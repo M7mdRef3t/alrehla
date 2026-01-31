@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp, BookOpen, MessageCircle } from "lucide-react";
-import type { Ring } from "../modules/map/mapTypes";
+import type { Ring, SituationLog } from "../modules/map/mapTypes";
 import { recoveryPlans } from "../data/recoveryPlans";
 import { scriptBank } from "../data/scriptBank";
 import { ProgressTracker } from "./ProgressTracker";
@@ -12,9 +12,9 @@ interface RecoveryPlanViewProps {
   personLabel: string;
   ring: Ring;
   completedSteps: string[];
-  situationLogs: any[];
+  situationLogs: SituationLog[];
   onToggleStep: (stepId: string) => void;
-  onAddLog: (log: any) => void;
+  onAddLog: (log: Omit<SituationLog, "id" | "date">) => void;
   onDeleteLog: (logId: string) => void;
 }
 

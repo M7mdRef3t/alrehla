@@ -7,7 +7,10 @@ import { AppSidebar } from "./components/AppSidebar";
 import { RelationshipGym } from "./components/RelationshipGym";
 import { BaselineAssessment } from "./components/BaselineAssessment";
 import { AIChatbot } from "./components/AIChatbot";
-import { useJourneyState } from "./state/journeyState";
+import { EmergencyOverlay } from "./components/EmergencyOverlay";
+import { useNotificationState } from "./state/notificationState";
+import { useEmergencyState } from "./state/emergencyState";
+import { trackPageView } from "./services/analytics";
 import type { AdviceCategory } from "./data/adviceScripts";
 
 type Screen = "landing" | "goal" | "map";
@@ -22,6 +25,26 @@ export default function App() {
   const [goalId, setGoalId] = useState<string>("unknown");
   const [showGym, setShowGym] = useState(false);
   const [showBaseline, setShowBaseline] = useState(false);
+  
+  const recordUserActivity = useNotificationState((s) => s.recordUserActivity);
+  const isEmergencyOpen = useEmergencyState((s) => s.isOpen);
+
+  // تسجيل النشاط عند تغيير الشاشة (تفاعل حقيقي)
+  useEffect(() => {
+    if (screen !== "landing") {
+      recordUserActivity();
+    }
+  }, [screen, recordUserActivity]);
+
+  // تتبع الصفحة للـ Analytics
+  useEffect(() => {
+    const pageNames: Record<Screen, string> = {
+      landing: "الرئيسية",
+      goal: "اختيار الهدف",
+      map: "خريطة العلاقات"
+    };
+    trackPageView(pageNames[screen]);
+  }, [screen]);
 
   /** بعد ما الكلام يظهر، نصبر 10 ثواني وندخل تلقائي على قائمة الأهداف */
   useEffect(() => {
@@ -33,7 +56,7 @@ export default function App() {
   const goToGoals = () => setScreen("goal");
 
   return (
-    <div className="min-h-screen bg-gray-50 flex" dir="rtl">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex transition-colors" dir="rtl">
       <AppSidebar
         onOpenGym={() => setShowGym(true)}
         onStartJourney={goToGoals}
@@ -107,6 +130,9 @@ export default function App() {
       )}
 
       <AIChatbot />
+
+      {/* Emergency Overlay */}
+      {isEmergencyOpen && <EmergencyOverlay />}
     </div>
   );
 }

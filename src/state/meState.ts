@@ -31,7 +31,9 @@ function saveMe(data: MeStored) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(ME_STORAGE_KEY, JSON.stringify(data));
-  } catch {}
+  } catch {
+    // Storage might be full or disabled
+  }
 }
 
 interface MeState extends MeStored {

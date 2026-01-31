@@ -198,10 +198,10 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
               <button
                 type="button"
                 onClick={() => onDeleteLog(log.id)}
-                className="absolute top-2 left-2 w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-rose-600 active:scale-95 transition-all duration-150 z-10"
+                className="absolute top-2 left-2 w-9 h-9 sm:w-6 sm:h-6 rounded-full bg-rose-500 text-white flex items-center justify-center sm:opacity-0 group-hover:opacity-100 hover:bg-rose-600 active:scale-95 transition-all duration-150 z-10"
                 title="حذف الموقف"
               >
-                <X className="w-3 h-3" strokeWidth={2.5} />
+                <X className="w-4 h-4 sm:w-3 sm:h-3" strokeWidth={2.5} />
               </button>
 
               <div className="space-y-2 text-sm">

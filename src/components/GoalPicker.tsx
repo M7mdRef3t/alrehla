@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { resolveAdviceCategory, type AdviceCategory } from "../data/adviceScripts";
 import { goalPickerCopy } from "../copy/goalPicker";
+import { trackEvent, AnalyticsEvents } from "../services/analytics";
 
 // Icon lookup for each goal type
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -43,7 +44,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
 }) => {
   const handleSelect = (goalId: string) => {
     const category = resolveAdviceCategory(goalId);
-    // Navigate immediately on selection
+    trackEvent(AnalyticsEvents.GOAL_SELECTED, { goal_id: goalId, category });
     onContinue(category, goalId);
   };
 
@@ -54,11 +55,11 @@ export const GoalPicker: FC<GoalPickerProps> = ({
     >
       <h1
         id="goal-title"
-        className="text-3xl md:text-4xl font-bold text-slate-900 mb-4"
+        className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4"
       >
         {goalPickerCopy.title}
       </h1>
-      <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-md mx-auto mb-10">
+      <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-md mx-auto mb-10">
         {goalPickerCopy.subtitle}
       </p>
 
@@ -80,8 +81,8 @@ export const GoalPicker: FC<GoalPickerProps> = ({
               animate="visible"
               className={`w-full max-w-[280px] rounded-2xl shadow-sm border-2 px-6 py-6 text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 cursor-pointer select-none hover:shadow-md hover:scale-[1.02] ${
                 isSelected
-                  ? "border-teal-500 bg-teal-50"
-                  : "border-transparent bg-white hover:border-teal-200 hover:bg-teal-50"
+                  ? "border-teal-500 bg-teal-50 dark:bg-teal-900/40 dark:border-teal-600"
+                  : "border-transparent bg-white dark:bg-slate-800 hover:border-teal-200 dark:hover:border-teal-700 hover:bg-teal-50 dark:hover:bg-teal-900/30"
               }`}
               onClick={() => handleSelect(option.id)}
               title={option.label}
@@ -93,10 +94,10 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                   aria-hidden="true"
                 />
               </div>
-              <p className="text-base font-bold text-slate-900 mb-1">
+              <p className="text-base font-bold text-slate-900 dark:text-white mb-1">
                 {option.label}
               </p>
-              <p className="text-sm text-slate-500 leading-relaxed">
+              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                 {option.subtitle}
               </p>
             </motion.button>
@@ -107,7 +108,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
       <div className="flex justify-center">
         <button
           type="button"
-          className="rounded-full bg-white border border-gray-200 px-6 py-3 text-sm text-gray-700 font-medium hover:bg-gray-50 active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 cursor-pointer select-none"
+          className="rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 px-6 py-3 text-sm text-gray-700 dark:text-slate-300 font-medium hover:bg-gray-50 dark:hover:bg-slate-700 active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 cursor-pointer select-none"
           onClick={onBack}
           title="رجوع للشاشة السابقة"
           aria-label="رجوع"

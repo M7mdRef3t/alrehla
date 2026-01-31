@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { DndContext, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
+import { DndContext, useDraggable, useDroppable, type DragEndEvent, TouchSensor, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { 
   User, 
   Users, 
@@ -98,7 +98,7 @@ function DraggablePersonChip({ personLabel }: { personLabel: string }) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`rounded-full bg-white border-2 border-teal-500 px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg cursor-grab active:cursor-grabbing touch-none select-none ${
+      className={`rounded-full bg-white border-2 border-teal-500 px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg cursor-grab active:cursor-grabbing select-none ${
         isDragging ? "opacity-90 scale-105 shadow-xl" : ""
       }`}
     >
@@ -131,6 +131,16 @@ function DroppableZone({
 }
 
 function PlacementStep({ personLabel, onPlace }: { personLabel: string; onPlace: (ring: RingId) => void }) {
+  // إعداد sensors للعمل على الموبايل والديسكتوب
+  const mouseSensor = useSensor(MouseSensor);
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 250,
+      tolerance: 5
+    }
+  });
+  const sensors = useSensors(mouseSensor, touchSensor);
+  
   const handleDragEnd = (event: DragEndEvent) => {
     const over = event.over;
     if (over && (over.id === "green" || over.id === "yellow" || over.id === "red")) {
@@ -143,7 +153,7 @@ function PlacementStep({ personLabel, onPlace }: { personLabel: string; onPlace:
       <h2 className="text-xl font-bold text-slate-900 mb-1">{mapCopy.placementTitle}</h2>
       <p className="text-sm text-gray-600 mb-6">{mapCopy.placementHint}</p>
 
-      <DndContext onDragEnd={handleDragEnd}>
+      <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
         <div className="grid grid-cols-1 gap-3 mb-8">
           {RING_ZONES.map((z) => (
             <DroppableZone
@@ -512,7 +522,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
             }
             stepInputs={
               addedNodeId
-                ? (nodes.find(n => n.id === addedNodeId)?.recoveryProgress as any)?.dynamicStepInputs || {}
+                ? nodes.find(n => n.id === addedNodeId)?.recoveryProgress?.dynamicStepInputs || {}
                 : {}
             }
             onToggleStep={

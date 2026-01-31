@@ -140,7 +140,7 @@ const MapNodeView: FC<NodeProps> = ({ node, nodeIndex, totalInRing, onClick }) =
       {/* Warning indicator for mismatch */}
       {hasMismatch && (
         <motion.div
-          className="absolute -top-1 -left-1 w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center shadow-md z-30"
+          className="absolute -top-1 -left-1 w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-amber-500 flex items-center justify-center shadow-md z-30"
           initial={{ scale: 0, opacity: 0 }}
           animate={{ 
             scale: [1, 1.1, 1],
@@ -159,19 +159,19 @@ const MapNodeView: FC<NodeProps> = ({ node, nodeIndex, totalInRing, onClick }) =
         </motion.div>
       )}
 
-      {/* Delete Button - Shows on hover */}
+      {/* Delete Button - Shows on hover or always on mobile */}
       {showDelete && (
         <motion.button
           type="button"
           onClick={handleDelete}
-          className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg hover:bg-rose-600 active:scale-95 transition-all duration-150 z-30"
+          className="absolute -top-2 -right-2 w-9 h-9 sm:w-6 sm:h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg hover:bg-rose-600 active:scale-95 transition-all duration-150 z-30"
           title="احذف الشخص من الخريطة"
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0, opacity: 0 }}
           transition={{ duration: 0.15 }}
         >
-          <X className="w-4 h-4" strokeWidth={2.5} />
+          <X className="w-5 h-5 sm:w-4 sm:h-4" strokeWidth={2.5} />
         </motion.button>
       )}
     </div>
@@ -201,7 +201,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick }) => {
   };
 
   return (
-    <div className="relative w-full max-w-md mx-auto aspect-square mt-8">
+    <div className="relative w-full max-w-md mx-auto aspect-square mt-8" id="map-canvas">
       <div className="absolute inset-0 overflow-hidden">
         <svg
           viewBox="0 0 100 100"

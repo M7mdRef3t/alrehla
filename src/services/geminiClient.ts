@@ -31,6 +31,7 @@ class GeminiClient {
           maxOutputTokens: 8192,
         }
       });
+      // eslint-disable-next-line no-console
       console.log('✅ Gemini AI initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize Gemini:', error);

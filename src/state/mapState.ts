@@ -22,6 +22,7 @@ interface MapState {
   updateLastViewedStep: (nodeId: string, step: "result" | "firstStep" | "recoveryPlan") => void;
   updateNodeSymptoms: (nodeId: string, symptomIds: string[]) => void;
   updateStepFeedback: (nodeId: string, stepId: string, value: "hard" | "easy" | "unrealistic") => void;
+  markTrainingComplete: (nodeId: string) => void;
 }
 
 let nextId = 1;
@@ -266,18 +267,15 @@ export const useMapState = create<MapState>((set, get) => ({
       
       const progress = node.recoveryProgress || { completedSteps: [], situationLogs: [] };
       
-      // Store dynamic step inputs in a special format
-      const dynamicInputs = (progress as any).dynamicStepInputs || {};
-      
       return {
         ...node,
         recoveryProgress: {
           ...progress,
           dynamicStepInputs: {
-            ...dynamicInputs,
+            ...(progress.dynamicStepInputs || {}),
             [stepId]: value
           }
-        } as any
+        }
       };
     });
     saveStoredState({ nodes: nextNodes });

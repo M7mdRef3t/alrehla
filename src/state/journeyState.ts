@@ -47,7 +47,9 @@ function saveJourney(data: StoredJourney) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(JOURNEY_STORAGE_KEY, JSON.stringify(data));
-  } catch {}
+  } catch {
+    // Storage might be full or disabled
+  }
 }
 
 interface JourneyState extends StoredJourney {

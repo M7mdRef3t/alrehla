@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, BookOpen } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import { ProgressIndicator } from "./ProgressIndicator";
 import { DynamicRecoveryPlan } from "./DynamicRecoveryPlan";
@@ -17,6 +17,7 @@ import type { AdviceCategory } from "../data/adviceScripts";
 import { adviceDatabase } from "../data/adviceScripts";
 import { getGoalAction } from "../copy/goalPicker";
 import { mapCopy } from "../copy/map";
+import { getSuggestedContent } from "../data/educationalContent";
 
 interface ViewPersonModalProps {
   nodeId: string;
@@ -306,10 +307,10 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               <button
                 type="button"
                 onClick={handleBack}
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors active:scale-95 rounded-lg hover:bg-gray-100"
               >
-                <ArrowLeft className="w-4 h-4" />
-                رجوع
+                <ArrowLeft className="w-5 h-5 sm:w-4 sm:h-4" />
+                <span className="font-medium">رجوع</span>
               </button>
               <RealityCheck
                 personLabel={node.label}
@@ -338,10 +339,10 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               <button
                 type="button"
                 onClick={handleBack}
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors active:scale-95 rounded-lg hover:bg-gray-100"
               >
-                <ArrowLeft className="w-4 h-4" />
-                رجوع
+                <ArrowLeft className="w-5 h-5 sm:w-4 sm:h-4" />
+                <span className="font-medium">رجوع</span>
               </button>
 
               <div className="mb-6 p-4 bg-purple-50 border-2 border-purple-300 rounded-xl text-right">
@@ -416,10 +417,10 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               <button
                 type="button"
                 onClick={handleBack}
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors active:scale-95 rounded-lg hover:bg-gray-100"
               >
-                <ArrowLeft className="w-4 h-4" />
-                رجوع
+                <ArrowLeft className="w-5 h-5 sm:w-4 sm:h-4" />
+                <span className="font-medium">رجوع</span>
               </button>
 
               <DynamicRecoveryPlan
@@ -430,7 +431,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
                 completedSteps={node.recoveryProgress?.completedSteps || []}
                 onToggleStep={(stepId) => toggleStepCompletion(nodeId, stepId)}
                 onUpdateStepInput={(stepId, value) => updateDynamicStepInput(nodeId, stepId, value)}
-                stepInputs={(node.recoveryProgress as any)?.dynamicStepInputs || {}}
+                stepInputs={node.recoveryProgress?.dynamicStepInputs || {}}
                 stepFeedback={node.recoveryProgress?.stepFeedback || {}}
                 onStepFeedback={(stepId, value) => updateStepFeedback(nodeId, stepId, value)}
               />
@@ -445,7 +446,47 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
                 />
               </div>
 
-              <div className="mt-8 pt-6 border-t border-gray-100">
+              <div className="mt-8 pt-6 border-t border-gray-100 space-y-4">
+                {/* Suggested Content */}
+                {(() => {
+                  const suggestedContent = getSuggestedContent(node.ring);
+                  const hasContent = suggestedContent.videos.length > 0 || 
+                                     suggestedContent.stories.length > 0 || 
+                                     suggestedContent.faqs.length > 0;
+                  
+                  if (hasContent) {
+                    return (
+                      <div className="p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+                        <div className="flex items-center gap-2 mb-2">
+                          <BookOpen className="w-5 h-5 text-indigo-600" />
+                          <h3 className="font-semibold text-indigo-900">محتوى مقترح لك</h3>
+                        </div>
+                        <p className="text-sm text-indigo-700 mb-3">
+                          محتوى تعليمي قد يساعدك في هذا الموقف
+                        </p>
+                        <div className="space-y-2">
+                          {suggestedContent.videos.slice(0, 2).map((video) => (
+                            <div key={video.id} className="p-3 bg-white rounded-lg border border-indigo-100">
+                              <p className="text-sm font-medium text-slate-900">{video.title}</p>
+                              <p className="text-xs text-slate-500 mt-1">{video.duration}</p>
+                            </div>
+                          ))}
+                          {suggestedContent.faqs.slice(0, 1).map((faq) => (
+                            <div key={faq.id} className="p-3 bg-white rounded-lg border border-indigo-100">
+                              <p className="text-sm font-medium text-slate-900">{faq.question}</p>
+                              <p className="text-xs text-slate-600 mt-1 line-clamp-2">{faq.answer}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-xs text-indigo-600 mt-3 text-center">
+                          افتح المكتبة لاستكشاف المزيد من المحتوى
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
                 <button
                   type="button"
                   onClick={onClose}

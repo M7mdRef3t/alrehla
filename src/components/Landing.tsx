@@ -25,7 +25,7 @@ export const Landing: FC = () => {
         aria-hidden="true"
       >
         <motion.div
-          className="w-[min(80vmax,520px)] h-[min(80vmax,520px)] rounded-full bg-teal-50 blur-3xl"
+          className="w-[min(80vmax,520px)] h-[min(80vmax,520px)] rounded-full bg-teal-50 dark:bg-teal-900/40 blur-3xl"
           animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.25, 0.5, 0.25] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -41,7 +41,7 @@ export const Landing: FC = () => {
       >
         <motion.h1
           id="landing-title"
-          className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 leading-normal"
+          className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-6 leading-normal"
           style={{ fontFamily: "'Almarai', sans-serif", willChange: "transform, opacity" }}
           variants={fogReveal}
         >
@@ -49,7 +49,7 @@ export const Landing: FC = () => {
           <span className="block mt-2">{landingCopy.titleLine2}</span>
         </motion.h1>
         <motion.p
-          className="text-base md:text-lg text-slate-600 leading-relaxed max-w-md mx-auto whitespace-pre-line"
+          className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-md mx-auto whitespace-pre-line"
           style={{ willChange: "transform, opacity" }}
           variants={fogReveal}
         >

@@ -99,14 +99,14 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
                   >
                     <div className="flex items-start gap-3">
                       <div
-                        className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                        className={`flex-shrink-0 w-10 h-10 sm:w-6 sm:h-6 rounded-md border-2 flex items-center justify-center transition-all ${
                           isSelected
                             ? 'bg-teal-500 border-teal-500'
                             : 'bg-white border-gray-300'
                         }`}
                       >
                         {isSelected && (
-                          <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                          <Check className="w-6 h-6 sm:w-4 sm:h-4 text-white" strokeWidth={3} />
                         )}
                       </div>
                       <span

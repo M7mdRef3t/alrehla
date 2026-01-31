@@ -267,7 +267,7 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
                     checked={isExpanded}
                     onChange={() => setExpandedStep(stepId)}
                     disabled={!isInteractive}
-                    className="w-5 h-5 border-gray-300 text-teal-600 focus:ring-teal-500 mt-0.5 shrink-0"
+                    className="w-9 h-9 sm:w-5 sm:h-5 border-gray-300 text-teal-600 focus:ring-teal-500 mt-0.5 shrink-0"
                     style={{ cursor: isInteractive ? 'pointer' : 'not-allowed' }}
                   />
                   <div className="flex-1">
