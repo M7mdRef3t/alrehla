@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import type { Ring, MapNode as MapNodeType } from "./mapTypes";
 import { useMapState } from "../../state/mapState";
+import { useMeState } from "../../state/meState";
 
 interface RingProps {
   ring: Ring;
@@ -179,12 +180,20 @@ const MapNodeView: FC<NodeProps> = ({ node, nodeIndex, totalInRing, onClick }) =
 
 interface MapCanvasProps {
   onNodeClick?: (id: string) => void;
+  onMeClick?: () => void;
 }
 
-export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick }) => {
-  const nodes = useMapState((s) => s.nodes);
+const ME_CENTER_COLORS: Record<string, { fill: string; shadow: string }> = {
+  drained: { fill: "#64748b", shadow: "0 2px 8px rgba(100, 116, 139, 0.25)" },
+  okay: { fill: "#0F172A", shadow: "0 2px 8px rgba(15, 23, 42, 0.15)" },
+  charged: { fill: "#0D9488", shadow: "0 2px 12px rgba(13, 148, 136, 0.5)" }
+};
 
-  // Group nodes by ring to calculate positions
+export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick }) => {
+  const nodes = useMapState((s) => s.nodes);
+  const battery = useMeState((s) => s.battery);
+  const meStyle = ME_CENTER_COLORS[battery] ?? ME_CENTER_COLORS.okay;
+
   const nodesByRing = {
     green: nodes.filter(n => n.ring === "green"),
     yellow: nodes.filter(n => n.ring === "yellow"),
@@ -193,95 +202,80 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick }) => {
 
   return (
     <div className="relative w-full max-w-md mx-auto aspect-square mt-8">
-        <div className="absolute inset-0 overflow-hidden">
-          {/* SVG Rings Container */}
-          <svg
-            viewBox="0 0 100 100"
-            className="w-full h-full"
-            style={{ filter: "drop-shadow(0 2px 8px rgba(0, 0, 0, 0.04))" }}
-          >
-            {/* Outer Ring - Red (Danger) - Largest, at back */}
-            <RingView
-              ring="red"
-              label="دائرة الخطر والاستنزاف"
-              radius={42}
-              strokeWidth={16}
-              color="#FB7185"
+      <div className="absolute inset-0 overflow-hidden">
+        <svg
+          viewBox="0 0 100 100"
+          className="w-full h-full"
+          style={{ filter: "drop-shadow(0 2px 8px rgba(0, 0, 0, 0.04))" }}
+        >
+          <RingView ring="red" label="دائرة الخطر والاستنزاف" radius={42} strokeWidth={16} color="#FB7185" />
+          <RingView ring="yellow" label="دائرة القرب المشروط" radius={30} strokeWidth={16} color="#FBBF24" />
+          <RingView ring="green" label="دائرة القرب الصحي" radius={18} strokeWidth={16} color="#14B8A6" />
+
+          {/* Center "Me" — لون حسب البطارية */}
+          <motion.g>
+            <motion.circle
+              cx="50"
+              cy="50"
+              r="6"
+              fill={meStyle.fill}
+              className="transition-colors duration-300"
+              style={{ filter: `drop-shadow(${meStyle.shadow})` }}
+              animate={{
+                scale: battery === "charged" ? [1, 1.08, 1] : [1, 1.05, 1],
+                opacity: battery === "drained" ? [0.7, 0.85, 0.7] : [0.9, 1, 0.9]
+              }}
+              transition={{
+                duration: battery === "charged" ? 2.5 : 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
             />
+            <text
+              x="50"
+              y="50"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="text-[3px] font-bold fill-white select-none pointer-events-none"
+            >
+              أنت
+            </text>
+          </motion.g>
+        </svg>
 
-            {/* Middle Ring - Yellow (Caution) */}
-            <RingView
-              ring="yellow"
-              label="دائرة القرب المشروط"
-              radius={30}
-              strokeWidth={16}
-              color="#FBBF24"
-            />
-
-            {/* Inner Ring - Teal (Safe) - Smallest, at front */}
-            <RingView
-              ring="green"
-              label="دائرة القرب الصحي"
-              radius={18}
-              strokeWidth={16}
-              color="#14B8A6"
-            />
-
-            {/* Center "Me" Circle with soft breathing animation */}
-            <motion.g>
-              <motion.circle
-                cx="50"
-                cy="50"
-                r="6"
-                fill="#0F172A"
-                className="z-50"
-                style={{
-                  filter: "drop-shadow(0 2px 8px rgba(15, 23, 42, 0.15))"
-                }}
-                animate={{
-                  scale: [1, 1.05, 1],
-                  opacity: [0.9, 1, 0.9]
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-              <text
-                x="50"
-                y="50"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                className="text-[3px] font-bold fill-white select-none pointer-events-none"
-              >
-                أنت
-              </text>
-            </motion.g>
-          </svg>
-
-          {/* Nodes Layer */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="relative w-full h-full pointer-events-auto">
-              {nodes.map((node) => {
-                // Find the index of this node within its ring
-                const nodesInSameRing = nodesByRing[node.ring];
-                const nodeIndex = nodesInSameRing.findIndex(n => n.id === node.id);
-                const totalInRing = nodesInSameRing.length;
-                
-                return (
-                  <MapNodeView 
-                    key={node.id} 
-                    node={node}
-                    nodeIndex={nodeIndex}
-                    totalInRing={totalInRing}
-                    onClick={onNodeClick}
-                  />
-                );
-              })}
-            </div>
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="relative w-full h-full pointer-events-auto">
+            {nodes.map((node) => {
+              const nodesInSameRing = nodesByRing[node.ring];
+              const nodeIndex = nodesInSameRing.findIndex(n => n.id === node.id);
+              const totalInRing = nodesInSameRing.length;
+              return (
+                <MapNodeView
+                  key={node.id}
+                  node={node}
+                  nodeIndex={nodeIndex}
+                  totalInRing={totalInRing}
+                  onClick={onNodeClick}
+                />
+              );
+            })}
           </div>
         </div>
+
+        {/* منطقة نقر مركز "أنا" — تفتح بطاقة أنا */}
+        {onMeClick && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onMeClick();
+            }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[20%] min-w-[56px] h-[20%] min-h-[56px] rounded-full z-30 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2"
+            title="بطاقتك — حالتك اليوم"
+            aria-label="افتح بطاقة أنا"
+          />
+        )}
+      </div>
     </div>
   );
 };

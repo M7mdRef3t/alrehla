@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { MapCanvas } from "../modules/map/MapCanvas";
 import { AddPersonModal } from "./AddPersonModal";
 import { ViewPersonModal } from "./ViewPersonModal";
+import { MeNodeDetails } from "./MeNodeDetails";
+import { BreathingOverlay } from "./BreathingOverlay";
 import { mapCopy } from "../copy/map";
 import { useMapState } from "../state/mapState";
 import type { AdviceCategory } from "../data/adviceScripts";
@@ -23,6 +25,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 }) => {
   const [showAddPerson, setShowAddPerson] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [showMeCard, setShowMeCard] = useState(false);
+  const [showBreathing, setShowBreathing] = useState(false);
   const [legendTooltip, setLegendTooltip] = useState<"green" | "yellow" | "red" | null>(null);
   const nodes = useMapState((s) => s.nodes);
   const showPlacementTooltip = useMapState((s) => s.showPlacementTooltip);
@@ -74,7 +78,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         </button>
       </div>
 
-      <MapCanvas onNodeClick={(id) => setSelectedNodeId(id)} />
+      <MapCanvas
+        onNodeClick={(id) => setSelectedNodeId(id)}
+        onMeClick={() => setShowMeCard(true)}
+      />
 
       {showPlacementTooltip && (
         <div
@@ -148,6 +155,20 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           goalId={goalId}
           onClose={() => setSelectedNodeId(null)}
         />
+      )}
+
+      {showMeCard && (
+        <MeNodeDetails
+          onClose={() => setShowMeCard(false)}
+          onStartBreathing={() => {
+            setShowMeCard(false);
+            setShowBreathing(true);
+          }}
+        />
+      )}
+
+      {showBreathing && (
+        <BreathingOverlay onClose={() => setShowBreathing(false)} />
       )}
 
       {journeyMode && onJourneyComplete && (
