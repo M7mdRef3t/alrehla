@@ -44,10 +44,11 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         className="fixed top-0 right-0 z-40 h-full hidden md:flex flex-row-reverse group/sidebar"
         aria-label="القائمة الرئيسية"
       >
-        {/* المحتوى — يظهر عند تحريك الماوس على التاب أو الشريط */}
-        <aside
-          className="h-full bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 shadow-lg flex flex-col gap-2 py-6 px-3 overflow-hidden transition-[width] duration-200 ease-out w-0 group-hover/sidebar:w-52 min-w-0"
-        >
+        {/* المحتوى — يظهر عند تحريك الماوس على التاب أو الشريط؛ wrapper يمنع ظهور أي جزء عند الإغلاق */}
+        <div className="h-full w-0 group-hover/sidebar:w-52 shrink-0 overflow-hidden transition-[width] duration-200 ease-out">
+          <aside
+            className="h-full w-52 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 shadow-lg flex flex-col gap-2 py-6 px-3 min-w-0"
+          >
           {isFirstTime && (
             <button
               type="button"
@@ -156,7 +157,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             <AlertCircle className="w-5 h-5 shrink-0" />
             طوارئ
           </button>
-        </aside>
+          </aside>
+        </div>
         {/* تاب صغير ظاهر دايماً — تحريك الماوس عليه يفتح الشريط */}
         <div
           className="h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-600 text-white border-l border-teal-700 shadow-md cursor-default py-4"

@@ -24,8 +24,15 @@ export const Landing: FC = () => {
         className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
         aria-hidden="true"
       >
+        {/* تنفس الوضع الفاتح — رمادي */}
         <motion.div
-          className="w-[min(80vmax,520px)] h-[min(80vmax,520px)] rounded-full bg-teal-50 dark:bg-teal-900/40 blur-3xl"
+          className="w-[min(80vmax,520px)] h-[min(80vmax,520px)] rounded-full bg-gray-300 blur-2xl dark:hidden"
+          animate={{ scale: [0.9, 1.15, 0.9], opacity: [0.7, 1, 0.7] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+        {/* تنفس الوضع الداكن — زي الأول teal */}
+        <motion.div
+          className="hidden w-[min(80vmax,520px)] h-[min(80vmax,520px)] rounded-full bg-teal-900/40 blur-3xl dark:block"
           animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.25, 0.5, 0.25] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
