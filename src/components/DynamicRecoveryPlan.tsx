@@ -7,6 +7,7 @@ import { generateAIPlan } from "../utils/aiPlanGenerator";
 import { geminiClient } from "../services/geminiClient";
 import { getExercisesForSymptoms } from "../data/symptomExercises";
 import { getSymptomLabel } from "../data/symptoms";
+import { mapCopy } from "../copy/map";
 import type { DynamicRecoveryPlan as Plan, DynamicStep } from "../utils/dynamicPlanGenerator";
 
 interface DynamicRecoveryPlanProps {
@@ -119,12 +120,15 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
 
   if (!plan || situations.length < 2) {
     return (
-      <div className="p-6 bg-amber-50 border-2 border-amber-300 rounded-xl text-center">
-        <p className="text-sm font-semibold text-amber-900 mb-2">
-          💡 محتاجين مواقف أكتر
+      <div className="p-6 bg-amber-50 border-2 border-amber-300 rounded-xl text-right">
+        <p className="text-base font-bold text-amber-900 mb-2">
+          ❓ {mapCopy.planRuleTitle}
         </p>
-        <p className="text-xs text-amber-800">
-          اكتب على الأقل موقفين في "الخطوة الأولى" عشان نقدر نحلل الأنماط ونولد خطة مخصصة ليك
+        <p className="text-sm text-amber-800 leading-relaxed">
+          {mapCopy.planRuleBody}
+        </p>
+        <p className="text-sm font-bold text-amber-800 mt-3">
+          {mapCopy.planRuleCounter(situations.length)}
         </p>
       </div>
     );

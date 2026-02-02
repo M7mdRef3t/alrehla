@@ -76,8 +76,16 @@ export const PersonalizedTraining: React.FC<PersonalizedTrainingProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+          className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
         >
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors"
+            aria-label="إغلاق"
+          >
+            <X className="w-5 h-5" />
+          </button>
           <div className="text-center">
             <Target className="w-12 h-12 text-slate-400 mx-auto mb-4" />
             <h3 className="text-lg font-bold text-slate-900 mb-2">
@@ -157,8 +165,16 @@ export const PersonalizedTraining: React.FC<PersonalizedTrainingProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden p-6 text-center"
+          className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden p-6 text-center"
         >
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors"
+            aria-label="إغلاق"
+          >
+            <X className="w-5 h-5" />
+          </button>
           <Trophy className="w-16 h-16 mx-auto mb-4 text-amber-500" />
           <h2 className="text-2xl font-bold text-slate-900 mb-2">{levelTitle}</h2>
           <p className="text-slate-600 text-sm mb-6">

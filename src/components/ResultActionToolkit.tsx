@@ -303,7 +303,14 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
                           تسجيل صوتي
                         </button>
                         <span className="text-xs text-teal-600">|</span>
-                        <span className="text-xs text-teal-600 font-medium">مواقف جاهزة:</span>
+                        <button
+                          type="button"
+                          onClick={() => setExpandedStep(isExpanded ? null : stepId)}
+                          className="text-xs text-teal-600 hover:text-teal-800 font-medium"
+                          title="اعرض مواقف جاهزة تختار منها"
+                        >
+                          مواقف جاهزة
+                        </button>
                       </div>
                     )}
                     {step.requiresInput && (

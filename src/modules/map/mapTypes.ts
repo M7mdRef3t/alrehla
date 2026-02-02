@@ -1,15 +1,32 @@
 export type Ring = "green" | "yellow" | "red";
 
+/** غالبًا / أحيانًا / نادراً — نفس أسلوب RealityCheck و FeelingCheck */
+export type HealthAnswers = {
+  q1: "often" | "sometimes" | "rarely";
+  q2: "often" | "sometimes" | "rarely";
+  q3: "often" | "sometimes" | "rarely";
+};
+
+/** اختياري: تغذية من AI — لو وُجدت تُدمج في واجهة التبويبات من غير تغيير المعمار */
+export interface PersonViewInsights {
+  /** تشخيص: نص إضافي أو بديل عن "فهم الوضع" (مثلاً من AI) */
+  diagnosisSummary?: string;
+  /** أعراض: تفسير أو تلخيص للأعراض المختارة (مثلاً من AI) */
+  symptomsInterpretation?: string;
+  /** حل: اقتراحات إضافية أو نص مخصص لتبويب الحل (مثلاً من AI) */
+  solutionSuggestions?: string;
+  /** خطة: نقاط بارزة أو ملخص لخطة التعافي (مثلاً من AI) */
+  planHighlights?: string[];
+}
+
 export interface AnalysisResult {
   score: number;
-  answers: {
-    q1: boolean;
-    q2: boolean;
-    q3: boolean;
-  };
+  answers: HealthAnswers;
   timestamp: number;
   recommendedRing: Ring;
   selectedSymptoms?: string[]; // IDs of symptoms user confirmed
+  /** تغذية اختيارية من AI للتبويبات الأربعة — التطبيق يدمجها دون تغيير هيكل الواجهة */
+  insights?: PersonViewInsights;
 }
 
 export interface PersonNote {

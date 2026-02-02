@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { MapCanvas } from "../modules/map/MapCanvas";
 import { AddPersonModal } from "./AddPersonModal";
 import { ViewPersonModal } from "./ViewPersonModal";
@@ -68,14 +69,17 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       </header>
 
       <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
-        <button
+        <motion.button
           type="button"
-          className="rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          className="rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold shadow-lg hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
           onClick={() => setShowAddPerson(true)}
           title={mapCopy.addPersonTitle}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
         >
           + {mapCopy.addPersonLabel}
-        </button>
+        </motion.button>
       </div>
 
       <MapCanvas
@@ -141,10 +145,13 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       </div>
 
       {showAddPerson && (
-        <AddPersonModal 
-          goalId={goalId} 
-          category={category} 
-          onClose={() => setShowAddPerson(false)} 
+        <AddPersonModal
+          goalId={goalId}
+          category={category}
+          onClose={(openNodeId) => {
+            setShowAddPerson(false);
+            if (openNodeId) setSelectedNodeId(openNodeId);
+          }}
         />
       )}
 

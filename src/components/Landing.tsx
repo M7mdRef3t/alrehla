@@ -2,6 +2,10 @@ import type { FC } from "react";
 import { motion } from "framer-motion";
 import { landingCopy } from "../copy/landing";
 
+interface LandingProps {
+  onStartJourney: () => void;
+}
+
 const fogReveal = {
   hidden: { opacity: 0, filter: "blur(8px)", y: 8 },
   visible: {
@@ -17,18 +21,22 @@ const containerVariants = {
   visible: { transition: { staggerChildren: 0.3 } }
 };
 
-export const Landing: FC = () => {
+export const Landing: FC<LandingProps> = ({ onStartJourney }) => {
   return (
     <div className="relative w-full max-w-xl py-10 md:py-14 min-h-[420px]">
       <motion.div
         className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
         aria-hidden="true"
       >
-        {/* تنفس الوضع الفاتح — رمادي */}
+        {/* تنفس الوضع الفاتح — أوضح بس بنفس جو الخلفية */}
         <motion.div
-          className="w-[min(80vmax,520px)] h-[min(80vmax,520px)] rounded-full bg-gray-300 blur-2xl dark:hidden"
-          animate={{ scale: [0.9, 1.15, 0.9], opacity: [0.7, 1, 0.7] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          className="w-[min(80vmax,520px)] h-[min(80vmax,520px)] rounded-full blur-2xl dark:hidden"
+          style={{
+            background:
+              "radial-gradient(circle at center, rgba(15,23,42,0.22), rgba(15,23,42,0))"
+          }}
+          animate={{ scale: [0.96, 1.06, 0.96], opacity: [0.55, 0.95, 0.55] }}
+          transition={{ duration: 7.5, repeat: Infinity, ease: "easeInOut" }}
         />
         {/* تنفس الوضع الداكن — زي الأول teal */}
         <motion.div
@@ -62,6 +70,18 @@ export const Landing: FC = () => {
         >
           {landingCopy.subtitle}
         </motion.p>
+        <motion.div variants={fogReveal} className="mt-8">
+          <motion.button
+            type="button"
+            onClick={onStartJourney}
+            className="rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            {landingCopy.ctaJourney}
+          </motion.button>
+        </motion.div>
       </motion.main>
     </div>
   );

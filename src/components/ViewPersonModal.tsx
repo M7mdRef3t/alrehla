@@ -1,9 +1,9 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft, BookOpen, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useMapState } from "../state/mapState";
-import { ProgressIndicator } from "./ProgressIndicator";
+import { RecoveryProgressBar } from "./RecoveryProgressBar";
 import { DynamicRecoveryPlan } from "./DynamicRecoveryPlan";
 import { ResultActionToolkit } from "./ResultActionToolkit";
 import { NotesSection } from "./NotesSection";
@@ -12,11 +12,9 @@ import { PersonalizedTraining } from "./PersonalizedTraining";
 import { SuggestedPlacement } from "./SuggestedPlacement";
 import { RecoveryRoadmap } from "./RecoveryRoadmap";
 import { RealityCheck, realityScoreToRing } from "./RealityCheck";
-import type { Ring } from "../modules/map/mapTypes";
 import type { AdviceCategory } from "../data/adviceScripts";
-import { adviceDatabase } from "../data/adviceScripts";
-import { getGoalAction } from "../copy/goalPicker";
 import { mapCopy } from "../copy/map";
+import { getPersonViewData } from "../modules/personView/personViewData";
 import { getSuggestedContent } from "../data/educationalContent";
 
 interface ViewPersonModalProps {
@@ -50,11 +48,13 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
     node?.lastViewedStep || "result"
   );
 
-  // Tabs on result view: التشخيص | الحل | الخطة
-  const [resultTab, setResultTab] = useState<"diagnosis" | "solution" | "plan">("diagnosis");
+  // Tabs on result view: التشخيص | الأعراض | الحل | الخطة
+  const [resultTab, setResultTab] = useState<"diagnosis" | "symptoms" | "solution" | "plan">("diagnosis");
 
   // Training modal state
   const [showTraining, setShowTraining] = useState(false);
+  // تبويب التشخيص — رؤية إضافية (إن وُجدت) مطوية افتراضيًا
+  const [showDiagnosisInsight, setShowDiagnosisInsight] = useState(false);
 
   // Update step when node changes
   useEffect(() => {
@@ -70,11 +70,19 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
         onClick={onClose}
       >
         <motion.div
-          className="bg-white border border-gray-200 rounded-2xl px-8 py-8 max-w-md w-full shadow-xl"
+          className="relative bg-white border border-gray-200 rounded-2xl px-8 py-8 max-w-md w-full shadow-xl"
           onClick={(e) => e.stopPropagation()}
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
         >
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-slate-500 hover:text-slate-700"
+            aria-label="إغلاق"
+          >
+            <X className="w-5 h-5" />
+          </button>
           <div className="text-center py-6">
             <h3 className="text-xl font-bold text-slate-900 mb-2">
               {node?.label || "شخص غير موجود"}
@@ -119,36 +127,9 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
     }
   };
 
-  const situationsCount = node.firstStepProgress?.stepInputs 
-    ? Object.values(node.firstStepProgress.stepInputs).flat().filter(s => s?.trim()).length 
-    : 0;
-  const canShowRecoveryPlan = situationsCount >= 2;
-
-  let zone: "red" | "yellow" | "green";
-  if (node.analysis.score > 2) {
-    zone = "red";
-  } else if (node.analysis.score >= 1) {
-    zone = "yellow";
-  } else {
-    zone = "green";
-  }
-
-  const adviceByZone = adviceDatabase[zone];
-  const advice = adviceByZone[category] ?? adviceByZone.general ?? adviceDatabase.green.general;
-  const stateLabel = node.ring === "green" ? "صحية" : node.ring === "yellow" ? "محتاجة انتباه" : "استنزاف";
-
-  const understanding = {
-    red: `علاقتك مع ${node.label} بتاخد منك أكتر مما بتديك. جسمك بيحذرك - اسمع له.`,
-    yellow: `في أنماط مش صحية في علاقتك مع ${node.label} محتاجة انتباه. الحدود هتحميك.`,
-    green: `علاقتك مع ${node.label} صحية ومتوازنة. حافظ عليها واستمر.`
-  };
-
-  // New personalized title
-  const personalizedTitle = {
-    red: `قربك من "${node.label}" مؤلم ومحتاج حماية`,
-    yellow: `علاقتك مع "${node.label}" محتاجة ضبط`,
-    green: `علاقتك مع "${node.label}" صحية وآمنة`
-  };
+  // عقد بيانات التبويبات الأربعة — مصدر واحد، قابل لتغذية AI عبر node.analysis.insights
+  const viewData = getPersonViewData(node, category, goalId);
+  const { diagnosis, symptoms, solution, plan } = viewData;
 
   return (
     <div
@@ -156,13 +137,21 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
       onClick={onClose}
     >
       <motion.div
-        className="bg-white border border-gray-200 rounded-2xl px-8 py-8 max-w-md w-full shadow-xl max-h-[90vh] overflow-y-auto"
+        className="relative bg-white border border-gray-200 rounded-2xl px-8 py-8 max-w-md w-full shadow-xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         initial={{ scale: 0.95, opacity: 0, y: 10 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 10 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
       >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-slate-500 hover:text-slate-700 z-10"
+          aria-label="إغلاق"
+        >
+          <X className="w-5 h-5" />
+        </button>
         <AnimatePresence mode="wait">
           {step === "result" && (
             <motion.div
@@ -172,114 +161,199 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <ProgressIndicator 
-                currentStep={1} 
-                totalSteps={3} 
-                labels={["النتيجة", "أول خطوة", "خطة التعافي"]}
-              />
+              <RecoveryProgressBar node={node} />
 
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200 mb-4 flex items-center justify-center gap-2"
-                title="تأكيد مكان الشخص على الخريطة وإغلاق الكارت"
-              >
-                ✓ {mapCopy.confirmPlacement}
-              </button>
-
-              {/* Tabs: التشخيص | الحل | الخطة */}
+              {/* Tabs: التشخيص | الأعراض | الحل | الخطة — ضغط لطيف وانتقال ناعم */}
               <div className="flex gap-1 p-1 bg-slate-100 rounded-xl mb-4">
-                {(["diagnosis", "solution", "plan"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setResultTab(tab)}
-                    className={`flex-1 py-2.5 px-3 rounded-lg text-sm font-semibold transition-all ${
-                      resultTab === tab
-                        ? "bg-white text-teal-700 shadow-sm"
-                        : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  >
-                    {tab === "diagnosis" ? mapCopy.tabDiagnosis : tab === "solution" ? mapCopy.tabSolution : mapCopy.tabPlan}
-                  </button>
-                ))}
+                {(["diagnosis", "symptoms", "solution", "plan"] as const).map((tab) => {
+                  const isActive = resultTab === tab;
+                  return (
+                    <motion.button
+                      key={tab}
+                      type="button"
+                      onClick={() => setResultTab(tab)}
+                      className={`flex-1 py-2.5 px-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-200 ${
+                        isActive ? "bg-white text-teal-700 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                      }`}
+                      whileTap={{ scale: 0.97 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      {tab === "diagnosis" ? mapCopy.tabDiagnosis : tab === "symptoms" ? mapCopy.tabSymptoms : tab === "solution" ? mapCopy.tabSolution : mapCopy.tabPlan}
+                    </motion.button>
+                  );
+                })}
               </div>
 
               {resultTab === "diagnosis" && (
                 <div className="space-y-4">
-                  <div className="p-6 bg-linear-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-2xl">
-                    <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                      {personalizedTitle[zone]}
-                    </h2>
-                    <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500 text-center">
-                      <p>
-                        الحالة: <span className="font-semibold text-slate-700">{stateLabel}</span>
-                      </p>
-                      {getGoalAction(goalId) && (
-                        <p>
-                          الهدف: <span className="font-semibold text-slate-700">{getGoalAction(goalId)}</span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="p-5 bg-blue-50 border-2 border-blue-200 rounded-xl text-right">
-                    <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
-                      <span>🔍</span> فهم الوضع
-                    </h3>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {understanding[zone]}
+                  {/* فقرة واحدة: العنوان + فهم الوضع + الحالة والهدف — بدون عنوان "اقرأ فهم الوضع" */}
+                  <div className="p-5 bg-linear-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-2xl text-right">
+                    <p className="text-base text-slate-800 leading-relaxed">
+                      {diagnosis.personalizedTitle}
+                      <br />
+                      {diagnosis.understanding}
+                      <br />
+                      <span className="text-sm text-gray-600 mt-2 block">
+                        الحالة: <span className="font-semibold text-slate-700">{diagnosis.stateLabel}</span>
+                        {diagnosis.goalAction && (
+                          <span>  الهدف: {diagnosis.goalAction}</span>
+                        )}
+                      </span>
                     </p>
                   </div>
 
+                  {/* رؤية إضافية — مطوية افتراضيًا، فتح/إغلاق ناعم */}
+                  {diagnosis.diagnosisSummary && (
+                    <div className="rounded-xl border-2 border-violet-200 overflow-hidden">
+                      <motion.button
+                        type="button"
+                        onClick={() => setShowDiagnosisInsight((v) => !v)}
+                        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-right bg-violet-50 hover:bg-violet-100 transition-colors duration-200 text-sm font-semibold text-violet-900"
+                        whileTap={{ scale: 0.995 }}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span>✨</span> {mapCopy.diagnosisReadInsight}
+                        </span>
+                        <motion.span
+                          animate={{ rotate: showDiagnosisInsight ? 180 : 0 }}
+                          transition={{ duration: 0.25, ease: "easeOut" }}
+                        >
+                          <ChevronDown className="w-4 h-4 shrink-0" />
+                        </motion.span>
+                      </motion.button>
+                      <AnimatePresence initial={false}>
+                        {showDiagnosisInsight && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-4 bg-violet-50/80 border-t border-violet-100 text-right">
+                              <p className="text-sm text-gray-700 leading-relaxed">{diagnosis.diagnosisSummary}</p>
+                              <button
+                                type="button"
+                                onClick={() => setShowDiagnosisInsight(false)}
+                                className="mt-2 text-xs text-slate-500 hover:text-slate-700 transition-colors duration-150"
+                              >
+                                {mapCopy.diagnosisCollapse}
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {resultTab === "symptoms" && (
+                <div className="min-h-[280px]">
+                  {symptoms.symptomsInterpretation && (
+                    <div className="mb-4 p-4 bg-violet-50 border-2 border-violet-200 rounded-xl text-right">
+                      <p className="text-sm text-gray-700 leading-relaxed">{symptoms.symptomsInterpretation}</p>
+                    </div>
+                  )}
                   <SymptomsChecklist
-                    ring={node.ring}
-                    personLabel={node.label}
-                    selectedSymptoms={node.analysis.selectedSymptoms}
+                    ring={symptoms.ring}
+                    personLabel={symptoms.personLabel}
+                    selectedSymptoms={symptoms.selectedSymptoms}
                     onSymptomsChange={(symptomIds) => updateNodeSymptoms(nodeId, symptomIds)}
                   />
                 </div>
               )}
 
               {resultTab === "solution" && (
-                <SuggestedPlacement
-                  currentRing={node.ring}
-                  personLabel={node.label}
-                  category={category}
-                  selectedSymptoms={node.analysis.selectedSymptoms}
-                />
+                <div className="space-y-4">
+                  {solution.solutionSuggestions && (
+                    <div className="p-4 bg-violet-50 border-2 border-violet-200 rounded-xl text-right">
+                      <p className="text-sm text-gray-700 leading-relaxed">{solution.solutionSuggestions}</p>
+                    </div>
+                  )}
+                  <SuggestedPlacement
+                    currentRing={solution.currentRing}
+                    personLabel={solution.personLabel}
+                    category={solution.category}
+                    selectedSymptoms={solution.selectedSymptoms}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setStep("reality")}
+                    className="w-full rounded-full bg-gray-100 text-gray-700 px-8 py-3 text-sm font-medium hover:bg-gray-200 active:scale-[0.98] transition-all duration-200 border border-dashed border-gray-300"
+                    title="اختياري: فهم علاقتك بالشخص"
+                  >
+                    استكمال: فهم العلاقة
+                  </button>
+                </div>
               )}
 
               {resultTab === "plan" && (
                 <div className="space-y-4">
+                  {!plan.canShowRecoveryPlan && (
+                    <div className="p-5 bg-amber-50 border-2 border-amber-400 rounded-xl text-right shadow-sm">
+                      <h3 className="text-base font-bold text-amber-900 mb-2">
+                        ❓ {mapCopy.planRuleTitle}
+                      </h3>
+                      <p className="text-sm text-amber-900 leading-relaxed mb-3">
+                        {mapCopy.planRuleBody}
+                      </p>
+                      <p className="text-sm font-bold text-amber-800 mb-4">
+                        {mapCopy.planRuleCounter(plan.situationsCount)}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleGoToFirstStep}
+                        className="w-full rounded-full bg-amber-500 text-white px-6 py-3 text-sm font-semibold hover:bg-amber-600 active:scale-[0.98] transition-all"
+                      >
+                        {mapCopy.planRuleCta}
+                      </button>
+                    </div>
+                  )}
+                  {plan.planHighlights && plan.planHighlights.length > 0 && (
+                    <div className="p-4 bg-violet-50 border-2 border-violet-200 rounded-xl text-right">
+                      <h3 className="text-sm font-bold text-violet-900 mb-2">نقاط بارزة</h3>
+                      <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                        {plan.planHighlights.map((h, i) => (
+                          <li key={i}>{h}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <RecoveryRoadmap
-                    personLabel={node.label}
-                    hasAnalysis={!!node.analysis}
-                    hasSelectedSymptoms={!!node.analysis?.selectedSymptoms && node.analysis.selectedSymptoms.length > 0}
-                    hasWrittenSituations={
-                      Object.values(node.firstStepProgress?.stepInputs || {})
-                        .flat()
-                        .filter(s => s?.trim()).length >= 2
-                    }
-                    hasCompletedTraining={node.hasCompletedTraining}
-                    completedRecoverySteps={node.recoveryProgress?.completedSteps?.length || 0}
-                    totalRecoverySteps={10}
-                    journeyStartDate={node.journeyStartDate}
+                    personLabel={plan.personLabel}
+                    hasAnalysis={plan.hasAnalysis}
+                    hasSelectedSymptoms={plan.hasSelectedSymptoms}
+                    hasWrittenSituations={plan.hasWrittenSituations}
+                    hasCompletedTraining={plan.hasCompletedTraining}
+                    completedRecoverySteps={plan.completedRecoverySteps}
+                    totalRecoverySteps={plan.totalRecoverySteps}
+                    journeyStartDate={plan.journeyStartDate}
                   />
 
                   <div className="space-y-3">
-                    <button
-                      type="button"
-                      onClick={() => setStep("reality")}
-                      className="w-full rounded-full bg-gray-100 text-gray-700 px-8 py-3 text-sm font-medium hover:bg-gray-200 active:scale-[0.98] transition-all duration-200 border border-dashed border-gray-300"
-                      title="اختياري: فهم علاقتك بالشخص"
-                    >
-                      استكمال: فهم العلاقة
-                    </button>
+                    {!plan.canShowRecoveryPlan && (
+                      <p className="text-sm text-slate-600 text-center">
+                        {mapCopy.planRuleCounter(plan.situationsCount)} — {mapCopy.planRuleShort}
+                      </p>
+                    )}
+                    {plan.canShowRecoveryPlan && (
+                      <button
+                        type="button"
+                        onClick={handleGoToRecoveryPlan}
+                        className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
+                      >
+                        شوف الخطة الأسبوعية →
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={handleGoToFirstStep}
-                      className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
+                      className={`w-full rounded-full px-8 py-3 text-sm font-medium active:scale-[0.98] transition-all duration-200 ${
+                        plan.canShowRecoveryPlan
+                          ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          : "bg-teal-600 text-white hover:bg-teal-700 shadow-lg font-semibold py-4 text-base"
+                      }`}
                     >
                       {mapCopy.firstStepCta} →
                     </button>
@@ -330,11 +404,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <ProgressIndicator 
-                currentStep={2} 
-                totalSteps={3} 
-                labels={["النتيجة", "أول خطوة", "خطة التعافي"]}
-              />
+              <RecoveryProgressBar node={node} />
 
               <button
                 type="button"
@@ -346,11 +416,17 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               </button>
 
               <div className="mb-6 p-4 bg-purple-50 border-2 border-purple-300 rounded-xl text-right">
+                <p className="text-sm font-bold text-purple-900 mb-2">
+                  🛑 {mapCopy.planRuleShort}
+                </p>
                 <p className="text-sm font-semibold text-purple-900 mb-1">
                   💡 اختار موقف أو اتنين تحب تبدأ بيهم
                 </p>
-                <p className="text-xs text-purple-800">
-                  عشان نقدر نحلل الأنماط ونولّد خطة تعافي مخصصة ليك ({situationsCount}/2)
+                <p className="text-xs text-purple-800 mb-1">
+                  عشان نقدر نحلل الأنماط ونولّد خطة تعافي مخصصة ليك
+                </p>
+                <p className="text-sm font-bold text-purple-700">
+                  {mapCopy.planRuleCounter(plan.situationsCount)}
                 </p>
               </div>
 
@@ -383,11 +459,11 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
                 <button
                   type="button"
                   onClick={handleGoToRecoveryPlan}
-                  disabled={!canShowRecoveryPlan}
+                  disabled={!plan.canShowRecoveryPlan}
                   className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-200"
-                  title={canShowRecoveryPlan ? "شوف خطة التعافي" : "اختار موقف أو اتنين الأول"}
+                  title={plan.canShowRecoveryPlan ? "شوف خطة التعافي" : "اختار موقف أو اتنين الأول"}
                 >
-                  مش دلوقتي – بعدين
+                  {plan.canShowRecoveryPlan ? "شوف خطة التعافي →" : "اكتب موقفين عشان تظهر الخطة"}
                 </button>
                 <button
                   type="button"
@@ -408,11 +484,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <ProgressIndicator 
-                currentStep={3} 
-                totalSteps={3} 
-                labels={["النتيجة", "أول خطوة", "خطة التعافي"]}
-              />
+              <RecoveryProgressBar node={node} />
 
               <button
                 type="button"

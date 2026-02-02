@@ -21,6 +21,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   unknown: HelpCircle
 };
 
+const ENABLED_GOAL_ID = "family";
+
 const tileVariants = {
   hidden: { opacity: 0, y: 12 },
   visible: (i: number) => ({
@@ -43,6 +45,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
   onContinue
 }) => {
   const handleSelect = (goalId: string) => {
+    if (goalId !== ENABLED_GOAL_ID) return;
     const category = resolveAdviceCategory(goalId);
     trackEvent(AnalyticsEvents.GOAL_SELECTED, { goal_id: goalId, category });
     onContinue(category, goalId);
@@ -70,6 +73,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
       >
         {goalPickerCopy.options.map((option, i) => {
           const Icon = ICON_MAP[option.id];
+          const isEnabled = option.id === ENABLED_GOAL_ID;
           const isSelected = initialGoalId != null && option.id === initialGoalId;
           return (
             <motion.button
@@ -79,25 +83,33 @@ export const GoalPicker: FC<GoalPickerProps> = ({
               variants={tileVariants}
               initial="hidden"
               animate="visible"
-              className={`w-full max-w-[280px] rounded-2xl shadow-sm border-2 px-6 py-6 text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 cursor-pointer select-none hover:shadow-md hover:scale-[1.02] ${
-                isSelected
-                  ? "border-teal-500 bg-teal-50 dark:bg-teal-900/40 dark:border-teal-600"
-                  : "border-transparent bg-white dark:bg-slate-800 hover:border-teal-200 dark:hover:border-teal-700 hover:bg-teal-50 dark:hover:bg-teal-900/30"
+              className={`group/card relative w-full max-w-[280px] rounded-2xl shadow-sm border-2 px-6 py-6 text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 select-none ${
+                !isEnabled
+                  ? "border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 cursor-not-allowed opacity-75 focus-visible:ring-gray-300"
+                  : isSelected
+                    ? "border-teal-500 bg-teal-50 dark:bg-teal-900/40 dark:border-teal-600 cursor-pointer focus-visible:ring-teal-400 hover:shadow-md hover:scale-[1.02]"
+                    : "border-transparent bg-white dark:bg-slate-800 hover:border-teal-200 dark:hover:border-teal-700 hover:bg-teal-50 dark:hover:bg-teal-900/30 cursor-pointer focus-visible:ring-teal-400 hover:shadow-md hover:scale-[1.02]"
               }`}
               onClick={() => handleSelect(option.id)}
-              title={option.label}
-              whileTap={{ scale: 0.98 }}
+              title={isEnabled ? option.label : "قريبًا"}
+              disabled={!isEnabled}
+              whileTap={isEnabled ? { scale: 0.98 } : undefined}
             >
+              {!isEnabled && (
+                <span className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/90 dark:bg-slate-900/90 opacity-0 group-hover/card:opacity-100 transition-opacity z-10 text-base font-bold text-slate-600 dark:text-slate-300">
+                  قريبًا
+                </span>
+              )}
               <div className="flex justify-center mb-3">
                 <Icon
-                  className="w-12 h-12 text-slate-500"
+                  className={`w-12 h-12 ${!isEnabled ? "text-slate-400 dark:text-slate-500" : "text-slate-500"}`}
                   aria-hidden="true"
                 />
               </div>
-              <p className="text-base font-bold text-slate-900 dark:text-white mb-1">
+              <p className={`text-base font-bold mb-1 ${!isEnabled ? "text-slate-500 dark:text-slate-500" : "text-slate-900 dark:text-white"}`}>
                 {option.label}
               </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p className={`text-sm leading-relaxed ${!isEnabled ? "text-slate-400 dark:text-slate-500" : "text-slate-500 dark:text-slate-400"}`}>
                 {option.subtitle}
               </p>
             </motion.button>

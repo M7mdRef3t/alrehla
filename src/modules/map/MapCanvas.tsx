@@ -1,10 +1,12 @@
 import type { FC } from "react";
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { X } from "lucide-react";
+import { X, GripVertical } from "lucide-react";
+import { DndContext, TouchSensor, MouseSensor, useSensor, useSensors, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
 import type { Ring, MapNode as MapNodeType } from "./mapTypes";
 import { useMapState } from "../../state/mapState";
 import { useMeState } from "../../state/meState";
+import { mapCopy } from "../../copy/map";
 
 interface RingProps {
   ring: Ring;
@@ -48,6 +50,7 @@ interface NodeProps {
   nodeIndex: number;
   totalInRing: number;
   onClick?: (id: string) => void;
+  justDraggedId?: string | null;
 }
 
 // Helper function to calculate position based on ring, index, and total nodes in ring
@@ -72,9 +75,10 @@ const getRingPosition = (ring: Ring, nodeIndex: number, totalInRing: number): { 
   return { x, y };
 };
 
-const MapNodeView: FC<NodeProps> = ({ node, nodeIndex, totalInRing, onClick }) => {
+const MapNodeView: FC<NodeProps> = ({ node, nodeIndex, totalInRing, onClick, justDraggedId }) => {
   const [showDelete, setShowDelete] = useState(false);
   const deleteNode = useMapState((s) => s.deleteNode);
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: node.id });
 
   // Check for mismatch between current position and recommended position
   const hasMismatch = node.analysis?.recommendedRing && node.ring !== node.analysis.recommendedRing;
@@ -95,9 +99,8 @@ const MapNodeView: FC<NodeProps> = ({ node, nodeIndex, totalInRing, onClick }) =
   };
 
   const handleClick = () => {
-    if (onClick) {
-      onClick(node.id);
-    }
+    if (node.id === justDraggedId) return;
+    if (onClick) onClick(node.id);
   };
 
   return (
@@ -107,35 +110,51 @@ const MapNodeView: FC<NodeProps> = ({ node, nodeIndex, totalInRing, onClick }) =
       onMouseLeave={() => setShowDelete(false)}
       className="relative z-20"
     >
-      <motion.button
-        type="button"
-        className={`rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer select-none ${
+      <div
+        ref={setNodeRef}
+        className={`rounded-full shadow-sm hover:shadow-lg transition-all duration-200 select-none flex items-center gap-0.5 pr-1 ${
+          isDragging ? "opacity-90 scale-105" : ""
+        } ${
           hasMismatch
             ? "bg-amber-50 border-2 border-amber-500 text-amber-900"
             : "bg-white border border-gray-200 text-slate-900"
         }`}
-        onClick={handleClick}
-        title={
-          hasMismatch
-            ? `⚠️ تعارض: موجود حالياً في دائرة مختلفة عن التوصية - اضغط للتفاصيل`
-            : `اضغط لرؤية تفاصيل ${node.label}`
-        }
-        whileHover={{
-          scale: 1.05,
-          boxShadow: hasMismatch
-            ? "0 10px 25px -5px rgba(245, 158, 11, 0.3), 0 4px 6px -2px rgba(245, 158, 11, 0.15)"
-            : "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
-        }}
-        whileTap={{
-          scale: 0.98,
-          boxShadow: hasMismatch
-            ? "0 20px 40px -10px rgba(245, 158, 11, 0.4), 0 8px 12px -4px rgba(245, 158, 11, 0.2)"
-            : "0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 8px 12px -4px rgba(0, 0, 0, 0.08)"
-        }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
-        <span className="text-xs md:text-sm font-semibold">{node.label}</span>
-      </motion.button>
+        <motion.button
+          type="button"
+          onClick={handleClick}
+          className="rounded-l-full pl-5 pr-2 py-2.5 text-sm font-semibold cursor-pointer flex-1 text-right min-w-0"
+          title={
+            hasMismatch
+              ? `⚠️ تعارض — اضغط للتفاصيل`
+              : `اضغط لرؤية تفاصيل ${node.label}`
+          }
+          whileHover={{
+            scale: 1.02,
+            boxShadow: hasMismatch
+              ? "0 10px 25px -5px rgba(245, 158, 11, 0.3), 0 4px 6px -2px rgba(245, 158, 11, 0.15)"
+              : "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
+          }}
+          whileTap={{
+            scale: 0.98,
+            boxShadow: hasMismatch
+              ? "0 20px 40px -10px rgba(245, 158, 11, 0.4), 0 8px 12px -4px rgba(245, 158, 11, 0.2)"
+              : "0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 8px 12px -4px rgba(0, 0, 0, 0.08)"
+          }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        >
+          <span className="text-xs md:text-sm font-semibold">{node.label}</span>
+        </motion.button>
+        <span
+          {...listeners}
+          {...attributes}
+          className={`shrink-0 p-1.5 rounded-r-full cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 hover:bg-slate-100/80 touch-none`}
+          title="اسحب لتحريك الدائرة"
+          aria-label="اسحب لتحريك"
+        >
+          <GripVertical className="w-4 h-4" strokeWidth={2} />
+        </span>
+      </div>
 
       {/* Warning indicator for mismatch */}
       {hasMismatch && (
@@ -178,6 +197,30 @@ const MapNodeView: FC<NodeProps> = ({ node, nodeIndex, totalInRing, onClick }) =
   );
 };
 
+const RING_LABELS: Record<Ring, string> = {
+  green: mapCopy.legendGreen,
+  yellow: mapCopy.legendYellow,
+  red: mapCopy.legendRed
+};
+
+const DroppableRing: FC<{ id: Ring; sizePct: number; zIndex: number }> = ({ id, sizePct, zIndex }) => {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-auto transition-opacity"
+      style={{
+        width: `${sizePct}%`,
+        height: `${sizePct}%`,
+        zIndex,
+        opacity: isOver ? 0.25 : 0,
+        backgroundColor: id === "green" ? "#14B8A6" : id === "yellow" ? "#FBBF24" : "#FB7185"
+      }}
+      aria-hidden
+    />
+  );
+};
+
 interface MapCanvasProps {
   onNodeClick?: (id: string) => void;
   onMeClick?: () => void;
@@ -189,10 +232,46 @@ const ME_CENTER_COLORS: Record<string, { fill: string; shadow: string }> = {
   charged: { fill: "#0D9488", shadow: "0 2px 12px rgba(13, 148, 136, 0.5)" }
 };
 
+type PendingMove = { nodeId: string; nodeLabel: string; fromRing: Ring; toRing: Ring };
+
 export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick }) => {
   const nodes = useMapState((s) => s.nodes);
+  const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
   const battery = useMeState((s) => s.battery);
   const meStyle = ME_CENTER_COLORS[battery] ?? ME_CENTER_COLORS.okay;
+
+  const [pendingMove, setPendingMove] = useState<PendingMove | null>(null);
+  const [justDraggedId, setJustDraggedId] = useState<string | null>(null);
+  const dragTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current); }, []);
+
+  const mouseSensor = useSensor(MouseSensor);
+  const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } });
+  const sensors = useSensors(mouseSensor, touchSensor);
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const activeId = String(event.active.id);
+      const overId = event.over?.id;
+      const node = nodes.find((n) => n.id === activeId);
+      if (!node || typeof overId !== "string" || (overId !== "green" && overId !== "yellow" && overId !== "red")) {
+        return;
+      }
+      const toRing = overId as Ring;
+      if (node.ring === toRing) return;
+      setPendingMove({ nodeId: node.id, nodeLabel: node.label, fromRing: node.ring, toRing });
+      setJustDraggedId(node.id);
+      if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current);
+      dragTimeoutRef.current = setTimeout(() => setJustDraggedId(null), 400);
+    },
+    [nodes]
+  );
+
+  const confirmPlacement = () => {
+    if (!pendingMove) return;
+    moveNodeToRing(pendingMove.nodeId, pendingMove.toRing);
+    setPendingMove(null);
+  };
 
   const nodesByRing = {
     green: nodes.filter(n => n.ring === "green"),
@@ -201,7 +280,9 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick }) => {
   };
 
   return (
-    <div className="relative w-full max-w-md mx-auto aspect-square mt-8" id="map-canvas">
+    <div className="w-full max-w-md mx-auto mt-8 flex flex-col gap-3">
+      <div className="relative w-full aspect-square" id="map-canvas">
+      <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
       <div className="absolute inset-0 overflow-hidden">
         <svg
           viewBox="0 0 100 100"
@@ -256,11 +337,17 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick }) => {
                   nodeIndex={nodeIndex}
                   totalInRing={totalInRing}
                   onClick={onNodeClick}
+                  justDraggedId={justDraggedId}
                 />
               );
             })}
           </div>
         </div>
+
+        {/* مناطق إفلات الدوائر */}
+        <DroppableRing id="red" sizePct={84} zIndex={10} />
+        <DroppableRing id="yellow" sizePct={64} zIndex={11} />
+        <DroppableRing id="green" sizePct={44} zIndex={12} />
 
         {/* منطقة نقر مركز "أنا" — تفتح بطاقة أنا */}
         {onMeClick && (
@@ -276,6 +363,32 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick }) => {
           />
         )}
       </div>
+      </DndContext>
+
+      {pendingMove && (
+        <div className="relative z-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 px-4 py-3 rounded-xl bg-teal-50 border-2 border-teal-200 text-right shadow-lg">
+          <p className="text-sm font-semibold text-slate-800 flex-1">
+            نقل "{pendingMove.nodeLabel}" إلى {RING_LABELS[pendingMove.toRing]}؟
+          </p>
+          <div className="flex gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setPendingMove(null)}
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-200 text-slate-700 hover:bg-slate-300"
+            >
+              إلغاء
+            </button>
+            <button
+              type="button"
+              onClick={confirmPlacement}
+              className="px-4 py-2 rounded-lg text-sm font-semibold bg-teal-600 text-white hover:bg-teal-700"
+            >
+              {mapCopy.confirmPlacement}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
     </div>
   );
 };

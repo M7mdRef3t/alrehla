@@ -1,14 +1,14 @@
 import { create } from "zustand";
-import type { MapNode, Ring, PersonNote, SituationLog } from "../modules/map/mapTypes";
+import type { MapNode, Ring, PersonNote, SituationLog, HealthAnswers } from "../modules/map/mapTypes";
 import { loadStoredState, saveStoredState } from "../services/localStore";
 
 interface MapState {
   nodes: MapNode[];
   showPlacementTooltip: boolean;
-  addNode: (label: string, ring?: Ring, analysis?: { score: number; answers: { q1: boolean; q2: boolean; q3: boolean } }) => string;
+  addNode: (label: string, ring?: Ring, analysis?: { score: number; answers: HealthAnswers }) => string;
   dismissPlacementTooltip: () => void;
   moveNodeToRing: (id: string, ring: Ring) => void;
-  analyzeNode: (id: string, result: { score: number; answers: { q1: boolean; q2: boolean; q3: boolean } }) => void;
+  analyzeNode: (id: string, result: { score: number; answers: HealthAnswers }) => void;
   addNoteToNode: (nodeId: string, text: string, comment?: string) => void;
   deleteNoteFromNode: (nodeId: string, noteId: string) => void;
   toggleStepCompletion: (nodeId: string, stepId: string) => void;
@@ -45,11 +45,11 @@ export const useMapState = create<MapState>((set, get) => ({
   addNode: (label: string, ring: Ring = "yellow", analysis) => {
     let processedAnalysis;
     if (analysis) {
-      // Calculate recommended ring based on score
+      // Score 0–6 (غالبًا=2، أحيانًا=1، نادراً=0). عالي = تأثير سلبي
       let recommendedRing: Ring;
-      if (analysis.score > 2) {
+      if (analysis.score >= 5) {
         recommendedRing = "red";
-      } else if (analysis.score >= 1) {
+      } else if (analysis.score >= 2) {
         recommendedRing = "yellow";
       } else {
         recommendedRing = "green";
@@ -100,11 +100,10 @@ export const useMapState = create<MapState>((set, get) => ({
     set({ nodes: nextNodes });
   },
   analyzeNode: (id, result) => {
-    // Calculate recommended ring based on score
     let recommendedRing: Ring;
-    if (result.score > 2) {
+    if (result.score >= 5) {
       recommendedRing = "red";
-    } else if (result.score >= 1) {
+    } else if (result.score >= 2) {
       recommendedRing = "yellow";
     } else {
       recommendedRing = "green";

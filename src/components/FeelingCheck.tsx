@@ -2,11 +2,35 @@ import type { FC } from "react";
 import React from "react";
 import { feelingCopy } from "../copy/feeling";
 
+export type FeelingOption = "often" | "sometimes" | "rarely";
+
 export type FeelingAnswers = {
-  q1: boolean;
-  q2: boolean;
-  q3: boolean;
+  q1: FeelingOption;
+  q2: FeelingOption;
+  q3: FeelingOption;
 };
+
+const OPTIONS: FeelingOption[] = ["often", "sometimes", "rarely"];
+
+/** غالبًا=2، أحيانًا=1، نادراً=0. المجموع عالي = تأثير سلبي. 0–1 أخضر، 2–4 أصفر، 5–6 أحمر */
+export function feelingScoreToRing(answers: FeelingAnswers): "green" | "yellow" | "red" {
+  const score =
+    (answers.q1 === "often" ? 2 : answers.q1 === "sometimes" ? 1 : 0) +
+    (answers.q2 === "often" ? 2 : answers.q2 === "sometimes" ? 1 : 0) +
+    (answers.q3 === "often" ? 2 : answers.q3 === "sometimes" ? 1 : 0);
+  if (score <= 1) return "green";
+  if (score <= 4) return "yellow";
+  return "red";
+}
+
+/** نفس المقياس، النتيجة من 0 لـ 6 (للتخزين/العرض) */
+export function feelingScore(answers: FeelingAnswers): number {
+  return (
+    (answers.q1 === "often" ? 2 : answers.q1 === "sometimes" ? 1 : 0) +
+    (answers.q2 === "often" ? 2 : answers.q2 === "sometimes" ? 1 : 0) +
+    (answers.q3 === "often" ? 2 : answers.q3 === "sometimes" ? 1 : 0)
+  );
+}
 
 interface FeelingCheckProps {
   personLabel: string;
@@ -18,27 +42,20 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
   onDone
 }) => {
   const [answers, setAnswers] = React.useState<FeelingAnswers>({
-    q1: false,
-    q2: false,
-    q3: false
-  });
-  
-  // Track which questions have been answered
-  const [answered, setAnswered] = React.useState<Record<string, boolean>>({
-    q1: false,
-    q2: false,
-    q3: false
+    q1: "sometimes",
+    q2: "sometimes",
+    q3: "sometimes"
   });
 
-  const handleAnswer = (key: keyof FeelingAnswers, value: boolean) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [key]: value
-    }));
-    setAnswered((prev) => ({
-      ...prev,
-      [key]: true
-    }));
+  const [answered, setAnswered] = React.useState<Record<string, boolean>>({
+    q1: true,
+    q2: true,
+    q3: true
+  });
+
+  const handleAnswer = (key: keyof FeelingAnswers, value: FeelingOption) => {
+    setAnswers((prev) => ({ ...prev, [key]: value }));
+    setAnswered((prev) => ({ ...prev, [key]: true }));
   };
 
   return (
@@ -54,98 +71,32 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
       </p>
 
       <ul className="list-none mt-8 space-y-4 text-sm text-slate-800 max-w-md mx-auto">
-        {/* Question 1 */}
-        <li className="p-4 bg-white border border-gray-200 rounded-xl text-right">
-          <p className="font-medium mb-3">{feelingCopy.q1}</p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className={`flex-1 rounded-full px-4 py-2.5 text-sm font-medium active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                answered.q1 && answers.q1
-                  ? "bg-rose-100 text-rose-700 border-2 border-rose-500 shadow-sm focus-visible:ring-rose-400"
-                  : "bg-gray-100 text-gray-700 hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-gray-400"
-              }`}
-              onClick={() => handleAnswer("q1", true)}
-              title="نعم"
-            >
-              نعم {answered.q1 && answers.q1 && "✓"}
-            </button>
-            <button
-              type="button"
-              className={`flex-1 rounded-full px-4 py-2.5 text-sm font-medium active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                answered.q1 && !answers.q1
-                  ? "bg-teal-100 text-teal-700 border-2 border-teal-500 shadow-sm focus-visible:ring-teal-400"
-                  : "bg-gray-100 text-gray-700 hover:bg-teal-50 hover:text-teal-600 focus-visible:ring-gray-400"
-              }`}
-              onClick={() => handleAnswer("q1", false)}
-              title="لا"
-            >
-              لا {answered.q1 && !answers.q1 && "✓"}
-            </button>
-          </div>
-        </li>
-
-        {/* Question 2 */}
-        <li className="p-4 bg-white border border-gray-200 rounded-xl text-right">
-          <p className="font-medium mb-3">{feelingCopy.q2}</p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className={`flex-1 rounded-full px-4 py-2.5 text-sm font-medium active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                answered.q2 && answers.q2
-                  ? "bg-rose-100 text-rose-700 border-2 border-rose-500 shadow-sm focus-visible:ring-rose-400"
-                  : "bg-gray-100 text-gray-700 hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-gray-400"
-              }`}
-              onClick={() => handleAnswer("q2", true)}
-              title="نعم"
-            >
-              نعم {answered.q2 && answers.q2 && "✓"}
-            </button>
-            <button
-              type="button"
-              className={`flex-1 rounded-full px-4 py-2.5 text-sm font-medium active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                answered.q2 && !answers.q2
-                  ? "bg-teal-100 text-teal-700 border-2 border-teal-500 shadow-sm focus-visible:ring-teal-400"
-                  : "bg-gray-100 text-gray-700 hover:bg-teal-50 hover:text-teal-600 focus-visible:ring-gray-400"
-              }`}
-              onClick={() => handleAnswer("q2", false)}
-              title="لا"
-            >
-              لا {answered.q2 && !answers.q2 && "✓"}
-            </button>
-          </div>
-        </li>
-
-        {/* Question 3 */}
-        <li className="p-4 bg-white border border-gray-200 rounded-xl text-right">
-          <p className="font-medium mb-3">{feelingCopy.q3}</p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className={`flex-1 rounded-full px-4 py-2.5 text-sm font-medium active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                answered.q3 && answers.q3
-                  ? "bg-rose-100 text-rose-700 border-2 border-rose-500 shadow-sm focus-visible:ring-rose-400"
-                  : "bg-gray-100 text-gray-700 hover:bg-rose-50 hover:text-rose-600 focus-visible:ring-gray-400"
-              }`}
-              onClick={() => handleAnswer("q3", true)}
-              title="نعم"
-            >
-              نعم {answered.q3 && answers.q3 && "✓"}
-            </button>
-            <button
-              type="button"
-              className={`flex-1 rounded-full px-4 py-2.5 text-sm font-medium active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                answered.q3 && !answers.q3
-                  ? "bg-teal-100 text-teal-700 border-2 border-teal-500 shadow-sm focus-visible:ring-teal-400"
-                  : "bg-gray-100 text-gray-700 hover:bg-teal-50 hover:text-teal-600 focus-visible:ring-gray-400"
-              }`}
-              onClick={() => handleAnswer("q3", false)}
-              title="لا"
-            >
-              لا {answered.q3 && !answers.q3 && "✓"}
-            </button>
-          </div>
-        </li>
+        {(["q1", "q2", "q3"] as const).map((key) => (
+          <li key={key} className="p-4 bg-white border border-gray-200 rounded-xl text-right">
+            <p className="font-medium mb-3">{feelingCopy[key]}</p>
+            <div className="flex gap-2">
+              {OPTIONS.map((opt) => {
+                const isSelected = answers[key] === opt;
+                const label = feelingCopy.options[opt];
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    className={`flex-1 rounded-full px-3 py-2.5 text-sm font-medium active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                      isSelected
+                        ? "bg-teal-100 text-teal-700 border-2 border-teal-500 shadow-sm focus-visible:ring-teal-400"
+                        : "bg-gray-100 text-gray-700 hover:bg-teal-50 hover:text-teal-600 focus-visible:ring-gray-400"
+                    }`}
+                    onClick={() => handleAnswer(key, opt)}
+                    title={label}
+                  >
+                    {label} {isSelected && "✓"}
+                  </button>
+                );
+              })}
+            </div>
+          </li>
+        ))}
       </ul>
 
       <div className="mt-8">
@@ -154,7 +105,7 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
           disabled={!answered.q1 || !answered.q2 || !answered.q3}
           className="rounded-full bg-teal-600 text-white px-10 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.99] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
           onClick={() => onDone(answers)}
-          title={answered.q1 && answered.q2 && answered.q3 ? "شوف النتيجة واقتراح الفعل" : "جاوب على كل الأسئلة الأول"}
+          title={answered.q1 && answered.q2 && answered.q3 ? "التالي: فين الشخص في حياتك؟" : "جاوب على كل الأسئلة الأول"}
         >
           {feelingCopy.cta}
         </button>

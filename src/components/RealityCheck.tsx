@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import React from "react";
+import { ArrowLeft } from "lucide-react";
 import { realityCopy } from "../copy/reality";
 
 export type RealityOption = "often" | "sometimes" | "rarely";
@@ -26,11 +27,14 @@ export function realityScoreToRing(answers: RealityAnswers): "green" | "yellow" 
 interface RealityCheckProps {
   personLabel: string;
   onDone: (answers: RealityAnswers) => void;
+  /** عند التوفير يظهر زر رجوع للشاشة السابقة */
+  onBack?: () => void;
 }
 
 export const RealityCheck: FC<RealityCheckProps> = ({
   personLabel,
-  onDone
+  onDone,
+  onBack
 }) => {
   const [answers, setAnswers] = React.useState<RealityAnswers>({
     q1: "sometimes",
@@ -56,6 +60,17 @@ export const RealityCheck: FC<RealityCheckProps> = ({
       className="mt-10 text-center"
       aria-labelledby="reality-title"
     >
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors active:scale-95 rounded-lg hover:bg-gray-100 w-full justify-start"
+          aria-label="رجوع"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="font-medium">رجوع</span>
+        </button>
+      )}
       <h2 id="reality-title" className="text-2xl font-bold text-slate-900 mb-2">
         {realityCopy.title}
       </h2>

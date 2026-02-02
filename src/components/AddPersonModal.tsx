@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { DndContext, useDraggable, useDroppable, type DragEndEvent, TouchSensor, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { 
   User, 
@@ -12,20 +12,16 @@ import {
   UserX,
   Building2,
   ArrowLeft,
+  UserPlus,
+  X,
   type LucideIcon 
 } from "lucide-react";
 import { mapCopy } from "../copy/map";
 import { useMapState } from "../state/mapState";
-import { FeelingCheck, type FeelingAnswers } from "./FeelingCheck";
-import { ResultActionToolkit } from "./ResultActionToolkit";
-import { DynamicRecoveryPlan } from "./DynamicRecoveryPlan";
-import { ProgressIndicator } from "./ProgressIndicator";
-import { SymptomsChecklist } from "./SymptomsChecklist";
-import { PersonalizedTraining } from "./PersonalizedTraining";
-import { SuggestedPlacement } from "./SuggestedPlacement";
+import { FeelingCheck, type FeelingAnswers, feelingScore, feelingScoreToRing } from "./FeelingCheck";
+import { RealityCheck, realityScoreToRing } from "./RealityCheck";
 import type { Ring } from "../modules/map/mapTypes";
 import type { AdviceCategory } from "../data/adviceScripts";
-import { adviceDatabase } from "../data/adviceScripts";
 import { getGoalAction } from "../copy/goalPicker";
 
 // Smart suggestions with icons based on goalId
@@ -40,9 +36,9 @@ const SUGGESTIONS: Record<string, SuggestionCard[]> = {
     { label: "أم", icon: Heart },
     { label: "أخ", icon: Users },
     { label: "أخت", icon: UserCircle },
-    { label: "ابن", icon: User },
+    { label: "ابن", icon: UserCheck },
     { label: "ابنة", icon: UserCircle },
-    { label: "قريب", icon: UserCheck }
+    { label: "قريب", icon: Users }
   ],
   work: [
     { label: "مدير", icon: Briefcase },
@@ -176,14 +172,21 @@ function PlacementStep({ personLabel, onPlace }: { personLabel: string; onPlace:
   );
 }
 
+type AddPersonStep =
+  | "select"
+  | "feeling"
+  | "position"
+  | "result";
+
 interface AddPersonModalProps {
   goalId: string;
   category: AdviceCategory;
-  onClose: () => void;
+  /** عند "تم" يُستدعى بدون معامل. عند "افتح [الاسم]" يُستدعى بمعرّف العقدة لفتح نافذة الشخص */
+  onClose: (openNodeId?: string) => void;
 }
 
 export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onClose }) => {
-  const [step, setStep] = useState<"select" | "feeling" | "placement" | "result" | "firstStep" | "recoveryPlan">("select");
+  const [step, setStep] = useState<AddPersonStep>("select");
   const [selectedTitle, setSelectedTitle] = useState<string>("");
   const [customTitleInput, setCustomTitleInput] = useState("");
   const [showCustomTitleInput, setShowCustomTitleInput] = useState(false);
@@ -194,15 +197,6 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
   const [addedNodeId, setAddedNodeId] = useState<string | null>(null);
   const [pendingPlacement, setPendingPlacement] = useState<{ finalLabel: string; score: number; healthAnswers: FeelingAnswers } | null>(null);
   const addNode = useMapState((s) => s.addNode);
-  const toggleFirstStepCompletion = useMapState((s) => s.toggleFirstStepCompletion);
-  const updateFirstStepInputs = useMapState((s) => s.updateFirstStepInputs);
-  const toggleStepCompletion = useMapState((s) => s.toggleStepCompletion);
-  const updateDynamicStepInput = useMapState((s) => s.updateDynamicStepInput);
-  const updateStepFeedback = useMapState((s) => s.updateStepFeedback);
-  const updateLastViewedStep = useMapState((s) => s.updateLastViewedStep);
-  const updateNodeSymptoms = useMapState((s) => s.updateNodeSymptoms);
-  const markTrainingComplete = useMapState((s) => s.markTrainingComplete);
-  const nodes = useMapState((s) => s.nodes);
 
   const suggestions = SUGGESTIONS[goalId] || SUGGESTIONS.general;
 
@@ -215,25 +209,26 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
   };
 
   const handleFeelingDone = (healthAnswers: FeelingAnswers) => {
-    // Calculate health score: count "yes" answers (true = unhealthy)
-    const score = (healthAnswers.q1 ? 1 : 0) + (healthAnswers.q2 ? 1 : 0) + (healthAnswers.q3 ? 1 : 0);
-    
-    // Determine RECOMMENDED ring based on health analysis
-    let ring: Ring;
-    if (score >= 2) {
-      ring = "red";    // 2-3 yes = should be distant (danger/exhausting)
-    } else if (score === 1) {
-      ring = "yellow"; // 1 yes = should be conditional
-    } else {
-      ring = "green";  // 0 yes = can be close (healthy)
-    }
-
+    const score = feelingScore(healthAnswers);
+    const ring = feelingScoreToRing(healthAnswers);
     setRecommendedRing(ring);
     setHealthScore(score);
 
     const finalLabel = customName.trim() || selectedTitle;
     setPendingPlacement({ finalLabel, score, healthAnswers });
-    setStep("placement");
+    // بعد تحليل تأثير العلاقة، نروح لشاشة "فين الشخص ده في حياتك؟"
+    setStep("position");
+  };
+
+  const handleRealityDone = (answers: Parameters<typeof realityScoreToRing>[0]) => {
+    if (!pendingPlacement) return;
+    const ring = realityScoreToRing(answers);
+    const { finalLabel, score, healthAnswers } = pendingPlacement;
+    const nodeId = addNode(finalLabel, ring, { score, answers: healthAnswers });
+    setAddedNodeId(nodeId);
+    setRecommendedRing(ring);
+    setPendingPlacement(null);
+    setStep("result");
   };
 
   const handlePlacementDrop = (ring: Ring) => {
@@ -243,43 +238,6 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
     setAddedNodeId(nodeId);
     setPendingPlacement(null);
     setStep("result");
-  };
-
-  const handleFinish = () => {
-    onClose();
-  };
-
-  const handleGoToFirstStep = () => {
-    setStep("firstStep");
-    if (addedNodeId) {
-      updateLastViewedStep(addedNodeId, "firstStep");
-    }
-  };
-
-  const handleGoToRecoveryPlan = () => {
-    setStep("recoveryPlan");
-    if (addedNodeId) {
-      updateLastViewedStep(addedNodeId, "recoveryPlan");
-    }
-  };
-
-  const handleCompleteLater = () => {
-    // Save current step before closing
-    if (addedNodeId && (step === "result" || step === "firstStep" || step === "recoveryPlan")) {
-      updateLastViewedStep(addedNodeId, step as "result" | "firstStep" | "recoveryPlan");
-    }
-    onClose();
-  };
-
-  // Training modal state
-  const [showTraining, setShowTraining] = useState(false);
-
-  const handleBack = () => {
-    if (step === "firstStep") {
-      setStep("result");
-    } else if (step === "recoveryPlan") {
-      setStep("firstStep");
-    }
   };
 
   const handleTitleSelect = (title: string) => {
@@ -293,22 +251,6 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
     setSelectedTitle(title);
   };
 
-  const getRingLabel = (ring: Ring): string => {
-    switch (ring) {
-      case "green": return "القرب الصحي";
-      case "yellow": return "القرب المشروط";
-      case "red": return "الخطر والاستنزاف";
-    }
-  };
-
-  // Calculate progress step
-  const getProgressStep = (): number => {
-    if (step === "result") return 1;
-    if (step === "firstStep") return 2;
-    if (step === "recoveryPlan") return 3;
-    return 0;
-  };
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
@@ -318,12 +260,20 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
       aria-modal="true"
     >
       <motion.div
-        className="bg-white border border-gray-200 rounded-2xl px-8 py-8 max-w-md w-full shadow-xl max-h-[90vh] overflow-y-auto"
+        className="relative bg-white border border-gray-200 rounded-2xl px-8 py-8 max-w-md w-full shadow-xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         initial={{ scale: 0.95, opacity: 0, y: 10 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
       >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-slate-500 hover:text-slate-700"
+          aria-label="إغلاق"
+        >
+          <X className="w-5 h-5" />
+        </button>
         {step === "select" ? (
           <form onSubmit={handleContinue} className="text-right">
             <h2 id="add-person-title" className="text-xl font-bold text-slate-900 mb-4">
@@ -335,31 +285,30 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
           <label className="block text-sm font-medium text-gray-700 mb-2">
             اختر اللقب <span className="text-red-500">*</span>
           </label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-4">
             {suggestions.map((suggestion) => {
               const Icon = suggestion.icon;
               const isSelected = selectedTitle === suggestion.label && !showCustomTitleInput;
-              const isPillar = goalId === "family" && (suggestion.label === "أب" || suggestion.label === "أم");
               return (
                 <motion.button
                   key={suggestion.label}
                   type="button"
                   onClick={() => handleTitleSelect(suggestion.label)}
-                  className={`flex flex-col items-center gap-1.5 rounded-xl border-2 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-1 ${
+                  className={`flex flex-col items-center justify-center gap-2 min-h-[88px] rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 p-3 ${
                     isSelected
-                      ? "bg-teal-50 border-teal-500 shadow-md"
-                      : "bg-white border-gray-100 hover:border-teal-300 hover:bg-teal-50"
-                  } ${isPillar ? "p-3" : "p-2.5"}`}
+                      ? "bg-teal-50 shadow-sm ring-1 ring-teal-200"
+                      : "bg-slate-50/80 hover:bg-teal-50/60 shadow-none hover:shadow-sm"
+                  }`}
                   title={`اختر "${suggestion.label}"`}
                   whileHover={{ scale: isSelected ? 1 : 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <div className={`rounded-full flex items-center justify-center ${
+                  <div className={`rounded-full flex items-center justify-center w-10 h-10 shrink-0 ${
                     isSelected ? "bg-teal-200" : "bg-teal-100"
-                  } ${isPillar ? "w-10 h-10" : "w-8 h-8"}`}>
-                    <Icon className={`${isSelected ? "text-teal-700" : "text-teal-600"} ${isPillar ? "w-5 h-5" : "w-4 h-4"}`} strokeWidth={2} />
+                  }`}>
+                    <Icon className={`${isSelected ? "text-teal-700" : "text-teal-600"} w-5 h-5`} strokeWidth={2} />
                   </div>
-                  <span className={`font-semibold ${isSelected ? "text-teal-900" : "text-slate-900"} ${isPillar ? "text-base" : "text-xs"}`}>
+                  <span className={`font-semibold text-sm ${isSelected ? "text-teal-900" : "text-slate-900"}`}>
                     {suggestion.label}
                   </span>
                 </motion.button>
@@ -368,16 +317,23 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
             <motion.button
               type="button"
               onClick={() => handleTitleSelect("__custom__")}
-              className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl border-2 border-dashed transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-1 ${
+              className={`flex flex-col items-center justify-center gap-2 min-h-[88px] rounded-2xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 p-3 ${
                 showCustomTitleInput && customTitleInput.trim()
-                  ? "bg-gray-100 border-gray-400"
-                  : "bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-gray-100"
+                  ? "bg-teal-50 shadow-sm ring-1 ring-teal-200"
+                  : "bg-slate-50/80 hover:bg-teal-50/60 shadow-none hover:shadow-sm"
               }`}
               title="اكتب لقب يدوياً"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <span className="text-xs font-medium text-gray-600">حد تاني</span>
+              <div className={`rounded-full flex items-center justify-center w-10 h-10 shrink-0 ${
+                showCustomTitleInput && customTitleInput.trim() ? "bg-teal-200" : "bg-slate-100"
+              }`}>
+                <UserPlus className={`${showCustomTitleInput && customTitleInput.trim() ? "text-teal-700" : "text-slate-500"} w-5 h-5`} strokeWidth={2} />
+              </div>
+              <span className={`font-semibold text-sm ${showCustomTitleInput && customTitleInput.trim() ? "text-teal-900" : "text-slate-600"}`}>
+                حد تاني
+              </span>
             </motion.button>
           </div>
           {showCustomTitleInput && (
@@ -452,6 +408,12 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
               onDone={handleFeelingDone}
             />
           </div>
+        ) : step === "position" && pendingPlacement ? (
+          <RealityCheck
+            personLabel={pendingPlacement.finalLabel}
+            onDone={handleRealityDone}
+            onBack={() => setStep("feeling")}
+          />
         ) : step === "placement" && pendingPlacement ? (
           <PlacementStep
             personLabel={pendingPlacement.finalLabel}
@@ -464,113 +426,18 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
             score={healthScore}
             category={category}
             goalId={goalId}
-            nodeId={addedNodeId || undefined}
-            onGoToFirstStep={handleGoToFirstStep}
-            onCompleteLater={handleCompleteLater}
-          />
-        ) : step === "firstStep" ? (
-          <FirstStepScreen
-            personLabel={customName.trim() || selectedTitle}
-            ring={recommendedRing}
-            score={healthScore}
-            category={category}
-            nodeId={addedNodeId || undefined}
-            selectedSymptoms={
-              addedNodeId
-                ? nodes.find(n => n.id === addedNodeId)?.analysis?.selectedSymptoms
-                : undefined
-            }
-            completedFirstSteps={
-              addedNodeId 
-                ? nodes.find(n => n.id === addedNodeId)?.firstStepProgress?.completedFirstSteps || []
-                : []
-            }
-            stepInputs={
-              addedNodeId
-                ? nodes.find(n => n.id === addedNodeId)?.firstStepProgress?.stepInputs || {}
-                : {}
-            }
-            onToggleFirstStep={
-              addedNodeId
-                ? (stepId) => toggleFirstStepCompletion(addedNodeId, stepId)
-                : undefined
-            }
-            onUpdateStepInputs={
-              addedNodeId
-                ? (stepId, inputs) => updateFirstStepInputs(addedNodeId, stepId, inputs)
-                : undefined
-            }
-            onGoToRecoveryPlan={handleGoToRecoveryPlan}
-            onCompleteLater={handleCompleteLater}
-            onBack={handleBack}
-            onOpenTraining={() => setShowTraining(true)}
-          />
-        ) : step === "recoveryPlan" ? (
-          <RecoveryPlanScreen
-            personLabel={customName.trim() || selectedTitle}
-            ring={recommendedRing}
-            nodeId={addedNodeId || undefined}
-            situations={
-              addedNodeId
-                ? Object.values(nodes.find(n => n.id === addedNodeId)?.firstStepProgress?.stepInputs || {}).flat().filter(s => s?.trim())
-                : []
-            }
-            completedSteps={
-              addedNodeId
-                ? nodes.find(n => n.id === addedNodeId)?.recoveryProgress?.completedSteps || []
-                : []
-            }
-            stepInputs={
-              addedNodeId
-                ? nodes.find(n => n.id === addedNodeId)?.recoveryProgress?.dynamicStepInputs || {}
-                : {}
-            }
-            onToggleStep={
-              addedNodeId
-                ? (stepId) => toggleStepCompletion(addedNodeId, stepId)
-                : undefined
-            }
-            onUpdateStepInput={
-              addedNodeId
-                ? (stepId, value) => updateDynamicStepInput(addedNodeId, stepId, value)
-                : undefined
-            }
-            stepFeedback={
-              addedNodeId
-                ? (nodes.find(n => n.id === addedNodeId)?.recoveryProgress?.stepFeedback || {})
-                : {}
-            }
-            onStepFeedback={
-              addedNodeId
-                ? (stepId, value) => updateStepFeedback(addedNodeId, stepId, value)
-                : undefined
-            }
-            onFinish={handleFinish}
-            onBack={handleBack}
+            summaryOnly
+            addedNodeId={addedNodeId ?? undefined}
+            onClose={onClose}
           />
         ) : null}
-
-        {/* Personalized Training Modal */}
-        {showTraining && addedNodeId && (
-          <PersonalizedTraining
-            personLabel={customName.trim() || selectedTitle}
-            selectedSymptoms={
-              nodes.find(n => n.id === addedNodeId)?.analysis?.selectedSymptoms || []
-            }
-            ring={nodes.find(n => n.id === addedNodeId)?.ring ?? recommendedRing}
-            goalId={goalId}
-            nodeId={addedNodeId || undefined}
-            onClose={() => setShowTraining(false)}
-            onComplete={() => addedNodeId && markTrainingComplete(addedNodeId)}
-          />
-        )}
       </motion.div>
     </div>
   );
 };
 
 // ============================================
-// Screen 1: Result Screen (النتيجة الأساسية)
+// Result Screen — في الإضافة: البطاقتين + تم + افتح [الاسم].
 // ============================================
 interface ResultScreenProps {
   personLabel: string;
@@ -578,9 +445,11 @@ interface ResultScreenProps {
   score: number;
   category: AdviceCategory;
   goalId: string;
-  nodeId?: string;
-  onGoToFirstStep: () => void;
-  onCompleteLater: () => void;
+  /** عند true نعرض البطاقتين + تم + افتح [الاسم] (نافذة إضافة شخص) */
+  summaryOnly?: boolean;
+  /** معرّف العقدة المضافة — لو وُجد نعرض زر "افتح [الاسم]" */
+  addedNodeId?: string;
+  onClose?: (openNodeId?: string) => void;
 }
 
 const ResultScreen: FC<ResultScreenProps> = ({
@@ -589,13 +458,10 @@ const ResultScreen: FC<ResultScreenProps> = ({
   score,
   category,
   goalId,
-  nodeId,
-  onGoToFirstStep,
-  onCompleteLater
+  summaryOnly = false,
+  addedNodeId,
+  onClose
 }) => {
-  const updateNodeSymptoms = useMapState((s) => s.updateNodeSymptoms);
-  const nodes = useMapState((s) => s.nodes);
-  const node = nodeId ? nodes.find(n => n.id === nodeId) : null;
   let zone: "red" | "yellow" | "green";
   if (score > 2) {
     zone = "red";
@@ -604,9 +470,6 @@ const ResultScreen: FC<ResultScreenProps> = ({
   } else {
     zone = "green";
   }
-
-  const adviceByZone = adviceDatabase[zone];
-  const advice = adviceByZone[category] ?? adviceByZone.general ?? adviceDatabase.green.general;
 
   const stateLabel = ring === "green" ? "صحية" : ring === "yellow" ? "محتاجة انتباه" : "استنزاف";
 
@@ -623,303 +486,58 @@ const ResultScreen: FC<ResultScreenProps> = ({
   };
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key="result"
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        transition={{ duration: 0.3 }}
-        className="text-center"
-      >
-        <ProgressIndicator 
-          currentStep={1} 
-          totalSteps={3} 
-          labels={["النتيجة", "أول خطوة", "خطة التعافي"]}
-        />
-
-        {/* النتيجة الرئيسية */}
-        <div className="p-6 bg-linear-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-2xl mb-6">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">
-            {personalizedTitle[zone]}
-          </h2>
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500 text-center">
+    <motion.div
+      key="result"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+      className="text-center"
+    >
+      {/* النتيجة الرئيسية */}
+      <div className="p-6 bg-linear-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-2xl mb-6">
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">
+          {personalizedTitle[zone]}
+        </h2>
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500 text-center">
+          <p>
+            الحالة: <span className="font-semibold text-slate-700">{stateLabel}</span>
+          </p>
+          {getGoalAction(goalId) && (
             <p>
-              الحالة: <span className="font-semibold text-slate-700">{stateLabel}</span>
+              الهدف: <span className="font-semibold text-slate-700">{getGoalAction(goalId)}</span>
             </p>
-            {getGoalAction(goalId) && (
-              <p>
-                الهدف: <span className="font-semibold text-slate-700">{getGoalAction(goalId)}</span>
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* فهم الوضع */}
-        <div className="p-5 bg-blue-50 border-2 border-blue-200 rounded-xl text-right mb-6">
-          <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
-            <span>🔍</span> فهم الوضع
-          </h3>
-          <p className="text-sm text-gray-700 leading-relaxed">
-            {understanding[zone]}
-          </p>
-        </div>
-
-        {/* Symptoms Checklist */}
-        {nodeId && node && (
-          <div className="mb-6">
-            <SymptomsChecklist
-              ring={ring}
-              personLabel={personLabel}
-              selectedSymptoms={node.analysis?.selectedSymptoms}
-              onSymptomsChange={(symptomIds) => updateNodeSymptoms(nodeId, symptomIds)}
-            />
-          </div>
-        )}
-
-        {/* Suggested Placement */}
-        {nodeId && node && (
-          <SuggestedPlacement
-            currentRing={ring}
-            personLabel={personLabel}
-            category={category}
-            selectedSymptoms={node.analysis?.selectedSymptoms}
-          />
-        )}
-
-        {/* الأزرار */}
-        <div className="space-y-3">
-          <button
-            type="button"
-            onClick={onGoToFirstStep}
-            className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-          >
-            {mapCopy.firstStepCta} →
-          </button>
-          <button
-            type="button"
-            onClick={onCompleteLater}
-            className="w-full rounded-full bg-gray-100 text-gray-700 px-8 py-3 text-sm font-medium hover:bg-gray-200 active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
-          >
-            أكمل بعدين
-          </button>
-        </div>
-      </motion.div>
-    </AnimatePresence>
-  );
-};
-
-// ============================================
-// Screen 2: First Step Screen (الخطوة الأولى)
-// ============================================
-interface FirstStepScreenProps {
-  personLabel: string;
-  ring: Ring;
-  score: number;
-  category: AdviceCategory;
-  nodeId?: string;
-  selectedSymptoms?: string[];
-  completedFirstSteps?: string[];
-  stepInputs?: Record<string, string[]>;
-  onToggleFirstStep?: (stepId: string) => void;
-  onUpdateStepInputs?: (stepId: string, inputs: string[]) => void;
-  onGoToRecoveryPlan: () => void;
-  onCompleteLater: () => void;
-  onBack: () => void;
-  onOpenTraining?: () => void;
-}
-
-const FirstStepScreen: FC<FirstStepScreenProps> = ({
-  personLabel,
-  ring,
-  score,
-  category,
-  nodeId,
-  selectedSymptoms,
-  completedFirstSteps,
-  stepInputs,
-  onToggleFirstStep,
-  onUpdateStepInputs,
-  onGoToRecoveryPlan,
-  onCompleteLater,
-  onBack,
-  onOpenTraining
-}) => {
-  // Check if user has written enough situations for dynamic plan
-  const situationsCount = stepInputs 
-    ? Object.values(stepInputs).flat().filter(s => s?.trim()).length 
-    : 0;
-  const canShowRecoveryPlan = situationsCount >= 2;
-
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key="firstStep"
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        transition={{ duration: 0.3 }}
-      >
-        <ProgressIndicator 
-          currentStep={2} 
-          totalSteps={3} 
-          labels={["النتيجة", "أول خطوة", "خطة التعافي"]}
-        />
-
-        {/* Back Button */}
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          رجوع
-        </button>
-
-        {/* Banner: Need at least 2 situations */}
-        <div className="mb-6 p-4 bg-purple-50 border-2 border-purple-300 rounded-xl text-right">
-          <p className="text-sm font-semibold text-purple-900 mb-1">
-            💡 اختار موقف أو اتنين تحب تبدأ بيهم
-          </p>
-          <p className="text-xs text-purple-800">
-            عشان نقدر نحلل الأنماط ونولّد خطة تعافي مخصصة ليك ({situationsCount}/2)
-          </p>
-        </div>
-
-        {/* First Step Toolkit */}
-        <ResultActionToolkit
-          personLabel={personLabel}
-          ring={ring}
-          score={score}
-          category={category}
-          nodeId={nodeId}
-          completedFirstSteps={completedFirstSteps}
-          stepInputs={stepInputs}
-          onToggleFirstStep={onToggleFirstStep}
-          onUpdateStepInputs={onUpdateStepInputs}
-          compactMode={true}
-        />
-
-        {/* الأزرار */}
-        <div className="mt-6 space-y-3">
-          {/* Training Button (if symptoms selected) */}
-          {selectedSymptoms && selectedSymptoms.length > 0 && (
-            <button
-              type="button"
-              onClick={onOpenTraining}
-              className="w-full rounded-full bg-purple-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-purple-700 active:scale-[0.98] transition-all duration-200 flex flex-col items-center gap-1"
-            >
-              <span>🎯 تدرب على التعامل مع {personLabel}</span>
-              <span className="text-sm font-medium text-purple-100">أنا جاهز أمثل دور {personLabel}.. وريني هتتصرف إزاي 😉</span>
-            </button>
           )}
+        </div>
+      </div>
 
+      {/* فهم الوضع */}
+      <div className="p-5 bg-blue-50 border-2 border-blue-200 rounded-xl text-right mb-6">
+        <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
+          <span>🔍</span> فهم الوضع
+        </h3>
+        <p className="text-sm text-gray-700 leading-relaxed">
+          {understanding[zone]}
+        </p>
+      </div>
+
+      {summaryOnly && onClose ? (
+        <div className="flex flex-col gap-3">
           <button
             type="button"
-            onClick={onGoToRecoveryPlan}
-            disabled={!canShowRecoveryPlan}
-            className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-            title={canShowRecoveryPlan ? "شوف خطة التعافي" : "اختار موقف أو اتنين الأول"}
+            onClick={() => onClose(addedNodeId)}
+            className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
           >
-            مش دلوقتي – بعدين
+            افتح {personLabel}
           </button>
           <button
             type="button"
-            onClick={onCompleteLater}
-            className="w-full rounded-full bg-gray-100 text-gray-700 px-8 py-3 text-sm font-medium hover:bg-gray-200 active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
+            onClick={() => onClose()}
+            className="w-full rounded-full bg-gray-100 text-gray-700 px-8 py-3 text-sm font-medium hover:bg-gray-200 active:scale-[0.98] transition-all duration-200"
           >
-            أكمل بعدين
+            تم
           </button>
         </div>
-      </motion.div>
-    </AnimatePresence>
-  );
-};
-
-// ============================================
-// Screen 3: Recovery Plan Screen (خطة التعافي)
-// ============================================
-interface RecoveryPlanScreenProps {
-  personLabel: string;
-  ring: Ring;
-  nodeId?: string;
-  situations: string[];
-  completedSteps?: string[];
-  stepInputs?: Record<string, string>;
-  onToggleStep?: (stepId: string) => void;
-  onUpdateStepInput?: (stepId: string, value: string) => void;
-  stepFeedback?: Record<string, "hard" | "easy" | "unrealistic">;
-  onStepFeedback?: (stepId: string, value: "hard" | "easy" | "unrealistic") => void;
-  onFinish: () => void;
-  onBack: () => void;
-}
-
-const RecoveryPlanScreen: FC<RecoveryPlanScreenProps> = ({
-  personLabel,
-  ring,
-  nodeId,
-  situations,
-  completedSteps,
-  stepInputs,
-  onToggleStep,
-  onUpdateStepInput,
-  stepFeedback = {},
-  onStepFeedback,
-  onFinish,
-  onBack
-}) => {
-  const nodes = useMapState((s) => s.nodes);
-  const node = nodeId ? nodes.find(n => n.id === nodeId) : null;
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key="recoveryPlan"
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        transition={{ duration: 0.3 }}
-      >
-        <ProgressIndicator 
-          currentStep={3} 
-          totalSteps={3} 
-          labels={["النتيجة", "أول خطوة", "خطة التعافي"]}
-        />
-
-        {/* Back Button */}
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          رجوع
-        </button>
-
-        {/* Dynamic Recovery Plan */}
-        <DynamicRecoveryPlan
-          personLabel={personLabel}
-          ring={ring}
-          situations={situations}
-          selectedSymptoms={node?.analysis?.selectedSymptoms}
-          completedSteps={completedSteps || []}
-          onToggleStep={onToggleStep || (() => {})}
-          onUpdateStepInput={onUpdateStepInput || (() => {})}
-          stepInputs={stepInputs || {}}
-          stepFeedback={stepFeedback}
-          onStepFeedback={onStepFeedback}
-        />
-
-        {/* زرار الإغلاق */}
-        <div className="mt-8 pt-6 border-t border-gray-100">
-          <button
-            type="button"
-            onClick={onFinish}
-            className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-          >
-            تمام، إغلاق
-          </button>
-        </div>
-      </motion.div>
-    </AnimatePresence>
+      ) : null}
+    </motion.div>
   );
 };

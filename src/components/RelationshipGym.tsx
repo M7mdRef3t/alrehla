@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, XCircle, ArrowRight, ShieldAlert, Trophy, Target } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, ShieldAlert, Trophy, Target, X } from "lucide-react";
 
 // بيانات التدريب (سيناريوهات جاهزة)
 const SCENARIOS = [
@@ -121,11 +121,19 @@ export const RelationshipGym: React.FC<RelationshipGymProps> = ({ onClose, onSta
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/90 backdrop-blur-sm p-4">
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 p-8 text-center"
+          className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 p-8 text-center"
         >
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors"
+            aria-label="إغلاق"
+          >
+            <X className="w-5 h-5" />
+          </button>
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -172,10 +180,18 @@ export const RelationshipGym: React.FC<RelationshipGymProps> = ({ onClose, onSta
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200"
+        className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200"
       >
         {/* Header */}
         <div className="bg-gradient-to-br from-teal-50 to-cyan-50 p-6 border-b border-teal-100 flex justify-between items-center">
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-white/80 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors z-10"
+            aria-label="إغلاق"
+          >
+            <X className="w-5 h-5" />
+          </button>
           <div>
             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
               <Target className="w-6 h-6 text-teal-600" />

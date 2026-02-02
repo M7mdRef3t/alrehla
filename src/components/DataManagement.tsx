@@ -326,8 +326,16 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   onClick={(e) => e.stopPropagation()}
-                  className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+                  className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl"
                 >
+                  <button
+                    type="button"
+                    onClick={handleCancelImport}
+                    className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors"
+                    aria-label="إغلاق"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                   <div className="flex flex-col items-center text-center space-y-4">
                     <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
                       <AlertTriangle className="w-8 h-8 text-amber-600" />
