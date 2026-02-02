@@ -70,6 +70,46 @@ export const Landing: FC<LandingProps> = ({ onStartJourney }) => {
         >
           {landingCopy.subtitle}
         </motion.p>
+
+        <motion.section
+          className="mt-8 text-right max-w-md mx-auto"
+          aria-labelledby="landing-what-is"
+          variants={fogReveal}
+        >
+          <h2 id="landing-what-is" className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+            {landingCopy.whatIsTitle}
+          </h2>
+          <ul className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed space-y-1.5 list-none pr-0">
+            {landingCopy.whatIsPoints.map((point, i) => (
+              <li key={i} className="flex gap-2 items-start">
+                <span className="text-teal-500 mt-0.5 shrink-0" aria-hidden>•</span>
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
+        </motion.section>
+
+        <motion.section
+          className="mt-6 text-center max-w-md mx-auto"
+          aria-labelledby="landing-trust"
+          variants={fogReveal}
+        >
+          <p id="landing-trust" className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+            {landingCopy.trustTitle}
+          </p>
+          <p className="text-lg font-bold text-teal-600 dark:text-teal-400 mt-0.5">
+            {landingCopy.trustCount} {landingCopy.trustSuffix}
+          </p>
+          <div className="mt-4 space-y-3">
+            {landingCopy.testimonials.map((t, i) => (
+              <blockquote key={i} className="text-sm text-slate-600 dark:text-slate-400 italic border-r-2 border-teal-200 dark:border-teal-700 pr-3 text-right">
+                "{t.quote}"
+                <cite className="block text-xs not-italic text-slate-500 dark:text-slate-500 mt-1">— {t.author}</cite>
+              </blockquote>
+            ))}
+          </div>
+        </motion.section>
+
         <motion.div variants={fogReveal} className="mt-8">
           <motion.button
             type="button"

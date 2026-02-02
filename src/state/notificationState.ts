@@ -6,6 +6,7 @@ import {
   loadNotificationSettings,
   saveNotificationSettings,
   recordActivity,
+  checkAndSendInactiveReminder,
   type NotificationSettings
 } from "../services/notifications";
 
@@ -42,6 +43,8 @@ export const useNotificationState = create<NotificationState>((set, get) => ({
       permission
     });
 
+    // فحص تذكير العودة (ذكي حسب التقدم) قبل تحديث آخر نشاط
+    checkAndSendInactiveReminder();
     // تسجيل النشاط عند فتح التطبيق
     recordActivity();
   },

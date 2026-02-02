@@ -6,6 +6,8 @@ import { AddPersonModal } from "./AddPersonModal";
 import { ViewPersonModal } from "./ViewPersonModal";
 import { MeNodeDetails } from "./MeNodeDetails";
 import { BreathingOverlay } from "./BreathingOverlay";
+import { MapOnboardingOverlay, hasSeenOnboarding } from "./MapOnboardingOverlay";
+import { UserPlus } from "lucide-react";
 import { mapCopy } from "../copy/map";
 import { useMapState } from "../state/mapState";
 import type { AdviceCategory } from "../data/adviceScripts";
@@ -32,12 +34,24 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const nodes = useMapState((s) => s.nodes);
   const showPlacementTooltip = useMapState((s) => s.showPlacementTooltip);
   const dismissPlacementTooltip = useMapState((s) => s.dismissPlacementTooltip);
+  const [showOnboarding, setShowOnboarding] = useState(() => nodes.length === 0 && !hasSeenOnboarding());
 
   useEffect(() => {
     if (!showPlacementTooltip) return;
     const t = setTimeout(dismissPlacementTooltip, 5000);
     return () => clearTimeout(t);
   }, [showPlacementTooltip, dismissPlacementTooltip]);
+
+  useEffect(() => {
+    if (nodes.length > 0 && showOnboarding) setShowOnboarding(false);
+  }, [nodes.length, showOnboarding]);
+
+  // لو الشخص المحدد اتحذف (مثلاً بعد حذف وإضافة تاني)، نغلق نافذة التفاصيل
+  useEffect(() => {
+    if (selectedNodeId && !nodes.some((n) => n.id === selectedNodeId)) {
+      setSelectedNodeId(null);
+    }
+  }, [selectedNodeId, nodes]);
 
   const canCompleteJourneyStep =
     journeyMode &&
@@ -72,7 +86,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         <motion.button
           type="button"
           className="rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold shadow-lg hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-          onClick={() => setShowAddPerson(true)}
+          onClick={() => {
+            setSelectedNodeId(null);
+            setShowAddPerson(true);
+          }}
           title={mapCopy.addPersonTitle}
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
@@ -86,6 +103,29 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         onNodeClick={(id) => setSelectedNodeId(id)}
         onMeClick={() => setShowMeCard(true)}
       />
+
+      {nodes.length === 0 && !showOnboarding && (
+        <motion.div
+          className="mt-6 mx-auto max-w-sm p-5 rounded-2xl bg-slate-100/80 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-600 border-dashed text-center"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          role="status"
+          aria-live="polite"
+        >
+          <UserPlus className="w-10 h-10 mx-auto text-slate-400 dark:text-slate-500 mb-3" aria-hidden />
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            {mapCopy.emptyMapTitle}
+          </p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            {mapCopy.emptyMapHint}
+          </p>
+        </motion.div>
+      )}
+
+      {showOnboarding && nodes.length === 0 && (
+        <MapOnboardingOverlay onClose={() => setShowOnboarding(false)} />
+      )}
 
       {showPlacementTooltip && (
         <div
@@ -151,6 +191,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           onClose={(openNodeId) => {
             setShowAddPerson(false);
             if (openNodeId) setSelectedNodeId(openNodeId);
+            else setSelectedNodeId(null);
           }}
         />
       )}

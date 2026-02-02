@@ -1,5 +1,6 @@
 import { DndContext, TouchSensor, MouseSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { mapCopy } from "../../copy/map";
+import { addPersonCopy } from "../../copy/addPerson";
 import { DraggablePersonChip } from "./DraggablePersonChip";
 import { DroppableZone, type RingId } from "./DroppableZone";
 
@@ -12,9 +13,12 @@ const RING_ZONES: { id: RingId; label: string; bg: string; border: string }[] = 
 interface PlacementStepProps {
   personLabel: string;
   onPlace: (ring: RingId) => void;
+  /** اقتراح الدائرة من الأسئلة السريعة */
+  suggestedRing?: RingId;
+  suggestionReason?: string;
 }
 
-export function PlacementStep({ personLabel, onPlace }: PlacementStepProps) {
+export function PlacementStep({ personLabel, onPlace, suggestedRing, suggestionReason }: PlacementStepProps) {
   const mouseSensor = useSensor(MouseSensor);
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
@@ -31,23 +35,38 @@ export function PlacementStep({ personLabel, onPlace }: PlacementStepProps) {
     }
   };
 
+  const suggestedLabel = suggestedRing ? RING_ZONES.find((z) => z.id === suggestedRing)?.label : null;
+
   return (
     <div className="text-center">
       <h2 className="text-xl font-bold text-slate-900 mb-1">{mapCopy.placementTitle}</h2>
-      <p className="text-sm text-gray-600 mb-6">{mapCopy.placementHint}</p>
+      <p className="text-sm text-gray-600 mb-4">{mapCopy.placementHint}</p>
+
+      {suggestedRing && suggestionReason && suggestedLabel && (
+        <div className="mb-6 p-4 bg-teal-50 dark:bg-teal-900/20 border-2 border-teal-200 dark:border-teal-700 rounded-xl text-right">
+          <p className="text-sm font-semibold text-teal-800 dark:text-teal-200 mb-1">
+            {addPersonCopy.suggestionPrefix} «{suggestedLabel}»
+          </p>
+          <p className="text-sm text-teal-700 dark:text-teal-300">{suggestionReason}</p>
+        </div>
+      )}
 
       <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
         <div className="grid grid-cols-1 gap-3 mb-8">
-          {RING_ZONES.map((z) => (
-            <DroppableZone
-              key={z.id}
-              ring={z.id}
-              label={z.label}
-              bg={z.bg}
-              border={z.border}
-              onPlace={onPlace}
-            />
-          ))}
+          {RING_ZONES.map((z) => {
+            const isSuggested = suggestedRing === z.id;
+            return (
+              <DroppableZone
+                key={z.id}
+                ring={z.id}
+                label={z.label}
+                bg={z.bg}
+                border={z.border}
+                onPlace={onPlace}
+                highlight={isSuggested}
+              />
+            );
+          })}
         </div>
 
         <div className="flex justify-center pt-4 pb-2" aria-label="الدائرة في إيدك">

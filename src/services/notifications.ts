@@ -2,6 +2,7 @@
  * خدمة الإشعارات
  * تدير إرسال الإشعارات المحلية للمستخدم
  */
+import { getSmartDailyReminder, getSmartInactiveReminder } from "./smartReminders";
 
 export interface NotificationOptions {
   title: string;
@@ -189,7 +190,7 @@ export function getDaysSinceLastActivity(): number | null {
 }
 
 /**
- * التحقق وإرسال إشعار عدم النشاط
+ * التحقق وإرسال إشعار عدم النشاط — تذكير مخصص حسب التقدم
  */
 export async function checkAndSendInactiveReminder(): Promise<void> {
   const settings = loadNotificationSettings();
@@ -199,6 +200,25 @@ export async function checkAndSendInactiveReminder(): Promise<void> {
   const daysSinceActivity = getDaysSinceLastActivity();
   
   if (daysSinceActivity !== null && daysSinceActivity >= settings.inactiveReminderDays) {
-    await sendPresetNotification(NOTIFICATION_TYPES.INACTIVE_REMINDER);
+    const { title, body } = getSmartInactiveReminder();
+    await sendNotification({
+      title,
+      body,
+      tag: "inactive-reminder"
+    });
   }
+}
+
+/**
+ * إرسال تذكير يومي مخصص حسب التقدم
+ */
+export async function sendSmartDailyReminder(): Promise<Notification | null> {
+  const settings = loadNotificationSettings();
+  if (!settings.enabled || !settings.dailyReminder) return null;
+  const { title, body } = getSmartDailyReminder();
+  return sendNotification({
+    title,
+    body,
+    tag: "daily-reminder"
+  });
 }

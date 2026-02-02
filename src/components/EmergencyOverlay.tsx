@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useEmergencyState } from "../state/emergencyState";
+import { emergencyCopy } from "../copy/emergency";
 
 export const EmergencyOverlay: FC = () => {
   const close = useEmergencyState((s) => s.close);
@@ -47,6 +48,30 @@ export const EmergencyOverlay: FC = () => {
         >
           خروج هادي
         </button>
+        {emergencyCopy.supportLines.length > 0 && (
+          <div className="mt-10 pt-8 border-t border-white/20 text-right">
+            <h3 className="text-lg font-semibold text-white mb-3">
+              {emergencyCopy.supportTitle}
+            </h3>
+            <ul className="space-y-3">
+              {emergencyCopy.supportLines.map((line) => (
+                <li key={line.phone} className="text-white/90 text-sm">
+                  <span className="font-medium">{line.name}</span>
+                  {" — "}
+                  <a
+                    href={`tel:${line.phone}`}
+                    className="text-teal-300 hover:text-teal-200 underline"
+                  >
+                    {line.phone}
+                  </a>
+                  <span className="block text-white/70 text-xs mt-0.5">
+                    {line.description}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </motion.div>
     </div>
   );

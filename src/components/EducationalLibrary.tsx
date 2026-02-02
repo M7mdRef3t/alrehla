@@ -1,8 +1,9 @@
 import type { FC } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Video, BookOpen, HelpCircle, Search, Tag } from "lucide-react";
 import { videos, successStories, faqs, categoryLabels, type ContentCategory } from "../data/educationalContent";
+import { useAchievementState } from "../state/achievementState";
 
 interface EducationalLibraryProps {
   isOpen: boolean;
@@ -12,7 +13,12 @@ interface EducationalLibraryProps {
 type Tab = "videos" | "stories" | "faqs";
 
 export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClose }) => {
+  const markLibraryOpened = useAchievementState((s) => s.markLibraryOpened);
   const [activeTab, setActiveTab] = useState<Tab>("videos");
+
+  useEffect(() => {
+    if (isOpen) markLibraryOpened();
+  }, [isOpen, markLibraryOpened]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<ContentCategory | "all">("all");
 

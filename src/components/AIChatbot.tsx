@@ -130,26 +130,57 @@ ${userMessage.content}`;
     }
   };
 
-  if (!geminiClient.isAvailable()) {
-    return null; // Don't show chatbot if AI is not available
-  }
+  const aiAvailable = geminiClient.isAvailable();
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button — يظهر دائماً */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group z-50"
           aria-label="فتح المساعد الذكي"
+          title="المساعد الذكي"
         >
           <MessageCircle className="w-6 h-6 group-hover:scale-110 transition-transform" />
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+          {aiAvailable && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" aria-hidden />
+          )}
         </button>
       )}
 
-      {/* Chat Window */}
-      {isOpen && (
+      {/* لو مفيش مفتاح Gemini: نافذة صغيرة تشرح التفعيل */}
+      {isOpen && !aiAvailable && (
+        <div className="fixed bottom-6 right-6 w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl flex flex-col z-50 border-2 border-purple-200 dark:border-slate-600 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-500" />
+              المساعد الذكي
+            </h3>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full p-1.5 transition-colors"
+              aria-label="إغلاق"
+            >
+              <X className="w-5 h-5 text-slate-500" />
+            </button>
+          </div>
+          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+            المساعد الذكي يحتاج تفعيل مفتاح Gemini عشان يشتغل. انسخ ملف <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded">.env.local.example</code> إلى <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded">.env.local</code> وضيف فيه <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded">VITE_GEMINI_API_KEY</code> (مفتاحك من Google AI)، بعدين أعد تشغيل التطبيق.
+          </p>
+          <a
+            href="https://makersuite.google.com/app/apikey"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline"
+          >
+            احصل على مفتاح Gemini ←
+          </a>
+        </div>
+      )}
+
+      {/* Chat Window — لما Gemini مفعّل */}
+      {isOpen && aiAvailable && (
         <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border-2 border-purple-200">
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-2xl">

@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, ArrowLeft, ClipboardList, PanelRightOpen, X, Bell, Database, Share2, BookOpen, Wind, AlertCircle, Palette } from "lucide-react";
+import { Target, ArrowLeft, ClipboardList, PanelRightOpen, X, Bell, Database, Share2, BookOpen, Wind, AlertCircle, Palette, Trophy } from "lucide-react";
 import { useJourneyState } from "../state/journeyState";
 import { useNotificationState } from "../state/notificationState";
 import { useEmergencyState } from "../state/emergencyState";
@@ -11,6 +11,8 @@ import { ShareStats } from "./ShareStats";
 import { EducationalLibrary } from "./EducationalLibrary";
 import { BreathingOverlay } from "./BreathingOverlay";
 import { ThemeSettings } from "./ThemeSettings";
+import { Achievements } from "./Achievements";
+import { useAchievementState } from "../state/achievementState";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 
 interface AppSidebarProps {
@@ -31,7 +33,9 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showLibrary, setShowLibrary] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
   const [showThemeSettings, setShowThemeSettings] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const isFirstTime = useJourneyState((s) => s.baselineCompletedAt == null);
+  const unlockedCount = useAchievementState((s) => s.unlockedIds.length);
   const { isSupported: notificationsSupported, settings: notificationSettings } = useNotificationState();
   const openEmergency = useEmergencyState((s) => s.open);
 
@@ -128,6 +132,20 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             <Palette className="w-5 h-5 shrink-0" />
             المظهر
           </button>
+          <button
+            type="button"
+            onClick={() => setShowAchievements(true)}
+            className="w-full flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+            title="إنجازاتك"
+          >
+            <Trophy className="w-5 h-5 shrink-0" />
+            إنجازاتك
+            {unlockedCount > 0 && (
+              <span className="mr-auto text-xs font-bold bg-amber-200 dark:bg-amber-700 text-amber-900 dark:text-amber-100 rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1.5">
+                {unlockedCount}
+              </span>
+            )}
+          </button>
           
           {/* فاصل */}
           <div className="border-t border-slate-200 dark:border-slate-700 my-2" />
@@ -137,6 +155,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             type="button"
             onClick={() => {
               trackEvent(AnalyticsEvents.BREATHING_USED);
+              useAchievementState.getState().markBreathingUsed();
               setShowBreathing(true);
             }}
             className="w-full flex items-center gap-3 rounded-xl bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-700 px-4 py-3 text-sm font-semibold hover:border-sky-400 dark:hover:border-sky-500 hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-all text-right shrink-0 whitespace-nowrap"
@@ -307,6 +326,22 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <Palette className="w-6 h-6 shrink-0" />
                   <span>المظهر</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAchievements(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all text-right"
+                >
+                  <Trophy className="w-6 h-6 shrink-0" />
+                  <span>إنجازاتك</span>
+                  {unlockedCount > 0 && (
+                    <span className="mr-auto text-xs font-bold bg-amber-200 dark:bg-amber-700 text-amber-900 dark:text-amber-100 rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1.5">
+                      {unlockedCount}
+                    </span>
+                  )}
+                </button>
                 
                 {/* فاصل */}
                 <div className="border-t border-slate-200 dark:border-slate-700 my-2" />
@@ -316,6 +351,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   type="button"
                   onClick={() => {
                     trackEvent(AnalyticsEvents.BREATHING_USED);
+                    useAchievementState.getState().markBreathingUsed();
                     setShowBreathing(true);
                     handleClose();
                   }}
@@ -379,6 +415,11 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         isOpen={showThemeSettings}
         onClose={() => setShowThemeSettings(false)}
       />
+
+      {/* Achievements Modal */}
+      {showAchievements && (
+        <Achievements onClose={() => setShowAchievements(false)} />
+      )}
     </>
   );
 };

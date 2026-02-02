@@ -16,6 +16,7 @@ import type { AdviceCategory } from "../data/adviceScripts";
 import { mapCopy } from "../copy/map";
 import { getPersonViewData } from "../modules/personView/personViewData";
 import { getSuggestedContent } from "../data/educationalContent";
+import { generateBasicPlan } from "../utils/dynamicPlanGenerator";
 
 interface ViewPersonModalProps {
   nodeId: string;
@@ -290,7 +291,42 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
 
               {resultTab === "plan" && (
                 <div className="space-y-4">
-                  {!plan.canShowRecoveryPlan && (
+                  {!plan.canShowRecoveryPlan && plan.canShowPlanPreview && (
+                    <div className="p-5 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-600 rounded-xl text-right">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3">
+                        {mapCopy.planPreviewTitle}
+                      </h3>
+                      {(() => {
+                        const basic = generateBasicPlan(plan.personLabel, node.ring);
+                        const first = basic.steps[0];
+                        if (!first) return null;
+                        return (
+                          <div className="mb-4 p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600">
+                            <p className="text-sm font-semibold text-teal-700 dark:text-teal-300 mb-1">
+                              الأسبوع {first.week} — {first.title}
+                            </p>
+                            <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">
+                              {first.description}
+                            </p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {first.successCriteria}
+                            </p>
+                          </div>
+                        );
+                      })()}
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                        {mapCopy.planPreviewCta}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleGoToFirstStep}
+                        className="w-full rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold hover:bg-teal-700 active:scale-[0.98] transition-all"
+                      >
+                        {mapCopy.planRuleCta}
+                      </button>
+                    </div>
+                  )}
+                  {!plan.canShowRecoveryPlan && !plan.canShowPlanPreview && (
                     <div className="p-5 bg-amber-50 border-2 border-amber-400 rounded-xl text-right shadow-sm">
                       <h3 className="text-base font-bold text-amber-900 mb-2">
                         ❓ {mapCopy.planRuleTitle}

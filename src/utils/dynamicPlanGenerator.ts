@@ -477,9 +477,9 @@ function getSafePracticeSituations(type: PatternType): string {
 }
 
 /**
- * Fallback basic plan if no patterns detected
+ * Fallback basic plan if no patterns detected. Used also for plan preview when situations < 2.
  */
-function generateBasicPlan(personLabel: string, ring: Ring): DynamicRecoveryPlan {
+export function generateBasicPlan(personLabel: string, ring: Ring): DynamicRecoveryPlan {
   return {
     personLabel,
     ring,

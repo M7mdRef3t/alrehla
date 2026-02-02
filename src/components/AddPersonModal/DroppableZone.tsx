@@ -8,9 +8,11 @@ interface DroppableZoneProps {
   bg: string;
   border: string;
   onPlace: (ring: RingId) => void;
+  /** تمييز المنطقة كاقتراح من الأسئلة السريعة */
+  highlight?: boolean;
 }
 
-export function DroppableZone({ ring, label, bg, border, onPlace }: DroppableZoneProps) {
+export function DroppableZone({ ring, label, bg, border, onPlace, highlight }: DroppableZoneProps) {
   const { isOver, setNodeRef } = useDroppable({ id: ring });
   
   return (
@@ -19,7 +21,7 @@ export function DroppableZone({ ring, label, bg, border, onPlace }: DroppableZon
       ref={setNodeRef}
       onClick={() => onPlace(ring)}
       className={`flex flex-col items-center justify-center rounded-2xl border-2 min-h-[80px] transition-all ${bg} ${border} ${
-        isOver ? "ring-4 ring-teal-400 ring-offset-2 scale-[1.02]" : "hover:scale-[1.02]"
+        isOver ? "ring-4 ring-teal-400 ring-offset-2 scale-[1.02]" : highlight ? "ring-2 ring-teal-500 ring-offset-2 shadow-md" : "hover:scale-[1.02]"
       }`}
     >
       <span className="text-sm font-semibold text-slate-800">{label}</span>

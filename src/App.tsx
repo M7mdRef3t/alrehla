@@ -9,8 +9,12 @@ import { RelationshipGym } from "./components/RelationshipGym";
 import { BaselineAssessment } from "./components/BaselineAssessment";
 import { AIChatbot } from "./components/AIChatbot";
 import { EmergencyOverlay } from "./components/EmergencyOverlay";
+import { AchievementToast } from "./components/Achievements";
 import { useNotificationState } from "./state/notificationState";
 import { useEmergencyState } from "./state/emergencyState";
+import { useMapState } from "./state/mapState";
+import { useJourneyState } from "./state/journeyState";
+import { useAchievementState, getLibraryOpenedAt, getBreathingUsedAt } from "./state/achievementState";
 import { trackPageView } from "./services/analytics";
 import type { AdviceCategory } from "./data/adviceScripts";
 
@@ -28,6 +32,20 @@ export default function App() {
   
   const recordUserActivity = useNotificationState((s) => s.recordUserActivity);
   const isEmergencyOpen = useEmergencyState((s) => s.isOpen);
+  const nodes = useMapState((s) => s.nodes);
+  const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
+  const checkAndUnlock = useAchievementState((s) => s.checkAndUnlock);
+
+  // فحص الإنجازات عند تغيّر الخريطة أو الرحلة
+  useEffect(() => {
+    if (screen !== "map") return;
+    checkAndUnlock({
+      nodes,
+      baselineCompletedAt: baselineCompletedAt ?? null,
+      libraryOpenedAt: getLibraryOpenedAt(),
+      breathingUsedAt: getBreathingUsedAt()
+    });
+  }, [screen, nodes, baselineCompletedAt, checkAndUnlock]);
 
   // تسجيل النشاط عند تغيير الشاشة (تفاعل حقيقي)
   useEffect(() => {
@@ -131,6 +149,7 @@ export default function App() {
       )}
 
       <AIChatbot />
+      <AchievementToast />
 
       {/* Emergency Overlay */}
       {isEmergencyOpen && <EmergencyOverlay />}

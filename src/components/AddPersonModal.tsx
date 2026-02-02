@@ -1,7 +1,6 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { DndContext, useDraggable, useDroppable, type DragEndEvent, TouchSensor, MouseSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { 
   User, 
   Users, 
@@ -17,9 +16,12 @@ import {
   type LucideIcon 
 } from "lucide-react";
 import { mapCopy } from "../copy/map";
+import { addPersonCopy } from "../copy/addPerson";
 import { useMapState } from "../state/mapState";
 import { FeelingCheck, type FeelingAnswers, feelingScore, feelingScoreToRing } from "./FeelingCheck";
 import { RealityCheck, realityScoreToRing } from "./RealityCheck";
+import { PlacementStep } from "./AddPersonModal/PlacementStep";
+import { suggestInitialRing, type QuickAnswer1, type QuickAnswer2 } from "../utils/suggestInitialRing";
 import type { Ring } from "../modules/map/mapTypes";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { getGoalAction } from "../copy/goalPicker";
@@ -79,103 +81,12 @@ const PLACEHOLDERS: Record<string, string> = {
   general: "مثال: الشخص اللي في بالك"
 };
 
-type RingId = "green" | "yellow" | "red";
-
-const RING_ZONES: { id: RingId; label: string; bg: string; border: string }[] = [
-  { id: "green", label: mapCopy.legendGreen, bg: "bg-teal-400/20", border: "border-teal-400" },
-  { id: "yellow", label: mapCopy.legendYellow, bg: "bg-amber-400/20", border: "border-amber-400" },
-  { id: "red", label: mapCopy.legendRed, bg: "bg-rose-400/20", border: "border-rose-400" }
-];
-
-function DraggablePersonChip({ personLabel }: { personLabel: string }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: "new-person" });
-  return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      className={`rounded-full bg-white border-2 border-teal-500 px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg cursor-grab active:cursor-grabbing select-none ${
-        isDragging ? "opacity-90 scale-105 shadow-xl" : ""
-      }`}
-    >
-      {personLabel}
-    </div>
-  );
-}
-
-function DroppableZone({
-  ring,
-  label,
-  bg,
-  border,
-  onPlace
-}: { ring: RingId; label: string; bg: string; border: string; onPlace: (ring: RingId) => void }) {
-  const { isOver, setNodeRef } = useDroppable({ id: ring });
-  return (
-    <button
-      type="button"
-      ref={setNodeRef}
-      onClick={() => onPlace(ring)}
-      className={`flex flex-col items-center justify-center rounded-2xl border-2 min-h-[80px] transition-all ${bg} ${border} ${
-        isOver ? "ring-4 ring-teal-400 ring-offset-2 scale-[1.02]" : "hover:scale-[1.02]"
-      }`}
-    >
-      <span className="text-sm font-semibold text-slate-800">{label}</span>
-      <span className="text-xs text-slate-600 mt-0.5">اضغط أو اسحب الدائرة هنا</span>
-    </button>
-  );
-}
-
-function PlacementStep({ personLabel, onPlace }: { personLabel: string; onPlace: (ring: RingId) => void }) {
-  // إعداد sensors للعمل على الموبايل والديسكتوب
-  const mouseSensor = useSensor(MouseSensor);
-  const touchSensor = useSensor(TouchSensor, {
-    activationConstraint: {
-      delay: 250,
-      tolerance: 5
-    }
-  });
-  const sensors = useSensors(mouseSensor, touchSensor);
-  
-  const handleDragEnd = (event: DragEndEvent) => {
-    const over = event.over;
-    if (over && (over.id === "green" || over.id === "yellow" || over.id === "red")) {
-      onPlace(over.id as RingId);
-    }
-  };
-
-  return (
-    <div className="text-center">
-      <h2 className="text-xl font-bold text-slate-900 mb-1">{mapCopy.placementTitle}</h2>
-      <p className="text-sm text-gray-600 mb-6">{mapCopy.placementHint}</p>
-
-      <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
-        <div className="grid grid-cols-1 gap-3 mb-8">
-          {RING_ZONES.map((z) => (
-            <DroppableZone
-              key={z.id}
-              ring={z.id}
-              label={z.label}
-              bg={z.bg}
-              border={z.border}
-              onPlace={onPlace}
-            />
-          ))}
-        </div>
-
-        <div className="flex justify-center pt-4 pb-2" aria-label="الدائرة في إيدك">
-          <DraggablePersonChip personLabel={personLabel} />
-        </div>
-        <p className="text-xs text-gray-500">اسحب الدائرة فوق المنطقة واتركها</p>
-      </DndContext>
-    </div>
-  );
-}
-
 type AddPersonStep =
   | "select"
+  | "quickQuestions"
   | "feeling"
   | "position"
+  | "placement"
   | "result";
 
 interface AddPersonModalProps {
@@ -196,6 +107,10 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
   const [healthScore, setHealthScore] = useState<number>(0);
   const [addedNodeId, setAddedNodeId] = useState<string | null>(null);
   const [pendingPlacement, setPendingPlacement] = useState<{ finalLabel: string; score: number; healthAnswers: FeelingAnswers } | null>(null);
+  const [quickAnswer1, setQuickAnswer1] = useState<QuickAnswer1 | null>(null);
+  const [quickAnswer2, setQuickAnswer2] = useState<QuickAnswer2 | null>(null);
+  const [suggestedRingFromQuestions, setSuggestedRingFromQuestions] = useState<Ring | null>(null);
+  const [suggestionReasonFromQuestions, setSuggestionReasonFromQuestions] = useState<string | null>(null);
   const addNode = useMapState((s) => s.addNode);
 
   const suggestions = SUGGESTIONS[goalId] || SUGGESTIONS.general;
@@ -204,8 +119,17 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
     event.preventDefault();
     if (selectedTitle) {
       setCurrentRing("yellow");
-      setStep("feeling");
+      setStep("quickQuestions");
     }
+  };
+
+  const handleQuickQuestionsDone = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (quickAnswer1 == null || quickAnswer2 == null) return;
+    const { ring, reason } = suggestInitialRing(quickAnswer1, quickAnswer2);
+    setSuggestedRingFromQuestions(ring);
+    setSuggestionReasonFromQuestions(reason);
+    setStep("feeling");
   };
 
   const handleFeelingDone = (healthAnswers: FeelingAnswers) => {
@@ -216,8 +140,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
 
     const finalLabel = customName.trim() || selectedTitle;
     setPendingPlacement({ finalLabel, score, healthAnswers });
-    // بعد تحليل تأثير العلاقة، نروح لشاشة "فين الشخص ده في حياتك؟"
-    setStep("position");
+    setStep("placement");
   };
 
   const handleRealityDone = (answers: Parameters<typeof realityScoreToRing>[0]) => {
@@ -401,6 +324,68 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
           </button>
             </div>
           </form>
+        ) : step === "quickQuestions" ? (
+          <form onSubmit={handleQuickQuestionsDone} className="text-right">
+            <h2 className="text-xl font-bold text-slate-900 mb-4">
+              {addPersonCopy.quickQuestionsTitle}
+            </h2>
+            <div className="space-y-5 mb-6">
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">{addPersonCopy.question1}</p>
+                <div className="flex flex-wrap gap-2">
+                  {addPersonCopy.options1.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setQuickAnswer1(opt.value as QuickAnswer1)}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                        quickAnswer1 === opt.value
+                          ? "bg-teal-600 text-white"
+                          : "bg-slate-100 text-slate-700 hover:bg-teal-50"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">{addPersonCopy.question2}</p>
+                <div className="flex flex-wrap gap-2">
+                  {addPersonCopy.options2.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setQuickAnswer2(opt.value as QuickAnswer2)}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                        quickAnswer2 === opt.value
+                          ? "bg-teal-600 text-white"
+                          : "bg-slate-100 text-slate-700 hover:bg-teal-50"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className="flex-1 rounded-full bg-gray-100 px-6 py-3 text-sm text-gray-700 font-medium hover:bg-gray-200"
+                onClick={() => setStep("select")}
+              >
+                رجوع
+              </button>
+              <button
+                type="submit"
+                disabled={quickAnswer1 == null || quickAnswer2 == null}
+                className="flex-1 rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {addPersonCopy.nextAfterQuestions}
+              </button>
+            </div>
+          </form>
         ) : step === "feeling" ? (
           <div>
             <FeelingCheck
@@ -418,6 +403,8 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
           <PlacementStep
             personLabel={pendingPlacement.finalLabel}
             onPlace={(ring) => handlePlacementDrop(ring)}
+            suggestedRing={suggestedRingFromQuestions ?? undefined}
+            suggestionReason={suggestionReasonFromQuestions || undefined}
           />
         ) : step === "result" ? (
           <ResultScreen

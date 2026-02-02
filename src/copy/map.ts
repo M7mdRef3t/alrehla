@@ -13,6 +13,9 @@ export const mapCopy = {
   placementHint: "اسحب الدائرة وارمِها في المنطقة اللي تناسب",
   confirmPlacement: "تأكيد المكان",
   firstPlacementTooltip: "تقدر تضغط على الشخص وتعدّل أو تفهم أكتر.",
+  /** حالة الخريطة الفاضية — placeholder يظهر لما مفيش أشخاص */
+  emptyMapTitle: "الخريطة فاضية دلوقتي",
+  emptyMapHint: "اضغط «أضف شخص» فوق عشان تضع أول علاقة وتبدأ.",
   tabDiagnosis: "التشخيص",
   tabSymptoms: "الأعراض",
   tabSolution: "الحل",
@@ -28,6 +31,13 @@ export const mapCopy = {
   planRuleCounter: (count: number) => `مواقفك الحالية: ${count}/2`,
   planRuleCta: "روح اكتب المواقف ←",
   planRuleShort: "الخطة الأسبوعية تظهر بعد موقفين فقط.",
+  planPreviewTitle: "معاينة الخطة",
+  planPreviewCta: "اكتب موقفين عشان نولّد لك خطة مخصصة كاملة.",
+  /** أونبوردينج الخريطة — يظهر مرة واحدة للمستخدم الجديد */
+  onboardingStep1: "أنت في المركز. الخريطة دي مساحتك، ومحدش يدخلها غير بإذنك.",
+  onboardingStep2: "الدوائر الثلاث: أخضر = قرب صحي، أصفر = قرب مشروط، أحمر = خطر أو استنزاف. ضع كل شخص في الدائرة اللي تناسب.",
+  onboardingCta: "فهمت",
+
   // Dynamic titles based on goalId
   titles: {
     family: "خريطة العيلة",

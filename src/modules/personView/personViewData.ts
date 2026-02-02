@@ -54,6 +54,8 @@ export interface PlanPayload {
   totalRecoverySteps: number;
   journeyStartDate: number | undefined;
   canShowRecoveryPlan: boolean;
+  /** معاينة الخطة — تُعرض عندما المواقف أقل من 2 لتفادي إحباط المستخدم */
+  canShowPlanPreview: boolean;
   /** اختياري من AI — نقاط بارزة تُعرض فوق أو تحت الخطة */
   planHighlights?: string[];
 }
@@ -113,6 +115,7 @@ export function getPersonViewData(
     ? Object.values(node.firstStepProgress.stepInputs).flat().filter((s) => s?.trim()).length
     : 0;
   const canShowRecoveryPlan = situationsCount >= 2;
+  const canShowPlanPreview = true;
 
   return {
     diagnosis: {
@@ -149,6 +152,7 @@ export function getPersonViewData(
       totalRecoverySteps: 10,
       journeyStartDate: node.journeyStartDate,
       canShowRecoveryPlan,
+      canShowPlanPreview,
       planHighlights: insights?.planHighlights
     }
   };
