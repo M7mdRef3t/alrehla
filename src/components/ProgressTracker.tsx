@@ -24,7 +24,7 @@ export const ProgressTracker: FC<ProgressTrackerProps> = ({
   return (
     <div className="mt-6 p-5 bg-gradient-to-br from-teal-50 to-blue-50 rounded-xl border border-teal-200">
       <h3 className="text-lg font-bold text-slate-900 mb-4 text-center">
-        📊 تقدمك في الخطة
+        📊 تقدمك في بروتوكول الدفاع
       </h3>
 
       {/* Progress Bar */}

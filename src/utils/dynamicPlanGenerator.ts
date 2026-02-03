@@ -42,7 +42,8 @@ export function generateDynamicPlan(
   ring: Ring,
   patterns: DetectedPattern[],
   insights: string[],
-  symptomExercises: SymptomExercise[] = []
+  symptomExercises: SymptomExercise[] = [],
+  focusTraumaInheritance?: boolean
 ): DynamicRecoveryPlan {
   
   const primaryPattern = patterns[0] || null;
@@ -61,6 +62,10 @@ export function generateDynamicPlan(
     steps.push(generateWeek3Practice(primaryPattern, patterns));
     steps.push(generateWeek4Expansion(primaryPattern, patterns));
   }
+
+  const finalInsights = focusTraumaInheritance
+    ? [...insights, "هذه الخطة تركز على توارث الصدمات في العيلة: الوعي بمصدر النمط وتمييز اللي هو منك عن المتوارث والحدود الصحية."]
+    : insights;
   
   return {
     personLabel,
@@ -68,7 +73,7 @@ export function generateDynamicPlan(
     primaryPattern: primaryPattern?.type || null,
     totalWeeks: steps.length,
     steps,
-    insights,
+    insights: finalInsights,
     generated: Date.now()
   };
 }

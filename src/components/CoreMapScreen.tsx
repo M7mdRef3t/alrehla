@@ -1,13 +1,15 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { MapCanvas } from "../modules/map/MapCanvas";
+import { FamilyTreeView } from "./FamilyTreeView";
+import { ForestView } from "./ForestView";
 import { AddPersonModal } from "./AddPersonModal";
 import { ViewPersonModal } from "./ViewPersonModal";
 import { MeNodeDetails } from "./MeNodeDetails";
 import { BreathingOverlay } from "./BreathingOverlay";
 import { MapOnboardingOverlay, hasSeenOnboarding } from "./MapOnboardingOverlay";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Map, TreeDeciduous } from "lucide-react";
 import { mapCopy } from "../copy/map";
 import { useMapState } from "../state/mapState";
 import type { AdviceCategory } from "../data/adviceScripts";
@@ -31,7 +33,18 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [showMeCard, setShowMeCard] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
   const [legendTooltip, setLegendTooltip] = useState<"green" | "yellow" | "red" | null>(null);
+  const [viewMode, setViewMode] = useState<"map" | "tree">("map");
+  const [galaxyMode, setGalaxyMode] = useState(false);
+  const [galaxySubView, setGalaxySubView] = useState<"map" | "forest">("map");
+  const [selectedContexts, setSelectedContexts] = useState<string[]>(["family", "work", "love", "general"]);
   const nodes = useMapState((s) => s.nodes);
+  const isFamily = goalId === "family";
+
+  const toggleContext = (ctx: string) => {
+    setSelectedContexts((prev) =>
+      prev.includes(ctx) ? prev.filter((c) => c !== ctx) : [...prev, ctx]
+    );
+  };
   const showPlacementTooltip = useMapState((s) => s.showPlacementTooltip);
   const dismissPlacementTooltip = useMapState((s) => s.dismissPlacementTooltip);
   const [showOnboarding, setShowOnboarding] = useState(() => nodes.length === 0 && !hasSeenOnboarding());
@@ -62,8 +75,19 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         n.hasCompletedTraining === true
     );
 
-  // Dynamic title based on goalId
-  const pageTitle = mapCopy.titles[goalId as keyof typeof mapCopy.titles] || mapCopy.titles.general;
+  const pageTitle = galaxyMode
+    ? galaxySubView === "forest"
+      ? mapCopy.forestTitle
+      : mapCopy.galaxyTitle
+    : isFamily && viewMode === "tree"
+      ? mapCopy.familyTreeTitle
+      : mapCopy.titles[goalId as keyof typeof mapCopy.titles] || mapCopy.titles.general;
+
+  const subtitle = galaxyMode
+    ? galaxySubView === "forest"
+      ? mapCopy.forestHint
+      : mapCopy.galaxyHint
+    : mapCopy.subtitle;
 
   return (
     <main
@@ -78,11 +102,89 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           {pageTitle}
         </h1>
         <p className="text-base md:text-lg text-gray-600 leading-relaxed max-w-md mx-auto">
-          {mapCopy.subtitle}
+          {subtitle}
         </p>
       </header>
 
       <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
+        <button
+          type="button"
+          onClick={() => setGalaxyMode((v) => !v)}
+          className={`rounded-full px-4 py-2.5 text-sm font-semibold border-2 transition-all ${
+            galaxyMode ? "bg-slate-700 text-white border-slate-700" : "bg-white text-slate-700 border-slate-300 hover:border-teal-400"
+          }`}
+          title={galaxyMode ? "رجوع لسياق واحد" : "عرض كل العلاقات"}
+        >
+          {galaxyMode ? mapCopy.viewSingleCta : mapCopy.viewAllCta}
+        </button>
+        {galaxyMode && (
+          <div className="flex rounded-full bg-slate-100 p-1 border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setGalaxySubView("map")}
+              className={`rounded-full px-4 py-2.5 text-sm font-semibold transition-all ${
+                galaxySubView === "map" ? "bg-teal-600 text-white shadow" : "text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              {mapCopy.galaxyTitle}
+            </button>
+            <button
+              type="button"
+              onClick={() => setGalaxySubView("forest")}
+              className={`rounded-full px-4 py-2.5 text-sm font-semibold transition-all ${
+                galaxySubView === "forest" ? "bg-teal-600 text-white shadow" : "text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              {mapCopy.forestTitle}
+            </button>
+          </div>
+        )}
+        {galaxyMode && galaxySubView === "map" && (
+          <div className="flex flex-wrap justify-center gap-2">
+            {(["family", "work", "love", "general"] as const).map((ctx) => {
+              const label = ctx === "family" ? mapCopy.contextFamily : ctx === "work" ? mapCopy.contextWork : ctx === "love" ? mapCopy.contextLove : mapCopy.contextGeneral;
+              const on = selectedContexts.includes(ctx);
+              return (
+                <button
+                  key={ctx}
+                  type="button"
+                  onClick={() => toggleContext(ctx)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
+                    on ? "bg-teal-600 text-white" : "bg-slate-200 text-slate-600"
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {!galaxyMode && isFamily && (
+          <div className="flex rounded-full bg-slate-100 p-1 border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setViewMode("map")}
+              className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all ${
+                viewMode === "map" ? "bg-teal-600 text-white shadow" : "text-slate-600 hover:bg-slate-200"
+              }`}
+              title="عرض الخريطة"
+            >
+              <Map className="w-4 h-4" />
+              الخريطة
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("tree")}
+              className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all ${
+                viewMode === "tree" ? "bg-teal-600 text-white shadow" : "text-slate-600 hover:bg-slate-200"
+              }`}
+              title="شجرة العيلة"
+            >
+              <TreeDeciduous className="w-4 h-4" />
+              شجرة العيلة
+            </button>
+          </div>
+        )}
         <motion.button
           type="button"
           className="rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold shadow-lg hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
@@ -99,10 +201,57 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         </motion.button>
       </div>
 
-      <MapCanvas
-        onNodeClick={(id) => setSelectedNodeId(id)}
-        onMeClick={() => setShowMeCard(true)}
-      />
+      <AnimatePresence mode="wait">
+        {galaxyMode && galaxySubView === "forest" ? (
+          <motion.div
+            key="forest"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            <ForestView onNodeClick={(id) => setSelectedNodeId(id)} />
+          </motion.div>
+        ) : galaxyMode && galaxySubView === "map" ? (
+          <motion.div
+            key="galaxy-map"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            <MapCanvas
+              onNodeClick={(id) => setSelectedNodeId(id)}
+              onMeClick={() => setShowMeCard(true)}
+              galaxyGoalIds={selectedContexts.length > 0 ? selectedContexts : ["family", "work", "love", "general"]}
+            />
+          </motion.div>
+        ) : viewMode === "map" ? (
+          <motion.div
+            key="single-map"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            <MapCanvas
+              onNodeClick={(id) => setSelectedNodeId(id)}
+              onMeClick={() => setShowMeCard(true)}
+              goalIdFilter={goalId}
+            />
+          </motion.div>
+        ) : isFamily ? (
+          <motion.div
+            key="family-tree"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            <FamilyTreeView onNodeClick={(id) => setSelectedNodeId(id)} />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       {nodes.length === 0 && !showOnboarding && (
         <motion.div
@@ -183,6 +332,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           );
         })}
       </div>
+      <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400" title={mapCopy.threatLevelHint}>
+        {mapCopy.threatLevelHint}
+      </p>
 
       {showAddPerson && (
         <AddPersonModal
@@ -231,7 +383,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           </button>
           {!canCompleteJourneyStep && nodes.length > 0 && (
             <p className="text-sm text-slate-500 max-w-xs text-center">
-              اضغط على العلاقة، وشوف النتيجة وخطة التعافي أو خلّص التدريب، بعدين اضغط "كمل الرحلة"
+              اضغط على الجبهة، وشوف النتيجة وبروتوكول الدفاع أو خلّص التدريب، بعدين اضغط "كمل الرحلة"
             </p>
           )}
         </div>

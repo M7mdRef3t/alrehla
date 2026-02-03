@@ -107,7 +107,7 @@ export const PRESET_NOTIFICATIONS: Record<NotificationType, NotificationOptions>
   },
   [NOTIFICATION_TYPES.STEP_REMINDER]: {
     title: "عندك خطوات متبقية ⏰",
-    body: "في خطوات في خطة التعافي مستنياك. خُد دقيقة وكملها.",
+    body: "في مهمات ميدان مستنياك. خُد دقيقة وكملها.",
     tag: "step-reminder"
   }
 };

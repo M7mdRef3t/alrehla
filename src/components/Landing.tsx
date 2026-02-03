@@ -23,7 +23,7 @@ const containerVariants = {
 
 export const Landing: FC<LandingProps> = ({ onStartJourney }) => {
   return (
-    <div className="relative w-full max-w-xl py-10 md:py-14 min-h-[420px]">
+    <div className="relative w-full max-w-xl min-h-[70vh] py-10 md:py-14 flex flex-col items-center justify-center">
       <motion.div
         className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
         aria-hidden="true"
@@ -71,8 +71,21 @@ export const Landing: FC<LandingProps> = ({ onStartJourney }) => {
           {landingCopy.subtitle}
         </motion.p>
 
+        <motion.div variants={fogReveal} className="mt-8">
+          <motion.button
+            type="button"
+            onClick={onStartJourney}
+            className="rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            {landingCopy.ctaJourney}
+          </motion.button>
+        </motion.div>
+
         <motion.section
-          className="mt-8 text-right max-w-md mx-auto"
+          className="mt-10 text-right max-w-md mx-auto"
           aria-labelledby="landing-what-is"
           variants={fogReveal}
         >
@@ -109,19 +122,6 @@ export const Landing: FC<LandingProps> = ({ onStartJourney }) => {
             ))}
           </div>
         </motion.section>
-
-        <motion.div variants={fogReveal} className="mt-8">
-          <motion.button
-            type="button"
-            onClick={onStartJourney}
-            className="rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-          >
-            {landingCopy.ctaJourney}
-          </motion.button>
-        </motion.div>
       </motion.main>
     </div>
   );

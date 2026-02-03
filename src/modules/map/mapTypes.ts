@@ -1,10 +1,10 @@
 export type Ring = "green" | "yellow" | "red";
 
-/** غالبًا / أحيانًا / نادراً — نفس أسلوب RealityCheck و FeelingCheck */
+/** صيغة قياسية: دايماً/جداً، أحياناً، نادراً، أبداً/لأ — نفس أسلوب FeelingCheck */
 export type HealthAnswers = {
-  q1: "often" | "sometimes" | "rarely";
-  q2: "often" | "sometimes" | "rarely";
-  q3: "often" | "sometimes" | "rarely";
+  q1: "often" | "sometimes" | "rarely" | "never";
+  q2: "often" | "sometimes" | "rarely" | "never";
+  q3: "often" | "sometimes" | "rarely" | "never";
 };
 
 /** اختياري: تغذية من AI — لو وُجدت تُدمج في واجهة التبويبات من غير تغيير المعمار */
@@ -51,12 +51,46 @@ export interface FirstStepProgress {
   stepInputs: Record<string, string[]>; // Store inputs for steps that require text (e.g., {"red-0": ["موقف 1", "موقف 2", "موقف 3"]})
 }
 
+/** تقدّم يومي — لمحرك المسارات (لوحة القياس) */
+export interface DailyPathProgress {
+  date: string;
+  didComplete: boolean;
+  moodScore?: number;
+  taskId?: string;
+  note?: string;
+}
+
 export interface RecoveryProgress {
-  completedSteps: string[]; // IDs of completed steps
+  completedSteps: string[];
   situationLogs: SituationLog[];
-  dynamicStepInputs?: Record<string, string>; // Store dynamic step inputs
-  /** تعليق المستخدم على صعوبة تمرين: قاسي | سهل | مش واقعي */
+  dynamicStepInputs?: Record<string, string>;
   stepFeedback?: Record<string, "hard" | "easy" | "unrealistic">;
+  /** مسار فك الارتباط: مرساة الواقع (3 أسباب) */
+  detachmentReasons?: string[];
+  ruminationLogCount?: number;
+  /** محرك المسارات: مسار التعافي الحالي (path_protection | path_detox | …) */
+  pathId?: string;
+  /** مرحلة المسار: awareness | resistance | acceptance | integration */
+  pathStage?: string;
+  /** تقدّم يومي — لتغذية لوحة القياس */
+  dailyPathProgress?: DailyPathProgress[];
+  /** عامل تعديل الصعوبة من الـ AI (1 = عادي) */
+  aiAdjustmentFactor?: number;
+  /** لقطة المسار المُولَّدة من Gemini — للعرض يوم بيوم (يُخزَّن كـ JSON) */
+  recoveryPathSnapshot?: unknown;
+  /** آخر تاريخ تم فيه تحديث المسار من الـ AI (إعادة تحضير) */
+  lastPathGeneratedAt?: number;
+  /** مؤشر شرعية الحدود (0–100) — لمسار الصيام الشعوري: مدى تصالح المستخدم مع وضع الحد */
+  boundaryLegitimacyScore?: number;
+}
+
+/** بيانات الشجرة: مين فوقه (parent) ونوع العلاقة — للعيلة/شغل/اجتماعي */
+export type TreeRelationType = "family" | "work" | "social";
+
+export interface TreeRelation {
+  type: TreeRelationType;
+  parentId: string | null;
+  relationLabel: string;
 }
 
 export interface MapNode {
@@ -74,5 +108,13 @@ export interface MapNode {
   lastViewedStep?: "result" | "firstStep" | "recoveryPlan"; // Track last viewed step for "complete later" feature
   journeyStartDate?: number; // Timestamp when user started the recovery journey
   hasCompletedTraining?: boolean; // Flag to track if user completed personalized training
+  /** اختياري: ربط في الشجرة — لو موجود يُستخدم في عرض شجرة العيلة/الشغل */
+  treeRelation?: TreeRelation;
+  /** اختياري: سياق الإضافة — عيلة/شغل/حب/فلوس؛ للفلتر وعرض الكل */
+  goalId?: string;
+  /** جسدياً بعيد، شعورياً عالق — خطة فك الارتباط بدل الحدود */
+  detachmentMode?: boolean;
+  /** في المنطقة الرمادية (تعافي) — الدائرة خارج الخريطة الملونة، لون باهت */
+  isDetached?: boolean;
 }
 

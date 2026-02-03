@@ -1,8 +1,9 @@
 import type { FC } from "react";
 import React from "react";
 import { feelingCopy } from "../copy/feeling";
+import { getOptionButtonClass, impactTier } from "../utils/optionColors";
 
-export type FeelingOption = "often" | "sometimes" | "rarely";
+export type FeelingOption = "often" | "sometimes" | "rarely" | "never";
 
 export type FeelingAnswers = {
   q1: FeelingOption;
@@ -10,26 +11,24 @@ export type FeelingAnswers = {
   q3: FeelingOption;
 };
 
-const OPTIONS: FeelingOption[] = ["often", "sometimes", "rarely"];
+/** صيغة قياسية: دايماً/جداً، أحياناً، نادراً، أبداً/لأ */
+const OPTIONS: FeelingOption[] = ["often", "sometimes", "rarely", "never"];
 
-/** غالبًا=2، أحيانًا=1، نادراً=0. المجموع عالي = تأثير سلبي. 0–1 أخضر، 2–4 أصفر، 5–6 أحمر */
+/** high=3، medium=2، low=1، zero=0. المجموع 0–9. 0–2 أخضر، 3–5 أصفر، 6–9 أحمر */
+function points(opt: FeelingOption): number {
+  return opt === "often" ? 3 : opt === "sometimes" ? 2 : opt === "rarely" ? 1 : 0;
+}
+
 export function feelingScoreToRing(answers: FeelingAnswers): "green" | "yellow" | "red" {
-  const score =
-    (answers.q1 === "often" ? 2 : answers.q1 === "sometimes" ? 1 : 0) +
-    (answers.q2 === "often" ? 2 : answers.q2 === "sometimes" ? 1 : 0) +
-    (answers.q3 === "often" ? 2 : answers.q3 === "sometimes" ? 1 : 0);
-  if (score <= 1) return "green";
-  if (score <= 4) return "yellow";
+  const score = points(answers.q1) + points(answers.q2) + points(answers.q3);
+  if (score <= 2) return "green";
+  if (score <= 5) return "yellow";
   return "red";
 }
 
-/** نفس المقياس، النتيجة من 0 لـ 6 (للتخزين/العرض) */
+/** النتيجة من 0 لـ 9 (للتخزين/العرض) */
 export function feelingScore(answers: FeelingAnswers): number {
-  return (
-    (answers.q1 === "often" ? 2 : answers.q1 === "sometimes" ? 1 : 0) +
-    (answers.q2 === "often" ? 2 : answers.q2 === "sometimes" ? 1 : 0) +
-    (answers.q3 === "often" ? 2 : answers.q3 === "sometimes" ? 1 : 0)
-  );
+  return points(answers.q1) + points(answers.q2) + points(answers.q3);
 }
 
 interface FeelingCheckProps {
@@ -78,15 +77,12 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
               {OPTIONS.map((opt) => {
                 const isSelected = answers[key] === opt;
                 const label = feelingCopy.options[opt];
+                const tier = impactTier[opt] ?? "amber";
                 return (
                   <button
                     key={opt}
                     type="button"
-                    className={`flex-1 rounded-full px-3 py-2.5 text-sm font-medium active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                      isSelected
-                        ? "bg-teal-100 text-teal-700 border-2 border-teal-500 shadow-sm focus-visible:ring-teal-400"
-                        : "bg-gray-100 text-gray-700 hover:bg-teal-50 hover:text-teal-600 focus-visible:ring-gray-400"
-                    }`}
+                    className={`flex-1 px-3 py-2.5 text-sm font-medium ${getOptionButtonClass(tier, isSelected)}`}
                     onClick={() => handleAnswer(key, opt)}
                     title={label}
                   >

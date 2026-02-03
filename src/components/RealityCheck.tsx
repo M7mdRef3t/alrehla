@@ -2,8 +2,9 @@ import type { FC } from "react";
 import React from "react";
 import { ArrowLeft } from "lucide-react";
 import { realityCopy } from "../copy/reality";
+import { getOptionButtonClass, realityTier } from "../utils/optionColors";
 
-export type RealityOption = "often" | "sometimes" | "rarely";
+export type RealityOption = "often" | "sometimes" | "rarely" | "never";
 
 export type RealityAnswers = {
   q1: RealityOption;
@@ -11,16 +12,18 @@ export type RealityAnswers = {
   q3: RealityOption;
 };
 
-const OPTIONS: RealityOption[] = ["often", "sometimes", "rarely"];
+/** صيغة قياسية: دايماً/جداً، أحياناً، نادراً، أبداً/لأ */
+const OPTIONS: RealityOption[] = ["often", "sometimes", "rarely", "never"];
 
-/** غالبًا=2، أحيانًا=1، نادراً=0. المجموع 4–6 أخضر، 2–3 أصفر، 0–1 أحمر */
+/** تواصل: high=3، medium=2، low=1، zero=0. المجموع 6–9 أخضر، 3–5 أصفر، 0–2 أحمر */
+function points(opt: RealityOption): number {
+  return opt === "often" ? 3 : opt === "sometimes" ? 2 : opt === "rarely" ? 1 : 0;
+}
+
 export function realityScoreToRing(answers: RealityAnswers): "green" | "yellow" | "red" {
-  const score =
-    (answers.q1 === "often" ? 2 : answers.q1 === "sometimes" ? 1 : 0) +
-    (answers.q2 === "often" ? 2 : answers.q2 === "sometimes" ? 1 : 0) +
-    (answers.q3 === "often" ? 2 : answers.q3 === "sometimes" ? 1 : 0);
-  if (score >= 4) return "green";
-  if (score >= 2) return "yellow";
+  const score = points(answers.q1) + points(answers.q2) + points(answers.q3);
+  if (score >= 6) return "green";
+  if (score >= 3) return "yellow";
   return "red";
 }
 
@@ -86,15 +89,12 @@ export const RealityCheck: FC<RealityCheckProps> = ({
               {OPTIONS.map((opt) => {
                 const isSelected = answers[key] === opt;
                 const label = realityCopy.options[opt];
+                const tier = realityTier[opt] ?? "amber";
                 return (
                   <button
                     key={opt}
                     type="button"
-                    className={`flex-1 rounded-full px-3 py-2.5 text-sm font-medium active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                      isSelected
-                        ? "bg-teal-100 text-teal-700 border-2 border-teal-500 shadow-sm focus-visible:ring-teal-400"
-                        : "bg-gray-100 text-gray-700 hover:bg-teal-50 hover:text-teal-600 focus-visible:ring-gray-400"
-                    }`}
+                    className={`flex-1 px-3 py-2.5 text-sm font-medium ${getOptionButtonClass(tier, isSelected)}`}
                     onClick={() => handleAnswer(key, opt)}
                     title={label}
                   >

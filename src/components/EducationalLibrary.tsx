@@ -232,24 +232,44 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
 };
 
 // Video Card Component
-const VideoCard: FC<{ video: VideoContent }> = ({ video }) => (
-  <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all">
-    <div className="flex gap-3">
-      <div className="w-24 h-16 rounded-lg bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center shrink-0">
-        <Video className="w-8 h-8 text-indigo-600" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-slate-900 mb-1 text-sm">{video.title}</h3>
-        <p className="text-xs text-slate-600 mb-2 line-clamp-2">{video.description}</p>
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <span>{video.duration}</span>
-          <span>•</span>
-          <span>{categoryLabels[video.category]}</span>
+const VideoCard: FC<{ video: VideoContent }> = ({ video }) => {
+  const hasVideo = Boolean(video.videoUrl);
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all">
+      <div className="flex gap-3">
+        <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+          {video.thumbnailUrl ? (
+            <img src={video.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <Video className="w-8 h-8 text-indigo-600" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-slate-900 mb-1 text-sm">{video.title}</h3>
+          <p className="text-xs text-slate-600 mb-2 line-clamp-2">{video.description}</p>
+          <div className="flex items-center gap-2 text-xs text-slate-500 flex-wrap">
+            <span>{video.duration}</span>
+            <span>•</span>
+            <span>{categoryLabels[video.category]}</span>
+            {hasVideo && (
+              <>
+                <span>•</span>
+                <a
+                  href={video.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 hover:underline font-medium"
+                >
+                  شاهد
+                </a>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Story Card Component
 const StoryCard: FC<{ story: SuccessStory }> = ({ story }) => {

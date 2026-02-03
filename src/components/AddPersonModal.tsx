@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   User, 
@@ -19,12 +19,15 @@ import { mapCopy } from "../copy/map";
 import { addPersonCopy } from "../copy/addPerson";
 import { useMapState } from "../state/mapState";
 import { FeelingCheck, type FeelingAnswers, feelingScore, feelingScoreToRing } from "./FeelingCheck";
-import { RealityCheck, realityScoreToRing } from "./RealityCheck";
-import { PlacementStep } from "./AddPersonModal/PlacementStep";
-import { suggestInitialRing, type QuickAnswer1, type QuickAnswer2 } from "../utils/suggestInitialRing";
+import { RealityCheck, realityScoreToRing, type RealityAnswers } from "./RealityCheck";
+import type { QuickAnswer1, QuickAnswer2 } from "../utils/suggestInitialRing";
 import type { Ring } from "../modules/map/mapTypes";
+import type { ContactLevel } from "../modules/pathEngine/pathTypes";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { getGoalAction } from "../copy/goalPicker";
+import { recordJourneyEvent } from "../services/journeyTracking";
+import { getOptionButtonClass, quick1Tier, quick2Tier } from "../utils/optionColors";
+import { generateDetachmentResultInsight, type DetachmentResultInsight } from "../utils/detachmentCurriculumGenerator";
 
 // Smart suggestions with icons based on goalId
 interface SuggestionCard {
@@ -40,6 +43,10 @@ const SUGGESTIONS: Record<string, SuggestionCard[]> = {
     { label: "أخت", icon: UserCircle },
     { label: "ابن", icon: UserCheck },
     { label: "ابنة", icon: UserCircle },
+    { label: "زوج", icon: Heart },
+    { label: "زوجة", icon: Heart },
+    { label: "زوجة الأخ", icon: Users },
+    { label: "زوج الأخت", icon: Users },
     { label: "قريب", icon: Users }
   ],
   work: [
@@ -52,6 +59,7 @@ const SUGGESTIONS: Record<string, SuggestionCard[]> = {
     { label: "شريك", icon: Heart },
     { label: "خطيب", icon: Heart },
     { label: "زوج", icon: Heart },
+    { label: "زوجة", icon: Heart },
     { label: "إكس", icon: UserX }
   ],
   money: [
@@ -86,7 +94,6 @@ type AddPersonStep =
   | "quickQuestions"
   | "feeling"
   | "position"
-  | "placement"
   | "result";
 
 interface AddPersonModalProps {
@@ -102,23 +109,24 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
   const [customTitleInput, setCustomTitleInput] = useState("");
   const [showCustomTitleInput, setShowCustomTitleInput] = useState(false);
   const [customName, setCustomName] = useState("");
-  const [currentRing, setCurrentRing] = useState<Ring>("yellow");
   const [recommendedRing, setRecommendedRing] = useState<Ring>("yellow");
   const [healthScore, setHealthScore] = useState<number>(0);
   const [addedNodeId, setAddedNodeId] = useState<string | null>(null);
   const [pendingPlacement, setPendingPlacement] = useState<{ finalLabel: string; score: number; healthAnswers: FeelingAnswers } | null>(null);
   const [quickAnswer1, setQuickAnswer1] = useState<QuickAnswer1 | null>(null);
   const [quickAnswer2, setQuickAnswer2] = useState<QuickAnswer2 | null>(null);
-  const [suggestedRingFromQuestions, setSuggestedRingFromQuestions] = useState<Ring | null>(null);
-  const [suggestionReasonFromQuestions, setSuggestionReasonFromQuestions] = useState<string | null>(null);
+  const [linkToParentId, setLinkToParentId] = useState<string | null>(null);
+  const [lastRealityAnswers, setLastRealityAnswers] = useState<RealityAnswers | null>(null);
+  const [isEmergency, setIsEmergency] = useState(false);
   const addNode = useMapState((s) => s.addNode);
+  const nodes = useMapState((s) => s.nodes);
+  const familyNodes = goalId === "family" ? nodes.filter((n) => n.goalId === "family" || n.goalId == null) : [];
 
   const suggestions = SUGGESTIONS[goalId] || SUGGESTIONS.general;
 
   const handleContinue = (event: React.FormEvent) => {
     event.preventDefault();
     if (selectedTitle) {
-      setCurrentRing("yellow");
       setStep("quickQuestions");
     }
   };
@@ -126,9 +134,6 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
   const handleQuickQuestionsDone = (e: React.FormEvent) => {
     e.preventDefault();
     if (quickAnswer1 == null || quickAnswer2 == null) return;
-    const { ring, reason } = suggestInitialRing(quickAnswer1, quickAnswer2);
-    setSuggestedRingFromQuestions(ring);
-    setSuggestionReasonFromQuestions(reason);
     setStep("feeling");
   };
 
@@ -140,25 +145,25 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
 
     const finalLabel = customName.trim() || selectedTitle;
     setPendingPlacement({ finalLabel, score, healthAnswers });
-    setStep("placement");
+    // بعد "تأثير العلاقة عليك" نروح لشاشة "فين الشخص في حياتك"
+    setStep("position");
   };
 
   const handleRealityDone = (answers: Parameters<typeof realityScoreToRing>[0]) => {
     if (!pendingPlacement) return;
     const ring = realityScoreToRing(answers);
+    setLastRealityAnswers(answers);
     const { finalLabel, score, healthAnswers } = pendingPlacement;
-    const nodeId = addNode(finalLabel, ring, { score, answers: healthAnswers });
+    const treeRelation =
+      goalId === "family" && linkToParentId
+        ? { type: "family" as const, parentId: linkToParentId, relationLabel: selectedTitle }
+        : undefined;
+    const detachmentMode = ring === "red" && isLowContact(answers);
+    const contact = realityAnswersToContact(answers);
+    const nodeId = addNode(finalLabel, ring, { score, answers: healthAnswers }, goalId, treeRelation, detachmentMode, contact, isEmergency);
+    recordJourneyEvent("node_added", { ring, detachmentMode: detachmentMode ?? false, isEmergency: isEmergency ?? false });
     setAddedNodeId(nodeId);
     setRecommendedRing(ring);
-    setPendingPlacement(null);
-    setStep("result");
-  };
-
-  const handlePlacementDrop = (ring: Ring) => {
-    if (!pendingPlacement) return;
-    const { finalLabel, score, healthAnswers } = pendingPlacement;
-    const nodeId = addNode(finalLabel, ring, { score, answers: healthAnswers });
-    setAddedNodeId(nodeId);
     setPendingPlacement(null);
     setStep("result");
   };
@@ -292,16 +297,46 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
               name="personName"
               type="text"
               value={customName}
-              onChange={(event) => setCustomName(event.target.value)}
-              placeholder={`مثال: أحمد، محمد، سارة...`}
+              onChange={(e) => setCustomName(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              placeholder="مثال: أحمد، محمد، سارة..."
               title="اكتب اسم الشخص (اختياري)"
+              autoComplete="off"
               className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+              dir="rtl"
             />
             <p className="text-xs text-gray-500 mt-2">
               سيظهر كـ: <span className="font-semibold text-teal-700">
                 {customName.trim() || selectedTitle}
               </span>
             </p>
+          </motion.div>
+        )}
+
+        {goalId === "family" && familyNodes.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mt-4"
+          >
+            <label htmlFor="link-parent" className="block text-sm font-medium text-gray-700 mb-2">
+              ربط بـ (اختياري)
+            </label>
+            <select
+              id="link-parent"
+              value={linkToParentId ?? ""}
+              onChange={(e) => setLinkToParentId(e.target.value || null)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+              <option value="">— بدون ربط —</option>
+              {familyNodes.map((n) => (
+                <option key={n.id} value={n.id}>
+                  {n.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">لو اخترت شخص، هيتربط تحته في شجرة العيلة</p>
           </motion.div>
         )}
         
@@ -333,39 +368,56 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">{addPersonCopy.question1}</p>
                 <div className="flex flex-wrap gap-2">
-                  {addPersonCopy.options1.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setQuickAnswer1(opt.value as QuickAnswer1)}
-                      className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                        quickAnswer1 === opt.value
-                          ? "bg-teal-600 text-white"
-                          : "bg-slate-100 text-slate-700 hover:bg-teal-50"
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+                  {addPersonCopy.options1.map((opt) => {
+                    const tier = quick1Tier[opt.value] ?? "green";
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setQuickAnswer1(opt.value as QuickAnswer1)}
+                        className={getOptionButtonClass(tier, quickAnswer1 === opt.value)}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">{addPersonCopy.question2}</p>
                 <div className="flex flex-wrap gap-2">
-                  {addPersonCopy.options2.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setQuickAnswer2(opt.value as QuickAnswer2)}
-                      className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                        quickAnswer2 === opt.value
-                          ? "bg-teal-600 text-white"
-                          : "bg-slate-100 text-slate-700 hover:bg-teal-50"
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+                  {addPersonCopy.options2.map((opt) => {
+                    const tier = quick2Tier[opt.value] ?? "green";
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setQuickAnswer2(opt.value as QuickAnswer2)}
+                        className={getOptionButtonClass(tier, quickAnswer2 === opt.value)}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">هل الوضع طوارئ؟ (إيذاء بدني، ابتزاز خطير)</p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsEmergency(false)}
+                    className={getOptionButtonClass("green", !isEmergency)}
+                  >
+                    لا
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEmergency(true)}
+                    className={getOptionButtonClass("red", isEmergency)}
+                  >
+                    نعم — طوارئ
+                  </button>
                 </div>
               </div>
             </div>
@@ -399,13 +451,6 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
             onDone={handleRealityDone}
             onBack={() => setStep("feeling")}
           />
-        ) : step === "placement" && pendingPlacement ? (
-          <PlacementStep
-            personLabel={pendingPlacement.finalLabel}
-            onPlace={(ring) => handlePlacementDrop(ring)}
-            suggestedRing={suggestedRingFromQuestions ?? undefined}
-            suggestionReason={suggestionReasonFromQuestions || undefined}
-          />
         ) : step === "result" ? (
           <ResultScreen
             personLabel={customName.trim() || selectedTitle}
@@ -416,6 +461,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
             summaryOnly
             addedNodeId={addedNodeId ?? undefined}
             onClose={onClose}
+            realityAnswers={lastRealityAnswers ?? undefined}
           />
         ) : null}
       </motion.div>
@@ -432,12 +478,36 @@ interface ResultScreenProps {
   score: number;
   category: AdviceCategory;
   goalId: string;
-  /** عند true نعرض البطاقتين + تم + افتح [الاسم] (نافذة إضافة شخص) */
   summaryOnly?: boolean;
-  /** معرّف العقدة المضافة — لو وُجد نعرض زر "افتح [الاسم]" */
   addedNodeId?: string;
   onClose?: (openNodeId?: string) => void;
+  /** إجابات شاشة الواقع — لو معظمها نادراً نعرض نص "رغم المسافة" */
+  realityAnswers?: RealityAnswers;
 }
+
+/** مسافة عالية = أغلب الإجابات نادراً أو أبداً (صيغة قياسية) */
+function isLowContact(realityAnswers: RealityAnswers): boolean {
+  const low = [realityAnswers.q1, realityAnswers.q2, realityAnswers.q3].filter(
+    (q) => q === "rarely" || q === "never"
+  ).length;
+  return low >= 2;
+}
+
+/** معدل الاحتكاك من إجابات الواقع (تواصل): 6–9 عالي، 3–5 متوسط، 1–2 منخفض، 0 لا تواصل */
+function realityAnswersToContact(answers: RealityAnswers): ContactLevel {
+  const pt = (q: string) => (q === "often" ? 3 : q === "sometimes" ? 2 : q === "rarely" ? 1 : 0);
+  const sum = pt(answers.q1) + pt(answers.q2) + pt(answers.q3);
+  if (sum >= 6) return "high";
+  if (sum >= 3) return "medium";
+  if (sum >= 1) return "low";
+  return "none";
+}
+
+const STATIC_ENEMY_EXPLANATION = (name: string) =>
+  `لأن العدو مش "${name}" اللي برا، العدو هو "${name}" اللي جوه دماغك (الصوت الداخلي، الذنب، الخوف). أنت مسجون في التفكير فيها رغم إنها مش موجودة.`;
+
+const STATIC_GOAL_EXPLANATION =
+  "لأن الهدف مش أنك «ترسم حدود» (الحدود مرسومة بالفعل بكلمة «نادراً»). الهدف هو إنك تبطل تحس بالذنب تجاه الحدود دي، وتبطل تفكر فيها قهرياً.";
 
 const ResultScreen: FC<ResultScreenProps> = ({
   personLabel,
@@ -447,7 +517,8 @@ const ResultScreen: FC<ResultScreenProps> = ({
   goalId,
   summaryOnly = false,
   addedNodeId,
-  onClose
+  onClose,
+  realityAnswers
 }) => {
   let zone: "red" | "yellow" | "green";
   if (score > 2) {
@@ -458,19 +529,52 @@ const ResultScreen: FC<ResultScreenProps> = ({
     zone = "green";
   }
 
-  const stateLabel = ring === "green" ? "صحية" : ring === "yellow" ? "محتاجة انتباه" : "استنزاف";
+  const lowContact = realityAnswers != null && isLowContact(realityAnswers);
+  const isEmotionalCaptivity = zone === "red" && lowContact;
+
+  const [aiInsight, setAiInsight] = useState<DetachmentResultInsight | null>(null);
+  useEffect(() => {
+    if (!isEmotionalCaptivity || !personLabel) return;
+    let cancelled = false;
+    generateDetachmentResultInsight(personLabel).then((r) => {
+      if (!cancelled && r) setAiInsight(r);
+    });
+    return () => { cancelled = true; };
+  }, [isEmotionalCaptivity, personLabel]);
+
+  const stateLabel =
+    isEmotionalCaptivity
+      ? (aiInsight?.status_title ?? "استنزاف عن بُعد")
+      : ring === "green"
+        ? "صحية"
+        : ring === "yellow"
+          ? "محتاجة انتباه"
+          : "استنزاف";
 
   const understanding = {
-    red: `علاقتك مع ${personLabel} بتاخد منك أكتر مما بتديك. جسمك بيحذرك - اسمع له.`,
+    red: isEmotionalCaptivity
+      ? "إجاباتك بتقول إنك نجحت تبعد بجسمك (تواصل نادر)، لكن لسه بتدفع التمن من طاقتك وتفكيرك. المشكلة دلوقتي مش في «المقابلة»، المشكلة في «الفكرة» وفي شعور الذنب اللي بيطاردك."
+      : lowContact
+        ? `أنت نجحت تبعد بجسمك، بس لسه محتاج تبعد بأفكارك ومشاعرك (فك الارتباط الشعوري).`
+        : `علاقتك مع ${personLabel} بتاخد منك أكتر مما بتديك. جسمك بيحذرك - اسمع له.`,
     yellow: `في أنماط مش صحية في علاقتك مع ${personLabel} محتاجة انتباه. الحدود هتحميك.`,
     green: `علاقتك مع ${personLabel} صحية ومتوازنة. حافظ عليها واستمر.`
   };
 
   const personalizedTitle = {
-    red: `قربك من "${personLabel}" مؤلم ومحتاج حماية`,
+    red: isEmotionalCaptivity
+      ? "جسمك بعيد.. بس عقلك لسه هناك"
+      : lowContact
+        ? `رغم المسافة، لسه تأثير "${personLabel}" عليك قوي`
+        : `قربك من "${personLabel}" مؤلم ومحتاج مسافة فوراً`,
     yellow: `علاقتك مع "${personLabel}" محتاجة ضبط`,
     green: `علاقتك مع "${personLabel}" صحية وآمنة`
   };
+
+  const goalLabel = isEmotionalCaptivity ? "فك الارتباط الشعوري" : getGoalAction(goalId);
+
+  const enemyExplanation = aiInsight?.deep_explanation ?? STATIC_ENEMY_EXPLANATION(personLabel);
+  const goalExplanation = aiInsight?.goal_reframed ?? STATIC_GOAL_EXPLANATION;
 
   return (
     <motion.div
@@ -489,9 +593,14 @@ const ResultScreen: FC<ResultScreenProps> = ({
           <p>
             الحالة: <span className="font-semibold text-slate-700">{stateLabel}</span>
           </p>
-          {getGoalAction(goalId) && (
-            <p>
-              الهدف: <span className="font-semibold text-slate-700">{getGoalAction(goalId)}</span>
+          {goalLabel && (
+            <p className="w-full">
+              الهدف: <span className="font-semibold text-slate-700">{goalLabel}</span>
+              {isEmotionalCaptivity && (
+                <span className="block mt-1 text-xs text-slate-600 font-normal">
+                  ليه؟ لأن الهدف مش «ترسم حدود» (الحدود مرسومة بنادراً). الهدف إنك تبطل تحس بالذنب وتبطل تفكر قهرياً.
+                </span>
+              )}
             </p>
           )}
         </div>
@@ -505,21 +614,49 @@ const ResultScreen: FC<ResultScreenProps> = ({
         <p className="text-sm text-gray-700 leading-relaxed">
           {understanding[zone]}
         </p>
+        {isEmotionalCaptivity && (
+          <p className="text-sm text-teal-800 mt-3 font-medium leading-relaxed">
+            أنت نجحت تبعد بجسمك، بس لسه محتاج تبعد بأفكارك ومشاعرك (فك الارتباط الشعوري).
+          </p>
+        )}
+        {lowContact && zone === "red" && !isEmotionalCaptivity && (
+          <p className="text-sm text-teal-800 mt-3 pt-3 border-t border-teal-200 leading-relaxed">
+            طبيعي جداً إن جسمك يكون مشي، بس عقلك لسه بيحاول يفهم اللي حصل. دي مش انتكاسة، دي مرحلة «تنضيف» الجرح.
+          </p>
+        )}
       </div>
+
+      {isEmotionalCaptivity && (
+        <>
+          {/* توضيح الحالة — العدو جوه دماغك */}
+          <div className="p-5 bg-violet-50 border-2 border-violet-200 rounded-xl text-right mb-6">
+            <h3 className="text-sm font-bold text-violet-900 mb-2">توضيح الحالة</h3>
+            <p className="text-sm text-gray-700 leading-relaxed">{enemyExplanation}</p>
+          </div>
+          {/* توضيح الهدف — مش رسم حدود */}
+          <div className="p-5 bg-amber-50 border-2 border-amber-200 rounded-xl text-right mb-6">
+            <h3 className="text-sm font-bold text-amber-900 mb-2">توضيح الهدف</h3>
+            <p className="text-sm text-gray-700 leading-relaxed">{goalExplanation}</p>
+          </div>
+          {/* المكان الصحيح المقترح */}
+          <div className="p-5 bg-slate-100 border-2 border-slate-300 rounded-xl text-right mb-6">
+            <h3 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
+              <span>🎯</span> المكان الصحيح المقترح
+            </h3>
+            <p className="font-semibold text-slate-700 mb-2">المنطقة الرمادية (منطقة التعافي)</p>
+            <p className="text-sm text-gray-700 leading-relaxed">
+              أنت محتاج فترة «صيام شعوري». مش بس ما تشوفهاش، كمان تدرب عقلك يبطل يستحضرها.
+            </p>
+          </div>
+        </>
+      )}
 
       {summaryOnly && onClose ? (
         <div className="flex flex-col gap-3">
           <button
             type="button"
-            onClick={() => onClose(addedNodeId)}
-            className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
-          >
-            افتح {personLabel}
-          </button>
-          <button
-            type="button"
             onClick={() => onClose()}
-            className="w-full rounded-full bg-gray-100 text-gray-700 px-8 py-3 text-sm font-medium hover:bg-gray-200 active:scale-[0.98] transition-all duration-200"
+            className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
           >
             تم
           </button>

@@ -1,0 +1,85 @@
+/**
+ * ألوان الاختيارات حسب المعنى في كل المنصة:
+ * أحمر = أسوأ (استنزاف كثير، لا أمان)، برتقالي، أصفر، أخضر = أفضل.
+ */
+
+export type OptionTier = "red" | "amber" | "yellow" | "green";
+
+const TIER_STYLES: Record<
+  OptionTier,
+  { selected: string; unselected: string; unselectedHover: string }
+> = {
+  red: {
+    selected: "bg-rose-500 text-white border-2 border-rose-600 shadow-sm",
+    unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
+    unselectedHover: "hover:bg-rose-50 hover:border-rose-200 hover:text-rose-800"
+  },
+  amber: {
+    selected: "bg-amber-500 text-white border-2 border-amber-600 shadow-sm",
+    unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
+    unselectedHover: "hover:bg-amber-50 hover:border-amber-200 hover:text-amber-800"
+  },
+  yellow: {
+    selected: "bg-amber-400 text-slate-900 border-2 border-amber-500 shadow-sm",
+    unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
+    unselectedHover: "hover:bg-amber-50 hover:border-amber-200 hover:text-amber-900"
+  },
+  green: {
+    selected: "bg-teal-500 text-white border-2 border-teal-600 shadow-sm",
+    unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
+    unselectedHover: "hover:bg-teal-50 hover:border-teal-200 hover:text-teal-800"
+  }
+};
+
+const FOCUS_RING: Record<OptionTier, string> = {
+  red: "focus-visible:ring-rose-400",
+  amber: "focus-visible:ring-amber-400",
+  yellow: "focus-visible:ring-amber-400",
+  green: "focus-visible:ring-teal-400"
+};
+
+export function getOptionButtonClass(tier: OptionTier, isSelected: boolean): string {
+  const base = "rounded-full px-4 py-2 text-sm font-medium transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
+  const t = TIER_STYLES[tier];
+  if (isSelected) return `${base} ${t.selected} ${FOCUS_RING[tier]}`;
+  return `${base} ${t.unselected} ${t.unselectedHover} focus-visible:ring-slate-300`;
+}
+
+/** صيغة قياسية: high→أحمر، medium→برتقالي، low→أصفر، zero→أخضر (للسؤال السلبي مثل استنزاف) */
+export const standardNegativeTier: Record<string, OptionTier> = {
+  high: "red",
+  medium: "amber",
+  low: "yellow",
+  zero: "green",
+  no: "green",
+  often: "red",
+  sometimes: "amber",
+  rarely: "yellow",
+  never: "green"
+};
+
+/** صيغة قياسية معكوسة: high→أخضر، zero→أحمر (للسؤال الإيجابي مثل أمان/تواصل) */
+export const standardPositiveTier: Record<string, OptionTier> = {
+  high: "green",
+  medium: "amber",
+  low: "yellow",
+  zero: "red",
+  yes: "green",
+  no: "red",
+  often: "green",
+  sometimes: "amber",
+  rarely: "yellow",
+  never: "red"
+};
+
+/** سؤالين سريعين — س1 (استنزاف): سلبي */
+export const quick1Tier = standardNegativeTier;
+
+/** سؤالين سريعين — س2 (أمان): إيجابي */
+export const quick2Tier = standardPositiveTier;
+
+/** تأثير العلاقة: غالباً أسوأ → سلبي */
+export const impactTier = standardNegativeTier;
+
+/** الواقع (تواصل): غالباً أفضل → إيجابي */
+export const realityTier = standardPositiveTier;

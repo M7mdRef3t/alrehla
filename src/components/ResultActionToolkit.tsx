@@ -1,5 +1,5 @@
-import React, { type FC } from "react";
-import { Mic } from "lucide-react";
+import React, { type FC, useRef, useEffect } from "react";
+import { Mic, Square, Play, Flame } from "lucide-react";
 import type { Ring } from "../modules/map/mapTypes";
 import {
   adviceDatabase,
@@ -120,6 +120,84 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
   compactMode = false
 }) => {
   const [expandedStep, setExpandedStep] = React.useState<string | null>(null);
+  const [voiceStepId, setVoiceStepId] = React.useState<string | null>(null);
+  const [recording, setRecording] = React.useState(false);
+  const [recordedBlob, setRecordedBlob] = React.useState<Blob | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  useEffect(() => {
+    return () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
+
+  const startVoiceRecording = async (stepId: string) => {
+    if (typeof navigator?.mediaDevices?.getUserMedia !== "function") {
+      setToast("المتصفح لا يدعم التسجيل الصوتي");
+      setTimeout(() => setToast(null), 2000);
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const mr = new MediaRecorder(stream);
+      mediaRecorderRef.current = mr;
+      chunksRef.current = [];
+      mr.ondataavailable = (e) => {
+        if (e.data.size) chunksRef.current.push(e.data);
+      };
+      mr.onstop = () => {
+        if (chunksRef.current.length) {
+          setRecordedBlob(new Blob(chunksRef.current, { type: "audio/webm" }));
+        }
+        stream.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+      };
+      mr.start();
+      setVoiceStepId(stepId);
+      setRecording(true);
+      setExpandedStep(stepId);
+    } catch {
+      setRecording(false);
+      setVoiceStepId(null);
+      setToast("تعذّر الوصول للميكروفون");
+      setTimeout(() => setToast(null), 2000);
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    const mr = mediaRecorderRef.current;
+    if (mr && mr.state !== "inactive") mr.stop();
+    setRecording(false);
+  };
+
+  const burnVoiceTape = () => {
+    if (!recordedBlob) return;
+    const url = URL.createObjectURL(recordedBlob);
+    const audio = new Audio(url);
+    audio.playbackRate = 0.72;
+    audio.onended = () => {
+      URL.revokeObjectURL(url);
+      setRecordedBlob(null);
+      setVoiceStepId(null);
+      setToast("تم حرق الشريط");
+      setTimeout(() => setToast(null), 2000);
+    };
+    audio.play();
+  };
+
+  const useVoiceAsDraft = () => {
+    if (!voiceStepId || !onUpdateStepInputs) return;
+    onUpdateStepInputs(voiceStepId, ["تم التسجيل الصوتي (عدّل النص لو حابب)"]);
+    setRecordedBlob(null);
+    setVoiceStepId(null);
+    if (!completedFirstSteps?.includes(voiceStepId)) setTimeout(() => onToggleFirstStep?.(voiceStepId), 300);
+    setToast("تمت إضافة المسودة من التسجيل");
+    setTimeout(() => setToast(null), 2000);
+  };
+
   let zone: AdviceZone;
   if (score > 2) {
     zone = "red";
@@ -290,18 +368,61 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
                         >
                           {isExpanded ? '▼' : '◀'} اضغط للكتابة
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setToast('التسجيل الصوتي قريباً');
-                            setTimeout(() => setToast(null), 2000);
-                          }}
-                          className="inline-flex items-center gap-1 text-xs text-teal-600 hover:text-teal-800"
-                          title="تسجيل صوتي"
-                        >
-                          <Mic className="w-4 h-4" />
-                          تسجيل صوتي
-                        </button>
+                        {voiceStepId === stepId && recording && (
+                          <>
+                            <span className="text-xs text-rose-600 font-medium">جاري التسجيل...</span>
+                            <button
+                              type="button"
+                              onClick={stopVoiceRecording}
+                              className="inline-flex items-center gap-1 text-xs text-rose-600 hover:text-rose-800 font-medium"
+                              title="إيقاف التسجيل"
+                            >
+                              <Square className="w-3.5 h-3.5" />
+                              إيقاف
+                            </button>
+                          </>
+                        )}
+                        {voiceStepId === stepId && recordedBlob && !recording && (
+                          <span className="inline-flex items-center gap-1.5 flex-wrap">
+                            <button
+                              type="button"
+                              onClick={burnVoiceTape}
+                              className="inline-flex items-center gap-1 text-xs text-teal-600 hover:text-teal-800"
+                              title="تشغيل ثم حرق الشريط"
+                            >
+                              <Play className="w-3.5 h-3.5" />
+                              تشغيل
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setRecordedBlob(null); setVoiceStepId(null); setToast("تم التخلص من التسجيل"); setTimeout(() => setToast(null), 2000); }}
+                              className="inline-flex items-center gap-1 text-xs text-amber-600 hover:text-amber-800"
+                              title="احرق الشريط"
+                            >
+                              <Flame className="w-3.5 h-3.5" />
+                              حرق الشريط
+                            </button>
+                            <button
+                              type="button"
+                              onClick={useVoiceAsDraft}
+                              className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-800 font-medium"
+                              title="استخدم كمسودة في الخطوة"
+                            >
+                              استخدم كمسودة
+                            </button>
+                          </span>
+                        )}
+                        {!(voiceStepId === stepId && (recording || recordedBlob)) && (
+                          <button
+                            type="button"
+                            onClick={() => startVoiceRecording(stepId)}
+                            className="inline-flex items-center gap-1 text-xs text-teal-600 hover:text-teal-800"
+                            title="تسجيل صوتي"
+                          >
+                            <Mic className="w-4 h-4" />
+                            تسجيل صوتي
+                          </button>
+                        )}
                         <span className="text-xs text-teal-600">|</span>
                         <button
                           type="button"
@@ -424,7 +545,7 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
             🎯 هيحصل إيه بعد كده؟
           </p>
           <p className="text-xs text-gray-600 leading-relaxed">
-            بعد ما تكتب المواقف المطلوبة فوق، هنولّد ليك خطة تعافي كاملة (30 يوم) مخصصة ليك بناءً على الأنماط اللي لقيناها. هتلاقي الخطة تظهر تلقائياً أول ما تكمل الكتابة.
+            بعد ما تكتب المواقف المطلوبة فوق، هنولّد ليك بروتوكول دفاع كامل (30 يوم) مخصص ليك بناءً على الأنماط اللي لقيناها. هتلاقي مهمات الميدان تظهر تلقائياً أول ما تكمل الكتابة.
           </p>
         </div>
       )}

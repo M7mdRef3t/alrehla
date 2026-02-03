@@ -1,7 +1,7 @@
 import type { FC } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, ArrowLeft, ClipboardList, PanelRightOpen, X, Bell, Database, Share2, BookOpen, Wind, AlertCircle, Palette, Trophy } from "lucide-react";
+import { Target, ArrowLeft, ClipboardList, PanelRightOpen, X, Bell, Database, Share2, BookOpen, Wind, AlertCircle, Palette, Trophy, BarChart3, MessageCircle, Globe } from "lucide-react";
 import { useJourneyState } from "../state/journeyState";
 import { useNotificationState } from "../state/notificationState";
 import { useEmergencyState } from "../state/emergencyState";
@@ -13,7 +13,17 @@ import { BreathingOverlay } from "./BreathingOverlay";
 import { ThemeSettings } from "./ThemeSettings";
 import { Achievements } from "./Achievements";
 import { useAchievementState } from "../state/achievementState";
+import { useMapState } from "../state/mapState";
+import type { RecoveryPlanOpenWith } from "../state/mapState";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
+import { SymptomsOverviewModal } from "./SymptomsOverviewModal";
+import { RecoveryPlanModal } from "./RecoveryPlanModal";
+import { TrackingDashboard } from "./TrackingDashboard";
+import { NoiseSilencingModal } from "./NoiseSilencingModal";
+import { AtlasDashboard } from "./AtlasDashboard";
+import { HealthBar } from "./HealthBar";
+import { TodayTaskStrip } from "./TodayTaskStrip";
+import { guardianCopy } from "../copy/guardianCopy";
 
 interface AppSidebarProps {
   onOpenGym: () => void;
@@ -34,6 +44,23 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showBreathing, setShowBreathing] = useState(false);
   const [showThemeSettings, setShowThemeSettings] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showSymptomsOverview, setShowSymptomsOverview] = useState(false);
+  const [showRecoveryPlan, setShowRecoveryPlan] = useState(false);
+  const [showTrackingDashboard, setShowTrackingDashboard] = useState(false);
+  const [showNoiseSilencing, setShowNoiseSilencing] = useState(false);
+  const [showAtlasDashboard, setShowAtlasDashboard] = useState(false);
+  const [initialRecoveryOptions, setInitialRecoveryOptions] = useState<RecoveryPlanOpenWith | null>(null);
+  const recoveryPlanOpenWith = useMapState((s) => s.recoveryPlanOpenWith);
+  const setRecoveryPlanOpenWith = useMapState((s) => s.setRecoveryPlanOpenWith);
+
+  useEffect(() => {
+    if (recoveryPlanOpenWith) {
+      setInitialRecoveryOptions(recoveryPlanOpenWith);
+      setRecoveryPlanOpenWith(null);
+      setShowRecoveryPlan(true);
+    }
+  }, [recoveryPlanOpenWith, setRecoveryPlanOpenWith]);
+
   const isFirstTime = useJourneyState((s) => s.baselineCompletedAt == null);
   const unlockedCount = useAchievementState((s) => s.unlockedIds.length);
   const { isSupported: notificationsSupported, settings: notificationSettings } = useNotificationState();
@@ -53,6 +80,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           <aside
             className="h-full w-52 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 shadow-lg flex flex-col gap-2 py-6 px-3 min-w-0 invisible group-hover/sidebar:visible"
           >
+          <HealthBar />
+          <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
           {isFirstTime && (
             <button
               type="button"
@@ -95,6 +124,24 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           )}
           <button
             type="button"
+            onClick={() => setShowTrackingDashboard(true)}
+            className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap"
+            title="لوحة المتابعة — إحصائيات أو تتبع بالمستخدمين"
+          >
+            <BarChart3 className="w-5 h-5 shrink-0" />
+            لوحة المتابعة
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAtlasDashboard(true)}
+            className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right shrink-0 whitespace-nowrap"
+            title="لوحة تحكم الأطلس — خريطة الألم، تشريح الأعراض، مختبر التعافي"
+          >
+            <Globe className="w-5 h-5 shrink-0" />
+            لوحة الأطلس
+          </button>
+          <button
+            type="button"
             onClick={() => setShowDataManagement(true)}
             className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-all text-right shrink-0 whitespace-nowrap"
             title="تصدير/استيراد البيانات"
@@ -125,6 +172,24 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           </button>
           <button
             type="button"
+            onClick={() => setShowSymptomsOverview(true)}
+            className="w-full flex items-center gap-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 px-4 py-3 text-sm font-semibold hover:border-purple-400 hover:bg-purple-50 hover:text-purple-700 transition-all text-right shrink-0 whitespace-nowrap"
+            title="شوف الأعراض لكل علاقة"
+          >
+            <ClipboardList className="w-5 h-5 shrink-0" />
+            الأعراض
+          </button>
+          <button
+            type="button"
+            onClick={() => { setInitialRecoveryOptions(null); setShowRecoveryPlan(true); }}
+            className="w-full flex items-center gap-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 px-4 py-3 text-sm font-semibold hover:border-teal-400 hover:bg-teal-50 hover:text-teal-700 transition-all text-right shrink-0 whitespace-nowrap"
+            title="مهمات الميدان — بروتوكول الدفاع"
+          >
+            <Target className="w-5 h-5 shrink-0" />
+            مهمات الميدان
+          </button>
+          <button
+            type="button"
             onClick={() => setShowThemeSettings(true)}
             className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right shrink-0 whitespace-nowrap"
             title="تغيير المظهر"
@@ -149,8 +214,19 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           
           {/* فاصل */}
           <div className="border-t border-slate-200 dark:border-slate-700 my-2" />
-          
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-1 pt-0.5 pb-0.5 text-right" title="أدوات سريعة — تشويش الإشارة، تنفس، بروتوكول الدفاع">
+            {guardianCopy.inventory}
+          </p>
           {/* أزرار الدعم والطوارئ */}
+          <button
+            type="button"
+            onClick={() => setShowNoiseSilencing(true)}
+            className="w-full flex items-center gap-3 rounded-xl bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 px-4 py-3 text-sm font-semibold hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+            title="تشويش الإشارة — إسكات الضجيج"
+          >
+            <MessageCircle className="w-5 h-5 shrink-0" />
+            تشويش الإشارة
+          </button>
           <button
             type="button"
             onClick={() => {
@@ -318,6 +394,29 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <button
                   type="button"
                   onClick={() => {
+                    setShowSymptomsOverview(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-purple-400 hover:bg-purple-50 hover:text-purple-700 transition-all text-right"
+                >
+                  <ClipboardList className="w-6 h-6 shrink-0" />
+                  <span>الأعراض</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInitialRecoveryOptions(null);
+                    setShowRecoveryPlan(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-700 transition-all text-right"
+                >
+                  <Target className="w-6 h-6 shrink-0" />
+                  <span>مهمات الميدان</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
                     setShowThemeSettings(true);
                     handleClose();
                   }}
@@ -342,11 +441,33 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     </span>
                   )}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAtlasDashboard(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right"
+                >
+                  <Globe className="w-6 h-6 shrink-0" />
+                  <span>لوحة الأطلس</span>
+                </button>
                 
                 {/* فاصل */}
                 <div className="border-t border-slate-200 dark:border-slate-700 my-2" />
                 
                 {/* أزرار الدعم والطوارئ */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNoiseSilencing(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-all text-right"
+                >
+                  <MessageCircle className="w-6 h-6 shrink-0" />
+                  <span>تشويش الإشارة</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -420,6 +541,32 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       {showAchievements && (
         <Achievements onClose={() => setShowAchievements(false)} />
       )}
+
+      {/* Symptoms Overview Modal */}
+      <SymptomsOverviewModal
+        isOpen={showSymptomsOverview}
+        onClose={() => setShowSymptomsOverview(false)}
+      />
+
+      {/* Recovery Plan Modal */}
+      <RecoveryPlanModal
+        isOpen={showRecoveryPlan}
+        onClose={() => { setShowRecoveryPlan(false); setInitialRecoveryOptions(null); }}
+        initialPreselectedNodeId={initialRecoveryOptions?.preselectedNodeId}
+        focusTraumaInheritance={initialRecoveryOptions?.focusTraumaInheritance}
+      />
+
+      <TrackingDashboard isOpen={showTrackingDashboard} onClose={() => setShowTrackingDashboard(false)} />
+
+      <NoiseSilencingModal
+        isOpen={showNoiseSilencing}
+        onClose={() => setShowNoiseSilencing(false)}
+      />
+
+      <AtlasDashboard
+        isOpen={showAtlasDashboard}
+        onClose={() => setShowAtlasDashboard(false)}
+      />
     </>
   );
 };

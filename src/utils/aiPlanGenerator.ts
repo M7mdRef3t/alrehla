@@ -37,18 +37,30 @@ export async function generateAIPlan(
   patterns: DetectedPattern[],
   situations: string[],
   analysisInsights: string[],
-  symptomExercises: SymptomExercise[] = []
+  symptomExercises: SymptomExercise[] = [],
+  focusTraumaInheritance?: boolean
 ): Promise<DynamicRecoveryPlan> {
   // Fallback to template-based generation if AI is not available
   if (!geminiClient.isAvailable()) {
     console.warn('AI not available, using template-based plan generation');
     const { generateDynamicPlan } = await import('./dynamicPlanGenerator');
-    return generateDynamicPlan(personLabel, ring, patterns, analysisInsights, symptomExercises);
+    return generateDynamicPlan(personLabel, ring, patterns, analysisInsights, symptomExercises, focusTraumaInheritance);
   }
 
   const primaryPattern = patterns[0];
   const allSituations = situations.join('\n• ');
   const allPatterns = patterns.map(p => `- ${p.type} (${p.severity}): ${p.description}`).join('\n');
+
+  const traumaInheritanceBlock = focusTraumaInheritance
+    ? `
+
+**تركيز إلزامي — توارث الصدمات:**
+المستخدم طلب التركيز على توارث الصدمات (نمط استنزاف متوارث في العيلة). الخطة لازم:
+- تذكر صراحة فكرة توريث الأنماط أو الصدمات عبر الأجيال
+- تدمج خطوات لفهم مصدر النمط (منين جاي؟ ليه بيتكرر؟)
+- تقدم تمارين لتمييز اللي هو منك عن اللي متوارث من العلاقة العائلية
+- تكون لغة الخطة داعمة بدون لوم، مع التركيز على الوعي والحدود`
+    : '';
 
   const prompt = `أنت متخصص في التعافي النفسي وبناء الحدود الصحية.
 
@@ -66,6 +78,7 @@ ${allPatterns}
 
 **الرؤى من التحليل:**
 ${analysisInsights.map((i, idx) => `${idx + 1}. ${i}`).join('\n')}
+${traumaInheritanceBlock}
 
 **المهمة:**
 صمم خطة تعافي مخصصة لمدة 4 أسابيع، بناءً على:
@@ -135,7 +148,7 @@ ${analysisInsights.map((i, idx) => `${idx + 1}. ${i}`).join('\n')}
     if (!result || !result.weeks) {
       console.warn('AI returned invalid plan, using template fallback');
       const { generateDynamicPlan } = await import('./dynamicPlanGenerator');
-      return generateDynamicPlan(personLabel, ring, patterns, analysisInsights);
+      return generateDynamicPlan(personLabel, ring, patterns, analysisInsights, [], focusTraumaInheritance);
     }
 
     // Convert AI response to our format
@@ -173,6 +186,6 @@ ${analysisInsights.map((i, idx) => `${idx + 1}. ${i}`).join('\n')}
     console.error('Error in AI plan generation:', error);
     // Fallback to template-based generation
     const { generateDynamicPlan } = await import('./dynamicPlanGenerator');
-    return generateDynamicPlan(personLabel, ring, patterns, analysisInsights);
+    return generateDynamicPlan(personLabel, ring, patterns, analysisInsights, [], focusTraumaInheritance);
   }
 }
