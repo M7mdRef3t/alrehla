@@ -8,7 +8,7 @@ import { getGoalAction } from "../../copy/goalPicker";
 
 export type ResultTabId = "diagnosis" | "symptoms" | "solution" | "plan";
 
-/** بيانات تبويب التشخيص */
+/** بيانات تبويب التشخيص — مطابق لهيكل شاشة النتيجة في AddPersonModal */
 export interface DiagnosisPayload {
   zone: Ring;
   stateLabel: string;
@@ -16,9 +16,15 @@ export interface DiagnosisPayload {
   hasMismatch: boolean;
   goalAction: string;
   personalizedTitle: string;
-  /** من القاعدة الثابتة — لو وُجد insights.diagnosisSummary يُعرض إضافياً أو بديلاً حسب الواجهة */
   understanding: string;
-  /** اختياري من AI */
+  /** استنزاف عن بُعد — جسم بعيد، عقل عالق */
+  isEmotionalCaptivity: boolean;
+  /** فقرة إضافية تحت فهم الوضع (استنزاف عن بُعد أو lowContact أحمر) */
+  understandingSubtext?: string;
+  /** توضيح الحالة — العدو جوه دماغك (عند استنزاف عن بُعد) */
+  enemyExplanation?: string;
+  /** عرض قسم توضيح الحالة + المكان الصحيح */
+  showDetachmentSections: boolean;
   diagnosisSummary?: string;
 }
 
@@ -68,7 +74,7 @@ export interface PersonViewData {
   plan: PlanPayload;
 }
 
-const stateLabels: Record<Ring, string> = {
+const stateLabelsBase: Record<Ring, string> = {
   green: "صحية",
   yellow: "محتاجة انتباه",
   red: "استنزاف"
@@ -80,22 +86,27 @@ const recommendedLabels: Record<Ring, string> = {
   red: "استنزاف"
 };
 
-function getUnderstanding(personLabel: string, zone: Ring): string {
-  const texts: Record<Ring, string> = {
-    red: `علاقتك مع ${personLabel} بتاخد منك أكتر مما بتديك. جسمك بيحذرك - اسمع له.`,
-    yellow: `في أنماط مش صحية في علاقتك مع ${personLabel} محتاجة انتباه. الحدود هتحميك.`,
-    green: `علاقتك مع ${personLabel} صحية ومتوازنة. حافظ عليها واستمر.`
-  };
-  return texts[zone];
+const STATIC_ENEMY_EXPLANATION = (name: string) =>
+  `لأن العدو مش "${name}" اللي برا، العدو هو "${name}" اللي جوه دماغك (الصوت الداخلي، الذنب، الخوف). أنت مسجون في التفكير فيها رغم إنها مش موجودة.`;
+
+function getUnderstanding(personLabel: string, zone: Ring, isEmotionalCaptivity: boolean): string {
+  if (zone === "red") {
+    if (isEmotionalCaptivity)
+      return "إجاباتك بتقول إنك نجحت تبعد بجسمك (تواصل نادر)، لكن لسه بتدفع التمن من طاقتك وتفكيرك. المشكلة دلوقتي مش في «المقابلة»، المشكلة في «الفكرة» وفي شعور الذنب اللي بيطاردك.";
+    return `علاقتك مع ${personLabel} بتاخد منك أكتر مما بتديك. جسمك بيحذرك - اسمع له.`;
+  }
+  if (zone === "yellow")
+    return `في أنماط مش صحية في علاقتك مع ${personLabel} محتاجة انتباه. الحدود هتحميك.`;
+  return `علاقتك مع ${personLabel} صحية ومتوازنة. حافظ عليها واستمر.`;
 }
 
-function getPersonalizedTitle(personLabel: string, zone: Ring): string {
-  const titles: Record<Ring, string> = {
-    red: `قربك من "${personLabel}" مؤلم ومحتاج حماية`,
-    yellow: `علاقتك مع "${personLabel}" محتاجة ضبط`,
-    green: `علاقتك مع "${personLabel}" صحية وآمنة`
-  };
-  return titles[zone];
+function getPersonalizedTitle(personLabel: string, zone: Ring, isEmotionalCaptivity: boolean): string {
+  if (zone === "red") {
+    if (isEmotionalCaptivity) return "جسمك بعيد.. بس عقلك لسه هناك";
+    return `قربك من "${personLabel}" مؤلم ومحتاج مسافة فوراً`;
+  }
+  if (zone === "yellow") return `علاقتك مع "${personLabel}" محتاجة ضبط`;
+  return `علاقتك مع "${personLabel}" صحية وآمنة`;
 }
 
 /**
@@ -110,6 +121,15 @@ export function getPersonViewData(
   const zone = node.ring;
   const analysis = node.analysis!;
   const insights = analysis.insights;
+  const isEmotionalCaptivity = zone === "red" && !!node.detachmentMode;
+  const stateLabel = isEmotionalCaptivity ? "استنزاف عن بُعد" : stateLabelsBase[zone];
+  const goalAction = isEmotionalCaptivity ? "فك الارتباط الشعوري" : getGoalAction(goalId);
+  const understanding = getUnderstanding(node.label, zone, isEmotionalCaptivity);
+  const personalizedTitle = getPersonalizedTitle(node.label, zone, isEmotionalCaptivity);
+
+  const understandingSubtext = isEmotionalCaptivity
+    ? "أنت نجحت تبعد بجسمك، بس لسه محتاج تبعد بأفكارك ومشاعرك (فك الارتباط الشعوري)."
+    : undefined;
 
   const situationsCount = node.firstStepProgress?.stepInputs
     ? Object.values(node.firstStepProgress.stepInputs).flat().filter((s) => s?.trim()).length
@@ -120,12 +140,16 @@ export function getPersonViewData(
   return {
     diagnosis: {
       zone,
-      stateLabel: stateLabels[zone],
+      stateLabel,
       recommendedLabel: analysis.recommendedRing ? recommendedLabels[analysis.recommendedRing] : null,
       hasMismatch: !!(analysis.recommendedRing && node.ring !== analysis.recommendedRing),
-      goalAction: getGoalAction(goalId),
-      personalizedTitle: getPersonalizedTitle(node.label, zone),
-      understanding: getUnderstanding(node.label, zone),
+      goalAction,
+      personalizedTitle,
+      understanding,
+      isEmotionalCaptivity,
+      understandingSubtext,
+      enemyExplanation: isEmotionalCaptivity ? STATIC_ENEMY_EXPLANATION(node.label) : undefined,
+      showDetachmentSections: isEmotionalCaptivity,
       diagnosisSummary: insights?.diagnosisSummary
     },
     symptoms: {

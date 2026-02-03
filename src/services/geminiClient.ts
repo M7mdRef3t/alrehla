@@ -1,9 +1,28 @@
-import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
+import {
+  GoogleGenerativeAI,
+  type GenerativeModel,
+  type Content,
+  type Part,
+  type FunctionCall,
+  type Tool
+} from "@google/generative-ai";
 
 /**
  * Gemini AI Client
  * Handles all interactions with Google's Gemini API
  */
+
+export interface GenerateWithToolsRequest {
+  /** محادثة: مصفوفة محتوى (دور + أجزاء) */
+  contents: Content[];
+  /** أدوات (تعريف دوال) */
+  tools: Tool[];
+  /** تعليمات النظام (اختياري) */
+  systemInstruction?: string;
+}
+
+/** تنفيذ استدعاء دالة من الموديل — يُرجع كائن النتيجة للموديل */
+export type ToolExecutor = (name: string, args: object) => Promise<object>;
 
 class GeminiClient {
   private genAI: GoogleGenerativeAI | null = null;
@@ -15,26 +34,27 @@ class GeminiClient {
   }
 
   private initialize() {
-    // Get API key from environment variable
-    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    // فترة تجريب: ضع VITE_GEMINI_AI_ENABLED=false في .env.local — مفيش طلبات للـ API (لا 429)، والتطبيق يولد النص محلياً في المتصفح
+    if (import.meta.env.VITE_GEMINI_AI_ENABLED === "false") return;
 
+    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!this.apiKey) return;
 
     try {
       this.genAI = new GoogleGenerativeAI(this.apiKey);
-      this.model = this.genAI.getGenerativeModel({ 
-        model: "gemini-1.5-pro",
+      this.model = this.genAI.getGenerativeModel({
+        model: "gemini-2.0-flash-lite",
         generationConfig: {
-          temperature: 0.7, // Balance between creativity and consistency
+          temperature: 0.7,
           topP: 0.95,
           topK: 40,
-          maxOutputTokens: 8192,
+          maxOutputTokens: 8192
         }
       });
       // eslint-disable-next-line no-console
-      console.log('✅ Gemini AI initialized successfully');
+      console.log("✅ Gemini AI initialized successfully");
     } catch (error) {
-      console.error('❌ Failed to initialize Gemini:', error);
+      console.error("❌ Failed to initialize Gemini:", error);
       this.model = null;
     }
   }
@@ -56,8 +76,15 @@ class GeminiClient {
       const result = await this.model.generateContent(prompt);
       const response = result.response;
       return response.text();
-    } catch (error) {
-      if (import.meta.env.DEV) console.error("Error generating content:", error);
+    } catch (error: unknown) {
+      if (import.meta.env.DEV) {
+        const msg = error && typeof error === "object" && "message" in error ? String((error as { message?: string }).message) : "";
+        if (msg.includes("429") || msg.includes("quota")) {
+          console.warn("[Gemini] الحصة المجانية انتهت أو الطلبات كثيرة. جرّب بعد دقيقة أو راجع الحساب.");
+        } else {
+          console.error("Error generating content:", error);
+        }
+      }
       return null;
     }
   }
@@ -85,7 +112,7 @@ class GeminiClient {
    */
   async *generateStream(prompt: string): AsyncGenerator<string> {
     if (!this.model) {
-      yield 'AI غير متاح حالياً';
+      yield "AI غير متاح حالياً";
       return;
     }
 
@@ -97,8 +124,85 @@ class GeminiClient {
       }
     } catch (error) {
       if (import.meta.env.DEV) console.error("Error streaming content:", error);
-      yield 'حدث خطأ في الاتصال';
+      yield "حدث خطأ في الاتصال";
     }
+  }
+
+  /**
+   * توليد مع أدوات (Function Calling): حلقة تنفيذ استدعاءات الدوال ثم رد نهائي.
+   */
+  async generateWithTools(
+    request: GenerateWithToolsRequest,
+    executeTool: ToolExecutor
+  ): Promise<string | null> {
+    if (!this.model) return null;
+
+    const { contents, tools, systemInstruction } = request;
+    const toolConfig = {
+      functionCallingConfig: { mode: "AUTO" as const }
+    };
+
+    let currentContents: Content[] = [...contents];
+    const maxToolRounds = 8;
+    let rounds = 0;
+
+    while (rounds < maxToolRounds) {
+      rounds += 1;
+      let res;
+      try {
+        res = await this.model.generateContent({
+          contents: currentContents,
+          tools,
+          systemInstruction: systemInstruction ?? undefined,
+          toolConfig
+        });
+      } catch (error: unknown) {
+        if (import.meta.env.DEV) {
+          const msg = error && typeof error === "object" && "message" in error ? String((error as { message?: string }).message) : "";
+          if (msg.includes("429") || msg.includes("quota")) {
+            console.warn("[Gemini] الحصة المجانية انتهت أو الطلبات كثيرة.");
+          } else {
+            console.error("Error in generateWithTools:", error);
+          }
+        }
+        return null;
+      }
+
+      const response = res.response;
+      const functionCalls = response.functionCalls?.() ?? [];
+
+      if (functionCalls.length === 0) {
+        try {
+          return response.text();
+        } catch {
+          return null;
+        }
+      }
+
+      const modelContent: Content = response.candidates?.[0]?.content ?? {
+        role: "model",
+        parts: []
+      };
+
+      const responseParts: Part[] = [];
+      for (const fc of functionCalls as FunctionCall[]) {
+        const name = fc.name;
+        const args = (fc.args ?? {}) as object;
+        const out = await executeTool(name, args);
+        responseParts.push({
+          functionResponse: { name, response: out }
+        });
+      }
+
+      const userContent: Content = {
+        role: "user",
+        parts: responseParts
+      };
+
+      currentContents = [...currentContents, modelContent, userContent];
+    }
+
+    return "تم تجاوز حد جولات الأدوات. جرّب صياغة أوضح.";
   }
 }
 

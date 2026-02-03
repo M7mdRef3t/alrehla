@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { MapNode, Ring, PersonNote, SituationLog, HealthAnswers, TreeRelation, DailyPathProgress } from "../modules/map/mapTypes";
+import type { MapNode, Ring, PersonNote, SituationLog, HealthAnswers, TreeRelation, DailyPathProgress, RealityAnswers } from "../modules/map/mapTypes";
 import { loadStoredState, saveStoredState } from "../services/localStore";
 import { resolvePathId } from "../modules/pathEngine/pathResolver";
 import type { ContactLevel } from "../modules/pathEngine/pathTypes";
@@ -14,11 +14,11 @@ interface MapState {
   showPlacementTooltip: boolean;
   recoveryPlanOpenWith: RecoveryPlanOpenWith | null;
   setRecoveryPlanOpenWith: (v: RecoveryPlanOpenWith | null) => void;
-  addNode: (label: string, ring?: Ring, analysis?: { score: number; answers: HealthAnswers }, goalId?: string, treeRelation?: TreeRelation, detachmentMode?: boolean, contact?: ContactLevel, isSOS?: boolean) => string;
+  addNode: (label: string, ring?: Ring, analysis?: { score: number; answers: HealthAnswers }, goalId?: string, treeRelation?: TreeRelation, detachmentMode?: boolean, contact?: ContactLevel, isSOS?: boolean, realityAnswers?: RealityAnswers) => string;
   updateDetachmentReasons: (nodeId: string, reasons: string[]) => void;
   incrementRuminationLog: (nodeId: string) => void;
   dismissPlacementTooltip: () => void;
-  moveNodeToRing: (id: string, ring: Ring) => void;
+  moveNodeToRing: (id: string, ring: Ring, realityAnswers?: RealityAnswers) => void;
   setDetached: (nodeId: string, value: boolean) => void;
   analyzeNode: (id: string, result: { score: number; answers: HealthAnswers }) => void;
   addNoteToNode: (nodeId: string, text: string, comment?: string) => void;
@@ -63,7 +63,7 @@ export const useMapState = create<MapState>((set, get) => ({
   recoveryPlanOpenWith: null,
   setRecoveryPlanOpenWith: (v) => set({ recoveryPlanOpenWith: v }),
   dismissPlacementTooltip: () => set({ showPlacementTooltip: false }),
-  addNode: (label: string, ring: Ring = "yellow", analysis, goalId?, treeRelation?, detachmentMode?, contact?, isSOS?) => {
+  addNode: (label: string, ring: Ring = "yellow", analysis, goalId?, treeRelation?, detachmentMode?, contact?, isSOS?, realityAnswers?) => {
     let processedAnalysis;
     if (analysis) {
       // Score 0–6 (غالبًا=2، أحيانًا=1، نادراً=0). عالي = تأثير سلبي
@@ -113,19 +113,25 @@ export const useMapState = create<MapState>((set, get) => ({
       hasCompletedTraining: false,
       ...(goalId != null && goalId !== "" && { goalId }),
       ...(treeRelation != null && { treeRelation }),
-      ...(detachmentMode === true && { detachmentMode: true })
+      ...(detachmentMode === true && { detachmentMode: true }),
+      ...(realityAnswers != null && { realityAnswers })
     };
     const nextNodes = [...get().nodes, newNode];
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes, showPlacementTooltip: true });
     return nodeId;
   },
-  moveNodeToRing: (id, ring) => {
+  moveNodeToRing: (id, ring, realityAnswers) => {
+    const isLowContact = (a: RealityAnswers) =>
+      [a.q1, a.q2, a.q3].filter((q) => q === "rarely" || q === "never").length >= 2;
     const nextNodes = get().nodes.map((node) =>
       node.id === id
         ? {
             ...node,
-            ring
+            ring,
+            ...(realityAnswers != null && ring === "red" && isLowContact(realityAnswers)
+              ? { detachmentMode: true as const, realityAnswers }
+              : {})
           }
         : node
     );

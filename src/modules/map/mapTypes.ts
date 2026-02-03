@@ -1,5 +1,13 @@
 export type Ring = "green" | "yellow" | "red";
 
+/** إجابات شاشة "فين الشخص في حياتك" — للاستنزاف عن بُعد وتخزينها على العقدة */
+export type RealityOption = "often" | "sometimes" | "rarely" | "never";
+export interface RealityAnswers {
+  q1: RealityOption;
+  q2: RealityOption;
+  q3: RealityOption;
+}
+
 /** صيغة قياسية: دايماً/جداً، أحياناً، نادراً، أبداً/لأ — نفس أسلوب FeelingCheck */
 export type HealthAnswers = {
   q1: "often" | "sometimes" | "rarely" | "never";
@@ -114,6 +122,8 @@ export interface MapNode {
   goalId?: string;
   /** جسدياً بعيد، شعورياً عالق — خطة فك الارتباط بدل الحدود */
   detachmentMode?: boolean;
+  /** إجابات "فين الشخص في حياتك" — لعرض نفس محتوى النتيجة عند فتح النافذة */
+  realityAnswers?: RealityAnswers;
   /** في المنطقة الرمادية (تعافي) — الدائرة خارج الخريطة الملونة، لون باهت */
   isDetached?: boolean;
 }

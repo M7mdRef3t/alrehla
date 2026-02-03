@@ -1,26 +1,53 @@
 import React, { type FC, useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Sparkles, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Sparkles, Loader2, Mic, MicOff } from "lucide-react";
 import { geminiClient } from "../services/geminiClient";
+import { getAgentToolDeclarations, executeToolCall } from "../agent";
+import type { AgentContext, AgentActions } from "../agent";
+import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
+import { AgentCard, CustomExerciseCard } from "./agentCards";
+import type { CardId, CustomExerciseSpec } from "./agentCards";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: number;
+  /** بطاقات مرفقة برد المساعد (من showCard) */
+  cardIds?: CardId[];
+  /** تمرين مخصص (من generateCustomExercise) */
+  customExerciseSpec?: CustomExerciseSpec;
 }
 
 interface AIChatbotProps {
   personLabel?: string;
-  context?: string; // Current situation or recovery stage
+  context?: string;
+  agentContext?: AgentContext;
+  agentActions?: AgentActions;
+  systemPromptOverride?: string;
+  /** لفتح تمرين التنفس من داخل البطاقات (مثلاً BreathingCard) */
+  onOpenBreathing?: () => void;
+  /** للانتقال لشاشة الخريطة (وضع Mod) */
+  onNavigateToMap?: () => void;
 }
 
-export const AIChatbot: FC<AIChatbotProps> = ({ personLabel, context }) => {
+export const AIChatbot: FC<AIChatbotProps> = ({
+  personLabel,
+  context,
+  agentContext,
+  agentActions,
+  systemPromptOverride,
+  onOpenBreathing,
+  onNavigateToMap
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const cardsForThisTurnRef = useRef<string[]>([]);
+  const customExerciseSpecRef = useRef<CustomExerciseSpec | null>(null);
+  const { isSupported: speechSupported, isListening, error: speechError, start: startSpeech, stop: stopSpeech } = useSpeechRecognition({ lang: "ar-EG" });
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -59,19 +86,77 @@ export const AIChatbot: FC<AIChatbotProps> = ({ personLabel, context }) => {
       timestamp: Date.now()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsStreaming(true);
 
-    // Build conversation history for context
-    const conversationHistory = messages
-      .map(m => `${m.role === "user" ? "المستخدم" : "المساعد"}: ${m.content}`)
-      .join("\n\n");
+    const assistantId = `assistant-${Date.now()}`;
+    const useTools = agentActions != null && systemPromptOverride != null;
 
-    const systemContext = `أنت مساعد نفسي متخصص في التعافي من العلاقات الاستنزافية وبناء الحدود الصحية.
+    try {
+      if (useTools) {
+        cardsForThisTurnRef.current = [];
+        const contents = messages.map((m) => ({
+          role: m.role === "user" ? ("user" as const) : ("model" as const),
+          parts: [{ text: m.content }]
+        }));
+        contents.push({ role: "user" as const, parts: [{ text: userMessage.content }] });
 
-${personLabel ? `**السياق:** المستخدم بيتعامل مع شخص اسمه "${personLabel}"` : ''}
-${context ? `**المرحلة الحالية:** ${context}` : ''}
+        const executeToolExecutor = async (name: string, args: object) => {
+          if (name === "showCard") {
+            const cardId = (args as { cardId?: string }).cardId;
+            if (cardId === "breathing" || cardId === "guilt_detox") {
+              cardsForThisTurnRef.current.push(cardId);
+            }
+            return { result: { ok: true } };
+          }
+          if (name === "generateCustomExercise") {
+            const a = args as { goal?: string; type?: string; title?: string; durationSeconds?: number };
+            const type = (a.type === "countdown" || a.type === "stopwatch") ? a.type : "countdown";
+            const title = String(a.title ?? a.goal ?? "تمرين مخصص").trim() || "تمرين مخصص";
+            const durationSeconds = typeof a.durationSeconds === "number" ? Math.max(0, a.durationSeconds) : 60;
+            customExerciseSpecRef.current = { type, title, durationSeconds };
+            return { result: { spec: { type, title, durationSeconds } } };
+          }
+          const out = await executeToolCall(name, args as Record<string, unknown>, agentActions);
+          return { result: out.result, error: out.error };
+        };
+
+        const finalText = await geminiClient.generateWithTools(
+          {
+            contents,
+            tools: [getAgentToolDeclarations()],
+            systemInstruction: systemPromptOverride
+          },
+          executeToolExecutor
+        );
+
+        const cardIds = [...cardsForThisTurnRef.current] as CardId[];
+        const customSpec = customExerciseSpecRef.current;
+        customExerciseSpecRef.current = null;
+        setMessages((prev) => {
+          const withoutLast = prev.filter((m) => m.id !== assistantId);
+          return [
+            ...withoutLast,
+            {
+              id: assistantId,
+              role: "assistant",
+              content: finalText ?? "عذراً، ما قدرتش أكمّل. جرّب تاني.",
+              timestamp: Date.now(),
+              cardIds: cardIds.length > 0 ? cardIds : undefined,
+              customExerciseSpec: customSpec ?? undefined
+            }
+          ];
+        });
+      } else {
+        const conversationHistory = messages
+          .map((m) => `${m.role === "user" ? "المستخدم" : "المساعد"}: ${m.content}`)
+          .join("\n\n");
+
+        const systemContext = `أنت مساعد نفسي متخصص في التعافي من العلاقات الاستنزافية وبناء الحدود الصحية.
+
+${personLabel ? `**السياق:** المستخدم بيتعامل مع شخص اسمه "${personLabel}"` : ""}
+${context ? `**المرحلة الحالية:** ${context}` : ""}
 
 **أسلوبك:**
 - استخدم العامية المصرية
@@ -81,43 +166,41 @@ ${context ? `**المرحلة الحالية:** ${context}` : ''}
 - ركز على التمكين، مش الحلول الجاهزة
 - لا تعطي نصائح طبية أو علاجية، بس دعم نفسي عام
 
-${conversationHistory ? `**المحادثة السابقة:**\n${conversationHistory}\n` : ''}
+${conversationHistory ? `**المحادثة السابقة:**\n${conversationHistory}\n` : ""}
 
 **سؤال المستخدم:**
 ${userMessage.content}`;
 
-    try {
-      let assistantContent = "";
-      const assistantId = `assistant-${Date.now()}`;
-
-      // Stream the response
-      for await (const chunk of geminiClient.generateStream(systemContext)) {
-        assistantContent += chunk;
-        
-        // Update the last message with accumulated content
-        setMessages(prev => {
-          const withoutLast = prev.filter(m => m.id !== assistantId);
-          return [
-            ...withoutLast,
-            {
-              id: assistantId,
-              role: "assistant",
-              content: assistantContent,
-              timestamp: Date.now()
-            }
-          ];
-        });
+        let assistantContent = "";
+        for await (const chunk of geminiClient.generateStream(systemContext)) {
+          assistantContent += chunk;
+          setMessages((prev) => {
+            const withoutLast = prev.filter((m) => m.id !== assistantId);
+            return [
+              ...withoutLast,
+              {
+                id: assistantId,
+                role: "assistant",
+                content: assistantContent,
+                timestamp: Date.now()
+              }
+            ];
+          });
+        }
       }
-
     } catch (error) {
-      console.error('Error in chatbot:', error);
-      const errorMessage: Message = {
-        id: `error-${Date.now()}`,
-        role: "assistant",
-        content: "عذراً، حصل خطأ. ممكن تحاول تاني؟",
-        timestamp: Date.now()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      if (typeof import.meta !== "undefined" && (import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
+        console.error("Error in chatbot:", error);
+      }
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantId,
+          role: "assistant",
+          content: "عذراً، حصل خطأ. ممكن تحاول تاني؟",
+          timestamp: Date.now()
+        }
+      ]);
     } finally {
       setIsStreaming(false);
     }
@@ -128,6 +211,19 @@ ${userMessage.content}`;
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleMicClick = () => {
+    if (isListening) {
+      stopSpeech();
+      return;
+    }
+    startSpeech((transcript) => {
+      if (transcript) {
+        setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        inputRef.current?.focus();
+      }
+    });
   };
 
   const aiAvailable = geminiClient.isAvailable();
@@ -186,16 +282,28 @@ ${userMessage.content}`;
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-2xl">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
-              <h3 className="font-bold">المساعد الذكي</h3>
+              <h3 className="font-bold">المساعد الميداني</h3>
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="hover:bg-white/20 rounded-full p-1 transition-colors"
-              aria-label="إغلاق"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1">
+              {agentContext?.screen !== "map" && onNavigateToMap != null && (
+                <button
+                  type="button"
+                  onClick={onNavigateToMap}
+                  className="text-xs font-medium px-2 py-1 rounded-lg hover:bg-white/20 transition-colors"
+                  aria-label="اعرض الخريطة"
+                >
+                  اعرض الخريطة
+                </button>
+              )}
+              <button
+                onClick={() => setIsOpen(false)}
+                className="hover:bg-white/20 rounded-full p-1 transition-colors"
+                aria-label="إغلاق"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
@@ -203,7 +311,7 @@ ${userMessage.content}`;
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
               >
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-2 ${
@@ -224,6 +332,22 @@ ${userMessage.content}`;
                     })}
                   </p>
                 </div>
+                {msg.role === "assistant" && msg.cardIds?.length ? (
+                  <div className="flex flex-col gap-1 mt-1 w-[85%] max-w-[85%]">
+                    {msg.cardIds.map((cardId) => (
+                      <AgentCard
+                        key={cardId}
+                        cardId={cardId}
+                        onStartBreathing={onOpenBreathing}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+                {msg.role === "assistant" && msg.customExerciseSpec ? (
+                  <div className="mt-1 w-[85%] max-w-[85%]">
+                    <CustomExerciseCard spec={msg.customExerciseSpec} />
+                  </div>
+                ) : null}
               </div>
             ))}
             {isStreaming && (
@@ -238,6 +362,9 @@ ${userMessage.content}`;
 
           {/* Input */}
           <div className="p-4 border-t border-gray-200 bg-white rounded-b-2xl">
+            {speechError != null && (
+              <p className="text-xs text-amber-600 mb-2 text-center">{speechError}</p>
+            )}
             <div className="flex items-end gap-2">
               <textarea
                 ref={inputRef}
@@ -249,6 +376,22 @@ ${userMessage.content}`;
                 disabled={isStreaming}
                 className="flex-1 resize-none border-2 border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
+              {speechSupported && (
+                <button
+                  type="button"
+                  onClick={handleMicClick}
+                  disabled={isStreaming}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                    isListening
+                      ? "bg-red-500 text-white animate-pulse"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                  aria-label={isListening ? "إيقاف الاستماع" : "تسجيل صوت"}
+                  title={isListening ? "إيقاف الاستماع" : "تسجيل صوت"}
+                >
+                  {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                </button>
+              )}
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || isStreaming}
@@ -259,7 +402,8 @@ ${userMessage.content}`;
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-2 text-center">
-              اضغط Enter للإرسال • Shift+Enter للسطر الجديد
+              {speechSupported ? "ميكروفون • " : ""}
+              Enter للإرسال • Shift+Enter سطر جديد
             </p>
           </div>
         </div>

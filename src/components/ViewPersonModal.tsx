@@ -1,14 +1,12 @@
 import type { FC } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, X, ChevronDown } from "lucide-react";
+import { X, ChevronDown, ArrowRight } from "lucide-react";
 import { useMapState } from "../state/mapState";
-import { RecoveryProgressBar } from "./RecoveryProgressBar";
-import { SuggestedPlacement } from "./SuggestedPlacement";
-import { RealityCheck, realityScoreToRing } from "./RealityCheck";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { mapCopy } from "../copy/map";
 import { getPersonViewData } from "../modules/personView/personViewData";
+import { generatePersonSolution } from "../utils/personSolutionAI";
 
 interface ViewPersonModalProps {
   nodeId: string;
@@ -24,15 +22,11 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   onClose
 }) => {
   const node = useMapState((s) => s.nodes.find((n) => n.id === nodeId));
-  const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
 
-  // شاشتين بس: تشخيص/حل + فهم العلاقة
-  const [step, setStep] = useState<"result" | "reality">("result");
-
-  // تبويبين بس في النتيجة: التشخيص | الحل
-  const [resultTab, setResultTab] = useState<"diagnosis" | "solution">("diagnosis");
-  // تبويب التشخيص — رؤية إضافية (إن وُجدت) مطوية افتراضيًا
+  const [viewScreen, setViewScreen] = useState<"diagnosis" | "solution">("diagnosis");
   const [showDiagnosisInsight, setShowDiagnosisInsight] = useState(false);
+  const [solutionText, setSolutionText] = useState<string | null>(null);
+  const [solutionLoading, setSolutionLoading] = useState(false);
 
   if (!node || !node.analysis) {
     return (
@@ -76,13 +70,28 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
     );
   }
 
-  const handleBack = () => {
-    if (step === "reality") setStep("result");
-  };
-
-  // نستخدم نفس بيانات العرض لكن بس التشخيص + الحل في النافذة دي
   const viewData = getPersonViewData(node, category, goalId);
-  const { diagnosis, solution } = viewData;
+  const { diagnosis } = viewData;
+
+  useEffect(() => {
+    if (viewScreen !== "solution" || solutionText !== null || solutionLoading) return;
+    setSolutionLoading(true);
+    const input = {
+      personLabel: node.label,
+      personalizedTitle: diagnosis.personalizedTitle,
+      stateLabel: diagnosis.stateLabel,
+      goalAction: diagnosis.goalAction,
+      understanding: diagnosis.understanding,
+      isEmotionalCaptivity: diagnosis.isEmotionalCaptivity,
+      understandingSubtext: diagnosis.understandingSubtext
+    };
+    generatePersonSolution(input)
+      .then((text) => {
+        setSolutionText(text ?? "تعذر توليد الحل. جرّب لاحقاً.");
+      })
+      .catch(() => setSolutionText("تعذر توليد الحل. جرّب لاحقاً."))
+      .finally(() => setSolutionLoading(false));
+  }, [viewScreen, nodeId, solutionText, solutionLoading]);
 
   return (
     <div
@@ -106,151 +115,142 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
           <X className="w-5 h-5" />
         </button>
         <AnimatePresence mode="wait">
-          {step === "result" && (
+          {viewScreen === "diagnosis" && (
             <motion.div
-              key="result"
+              key="diagnosis"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
+              className="text-center"
             >
-              <RecoveryProgressBar node={node} />
-
-              {/* Tabs: التشخيص | الحل */}
-              <div className="flex gap-1 p-1 bg-slate-100 rounded-xl mb-4">
-                {(["diagnosis", "solution"] as const).map((tab) => {
-                  const isActive = resultTab === tab;
-                  return (
-                    <motion.button
-                      key={tab}
-                      type="button"
-                      onClick={() => setResultTab(tab)}
-                      className={`flex-1 py-2.5 px-2 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-200 ${
-                        isActive ? "bg-white text-teal-700 shadow-sm" : "text-slate-600 hover:text-slate-900"
-                      }`}
-                      whileTap={{ scale: 0.97 }}
-                      transition={{ duration: 0.15 }}
-                    >
-                      {tab === "diagnosis" ? mapCopy.tabDiagnosis : tab === "symptoms" ? mapCopy.tabSymptoms : tab === "solution" ? mapCopy.tabSolution : mapCopy.tabPlan}
-                    </motion.button>
-                  );
-                })}
+              {/* النتيجة الرئيسية — محتوى التشخيص بدون كلمة التشخيص */}
+              <div className="p-6 bg-linear-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-2xl mb-6">
+                <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                  {diagnosis.personalizedTitle}
+                </h2>
+                <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500 text-center">
+                  <p>
+                    الحالة: <span className="font-semibold text-slate-700">{diagnosis.stateLabel}</span>
+                  </p>
+                  {diagnosis.goalAction && (
+                    <p className="w-full">
+                      الهدف: <span className="font-semibold text-slate-700">{diagnosis.goalAction}</span>
+                      {diagnosis.isEmotionalCaptivity && (
+                        <span className="block mt-1 text-xs text-slate-600 font-normal">
+                          ليه؟ لأن الهدف مش «ترسم حدود» (الحدود مرسومة بنادراً). الهدف إنك تبطل تحس بالذنب وتبطل تفكر قهرياً.
+                        </span>
+                      )}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              {resultTab === "diagnosis" && (
-                <div className="space-y-4">
-                  {/* فقرة واحدة: العنوان + فهم الوضع + الحالة والهدف — بدون عنوان "اقرأ فهم الوضع" */}
-                  <div className="p-5 bg-linear-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-2xl text-right">
-                    <p className="text-base text-slate-800 leading-relaxed">
-                      {diagnosis.personalizedTitle}
-                      <br />
-                      {diagnosis.understanding}
-                      <br />
-                      <span className="text-sm text-gray-600 mt-2 block">
-                        الحالة: <span className="font-semibold text-slate-700">{diagnosis.stateLabel}</span>
-                        {diagnosis.goalAction && (
-                          <span>  الهدف: {diagnosis.goalAction}</span>
-                        )}
-                      </span>
-                    </p>
-                  </div>
+              {/* فهم الوضع */}
+              <div className="p-5 bg-blue-50 border-2 border-blue-200 rounded-xl text-right mb-6">
+                <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
+                  <span>🔍</span> فهم الوضع
+                </h3>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {diagnosis.understanding}
+                </p>
+                {diagnosis.understandingSubtext && (
+                  <p className="text-sm text-teal-800 mt-3 font-medium leading-relaxed">
+                    {diagnosis.understandingSubtext}
+                  </p>
+                )}
+              </div>
 
-                  {/* رؤية إضافية — مطوية افتراضيًا، فتح/إغلاق ناعم */}
-                  {diagnosis.diagnosisSummary && (
-                    <div className="rounded-xl border-2 border-violet-200 overflow-hidden">
-                      <motion.button
-                        type="button"
-                        onClick={() => setShowDiagnosisInsight((v) => !v)}
-                        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-right bg-violet-50 hover:bg-violet-100 transition-colors duration-200 text-sm font-semibold text-violet-900"
-                        whileTap={{ scale: 0.995 }}
-                      >
-                        <span className="flex items-center gap-2">
-                          <span>✨</span> {mapCopy.diagnosisReadInsight}
-                        </span>
-                        <motion.span
-                          animate={{ rotate: showDiagnosisInsight ? 180 : 0 }}
-                          transition={{ duration: 0.25, ease: "easeOut" }}
-                        >
-                          <ChevronDown className="w-4 h-4 shrink-0" />
-                        </motion.span>
-                      </motion.button>
-                      <AnimatePresence initial={false}>
-                        {showDiagnosisInsight && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.25, ease: "easeOut" }}
-                            className="overflow-hidden"
-                          >
-                            <div className="p-4 bg-violet-50/80 border-t border-violet-100 text-right">
-                              <p className="text-sm text-gray-700 leading-relaxed">{diagnosis.diagnosisSummary}</p>
-                              <button
-                                type="button"
-                                onClick={() => setShowDiagnosisInsight(false)}
-                                className="mt-2 text-xs text-slate-500 hover:text-slate-700 transition-colors duration-150"
-                              >
-                                {mapCopy.diagnosisCollapse}
-                              </button>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  )}
+              {diagnosis.showDetachmentSections && (
+                <div className="p-5 bg-violet-50 border-2 border-violet-200 rounded-xl text-right mb-6">
+                  <h3 className="text-sm font-bold text-violet-900 mb-2">توضيح الحالة</h3>
+                  <p className="text-sm text-gray-700 leading-relaxed">{diagnosis.enemyExplanation}</p>
                 </div>
               )}
 
-              {resultTab === "solution" && (
-                <div className="space-y-4">
-                  {solution.solutionSuggestions && (
-                    <div className="p-4 bg-violet-50 border-2 border-violet-200 rounded-xl text-right">
-                      <p className="text-sm text-gray-700 leading-relaxed">{solution.solutionSuggestions}</p>
-                    </div>
-                  )}
-                  <SuggestedPlacement
-                    currentRing={solution.currentRing}
-                    personLabel={solution.personLabel}
-                    category={solution.category}
-                    selectedSymptoms={solution.selectedSymptoms}
-                  />
-                  <button
+              {diagnosis.diagnosisSummary && (
+                <div className="rounded-xl border-2 border-violet-200 overflow-hidden mb-6">
+                  <motion.button
                     type="button"
-                    onClick={() => setStep("reality")}
-                    className="w-full rounded-full bg-gray-100 text-gray-700 px-8 py-3 text-sm font-medium hover:bg-gray-200 active:scale-[0.98] transition-all duration-200 border border-dashed border-gray-300"
-                    title="اختياري: فهم علاقتك بالشخص"
+                    onClick={() => setShowDiagnosisInsight((v) => !v)}
+                    className="w-full flex items-center justify-between gap-2 px-4 py-3 text-right bg-violet-50 hover:bg-violet-100 transition-colors duration-200 text-sm font-semibold text-violet-900"
+                    whileTap={{ scale: 0.995 }}
                   >
-                    استكمال: فهم العلاقة
-                  </button>
+                    <span className="flex items-center gap-2">
+                      <span>✨</span> {mapCopy.diagnosisReadInsight}
+                    </span>
+                    <motion.span
+                      animate={{ rotate: showDiagnosisInsight ? 180 : 0 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                    >
+                      <ChevronDown className="w-4 h-4 shrink-0" />
+                    </motion.span>
+                  </motion.button>
+                  <AnimatePresence initial={false}>
+                    {showDiagnosisInsight && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-4 bg-violet-50/80 border-t border-violet-100 text-right">
+                          <p className="text-sm text-gray-700 leading-relaxed">{diagnosis.diagnosisSummary}</p>
+                          <button
+                            type="button"
+                            onClick={() => setShowDiagnosisInsight(false)}
+                            className="mt-2 text-xs text-slate-500 hover:text-slate-700 transition-colors duration-150"
+                          >
+                            {mapCopy.diagnosisCollapse}
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               )}
 
+              <button
+                type="button"
+                onClick={() => setViewScreen("solution")}
+                className="w-full mt-6 rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <span>الحل</span>
+                <ArrowRight className="w-5 h-5" />
+              </button>
             </motion.div>
           )}
 
-          {step === "reality" && (
+          {viewScreen === "solution" && (
             <motion.div
-              key="reality"
+              key="solution"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
+              className="text-right"
             >
               <button
                 type="button"
-                onClick={handleBack}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors active:scale-95 rounded-lg hover:bg-gray-100"
+                onClick={() => setViewScreen("diagnosis")}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 mb-4 transition-colors active:scale-95 rounded-lg hover:bg-slate-100"
               >
-                <ArrowLeft className="w-5 h-5 sm:w-4 sm:h-4" />
+                <ArrowRight className="w-4 h-4" aria-hidden />
                 <span className="font-medium">رجوع</span>
               </button>
-              <RealityCheck
-                personLabel={node.label}
-                onDone={(answers) => {
-                  moveNodeToRing(nodeId, realityScoreToRing(answers));
-                  setStep("result");
-                }}
-              />
+              {solutionLoading ? (
+                <div className="p-6 text-center text-slate-500">
+                  <p className="text-sm">جاري تحليل الوضع وتوليد حل مخصص...</p>
+                </div>
+              ) : solutionText ? (
+                <div className="p-5 bg-teal-50 border-2 border-teal-200 rounded-xl">
+                  <h3 className="text-sm font-bold text-teal-900 mb-2 flex items-center gap-2">
+                    <span>💡</span> الحل المخصص
+                  </h3>
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{solutionText}</p>
+                </div>
+              ) : null}
             </motion.div>
           )}
 

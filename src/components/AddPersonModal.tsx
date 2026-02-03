@@ -160,7 +160,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, category, onCl
         : undefined;
     const detachmentMode = ring === "red" && isLowContact(answers);
     const contact = realityAnswersToContact(answers);
-    const nodeId = addNode(finalLabel, ring, { score, answers: healthAnswers }, goalId, treeRelation, detachmentMode, contact, isEmergency);
+    const nodeId = addNode(finalLabel, ring, { score, answers: healthAnswers }, goalId, treeRelation, detachmentMode, contact, isEmergency, answers);
     recordJourneyEvent("node_added", { ring, detachmentMode: detachmentMode ?? false, isEmergency: isEmergency ?? false });
     setAddedNodeId(nodeId);
     setRecommendedRing(ring);
@@ -506,9 +506,6 @@ function realityAnswersToContact(answers: RealityAnswers): ContactLevel {
 const STATIC_ENEMY_EXPLANATION = (name: string) =>
   `لأن العدو مش "${name}" اللي برا، العدو هو "${name}" اللي جوه دماغك (الصوت الداخلي، الذنب، الخوف). أنت مسجون في التفكير فيها رغم إنها مش موجودة.`;
 
-const STATIC_GOAL_EXPLANATION =
-  "لأن الهدف مش أنك «ترسم حدود» (الحدود مرسومة بالفعل بكلمة «نادراً»). الهدف هو إنك تبطل تحس بالذنب تجاه الحدود دي، وتبطل تفكر فيها قهرياً.";
-
 const ResultScreen: FC<ResultScreenProps> = ({
   personLabel,
   ring,
@@ -574,7 +571,6 @@ const ResultScreen: FC<ResultScreenProps> = ({
   const goalLabel = isEmotionalCaptivity ? "فك الارتباط الشعوري" : getGoalAction(goalId);
 
   const enemyExplanation = aiInsight?.deep_explanation ?? STATIC_ENEMY_EXPLANATION(personLabel);
-  const goalExplanation = aiInsight?.goal_reframed ?? STATIC_GOAL_EXPLANATION;
 
   return (
     <motion.div
@@ -632,11 +628,6 @@ const ResultScreen: FC<ResultScreenProps> = ({
           <div className="p-5 bg-violet-50 border-2 border-violet-200 rounded-xl text-right mb-6">
             <h3 className="text-sm font-bold text-violet-900 mb-2">توضيح الحالة</h3>
             <p className="text-sm text-gray-700 leading-relaxed">{enemyExplanation}</p>
-          </div>
-          {/* توضيح الهدف — مش رسم حدود */}
-          <div className="p-5 bg-amber-50 border-2 border-amber-200 rounded-xl text-right mb-6">
-            <h3 className="text-sm font-bold text-amber-900 mb-2">توضيح الهدف</h3>
-            <p className="text-sm text-gray-700 leading-relaxed">{goalExplanation}</p>
           </div>
           {/* المكان الصحيح المقترح */}
           <div className="p-5 bg-slate-100 border-2 border-slate-300 rounded-xl text-right mb-6">

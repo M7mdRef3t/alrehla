@@ -17,6 +17,10 @@ import type { AdviceCategory } from "../data/adviceScripts";
 interface CoreMapScreenProps {
   category: AdviceCategory;
   goalId: string;
+  selectedNodeId: string | null;
+  onSelectNode: (id: string | null) => void;
+  /** عند توفره يُستدعى لفتح تمرين التنفس (مثلاً من الـ Agent) */
+  onOpenBreathing?: () => void;
   /** في وضع الرحلة: يظهر زر "كمل الرحلة" عند اكتمال خطوة علاقة واحدة */
   journeyMode?: boolean;
   onJourneyComplete?: () => void;
@@ -25,11 +29,13 @@ interface CoreMapScreenProps {
 export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   category,
   goalId,
+  selectedNodeId,
+  onSelectNode,
+  onOpenBreathing,
   journeyMode = false,
   onJourneyComplete
 }) => {
   const [showAddPerson, setShowAddPerson] = useState(false);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [showMeCard, setShowMeCard] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
   const [legendTooltip, setLegendTooltip] = useState<"green" | "yellow" | "red" | null>(null);
@@ -62,9 +68,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   // لو الشخص المحدد اتحذف (مثلاً بعد حذف وإضافة تاني)، نغلق نافذة التفاصيل
   useEffect(() => {
     if (selectedNodeId && !nodes.some((n) => n.id === selectedNodeId)) {
-      setSelectedNodeId(null);
+      onSelectNode(null);
     }
-  }, [selectedNodeId, nodes]);
+  }, [selectedNodeId, nodes, onSelectNode]);
 
   const canCompleteJourneyStep =
     journeyMode &&
@@ -189,7 +195,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           type="button"
           className="rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold shadow-lg hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
           onClick={() => {
-            setSelectedNodeId(null);
+            onSelectNode(null);
             setShowAddPerson(true);
           }}
           title={mapCopy.addPersonTitle}
@@ -210,7 +216,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
           >
-            <ForestView onNodeClick={(id) => setSelectedNodeId(id)} />
+            <ForestView onNodeClick={(id) => onSelectNode(id)} />
           </motion.div>
         ) : galaxyMode && galaxySubView === "map" ? (
           <motion.div
@@ -221,7 +227,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             transition={{ duration: 0.25, ease: "easeOut" }}
           >
             <MapCanvas
-              onNodeClick={(id) => setSelectedNodeId(id)}
+              onNodeClick={(id) => onSelectNode(id)}
               onMeClick={() => setShowMeCard(true)}
               galaxyGoalIds={selectedContexts.length > 0 ? selectedContexts : ["family", "work", "love", "general"]}
             />
@@ -235,7 +241,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             transition={{ duration: 0.25, ease: "easeOut" }}
           >
             <MapCanvas
-              onNodeClick={(id) => setSelectedNodeId(id)}
+              onNodeClick={(id) => onSelectNode(id)}
               onMeClick={() => setShowMeCard(true)}
               goalIdFilter={goalId}
             />
@@ -248,7 +254,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
           >
-            <FamilyTreeView onNodeClick={(id) => setSelectedNodeId(id)} />
+            <FamilyTreeView onNodeClick={(id) => onSelectNode(id)} />
           </motion.div>
         ) : null}
       </AnimatePresence>
@@ -342,8 +348,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           category={category}
           onClose={(openNodeId) => {
             setShowAddPerson(false);
-            if (openNodeId) setSelectedNodeId(openNodeId);
-            else setSelectedNodeId(null);
+            if (openNodeId) onSelectNode(openNodeId);
+            else onSelectNode(null);
           }}
         />
       )}
@@ -353,7 +359,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           nodeId={selectedNodeId}
           category={category}
           goalId={goalId}
-          onClose={() => setSelectedNodeId(null)}
+          onClose={() => onSelectNode(null)}
         />
       )}
 
@@ -362,12 +368,13 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           onClose={() => setShowMeCard(false)}
           onStartBreathing={() => {
             setShowMeCard(false);
-            setShowBreathing(true);
+            if (onOpenBreathing) onOpenBreathing();
+            else setShowBreathing(true);
           }}
         />
       )}
 
-      {showBreathing && (
+      {showBreathing && !onOpenBreathing && (
         <BreathingOverlay onClose={() => setShowBreathing(false)} />
       )}
 

@@ -396,10 +396,12 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
               أنت
             </text>
           </motion.g>
-        </svg>
 
-        {/* المنطقة الرمادية: خارج الأحمر — عزل تعافي */}
-        <circle cx="50" cy="50" r={GREY_ZONE_RADIUS} fill="none" stroke="#94a3b8" strokeWidth={8} opacity={0.35} className="pointer-events-none" />
+          {/* المنطقة الرمادية: خارج الأحمر — عزل تعافي */}
+          <g aria-hidden>
+            <circle cx="50" cy="50" r={GREY_ZONE_RADIUS} fill="none" stroke="#94a3b8" strokeWidth={8} opacity={0.35} className="pointer-events-none" />
+          </g>
+        </svg>
 
         <div className="absolute inset-0 pointer-events-none">
           <div className="relative w-full h-full pointer-events-auto">

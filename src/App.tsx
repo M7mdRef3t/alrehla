@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { Landing } from "./components/Landing";
@@ -7,6 +7,7 @@ import { CoreMapScreen } from "./components/CoreMapScreen";
 import { AppSidebar } from "./components/AppSidebar";
 import { RelationshipGym } from "./components/RelationshipGym";
 import { BaselineAssessment } from "./components/BaselineAssessment";
+import { BreathingOverlay } from "./components/BreathingOverlay";
 import { AIChatbot } from "./components/AIChatbot";
 import { EmergencyOverlay } from "./components/EmergencyOverlay";
 import { AchievementToast } from "./components/Achievements";
@@ -17,6 +18,11 @@ import { useJourneyState } from "./state/journeyState";
 import { useAchievementState, getLibraryOpenedAt, getBreathingUsedAt } from "./state/achievementState";
 import { trackPageView } from "./services/analytics";
 import type { AdviceCategory } from "./data/adviceScripts";
+import {
+  createAgentActions,
+  resolvePersonFromNodes,
+  buildAgentSystemPrompt
+} from "./agent";
 
 type Screen = "landing" | "goal" | "map";
 
@@ -29,7 +35,9 @@ export default function App() {
   const [goalId, setGoalId] = useState<string>("unknown");
   const [showGym, setShowGym] = useState(false);
   const [showBaseline, setShowBaseline] = useState(false);
-  
+  const [showBreathing, setShowBreathing] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+
   const recordUserActivity = useNotificationState((s) => s.recordUserActivity);
   const isEmergencyOpen = useEmergencyState((s) => s.isOpen);
   const nodes = useMapState((s) => s.nodes);
@@ -66,12 +74,45 @@ export default function App() {
 
   const goToGoals = () => setScreen("goal");
 
+  useEffect(() => {
+    if (screen !== "map") setSelectedNodeId(null);
+  }, [screen]);
+
+  const agentContext = useMemo(
+    () => ({
+      nodesSummary: nodes.map((n) => ({ id: n.id, label: n.label, ring: n.ring })),
+      screen,
+      selectedNodeId,
+      goalId,
+      category
+    }),
+    [nodes, screen, selectedNodeId, goalId, category]
+  );
+
+  const agentActions = useMemo(
+    () =>
+      createAgentActions({
+        resolvePerson: (labelOrId) => resolvePersonFromNodes(labelOrId, nodes),
+        onNavigateBreathing: () => setShowBreathing(true),
+        onNavigateGym: () => setShowGym(true),
+        onNavigateMap: () => setScreen("map"),
+        onNavigateBaseline: () => setShowBaseline(true),
+        onNavigateEmergency: () => useEmergencyState.getState().open(),
+        onNavigatePerson: (nodeId) => {
+          setScreen("map");
+          setSelectedNodeId(nodeId);
+        }
+      }),
+    [nodes]
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex transition-colors" dir="rtl">
       <AppSidebar
         onOpenGym={() => setShowGym(true)}
         onStartJourney={goToGoals}
         onOpenBaseline={() => setShowBaseline(true)}
+        viewingNodeId={screen === "map" ? selectedNodeId : null}
       />
       <main
         className="flex-1 min-w-0 flex items-center justify-center px-4 transition-[margin]"
@@ -98,7 +139,13 @@ export default function App() {
           )}
 
           {screen === "map" && (
-            <CoreMapScreen category={category} goalId={goalId} />
+            <CoreMapScreen
+              category={category}
+              goalId={goalId}
+              selectedNodeId={selectedNodeId}
+              onSelectNode={setSelectedNodeId}
+              onOpenBreathing={() => setShowBreathing(true)}
+            />
           )}
         </motion.div>
       </main>
@@ -148,11 +195,31 @@ export default function App() {
         </div>
       )}
 
-      <AIChatbot />
+      <AIChatbot
+        agentContext={agentContext}
+        agentActions={agentActions}
+        systemPromptOverride={buildAgentSystemPrompt(agentContext)}
+        onOpenBreathing={() => setShowBreathing(true)}
+        onNavigateToMap={() => setScreen("map")}
+      />
       <AchievementToast />
 
-      {/* Emergency Overlay */}
-      {isEmergencyOpen && <EmergencyOverlay />}
+      {showBreathing && (
+        <BreathingOverlay onClose={() => setShowBreathing(false)} />
+      )}
+
+      {isEmergencyOpen && (
+        <EmergencyOverlay
+          onStartBreathing={() => {
+            useEmergencyState.getState().close();
+            setShowBreathing(true);
+          }}
+          onStartScenario={() => {
+            useEmergencyState.getState().close();
+            setShowGym(true);
+          }}
+        />
+      )}
     </div>
   );
 }

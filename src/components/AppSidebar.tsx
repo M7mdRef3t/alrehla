@@ -23,18 +23,22 @@ import { NoiseSilencingModal } from "./NoiseSilencingModal";
 import { AtlasDashboard } from "./AtlasDashboard";
 import { HealthBar } from "./HealthBar";
 import { TodayTaskStrip } from "./TodayTaskStrip";
+import { RecoveryProgressBar } from "./RecoveryProgressBar";
 import { guardianCopy } from "../copy/guardianCopy";
 
 interface AppSidebarProps {
   onOpenGym: () => void;
   onStartJourney: () => void;
   onOpenBaseline: () => void;
+  /** عند فتح نافذة شخص: نعرض بار المراحل واسمه فوق المحتوى */
+  viewingNodeId?: string | null;
 }
 
 export const AppSidebar: FC<AppSidebarProps> = ({
   onOpenGym,
   onStartJourney,
-  onOpenBaseline
+  onOpenBaseline,
+  viewingNodeId = null
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
@@ -61,6 +65,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     }
   }, [recoveryPlanOpenWith, setRecoveryPlanOpenWith]);
 
+  const nodes = useMapState((s) => s.nodes);
+  const viewingNode = viewingNodeId ? nodes.find((n) => n.id === viewingNodeId) : null;
   const isFirstTime = useJourneyState((s) => s.baselineCompletedAt == null);
   const unlockedCount = useAchievementState((s) => s.unlockedIds.length);
   const { isSupported: notificationsSupported, settings: notificationSettings } = useNotificationState();
@@ -80,6 +86,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           <aside
             className="h-full w-52 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 shadow-lg flex flex-col gap-2 py-6 px-3 min-w-0 invisible group-hover/sidebar:visible"
           >
+          {viewingNode?.analysis && (
+            <div className="shrink-0 space-y-1 mb-1">
+              <RecoveryProgressBar node={viewingNode} />
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 text-center truncate px-1" title={viewingNode.label}>
+                {viewingNode.label}
+              </p>
+            </div>
+          )}
           <HealthBar />
           <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
           {isFirstTime && (
