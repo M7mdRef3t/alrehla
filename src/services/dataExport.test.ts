@@ -11,8 +11,8 @@ describe("dataExport", () => {
   });
 
   describe("getStorageStats", () => {
-    it("returns stats object with correct shape", () => {
-      const stats = getStorageStats();
+    it("returns stats object with correct shape", async () => {
+      const stats = await getStorageStats();
       
       expect(stats).toHaveProperty("nodesCount");
       expect(stats).toHaveProperty("hasJourneyData");

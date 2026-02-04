@@ -132,7 +132,7 @@ export async function generateDetachmentCurriculum(
     const prompt = buildPrompt(personLabel, symptomsSummary, contactReality);
     const result = await geminiClient.generateJSON<DetachmentCurriculumResult>(prompt);
     if (result?.status_title && result?.deep_explanation && result?.custom_curriculum?.length) {
-      return result;
+      return { ...result, aiGenerated: true };
     }
   }
   return {
@@ -141,7 +141,8 @@ export async function generateDetachmentCurriculum(
     goal_reframed:
       "لأن الهدف مش أنك «ترسم حدود» (الحدود مرسومة بالفعل بكلمة «نادراً»). الهدف هو إنك تبطل تحس بالذنب تجاه الحدود دي، وتبطل تفكر فيها قهرياً.",
     suggested_zone: "المنطقة الرمادية (منطقة التعافي)",
-    custom_curriculum: STATIC_CURRICULA
+    custom_curriculum: STATIC_CURRICULA,
+    aiGenerated: false
   };
 }
 
@@ -150,6 +151,7 @@ export interface DetachmentResultInsight {
   status_title: string;
   deep_explanation: string;
   goal_reframed: string;
+  aiGenerated: boolean;
 }
 
 export async function generateDetachmentResultInsight(
@@ -160,7 +162,8 @@ export async function generateDetachmentResultInsight(
   return {
     status_title: full.status_title,
     deep_explanation: full.deep_explanation,
-    goal_reframed: full.goal_reframed
+    goal_reframed: full.goal_reframed,
+    aiGenerated: full.aiGenerated ?? false
   };
 }
 

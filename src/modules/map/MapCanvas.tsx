@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import { X, GripVertical } from "lucide-react";
 import { DndContext, TouchSensor, MouseSensor, useSensor, useSensors, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
@@ -16,7 +16,7 @@ interface RingProps {
   color: string;
 }
 
-const RingView: FC<RingProps> = ({ label, radius, strokeWidth, color }) => {
+const RingView: FC<RingProps> = memo(({ label, radius, strokeWidth, color }) => {
   return (
     <g aria-label={label}>
       {/* Background Track - Faint ring to show structure */}
@@ -43,7 +43,7 @@ const RingView: FC<RingProps> = ({ label, radius, strokeWidth, color }) => {
       />
     </g>
   );
-};
+});
 
 interface NodeProps {
   node: MapNodeType;
@@ -68,8 +68,12 @@ const getRingPosition = (ring: Ring, nodeIndex: number, totalInRing: number): { 
   return { x, y };
 };
 
-/** المنطقة الرمادية: خارج الدائرة الحمراء — نفس وحدات getRingPosition */
-const GREY_ZONE_RADIUS = 52;
+/**
+ * المنطقة الرمادي حوالين الخريطة
+ * عشان تبان كاملة جوّه SVG (viewBox 0–100 مع strokeWidth 8)
+ * لازم الشعاع يبقى ≤ 46 تقريباً، غير كده بتتقص من فوق/تحت.
+ */
+const GREY_ZONE_RADIUS = 46;
 const getGreyZonePosition = (nodeIndex: number, totalInGrey: number): { x: number; y: number } => {
   const angleStep = (2 * Math.PI) / Math.max(totalInGrey, 1);
   const angle = nodeIndex * angleStep - Math.PI / 2;
@@ -85,13 +89,16 @@ const THREAT_RING_CLASS: Record<Ring, string> = {
   green: "border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.35)]"
 };
 
-const MapNodeView: FC<NodeProps> = ({ node, nodeIndex, totalInRing, position, onClick, justDraggedId }) => {
+const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, justDraggedId }) => {
   const [showDelete, setShowDelete] = useState(false);
   const deleteNode = useMapState((s) => s.deleteNode);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: node.id });
 
   const hasMismatch = node.analysis?.recommendedRing && node.ring !== node.analysis.recommendedRing;
-  const ringPos = position ?? getRingPosition(node.ring, nodeIndex, totalInRing);
+  const ringPos = useMemo(
+    () => position ?? getRingPosition(node.ring, nodeIndex, totalInRing),
+    [position, node.ring, nodeIndex, totalInRing]
+  );
   const isDetached = !!node.isDetached;
   const threatRingClass = isDetached
     ? "border-slate-400 shadow-[0_0_6px_rgba(148,163,184,0.25)]"
@@ -104,15 +111,15 @@ const MapNodeView: FC<NodeProps> = ({ node, nodeIndex, totalInRing, position, on
     transform: "translate(-50%, -50%)"
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     deleteNode(node.id);
-  };
+  }, [deleteNode, node.id]);
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     if (node.id === justDraggedId) return;
     if (onClick) onClick(node.id);
-  };
+  }, [node.id, justDraggedId, onClick]);
 
   return (
     <div
@@ -222,7 +229,23 @@ const MapNodeView: FC<NodeProps> = ({ node, nodeIndex, totalInRing, position, on
       )}
     </div>
   );
-};
+}, (prev, next) => {
+  const a = prev.node;
+  const b = next.node;
+  return (
+    a.id === b.id &&
+    a.label === b.label &&
+    a.ring === b.ring &&
+    a.isDetached === b.isDetached &&
+    a.analysis?.recommendedRing === b.analysis?.recommendedRing &&
+    prev.nodeIndex === next.nodeIndex &&
+    prev.totalInRing === next.totalInRing &&
+    prev.justDraggedId === next.justDraggedId &&
+    (prev.position?.x ?? null) === (next.position?.x ?? null) &&
+    (prev.position?.y ?? null) === (next.position?.y ?? null) &&
+    prev.onClick === next.onClick
+  );
+});
 
 const RING_LABELS: Record<Ring, string> = {
   green: mapCopy.legendGreen,
@@ -230,7 +253,7 @@ const RING_LABELS: Record<Ring, string> = {
   red: mapCopy.legendRed
 };
 
-const DroppableRing: FC<{ id: Ring | "grey"; sizePct: number; zIndex: number }> = ({ id, sizePct, zIndex }) => {
+const DroppableRing: FC<{ id: Ring | "grey"; sizePct: number; zIndex: number }> = memo(({ id, sizePct, zIndex }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
   const bg =
     id === "grey" ? "#94a3b8" : id === "green" ? "#14B8A6" : id === "yellow" ? "#FBBF24" : "#FB7185";
@@ -248,7 +271,7 @@ const DroppableRing: FC<{ id: Ring | "grey"; sizePct: number; zIndex: number }> 
       aria-hidden
     />
   );
-};
+});
 
 interface MapCanvasProps {
   onNodeClick?: (id: string) => void;
@@ -292,7 +315,10 @@ function filterNodesByContext(
 
 export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFilter, galaxyGoalIds }) => {
   const allNodes = useMapState((s) => s.nodes);
-  const nodes = filterNodesByContext(allNodes, goalIdFilter, galaxyGoalIds);
+  const nodes = useMemo(
+    () => filterNodesByContext(allNodes, goalIdFilter, galaxyGoalIds),
+    [allNodes, goalIdFilter, galaxyGoalIds]
+  );
   const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
   const setDetached = useMapState((s) => s.setDetached);
   const battery = useMeState((s) => s.battery);
@@ -339,25 +365,34 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
     [nodes, setDetached]
   );
 
-  const confirmPlacement = () => {
+  const confirmPlacement = useCallback(() => {
     if (!pendingMove) return;
     moveNodeToRing(pendingMove.nodeId, pendingMove.toRing);
     setPendingMove(null);
-  };
+  }, [moveNodeToRing, pendingMove]);
 
-  const detachedNodes = nodes.filter((n) => n.isDetached);
-  const ringNodes = nodes.filter((n) => !n.isDetached);
-  const nodesByRing = {
-    green: ringNodes.filter(n => n.ring === "green"),
-    yellow: ringNodes.filter(n => n.ring === "yellow"),
-    red: ringNodes.filter(n => n.ring === "red")
-  };
+  const { detachedNodes, ringNodes, nodesByRing } = useMemo(() => {
+    const detached = nodes.filter((n) => n.isDetached);
+    const ring = nodes.filter((n) => !n.isDetached);
+    return {
+      detachedNodes: detached,
+      ringNodes: ring,
+      nodesByRing: {
+        green: ring.filter((n) => n.ring === "green"),
+        yellow: ring.filter((n) => n.ring === "yellow"),
+        red: ring.filter((n) => n.ring === "red")
+      }
+    };
+  }, [nodes]);
 
   return (
-    <div className="w-full max-w-md mx-auto mt-8 flex flex-col gap-3">
-      <div className="relative w-full aspect-square" id="map-canvas">
+    <div className="w-full mx-auto mt-6 flex flex-col gap-3">
+      <div
+        className="relative w-full min-h-[260px] sm:min-h-[320px] md:min-h-[380px]"
+        id="map-canvas"
+      >
       <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0">
         <svg
           viewBox="0 0 100 100"
           className="w-full h-full"
@@ -399,7 +434,16 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
 
           {/* المنطقة الرمادية: خارج الأحمر — عزل تعافي */}
           <g aria-hidden>
-            <circle cx="50" cy="50" r={GREY_ZONE_RADIUS} fill="none" stroke="#94a3b8" strokeWidth={8} opacity={0.35} className="pointer-events-none" />
+            <circle
+              cx="50"
+              cy="50"
+              r={GREY_ZONE_RADIUS}
+              fill="none"
+              stroke="#64748b"
+              strokeWidth={8}
+              opacity={0.75}
+              className="pointer-events-none"
+            />
           </g>
         </svg>
 
@@ -435,7 +479,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
         </div>
 
         {/* مناطق إفلات الدوائر — الرمادي خلف الأحمر عشان الإسقاط على الحافة يعدّ رمادي */}
-        <DroppableRing id="grey" sizePct={98} zIndex={9} />
+        <DroppableRing id="grey" sizePct={92} zIndex={9} />
         <DroppableRing id="red" sizePct={84} zIndex={10} />
         <DroppableRing id="yellow" sizePct={64} zIndex={11} />
         <DroppableRing id="green" sizePct={44} zIndex={12} />

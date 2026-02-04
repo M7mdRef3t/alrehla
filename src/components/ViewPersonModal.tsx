@@ -7,6 +7,7 @@ import type { AdviceCategory } from "../data/adviceScripts";
 import { mapCopy } from "../copy/map";
 import { getPersonViewData } from "../modules/personView/personViewData";
 import { generatePersonSolution } from "../utils/personSolutionAI";
+import { generatePersonViewInsightsFromAI } from "../utils/personViewAI";
 
 interface ViewPersonModalProps {
   nodeId: string;
@@ -22,11 +23,14 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   onClose
 }) => {
   const node = useMapState((s) => s.nodes.find((n) => n.id === nodeId));
+  const updateNodeInsights = useMapState((s) => s.updateNodeInsights);
 
   const [viewScreen, setViewScreen] = useState<"diagnosis" | "solution">("diagnosis");
   const [showDiagnosisInsight, setShowDiagnosisInsight] = useState(false);
   const [solutionText, setSolutionText] = useState<string | null>(null);
   const [solutionLoading, setSolutionLoading] = useState(false);
+  const [aiDiagnosisLoading, setAiDiagnosisLoading] = useState(false);
+  const hasAIInsights = !!node?.analysis?.insights;
 
   if (!node || !node.analysis) {
     return (
@@ -72,6 +76,29 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
 
   const viewData = getPersonViewData(node, category, goalId);
   const { diagnosis } = viewData;
+
+  // توليد تشخيص / فهم / هدف مخصص من الذكاء الاصطناعي، مربوط بكل ما نعرفه عن الشخص
+  useEffect(() => {
+    if (!node || !node.analysis) return;
+    // لو عندنا خلاص ملخص تشخيص من AI، نسيبها زي ما هي
+    if (node.analysis.insights?.diagnosisSummary) return;
+
+    let cancelled = false;
+    setAiDiagnosisLoading(true);
+
+    generatePersonViewInsightsFromAI(node, category, goalId)
+      .then((insights) => {
+        if (!insights || cancelled) return;
+        updateNodeInsights(node.id, insights);
+      })
+      .finally(() => {
+        if (!cancelled) setAiDiagnosisLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [node, category, goalId, updateNodeInsights]);
 
   useEffect(() => {
     if (viewScreen !== "solution" || solutionText !== null || solutionLoading) return;
@@ -126,8 +153,16 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
             >
               {/* النتيجة الرئيسية — محتوى التشخيص بدون كلمة التشخيص */}
               <div className="p-6 bg-linear-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-2xl mb-6">
-                <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                  {diagnosis.personalizedTitle}
+                <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
+                  <span>{diagnosis.personalizedTitle}</span>
+                  {hasAIInsights && (
+                    <span
+                      className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700"
+                      title="تم توليده/تعديله بالذكاء الاصطناعي"
+                    >
+                      AI
+                    </span>
+                  )}
                 </h2>
                 <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500 text-center">
                   <p>
@@ -136,11 +171,6 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
                   {diagnosis.goalAction && (
                     <p className="w-full">
                       الهدف: <span className="font-semibold text-slate-700">{diagnosis.goalAction}</span>
-                      {diagnosis.isEmotionalCaptivity && (
-                        <span className="block mt-1 text-xs text-slate-600 font-normal">
-                          ليه؟ لأن الهدف مش «ترسم حدود» (الحدود مرسومة بنادراً). الهدف إنك تبطل تحس بالذنب وتبطل تفكر قهرياً.
-                        </span>
-                      )}
                     </p>
                   )}
                 </div>
@@ -150,6 +180,14 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               <div className="p-5 bg-blue-50 border-2 border-blue-200 rounded-xl text-right mb-6">
                 <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
                   <span>🔍</span> فهم الوضع
+                  {hasAIInsights && (
+                    <span
+                      className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700"
+                      title="تم توليده/تعديله بالذكاء الاصطناعي"
+                    >
+                      AI
+                    </span>
+                  )}
                 </h3>
                 <p className="text-sm text-gray-700 leading-relaxed">
                   {diagnosis.understanding}
@@ -163,7 +201,17 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
 
               {diagnosis.showDetachmentSections && (
                 <div className="p-5 bg-violet-50 border-2 border-violet-200 rounded-xl text-right mb-6">
-                  <h3 className="text-sm font-bold text-violet-900 mb-2">توضيح الحالة</h3>
+                  <h3 className="text-sm font-bold text-violet-900 mb-2 flex items-center gap-2">
+                    <span>توضيح الحالة</span>
+                    {hasAIInsights && (
+                      <span
+                        className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700"
+                        title="تم توليده/تعديله بالذكاء الاصطناعي"
+                      >
+                        AI
+                      </span>
+                    )}
+                  </h3>
                   <p className="text-sm text-gray-700 leading-relaxed">{diagnosis.enemyExplanation}</p>
                 </div>
               )}

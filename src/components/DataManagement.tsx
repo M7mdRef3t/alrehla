@@ -1,10 +1,11 @@
 import type { FC } from "react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Upload, X, AlertTriangle, Check, Database, FileJson, HardDrive, FileText } from "lucide-react";
 import { exportToJSON, importFromJSON, restoreBackupData, getStorageStats } from "../services/dataExport";
 import { exportMapToPDF, downloadMapImage } from "../services/pdfExport";
 import { useMapState } from "../state/mapState";
+import { clearLocalData } from "../services/secureStore";
 
 interface DataManagementProps {
   isOpen: boolean;
@@ -20,14 +21,32 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
   const [error, setError] = useState<string | null>(null);
   const [showConfirmImport, setShowConfirmImport] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [showConfirmWipe, setShowConfirmWipe] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const nodes = useMapState((s) => s.nodes);
-  const stats = getStorageStats();
+  const [stats, setStats] = useState({
+    nodesCount: 0,
+    hasJourneyData: false,
+    hasMeData: false,
+    hasNotificationSettings: false,
+    totalSizeKB: 0
+  });
 
-  const handleExport = () => {
+  useEffect(() => {
+    let mounted = true;
+    void (async () => {
+      const next = await getStorageStats();
+      if (mounted) setStats(next);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const handleExport = async () => {
     try {
-      exportToJSON();
+      await exportToJSON();
       setExportSuccess(true);
       setTimeout(() => setExportSuccess(false), 3000);
     } catch (err) {
@@ -93,8 +112,8 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
 
     try {
       const data = await importFromJSON(pendingFile);
-      restoreBackupData(data);
-      
+      await restoreBackupData(data);
+
       setImportSuccess(true);
       setShowConfirmImport(false);
       setPendingFile(null);
@@ -121,6 +140,11 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const handleConfirmWipe = () => {
+    clearLocalData();
+    window.location.reload();
   };
 
   return (
@@ -184,7 +208,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                 {/* Export Section */}
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-slate-500 px-2">تصدير</p>
-                  
+
                   <button
                     type="button"
                     onClick={handleExport}
@@ -241,7 +265,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                 {/* Import Section */}
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-slate-500 px-2">استيراد</p>
-                  
+
                   <div>
                     <input
                       ref={fileInputRef}
@@ -299,13 +323,31 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                     </p>
                   </div>
                 </div>
+
+                {/* Data Wipe */}
+                <div className="space-y-2 pt-2">
+                  <p className="text-xs font-semibold text-slate-500 px-2">مسح البيانات</p>
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmWipe(true)}
+                    className="w-full flex items-center gap-3 p-4 bg-white border-2 border-rose-200 rounded-xl hover:border-rose-400 hover:bg-rose-50 transition-all text-right active:scale-[0.99]"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="w-5 h-5 text-rose-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-slate-900">مسح كل البيانات المحلية</p>
+                      <p className="text-xs text-slate-500">يحذف جميع مفاتيح dawayir- من المتصفح</p>
+                    </div>
+                  </button>
+                </div>
               </div>
 
               {/* Footer */}
               <div className="p-4 border-t border-slate-200 bg-slate-50">
                 <p className="text-xs text-slate-500 text-center flex items-center justify-center gap-1">
                   <FileJson className="w-3 h-3" />
-                  كل بياناتك محفوظة محلياً في متصفحك
+                  كل بياناتك محفوظة محليًا في متصفحك
                 </p>
               </div>
             </div>
@@ -365,6 +407,65 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                         className="flex-1 py-2.5 px-4 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition-colors disabled:opacity-50"
                       >
                         {isImporting ? "جاري الاستيراد..." : "تأكيد"}
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Confirm Wipe Dialog */}
+          <AnimatePresence>
+            {showConfirmWipe && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4"
+                onClick={() => setShowConfirmWipe(false)}
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmWipe(false)}
+                    className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors"
+                    aria-label="إغلاق"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                  <div className="flex flex-col items-center text-center space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center">
+                      <AlertTriangle className="w-8 h-8 text-rose-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 mb-2">
+                        هل أنت متأكد؟
+                      </h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        سيتم حذف جميع البيانات المحلية نهائيًا ولا يمكن التراجع عن هذا الإجراء.
+                      </p>
+                    </div>
+                    <div className="flex gap-3 w-full">
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmWipe(false)}
+                        className="flex-1 py-2.5 px-4 border-2 border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition-colors"
+                      >
+                        إلغاء
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleConfirmWipe}
+                        className="flex-1 py-2.5 px-4 bg-rose-500 text-white font-semibold rounded-xl hover:bg-rose-600 transition-colors"
+                      >
+                        مسح
                       </button>
                     </div>
                   </div>

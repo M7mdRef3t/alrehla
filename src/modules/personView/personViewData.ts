@@ -122,12 +122,12 @@ export function getPersonViewData(
   const analysis = node.analysis!;
   const insights = analysis.insights;
   const isEmotionalCaptivity = zone === "red" && !!node.detachmentMode;
-  const stateLabel = isEmotionalCaptivity ? "استنزاف عن بُعد" : stateLabelsBase[zone];
-  const goalAction = isEmotionalCaptivity ? "فك الارتباط الشعوري" : getGoalAction(goalId);
-  const understanding = getUnderstanding(node.label, zone, isEmotionalCaptivity);
-  const personalizedTitle = getPersonalizedTitle(node.label, zone, isEmotionalCaptivity);
+  const baseStateLabel = isEmotionalCaptivity ? "استنزاف عن بُعد" : stateLabelsBase[zone];
+  const baseGoalAction = isEmotionalCaptivity ? "فك الارتباط الشعوري" : getGoalAction(goalId);
+  const baseUnderstanding = getUnderstanding(node.label, zone, isEmotionalCaptivity);
+  const basePersonalizedTitle = getPersonalizedTitle(node.label, zone, isEmotionalCaptivity);
 
-  const understandingSubtext = isEmotionalCaptivity
+  const baseUnderstandingSubtext = isEmotionalCaptivity
     ? "أنت نجحت تبعد بجسمك، بس لسه محتاج تبعد بأفكارك ومشاعرك (فك الارتباط الشعوري)."
     : undefined;
 
@@ -140,15 +140,17 @@ export function getPersonViewData(
   return {
     diagnosis: {
       zone,
-      stateLabel,
+      stateLabel: insights?.stateLabel ?? baseStateLabel,
       recommendedLabel: analysis.recommendedRing ? recommendedLabels[analysis.recommendedRing] : null,
       hasMismatch: !!(analysis.recommendedRing && node.ring !== analysis.recommendedRing),
-      goalAction,
-      personalizedTitle,
-      understanding,
+      goalAction: insights?.goalAction ?? baseGoalAction,
+      personalizedTitle: insights?.diagnosisTitle ?? basePersonalizedTitle,
+      understanding: insights?.diagnosisUnderstanding ?? baseUnderstanding,
       isEmotionalCaptivity,
-      understandingSubtext,
-      enemyExplanation: isEmotionalCaptivity ? STATIC_ENEMY_EXPLANATION(node.label) : undefined,
+      understandingSubtext: insights?.understandingSubtext ?? baseUnderstandingSubtext,
+      enemyExplanation:
+        insights?.enemyExplanation ??
+        (isEmotionalCaptivity ? STATIC_ENEMY_EXPLANATION(node.label) : undefined),
       showDetachmentSections: isEmotionalCaptivity,
       diagnosisSummary: insights?.diagnosisSummary
     },

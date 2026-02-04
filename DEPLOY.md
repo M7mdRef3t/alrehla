@@ -3,7 +3,7 @@
 ## قبل النشر
 
 1. **المتغيرات (اختياري)**  
-   لو عايز تفعّل الـ AI (Gemini): انسخ `.env.local.example` إلى `.env.local` وضيف مفتاحك.  
+   لو عايز تفعل الـ AI (Gemini): ضيف `GEMINI_API_KEY` في بيئة السيرفر (Vercel).  
    المنصة تشتغل بدون مفتاح بمنطق احتياطي.
 
 2. **البناء المحلي**
@@ -18,22 +18,24 @@
 
 ## النشر على Vercel
 
-1. اربط الريبو من [vercel.com](https://vercel.com).
+1. اربط الريبو من https://vercel.com  
 2. **Build Command:** `npm run build`  
    **Output Directory:** `dist`  
    **Install Command:** `npm ci`
-3. (اختياري) في **Environment Variables** ضيف `VITE_GEMINI_API_KEY`.
+3. (اختياري) في **Environment Variables** ضيف `GEMINI_API_KEY`.
 4. Deploy.
 
 ---
 
 ## النشر على Netlify
 
-1. اربط الريبو من [netlify.com](https://netlify.com).
+> ملاحظة: الـ AI Proxy مبني على Vercel Functions.  
+لو هتنشر على Netlify بدون Functions بديلة، خصائص الـ AI لن تعمل.
+
+1. اربط الريبو من https://netlify.com  
 2. **Build command:** `npm run build`  
    **Publish directory:** `dist`
-3. (اختياري) في **Site settings → Environment variables** ضيف `VITE_GEMINI_API_KEY`.
-4. Deploy.
+3. Deploy.
 
 ---
 
@@ -43,7 +45,7 @@
    ```bash
    npm run build
    ```
-2. ارفع محتويات مجلد `dist/` على السيرفر (أي استضافة static: GitHub Pages، S3، etc.).
+2. ارفع محتويات مجلد `dist/` على السيرفر (GitHub Pages, S3, إلخ).
 3. لو الموقع تحت مسار فرعي (مثلاً `example.com/dawayir/`) غيّر في `vite.config.ts`:
    ```ts
    base: "/dawayir/"
@@ -54,5 +56,5 @@
 
 ## ملاحظات
 
-- البيانات (الخريطة، الرحلة، القياس) محفوظة في **localStorage** في المتصفح فقط — مفيش سيرفر قاعدة بيانات.
-- الـ AI اختياري؛ بدون مفتاح Gemini الخطة والتحليل يشتغلوا بمنطق احتياطي.
+- البيانات (الخريطة، الرحلة، القياس) محفوظة في **localStorage** محليًا داخل المتصفح فقط.
+- الـ AI اختياري؛ بدون مفتاح Gemini النظام يعمل بمنطق احتياطي.

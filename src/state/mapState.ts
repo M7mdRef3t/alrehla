@@ -42,15 +42,19 @@ interface MapState {
   addDailyPathProgress: (nodeId: string, entry: DailyPathProgress) => void;
   /** مؤشر شرعية الحدود (0–100) — لمسار الصيام الشعوري */
   updateBoundaryLegitimacyScore: (nodeId: string, score: number) => void;
+  /** تغذية نافذة الشخص من الذكاء الاصطناعي (تشخيص/أعراض/حل/خطة) */
+  updateNodeInsights: (nodeId: string, insights: PersonViewInsights) => void;
 }
 
 let nextId = 1;
 
-const initial = loadStoredState();
-const initialNodes: MapNode[] = initial?.nodes ?? [];
-if (initialNodes.length > 0) {
+function deriveNextId(nodes: MapNode[]) {
+  if (nodes.length === 0) {
+    nextId = 1;
+    return;
+  }
   const maxId = Math.max(
-    ...initialNodes
+    ...nodes
       .map((node) => Number(node.id))
       .filter((value) => Number.isFinite(value))
   );
@@ -58,7 +62,7 @@ if (initialNodes.length > 0) {
 }
 
 export const useMapState = create<MapState>((set, get) => ({
-  nodes: initialNodes,
+  nodes: [],
   showPlacementTooltip: false,
   recoveryPlanOpenWith: null,
   setRecoveryPlanOpenWith: (v) => set({ recoveryPlanOpenWith: v }),
@@ -451,6 +455,23 @@ export const useMapState = create<MapState>((set, get) => ({
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
   },
+  updateNodeInsights: (nodeId, insights) => {
+    const nextNodes = get().nodes.map((node) => {
+      if (node.id !== nodeId || !node.analysis) return node;
+      return {
+        ...node,
+        analysis: {
+          ...node.analysis,
+          insights: {
+            ...(node.analysis.insights ?? {}),
+            ...insights
+          }
+        }
+      };
+    });
+    saveStoredState({ nodes: nextNodes });
+    set({ nodes: nextNodes });
+  },
   updateBoundaryLegitimacyScore: (nodeId, score) => {
     const value = Math.max(0, Math.min(100, Math.round(score)));
     const nextNodes = get().nodes.map((node) => {
@@ -465,5 +486,18 @@ export const useMapState = create<MapState>((set, get) => ({
     set({ nodes: nextNodes });
   }
 }));
+
+async function hydrateMapState() {
+  const initial = await loadStoredState();
+  const initialNodes: MapNode[] = initial?.nodes ?? [];
+  if (initialNodes.length > 0) {
+    deriveNextId(initialNodes);
+    useMapState.setState({ nodes: initialNodes });
+  }
+}
+
+if (typeof window !== "undefined") {
+  void hydrateMapState();
+}
 
 

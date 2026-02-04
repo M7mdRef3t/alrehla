@@ -3,6 +3,7 @@
  * تدير إرسال الإشعارات المحلية للمستخدم
  */
 import { getSmartDailyReminder, getSmartInactiveReminder } from "./smartReminders";
+import { getItem, setItem, getJSON, setJSON } from "./secureStore";
 
 export interface NotificationOptions {
   title: string;
@@ -59,7 +60,7 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
  */
 export async function sendNotification(options: NotificationOptions): Promise<Notification | null> {
   if (!isNotificationSupported()) return null;
-  
+
   if (Notification.permission !== "granted") {
     console.warn("لم يتم منح إذن الإشعارات");
     return null;
@@ -81,13 +82,13 @@ export async function sendNotification(options: NotificationOptions): Promise<No
 
     return notification;
   } catch (error) {
-    console.error("فشل في إرسال الإشعار:", error);
+    console.error("فشل في إرسال الإشعارات:", error);
     return null;
   }
 }
 
 /**
- * الإشعارات المعرّفة مسبقاً
+ * الإشعارات المُعرّفة مسبقًا
  */
 export const PRESET_NOTIFICATIONS: Record<NotificationType, NotificationOptions> = {
   [NOTIFICATION_TYPES.DAILY_REMINDER]: {
@@ -107,13 +108,13 @@ export const PRESET_NOTIFICATIONS: Record<NotificationType, NotificationOptions>
   },
   [NOTIFICATION_TYPES.STEP_REMINDER]: {
     title: "عندك خطوات متبقية ⏰",
-    body: "في مهمات ميدان مستنياك. خُد دقيقة وكملها.",
+    body: "في مهام ميدان مستنياك. خُد دقيقة وكمّلها.",
     tag: "step-reminder"
   }
 };
 
 /**
- * إرسال إشعار مُعرّف مسبقاً
+ * إرسال إشعار مُعرّف مسبقًا
  */
 export async function sendPresetNotification(type: NotificationType): Promise<Notification | null> {
   const options = PRESET_NOTIFICATIONS[type];
@@ -141,11 +142,11 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   exerciseComplete: true
 };
 
-export function loadNotificationSettings(): NotificationSettings {
+export async function loadNotificationSettings(): Promise<NotificationSettings> {
   try {
-    const stored = localStorage.getItem(NOTIFICATION_SETTINGS_KEY);
+    const stored = await getJSON<Partial<NotificationSettings>>(NOTIFICATION_SETTINGS_KEY);
     if (stored) {
-      return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
+      return { ...DEFAULT_SETTINGS, ...stored };
     }
   } catch (error) {
     console.error("فشل في تحميل إعدادات الإشعارات:", error);
@@ -154,35 +155,31 @@ export function loadNotificationSettings(): NotificationSettings {
 }
 
 export function saveNotificationSettings(settings: NotificationSettings): void {
-  try {
-    localStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(settings));
-  } catch (error) {
-    console.error("فشل في حفظ إعدادات الإشعارات:", error);
-  }
+  void setJSON(NOTIFICATION_SETTINGS_KEY, settings);
 }
 
 /**
  * تسجيل آخر نشاط للمستخدم
  */
 export function recordActivity(): void {
-  localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
+  void setItem(LAST_ACTIVITY_KEY, Date.now().toString());
 }
 
 /**
  * الحصول على آخر وقت نشاط
  */
-export function getLastActivity(): number | null {
-  const stored = localStorage.getItem(LAST_ACTIVITY_KEY);
+export async function getLastActivity(): Promise<number | null> {
+  const stored = await getItem(LAST_ACTIVITY_KEY);
   return stored ? parseInt(stored, 10) : null;
 }
 
 /**
  * حساب عدد الأيام منذ آخر نشاط
  */
-export function getDaysSinceLastActivity(): number | null {
-  const lastActivity = getLastActivity();
+export async function getDaysSinceLastActivity(): Promise<number | null> {
+  const lastActivity = await getLastActivity();
   if (!lastActivity) return null;
-  
+
   const now = Date.now();
   const diffMs = now - lastActivity;
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -193,14 +190,14 @@ export function getDaysSinceLastActivity(): number | null {
  * التحقق وإرسال إشعار عدم النشاط — تذكير مخصص حسب التقدم
  */
 export async function checkAndSendInactiveReminder(): Promise<void> {
-  const settings = loadNotificationSettings();
-  
+  const settings = await loadNotificationSettings();
+
   if (!settings.enabled || !settings.inactiveReminder) return;
-  
-  const daysSinceActivity = getDaysSinceLastActivity();
-  
+
+  const daysSinceActivity = await getDaysSinceLastActivity();
+
   if (daysSinceActivity !== null && daysSinceActivity >= settings.inactiveReminderDays) {
-    const { title, body } = getSmartInactiveReminder();
+    const { title, body } = await getSmartInactiveReminder();
     await sendNotification({
       title,
       body,
@@ -213,9 +210,9 @@ export async function checkAndSendInactiveReminder(): Promise<void> {
  * إرسال تذكير يومي مخصص حسب التقدم
  */
 export async function sendSmartDailyReminder(): Promise<Notification | null> {
-  const settings = loadNotificationSettings();
+  const settings = await loadNotificationSettings();
   if (!settings.enabled || !settings.dailyReminder) return null;
-  const { title, body } = getSmartDailyReminder();
+  const { title, body } = await getSmartDailyReminder();
   return sendNotification({
     title,
     body,

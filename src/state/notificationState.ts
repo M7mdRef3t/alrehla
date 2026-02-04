@@ -31,7 +31,14 @@ interface NotificationState {
 export const useNotificationState = create<NotificationState>((set, get) => ({
   isSupported: false,
   permission: null,
-  settings: loadNotificationSettings(),
+  settings: {
+    enabled: false,
+    dailyReminder: true,
+    dailyReminderTime: "20:00",
+    inactiveReminder: true,
+    inactiveReminderDays: 3,
+    exerciseComplete: true
+  },
   isLoading: false,
 
   initialize: () => {
@@ -44,7 +51,10 @@ export const useNotificationState = create<NotificationState>((set, get) => ({
     });
 
     // فحص تذكير العودة (ذكي حسب التقدم) قبل تحديث آخر نشاط
-    checkAndSendInactiveReminder();
+    void loadNotificationSettings().then((settings) => {
+      set({ settings });
+    });
+    void checkAndSendInactiveReminder();
     // تسجيل النشاط عند فتح التطبيق
     recordActivity();
   },

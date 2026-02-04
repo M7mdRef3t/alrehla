@@ -1,13 +1,42 @@
 import "@testing-library/jest-dom";
+import { webcrypto } from "node:crypto";
 
-// Mock localStorage
+// Provide Web Crypto for tests
+if (!globalThis.crypto) {
+  // @ts-expect-error - webcrypto polyfill
+  globalThis.crypto = webcrypto;
+}
+Object.defineProperty(window, "crypto", { value: globalThis.crypto });
+
+if (!globalThis.btoa) {
+  globalThis.btoa = (input: string) => Buffer.from(input, "binary").toString("base64");
+}
+
+if (!globalThis.atob) {
+  globalThis.atob = (input: string) => Buffer.from(input, "base64").toString("binary");
+}
+
+// Mock localStorage with in-memory implementation
+const storage = new Map<string, string>();
 const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-  length: 0,
-  key: vi.fn()
+  getItem: vi.fn((key: string) => {
+    return storage.has(key) ? storage.get(key)! : null;
+  }),
+  setItem: vi.fn((key: string, value: string) => {
+    storage.set(key, String(value));
+  }),
+  removeItem: vi.fn((key: string) => {
+    storage.delete(key);
+  }),
+  clear: vi.fn(() => {
+    storage.clear();
+  }),
+  key: vi.fn((index: number) => {
+    return Array.from(storage.keys())[index] ?? null;
+  }),
+  get length() {
+    return storage.size;
+  }
 };
 Object.defineProperty(window, "localStorage", { value: localStorageMock });
 

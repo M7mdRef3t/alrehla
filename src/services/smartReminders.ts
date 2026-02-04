@@ -23,8 +23,8 @@ function countSituations(nodes: MapNode[]): number {
   return total;
 }
 
-export function getProgressSnapshot(): ProgressSnapshot {
-  const stored = loadStoredState();
+export async function getProgressSnapshot(): Promise<ProgressSnapshot> {
+  const stored = await loadStoredState();
   const nodes = stored?.nodes ?? [];
   const situationsCount = countSituations(nodes);
   const hasViewedPlan = nodes.some((n) => n.lastViewedStep === "recoveryPlan");
@@ -43,10 +43,10 @@ export interface SmartReminderContent {
 }
 
 /**
- * يختار تذكيراً يومياً مخصصاً حسب التقدم
+ * يختار تذكيرًا يوميًا مخصصًا حسب التقدم
  */
-export function getSmartDailyReminder(): SmartReminderContent {
-  const p = getProgressSnapshot();
+export async function getSmartDailyReminder(): Promise<SmartReminderContent> {
+  const p = await getProgressSnapshot();
 
   if (p.nodesCount === 0) {
     return {
@@ -90,10 +90,10 @@ export function getSmartDailyReminder(): SmartReminderContent {
 }
 
 /**
- * يختار تذكير عودة (بعد غياب) مخصصاً حسب التقدم
+ * يختار تذكير عودة (بعد غياب) مخصصًا حسب التقدم
  */
-export function getSmartInactiveReminder(): SmartReminderContent {
-  const p = getProgressSnapshot();
+export async function getSmartInactiveReminder(): Promise<SmartReminderContent> {
+  const p = await getProgressSnapshot();
 
   if (p.nodesCount === 0) {
     return {
@@ -128,3 +128,4 @@ export function getSmartInactiveReminder(): SmartReminderContent {
     body: "محتاجين نشوف خريطتك. تعالى نكمّل رحلتك."
   };
 }
+

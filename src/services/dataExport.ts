@@ -1,4 +1,5 @@
 import { loadStoredState } from "./localStore";
+import { getJSON, setJSON, getItem } from "./secureStore";
 
 /**
  * واجهة بيانات النسخة الاحتياطية
@@ -30,13 +31,13 @@ export interface BackupData {
 /**
  * تصدير جميع البيانات إلى ملف JSON
  */
-export function exportToJSON(): void {
+export async function exportToJSON(): Promise<void> {
   try {
-    // جمع البيانات من localStorage
-    const mapData = loadStoredState();
-    const meData = localStorage.getItem("dawayir-me");
-    const journeyData = localStorage.getItem("dawayir-journey");
-    const notificationData = localStorage.getItem("dawayir-notification-settings");
+    // جمع البيانات من التخزين المحلي
+    const mapData = await loadStoredState();
+    const meData = await getJSON("dawayir-me");
+    const journeyData = await getJSON("dawayir-journey");
+    const notificationData = await getJSON("dawayir-notification-settings");
 
     const data: BackupData = {
       version: "1.0",
@@ -46,27 +47,15 @@ export function exportToJSON(): void {
 
     // إضافة البيانات الإضافية إن وُجدت
     if (meData) {
-      try {
-        data.me = JSON.parse(meData);
-      } catch {
-        // تجاهل الخطأ
-      }
+      data.me = meData as BackupData["me"];
     }
 
     if (journeyData) {
-      try {
-        data.journey = JSON.parse(journeyData);
-      } catch {
-        // تجاهل الخطأ
-      }
+      data.journey = journeyData as BackupData["journey"];
     }
 
     if (notificationData) {
-      try {
-        data.notification = JSON.parse(notificationData);
-      } catch {
-        // تجاهل الخطأ
-      }
+      data.notification = notificationData as BackupData["notification"];
     }
 
     // إنشاء ملف JSON
@@ -127,26 +116,26 @@ export async function importFromJSON(file: File): Promise<BackupData> {
 /**
  * استعادة البيانات المستوردة
  */
-export function restoreBackupData(data: BackupData): void {
+export async function restoreBackupData(data: BackupData): Promise<void> {
   try {
     // استعادة بيانات الخريطة
     if (data.nodes && Array.isArray(data.nodes)) {
-      localStorage.setItem("dawayir-map-nodes", JSON.stringify({ nodes: data.nodes }));
+      await setJSON("dawayir-map-nodes", { nodes: data.nodes });
     }
 
     // استعادة بيانات "أنا"
     if (data.me) {
-      localStorage.setItem("dawayir-me", JSON.stringify(data.me));
+      await setJSON("dawayir-me", data.me);
     }
 
     // استعادة بيانات الرحلة
     if (data.journey) {
-      localStorage.setItem("dawayir-journey", JSON.stringify(data.journey));
+      await setJSON("dawayir-journey", data.journey);
     }
 
     // استعادة إعدادات الإشعارات
     if (data.notification) {
-      localStorage.setItem("dawayir-notification-settings", JSON.stringify(data.notification));
+      await setJSON("dawayir-notification-settings", data.notification);
     }
   } catch (error) {
     console.error("فشل في استعادة البيانات:", error);
@@ -159,9 +148,12 @@ export function restoreBackupData(data: BackupData): void {
  */
 export function getStorageSize(): number {
   let total = 0;
-  for (const key in localStorage) {
-    if (Object.prototype.hasOwnProperty.call(localStorage, key) && key.startsWith("dawayir-")) {
-      total += localStorage[key].length + key.length;
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith("dawayir-")) continue;
+    const value = localStorage.getItem(key);
+    if (value != null) {
+      total += value.length + key.length;
     }
   }
   return Math.round(total / 1024); // بالكيلوبايت
@@ -170,17 +162,17 @@ export function getStorageSize(): number {
 /**
  * حساب عدد العناصر المحفوظة
  */
-export function getStorageStats(): {
+export async function getStorageStats(): Promise<{
   nodesCount: number;
   hasJourneyData: boolean;
   hasMeData: boolean;
   hasNotificationSettings: boolean;
   totalSizeKB: number;
-} {
-  const mapData = loadStoredState();
-  const meData = localStorage.getItem("dawayir-me");
-  const journeyData = localStorage.getItem("dawayir-journey");
-  const notificationData = localStorage.getItem("dawayir-notification-settings");
+}> {
+  const mapData = await loadStoredState();
+  const meData = await getJSON("dawayir-me");
+  const journeyData = await getJSON("dawayir-journey");
+  const notificationData = await getJSON("dawayir-notification-settings");
 
   return {
     nodesCount: mapData?.nodes?.length || 0,
@@ -189,4 +181,11 @@ export function getStorageStats(): {
     hasNotificationSettings: !!notificationData,
     totalSizeKB: getStorageSize()
   };
+}
+
+export async function hasAnyStoredData(): Promise<boolean> {
+  const keys = Object.keys(localStorage).filter((key) => key.startsWith("dawayir-"));
+  if (keys.length === 0) return false;
+  const mapData = await getItem("dawayir-map-nodes");
+  return mapData != null;
 }

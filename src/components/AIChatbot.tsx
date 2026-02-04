@@ -63,7 +63,7 @@ export const AIChatbot: FC<AIChatbotProps> = ({
 
   // Welcome message when chat opens for the first time
   useEffect(() => {
-    if (isOpen && messages.length === 0 && geminiClient.isAvailable()) {
+    if (isOpen && messages.length === 0) {
       const welcomeMsg: Message = {
         id: "welcome",
         role: "assistant",
@@ -94,7 +94,18 @@ export const AIChatbot: FC<AIChatbotProps> = ({
     const useTools = agentActions != null && systemPromptOverride != null;
 
     try {
-      if (useTools) {
+      if (!aiAvailable) {
+        const fallback = getFallbackReply(userMessage.content);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: assistantId,
+            role: "assistant",
+            content: fallback,
+            timestamp: Date.now()
+          }
+        ]);
+      } else if (useTools) {
         cardsForThisTurnRef.current = [];
         const contents = messages.map((m) => ({
           role: m.role === "user" ? ("user" as const) : ("model" as const),
@@ -228,6 +239,21 @@ ${userMessage.content}`;
 
   const aiAvailable = geminiClient.isAvailable();
 
+  const getFallbackReply = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return "احكيلي أكتر وأنا معاك.";
+    if (trimmed.includes("مش عارف") || trimmed.includes("مش قادر")) {
+      return "فاهم قد إيه الموضوع تقيل. خلّينا نأخدها خطوة خطوة: احكيلي موقف واحد حصل مؤخرًا.";
+    }
+    if (trimmed.includes("خوف") || trimmed.includes("قلق")) {
+      return "ده طبيعي يحصل. جرّب تاخد نفس هادي ٤ مرات، وبعدها احكيلي إيه اللي بيقلقك بالتحديد.";
+    }
+    if (trimmed.includes("حدود") || trimmed.includes("لا")) {
+      return "تمام، موضوع الحدود مهم. تحب نحدد جملة واحدة تقولها في الموقف الجاي؟";
+    }
+    return "فاهمك. احكيلي موقف محدد حصل، وإنت حسّيت بإيه وقتها؟";
+  };
+
   return (
     <>
       {/* Floating Button — يظهر دائماً */}
@@ -245,45 +271,19 @@ ${userMessage.content}`;
         </button>
       )}
 
-      {/* لو مفيش مفتاح Gemini: نافذة صغيرة تشرح التفعيل */}
-      {isOpen && !aiAvailable && (
-        <div className="fixed bottom-6 right-6 w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl flex flex-col z-50 border-2 border-purple-200 dark:border-slate-600 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-500" />
-              المساعد الذكي
-            </h3>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full p-1.5 transition-colors"
-              aria-label="إغلاق"
-            >
-              <X className="w-5 h-5 text-slate-500" />
-            </button>
-          </div>
-          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
-            المساعد الذكي يحتاج تفعيل مفتاح Gemini عشان يشتغل. انسخ ملف <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded">.env.local.example</code> إلى <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded">.env.local</code> وضيف فيه <code className="bg-slate-100 dark:bg-slate-700 px-1 rounded">VITE_GEMINI_API_KEY</code> (مفتاحك من Google AI)، بعدين أعد تشغيل التطبيق.
-          </p>
-          <a
-            href="https://makersuite.google.com/app/apikey"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline"
-          >
-            احصل على مفتاح Gemini ←
-          </a>
-        </div>
-      )}
-
-      {/* Chat Window — لما Gemini مفعّل */}
-      {isOpen && aiAvailable && (
+      {/* Chat Window — يعمل مع/بدون AI */}
+      {isOpen && (
         <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border-2 border-purple-200">
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-2xl">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
               <h3 className="font-bold">المساعد الميداني</h3>
-              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              {aiAvailable ? (
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              ) : (
+                <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">وضع بسيط</span>
+              )}
             </div>
             <div className="flex items-center gap-1">
               {agentContext?.screen !== "map" && onNavigateToMap != null && (

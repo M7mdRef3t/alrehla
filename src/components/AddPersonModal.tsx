@@ -548,27 +548,36 @@ const ResultScreen: FC<ResultScreenProps> = ({
           ? "محتاجة انتباه"
           : "استنزاف";
 
+  const aiTitle = aiInsight?.status_title;
+  const aiGoal = aiInsight?.goal_reframed;
+
+  // العنوان الكبير في أعلى الكارت
+  const personalizedTitle =
+    zone === "red" && isEmotionalCaptivity
+      ? aiTitle ?? "جسمك بعيد.. بس عقلك لسه هناك"
+      : zone === "red"
+        ? lowContact
+          ? `رغم المسافة، لسه تأثير "${personLabel}" عليك قوي`
+          : `قربك من "${personLabel}" مؤلم ومحتاج مسافة فوراً`
+        : zone === "yellow"
+          ? `علاقتك مع "${personLabel}" محتاجة ضبط`
+          : `علاقتك مع "${personLabel}" صحية وآمنة`;
+
+  // label الهدف نفسه (قصير وثابت)، التوضيح التحتي من الذكاء الاصطناعي
+  const goalLabel = isEmotionalCaptivity
+    ? "فك الارتباط الشعوري"
+    : getGoalAction(goalId);
+
   const understanding = {
     red: isEmotionalCaptivity
-      ? "إجاباتك بتقول إنك نجحت تبعد بجسمك (تواصل نادر)، لكن لسه بتدفع التمن من طاقتك وتفكيرك. المشكلة دلوقتي مش في «المقابلة»، المشكلة في «الفكرة» وفي شعور الذنب اللي بيطاردك."
+      ? aiInsight?.deep_explanation ??
+        "إجاباتك بتقول إنك نجحت تبعد بجسمك (تواصل نادر)، لكن لسه بتدفع التمن من طاقتك وتفكيرك. المشكلة دلوقتي مش في «المقابلة»، المشكلة في «الفكرة» وفي شعور الذنب اللي بيطاردك."
       : lowContact
         ? `أنت نجحت تبعد بجسمك، بس لسه محتاج تبعد بأفكارك ومشاعرك (فك الارتباط الشعوري).`
         : `علاقتك مع ${personLabel} بتاخد منك أكتر مما بتديك. جسمك بيحذرك - اسمع له.`,
     yellow: `في أنماط مش صحية في علاقتك مع ${personLabel} محتاجة انتباه. الحدود هتحميك.`,
     green: `علاقتك مع ${personLabel} صحية ومتوازنة. حافظ عليها واستمر.`
   };
-
-  const personalizedTitle = {
-    red: isEmotionalCaptivity
-      ? "جسمك بعيد.. بس عقلك لسه هناك"
-      : lowContact
-        ? `رغم المسافة، لسه تأثير "${personLabel}" عليك قوي`
-        : `قربك من "${personLabel}" مؤلم ومحتاج مسافة فوراً`,
-    yellow: `علاقتك مع "${personLabel}" محتاجة ضبط`,
-    green: `علاقتك مع "${personLabel}" صحية وآمنة`
-  };
-
-  const goalLabel = isEmotionalCaptivity ? "فك الارتباط الشعوري" : getGoalAction(goalId);
 
   const enemyExplanation = aiInsight?.deep_explanation ?? STATIC_ENEMY_EXPLANATION(personLabel);
 
@@ -582,23 +591,26 @@ const ResultScreen: FC<ResultScreenProps> = ({
     >
       {/* النتيجة الرئيسية */}
       <div className="p-6 bg-linear-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-2xl mb-6">
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">
-          {personalizedTitle[zone]}
+        <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
+          <span>{personalizedTitle}</span>
+          {isEmotionalCaptivity && aiInsight?.aiGenerated && (
+            <span
+              className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700"
+              title="تم توليده/تعديله بالذكاء الاصطناعي"
+            >
+              AI
+            </span>
+          )}
         </h2>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500 text-center">
           <p>
             الحالة: <span className="font-semibold text-slate-700">{stateLabel}</span>
           </p>
-          {goalLabel && (
-            <p className="w-full">
-              الهدف: <span className="font-semibold text-slate-700">{goalLabel}</span>
-              {isEmotionalCaptivity && (
-                <span className="block mt-1 text-xs text-slate-600 font-normal">
-                  ليه؟ لأن الهدف مش «ترسم حدود» (الحدود مرسومة بنادراً). الهدف إنك تبطل تحس بالذنب وتبطل تفكر قهرياً.
-                </span>
+              {goalLabel && (
+                <p className="w-full">
+                  الهدف: <span className="font-semibold text-slate-700">{goalLabel}</span>
+                </p>
               )}
-            </p>
-          )}
         </div>
       </div>
 
@@ -606,13 +618,21 @@ const ResultScreen: FC<ResultScreenProps> = ({
       <div className="p-5 bg-blue-50 border-2 border-blue-200 rounded-xl text-right mb-6">
         <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
           <span>🔍</span> فهم الوضع
+          {isEmotionalCaptivity && aiInsight?.aiGenerated && (
+            <span
+              className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700"
+              title="تم توليده/تعديله بالذكاء الاصطناعي"
+            >
+              AI
+            </span>
+          )}
         </h3>
         <p className="text-sm text-gray-700 leading-relaxed">
           {understanding[zone]}
         </p>
-        {isEmotionalCaptivity && (
+        {isEmotionalCaptivity && (aiInsight?.goal_reframed ?? aiGoal) && (
           <p className="text-sm text-teal-800 mt-3 font-medium leading-relaxed">
-            أنت نجحت تبعد بجسمك، بس لسه محتاج تبعد بأفكارك ومشاعرك (فك الارتباط الشعوري).
+            {aiInsight?.goal_reframed ?? aiGoal}
           </p>
         )}
         {lowContact && zone === "red" && !isEmotionalCaptivity && (

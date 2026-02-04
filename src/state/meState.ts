@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { getJSON, setJSON } from "../services/secureStore";
 
 const ME_STORAGE_KEY = "dawayir-me";
 
@@ -10,30 +11,29 @@ interface MeStored {
   shieldMode: boolean;
 }
 
-function loadMe(): MeStored {
-  if (typeof window === "undefined")
-    return { battery: "okay", journalNote: "", shieldMode: false };
+const defaultState: MeStored = {
+  battery: "okay",
+  journalNote: "",
+  shieldMode: false
+};
+
+async function loadMe(): Promise<MeStored> {
+  if (typeof window === "undefined") return defaultState;
   try {
-    const raw = window.localStorage.getItem(ME_STORAGE_KEY);
-    if (!raw) return { battery: "okay", journalNote: "", shieldMode: false };
-    const parsed = JSON.parse(raw) as Partial<MeStored>;
+    const parsed = await getJSON<Partial<MeStored>>(ME_STORAGE_KEY);
     return {
-      battery: parsed.battery ?? "okay",
-      journalNote: parsed.journalNote ?? "",
-      shieldMode: parsed.shieldMode ?? false
+      battery: parsed?.battery ?? "okay",
+      journalNote: parsed?.journalNote ?? "",
+      shieldMode: parsed?.shieldMode ?? false
     };
   } catch {
-    return { battery: "okay", journalNote: "", shieldMode: false };
+    return defaultState;
   }
 }
 
 function saveMe(data: MeStored) {
   if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(ME_STORAGE_KEY, JSON.stringify(data));
-  } catch {
-    // Storage might be full or disabled
-  }
+  void setJSON(ME_STORAGE_KEY, data);
 }
 
 interface MeState extends MeStored {
@@ -42,27 +42,35 @@ interface MeState extends MeStored {
   setShieldMode: (on: boolean) => void;
 }
 
-export const useMeState = create<MeState>((set) => {
-  const stored = loadMe();
-  return {
-    ...stored,
-    setBattery: (battery) =>
-      set((s) => {
-        const next = { ...s, battery };
-        saveMe(next);
-        return next;
-      }),
-    setJournalNote: (journalNote) =>
-      set((s) => {
-        const next = { ...s, journalNote };
-        saveMe(next);
-        return next;
-      }),
-    setShieldMode: (shieldMode) =>
-      set((s) => {
-        const next = { ...s, shieldMode };
-        saveMe(next);
-        return next;
-      })
-  };
-});
+export const useMeState = create<MeState>((set) => ({
+  ...defaultState,
+  setBattery: (battery) =>
+    set((s) => {
+      const next = { ...s, battery };
+      saveMe(next);
+      return next;
+    }),
+  setJournalNote: (journalNote) =>
+    set((s) => {
+      const next = { ...s, journalNote };
+      saveMe(next);
+      return next;
+    }),
+  setShieldMode: (shieldMode) =>
+    set((s) => {
+      const next = { ...s, shieldMode };
+      saveMe(next);
+      return next;
+    })
+}));
+
+async function hydrateMeState() {
+  const stored = await loadMe();
+  useMeState.setState(stored);
+  saveMe(stored);
+}
+
+if (typeof window !== "undefined") {
+  void hydrateMeState();
+}
+

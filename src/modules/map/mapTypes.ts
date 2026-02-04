@@ -19,6 +19,18 @@ export type HealthAnswers = {
 export interface PersonViewInsights {
   /** تشخيص: نص إضافي أو بديل عن "فهم الوضع" (مثلاً من AI) */
   diagnosisSummary?: string;
+  /** عنوان مخصص لتبويب التشخيص (لو AI حب يغيّره) */
+  diagnosisTitle?: string;
+  /** نص مخصص لـ "فهم الوضع" */
+  diagnosisUnderstanding?: string;
+  /** تسمية حالة مخصصة (تظهر تحت العنوان) */
+  stateLabel?: string;
+  /** هدف مخصص للعمل (صياغة أوضح للهدف) */
+  goalAction?: string;
+  /** فقرة إضافية تحت فهم الوضع (مثلاً لاستنزاف عن بُعد) */
+  understandingSubtext?: string;
+  /** توضيح الحالة — العدو جوه الدماغ مثلاً */
+  enemyExplanation?: string;
   /** أعراض: تفسير أو تلخيص للأعراض المختارة (مثلاً من AI) */
   symptomsInterpretation?: string;
   /** حل: اقتراحات إضافية أو نص مخصص لتبويب الحل (مثلاً من AI) */

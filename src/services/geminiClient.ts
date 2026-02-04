@@ -1,16 +1,31 @@
-import {
-  GoogleGenerativeAI,
-  type GenerativeModel,
-  type Content,
-  type Part,
-  type FunctionCall,
-  type Tool
-} from "@google/generative-ai";
+import type { Content, FunctionCall, Part, Tool } from "@google/generative-ai";
 
 /**
- * Gemini AI Client
- * Handles all interactions with Google's Gemini API
+ * ترتيب الموديلات النصية — من الأفضل للاحتياط. مرجع كامل: docs/GEMINI_MODELS.md
  */
+const TEXT_MODEL_FALLBACK_ORDER: string[] = [
+  "gemini-2.0-flash-lite",
+  "gemini-2.5-flash-lite",
+  "gemini-2.0-flash",
+  "gemini-2.5-flash",
+  "gemini-2.5-pro",
+  "gemini-3-flash-preview",
+  "gemini-3-pro-preview"
+];
+
+const GENERATION_CONFIG = {
+  temperature: 0.7,
+  topP: 0.95,
+  topK: 40,
+  maxOutputTokens: 8192
+};
+
+function isRateLimitError(error: unknown): boolean {
+  const msg = error && typeof error === "object" && "message" in error
+    ? String((error as { message?: string }).message)
+    : "";
+  return msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED");
+}
 
 export interface GenerateWithToolsRequest {
   /** محادثة: مصفوفة محتوى (دور + أجزاء) */
@@ -24,67 +39,58 @@ export interface GenerateWithToolsRequest {
 /** تنفيذ استدعاء دالة من الموديل — يُرجع كائن النتيجة للموديل */
 export type ToolExecutor = (name: string, args: object) => Promise<object>;
 
+interface ToolResponse {
+  text?: string;
+  functionCalls?: FunctionCall[];
+  modelContent?: Content;
+}
+
 class GeminiClient {
-  private genAI: GoogleGenerativeAI | null = null;
-  private model: GenerativeModel | null = null;
-  private apiKey: string | null = null;
+  private serverAvailable = true;
 
-  constructor() {
-    this.initialize();
+  private isEnabled(): boolean {
+    return import.meta.env.VITE_GEMINI_AI_ENABLED !== "false";
   }
 
-  private initialize() {
-    // فترة تجريب: ضع VITE_GEMINI_AI_ENABLED=false في .env.local — مفيش طلبات للـ API (لا 429)، والتطبيق يولد النص محلياً في المتصفح
-    if (import.meta.env.VITE_GEMINI_AI_ENABLED === "false") return;
-
-    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!this.apiKey) return;
-
-    try {
-      this.genAI = new GoogleGenerativeAI(this.apiKey);
-      this.model = this.genAI.getGenerativeModel({
-        model: "gemini-2.0-flash-lite",
-        generationConfig: {
-          temperature: 0.7,
-          topP: 0.95,
-          topK: 40,
-          maxOutputTokens: 8192
-        }
-      });
-      // eslint-disable-next-line no-console
-      console.log("✅ Gemini AI initialized successfully");
-    } catch (error) {
-      console.error("❌ Failed to initialize Gemini:", error);
-      this.model = null;
-    }
-  }
-
-  /**
-   * Check if AI is available
-   */
   isAvailable(): boolean {
-    return this.model !== null;
+    return this.isEnabled() && this.serverAvailable;
+  }
+
+  private markServerUnavailable() {
+    this.serverAvailable = false;
+  }
+
+  private markServerAvailable() {
+    this.serverAvailable = true;
   }
 
   /**
-   * Generate content using Gemini
+   * Generate content — عبر Proxy
    */
   async generate(prompt: string): Promise<string | null> {
-    if (!this.model) return null;
+    if (!this.isEnabled()) return null;
 
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = result.response;
-      return response.text();
-    } catch (error: unknown) {
-      if (import.meta.env.DEV) {
-        const msg = error && typeof error === "object" && "message" in error ? String((error as { message?: string }).message) : "";
-        if (msg.includes("429") || msg.includes("quota")) {
-          console.warn("[Gemini] الحصة المجانية انتهت أو الطلبات كثيرة. جرّب بعد دقيقة أو راجع الحساب.");
-        } else {
-          console.error("Error generating content:", error);
-        }
+      const res = await fetch("/api/gemini/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          generationConfig: GENERATION_CONFIG,
+          modelOrder: TEXT_MODEL_FALLBACK_ORDER
+        })
+      });
+
+      if (res.status === 503) {
+        this.markServerUnavailable();
+        return null;
       }
+      if (!res.ok) return null;
+      this.markServerAvailable();
+      const data = (await res.json()) as { text?: string };
+      return data.text ?? null;
+    } catch (error) {
+      if (import.meta.env.DEV) console.error("Error generating content:", error);
       return null;
     }
   }
@@ -111,15 +117,39 @@ class GeminiClient {
    * Stream content generation (for chatbot)
    */
   async *generateStream(prompt: string): AsyncGenerator<string> {
-    if (!this.model) {
-      yield "AI غير متاح حالياً";
+    if (!this.isEnabled()) {
+      yield "AI غير متاح حاليا";
       return;
     }
 
     try {
-      const result = await this.model.generateContentStream(prompt);
-      for await (const chunk of result.stream) {
-        const text = chunk.text();
+      const res = await fetch("/api/gemini/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          generationConfig: GENERATION_CONFIG,
+          modelOrder: TEXT_MODEL_FALLBACK_ORDER
+        })
+      });
+
+      if (res.status === 503) {
+        this.markServerUnavailable();
+        yield "AI غير متاح حاليا";
+        return;
+      }
+      if (!res.ok || !res.body) {
+        yield "حدث خطأ في الاتصال";
+        return;
+      }
+
+      this.markServerAvailable();
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const text = decoder.decode(value, { stream: true });
         if (text) yield text;
       }
     } catch (error) {
@@ -129,77 +159,70 @@ class GeminiClient {
   }
 
   /**
-   * توليد مع أدوات (Function Calling): حلقة تنفيذ استدعاءات الدوال ثم رد نهائي.
+   * توليد مع أدوات (Function Calling) — عبر Proxy
    */
   async generateWithTools(
     request: GenerateWithToolsRequest,
     executeTool: ToolExecutor
   ): Promise<string | null> {
-    if (!this.model) return null;
+    if (!this.isEnabled()) return null;
 
     const { contents, tools, systemInstruction } = request;
-    const toolConfig = {
-      functionCallingConfig: { mode: "AUTO" as const }
-    };
-
-    let currentContents: Content[] = [...contents];
     const maxToolRounds = 8;
+    let currentContents: Content[] = [...contents];
     let rounds = 0;
 
     while (rounds < maxToolRounds) {
       rounds += 1;
-      let res;
+      let response: ToolResponse | null = null;
+
       try {
-        res = await this.model.generateContent({
-          contents: currentContents,
-          tools,
-          systemInstruction: systemInstruction ?? undefined,
-          toolConfig
+        const res = await fetch("/api/gemini/tool", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: currentContents,
+            tools,
+            systemInstruction,
+            generationConfig: GENERATION_CONFIG,
+            modelOrder: TEXT_MODEL_FALLBACK_ORDER
+          })
         });
-      } catch (error: unknown) {
-        if (import.meta.env.DEV) {
-          const msg = error && typeof error === "object" && "message" in error ? String((error as { message?: string }).message) : "";
-          if (msg.includes("429") || msg.includes("quota")) {
-            console.warn("[Gemini] الحصة المجانية انتهت أو الطلبات كثيرة.");
-          } else {
-            console.error("Error in generateWithTools:", error);
-          }
+
+        if (res.status === 503) {
+          this.markServerUnavailable();
+          return null;
+        }
+        if (!res.ok) return null;
+        this.markServerAvailable();
+        response = (await res.json()) as ToolResponse;
+      } catch (error) {
+        if (import.meta.env.DEV) console.error("Error in generateWithTools:", error);
+        if (import.meta.env.DEV && isRateLimitError(error)) {
+          // eslint-disable-next-line no-console
+          console.warn("[Gemini] Rate limit in proxy.");
         }
         return null;
       }
 
-      const response = res.response;
-      const functionCalls = response.functionCalls?.() ?? [];
+      if (!response) return null;
 
-      if (functionCalls.length === 0) {
-        try {
-          return response.text();
-        } catch {
-          return null;
-        }
+      if (!response.functionCalls || response.functionCalls.length === 0) {
+        return response.text ?? null;
       }
 
-      const modelContent: Content = response.candidates?.[0]?.content ?? {
+      const modelContent: Content = response.modelContent ?? {
         role: "model",
         parts: []
       };
-
       const responseParts: Part[] = [];
-      for (const fc of functionCalls as FunctionCall[]) {
+      for (const fc of response.functionCalls as FunctionCall[]) {
         const name = fc.name;
         const args = (fc.args ?? {}) as object;
         const out = await executeTool(name, args);
-        responseParts.push({
-          functionResponse: { name, response: out }
-        });
+        responseParts.push({ functionResponse: { name, response: out } });
       }
-
-      const userContent: Content = {
-        role: "user",
-        parts: responseParts
-      };
-
-      currentContents = [...currentContents, modelContent, userContent];
+      currentContents = [...currentContents, modelContent, { role: "user", parts: responseParts }];
     }
 
     return "تم تجاوز حد جولات الأدوات. جرّب صياغة أوضح.";

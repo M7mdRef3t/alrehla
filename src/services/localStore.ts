@@ -1,4 +1,5 @@
 import type { MapNode } from "../modules/map/mapTypes";
+import { getJSON, setJSON } from "./secureStore";
 
 const STORAGE_KEY = "dawayir-map-nodes";
 
@@ -10,15 +11,13 @@ const isBrowser = typeof window !== "undefined";
 
 let saveTimeout: NodeJS.Timeout | null = null;
 
-export const loadStoredState = (): StoredState | null => {
+export const loadStoredState = async (): Promise<StoredState | null> => {
   if (!isBrowser) return null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as StoredState;
-    if (!Array.isArray(parsed.nodes)) return null;
+    const parsed = await getJSON<StoredState>(STORAGE_KEY);
+    if (!parsed || !Array.isArray(parsed.nodes)) return null;
 
-    const migratedNodes = parsed.nodes.map(node => {
+    const migratedNodes = parsed.nodes.map((node) => {
       if (node.firstStepProgress && !node.firstStepProgress.stepInputs) {
         return {
           ...node,
@@ -39,18 +38,13 @@ export const loadStoredState = (): StoredState | null => {
 
 export const saveStoredState = (state: StoredState) => {
   if (!isBrowser) return;
-  
+
   // Debounce saves to prevent race conditions
   if (saveTimeout) {
     clearTimeout(saveTimeout);
   }
-  
+
   saveTimeout = setTimeout(() => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (error) {
-      if (import.meta.env.DEV) console.error("Error saving to localStorage:", error);
-    }
+    void setJSON(STORAGE_KEY, state);
   }, 100); // 100ms debounce
 };
-
