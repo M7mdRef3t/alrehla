@@ -1,4 +1,4 @@
-# User Stories
+# User Stories — الرحلة (أداة دواير)
 
 ## Core Map
 As a user, I want to add people and drag them into circles so I can see my boundaries visually.

@@ -1,5 +1,17 @@
 import { create } from "zustand";
-import type { MapNode, Ring, PersonNote, SituationLog, HealthAnswers, TreeRelation, DailyPathProgress, RealityAnswers } from "../modules/map/mapTypes";
+import type {
+  MapNode,
+  Ring,
+  PersonNote,
+  SituationLog,
+  HealthAnswers,
+  TreeRelation,
+  DailyPathProgress,
+  RealityAnswers,
+  QuickAnswerValue,
+  MissionProgress,
+  PersonViewInsights
+} from "../modules/map/mapTypes";
 import { loadStoredState, saveStoredState } from "../services/localStore";
 import { resolvePathId } from "../modules/pathEngine/pathResolver";
 import type { ContactLevel } from "../modules/pathEngine/pathTypes";
@@ -14,7 +26,18 @@ interface MapState {
   showPlacementTooltip: boolean;
   recoveryPlanOpenWith: RecoveryPlanOpenWith | null;
   setRecoveryPlanOpenWith: (v: RecoveryPlanOpenWith | null) => void;
-  addNode: (label: string, ring?: Ring, analysis?: { score: number; answers: HealthAnswers }, goalId?: string, treeRelation?: TreeRelation, detachmentMode?: boolean, contact?: ContactLevel, isSOS?: boolean, realityAnswers?: RealityAnswers) => string;
+  addNode: (
+    label: string,
+    ring?: Ring,
+    analysis?: { score: number; answers: HealthAnswers },
+    goalId?: string,
+    treeRelation?: TreeRelation,
+    detachmentMode?: boolean,
+    contact?: ContactLevel,
+    isSOS?: boolean,
+    realityAnswers?: RealityAnswers,
+    safetyAnswer?: QuickAnswerValue
+  ) => string;
   updateDetachmentReasons: (nodeId: string, reasons: string[]) => void;
   incrementRuminationLog: (nodeId: string) => void;
   dismissPlacementTooltip: () => void;
@@ -44,6 +67,18 @@ interface MapState {
   updateBoundaryLegitimacyScore: (nodeId: string, score: number) => void;
   /** تغذية نافذة الشخص من الذكاء الاصطناعي (تشخيص/أعراض/حل/خطة) */
   updateNodeInsights: (nodeId: string, insights: PersonViewInsights) => void;
+  /** بدء المهمة */
+  startMission: (nodeId: string) => void;
+  /** تحديث خطوة في المهمة */
+  toggleMissionStep: (nodeId: string, stepIndex: number) => void;
+  /** إنهاء المهمة */
+  completeMission: (nodeId: string) => void;
+  /** إعادة ضبط المهمة */
+  resetMission: (nodeId: string) => void;
+  /** أرشفة المهمة */
+  archiveMission: (nodeId: string) => void;
+  /** إلغاء أرشفة المهمة */
+  unarchiveMission: (nodeId: string) => void;
 }
 
 let nextId = 1;
@@ -67,7 +102,18 @@ export const useMapState = create<MapState>((set, get) => ({
   recoveryPlanOpenWith: null,
   setRecoveryPlanOpenWith: (v) => set({ recoveryPlanOpenWith: v }),
   dismissPlacementTooltip: () => set({ showPlacementTooltip: false }),
-  addNode: (label: string, ring: Ring = "yellow", analysis, goalId?, treeRelation?, detachmentMode?, contact?, isSOS?, realityAnswers?) => {
+  addNode: (
+    label: string,
+    ring: Ring = "yellow",
+    analysis,
+    goalId?,
+    treeRelation?,
+    detachmentMode?,
+    contact?,
+    isSOS?,
+    realityAnswers?,
+    safetyAnswer?
+  ) => {
     let processedAnalysis;
     if (analysis) {
       // Score 0–6 (غالبًا=2، أحيانًا=1، نادراً=0). عالي = تأثير سلبي
@@ -95,6 +141,10 @@ export const useMapState = create<MapState>((set, get) => ({
     });
 
     const nodeId = String(nextId++);
+    const missionProgress: MissionProgress = {
+      checkedSteps: [],
+      isArchived: false
+    };
     const newNode: MapNode = {
       id: nodeId,
       label,
@@ -112,13 +162,16 @@ export const useMapState = create<MapState>((set, get) => ({
         pathId: pathIdFromResolver,
         pathStage: "awareness"
       },
+      missionProgress,
       notes: [],
       journeyStartDate: Date.now(), // Set journey start date
       hasCompletedTraining: false,
       ...(goalId != null && goalId !== "" && { goalId }),
       ...(treeRelation != null && { treeRelation }),
       ...(detachmentMode === true && { detachmentMode: true }),
-      ...(realityAnswers != null && { realityAnswers })
+      ...(realityAnswers != null && { realityAnswers }),
+      ...(isSOS === true && { isEmergency: true }),
+      ...(safetyAnswer != null && { safetyAnswer })
     };
     const nextNodes = [...get().nodes, newNode];
     saveStoredState({ nodes: nextNodes });
@@ -484,6 +537,112 @@ export const useMapState = create<MapState>((set, get) => ({
     });
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+  },
+  startMission: (nodeId) => {
+    const now = Date.now();
+    const nextNodes = get().nodes.map((node) => {
+      if (node.id !== nodeId) return node;
+      const progress = node.missionProgress ?? { checkedSteps: [] };
+      return {
+        ...node,
+        missionProgress: {
+          ...progress,
+          startedAt: progress.startedAt ?? now,
+          isCompleted: false,
+          completedAt: undefined
+        }
+      };
+    });
+    saveStoredState({ nodes: nextNodes });
+    set({ nodes: nextNodes });
+  },
+  toggleMissionStep: (nodeId, stepIndex) => {
+    const nextNodes = get().nodes.map((node) => {
+      if (node.id !== nodeId) return node;
+      const progress = node.missionProgress ?? { checkedSteps: [] };
+      const checked = new Set(progress.checkedSteps ?? []);
+      if (checked.has(stepIndex)) checked.delete(stepIndex);
+      else checked.add(stepIndex);
+      return {
+        ...node,
+        missionProgress: {
+          ...progress,
+          checkedSteps: Array.from(checked),
+          startedAt: progress.startedAt ?? Date.now()
+        }
+      };
+    });
+    saveStoredState({ nodes: nextNodes });
+    set({ nodes: nextNodes });
+  },
+  completeMission: (nodeId) => {
+    const now = Date.now();
+    const nextNodes = get().nodes.map((node) => {
+      if (node.id !== nodeId) return node;
+      const progress = node.missionProgress ?? { checkedSteps: [] };
+      return {
+        ...node,
+        missionProgress: {
+          ...progress,
+          isCompleted: true,
+          completedAt: now,
+          startedAt: progress.startedAt ?? now
+        }
+      };
+    });
+    saveStoredState({ nodes: nextNodes });
+    set({ nodes: nextNodes });
+  },
+  resetMission: (nodeId) => {
+    const nextNodes = get().nodes.map((node) => {
+      if (node.id !== nodeId) return node;
+      return {
+        ...node,
+        missionProgress: {
+          checkedSteps: [],
+          startedAt: undefined,
+          completedAt: undefined,
+          isCompleted: false,
+          isArchived: false,
+          archivedAt: undefined
+        }
+      };
+    });
+    saveStoredState({ nodes: nextNodes });
+    set({ nodes: nextNodes });
+  },
+  archiveMission: (nodeId) => {
+    const now = Date.now();
+    const nextNodes = get().nodes.map((node) => {
+      if (node.id !== nodeId) return node;
+      const progress = node.missionProgress ?? { checkedSteps: [] };
+      return {
+        ...node,
+        missionProgress: {
+          ...progress,
+          isArchived: true,
+          archivedAt: now
+        }
+      };
+    });
+    saveStoredState({ nodes: nextNodes });
+    set({ nodes: nextNodes });
+  },
+  unarchiveMission: (nodeId) => {
+    const nextNodes = get().nodes.map((node) => {
+      if (node.id !== nodeId) return node;
+      const progress = node.missionProgress ?? { checkedSteps: [] };
+      return {
+        ...node,
+        missionProgress: {
+          ...progress,
+          isArchived: false,
+          archivedAt: undefined
+        }
+      };
+    });
+    saveStoredState({ nodes: nextNodes });
+    set({ nodes: nextNodes });
   }
 }));
 
@@ -499,5 +658,3 @@ async function hydrateMapState() {
 if (typeof window !== "undefined") {
   void hydrateMapState();
 }
-
-

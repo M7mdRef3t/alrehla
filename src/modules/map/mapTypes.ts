@@ -104,6 +104,17 @@ export interface RecoveryProgress {
   boundaryLegitimacyScore?: number;
 }
 
+export type QuickAnswerValue = "high" | "medium" | "low" | "zero";
+
+export interface MissionProgress {
+  startedAt?: number;
+  completedAt?: number;
+  isCompleted?: boolean;
+  checkedSteps?: number[];
+  isArchived?: boolean;
+  archivedAt?: number;
+}
+
 /** بيانات الشجرة: مين فوقه (parent) ونوع العلاقة — للعيلة/شغل/اجتماعي */
 export type TreeRelationType = "family" | "work" | "social";
 
@@ -136,7 +147,12 @@ export interface MapNode {
   detachmentMode?: boolean;
   /** إجابات "فين الشخص في حياتك" — لعرض نفس محتوى النتيجة عند فتح النافذة */
   realityAnswers?: RealityAnswers;
+  /** إجابة سؤال الأمان السريع — لتحديد السيناريو عند إعادة فتح النتيجة */
+  safetyAnswer?: QuickAnswerValue;
+  /** حالة طوارئ من الأسئلة السريعة */
+  isEmergency?: boolean;
+  /** تقدّم المهمة (التنفيذ) */
+  missionProgress?: MissionProgress;
   /** في المنطقة الرمادية (تعافي) — الدائرة خارج الخريطة الملونة، لون باهت */
   isDetached?: boolean;
 }
-

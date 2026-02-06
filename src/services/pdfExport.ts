@@ -42,7 +42,7 @@ export async function downloadMapImage(): Promise<void> {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `dawayir-map-${Date.now()}.png`;
+  a.download = `journey-map-${Date.now()}.png`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -71,7 +71,7 @@ export async function exportMapToPDF(nodes: MapNode[]): Promise<void> {
 
     // العنوان
     pdf.setFontSize(20);
-    pdf.text("خريطة علاقاتي - دواير", pageWidth / 2, yPosition, { align: "center" });
+    pdf.text("خريطة علاقاتي — أداة دواير (الرحلة)", pageWidth / 2, yPosition, { align: "center" });
     yPosition += 15;
 
     // التاريخ
@@ -184,7 +184,7 @@ export async function exportMapToPDF(nodes: MapNode[]): Promise<void> {
     addSection("Red Circle - Draining Relationships", "#ef4444", redNodes);
 
     // حفظ الملف
-    pdf.save(`dawayir-map-${Date.now()}.pdf`);
+    pdf.save(`journey-map-${Date.now()}.pdf`);
   } catch (error) {
     console.error("فشل في تصدير PDF:", error);
     throw new Error("حدث خطأ أثناء إنشاء ملف PDF");

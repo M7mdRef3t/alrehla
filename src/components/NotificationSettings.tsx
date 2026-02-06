@@ -1,8 +1,13 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, BellOff, X, Check, Clock, Calendar } from "lucide-react";
+import { Bell, BellOff, X, Check, Clock, Calendar, Target, HeartPulse } from "lucide-react";
 import { useNotificationState } from "../state/notificationState";
+import { usePulseState } from "../state/pulseState";
+import { useAdminState } from "../state/adminState";
+import { isFeatureEnabled } from "../utils/featureFlags";
+import { isSupabaseReady } from "../services/supabaseClient";
+import { savePulseCheckMode } from "../services/adminApi";
 
 interface NotificationSettingsProps {
   isOpen: boolean;
@@ -21,6 +26,11 @@ export const NotificationSettings: FC<NotificationSettingsProps> = ({
     requestPermission,
     updateSettings
   } = useNotificationState();
+  const pulseCheckMode = usePulseState((s) => s.checkInMode);
+  const setPulseCheckMode = usePulseState((s) => s.setCheckInMode);
+  const featureFlags = useAdminState((s) => s.featureFlags);
+  const betaAccess = useAdminState((s) => s.betaAccess);
+  const canUsePulseCheck = isFeatureEnabled(featureFlags.pulse_check, betaAccess);
 
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);
 
@@ -156,8 +166,37 @@ export const NotificationSettings: FC<NotificationSettingsProps> = ({
                       onChange={(checked) => updateSettings({ dailyReminder: checked })}
                     />
 
+                    <SettingToggle
+                      icon={<Target className="w-4 h-4" />}
+                      label="تذكير المهمة اليومية"
+                      description="تذكير يومي لو عندك مهمة نشطة"
+                      checked={settings.missionReminder}
+                      onChange={(checked) => updateSettings({ missionReminder: checked })}
+                    />
+
+                    {settings.missionReminder && (
+                      <div className="pr-9">
+                        <label className="flex items-center gap-2 text-sm text-slate-600">
+                          <span>خطوة التذكير:</span>
+                          <select
+                            value={settings.missionReminderStrategy}
+                            onChange={(e) => updateSettings({ missionReminderStrategy: e.target.value as typeof settings.missionReminderStrategy })}
+                            className="px-2 py-1 border border-slate-200 rounded-lg text-sm bg-white"
+                          >
+                            <option value="next">أول خطوة غير منجزة</option>
+                            <option value="random">خطوة مختلفة (عشوائي)</option>
+                            <option value="last">آخر خطوة غير منجزة</option>
+                            <option value="cycle">تناوب يومي</option>
+                          </select>
+                        </label>
+                        <p className="text-[11px] text-slate-500 mt-1">
+                          لو اخترت "خطوة مختلفة" هنحاول نتجنب أول خطوة لما يكون فيه أكثر من خطوة غير منجزة.
+                        </p>
+                      </div>
+                    )}
+
                     {/* Daily Reminder Time */}
-                    {settings.dailyReminder && (
+                    {(settings.dailyReminder || settings.missionReminder) && (
                       <div className="pr-9">
                         <label className="flex items-center gap-2 text-sm text-slate-600">
                           <span>وقت التذكير:</span>
@@ -190,6 +229,60 @@ export const NotificationSettings: FC<NotificationSettingsProps> = ({
                     />
                   </motion.div>
                 )}
+
+                {/* Pulse Check Settings */}
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-9 h-9 rounded-lg bg-rose-100 flex items-center justify-center text-rose-600">
+                      <HeartPulse className="w-4 h-4" />
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-slate-900">بوابة النبض اللحظي</p>
+                      <p className="text-xs text-slate-500">اختار توقيت ظهورها</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setPulseCheckMode("daily");
+                        if (isSupabaseReady) {
+                          await savePulseCheckMode("daily");
+                        }
+                      }}
+                      disabled={!canUsePulseCheck}
+                      className={`rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${
+                        pulseCheckMode === "daily"
+                          ? "border-rose-300 bg-rose-50 text-rose-700"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-rose-200"
+                      } ${!canUsePulseCheck ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      مرة يوميًا
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setPulseCheckMode("everyOpen");
+                        if (isSupabaseReady) {
+                          await savePulseCheckMode("everyOpen");
+                        }
+                      }}
+                      disabled={!canUsePulseCheck}
+                      className={`rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${
+                        pulseCheckMode === "everyOpen"
+                          ? "border-rose-300 bg-rose-50 text-rose-700"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-rose-200"
+                      } ${!canUsePulseCheck ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      مع كل فتح
+                    </button>
+                  </div>
+                  {!canUsePulseCheck && (
+                    <p className="text-[11px] text-slate-500 mt-2">
+                      بوابة النبض مقفولة حالياً من لوحة التحكم.
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Footer */}

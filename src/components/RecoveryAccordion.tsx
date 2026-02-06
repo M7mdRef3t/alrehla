@@ -8,7 +8,6 @@ import { SituationLogger } from "./SituationLogger";
 import type { SituationLog } from "../types/recoveryPlan";
 
 interface RecoveryAccordionProps {
-  personLabel: string;
   ring: Ring;
   completedSteps: string[];
   situationLogs: SituationLog[];
@@ -20,7 +19,6 @@ interface RecoveryAccordionProps {
 type AccordionSection = "plan" | "scripts" | "log" | "progress";
 
 export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
-  personLabel,
   ring,
   completedSteps,
   situationLogs,

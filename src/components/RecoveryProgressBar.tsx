@@ -91,7 +91,7 @@ export const RecoveryProgressBar: FC<RecoveryProgressBarProps> = ({ node }) => {
 
       {/* نقاط المراحل — كل نقطة تعكس حالة حقيقية؛ إكمال = نبضة لطيفة */}
       <div className="flex items-center justify-between gap-0.5">
-        {MILESTONES.map((m, i) => {
+        {MILESTONES.map((m) => {
           const done = status[m.id];
           return (
             <div

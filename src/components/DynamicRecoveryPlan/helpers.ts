@@ -7,7 +7,7 @@ export function getPlanTitle(personLabel: string, ring: Ring): string {
   return `خطة تعزيز علاقتك مع (${personLabel})`;
 }
 
-export function buildInsightFromSymptoms(selectedSymptoms: string[], personLabel: string): string {
+export function buildInsightFromSymptoms(selectedSymptoms: string[]): string {
   if (selectedSymptoms.length === 0) return "";
   const labels = selectedSymptoms.map(getSymptomLabel).join(" و ");
   return `بناءً على مشكلة (${labels})، ركزنا في الأسبوع الأول على حماية ثقتك بنفسك والحدود بدون قسوة.`;

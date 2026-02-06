@@ -21,6 +21,10 @@ function hasCompletedTraining(nodes: MapNode[]): boolean {
   return nodes.some((n) => n.hasCompletedTraining === true);
 }
 
+function hasCompletedMission(nodes: MapNode[]): boolean {
+  return nodes.some((n) => n.missionProgress?.isCompleted === true);
+}
+
 export interface AchievementState {
   unlockedIds: string[];
   lastNewAchievementId: string | null;
@@ -101,7 +105,8 @@ export const useAchievementState = create<AchievementState>()(
           { id: "boundary_keeper", condition: nodes.length >= 5 },
           { id: "measured", condition: baselineCompletedAt != null },
           { id: "reader", condition: libraryOpenedAt != null },
-          { id: "breather", condition: breathingUsedAt != null }
+          { id: "breather", condition: breathingUsedAt != null },
+          { id: "mission_complete", condition: hasCompletedMission(nodes) }
         ];
 
         for (const { id, condition } of toCheck) {

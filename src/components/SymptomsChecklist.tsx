@@ -71,7 +71,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
   // مزامنة الاختيارات مع القيم المحفوظة (عند إعادة فتح النافذة أو تغيير الشخص)
   useEffect(() => {
     setSelected(new Set(selectedSymptoms || []));
-  }, [selectedSymptoms?.join(",")]);
+  }, [selectedSymptoms]);
 
   const handleToggle = (symptomId: string) => {
     if (readOnly) return;

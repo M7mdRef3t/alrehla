@@ -6,8 +6,7 @@ import type { AdviceCategory } from "../data/adviceScripts";
 import {
   calculateSuggestedPlacement,
   getSuggestedRingLabel,
-  getRingIcon,
-  type SuggestedPlacement as PlacementType
+  getRingIcon
 } from "../utils/suggestedPlacement";
 
 interface SuggestedPlacementProps {

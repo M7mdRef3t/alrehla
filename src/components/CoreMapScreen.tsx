@@ -8,22 +8,33 @@ import { AddPersonModal } from "./AddPersonModal";
 import { ViewPersonModal } from "./ViewPersonModal";
 import { MeNodeDetails } from "./MeNodeDetails";
 import { BreathingOverlay } from "./BreathingOverlay";
-import { MapOnboardingOverlay, hasSeenOnboarding } from "./MapOnboardingOverlay";
+import { MapOnboardingOverlay } from "./MapOnboardingOverlay";
+import { hasSeenOnboarding } from "../utils/mapOnboarding";
 import { UserPlus, Map, TreeDeciduous } from "lucide-react";
 import { mapCopy } from "../copy/map";
 import { useMapState } from "../state/mapState";
 import type { AdviceCategory } from "../data/adviceScripts";
+import { getGoalMeta } from "../data/goalMeta";
+import { useAdminState } from "../state/adminState";
+import { isFeatureEnabled } from "../utils/featureFlags";
 
 interface CoreMapScreenProps {
   category: AdviceCategory;
   goalId: string;
   selectedNodeId: string | null;
   onSelectNode: (id: string | null) => void;
+  onOpenMission?: (nodeId: string) => void;
   /** عند توفره يُستدعى لفتح تمرين التنفس (مثلاً من الـ Agent) */
   onOpenBreathing?: () => void;
   /** في وضع الرحلة: يظهر زر "كمل الرحلة" عند اكتمال خطوة علاقة واحدة */
   journeyMode?: boolean;
   onJourneyComplete?: () => void;
+  pulseMode?: "low" | "angry" | "high" | "normal";
+  pulseInsight?: { title: string; body: string } | null;
+  onOpenCocoon?: () => void;
+  onOpenNoise?: () => void;
+  onOpenChallenge?: () => void;
+  challengeLabel?: string | null;
 }
 
 export const CoreMapScreen: FC<CoreMapScreenProps> = ({
@@ -31,9 +42,16 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   goalId,
   selectedNodeId,
   onSelectNode,
+  onOpenMission,
   onOpenBreathing,
   journeyMode = false,
-  onJourneyComplete
+  onJourneyComplete,
+  pulseMode = "normal",
+  pulseInsight,
+  onOpenCocoon,
+  onOpenNoise,
+  onOpenChallenge,
+  challengeLabel
 }) => {
   const [showAddPerson, setShowAddPerson] = useState(false);
   const [showMeCard, setShowMeCard] = useState(false);
@@ -45,6 +63,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [selectedContexts, setSelectedContexts] = useState<string[]>(["family", "work", "love", "general"]);
   const nodes = useMapState((s) => s.nodes);
   const isFamily = goalId === "family";
+  const featureFlags = useAdminState((s) => s.featureFlags);
+  const betaAccess = useAdminState((s) => s.betaAccess);
+  const canUseFamilyTree = isFeatureEnabled(featureFlags.family_tree, betaAccess);
+  const canUseMirror = isFeatureEnabled(featureFlags.mirror_tool, betaAccess);
 
   const toggleContext = (ctx: string) => {
     setSelectedContexts((prev) =>
@@ -64,6 +86,18 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   useEffect(() => {
     if (nodes.length > 0 && showOnboarding) setShowOnboarding(false);
   }, [nodes.length, showOnboarding]);
+
+  useEffect(() => {
+    if (!canUseFamilyTree && viewMode === "tree") {
+      setViewMode("map");
+    }
+  }, [canUseFamilyTree, viewMode]);
+
+  useEffect(() => {
+    if (!canUseMirror && showMeCard) {
+      setShowMeCard(false);
+    }
+  }, [canUseMirror, showMeCard]);
 
   // لو الشخص المحدد اتحذف (مثلاً بعد حذف وإضافة تاني)، نغلق نافذة التفاصيل
   useEffect(() => {
@@ -94,6 +128,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       ? mapCopy.forestHint
       : mapCopy.galaxyHint
     : mapCopy.subtitle;
+  const goalMeta = getGoalMeta(goalId);
 
   return (
     <main
@@ -101,16 +136,82 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       aria-labelledby="core-map-title"
     >
       <header>
-        <h1
-          id="core-map-title"
-          className="text-3xl md:text-4xl font-bold text-slate-900 mb-4"
-        >
-          {pageTitle}
-        </h1>
+        <div className="flex flex-col items-center gap-2 mb-4">
+          <h1
+            id="core-map-title"
+            className="text-3xl md:text-4xl font-bold text-slate-900"
+          >
+            {pageTitle}
+          </h1>
+          {goalMeta && (
+            <span
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${goalMeta.badgeClasses}`}
+            >
+              <goalMeta.icon className="w-4 h-4" />
+              {goalMeta.label}
+            </span>
+          )}
+        </div>
         <p className="text-base md:text-lg text-gray-600 leading-relaxed max-w-md mx-auto">
           {subtitle}
         </p>
       </header>
+
+      {pulseInsight && (
+        <div className="mt-4 mx-auto max-w-md rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-right">
+          <p className="text-xs font-semibold text-indigo-700">{pulseInsight.title}</p>
+          <p className="text-xs text-indigo-600 mt-1 leading-relaxed">{pulseInsight.body}</p>
+        </div>
+      )}
+
+      {pulseMode === "low" && (
+        <div className="mt-4 mx-auto max-w-md rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-right">
+          <p className="text-sm font-semibold text-slate-800">بطاقتك منخفضة اليوم</p>
+          <p className="text-xs text-slate-600 mt-1">
+            خلّينا في وضع شحن. خطوة واحدة بس من غير ضغط.
+          </p>
+          <button
+            type="button"
+            onClick={onOpenCocoon}
+            className="mt-3 w-full rounded-full bg-slate-900 text-white py-2.5 text-sm font-semibold hover:bg-slate-800 transition-all"
+          >
+            وضع الشرنقة
+          </button>
+        </div>
+      )}
+
+      {pulseMode === "angry" && (
+        <div className="mt-4 mx-auto max-w-md rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-right">
+          <p className="text-sm font-semibold text-rose-700">النبض عالي.. محتاج تهدئة أولاً</p>
+          <p className="text-xs text-rose-600 mt-1">
+            تعالى نفضي الضجيج قبل أي خطوة تانية.
+          </p>
+          <button
+            type="button"
+            onClick={onOpenNoise}
+            className="mt-3 w-full rounded-full bg-rose-600 text-white py-2.5 text-sm font-semibold hover:bg-rose-700 transition-all"
+          >
+            تفريغ الضجيج
+          </button>
+        </div>
+      )}
+
+      {pulseMode === "high" && (
+        <div className="mt-4 mx-auto max-w-md rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-right">
+          <p className="text-sm font-semibold text-emerald-700">بطاقتك قوية.. نقدر نكسب خطوة كبيرة</p>
+          <p className="text-xs text-emerald-600 mt-1">
+            {challengeLabel ?? "جاهز لتحدي اليوم؟"}
+          </p>
+          <button
+            type="button"
+            onClick={onOpenChallenge}
+            className="mt-3 w-full rounded-full bg-emerald-600 text-white py-2.5 text-sm font-semibold hover:bg-emerald-700 transition-all disabled:opacity-60"
+            disabled={!onOpenChallenge}
+          >
+            تحدي اليوم
+          </button>
+        </div>
+      )}
 
       <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
         <button
@@ -165,7 +266,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             })}
           </div>
         )}
-        {!galaxyMode && isFamily && (
+        {!galaxyMode && isFamily && canUseFamilyTree && (
           <div className="flex rounded-full bg-slate-100 p-1 border border-slate-200">
             <button
               type="button"
@@ -228,7 +329,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           >
             <MapCanvas
               onNodeClick={(id) => onSelectNode(id)}
-              onMeClick={() => setShowMeCard(true)}
+              onMeClick={canUseMirror ? () => setShowMeCard(true) : undefined}
               galaxyGoalIds={selectedContexts.length > 0 ? selectedContexts : ["family", "work", "love", "general"]}
             />
           </motion.div>
@@ -242,7 +343,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           >
             <MapCanvas
               onNodeClick={(id) => onSelectNode(id)}
-              onMeClick={() => setShowMeCard(true)}
+              onMeClick={canUseMirror ? () => setShowMeCard(true) : undefined}
               goalIdFilter={goalId}
             />
           </motion.div>
@@ -345,12 +446,12 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {showAddPerson && (
         <AddPersonModal
           goalId={goalId}
-          category={category}
           onClose={(openNodeId) => {
             setShowAddPerson(false);
             if (openNodeId) onSelectNode(openNodeId);
             else onSelectNode(null);
           }}
+          onOpenMission={onOpenMission}
         />
       )}
 
@@ -359,6 +460,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           nodeId={selectedNodeId}
           category={category}
           goalId={goalId}
+          onOpenMission={onOpenMission}
           onClose={() => onSelectNode(null)}
         />
       )}

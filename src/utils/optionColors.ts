@@ -15,14 +15,14 @@ const TIER_STYLES: Record<
     unselectedHover: "hover:bg-rose-50 hover:border-rose-200 hover:text-rose-800"
   },
   amber: {
-    selected: "bg-amber-500 text-white border-2 border-amber-600 shadow-sm",
+    selected: "bg-orange-500 text-white border-2 border-orange-600 shadow-sm",
     unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
-    unselectedHover: "hover:bg-amber-50 hover:border-amber-200 hover:text-amber-800"
+    unselectedHover: "hover:bg-orange-50 hover:border-orange-200 hover:text-orange-800"
   },
   yellow: {
-    selected: "bg-amber-400 text-slate-900 border-2 border-amber-500 shadow-sm",
+    selected: "bg-yellow-300 text-slate-900 border-2 border-yellow-400 shadow-sm",
     unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
-    unselectedHover: "hover:bg-amber-50 hover:border-amber-200 hover:text-amber-900"
+    unselectedHover: "hover:bg-yellow-50 hover:border-yellow-200 hover:text-yellow-900"
   },
   green: {
     selected: "bg-teal-500 text-white border-2 border-teal-600 shadow-sm",
@@ -39,7 +39,7 @@ const FOCUS_RING: Record<OptionTier, string> = {
 };
 
 export function getOptionButtonClass(tier: OptionTier, isSelected: boolean): string {
-  const base = "rounded-full px-4 py-2 text-sm font-medium transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
+  const base = "inline-flex items-center justify-center text-center whitespace-normal leading-tight rounded-2xl min-h-[44px] px-3 py-2 text-sm font-medium transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2";
   const t = TIER_STYLES[tier];
   if (isSelected) return `${base} ${t.selected} ${FOCUS_RING[tier]}`;
   return `${base} ${t.unselected} ${t.unselectedHover} focus-visible:ring-slate-300`;

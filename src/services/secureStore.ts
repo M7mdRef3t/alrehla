@@ -1,4 +1,5 @@
 import { getOrCreateDeviceKey } from "./cryptoKeyStore";
+import { getRemoteValue, queueRemoteSet } from "./cloudStore";
 
 const ENCRYPTED_PREFIX = "v1:";
 
@@ -66,6 +67,33 @@ async function decryptString(value: string): Promise<string> {
 
 export async function getItem(key: string): Promise<string | null> {
   if (!isBrowser()) return null;
+  const remote = await getRemoteValue(key);
+  if (remote != null) {
+    if (!isSensitiveKey(key)) {
+      window.localStorage.setItem(key, remote);
+      return remote;
+    }
+
+    let plain: string | null = remote;
+    if (isEncryptedValue(remote)) {
+      try {
+        plain = await decryptString(remote);
+        queueRemoteSet(key, plain);
+      } catch {
+        plain = null;
+      }
+    }
+
+    if (plain) {
+      try {
+        const encrypted = await encryptString(plain);
+        window.localStorage.setItem(key, encrypted);
+      } catch {
+        window.localStorage.setItem(key, plain);
+      }
+      return plain;
+    }
+  }
   const raw = window.localStorage.getItem(key);
   if (raw == null) return null;
   if (!isSensitiveKey(key)) return raw;
@@ -92,11 +120,13 @@ export async function setItem(key: string, value: string): Promise<void> {
   if (!isBrowser()) return;
   if (!isSensitiveKey(key)) {
     window.localStorage.setItem(key, value);
+    queueRemoteSet(key, value);
     return;
   }
   try {
     const encrypted = await encryptString(value);
     window.localStorage.setItem(key, encrypted);
+    queueRemoteSet(key, value);
   } catch {
     // Ignore storage errors
   }

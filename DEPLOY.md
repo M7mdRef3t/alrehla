@@ -1,10 +1,12 @@
-# نشر المنصة — دواير / مسافتي
+# نشر المنصة — الرحلة (أداة دواير)
 
 ## قبل النشر
 
 1. **المتغيرات (اختياري)**  
    لو عايز تفعل الـ AI (Gemini): ضيف `GEMINI_API_KEY` في بيئة السيرفر (Vercel).  
    المنصة تشتغل بدون مفتاح بمنطق احتياطي.
+   لو هتفعل لوحة التحكم والتتبع السحابي: ضيف `VITE_SUPABASE_URL` و `VITE_SUPABASE_ANON_KEY`.
+   ولو هتفعل لوحة التحكم الآمنة عبر API: ضيف `SUPABASE_SERVICE_ROLE_KEY` و `ADMIN_API_SECRET`.
 
 2. **البناء المحلي**
    ```bash
@@ -24,6 +26,19 @@
    **Install Command:** `npm ci`
 3. (اختياري) في **Environment Variables** ضيف `GEMINI_API_KEY`.
 4. Deploy.
+5. لو عايز التقارير التلقائية: أضف
+   - `ADMIN_API_SECRET`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `ADMIN_ALLOWED_ROLES` و `VITE_ADMIN_ALLOWED_ROLES`
+   - `CRON_SECRET`
+   - `PUBLIC_APP_URL`
+   - `SLACK_WEBHOOK_URL` (اختياري)
+   - `RESEND_API_KEY` + `REPORT_EMAIL_TO` + `REPORT_EMAIL_FROM` (اختياري)
+6. فعّل Vercel Cron على المسارات:
+   - لو استخدمت `vercel.json` المرفق: سيُفعل مسارات الكرون تلقائياً.
+   - لو ضبطت `CRON_SECRET` يجب تحديث المسارات إلى:
+     - `/api/admin/cron-report?period=daily&secret=YOUR_CRON_SECRET`
+     - `/api/admin/cron-report?period=weekly&secret=YOUR_CRON_SECRET`
 
 ---
 

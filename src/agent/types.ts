@@ -1,17 +1,20 @@
 import type { Ring } from "../modules/map/mapTypes";
+import type { PulseEntry } from "../state/pulseState";
 
 /** سياق القراءة فقط للـ Agent: عُقد الخريطة، الشاشة الحالية، الهدف. */
 export interface AgentContext {
   /** ملخص العُقد: id, label, ring */
   nodesSummary: { id: string; label: string; ring: Ring }[];
   /** الشاشة الحالية */
-  screen: "landing" | "goal" | "map";
+  screen: "landing" | "goal" | "map" | "guided" | "mission" | "tools";
   /** معرف العقدة المفتوحة (نافذة الشخص) إن وُجدت */
   selectedNodeId: string | null;
   /** هدف الرحلة الحالية */
   goalId: string;
   /** فئة النصيحة */
   category: string;
+  /** النبض اللحظي (لو متاح) */
+  pulse?: PulseEntry | null;
 }
 
 /** مسار للتنقل أو overlay */

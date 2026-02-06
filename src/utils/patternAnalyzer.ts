@@ -1,5 +1,3 @@
-import type { Ring } from "../modules/map/mapTypes";
-
 // Pattern types we can detect
 export type PatternType = 
   | 'timing'        // Timing-based patterns (e.g., late night calls)
@@ -162,7 +160,7 @@ function extractTriggers(situations: string[]): string[] {
   ];
   
   situations.forEach(situation => {
-    triggerPatterns.forEach(({ pattern, label }) => {
+    triggerPatterns.forEach(({ pattern }) => {
       const matches = situation.matchAll(pattern);
       for (const match of matches) {
         if (match[1] && match[1].trim().length < 50) {
@@ -198,7 +196,7 @@ function generateInsights(patterns: DetectedPattern[], allText: string): string[
   }
   
   // Emotional state detection
-  let emotionalStates: string[] = [];
+  const emotionalStates: string[] = [];
   Object.entries(EMOTIONAL_STATES).forEach(([state, regex]) => {
     if (regex.test(allText)) {
       emotionalStates.push(state);

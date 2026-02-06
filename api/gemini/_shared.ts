@@ -17,11 +17,33 @@ export const DEFAULT_GENERATION_CONFIG = {
   maxOutputTokens: 8192
 };
 
-export function isRateLimitError(error: unknown): boolean {
+function extractErrorMessage(error: unknown): string {
   const msg = error && typeof error === "object" && "message" in error
     ? String((error as { message?: string }).message)
     : "";
+  return msg;
+}
+
+export function isRateLimitError(error: unknown): boolean {
+  const msg = extractErrorMessage(error);
   return msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED");
+}
+
+// أخطاء شائعة عند عدم توفر موديل معين أو صلاحياته
+export function isRetryableModelError(error: unknown): boolean {
+  const msg = extractErrorMessage(error).toLowerCase();
+  return (
+    msg.includes("429") ||
+    msg.includes("quota") ||
+    msg.includes("resource_exhausted") ||
+    msg.includes("permission") ||
+    msg.includes("denied") ||
+    msg.includes("403") ||
+    msg.includes("404") ||
+    msg.includes("not found") ||
+    msg.includes("model") ||
+    msg.includes("unsupported")
+  );
 }
 
 export function getClient() {
@@ -40,4 +62,3 @@ export function getModel(
     generationConfig
   });
 }
-

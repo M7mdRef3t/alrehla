@@ -28,6 +28,7 @@ interface StoredJourney {
   baselineCompletedAt: number | null;
   goalId: string | null;
   category: string | null;
+  lastGoalById?: Record<string, { category: string; updatedAt: number }>;
   postStepAnswers: PostStepAnswers | null;
   postStepScore: number | null;
   journeyStartedAt: number | null;
@@ -54,6 +55,7 @@ interface JourneyState extends StoredJourney {
   canGoNext: () => boolean;
   canGoBack: () => boolean;
   goToStep: (stepId: JourneyStepId) => void;
+  setLastGoal: (goalId: string, category: string) => void;
   completeBaseline: (answers: BaselineAnswers, score: number) => void;
   completeGoal: (goalId: string, category: string) => void;
   completePostStep: (answers: PostStepAnswers, score: number) => void;
@@ -70,6 +72,7 @@ const defaultState: StoredJourney = {
   baselineCompletedAt: null,
   goalId: null,
   category: null,
+  lastGoalById: {},
   postStepAnswers: null,
   postStepScore: null,
   journeyStartedAt: null
@@ -104,6 +107,20 @@ export const useJourneyState = create<JourneyState>((set, get) => ({
       return next;
     });
   },
+  setLastGoal(goalId: string, category: string) {
+    set((s) => {
+      const lastGoalById = { ...(s.lastGoalById ?? {}) };
+      lastGoalById[goalId] = { category, updatedAt: Date.now() };
+      const next: StoredJourney = {
+        ...s,
+        goalId,
+        category,
+        lastGoalById
+      };
+      saveJourney(next);
+      return next;
+    });
+  },
   completeBaseline(answers: BaselineAnswers, score: number) {
     set((s) => {
       const next: StoredJourney = {
@@ -120,10 +137,13 @@ export const useJourneyState = create<JourneyState>((set, get) => ({
   },
   completeGoal(goalId: string, category: string) {
     set((s) => {
+      const lastGoalById = { ...(s.lastGoalById ?? {}) };
+      lastGoalById[goalId] = { category, updatedAt: Date.now() };
       const next: StoredJourney = {
         ...s,
         goalId,
         category,
+        lastGoalById,
         completedStepIds: [...new Set([...s.completedStepIds, "goal"])],
         currentStepId: "map"
       };
@@ -184,7 +204,8 @@ async function hydrateJourneyState() {
     ...defaultState,
     ...stored,
     currentStepId,
-    journeyStartedAt: stored.journeyStartedAt ?? Date.now()
+    journeyStartedAt: stored.journeyStartedAt ?? Date.now(),
+    lastGoalById: stored.lastGoalById ?? {}
   };
   useJourneyState.setState(next);
   saveJourney(next);
@@ -193,4 +214,3 @@ async function hydrateJourneyState() {
 if (typeof window !== "undefined") {
   void hydrateJourneyState();
 }
-

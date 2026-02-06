@@ -99,7 +99,6 @@ interface ResultActionToolkitProps {
   ring: Ring;
   score: number;
   category: AdviceCategory;
-  nodeId?: string;
   completedFirstSteps?: string[];
   stepInputs?: Record<string, string[]>;
   onToggleFirstStep?: (stepId: string) => void;
@@ -112,7 +111,6 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
   ring,
   score,
   category,
-  nodeId,
   completedFirstSteps,
   stepInputs,
   onToggleFirstStep,
@@ -212,18 +210,6 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
     adviceByZone[category] ?? adviceByZone.general ?? adviceDatabase.green.general;
 
   const [toast, setToast] = React.useState<string | null>(null);
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setToast("تم النسخ ✓");
-      window.setTimeout(() => {
-        setToast(null);
-      }, 2000);
-    } catch {
-      // تجاهل الخطأ بهدوء
-    }
-  };
 
   const ringLabel =
     ring === "green"

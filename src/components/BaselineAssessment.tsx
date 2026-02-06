@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   BASELINE_QUESTIONS,
   computeBaselineScore,
-  type BaselineAnswers,
-  type BaselineQuestion
+  type BaselineAnswers
 } from "../data/baselineQuestions";
 import { useJourneyState } from "../state/journeyState";
 

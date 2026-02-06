@@ -59,7 +59,7 @@ function getPlanTitle(personLabel: string, ring: Ring): string {
   return `خطة تعزيز علاقتك مع (${personLabel})`;
 }
 
-function buildInsightFromSymptoms(selectedSymptoms: string[], personLabel: string): string {
+function buildInsightFromSymptoms(selectedSymptoms: string[]): string {
   if (selectedSymptoms.length === 0) return "";
   const labels = selectedSymptoms.map(getSymptomLabel).join(" و ");
   return `بناءً على مشكلة (${labels})، ركزنا في الأسبوع الأول على حماية ثقتك بنفسك والحدود بدون قسوة.`;
@@ -275,6 +275,11 @@ const PathEngineBlock: FC<{
       <div className="p-4 bg-teal-50 border-b border-teal-200">
         <h3 className="font-bold text-teal-900 flex items-center gap-2">
           <span>🛤️</span> مسار التعافي
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+            pathSnapshot.aiGenerated ? "bg-purple-100 text-purple-800" : "bg-slate-100 text-slate-600"
+          }`}>
+            {pathSnapshot.aiGenerated ? "AI" : "قالب"}
+          </span>
         </h3>
         <p className="text-xs text-teal-700 mt-1">{pathNameAr}</p>
         <div className="flex gap-2 mt-2 flex-wrap">
@@ -427,9 +432,7 @@ const DetachmentSection: FC<{
   showRuminationPrompt: boolean;
   setShowRuminationPrompt: (v: boolean) => void;
   showRuminationResponse: boolean;
-  setShowRuminationResponse: (v: boolean) => void;
   onRuminationChoice: () => void;
-  onIncrementRumination?: () => void;
 }> = ({
   personLabel,
   detachmentReasons,
@@ -442,9 +445,7 @@ const DetachmentSection: FC<{
   showRuminationPrompt,
   setShowRuminationPrompt,
   showRuminationResponse,
-  setShowRuminationResponse,
-  onRuminationChoice,
-  onIncrementRumination
+  onRuminationChoice
 }) => {
   const [guiltInput, setGuiltInput] = useState("");
   const [guiltResponse, setGuiltResponse] = useState<string | null>(null);
@@ -682,6 +683,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
 
   const pathSnapshot = isRecoveryPath(recoveryPathSnapshot) ? recoveryPathSnapshot : null;
   const hasHardFeedback = Object.values(stepFeedback).some((v) => v === "hard" || v === "unrealistic");
+  const detachmentKey = detachmentReasons.join(",");
 
   useEffect(() => {
     if (!nodeId || !pathId || pathSnapshot || !onUpdateRecoveryPathSnapshot) return;
@@ -705,7 +707,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
         if (!cancelled) setPathGenerating(false);
       });
     return () => { cancelled = true; };
-  }, [nodeId, pathId, personLabel, pathSnapshot, onUpdateRecoveryPathSnapshot, selectedSymptoms, goalId]);
+  }, [nodeId, pathId, personLabel, pathSnapshot, onUpdateRecoveryPathSnapshot, selectedSymptoms, goalId, ring]);
 
   // Generate plan when component mounts or situations change
   useEffect(() => {
@@ -742,7 +744,12 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
     }
 
     generatePlan();
-  }, [situations.length, personLabel, ring, selectedSymptoms.length, focusTraumaInheritance]);
+  }, [situations, personLabel, ring, selectedSymptoms, focusTraumaInheritance]);
+
+  useEffect(() => {
+    if (detachmentReasons.length >= 3) setRealityAnchorDraft([...detachmentReasons]);
+    else if (detachmentReasons.length === 0) setRealityAnchorDraft(["", "", ""]);
+  }, [detachmentKey, detachmentReasons]);
 
   const toggleWeek = (week: number) => {
     setExpandedWeeks((prev) => {
@@ -781,11 +788,6 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
       </div>
     );
   }
-
-  useEffect(() => {
-    if (detachmentReasons.length >= 3) setRealityAnchorDraft([...detachmentReasons]);
-    else if (detachmentReasons.length === 0) setRealityAnchorDraft(["", "", ""]);
-  }, [detachmentReasons.join(",")]);
 
   const saveRealityAnchor = () => {
     const trimmed = realityAnchorDraft.map((s) => s.trim()).filter(Boolean);
@@ -826,9 +828,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
                 showRuminationPrompt={showRuminationPrompt}
                 setShowRuminationPrompt={setShowRuminationPrompt}
                 showRuminationResponse={showRuminationResponse}
-                setShowRuminationResponse={setShowRuminationResponse}
                 onRuminationChoice={handleRuminationChoice}
-                onIncrementRumination={onIncrementRumination}
               />
               <DetachmentCurriculaBlock personLabel={personLabel} />
             </>
@@ -924,9 +924,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
             showRuminationPrompt={showRuminationPrompt}
             setShowRuminationPrompt={setShowRuminationPrompt}
             showRuminationResponse={showRuminationResponse}
-            setShowRuminationResponse={setShowRuminationResponse}
             onRuminationChoice={handleRuminationChoice}
-            onIncrementRumination={onIncrementRumination}
           />
           <DetachmentCurriculaBlock personLabel={personLabel} />
         </>
@@ -996,10 +994,14 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
               <h3 className="text-lg font-bold text-purple-900">
                 {getPlanTitle(personLabel, ring)}
               </h3>
-              {isAIPowered && (
+              {isAIPowered ? (
                 <span className="flex items-center gap-1 px-2 py-1 bg-purple-200 text-purple-900 rounded-full text-xs font-semibold">
                   <Sparkles className="w-3 h-3" />
                   AI
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 px-2 py-1 bg-slate-200 text-slate-700 rounded-full text-xs font-semibold">
+                  قالب
                 </span>
               )}
               {focusTraumaInheritance && (
@@ -1046,7 +1048,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
             <div className="p-4 space-y-2 text-right">
               {selectedSymptoms.length > 0 && (
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-gray-800">
-                  • {buildInsightFromSymptoms(selectedSymptoms, personLabel)}
+                  • {buildInsightFromSymptoms(selectedSymptoms)}
                 </div>
               )}
               {plan.insights

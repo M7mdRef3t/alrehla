@@ -1,4 +1,4 @@
-import { DEFAULT_GENERATION_CONFIG, DEFAULT_MODEL_ORDER, getClient, getModel, isRateLimitError } from "./_shared";
+import { DEFAULT_GENERATION_CONFIG, DEFAULT_MODEL_ORDER, getClient, getModel, isRetryableModelError } from "./_shared";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
@@ -37,7 +37,7 @@ export default async function handler(req: any, res: any) {
       return;
     } catch (error) {
       lastError = error;
-      if (isRateLimitError(error)) {
+      if (isRetryableModelError(error)) {
         continue;
       }
       break;

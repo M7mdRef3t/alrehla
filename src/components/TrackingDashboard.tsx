@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, BarChart3, Users, Shield } from "lucide-react";
 import {
   getTrackingMode,
@@ -11,6 +11,7 @@ import {
   clearAllJourneyEvents,
   type TrackingMode as Mode
 } from "../services/journeyTracking";
+import { isSupabaseReady } from "../services/supabaseClient";
 
 interface TrackingDashboardProps {
   isOpen: boolean;
@@ -40,8 +41,8 @@ export const TrackingDashboard: FC<TrackingDashboardProps> = ({ isOpen, onClose 
     setMode(v);
   };
 
-  const stats = useMemo(() => getAggregateStats(), [isOpen]);
-  const sessions = useMemo(() => getSessionsWithProgress(), [isOpen, mode]);
+  const stats = getAggregateStats();
+  const sessions = getSessionsWithProgress();
 
   const handleClearEvents = () => {
     if (confirmClear) {
@@ -81,7 +82,11 @@ export const TrackingDashboard: FC<TrackingDashboardProps> = ({ isOpen, onClose 
           {/* رابط الباكند */}
           <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
             <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">رابط الخادم للتتبع (اختياري)</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">لو ضبطت رابط، كل حدث تتبع هيترسل تلقائياً للخادم عشان تقدر تتابع من لوحة خارجية.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+              {isSupabaseReady
+                ? "Supabase متصل — الإرسال يتم تلقائياً. الرابط هنا احتياطي فقط."
+                : "لو ضبطت رابط، كل حدث تتبع هيترسل تلقائياً للخادم عشان تقدر تتابع من لوحة خارجية."}
+            </p>
             <div className="flex gap-2">
               <input
                 type="url"

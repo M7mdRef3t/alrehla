@@ -42,8 +42,6 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
     onClose();
   };
 
-  if (!isOpen) return null;
-
   const hasNodes = nodes.length > 0;
   const effectiveSelectedId =
     hasNodes && selectedNodeId && nodes.some((n) => n.id === selectedNodeId)
@@ -56,6 +54,8 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
     () => nodes.find((n) => n.id === effectiveSelectedId) || null,
     [nodes, effectiveSelectedId]
   );
+
+  if (!isOpen) return null;
 
   return (
     <AnimatePresence>
@@ -196,4 +196,3 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
     </AnimatePresence>
   );
 }
-

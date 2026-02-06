@@ -1,7 +1,7 @@
 import type { FC } from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, ArrowLeft, ClipboardList, PanelRightOpen, X, Bell, Database, Share2, BookOpen, Wind, AlertCircle, Palette, Trophy, BarChart3, MessageCircle, Globe } from "lucide-react";
+import { Target, ArrowLeft, ClipboardList, PanelRightOpen, X, Bell, Database, Share2, BookOpen, Wind, AlertCircle, Palette, Trophy, BarChart3, MessageCircle, Globe, Sparkles, Layers, Move, Compass, Star } from "lucide-react";
 import { useJourneyState } from "../state/journeyState";
 import { useNotificationState } from "../state/notificationState";
 import { useEmergencyState } from "../state/emergencyState";
@@ -25,11 +25,21 @@ import { HealthBar } from "./HealthBar";
 import { TodayTaskStrip } from "./TodayTaskStrip";
 import { RecoveryProgressBar } from "./RecoveryProgressBar";
 import { guardianCopy } from "../copy/guardianCopy";
+import { AdvancedToolsModal } from "./AdvancedToolsModal";
+import { ClassicRecoveryModal } from "./ClassicRecoveryModal";
+import { ManualPlacementModal } from "./ManualPlacementModal";
+import { getMissionProgressSummary } from "../utils/missionProgress";
+import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
+import { getGoalMeta } from "../data/goalMeta";
 
 interface AppSidebarProps {
   onOpenGym: () => void;
   onStartJourney: () => void;
   onOpenBaseline: () => void;
+  onOpenGuidedJourney: () => void;
+  onOpenJourneyTools?: () => void;
+  onOpenDawayir?: () => void;
+  onOpenMission?: (nodeId: string) => void;
   /** عند فتح نافذة شخص: نعرض بار المراحل واسمه فوق المحتوى */
   viewingNodeId?: string | null;
 }
@@ -38,6 +48,10 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   onOpenGym,
   onStartJourney,
   onOpenBaseline,
+  onOpenGuidedJourney,
+  onOpenJourneyTools,
+  onOpenDawayir,
+  onOpenMission,
   viewingNodeId = null
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,6 +67,9 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showTrackingDashboard, setShowTrackingDashboard] = useState(false);
   const [showNoiseSilencing, setShowNoiseSilencing] = useState(false);
   const [showAtlasDashboard, setShowAtlasDashboard] = useState(false);
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
+  const [showClassicRecovery, setShowClassicRecovery] = useState(false);
+  const [showManualPlacement, setShowManualPlacement] = useState(false);
   const [initialRecoveryOptions, setInitialRecoveryOptions] = useState<RecoveryPlanOpenWith | null>(null);
   const recoveryPlanOpenWith = useMapState((s) => s.recoveryPlanOpenWith);
   const setRecoveryPlanOpenWith = useMapState((s) => s.setRecoveryPlanOpenWith);
@@ -66,7 +83,47 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   }, [recoveryPlanOpenWith, setRecoveryPlanOpenWith]);
 
   const nodes = useMapState((s) => s.nodes);
+  const archiveMission = useMapState((s) => s.archiveMission);
+  const unarchiveMission = useMapState((s) => s.unarchiveMission);
+  const activeMissions = useMemo(() => {
+    return nodes
+      .filter((node) => node.missionProgress?.startedAt && !node.missionProgress?.isCompleted)
+      .map((node) => {
+        const summary = getMissionProgressSummary(node);
+        return summary ? { node, summary } : null;
+      })
+      .filter((item): item is { node: typeof nodes[number]; summary: NonNullable<ReturnType<typeof getMissionProgressSummary>> } => item != null)
+      .sort((a, b) => (b.node.missionProgress?.startedAt ?? 0) - (a.node.missionProgress?.startedAt ?? 0));
+  }, [nodes]);
+  const completedMissions = useMemo(() => {
+    return nodes
+      .filter((node) => node.missionProgress?.isCompleted && !node.missionProgress?.isArchived)
+      .map((node) => {
+        const summary = getMissionProgressSummary(node);
+        return summary ? { node, summary } : null;
+      })
+      .filter((item): item is { node: typeof nodes[number]; summary: NonNullable<ReturnType<typeof getMissionProgressSummary>> } => item != null)
+      .sort((a, b) => (b.node.missionProgress?.completedAt ?? 0) - (a.node.missionProgress?.completedAt ?? 0));
+  }, [nodes]);
+  const archivedMissions = useMemo(() => {
+    return nodes
+      .filter((node) => node.missionProgress?.isArchived)
+      .map((node) => {
+        const summary = getMissionProgressSummary(node, { includeArchived: true });
+        return summary ? { node, summary } : null;
+      })
+      .filter((item): item is { node: typeof nodes[number]; summary: NonNullable<ReturnType<typeof getMissionProgressSummary>> } => item != null)
+      .sort((a, b) => (b.node.missionProgress?.archivedAt ?? 0) - (a.node.missionProgress?.archivedAt ?? 0));
+  }, [nodes]);
   const viewingNode = viewingNodeId ? nodes.find((n) => n.id === viewingNodeId) : null;
+  const lastGoalId = useJourneyState((s) => s.goalId);
+  const lastGoalCategory = useJourneyState((s) => s.category);
+  const lastGoalById = useJourneyState((s) => s.lastGoalById);
+  const lastGoalRecord = getLastGoalMeta(lastGoalById, lastGoalId, lastGoalCategory);
+  const lastGoalLabel = getGoalLabel(lastGoalRecord?.goalId);
+  const lastGoalMeta = getGoalMeta(lastGoalRecord?.goalId);
+  const [badgePulse, setBadgePulse] = useState(false);
+  const lastGoalRef = useRef<string | null>(lastGoalLabel ?? null);
   const isFirstTime = useJourneyState((s) => s.baselineCompletedAt == null);
   const unlockedCount = useAchievementState((s) => s.unlockedIds.length);
   const { isSupported: notificationsSupported, settings: notificationSettings } = useNotificationState();
@@ -74,6 +131,21 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
   const handleClose = () => setIsOpen(false);
   const handleOpen = () => setIsOpen(true);
+
+  useEffect(() => {
+    if (!lastGoalLabel) return;
+    if (lastGoalRef.current && lastGoalRef.current !== lastGoalLabel) {
+      setBadgePulse(true);
+      const t = setTimeout(() => setBadgePulse(false), 700);
+      lastGoalRef.current = lastGoalLabel;
+      return () => clearTimeout(t);
+    }
+    lastGoalRef.current = lastGoalLabel;
+  }, [lastGoalLabel]);
+
+  const badgePulseClass = badgePulse ? "animate-bounce" : "";
+  const fallbackBadgeClasses =
+    "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200";
 
   return (
     <>
@@ -96,6 +168,141 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           )}
           <HealthBar />
           <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
+          {onOpenJourneyTools && (
+            <button
+              type="button"
+              onClick={() => onOpenJourneyTools()}
+              className="w-full flex items-center gap-3 rounded-xl bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100/70 dark:hover:bg-teal-900/40 transition-all text-right shrink-0 whitespace-nowrap"
+              title="أدوات الرحلة"
+            >
+              <Compass className="w-5 h-5 shrink-0" />
+              أدوات الرحلة
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onOpenDawayir?.()}
+            className="w-full flex items-center gap-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-all text-right shrink-0 whitespace-nowrap"
+            title="افتح أداة دواير"
+          >
+            <Compass className="w-5 h-5 shrink-0 text-teal-600" />
+            <span className="flex flex-col items-start">
+              افتح دواير
+              {lastGoalLabel && (
+                <span
+                  className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${lastGoalMeta?.badgeClasses ?? fallbackBadgeClasses} ${badgePulseClass}`}
+                >
+                  {lastGoalMeta ? <lastGoalMeta.icon className="w-3 h-3" /> : <Star className="w-3 h-3" />}
+                  آخر هدف: {lastGoalLabel}
+                </span>
+              )}
+            </span>
+          </button>
+          {activeMissions.length > 0 && (
+            <div className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 text-right">
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                <span>المهام النشطة</span>
+                <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5">
+                  {activeMissions.length}
+                </span>
+              </div>
+              <div className="space-y-2 max-h-44 overflow-auto pr-1">
+                {activeMissions.map(({ node, summary }) => (
+                  <button
+                    key={node.id}
+                    type="button"
+                    onClick={() => onOpenMission?.(node.id)}
+                    disabled={!onOpenMission}
+                    className="w-full flex items-center justify-between gap-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50/60 dark:hover:bg-teal-900/30 transition-all disabled:opacity-50"
+                  >
+                    <div className="flex flex-col items-start text-right min-w-0">
+                      <span className="font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[9rem]">{node.label}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[9rem]">
+                        {summary.missionLabel} — {summary.missionGoal}
+                      </span>
+                    </div>
+                    <span className="rounded-full bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-200 border border-amber-200 dark:border-amber-800 px-2 py-0.5">
+                      {summary.completed}/{summary.total}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {completedMissions.length > 0 && (
+            <div className="w-full rounded-xl border border-emerald-200 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-900/20 px-3 py-3 text-right">
+              <div className="flex items-center justify-between text-xs font-semibold text-emerald-800 dark:text-emerald-200 mb-2">
+                <span>المهام المكتملة</span>
+                <span className="rounded-full bg-emerald-100 dark:bg-emerald-900 px-2 py-0.5">
+                  {completedMissions.length}
+                </span>
+              </div>
+              <div className="space-y-2 max-h-40 overflow-auto pr-1">
+                {completedMissions.map(({ node, summary }) => (
+                  <div
+                    key={node.id}
+                    className="w-full flex items-center justify-between gap-2 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-white/70 dark:bg-emerald-900/30 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-200"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => onOpenMission?.(node.id)}
+                      disabled={!onOpenMission}
+                      className="flex flex-col items-start text-right min-w-0 disabled:opacity-50"
+                    >
+                      <span className="font-semibold truncate max-w-[8rem]">{node.label}</span>
+                      <span className="text-[10px] text-emerald-700/80 dark:text-emerald-200/70 truncate max-w-[8rem]">
+                        {summary.missionLabel} — {summary.missionGoal}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => archiveMission(node.id)}
+                      className="rounded-full border border-emerald-300 dark:border-emerald-700 px-2 py-1 text-[10px] font-semibold hover:bg-emerald-100/70 dark:hover:bg-emerald-800/40"
+                    >
+                      أرشفة
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {archivedMissions.length > 0 && (
+            <div className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 px-3 py-3 text-right">
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
+                <span>الأرشيف</span>
+                <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5">
+                  {archivedMissions.length}
+                </span>
+              </div>
+              <div className="space-y-2 max-h-36 overflow-auto pr-1">
+                {archivedMissions.map(({ node, summary }) => (
+                  <div
+                    key={node.id}
+                    className="w-full flex items-center justify-between gap-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/40 px-3 py-2 text-xs text-slate-700 dark:text-slate-200"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => onOpenMission?.(node.id)}
+                      disabled={!onOpenMission}
+                      className="flex flex-col items-start text-right min-w-0 disabled:opacity-50"
+                    >
+                      <span className="font-semibold truncate max-w-[8rem]">{node.label}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[8rem]">
+                        {summary.missionLabel} — {summary.missionGoal}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => unarchiveMission(node.id)}
+                      className="rounded-full border border-slate-300 dark:border-slate-600 px-2 py-1 text-[10px] font-semibold hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                    >
+                      استرجاع
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {isFirstTime && (
             <button
               type="button"
@@ -115,6 +322,15 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           >
             <ArrowLeft className="w-5 h-5 shrink-0" />
             أبدأ رحلتك
+          </button>
+          <button
+            type="button"
+            onClick={onOpenGuidedJourney}
+            className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap"
+            title="الرحلة الموجهة خطوة بخطوة"
+          >
+            <Layers className="w-5 h-5 shrink-0" />
+            الرحلة الموجهة
           </button>
           <button
             type="button"
@@ -210,6 +426,33 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           >
             <Palette className="w-5 h-5 shrink-0" />
             المظهر
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAdvancedTools(true)}
+            className="w-full flex items-center gap-3 rounded-xl bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 px-4 py-3 text-sm font-semibold hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+            title="أدوات متقدمة — أول خطوات + ملاحظات + تدريب"
+          >
+            <Sparkles className="w-5 h-5 shrink-0" />
+            أدوات متقدمة
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowClassicRecovery(true)}
+            className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+            title="الخطة الكلاسيكية — عرض بديل"
+          >
+            <ClipboardList className="w-5 h-5 shrink-0" />
+            الخطة الكلاسيكية
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowManualPlacement(true)}
+            className="w-full flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+            title="تحريك الشخص يدويًا بين الدوائر"
+          >
+            <Move className="w-5 h-5 shrink-0" />
+            تحديد الدائرة يدويًا
           </button>
           <button
             type="button"
@@ -350,6 +593,17 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <button
                   type="button"
                   onClick={() => {
+                    onOpenGuidedJourney();
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right"
+                >
+                  <Layers className="w-6 h-6 shrink-0" />
+                  <span>الرحلة الموجهة</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
                     onOpenBaseline();
                     handleClose();
                   }}
@@ -358,6 +612,154 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <ClipboardList className="w-6 h-6 shrink-0" />
                   <span>القياس</span>
                 </button>
+                {onOpenJourneyTools && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onOpenJourneyTools();
+                      handleClose();
+                    }}
+                    className="w-full flex items-center gap-3 rounded-xl bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100/70 dark:hover:bg-teal-900/40 transition-all text-right"
+                  >
+                    <Compass className="w-6 h-6 shrink-0" />
+                    <span>أدوات الرحلة</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenDawayir?.();
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-all text-right"
+                >
+                  <Compass className="w-6 h-6 shrink-0 text-teal-600" />
+                  <span className="flex flex-col items-start">
+                    افتح دواير
+                    {lastGoalLabel && (
+                      <span
+                        className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${lastGoalMeta?.badgeClasses ?? fallbackBadgeClasses} ${badgePulseClass}`}
+                      >
+                        {lastGoalMeta ? <lastGoalMeta.icon className="w-3 h-3" /> : <Star className="w-3 h-3" />}
+                        آخر هدف: {lastGoalLabel}
+                      </span>
+                    )}
+                  </span>
+                </button>
+                {activeMissions.length > 0 && (
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                      <span>المهام النشطة</span>
+                      <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5">
+                        {activeMissions.length}
+                      </span>
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-auto pr-1">
+                      {activeMissions.map(({ node, summary }) => (
+                        <button
+                          key={node.id}
+                          type="button"
+                          onClick={() => {
+                            onOpenMission?.(node.id);
+                            handleClose();
+                          }}
+                          disabled={!onOpenMission}
+                          className="w-full flex items-center justify-between gap-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50/60 dark:hover:bg-teal-900/30 transition-all disabled:opacity-50"
+                        >
+                          <div className="flex flex-col items-start text-right min-w-0">
+                            <span className="font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[9rem]">{node.label}</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[9rem]">
+                              {summary.missionLabel} — {summary.missionGoal}
+                            </span>
+                          </div>
+                          <span className="rounded-full bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-200 border border-amber-200 dark:border-amber-800 px-2 py-0.5">
+                            {summary.completed}/{summary.total}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {completedMissions.length > 0 && (
+                  <div className="rounded-xl border border-emerald-200 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-900/20 p-3">
+                    <div className="flex items-center justify-between text-xs font-semibold text-emerald-800 dark:text-emerald-200 mb-2">
+                      <span>المهام المكتملة</span>
+                      <span className="rounded-full bg-emerald-100 dark:bg-emerald-900 px-2 py-0.5">
+                        {completedMissions.length}
+                      </span>
+                    </div>
+                    <div className="space-y-2 max-h-40 overflow-auto pr-1">
+                      {completedMissions.map(({ node, summary }) => (
+                        <div
+                          key={node.id}
+                          className="w-full flex items-center justify-between gap-2 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-white/70 dark:bg-emerald-900/30 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-200"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onOpenMission?.(node.id);
+                              handleClose();
+                            }}
+                            disabled={!onOpenMission}
+                            className="flex flex-col items-start text-right min-w-0 disabled:opacity-50"
+                          >
+                            <span className="font-semibold truncate max-w-[8rem]">{node.label}</span>
+                            <span className="text-[10px] text-emerald-700/80 dark:text-emerald-200/70 truncate max-w-[8rem]">
+                              {summary.missionLabel} — {summary.missionGoal}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => archiveMission(node.id)}
+                            className="rounded-full border border-emerald-300 dark:border-emerald-700 px-2 py-1 text-[10px] font-semibold hover:bg-emerald-100/70 dark:hover:bg-emerald-800/40"
+                          >
+                            أرشفة
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {archivedMissions.length > 0 && (
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 p-3">
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
+                      <span>الأرشيف</span>
+                      <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5">
+                        {archivedMissions.length}
+                      </span>
+                    </div>
+                    <div className="space-y-2 max-h-36 overflow-auto pr-1">
+                      {archivedMissions.map(({ node, summary }) => (
+                        <div
+                          key={node.id}
+                          className="w-full flex items-center justify-between gap-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/40 px-3 py-2 text-xs text-slate-700 dark:text-slate-200"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onOpenMission?.(node.id);
+                              handleClose();
+                            }}
+                            disabled={!onOpenMission}
+                            className="flex flex-col items-start text-right min-w-0 disabled:opacity-50"
+                          >
+                            <span className="font-semibold truncate max-w-[8rem]">{node.label}</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[8rem]">
+                              {summary.missionLabel} — {summary.missionGoal}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => unarchiveMission(node.id)}
+                            className="rounded-full border border-slate-300 dark:border-slate-600 px-2 py-1 text-[10px] font-semibold hover:bg-slate-100 dark:hover:bg-slate-800/50"
+                          >
+                            استرجاع
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {notificationsSupported && (
                   <button
                     type="button"
@@ -438,6 +840,39 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 >
                   <Palette className="w-6 h-6 shrink-0" />
                   <span>المظهر</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAdvancedTools(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-all text-right"
+                >
+                  <Sparkles className="w-6 h-6 shrink-0" />
+                  <span>أدوات متقدمة</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowClassicRecovery(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right"
+                >
+                  <ClipboardList className="w-6 h-6 shrink-0" />
+                  <span>الخطة الكلاسيكية</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowManualPlacement(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all text-right"
+                >
+                  <Move className="w-6 h-6 shrink-0" />
+                  <span>تحديد الدائرة يدويًا</span>
                 </button>
                 <button
                   type="button"
@@ -580,6 +1015,21 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       <AtlasDashboard
         isOpen={showAtlasDashboard}
         onClose={() => setShowAtlasDashboard(false)}
+      />
+
+      <AdvancedToolsModal
+        isOpen={showAdvancedTools}
+        onClose={() => setShowAdvancedTools(false)}
+      />
+
+      <ClassicRecoveryModal
+        isOpen={showClassicRecovery}
+        onClose={() => setShowClassicRecovery(false)}
+      />
+
+      <ManualPlacementModal
+        isOpen={showManualPlacement}
+        onClose={() => setShowManualPlacement(false)}
       />
     </>
   );

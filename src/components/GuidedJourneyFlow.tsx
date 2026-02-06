@@ -7,6 +7,7 @@ import { GoalPicker } from "./GoalPicker";
 import { CoreMapScreen } from "./CoreMapScreen";
 import { PostStepMeasurement } from "./PostStepMeasurement";
 import { JourneyCelebration } from "./JourneyCelebration";
+import { ProgressIndicator } from "./ProgressIndicator";
 import type { AdviceCategory } from "../data/adviceScripts";
 
 const STEP_LABELS: Record<string, string> = {
@@ -41,9 +42,15 @@ export const GuidedJourneyFlow: FC<GuidedJourneyFlowProps> = ({
 
   const stepIds = getStepIds();
   const currentIndex = getCurrentStepIndex();
+  const labels = stepIds.map((id) => STEP_LABELS[id] ?? id);
 
   return (
     <div className="w-full max-w-2xl mx-auto">
+      <ProgressIndicator
+        currentStep={currentIndex + 1}
+        totalSteps={stepIds.length}
+        labels={labels}
+      />
       {/* Progress: خطوات الرحلة — رقم ١ (القياس) مقفول بعد ما نكون دخلنا على الأهداف */}
       <div className="mb-8 flex flex-wrap justify-center gap-2">
         {stepIds.map((id, i) => {

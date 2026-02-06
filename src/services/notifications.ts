@@ -14,6 +14,8 @@ export interface NotificationOptions {
   data?: Record<string, unknown>;
 }
 
+export type MissionReminderStrategy = "next" | "random" | "last" | "cycle";
+
 // مفتاح حفظ إعدادات الإشعارات
 const NOTIFICATION_SETTINGS_KEY = "dawayir-notification-settings";
 const LAST_ACTIVITY_KEY = "dawayir-last-activity";
@@ -23,7 +25,8 @@ export const NOTIFICATION_TYPES = {
   DAILY_REMINDER: "daily-reminder",
   INACTIVE_REMINDER: "inactive-reminder",
   EXERCISE_COMPLETE: "exercise-complete",
-  STEP_REMINDER: "step-reminder"
+  STEP_REMINDER: "step-reminder",
+  MISSION_REMINDER: "mission-reminder"
 } as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
@@ -110,6 +113,11 @@ export const PRESET_NOTIFICATIONS: Record<NotificationType, NotificationOptions>
     title: "عندك خطوات متبقية ⏰",
     body: "في مهام ميدان مستنياك. خُد دقيقة وكمّلها.",
     tag: "step-reminder"
+  },
+  [NOTIFICATION_TYPES.MISSION_REMINDER]: {
+    title: "مهمتك مستنياك 🎯",
+    body: "عندك مهمة نشطة. خصّص دقيقة وكمّل خطوة النهاردة.",
+    tag: "mission-reminder"
   }
 };
 
@@ -131,6 +139,8 @@ export interface NotificationSettings {
   inactiveReminder: boolean;
   inactiveReminderDays: number;
   exerciseComplete: boolean;
+  missionReminder: boolean;
+  missionReminderStrategy: MissionReminderStrategy;
 }
 
 const DEFAULT_SETTINGS: NotificationSettings = {
@@ -139,7 +149,9 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   dailyReminderTime: "20:00",
   inactiveReminder: true,
   inactiveReminderDays: 3,
-  exerciseComplete: true
+  exerciseComplete: true,
+  missionReminder: true,
+  missionReminderStrategy: "next"
 };
 
 export async function loadNotificationSettings(): Promise<NotificationSettings> {

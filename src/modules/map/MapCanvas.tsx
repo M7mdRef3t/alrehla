@@ -7,6 +7,7 @@ import type { Ring, MapNode as MapNodeType } from "./mapTypes";
 import { useMapState } from "../../state/mapState";
 import { useMeState } from "../../state/meState";
 import { mapCopy } from "../../copy/map";
+import { getMissionProgressSummary } from "../../utils/missionProgress";
 
 interface RingProps {
   ring: Ring;
@@ -104,6 +105,10 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     ? "border-slate-400 shadow-[0_0_6px_rgba(148,163,184,0.25)]"
     : THREAT_RING_CLASS[node.ring];
 
+  const missionBadge = useMemo(() => getMissionProgressSummary(node), [
+    node
+  ]);
+
   const style: React.CSSProperties = {
     position: "absolute",
     top: `${ringPos.y}%`,
@@ -177,7 +182,20 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
         >
-          <span className="text-xs md:text-sm font-semibold">{node.label}</span>
+          <span className="flex flex-col items-start">
+            <span className="text-xs md:text-sm font-semibold">{node.label}</span>
+            {missionBadge ? (
+              <span
+                className={`mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                  missionBadge.tone === "done"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-amber-50 text-amber-700 border-amber-200"
+                }`}
+              >
+                {missionBadge.label}
+              </span>
+            ) : null}
+          </span>
         </motion.button>
         <span
           {...listeners}

@@ -12,7 +12,6 @@ import {
 import { getScenariosForNode, type TrainingScenario } from "../data/symptomScenarios";
 import type { Ring } from "../modules/map/mapTypes";
 
-const LEVEL_SIZES = [3, 4, 6]; // Level 1: 3, Level 2: 4, Level 3: rest
 const LEVEL_LABELS = ["المبتدئ (الرفض)", "المتوسط (الذنب)", "الوحش (التلاعب)"];
 const LEVEL_REWARDS = ["مستوى المبتدئ مكتمل! 🎉", "مستوى المتوسط مكتمل! 💪", "مستوى الوحش مكتمل! 🔥"];
 
@@ -28,7 +27,6 @@ interface PersonalizedTrainingProps {
   selectedSymptoms: string[];
   ring: Ring;
   goalId: string;
-  nodeId?: string;
   onClose: () => void;
   onComplete?: () => void;
 }
@@ -38,7 +36,6 @@ export const PersonalizedTraining: React.FC<PersonalizedTrainingProps> = ({
   selectedSymptoms,
   ring,
   goalId,
-  nodeId,
   onClose,
   onComplete
 }) => {

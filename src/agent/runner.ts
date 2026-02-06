@@ -1,7 +1,6 @@
 import { useMapState } from "../state/mapState";
 import { isKnownSymptomId } from "./tools";
-import type { AgentActions, AgentRoute } from "./types";
-import type { Ring } from "../modules/map/mapTypes";
+import type { AgentActions } from "./types";
 
 export interface RunnerDeps {
   /** حل اسم الشخص إلى nodeId. إن لم يُوجد يُرجع null. */

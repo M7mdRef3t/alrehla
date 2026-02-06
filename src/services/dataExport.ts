@@ -31,46 +31,38 @@ export interface BackupData {
 /**
  * تصدير جميع البيانات إلى ملف JSON
  */
+export async function buildBackupFromLocal(): Promise<BackupData> {
+  // جمع البيانات من التخزين المحلي
+  const mapData = await loadStoredState();
+  const meData = await getJSON("dawayir-me");
+  const journeyData = await getJSON("dawayir-journey");
+  const notificationData = await getJSON("dawayir-notification-settings");
+
+  const data: BackupData = {
+    version: "1.0",
+    exportedAt: new Date().toISOString(),
+    nodes: mapData?.nodes || []
+  };
+
+  if (meData) {
+    data.me = meData as BackupData["me"];
+  }
+
+  if (journeyData) {
+    data.journey = journeyData as BackupData["journey"];
+  }
+
+  if (notificationData) {
+    data.notification = notificationData as BackupData["notification"];
+  }
+
+  return data;
+}
+
 export async function exportToJSON(): Promise<void> {
   try {
-    // جمع البيانات من التخزين المحلي
-    const mapData = await loadStoredState();
-    const meData = await getJSON("dawayir-me");
-    const journeyData = await getJSON("dawayir-journey");
-    const notificationData = await getJSON("dawayir-notification-settings");
-
-    const data: BackupData = {
-      version: "1.0",
-      exportedAt: new Date().toISOString(),
-      nodes: mapData?.nodes || []
-    };
-
-    // إضافة البيانات الإضافية إن وُجدت
-    if (meData) {
-      data.me = meData as BackupData["me"];
-    }
-
-    if (journeyData) {
-      data.journey = journeyData as BackupData["journey"];
-    }
-
-    if (notificationData) {
-      data.notification = notificationData as BackupData["notification"];
-    }
-
-    // إنشاء ملف JSON
-    const jsonString = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-
-    // تحميل الملف
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `dawayir-backup-${Date.now()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const data = await buildBackupFromLocal();
+    downloadBackupFile(data);
   } catch (error) {
     console.error("فشل في تصدير البيانات:", error);
     throw new Error("حدث خطأ أثناء تصدير البيانات");
@@ -100,7 +92,7 @@ export async function importFromJSON(file: File): Promise<BackupData> {
         }
 
         resolve(data);
-      } catch (error) {
+      } catch {
         reject(new Error("فشل في قراءة الملف. تأكد أن الملف صحيح."));
       }
     };
@@ -141,6 +133,63 @@ export async function restoreBackupData(data: BackupData): Promise<void> {
     console.error("فشل في استعادة البيانات:", error);
     throw new Error("حدث خطأ أثناء استعادة البيانات");
   }
+}
+
+export function downloadBackupFile(data: BackupData, fileNamePrefix = "journey-backup"): void {
+  const jsonString = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonString], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${fileNamePrefix}-${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export function backupToKeyValues(data: BackupData): Record<string, string> {
+  const updates: Record<string, string> = {};
+  if (data.nodes && Array.isArray(data.nodes)) {
+    updates["dawayir-map-nodes"] = JSON.stringify({ nodes: data.nodes });
+  }
+  if (data.me) {
+    updates["dawayir-me"] = JSON.stringify(data.me);
+  }
+  if (data.journey) {
+    updates["dawayir-journey"] = JSON.stringify(data.journey);
+  }
+  if (data.notification) {
+    updates["dawayir-notification-settings"] = JSON.stringify(data.notification);
+  }
+  return updates;
+}
+
+export function buildBackupFromKeyValues(values: Record<string, string>): BackupData {
+  const parse = <T>(key: string): T | undefined => {
+    try {
+      const raw = values[key];
+      if (!raw) return undefined;
+      return JSON.parse(raw) as T;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const map = parse<{ nodes?: unknown[] }>("dawayir-map-nodes");
+  const me = parse<BackupData["me"]>("dawayir-me");
+  const journey = parse<BackupData["journey"]>("dawayir-journey");
+  const notification = parse<BackupData["notification"]>("dawayir-notification-settings");
+
+  return {
+    version: "1.0",
+    exportedAt: new Date().toISOString(),
+    nodes: map?.nodes ?? [],
+    ...(me ? { me } : {}),
+    ...(journey ? { journey } : {}),
+    ...(notification ? { notification } : {})
+  };
 }
 
 /**

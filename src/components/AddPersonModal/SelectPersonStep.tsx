@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import type { FC, ReactNode } from "react";
 import { motion } from "framer-motion";
 import { mapCopy } from "../../copy/map";
 import { SUGGESTIONS, type SuggestionCard } from "./constants";
@@ -9,6 +9,7 @@ interface SelectPersonStepProps {
   customTitleInput: string;
   showCustomTitleInput: boolean;
   customName: string;
+  afterNameContent?: ReactNode;
   onTitleSelect: (title: string) => void;
   onCustomTitleChange: (value: string) => void;
   onNameChange: (value: string) => void;
@@ -22,6 +23,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
   customTitleInput,
   showCustomTitleInput,
   customName,
+  afterNameContent,
   onTitleSelect,
   onCustomTitleChange,
   onNameChange,
@@ -127,6 +129,8 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           </p>
         </motion.div>
       )}
+
+      {afterNameContent}
   
       <div className="mt-6 flex gap-3">
         <button

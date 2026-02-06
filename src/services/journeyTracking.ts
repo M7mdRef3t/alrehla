@@ -2,11 +2,15 @@
  * تتبع الرحلة — نظامين: بدون هوية (إحصائيات مجمّعة) | مع هوية (لمتابعة المستخدمين ومساعدتهم)
  */
 
+import { isSupabaseReady, supabase } from "./supabaseClient";
+
 const KEY_MODE = "dawayir-tracking-mode";
 const KEY_EVENTS = "dawayir-journey-events";
 const KEY_SESSION_ID = "dawayir-session-id";
 const KEY_API_URL = "dawayir-tracking-api-url";
 const MAX_EVENTS = 2000;
+const SUPABASE_EVENTS_TABLE = "journey_events";
+const SUPABASE_PROFILES_TABLE = "profiles";
 
 export type TrackingMode = "anonymous" | "identified";
 
@@ -34,6 +38,11 @@ export interface JourneyEvent {
 }
 
 const isBrowser = typeof window !== "undefined";
+let supabaseSyncTimer: ReturnType<typeof setTimeout> | null = null;
+const supabaseQueue: Array<{
+  mode: TrackingMode;
+  event: JourneyEvent;
+}> = [];
 
 function getOrCreateSessionId(): string {
   if (!isBrowser) return "";
@@ -43,6 +52,12 @@ function getOrCreateSessionId(): string {
     localStorage.setItem(KEY_SESSION_ID, id);
   }
   return id;
+}
+
+export function getTrackingSessionId(): string | null {
+  if (getTrackingMode() !== "identified") return null;
+  const id = getOrCreateSessionId();
+  return id || null;
 }
 
 export function getTrackingMode(): TrackingMode {
@@ -67,6 +82,57 @@ export function setTrackingApiUrl(url: string | null): void {
   if (!isBrowser) return;
   if (url == null || !url.trim()) localStorage.removeItem(KEY_API_URL);
   else localStorage.setItem(KEY_API_URL, url.trim());
+}
+
+function queueSupabaseSync(mode: TrackingMode, event: JourneyEvent) {
+  if (!isSupabaseReady || !supabase) return;
+  supabaseQueue.push({ mode, event });
+  if (supabaseSyncTimer) clearTimeout(supabaseSyncTimer);
+  supabaseSyncTimer = setTimeout(() => {
+    void flushSupabaseSync();
+  }, 800);
+}
+
+async function flushSupabaseSync(): Promise<void> {
+  if (!isSupabaseReady || !supabase) return;
+  const batch = supabaseQueue.splice(0, supabaseQueue.length);
+  if (batch.length === 0) return;
+
+  const rows = batch.map(({ mode, event }) => ({
+    session_id: event.sessionId ?? null,
+    mode,
+    type: event.type,
+    payload: event.payload ?? null,
+    created_at: new Date(event.timestamp).toISOString()
+  }));
+
+  const { error } = await supabase.from(SUPABASE_EVENTS_TABLE).insert(rows);
+  if (error && import.meta.env.DEV) {
+    console.warn("journeyTracking: supabase insert failed", error);
+  }
+
+  const sessionIds = Array.from(
+    new Set(
+      batch
+        .filter((item) => item.mode === "identified" && item.event.sessionId)
+        .map((item) => item.event.sessionId!)
+    )
+  );
+  if (sessionIds.length === 0) return;
+
+  const now = new Date().toISOString();
+  const profileRows = sessionIds.map((id) => ({
+    id,
+    full_name: id,
+    role: "session",
+    last_seen: now
+  }));
+  const { error: profileError } = await supabase.from(SUPABASE_PROFILES_TABLE).upsert(profileRows, {
+    onConflict: "id"
+  });
+  if (profileError && import.meta.env.DEV) {
+    console.warn("journeyTracking: profile upsert failed", profileError);
+  }
 }
 
 function loadEvents(): JourneyEvent[] {
@@ -110,6 +176,7 @@ export function recordJourneyEvent(
   const events = loadEvents();
   events.push(event);
   saveEvents(events);
+  queueSupabaseSync(mode, event);
 
   const apiUrl = getTrackingApiUrl();
   if (apiUrl) {

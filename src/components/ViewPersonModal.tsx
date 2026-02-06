@@ -14,13 +14,15 @@ interface ViewPersonModalProps {
   category: AdviceCategory;
   goalId?: string;
   onClose: () => void;
+  onOpenMission?: (nodeId: string) => void;
 }
 
 export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   nodeId,
   category,
   goalId,
-  onClose
+  onClose,
+  onOpenMission
 }) => {
   const node = useMapState((s) => s.nodes.find((n) => n.id === nodeId));
   const updateNodeInsights = useMapState((s) => s.updateNodeInsights);
@@ -29,10 +31,50 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   const [showDiagnosisInsight, setShowDiagnosisInsight] = useState(false);
   const [solutionText, setSolutionText] = useState<string | null>(null);
   const [solutionLoading, setSolutionLoading] = useState(false);
-  const [aiDiagnosisLoading, setAiDiagnosisLoading] = useState(false);
   const hasAIInsights = !!node?.analysis?.insights;
+  const viewData = node && node.analysis ? getPersonViewData(node, category, goalId) : null;
+  const diagnosis = viewData?.diagnosis ?? null;
 
-  if (!node || !node.analysis) {
+  // توليد تشخيص / فهم / هدف مخصص من الذكاء الاصطناعي، مربوط بكل ما نعرفه عن الشخص
+  useEffect(() => {
+    if (!node || !node.analysis) return;
+    // لو عندنا خلاص ملخص تشخيص من AI، نسيبها زي ما هي
+    if (node.analysis.insights?.diagnosisSummary) return;
+
+    let cancelled = false;
+    generatePersonViewInsightsFromAI(node, category, goalId)
+      .then((insights) => {
+        if (!insights || cancelled) return;
+        updateNodeInsights(node.id, insights);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [node, category, goalId, updateNodeInsights]);
+
+  useEffect(() => {
+    if (!diagnosis || !node) return;
+    if (viewScreen !== "solution" || solutionText !== null || solutionLoading) return;
+    setSolutionLoading(true);
+    const input = {
+      personLabel: node.label,
+      personalizedTitle: diagnosis.personalizedTitle,
+      stateLabel: diagnosis.stateLabel,
+      goalAction: diagnosis.goalAction,
+      understanding: diagnosis.understanding,
+      isEmotionalCaptivity: diagnosis.isEmotionalCaptivity,
+      understandingSubtext: diagnosis.understandingSubtext
+    };
+    generatePersonSolution(input)
+      .then((text) => {
+        setSolutionText(text ?? "تعذر توليد الحل. جرّب لاحقاً.");
+      })
+      .catch(() => setSolutionText("تعذر توليد الحل. جرّب لاحقاً."))
+      .finally(() => setSolutionLoading(false));
+  }, [viewScreen, node, diagnosis, solutionText, solutionLoading]);
+
+  if (!node || !node.analysis || !diagnosis) {
     return (
       <div
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
@@ -73,52 +115,6 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
       </div>
     );
   }
-
-  const viewData = getPersonViewData(node, category, goalId);
-  const { diagnosis } = viewData;
-
-  // توليد تشخيص / فهم / هدف مخصص من الذكاء الاصطناعي، مربوط بكل ما نعرفه عن الشخص
-  useEffect(() => {
-    if (!node || !node.analysis) return;
-    // لو عندنا خلاص ملخص تشخيص من AI، نسيبها زي ما هي
-    if (node.analysis.insights?.diagnosisSummary) return;
-
-    let cancelled = false;
-    setAiDiagnosisLoading(true);
-
-    generatePersonViewInsightsFromAI(node, category, goalId)
-      .then((insights) => {
-        if (!insights || cancelled) return;
-        updateNodeInsights(node.id, insights);
-      })
-      .finally(() => {
-        if (!cancelled) setAiDiagnosisLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [node, category, goalId, updateNodeInsights]);
-
-  useEffect(() => {
-    if (viewScreen !== "solution" || solutionText !== null || solutionLoading) return;
-    setSolutionLoading(true);
-    const input = {
-      personLabel: node.label,
-      personalizedTitle: diagnosis.personalizedTitle,
-      stateLabel: diagnosis.stateLabel,
-      goalAction: diagnosis.goalAction,
-      understanding: diagnosis.understanding,
-      isEmotionalCaptivity: diagnosis.isEmotionalCaptivity,
-      understandingSubtext: diagnosis.understandingSubtext
-    };
-    generatePersonSolution(input)
-      .then((text) => {
-        setSolutionText(text ?? "تعذر توليد الحل. جرّب لاحقاً.");
-      })
-      .catch(() => setSolutionText("تعذر توليد الحل. جرّب لاحقاً."))
-      .finally(() => setSolutionLoading(false));
-  }, [viewScreen, nodeId, solutionText, solutionLoading]);
 
   return (
     <div
@@ -198,6 +194,19 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
                   </p>
                 )}
               </div>
+
+              {onOpenMission && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenMission(node.id);
+                    onClose();
+                  }}
+                  className="w-full mb-6 rounded-full bg-slate-900 text-white px-6 py-3 text-sm font-semibold shadow hover:bg-slate-800 active:scale-[0.99] transition-all duration-200"
+                >
+                  افتح شاشة المهمة
+                </button>
+              )}
 
               {diagnosis.showDetachmentSections && (
                 <div className="p-5 bg-violet-50 border-2 border-violet-200 rounded-xl text-right mb-6">

@@ -55,6 +55,8 @@ export interface RecoveryPath {
   };
   /** للسماح للـ AI بتعديل الصعوبة لاحقاً */
   aiAdjustmentFactor?: number;
+  /** هل الخطة مولّدة بالذكاء الاصطناعي؟ */
+  aiGenerated?: boolean;
 }
 
 /** تقدّم يومي — لتغذية لوحة القياس */

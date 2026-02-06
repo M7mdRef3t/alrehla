@@ -51,16 +51,16 @@ export function generateDynamicPlan(
   
   // If we have symptom exercises, prioritize them
   if (symptomExercises.length > 0) {
-    steps = integrateSymptomExercises(symptomExercises, patterns, personLabel);
+    steps = integrateSymptomExercises(symptomExercises, patterns);
   } else if (patterns.length === 0) {
     // Fallback to basic plan if no patterns detected
     return generateBasicPlan(personLabel, ring);
   } else {
     // Use pattern-based plan
-    steps.push(generateWeek1Understanding(primaryPattern, patterns));
-    steps.push(generateWeek2Defense(primaryPattern, patterns));
-    steps.push(generateWeek3Practice(primaryPattern, patterns));
-    steps.push(generateWeek4Expansion(primaryPattern, patterns));
+    steps.push(generateWeek1Understanding(primaryPattern));
+    steps.push(generateWeek2Defense(primaryPattern));
+    steps.push(generateWeek3Practice(primaryPattern));
+    steps.push(generateWeek4Expansion());
   }
 
   const finalInsights = focusTraumaInheritance
@@ -84,8 +84,7 @@ export function generateDynamicPlan(
  */
 function integrateSymptomExercises(
   symptomExercises: SymptomExercise[],
-  patterns: DetectedPattern[],
-  personLabel: string
+  patterns: DetectedPattern[]
 ): DynamicStep[] {
   const steps: DynamicStep[] = [];
   
@@ -144,9 +143,9 @@ function integrateSymptomExercises(
     for (let i = 0; i < remainingWeeks; i++) {
       const weekNum = steps.length + 1;
       if (weekNum === 3) {
-        steps.push(generateWeek3Practice(primaryPattern, patterns));
+        steps.push(generateWeek3Practice(primaryPattern));
       } else if (weekNum === 4) {
-        steps.push(generateWeek4Expansion(primaryPattern, patterns));
+        steps.push(generateWeek4Expansion());
       }
     }
   }
@@ -158,8 +157,7 @@ function integrateSymptomExercises(
  * Week 1: Understanding the pattern/weapon
  */
 function generateWeek1Understanding(
-  primaryPattern: DetectedPattern,
-  allPatterns: DetectedPattern[]
+  primaryPattern: DetectedPattern
 ): DynamicStep {
   
   const patternName = getPatternArabicName(primaryPattern.type);
@@ -227,8 +225,7 @@ function generateWeek1Understanding(
  * Week 2: Building defenses
  */
 function generateWeek2Defense(
-  primaryPattern: DetectedPattern,
-  allPatterns: DetectedPattern[]
+  primaryPattern: DetectedPattern
 ): DynamicStep {
   
   const protectionPhrases = generateProtectionPhrases(primaryPattern);
@@ -286,8 +283,7 @@ function generateWeek2Defense(
  * Week 3: Safe practice
  */
 function generateWeek3Practice(
-  primaryPattern: DetectedPattern,
-  allPatterns: DetectedPattern[]
+  primaryPattern: DetectedPattern
 ): DynamicStep {
   
   const safeSituations = getSafePracticeSituations(primaryPattern.type);
@@ -348,10 +344,7 @@ function generateWeek3Practice(
 /**
  * Week 4: Expansion (dynamically generated)
  */
-function generateWeek4Expansion(
-  primaryPattern: DetectedPattern,
-  allPatterns: DetectedPattern[]
-): DynamicStep {
+function generateWeek4Expansion(): DynamicStep {
   
   return {
     id: 'week-4',

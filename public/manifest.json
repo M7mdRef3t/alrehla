@@ -1,7 +1,7 @@
 {
-  "name": "دواير — مسافتي",
-  "short_name": "دواير",
-  "description": "خريطة بصرية لعلاقاتك. هنساعدك ترسم حدودك وتشوف مين يستحق وجودك.",
+  "name": "الرحلة",
+  "short_name": "الرحلة",
+  "description": "الرحلة منصة تساعدك تشوف علاقاتك وحدودك بوضوح. أداة دواير هي البوصلة الأولى.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f8fafc",
@@ -63,9 +63,9 @@
   "screenshots": [],
   "shortcuts": [
     {
-      "name": "أبدأ رحلتك",
-      "short_name": "الرحلة",
-      "description": "ابدأ رحلة تحديد حدودك",
+      "name": "افتح دواير",
+      "short_name": "دواير",
+      "description": "افتح أداة دواير لترتيب علاقاتك",
       "url": "/?action=start",
       "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     }

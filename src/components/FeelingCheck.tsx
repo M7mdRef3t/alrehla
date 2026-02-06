@@ -14,23 +14,6 @@ export type FeelingAnswers = {
 /** صيغة قياسية: دايماً/جداً، أحياناً، نادراً، أبداً/لأ */
 const OPTIONS: FeelingOption[] = ["often", "sometimes", "rarely", "never"];
 
-/** high=3، medium=2، low=1، zero=0. المجموع 0–9. 0–2 أخضر، 3–5 أصفر، 6–9 أحمر */
-function points(opt: FeelingOption): number {
-  return opt === "often" ? 3 : opt === "sometimes" ? 2 : opt === "rarely" ? 1 : 0;
-}
-
-export function feelingScoreToRing(answers: FeelingAnswers): "green" | "yellow" | "red" {
-  const score = points(answers.q1) + points(answers.q2) + points(answers.q3);
-  if (score <= 2) return "green";
-  if (score <= 5) return "yellow";
-  return "red";
-}
-
-/** النتيجة من 0 لـ 9 (للتخزين/العرض) */
-export function feelingScore(answers: FeelingAnswers): number {
-  return points(answers.q1) + points(answers.q2) + points(answers.q3);
-}
-
 interface FeelingCheckProps {
   personLabel: string;
   onDone: (answers: FeelingAnswers) => void;
@@ -73,7 +56,7 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
         {(["q1", "q2", "q3"] as const).map((key) => (
           <li key={key} className="p-4 bg-white border border-gray-200 rounded-xl text-right">
             <p className="font-medium mb-3">{feelingCopy[key]}</p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-stretch">
               {OPTIONS.map((opt) => {
                 const isSelected = answers[key] === opt;
                 const label = feelingCopy.options[opt];
@@ -82,7 +65,7 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
                   <button
                     key={opt}
                     type="button"
-                    className={`flex-1 px-3 py-2.5 text-sm font-medium ${getOptionButtonClass(tier, isSelected)}`}
+                    className={`flex-1 min-w-0 ${getOptionButtonClass(tier, isSelected)}`}
                     onClick={() => handleAnswer(key, opt)}
                     title={label}
                   >

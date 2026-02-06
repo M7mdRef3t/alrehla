@@ -57,7 +57,7 @@ export function trackPageView(pageName: string): void {
   
   // Dev logging
   if (import.meta.env.DEV) {
-    console.info(`[Analytics] Page: ${pageName}`);
+    console.warn(`[Analytics] Page: ${pageName}`);
   }
 }
 
@@ -74,7 +74,7 @@ export function trackEvent(
   
   // Dev logging
   if (import.meta.env.DEV) {
-    console.info(`[Analytics] Event: ${eventName}`, params);
+    console.warn(`[Analytics] Event: ${eventName}`, params);
   }
 }
 

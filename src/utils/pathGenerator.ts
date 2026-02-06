@@ -57,7 +57,9 @@ export async function generateRecoveryPathFromAI(
   input: GeneratePathInput
 ): Promise<RecoveryPath | null> {
   const { personLabel, pathId, lastDifficulty, symptomType, relationshipRole } = input;
-  if (!geminiClient.isAvailable()) return null;
+  if (!geminiClient.isAvailable()) {
+    return buildFallbackRecoveryPath(input);
+  }
 
   const pathName = PATH_NAMES[pathId];
   const pathDesc = PATH_DESCRIPTIONS[pathId];
@@ -138,9 +140,114 @@ ${philosophyRule}${roleLine ? roleLine + "\n" : ""}${symptomLine ? symptomLine +
 
   try {
     const result = await geminiClient.generateJSON<RecoveryPath>(prompt);
-    if (result?.id && result?.phases?.week1) return result;
+    if (result?.id && result?.phases?.week1) return { ...result, aiGenerated: true };
   } catch (e) {
     if (import.meta.env.DEV) console.warn("pathGenerator: Gemini failed", e);
   }
-  return null;
+  return buildFallbackRecoveryPath(input);
+}
+
+function buildFallbackRecoveryPath(input: GeneratePathInput): RecoveryPath {
+  const { personLabel, pathId } = input;
+  const name = PATH_NAMES[pathId];
+  const description = PATH_DESCRIPTIONS[pathId];
+
+  const commonWeek = (week: number, focus: string, tasks: RecoveryPath["phases"]["week1"]["tasks"]): RecoveryPath["phases"]["week1"] => ({
+    week,
+    focus,
+    description: `أسبوع ${week}: خطوات بسيطة قابلة للتنفيذ مع ${personLabel}.`,
+    tasks,
+    successCriteria: "إنجزت المهام الأساسية وشعرت بفرق بسيط في وضوحك وحدودك."
+  });
+
+  const pathTasks: Record<PathId, { week1: RecoveryPath["phases"]["week1"]["tasks"]; week2: RecoveryPath["phases"]["week2"]["tasks"]; week3: RecoveryPath["phases"]["week3"]["tasks"]; }> = {
+    path_protection: {
+      week1: [
+        { id: "w1-t1", type: "reflection", title: "رسم حدود واضحة", text: "اكتب 3 حدود مش هتتجاوزها مع الشخص ده.", requiresInput: true, placeholder: "مثال: مش هرد بعد الساعة 10..." },
+        { id: "w1-t2", type: "practice", title: "قول لأ صغيرة", text: "اختار موقف بسيط وقل فيه لأ مرة واحدة.", requiresInput: true, placeholder: "الموقف اللي قلت فيه لأ..." },
+        { id: "w1-t3", type: "breathing", title: "تهدئة قبل الرد", text: "تنفس 60 ثانية قبل أي رد صعب.", requiresInput: false }
+      ],
+      week2: [
+        { id: "w2-t1", type: "writing", title: "نص رد جاهز", text: "اكتب رد قصير ومحترم تقدر تستخدمه وقت الضغط.", requiresInput: true, placeholder: "مثال: مقدرش دلوقتي، ممكن بكرة." },
+        { id: "w2-t2", type: "observation", title: "لاحظ ضغط الجسم", text: "سجّل إحساس جسمك بعد كل تواصل.", requiresInput: true, placeholder: "بعد المكالمة حسيت..." }
+      ],
+      week3: [
+        { id: "w3-t1", type: "challenge", title: "حد نهائي", text: "نفّذ حد واحد كنت بتأجله.", requiresInput: true, placeholder: "الحد اللي نفذته..." },
+        { id: "w3-t2", type: "reflection", title: "إعادة تقييم", text: "قيّم علاقتك بعد الحدود الجديدة (جملة واحدة).", requiresInput: true, placeholder: "دلوقتي شايف العلاقة..." }
+      ]
+    },
+    path_detox: {
+      week1: [
+        { id: "w1-t1", type: "reflection", title: "تمييز الذنب", text: "اكتب 3 جمل ذنب بتطاردك واسمّيها \"ذنب حدود\".", requiresInput: true, placeholder: "مثال: لما بسكت، بحس إني شخص وحش." },
+        { id: "w1-t2", type: "practice", title: "وقف الاستحضار", text: "كل ما تفكر فيه، قول لنفسك: \"ده مش وقت التفكير\".", requiresInput: false },
+        { id: "w1-t3", type: "breathing", title: "تهدئة الذهن", text: "تنفس 90 ثانية لما يشتغل الاجترار.", requiresInput: false }
+      ],
+      week2: [
+        { id: "w2-t1", type: "writing", title: "قاضي الحدود", text: "اكتب سؤالين يفضحوا الذنب (هل في قانون؟)", requiresInput: true, placeholder: "هل فيه قانون بيقول..." },
+        { id: "w2-t2", type: "observation", title: "سجل الاجترار", text: "سجّل كل مرة استحضرت الشخص خلال اليوم.", requiresInput: true, placeholder: "عدد المرات..." }
+      ],
+      week3: [
+        { id: "w3-t1", type: "challenge", title: "صيام شعوري ليوم واحد", text: "يوم واحد بلا استحضار متعمّد (اكتب نتيجتك).", requiresInput: true, placeholder: "النتيجة..." },
+        { id: "w3-t2", type: "reflection", title: "رسالة لنفسك", text: "اكتب رسالة قصيرة تثبّت حقك في الحدود.", requiresInput: true, placeholder: "أنا من حقي..." }
+      ]
+    },
+    path_negotiation: {
+      week1: [
+        { id: "w1-t1", type: "reflection", title: "أين التوتر؟", text: "حدد أكثر نقطتين بيوجعوك في العلاقة.", requiresInput: true, placeholder: "أكتر نقطتين..." },
+        { id: "w1-t2", type: "practice", title: "تواصل واضح", text: "جرّب جملة واضحة عن احتياجك.", requiresInput: true, placeholder: "مثال: محتاج شوية مساحة." }
+      ],
+      week2: [
+        { id: "w2-t1", type: "writing", title: "سيناريو بديل", text: "اكتب رد بديل محترم لموقف متكرر.", requiresInput: true, placeholder: "لو حصل كذا، هقول..." },
+        { id: "w2-t2", type: "observation", title: "قياس رد الفعل", text: "لاحظ رد الطرف الآخر بعد الجملة الجديدة.", requiresInput: true, placeholder: "رد الفعل كان..." }
+      ],
+      week3: [
+        { id: "w3-t1", type: "challenge", title: "تفاوض بسيط", text: "جرّب تفاوض واحد يخفف الضغط.", requiresInput: true, placeholder: "التفاوض كان..." },
+        { id: "w3-t2", type: "reflection", title: "تقييم التوازن", text: "هل التوازن اتحسن؟ اكتب جملة.", requiresInput: true, placeholder: "أيوه/لا لأن..." }
+      ]
+    },
+    path_deepening: {
+      week1: [
+        { id: "w1-t1", type: "reflection", title: "نقطة قوة", text: "اكتب موقف واحد حسّسك بالأمان.", requiresInput: true, placeholder: "الموقف..." },
+        { id: "w1-t2", type: "practice", title: "تعزيز القرب", text: "قول كلمة تقدير صريحة.", requiresInput: true, placeholder: "الكلمة..." }
+      ],
+      week2: [
+        { id: "w2-t1", type: "writing", title: "اتفاق بسيط", text: "اتفقوا على عادة صغيرة ثابتة.", requiresInput: true, placeholder: "الاتفاق..." },
+        { id: "w2-t2", type: "observation", title: "أثر الاتفاق", text: "لاحظ أثر العادة على إحساسك.", requiresInput: true, placeholder: "الأثر..." }
+      ],
+      week3: [
+        { id: "w3-t1", type: "challenge", title: "خطوة تعميق", text: "جرّب خطوة جديدة تقوّي العلاقة.", requiresInput: true, placeholder: "الخطوة..." },
+        { id: "w3-t2", type: "reflection", title: "تثبيت الاستمرار", text: "اكتب جملة تثبت العادة الجديدة.", requiresInput: true, placeholder: "هنستمر لأن..." }
+      ]
+    },
+    path_sos: {
+      week1: [
+        { id: "w1-t1", type: "reflection", title: "أمانك أولاً", text: "اكتب خطة أمان سريعة (مين هتكلم؟ فين؟).", requiresInput: true, placeholder: "هكلم..." },
+        { id: "w1-t2", type: "practice", title: "مسافة فورية", text: "احمِ نفسك بمسافة مؤقتة فوراً.", requiresInput: true, placeholder: "الخطوة..." }
+      ],
+      week2: [
+        { id: "w2-t1", type: "writing", title: "توثيق بسيط", text: "اكتب ملخصًا واضحًا لما يحدث.", requiresInput: true, placeholder: "ملخص..." },
+        { id: "w2-t2", type: "observation", title: "طلب دعم", text: "حدّد شخص دعم واحد على الأقل.", requiresInput: true, placeholder: "شخص الدعم..." }
+      ],
+      week3: [
+        { id: "w3-t1", type: "challenge", title: "خروج آمن", text: "نفّذ خطوة خروج آمنة (لو لزم).", requiresInput: true, placeholder: "الخطوة..." },
+        { id: "w3-t2", type: "reflection", title: "تثبيت الأمان", text: "اكتب كيف ستمنع تكرار الخطر.", requiresInput: true, placeholder: "هأمن نفسي بـ..." }
+      ]
+    }
+  };
+
+  const tasks = pathTasks[pathId];
+
+  return {
+    id: pathId,
+    name,
+    nameAr: name,
+    description,
+    phases: {
+      week1: commonWeek(1, "خطوات تأسيسية", tasks.week1),
+      week2: commonWeek(2, "تثبيت الحدود", tasks.week2),
+      week3: commonWeek(3, "ترسيخ السلوك", tasks.week3)
+    },
+    aiAdjustmentFactor: 1,
+    aiGenerated: false
+  };
 }

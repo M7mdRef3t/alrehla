@@ -21,9 +21,13 @@ export const SUGGESTIONS: Record<string, SuggestionCard[]> = {
     { label: "أم", icon: Heart },
     { label: "أخ", icon: Users },
     { label: "أخت", icon: UserCircle },
-    { label: "ابن", icon: User },
+    { label: "ابن", icon: UserCheck },
     { label: "ابنة", icon: UserCircle },
-    { label: "قريب", icon: UserCheck }
+    { label: "زوج", icon: Heart },
+    { label: "زوجة", icon: Heart },
+    { label: "زوجة الأخ", icon: Users },
+    { label: "زوج الأخت", icon: Users },
+    { label: "قريب", icon: Users }
   ],
   work: [
     { label: "مدير", icon: Briefcase },

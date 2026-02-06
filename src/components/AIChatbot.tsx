@@ -163,11 +163,41 @@ export const AIChatbot: FC<AIChatbotProps> = ({
         const conversationHistory = messages
           .map((m) => `${m.role === "user" ? "المستخدم" : "المساعد"}: ${m.content}`)
           .join("\n\n");
+        const pulseInfo = (() => {
+          const pulse = agentContext?.pulse;
+          if (!pulse) return "";
+          const moodMap: Record<string, string> = {
+            bright: "رايق",
+            calm: "هادئ",
+            anxious: "قلقان",
+            angry: "غضبان",
+            sad: "حزين"
+          };
+          const focusMap: Record<string, string> = {
+            event: "موقف حصل",
+            thought: "فكرة مش بتروح",
+            body: "جسدي تعبان",
+            none: "ولا حاجة"
+          };
+          const moodLabel = moodMap[pulse.mood] ?? pulse.mood;
+          const focusLabel = focusMap[pulse.focus] ?? pulse.focus;
+          const line = `**النبض اللحظي:** طاقة ${pulse.energy}/10، مزاج: ${moodLabel}، تركيز: ${focusLabel}.`;
+          const directive =
+            pulse.mood === "angry"
+              ? "تعليمات: المستخدم متوتر/غضبان. ركّز على التهدئة أولاً ولا تقترح مواجهات."
+              : pulse.energy <= 3
+                ? "تعليمات: طاقة منخفضة. قدّم خطوات خفيفة ودعم قصير فقط."
+                : pulse.energy >= 8
+                  ? "تعليمات: طاقة عالية. يمكن اقتراح خطوة جريئة واحدة."
+                  : "";
+          return `${line}\n${directive ? `${directive}\n` : ""}`;
+        })();
 
-        const systemContext = `أنت مساعد نفسي متخصص في التعافي من العلاقات الاستنزافية وبناء الحدود الصحية.
+        const systemContext = `أنت مرشد الرحلة في منصة "الرحلة". دورك توجيه المستخدم بين أدوات الرحلة، وخصوصًا أداة "دواير" لتنظيم العلاقات وبناء الحدود الصحية.
 
 ${personLabel ? `**السياق:** المستخدم بيتعامل مع شخص اسمه "${personLabel}"` : ""}
 ${context ? `**المرحلة الحالية:** ${context}` : ""}
+${pulseInfo}
 
 **أسلوبك:**
 - استخدم العامية المصرية
@@ -261,8 +291,8 @@ ${userMessage.content}`;
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group z-50"
-          aria-label="فتح المساعد الذكي"
-          title="المساعد الذكي"
+          aria-label="فتح مرشد الرحلة"
+          title="مرشد الرحلة"
         >
           <MessageCircle className="w-6 h-6 group-hover:scale-110 transition-transform" />
           {aiAvailable && (
@@ -278,7 +308,7 @@ ${userMessage.content}`;
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-2xl">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
-              <h3 className="font-bold">المساعد الميداني</h3>
+              <h3 className="font-bold">مرشد الرحلة</h3>
               {aiAvailable ? (
                 <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
               ) : (

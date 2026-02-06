@@ -139,10 +139,8 @@ ${summary}
     return insights;
   } catch (error) {
     if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
       console.error("Error generating AI person view insights:", error);
     }
     return null;
   }
 }
-

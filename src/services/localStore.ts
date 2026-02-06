@@ -1,5 +1,6 @@
 import type { MapNode } from "../modules/map/mapTypes";
 import { getJSON, setJSON } from "./secureStore";
+import { queueMapSync } from "./mapSync";
 
 const STORAGE_KEY = "dawayir-map-nodes";
 
@@ -27,6 +28,19 @@ export const loadStoredState = async (): Promise<StoredState | null> => {
           }
         };
       }
+      if (node.missionProgress) {
+        const checkedSteps = Array.isArray(node.missionProgress.checkedSteps)
+          ? node.missionProgress.checkedSteps
+          : [];
+        return {
+          ...node,
+          missionProgress: {
+            ...node.missionProgress,
+            checkedSteps,
+            isArchived: node.missionProgress.isArchived ?? false
+          }
+        };
+      }
       return node;
     });
     return { nodes: migratedNodes };
@@ -46,5 +60,6 @@ export const saveStoredState = (state: StoredState) => {
 
   saveTimeout = setTimeout(() => {
     void setJSON(STORAGE_KEY, state);
+    queueMapSync(state.nodes);
   }, 100); // 100ms debounce
 };

@@ -1,11 +1,23 @@
 import type { FC } from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, Upload, X, AlertTriangle, Check, Database, FileJson, HardDrive, FileText } from "lucide-react";
-import { exportToJSON, importFromJSON, restoreBackupData, getStorageStats } from "../services/dataExport";
+import { Download, Upload, X, AlertTriangle, Check, Database, FileJson, HardDrive, FileText, Cloud, LogIn, LogOut, User } from "lucide-react";
+import {
+  exportToJSON,
+  importFromJSON,
+  restoreBackupData,
+  getStorageStats,
+  downloadBackupFile,
+  buildBackupFromKeyValues,
+  backupToKeyValues,
+  buildBackupFromLocal
+} from "../services/dataExport";
 import { exportMapToPDF, downloadMapImage } from "../services/pdfExport";
 import { useMapState } from "../state/mapState";
 import { clearLocalData } from "../services/secureStore";
+import { fetchRemoteState, pushRemoteState } from "../services/cloudStore";
+import { useAuthState } from "../state/authState";
+import { signInWithEmail, signUpWithEmail, signOut } from "../services/authService";
 
 interface DataManagementProps {
   isOpen: boolean;
@@ -22,6 +34,13 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
   const [showConfirmImport, setShowConfirmImport] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [showConfirmWipe, setShowConfirmWipe] = useState(false);
+  const [cloudLoading, setCloudLoading] = useState(false);
+  const [cloudSuccess, setCloudSuccess] = useState<string | null>(null);
+  const [cloudError, setCloudError] = useState<string | null>(null);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authMessage, setAuthMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const nodes = useMapState((s) => s.nodes);
@@ -32,6 +51,9 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
     hasNotificationSettings: false,
     totalSizeKB: 0
   });
+
+  const authStatus = useAuthState((s) => s.status);
+  const authUser = useAuthState((s) => s.user);
 
   useEffect(() => {
     let mounted = true;
@@ -145,6 +167,94 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
   const handleConfirmWipe = () => {
     clearLocalData();
     window.location.reload();
+  };
+
+  const handleCloudExport = async () => {
+    setCloudLoading(true);
+    setCloudError(null);
+    try {
+      const remote = await fetchRemoteState();
+      const backup = buildBackupFromKeyValues(remote);
+      downloadBackupFile(backup, "journey-cloud-backup");
+      setCloudSuccess("تم تنزيل نسخة السحابة بنجاح");
+      setTimeout(() => setCloudSuccess(null), 3000);
+    } catch {
+      setCloudError("تعذر تنزيل بيانات السحابة");
+    } finally {
+      setCloudLoading(false);
+    }
+  };
+
+  const handleCloudImport = async () => {
+    setCloudLoading(true);
+    setCloudError(null);
+    try {
+      const backup = await buildBackupFromLocal();
+      const payload = backupToKeyValues(backup);
+      const ok = await pushRemoteState(payload);
+      if (!ok) throw new Error("cloud");
+      setCloudSuccess("تم رفع بياناتك للسحابة");
+      setTimeout(() => setCloudSuccess(null), 3000);
+    } catch {
+      setCloudError("فشل رفع البيانات للسحابة");
+    } finally {
+      setCloudLoading(false);
+    }
+  };
+
+  const handleCloudPull = async () => {
+    setCloudLoading(true);
+    setCloudError(null);
+    try {
+      const remote = await fetchRemoteState();
+      const backup = buildBackupFromKeyValues(remote);
+      await restoreBackupData(backup);
+      setCloudSuccess("تم استعادة نسخة السحابة");
+      setTimeout(() => window.location.reload(), 1200);
+    } catch {
+      setCloudError("فشل استعادة بيانات السحابة");
+    } finally {
+      setCloudLoading(false);
+    }
+  };
+
+  const handleSignIn = async () => {
+    if (!authEmail || !authPassword) {
+      setAuthMessage("أدخل البريد وكلمة المرور");
+      return;
+    }
+    setAuthLoading(true);
+    setAuthMessage(null);
+    const { error } = await signInWithEmail(authEmail.trim(), authPassword);
+    if (error) {
+      setAuthMessage("تعذر تسجيل الدخول. تأكد من البيانات.");
+    } else {
+      setAuthMessage("تم تسجيل الدخول");
+    }
+    setAuthLoading(false);
+  };
+
+  const handleSignUp = async () => {
+    if (!authEmail || !authPassword) {
+      setAuthMessage("أدخل البريد وكلمة المرور");
+      return;
+    }
+    setAuthLoading(true);
+    setAuthMessage(null);
+    const { error } = await signUpWithEmail(authEmail.trim(), authPassword);
+    if (error) {
+      setAuthMessage("تعذر إنشاء الحساب. جرّب بيانات أخرى.");
+    } else {
+      setAuthMessage("تم إنشاء الحساب. راجع بريدك للتأكيد إن لزم.");
+    }
+    setAuthLoading(false);
+  };
+
+  const handleSignOut = async () => {
+    setAuthLoading(true);
+    setAuthMessage(null);
+    await signOut();
+    setAuthLoading(false);
   };
 
   return (
@@ -262,6 +372,112 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                   </button>
                 </div>
 
+                {/* Cloud Section */}
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-slate-500 px-2">السحابة</p>
+                  <div className="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <Cloud className="w-4 h-4" />
+                      <span>مزامنة البيانات</span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCloudImport}
+                        disabled={cloudLoading}
+                        className="w-full flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:border-blue-400 hover:bg-blue-50 disabled:opacity-50"
+                      >
+                        <Upload className="w-4 h-4 text-blue-600" />
+                        رفع النسخة الحالية للسحابة
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCloudPull}
+                        disabled={cloudLoading}
+                        className="w-full flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:border-emerald-400 hover:bg-emerald-50 disabled:opacity-50"
+                      >
+                        <Download className="w-4 h-4 text-emerald-600" />
+                        استعادة نسخة السحابة على هذا الجهاز
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCloudExport}
+                        disabled={cloudLoading}
+                        className="w-full flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:border-slate-400 hover:bg-slate-100 disabled:opacity-50"
+                      >
+                        <FileJson className="w-4 h-4 text-slate-600" />
+                        تنزيل نسخة السحابة كملف
+                      </button>
+                    </div>
+                    {cloudSuccess && <p className="text-xs text-green-600">{cloudSuccess}</p>}
+                    {cloudError && <p className="text-xs text-rose-600">{cloudError}</p>}
+                  </div>
+                </div>
+
+                {/* Auth Section */}
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-slate-500 px-2">الحساب</p>
+                  <div className="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-slate-600">
+                      <User className="w-4 h-4" />
+                      <span>ربط الحساب بالسحابة</span>
+                    </div>
+                    {authUser ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-slate-700">مسجل كـ {authUser.email ?? "مستخدم"}</p>
+                        <button
+                          type="button"
+                          onClick={handleSignOut}
+                          disabled={authLoading}
+                          className="w-full flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:border-rose-400 hover:bg-rose-50 disabled:opacity-50"
+                        >
+                          <LogOut className="w-4 h-4 text-rose-600" />
+                          تسجيل خروج
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <input
+                          type="email"
+                          value={authEmail}
+                          onChange={(e) => setAuthEmail(e.target.value)}
+                          placeholder="البريد الإلكتروني"
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                        />
+                        <input
+                          type="password"
+                          value={authPassword}
+                          onChange={(e) => setAuthPassword(e.target.value)}
+                          placeholder="كلمة المرور"
+                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={handleSignIn}
+                            disabled={authLoading}
+                            className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:border-blue-400 hover:bg-blue-50 disabled:opacity-50"
+                          >
+                            <LogIn className="w-4 h-4 text-blue-600" />
+                            دخول
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSignUp}
+                            disabled={authLoading}
+                            className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:border-emerald-400 hover:bg-emerald-50 disabled:opacity-50"
+                          >
+                            <User className="w-4 h-4 text-emerald-600" />
+                            حساب جديد
+                          </button>
+                        </div>
+                        {authStatus === "loading" && <p className="text-xs text-slate-500">جاري فحص الجلسة...</p>}
+                        {authMessage && <p className="text-xs text-slate-500">{authMessage}</p>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Import Section */}
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-slate-500 px-2">استيراد</p>
@@ -337,7 +553,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-slate-900">مسح كل البيانات المحلية</p>
-                      <p className="text-xs text-slate-500">يحذف جميع مفاتيح dawayir- من المتصفح</p>
+                      <p className="text-xs text-slate-500">يحذف جميع بيانات الرحلة المخزنة محليًا</p>
                     </div>
                   </button>
                 </div>

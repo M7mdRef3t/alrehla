@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, XCircle, ArrowRight, ShieldAlert, Trophy, Target, X } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, Trophy, Target, X } from "lucide-react";
 
 // بيانات التدريب (سيناريوهات جاهزة)
 const SCENARIOS = [

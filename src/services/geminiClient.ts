@@ -199,7 +199,6 @@ class GeminiClient {
       } catch (error) {
         if (import.meta.env.DEV) console.error("Error in generateWithTools:", error);
         if (import.meta.env.DEV && isRateLimitError(error)) {
-          // eslint-disable-next-line no-console
           console.warn("[Gemini] Rate limit in proxy.");
         }
         return null;

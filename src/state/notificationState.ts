@@ -31,14 +31,16 @@ interface NotificationState {
 export const useNotificationState = create<NotificationState>((set, get) => ({
   isSupported: false,
   permission: null,
-  settings: {
-    enabled: false,
-    dailyReminder: true,
-    dailyReminderTime: "20:00",
-    inactiveReminder: true,
-    inactiveReminderDays: 3,
-    exerciseComplete: true
-  },
+    settings: {
+      enabled: false,
+      dailyReminder: true,
+      dailyReminderTime: "20:00",
+      inactiveReminder: true,
+      inactiveReminderDays: 3,
+      exerciseComplete: true,
+      missionReminder: true,
+      missionReminderStrategy: "next"
+    },
   isLoading: false,
 
   initialize: () => {

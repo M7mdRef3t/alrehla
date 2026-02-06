@@ -4,8 +4,7 @@ import { motion } from "framer-motion";
 import {
   POST_STEP_QUESTIONS,
   computePostStepScore,
-  type PostStepAnswers,
-  type PostStepQuestion
+  type PostStepAnswers
 } from "../data/postStepQuestions";
 import { useJourneyState } from "../state/journeyState";
 

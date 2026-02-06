@@ -1,5 +1,3 @@
-import type { Ring } from "../modules/map/mapTypes";
-
 /**
  * Recovery Roadmap System
  * خريطة واضحة للرحلة من الاستنزاف للتعافي

@@ -6,6 +6,7 @@ import { useMapState } from "../state/mapState";
 import { mapCopy } from "../copy/map";
 import { guardianCopy } from "../copy/guardianCopy";
 import { Target } from "lucide-react";
+import { getMissionProgressSummary } from "../utils/missionProgress";
 
 const RING_STYLES: Record<Ring, { dot: string; border: string; bg: string }> = {
   green: { dot: "bg-teal-400", border: "border-teal-400", bg: "bg-teal-50" },
@@ -111,6 +112,7 @@ interface TreeNodeButtonProps {
 const TreeNodeButton: FC<TreeNodeButtonProps> = ({ node, onSelect }) => {
   const style = RING_STYLES[node.ring];
   const setRecoveryPlanOpenWith = useMapState((s) => s.setRecoveryPlanOpenWith);
+  const missionBadge = useMemo(() => getMissionProgressSummary(node), [node]);
   const openRecoveryPlan = (e: React.MouseEvent) => {
     e.stopPropagation();
     setRecoveryPlanOpenWith({ preselectedNodeId: node.id });
@@ -126,7 +128,20 @@ const TreeNodeButton: FC<TreeNodeButtonProps> = ({ node, onSelect }) => {
         title={`${mapCopy.legendGreen}/${mapCopy.legendYellow}/${mapCopy.legendRed} — اضغط للتفاصيل`}
       >
         <span className={`w-3 h-3 rounded-full shrink-0 ${style.dot}`} />
-        <span className="text-sm font-semibold text-slate-800">{node.label}</span>
+        <span className="flex flex-col items-start">
+          <span className="text-sm font-semibold text-slate-800">{node.label}</span>
+          {missionBadge ? (
+            <span
+              className={`mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                missionBadge.tone === "done"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-amber-50 text-amber-700 border-amber-200"
+              }`}
+            >
+              {missionBadge.label}
+            </span>
+          ) : null}
+        </span>
       </motion.button>
       <motion.button
         type="button"
@@ -242,7 +257,7 @@ export const FamilyTreeView: FC<FamilyTreeViewProps> = ({ onNodeClick }) => {
       if (b) branches.push(b);
     });
     return branches;
-  }, [nodes, treeRoots]);
+  }, [treeRoots]);
 
   if (nodes.length === 0) {
     return (

@@ -84,6 +84,14 @@ export const ACHIEVEMENTS: Achievement[] = [
     hint: "إنك تهتم بنفسك ده إنجاز بحد ذاته.",
     icon: "🌬️",
     order: 9
+  },
+  {
+    id: "mission_complete",
+    title: "قائد ميداني",
+    description: "أنهيت مهمة كاملة",
+    hint: "أول مهمة مكتملة… دلوقتي أنت بتقود الخطة بجد.",
+    icon: "🏁",
+    order: 10
   }
 ].sort((a, b) => a.order - b.order);
 

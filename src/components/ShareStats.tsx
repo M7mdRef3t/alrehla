@@ -59,7 +59,7 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download = `dawayir-stats-${Date.now()}.png`;
+          a.download = `journey-stats-${Date.now()}.png`;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
@@ -116,7 +116,7 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
           {/* Stats Card */}
           <div ref={statsRef} className="p-6 bg-gradient-to-br from-teal-50 via-blue-50 to-purple-50">
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-slate-900 mb-1">رحلتي في دواير</h3>
+              <h3 className="text-2xl font-bold text-slate-900 mb-1">رحلتي في أداة دواير</h3>
               <p className="text-sm text-slate-600">إحصائيات مجهولة عن تقدمي</p>
             </div>
 
@@ -193,8 +193,8 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
 
             {/* Footer */}
             <div className="mt-6 text-center">
-              <p className="text-xs text-slate-500">دواير — مسافتي</p>
-              <p className="text-xs text-slate-400">dawayir.app</p>
+              <p className="text-xs text-slate-500">الرحلة — أداة دواير</p>
+              <p className="text-xs text-slate-400">alrehla.app</p>
             </div>
           </div>
 

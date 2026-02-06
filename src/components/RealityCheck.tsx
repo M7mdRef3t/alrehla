@@ -15,18 +15,6 @@ export type RealityAnswers = {
 /** صيغة قياسية: دايماً/جداً، أحياناً، نادراً، أبداً/لأ */
 const OPTIONS: RealityOption[] = ["often", "sometimes", "rarely", "never"];
 
-/** تواصل: high=3، medium=2، low=1، zero=0. المجموع 6–9 أخضر، 3–5 أصفر، 0–2 أحمر */
-function points(opt: RealityOption): number {
-  return opt === "often" ? 3 : opt === "sometimes" ? 2 : opt === "rarely" ? 1 : 0;
-}
-
-export function realityScoreToRing(answers: RealityAnswers): "green" | "yellow" | "red" {
-  const score = points(answers.q1) + points(answers.q2) + points(answers.q3);
-  if (score >= 6) return "green";
-  if (score >= 3) return "yellow";
-  return "red";
-}
-
 interface RealityCheckProps {
   personLabel: string;
   onDone: (answers: RealityAnswers) => void;
@@ -85,7 +73,7 @@ export const RealityCheck: FC<RealityCheckProps> = ({
         {(["q1", "q2", "q3"] as const).map((key) => (
           <li key={key} className="p-4 bg-white border border-gray-200 rounded-xl text-right">
             <p className="font-medium mb-3">{realityCopy[key]}</p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-stretch">
               {OPTIONS.map((opt) => {
                 const isSelected = answers[key] === opt;
                 const label = realityCopy.options[opt];
@@ -94,7 +82,7 @@ export const RealityCheck: FC<RealityCheckProps> = ({
                   <button
                     key={opt}
                     type="button"
-                    className={`flex-1 px-3 py-2.5 text-sm font-medium ${getOptionButtonClass(tier, isSelected)}`}
+                    className={`flex-1 min-w-0 ${getOptionButtonClass(tier, isSelected)}`}
                     onClick={() => handleAnswer(key, opt)}
                     title={label}
                   >
