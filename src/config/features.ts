@@ -3,8 +3,12 @@ export type FeatureFlagMode = "on" | "off" | "beta";
 export type FeatureFlagKey =
   | "dawayir_map"
   | "journey_tools"
+  | "basic_diagnosis"
   | "mirror_tool"
   | "family_tree"
+  | "internal_boundaries"
+  | "generative_ui_mode"
+  | "global_atlas"
   | "ai_field"
   | "pulse_check";
 
@@ -30,6 +34,12 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
     group: "Core"
   },
   {
+    key: "basic_diagnosis",
+    label: "التشخيص الأساسي",
+    description: "تشغيل التشخيص السريع ونوافذ قراءة الحالة",
+    group: "Core"
+  },
+  {
     key: "mirror_tool",
     label: "أداة المراية (أنا)",
     description: "بطاقة الذات في مركز الخريطة",
@@ -40,6 +50,25 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
     label: "شجرة العيلة",
     description: "عرض شجرة العائلة في وضع الخريطة العائلية",
     group: "Core"
+  },
+  {
+    key: "internal_boundaries",
+    label: "الحدود الداخلية",
+    description: "أدوات السيطرة على الضجيج وفك الذنب",
+    group: "Core"
+  },
+  {
+    key: "generative_ui_mode",
+    label: "GenUI الميداني",
+    description: "تغييرات واجهة ذكية حسب السياق اللحظي",
+    group: "AI",
+    supportsBeta: true
+  },
+  {
+    key: "global_atlas",
+    label: "أطلس العلاقات",
+    description: "لوحة الإحصاءات المتقدمة وتحليل الأنماط",
+    group: "Insights"
   },
   {
     key: "ai_field",
@@ -59,8 +88,12 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
 export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, FeatureFlagMode> = {
   dawayir_map: "on",
   journey_tools: "on",
-  mirror_tool: "on",
-  family_tree: "on",
-  ai_field: "beta",
+  basic_diagnosis: "on",
+  mirror_tool: "off",
+  family_tree: "off",
+  internal_boundaries: "off",
+  generative_ui_mode: "off",
+  global_atlas: "off",
+  ai_field: "on",
   pulse_check: "on"
 };

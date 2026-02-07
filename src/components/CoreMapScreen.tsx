@@ -16,7 +16,9 @@ import { useMapState } from "../state/mapState";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { getGoalMeta } from "../data/goalMeta";
 import { useAdminState } from "../state/adminState";
-import { isFeatureEnabled } from "../utils/featureFlags";
+import { getEffectiveFeatureAccess } from "../utils/featureFlags";
+import { useAuthState } from "../state/authState";
+import type { FeatureFlagKey } from "../config/features";
 
 interface CoreMapScreenProps {
   category: AdviceCategory;
@@ -35,6 +37,8 @@ interface CoreMapScreenProps {
   onOpenNoise?: () => void;
   onOpenChallenge?: () => void;
   challengeLabel?: string | null;
+  canUseBasicDiagnosis?: boolean;
+  onFeatureLocked?: (feature: FeatureFlagKey) => void;
 }
 
 export const CoreMapScreen: FC<CoreMapScreenProps> = ({
@@ -51,7 +55,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   onOpenCocoon,
   onOpenNoise,
   onOpenChallenge,
-  challengeLabel
+  challengeLabel,
+  canUseBasicDiagnosis = true,
+  onFeatureLocked
 }) => {
   const [showAddPerson, setShowAddPerson] = useState(false);
   const [showMeCard, setShowMeCard] = useState(false);
@@ -65,8 +71,19 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const isFamily = goalId === "family";
   const featureFlags = useAdminState((s) => s.featureFlags);
   const betaAccess = useAdminState((s) => s.betaAccess);
-  const canUseFamilyTree = isFeatureEnabled(featureFlags.family_tree, betaAccess);
-  const canUseMirror = isFeatureEnabled(featureFlags.mirror_tool, betaAccess);
+  const adminAccess = useAdminState((s) => s.adminAccess);
+  const role = useAuthState((s) => s.roleOverride ?? s.role);
+  const featureAccess = getEffectiveFeatureAccess({
+    featureFlags,
+    betaAccess,
+    role,
+    adminAccess,
+    isDev: import.meta.env.DEV
+  });
+  const canUseFamilyTree = featureAccess.family_tree;
+  const canUseMirror = featureAccess.mirror_tool;
+  const canUseGalaxyView = featureAccess.global_atlas;
+  const canUseFamilyTreeView = canUseFamilyTree;
 
   const toggleContext = (ctx: string) => {
     setSelectedContexts((prev) =>
@@ -88,10 +105,22 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   }, [nodes.length, showOnboarding]);
 
   useEffect(() => {
-    if (!canUseFamilyTree && viewMode === "tree") {
+    if (!canUseGalaxyView && galaxyMode) {
+      setGalaxyMode(false);
+    }
+  }, [canUseGalaxyView, galaxyMode]);
+
+  useEffect(() => {
+    if (!canUseFamilyTreeView && viewMode === "tree") {
       setViewMode("map");
     }
-  }, [canUseFamilyTree, viewMode]);
+  }, [canUseFamilyTreeView, viewMode]);
+
+  useEffect(() => {
+    if (!selectedNodeId || canUseBasicDiagnosis) return;
+    onFeatureLocked?.("basic_diagnosis");
+    onSelectNode(null);
+  }, [selectedNodeId, canUseBasicDiagnosis, onFeatureLocked, onSelectNode]);
 
   useEffect(() => {
     if (!canUseMirror && showMeCard) {
@@ -115,15 +144,15 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         n.hasCompletedTraining === true
     );
 
-  const pageTitle = galaxyMode
+  const pageTitle = canUseGalaxyView && galaxyMode
     ? galaxySubView === "forest"
       ? mapCopy.forestTitle
       : mapCopy.galaxyTitle
-    : isFamily && viewMode === "tree"
+    : canUseFamilyTreeView && isFamily && viewMode === "tree"
       ? mapCopy.familyTreeTitle
       : mapCopy.titles[goalId as keyof typeof mapCopy.titles] || mapCopy.titles.general;
 
-  const subtitle = galaxyMode
+  const subtitle = canUseGalaxyView && galaxyMode
     ? galaxySubView === "forest"
       ? mapCopy.forestHint
       : mapCopy.galaxyHint
@@ -166,9 +195,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {pulseMode === "low" && (
         <div className="mt-4 mx-auto max-w-md rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-right">
-          <p className="text-sm font-semibold text-slate-800">بطاقتك منخفضة اليوم</p>
+          <p className="text-sm font-semibold text-slate-800">الطاقة منخفضة.. أولويتنا وقف النزيف</p>
           <p className="text-xs text-slate-600 mt-1">
-            خلّينا في وضع شحن. خطوة واحدة بس من غير ضغط.
+            نفّذ خطوة صيانة واحدة وبس، من غير أي اشتباك.
           </p>
           <button
             type="button"
@@ -182,25 +211,25 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {pulseMode === "angry" && (
         <div className="mt-4 mx-auto max-w-md rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-right">
-          <p className="text-sm font-semibold text-rose-700">النبض عالي.. محتاج تهدئة أولاً</p>
+          <p className="text-sm font-semibold text-rose-700">الرادار بيقول ضجيج عالي.. ثبّت موقعك الأول</p>
           <p className="text-xs text-rose-600 mt-1">
-            تعالى نفضي الضجيج قبل أي خطوة تانية.
+            قبل أي قرار، افصل الشوشرة وارجع للتحكم.
           </p>
           <button
             type="button"
             onClick={onOpenNoise}
             className="mt-3 w-full rounded-full bg-rose-600 text-white py-2.5 text-sm font-semibold hover:bg-rose-700 transition-all"
           >
-            تفريغ الضجيج
+            إسكات الضجيج
           </button>
         </div>
       )}
 
       {pulseMode === "high" && (
         <div className="mt-4 mx-auto max-w-md rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-right">
-          <p className="text-sm font-semibold text-emerald-700">بطاقتك قوية.. نقدر نكسب خطوة كبيرة</p>
+          <p className="text-sm font-semibold text-emerald-700">طاقتك جاهزة.. وقت حسم جبهة</p>
           <p className="text-xs text-emerald-600 mt-1">
-            {challengeLabel ?? "جاهز لتحدي اليوم؟"}
+            {challengeLabel ?? "جاهز لمناورة النهاردة؟"}
           </p>
           <button
             type="button"
@@ -208,7 +237,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             className="mt-3 w-full rounded-full bg-emerald-600 text-white py-2.5 text-sm font-semibold hover:bg-emerald-700 transition-all disabled:opacity-60"
             disabled={!onOpenChallenge}
           >
-            تحدي اليوم
+            مناورة اليوم
           </button>
         </div>
       )}
@@ -216,15 +245,17 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
         <button
           type="button"
+          hidden={!canUseGalaxyView}
+          aria-hidden={!canUseGalaxyView}
           onClick={() => setGalaxyMode((v) => !v)}
           className={`rounded-full px-4 py-2.5 text-sm font-semibold border-2 transition-all ${
             galaxyMode ? "bg-slate-700 text-white border-slate-700" : "bg-white text-slate-700 border-slate-300 hover:border-teal-400"
           }`}
-          title={galaxyMode ? "رجوع لسياق واحد" : "عرض كل العلاقات"}
+          title={galaxyMode ? "رجوع لسياق واحد" : "عرض كل الجبهات"}
         >
           {galaxyMode ? mapCopy.viewSingleCta : mapCopy.viewAllCta}
         </button>
-        {galaxyMode && (
+        {canUseGalaxyView && galaxyMode && (
           <div className="flex rounded-full bg-slate-100 p-1 border border-slate-200">
             <button
               type="button"
@@ -246,7 +277,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             </button>
           </div>
         )}
-        {galaxyMode && galaxySubView === "map" && (
+        {canUseGalaxyView && galaxyMode && galaxySubView === "map" && (
           <div className="flex flex-wrap justify-center gap-2">
             {(["family", "work", "love", "general"] as const).map((ctx) => {
               const label = ctx === "family" ? mapCopy.contextFamily : ctx === "work" ? mapCopy.contextWork : ctx === "love" ? mapCopy.contextLove : mapCopy.contextGeneral;
@@ -266,7 +297,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             })}
           </div>
         )}
-        {!galaxyMode && isFamily && canUseFamilyTree && (
+        {!galaxyMode && isFamily && canUseFamilyTreeView && (
           <div className="flex rounded-full bg-slate-100 p-1 border border-slate-200">
             <button
               type="button"
@@ -281,14 +312,24 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setViewMode("tree")}
+              onClick={() => {
+                if (!canUseFamilyTree) {
+                  onFeatureLocked?.("family_tree");
+                  return;
+                }
+                setViewMode("tree");
+              }}
               className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all ${
-                viewMode === "tree" ? "bg-teal-600 text-white shadow" : "text-slate-600 hover:bg-slate-200"
+                viewMode === "tree"
+                  ? "bg-teal-600 text-white shadow"
+                  : canUseFamilyTree
+                    ? "text-slate-600 hover:bg-slate-200"
+                    : "text-slate-400"
               }`}
               title="شجرة العيلة"
             >
               <TreeDeciduous className="w-4 h-4" />
-              شجرة العيلة
+              {canUseFamilyTree ? "شجرة العيلة" : "شجرة العيلة 🔒"}
             </button>
           </div>
         )}
@@ -309,7 +350,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       </div>
 
       <AnimatePresence mode="wait">
-        {galaxyMode && galaxySubView === "forest" ? (
+        {canUseGalaxyView && galaxyMode && galaxySubView === "forest" ? (
           <motion.div
             key="forest"
             initial={{ opacity: 0, y: 12 }}
@@ -319,7 +360,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           >
             <ForestView onNodeClick={(id) => onSelectNode(id)} />
           </motion.div>
-        ) : galaxyMode && galaxySubView === "map" ? (
+        ) : canUseGalaxyView && galaxyMode && galaxySubView === "map" ? (
           <motion.div
             key="galaxy-map"
             initial={{ opacity: 0, y: 12 }}
@@ -329,11 +370,17 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           >
             <MapCanvas
               onNodeClick={(id) => onSelectNode(id)}
-              onMeClick={canUseMirror ? () => setShowMeCard(true) : undefined}
+              onMeClick={() => {
+                if (!canUseMirror) {
+                  onFeatureLocked?.("mirror_tool");
+                  return;
+                }
+                setShowMeCard(true);
+              }}
               galaxyGoalIds={selectedContexts.length > 0 ? selectedContexts : ["family", "work", "love", "general"]}
             />
           </motion.div>
-        ) : viewMode === "map" ? (
+        ) : !canUseFamilyTreeView || viewMode === "map" ? (
           <motion.div
             key="single-map"
             initial={{ opacity: 0, y: 12 }}
@@ -343,11 +390,17 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           >
             <MapCanvas
               onNodeClick={(id) => onSelectNode(id)}
-              onMeClick={canUseMirror ? () => setShowMeCard(true) : undefined}
+              onMeClick={() => {
+                if (!canUseMirror) {
+                  onFeatureLocked?.("mirror_tool");
+                  return;
+                }
+                setShowMeCard(true);
+              }}
               goalIdFilter={goalId}
             />
           </motion.div>
-        ) : isFamily ? (
+        ) : canUseFamilyTreeView && isFamily ? (
           <motion.div
             key="family-tree"
             initial={{ opacity: 0, y: 12 }}
@@ -410,9 +463,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         {(["green", "yellow", "red"] as const).map((key) => {
           const isActive = legendTooltip === key;
           const config = {
-            green: { label: mapCopy.legendGreen, dot: "bg-teal-400 shadow-[0_0_8px_rgba(20,184,166,0.4)]", pill: "bg-teal-400/10 text-teal-700" },
-            yellow: { label: mapCopy.legendYellow, dot: "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]", pill: "bg-amber-400/10 text-amber-700" },
-            red: { label: mapCopy.legendRed, dot: "bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.4)]", pill: "bg-rose-400/10 text-rose-700" }
+            green: { label: mapCopy.legendGreen, dot: "bg-teal-600 shadow-[0_0_8px_rgba(15,118,110,0.35)]", pill: "bg-teal-100 text-teal-800" },
+            yellow: { label: mapCopy.legendYellow, dot: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]", pill: "bg-amber-100 text-amber-800" },
+            red: { label: mapCopy.legendRed, dot: "bg-rose-600 shadow-[0_0_8px_rgba(190,24,93,0.32)]", pill: "bg-rose-100 text-rose-800" }
           }[key];
           return (
             <div key={key} className="relative">
@@ -455,7 +508,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         />
       )}
 
-      {selectedNodeId && (
+      {selectedNodeId && canUseBasicDiagnosis && (
         <ViewPersonModal
           nodeId={selectedNodeId}
           category={category}
@@ -492,7 +545,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           </button>
           {!canCompleteJourneyStep && nodes.length > 0 && (
             <p className="text-sm text-slate-500 max-w-xs text-center">
-              اضغط على الجبهة، وشوف النتيجة وبروتوكول الدفاع أو خلّص التدريب، بعدين اضغط "كمل الرحلة"
+              افتح الجبهة، راجع النتيجة وبروتوكول الدفاع أو كمّل التدريب، وبعدها اضغط "كمل الرحلة"
             </p>
           )}
         </div>

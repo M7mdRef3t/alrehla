@@ -36,6 +36,11 @@ function fromBase64(base64: string): Uint8Array {
   return bytes;
 }
 
+function toWebCryptoBuffer(bytes: Uint8Array): Uint8Array {
+  // Ensure the typed array is backed by a plain ArrayBuffer for Web Crypto typing.
+  return Uint8Array.from(bytes);
+}
+
 function isEncryptedValue(value: string): boolean {
   return value.startsWith(ENCRYPTED_PREFIX);
 }
@@ -59,9 +64,13 @@ async function decryptString(value: string): Promise<string> {
 
   const parts = value.slice(ENCRYPTED_PREFIX.length).split(":");
   if (parts.length !== 2) return value;
-  const iv = fromBase64(parts[0]);
-  const data = fromBase64(parts[1]);
-  const plainBuffer = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
+  const iv = toWebCryptoBuffer(fromBase64(parts[0]));
+  const data = toWebCryptoBuffer(fromBase64(parts[1]));
+  const plainBuffer = await window.crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: iv as unknown as BufferSource },
+    key,
+    data as unknown as BufferSource
+  );
   return new TextDecoder().decode(plainBuffer);
 }
 

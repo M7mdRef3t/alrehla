@@ -70,7 +70,7 @@ export function getAgentToolDeclarations(): FunctionDeclarationsTool {
           zone: {
             type: SchemaType.STRING as const,
             description: "الدائرة: red (أحمر)، yellow (أصفر)، green (أخضر). قيم مسموحة: red, yellow, green"
-          } as { type: SchemaType; description: string }
+          }
         },
         required: ["personLabelOrId", "zone"]
       }
@@ -101,7 +101,7 @@ export function getAgentToolDeclarations(): FunctionDeclarationsTool {
           overlayId: {
             type: SchemaType.STRING as const,
             description: "معرف الـ overlay: emergency (غرفة الطوارئ). القيمة المدعومة: emergency"
-          } as { type: SchemaType; description: string }
+          }
         },
         required: ["overlayId"]
       }
@@ -116,7 +116,7 @@ export function getAgentToolDeclarations(): FunctionDeclarationsTool {
           cardId: {
             type: SchemaType.STRING as const,
             description: "معرف البطاقة: breathing أو guilt_detox"
-          } as { type: SchemaType; description: string }
+          }
         },
         required: ["cardId"]
       }
@@ -135,7 +135,7 @@ export function getAgentToolDeclarations(): FunctionDeclarationsTool {
           type: {
             type: SchemaType.STRING as const,
             description: "نوع التمرين: countdown (عدّ تنازلي) أو stopwatch (ساعة توقيت)"
-          } as { type: SchemaType; description: string },
+          },
           title: {
             type: SchemaType.STRING,
             description: "عنوان التمرين بالعربي (مثل: اصمد دقيقة)"
@@ -195,16 +195,20 @@ export async function executeToolCall(
       if (!valid) {
         return { result: {}, error: "route غير صالح. استخدم breathing | gym | map | baseline | emergency | person:nodeId" };
       }
-      actions.navigate(route as Parameters<AgentActions["navigate"]>[0]);
-      return { result: { message: `تم التنقل إلى: ${route}.` } };
+      const out = actions.navigate(route as Parameters<AgentActions["navigate"]>[0]);
+      return out.ok
+        ? { result: { message: `تم التنقل إلى: ${route}.` } }
+        : { result: {}, error: out.error };
     }
     if (name === "showOverlay") {
       const overlayId = String(args.overlayId ?? "").trim();
       if (overlayId !== "emergency") {
         return { result: {}, error: "overlayId المدعوم حالياً: emergency" };
       }
-      actions.showOverlay?.(overlayId);
-      return { result: { message: "تم فتح غرفة الطوارئ." } };
+      const out = actions.showOverlay?.(overlayId) ?? { ok: false, error: "overlay غير متاح" };
+      return out.ok
+        ? { result: { message: "تم فتح غرفة الطوارئ." } }
+        : { result: {}, error: out.error };
     }
     if (name === "showCard") {
       return { result: {}, error: "showCard يُنفَّذ من واجهة المحادثة فقط" };
@@ -223,3 +227,4 @@ export async function executeToolCall(
 export function isKnownSymptomId(value: string): boolean {
   return ALL_SYMPTOM_IDS.has(value.trim().toLowerCase());
 }
+

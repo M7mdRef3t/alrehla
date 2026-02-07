@@ -148,7 +148,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
-      onClick={onClose}
+      onClick={() => onClose()}
       aria-labelledby="add-person-title"
       role="dialog"
       aria-modal="true"
@@ -162,7 +162,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
       >
         <button
           type="button"
-          onClick={onClose}
+          onClick={() => onClose()}
           className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-slate-500 hover:text-slate-700"
           aria-label="إغلاق"
         >
@@ -264,3 +264,4 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
     </div>
   );
 };
+

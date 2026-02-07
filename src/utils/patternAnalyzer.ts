@@ -20,6 +20,8 @@ export interface PatternAnalysisResult {
   patterns: DetectedPattern[];
   primaryPattern: DetectedPattern | null;
   insights: string[];
+  emotionalState?: string;
+  aiGenerated?: boolean;
 }
 
 // Keywords and patterns for detection

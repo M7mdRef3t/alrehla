@@ -10,20 +10,20 @@ const RING_LABELS: Record<Ring, string> = {
 };
 
 const GOAL_LABELS: Record<Ring, string> = {
-  red: "تعافي",
-  yellow: "حدود صحية",
-  green: "استمرار آمن"
+  red: "استعادة السيطرة",
+  yellow: "تثبيت الحدود",
+  green: "استقرار آمن"
 };
 
 /** مراحل الرحلة — مرتبة؛ كل مرحلة تعتمد على البيانات الفعلية */
 const MILESTONES = [
   { id: "awareness", label: "وعي", icon: "👁️" },
-  { id: "understanding", label: "فهم العلاقة", icon: "💭" },
+  { id: "understanding", label: "فك النمط", icon: "💭" },
   { id: "firstStep", label: "أول خطوة", icon: "🎯" },
-  { id: "situations", label: "مواقف", icon: "📝" },
-  { id: "plan", label: "خطة", icon: "📋" },
-  { id: "training", label: "تدريب", icon: "💪" },
-  { id: "recovery", label: "تعافي", icon: "🌱" }
+  { id: "situations", label: "تقارير", icon: "📝" },
+  { id: "plan", label: "بروتوكول", icon: "📋" },
+  { id: "training", label: "مناورات", icon: "💪" },
+  { id: "recovery", label: "سيطرة", icon: "🌱" }
 ] as const;
 
 function getMilestoneStatus(node: MapNode): Record<string, boolean> {
@@ -32,7 +32,7 @@ function getMilestoneStatus(node: MapNode): Record<string, boolean> {
     : 0;
   const hasFirstStep =
     (node.firstStepProgress?.completedFirstSteps?.length ?? 0) > 0 ||
-    (node.firstStepProgress?.stepInputs && Object.values(node.firstStepProgress.stepInputs).flat().some((s) => s?.trim()));
+    Boolean(node.firstStepProgress?.stepInputs && Object.values(node.firstStepProgress.stepInputs).flat().some((s) => s?.trim()));
   const hasSituations = situationsCount >= 2;
   const hasPlan =
     hasSituations &&
@@ -66,7 +66,7 @@ export const RecoveryProgressBar: FC<RecoveryProgressBarProps> = ({ node }) => {
   const status = getMilestoneStatus(node);
   const completed = getCompletedCount(status);
   const total = MILESTONES.length;
-  const progressPct = total === 0 ? 0 : Math.round((completed / total) * 100);
+  const progressPct = Math.round((completed / Math.max(total, 1)) * 100);
   const fromLabel = RING_LABELS[node.ring];
   const toLabel = GOAL_LABELS[node.ring];
 
@@ -126,7 +126,7 @@ export const RecoveryProgressBar: FC<RecoveryProgressBarProps> = ({ node }) => {
       {/* نسبة مئوية اختيارية */}
       {completed > 0 && (
         <p className="text-[10px] text-slate-500 text-center mt-1">
-          رحلة التعافي: {completed}/{total} مراحل — {progressPct}%
+          رحلة الاستعادة: {completed}/{total} مراحل — {progressPct}%
         </p>
       )}
     </div>

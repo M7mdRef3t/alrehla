@@ -1,12 +1,30 @@
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import type { MapNode } from "../modules/map/mapTypes";
+
+let html2canvasLoader: Promise<typeof import("html2canvas")> | null = null;
+let jsPdfLoader: Promise<typeof import("jspdf")> | null = null;
+
+async function loadHtml2Canvas() {
+  if (!html2canvasLoader) {
+    html2canvasLoader = import("html2canvas");
+  }
+  const module = await html2canvasLoader;
+  return module.default;
+}
+
+async function loadJsPdf() {
+  if (!jsPdfLoader) {
+    jsPdfLoader = import("jspdf");
+  }
+  const module = await jsPdfLoader;
+  return module.default;
+}
 
 /**
  * تصدير الخريطة كصورة PNG
  */
 export async function exportMapAsImage(elementId = "map-canvas"): Promise<Blob | null> {
   try {
+    const html2canvas = await loadHtml2Canvas();
     const element = document.getElementById(elementId);
     if (!element) {
       throw new Error("عنصر الخريطة غير موجود");
@@ -54,7 +72,8 @@ export async function downloadMapImage(): Promise<void> {
  */
 export async function exportMapToPDF(nodes: MapNode[]): Promise<void> {
   try {
-    const pdf = new jsPDF({
+    const JsPdf = await loadJsPdf();
+    const pdf = new JsPdf({
       orientation: "portrait",
       unit: "mm",
       format: "a4"

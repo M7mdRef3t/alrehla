@@ -32,6 +32,7 @@ export interface DynamicRecoveryPlan {
   steps: DynamicStep[];
   insights: string[];
   generated: number;
+  aiGenerated?: boolean;
 }
 
 /**

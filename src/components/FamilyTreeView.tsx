@@ -9,9 +9,9 @@ import { Target } from "lucide-react";
 import { getMissionProgressSummary } from "../utils/missionProgress";
 
 const RING_STYLES: Record<Ring, { dot: string; border: string; bg: string }> = {
-  green: { dot: "bg-teal-400", border: "border-teal-400", bg: "bg-teal-50" },
-  yellow: { dot: "bg-amber-400", border: "border-amber-400", bg: "bg-amber-50" },
-  red: { dot: "bg-rose-400", border: "border-rose-400", bg: "bg-rose-50" }
+  green: { dot: "bg-teal-600", border: "border-teal-600", bg: "bg-teal-100" },
+  yellow: { dot: "bg-orange-500", border: "border-orange-500", bg: "bg-orange-100" },
+  red: { dot: "bg-rose-600", border: "border-rose-600", bg: "bg-rose-100" }
 };
 
 /** خلية في الشجرة: شخص واحد أو زوجين (أب+أم / زوج+زوجة) */

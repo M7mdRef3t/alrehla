@@ -221,6 +221,7 @@ function geminiDevProxy() {
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  const hasSupabaseEnv = Boolean(env.VITE_SUPABASE_URL && env.VITE_SUPABASE_ANON_KEY);
   if (!process.env.GEMINI_API_KEY && env.GEMINI_API_KEY) {
     process.env.GEMINI_API_KEY = env.GEMINI_API_KEY;
   }
@@ -268,13 +269,40 @@ export default defineConfig(({ mode }) => {
     target: "esnext",
     minify: "esbuild",
     sourcemap: false,
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ["react", "react-dom"],
-          motion: ["framer-motion"],
-          dnd: ["@dnd-kit/core"],
-          state: ["zustand"]
+        manualChunks(id) {
+          if (id.includes("preload-helper")) return "vendor";
+          if (!id.includes("node_modules")) return undefined;
+          if (id.includes("@vercel/analytics") || id.includes("@vercel/speed-insights")) return "vercel";
+          if (hasSupabaseEnv && (id.includes("@supabase/") || id.includes("supabase-js"))) return "supabase";
+          if (
+            id.includes("/react/") ||
+            id.includes("/react-dom/") ||
+            id.includes("/scheduler/") ||
+            id.includes("/use-sync-external-store/")
+          ) return "react-core";
+          // Keep framer-motion runtime + its heavy shared deps isolated from app core.
+          if (id.includes("motion-dom") || id.includes("motion-utils") || id.includes("es-toolkit")) return "motion";
+          if (id.includes("core-js")) return "polyfills";
+          if (id.includes("framer-motion")) return "motion";
+          if (id.includes("@dnd-kit/core")) return "dnd";
+          if (id.includes("zustand")) return "state";
+          if (id.includes("recharts")) return "charts";
+          if (id.includes("lucide-react")) return "icons";
+          if (id.includes("dompurify")) return "ai-utils";
+          if (
+            id.includes("canvg") ||
+            id.includes("stackblur-canvas") ||
+            id.includes("svg-pathdata") ||
+            id.includes("rgbcolor") ||
+            id.includes("fflate")
+          ) return "pdf-utils";
+          if (id.includes("html2canvas")) return "html2canvas";
+          if (id.includes("jspdf")) return "jspdf";
+          if (id.includes("@google/generative-ai")) return "gemini";
+          return "vendor";
         }
       }
     }

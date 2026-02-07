@@ -22,20 +22,22 @@ export type JourneyEventType =
   | "mood_logged";
 
 export interface JourneyEventPayload {
-  path_started?: { pathId: string; zone: string; symptomType?: string; relationshipRole?: string };
-  task_completed?: { pathId: string; taskId: string; date: string; moodScore?: number };
-  path_regenerated?: { pathId: string; reason?: string };
-  node_added?: { ring: string; detachmentMode?: boolean; isEmergency?: boolean };
-  mood_logged?: { pathId: string; date: string; moodScore: number };
+  path_started: { pathId: string; zone: string; symptomType?: string; relationshipRole?: string };
+  task_completed: { pathId: string; taskId: string; date: string; moodScore?: number };
+  path_regenerated: { pathId: string; reason?: string };
+  node_added: { ring: string; detachmentMode?: boolean; isEmergency?: boolean };
+  mood_logged: { pathId: string; date: string; moodScore: number };
 }
 
-export interface JourneyEvent {
-  type: JourneyEventType;
-  payload: JourneyEventPayload[JourneyEventType];
-  timestamp: number;
-  /** موجود فقط في وضع "مع هوية" */
-  sessionId?: string;
-}
+export type JourneyEvent = {
+  [K in JourneyEventType]: {
+    type: K;
+    payload: JourneyEventPayload[K];
+    timestamp: number;
+    /** ????? ??? ?? ??? "?? ????" */
+    sessionId?: string;
+  };
+}[JourneyEventType]
 
 const isBrowser = typeof window !== "undefined";
 let supabaseSyncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -165,11 +167,11 @@ export function recordJourneyEvent(
   payload: JourneyEventPayload[JourneyEventType]
 ): void {
   const mode = getTrackingMode();
-  const event: JourneyEvent = {
+  const event = {
     type,
     payload,
     timestamp: Date.now()
-  };
+  } as JourneyEvent;
   if (mode === "identified") {
     event.sessionId = getOrCreateSessionId();
   }
@@ -401,3 +403,6 @@ export function clearSessionId(): void {
   if (!isBrowser) return;
   localStorage.removeItem(KEY_SESSION_ID);
 }
+
+
+

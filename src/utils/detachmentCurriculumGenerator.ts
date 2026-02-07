@@ -19,6 +19,7 @@ export interface DetachmentCurriculumResult {
   goal_reframed: string;
   suggested_zone: string;
   custom_curriculum: DetachmentCurriculumItem[];
+  aiGenerated?: boolean;
 }
 
 const PSYCHOLOGIST_SYSTEM = `أنت معالج نفسي وسردي (Psychologist & Narrative Therapist). دورك مش إنك تدي نصائح سطحية، بل إنك تكشف المستور: الفجوة بين "الواقع الموضوعي" و"ما يختبره المستخدم داخلياً". استخدم العامية المصرية. كن داعماً بدون لوم.`;

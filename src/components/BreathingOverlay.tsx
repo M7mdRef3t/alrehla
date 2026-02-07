@@ -1,11 +1,11 @@
-import type { FC } from "react";
+﻿import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 
 interface BreathingOverlayProps {
   onClose: () => void;
-  /** عدد دورات التنفس قبل إغلاق تلقائي (0 = لا إغلاق تلقائي) */
+  /** Ø¹Ø¯Ø¯ Ø¯ÙˆØ±Ø§Øª Ø§Ù„ØªÙ†ÙØ³ Ù‚Ø¨Ù„ Ø¥ØºÙ„Ø§Ù‚ ØªÙ„Ù‚Ø§Ø¦ÙŠ (0 = Ù„Ø§ Ø¥ØºÙ„Ø§Ù‚ ØªÙ„Ù‚Ø§Ø¦ÙŠ) */
   autoCloseAfterCycles?: number;
 }
 
@@ -42,19 +42,19 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
       className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-md px-4"
       role="dialog"
       aria-modal="true"
-      aria-label="دقيقة تنفس"
+      aria-label="Ø¯Ù‚ÙŠÙ‚Ø© ØªÙ†ÙØ³"
     >
       <button
         type="button"
         onClick={onClose}
         className="absolute top-4 left-4 p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors z-10"
-        aria-label="إغلاق"
+        aria-label="Ø¥ØºÙ„Ø§Ù‚"
       >
         <X className="w-5 h-5" />
       </button>
 
       <p className="text-white/90 text-lg font-medium mb-8">
-        {phase === "in" ? "شهيق" : "زفير"}
+        {phase === "in" ? "Ø´Ù‡ÙŠÙ‚" : "Ø²ÙÙŠØ±"}
       </p>
 
       <motion.div
@@ -68,9 +68,8 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
           ease: "easeInOut"
         }}
       />
-
       <p className="text-white/70 text-sm mt-8 max-w-xs text-center">
-        خد وقتك — دقيقة واحدة من التنفس الهادئ
+        Ø®Ø¯ ÙˆÙ‚ØªÙƒ â€” Ø¯Ù‚ÙŠÙ‚Ø© ÙˆØ§Ø­Ø¯Ø© Ù…Ù† Ø§Ù„ØªÙ†ÙØ³ Ø§Ù„Ù‡Ø§Ø¯Ø¦
       </p>
     </div>
   );

@@ -1,4 +1,4 @@
-import type { FC, ReactNode } from "react";
+﻿import type { FC, ReactNode } from "react";
 import { useEffect, useState, useRef } from "react";
 import {
   Activity,
@@ -25,7 +25,7 @@ import { getAggregateStats, getEventsByDay, getSessionsWithProgress, getTracking
 import { getLastActivity } from "../../services/notifications";
 import { geminiClient } from "../../services/geminiClient";
 import { usePulseState } from "../../state/pulseState";
-import { isFeatureEnabled } from "../../utils/featureFlags";
+import { getEffectiveFeatureAccess } from "../../utils/featureFlags";
 import {
   fetchAdminConfig,
   fetchAiLogs,
@@ -59,12 +59,12 @@ import { loadStoredState } from "../../services/localStore";
 type AdminTab = "overview" | "feature-flags" | "ai-studio" | "content" | "users" | "user-state";
 
 const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
-  { id: "overview", label: "نبض الرحلة", icon: <Activity className="w-4 h-4" /> },
-  { id: "feature-flags", label: "التحكم في الزمن", icon: <Flag className="w-4 h-4" /> },
-  { id: "ai-studio", label: "مختبر الذكاء", icon: <Brain className="w-4 h-4" /> },
-  { id: "content", label: "إدارة المحتوى", icon: <Database className="w-4 h-4" /> },
-  { id: "users", label: "شؤون المسافرين", icon: <Users className="w-4 h-4" /> },
-  { id: "user-state", label: "سحابة البيانات", icon: <Database className="w-4 h-4" /> }
+  { id: "overview", label: "Ù†Ø¨Ø¶ Ø§Ù„Ø±Ø­Ù„Ø©", icon: <Activity className="w-4 h-4" /> },
+  { id: "feature-flags", label: "Ø§Ù„ØªØ­ÙƒÙ… ÙÙŠ Ø§Ù„Ø²Ù…Ù†", icon: <Flag className="w-4 h-4" /> },
+  { id: "ai-studio", label: "Ù…Ø®ØªØ¨Ø± Ø§Ù„Ø°ÙƒØ§Ø¡", icon: <Brain className="w-4 h-4" /> },
+  { id: "content", label: "Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø­ØªÙˆÙ‰", icon: <Database className="w-4 h-4" /> },
+  { id: "users", label: "Ø´Ø¤ÙˆÙ† Ø§Ù„Ù…Ø³Ø§ÙØ±ÙŠÙ†", icon: <Users className="w-4 h-4" /> },
+  { id: "user-state", label: "Ø³Ø­Ø§Ø¨Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª", icon: <Database className="w-4 h-4" /> }
 ];
 
 const getTabFromLocation = (): AdminTab => {
@@ -81,19 +81,19 @@ const updateTabInUrl = (tab: AdminTab) => {
   window.history.pushState({}, "", url.toString());
 };
 
-const formatNumber = (value: number | null, fallback = "—") =>
+const formatNumber = (value: number | null, fallback = "â€”") =>
   value == null || Number.isNaN(value) ? fallback : value.toLocaleString("ar-EG");
 
 const formatTimeAgo = (ts: number | null) => {
-  if (!ts) return "—";
+  if (!ts) return "â€”";
   const diff = Date.now() - ts;
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "الآن";
-  if (mins < 60) return `منذ ${mins} دقيقة`;
+  if (mins < 1) return "Ø§Ù„Ø¢Ù†";
+  if (mins < 60) return `Ù…Ù†Ø° ${mins} Ø¯Ù‚ÙŠÙ‚Ø©`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `منذ ${hours} ساعة`;
+  if (hours < 24) return `Ù…Ù†Ø° ${hours} Ø³Ø§Ø¹Ø©`;
   const days = Math.floor(hours / 24);
-  return `منذ ${days} يوم`;
+  return `Ù…Ù†Ø° ${days} ÙŠÙˆÙ…`;
 };
 
 const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
@@ -102,6 +102,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   const setAdminAccess = useAdminState((s) => s.setAdminAccess);
   const setAdminCode = useAdminState((s) => s.setAdminCode);
   const authUser = useAuthState((s) => s.user);
+  const authRole = useAuthState((s) => s.roleOverride ?? s.role);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
 
@@ -113,30 +114,32 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   }, [adminAccess, adminCode, setAdminCode]);
 
   useEffect(() => {
-    if (adminAccess || !authUser || !supabase) return;
+    if (adminAccess) return;
     let mounted = true;
-    const allowedRoles = (import.meta.env.VITE_ADMIN_ALLOWED_ROLES || "admin,owner,superadmin")
+    const allowedRoles = (import.meta.env.VITE_ADMIN_ALLOWED_ROLES || "admin,owner,superadmin,developer")
       .split(",")
       .map((r: string) => r.trim())
       .filter(Boolean);
-    supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", authUser.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!mounted) return;
-        if (data?.role && allowedRoles.includes(String(data.role))) {
-          setAdminAccess(true);
-        }
-      })
-      .catch(() => {
-        // ignore
-      });
+    if (authRole && allowedRoles.includes(String(authRole))) {
+      setAdminAccess(true);
+      return;
+    }
+    if (!authUser || !supabase) return;
+    void (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", authUser.id)
+        .maybeSingle();
+      if (!mounted) return;
+      if (data?.role && allowedRoles.includes(String(data.role))) {
+        setAdminAccess(true);
+      }
+    })();
     return () => {
       mounted = false;
     };
-  }, [adminAccess, authUser, setAdminAccess]);
+  }, [adminAccess, authRole, authUser, setAdminAccess]);
 
   const handleLogin = () => {
     const expected = import.meta.env.VITE_ADMIN_CODE || ADMIN_ACCESS_CODE;
@@ -145,7 +148,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
       setAdminCode(code.trim());
       setError("");
     } else {
-      setError("الكود غير صحيح. جرّب تاني.");
+      setError("Ø§Ù„ÙƒÙˆØ¯ ØºÙŠØ± ØµØ­ÙŠØ­. Ø¬Ø±Ù‘Ø¨ ØªØ§Ù†ÙŠ.");
     }
   };
 
@@ -159,20 +162,20 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div className="text-right">
-            <p className="text-sm text-slate-300">بوابة القمرة</p>
-            <h1 className="text-xl font-bold">لوحة التحكم</h1>
+            <p className="text-sm text-slate-300">Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ù‚Ù…Ø±Ø©</p>
+            <h1 className="text-xl font-bold">Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…</h1>
           </div>
         </div>
         <p className="text-sm text-slate-400">
-          الدخول محلي على هذا الجهاز. اربطها لاحقاً بصلاحيات حقيقية.
+          Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù…Ø­Ù„ÙŠ Ø¹Ù„Ù‰ Ù‡Ø°Ø§ Ø§Ù„Ø¬Ù‡Ø§Ø². Ø§Ø±Ø¨Ø·Ù‡Ø§ Ù„Ø§Ø­Ù‚Ø§Ù‹ Ø¨ØµÙ„Ø§Ø­ÙŠØ§Øª Ø­Ù‚ÙŠÙ‚ÙŠØ©.
         </p>
         <div className="space-y-2">
-          <label className="text-xs text-slate-400">كود المدير</label>
+          <label className="text-xs text-slate-400">ÙƒÙˆØ¯ Ø§Ù„Ù…Ø¯ÙŠØ±</label>
           <input
             type="password"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            placeholder="••••••"
+            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢"
             className="w-full rounded-xl bg-slate-950/60 border border-slate-700 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
           {error && <p className="text-xs text-rose-300">{error}</p>}
@@ -182,7 +185,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
           onClick={handleLogin}
           className="w-full rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold py-2"
         >
-          دخول القمرة
+          Ø¯Ø®ÙˆÙ„ Ø§Ù„Ù‚Ù…Ø±Ø©
         </button>
       </div>
     </div>
@@ -192,6 +195,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
 export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const [tab, setTab] = useState<AdminTab>(getTabFromLocation);
   const setAdminAccess = useAdminState((s) => s.setAdminAccess);
+  const setAdminCode = useAdminState((s) => s.setAdminCode);
   const setFeatureFlags = useAdminState((s) => s.setFeatureFlags);
   const setSystemPrompt = useAdminState((s) => s.setSystemPrompt);
   const setScoringWeights = useAdminState((s) => s.setScoringWeights);
@@ -236,7 +240,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
       } catch {
         if (cancelled) return;
         setRemoteStatus("error");
-        setRemoteMessage("تعذر الاتصال ببيانات Supabase. جاري عرض النسخة المحلية.");
+        setRemoteMessage("ØªØ¹Ø°Ø± Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø¨ÙŠØ§Ù†Ø§Øª Supabase. Ø¬Ø§Ø±ÙŠ Ø¹Ø±Ø¶ Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ù…Ø­Ù„ÙŠØ©.");
       }
     };
     void loadRemote();
@@ -261,8 +265,8 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
               <Compass className="w-5 h-5" />
             </div>
             <div className="text-right">
-              <p className="text-xs text-slate-400">الرحلة</p>
-              <h2 className="text-lg font-bold">قمرة القيادة</h2>
+              <p className="text-xs text-slate-400">Ø§Ù„Ø±Ø­Ù„Ø©</p>
+              <h2 className="text-lg font-bold">Ù‚Ù…Ø±Ø© Ø§Ù„Ù‚ÙŠØ§Ø¯Ø©</h2>
             </div>
           </div>
           <nav className="space-y-2">
@@ -293,7 +297,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
               className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-300 hover:bg-slate-900"
             >
               <LogOut className="w-4 h-4" />
-              تسجيل خروج
+              ØªØ³Ø¬ÙŠÙ„ Ø®Ø±ÙˆØ¬
             </button>
           </div>
         </aside>
@@ -301,17 +305,17 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
         <main className="flex-1 min-w-0 p-6 space-y-6">
           <header className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs text-slate-400">حالة النظام</p>
+              <p className="text-xs text-slate-400">Ø­Ø§Ù„Ø© Ø§Ù„Ù†Ø¸Ø§Ù…</p>
               <div className="flex items-center gap-2">
                 <span className={`w-2 h-2 rounded-full ${aiOnline ? "bg-emerald-400" : "bg-rose-400"}`} />
-                <p className="text-sm font-semibold">{aiOnline ? "الذكاء متصل" : "الذكاء غير متاح"}</p>
+                <p className="text-sm font-semibold">{aiOnline ? "Ø§Ù„Ø°ÙƒØ§Ø¡ Ù…ØªØµÙ„" : "Ø§Ù„Ø°ÙƒØ§Ø¡ ØºÙŠØ± Ù…ØªØ§Ø­"}</p>
               </div>
               <p className="text-[11px] text-slate-500 mt-1">
                 {remoteStatus === "connected"
-                  ? "Supabase متصل"
+                  ? "Supabase Ù…ØªØµÙ„"
                   : remoteStatus === "error"
-                    ? "Supabase غير متاح"
-                    : "وضع محلي"}
+                    ? "Supabase ØºÙŠØ± Ù…ØªØ§Ø­"
+                    : "ÙˆØ¶Ø¹ Ù…Ø­Ù„ÙŠ"}
               </p>
               {remoteMessage && (
                 <p className="text-[11px] text-rose-300 mt-1">{remoteMessage}</p>
@@ -413,7 +417,7 @@ const OverviewPanel: FC = () => {
     setDailyError("");
     const data = await fetchDailyReport();
     if (!data) {
-      setDailyError("تعذر توليد التقرير اليومي.");
+      setDailyError("ØªØ¹Ø°Ø± ØªÙˆÙ„ÙŠØ¯ Ø§Ù„ØªÙ‚Ø±ÙŠØ± Ø§Ù„ÙŠÙˆÙ…ÙŠ.");
     }
     setDailyReport(data);
     setDailyLoading(false);
@@ -424,7 +428,7 @@ const OverviewPanel: FC = () => {
     setWeeklyError("");
     const data = await fetchWeeklyReport();
     if (!data) {
-      setWeeklyError("تعذر توليد التقرير الأسبوعي.");
+      setWeeklyError("ØªØ¹Ø°Ø± ØªÙˆÙ„ÙŠØ¯ Ø§Ù„ØªÙ‚Ø±ÙŠØ± Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ÙŠ.");
     }
     setWeeklyReport(data);
     setWeeklyLoading(false);
@@ -433,17 +437,17 @@ const OverviewPanel: FC = () => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <StatCard title="إجمالي المسافرين" value={formatNumber(totalUsers)} hint={isSupabaseReady ? "من Supabase" : "جلسات محلية"} />
-        <StatCard title="نشط الآن" value={formatNumber(activeNowValue)} hint={`آخر نشاط: ${formatTimeAgo(lastActive)}`} />
-        <StatCard title="متوسط طاقة اليوم" value={formatNumber(avgMoodValue)} hint="من سجل النبض" />
-        <StatCard title="استدعاءات AI" value={formatNumber(aiTokensUsed)} hint={isSupabaseReady ? "من سجل AI" : "مؤقتاً من المهام"} />
+        <StatCard title="Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø³Ø§ÙØ±ÙŠÙ†" value={formatNumber(totalUsers)} hint={isSupabaseReady ? "Ù…Ù† Supabase" : "Ø¬Ù„Ø³Ø§Øª Ù…Ø­Ù„ÙŠØ©"} />
+        <StatCard title="Ù†Ø´Ø· Ø§Ù„Ø¢Ù†" value={formatNumber(activeNowValue)} hint={`Ø¢Ø®Ø± Ù†Ø´Ø§Ø·: ${formatTimeAgo(lastActive)}`} />
+        <StatCard title="Ù…ØªÙˆØ³Ø· Ø·Ø§Ù‚Ø© Ø§Ù„ÙŠÙˆÙ…" value={formatNumber(avgMoodValue)} hint="Ù…Ù† Ø³Ø¬Ù„ Ø§Ù„Ù†Ø¨Ø¶" />
+        <StatCard title="Ø§Ø³ØªØ¯Ø¹Ø§Ø¡Ø§Øª AI" value={formatNumber(aiTokensUsed)} hint={isSupabaseReady ? "Ù…Ù† Ø³Ø¬Ù„ AI" : "Ù…Ø¤Ù‚ØªØ§Ù‹ Ù…Ù† Ø§Ù„Ù…Ù‡Ø§Ù…"} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 rounded-3xl border border-slate-800 bg-slate-900/60 p-4">
           <div className="flex items-center gap-2 mb-4">
             <LineChartIcon className="w-4 h-4 text-teal-300" />
-            <h3 className="text-sm font-semibold">نمو التفاعل (آخر الأيام)</h3>
+            <h3 className="text-sm font-semibold">Ù†Ù…Ùˆ Ø§Ù„ØªÙØ§Ø¹Ù„ (Ø¢Ø®Ø± Ø§Ù„Ø£ÙŠØ§Ù…)</h3>
           </div>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
@@ -460,10 +464,10 @@ const OverviewPanel: FC = () => {
         <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-4">
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-amber-300" />
-            <h3 className="text-sm font-semibold">مناطق الاحتكاك الأعلى</h3>
+            <h3 className="text-sm font-semibold">Ù…Ù†Ø§Ø·Ù‚ Ø§Ù„Ø§Ø­ØªÙƒØ§Ùƒ Ø§Ù„Ø£Ø¹Ù„Ù‰</h3>
           </div>
           {topZones.length === 0 ? (
-            <p className="text-xs text-slate-400">لا توجد بيانات كافية بعد.</p>
+            <p className="text-xs text-slate-400">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¨ÙŠØ§Ù†Ø§Øª ÙƒØ§ÙÙŠØ© Ø¨Ø¹Ø¯.</p>
           ) : (
             <div className="space-y-2">
               {topZones.map(([zone, count]) => (
@@ -475,29 +479,29 @@ const OverviewPanel: FC = () => {
             </div>
           )}
           <div className="pt-3 border-t border-slate-800 text-xs text-slate-400">
-            آخر نبضة: {formatTimeAgo(lastActive)}
+            Ø¢Ø®Ø± Ù†Ø¨Ø¶Ø©: {formatTimeAgo(lastActive)}
           </div>
         </div>
       </div>
 
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">التقرير اليومي</h3>
+          <h3 className="text-sm font-semibold">Ø§Ù„ØªÙ‚Ø±ÙŠØ± Ø§Ù„ÙŠÙˆÙ…ÙŠ</h3>
           <button
             type="button"
             onClick={handleDailyReport}
             className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400"
             disabled={dailyLoading}
           >
-            {dailyLoading ? "جاري التوليد..." : "توليد التقرير"}
+            {dailyLoading ? "Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªÙˆÙ„ÙŠØ¯..." : "ØªÙˆÙ„ÙŠØ¯ Ø§Ù„ØªÙ‚Ø±ÙŠØ±"}
           </button>
         </div>
         {dailyError && <p className="text-xs text-rose-300">{dailyError}</p>}
         {dailyReport && (
           <div className="space-y-2 text-xs text-slate-300">
-            <p>تاريخ التقرير: {dailyReport.date}</p>
-            <p>إجمالي الأحداث: {dailyReport.totalEvents}</p>
-            <p>جلسات نشطة: {dailyReport.uniqueSessions}</p>
+            <p>ØªØ§Ø±ÙŠØ® Ø§Ù„ØªÙ‚Ø±ÙŠØ±: {dailyReport.date}</p>
+            <p>Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø£Ø­Ø¯Ø§Ø«: {dailyReport.totalEvents}</p>
+            <p>Ø¬Ù„Ø³Ø§Øª Ù†Ø´Ø·Ø©: {dailyReport.uniqueSessions}</p>
             <div className="flex flex-wrap gap-2">
               {Object.entries(dailyReport.typeCounts).map(([type, count]) => (
                 <span key={type} className="rounded-full border border-slate-700 px-2 py-1">
@@ -506,13 +510,13 @@ const OverviewPanel: FC = () => {
               ))}
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-slate-400">أكثر الجلسات نشاطاً:</p>
+              <p className="text-xs text-slate-400">Ø£ÙƒØ«Ø± Ø§Ù„Ø¬Ù„Ø³Ø§Øª Ù†Ø´Ø§Ø·Ø§Ù‹:</p>
               {dailyReport.topSessions.length === 0 ? (
-                <p className="text-xs text-slate-500">لا توجد جلسات اليوم.</p>
+                <p className="text-xs text-slate-500">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¬Ù„Ø³Ø§Øª Ø§Ù„ÙŠÙˆÙ….</p>
               ) : (
                 dailyReport.topSessions.map((row) => (
                   <div key={row.sessionId} className="text-xs text-slate-300">
-                    {row.sessionId.slice(0, 14)}… — {row.total} حدث
+                    {row.sessionId.slice(0, 14)}â€¦ â€” {row.total} Ø­Ø¯Ø«
                   </div>
                 ))
               )}
@@ -523,22 +527,22 @@ const OverviewPanel: FC = () => {
 
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">التقرير الأسبوعي</h3>
+          <h3 className="text-sm font-semibold">Ø§Ù„ØªÙ‚Ø±ÙŠØ± Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ÙŠ</h3>
           <button
             type="button"
             onClick={handleWeeklyReport}
             className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400"
             disabled={weeklyLoading}
           >
-            {weeklyLoading ? "جاري التوليد..." : "توليد التقرير"}
+            {weeklyLoading ? "Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªÙˆÙ„ÙŠØ¯..." : "ØªÙˆÙ„ÙŠØ¯ Ø§Ù„ØªÙ‚Ø±ÙŠØ±"}
           </button>
         </div>
         {weeklyError && <p className="text-xs text-rose-300">{weeklyError}</p>}
         {weeklyReport && (
           <div className="space-y-2 text-xs text-slate-300">
-            <p>الفترة: {weeklyReport.from} → {weeklyReport.to}</p>
-            <p>إجمالي الأحداث: {weeklyReport.totalEvents}</p>
-            <p>جلسات فريدة: {weeklyReport.uniqueSessions}</p>
+            <p>Ø§Ù„ÙØªØ±Ø©: {weeklyReport.from} â†’ {weeklyReport.to}</p>
+            <p>Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø£Ø­Ø¯Ø§Ø«: {weeklyReport.totalEvents}</p>
+            <p>Ø¬Ù„Ø³Ø§Øª ÙØ±ÙŠØ¯Ø©: {weeklyReport.uniqueSessions}</p>
             <div className="flex flex-wrap gap-2">
               {Object.entries(weeklyReport.typeCounts).map(([type, count]) => (
                 <span key={type} className="rounded-full border border-slate-700 px-2 py-1">
@@ -547,13 +551,13 @@ const OverviewPanel: FC = () => {
               ))}
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-slate-400">أكثر الجلسات نشاطاً:</p>
+              <p className="text-xs text-slate-400">Ø£ÙƒØ«Ø± Ø§Ù„Ø¬Ù„Ø³Ø§Øª Ù†Ø´Ø§Ø·Ø§Ù‹:</p>
               {weeklyReport.topSessions.length === 0 ? (
-                <p className="text-xs text-slate-500">لا توجد جلسات كافية.</p>
+                <p className="text-xs text-slate-500">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¬Ù„Ø³Ø§Øª ÙƒØ§ÙÙŠØ©.</p>
               ) : (
                 weeklyReport.topSessions.map((row) => (
                   <div key={row.sessionId} className="text-xs text-slate-300">
-                    {row.sessionId.slice(0, 14)}… — {row.total} حدث
+                    {row.sessionId.slice(0, 14)}â€¦ â€” {row.total} Ø­Ø¯Ø«
                   </div>
                 ))
               )}
@@ -570,14 +574,23 @@ const FeatureFlagsPanel: FC = () => {
   const updateFeatureFlag = useAdminState((s) => s.updateFeatureFlag);
   const betaAccess = useAdminState((s) => s.betaAccess);
   const setBetaAccess = useAdminState((s) => s.setBetaAccess);
+  const adminAccess = useAdminState((s) => s.adminAccess);
+  const role = useAuthState((s) => s.role);
   const [saving, setSaving] = useState(false);
+  const effectiveAccess = getEffectiveFeatureAccess({
+    featureFlags,
+    betaAccess,
+    role,
+    adminAccess,
+    isDev: import.meta.env.DEV
+  });
 
   return (
     <div className="space-y-6">
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4">
-        <h3 className="text-sm font-semibold mb-2">مفاتيح الإطلاق</h3>
+        <h3 className="text-sm font-semibold mb-2">Ù…ÙØ§ØªÙŠØ­ Ø§Ù„Ø¥Ø·Ù„Ø§Ù‚</h3>
         <p className="text-xs text-slate-400">
-          غيّر حالة كل ميزة فوراً. وضع Beta يفتحها لمجموعة تجريبية فقط.
+          ØºÙŠÙ‘Ø± Ø­Ø§Ù„Ø© ÙƒÙ„ Ù…ÙŠØ²Ø© ÙÙˆØ±Ø§Ù‹. ÙˆØ¶Ø¹ Beta ÙŠÙØªØ­Ù‡Ø§ Ù„Ù…Ø¬Ù…ÙˆØ¹Ø© ØªØ¬Ø±ÙŠØ¨ÙŠØ© ÙÙ‚Ø·.
         </p>
       </div>
 
@@ -619,19 +632,19 @@ const FeatureFlagsPanel: FC = () => {
               </div>
             </div>
             <p className="text-[11px] text-slate-500 mt-3">
-              الحالة الحالية: {isFeatureEnabled(mode, betaAccess) ? "مفعّلة لهذا الجهاز" : "مقفولة لهذا الجهاز"}
+              Ø§Ù„Ø­Ø§Ù„Ø© Ø§Ù„Ø­Ø§Ù„ÙŠØ©: {effectiveAccess[flag.key] ? "Ù…ÙØ¹Ù‘Ù„Ø© Ù„Ù‡Ø°Ø§ Ø§Ù„Ø¬Ù‡Ø§Ø²" : "Ù…Ù‚ÙÙˆÙ„Ø© Ù„Ù‡Ø°Ø§ Ø§Ù„Ø¬Ù‡Ø§Ø²"}
             </p>
           </div>
         );
       })}
       </div>
       {saving && (
-        <p className="text-xs text-slate-400">جاري حفظ الإعدادات على Supabase...</p>
+        <p className="text-xs text-slate-400">Ø¬Ø§Ø±ÙŠ Ø­ÙØ¸ Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø¹Ù„Ù‰ Supabase...</p>
       )}
 
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4">
-        <h4 className="text-sm font-semibold mb-2">صلاحية Beta لهذا الجهاز</h4>
-        <p className="text-xs text-slate-400 mb-3">فعّلها لتجربة الميزات في وضع Beta.</p>
+        <h4 className="text-sm font-semibold mb-2">ØµÙ„Ø§Ø­ÙŠØ© Beta Ù„Ù‡Ø°Ø§ Ø§Ù„Ø¬Ù‡Ø§Ø²</h4>
+        <p className="text-xs text-slate-400 mb-3">ÙØ¹Ù‘Ù„Ù‡Ø§ Ù„ØªØ¬Ø±Ø¨Ø© Ø§Ù„Ù…ÙŠØ²Ø§Øª ÙÙŠ ÙˆØ¶Ø¹ Beta.</p>
         <button
           type="button"
           onClick={async () => {
@@ -644,7 +657,7 @@ const FeatureFlagsPanel: FC = () => {
             betaAccess ? "border-emerald-400 bg-emerald-500/20 text-emerald-200" : "border-slate-700 text-slate-400"
           }`}
         >
-          {betaAccess ? "Beta مفعّل" : "Beta مغلق"}
+          {betaAccess ? "Beta Ù…ÙØ¹Ù‘Ù„" : "Beta Ù…ØºÙ„Ù‚"}
         </button>
       </div>
     </div>
@@ -692,9 +705,9 @@ const AIStudioPanel: FC = () => {
     setPlayMessages((prev) => [...prev, { role: "user", content: userText }]);
     setPlayInput("");
     setLoading(true);
-    const prompt = `${promptDraft.trim()}\n\nالمستخدم: ${userText}\nالمساعد:`;
+    const prompt = `${promptDraft.trim()}\n\nØ§Ù„Ù…Ø³ØªØ®Ø¯Ù…: ${userText}\nØ§Ù„Ù…Ø³Ø§Ø¹Ø¯:`;
     const response = await geminiClient.generate(prompt);
-    const finalText = response ?? "تعذر الوصول للذكاء الاصطناعي حالياً.";
+    const finalText = response ?? "ØªØ¹Ø°Ø± Ø§Ù„ÙˆØµÙˆÙ„ Ù„Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ø­Ø§Ù„ÙŠØ§Ù‹.";
     setPlayMessages((prev) => [...prev, { role: "assistant", content: finalText }]);
     const entry = {
       id: `ai_${Date.now()}`,
@@ -730,20 +743,20 @@ const AIStudioPanel: FC = () => {
             onClick={handleSavePrompt}
             className="rounded-full bg-teal-500 text-slate-950 px-4 py-2 text-xs font-semibold"
           >
-            حفظ التعديلات
+            Ø­ÙØ¸ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„Ø§Øª
           </button>
           <button
             type="button"
             onClick={() => setPromptDraft(systemPrompt)}
             className="rounded-full border border-slate-700 px-4 py-2 text-xs text-slate-300"
           >
-            رجوع
+            Ø±Ø¬ÙˆØ¹
           </button>
         </div>
       </div>
 
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-4">
-        <h3 className="text-sm font-semibold">معادلة الحساب</h3>
+        <h3 className="text-sm font-semibold">Ù…Ø¹Ø§Ø¯Ù„Ø© Ø§Ù„Ø­Ø³Ø§Ø¨</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {(["often", "sometimes", "rarely", "never"] as const).map((key) => (
             <div key={key} className="space-y-1">
@@ -759,7 +772,7 @@ const AIStudioPanel: FC = () => {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-xs text-slate-400">حدّ Low (≤)</label>
+            <label className="text-xs text-slate-400">Ø­Ø¯Ù‘ Low (â‰¤)</label>
             <input
               type="number"
               value={thresholdDraft.lowMax}
@@ -768,7 +781,7 @@ const AIStudioPanel: FC = () => {
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs text-slate-400">حدّ Medium (≤)</label>
+            <label className="text-xs text-slate-400">Ø­Ø¯Ù‘ Medium (â‰¤)</label>
             <input
               type="number"
               value={thresholdDraft.mediumMax}
@@ -782,7 +795,7 @@ const AIStudioPanel: FC = () => {
           onClick={handleSaveScoring}
           className="rounded-full bg-slate-200 text-slate-900 px-4 py-2 text-xs font-semibold"
         >
-          حفظ المعادلة
+          Ø­ÙØ¸ Ø§Ù„Ù…Ø¹Ø§Ø¯Ù„Ø©
         </button>
       </div>
 
@@ -790,7 +803,7 @@ const AIStudioPanel: FC = () => {
         <h3 className="text-sm font-semibold">Test Playground</h3>
         <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-3 h-52 overflow-auto space-y-2 text-xs">
           {playMessages.length === 0 && (
-            <p className="text-slate-500">اكتب رسالة واختبر التغييرات فوراً.</p>
+            <p className="text-slate-500">Ø§ÙƒØªØ¨ Ø±Ø³Ø§Ù„Ø© ÙˆØ§Ø®ØªØ¨Ø± Ø§Ù„ØªØºÙŠÙŠØ±Ø§Øª ÙÙˆØ±Ø§Ù‹.</p>
           )}
           {playMessages.map((msg, idx) => (
             <div key={idx} className={msg.role === "user" ? "text-right" : "text-left"}>
@@ -806,7 +819,7 @@ const AIStudioPanel: FC = () => {
           <input
             value={playInput}
             onChange={(e) => setPlayInput(e.target.value)}
-            placeholder="جرّب رسالة..."
+            placeholder="Ø¬Ø±Ù‘Ø¨ Ø±Ø³Ø§Ù„Ø©..."
             className="flex-1 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
           />
           <button
@@ -816,24 +829,24 @@ const AIStudioPanel: FC = () => {
             disabled={loading}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            تشغيل
+            ØªØ´ØºÙŠÙ„
           </button>
         </div>
       </div>
 
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">آخر ردود الذكاء</h3>
+          <h3 className="text-sm font-semibold">Ø¢Ø®Ø± Ø±Ø¯ÙˆØ¯ Ø§Ù„Ø°ÙƒØ§Ø¡</h3>
           <button
             type="button"
             onClick={clearAiLogs}
             className="text-xs text-slate-400 hover:text-rose-300"
           >
-            مسح السجل
+            Ù…Ø³Ø­ Ø§Ù„Ø³Ø¬Ù„
           </button>
         </div>
         {aiLogs.length === 0 ? (
-          <p className="text-xs text-slate-500">لا يوجد سجل بعد.</p>
+          <p className="text-xs text-slate-500">Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø³Ø¬Ù„ Ø¨Ø¹Ø¯.</p>
         ) : (
           <div className="space-y-2">
             {aiLogs.map((log) => (
@@ -848,7 +861,7 @@ const AIStudioPanel: FC = () => {
                       if (isSupabaseReady) await rateAiLogRemote(log.id, "up");
                     }}
                     className={`p-1 rounded-full ${log.rating === "up" ? "text-emerald-300" : "hover:text-emerald-200"}`}
-                    title="ممتاز"
+                    title="Ù…Ù…ØªØ§Ø²"
                   >
                     <ThumbsUp className="w-4 h-4" />
                   </button>
@@ -859,7 +872,7 @@ const AIStudioPanel: FC = () => {
                       if (isSupabaseReady) await rateAiLogRemote(log.id, "down");
                     }}
                     className={`p-1 rounded-full ${log.rating === "down" ? "text-rose-300" : "hover:text-rose-200"}`}
-                    title="سيء"
+                    title="Ø³ÙŠØ¡"
                   >
                     <ThumbsDown className="w-4 h-4" />
                   </button>
@@ -885,21 +898,21 @@ const ContentPanel: FC = () => {
   const removeBroadcast = useAdminState((s) => s.removeBroadcast);
 
   const [missionTitle, setMissionTitle] = useState("");
-  const [missionTrack, setMissionTrack] = useState("مسار الجذور");
-  const [missionDifficulty, setMissionDifficulty] = useState<"سهل" | "متوسط" | "صعب">("سهل");
+  const [missionTrack, setMissionTrack] = useState("Ù…Ø³Ø§Ø± Ø§Ù„Ø¬Ø°ÙˆØ±");
+  const [missionDifficulty, setMissionDifficulty] = useState<Parameters<typeof addMission>[0]["difficulty"]>("Ø³Ù‡Ù„" as Parameters<typeof addMission>[0]["difficulty"]);
 
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastBody, setBroadcastBody] = useState("");
 
   const handleAddMission = async () => {
     if (!missionTitle.trim()) return;
-    const mission = {
+    const mission: Parameters<typeof addMission>[0] = {
       id: `mission_${Date.now()}`,
       title: missionTitle.trim(),
       track: missionTrack,
       difficulty: missionDifficulty,
       createdAt: Date.now()
-    } as const;
+    };
     addMission(mission);
     if (isSupabaseReady) {
       await saveMission(mission);
@@ -926,12 +939,12 @@ const ContentPanel: FC = () => {
   return (
     <div className="space-y-6">
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
-        <h3 className="text-sm font-semibold">مكتبة المهمات</h3>
+        <h3 className="text-sm font-semibold">Ù…ÙƒØªØ¨Ø© Ø§Ù„Ù…Ù‡Ù…Ø§Øª</h3>
         <div className="grid md:grid-cols-3 gap-2">
           <input
             value={missionTitle}
             onChange={(e) => setMissionTitle(e.target.value)}
-            placeholder="اسم المهمة"
+            placeholder="Ø§Ø³Ù… Ø§Ù„Ù…Ù‡Ù…Ø©"
             className="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
           />
           <select
@@ -939,20 +952,20 @@ const ContentPanel: FC = () => {
             onChange={(e) => setMissionTrack(e.target.value)}
             className="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
           >
-            <option>مسار الجذور</option>
-            <option>مسار الدرع</option>
-            <option>مسار فن المسافة</option>
-            <option>مسار الصيام الشعوري</option>
-            <option>مسار الطوارئ</option>
+            <option>Ù…Ø³Ø§Ø± Ø§Ù„Ø¬Ø°ÙˆØ±</option>
+            <option>Ù…Ø³Ø§Ø± Ø§Ù„Ø¯Ø±Ø¹</option>
+            <option>Ù…Ø³Ø§Ø± ÙÙ† Ø§Ù„Ù…Ø³Ø§ÙØ©</option>
+            <option>Ù…Ø³Ø§Ø± Ø§Ù„ØµÙŠØ§Ù… Ø§Ù„Ø´Ø¹ÙˆØ±ÙŠ</option>
+            <option>Ù…Ø³Ø§Ø± Ø§Ù„Ø·ÙˆØ§Ø±Ø¦</option>
           </select>
           <select
             value={missionDifficulty}
-            onChange={(e) => setMissionDifficulty(e.target.value as "سهل" | "متوسط" | "صعب")}
+            onChange={(e) => setMissionDifficulty(e.target.value as Parameters<typeof addMission>[0]["difficulty"])}
             className="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
           >
-            <option value="سهل">سهل</option>
-            <option value="متوسط">متوسط</option>
-            <option value="صعب">صعب</option>
+            <option value="Ø³Ù‡Ù„">Ø³Ù‡Ù„</option>
+            <option value="Ù…ØªÙˆØ³Ø·">Ù…ØªÙˆØ³Ø·</option>
+            <option value="ØµØ¹Ø¨">ØµØ¹Ø¨</option>
           </select>
         </div>
         <button
@@ -960,15 +973,15 @@ const ContentPanel: FC = () => {
           onClick={handleAddMission}
           className="rounded-full bg-teal-500 text-slate-950 px-4 py-2 text-xs font-semibold"
         >
-          إضافة مهمة
+          Ø¥Ø¶Ø§ÙØ© Ù…Ù‡Ù…Ø©
         </button>
         <div className="space-y-2">
-          {missions.length === 0 && <p className="text-xs text-slate-500">لا توجد مهام مضافة بعد.</p>}
+          {missions.length === 0 && <p className="text-xs text-slate-500">Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù‡Ø§Ù… Ù…Ø¶Ø§ÙØ© Ø¨Ø¹Ø¯.</p>}
           {missions.map((m) => (
             <div key={m.id} className="flex items-center justify-between text-xs bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2">
               <div>
                 <p className="font-semibold text-slate-200">{m.title}</p>
-                <p className="text-slate-500">{m.track} • {m.difficulty}</p>
+                <p className="text-slate-500">{m.track} â€¢ {m.difficulty}</p>
               </div>
               <button
                 type="button"
@@ -980,7 +993,7 @@ const ContentPanel: FC = () => {
                 }}
                 className="text-rose-300 hover:text-rose-200"
               >
-                حذف
+                Ø­Ø°Ù
               </button>
             </div>
           ))}
@@ -988,17 +1001,17 @@ const ContentPanel: FC = () => {
       </div>
 
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
-        <h3 className="text-sm font-semibold">رسائل الطوارئ العامة</h3>
+        <h3 className="text-sm font-semibold">Ø±Ø³Ø§Ø¦Ù„ Ø§Ù„Ø·ÙˆØ§Ø±Ø¦ Ø§Ù„Ø¹Ø§Ù…Ø©</h3>
         <input
           value={broadcastTitle}
           onChange={(e) => setBroadcastTitle(e.target.value)}
-          placeholder="عنوان الرسالة"
+          placeholder="Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø±Ø³Ø§Ù„Ø©"
           className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
         />
         <textarea
           value={broadcastBody}
           onChange={(e) => setBroadcastBody(e.target.value)}
-          placeholder="نص الرسالة"
+          placeholder="Ù†Øµ Ø§Ù„Ø±Ø³Ø§Ù„Ø©"
           rows={3}
           className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
         />
@@ -1007,10 +1020,10 @@ const ContentPanel: FC = () => {
           onClick={handleAddBroadcast}
           className="rounded-full bg-amber-400 text-slate-950 px-4 py-2 text-xs font-semibold"
         >
-          إرسال الرسالة
+          Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø±Ø³Ø§Ù„Ø©
         </button>
         <div className="space-y-2">
-          {broadcasts.length === 0 && <p className="text-xs text-slate-500">لا توجد رسائل بعد.</p>}
+          {broadcasts.length === 0 && <p className="text-xs text-slate-500">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø±Ø³Ø§Ø¦Ù„ Ø¨Ø¹Ø¯.</p>}
           {broadcasts.map((b) => (
             <div key={b.id} className="flex items-start justify-between gap-3 text-xs bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2">
               <div>
@@ -1027,7 +1040,7 @@ const ContentPanel: FC = () => {
                 }}
                 className="text-rose-300 hover:text-rose-200"
               >
-                حذف
+                Ø­Ø°Ù
               </button>
             </div>
           ))}
@@ -1073,7 +1086,7 @@ const UsersPanel: FC = () => {
       `${u.fullName} ${u.email} ${u.id}`.toLowerCase().includes(query.toLowerCase())
     ) ?? [];
 
-  const ROLE_OPTIONS = ["user", "admin", "editor", "moderator", "owner"];
+  const ROLE_OPTIONS = ["user", "admin", "developer", "editor", "moderator", "owner"];
 
   const openGodView = async (sessionId: string) => {
     setGodViewSessionId(sessionId);
@@ -1088,7 +1101,7 @@ const UsersPanel: FC = () => {
         if (data) {
           setGodViewSnapshot(data);
         } else {
-          setGodViewError("لا توجد بيانات خريطة لهذه الجلسة بعد.");
+          setGodViewError("Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¨ÙŠØ§Ù†Ø§Øª Ø®Ø±ÙŠØ·Ø© Ù„Ù‡Ø°Ù‡ Ø§Ù„Ø¬Ù„Ø³Ø© Ø¨Ø¹Ø¯.");
         }
       } else {
         const currentSession = getTrackingSessionId();
@@ -1101,14 +1114,14 @@ const UsersPanel: FC = () => {
               updatedAt: Date.now()
             });
           } else {
-            setGodViewError("لا توجد بيانات محلية متاحة حالياً.");
+            setGodViewError("Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¨ÙŠØ§Ù†Ø§Øª Ù…Ø­Ù„ÙŠØ© Ù…ØªØ§Ø­Ø© Ø­Ø§Ù„ÙŠØ§Ù‹.");
           }
         } else {
-          setGodViewError("ربط Supabase غير متاح لهذه الجلسة.");
+          setGodViewError("Ø±Ø¨Ø· Supabase ØºÙŠØ± Ù…ØªØ§Ø­ Ù„Ù‡Ø°Ù‡ Ø§Ù„Ø¬Ù„Ø³Ø©.");
         }
       }
     } catch (error) {
-      setGodViewError("حصل خطأ أثناء تحميل بيانات الخريطة.");
+      setGodViewError("Ø­ØµÙ„ Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ ØªØ­Ù…ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø®Ø±ÙŠØ·Ø©.");
       if (import.meta.env.DEV) {
         console.warn("God View load failed", error);
       }
@@ -1120,21 +1133,21 @@ const UsersPanel: FC = () => {
   return (
     <div className="space-y-6">
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
-        <h3 className="text-sm font-semibold">جدول المسافرين</h3>
+        <h3 className="text-sm font-semibold">Ø¬Ø¯ÙˆÙ„ Ø§Ù„Ù…Ø³Ø§ÙØ±ÙŠÙ†</h3>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="ابحث برقم الجلسة..."
+          placeholder="Ø§Ø¨Ø­Ø« Ø¨Ø±Ù‚Ù… Ø§Ù„Ø¬Ù„Ø³Ø©..."
           className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
         />
       </div>
 
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4">
-        {loading && <p className="text-xs text-slate-500">جاري تحميل المستخدمين...</p>}
+        {loading && <p className="text-xs text-slate-500">Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ†...</p>}
         {!loading && remoteUsers && (
           <div className="space-y-2">
             {filteredUsers.length === 0 ? (
-              <p className="text-xs text-slate-500">لا توجد نتائج مطابقة.</p>
+              <p className="text-xs text-slate-500">Ù„Ø§ ØªÙˆØ¬Ø¯ Ù†ØªØ§Ø¦Ø¬ Ù…Ø·Ø§Ø¨Ù‚Ø©.</p>
             ) : (
               filteredUsers.map((user) => (
                 <div key={user.id} className="flex flex-wrap items-center justify-between gap-3 text-xs border border-slate-800 rounded-xl px-3 py-2">
@@ -1143,7 +1156,7 @@ const UsersPanel: FC = () => {
                     <p className="text-slate-500">{user.email}</p>
                   </div>
                   <div className="text-slate-400">
-                    الدور: {user.role} • انضم {user.createdAt ? new Date(user.createdAt).toLocaleDateString("ar-EG") : "—"}
+                    Ø§Ù„Ø¯ÙˆØ±: {user.role} â€¢ Ø§Ù†Ø¶Ù… {user.createdAt ? new Date(user.createdAt).toLocaleDateString("ar-EG") : "â€”"}
                   </div>
                   <div className="flex items-center gap-2">
                     <select
@@ -1166,7 +1179,7 @@ const UsersPanel: FC = () => {
                       ))}
                     </select>
                     {roleSaving === user.id && (
-                      <span className="text-xs text-slate-500">جارٍ الحفظ...</span>
+                      <span className="text-xs text-slate-500">Ø¬Ø§Ø±Ù Ø§Ù„Ø­ÙØ¸...</span>
                     )}
                   </div>
                   <button
@@ -1174,7 +1187,7 @@ const UsersPanel: FC = () => {
                     className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400"
                     onClick={() => openGodView(user.id)}
                   >
-                    نظرة الإله
+                    Ù†Ø¸Ø±Ø© Ø§Ù„Ø¥Ù„Ù‡
                   </button>
                 </div>
               ))
@@ -1184,24 +1197,24 @@ const UsersPanel: FC = () => {
         {!loading && !remoteUsers && (
           <>
             {filteredSessions.length === 0 ? (
-              <p className="text-xs text-slate-500">لا توجد جلسات معرّفة. فعّل وضع التتبع بالهوية.</p>
+              <p className="text-xs text-slate-500">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¬Ù„Ø³Ø§Øª Ù…Ø¹Ø±Ù‘ÙØ©. ÙØ¹Ù‘Ù„ ÙˆØ¶Ø¹ Ø§Ù„ØªØªØ¨Ø¹ Ø¨Ø§Ù„Ù‡ÙˆÙŠØ©.</p>
             ) : (
               <div className="space-y-2">
                 {filteredSessions.map((session) => (
                   <div key={session.sessionId} className="flex flex-wrap items-center justify-between gap-3 text-xs border border-slate-800 rounded-xl px-3 py-2">
                     <div>
                       <p className="font-semibold text-slate-200">{session.sessionId}</p>
-                      <p className="text-slate-500">آخر نشاط: {session.lastActivity}</p>
+                      <p className="text-slate-500">Ø¢Ø®Ø± Ù†Ø´Ø§Ø·: {session.lastActivity}</p>
                     </div>
                     <div className="text-slate-400">
-                      مسارات: {session.pathStarts} • مهام: {session.taskCompletions}
+                      Ù…Ø³Ø§Ø±Ø§Øª: {session.pathStarts} â€¢ Ù…Ù‡Ø§Ù…: {session.taskCompletions}
                     </div>
                     <button
                       type="button"
                       className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400"
                       onClick={() => openGodView(session.sessionId)}
                     >
-                      نظرة الإله
+                      Ù†Ø¸Ø±Ø© Ø§Ù„Ø¥Ù„Ù‡
                     </button>
                   </div>
                 ))}
@@ -1264,7 +1277,7 @@ const UserStatePanel: FC = () => {
       row.ownerId ? { ownerId: row.ownerId } : { deviceToken: row.deviceToken }
     );
     if (!data) {
-      setDetailError("لا توجد تفاصيل متاحة.");
+      setDetailError("Ù„Ø§ ØªÙˆØ¬Ø¯ ØªÙØ§ØµÙŠÙ„ Ù…ØªØ§Ø­Ø©.");
       setDetail(null);
     } else {
       setDetail(data);
@@ -1316,20 +1329,20 @@ const UserStatePanel: FC = () => {
         const json = JSON.parse(raw);
         const rowsPayload = Array.isArray(json?.rows) ? json.rows : Array.isArray(json) ? json : [];
         if (rowsPayload.length === 0) {
-          setImportError("الملف لا يحتوي على بيانات صالحة.");
+          setImportError("Ø§Ù„Ù…Ù„Ù Ù„Ø§ ÙŠØ­ØªÙˆÙŠ Ø¹Ù„Ù‰ Ø¨ÙŠØ§Ù†Ø§Øª ØµØ§Ù„Ø­Ø©.");
           return;
         }
         setImporting(true);
         const ok = await importUserStates(rowsPayload);
         if (!ok) {
-          setImportError("فشل استيراد البيانات.");
+          setImportError("ÙØ´Ù„ Ø§Ø³ØªÙŠØ±Ø§Ø¯ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª.");
         } else {
           setImportError("");
           const refreshed = await fetchUserStates();
           setRows(refreshed);
         }
       } catch {
-        setImportError("فشل قراءة ملف الاستيراد.");
+        setImportError("ÙØ´Ù„ Ù‚Ø±Ø§Ø¡Ø© Ù…Ù„Ù Ø§Ù„Ø§Ø³ØªÙŠØ±Ø§Ø¯.");
       } finally {
         setImporting(false);
         if (fileRef.current) fileRef.current.value = "";
@@ -1341,7 +1354,7 @@ const UserStatePanel: FC = () => {
   return (
     <div className="space-y-6">
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
-        <h3 className="text-sm font-semibold">لقطات السحابة</h3>
+        <h3 className="text-sm font-semibold">Ù„Ù‚Ø·Ø§Øª Ø§Ù„Ø³Ø­Ø§Ø¨Ø©</h3>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -1349,7 +1362,7 @@ const UserStatePanel: FC = () => {
             disabled={exporting}
             className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400 disabled:opacity-50"
           >
-            {exporting ? "جاري التصدير..." : "تصدير JSON"}
+            {exporting ? "Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØµØ¯ÙŠØ±..." : "ØªØµØ¯ÙŠØ± JSON"}
           </button>
           <button
             type="button"
@@ -1357,7 +1370,7 @@ const UserStatePanel: FC = () => {
             disabled={fullExporting}
             className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-indigo-400 disabled:opacity-50"
           >
-            {fullExporting ? "جاري التصدير..." : "تصدير شامل"}
+            {fullExporting ? "Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØµØ¯ÙŠØ±..." : "ØªØµØ¯ÙŠØ± Ø´Ø§Ù…Ù„"}
           </button>
           <button
             type="button"
@@ -1365,7 +1378,7 @@ const UserStatePanel: FC = () => {
             disabled={importing}
             className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-amber-400 disabled:opacity-50"
           >
-            {importing ? "جاري الاستيراد..." : "استيراد ملف"}
+            {importing ? "Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø§Ø³ØªÙŠØ±Ø§Ø¯..." : "Ø§Ø³ØªÙŠØ±Ø§Ø¯ Ù…Ù„Ù"}
           </button>
           <input
             ref={fileRef}
@@ -1379,17 +1392,17 @@ const UserStatePanel: FC = () => {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="ابحث بـ device token أو user id"
+          placeholder="Ø§Ø¨Ø­Ø« Ø¨Ù€ device token Ø£Ùˆ user id"
           className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
         />
       </div>
 
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
-        {loading && <p className="text-xs text-slate-500">جاري تحميل البيانات...</p>}
+        {loading && <p className="text-xs text-slate-500">Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª...</p>}
         {!loading && rows && (
           <div className="space-y-2">
             {filtered.length === 0 ? (
-              <p className="text-xs text-slate-500">لا توجد نتائج.</p>
+              <p className="text-xs text-slate-500">Ù„Ø§ ØªÙˆØ¬Ø¯ Ù†ØªØ§Ø¦Ø¬.</p>
             ) : (
               filtered.map((row) => (
                 <div
@@ -1400,17 +1413,17 @@ const UserStatePanel: FC = () => {
                     <p className="font-mono text-slate-300 truncate max-w-[220px]" title={row.deviceToken}>
                       {row.deviceToken}
                     </p>
-                    <p className="text-slate-500">user: {row.ownerId ?? "—"}</p>
+                    <p className="text-slate-500">user: {row.ownerId ?? "â€”"}</p>
                   </div>
                   <div className="text-slate-400">
-                    آخر تحديث: {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString("ar-EG") : "—"}
+                    Ø¢Ø®Ø± ØªØ­Ø¯ÙŠØ«: {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString("ar-EG") : "â€”"}
                   </div>
                   <button
                     type="button"
                     onClick={() => loadDetail(row)}
                     className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400"
                   >
-                    عرض البيانات
+                    Ø¹Ø±Ø¶ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª
                   </button>
                 </div>
               ))
@@ -1420,13 +1433,13 @@ const UserStatePanel: FC = () => {
       </div>
 
       <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
-        <h4 className="text-sm font-semibold">تفاصيل المستخدم</h4>
-        {detailLoading && <p className="text-xs text-slate-500">جاري التحميل...</p>}
+        <h4 className="text-sm font-semibold">ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…</h4>
+        {detailLoading && <p className="text-xs text-slate-500">Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„...</p>}
         {detailError && <p className="text-xs text-rose-300">{detailError}</p>}
         {!detailLoading && detail && (
           <div className="space-y-2">
             <p className="text-xs text-slate-400">Device: {detail.deviceToken}</p>
-            <p className="text-xs text-slate-400">User: {detail.ownerId ?? "—"}</p>
+            <p className="text-xs text-slate-400">User: {detail.ownerId ?? "â€”"}</p>
             <pre className="max-h-64 overflow-y-auto rounded-xl bg-slate-950/70 p-3 text-[11px] text-slate-200">
 {JSON.stringify(detail.data ?? {}, null, 2)}
             </pre>
@@ -1456,7 +1469,7 @@ const GodViewModal: FC<{
 
   const updatedAtLabel = snapshot?.updatedAt
     ? new Date(snapshot.updatedAt).toLocaleDateString("ar-EG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
-    : "—";
+    : "â€”";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
@@ -1466,8 +1479,8 @@ const GodViewModal: FC<{
       >
         <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
           <div className="space-y-1">
-            <h3 className="text-lg font-semibold">نظرة الإله</h3>
-            <p className="text-xs text-slate-400">{sessionId ?? "—"}</p>
+            <h3 className="text-lg font-semibold">Ù†Ø¸Ø±Ø© Ø§Ù„Ø¥Ù„Ù‡</h3>
+            <p className="text-xs text-slate-400">{sessionId ?? "â€”"}</p>
           </div>
           <button type="button" onClick={onClose} className="rounded-full p-2 hover:bg-slate-800">
             <X className="w-5 h-5 text-slate-300" />
@@ -1478,7 +1491,7 @@ const GodViewModal: FC<{
           {loading && (
             <div className="flex items-center gap-2 text-sm text-slate-400">
               <Loader2 className="w-4 h-4 animate-spin" />
-              جاري تحميل الخريطة...
+              Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø©...
             </div>
           )}
 
@@ -1492,46 +1505,46 @@ const GodViewModal: FC<{
             <>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
                 <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3">
-                  <p className="text-xs text-slate-400">إجمالي العلاقات</p>
+                  <p className="text-xs text-slate-400">Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¹Ù„Ø§Ù‚Ø§Øª</p>
                   <p className="text-lg font-semibold text-teal-300">{nodes.length}</p>
                 </div>
                 <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3">
-                  <p className="text-xs text-slate-400">أحمر</p>
+                  <p className="text-xs text-slate-400">Ø£Ø­Ù…Ø±</p>
                   <p className="text-lg font-semibold text-rose-300">{ringCounts.red}</p>
                 </div>
                 <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3">
-                  <p className="text-xs text-slate-400">أصفر</p>
+                  <p className="text-xs text-slate-400">Ø£ØµÙØ±</p>
                   <p className="text-lg font-semibold text-amber-300">{ringCounts.yellow}</p>
                 </div>
                 <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3">
-                  <p className="text-xs text-slate-400">أخضر/رمادي</p>
+                  <p className="text-xs text-slate-400">Ø£Ø®Ø¶Ø±/Ø±Ù…Ø§Ø¯ÙŠ</p>
                   <p className="text-lg font-semibold text-emerald-300">{ringCounts.green + ringCounts.grey}</p>
                 </div>
               </div>
 
               <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 text-xs text-slate-400">
-                آخر تحديث: {updatedAtLabel}
+                Ø¢Ø®Ø± ØªØ­Ø¯ÙŠØ«: {updatedAtLabel}
               </div>
 
               {nodes.length === 0 ? (
-                <p className="text-sm text-slate-400">لا توجد عقد محفوظة بعد.</p>
+                <p className="text-sm text-slate-400">Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¹Ù‚Ø¯ Ù…Ø­ÙÙˆØ¸Ø© Ø¨Ø¹Ø¯.</p>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {nodes.slice(0, 12).map((node) => (
                     <div key={node.id} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
                       <p className="text-sm font-semibold text-slate-100">{node.label}</p>
                       <p className="text-xs text-slate-400 mt-1">
-                        المنطقة: {node.isDetached || node.detachmentMode ? "رمادي" : node.ring === "red" ? "أحمر" : node.ring === "yellow" ? "أصفر" : "أخضر"}
+                        Ø§Ù„Ù…Ù†Ø·Ù‚Ø©: {node.isDetached || node.detachmentMode ? "Ø±Ù…Ø§Ø¯ÙŠ" : node.ring === "red" ? "Ø£Ø­Ù…Ø±" : node.ring === "yellow" ? "Ø£ØµÙØ±" : "Ø£Ø®Ø¶Ø±"}
                       </p>
                       {node.analysis?.score != null && (
-                        <p className="text-xs text-slate-500 mt-1">تقييم: {node.analysis.score}</p>
+                        <p className="text-xs text-slate-500 mt-1">ØªÙ‚ÙŠÙŠÙ…: {node.analysis.score}</p>
                       )}
                     </div>
                   ))}
                 </div>
               )}
               {nodes.length > 12 && (
-                <p className="text-xs text-slate-500">عرض أول 12 علاقة فقط.</p>
+                <p className="text-xs text-slate-500">Ø¹Ø±Ø¶ Ø£ÙˆÙ„ 12 Ø¹Ù„Ø§Ù‚Ø© ÙÙ‚Ø·.</p>
               )}
             </>
           )}
@@ -1548,3 +1561,4 @@ const StatCard: FC<{ title: string; value: string; hint?: string }> = ({ title, 
     {hint && <p className="text-[11px] text-slate-500 mt-2">{hint}</p>}
   </div>
 );
+

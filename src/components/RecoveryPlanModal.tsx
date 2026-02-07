@@ -87,7 +87,7 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
                   <div className="text-right">
                     <h2 className="text-lg font-bold text-slate-900 dark:text-white">بروتوكول الدفاع</h2>
                     <p className="text-xs text-slate-500">
-                      اختر الشخص وشوف خطتك الأسبوعية معاه
+                      اختَر الجبهة وشوف خطة الميدان الأسبوعية.
                     </p>
                   </div>
                 </div>
@@ -104,9 +104,9 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
               <div className="p-4 space-y-4 overflow-y-auto">
                 {!hasNodes && (
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-right text-sm text-slate-700">
-                    لسه ما فيش علاقات على الخريطة.
+                    لسه مفيش جبهات على الخريطة.
                     <br />
-                    ابدأ بإضافة جبهة وكتابة موقفين عالأقل، وبعدها هتظهر مهمات الميدان هنا.
+                    ابدأ بإضافة جبهة وسجّل موقفين على الأقل، وبعدها مهمات الميدان هتظهر هنا.
                   </div>
                 )}
 
@@ -115,7 +115,7 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
                     {/* Person selector */}
                     <div className="space-y-2">
                       <label className="block text-xs font-semibold text-slate-600 text-right">
-                        اختر الشخص
+                        اختَر الجبهة
                       </label>
                       <select
                         value={effectiveSelectedId ?? ""}
@@ -162,7 +162,7 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
                         ruminationCount={selectedNode.recoveryProgress?.ruminationLogCount ?? 0}
                         onIncrementRumination={() => incrementRuminationLog(selectedNode.id)}
                         nodeId={selectedNode.id}
-                        pathId={selectedNode.recoveryProgress?.pathId}
+                        pathId={selectedNode.recoveryProgress?.pathId as import("../modules/pathEngine/pathTypes").PathId | undefined}
                         recoveryPathSnapshot={selectedNode.recoveryProgress?.recoveryPathSnapshot}
                         onUpdateRecoveryPathSnapshot={(snapshot) =>
                           updateRecoveryPathSnapshot(selectedNode.id, snapshot)

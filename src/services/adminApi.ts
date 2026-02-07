@@ -22,6 +22,21 @@ type SystemSettingKey =
 const SETTINGS_TABLE = "system_settings";
 const ADMIN_API_BASE = import.meta.env.VITE_ADMIN_API_BASE ?? "";
 const ADMIN_API_PATH = `${ADMIN_API_BASE}/api/admin`;
+const HOBBY_REMAP_BASES = new Set([
+  "daily-report",
+  "weekly-report",
+  "full-export",
+  "user-state",
+  "user-state-export",
+  "user-state-import"
+]);
+
+function remapAdminPathForHobby(path: string): string {
+  const [base, ...rest] = path.split("?");
+  if (!HOBBY_REMAP_BASES.has(base)) return path;
+  const query = rest.join("?");
+  return `overview?kind=${encodeURIComponent(base)}${query ? `&${query}` : ""}`;
+}
 
 function getAdminCode(): string | null {
   const state = useAdminState.getState();
@@ -32,8 +47,9 @@ async function callAdminApi<T>(path: string, options?: RequestInit): Promise<T |
   const code = getAdminCode();
   const authToken = getAuthToken();
   if (!code && !authToken) return null;
+  const effectivePath = remapAdminPathForHobby(path);
   try {
-    const res = await fetch(`${ADMIN_API_PATH}/${path}`, {
+    const res = await fetch(`${ADMIN_API_PATH}/${effectivePath}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",

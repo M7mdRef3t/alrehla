@@ -9,7 +9,11 @@ interface FeatureLockedModalProps {
   onClose: () => void;
 }
 
-export const FeatureLockedModal: FC<FeatureLockedModalProps> = ({ isOpen, featureKey, onClose }) => {
+export const FeatureLockedModal: FC<FeatureLockedModalProps> = ({
+  isOpen,
+  featureKey,
+  onClose
+}) => {
   const feature = FEATURE_FLAGS.find((f) => f.key === featureKey);
   if (!isOpen || !feature) return null;
 
@@ -33,9 +37,7 @@ export const FeatureLockedModal: FC<FeatureLockedModalProps> = ({ isOpen, featur
             <Lock className="w-6 h-6" />
           </div>
           <h2 className="text-xl font-bold text-slate-900">{feature.label}</h2>
-          <p className="text-sm text-slate-600">
-            الميزة دي حالياً مقفولة ضمن الإطلاق التدريجي. هنفتحها قريباً.
-          </p>
+          <p className="text-sm text-slate-600">هذه الأداة قيد التطوير لرحلتك القادمة</p>
           <button
             type="button"
             onClick={onClose}

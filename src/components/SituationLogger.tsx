@@ -70,7 +70,7 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
       </div>
 
       <p className="text-sm text-gray-600 mb-4 text-right">
-        سجّل المواقف الصعبة عشان تتعلم منها وتشوف تقدمك
+        سجّل تقارير الميدان عشان تراجعها وتعرف إيه اللي بينزف طاقتك.
       </p>
 
       {/* Add Log Form */}
@@ -87,13 +87,13 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1 text-right">
-                  الموقف <span className="text-red-500">*</span>
+                  تقرير الموقف <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={newLog.situation}
                   onChange={(e) => setNewLog({ ...newLog, situation: e.target.value })}
-                  placeholder="مثال: طلب مني فلوس"
+                  placeholder="مثال: طلب مني فلوس بشكل مفاجئ"
                   className="w-full border border-purple-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   dir="rtl"
                 />
@@ -101,13 +101,13 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1 text-right">
-                  إحساسي <span className="text-red-500">*</span>
+                  قراءة الرادار <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={newLog.feeling}
                   onChange={(e) => setNewLog({ ...newLog, feeling: e.target.value })}
-                  placeholder="مثال: ضغط وخوف"
+                  placeholder="مثال: ضغط + ذنب"
                   className="w-full border border-purple-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   dir="rtl"
                 />
@@ -115,13 +115,13 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1 text-right">
-                  رددت إزاي
+                  المناورة اللي اتنفذت
                 </label>
                 <input
                   type="text"
                   value={newLog.response}
                   onChange={(e) => setNewLog({ ...newLog, response: e.target.value })}
-                  placeholder="مثال: قولت 'هشوف'"
+                  placeholder='مثال: قولت "مش مناسب دلوقتي"'
                   className="w-full border border-purple-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   dir="rtl"
                 />
@@ -129,13 +129,13 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1 text-right">
-                  النتيجة
+                  نتيجة المناورة
                 </label>
                 <input
                   type="text"
                   value={newLog.outcome}
                   onChange={(e) => setNewLog({ ...newLog, outcome: e.target.value })}
-                  placeholder="مثال: اتضايق لكن متقبل"
+                  placeholder="مثال: حصل شد بسيط وبعدها هدوء"
                   className="w-full border border-purple-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   dir="rtl"
                 />
@@ -143,13 +143,13 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1 text-right">
-                  الدرس المستفاد
+                  قاعدة جديدة
                 </label>
                 <input
                   type="text"
                   value={newLog.lesson}
                   onChange={(e) => setNewLog({ ...newLog, lesson: e.target.value })}
-                  placeholder="مثال: الرفض مش نهاية العالم"
+                  placeholder="مثال: الوضوح بيقلل النزيف"
                   className="w-full border border-purple-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   dir="rtl"
                 />
@@ -181,8 +181,8 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
         {logs.length === 0 ? (
           <div className="text-center py-8 text-gray-500 text-sm">
             <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p>لسه مفيش مواقف مسجلة</p>
-            <p className="text-xs mt-1">اضغط على + لإضافة أول موقف</p>
+            <p>لسه مفيش تقارير ميدان</p>
+            <p className="text-xs mt-1">اضغط + وسجّل أول تقرير</p>
           </div>
         ) : (
           logs.map((log) => (
@@ -199,23 +199,23 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
                 type="button"
                 onClick={() => onDeleteLog(log.id)}
                 className="absolute top-2 left-2 w-9 h-9 sm:w-6 sm:h-6 rounded-full bg-rose-500 text-white flex items-center justify-center sm:opacity-0 group-hover:opacity-100 hover:bg-rose-600 active:scale-95 transition-all duration-150 z-10"
-                title="حذف الموقف"
+                title="حذف التقرير"
               >
                 <X className="w-4 h-4 sm:w-3 sm:h-3" strokeWidth={2.5} />
               </button>
 
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="font-semibold text-purple-700">الموقف:</span>{" "}
+                  <span className="font-semibold text-purple-700">التقرير:</span>{" "}
                   <span className="text-slate-900">{log.situation}</span>
                 </div>
                 <div>
-                  <span className="font-semibold text-purple-700">إحساسي:</span>{" "}
+                  <span className="font-semibold text-purple-700">الرادار:</span>{" "}
                   <span className="text-slate-700">{log.feeling}</span>
                 </div>
                 {log.response && (
                   <div>
-                    <span className="font-semibold text-purple-700">رددت:</span>{" "}
+                    <span className="font-semibold text-purple-700">المناورة:</span>{" "}
                     <span className="text-slate-700">{log.response}</span>
                   </div>
                 )}
@@ -227,7 +227,7 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
                 )}
                 {log.lesson && (
                   <div className="pt-2 border-t border-purple-100">
-                    <span className="font-semibold text-teal-600">✓ الدرس:</span>{" "}
+                    <span className="font-semibold text-teal-600">✓ القاعدة:</span>{" "}
                     <span className="text-slate-700 italic">{log.lesson}</span>
                   </div>
                 )}

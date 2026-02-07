@@ -1,10 +1,10 @@
 import "@testing-library/jest-dom";
 import { webcrypto } from "node:crypto";
+import { vi } from "vitest";
 
 // Provide Web Crypto for tests
 if (!globalThis.crypto) {
-  // @ts-expect-error - webcrypto polyfill
-  globalThis.crypto = webcrypto;
+  globalThis.crypto = webcrypto as unknown as Crypto;
 }
 Object.defineProperty(window, "crypto", { value: globalThis.crypto });
 
@@ -43,7 +43,7 @@ Object.defineProperty(window, "localStorage", { value: localStorageMock });
 // Mock matchMedia
 Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -56,14 +56,14 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
+(globalThis as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 }));
 
 // Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+(globalThis as unknown as { IntersectionObserver: typeof IntersectionObserver }).IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),

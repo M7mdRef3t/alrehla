@@ -26,7 +26,7 @@ export function getAdminSecret(): string | null {
 }
 
 function getAllowedRoles(): string[] {
-  const raw = process.env.ADMIN_ALLOWED_ROLES || "admin,owner,superadmin";
+  const raw = process.env.ADMIN_ALLOWED_ROLES || "admin,owner,superadmin,developer";
   return raw.split(",").map((r) => r.trim()).filter(Boolean);
 }
 

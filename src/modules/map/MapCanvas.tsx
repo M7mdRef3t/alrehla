@@ -75,6 +75,7 @@ const getRingPosition = (ring: Ring, nodeIndex: number, totalInRing: number): { 
  * لازم الشعاع يبقى ≤ 46 تقريباً، غير كده بتتقص من فوق/تحت.
  */
 const GREY_ZONE_RADIUS = 46;
+const GREY_ZONE_STROKE_RADIUS = 48;
 const getGreyZonePosition = (nodeIndex: number, totalInGrey: number): { x: number; y: number } => {
   const angleStep = (2 * Math.PI) / Math.max(totalInGrey, 1);
   const angle = nodeIndex * angleStep - Math.PI / 2;
@@ -84,10 +85,17 @@ const getGreyZonePosition = (nodeIndex: number, totalInGrey: number): { x: numbe
 };
 
 /** لون حلقة التهديد حسب الدائرة: أحمر عالي، أصفر متوسط، أخضر منخفض، رمادي للمنفصل */
+const MAP_RING_COLORS = {
+  red: "#BE123C",
+  yellow: "#F59E0B",
+  green: "#0F766E",
+  grey: "#94A3B8"
+} as const;
+
 const THREAT_RING_CLASS: Record<Ring, string> = {
-  red: "border-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]",
-  yellow: "border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]",
-  green: "border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.35)]"
+  red: "border-rose-600 shadow-[0_0_10px_rgba(190,24,93,0.35)]",
+  yellow: "border-amber-500 shadow-[0_0_9px_rgba(245,158,11,0.28)]",
+  green: "border-teal-600 shadow-[0_0_8px_rgba(15,118,110,0.28)]"
 };
 
 const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, justDraggedId }) => {
@@ -274,7 +282,7 @@ const RING_LABELS: Record<Ring, string> = {
 const DroppableRing: FC<{ id: Ring | "grey"; sizePct: number; zIndex: number }> = memo(({ id, sizePct, zIndex }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
   const bg =
-    id === "grey" ? "#94a3b8" : id === "green" ? "#14B8A6" : id === "yellow" ? "#FBBF24" : "#FB7185";
+    id === "grey" ? MAP_RING_COLORS.grey : id === "green" ? MAP_RING_COLORS.green : id === "yellow" ? MAP_RING_COLORS.yellow : MAP_RING_COLORS.red;
   return (
     <div
       ref={setNodeRef}
@@ -283,7 +291,7 @@ const DroppableRing: FC<{ id: Ring | "grey"; sizePct: number; zIndex: number }> 
         width: `${sizePct}%`,
         height: `${sizePct}%`,
         zIndex,
-        opacity: isOver ? 0.25 : 0,
+        opacity: isOver ? 0.18 : 0,
         backgroundColor: bg
       }}
       aria-hidden
@@ -416,9 +424,9 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
           className="w-full h-full"
           style={{ filter: "drop-shadow(0 2px 8px rgba(0, 0, 0, 0.04))" }}
         >
-          <RingView ring="red" label="دائرة الخطر والاستنزاف" radius={42} strokeWidth={16} color="#FB7185" />
-          <RingView ring="yellow" label="دائرة القرب المشروط" radius={30} strokeWidth={16} color="#FBBF24" />
-          <RingView ring="green" label="دائرة القرب الصحي" radius={18} strokeWidth={16} color="#14B8A6" />
+          <RingView ring="red" label="دائرة الخطر والاستنزاف" radius={40} strokeWidth={12} color={MAP_RING_COLORS.red} />
+          <RingView ring="yellow" label="دائرة القرب المشروط" radius={29} strokeWidth={12} color={MAP_RING_COLORS.yellow} />
+          <RingView ring="green" label="دائرة القرب الصحي" radius={18} strokeWidth={12} color={MAP_RING_COLORS.green} />
 
           {/* Center "Me" — لون حسب البطارية */}
           <motion.g>
@@ -455,11 +463,12 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
             <circle
               cx="50"
               cy="50"
-              r={GREY_ZONE_RADIUS}
+              r={GREY_ZONE_STROKE_RADIUS}
               fill="none"
-              stroke="#64748b"
-              strokeWidth={8}
-              opacity={0.75}
+              stroke={MAP_RING_COLORS.grey}
+              strokeWidth={3}
+              strokeDasharray="1.2 1.2"
+              opacity={0.9}
               className="pointer-events-none"
             />
           </g>
@@ -498,9 +507,9 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
 
         {/* مناطق إفلات الدوائر — الرمادي خلف الأحمر عشان الإسقاط على الحافة يعدّ رمادي */}
         <DroppableRing id="grey" sizePct={92} zIndex={9} />
-        <DroppableRing id="red" sizePct={84} zIndex={10} />
-        <DroppableRing id="yellow" sizePct={64} zIndex={11} />
-        <DroppableRing id="green" sizePct={44} zIndex={12} />
+        <DroppableRing id="red" sizePct={80} zIndex={10} />
+        <DroppableRing id="yellow" sizePct={58} zIndex={11} />
+        <DroppableRing id="green" sizePct={36} zIndex={12} />
 
         {/* منطقة نقر مركز "أنا" — تفتح بطاقة أنا */}
         {onMeClick && (

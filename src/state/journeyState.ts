@@ -102,7 +102,7 @@ export const useJourneyState = create<JourneyState>((set, get) => ({
       const completed = s.completedStepIds.includes(stepId)
         ? s.completedStepIds
         : [...s.completedStepIds, stepId];
-      next.completedStepIds = [...new Set(completed)];
+      next.completedStepIds = [...new Set(completed)] as JourneyStepId[];
       saveJourney(next);
       return next;
     });
@@ -128,7 +128,7 @@ export const useJourneyState = create<JourneyState>((set, get) => ({
         baselineAnswers: answers,
         baselineScore: score,
         baselineCompletedAt: Date.now(),
-        completedStepIds: [...new Set([...s.completedStepIds, "baseline"])],
+        completedStepIds: [...new Set([...s.completedStepIds, "baseline"])] as JourneyStepId[],
         currentStepId: "goal"
       };
       saveJourney(next);
@@ -144,7 +144,7 @@ export const useJourneyState = create<JourneyState>((set, get) => ({
         goalId,
         category,
         lastGoalById,
-        completedStepIds: [...new Set([...s.completedStepIds, "goal"])],
+        completedStepIds: [...new Set([...s.completedStepIds, "goal"])] as JourneyStepId[],
         currentStepId: "map"
       };
       saveJourney(next);
@@ -157,7 +157,7 @@ export const useJourneyState = create<JourneyState>((set, get) => ({
         ...s,
         postStepAnswers: answers,
         postStepScore: score,
-        completedStepIds: [...new Set([...s.completedStepIds, "map", "measurement"])],
+        completedStepIds: [...new Set([...s.completedStepIds, "map", "measurement"])] as JourneyStepId[],
         currentStepId: "celebration"
       };
       saveJourney(next);

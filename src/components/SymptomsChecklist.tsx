@@ -45,14 +45,14 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
   type TestAnswer = "green" | "yellow" | "red";
   const [testAnswers, setTestAnswers] = useState<[TestAnswer | null, TestAnswer | null, TestAnswer | null]>([null, null, null]);
   const THIRTY_SECOND_QUESTIONS = [
-    "بعد التعامل معاه… طاقتي عاملة إيه؟",
-    "هل حسّيت إني لازم أكون حاجة غير نفسي؟",
-    "هل في شدّ أو ذنب؟"
+    "بعد التعامل معاه.. طاقتي عاملة إزاي؟",
+    "حسّيت إني بسيب موقعي الحقيقي؟",
+    "في شدّ داخلي أو ضجيج ذنب؟"
   ] as const;
   const testOptions: { value: TestAnswer; label: string; color: string }[] = [
-    { value: "green", label: "راحة / طبيعية", color: "bg-teal-100 border-teal-400 text-teal-800" },
-    { value: "yellow", label: "شدّ محتمل", color: "bg-amber-100 border-amber-400 text-amber-800" },
-    { value: "red", label: "إنهاك / ذنب / اختناق", color: "bg-rose-100 border-rose-400 text-rose-800" }
+    { value: "green", label: "هدوء / استقرار", color: "bg-teal-100 border-teal-400 text-teal-800" },
+    { value: "yellow", label: "حذر / شدّ", color: "bg-amber-100 border-amber-400 text-amber-800" },
+    { value: "red", label: "نزيف / ضجيج / اختناق", color: "bg-rose-100 border-rose-400 text-rose-800" }
   ];
   const setTestAnswer = (qIndex: 0 | 1 | 2, value: TestAnswer) => {
     setTestAnswers((prev) => {
@@ -65,7 +65,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
   const testResult: TestAnswer | null = testComplete
     ? (testAnswers.includes("red") ? "red" : testAnswers.includes("yellow") ? "yellow" : "green")
     : null;
-  const testResultLabel = testResult === "green" ? "🟢 راحة / طبيعية" : testResult === "yellow" ? "🟡 شدّ محتمل" : testResult === "red" ? "🔴 إنهاك / ذنب / اختناق" : null;
+  const testResultLabel = testResult === "green" ? "🟢 هدوء / استقرار" : testResult === "yellow" ? "🟡 حذر / شدّ" : testResult === "red" ? "🔴 نزيف / ضجيج / اختناق" : null;
   const testResultColor = testResult === "green" ? "bg-teal-50 border-teal-300 text-teal-800" : testResult === "yellow" ? "bg-amber-50 border-amber-300 text-amber-800" : testResult === "red" ? "bg-rose-50 border-rose-300 text-rose-800" : "";
 
   // مزامنة الاختيارات مع القيم المحفوظة (عند إعادة فتح النافذة أو تغيير الشخص)
@@ -156,7 +156,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
   const weightVerdictYellow = !weightVerdictRed && totalWeight >= WEIGHT_THRESHOLD_YELLOW;
 
   const getRingLabel = (r: Ring) =>
-    r === "green" ? "قرب صحي" : r === "yellow" ? "محتاجة انتباه" : "استنزاف";
+    r === "green" ? "تموضع آمن" : r === "yellow" ? "منطقة حذر" : "استنزاف";
 
   const getImpactCopy = () => {
     if (impactLevel === "none") return null;
@@ -164,19 +164,19 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
     const levelColor = impactLevel === "light" ? "text-teal-700 bg-teal-50 border-teal-200" : impactLevel === "medium" ? "text-amber-800 bg-amber-50 border-amber-200" : "text-rose-800 bg-rose-50 border-rose-200";
     const summaries: Record<Ring, Record<"light" | "medium" | "high", string>> = {
       green: {
-        light: "العلاقة صحية والتأثير محدود — استمر في الحفاظ على الحدود.",
-        medium: "العلاقة في المكان الصح، بس في أعراض — راقبها وضبط حدود لو حاجة تغيّرت.",
-        high: "حتى مع العلاقة الصحية، الأعراض كتير — ممكن تحتاج تراجع المسافة أو تراجع مع متخصص."
+        light: "الجبهة مستقرة والتأثير محدود. كمل على نفس القواعد.",
+        medium: "الجبهة في تموضع آمن، بس في إشارات محتاجة مراقبة وضبط درع.",
+        high: "حتى مع تموضع آمن، الإشارات كتير. راجع المسافة لو لسه النزيف مستمر."
       },
       yellow: {
-        light: "العلاقة محتاجة انتباه والتأثير لسه خفيف — وضع الحدود هيمنع الانزلاق.",
-        medium: "العلاقة محتاجة انتباه والأعراض أوضح — خطة تعافي وحدود واضحة هتفيدك.",
-        high: "العلاقة في منطقة خطر والأعراض شديدة — مهم جداً تراجع حدودك وتاخد مساحة."
+        light: "الجبهة في منطقة حذر والتأثير خفيف. تفعيل الدرع بدري يمنع الانزلاق.",
+        medium: "إشارات الحذر واضحة. محتاج بروتوكول استعادة وحدود أوضح.",
+        high: "الجبهة قربت من الخطر. لازم مسافة أوضح وقواعد أقوى فورًا."
       },
       red: {
-        light: "العلاقة استنزافية حتى مع أعراض قليلة — الحدود ضرورية لحماية نفسك.",
-        medium: "العلاقة بتاخد منك والأعراض واضحة — خطة تعافي وحدود صارمة ضرورية.",
-        high: "العلاقة استنزافية والأعراض شديدة — ضروري تراجع حدودك وتاخد مساحة ليك، ولو محتاج اسأل متخصص."
+        light: "الجبهة مستنزفة حتى لو الإشارات قليلة. الدرع الصارم ضروري.",
+        medium: "الاستنزاف واضح. محتاج بروتوكول استعادة مع حدود حاسمة.",
+        high: "الاستنزاف شديد. لازم مساحة آمنة فورًا وتخفيف الاحتكاك لأقل درجة."
       }
     };
     const summary = summaries[ring][impactLevel];
@@ -188,7 +188,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
   return (
     <div className="space-y-3">
       <p className="text-sm font-semibold text-purple-900 text-right">
-        📋 اختار كل الأعراض اللي تنطبق عليك مع {personLabel}
+        📋 اختار كل الإشارات اللي ظهرت مع جبهة {personLabel}
       </p>
 
       {/* تابات الفئات */}
@@ -296,14 +296,14 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
         >
           <div className="flex flex-wrap items-center justify-end gap-2 mb-2">
             <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/80">درجة التأثير: {impactCopy.levelText}</span>
-            {impactCopy.relationshipLabel && <span className="text-xs font-semibold">حالة العلاقة: {impactCopy.relationshipLabel}</span>}
+            {impactCopy.relationshipLabel && <span className="text-xs font-semibold">حالة الجبهة: {impactCopy.relationshipLabel}</span>}
             {dominantLabels && <span className="text-xs font-semibold">الغالب: {dominantLabels}</span>}
             <span className="text-xs text-slate-600">نقاط: {totalWeight}</span>
           </div>
           <p className="text-sm leading-relaxed">{impactCopy.summary}</p>
           {(weightVerdictRed || weightVerdictYellow) && (
             <p className={`text-xs font-bold mt-2 pt-2 border-t border-current/20 ${weightVerdictRed ? "text-rose-700" : "text-amber-700"}`} dir="rtl">
-              {weightVerdictRed ? "🛑 جسمك حسم القرار — العلاقة دي في المنطقة الحمراء." : "⚠ مجموع الأعراض يشير لمنطقة حذر — الحدود ضرورية."}
+              {weightVerdictRed ? "🛑 الرادار حسمها: الجبهة دي في أحمر واضح." : "⚠ إجمالي الإشارات في منطقة حذر: ثبّت الدرع فورًا."}
             </p>
           )}
         </motion.div>
@@ -316,7 +316,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
           onClick={() => setShowHealthyRef((v) => !v)}
           className="w-full flex items-center justify-between gap-2 px-3 py-2 text-xs font-semibold text-teal-800 text-right"
         >
-          <span>🟢 مرجع: أعراض العلاقة الصحية</span>
+          <span>🟢 مرجع: مؤشرات الجبهة الآمنة</span>
           {showHealthyRef ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronLeft className="w-4 h-4 shrink-0 rotate-180" />}
         </button>
         {showHealthyRef && (
@@ -335,12 +335,12 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
           onClick={() => setShowThirtyTest((v) => !v)}
           className="w-full flex items-center justify-between gap-2 px-3 py-2 text-xs font-semibold text-slate-700 text-right"
         >
-          <span>⏱ اختبار 30 ثانية (اختياري)</span>
+          <span>⏱ اختبار 30 ثانية للرادار (اختياري)</span>
           {showThirtyTest ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronLeft className="w-4 h-4 shrink-0 rotate-180" />}
         </button>
         {showThirtyTest && (
           <div className="p-3 border-t border-slate-100 space-y-3 text-right">
-            <p className="text-xs text-slate-600">اسأل نفسك 3 أسئلة واختار:</p>
+            <p className="text-xs text-slate-600">جاوب 3 أسئلة بسرعة وخد القراءة:</p>
             {THIRTY_SECOND_QUESTIONS.map((q, i) => (
               <div key={i}>
                 <p className="text-xs font-semibold text-slate-700 mb-1">{i + 1}. {q}</p>
@@ -372,7 +372,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
 
       {selected.size > 0 && !readOnly && (
         <p className="text-xs text-center text-teal-700 font-medium">
-          ✓ اخترت {selected.size} عرض
+          ✓ اخترت {selected.size} مؤشر
         </p>
       )}
     </div>

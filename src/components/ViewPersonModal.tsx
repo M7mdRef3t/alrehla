@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronDown, ArrowRight } from "lucide-react";
 import { useMapState } from "../state/mapState";
@@ -34,6 +34,14 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   const hasAIInsights = !!node?.analysis?.insights;
   const viewData = node && node.analysis ? getPersonViewData(node, category, goalId) : null;
   const diagnosis = viewData?.diagnosis ?? null;
+  const relationshipToneText = useMemo(() => {
+    const label = diagnosis?.stateLabel ?? "";
+    if (label.includes("رمادية")) return "في هدوء خارجي، بس لسه محتاجين نقفل الاختراق الداخلي.";
+    if (label.includes("حمراء") || label.includes("استنزاف")) return "الجبهة دي ضاغطة، وأولوية المرحلة حماية الموارد.";
+    if (label.includes("صفراء")) return "في إشارات استنزاف، ومع ضبط الدرع الوضع يتحسن بسرعة.";
+    if (label.includes("خضراء")) return "الجبهة متوازنة، والهدف الحفاظ على الاستقرار.";
+    return "ده ملخص وضع الجبهة الحالي عشان القرار يبقى أوضح.";
+  }, [diagnosis?.stateLabel]);
 
   // توليد تشخيص / فهم / هدف مخصص من الذكاء الاصطناعي، مربوط بكل ما نعرفه عن الشخص
   useEffect(() => {
@@ -96,12 +104,12 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
           </button>
           <div className="text-center py-6">
             <h3 className="text-xl font-bold text-slate-900 mb-2">
-              {node?.label || "شخص غير موجود"}
+              {node?.label ? `علاقتك مع ${node.label}` : "شخص غير موجود"}
             </h3>
             <p className="text-gray-500 mb-6">
               تمت إضافة هذا الشخص قبل تفعيل ميزة حفظ التحليل.
               <br />
-              يمكنك حذفه وإضافته مرة أخرى للحصول على النصائح.
+              يمكنك حذفه وإضافته مرة أخرى للحصول على قراءة أدق.
             </p>
             <button
               type="button"
@@ -147,6 +155,18 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               transition={{ duration: 0.3 }}
               className="text-center"
             >
+              <div className="mb-5 rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-center">
+                <p className="text-xs font-semibold text-teal-800">قراءة الجبهة الحالية</p>
+                <h3 className="mt-1 text-xl font-extrabold leading-tight text-slate-900">
+                  علاقتك مع{" "}
+                  <span className="inline-block max-w-[72vw] truncate align-bottom text-teal-700 sm:max-w-full" title={node.label}>
+                    {node.label}
+                  </span>
+                </h3>
+                <p className="mt-1 text-xs text-slate-600">
+                  {relationshipToneText}
+                </p>
+              </div>
               {/* النتيجة الرئيسية — محتوى التشخيص بدون كلمة التشخيص */}
               <div className="p-6 bg-linear-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-2xl mb-6">
                 <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
@@ -204,7 +224,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
                   }}
                   className="w-full mb-6 rounded-full bg-slate-900 text-white px-6 py-3 text-sm font-semibold shadow hover:bg-slate-800 active:scale-[0.99] transition-all duration-200"
                 >
-                  افتح شاشة المهمة
+                  افتح شاشة المناورة
                 </button>
               )}
 

@@ -8,19 +8,24 @@ import { useMapState } from "../state/mapState";
 import { useAchievementState } from "../state/achievementState";
 import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
 import { getGoalMeta, getGoalOrderIndex } from "../data/goalMeta";
+import type { FeatureFlagKey } from "../config/features";
 
 interface JourneyToolsScreenProps {
   onBack: () => void;
   onOpenDawayir: () => void;
   onOpenDawayirSetup?: () => void;
   onOpenGoal?: (goalId: string, category: string) => void;
+  onFeatureLocked?: (feature: FeatureFlagKey) => void;
+  availableFeatures?: Partial<Record<FeatureFlagKey, boolean>>;
 }
 
 export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
   onBack,
   onOpenDawayir,
   onOpenDawayirSetup,
-  onOpenGoal
+  onOpenGoal,
+  onFeatureLocked,
+  availableFeatures
 }) => {
   const containerVariants = {
     hidden: { opacity: 0, y: 12 },
@@ -52,7 +57,8 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
     nodesCount,
     baselineCompletedAt: baselineCompletedAt ?? null,
     unlockedIds,
-    hasMissionCompleted
+    hasMissionCompleted,
+    availableFeatures
   });
   const savedGoals = lastGoalById
     ? Object.entries(lastGoalById)
@@ -106,14 +112,14 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
       >
         <div className="flex items-center justify-center gap-2 text-teal-600">
           <Compass className="w-6 h-6" />
-          <span className="text-sm font-semibold">الرحلة</span>
+          <span className="text-sm font-semibold">غرفة العمليات</span>
         </div>
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
-          أدوات الرحلة
+          لوحة العمليات
         </h1>
         <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-xl mx-auto">
-          كل أداة هي محطة. البداية من <strong className="text-slate-800">دواير</strong>،
-          والباقي يفتح مع تقدّمك.
+          كل أداة هي مناورة. البداية من <strong className="text-slate-800">دواير</strong>،
+          والباقي يتفعل مع تقدّمك في الجبهات.
         </p>
       </motion.header>
 
@@ -123,10 +129,15 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
         initial="hidden"
         animate="show"
       >
-        {tools.map((tool) => (
-          <motion.div
+              {tools.map((tool) => (
+          <motion.button
             key={tool.id}
-            className={`rounded-2xl border px-5 py-4 shadow-sm ${
+            type="button"
+            onClick={() => {
+              if (!tool.locked || !tool.featureKey || !onFeatureLocked) return;
+              onFeatureLocked(tool.featureKey);
+            }}
+            className={`w-full rounded-2xl border px-5 py-4 shadow-sm text-right ${
               tool.locked
                 ? "border-slate-200 bg-white"
                 : "border-teal-200 bg-teal-50/70"
@@ -161,7 +172,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
                 </span>
                 {!tool.locked && tool.id !== "dawayir" && (
                   <span className="text-[10px] font-semibold rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700 whitespace-nowrap">
-                    تم فتحها
+                    مفعّلة
                   </span>
                 )}
               </div>
@@ -169,15 +180,15 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
             <p className="text-xs text-slate-600 mt-3 leading-relaxed">
               {tool.description}
             </p>
-          </motion.div>
+          </motion.button>
         ))}
       </motion.section>
 
       {savedGoals.length > 0 && (
         <section className="mt-6 text-right">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-bold text-slate-700">تبديل الخريطة</h2>
-            <span className="text-[11px] text-slate-500">اختصار سريع</span>
+            <h2 className="text-sm font-bold text-slate-700">تبديل المسار</h2>
+            <span className="text-[11px] text-slate-500">مناورة سريعة</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {savedGoals.map((goal) => (
@@ -208,7 +219,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
           onClick={handleOpenDawayir}
           className="inline-flex items-center gap-2 rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold shadow-md hover:bg-teal-700 transition-all"
         >
-          افتح دواير
+          افتح غرفة دواير
           <ArrowRight className="w-4 h-4" />
         </button>
         {lastGoalLabel && (
@@ -227,7 +238,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
             onClick={handleSetup}
             className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-6 py-3 text-sm font-semibold text-teal-700 hover:border-teal-300 hover:bg-teal-100 transition-all"
           >
-            ابدأ إعداد دواير
+            جهّز غرفة دواير
           </button>
         )}
         <button

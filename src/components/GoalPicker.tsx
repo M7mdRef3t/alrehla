@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import { motion } from "framer-motion";
+import type { Variants } from "framer-motion";
 import {
   Briefcase,
   Home,
@@ -23,12 +24,12 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 const ENABLED_GOAL_ID = "family";
 
-const tileVariants = {
+const tileVariants: Variants = {
   hidden: { opacity: 0, y: 12 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.1, duration: 0.4, ease: "easeOut" }
+    transition: { delay: i * 0.1, duration: 0.4, ease: [0.16, 1, 0.3, 1] }
   })
 };
 

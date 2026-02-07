@@ -57,6 +57,15 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     personGender
   }), [score, feelingAnswers, realityAnswers, isEmergency, safetyAnswer, personGender]);
 
+  const relationshipToneText = useMemo(() => {
+    const label = result.state_label ?? "";
+    if (label.includes("رمادية")) return "في هدوء خارجي، بس لسه محتاجين نقفل الاختراق الداخلي.";
+    if (label.includes("حمراء") || label.includes("استنزاف")) return "الجبهة دي ضاغطة، وأولوية المرحلة حماية مواردك.";
+    if (label.includes("صفراء")) return "في إشارات استنزاف، ومع ضبط الدرع الوضع يتحسن بسرعة.";
+    if (label.includes("خضراء")) return "الجبهة متوازنة، والهدف دلوقتي الحفاظ على استقرارها.";
+    return "دي خلاصة واضحة لوضع الجبهة بناءً على إجاباتك.";
+  }, [result.state_label]);
+
   const missionProgress = useMapState((s) =>
     addedNodeId ? s.nodes.find((node) => node.id === addedNodeId)?.missionProgress : undefined
   );
@@ -68,6 +77,27 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   const totalSteps = result.steps.length;
   const isMissionStarted = Boolean(missionProgress?.startedAt);
   const isMissionCompleted = Boolean(missionProgress?.isCompleted);
+  const missionButtonLabel = isMissionCompleted
+    ? "المناورة اتقفلت"
+    : isMissionStarted
+      ? "كمّل المناورة"
+      : "ابدأ المناورة";
+  const missionButtonTone = isMissionCompleted
+    ? "bg-emerald-600 hover:bg-emerald-700"
+    : "bg-slate-900 hover:bg-slate-800";
+  const shortPromiseBody = useMemo(() => {
+    const trimmed = result.promise_body.trim();
+    if (trimmed.length <= 120) return trimmed;
+    return `${trimmed.slice(0, 120).trim()}...`;
+  }, [result.promise_body]);
+  const normalizedObstacles = useMemo(
+    () =>
+      result.obstacles.map((item) => ({
+        ...item,
+        solution: item.solution.replace("Euphoric Recall", "استدعاء الذكريات الوردية")
+      })),
+    [result.obstacles]
+  );
 
   return (
     <motion.div
@@ -78,11 +108,20 @@ export const ResultScreen: FC<ResultScreenProps> = ({
       className="text-center"
     >
       <>
-        <div className="mb-3 text-sm font-semibold text-slate-700 text-center">
-          {displayName}
+        <div className="mb-5 rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-center">
+          <p className="text-xs font-semibold text-teal-800">قراءة الجبهة الحالية</p>
+          <h3 className="mt-1 text-xl font-extrabold leading-tight text-slate-900">
+            علاقتك مع{" "}
+            <span className="inline-block max-w-[72vw] truncate align-bottom text-teal-700 sm:max-w-full" title={displayName}>
+              {displayName}
+            </span>
+          </h3>
+          <p className="mt-1 text-xs text-slate-600">
+            {relationshipToneText}
+          </p>
         </div>
 
-        <div className="p-6 bg-linear-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-2xl mb-6">
+        <div className="p-6 bg-gradient-to-b from-slate-50 to-white border border-slate-200 rounded-2xl mb-6 shadow-sm">
           <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
             <span>{result.title}</span>
             <span
@@ -103,53 +142,35 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               الوعد: <span className="font-semibold text-slate-800">{result.promise_label}</span>
             </p>
             <p className="w-full text-xs text-slate-500 leading-relaxed">
-              {result.promise_body}
+              {shortPromiseBody}
             </p>
             <div className="w-full mt-2 rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-xs text-slate-600">
-              <span className="font-semibold text-slate-700">المهمة:</span>{" "}
+            <span className="font-semibold text-slate-700">المناورة:</span>{" "}
               {result.mission_label} —{" "}
               <span className="font-semibold text-slate-700">{result.mission_goal}</span>
             </div>
           </div>
         </div>
 
-        <div className="p-5 bg-blue-50 border-2 border-blue-200 rounded-xl text-right mb-6">
+        <div className="p-5 bg-sky-50/60 border border-sky-200 rounded-xl text-right mb-6 shadow-sm">
           <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
             <span>🔍</span> {result.understanding_title}
-            <span
-              className="inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
-              title="نتيجة محسوبة من القالب"
-            >
-              قالب
-            </span>
           </h3>
           <p className="text-sm text-gray-700 leading-relaxed">
             {result.understanding_body}
           </p>
         </div>
 
-        <div className="p-5 bg-violet-50 border-2 border-violet-200 rounded-xl text-right mb-6">
+        <div className="p-5 bg-violet-50/60 border border-violet-200 rounded-xl text-right mb-6 shadow-sm">
           <h3 className="text-sm font-bold text-violet-900 mb-2 flex items-center gap-2">
             {result.explanation_title}
-            <span
-              className="inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
-              title="نتيجة محسوبة من القالب"
-            >
-              قالب
-            </span>
           </h3>
           <p className="text-sm text-gray-700 leading-relaxed">{result.explanation_body}</p>
         </div>
 
-        <div className="p-5 bg-amber-50 border-2 border-amber-200 rounded-xl text-right mb-6">
+        <div className="p-5 bg-amber-50/70 border border-amber-200 rounded-xl text-right mb-6 shadow-sm">
           <h3 className="text-sm font-bold text-amber-900 mb-3 flex items-center gap-2">
             <span>🎒</span> العتاد المطلوب
-            <span
-              className="inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
-              title="نتيجة محسوبة من القالب"
-            >
-              قالب
-            </span>
           </h3>
           <ul className="space-y-2 text-sm text-slate-700">
             {result.requirements.map((item, index) => (
@@ -161,9 +182,9 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           </ul>
         </div>
 
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-700">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-700">
           <div className="flex flex-col gap-1">
-            <span className="font-semibold text-slate-800">لو جاهز، ابدأ المهمة</span>
+            <span className="font-semibold text-slate-800">لو جاهز، ابدأ المناورة</span>
             <span className="text-xs text-slate-500">تقدر تتابع التنفيذ في شاشة مستقلة.</span>
           </div>
           <div className="flex flex-col items-end gap-2">
@@ -175,15 +196,11 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                 if (!isMissionStarted) startMission(addedNodeId);
                 onOpenMission?.(addedNodeId);
               }}
-              className="rounded-full bg-slate-900 text-white px-4 py-2 text-xs font-semibold shadow hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`rounded-full text-white px-4 py-2 text-xs font-semibold shadow disabled:opacity-50 disabled:cursor-not-allowed ${missionButtonTone}`}
             >
-              {isMissionStarted ? "متابعة المهمة" : "ابدأ المهمة"}
+              {missionButtonLabel}
             </button>
-            {isMissionCompleted ? (
-              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200">
-                مهمة مكتملة
-              </span>
-            ) : isMissionStarted ? (
+            {!isMissionCompleted && isMissionStarted ? (
               <span className="text-xs text-slate-500">
                 التقدم: {completedSteps}/{totalSteps}
               </span>
@@ -191,15 +208,9 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           </div>
         </div>
 
-        <div className="p-5 bg-emerald-50 border-2 border-emerald-200 rounded-xl text-right mb-6">
+        <div className="p-5 bg-emerald-50/60 border border-emerald-200 rounded-xl text-right mb-6 shadow-sm">
           <h3 className="text-sm font-bold text-emerald-900 mb-3 flex items-center gap-2">
-            <span>🗺️</span> خطة التنفيذ
-            <span
-              className="inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
-              title="نتيجة محسوبة من القالب"
-            >
-              قالب
-            </span>
+            <span>🗺️</span> خطة المناورة
           </h3>
           <ol className="space-y-2 text-sm text-slate-700 list-decimal list-inside">
             {result.steps.map((step, index) => (
@@ -210,18 +221,12 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           </ol>
         </div>
 
-        <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-xl text-right mb-6">
+        <div className="p-5 bg-rose-50/55 border border-rose-200 rounded-xl text-right mb-6 shadow-sm">
           <h3 className="text-sm font-bold text-rose-900 mb-3 flex items-center gap-2">
             <span>⚠️</span> الكمائن المتوقعة
-            <span
-              className="inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
-              title="نتيجة محسوبة من القالب"
-            >
-              قالب
-            </span>
           </h3>
           <ul className="space-y-2 text-sm text-slate-700">
-            {result.obstacles.map((item, index) => (
+            {normalizedObstacles.map((item, index) => (
               <li key={`${item.title}-${index}`} className="rounded-lg bg-white/70 px-3 py-2 border border-rose-200">
                 <span className="font-semibold text-slate-800">{item.title}:</span>{" "}
                 {item.solution}
@@ -230,15 +235,9 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           </ul>
         </div>
 
-        <div className="p-5 bg-slate-100 border-2 border-slate-300 rounded-xl text-right mb-6">
+        <div className="p-5 bg-slate-50 border border-slate-300 rounded-xl text-right mb-6 shadow-sm">
           <h3 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
             <span>🎯</span> {result.suggested_zone_title}
-            <span
-              className="inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
-              title="نتيجة محسوبة من القالب"
-            >
-              قالب
-            </span>
           </h3>
           <p className="font-semibold text-slate-700 mb-2">{result.suggested_zone_label}</p>
           <p className="text-sm text-gray-700 leading-relaxed">

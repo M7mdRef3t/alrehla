@@ -174,11 +174,12 @@ ${traumaInheritanceBlock}
 
     return {
       personLabel,
+      ring,
       totalWeeks: result.totalWeeks,
       primaryPattern: result.primaryPattern,
       steps,
       insights: result.insights,
-      generatedAt: Date.now(),
+      generated: Date.now(),
       aiGenerated: true
     };
 

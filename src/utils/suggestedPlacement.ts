@@ -1,5 +1,4 @@
 import type { Ring } from "../modules/map/mapTypes";
-import type { AdviceCategory } from "../data/adviceScripts";
 
 /**
  * Suggested Placement Logic
@@ -22,7 +21,7 @@ export interface SuggestedPlacement {
  */
 export function calculateSuggestedPlacement(
   currentRing: Ring,
-  category: AdviceCategory,
+  category: string,
   selectedSymptoms?: string[]
 ): SuggestedPlacement {
   
@@ -105,7 +104,7 @@ export function calculateSuggestedPlacement(
 /**
  * تحديد المكان المقترح بناءً على نوع العلاقة
  */
-function getSuggestedRingForCategory(category: AdviceCategory): Ring {
+function getSuggestedRingForCategory(category: string): Ring {
   switch (category) {
     case "mother":
     case "father":
@@ -140,7 +139,7 @@ function getSuggestedRingForCategory(category: AdviceCategory): Ring {
 /**
  * السبب المقترح
  */
-function getSuggestedReason(category: AdviceCategory, suggestedRing: Ring): string {
+function getSuggestedReason(category: string, suggestedRing: Ring): string {
   const isFamilyOrSpouse = ["mother", "father", "sibling", "spouse"].includes(category);
   
   if (suggestedRing === "red") {
@@ -164,7 +163,7 @@ function getSuggestedReason(category: AdviceCategory, suggestedRing: Ring): stri
 /**
  * الخطوات المقترحة
  */
-function getSuggestedSteps(category: AdviceCategory, suggestedRing: Ring): string[] {
+function getSuggestedSteps(category: string, suggestedRing: Ring): string[] {
   const isFamilyOrSpouse = ["mother", "father", "sibling", "spouse"].includes(category);
   
   if (suggestedRing === "red") {
@@ -241,3 +240,4 @@ export function getRingIcon(ring: Ring): string {
       return "🚨";
   }
 }
+

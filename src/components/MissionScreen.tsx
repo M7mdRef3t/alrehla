@@ -52,48 +52,48 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
   const scenarioTheme: Record<ResultScenarioKey, { title: string; description: string; tone: string; border: string; accent: string }> = {
     emergency: {
       title: "رسالة طوارئ",
-      description: "الأولوية القصوى للسلامة. نفّذ الخطوات بهدوء وبشكل متدرج.",
+      description: "أولوية قصوى: أمّن موقعك أولًا، وبعدها نفّذ بهدوء ومن غير استعجال.",
       tone: "from-rose-50 to-rose-100",
       border: "border-rose-200",
       accent: "text-rose-800"
     },
     emotional_prisoner: {
       title: "رسالة استرداد",
-      description: "هدفك اليوم تقليل الضجيج الداخلي واستعادة المساحة العقلية.",
+      description: "هدفك النهاردة إسكات الضجيج الداخلي واسترداد مساحتك العقلية.",
       tone: "from-slate-50 to-slate-100",
       border: "border-slate-200",
       accent: "text-slate-800"
     },
     active_battlefield: {
       title: "رسالة درع",
-      description: "ثباتك هو القوة. نفّذ الخطوات بوضوح ومن غير تبرير.",
+      description: "ثباتك هو القوة. نفّذ الخطة بوضوح ومن غير تبرير.",
       tone: "from-orange-50 to-amber-100",
       border: "border-amber-200",
       accent: "text-amber-800"
     },
     eggshells: {
       title: "رسالة توازن",
-      description: "التعامل الرسمي يقلل الاحتكاك. خليك ثابت على المسافة الآمنة.",
+      description: "التواصل الرسمي يقلّل الاحتكاك. ثبّت نفسك على المسافة الآمنة.",
       tone: "from-yellow-50 to-amber-50",
       border: "border-amber-200",
       accent: "text-amber-800"
     },
     fading_echo: {
       title: "رسالة قبول",
-      description: "التخفف من التوقعات هو بداية الراحة. ركّز على استثمارك الجديد.",
+      description: "تقليل التوقعات بداية الاتزان. ركّز على استثمارك الجديد.",
       tone: "from-emerald-50 to-teal-50",
       border: "border-emerald-200",
       accent: "text-emerald-800"
     },
     safe_harbor: {
       title: "رسالة امتنان",
-      description: "العلاقات الآمنة محتاجة رعاية مستمرة. خطوتك اليوم استثمار ذكي.",
+      description: "الجبهات الآمنة محتاجة رعاية مستمرة. خطوتك اليوم استثمار ذكي.",
       tone: "from-teal-50 to-emerald-50",
       border: "border-teal-200",
       accent: "text-teal-800"
     }
   };
-  const theme = scenarioTheme[result.scenarioKey] ?? scenarioTheme.safe_harbor;
+  const theme = scenarioTheme[(result?.scenarioKey ?? "safe_harbor") as ResultScenarioKey] ?? scenarioTheme.safe_harbor;
 
   useEffect(() => {
     if (!missionCompleted) {
@@ -145,8 +145,8 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
           رجوع للخريطة
         </button>
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900 mb-2">المهمة غير متاحة حالياً</h2>
-          <p className="text-sm text-slate-600">لازم يكون الشخص عنده تحليل محفوظ عشان تظهر المهمة.</p>
+          <h2 className="text-lg font-bold text-slate-900 mb-2">المناورة غير جاهزة دلوقتي</h2>
+          <p className="text-sm text-slate-600">لازم يكون ملف الجبهة فيه قراءة محفوظة عشان تشتغل المناورة.</p>
         </div>
       </div>
     );
@@ -157,7 +157,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
       {showCelebration && (
         <div className="absolute inset-x-0 -top-6 flex justify-center pointer-events-none">
           <div className="rounded-full bg-emerald-600 text-white px-4 py-2 text-xs font-semibold shadow-lg animate-bounce">
-            إنجاز جديد: المهمة اكتملت
+            إنجاز جديد: المناورة اتحسمت
           </div>
         </div>
       )}
@@ -172,10 +172,10 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
 
       <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900 mb-2">
-          مهمة {node.label}
+          مناورة جبهة {node.label}
         </h1>
         <p className="text-sm text-slate-600">
-          {result.mission_label} — <span className="font-semibold text-slate-800">{result.mission_goal}</span>
+          الهدف المباشر: <span className="font-semibold text-slate-800">{result.mission_label} — {result.mission_goal}</span>
         </p>
         <div className={`mt-4 rounded-xl border px-4 py-3 text-right bg-gradient-to-l ${theme.tone} ${theme.border}`}>
           <p className={`text-sm font-semibold ${theme.accent}`}>{theme.title}</p>
@@ -183,7 +183,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div className="text-xs text-slate-500">
-            التقدم: {completedSteps}/{totalSteps}
+            التقدم الميداني: {completedSteps}/{totalSteps}
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -192,7 +192,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
               disabled={missionStarted}
               className="rounded-full bg-slate-900 text-white px-4 py-2 text-xs font-semibold shadow hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {missionStarted ? "المهمة بدأت" : "ابدأ المهمة"}
+              {missionStarted ? "المناورة شغالة" : "ابدأ المناورة"}
             </button>
             {missionCompleted ? (
               <button
@@ -200,7 +200,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
                 onClick={() => resetMission(node.id)}
                 className="rounded-full bg-white text-slate-700 px-4 py-2 text-xs font-semibold border border-slate-200 hover:border-slate-300"
               >
-                ابدأ من جديد
+                إعادة ضبط المناورة
               </button>
             ) : null}
           </div>
@@ -209,13 +209,13 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
 
       {missionCompleted && (
         <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-right">
-          <h2 className="text-sm font-bold text-emerald-900 mb-2">إنجاز المهمة</h2>
+          <h2 className="text-sm font-bold text-emerald-900 mb-2">تثبيت المكسب</h2>
           <p className="text-sm text-emerald-800 leading-relaxed">
-            أحسنت! خلّصت المهمة بنجاح. خليك فاكر إن الاستمرارية هي اللي بتحول الانتصار ده لعادة دائمة.
+            نفّذت المناورة بنجاح. الاستمرارية هي اللي بتحوّل المكسب لسيطرة ثابتة.
           </p>
           {completionDate && (
             <p className="mt-2 text-xs text-emerald-700">
-              تمت المهمة بتاريخ: {completionDate}
+              تاريخ حسم المناورة: {completionDate}
             </p>
           )}
         </div>
@@ -238,7 +238,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
       <div className="p-5 bg-emerald-50 border-2 border-emerald-200 rounded-xl text-right mb-6">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
-            <span>🗺️</span> خطة التنفيذ
+            <span>🗺️</span> خطة المناورة
           </h3>
           <span className="text-xs text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-full px-2 py-1">
             التقدم: {completedSteps}/{totalSteps}
@@ -267,7 +267,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
 
       {canComplete && (
         <div className="mb-6 rounded-xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-700 flex flex-wrap items-center justify-between gap-3">
-          <span className="font-semibold text-slate-800">كل الخطوات اتعلمت ✔️</span>
+          <span className="font-semibold text-slate-800">كل خطوات المناورة اتحسمت ✔️</span>
           <button
             type="button"
             onClick={() => {
@@ -276,7 +276,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
             }}
             className="rounded-full bg-emerald-600 text-white px-4 py-2 text-xs font-semibold shadow hover:bg-emerald-700"
           >
-            إنهاء المهمة
+            تثبيت الإغلاق
           </button>
         </div>
       )}

@@ -2,7 +2,16 @@ import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Video, BookOpen, HelpCircle, Search, Tag } from "lucide-react";
-import { videos, successStories, faqs, categoryLabels, type ContentCategory } from "../data/educationalContent";
+import {
+  videos,
+  successStories,
+  faqs,
+  categoryLabels,
+  type ContentCategory,
+  type VideoContent,
+  type SuccessStory,
+  type FAQItem
+} from "../data/educationalContent";
 import { useAchievementState } from "../state/achievementState";
 
 interface EducationalLibraryProps {
@@ -363,7 +372,7 @@ const FAQCard: FC<{ faq: FAQItem }> = ({ faq }) => {
           </div>
           {faq.tags && faq.tags.length > 0 && (
             <div className="flex gap-2 mt-2 flex-wrap">
-              {faq.tags.map((tag) => (
+              {faq.tags.map((tag: string) => (
                 <span
                   key={tag}
                   className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs"

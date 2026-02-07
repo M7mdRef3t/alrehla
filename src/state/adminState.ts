@@ -5,7 +5,8 @@ import {
   type FeatureFlagKey,
   type FeatureFlagMode
 } from "../config/features";
-import { isFeatureEnabled } from "../utils/featureFlags";
+import { getAuthRole } from "./authState";
+import { getEffectiveFeatureAccess } from "../utils/featureFlags";
 
 export interface ScoringWeights {
   often: number;
@@ -75,7 +76,7 @@ interface AdminState {
 }
 
 const DEFAULT_PROMPT =
-  "أنت مرشد الرحلة. لهجتك مصرية، أسلوبك حنون وواضح، وتركّز على الحماية وبناء الحدود.";
+  "أنت مرشد الرحلة في غرفة عمليات الحياة. لهجتك مصرية ذكية ومحترمة. استخدم قاموس تكتيكي (جبهة/درع/ضجيج/طاقة)، وركّز على التمكين بخطوات عملية قصيرة بدون لغة طبية.";
 
 const DEFAULT_WEIGHTS: ScoringWeights = {
   often: 3,
@@ -104,7 +105,13 @@ export const useAdminState = create<AdminState>()(
       broadcasts: [],
       setAdminAccess: (value) => set({ adminAccess: value }),
       setAdminCode: (value) => set({ adminCode: value }),
-      setFeatureFlags: (flags) => set({ featureFlags: flags }),
+      setFeatureFlags: (flags) =>
+        set({
+          featureFlags: {
+            ...DEFAULT_FEATURE_FLAGS,
+            ...flags
+          }
+        }),
       updateFeatureFlag: (key, mode) =>
         set((state) => ({
           featureFlags: { ...state.featureFlags, [key]: mode }
@@ -142,7 +149,14 @@ export const useAdminState = create<AdminState>()(
 
 export function isFeatureAllowed(key: FeatureFlagKey): boolean {
   const state = useAdminState.getState();
-  return isFeatureEnabled(state.featureFlags[key], state.betaAccess);
+  const access = getEffectiveFeatureAccess({
+    featureFlags: state.featureFlags,
+    betaAccess: state.betaAccess,
+    role: getAuthRole(),
+    adminAccess: state.adminAccess,
+    isDev: import.meta.env.DEV
+  });
+  return access[key];
 }
 
 export function getScoringWeights(): ScoringWeights {

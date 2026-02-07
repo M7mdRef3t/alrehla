@@ -41,7 +41,7 @@ export const RecoveryPlanView: FC<RecoveryPlanViewProps> = ({
           بروتوكول الدفاع - {plan.duration} يوم
         </h2>
         <p className="text-sm text-gray-600">
-          خطة عملية للوصول لعلاقة صحية مع {personLabel}
+          بروتوكول ميداني لتأمين جبهتك مع {personLabel}
         </p>
       </div>
 
@@ -157,7 +157,7 @@ export const RecoveryPlanView: FC<RecoveryPlanViewProps> = ({
         >
           <div className="flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-blue-600" />
-            <span className="font-bold text-slate-900">بنك الجمل الجاهزة</span>
+            <span className="font-bold text-slate-900">بنك السكريبتات الجاهزة</span>
           </div>
           {showScripts ? (
             <ChevronUp className="w-5 h-5 text-gray-600" />

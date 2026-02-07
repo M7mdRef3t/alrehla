@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useJourneyState } from "../state/journeyState";
@@ -27,6 +28,7 @@ export const GuidedJourneyFlow: FC<GuidedJourneyFlowProps> = ({
   onBackToLanding,
   onFinishJourney
 }) => {
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const {
     currentStepId,
     getStepIds,
@@ -133,6 +135,8 @@ export const GuidedJourneyFlow: FC<GuidedJourneyFlowProps> = ({
             <CoreMapScreen
               category={category as AdviceCategory}
               goalId={goalId}
+              selectedNodeId={selectedNodeId}
+              onSelectNode={setSelectedNodeId}
               journeyMode
               onJourneyComplete={() => goToStep("measurement")}
             />

@@ -161,7 +161,6 @@ export const AdvancedToolsModal: FC<AdvancedToolsModalProps> = ({ isOpen, onClos
               selectedSymptoms={selectedSymptoms}
               ring={selectedNode.ring}
               goalId={selectedNode.goalId ?? "unknown"}
-              nodeId={selectedNode.id}
               onClose={() => setShowTraining(false)}
               onComplete={() => setShowTraining(false)}
             />

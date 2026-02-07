@@ -46,7 +46,7 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
 
   return (
     <div className="mt-8 space-y-3">
-      {/* خطة الـ 30 يوم */}
+      {/* بروتوكول 30 يوم */}
       <div className="border-2 border-purple-200 rounded-xl overflow-hidden bg-white">
         <button
           onClick={() => toggleSection("plan")}
@@ -54,7 +54,7 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
         >
           <div className="flex items-center gap-2">
             <span className="text-lg">📋</span>
-            <span className="font-bold text-purple-900">خطة الـ 30 يوم</span>
+            <span className="font-bold text-purple-900">بروتوكول 30 يوم</span>
           </div>
           {openSections.has("plan") ? (
             <ChevronUp className="w-5 h-5 text-purple-700" />
@@ -107,7 +107,7 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
         )}
       </div>
 
-      {/* بنك الجمل الجاهزة */}
+      {/* بنك السكريبتات */}
       <div className="border-2 border-blue-200 rounded-xl overflow-hidden bg-white">
         <button
           onClick={() => toggleSection("scripts")}
@@ -115,7 +115,7 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
         >
           <div className="flex items-center gap-2">
             <span className="text-lg">💬</span>
-            <span className="font-bold text-blue-900">بنك الجمل الجاهزة</span>
+            <span className="font-bold text-blue-900">بنك السكريبتات الجاهزة</span>
           </div>
           {openSections.has("scripts") ? (
             <ChevronUp className="w-5 h-5 text-blue-700" />
@@ -158,7 +158,7 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
         >
           <div className="flex items-center gap-2">
             <span className="text-lg">📝</span>
-            <span className="font-bold text-amber-900">سجل المواقف الصعبة</span>
+            <span className="font-bold text-amber-900">سجل الميدان</span>
           </div>
           {openSections.has("log") ? (
             <ChevronUp className="w-5 h-5 text-amber-700" />
@@ -186,7 +186,7 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-lg">📈</span>
             <span className="font-bold text-teal-900">
-              تقدمك ({completedCount} من {totalSteps})
+              تقدمك الميداني ({completedCount} من {totalSteps})
             </span>
           </div>
           {openSections.has("progress") ? (

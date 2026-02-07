@@ -12,12 +12,20 @@ import {
   backupToKeyValues,
   buildBackupFromLocal
 } from "../services/dataExport";
-import { exportMapToPDF, downloadMapImage } from "../services/pdfExport";
 import { useMapState } from "../state/mapState";
 import { clearLocalData } from "../services/secureStore";
 import { fetchRemoteState, pushRemoteState } from "../services/cloudStore";
 import { useAuthState } from "../state/authState";
 import { signInWithEmail, signUpWithEmail, signOut } from "../services/authService";
+
+let pdfExportLoader: Promise<typeof import("../services/pdfExport")> | null = null;
+
+async function loadPdfExportService() {
+  if (!pdfExportLoader) {
+    pdfExportLoader = import("../services/pdfExport");
+  }
+  return pdfExportLoader;
+}
 
 interface DataManagementProps {
   isOpen: boolean;
@@ -88,6 +96,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
     setError(null);
 
     try {
+      const { exportMapToPDF } = await loadPdfExportService();
       await exportMapToPDF(nodes);
       setTimeout(() => setPdfExporting(false), 1000);
     } catch (err) {
@@ -108,6 +117,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
     setError(null);
 
     try {
+      const { downloadMapImage } = await loadPdfExportService();
       await downloadMapImage();
       setTimeout(() => setImageExporting(false), 1000);
     } catch (err) {
@@ -220,32 +230,32 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
 
   const handleSignIn = async () => {
     if (!authEmail || !authPassword) {
-      setAuthMessage("أدخل البريد وكلمة المرور");
+      setAuthMessage("حدّد الإحداثيات: البريد وكلمة المرور.");
       return;
     }
     setAuthLoading(true);
     setAuthMessage(null);
     const { error } = await signInWithEmail(authEmail.trim(), authPassword);
     if (error) {
-      setAuthMessage("تعذر تسجيل الدخول. تأكد من البيانات.");
+      setAuthMessage("بوابة الدخول لسه مقفولة. راجع البيانات وحاول تاني.");
     } else {
-      setAuthMessage("تم تسجيل الدخول");
+      setAuthMessage("تم تأمين البوابة. أنت داخل غرفة العمليات.");
     }
     setAuthLoading(false);
   };
 
   const handleSignUp = async () => {
     if (!authEmail || !authPassword) {
-      setAuthMessage("أدخل البريد وكلمة المرور");
+      setAuthMessage("حدّد الإحداثيات: البريد وكلمة المرور.");
       return;
     }
     setAuthLoading(true);
     setAuthMessage(null);
     const { error } = await signUpWithEmail(authEmail.trim(), authPassword);
     if (error) {
-      setAuthMessage("تعذر إنشاء الحساب. جرّب بيانات أخرى.");
+      setAuthMessage("تأسيس الحساب اتعطّل. جرّب بريد تاني أو راجع الإعدادات.");
     } else {
-      setAuthMessage("تم إنشاء الحساب. راجع بريدك للتأكيد إن لزم.");
+      setAuthMessage("الحساب اتجهّز. راجع بريدك وثبّت الدخول من الرسالة.");
     }
     setAuthLoading(false);
   };

@@ -11,6 +11,7 @@ const EXCLUDED_KEYS = new Set([
 
 const API_BASE = import.meta.env.VITE_ADMIN_API_BASE ?? "";
 const USER_STATE_ENDPOINT = `${API_BASE}/api/user/state`;
+const REMOTE_SYNC_ENABLED = Boolean(API_BASE);
 
 let remoteCache: Record<string, string> | null = null;
 let remoteLoaded = false;
@@ -95,11 +96,13 @@ async function loadRemoteState(): Promise<void> {
 
 export async function getRemoteValue(key: string): Promise<string | null> {
   if (!shouldSyncKey(key)) return null;
+  if (!REMOTE_SYNC_ENABLED) return null;
   await loadRemoteState();
   return remoteCache && key in remoteCache ? remoteCache[key] : null;
 }
 
 export async function fetchRemoteState(): Promise<Record<string, string>> {
+  if (!REMOTE_SYNC_ENABLED) return {};
   await loadRemoteState();
   return remoteCache ?? {};
 }
@@ -113,6 +116,7 @@ function scheduleSync(): void {
 
 export function queueRemoteSet(key: string, value: string): void {
   if (!shouldSyncKey(key)) return;
+  if (!REMOTE_SYNC_ENABLED) return;
   pendingUpdates[key] = value;
   remoteCache = { ...(remoteCache ?? {}), [key]: value };
   scheduleSync();
@@ -120,6 +124,7 @@ export function queueRemoteSet(key: string, value: string): void {
 
 async function flushUpdates(): Promise<void> {
   if (!isBrowser()) return;
+  if (!REMOTE_SYNC_ENABLED) return;
   const updates = pendingUpdates;
   pendingUpdates = {};
   if (Object.keys(updates).length === 0) return;
@@ -145,6 +150,7 @@ async function flushUpdates(): Promise<void> {
 }
 
 export async function pushRemoteState(data: Record<string, string>): Promise<boolean> {
+  if (!REMOTE_SYNC_ENABLED) return false;
   const headers = buildHeaders();
   if (!headers["x-device-token"] && !headers.Authorization) return false;
   try {

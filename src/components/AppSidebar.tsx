@@ -1,36 +1,69 @@
 import type { FC } from "react";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { Suspense, lazy, useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Target, ArrowLeft, ClipboardList, PanelRightOpen, X, Bell, Database, Share2, BookOpen, Wind, AlertCircle, Palette, Trophy, BarChart3, MessageCircle, Globe, Sparkles, Layers, Move, Compass, Star } from "lucide-react";
 import { useJourneyState } from "../state/journeyState";
 import { useNotificationState } from "../state/notificationState";
 import { useEmergencyState } from "../state/emergencyState";
-import { NotificationSettings } from "./NotificationSettings";
-import { DataManagement } from "./DataManagement";
-import { ShareStats } from "./ShareStats";
-import { EducationalLibrary } from "./EducationalLibrary";
 import { BreathingOverlay } from "./BreathingOverlay";
-import { ThemeSettings } from "./ThemeSettings";
-import { Achievements } from "./Achievements";
 import { useAchievementState } from "../state/achievementState";
 import { useMapState } from "../state/mapState";
 import type { RecoveryPlanOpenWith } from "../state/mapState";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
-import { SymptomsOverviewModal } from "./SymptomsOverviewModal";
-import { RecoveryPlanModal } from "./RecoveryPlanModal";
-import { TrackingDashboard } from "./TrackingDashboard";
-import { NoiseSilencingModal } from "./NoiseSilencingModal";
-import { AtlasDashboard } from "./AtlasDashboard";
 import { HealthBar } from "./HealthBar";
 import { TodayTaskStrip } from "./TodayTaskStrip";
 import { RecoveryProgressBar } from "./RecoveryProgressBar";
 import { guardianCopy } from "../copy/guardianCopy";
-import { AdvancedToolsModal } from "./AdvancedToolsModal";
-import { ClassicRecoveryModal } from "./ClassicRecoveryModal";
-import { ManualPlacementModal } from "./ManualPlacementModal";
 import { getMissionProgressSummary } from "../utils/missionProgress";
 import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
 import { getGoalMeta } from "../data/goalMeta";
+import { useAdminState } from "../state/adminState";
+import { useAuthState } from "../state/authState";
+import { getEffectiveFeatureAccess, isPrivilegedRole } from "../utils/featureFlags";
+import type { FeatureFlagKey } from "../config/features";
+
+const NotificationSettings = lazy(() =>
+  import("./NotificationSettings").then((m) => ({ default: m.NotificationSettings }))
+);
+const DataManagement = lazy(() =>
+  import("./DataManagement").then((m) => ({ default: m.DataManagement }))
+);
+const ShareStats = lazy(() =>
+  import("./ShareStats").then((m) => ({ default: m.ShareStats }))
+);
+const EducationalLibrary = lazy(() =>
+  import("./EducationalLibrary").then((m) => ({ default: m.EducationalLibrary }))
+);
+const ThemeSettings = lazy(() =>
+  import("./ThemeSettings").then((m) => ({ default: m.ThemeSettings }))
+);
+const Achievements = lazy(() =>
+  import("./Achievements").then((m) => ({ default: m.Achievements }))
+);
+const SymptomsOverviewModal = lazy(() =>
+  import("./SymptomsOverviewModal").then((m) => ({ default: m.SymptomsOverviewModal }))
+);
+const RecoveryPlanModal = lazy(() =>
+  import("./RecoveryPlanModal").then((m) => ({ default: m.RecoveryPlanModal }))
+);
+const TrackingDashboard = lazy(() =>
+  import("./TrackingDashboard").then((m) => ({ default: m.TrackingDashboard }))
+);
+const NoiseSilencingModal = lazy(() =>
+  import("./NoiseSilencingModal").then((m) => ({ default: m.NoiseSilencingModal }))
+);
+const AtlasDashboard = lazy(() =>
+  import("./AtlasDashboard").then((m) => ({ default: m.AtlasDashboard }))
+);
+const AdvancedToolsModal = lazy(() =>
+  import("./AdvancedToolsModal").then((m) => ({ default: m.AdvancedToolsModal }))
+);
+const ClassicRecoveryModal = lazy(() =>
+  import("./ClassicRecoveryModal").then((m) => ({ default: m.ClassicRecoveryModal }))
+);
+const ManualPlacementModal = lazy(() =>
+  import("./ManualPlacementModal").then((m) => ({ default: m.ManualPlacementModal }))
+);
 
 interface AppSidebarProps {
   onOpenGym: () => void;
@@ -39,6 +72,7 @@ interface AppSidebarProps {
   onOpenGuidedJourney: () => void;
   onOpenJourneyTools?: () => void;
   onOpenDawayir?: () => void;
+  onFeatureLocked?: (feature: FeatureFlagKey) => void;
   onOpenMission?: (nodeId: string) => void;
   /** عند فتح نافذة شخص: نعرض بار المراحل واسمه فوق المحتوى */
   viewingNodeId?: string | null;
@@ -51,6 +85,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   onOpenGuidedJourney,
   onOpenJourneyTools,
   onOpenDawayir,
+  onFeatureLocked,
   onOpenMission,
   viewingNodeId = null
 }) => {
@@ -128,6 +163,22 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const unlockedCount = useAchievementState((s) => s.unlockedIds.length);
   const { isSupported: notificationsSupported, settings: notificationSettings } = useNotificationState();
   const openEmergency = useEmergencyState((s) => s.open);
+  const featureFlags = useAdminState((s) => s.featureFlags);
+  const betaAccess = useAdminState((s) => s.betaAccess);
+  const adminAccess = useAdminState((s) => s.adminAccess);
+  const role = useAuthState((s) => s.roleOverride ?? s.role);
+  const canShowJourneyToolsEntry = Boolean(onOpenJourneyTools) && isPrivilegedRole(role);
+  const availableFeatures = useMemo(
+    () =>
+      getEffectiveFeatureAccess({
+        featureFlags,
+        betaAccess,
+        role,
+        adminAccess,
+        isDev: import.meta.env.DEV
+      }),
+    [featureFlags, betaAccess, role, adminAccess]
+  );
 
   const handleClose = () => setIsOpen(false);
   const handleOpen = () => setIsOpen(true);
@@ -146,6 +197,13 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const badgePulseClass = badgePulse ? "animate-bounce" : "";
   const fallbackBadgeClasses =
     "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200";
+  const openWithFeatureGate = (feature: FeatureFlagKey, onAllowed: () => void) => {
+    if (!availableFeatures[feature]) {
+      onFeatureLocked?.(feature);
+      return;
+    }
+    onAllowed();
+  };
 
   return (
     <>
@@ -168,15 +226,15 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           )}
           <HealthBar />
           <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
-          {onOpenJourneyTools && (
+          {canShowJourneyToolsEntry && (
             <button
               type="button"
-              onClick={() => onOpenJourneyTools()}
+              onClick={() => onOpenJourneyTools?.()}
               className="w-full flex items-center gap-3 rounded-xl bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100/70 dark:hover:bg-teal-900/40 transition-all text-right shrink-0 whitespace-nowrap"
-              title="أدوات الرحلة"
+              title="لوحة العمليات"
             >
               <Compass className="w-5 h-5 shrink-0" />
-              أدوات الرحلة
+              لوحة العمليات
             </button>
           )}
           <button
@@ -187,7 +245,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           >
             <Compass className="w-5 h-5 shrink-0 text-teal-600" />
             <span className="flex flex-col items-start">
-              افتح دواير
+              افتح غرفة دواير
               {lastGoalLabel && (
                 <span
                   className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${lastGoalMeta?.badgeClasses ?? fallbackBadgeClasses} ${badgePulseClass}`}
@@ -201,7 +259,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           {activeMissions.length > 0 && (
             <div className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 text-right">
               <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
-                <span>المهام النشطة</span>
+                <span>الجبهات المفتوحة</span>
                 <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5">
                   {activeMissions.length}
                 </span>
@@ -232,7 +290,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           {completedMissions.length > 0 && (
             <div className="w-full rounded-xl border border-emerald-200 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-900/20 px-3 py-3 text-right">
               <div className="flex items-center justify-between text-xs font-semibold text-emerald-800 dark:text-emerald-200 mb-2">
-                <span>المهام المكتملة</span>
+                <span>الملفات المحسومة</span>
                 <span className="rounded-full bg-emerald-100 dark:bg-emerald-900 px-2 py-0.5">
                   {completedMissions.length}
                 </span>
@@ -269,7 +327,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           {archivedMissions.length > 0 && (
             <div className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 px-3 py-3 text-right">
               <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
-                <span>الأرشيف</span>
+                <span>الأرشيف التكتيكي</span>
                 <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5">
                   {archivedMissions.length}
                 </span>
@@ -311,7 +369,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               title="تدرب على سيناريوهات حقيقية قبل ما تبدأ"
             >
               <Target className="w-5 h-5 shrink-0" />
-              جرب نفسك الأول
+              تجربة ميدانية سريعة
             </button>
           )}
           <button
@@ -321,7 +379,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             title="قائمة الأهداف"
           >
             <ArrowLeft className="w-5 h-5 shrink-0" />
-            أبدأ رحلتك
+            ابدأ مهمتك
           </button>
           <button
             type="button"
@@ -336,10 +394,10 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             type="button"
             onClick={onOpenBaseline}
             className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap"
-            title="القياس الأولي"
+            title="رصد الحالة اللحظية"
           >
             <ClipboardList className="w-5 h-5 shrink-0" />
-            القياس
+            رصد الحالة
           </button>
           {notificationsSupported && (
             <button
@@ -356,16 +414,16 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             type="button"
             onClick={() => setShowTrackingDashboard(true)}
             className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap"
-            title="لوحة المتابعة — إحصائيات أو تتبع بالمستخدمين"
+            title="رادار المتابعة — مؤشرات التقدم"
           >
             <BarChart3 className="w-5 h-5 shrink-0" />
-            لوحة المتابعة
+            رادار المتابعة
           </button>
           <button
             type="button"
-            onClick={() => setShowAtlasDashboard(true)}
+            onClick={() => openWithFeatureGate("global_atlas", () => setShowAtlasDashboard(true))}
             className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right shrink-0 whitespace-nowrap"
-            title="لوحة تحكم الأطلس — خريطة الألم، تشريح الأعراض، مختبر التعافي"
+            title="لوحة تحكم الأطلس — خريطة الألم، تشريح الأعراض، مختبر الاستعادة"
           >
             <Globe className="w-5 h-5 shrink-0" />
             لوحة الأطلس
@@ -429,7 +487,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => setShowAdvancedTools(true)}
+            onClick={() => openWithFeatureGate("internal_boundaries", () => setShowAdvancedTools(true))}
             className="w-full flex items-center gap-3 rounded-xl bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 px-4 py-3 text-sm font-semibold hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-all text-right shrink-0 whitespace-nowrap"
             title="أدوات متقدمة — أول خطوات + ملاحظات + تدريب"
           >
@@ -438,7 +496,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => setShowClassicRecovery(true)}
+            onClick={() => openWithFeatureGate("internal_boundaries", () => setShowClassicRecovery(true))}
             className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right shrink-0 whitespace-nowrap"
             title="الخطة الكلاسيكية — عرض بديل"
           >
@@ -447,7 +505,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => setShowManualPlacement(true)}
+            onClick={() => openWithFeatureGate("internal_boundaries", () => setShowManualPlacement(true))}
             className="w-full flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all text-right shrink-0 whitespace-nowrap"
             title="تحريك الشخص يدويًا بين الدوائر"
           >
@@ -495,7 +553,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             title="تمرين تنفس للهدوء"
           >
             <Wind className="w-5 h-5 shrink-0" />
-            هدّي نفسك
+            ثبت موقعك
           </button>
           <button
             type="button"
@@ -514,7 +572,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         {/* تاب صغير ظاهر دايماً — تحريك الماوس عليه يفتح الشريط */}
         <div
           className="h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-600 text-white border-l border-teal-700 shadow-md cursor-default py-4"
-          title="افتح القائمة"
+          title="افتح مركز القيادة"
         >
           <PanelRightOpen className="w-5 h-5" />
         </div>
@@ -525,7 +583,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         type="button"
         onClick={handleOpen}
         className="fixed top-4 right-4 z-40 md:hidden w-12 h-12 flex items-center justify-center bg-teal-600 text-white rounded-full shadow-lg active:scale-95 transition-transform"
-        title="افتح القائمة"
+        title="افتح مركز القيادة"
       >
         <PanelRightOpen className="w-6 h-6" />
       </button>
@@ -553,7 +611,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             >
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">القائمة</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">مركز القيادة</h2>
                 <button
                   type="button"
                   onClick={handleClose}
@@ -576,7 +634,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right"
                   >
                     <Target className="w-6 h-6 shrink-0" />
-                    <span>جرب نفسك الأول</span>
+                    <span>تجربة ميدانية سريعة</span>
                   </button>
                 )}
                 <button
@@ -588,7 +646,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   className="w-full flex items-center gap-3 rounded-xl bg-teal-600 text-white px-4 py-3 text-sm font-semibold active:scale-95 hover:bg-teal-700 dark:hover:bg-teal-600 transition-all text-right"
                 >
                   <ArrowLeft className="w-6 h-6 shrink-0" />
-                  <span>أبدأ رحلتك</span>
+                  <span>ابدأ مهمتك</span>
                 </button>
                 <button
                   type="button"
@@ -610,19 +668,19 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right"
                 >
                   <ClipboardList className="w-6 h-6 shrink-0" />
-                  <span>القياس</span>
+                  <span>رصد الحالة</span>
                 </button>
-                {onOpenJourneyTools && (
+                {canShowJourneyToolsEntry && (
                   <button
                     type="button"
                     onClick={() => {
-                      onOpenJourneyTools();
+                      onOpenJourneyTools?.();
                       handleClose();
                     }}
                     className="w-full flex items-center gap-3 rounded-xl bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100/70 dark:hover:bg-teal-900/40 transition-all text-right"
                   >
                     <Compass className="w-6 h-6 shrink-0" />
-                    <span>أدوات الرحلة</span>
+                    <span>لوحة العمليات</span>
                   </button>
                 )}
                 <button
@@ -635,7 +693,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 >
                   <Compass className="w-6 h-6 shrink-0 text-teal-600" />
                   <span className="flex flex-col items-start">
-                    افتح دواير
+                    افتح غرفة دواير
                     {lastGoalLabel && (
                       <span
                         className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${lastGoalMeta?.badgeClasses ?? fallbackBadgeClasses} ${badgePulseClass}`}
@@ -649,7 +707,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 {activeMissions.length > 0 && (
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
                     <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
-                      <span>المهام النشطة</span>
+                      <span>الجبهات المفتوحة</span>
                       <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5">
                         {activeMissions.length}
                       </span>
@@ -683,7 +741,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 {completedMissions.length > 0 && (
                   <div className="rounded-xl border border-emerald-200 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-900/20 p-3">
                     <div className="flex items-center justify-between text-xs font-semibold text-emerald-800 dark:text-emerald-200 mb-2">
-                      <span>المهام المكتملة</span>
+                      <span>الملفات المحسومة</span>
                       <span className="rounded-full bg-emerald-100 dark:bg-emerald-900 px-2 py-0.5">
                         {completedMissions.length}
                       </span>
@@ -723,7 +781,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 {archivedMissions.length > 0 && (
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 p-3">
                     <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
-                      <span>الأرشيف</span>
+                      <span>الأرشيف التكتيكي</span>
                       <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5">
                         {archivedMissions.length}
                       </span>
@@ -844,7 +902,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    setShowAdvancedTools(true);
+                    openWithFeatureGate("internal_boundaries", () => setShowAdvancedTools(true));
                     handleClose();
                   }}
                   className="w-full flex items-center gap-3 rounded-xl bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-all text-right"
@@ -855,7 +913,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    setShowClassicRecovery(true);
+                    openWithFeatureGate("internal_boundaries", () => setShowClassicRecovery(true));
                     handleClose();
                   }}
                   className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right"
@@ -866,7 +924,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    setShowManualPlacement(true);
+                    openWithFeatureGate("internal_boundaries", () => setShowManualPlacement(true));
                     handleClose();
                   }}
                   className="w-full flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all text-right"
@@ -893,7 +951,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    setShowAtlasDashboard(true);
+                    openWithFeatureGate("global_atlas", () => setShowAtlasDashboard(true));
                     handleClose();
                   }}
                   className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right"
@@ -928,7 +986,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   className="w-full flex items-center gap-3 rounded-xl bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-all text-right"
                 >
                   <Wind className="w-6 h-6 shrink-0" />
-                  <span>هدّي نفسك</span>
+                  <span>ثبت موقعك</span>
                 </button>
                 <button
                   type="button"
@@ -949,28 +1007,44 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       </AnimatePresence>
 
       {/* Notification Settings Modal */}
-      <NotificationSettings
-        isOpen={showNotificationSettings}
-        onClose={() => setShowNotificationSettings(false)}
-      />
+      {showNotificationSettings && (
+        <Suspense fallback={null}>
+          <NotificationSettings
+            isOpen={showNotificationSettings}
+            onClose={() => setShowNotificationSettings(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Data Management Modal */}
-      <DataManagement
-        isOpen={showDataManagement}
-        onClose={() => setShowDataManagement(false)}
-      />
+      {showDataManagement && (
+        <Suspense fallback={null}>
+          <DataManagement
+            isOpen={showDataManagement}
+            onClose={() => setShowDataManagement(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Share Stats Modal */}
-      <ShareStats
-        isOpen={showShareStats}
-        onClose={() => setShowShareStats(false)}
-      />
+      {showShareStats && (
+        <Suspense fallback={null}>
+          <ShareStats
+            isOpen={showShareStats}
+            onClose={() => setShowShareStats(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Educational Library Modal */}
-      <EducationalLibrary
-        isOpen={showLibrary}
-        onClose={() => setShowLibrary(false)}
-      />
+      {showLibrary && (
+        <Suspense fallback={null}>
+          <EducationalLibrary
+            isOpen={showLibrary}
+            onClose={() => setShowLibrary(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Breathing Overlay */}
       {showBreathing && (
@@ -981,56 +1055,94 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       )}
 
       {/* Theme Settings Modal */}
-      <ThemeSettings
-        isOpen={showThemeSettings}
-        onClose={() => setShowThemeSettings(false)}
-      />
+      {showThemeSettings && (
+        <Suspense fallback={null}>
+          <ThemeSettings
+            isOpen={showThemeSettings}
+            onClose={() => setShowThemeSettings(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Achievements Modal */}
       {showAchievements && (
-        <Achievements onClose={() => setShowAchievements(false)} />
+        <Suspense fallback={null}>
+          <Achievements onClose={() => setShowAchievements(false)} />
+        </Suspense>
       )}
 
       {/* Symptoms Overview Modal */}
-      <SymptomsOverviewModal
-        isOpen={showSymptomsOverview}
-        onClose={() => setShowSymptomsOverview(false)}
-      />
+      {showSymptomsOverview && (
+        <Suspense fallback={null}>
+          <SymptomsOverviewModal
+            isOpen={showSymptomsOverview}
+            onClose={() => setShowSymptomsOverview(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Recovery Plan Modal */}
-      <RecoveryPlanModal
-        isOpen={showRecoveryPlan}
-        onClose={() => { setShowRecoveryPlan(false); setInitialRecoveryOptions(null); }}
-        initialPreselectedNodeId={initialRecoveryOptions?.preselectedNodeId}
-        focusTraumaInheritance={initialRecoveryOptions?.focusTraumaInheritance}
-      />
+      {showRecoveryPlan && (
+        <Suspense fallback={null}>
+          <RecoveryPlanModal
+            isOpen={showRecoveryPlan}
+            onClose={() => { setShowRecoveryPlan(false); setInitialRecoveryOptions(null); }}
+            initialPreselectedNodeId={initialRecoveryOptions?.preselectedNodeId}
+            focusTraumaInheritance={initialRecoveryOptions?.focusTraumaInheritance}
+          />
+        </Suspense>
+      )}
 
-      <TrackingDashboard isOpen={showTrackingDashboard} onClose={() => setShowTrackingDashboard(false)} />
+      {showTrackingDashboard && (
+        <Suspense fallback={null}>
+          <TrackingDashboard isOpen={showTrackingDashboard} onClose={() => setShowTrackingDashboard(false)} />
+        </Suspense>
+      )}
 
-      <NoiseSilencingModal
-        isOpen={showNoiseSilencing}
-        onClose={() => setShowNoiseSilencing(false)}
-      />
+      {showNoiseSilencing && (
+        <Suspense fallback={null}>
+          <NoiseSilencingModal
+            isOpen={showNoiseSilencing}
+            onClose={() => setShowNoiseSilencing(false)}
+          />
+        </Suspense>
+      )}
 
-      <AtlasDashboard
-        isOpen={showAtlasDashboard}
-        onClose={() => setShowAtlasDashboard(false)}
-      />
+      {showAtlasDashboard && (
+        <Suspense fallback={null}>
+          <AtlasDashboard
+            isOpen={showAtlasDashboard}
+            onClose={() => setShowAtlasDashboard(false)}
+          />
+        </Suspense>
+      )}
 
-      <AdvancedToolsModal
-        isOpen={showAdvancedTools}
-        onClose={() => setShowAdvancedTools(false)}
-      />
+      {showAdvancedTools && (
+        <Suspense fallback={null}>
+          <AdvancedToolsModal
+            isOpen={showAdvancedTools}
+            onClose={() => setShowAdvancedTools(false)}
+          />
+        </Suspense>
+      )}
 
-      <ClassicRecoveryModal
-        isOpen={showClassicRecovery}
-        onClose={() => setShowClassicRecovery(false)}
-      />
+      {showClassicRecovery && (
+        <Suspense fallback={null}>
+          <ClassicRecoveryModal
+            isOpen={showClassicRecovery}
+            onClose={() => setShowClassicRecovery(false)}
+          />
+        </Suspense>
+      )}
 
-      <ManualPlacementModal
-        isOpen={showManualPlacement}
-        onClose={() => setShowManualPlacement(false)}
-      />
+      {showManualPlacement && (
+        <Suspense fallback={null}>
+          <ManualPlacementModal
+            isOpen={showManualPlacement}
+            onClose={() => setShowManualPlacement(false)}
+          />
+        </Suspense>
+      )}
     </>
   );
 };

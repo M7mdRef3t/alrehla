@@ -1,5 +1,6 @@
 import type { Ring } from "../modules/map/mapTypes";
 import type { PulseEntry } from "../state/pulseState";
+import type { FeatureFlagKey } from "../config/features";
 
 /** سياق القراءة فقط للـ Agent: عُقد الخريطة، الشاشة الحالية، الهدف. */
 export interface AgentContext {
@@ -15,6 +16,8 @@ export interface AgentContext {
   category: string;
   /** النبض اللحظي (لو متاح) */
   pulse?: PulseEntry | null;
+  /** الميزات المسموحة للمستخدم الحالي */
+  availableFeatures: Record<FeatureFlagKey, boolean>;
 }
 
 /** مسار للتنقل أو overlay */
@@ -35,7 +38,7 @@ export interface AgentActions {
   /** نقل شخص لدائرة (أحمر / أصفر / أخضر) */
   updateRelationshipZone: (personLabelOrId: string, zone: Ring) => Promise<{ ok: boolean; error?: string }>;
   /** التنقل: breathing | gym | map | baseline | emergency | person:nodeId */
-  navigate: (route: AgentRoute) => void;
+  navigate: (route: AgentRoute) => { ok: boolean; error?: string };
   /** فتح overlay (مثل emergency = غرفة الطوارئ) */
-  showOverlay?: (overlayId: string) => void;
+  showOverlay?: (overlayId: string) => { ok: boolean; error?: string };
 }

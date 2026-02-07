@@ -36,11 +36,11 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
           <CheckCircle2 className="w-6 h-6 text-green-600 shrink-0 mt-0.5" />
           <div className="flex-1">
             <h3 className="text-base font-bold text-green-900 mb-1">
-              ✅ العلاقة في مكانها الصحيح!
+              ✅ الجبهة في مكانها الصح
             </h3>
             <p className="text-sm text-green-800 leading-relaxed">
-              علاقتك مع <span className="font-bold">{personLabel}</span> صحية ومتوازنة. 
-              استمر في الحفاظ عليها!
+              جبهتك مع <span className="font-bold">{personLabel}</span> مستقرة ومتوازنة.
+              كمّل بنفس الإيقاع.
             </p>
           </div>
         </div>
@@ -48,7 +48,7 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
         {/* Maintenance Steps */}
         <div className="mt-4 pt-4 border-t border-green-200">
           <p className="text-xs font-semibold text-green-900 mb-2">
-            💡 للحفاظ على العلاقة الصحية:
+            💡 للحفاظ على استقرار الجبهة:
           </p>
           <ul className="space-y-2">
             {placement.steps.map((step, index) => (
@@ -75,18 +75,18 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
           <AlertTriangle className="w-6 h-6 text-red-600 shrink-0 mt-0.5" />
           <div className="flex-1">
             <h3 className="text-base font-bold text-red-900 mb-1">
-              🛡️ الحماية القصوى - أنت في المكان الصح
+              🛡️ درعك شغال.. إنت في المكان الصح
             </h3>
             <p className="text-sm text-red-800 leading-relaxed">
-              العلاقة مع <span className="font-bold">{personLabel}</span> استنزاف. 
-              خليك على الحدود الصارمة واستمر في الحماية.
+              الجبهة مع <span className="font-bold">{personLabel}</span> مستنزفة.
+              ثبّت الحدود الصارمة وكمل حماية مواردك.
             </p>
           </div>
         </div>
 
         <div className="mt-4 pt-4 border-t border-red-200">
           <p className="text-xs font-semibold text-red-900 mb-2">
-            💡 التزم بالحدود دي:
+            💡 ثبّت القواعد دي:
           </p>
           <ul className="space-y-2">
             {placement.steps.map((step, index) => (
@@ -115,10 +115,10 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
         <AlertTriangle className="w-6 h-6 text-purple-600 shrink-0 mt-0.5" />
         <div className="flex-1">
           <h3 className="text-base font-bold text-purple-900 mb-1">
-            🎯 المكان الصحيح المقترح
+            🎯 التموضع الصحيح المقترح
           </h3>
           <p className="text-xs text-purple-800">
-            بناءً على التحليل، ده أفضل مكان للعلاقة عشان تحمي نفسك وتحافظ على صحتك النفسية
+            بناءً على القراءة، ده أنسب تموضع للجبهة عشان تحمي مواردك وتقلل النزيف.
           </p>
         </div>
       </div>
@@ -128,7 +128,7 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
         {/* Current Ring */}
         <div className="p-3 bg-white rounded-lg border-2 border-red-200">
           <p className="text-xs font-semibold text-slate-700 mb-1">
-            المكان الحالي:
+            التموضع الحالي:
           </p>
           <div className="flex items-center gap-2">
             <span className="text-2xl">{getRingIcon(placement.currentRing)}</span>
@@ -149,7 +149,7 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
         {needsImprovement && (
           <div className="p-3 bg-white rounded-lg border-2 border-green-200">
             <p className="text-xs font-semibold text-slate-700 mb-1">
-              المكان الصحيح المقترح:
+              التموضع المقترح:
             </p>
             <div className="flex items-center gap-2">
               <span className="text-2xl">{getRingIcon(placement.suggestedRing)}</span>
@@ -164,7 +164,7 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
       {/* Reason */}
       <div className="p-4 bg-linear-to-r from-purple-100 to-blue-100 rounded-lg mb-4">
         <p className="text-xs font-semibold text-purple-900 mb-2">
-          💡 ليه المكان ده؟
+          💡 ليه التموضع ده؟
         </p>
         <p className="text-sm text-purple-900 leading-relaxed">
           {placement.reason}
@@ -176,7 +176,7 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
         <p className="text-xs font-semibold text-slate-900 mb-3 flex items-center gap-2">
           <span>🎯</span>
           <span>
-            إزاي توصل للمكان الصحيح مع {personLabel}:
+            إزاي تنقل جبهتك مع {personLabel} للتموضع الصح:
           </span>
         </p>
         <ul className="space-y-2.5">
@@ -196,8 +196,8 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
       {/* Important Note */}
       <div className="mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded-lg">
         <p className="text-xs text-yellow-900 leading-relaxed">
-          <span className="font-bold">⚠️ مهم:</span> التغيير محتاج وقت وثبات. 
-          خليك ملتزم بالحدود اللي هتحطها - أي تنازل ممكن يرجعك للدائرة الحمراء تاني.
+          <span className="font-bold">⚠️ مهم:</span> النقل محتاج ثبات تكتيكي.
+          أي تنازل بدري ممكن يرجّع الجبهة للمنطقة الحمراء.
         </p>
       </div>
     </motion.div>

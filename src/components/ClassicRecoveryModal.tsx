@@ -65,7 +65,7 @@ export const ClassicRecoveryModal: FC<ClassicRecoveryModalProps> = ({
                   </div>
                   <div className="text-right">
                     <h2 className="text-lg font-bold text-slate-900">الخطة الكلاسيكية</h2>
-                    <p className="text-xs text-slate-500">خطة أسبوعية + بنك جمل + سجل مواقف</p>
+                    <p className="text-xs text-slate-500">خطة أسبوعية + بنك سكريبتات + سجل الميدان</p>
                   </div>
                 </div>
                 <button
@@ -80,13 +80,13 @@ export const ClassicRecoveryModal: FC<ClassicRecoveryModalProps> = ({
               <div className="p-4 space-y-4 overflow-y-auto">
                 {nodes.length === 0 ? (
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-right text-sm text-slate-700">
-                    لسه ما فيش علاقات على الخريطة. أضف شخص أولاً علشان الخطة تظهر.
+                    لسه مفيش جبهات على الخريطة. أضف جبهة أولًا عشان الخطة تظهر.
                   </div>
                 ) : (
                   <>
                     <div className="space-y-2">
                       <label className="block text-xs font-semibold text-slate-600 text-right">
-                        اختر الشخص
+                        اختَر الجبهة
                       </label>
                       <select
                         value={selectedNodeId ?? ""}

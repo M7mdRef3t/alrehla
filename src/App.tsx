@@ -1,10 +1,6 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { Landing } from "./components/Landing";
-import { GoalPicker } from "./components/GoalPicker";
-import { AppSidebar } from "./components/AppSidebar";
-import { AchievementToast } from "./components/Achievements";
 import { useNotificationState } from "./state/notificationState";
 import { useEmergencyState } from "./state/emergencyState";
 import { useMapState } from "./state/mapState";
@@ -16,24 +12,14 @@ import type { PulseFocus, PulseMood } from "./state/pulseState";
 import { trackPageView } from "./services/analytics";
 import { sendNotification, sendPresetNotification, NOTIFICATION_TYPES } from "./services/notifications";
 import type { AdviceCategory } from "./data/adviceScripts";
-import {
-  createAgentActions,
-  resolvePersonFromNodes,
-  buildAgentSystemPrompt
-} from "./agent";
+import type { AgentActions, AgentContext } from "./agent/types";
 import { getIncompleteMissionSteps } from "./utils/missionProgress";
 import { getLastGoalMeta } from "./utils/goalLabel";
 import { getWeeklyPulseInsight } from "./utils/pulseInsights";
-import { PulseCheckModal } from "./components/PulseCheckModal";
-import { CocoonModeModal } from "./components/CocoonModeModal";
-import { NoiseSilencingModal } from "./components/NoiseSilencingModal";
-import { FeatureLockedModal } from "./components/FeatureLockedModal";
-import { AdminDashboard } from "./components/admin/AdminDashboard";
 import { useAdminState } from "./state/adminState";
-import { isFeatureEnabled } from "./utils/featureFlags";
+import { getEffectiveFeatureAccess, isPrivilegedRole } from "./utils/featureFlags";
 import type { FeatureFlagKey } from "./config/features";
-import { fetchAdminConfig } from "./services/adminApi";
-import { isSupabaseReady } from "./services/supabaseClient";
+import { useAuthState } from "./state/authState";
 
 type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
 
@@ -41,18 +27,34 @@ type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
 const SIDEBAR_TAB_MARGIN = "2.5rem"; // w-10
 
 const CoreMapScreen = lazy(() => import("./components/CoreMapScreen").then((m) => ({ default: m.CoreMapScreen })));
+const GoalPicker = lazy(() => import("./components/GoalPicker").then((m) => ({ default: m.GoalPicker })));
 const RelationshipGym = lazy(() => import("./components/RelationshipGym").then((m) => ({ default: m.RelationshipGym })));
 const BaselineAssessment = lazy(() => import("./components/BaselineAssessment").then((m) => ({ default: m.BaselineAssessment })));
+const PulseCheckModal = lazy(() => import("./components/PulseCheckModal").then((m) => ({ default: m.PulseCheckModal })));
+const CocoonModeModal = lazy(() => import("./components/CocoonModeModal").then((m) => ({ default: m.CocoonModeModal })));
+const NoiseSilencingModal = lazy(() =>
+  import("./components/NoiseSilencingModal").then((m) => ({ default: m.NoiseSilencingModal }))
+);
 const BreathingOverlay = lazy(() => import("./components/BreathingOverlay").then((m) => ({ default: m.BreathingOverlay })));
+const FeatureLockedModal = lazy(() =>
+  import("./components/FeatureLockedModal").then((m) => ({ default: m.FeatureLockedModal }))
+);
+const AchievementToast = lazy(() =>
+  import("./components/AchievementToast").then((m) => ({ default: m.AchievementToast }))
+);
 const AIChatbot = lazy(() => import("./components/AIChatbot").then((m) => ({ default: m.AIChatbot })));
 const EmergencyOverlay = lazy(() => import("./components/EmergencyOverlay").then((m) => ({ default: m.EmergencyOverlay })));
 const GuidedJourneyFlow = lazy(() => import("./components/GuidedJourneyFlow").then((m) => ({ default: m.GuidedJourneyFlow })));
 const MissionScreen = lazy(() => import("./components/MissionScreen").then((m) => ({ default: m.MissionScreen })));
 const JourneyToolsScreen = lazy(() => import("./components/JourneyToolsScreen").then((m) => ({ default: m.JourneyToolsScreen })));
+const AppSidebar = lazy(() => import("./components/AppSidebar").then((m) => ({ default: m.AppSidebar })));
+const AdminDashboard = lazy(() => import("./components/admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
 
 const preloadCoreMap = () => import("./components/CoreMapScreen");
 const preloadChatbot = () => import("./components/AIChatbot");
 const preloadGym = () => import("./components/RelationshipGym");
+const hasSupabaseEnv = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+type AgentModule = typeof import("./agent");
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("landing");
@@ -69,6 +71,7 @@ export default function App() {
   const [showNoiseSilencingPulse, setShowNoiseSilencingPulse] = useState(false);
   const [pendingCocoonAfterNoise, setPendingCocoonAfterNoise] = useState(false);
   const [themeBeforePulse, setThemeBeforePulse] = useState<"light" | "dark" | "system" | null>(null);
+  const [agentModule, setAgentModule] = useState<AgentModule | null>(null);
   const [lockedFeature, setLockedFeature] = useState<FeatureFlagKey | null>(null);
   const [isAdminRoute, setIsAdminRoute] = useState(() =>
     typeof window !== "undefined" ? window.location.pathname.startsWith("/admin") : false
@@ -85,6 +88,7 @@ export default function App() {
   const storedCategory = useJourneyState((s) => s.category);
   const lastGoalById = useJourneyState((s) => s.lastGoalById);
   const checkAndUnlock = useAchievementState((s) => s.checkAndUnlock);
+  const lastNewAchievementId = useAchievementState((s) => s.lastNewAchievementId);
   const theme = useThemeState((s) => s.theme);
   const setTheme = useThemeState((s) => s.setTheme);
   const lastPulse = usePulseState((s) => s.lastPulse);
@@ -96,11 +100,46 @@ export default function App() {
   const featureFlags = useAdminState((s) => s.featureFlags);
   const betaAccess = useAdminState((s) => s.betaAccess);
   const adminPrompt = useAdminState((s) => s.systemPrompt);
+  const adminAccess = useAdminState((s) => s.adminAccess);
   const setFeatureFlags = useAdminState((s) => s.setFeatureFlags);
   const setSystemPrompt = useAdminState((s) => s.setSystemPrompt);
   const setScoringWeights = useAdminState((s) => s.setScoringWeights);
   const setScoringThresholds = useAdminState((s) => s.setScoringThresholds);
   const setPulseCheckMode = usePulseState((s) => s.setCheckInMode);
+  const role = useAuthState((s) => s.roleOverride ?? s.role);
+  const isPrivilegedUser = isPrivilegedRole(role);
+  const showTopToolsButton = isPrivilegedUser;
+  const availableFeatures = useMemo(
+    () =>
+      getEffectiveFeatureAccess({
+        featureFlags,
+        betaAccess,
+        role,
+        adminAccess,
+        isDev: import.meta.env.DEV
+      }),
+    [featureFlags, betaAccess, role, adminAccess]
+  );
+  const canUseMap = availableFeatures.dawayir_map;
+  const canUseJourneyTools = availableFeatures.journey_tools;
+  const canUseAIField = availableFeatures.ai_field;
+  const canShowAIChatbot = canUseAIField && isPrivilegedUser;
+  const canUsePulseCheck = availableFeatures.pulse_check;
+
+  useEffect(() => {
+    if (!canShowAIChatbot) return;
+    let cancelled = false;
+    import("./agent")
+      .then((mod) => {
+        if (!cancelled) setAgentModule(mod);
+      })
+      .catch(() => {
+        // keep chatbot available in fallback mode
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [canShowAIChatbot]);
 
   useEffect(() => {
     if (screen !== "map") return;
@@ -126,9 +165,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!isSupabaseReady) return;
+    if (!hasSupabaseEnv) return;
     let cancelled = false;
-    fetchAdminConfig()
+    import("./services/adminApi")
+      .then(({ fetchAdminConfig }) => fetchAdminConfig())
       .then((config) => {
         if (!config || cancelled) return;
         if (config.featureFlags) setFeatureFlags(config.featureFlags);
@@ -181,11 +221,6 @@ export default function App() {
     trackPageView(pageNames[screen]);
   }, [screen]);
 
-  const canUseMap = isFeatureEnabled(featureFlags.dawayir_map, betaAccess);
-  const canUseJourneyTools = isFeatureEnabled(featureFlags.journey_tools, betaAccess);
-  const canUseAIField = isFeatureEnabled(featureFlags.ai_field, betaAccess);
-  const canUsePulseCheck = isFeatureEnabled(featureFlags.pulse_check, betaAccess);
-
   const goToGoals = () => {
     if (!canUseMap) {
       setLockedFeature("dawayir_map");
@@ -195,14 +230,14 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (screen === "landing") {
+    if (screen === "landing" && canShowAIChatbot) {
       void preloadChatbot();
     }
     if (screen === "goal") {
       void preloadCoreMap();
       void preloadGym();
     }
-  }, [screen]);
+  }, [screen, canShowAIChatbot]);
 
   useEffect(() => {
     if (screen !== "map") setSelectedNodeId(null);
@@ -284,39 +319,44 @@ export default function App() {
     }
   };
 
-  const agentContext = useMemo(
+  const agentContext = useMemo<AgentContext>(
     () => ({
       nodesSummary: nodes.map((n) => ({ id: n.id, label: n.label, ring: n.ring })),
+      availableFeatures,
       screen,
       selectedNodeId,
       goalId,
       category,
       pulse: lastPulse
     }),
-    [nodes, screen, selectedNodeId, goalId, category, lastPulse]
+    [nodes, availableFeatures, screen, selectedNodeId, goalId, category, lastPulse]
   );
 
-  const agentSystemPrompt = useMemo(() => {
-    const basePrompt = buildAgentSystemPrompt(agentContext);
+  const agentSystemPrompt = useMemo<string | undefined>(() => {
+    if (!agentModule) return undefined;
+    const basePrompt = agentModule.buildAgentSystemPrompt(agentContext);
     const adminTrimmed = adminPrompt?.trim();
     return adminTrimmed ? `${adminTrimmed}\n\n${basePrompt}` : basePrompt;
-  }, [agentContext, adminPrompt]);
+  }, [agentModule, agentContext, adminPrompt]);
 
-  const agentActions = useMemo(
-    () =>
-      createAgentActions({
-        resolvePerson: (labelOrId) => resolvePersonFromNodes(labelOrId, nodes),
+  const agentActions = useMemo<AgentActions | undefined>(
+    () => {
+      if (!agentModule) return undefined;
+      return agentModule.createAgentActions({
+        resolvePerson: (labelOrId) => agentModule.resolvePersonFromNodes(labelOrId, nodes),
         onNavigateBreathing: () => setShowBreathing(true),
         onNavigateGym: () => setShowGym(true),
         onNavigateMap: () => setScreen("map"),
         onNavigateBaseline: () => setShowBaseline(true),
         onNavigateEmergency: () => useEmergencyState.getState().open(),
+        availableFeatures,
         onNavigatePerson: (nodeId) => {
           setScreen("map");
           setSelectedNodeId(nodeId);
         }
-      }),
-    [nodes]
+      });
+    },
+    [agentModule, nodes, availableFeatures]
   );
 
   const pulseInsight = useMemo(() => getWeeklyPulseInsight(pulseLogs), [pulseLogs]);
@@ -493,48 +533,51 @@ export default function App() {
 
   if (isAdminRoute) {
     return (
-      <AdminDashboard
-        onExit={() => {
-          if (typeof window !== "undefined") {
-            window.history.pushState({}, "", "/");
-            setIsAdminRoute(false);
-          }
-        }}
-      />
+      <Suspense fallback={<div className="min-h-screen bg-gray-50 dark:bg-slate-900" />}>
+        <AdminDashboard
+          onExit={() => {
+            if (typeof window !== "undefined") {
+              window.history.pushState({}, "", "/");
+              setIsAdminRoute(false);
+            }
+          }}
+        />
+      </Suspense>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex transition-colors" dir="rtl">
-      <AppSidebar
-        onOpenGym={() => setShowGym(true)}
-        onStartJourney={goToGoals}
-        onOpenBaseline={() => setShowBaseline(true)}
-        onOpenGuidedJourney={() => setScreen("guided")}
-        onOpenMission={openMissionScreen}
-        onOpenJourneyTools={canUseJourneyTools ? openJourneyTools : undefined}
-        onOpenDawayir={canUseMap ? openDawayirTool : undefined}
-        viewingNodeId={screen === "map" ? selectedNodeId : null}
-      />
+      {isPrivilegedUser && (
+        <Suspense fallback={null}>
+          <AppSidebar
+            onOpenGym={() => setShowGym(true)}
+            onStartJourney={goToGoals}
+            onOpenBaseline={() => setShowBaseline(true)}
+            onOpenGuidedJourney={() => setScreen("guided")}
+            onOpenMission={openMissionScreen}
+            onOpenJourneyTools={openJourneyTools}
+            onOpenDawayir={openDawayirTool}
+            onFeatureLocked={setLockedFeature}
+            viewingNodeId={screen === "map" ? selectedNodeId : null}
+          />
+        </Suspense>
+      )}
       <main
         className="flex-1 min-w-0 flex items-center justify-center px-4 transition-[margin]"
-        style={{ marginRight: SIDEBAR_TAB_MARGIN }}
+        style={{ marginRight: isPrivilegedUser ? SIDEBAR_TAB_MARGIN : "0px" }}
       >
         <Suspense fallback={<div className="text-slate-500 text-sm">...جاري التحميل</div>}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={screen}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full flex justify-center max-w-2xl"
-            >
+            <div key={screen} className="w-full flex justify-center max-w-2xl">
             {screen === "landing" && (
               <Landing
                 onStartJourney={goToGoals}
-                onOpenTools={canUseJourneyTools ? openJourneyTools : undefined}
-                showToolsSection={canUseJourneyTools}
+                onOpenTools={openJourneyTools}
+                showTopToolsButton={showTopToolsButton}
+                showPostStartContent={isPrivilegedUser}
+                showToolsSection
+                onFeatureLocked={setLockedFeature}
+                availableFeatures={availableFeatures}
               />
             )}
 
@@ -562,6 +605,8 @@ export default function App() {
                 pulseInsight={pulseInsight}
                 onOpenCocoon={() => setShowCocoon(true)}
                 onOpenNoise={() => setShowNoiseSilencingPulse(true)}
+                canUseBasicDiagnosis={availableFeatures.basic_diagnosis}
+                onFeatureLocked={setLockedFeature}
                 onOpenChallenge={
                   challengeTarget ? () => openMissionScreen(challengeTarget.nodeId) : undefined
                 }
@@ -574,6 +619,8 @@ export default function App() {
                 onBack={() => setScreen(toolsBackScreen)}
                 onOpenDawayir={openDawayirTool}
                 onOpenDawayirSetup={openDawayirSetup}
+                onFeatureLocked={setLockedFeature}
+                availableFeatures={availableFeatures}
                 onOpenGoal={(goalId, category) => {
                   setGoalId(goalId);
                   setCategory(category as AdviceCategory);
@@ -595,8 +642,7 @@ export default function App() {
                 onBack={() => setScreen("map")}
               />
             )}
-            </motion.div>
-          </AnimatePresence>
+            </div>
         </Suspense>
       </main>
 
@@ -646,7 +692,7 @@ export default function App() {
           </div>
         )}
 
-        {canUseAIField && (
+        {canShowAIChatbot && (
           <AIChatbot
             agentContext={agentContext}
             agentActions={agentActions}
@@ -655,39 +701,47 @@ export default function App() {
             onNavigateToMap={() => setScreen("map")}
           />
         )}
-        <AchievementToast />
+        {lastNewAchievementId && <AchievementToast />}
 
-        <PulseCheckModal
-          isOpen={showPulseCheck}
-          onSubmit={handlePulseSubmit}
-          onClose={() => setShowPulseCheck(false)}
-        />
+        {showPulseCheck && (
+          <PulseCheckModal
+            isOpen={showPulseCheck}
+            onSubmit={handlePulseSubmit}
+            onClose={() => setShowPulseCheck(false)}
+          />
+        )}
 
-        <CocoonModeModal
-          isOpen={showCocoon}
-          onStart={() => {
-            setShowCocoon(false);
-            setShowBreathing(true);
-          }}
-          onClose={() => setShowCocoon(false)}
-        />
+        {showCocoon && (
+          <CocoonModeModal
+            isOpen={showCocoon}
+            onStart={() => {
+              setShowCocoon(false);
+              setShowBreathing(true);
+            }}
+            onClose={() => setShowCocoon(false)}
+          />
+        )}
 
-        <NoiseSilencingModal
-          isOpen={showNoiseSilencingPulse}
-          onClose={() => {
-            setShowNoiseSilencingPulse(false);
-            if (pendingCocoonAfterNoise) {
-              setPendingCocoonAfterNoise(false);
-              setShowCocoon(true);
-            }
-          }}
-        />
+        {showNoiseSilencingPulse && (
+          <NoiseSilencingModal
+            isOpen={showNoiseSilencingPulse}
+            onClose={() => {
+              setShowNoiseSilencingPulse(false);
+              if (pendingCocoonAfterNoise) {
+                setPendingCocoonAfterNoise(false);
+                setShowCocoon(true);
+              }
+            }}
+          />
+        )}
 
-        <FeatureLockedModal
-          isOpen={lockedFeature != null}
-          featureKey={lockedFeature}
-          onClose={() => setLockedFeature(null)}
-        />
+        {lockedFeature != null && (
+          <FeatureLockedModal
+            isOpen={lockedFeature != null}
+            featureKey={lockedFeature}
+            onClose={() => setLockedFeature(null)}
+          />
+        )}
 
         {showBreathing && (
           <BreathingOverlay onClose={() => setShowBreathing(false)} />

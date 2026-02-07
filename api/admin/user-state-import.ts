@@ -1,5 +1,12 @@
 import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared";
 
+type UserStateImportRow = {
+  device_token?: string;
+  owner_id?: string | null;
+  data?: Record<string, unknown>;
+  updated_at?: string;
+};
+
 export default async function handler(req: any, res: any) {
   if (!(await verifyAdmin(req, res))) return;
   if (req.method !== "POST") {
@@ -13,7 +20,11 @@ export default async function handler(req: any, res: any) {
   }
 
   const body = await parseJsonBody(req);
-  const rows = Array.isArray(body?.rows) ? body.rows : Array.isArray(body) ? body : [];
+  const rows: UserStateImportRow[] = Array.isArray(body?.rows)
+    ? (body.rows as UserStateImportRow[])
+    : Array.isArray(body)
+      ? (body as UserStateImportRow[])
+      : [];
   if (rows.length === 0) {
     res.status(400).json({ error: "No rows provided" });
     return;

@@ -37,8 +37,8 @@
 6. فعّل Vercel Cron على المسارات:
    - لو استخدمت `vercel.json` المرفق: سيُفعل مسارات الكرون تلقائياً.
    - لو ضبطت `CRON_SECRET` يجب تحديث المسارات إلى:
-     - `/api/admin/cron-report?period=daily&secret=YOUR_CRON_SECRET`
-     - `/api/admin/cron-report?period=weekly&secret=YOUR_CRON_SECRET`
+     - `/api/admin/overview?kind=cron-report&period=daily&secret=YOUR_CRON_SECRET`
+     - `/api/admin/overview?kind=cron-report&period=weekly&secret=YOUR_CRON_SECRET`
 
 ---
 

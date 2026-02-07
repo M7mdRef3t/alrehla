@@ -15,10 +15,10 @@ export const ProgressTracker: FC<ProgressTrackerProps> = ({
   
   const milestones = [
     { label: "البداية", percent: 0 },
-    { label: "الخطوات الأولى", percent: 20 },
-    { label: "التحسن المحسوس", percent: 40 },
-    { label: "علاقة أصح", percent: 70 },
-    { label: "التوازن الصحي", percent: 100 }
+    { label: "تثبيت الموقع", percent: 20 },
+    { label: "فك النمط", percent: 40 },
+    { label: "درع ثابت", percent: 70 },
+    { label: "سيطرة كاملة", percent: 100 }
   ];
 
   return (
@@ -53,7 +53,7 @@ export const ProgressTracker: FC<ProgressTrackerProps> = ({
         <p className="text-2xl font-bold text-teal-700">
           {completedSteps} <span className="text-slate-400">/</span> {totalSteps}
         </p>
-        <p className="text-sm text-slate-600 mt-1">خطوة مكتملة</p>
+        <p className="text-sm text-slate-600 mt-1">مناورة مكتملة</p>
       </div>
 
       {/* Milestones */}
@@ -118,12 +118,12 @@ export const ProgressTracker: FC<ProgressTrackerProps> = ({
       {/* Encouragement Message */}
       <div className="mt-6 p-4 bg-white rounded-lg border border-teal-200">
         <p className="text-sm text-center text-slate-700 leading-relaxed">
-          {percentage === 0 && "🎯 ابدأ رحلتك نحو علاقة أصح!"}
-          {percentage > 0 && percentage < 30 && "💪 بداية قوية! استمر"}
-          {percentage >= 30 && percentage < 60 && "🌟 تقدم ممتاز! أنت على الطريق الصح"}
-          {percentage >= 60 && percentage < 90 && "🔥 رائع! أوشكت على النهاية"}
-          {percentage >= 90 && percentage < 100 && "🎊 تقريباً وصلت! خطوة أخيرة"}
-          {percentage === 100 && "🎉 مبروك! أنت وصلت لتوازن صحي"}
+          {percentage === 0 && "🎯 ثبّت موقعك وابدأ أول مناورة."}
+          {percentage > 0 && percentage < 30 && "💪 بداية قوية. كمّل بنفس الإيقاع."}
+          {percentage >= 30 && percentage < 60 && "🌟 القراءة أوضح والسيطرة بتزيد."}
+          {percentage >= 60 && percentage < 90 && "🔥 ممتاز. باقي خطوة أو خطوتين على الحسم."}
+          {percentage >= 90 && percentage < 100 && "🎊 قربت توصل لسيطرة كاملة."}
+          {percentage === 100 && "🎉 ممتاز! الجبهة تحت سيطرتك."}
         </p>
       </div>
     </div>

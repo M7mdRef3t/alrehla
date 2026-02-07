@@ -1,9 +1,12 @@
+import type { FeatureFlagKey } from "../config/features";
+
 export interface JourneyToolBase {
   id: string;
   name: string;
   tagline: string;
   description: string;
   icon: string;
+  featureKey: FeatureFlagKey;
 }
 
 export interface JourneyToolView extends JourneyToolBase {
@@ -16,29 +19,33 @@ export interface JourneyToolContext {
   baselineCompletedAt: number | null;
   unlockedIds: string[];
   hasMissionCompleted: boolean;
+  availableFeatures?: Partial<Record<FeatureFlagKey, boolean>>;
 }
 
 export const journeyToolsBase: JourneyToolBase[] = [
   {
     id: "dawayir",
     name: "دواير",
-    tagline: "البوصلة",
-    description: "خريطة العلاقات وتحديد الاتجاه: مين معاك ومين بيستنزفك.",
-    icon: "🧭"
+    tagline: "البوصلة التكتيكية",
+    description: "خريطة الجبهات وتحديد الاتجاه: مين بيدعمك ومين بيستنزف مواردك.",
+    icon: "🧭",
+    featureKey: "dawayir_map"
   },
   {
     id: "mirror",
     name: "المراية",
-    tagline: "أنا",
-    description: "وعي ذاتي وتنظيف الضجيج الداخلي: الطاقة، الذنب، والصوت الداخلي.",
-    icon: "🪞"
+    tagline: "غرفة أنا",
+    description: "ضبط داخلي وتنظيف الضجيج: طاقة، اختراق داخلي، وصوتك الحقيقي.",
+    icon: "🪞",
+    featureKey: "mirror_tool"
   },
   {
     id: "journal",
     name: "السجل",
-    tagline: "المذكرات الذكية",
-    description: "توثيق الرحلة وتحويل خبراتك لقصة قابلة للمراجعة.",
-    icon: "📖"
+    tagline: "الأرشيف الذكي",
+    description: "توثيق المناورات وتحويل الخبرات لمرجع قرار قابل للمراجعة.",
+    icon: "📖",
+    featureKey: "internal_boundaries"
   }
 ];
 
@@ -49,23 +56,30 @@ export function getJourneyToolsView(context: JourneyToolContext): JourneyToolVie
   const journalUnlocked = context.unlockedIds.includes("mission_complete") || context.hasMissionCompleted;
 
   return journeyToolsBase.map((tool) => {
+    if (context.availableFeatures && context.availableFeatures[tool.featureKey] === false) {
+      return {
+        ...tool,
+        locked: true,
+        status: "قيد التجهيز"
+      };
+    }
     if (tool.id === "dawayir") {
-      return { ...tool, locked: false, status: "متاحة الآن" };
+      return { ...tool, locked: false, status: "جاهزة الآن" };
     }
     if (tool.id === "mirror") {
       return {
         ...tool,
         locked: !mirrorUnlocked,
-        status: mirrorUnlocked ? "متاحة الآن" : "🔒 تفتح بعد أول خطوة"
+        status: mirrorUnlocked ? "جاهزة الآن" : "🔒 تفتح بعد أول خطوة"
       };
     }
     if (tool.id === "journal") {
       return {
         ...tool,
         locked: !journalUnlocked,
-        status: journalUnlocked ? "متاحة الآن" : "🔒 تفتح بعد أول مهمة مكتملة"
+        status: journalUnlocked ? "جاهزة الآن" : "🔒 تفتح بعد أول مهمة مكتملة"
       };
     }
-    return { ...tool, locked: true, status: "🔒 قريباً في رحلتك" };
+    return { ...tool, locked: true, status: "🔒 قيد التجهيز" };
   });
 }

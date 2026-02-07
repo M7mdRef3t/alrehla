@@ -1,4 +1,5 @@
 import type { AgentContext } from "./types";
+import { buildToneSystemBlock } from "../copy/toneGuide";
 
 /** بناء الـ system prompt للمساعد الميداني مع السياق الحالي */
 export function buildAgentSystemPrompt(context: AgentContext): string {
@@ -45,21 +46,31 @@ export function buildAgentSystemPrompt(context: AgentContext): string {
     }
     return "";
   })();
+  const featureLines = Object.entries(context.availableFeatures)
+    .map(([key, enabled]) => `  - ${key}: ${enabled ? "enabled" : "disabled"}`)
+    .join("\n");
+  const familyTreeDirective = context.availableFeatures.family_tree
+    ? ""
+    : "لو المستخدم طلب جذور العيلة أو Family Tree رد: الجزء ده لسه بيتبني. نكمل بالدائرة الحالية الأول.";
+  const toneBlock = buildToneSystemBlock(context.pulse);
 
   return `أنت مرشد الرحلة — مساعد في غرفة العمليات لمنصة "الرحلة". مهمتك: توجيه المستخدم بين أدوات الرحلة (أداة "دواير" هي البوصلة الأساسية الآن)، تجهيز الأدوات، تغيير الشاشات، وتسجيل المواقف والأعراض على الخريطة، مش مجرد الرد بنص.
 
-**أسلوبك:**
-- استخدم العامية المصرية.
-- استمع reflectively: قبل تنفيذ أي أداة، لخّص فهمك للمستخدم (مثلاً: "يعني إحساسك إن مديرك بيستنزفك وعايز تسيب الشغل؟") ثم نفّذ الأدوات ثم رد بتأكيد واضح ("سجلت الموقف، وحطيت المدير في الدائرة الحمراء. عايز نبدأ بتمرين تنفس دقيقة؟").
-- كن متعاطفاً وداعماً، قدم نصائح عملية محددة.
-- لا تعطي نصائح طبية أو علاجية، بس دعم نفسي عام.
-- ركّز على التمكين، مش الحلول الجاهزة.
+${toneBlock}
+
+**أسلوب التنفيذ:**
+- استمع reflectively: قبل تنفيذ أي أداة، لخّص فهمك للمستخدم ثم نفّذ الأداة ثم أكد النتيجة.
+- كن عملياً: خطوة واحدة واضحة أهم من نص طويل.
+- لا تعطي نصائح طبية أو علاجية.
+- التزم بالميزات المفعلة فقط. لا تقترح أداة مقفولة، ولو المستخدم طلبها وجّهه لأقرب بديل متاح داخل الدائرة الحالية.
 
 **سياق التطبيق الحالي (للقراءة فقط):**
 - الشاشة الحالية: ${context.screen}
 - الهدف/الفئة: ${context.goalId} / ${context.category}
 - العقدة المفتوحة (نافذة شخص): ${context.selectedNodeId ?? "لا يوجد"}
 - ${pulseLine}
+- الميزات المتاحة حالياً:
+${featureLines}
 - أشخاص على الخريطة:
 ${nodesLine}
 
@@ -73,6 +84,7 @@ ${nodesLine}
 - generateCustomExercise(goal, type, title, durationSeconds?): توليد تمرين مخصص (عدّ تنازلي أو ساعة توقيت) بعنوان ومدة بالثواني.
 
 ${pulseInstruction ? `**تعليمات لحظية:**\n- ${pulseInstruction}\n` : ""}
+${familyTreeDirective ? `**تعليمات الميزات المقفولة:**\n- ${familyTreeDirective}\n` : ""}
 
 استخدم الأدوات عند الحاجة ثم اذكر للمستخدم ما تم بشكل واضح.`;
 }

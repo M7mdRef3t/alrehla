@@ -24,7 +24,7 @@ function buildPersonSummary(node: MapNode, category: AdviceCategory, goalId?: st
   const selectedSymptoms = node.analysis?.selectedSymptoms ?? [];
   const pathId = node.recoveryProgress?.pathId;
   const pathStage = node.recoveryProgress?.pathStage;
-  const pathName = pathId ? PATH_NAMES[pathId] : undefined;
+  const pathName = pathId ? PATH_NAMES[pathId as keyof typeof PATH_NAMES] : undefined;
   const situationsCount = node.firstStepProgress
     ? Object.values(node.firstStepProgress.stepInputs)
         .flat()
@@ -144,3 +144,4 @@ ${summary}
     return null;
   }
 }
+

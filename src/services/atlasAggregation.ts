@@ -120,7 +120,7 @@ export function getRecoveryLabData(): RecoveryLabBar[] {
     const rate = row.starts > 0 ? Math.round((row.completions / row.starts) * 100) : 0;
     return {
       pathId,
-      pathLabel: PATH_NAMES[pathId] ?? pathId,
+      pathLabel: PATH_NAMES[pathId as keyof typeof PATH_NAMES] ?? pathId,
       starts: row.starts,
       completions: row.completions,
       completionRate: rate
@@ -156,9 +156,10 @@ export function getAtlasAlerts(): string[] {
     if (row.starts < 5) continue;
     const rate = row.completions / row.starts;
     if (rate <= 0.4) {
-      const name = PATH_NAMES[pathId] ?? pathId;
+      const name = PATH_NAMES[pathId as keyof typeof PATH_NAMES] ?? pathId;
       alerts.push(`معدل إكمال منخفض في "${name}" (${Math.round(rate * 100)}%). قد تحتاج مراجعة صعوبة التمارين.`);
     }
   }
   return alerts;
 }
+

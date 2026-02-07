@@ -6,6 +6,7 @@ import type { AgentContext, AgentActions } from "../agent";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import { AgentCard, CustomExerciseCard } from "./agentCards";
 import type { CardId, CustomExerciseSpec } from "./agentCards";
+import { buildToneSystemBlock, resolveVoiceMode } from "../copy/toneGuide";
 
 interface Message {
   id: string;
@@ -68,8 +69,8 @@ export const AIChatbot: FC<AIChatbotProps> = ({
         id: "welcome",
         role: "assistant",
         content: personLabel
-          ? `مرحباً! أنا هنا عشان أساعدك في رحلة التعافي مع ${personLabel}. إزاي أقدر أساعدك النهاردة؟`
-          : "مرحباً! أنا هنا عشان أساعدك في رحلة التعافي. إزاي أقدر أساعدك النهاردة؟",
+          ? `أنا مرشد الرحلة من غرفة العمليات. جاهزين نراجع جبهة ${personLabel} ونحدد أول مناورة؟`
+          : "أنا مرشد الرحلة من غرفة العمليات. احكيلي الجبهة اللي بتسحب طاقتك ونبدأ بخطوة واضحة.",
         timestamp: Date.now()
       };
       setMessages([welcomeMsg]);
@@ -192,20 +193,20 @@ export const AIChatbot: FC<AIChatbotProps> = ({
                   : "";
           return `${line}\n${directive ? `${directive}\n` : ""}`;
         })();
+        const toneContext = buildToneSystemBlock(agentContext?.pulse);
 
         const systemContext = `أنت مرشد الرحلة في منصة "الرحلة". دورك توجيه المستخدم بين أدوات الرحلة، وخصوصًا أداة "دواير" لتنظيم العلاقات وبناء الحدود الصحية.
 
 ${personLabel ? `**السياق:** المستخدم بيتعامل مع شخص اسمه "${personLabel}"` : ""}
 ${context ? `**المرحلة الحالية:** ${context}` : ""}
 ${pulseInfo}
+${toneContext}
 
-**أسلوبك:**
-- استخدم العامية المصرية
-- كن متعاطفاً وداعماً
-- قدم نصائح عملية محددة
-- اسأل أسئلة توضيحية إذا لزم الأمر
-- ركز على التمكين، مش الحلول الجاهزة
-- لا تعطي نصائح طبية أو علاجية، بس دعم نفسي عام
+**أسلوب التنفيذ:**
+- استخدم العامية المصرية الذكية.
+- قدّم خطوة عملية واحدة واضحة.
+- اسأل سؤال توضيحي فقط لما يكون لازم.
+- لا تعطي نصائح طبية أو علاجية.
 
 ${conversationHistory ? `**المحادثة السابقة:**\n${conversationHistory}\n` : ""}
 
@@ -271,17 +272,24 @@ ${userMessage.content}`;
 
   const getFallbackReply = (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed) return "احكيلي أكتر وأنا معاك.";
+    const mode = resolveVoiceMode(agentContext?.pulse?.energy ?? null);
+    const modePrefix =
+      mode === "field_medic"
+        ? "أولوية دلوقتي: وقف النزيف."
+        : mode === "general_motivator"
+          ? "طاقتك تسمح بخطوة حاسمة."
+          : "خلّينا نفكك الموقف بهدوء.";
+    if (!trimmed) return `${modePrefix} احكيلي الجبهة اللي محتاجة تدخل دلوقتي.`;
     if (trimmed.includes("مش عارف") || trimmed.includes("مش قادر")) {
-      return "فاهم قد إيه الموضوع تقيل. خلّينا نأخدها خطوة خطوة: احكيلي موقف واحد حصل مؤخرًا.";
+      return `${modePrefix} اختار موقف واحد حصل قريب، واحنا نقفله خطوة خطوة.`;
     }
     if (trimmed.includes("خوف") || trimmed.includes("قلق")) {
-      return "ده طبيعي يحصل. جرّب تاخد نفس هادي ٤ مرات، وبعدها احكيلي إيه اللي بيقلقك بالتحديد.";
+      return `${modePrefix} خُد نفس عميق 4 مرات وثبّت موقعك، وبعدها قولي إيه مصدر الضجيج بالظبط.`;
     }
     if (trimmed.includes("حدود") || trimmed.includes("لا")) {
-      return "تمام، موضوع الحدود مهم. تحب نحدد جملة واحدة تقولها في الموقف الجاي؟";
+      return `${modePrefix} ممتاز. نفعّل الدرع بجملة واحدة جاهزة للموقف الجاي؟`;
     }
-    return "فاهمك. احكيلي موقف محدد حصل، وإنت حسّيت بإيه وقتها؟";
+    return `${modePrefix} احكيلي موقف محدد: حصل إمتى، واتقال فيه إيه، وسحب منك طاقة قد إيه؟`;
   };
 
   return (

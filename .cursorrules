@@ -1,0 +1,49 @@
+﻿# Al-Rehla Cursor Rules (Wave-Based Launch)
+
+## 1) Product Phasing Is Mandatory
+- Build all Phase 1, 2, and 3 code paths early.
+- Only expose UI entry points based on feature flags.
+- Never expose future-wave entry points to regular users without a lock state.
+
+## 2) God Mode (Role-Based)
+- Privileged roles: `admin`, `owner`, `superadmin`, `developer`.
+- Privileged roles must see all features regardless of flag mode.
+- Regular users must see only effective feature access from flags.
+
+## 3) Feature Flags Source of Truth
+- Definitions and defaults: `src/config/features.ts`.
+- Effective access + role bypass: `src/utils/featureFlags.ts`.
+- Admin controls: `src/components/admin/AdminDashboard.tsx`.
+
+## 4) Locked Feature UX Contract
+- Never return 404 for a disabled feature click.
+- Show `FeatureLockedModal` with a single consistent message.
+- Keep teaser visibility for locked entries where UX requires anticipation.
+
+## 5) AI Safety + Availability Contract
+- Agent prompt must include current `availableFeatures`.
+- Agent must not suggest or execute locked tools.
+- If a user asks for a locked capability, respond with the approved fallback line and route to current-wave options.
+
+## 6) Data Integrity Contract
+- Family-tree lineage is represented by `treeRelation.parentId` in node JSON.
+- Validators must run on load/save so hidden features still keep valid schema.
+- Export/import must preserve tree relation data even when UI is locked.
+
+## 7) User-Centric Decision Rule
+- Every new UI/behavior change must answer: why this helps the owner daily.
+- Prefer reuse over duplicate components.
+- Before major edits, run a discovery pass with `rg` on App/Sidebar/state/modules.
+
+## 8) Platform Access Persistence (Supabase/Vercel)
+- Never block on permissions without first running `npm run access:doctor`.
+- Access bootstrap source of truth is `scripts/bootstrap-access.ps1`.
+- Required keys for full autonomous ops:
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `ADMIN_API_SECRET`
+  - `SUPABASE_ACCESS_TOKEN`
+  - `SUPABASE_PROJECT_REF`
+  - `VERCEL_TOKEN`
+- After keys are set, run `npm run access:bootstrap` once to persist user env + verify CLI auth.

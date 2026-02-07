@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import type { PulseFocus, PulseMood } from "../state/pulseState";
@@ -31,6 +31,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({ isOpen, onSubmit, on
   const [focus, setFocus] = useState<PulseFocus>("none");
   const [touched, setTouched] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(5);
+  const autoSubmittedRef = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -39,12 +40,15 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({ isOpen, onSubmit, on
     setFocus("none");
     setTouched(false);
     setSecondsLeft(5);
+    autoSubmittedRef.current = false;
   }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
     if (touched) return;
     if (secondsLeft <= 0) {
+      if (autoSubmittedRef.current) return;
+      autoSubmittedRef.current = true;
       onSubmit({ energy, mood, focus, auto: true });
       return;
     }

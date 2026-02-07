@@ -65,10 +65,10 @@ export const RecoveryRoadmap: FC<RecoveryRoadmapProps> = ({
         <Sparkles className="w-6 h-6 text-teal-600 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
           <h3 className="text-base font-bold text-teal-900 mb-1">
-            🗺️ خريطة رحلة التعافي
+            🗺️ خريطة استعادة السيطرة
           </h3>
           <p className="text-xs text-teal-800">
-            رحلتك مع {personLabel} من الاستنزاف للتعافي الكامل
+            رحلتك مع {personLabel} من الاستنزاف لثبات السيطرة
           </p>
         </div>
       </div>
@@ -124,7 +124,7 @@ export const RecoveryRoadmap: FC<RecoveryRoadmapProps> = ({
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">{currentPhase.icon}</span>
             <h4 className="text-sm font-bold text-teal-900">
-              أنت دلوقتي في: {currentPhase.title}
+              أنت دلوقتي في محطة: {currentPhase.title}
             </h4>
           </div>
           
@@ -135,7 +135,7 @@ export const RecoveryRoadmap: FC<RecoveryRoadmapProps> = ({
           {/* Current Goals */}
           <div className="mb-3">
             <p className="text-xs font-semibold text-slate-900 mb-2">
-              🎯 أهداف المرحلة دي:
+              🎯 أهداف المحطة دي:
             </p>
             <ul className="space-y-1.5">
               {currentPhase.goals.map((goal, i) => (
@@ -150,7 +150,7 @@ export const RecoveryRoadmap: FC<RecoveryRoadmapProps> = ({
           {/* Tips */}
           <div className="p-3 bg-yellow-50 border border-yellow-300 rounded-lg">
             <p className="text-xs font-semibold text-yellow-900 mb-2">
-              💡 نصائح للمرحلة دي:
+              💡 تكتيكات المحطة دي:
             </p>
             <ul className="space-y-1.5">
               {currentPhase.tips.slice(0, 2).map((tip, i) => (
@@ -175,7 +175,7 @@ export const RecoveryRoadmap: FC<RecoveryRoadmapProps> = ({
           <div className="flex items-center gap-2 mb-2">
             <ArrowRight className="w-4 h-4 text-purple-600" />
             <h4 className="text-xs font-bold text-purple-900">
-              المرحلة الجاية: {nextPhase.title}
+              المحطة الجاية: {nextPhase.title}
             </h4>
           </div>
           <p className="text-xs text-purple-800 leading-relaxed">
@@ -193,15 +193,15 @@ export const RecoveryRoadmap: FC<RecoveryRoadmapProps> = ({
         >
           <div className="text-4xl mb-3">🎉</div>
           <h3 className="text-lg font-bold text-green-900 mb-2">
-            مبروك! وصلت للتعافي الكامل!
+            مبروك! استعدت السيطرة بالكامل!
           </h3>
           <p className="text-sm text-green-800 leading-relaxed mb-3">
-            علاقتك مع {personLabel} دلوقتي في مكانها الصحيح، وأنت متعافي نفسياً.
-            استمر في الحفاظ على الحدود وازدهر في حياتك!
+            جبهتك مع {personLabel} بقت في تموضع آمن ومستقر.
+            حافظ على الدرع واستثمر طاقتك في الجبهات اللي بتخدمك.
           </p>
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold">
             <Check className="w-4 h-4" />
-            رحلة مكتملة
+            السيطرة اكتملت
           </div>
         </motion.div>
       )}

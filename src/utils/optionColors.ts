@@ -15,9 +15,9 @@ const TIER_STYLES: Record<
     unselectedHover: "hover:bg-rose-50 hover:border-rose-200 hover:text-rose-800"
   },
   amber: {
-    selected: "bg-orange-500 text-white border-2 border-orange-600 shadow-sm",
+    selected: "bg-amber-500 text-white border-2 border-amber-600 shadow-sm",
     unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
-    unselectedHover: "hover:bg-orange-50 hover:border-orange-200 hover:text-orange-800"
+    unselectedHover: "hover:bg-amber-50 hover:border-amber-200 hover:text-amber-800"
   },
   yellow: {
     selected: "bg-yellow-300 text-slate-900 border-2 border-yellow-400 shadow-sm",

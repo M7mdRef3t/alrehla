@@ -19,7 +19,8 @@ import type { RecoveryPath } from "../modules/pathEngine/pathTypes";
 function isRecoveryPath(x: unknown): x is RecoveryPath {
   if (!x || typeof x !== "object") return false;
   const o = x as Record<string, unknown>;
-  return Array.isArray(o?.phases?.week1?.tasks);
+  const phases = o.phases as { week1?: { tasks?: unknown } } | undefined;
+  return Array.isArray(phases?.week1?.tasks);
 }
 
 interface DynamicRecoveryPlanProps {
@@ -54,15 +55,15 @@ interface DynamicRecoveryPlanProps {
 }
 
 function getPlanTitle(personLabel: string, ring: Ring): string {
-  if (ring === "red") return `خطة حماية طاقتك مع (${personLabel})`;
-  if (ring === "yellow") return `خطة توازن علاقتك مع (${personLabel})`;
-  return `خطة تعزيز علاقتك مع (${personLabel})`;
+  if (ring === "red") return `بروتوكول تأمين جبهة (${personLabel})`;
+  if (ring === "yellow") return `بروتوكول توازن جبهة (${personLabel})`;
+  return `بروتوكول تعزيز جبهة (${personLabel})`;
 }
 
 function buildInsightFromSymptoms(selectedSymptoms: string[]): string {
   if (selectedSymptoms.length === 0) return "";
   const labels = selectedSymptoms.map(getSymptomLabel).join(" و ");
-  return `بناءً على مشكلة (${labels})، ركزنا في الأسبوع الأول على حماية ثقتك بنفسك والحدود بدون قسوة.`;
+  return `بناءً على إشارات (${labels})، ركزنا في الأسبوع الأول على تأمين درعك الداخلي وحدودك بدون قسوة.`;
 }
 
 const LAST_N_DAYS = 14;
@@ -123,36 +124,36 @@ const PathProgressPanel: FC<{
   return (
     <div className="p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-right">
       <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-3">
-        <span>📊</span> تقدمك — أنت فين دلوقتي؟
+        <span>📊</span> لوحة القيادة — أنت واقف فين؟
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
         <div className="p-3 bg-white border border-teal-200 rounded-lg">
-          <p className="text-xs text-slate-600 mb-0.5">مناعة نفسية</p>
-          <p className="text-lg font-bold text-teal-600">تمارين حدود مُنجَزة: {completedStepsCount}</p>
-          <p className="text-xs text-slate-500">كل ما تنجز تمرين حدود، المؤشر يزيد</p>
+          <p className="text-xs text-slate-600 mb-0.5">مناعة الجبهة</p>
+          <p className="text-lg font-bold text-teal-600">مناورات درع مُنجزة: {completedStepsCount}</p>
+          <p className="text-xs text-slate-500">كل مناورة درع بتزوّد قوة الجبهة</p>
         </div>
         <div className="p-3 bg-white border border-amber-200 rounded-lg">
-          <p className="text-xs text-slate-600 mb-0.5">صفاء ذهني</p>
+          <p className="text-xs text-slate-600 mb-0.5">هدوء الرادار</p>
           <p className="text-lg font-bold text-amber-600">
-            {avgMood != null ? `مزاج ${avgMood}/5` : ruminationCount === 0 ? "بدون اجترار مسجّل" : `اجترار: ${ruminationCount}`}
+            {avgMood != null ? `مزاج ${avgMood}/5` : ruminationCount === 0 ? "بدون ضجيج مسجّل" : `ضجيج: ${ruminationCount}`}
           </p>
-          <p className="text-xs text-slate-500">{avgMood != null ? "متوسط آخر 7 أيام" : "كل ما قل الاجترار، المؤشر يزيد"}</p>
+          <p className="text-xs text-slate-500">{avgMood != null ? "متوسط آخر 7 أيام" : "كل ما قل الضجيج، المؤشر يزيد"}</p>
         </div>
         <div className="p-3 bg-white border border-violet-200 rounded-lg">
-          <p className="text-xs text-slate-600 mb-0.5">تحكم</p>
-          <p className="text-lg font-bold text-violet-600">أيام إنجاز: {completedDaysCount}</p>
-          <p className="text-xs text-slate-500">أنت اللي قررت تنجز — المؤشر يزيد</p>
+          <p className="text-xs text-slate-600 mb-0.5">تحكم ميداني</p>
+          <p className="text-lg font-bold text-violet-600">أيام حسم: {completedDaysCount}</p>
+          <p className="text-xs text-slate-500">كل يوم حسم بيثبّت سيطرتك</p>
         </div>
       </div>
       {pathId === "path_detox" && onUpdateBoundaryLegitimacyScore && (
         <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl mb-3 text-right">
-          <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 mb-1">مؤشر شرعية الحدود</p>
-          <p className="text-xs text-amber-800 dark:text-amber-300 mb-2">كيف تحس تجاه وضع الحدود دلوقتي؟</p>
+          <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 mb-1">مؤشر ثبات الدرع</p>
+          <p className="text-xs text-amber-800 dark:text-amber-300 mb-2">وضعك مع تفعيل الحدود دلوقتي عامل إزاي؟</p>
           <div className="flex flex-wrap gap-2">
             {[
-              { value: 0, label: "حاسس إني مجرم لما بقول لأ" },
-              { value: 50, label: "عارف إنه حقي بس قلبي بيوجعني" },
-              { value: 100, label: "ده حقي الطبيعي ومش ندمان عليه" }
+              { value: 0, label: "بحس إني معتدي لما بقول لأ" },
+              { value: 50, label: "عارف إنه حقي بس لسه في سحب ذنب" },
+              { value: 100, label: "ده حقي الطبيعي ودرعي ثابت" }
             ].map(({ value, label }) => (
               <button
                 key={value}
@@ -169,7 +170,7 @@ const PathProgressPanel: FC<{
             ))}
           </div>
           {boundaryLegitimacyScore != null && (
-            <p className="text-xs text-amber-700 dark:text-amber-400 mt-2">الحالي: {boundaryLegitimacyScore}%</p>
+            <p className="text-xs text-amber-700 dark:text-amber-400 mt-2">القراءة الحالية: {boundaryLegitimacyScore}%</p>
           )}
         </div>
       )}
@@ -274,7 +275,7 @@ const PathEngineBlock: FC<{
     <div className="border-2 border-teal-200 rounded-xl overflow-hidden bg-white text-right">
       <div className="p-4 bg-teal-50 border-b border-teal-200">
         <h3 className="font-bold text-teal-900 flex items-center gap-2">
-          <span>🛤️</span> مسار التعافي
+          <span>🛤️</span> مسار الاستعادة
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
             pathSnapshot.aiGenerated ? "bg-purple-100 text-purple-800" : "bg-slate-100 text-slate-600"
           }`}>
@@ -369,12 +370,12 @@ const PathEngineBlock: FC<{
                         className="mt-3 w-full py-2.5 px-4 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         <CheckCircle2 className="w-4 h-4" />
-                        تم الإنجاز ✅
+                        المناورة اتنفذت ✅
                       </button>
                     )}
                     {!isCurrentDone && moodPromptForTaskId === currentTask.id && (
                       <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                        <p className="text-sm font-semibold text-amber-900 mb-2">كيف حاسس دلوقتي؟</p>
+                        <p className="text-sm font-semibold text-amber-900 mb-2">الرادار بيقول إيه بعد التنفيذ؟</p>
                         <div className="flex flex-wrap gap-2 mb-2">
                           {( [1, 2, 3, 4, 5] as const ).map((score) => (
                             <button
@@ -392,14 +393,14 @@ const PathEngineBlock: FC<{
                           onClick={() => handleMoodSkip(currentTask.id)}
                           className="text-xs text-slate-500 hover:text-slate-700"
                         >
-                          تخطي
+                          تخطي القياس
                         </button>
                       </div>
                     )}
                     {isCurrentDone && (
                       <p className="mt-2 text-sm text-green-700 font-medium flex items-center gap-1">
                         <CheckCircle2 className="w-4 h-4" />
-                        تم إنجاز المهمة
+                        المهمة اتنفذت
                       </p>
                     )}
                   </div>
@@ -408,7 +409,7 @@ const PathEngineBlock: FC<{
             )}
             {phase?.successCriteria && (
               <p className="text-xs text-gray-600 pt-2 border-t border-teal-100">
-                <span className="font-semibold">علامة النجاح:</span> {phase.successCriteria}
+                <span className="font-semibold">علامة الحسم:</span> {phase.successCriteria}
               </p>
             )}
           </>
@@ -607,7 +608,7 @@ const DetachmentCurriculaBlock: FC<{ personLabel: string }> = ({ personLabel }) 
   if (loading) {
     return (
       <div className="p-4 bg-slate-100 border border-slate-200 rounded-xl text-right">
-        <p className="text-sm text-slate-600">جاري تحضير مناهج التعافي...</p>
+        <p className="text-sm text-slate-600">جاري تجهيز بروتوكولات الاستعادة...</p>
       </div>
     );
   }
@@ -615,7 +616,7 @@ const DetachmentCurriculaBlock: FC<{ personLabel: string }> = ({ personLabel }) 
   return (
     <div className="space-y-4 p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-right">
       <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-        <span>📚</span> مناهج التعافي
+        <span>📚</span> بروتوكولات الاستعادة
       </h3>
       <p className="text-sm font-semibold text-slate-700">{result.status_title}</p>
       <p className="text-sm text-slate-600 leading-relaxed">{result.deep_explanation}</p>
@@ -767,8 +768,8 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
     return (
       <div className="p-6 bg-teal-50 border-2 border-teal-300 rounded-xl text-center">
         <Sparkles className="w-8 h-8 text-teal-600 mx-auto mb-3 animate-pulse" />
-        <p className="text-sm font-semibold text-teal-900 mb-2">جاري تحضير مسار التعافي...</p>
-        <p className="text-xs text-teal-800">بنصمّم مهام الأسبوع الأول مخصصة ليك.</p>
+        <p className="text-sm font-semibold text-teal-900 mb-2">جاري تجهيز مسار الاستعادة...</p>
+        <p className="text-xs text-teal-800">بنصمّم مناورات الأسبوع الأول مخصوص ليك.</p>
       </div>
     );
   }
@@ -778,12 +779,12 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
       <div className="p-6 bg-purple-50 border-2 border-purple-300 rounded-xl text-center">
         <Sparkles className="w-8 h-8 text-purple-600 mx-auto mb-3 animate-pulse" />
         <p className="text-sm font-semibold text-purple-900 mb-2">
-          🧠 بنحلل المواقف...
+          🧠 بنقرأ المشهد...
         </p>
         <p className="text-xs text-purple-800">
           {geminiClient.isAvailable() 
-            ? 'الذكاء الاصطناعي بيحلل مواقفك ويصمم خطة مخصصة ليك...' 
-            : 'بنحلل المواقف وبنولد خطة مخصصة ليك...'}
+            ? 'الذكاء الاصطناعي بيحلل تقاريرك ويبني بروتوكول مخصص ليك...'
+            : 'بنحلل تقاريرك وبنبني بروتوكول مخصص ليك...'}
         </p>
       </div>
     );
@@ -1011,7 +1012,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
               )}
             </div>
             <p className="text-sm text-purple-800">
-              بناءً على المواقف اللي كتبتها، صممنا خطة تعافي مخصصة ليك على مدار {plan.totalWeeks} أسابيع
+              من واقع المواقف اللي سجلتها، جهزنا بروتوكول استعادة مخصص ليك على مدار {plan.totalWeeks} أسابيع
             </p>
           </div>
         </div>
@@ -1027,7 +1028,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
         </div>
       </div>
 
-      {/* رؤى من التحليل - مربوطة بالـ Tags */}
+      {/* قراءة المشهد - مربوطة بالـ Tags */}
       {(plan.insights.length > 0 || selectedSymptoms.length > 0) && (
         <div className="border-2 border-blue-200 rounded-xl overflow-hidden bg-white">
           <button
@@ -1036,7 +1037,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
           >
             <div className="flex items-center gap-2">
               <span className="text-lg">💡</span>
-              <span className="font-bold text-blue-900">رؤى من التحليل</span>
+              <span className="font-bold text-blue-900">قراءة المشهد</span>
             </div>
             {showInsights ? (
               <ChevronUp className="w-5 h-5 text-blue-700" />
@@ -1138,8 +1139,8 @@ const WeekCard: FC<WeekCardProps> = ({
 
   const whyBoxText =
     selectedSymptoms.length > 0
-      ? `لأن علاقتك بـ (${personLabel}) فيها ${selectedSymptoms.map(getSymptomLabel).join(" + ")}، فالتركيز هنا على الحدود بدون قسوة.`
-      : `التركيز هنا على الحدود والوعي باحتياجاتك مع (${personLabel}).`;
+      ? `لأن جبهتك مع (${personLabel}) فيها ${selectedSymptoms.map(getSymptomLabel).join(" + ")}، فالتركيز هنا على تقوية الدرع وحدودك بدون قسوة.`
+      : `التركيز هنا على تقوية الدرع ووضوح احتياجاتك مع (${personLabel}).`;
 
   return (
     <div className="border-2 border-purple-200 rounded-xl overflow-hidden bg-white">
@@ -1186,7 +1187,7 @@ const WeekCard: FC<WeekCardProps> = ({
         <div className="p-5 space-y-4 text-right border-t-2 border-purple-200">
           {/* Why Box */}
           <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl">
-            <p className="text-xs font-semibold text-amber-900 mb-1">💡 ليه التمارين دي؟</p>
+            <p className="text-xs font-semibold text-amber-900 mb-1">💡 ليه المناورات دي؟</p>
             <p className="text-sm text-amber-800">{whyBoxText}</p>
           </div>
 
@@ -1243,7 +1244,7 @@ const WeekCard: FC<WeekCardProps> = ({
                       animate={{ scale: 1 }}
                       className="absolute text-xl font-bold text-green-600"
                     >
-                      تم الإنجاز!
+                      تم الحسم!
                     </motion.span>
                   </motion.div>
                 )}
@@ -1268,7 +1269,7 @@ const WeekCard: FC<WeekCardProps> = ({
 
           <div className="pt-4 border-t border-purple-200">
             <p className="text-xs text-gray-600">
-              <span className="font-semibold">علامة النجاح:</span> {step.successCriteria}
+              <span className="font-semibold">علامة الحسم:</span> {step.successCriteria}
             </p>
           </div>
         </div>
@@ -1352,13 +1353,13 @@ const ActionItem: FC<ActionItemProps> = ({
               className="mt-3 w-full py-2.5 px-4 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               <CheckCircle2 className="w-4 h-4" />
-              تم الإنجاز ✅
+              المناورة اتنفذت ✅
             </button>
           )}
           {isCompleted && (
             <p className="mt-2 text-sm text-green-700 font-medium flex items-center gap-1">
               <CheckCircle2 className="w-4 h-4" />
-              تم إنجاز المهمة
+              المهمة اتنفذت
             </p>
           )}
 
@@ -1371,7 +1372,7 @@ const ActionItem: FC<ActionItemProps> = ({
                 className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
               >
                 <HelpCircle className="w-3.5 h-3.5" />
-                مش حاسس التمرين ده مناسب؟
+                حاسس إن المناورة دي مش مناسبة؟
               </button>
               {showFeedbackOptions && (
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -1402,7 +1403,7 @@ const ActionItem: FC<ActionItemProps> = ({
               )}
               {stepFeedbackValue && (
                 <p className="mt-1 text-xs text-purple-600">
-                  تم تسجيل ملاحظتك — هنراعيها في التمارين الجاية
+                  ملاحظتك اتسجلت — هنظبط المناورات الجاية عليها
                 </p>
               )}
             </div>

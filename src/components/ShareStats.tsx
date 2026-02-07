@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Share2, Download, TrendingUp, Users, Calendar, Check } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import { useJourneyState } from "../state/journeyState";
-import html2canvas from "html2canvas";
 
 interface ShareStatsProps {
   isOpen: boolean;
@@ -47,6 +46,7 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
     setIsExporting(true);
 
     try {
+      const { default: html2canvas } = await import("html2canvas");
       const canvas = await html2canvas(statsRef.current, {
         backgroundColor: "#ffffff",
         scale: 2,

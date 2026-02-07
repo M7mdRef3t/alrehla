@@ -257,7 +257,7 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
   const understanding = {
     red: "العلاقة دي بتاخد منك أكتر مما بتديك. جسمك بيحذرك - اسمع له.",
     yellow: "في أنماط مش صحية محتاجة انتباه. الحدود هتحميك.",
-    green: "علاقة صحية ومتوازنة. حافظ عليها واستمر."
+    green: "الجبهة آمنة ومتوازنة. حافظ على نفس القواعد."
   };
 
   return (
@@ -305,7 +305,7 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
         </p>
         {!compactMode && (
           <p className="text-xs text-teal-600 mb-3">
-            📝 اكتب المواقف المطلوبة عشان نولّد ليك خطة تعافي مخصصة (30 يوم)
+            📝 اكتب المواقف المطلوبة عشان نولّد ليك بروتوكول استعادة مخصص (30 يوم)
           </p>
         )}
         <div className="space-y-3">

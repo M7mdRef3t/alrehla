@@ -85,8 +85,9 @@ ${allText}
       .filter(p => p.confidence >= 0.7)
       .map(p => ({
         type: p.type,
+        pattern: p.description,
+        frequency: p.examples.length,
         severity: p.severity,
-        count: p.examples.length,
         examples: p.examples,
         description: p.description,
         triggers: p.triggers
@@ -96,7 +97,7 @@ ${allText}
         return severityOrder[b.severity] - severityOrder[a.severity];
       });
 
-    const primaryPattern = patterns.length > 0 ? patterns[0].type : undefined;
+    const primaryPattern = patterns.length > 0 ? patterns[0] : null;
 
     return {
       patterns,

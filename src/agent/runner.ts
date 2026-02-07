@@ -1,6 +1,9 @@
 import { useMapState } from "../state/mapState";
 import { isKnownSymptomId } from "./tools";
 import type { AgentActions } from "./types";
+import type { FeatureFlagKey } from "../config/features";
+
+const LOCKED_REPLY = "الجزء ده لسه بيتبني. نكمل بالدائرة الحالية الأول.";
 
 export interface RunnerDeps {
   /** حل اسم الشخص إلى nodeId. إن لم يُوجد يُرجع null. */
@@ -15,6 +18,8 @@ export interface RunnerDeps {
   onNavigateBaseline: () => void;
   /** فتح غرفة الطوارئ (Phase 2) */
   onNavigateEmergency?: () => void;
+  /** صلاحيات الميزات المتاحة */
+  availableFeatures: Record<FeatureFlagKey, boolean>;
   /** فتح نافذة شخص معين (على الخريطة) */
   onNavigatePerson: (nodeId: string) => void;
 }
@@ -28,12 +33,16 @@ export function createAgentActions(deps: RunnerDeps): AgentActions {
     onNavigateMap,
     onNavigateBaseline,
     onNavigateEmergency,
+    availableFeatures,
     onNavigatePerson
   } = deps;
 
   const getState = useMapState.getState;
 
   const logSituation: AgentActions["logSituation"] = async (personLabelOrId, text, emotionalTag) => {
+    if (!availableFeatures.dawayir_map || !availableFeatures.basic_diagnosis) {
+      return { ok: false, error: LOCKED_REPLY };
+    }
     const nodeId = resolvePerson(personLabelOrId);
     if (!nodeId) return { ok: false, error: `لم أجد شخصاً بهذا الاسم أو المعرف: ${personLabelOrId}` };
     try {
@@ -51,6 +60,9 @@ export function createAgentActions(deps: RunnerDeps): AgentActions {
   };
 
   const addOrUpdateSymptom: AgentActions["addOrUpdateSymptom"] = async (personLabelOrId, symptomIdOrText) => {
+    if (!availableFeatures.dawayir_map || !availableFeatures.basic_diagnosis) {
+      return { ok: false, error: LOCKED_REPLY };
+    }
     const nodeId = resolvePerson(personLabelOrId);
     if (!nodeId) return { ok: false, error: `لم أجد شخصاً بهذا الاسم أو المعرف: ${personLabelOrId}` };
     const node = getState().nodes.find((n) => n.id === nodeId);
@@ -72,6 +84,9 @@ export function createAgentActions(deps: RunnerDeps): AgentActions {
   };
 
   const updateRelationshipZone: AgentActions["updateRelationshipZone"] = async (personLabelOrId, zone) => {
+    if (!availableFeatures.dawayir_map || !availableFeatures.basic_diagnosis) {
+      return { ok: false, error: LOCKED_REPLY };
+    }
     const nodeId = resolvePerson(personLabelOrId);
     if (!nodeId) return { ok: false, error: `لم أجد شخصاً بهذا الاسم أو المعرف: ${personLabelOrId}` };
     try {
@@ -83,16 +98,27 @@ export function createAgentActions(deps: RunnerDeps): AgentActions {
   };
 
   const navigate: AgentActions["navigate"] = (route) => {
+    if (route === "map" && !availableFeatures.dawayir_map) {
+      return { ok: false, error: LOCKED_REPLY };
+    }
+    if (route.startsWith("person:") && (!availableFeatures.dawayir_map || !availableFeatures.basic_diagnosis)) {
+      return { ok: false, error: LOCKED_REPLY };
+    }
     if (route === "breathing") onNavigateBreathing();
     else if (route === "gym") onNavigateGym();
     else if (route === "map") onNavigateMap();
     else if (route === "baseline") onNavigateBaseline();
     else if (route === "emergency") onNavigateEmergency?.();
     else if (route.startsWith("person:")) onNavigatePerson(route.slice(7).trim());
+    return { ok: true };
   };
 
   const showOverlay: AgentActions["showOverlay"] = (overlayId) => {
-    if (overlayId === "emergency") onNavigateEmergency?.();
+    if (overlayId === "emergency") {
+      onNavigateEmergency?.();
+      return { ok: true };
+    }
+    return { ok: false, error: "overlayId غير صالح" };
   };
 
   return {

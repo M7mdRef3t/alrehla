@@ -1,3 +1,4 @@
+import { FunctionCallingMode, type ToolConfig } from "@google/generative-ai";
 import { DEFAULT_GENERATION_CONFIG, DEFAULT_MODEL_ORDER, getClient, getModel, isRetryableModelError } from "./_shared";
 
 export default async function handler(req: any, res: any) {
@@ -20,7 +21,7 @@ export default async function handler(req: any, res: any) {
 
   const config = generationConfig ?? DEFAULT_GENERATION_CONFIG;
   const models: string[] = Array.isArray(modelOrder) && modelOrder.length > 0 ? modelOrder : DEFAULT_MODEL_ORDER;
-  const toolConfig = { functionCallingConfig: { mode: "AUTO" as const } };
+  const toolConfig: ToolConfig = { functionCallingConfig: { mode: FunctionCallingMode.AUTO } };
 
   let lastError: unknown = null;
   for (let i = 0; i < models.length; i += 1) {
