@@ -1086,7 +1086,8 @@ const UsersPanel: FC = () => {
       `${u.fullName} ${u.email} ${u.id}`.toLowerCase().includes(query.toLowerCase())
     ) ?? [];
 
-  const ROLE_OPTIONS = ["user", "admin", "developer", "editor", "moderator", "owner"];
+  // Keep this aligned with actual auth/feature-role logic (see src/utils/featureFlags.ts and AdminGate allowed roles).
+  const ROLE_OPTIONS = ["user", "admin", "developer", "owner", "superadmin"];
 
   const openGodView = async (sessionId: string) => {
     setGodViewSessionId(sessionId);
@@ -1561,4 +1562,3 @@ const StatCard: FC<{ title: string; value: string; hint?: string }> = ({ title, 
     {hint && <p className="text-[11px] text-slate-500 mt-2">{hint}</p>}
   </div>
 );
-

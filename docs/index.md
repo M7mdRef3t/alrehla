@@ -4,6 +4,7 @@
 - concept.md
 - user-journey.md
 - pitch.md
+- roles.md
 - release-waves-playbook.md
 - platform-constitution-summary.md
 - constitution-discovery-report.md

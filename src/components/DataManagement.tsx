@@ -1,7 +1,8 @@
 import type { FC } from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, Upload, X, AlertTriangle, Check, Database, FileJson, HardDrive, FileText, Cloud, LogIn, LogOut, User } from "lucide-react";
+import { Download, Upload, X, AlertTriangle, Check, Database, FileJson, HardDrive, FileText, Cloud, LogOut, User } from "lucide-react";
+import { GoogleMark } from "./GoogleMark";
 import {
   exportToJSON,
   importFromJSON,
@@ -16,7 +17,7 @@ import { useMapState } from "../state/mapState";
 import { clearLocalData } from "../services/secureStore";
 import { fetchRemoteState, pushRemoteState } from "../services/cloudStore";
 import { useAuthState } from "../state/authState";
-import { signInWithEmail, signUpWithEmail, signOut } from "../services/authService";
+import { signInWithGoogle, signOut } from "../services/authService";
 
 let pdfExportLoader: Promise<typeof import("../services/pdfExport")> | null = null;
 
@@ -45,8 +46,6 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
   const [cloudLoading, setCloudLoading] = useState(false);
   const [cloudSuccess, setCloudSuccess] = useState<string | null>(null);
   const [cloudError, setCloudError] = useState<string | null>(null);
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -228,34 +227,14 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
     }
   };
 
-  const handleSignIn = async () => {
-    if (!authEmail || !authPassword) {
-      setAuthMessage("حدّد الإحداثيات: البريد وكلمة المرور.");
-      return;
-    }
+  const handleGoogleLogin = async () => {
     setAuthLoading(true);
     setAuthMessage(null);
-    const { error } = await signInWithEmail(authEmail.trim(), authPassword);
+    const { error } = await signInWithGoogle();
     if (error) {
-      setAuthMessage("بوابة الدخول لسه مقفولة. راجع البيانات وحاول تاني.");
+      setAuthMessage("تعذّر فتح بوابة جوجل. راجع الإعدادات ونكمل.");
     } else {
-      setAuthMessage("تم تأمين البوابة. أنت داخل غرفة العمليات.");
-    }
-    setAuthLoading(false);
-  };
-
-  const handleSignUp = async () => {
-    if (!authEmail || !authPassword) {
-      setAuthMessage("حدّد الإحداثيات: البريد وكلمة المرور.");
-      return;
-    }
-    setAuthLoading(true);
-    setAuthMessage(null);
-    const { error } = await signUpWithEmail(authEmail.trim(), authPassword);
-    if (error) {
-      setAuthMessage("تأسيس الحساب اتعطّل. جرّب بريد تاني أو راجع الإعدادات.");
-    } else {
-      setAuthMessage("الحساب اتجهّز. راجع بريدك وثبّت الدخول من الرسالة.");
+      setAuthMessage("تمام... بنحوّلك على بوابة جوجل.");
     }
     setAuthLoading(false);
   };
@@ -447,40 +426,15 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <input
-                          type="email"
-                          value={authEmail}
-                          onChange={(e) => setAuthEmail(e.target.value)}
-                          placeholder="البريد الإلكتروني"
-                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
-                        <input
-                          type="password"
-                          value={authPassword}
-                          onChange={(e) => setAuthPassword(e.target.value)}
-                          placeholder="كلمة المرور"
-                          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={handleSignIn}
-                            disabled={authLoading}
-                            className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:border-blue-400 hover:bg-blue-50 disabled:opacity-50"
-                          >
-                            <LogIn className="w-4 h-4 text-blue-600" />
-                            دخول
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleSignUp}
-                            disabled={authLoading}
-                            className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:border-emerald-400 hover:bg-emerald-50 disabled:opacity-50"
-                          >
-                            <User className="w-4 h-4 text-emerald-600" />
-                            حساب جديد
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={handleGoogleLogin}
+                          disabled={authLoading || authStatus === "loading"}
+                          className="w-full flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:border-blue-400 hover:bg-blue-50 disabled:opacity-50"
+                        >
+                          <GoogleMark className="w-4 h-4" />
+                          Continue with Google
+                        </button>
                         {authStatus === "loading" && <p className="text-xs text-slate-500">جاري فحص الجلسة...</p>}
                         {authMessage && <p className="text-xs text-slate-500">{authMessage}</p>}
                       </div>

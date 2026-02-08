@@ -85,6 +85,11 @@ export const AnalyticsEvents = {
   GOAL_SELECTED: "goal_selected",
   PERSON_ADDED: "person_added",
   BASELINE_COMPLETED: "baseline_completed",
+
+  // Conversion (micro-commitment)
+  MICRO_COMPASS_OPENED: "micro_compass_opened",
+  MICRO_COMPASS_COMPLETED: "micro_compass_completed",
+  AUTH_GOOGLE_CLICKED: "auth_google_clicked",
   
   // Feature usage
   BREATHING_USED: "breathing_exercise_used",

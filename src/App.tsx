@@ -9,7 +9,7 @@ import { useAchievementState, getLibraryOpenedAt, getBreathingUsedAt } from "./s
 import { useThemeState } from "./state/themeState";
 import { usePulseState } from "./state/pulseState";
 import type { PulseFocus, PulseMood } from "./state/pulseState";
-import { trackPageView } from "./services/analytics";
+import { trackPageView, trackEvent, AnalyticsEvents } from "./services/analytics";
 import { sendNotification, sendPresetNotification, NOTIFICATION_TYPES } from "./services/notifications";
 import type { AdviceCategory } from "./data/adviceScripts";
 import type { AgentActions, AgentContext } from "./agent/types";
@@ -20,8 +20,16 @@ import { useAdminState } from "./state/adminState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "./utils/featureFlags";
 import type { FeatureFlagKey } from "./config/features";
 import { useAuthState } from "./state/authState";
+import { InstallHintBanner } from "./components/InstallHintBanner";
+import { GoogleMark } from "./components/GoogleMark";
+import { GoogleAuthModal } from "./components/GoogleAuthModal";
+import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
+import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
+import { geminiClient } from "./services/geminiClient";
+import { isSupabaseReady } from "./services/supabaseClient";
 
 type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
+type PulseCheckContext = "regular" | "start_recovery";
 
 /** مسافة للمينيو — تاب صغير ظاهر (الشريط يظهر عند التحريك) */
 const SIDEBAR_TAB_MARGIN = "2.5rem"; // w-10
@@ -56,6 +64,34 @@ const preloadGym = () => import("./components/RelationshipGym");
 const hasSupabaseEnv = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 type AgentModule = typeof import("./agent");
 
+function getFirstNameFromAuthUser(user: any): string | null {
+  if (!user) return null;
+  const meta = (user as { user_metadata?: Record<string, unknown> }).user_metadata ?? {};
+  const rawName =
+    (typeof meta.full_name === "string" && meta.full_name.trim()) ||
+    (typeof meta.name === "string" && meta.name.trim()) ||
+    "";
+  const email = typeof (user as { email?: unknown }).email === "string" ? String((user as { email: string }).email) : "";
+  const fromEmail = email && email.includes("@") ? email.split("@")[0] : "";
+  const base = rawName || fromEmail;
+  if (!base) return null;
+  const first = base.trim().split(/\s+/)[0];
+  return first || null;
+}
+
+function cleanSingleLine(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+function cleanWelcomeMessage(text: string | null): string | null {
+  if (!text) return null;
+  const oneLine = cleanSingleLine(text);
+  if (!oneLine) return null;
+  const unquoted = oneLine.replace(/^["“]+|["”]+$/g, "").trim();
+  if (!unquoted) return null;
+  return unquoted.length > 140 ? `${unquoted.slice(0, 140).trim()}...` : unquoted;
+}
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>("landing");
   const [category, setCategory] = useState<AdviceCategory>("general");
@@ -67,6 +103,7 @@ export default function App() {
   const [missionNodeId, setMissionNodeId] = useState<string | null>(null);
   const [toolsBackScreen, setToolsBackScreen] = useState<Screen>("landing");
   const [showPulseCheck, setShowPulseCheck] = useState(false);
+  const [pulseCheckContext, setPulseCheckContext] = useState<PulseCheckContext>("regular");
   const [showCocoon, setShowCocoon] = useState(false);
   const [showNoiseSilencingPulse, setShowNoiseSilencingPulse] = useState(false);
   const [pendingCocoonAfterNoise, setPendingCocoonAfterNoise] = useState(false);
@@ -76,6 +113,9 @@ export default function App() {
   const [isAdminRoute, setIsAdminRoute] = useState(() =>
     typeof window !== "undefined" ? window.location.pathname.startsWith("/admin") : false
   );
+  const [postAuthIntent, setPostAuthIntentState] = useState<PostAuthIntent | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [welcome, setWelcome] = useState<{ message: string; source: WelcomeSource } | null>(null);
 
   const recordUserActivity = useNotificationState((s) => s.recordUserActivity);
   const notificationSettings = useNotificationState((s) => s.settings);
@@ -106,6 +146,8 @@ export default function App() {
   const setScoringWeights = useAdminState((s) => s.setScoringWeights);
   const setScoringThresholds = useAdminState((s) => s.setScoringThresholds);
   const setPulseCheckMode = usePulseState((s) => s.setCheckInMode);
+  const authStatus = useAuthState((s) => s.status);
+  const authUser = useAuthState((s) => s.user);
   const role = useAuthState((s) => s.roleOverride ?? s.role);
   const isPrivilegedUser = isPrivilegedRole(role);
   const showTopToolsButton = isPrivilegedUser;
@@ -125,6 +167,7 @@ export default function App() {
   const canUseAIField = availableFeatures.ai_field;
   const canShowAIChatbot = canUseAIField && isPrivilegedUser;
   const canUsePulseCheck = availableFeatures.pulse_check;
+  const shouldGateStartWithAuth = isSupabaseReady && !authUser && !isPrivilegedUser;
 
   useEffect(() => {
     if (!canShowAIChatbot) return;
@@ -187,8 +230,12 @@ export default function App() {
 
   useEffect(() => {
     if (!canUsePulseCheck) return;
+    if (screen === "landing" && shouldGateStartWithAuth) return;
     if (pulseCheckMode === "everyOpen") {
-      const t = window.setTimeout(() => setShowPulseCheck(true), 350);
+      const t = window.setTimeout(() => {
+        setPulseCheckContext("regular");
+        setShowPulseCheck(true);
+      }, 350);
       return () => window.clearTimeout(t);
     }
 
@@ -200,14 +247,17 @@ export default function App() {
       lastPulseDate.getMonth() === now.getMonth() &&
       lastPulseDate.getDate() === now.getDate();
     if (isSameDay) return;
-    const t = window.setTimeout(() => setShowPulseCheck(true), 350);
+    const t = window.setTimeout(() => {
+      setPulseCheckContext("regular");
+      setShowPulseCheck(true);
+    }, 350);
     return () => window.clearTimeout(t);
-  }, [lastPulse, pulseCheckMode, canUsePulseCheck]);
+  }, [lastPulse, pulseCheckMode, canUsePulseCheck, screen, shouldGateStartWithAuth]);
 
   useEffect(() => {
     if (canUsePulseCheck) return;
-    if (showPulseCheck) setShowPulseCheck(false);
-  }, [canUsePulseCheck, showPulseCheck]);
+    if (showPulseCheck && pulseCheckContext === "regular") setShowPulseCheck(false);
+  }, [canUsePulseCheck, showPulseCheck, pulseCheckContext]);
 
   useEffect(() => {
     const pageNames: Record<Screen, string> = {
@@ -221,12 +271,72 @@ export default function App() {
     trackPageView(pageNames[screen]);
   }, [screen]);
 
+  useEffect(() => {
+    if (authStatus !== "ready") return;
+    if (!authUser) return;
+    const intent = getPostAuthIntent();
+    if (!intent) return;
+    clearPostAuthIntent();
+    if (intent.kind === "login") {
+      setPulseCheckContext("regular");
+      setShowPulseCheck(false);
+      setShowAuthModal(false);
+      setPostAuthIntentState(null);
+      return;
+    }
+    if (intent.kind !== "start_recovery") return;
+
+    setPulseCheckContext("regular");
+    setShowPulseCheck(false);
+    setShowAuthModal(false);
+    setPostAuthIntentState(null);
+
+    logPulse(intent.pulse);
+
+    const firstName = getFirstNameFromAuthUser(authUser);
+    const templateMessage = firstName
+      ? `أهلاً يا ${firstName}.. جاهز نرسم أول دايرة؟`
+      : "أهلاً بيك.. جاهز نرسم أول دايرة؟";
+    setWelcome({ message: templateMessage, source: "template" });
+    setScreen("goal");
+
+    let cancelled = false;
+    void (async () => {
+      if (!geminiClient.isAvailable()) return;
+      const prompt = firstName
+        ? `اكتب ترحيب قصير باللهجة المصرية لمستخدم اسمه "${firstName}". جملة واحدة فقط + سؤال. بدون إيموجي. بدون علامات اقتباس. أقل من 12 كلمة.`
+        : "اكتب ترحيب قصير باللهجة المصرية للمستخدم. جملة واحدة فقط + سؤال. بدون إيموجي. بدون علامات اقتباس. أقل من 12 كلمة.";
+      const out = await geminiClient.generate(prompt);
+      if (cancelled) return;
+      const cleaned = cleanWelcomeMessage(out);
+      if (!cleaned) return;
+      setWelcome({ message: cleaned, source: "ai" });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authStatus, authUser, logPulse]);
+
   const goToGoals = () => {
     if (!canUseMap) {
       setLockedFeature("dawayir_map");
       return;
     }
     setScreen("goal");
+  };
+
+  const startRecovery = () => {
+    if (shouldGateStartWithAuth) {
+      trackEvent(AnalyticsEvents.MICRO_COMPASS_OPENED, { source: "landing", gate: "pulse" });
+      setWelcome(null);
+      setPostAuthIntentState(null);
+      setShowAuthModal(false);
+      setPulseCheckContext("start_recovery");
+      setShowPulseCheck(true);
+      return;
+    }
+    goToGoals();
   };
 
   useEffect(() => {
@@ -290,9 +400,33 @@ export default function App() {
     setScreen("goal");
   };
 
+  const closePulseCheck = () => {
+    setShowPulseCheck(false);
+    setPulseCheckContext("regular");
+  };
+
+  const handlePulseGateSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean }) => {
+    trackEvent(AnalyticsEvents.MICRO_COMPASS_COMPLETED, {
+      gate: "pulse",
+      pulse_energy: payload.energy,
+      pulse_mood: payload.mood,
+      pulse_focus: payload.focus,
+      pulse_auto: payload.auto ?? false
+    });
+    closePulseCheck();
+
+    const intent: PostAuthIntent = {
+      kind: "start_recovery",
+      pulse: payload,
+      createdAt: Date.now()
+    };
+    setPostAuthIntentState(intent);
+    setShowAuthModal(true);
+  };
+
   const handlePulseSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean }) => {
     logPulse(payload);
-    setShowPulseCheck(false);
+    closePulseCheck();
 
     const isLow = payload.energy <= 3;
     const isAngry = payload.mood === "angry";
@@ -548,6 +682,25 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex transition-colors" dir="rtl">
+      <InstallHintBanner />
+      {isSupabaseReady && screen === "landing" && !authUser && !showAuthModal && !showPulseCheck && (
+        <button
+          type="button"
+          onClick={() => {
+            setPulseCheckContext("regular");
+            setShowPulseCheck(false);
+            setWelcome(null);
+            const intent: PostAuthIntent = { kind: "login", createdAt: Date.now() };
+            setPostAuthIntentState(intent);
+            setShowAuthModal(true);
+          }}
+          className="fixed left-4 z-[80] top-[calc(env(safe-area-inset-top)+0.75rem)] w-11 h-11 flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+          aria-label="تسجيل الدخول"
+          title="تسجيل الدخول"
+        >
+          <GoogleMark className="w-5 h-5" />
+        </button>
+      )}
       {isPrivilegedUser && (
         <Suspense fallback={null}>
           <AppSidebar
@@ -571,7 +724,7 @@ export default function App() {
             <div key={screen} className="w-full flex justify-center max-w-2xl">
             {screen === "landing" && (
               <Landing
-                onStartJourney={goToGoals}
+                onStartJourney={startRecovery}
                 onOpenTools={openJourneyTools}
                 showTopToolsButton={showTopToolsButton}
                 showPostStartContent={isPrivilegedUser}
@@ -582,15 +735,25 @@ export default function App() {
             )}
 
             {screen === "goal" && (
-              <GoalPicker
-                onBack={() => setScreen("landing")}
-                onContinue={(nextCategory, nextGoalId) => {
-                  setCategory(nextCategory);
-                  setGoalId(nextGoalId);
-                  useJourneyState.getState().setLastGoal(nextGoalId, nextCategory);
-                  setScreen("map");
-                }}
-              />
+              <div className="w-full">
+                {welcome && (
+                  <OnboardingWelcomeBubble
+                    message={welcome.message}
+                    source={welcome.source}
+                    onClose={() => setWelcome(null)}
+                  />
+                )}
+                <GoalPicker
+                  onBack={() => setScreen("landing")}
+                  onContinue={(nextCategory, nextGoalId) => {
+                    setWelcome(null);
+                    setCategory(nextCategory);
+                    setGoalId(nextGoalId);
+                    useJourneyState.getState().setLastGoal(nextGoalId, nextCategory);
+                    setScreen("map");
+                  }}
+                />
+              </div>
             )}
 
             {screen === "map" && (
@@ -706,8 +869,14 @@ export default function App() {
         {showPulseCheck && (
           <PulseCheckModal
             isOpen={showPulseCheck}
-            onSubmit={handlePulseSubmit}
-            onClose={() => setShowPulseCheck(false)}
+            onSubmit={(payload) => {
+              if (pulseCheckContext === "start_recovery") {
+                handlePulseGateSubmit(payload);
+                return;
+              }
+              handlePulseSubmit(payload);
+            }}
+            onClose={closePulseCheck}
           />
         )}
 
@@ -760,6 +929,14 @@ export default function App() {
           />
         )}
       </Suspense>
+
+      {postAuthIntent && (
+        <GoogleAuthModal
+          isOpen={showAuthModal}
+          intent={postAuthIntent}
+          onClose={() => setShowAuthModal(false)}
+        />
+      )}
     </div>
   );
 }

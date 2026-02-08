@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import type { PulseFocus, PulseMood } from "../state/pulseState";
@@ -29,32 +29,13 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({ isOpen, onSubmit, on
   const [energy, setEnergy] = useState(5);
   const [mood, setMood] = useState<PulseMood>("calm");
   const [focus, setFocus] = useState<PulseFocus>("none");
-  const [touched, setTouched] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(5);
-  const autoSubmittedRef = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return;
     setEnergy(5);
     setMood("calm");
     setFocus("none");
-    setTouched(false);
-    setSecondsLeft(5);
-    autoSubmittedRef.current = false;
   }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    if (touched) return;
-    if (secondsLeft <= 0) {
-      if (autoSubmittedRef.current) return;
-      autoSubmittedRef.current = true;
-      onSubmit({ energy, mood, focus, auto: true });
-      return;
-    }
-    const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [isOpen, secondsLeft, touched, energy, mood, focus, onSubmit]);
 
   const handleSubmit = () => {
     onSubmit({ energy, mood, focus });
@@ -92,17 +73,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({ isOpen, onSubmit, on
             </div>
 
             <div className="p-4 space-y-4">
-              <div className="flex items-center justify-between text-xs text-slate-500">
-                <span>استجابة تلقائية خلال</span>
-                <span className="font-semibold">{secondsLeft}s</span>
-              </div>
-              <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-teal-500 transition-all"
-                  style={{ width: `${(secondsLeft / 5) * 100}%` }}
-                />
-              </div>
-
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">مؤشر البطارية 🔋</label>
                 <input
@@ -112,7 +82,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({ isOpen, onSubmit, on
                   value={energy}
                   onChange={(e) => {
                     setEnergy(Number(e.target.value));
-                    setTouched(true);
                   }}
                   className="w-full accent-teal-600"
                 />
@@ -132,7 +101,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({ isOpen, onSubmit, on
                       type="button"
                       onClick={() => {
                         setMood(item.id);
-                        setTouched(true);
                       }}
                       className={`px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${
                         mood === item.id
@@ -156,7 +124,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({ isOpen, onSubmit, on
                       type="button"
                       onClick={() => {
                         setFocus(item.id);
-                        setTouched(true);
                       }}
                       className={`px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${
                         focus === item.id

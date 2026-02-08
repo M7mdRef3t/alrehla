@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useEffect, useRef, useState } from "react";
-import { LogIn, LogOut, Mail, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { landingCopy } from "../copy/landing";
 import { getJourneyToolsView } from "../data/journeyTools";
 import { useJourneyState } from "../state/journeyState";
@@ -9,10 +9,6 @@ import { useAchievementState } from "../state/achievementState";
 import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
 import { getGoalMeta } from "../data/goalMeta";
 import type { FeatureFlagKey } from "../config/features";
-import { useAuthState } from "../state/authState";
-import { signInWithGoogle, signInWithMagicLink, signOut } from "../services/authService";
-import { isSupabaseReady } from "../services/supabaseClient";
-import { isPrivilegedRole } from "../utils/featureFlags";
 
 interface LandingProps {
   onStartJourney: () => void;
@@ -23,13 +19,6 @@ interface LandingProps {
   onFeatureLocked?: (feature: FeatureFlagKey) => void;
   availableFeatures?: Partial<Record<FeatureFlagKey, boolean>>;
 }
-
-type AuthMessage = {
-  kind: "success" | "error" | "info";
-  text: string;
-};
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const Landing: FC<LandingProps> = ({
   onStartJourney,
@@ -52,17 +41,6 @@ export const Landing: FC<LandingProps> = ({
   const lastGoalRef = useRef<string | null>(lastGoalLabel ?? null);
   const unlockedIds = useAchievementState((s) => s.unlockedIds);
   const hasMissionCompleted = useMapState((s) => s.nodes.some((n) => n.missionProgress?.isCompleted));
-  const authStatus = useAuthState((s) => s.status);
-  const authUser = useAuthState((s) => s.user);
-  const role = useAuthState((s) => s.roleOverride ?? s.role);
-  const [magicEmail, setMagicEmail] = useState("");
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authMessage, setAuthMessage] = useState<AuthMessage | null>(null);
-  const isPrivileged = isPrivilegedRole(role);
-  const hasAuthSession = Boolean(authUser);
-  const showLaunchAuth = isSupabaseReady && !hasAuthSession && !isPrivileged;
-  const showPrivilegedBypass = isSupabaseReady && !hasAuthSession && isPrivileged;
-  const canStartJourney = !showLaunchAuth;
   const tools = getJourneyToolsView({
     nodesCount,
     baselineCompletedAt: baselineCompletedAt ?? null,
@@ -82,80 +60,9 @@ export const Landing: FC<LandingProps> = ({
     lastGoalRef.current = lastGoalLabel;
   }, [lastGoalLabel]);
 
-  useEffect(() => {
-    if (!authUser?.email) return;
-    setMagicEmail(authUser.email);
-    setAuthMessage(null);
-  }, [authUser?.email]);
-
   const handleStartJourney = () => {
-    if (!canStartJourney) {
-      setAuthMessage({
-        kind: "info",
-        text: landingCopy.auth.startBlocked
-      });
-      return;
-    }
     onStartJourney();
   };
-
-  const handleGoogleLogin = async () => {
-    setAuthLoading(true);
-    setAuthMessage(null);
-    const { error } = await signInWithGoogle();
-    if (error) {
-      setAuthMessage({
-        kind: "error",
-        text: landingCopy.auth.googleFailed
-      });
-    } else {
-      setAuthMessage({
-        kind: "info",
-        text: landingCopy.auth.googleRedirecting
-      });
-    }
-    setAuthLoading(false);
-  };
-
-  const handleMagicLinkLogin = async () => {
-    const email = magicEmail.trim();
-    if (!EMAIL_PATTERN.test(email)) {
-      setAuthMessage({
-        kind: "error",
-        text: landingCopy.auth.emailInvalid
-      });
-      return;
-    }
-    setAuthLoading(true);
-    setAuthMessage(null);
-    const { error } = await signInWithMagicLink(email);
-    if (error) {
-      setAuthMessage({
-        kind: "error",
-        text: landingCopy.auth.magicFailed
-      });
-    } else {
-      setAuthMessage({
-        kind: "success",
-        text: landingCopy.auth.magicSent
-      });
-    }
-    setAuthLoading(false);
-  };
-
-  const handleSignOut = async () => {
-    setAuthLoading(true);
-    setAuthMessage(null);
-    await signOut();
-    setAuthLoading(false);
-  };
-
-  const authMessageClass = (() => {
-    if (!authMessage) return "";
-    if (authMessage.kind === "error") return "text-rose-600";
-    if (authMessage.kind === "success") return "text-emerald-600";
-    return "text-slate-600";
-  })();
 
   const badgePulseClass = badgePulse ? "animate-bounce" : "";
   const fallbackBadgeClasses =
@@ -206,105 +113,14 @@ export const Landing: FC<LandingProps> = ({
           {landingCopy.subtitle}
         </p>
 
-        {isSupabaseReady && (
-          <section className="mt-6 max-w-md mx-auto text-right" aria-label="launch-auth">
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-900/70 p-4 shadow-sm">
-              {showLaunchAuth ? (
-                <div className="space-y-3">
-                  <div>
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                      {landingCopy.auth.gateTitle}
-                    </h2>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-                      {landingCopy.auth.gateHint}
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleGoogleLogin}
-                    disabled={authLoading || authStatus === "loading"}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-2.5 text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    {landingCopy.auth.chooseGoogle}
-                  </button>
-
-                  <div className="flex items-center gap-2">
-                    <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-                    <span className="text-[11px] text-slate-500">{landingCopy.auth.orDivider}</span>
-                    <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-2">
-                    <input
-                      type="email"
-                      dir="ltr"
-                      value={magicEmail}
-                      onChange={(e) => setMagicEmail(e.target.value)}
-                      placeholder="name@email.com"
-                      className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-900 dark:text-slate-100"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleMagicLinkLogin}
-                      disabled={authLoading || authStatus === "loading"}
-                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-60"
-                    >
-                      <Mail className="w-4 h-4" />
-                      {landingCopy.auth.chooseMagicLink}
-                    </button>
-                  </div>
-
-                  {authStatus === "loading" && (
-                    <p className="text-xs text-slate-500">{landingCopy.auth.sessionCheck}</p>
-                  )}
-                  {authMessage && <p className={`text-xs ${authMessageClass}`}>{authMessage.text}</p>}
-                </div>
-              ) : showPrivilegedBypass ? (
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    {landingCopy.auth.devBypassTitle}
-                  </p>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                    {landingCopy.auth.devBypassHint}
-                  </p>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between gap-2">
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{landingCopy.auth.securedTitle}</p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">{authUser?.email ?? "حساب مفعل"}</p>
-                  </div>
-                  {authUser && (
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      disabled={authLoading}
-                      className="inline-flex items-center gap-1 rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-60"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      خروج
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </section>
-        )}
-
         <div className="mt-8">
           <button
             type="button"
             onClick={handleStartJourney}
-            disabled={!canStartJourney || authStatus === "loading"}
             className="rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 transition-transform disabled:opacity-60 disabled:hover:bg-teal-600"
           >
             {landingCopy.ctaJourney}
           </button>
-          {showLaunchAuth && (
-            <p className="mt-2 text-xs text-slate-500">{landingCopy.auth.startBlocked}</p>
-          )}
           {showPostStartContent && onOpenTools && (
             <div className="mt-4 flex flex-col items-center gap-2">
               <button

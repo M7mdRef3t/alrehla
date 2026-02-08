@@ -3,7 +3,12 @@ import { supabase } from "./supabaseClient";
 
 function getRedirectUrl(): string | undefined {
   if (typeof window === "undefined") return undefined;
-  return `${window.location.origin}/`;
+  const configured =
+    (import.meta.env.VITE_AUTH_REDIRECT_URL as string | undefined) ||
+    (import.meta.env.VITE_PUBLIC_APP_URL as string | undefined) ||
+    "";
+  const base = configured.trim() || window.location.origin;
+  return base.endsWith("/") ? base : `${base}/`;
 }
 
 function buildSupabaseUnavailableError() {
