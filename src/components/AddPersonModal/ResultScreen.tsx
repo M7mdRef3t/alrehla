@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import { useMemo } from "react";
 import { motion } from "framer-motion";
+import { LayoutTemplate } from "lucide-react";
 import type { FeelingAnswers } from "../FeelingCheck";
 import type { RealityAnswers } from "../RealityCheck";
 import type { QuickAnswer2 } from "../../utils/suggestInitialRing";
@@ -56,15 +57,16 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     safetyAnswer,
     personGender
   }), [score, feelingAnswers, realityAnswers, isEmergency, safetyAnswer, personGender]);
+  const isEmotionalPrisoner = result.scenarioKey === "emotional_prisoner";
 
   const relationshipToneText = useMemo(() => {
+    if (isEmotionalPrisoner) return "في هدوء خارجي، بس لسه محتاجين نقفل الاختراق الداخلي.";
     const label = result.state_label ?? "";
-    if (label.includes("رمادية")) return "في هدوء خارجي، بس لسه محتاجين نقفل الاختراق الداخلي.";
     if (label.includes("حمراء") || label.includes("استنزاف")) return "الجبهة دي ضاغطة، وأولوية المرحلة حماية مواردك.";
     if (label.includes("صفراء")) return "في إشارات استنزاف، ومع ضبط الدرع الوضع يتحسن بسرعة.";
     if (label.includes("خضراء")) return "الجبهة متوازنة، والهدف دلوقتي الحفاظ على استقرارها.";
     return "دي خلاصة واضحة لوضع الجبهة بناءً على إجاباتك.";
-  }, [result.state_label]);
+  }, [isEmotionalPrisoner, result.state_label]);
 
   const missionProgress = useMapState((s) =>
     addedNodeId ? s.nodes.find((node) => node.id === addedNodeId)?.missionProgress : undefined
@@ -116,6 +118,11 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               {displayName}
             </span>
           </h3>
+          {isEmotionalPrisoner && (
+            <p className="mt-2 text-2xl font-extrabold text-slate-900">
+              {result.title}
+            </p>
+          )}
           <p className="mt-1 text-xs text-slate-600">
             {relationshipToneText}
           </p>
@@ -123,18 +130,32 @@ export const ResultScreen: FC<ResultScreenProps> = ({
 
         <div className="p-6 bg-gradient-to-b from-slate-50 to-white border border-slate-200 rounded-2xl mb-6 shadow-sm">
           <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
-            <span>{result.title}</span>
+            <span>
+              {isEmotionalPrisoner ? `الحالة: ${result.state_label}` : result.title}
+            </span>
             <span
-              className="inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
-              title="نتيجة محسوبة من القالب"
+              className="inline-flex items-center justify-center rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
+              title="نسخة ثابتة"
+              aria-label="نسخة ثابتة"
             >
-              قالب
+              <LayoutTemplate className="w-3 h-3" aria-hidden="true" />
             </span>
           </h2>
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500 text-center">
-            <p>
-              الحالة: <span className="font-semibold text-slate-700">{result.state_label}</span>
+          {isEmotionalPrisoner && (
+            <p className="mb-2 text-sm text-slate-600 leading-relaxed text-center">
+              جسمك حر.. بس عقلك لسه هناك، أنت خرجت من المكان بس لسه محبوس في التفكير. بتصحى وتنام وأنت بتكلمهم في خيالك وبتدافع عن نفسك في محاكمات جوه دماغك.
             </p>
+          )}
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500 text-center">
+            {isEmotionalPrisoner ? (
+              <p className="w-full">
+                التكتيك: <span className="font-semibold text-slate-700">العزل الصحي</span>
+              </p>
+            ) : (
+              <p>
+                الحالة: <span className="font-semibold text-slate-700">{result.state_label}</span>
+              </p>
+            )}
             <p className="w-full">
               الهدف: <span className="font-semibold text-slate-700">{result.goal_label}</span>
             </p>

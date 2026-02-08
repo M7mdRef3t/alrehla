@@ -5,7 +5,7 @@ import { Bell, BellOff, X, Check, Clock, Calendar, Target, HeartPulse } from "lu
 import { useNotificationState } from "../state/notificationState";
 import { usePulseState } from "../state/pulseState";
 import { useAdminState } from "../state/adminState";
-import { useAuthState } from "../state/authState";
+import { getEffectiveRoleFromState, useAuthState } from "../state/authState";
 import { getEffectiveFeatureAccess } from "../utils/featureFlags";
 import { isSupabaseReady } from "../services/supabaseClient";
 import { savePulseCheckMode } from "../services/adminApi";
@@ -32,7 +32,7 @@ export const NotificationSettings: FC<NotificationSettingsProps> = ({
   const featureFlags = useAdminState((s) => s.featureFlags);
   const betaAccess = useAdminState((s) => s.betaAccess);
   const adminAccess = useAdminState((s) => s.adminAccess);
-  const role = useAuthState((s) => s.role);
+  const role = useAuthState(getEffectiveRoleFromState);
   const canUsePulseCheck = getEffectiveFeatureAccess({
     featureFlags,
     betaAccess,

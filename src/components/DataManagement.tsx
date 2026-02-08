@@ -16,8 +16,10 @@ import {
 import { useMapState } from "../state/mapState";
 import { clearLocalData } from "../services/secureStore";
 import { fetchRemoteState, pushRemoteState } from "../services/cloudStore";
-import { useAuthState } from "../state/authState";
-import { signInWithGoogle, signOut } from "../services/authService";
+import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "../state/authState";
+import { signInWithGoogle, signOut, updateAccountProfile } from "../services/authService";
+import { isPrivilegedRole } from "../utils/featureFlags";
+import { useAdminState } from "../state/adminState";
 
 let pdfExportLoader: Promise<typeof import("../services/pdfExport")> | null = null;
 
@@ -61,6 +63,79 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
 
   const authStatus = useAuthState((s) => s.status);
   const authUser = useAuthState((s) => s.user);
+  const baseRole = useAuthState((s) => s.role);
+  const roleOverride = useAuthState((s) => s.roleOverride);
+  const setRoleOverride = useAuthState((s) => s.setRoleOverride);
+  const authRole = useAuthState(getEffectiveRoleFromState);
+  const isPrivilegedUser = isPrivilegedRole(authRole);
+  const canViewAsUser = isPrivilegedRole(baseRole);
+
+  const authDisplayName = useAuthState((s) => s.displayName) ?? "";
+  const authToneGender = useAuthState((s) => s.toneGender);
+
+  const privilegedRoleLabel = (baseRole || "owner").trim().toLowerCase();
+  const viewMode = roleOverride ? roleOverride.trim().toLowerCase() : null;
+  const isUserView = authRole === "user";
+  const isRealRoleView = viewMode == null;
+  const isDevRoleView = Boolean(import.meta.env.DEV && viewMode && viewMode !== "user");
+
+  const setDevRoleQueryParam = (role: string | null) => {
+    if (typeof window === "undefined" || !import.meta.env.DEV) return;
+    try {
+      const url = new URL(window.location.href);
+      if (role && role.trim()) url.searchParams.set("asRole", role.trim());
+      else url.searchParams.delete("asRole");
+      window.history.replaceState({}, "", url.toString());
+    } catch {
+      // ignore URL update errors
+    }
+  };
+
+  const handleViewAsUser = () => {
+    // In dev, also clear local admin gate so the UI truly looks like a user.
+    useAdminState.getState().setAdminAccess(false);
+    useAdminState.getState().setAdminCode(null);
+
+    setRoleOverride("user");
+    setDevRoleQueryParam("user");
+  };
+
+  const handleUseRealRole = () => {
+    setRoleOverride(null);
+    setDevRoleQueryParam(null);
+  };
+
+  const handleUseDevRole = () => {
+    if (!import.meta.env.DEV) return;
+    setRoleOverride(privilegedRoleLabel);
+    setDevRoleQueryParam(privilegedRoleLabel);
+  };
+
+  const [displayName, setDisplayName] = useState(authDisplayName);
+  const [displayNameDirty, setDisplayNameDirty] = useState(false);
+  const [displayNameSaving, setDisplayNameSaving] = useState(false);
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null);
+  const [displayNameMessage, setDisplayNameMessage] = useState<string | null>(null);
+
+  const [toneGender, setToneGender] = useState<UserToneGender>(authToneGender);
+  const [toneGenderDirty, setToneGenderDirty] = useState(false);
+
+  useEffect(() => {
+    // Keep field synced to server updates as long as the user hasn't started editing.
+    if (!displayNameDirty) setDisplayName(authDisplayName);
+  }, [authDisplayName, displayNameDirty]);
+
+  useEffect(() => {
+    if (!toneGenderDirty) setToneGender(authToneGender);
+  }, [authToneGender, toneGenderDirty]);
+
+  useEffect(() => {
+    // On user switch (login/logout), reset edit state.
+    setDisplayNameDirty(false);
+    setToneGenderDirty(false);
+    setDisplayNameError(null);
+    setDisplayNameMessage(null);
+  }, [authUser?.id]);
 
   useEffect(() => {
     let mounted = true;
@@ -246,6 +321,45 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
     setAuthLoading(false);
   };
 
+  const handleSaveAccountProfile = async () => {
+    const profileDirty = displayNameDirty || toneGenderDirty;
+    if (!profileDirty) return;
+
+    const normalizedName = displayName.replace(/\s+/g, " ").trim();
+    if (displayNameDirty && !normalizedName) {
+      setDisplayNameError("اكتب اسمك.");
+      setDisplayNameMessage(null);
+      return;
+    }
+
+    setDisplayNameSaving(true);
+    setDisplayNameError(null);
+    setDisplayNameMessage(null);
+    try {
+      const { data, error } = await updateAccountProfile({
+        fullName: displayNameDirty ? normalizedName : undefined,
+        toneGender: toneGenderDirty ? toneGender : undefined
+      });
+      if (error) {
+        setDisplayNameError("حصلت مشكلة وإحنا بنحفظ بيانات الحساب. جرّب تاني.");
+      } else {
+        setDisplayNameDirty(false);
+        setToneGenderDirty(false);
+        setDisplayNameMessage("تم حفظ بيانات الحساب.");
+
+        const updatedUser = data?.user ?? null;
+        if (updatedUser) {
+          const currentSession = useAuthState.getState().session;
+          if (currentSession) useAuthState.getState().setSession({ ...currentSession, user: updatedUser });
+        }
+      }
+    } catch {
+      setDisplayNameError("حصلت مشكلة وإحنا بنحفظ بيانات الحساب. جرّب تاني.");
+    } finally {
+      setDisplayNameSaving(false);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -268,12 +382,24 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
           >
             <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-l from-blue-50 to-white">
+              <div
+                className={`flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-l ${
+                  isPrivilegedUser ? "from-blue-50 to-white" : "from-teal-50 to-white"
+                }`}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Database className="w-5 h-5 text-blue-600" />
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      isPrivilegedUser ? "bg-blue-100" : "bg-teal-100"
+                    }`}
+                  >
+                    {isPrivilegedUser ? (
+                      <Database className="w-5 h-5 text-blue-600" />
+                    ) : (
+                      <User className="w-5 h-5 text-teal-700" />
+                    )}
                   </div>
-                  <h2 className="text-lg font-bold text-slate-900">إدارة البيانات</h2>
+                  <h2 className="text-lg font-bold text-slate-900">{isPrivilegedUser ? "إدارة البيانات" : "الحساب"}</h2>
                 </div>
                 <button
                   type="button"
@@ -286,7 +412,9 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
 
               {/* Content */}
               <div className="p-4 space-y-4">
-                {/* Storage Stats */}
+                {isPrivilegedUser && (
+                  <>
+                    {/* Storage Stats */}
                 <div className="p-4 bg-slate-50 rounded-xl space-y-2">
                   <div className="flex items-center gap-2 text-sm text-slate-600">
                     <HardDrive className="w-4 h-4" />
@@ -403,6 +531,9 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                   </div>
                 </div>
 
+                  </>
+                )}
+
                 {/* Auth Section */}
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-slate-500 px-2">الحساب</p>
@@ -413,6 +544,137 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                     </div>
                     {authUser ? (
                       <div className="space-y-2">
+                        <div className="space-y-1">
+                          <p className="text-xs text-slate-500">اسمك</p>
+                          <input
+                            value={displayName}
+                            onChange={(e) => {
+                              setDisplayName(e.target.value);
+                              setDisplayNameDirty(true);
+                              setDisplayNameError(null);
+                              setDisplayNameMessage(null);
+                            }}
+                            placeholder="اكتب اسمك"
+                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-teal-400"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <p className="text-xs text-slate-500">صيغة مخاطبتك</p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next: UserToneGender = "male";
+                                setToneGender(next);
+                                setToneGenderDirty(next !== authToneGender);
+                                setDisplayNameError(null);
+                                setDisplayNameMessage(null);
+                              }}
+                              className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                                toneGender === "male"
+                                  ? "border-teal-600 bg-teal-600 text-white"
+                                  : "border-slate-200 bg-white text-slate-700 hover:border-teal-300 hover:bg-teal-50"
+                              }`}
+                            >
+                              مذكر
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next: UserToneGender = "female";
+                                setToneGender(next);
+                                setToneGenderDirty(next !== authToneGender);
+                                setDisplayNameError(null);
+                                setDisplayNameMessage(null);
+                              }}
+                              className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                                toneGender === "female"
+                                  ? "border-teal-600 bg-teal-600 text-white"
+                                  : "border-slate-200 bg-white text-slate-700 hover:border-teal-300 hover:bg-teal-50"
+                              }`}
+                            >
+                              مؤنث
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next: UserToneGender = "neutral";
+                                setToneGender(next);
+                                setToneGenderDirty(next !== authToneGender);
+                                setDisplayNameError(null);
+                                setDisplayNameMessage(null);
+                              }}
+                              className={`flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                                toneGender === "neutral"
+                                  ? "border-teal-600 bg-teal-600 text-white"
+                                  : "border-slate-200 bg-white text-slate-700 hover:border-teal-300 hover:bg-teal-50"
+                              }`}
+                            >
+                              محايد
+                            </button>
+                          </div>
+                          <p className="text-[11px] leading-relaxed text-slate-500">اختار محايد لو مش حابب تحدد.</p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleSaveAccountProfile}
+                          disabled={displayNameSaving || (!displayNameDirty && !toneGenderDirty)}
+                          className="w-full rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {displayNameSaving ? "..." : "حفظ"}
+                        </button>
+
+                        {displayNameError && <p className="text-xs text-rose-600">{displayNameError}</p>}
+                        {displayNameMessage && <p className="text-xs text-emerald-700">{displayNameMessage}</p>}
+
+                        {authUser && canViewAsUser && (
+                          <div className="space-y-1">
+                            <p className="text-xs text-slate-500">وضع الصلاحية</p>
+                            <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+                              <button
+                                type="button"
+                                onClick={handleViewAsUser}
+                                className={`flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
+                                  isUserView
+                                    ? "bg-slate-900 text-white"
+                                    : "text-slate-700 hover:bg-slate-50"
+                                }`}
+                              >
+                                مستخدم
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleUseRealRole}
+                                className={`flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
+                                  isRealRoleView
+                                    ? "bg-teal-700 text-white"
+                                    : "text-slate-700 hover:bg-slate-50"
+                                }`}
+                              >
+                                {privilegedRoleLabel}
+                              </button>
+                              {import.meta.env.DEV && (
+                                <button
+                                  type="button"
+                                  onClick={handleUseDevRole}
+                                  className={`flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
+                                    isDevRoleView
+                                      ? "bg-indigo-700 text-white"
+                                      : "text-slate-700 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  تطوير
+                                </button>
+                              )}
+                            </div>
+                            <p className="text-[11px] leading-relaxed text-slate-500">
+                              مستخدم: استخدام المنصة كمستخدم عادي بدون أدوات المالك. {privilegedRoleLabel}: أدوات المالك.
+                              {import.meta.env.DEV ? " تطوير: محاكاة الدور عبر asRole (محلي فقط)." : null}
+                            </p>
+                          </div>
+                        )}
                         <p className="text-sm text-slate-700">مسجل كـ {authUser.email ?? "مستخدم"}</p>
                         <button
                           type="button"
@@ -442,7 +704,9 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                   </div>
                 </div>
 
-                {/* Import Section */}
+                {isPrivilegedUser && (
+                  <>
+                    {/* Import Section */}
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-slate-500 px-2">استيراد</p>
 
@@ -521,21 +785,24 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                     </div>
                   </button>
                 </div>
+                  </>
+                )}
               </div>
 
-              {/* Footer */}
-              <div className="p-4 border-t border-slate-200 bg-slate-50">
-                <p className="text-xs text-slate-500 text-center flex items-center justify-center gap-1">
-                  <FileJson className="w-3 h-3" />
-                  كل بياناتك محفوظة محليًا في متصفحك
-                </p>
-              </div>
+              {isPrivilegedUser && (
+                <div className="p-4 border-t border-slate-200 bg-slate-50">
+                  <p className="text-xs text-slate-500 text-center flex items-center justify-center gap-1">
+                    <FileJson className="w-3 h-3" />
+                    كل بياناتك محفوظة محليًا في متصفحك
+                  </p>
+                </div>
+              )}
             </div>
           </motion.div>
 
-          {/* Confirm Import Dialog */}
-          <AnimatePresence>
-            {showConfirmImport && (
+          {isPrivilegedUser && (
+            <AnimatePresence>
+              {showConfirmImport && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -592,12 +859,13 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                   </div>
                 </motion.div>
               </motion.div>
-            )}
-          </AnimatePresence>
+              )}
+            </AnimatePresence>
+          )}
 
-          {/* Confirm Wipe Dialog */}
-          <AnimatePresence>
-            {showConfirmWipe && (
+          {isPrivilegedUser && (
+            <AnimatePresence>
+              {showConfirmWipe && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -651,8 +919,9 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                   </div>
                 </motion.div>
               </motion.div>
-            )}
-          </AnimatePresence>
+              )}
+            </AnimatePresence>
+          )}
         </>
       )}
     </AnimatePresence>

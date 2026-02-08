@@ -99,11 +99,9 @@ create policy profiles_user_select on profiles
   for select
   using (auth.uid()::text = id);
 
+-- IMPORTANT: Do not allow authenticated users to update their own profile row directly.
+-- Otherwise they can self-escalate `role` to privileged values.
 drop policy if exists profiles_user_update on profiles;
-create policy profiles_user_update on profiles
-  for update
-  using (auth.uid()::text = id)
-  with check (auth.uid()::text = id);
 
 -- User state (service role only)
 alter table user_state enable row level security;

@@ -14,10 +14,9 @@ import { UserPlus, Map, TreeDeciduous } from "lucide-react";
 import { mapCopy } from "../copy/map";
 import { useMapState } from "../state/mapState";
 import type { AdviceCategory } from "../data/adviceScripts";
-import { getGoalMeta } from "../data/goalMeta";
 import { useAdminState } from "../state/adminState";
 import { getEffectiveFeatureAccess } from "../utils/featureFlags";
-import { useAuthState } from "../state/authState";
+import { getEffectiveRoleFromState, useAuthState } from "../state/authState";
 import type { FeatureFlagKey } from "../config/features";
 
 interface CoreMapScreenProps {
@@ -72,7 +71,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const featureFlags = useAdminState((s) => s.featureFlags);
   const betaAccess = useAdminState((s) => s.betaAccess);
   const adminAccess = useAdminState((s) => s.adminAccess);
-  const role = useAuthState((s) => s.roleOverride ?? s.role);
+  const role = useAuthState(getEffectiveRoleFromState);
   const featureAccess = getEffectiveFeatureAccess({
     featureFlags,
     betaAccess,
@@ -156,8 +155,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     ? galaxySubView === "forest"
       ? mapCopy.forestHint
       : mapCopy.galaxyHint
-    : mapCopy.subtitle;
-  const goalMeta = getGoalMeta(goalId);
+    : canUseFamilyTreeView && isFamily && viewMode === "tree"
+      ? mapCopy.familyTreeSubtitle
+      : mapCopy.subtitle;
 
   return (
     <main
@@ -172,14 +172,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           >
             {pageTitle}
           </h1>
-          {goalMeta && (
-            <span
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${goalMeta.badgeClasses}`}
-            >
-              <goalMeta.icon className="w-4 h-4" />
-              {goalMeta.label}
-            </span>
-          )}
         </div>
         <p className="text-base md:text-lg text-gray-600 leading-relaxed max-w-md mx-auto">
           {subtitle}

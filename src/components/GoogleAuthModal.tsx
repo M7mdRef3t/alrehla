@@ -13,6 +13,7 @@ interface GoogleAuthModalProps {
   isOpen: boolean;
   intent: PostAuthIntent;
   onClose: () => void;
+  onNotNow?: () => void;
 }
 
 function valueToLabel(value: number): string {
@@ -41,7 +42,8 @@ const FOCUS_LABEL: Record<PulseFocus, string> = {
 export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
   isOpen,
   intent,
-  onClose
+  onClose,
+  onNotNow
 }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -89,6 +91,14 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
 
     setMessage("تمام... بنحوّلك على Google.");
     setLoading(false);
+  };
+
+  const handleNotNow = () => {
+    if (intent.kind === "start_recovery" && onNotNow) {
+      onNotNow();
+      return;
+    }
+    onClose();
   };
 
   return (
@@ -167,7 +177,7 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
 
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleNotNow}
                 className="w-full inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900"
               >
                 مش دلوقتي

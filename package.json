@@ -7,6 +7,8 @@
     "start": "vite --open",
     "access:doctor": "powershell -ExecutionPolicy Bypass -File scripts/access-doctor.ps1",
     "access:bootstrap": "powershell -ExecutionPolicy Bypass -File scripts/bootstrap-access.ps1",
+    "auth:google:configure": "powershell -ExecutionPolicy Bypass -File scripts/configure-supabase-google-oauth.ps1",
+    "role:promote": "powershell -ExecutionPolicy Bypass -File scripts/promote-role.ps1",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run lint && npm run test:run",
     "build": "vite build",

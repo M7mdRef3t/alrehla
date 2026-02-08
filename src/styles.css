@@ -66,3 +66,75 @@
     100% { transform: scale(1); }
   }
 }
+
+/* ========================================
+   Pulse (Micro Compass) Range Styling
+   ========================================
+   Uses CSS variables set inline:
+   --pulse-fill: hex color for fill/thumb
+*/
+.pulse-range {
+  --pulse-fill: #14b8a6;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 10px;
+  border-radius: 9999px;
+  background: transparent;
+  /* Force a consistent RTL slider across browsers (incl. Safari). */
+  direction: ltr;
+  transform: scaleX(-1);
+  transform-origin: center;
+}
+
+.dark .pulse-range {
+  background: transparent;
+}
+
+.pulse-range:focus {
+  outline: none;
+}
+
+.pulse-range::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 9999px;
+  background: transparent;
+}
+
+.pulse-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--pulse-fill);
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+  cursor: pointer;
+  margin-top: -4px;
+}
+
+.pulse-range::-moz-range-track {
+  height: 10px;
+  border-radius: 9999px;
+  background: transparent;
+}
+
+.dark .pulse-range::-moz-range-track {
+  background: transparent;
+}
+
+.pulse-range::-moz-range-progress {
+  height: 10px;
+  border-radius: 9999px;
+  background: transparent;
+}
+
+.pulse-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--pulse-fill);
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+  cursor: pointer;
+}

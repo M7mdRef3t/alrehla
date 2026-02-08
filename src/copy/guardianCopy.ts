@@ -27,7 +27,7 @@ export const guardianCopy = {
   shieldActive: "الدرع مفعّل",
   /** الخريطة */
   myTerritory: "مملكتك",
-  noEntryWithoutPermission: "محدش يدخل المساحة دي غير بإذنك.",
+  noEntryWithoutPermission: "الدايرة الأولى.. بداية الحكاية.",
   threatLevel: "مستوى التهديد",
   /** لوحة القيادة */
   dashboardTitle: "مركز القيادة",

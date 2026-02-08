@@ -20,7 +20,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { FEATURE_FLAGS, type FeatureFlagMode } from "../../config/features";
 import { useAdminState, ADMIN_ACCESS_CODE } from "../../state/adminState";
-import { useAuthState } from "../../state/authState";
+import { getEffectiveRoleFromState, useAuthState } from "../../state/authState";
 import { getAggregateStats, getEventsByDay, getSessionsWithProgress, getTrackingSessionId } from "../../services/journeyTracking";
 import { getLastActivity } from "../../services/notifications";
 import { geminiClient } from "../../services/geminiClient";
@@ -102,7 +102,8 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   const setAdminAccess = useAdminState((s) => s.setAdminAccess);
   const setAdminCode = useAdminState((s) => s.setAdminCode);
   const authUser = useAuthState((s) => s.user);
-  const authRole = useAuthState((s) => s.roleOverride ?? s.role);
+  const roleOverride = useAuthState((s) => s.roleOverride);
+  const authRole = useAuthState(getEffectiveRoleFromState);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
 
@@ -114,17 +115,45 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   }, [adminAccess, adminCode, setAdminCode]);
 
   useEffect(() => {
-    if (adminAccess) return;
     let mounted = true;
     const allowedRoles = (import.meta.env.VITE_ADMIN_ALLOWED_ROLES || "admin,owner,superadmin,developer")
       .split(",")
-      .map((r: string) => r.trim())
+      .map((r: string) => r.trim().toLowerCase())
       .filter(Boolean);
-    if (authRole && allowedRoles.includes(String(authRole))) {
-      setAdminAccess(true);
-      return;
+
+    const normalizedRole = typeof authRole === "string" ? authRole.trim().toLowerCase() : "";
+    const isAllowedByRole = Boolean(normalizedRole && allowedRoles.includes(normalizedRole));
+
+    if (isAllowedByRole) {
+      if (!adminAccess) setAdminAccess(true);
+      return () => {
+        mounted = false;
+      };
     }
-    if (!authUser || !supabase) return;
+
+    // Respect view-as overrides (ex: "user") by preventing auto-elevation from the real DB role.
+    if (roleOverride) {
+      if (adminAccess) {
+        setAdminAccess(false);
+        setAdminCode(null);
+      }
+      return () => {
+        mounted = false;
+      };
+    }
+
+    if (adminAccess) {
+      return () => {
+        mounted = false;
+      };
+    }
+
+    if (!authUser || !supabase) {
+      return () => {
+        mounted = false;
+      };
+    }
+
     void (async () => {
       const { data } = await supabase
         .from("profiles")
@@ -132,14 +161,16 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
         .eq("id", authUser.id)
         .maybeSingle();
       if (!mounted) return;
-      if (data?.role && allowedRoles.includes(String(data.role))) {
+      const dbRole = typeof data?.role === "string" ? data.role.trim().toLowerCase() : "";
+      if (dbRole && allowedRoles.includes(dbRole)) {
         setAdminAccess(true);
       }
     })();
+
     return () => {
       mounted = false;
     };
-  }, [adminAccess, authRole, authUser, setAdminAccess]);
+  }, [adminAccess, authRole, authUser, roleOverride, setAdminAccess, setAdminCode]);
 
   const handleLogin = () => {
     const expected = import.meta.env.VITE_ADMIN_CODE || ADMIN_ACCESS_CODE;
@@ -575,7 +606,7 @@ const FeatureFlagsPanel: FC = () => {
   const betaAccess = useAdminState((s) => s.betaAccess);
   const setBetaAccess = useAdminState((s) => s.setBetaAccess);
   const adminAccess = useAdminState((s) => s.adminAccess);
-  const role = useAuthState((s) => s.role);
+  const role = useAuthState(getEffectiveRoleFromState);
   const [saving, setSaving] = useState(false);
   const effectiveAccess = getEffectiveFeatureAccess({
     featureFlags,

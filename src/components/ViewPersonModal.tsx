@@ -36,12 +36,13 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   const diagnosis = viewData?.diagnosis ?? null;
   const relationshipToneText = useMemo(() => {
     const label = diagnosis?.stateLabel ?? "";
+    if (diagnosis?.isEmotionalCaptivity) return "في هدوء خارجي، بس لسه محتاجين نقفل الاختراق الداخلي.";
     if (label.includes("رمادية")) return "في هدوء خارجي، بس لسه محتاجين نقفل الاختراق الداخلي.";
     if (label.includes("حمراء") || label.includes("استنزاف")) return "الجبهة دي ضاغطة، وأولوية المرحلة حماية الموارد.";
     if (label.includes("صفراء")) return "في إشارات استنزاف، ومع ضبط الدرع الوضع يتحسن بسرعة.";
     if (label.includes("خضراء")) return "الجبهة متوازنة، والهدف الحفاظ على الاستقرار.";
     return "ده ملخص وضع الجبهة الحالي عشان القرار يبقى أوضح.";
-  }, [diagnosis?.stateLabel]);
+  }, [diagnosis?.isEmotionalCaptivity, diagnosis?.stateLabel]);
 
   // توليد تشخيص / فهم / هدف مخصص من الذكاء الاصطناعي، مربوط بكل ما نعرفه عن الشخص
   useEffect(() => {

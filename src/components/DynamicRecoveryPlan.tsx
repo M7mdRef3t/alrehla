@@ -1,6 +1,6 @@
 import React, { type FC, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, CheckCircle2, Circle, AlertTriangle, Sparkles, HelpCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, Circle, AlertTriangle, Sparkles, HelpCircle, LayoutTemplate } from "lucide-react";
 import type { Ring, DailyPathProgress } from "../modules/map/mapTypes";
 import { analyzeWithAI } from "../utils/aiPatternAnalyzer";
 import { generateAIPlan } from "../utils/aiPlanGenerator";
@@ -279,7 +279,13 @@ const PathEngineBlock: FC<{
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
             pathSnapshot.aiGenerated ? "bg-purple-100 text-purple-800" : "bg-slate-100 text-slate-600"
           }`}>
-            {pathSnapshot.aiGenerated ? "AI" : "قالب"}
+            <span
+              className="inline-flex items-center justify-center"
+              title={pathSnapshot.aiGenerated ? "AI" : "نسخة ثابتة"}
+              aria-label={pathSnapshot.aiGenerated ? "AI" : "نسخة ثابتة"}
+            >
+              {pathSnapshot.aiGenerated ? "AI" : <LayoutTemplate className="w-3 h-3" aria-hidden="true" />}
+            </span>
           </span>
         </h3>
         <p className="text-xs text-teal-700 mt-1">{pathNameAr}</p>
@@ -1002,7 +1008,9 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
                 </span>
               ) : (
                 <span className="flex items-center gap-1 px-2 py-1 bg-slate-200 text-slate-700 rounded-full text-xs font-semibold">
-                  قالب
+                  <span title="نسخة ثابتة" aria-label="نسخة ثابتة">
+                    <LayoutTemplate className="w-3 h-3" aria-hidden="true" />
+                  </span>
                 </span>
               )}
               {focusTraumaInheritance && (

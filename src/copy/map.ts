@@ -1,6 +1,6 @@
 export const mapCopy = {
   title: "أنا المركز.",
-  subtitle: "محدش يدخل المساحة دي غير بإذنك.",
+  subtitle: "من هنا بدأت الحكاية",
   addPersonLabel: "أضف جبهة",
   addPersonTitle: "ابدأ بأكتر جبهة (شخص) حاسس إنها قريبة وضاغطة عليك",
   feelingCta: "حلل إحساسك",
@@ -20,6 +20,7 @@ export const mapCopy = {
   emptyMapHint: "اضغط «أضف جبهة» فوق عشان تضع أول علاقة وتبدأ.",
   /** شجرة العيلة — عرض هرمي */
   familyTreeTitle: "شجرة العيلة",
+  familyTreeSubtitle: "من هنا بدأت الحكاية",
   familyTreeHint: "لون الدائرة = مكانهم في الخريطة (قرب صحي / مشروط / استنزاف). اضغط على الشخص للتفاصيل.",
   familyTreeEmpty: "مافيش أشخاص. اضف أشخاص من الخريطة أولاً.",
   galaxyTitle: "الخريطة العامة",

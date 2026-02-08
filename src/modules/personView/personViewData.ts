@@ -122,13 +122,13 @@ export function getPersonViewData(
   const analysis = node.analysis!;
   const insights = analysis.insights;
   const isEmotionalCaptivity = zone === "red" && !!node.detachmentMode;
-  const baseStateLabel = isEmotionalCaptivity ? "استنزاف عن بُعد" : stateLabelsBase[zone];
-  const baseGoalAction = isEmotionalCaptivity ? "فك الارتباط الشعوري" : getGoalAction(goalId);
+  const baseStateLabel = isEmotionalCaptivity ? "سجين ذهني" : stateLabelsBase[zone];
+  const baseGoalAction = isEmotionalCaptivity ? "كسر السلاسل" : getGoalAction(goalId);
   const baseUnderstanding = getUnderstanding(node.label, zone, isEmotionalCaptivity);
   const basePersonalizedTitle = getPersonalizedTitle(node.label, zone, isEmotionalCaptivity);
 
   const baseUnderstandingSubtext = isEmotionalCaptivity
-    ? "أنت نجحت تبعد بجسمك، بس لسه محتاج تبعد بأفكارك ومشاعرك (فك الارتباط الشعوري)."
+    ? "جسمك حر.. بس عقلك لسه هناك. هنا المطلوب كسر السلاسل جوه دماغك."
     : undefined;
 
   const situationsCount = node.firstStepProgress?.stepInputs

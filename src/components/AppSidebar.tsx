@@ -18,7 +18,7 @@ import { getMissionProgressSummary } from "../utils/missionProgress";
 import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
 import { getGoalMeta } from "../data/goalMeta";
 import { useAdminState } from "../state/adminState";
-import { useAuthState } from "../state/authState";
+import { getEffectiveRoleFromState, useAuthState } from "../state/authState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "../utils/featureFlags";
 import type { FeatureFlagKey } from "../config/features";
 
@@ -166,7 +166,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const featureFlags = useAdminState((s) => s.featureFlags);
   const betaAccess = useAdminState((s) => s.betaAccess);
   const adminAccess = useAdminState((s) => s.adminAccess);
-  const role = useAuthState((s) => s.roleOverride ?? s.role);
+  const role = useAuthState(getEffectiveRoleFromState);
   const canShowJourneyToolsEntry = Boolean(onOpenJourneyTools) && isPrivilegedRole(role);
   const availableFeatures = useMemo(
     () =>

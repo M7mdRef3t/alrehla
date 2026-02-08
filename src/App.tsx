@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
-import { X } from "lucide-react";
+import { X, User } from "lucide-react";
 import { Landing } from "./components/Landing";
 import { useNotificationState } from "./state/notificationState";
 import { useEmergencyState } from "./state/emergencyState";
@@ -19,9 +19,8 @@ import { getWeeklyPulseInsight } from "./utils/pulseInsights";
 import { useAdminState } from "./state/adminState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "./utils/featureFlags";
 import type { FeatureFlagKey } from "./config/features";
-import { useAuthState } from "./state/authState";
+import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "./state/authState";
 import { InstallHintBanner } from "./components/InstallHintBanner";
-import { GoogleMark } from "./components/GoogleMark";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
 import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
@@ -57,6 +56,7 @@ const MissionScreen = lazy(() => import("./components/MissionScreen").then((m) =
 const JourneyToolsScreen = lazy(() => import("./components/JourneyToolsScreen").then((m) => ({ default: m.JourneyToolsScreen })));
 const AppSidebar = lazy(() => import("./components/AppSidebar").then((m) => ({ default: m.AppSidebar })));
 const AdminDashboard = lazy(() => import("./components/admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
+const DataManagement = lazy(() => import("./components/DataManagement").then((m) => ({ default: m.DataManagement })));
 
 const preloadCoreMap = () => import("./components/CoreMapScreen");
 const preloadChatbot = () => import("./components/AIChatbot");
@@ -64,19 +64,18 @@ const preloadGym = () => import("./components/RelationshipGym");
 const hasSupabaseEnv = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 type AgentModule = typeof import("./agent");
 
-function getFirstNameFromAuthUser(user: any): string | null {
-  if (!user) return null;
-  const meta = (user as { user_metadata?: Record<string, unknown> }).user_metadata ?? {};
-  const rawName =
-    (typeof meta.full_name === "string" && meta.full_name.trim()) ||
-    (typeof meta.name === "string" && meta.name.trim()) ||
-    "";
-  const email = typeof (user as { email?: unknown }).email === "string" ? String((user as { email: string }).email) : "";
-  const fromEmail = email && email.includes("@") ? email.split("@")[0] : "";
-  const base = rawName || fromEmail;
-  if (!base) return null;
-  const first = base.trim().split(/\s+/)[0];
-  return first || null;
+function buildStartRecoveryWelcome(firstName: string | null, toneGender: UserToneGender): string {
+  const prefix = firstName ? `أهلاً يا ${firstName}..` : "أهلاً..";
+  if (toneGender === "female") return `${prefix} جاهزة نرسم أول دايرة؟`;
+  if (toneGender === "male") return `${prefix} جاهز نرسم أول دايرة؟`;
+  return `${prefix} نبدأ نرسم أول دايرة؟`;
+}
+
+function buildWelcomePrompt(firstName: string | null, toneGender: UserToneGender): string {
+  const toneLabel = toneGender === "female" ? "مؤنث" : toneGender === "male" ? "مذكر" : "محايد بدون تذكير/تأنيث";
+  const namePart = firstName ? ` لمستخدم اسمه "${firstName}"` : "";
+  const tonePart = toneGender === "neutral" ? "بدون تذكير/تأنيث مباشر" : `بصيغة مخاطبة ${toneLabel}`;
+  return `اكتب ترحيب قصير باللهجة المصرية${namePart}. جملة واحدة فقط + سؤال. بدون إيموجي. بدون علامات اقتباس. أقل من 12 كلمة. ${tonePart}.`;
 }
 
 function cleanSingleLine(text: string): string {
@@ -115,6 +114,7 @@ export default function App() {
   );
   const [postAuthIntent, setPostAuthIntentState] = useState<PostAuthIntent | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showDataManagement, setShowDataManagement] = useState(false);
   const [welcome, setWelcome] = useState<{ message: string; source: WelcomeSource } | null>(null);
 
   const recordUserActivity = useNotificationState((s) => s.recordUserActivity);
@@ -148,7 +148,9 @@ export default function App() {
   const setPulseCheckMode = usePulseState((s) => s.setCheckInMode);
   const authStatus = useAuthState((s) => s.status);
   const authUser = useAuthState((s) => s.user);
-  const role = useAuthState((s) => s.roleOverride ?? s.role);
+  const authFirstName = useAuthState((s) => s.firstName);
+  const authToneGender = useAuthState((s) => s.toneGender);
+  const role = useAuthState(getEffectiveRoleFromState);
   const isPrivilegedUser = isPrivilegedRole(role);
   const showTopToolsButton = isPrivilegedUser;
   const availableFeatures = useMemo(
@@ -230,7 +232,9 @@ export default function App() {
 
   useEffect(() => {
     if (!canUsePulseCheck) return;
-    if (screen === "landing" && shouldGateStartWithAuth) return;
+    // Don't show the micro-compass automatically on initial entry (landing).
+    // It's used later in the journey, while still allowing explicit opens (e.g. startRecovery gate).
+    if (screen === "landing") return;
     if (pulseCheckMode === "everyOpen") {
       const t = window.setTimeout(() => {
         setPulseCheckContext("regular");
@@ -293,19 +297,13 @@ export default function App() {
 
     logPulse(intent.pulse);
 
-    const firstName = getFirstNameFromAuthUser(authUser);
-    const templateMessage = firstName
-      ? `أهلاً يا ${firstName}.. جاهز نرسم أول دايرة؟`
-      : "أهلاً بيك.. جاهز نرسم أول دايرة؟";
-    setWelcome({ message: templateMessage, source: "template" });
+    setWelcome({ message: buildStartRecoveryWelcome(authFirstName, authToneGender), source: "template" });
     setScreen("goal");
 
     let cancelled = false;
     void (async () => {
       if (!geminiClient.isAvailable()) return;
-      const prompt = firstName
-        ? `اكتب ترحيب قصير باللهجة المصرية لمستخدم اسمه "${firstName}". جملة واحدة فقط + سؤال. بدون إيموجي. بدون علامات اقتباس. أقل من 12 كلمة.`
-        : "اكتب ترحيب قصير باللهجة المصرية للمستخدم. جملة واحدة فقط + سؤال. بدون إيموجي. بدون علامات اقتباس. أقل من 12 كلمة.";
+      const prompt = buildWelcomePrompt(authFirstName, authToneGender);
       const out = await geminiClient.generate(prompt);
       if (cancelled) return;
       const cleaned = cleanWelcomeMessage(out);
@@ -316,7 +314,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [authStatus, authUser, logPulse]);
+  }, [authStatus, authUser, authFirstName, authToneGender, logPulse]);
 
   const goToGoals = () => {
     if (!canUseMap) {
@@ -683,23 +681,37 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex transition-colors" dir="rtl">
       <InstallHintBanner />
-      {isSupabaseReady && screen === "landing" && !authUser && !showAuthModal && !showPulseCheck && (
-        <button
-          type="button"
-          onClick={() => {
-            setPulseCheckContext("regular");
-            setShowPulseCheck(false);
-            setWelcome(null);
-            const intent: PostAuthIntent = { kind: "login", createdAt: Date.now() };
-            setPostAuthIntentState(intent);
-            setShowAuthModal(true);
-          }}
-          className="fixed left-4 z-[80] top-[calc(env(safe-area-inset-top)+0.75rem)] w-11 h-11 flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-          aria-label="تسجيل الدخول"
-          title="تسجيل الدخول"
-        >
-          <GoogleMark className="w-5 h-5" />
-        </button>
+      {isSupabaseReady && !isAdminRoute && !showAuthModal && !showPulseCheck && (
+        <div className="fixed z-[80] top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4" dir="ltr">
+          <button
+            type="button"
+            onClick={() => {
+              if (authUser) {
+                setShowDataManagement(true);
+                return;
+              }
+              setPulseCheckContext("regular");
+              setShowPulseCheck(false);
+              setWelcome(null);
+              const intent: PostAuthIntent = { kind: "login", createdAt: Date.now() };
+              setPostAuthIntentState(intent);
+              setShowAuthModal(true);
+            }}
+            className="w-11 h-11 flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent cursor-pointer"
+            aria-label={authUser ? "حسابي" : "تسجيل الدخول"}
+            title={authUser ? "حسابي" : "تسجيل الدخول"}
+          >
+            <span className="relative inline-flex items-center justify-center">
+              <User className="w-5 h-5" />
+              {authUser && (
+                <span
+                  className="absolute top-0 right-0 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"
+                  aria-hidden="true"
+                />
+              )}
+            </span>
+          </button>
+        </div>
       )}
       {isPrivilegedUser && (
         <Suspense fallback={null}>
@@ -869,6 +881,7 @@ export default function App() {
         {showPulseCheck && (
           <PulseCheckModal
             isOpen={showPulseCheck}
+            context={pulseCheckContext}
             onSubmit={(payload) => {
               if (pulseCheckContext === "start_recovery") {
                 handlePulseGateSubmit(payload);
@@ -935,7 +948,20 @@ export default function App() {
           isOpen={showAuthModal}
           intent={postAuthIntent}
           onClose={() => setShowAuthModal(false)}
+          onNotNow={() => {
+            setShowAuthModal(false);
+            setPostAuthIntentState(null);
+            clearPostAuthIntent();
+            setWelcome(null);
+            openDawayirSetup();
+          }}
         />
+      )}
+
+      {showDataManagement && (
+        <Suspense fallback={null}>
+          <DataManagement isOpen={showDataManagement} onClose={() => setShowDataManagement(false)} />
+        </Suspense>
       )}
     </div>
   );

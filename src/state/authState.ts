@@ -1,10 +1,16 @@
 import { create } from "zustand";
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
+import { isPrivilegedRole } from "../utils/featureFlags";
+
+export type UserToneGender = "male" | "female" | "neutral";
 
 interface AuthState {
   status: "loading" | "ready";
   user: User | null;
   session: Session | null;
+  displayName: string | null;
+  firstName: string | null;
+  toneGender: UserToneGender;
   role: string | null;
   roleOverride: string | null;
   setSession: (session: Session | null) => void;
@@ -17,6 +23,63 @@ const ROLE_OVERRIDE_QUERY_KEY = "asRole";
 const hasSupabaseEnv = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 let supabaseClient: SupabaseClient | null = null;
 let supabaseAuthInitialized = false;
+
+function normalizeToneGender(raw: unknown): UserToneGender {
+  if (raw === "male" || raw === "female" || raw === "neutral") return raw;
+  return "neutral";
+}
+
+function normalizeRole(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const value = raw.trim().toLowerCase();
+  return value ? value : null;
+}
+
+export function getEffectiveRoleFromState(
+  state: Pick<AuthState, "role" | "roleOverride">,
+  options?: { isDev?: boolean }
+): string | null {
+  const base = normalizeRole(state.role);
+  const override = normalizeRole(state.roleOverride);
+  if (!override) return base;
+
+  const isDev = options?.isDev ?? import.meta.env.DEV;
+  if (isDev) return override;
+
+  // Production: allow privileged users to *down-scope* only (view-as user).
+  if (override === "user" && isPrivilegedRole(base)) return override;
+  return base;
+}
+
+function getDisplayNameFromUser(user: User | null): string | null {
+  if (!user) return null;
+  const meta = (user as { user_metadata?: Record<string, unknown> }).user_metadata ?? {};
+  const rawName =
+    (typeof meta.full_name === "string" && meta.full_name.trim()) ||
+    (typeof meta.name === "string" && meta.name.trim()) ||
+    "";
+  const email = typeof user.email === "string" ? user.email : "";
+  const fromEmail = email && email.includes("@") ? email.split("@")[0] : "";
+  const base = (rawName || fromEmail).trim();
+  return base ? base : null;
+}
+
+function getFirstName(displayName: string | null): string | null {
+  if (!displayName) return null;
+  const first = displayName.trim().split(/\s+/)[0];
+  return first ? first : null;
+}
+
+function getToneGenderFromUser(user: User | null): UserToneGender {
+  if (!user) return "neutral";
+  const meta = (user as { user_metadata?: Record<string, unknown> }).user_metadata ?? {};
+  const raw =
+    meta.tone_gender ??
+    meta.user_tone_gender ??
+    meta.userToneGender ??
+    meta.toneGender;
+  return normalizeToneGender(raw);
+}
 
 function getRoleOverrideFromUrl(): string | null {
   if (typeof window === "undefined" || !import.meta.env.DEV) return null;
@@ -31,29 +94,58 @@ function getRoleOverrideFromUrl(): string | null {
 }
 
 function getInitialRoleOverride(): string | null {
-  if (typeof window === "undefined" || !import.meta.env.DEV) return null;
-  const fromUrl = getRoleOverrideFromUrl();
-  if (fromUrl) {
-    window.localStorage.setItem(ROLE_OVERRIDE_KEY, fromUrl);
-    return fromUrl;
+  if (typeof window === "undefined") return null;
+
+  // DEV: allow overriding via URL param for fast testing.
+  if (import.meta.env.DEV) {
+    const fromUrl = getRoleOverrideFromUrl();
+    if (fromUrl) {
+      window.localStorage.setItem(ROLE_OVERRIDE_KEY, fromUrl);
+      return fromUrl;
+    }
+    return window.localStorage.getItem(ROLE_OVERRIDE_KEY);
   }
-  return window.localStorage.getItem(ROLE_OVERRIDE_KEY);
+
+  // Production: allow a persisted *down-scope* to `user` only.
+  const stored = normalizeRole(window.localStorage.getItem(ROLE_OVERRIDE_KEY));
+  return stored === "user" ? "user" : null;
 }
 
 export const useAuthState = create<AuthState>((set) => ({
   status: "loading",
   user: null,
   session: null,
+  displayName: null,
+  firstName: null,
+  toneGender: "neutral",
   role: null,
   roleOverride: getInitialRoleOverride(),
-  setSession: (session) => set({ session, user: session?.user ?? null, status: "ready" }),
+  setSession: (session) =>
+    set(() => {
+      const user = session?.user ?? null;
+      const displayName = getDisplayNameFromUser(user);
+      return {
+        session,
+        user,
+        status: "ready",
+        displayName,
+        firstName: getFirstName(displayName),
+        toneGender: getToneGenderFromUser(user)
+      };
+    }),
   setRole: (role) => set({ role }),
   setRoleOverride: (role) =>
     set(() => {
       const normalized = role && role.trim() ? role.trim() : null;
-      if (typeof window !== "undefined" && import.meta.env.DEV) {
-        if (normalized) window.localStorage.setItem(ROLE_OVERRIDE_KEY, normalized);
-        else window.localStorage.removeItem(ROLE_OVERRIDE_KEY);
+      if (typeof window !== "undefined") {
+        if (import.meta.env.DEV) {
+          if (normalized) window.localStorage.setItem(ROLE_OVERRIDE_KEY, normalized);
+          else window.localStorage.removeItem(ROLE_OVERRIDE_KEY);
+        } else {
+          const safe = normalizeRole(normalized);
+          if (safe === "user") window.localStorage.setItem(ROLE_OVERRIDE_KEY, "user");
+          else window.localStorage.removeItem(ROLE_OVERRIDE_KEY);
+        }
       }
       return { roleOverride: normalized };
     })
@@ -71,10 +163,20 @@ export function getAuthEmail(): string | null {
   return useAuthState.getState().user?.email ?? null;
 }
 
+export function getAuthDisplayName(): string | null {
+  return useAuthState.getState().displayName ?? null;
+}
+
+export function getAuthFirstName(): string | null {
+  return useAuthState.getState().firstName ?? null;
+}
+
+export function getAuthToneGender(): UserToneGender {
+  return useAuthState.getState().toneGender ?? "neutral";
+}
+
 export function getAuthRole(): string | null {
-  const state = useAuthState.getState();
-  if (import.meta.env.DEV && state.roleOverride) return state.roleOverride;
-  return state.role ?? null;
+  return getEffectiveRoleFromState(useAuthState.getState());
 }
 
 function getRoleFromMetadata(user: User | null): string | null {

@@ -47,36 +47,41 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           {suggestions.map((suggestion: SuggestionCard) => {
             const Icon = suggestion.icon;
             const isSelected = selectedTitle === suggestion.label && !showCustomTitleInput;
-            const isPillar = goalId === "family" && (suggestion.label === "أب" || suggestion.label === "أم");
             return (
               <motion.button
                 key={suggestion.label}
                 type="button"
                 onClick={() => onTitleSelect(suggestion.label)}
-                className={`flex flex-col items-center gap-1.5 rounded-xl border-2 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-1 ${
+                className={`w-full h-24 sm:h-28 flex flex-col items-center justify-center gap-2 rounded-xl border-2 p-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-1 ${
                   isSelected
                     ? "bg-teal-50 border-teal-500 shadow-md"
                     : "bg-white border-gray-100 hover:border-teal-300 hover:bg-teal-50"
-                } ${isPillar ? "p-3" : "p-2.5"}`}
+                }`}
                 title={`اختر "${suggestion.label}"`}
                 whileHover={{ scale: isSelected ? 1 : 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className={`rounded-full flex items-center justify-center ${
-                  isSelected ? "bg-teal-200" : "bg-teal-100"
-                } ${isPillar ? "w-10 h-10" : "w-8 h-8"}`}>
-                  <Icon className={`${isSelected ? "text-teal-700" : "text-teal-600"} ${isPillar ? "w-5 h-5" : "w-4 h-4"}`} strokeWidth={2} />
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    isSelected ? "bg-teal-200" : "bg-teal-100"
+                  }`}
+                >
+                  <Icon className={`${isSelected ? "text-teal-700" : "text-teal-600"} w-5 h-5`} strokeWidth={2} />
                 </div>
-                <span className={`font-semibold ${isSelected ? "text-teal-900" : "text-slate-900"} ${isPillar ? "text-base" : "text-xs"}`}>
+                <div
+                  className={`min-h-[2.25rem] flex items-center justify-center text-center font-semibold leading-tight ${
+                    isSelected ? "text-teal-900" : "text-slate-900"
+                  } text-xs sm:text-sm`}
+                >
                   {suggestion.label}
-                </span>
+                </div>
               </motion.button>
             );
           })}
           <motion.button
             type="button"
             onClick={() => onTitleSelect("__custom__")}
-            className={`flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl border-2 border-dashed transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-1 ${
+            className={`w-full h-24 sm:h-28 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-1 ${
               showCustomTitleInput && customTitleInput.trim()
                 ? "bg-gray-100 border-gray-400"
                 : "bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-gray-100"
@@ -85,7 +90,12 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <span className="text-xs font-medium text-gray-600">حد تاني</span>
+            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
+              <span className="text-slate-700 text-lg font-bold leading-none">+</span>
+            </div>
+            <div className="min-h-[2.25rem] flex items-center justify-center text-center text-xs sm:text-sm font-semibold text-gray-700 leading-tight">
+              حد تاني
+            </div>
           </motion.button>
         </div>
         {showCustomTitleInput && (
