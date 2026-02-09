@@ -20,8 +20,16 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // يمكن إضافة تسجيل للأخطاء هنا (مثل Sentry)
+    // تسجيل الخطأ
     console.error("Error caught by ErrorBoundary:", error, errorInfo);
+    // يمكن إرسال الخطأ إلى Sentry أو خدمة مراقبة أخرى
+    if (typeof window !== "undefined" && window.__errorReporter) {
+      window.__errorReporter({
+        error: error.toString(),
+        stack: errorInfo.componentStack,
+        timestamp: new Date().toISOString()
+      });
+    }
   }
 
   handleReset = () => {
@@ -69,12 +77,13 @@ export class ErrorBoundary extends Component<Props, State> {
 
             {/* العنوان */}
             <h1 className="text-2xl font-bold text-slate-900 mb-3">
-              حصل خطأ غير متوقع 😔
+              عذراً، حصل خطأ غير متوقع
             </h1>
 
             {/* الوصف */}
             <p className="text-slate-600 mb-6 leading-relaxed">
-              ممكن تجرب تحدّث الصفحة أو تمسح البيانات وتبدأ من جديد
+              حاول تحديث الصفحة أو امسح البيانات المؤقتة والبدء من جديد. 
+              إذا استمرت المشكلة، تواصل معنا.
             </p>
 
             {/* تفاصيل الخطأ (للمطورين فقط في وضع التطوير) */}
@@ -86,28 +95,41 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
             )}
 
-            {/* الأزرار */}
-            <div className="flex flex-col gap-3">
+            {/* الأزرار - الأولويات */}
+            <div className="flex flex-col gap-3 mb-4">
               <button
                 onClick={this.handleReset}
                 className="w-full py-3 px-6 bg-gradient-to-l from-teal-600 to-teal-500 text-white font-semibold rounded-xl hover:from-teal-700 hover:to-teal-600 transition-all duration-200 shadow-lg shadow-teal-500/30"
               >
-                🔄 إعادة المحاولة
+                🔄 تحديث الصفحة
               </button>
 
               <button
                 onClick={this.handleClearData}
-                className="w-full py-3 px-6 bg-white text-slate-700 font-semibold rounded-xl border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all duration-200"
+                className="w-full py-3 px-6 bg-amber-50 text-amber-700 font-semibold rounded-xl border-2 border-amber-200 hover:border-amber-300 hover:bg-amber-100 transition-all duration-200"
               >
                 🗑️ مسح البيانات والبدء من جديد
               </button>
+            </div>
 
-              <a
-                href="/"
-                className="text-sm text-teal-600 hover:text-teal-700 mt-2 inline-block"
-              >
-                العودة للصفحة الرئيسية ←
-              </a>
+            {/* خيارات إضافية */}
+            <div className="border-t border-slate-200 pt-4 mt-4">
+              <p className="text-xs text-slate-500 mb-3">خيارات أخرى:</p>
+              <div className="flex flex-col gap-2">
+                <a
+                  href="/"
+                  className="text-sm text-teal-600 hover:text-teal-700 font-semibold"
+                >
+                  ← العودة للصفحة الرئيسية
+                </a>
+                <a
+                  href="javascript:void(0)"
+                  onClick={() => window.open("mailto:support@alrahla.app")}
+                  className="text-sm text-slate-600 hover:text-slate-700 font-semibold"
+                >
+                  📧 التواصل مع الدعم
+                </a>
+              </div>
             </div>
           </div>
         </div>

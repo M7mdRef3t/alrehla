@@ -12,6 +12,7 @@ import {
   type TrackingMode as Mode
 } from "../services/journeyTracking";
 import { isSupabaseReady } from "../services/supabaseClient";
+import { useAppContentString } from "../hooks/useAppContentString";
 
 interface TrackingDashboardProps {
   isOpen: boolean;
@@ -31,6 +32,12 @@ export const TrackingDashboard: FC<TrackingDashboardProps> = ({ isOpen, onClose 
   const [confirmClear, setConfirmClear] = useState(false);
   const [apiUrlInput, setApiUrlInput] = useState(() => getTrackingApiUrl() ?? "");
   const [apiUrlSaved, setApiUrlSaved] = useState(false);
+
+  const apiUrlPlaceholder = useAppContentString(
+    "tracking_api_url_placeholder",
+    "https://your-server.com/api/tracking",
+    { page: "tracking" }
+  );
 
   useEffect(() => {
     if (isOpen) setApiUrlInput(getTrackingApiUrl() ?? "");
@@ -92,7 +99,7 @@ export const TrackingDashboard: FC<TrackingDashboardProps> = ({ isOpen, onClose 
                 type="url"
                 value={apiUrlInput}
                 onChange={(e) => setApiUrlInput(e.target.value)}
-                placeholder="https://your-server.com/api/tracking"
+                placeholder={apiUrlPlaceholder}
                 className="flex-1 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400"
               />
               <button

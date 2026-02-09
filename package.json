@@ -19,6 +19,7 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "generate-icons": "node scripts/generate-icons.js",
+    "supabase:apply-setup": "node scripts/apply-supabase-setup.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

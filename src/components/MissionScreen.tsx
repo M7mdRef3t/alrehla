@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Info } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import { buildResultTemplateFromAnswers } from "../utils/resultScreenTemplates";
 import type { FeelingAnswers } from "./FeelingCheck";
@@ -21,7 +21,10 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
   const resetMission = useMapState((s) => s.resetMission);
   const unlockAchievement = useAchievementState((s) => s.unlock);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showRealityPopup, setShowRealityPopup] = useState(false);
+  const [showDopaminePopup, setShowDopaminePopup] = useState(false);
   const lastCelebratedAtRef = useRef<number | null>(null);
+  const detachmentReasons = node?.recoveryProgress?.detachmentReasons;
 
   const result = useMemo(() => {
     if (!node) return null;
@@ -155,11 +158,38 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
   return (
     <div className="w-full max-w-2xl py-10 text-center relative">
       {showCelebration && (
-        <div className="absolute inset-x-0 -top-6 flex justify-center pointer-events-none">
-          <div className="rounded-full bg-emerald-600 text-white px-4 py-2 text-xs font-semibold shadow-lg animate-bounce">
-            إنجاز جديد: المناورة اتحسمت
+        <>
+          <div className="absolute inset-0 pointer-events-none overflow-hidden z-10 flex items-center justify-center">
+            <div className="text-5xl animate-bounce">🎉</div>
+            <div className="absolute inset-0 flex justify-around items-start pt-8 opacity-70">
+              {["🎊", "✨", "🌟", "💚", "🎉"].map((e, i) => (
+                <span
+                  key={i}
+                  className="animate-[fall_1.5s_ease-in_forwards] opacity-80"
+                  style={{
+                    animationDelay: `${i * 0.15}s`,
+                    position: "absolute",
+                    left: `${15 + i * 18}%`,
+                    top: -20,
+                    fontSize: "1.25rem"
+                  }}
+                >
+                  {e}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+          <style>{`
+            @keyframes fall {
+              to { transform: translateY(120px) rotate(10deg); opacity: 0.3; }
+            }
+          `}</style>
+          <div className="absolute inset-x-0 -top-6 flex justify-center pointer-events-none z-20">
+            <div className="rounded-full bg-emerald-600 text-white px-4 py-2 text-xs font-semibold shadow-lg animate-bounce">
+              إنجاز جديد: المناورة اتحسمت 🎉
+            </div>
+          </div>
+        </>
       )}
       <button
         type="button"
@@ -177,7 +207,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
         <p className="text-sm text-slate-600">
           الهدف المباشر: <span className="font-semibold text-slate-800">{result.mission_label} — {result.mission_goal}</span>
         </p>
-        <div className={`mt-4 rounded-xl border px-4 py-3 text-right bg-gradient-to-l ${theme.tone} ${theme.border}`}>
+        <div className={`mt-4 rounded-xl border px-4 py-3 text-right bg-linear-to-l ${theme.tone} ${theme.border}`}>
           <p className={`text-sm font-semibold ${theme.accent}`}>{theme.title}</p>
           <p className="text-xs text-slate-600">{theme.description}</p>
         </div>
@@ -185,15 +215,18 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
           <div className="text-xs text-slate-500">
             التقدم الميداني: {completedSteps}/{totalSteps}
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <button
               type="button"
               onClick={() => startMission(node.id)}
               disabled={missionStarted}
-              className="rounded-full bg-slate-900 text-white px-4 py-2 text-xs font-semibold shadow hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`rounded-full bg-slate-900 text-white px-4 py-2 text-xs font-semibold shadow hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed ${missionStarted && !missionCompleted ? "animate-pulse ring-2 ring-emerald-400/60 ring-offset-2" : ""}`}
             >
               {missionStarted ? "المناورة شغالة" : "ابدأ المناورة"}
             </button>
+            {missionStarted && !missionCompleted && (
+              <span className="text-xs text-emerald-600 font-medium">نشط الآن</span>
+            )}
             {missionCompleted ? (
               <button
                 type="button"
@@ -226,13 +259,52 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
           <span>🎒</span> العتاد المطلوب
         </h3>
         <ul className="space-y-2 text-sm text-slate-700">
-          {result.requirements.map((item, index) => (
-            <li key={`${item.title}-${index}`} className="rounded-lg bg-white/70 px-3 py-2 border border-amber-200">
-              <span className="font-semibold text-slate-800">{item.title}:</span>{" "}
-              {item.detail}
-            </li>
-          ))}
+          {result.requirements.map((item, index) => {
+            const isReality = item.title.includes("ملف القضية") || item.title.includes("قائمة الواقع");
+            const isDopamine = item.title.includes("بديل الدوبامين");
+            return (
+              <li key={`${item.title}-${index}`} className="rounded-lg bg-white/70 px-3 py-2 border border-amber-200 flex items-start justify-between gap-2">
+                <span>
+                  <span className="font-semibold text-slate-800">{item.title}:</span>{" "}
+                  {item.detail}
+                </span>
+                {(isReality || isDopamine) && (
+                  <button
+                    type="button"
+                    onClick={() => { if (isReality) setShowRealityPopup((v) => !v); else setShowDopaminePopup((v) => !v); }}
+                    className="shrink-0 rounded-full p-1 text-amber-700 hover:bg-amber-200/80"
+                    title={isReality ? "قائمة الواقع" : "بديل الدوبامين"}
+                    aria-label={isReality ? "شرح قائمة الواقع" : "شرح بديل الدوبامين"}
+                  >
+                    <Info className="w-4 h-4" />
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
+        {showRealityPopup && (
+          <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50/90 p-3 text-right text-sm text-slate-800">
+            <p className="font-semibold text-amber-900 mb-2">قائمة الواقع (ملف القضية الحقيقي)</p>
+            {detachmentReasons && detachmentReasons.length > 0 ? (
+              <ul className="list-disc list-inside space-y-1">
+                {detachmentReasons.map((r, i) => (
+                  <li key={i}>{r}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>ورقة مكتوب فيها «ليه بعدت عنهم؟» — تكتبها في خطة التعافي (مرساة الواقع) وتقرأها وقت الضعف.</p>
+            )}
+            <button type="button" onClick={() => setShowRealityPopup(false)} className="mt-2 text-xs text-amber-700 underline">إغلاق</button>
+          </div>
+        )}
+        {showDopaminePopup && (
+          <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50/90 p-3 text-right text-sm text-slate-800">
+            <p className="font-semibold text-amber-900 mb-2">بديل الدوبامين</p>
+            <p>نشاط ممتع جاهز فوراً لما الفكرة تهاجمك — مثلاً: مشي، مكالمة صديق، لعبة.</p>
+            <button type="button" onClick={() => setShowDopaminePopup(false)} className="mt-2 text-xs text-amber-700 underline">إغلاق</button>
+          </div>
+        )}
       </div>
 
       <div className="p-5 bg-emerald-50 border-2 border-emerald-200 rounded-xl text-right mb-6">
@@ -247,6 +319,11 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
         <ol className="space-y-2 text-sm text-slate-700">
           {result.steps.map((step, index) => {
             const isChecked = checkedSteps[index] ?? false;
+            const stepHasDays = /(\d+)\s*أيام?/.test(step);
+            const startTs = progress.startedAt ?? 0;
+            const dayCount = startTs
+              ? Math.min(7, Math.max(1, Math.floor((Date.now() - startTs) / 86400000) + 1))
+              : 1;
             return (
               <li key={`${step}-${index}`} className="rounded-lg bg-white/70 px-3 py-2 border border-emerald-200">
                 <label className="flex items-start gap-2 cursor-pointer">
@@ -259,6 +336,11 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
                   />
                   <span className={isChecked ? "line-through text-emerald-700" : ""}>{step}</span>
                 </label>
+                {index === 0 && stepHasDays && missionStarted && !missionCompleted && (
+                  <div className="mt-2 mr-6 text-xs text-emerald-700 bg-emerald-100 rounded-full px-3 py-1 inline-block">
+                    اليوم {dayCount} من 7
+                  </div>
+                )}
               </li>
             );
           })}
@@ -286,12 +368,29 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
           <span>⚠️</span> الكمائن المتوقعة
         </h3>
         <ul className="space-y-2 text-sm text-slate-700">
-          {result.obstacles.map((item, index) => (
-            <li key={`${item.title}-${index}`} className="rounded-lg bg-white/70 px-3 py-2 border border-rose-200">
-              <span className="font-semibold text-slate-800">{item.title}:</span>{" "}
-              {item.solution}
-            </li>
-          ))}
+          {result.obstacles.map((item, index) => {
+            const solutionHasReality = item.solution.includes("ملف القضية الحقيقي") || item.solution.includes("قائمة الواقع");
+            return (
+              <li key={`${item.title}-${index}`} className="rounded-lg bg-white/70 px-3 py-2 border border-rose-200">
+                <span className="font-semibold text-slate-800">{item.title}:</span>{" "}
+                {solutionHasReality && item.solution.includes("ملف القضية الحقيقي") ? (
+                  <>
+                    {item.solution.split("ملف القضية الحقيقي")[0]}
+                    <button type="button" onClick={() => setShowRealityPopup((v) => !v)} className="text-rose-700 font-semibold underline hover:text-rose-800">ملف القضية الحقيقي</button>
+                    {item.solution.split("ملف القضية الحقيقي")[1]}
+                  </>
+                ) : solutionHasReality && item.solution.includes("قائمة الواقع") ? (
+                  <>
+                    {item.solution.split("قائمة الواقع")[0]}
+                    <button type="button" onClick={() => setShowRealityPopup((v) => !v)} className="text-rose-700 font-semibold underline hover:text-rose-800">قائمة الواقع</button>
+                    {item.solution.split("قائمة الواقع")[1]}
+                  </>
+                ) : (
+                  item.solution
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>

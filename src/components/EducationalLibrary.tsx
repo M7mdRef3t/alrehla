@@ -13,6 +13,7 @@ import {
   type FAQItem
 } from "../data/educationalContent";
 import { useAchievementState } from "../state/achievementState";
+import { useAppContentString } from "../hooks/useAppContentString";
 
 interface EducationalLibraryProps {
   isOpen: boolean;
@@ -30,6 +31,12 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
   }, [isOpen, markLibraryOpened]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<ContentCategory | "all">("all");
+
+  const searchPlaceholder = useAppContentString(
+    "library_search_placeholder",
+    "ابحث...",
+    { page: "library" }
+  );
 
   // Filter content
   const filteredVideos = videos.filter(v => {
@@ -75,7 +82,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
             className="fixed inset-4 z-50 bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-w-4xl mx-auto my-auto"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-l from-indigo-50 to-white shrink-0">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-linear-to-l from-indigo-50 to-white shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
                   <BookOpen className="w-5 h-5 text-indigo-600" />
@@ -100,7 +107,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="ابحث..."
+                  placeholder={searchPlaceholder}
                   className="w-full pr-10 pl-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
@@ -246,7 +253,7 @@ const VideoCard: FC<{ video: VideoContent }> = ({ video }) => {
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all">
       <div className="flex gap-3">
-        <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+        <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-linear-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
           {video.thumbnailUrl ? (
             <img src={video.thumbnailUrl} alt="" className="w-full h-full object-cover" />
           ) : (

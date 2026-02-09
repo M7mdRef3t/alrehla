@@ -33,7 +33,7 @@ export const OnboardingWelcomeBubble: FC<OnboardingWelcomeBubbleProps> = ({
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-xs font-extrabold text-emerald-900 dark:text-emerald-100">
-                    المساعد
+                    مرحباً بك
                   </p>
                   <span
                     className="inline-flex items-center justify-center text-[10px] font-semibold rounded-full px-2 py-0.5 border border-emerald-200 bg-white/80 text-emerald-800 dark:border-emerald-900/60 dark:bg-slate-950/60 dark:text-emerald-200"

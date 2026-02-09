@@ -5,6 +5,7 @@ import { X, Mic, MicOff, Flame, MessageSquare, Send, Wind } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import { realityCheckImaginaryArgument } from "../utils/noiseSilencingAI";
 import { BreathingOverlay } from "./BreathingOverlay";
+import { useAppContentString } from "../hooks/useAppContentString";
 
 type Step = "who" | "awareness" | "dump" | "reality" | "closure" | "done";
 
@@ -28,6 +29,12 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
+
+  const rantPlaceholder = useAppContentString(
+    "noise_rant_placeholder",
+    "قول كل اللي نفسك تقوله للشخص ده...",
+    { page: "noise_silencing" }
+  );
 
   const [recording, setRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
@@ -277,7 +284,7 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
                   <textarea
                     value={rantText}
                     onChange={(e) => setRantText(e.target.value)}
-                    placeholder="قول كل اللي نفسك تقوله للشخص ده..."
+                    placeholder={rantPlaceholder}
                     className="w-full min-h-[120px] rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 p-3 text-slate-900 dark:text-white placeholder:text-slate-400 resize-y"
                     dir="rtl"
                   />

@@ -1,8 +1,12 @@
-import type { PulseEntry } from "../state/pulseState";
+import type { PulseEntry, WeekdayLabels } from "../state/pulseState";
 
-const DAY_NAMES = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+export const PULSE_DAY_NAMES = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+const DAY_NAMES = PULSE_DAY_NAMES;
 
-export function getWeeklyPulseInsight(logs: PulseEntry[]): { title: string; body: string } | null {
+export function getWeeklyPulseInsight(
+  logs: PulseEntry[],
+  weekdayLabels?: WeekdayLabels | null
+): { title: string; body: string } | null {
   if (!logs || logs.length < 5) return null;
   const now = Date.now();
   const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
@@ -34,8 +38,15 @@ export function getWeeklyPulseInsight(logs: PulseEntry[]): { title: string; body
 
   const dayName = DAY_NAMES[lowestDay] ?? "اليوم";
   const rounded = Math.round(lowestAvg * 10) / 10;
+  const labelForDay = weekdayLabels?.[lowestDay]?.trim();
+
+  const baseBody = `لاحظنا إن طاقتك بتقل غالبًا يوم ${dayName}. متوسط طاقتك فيه حوالي ${rounded}/10.`;
+  const body = labelForDay
+    ? `${baseBody} ده اليوم اللي عندك فيه ${labelForDay}.. تعال نجهز له بشكل مختلف.`
+    : `${baseBody} لو ده يوم ضغط متكرر، خلّي فيه خطوة خفيفة بدل مواجهة.`;
+
   return {
     title: "تقرير النبض الأسبوعي",
-    body: `لاحظنا إن طاقتك بتقل غالبًا يوم ${dayName}. متوسط طاقتك فيه حوالي ${rounded}/10. لو ده يوم ضغط متكرر، خلّي فيه خطوة خفيفة بدل مواجهة.`
+    body
   };
 }

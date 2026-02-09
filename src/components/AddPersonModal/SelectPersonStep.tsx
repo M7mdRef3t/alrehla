@@ -2,6 +2,8 @@ import type { FC, ReactNode } from "react";
 import { motion } from "framer-motion";
 import { mapCopy } from "../../copy/map";
 import { SUGGESTIONS, type SuggestionCard } from "./constants";
+import { EditableText } from "../EditableText";
+import { useAppContentString } from "../../hooks/useAppContentString";
 
 interface SelectPersonStepProps {
   goalId: string;
@@ -32,16 +34,29 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
 }) => {
   const suggestions = SUGGESTIONS[goalId] || SUGGESTIONS.general;
 
+  const customTitlePlaceholder = useAppContentString(
+    "add_person_custom_title_placeholder",
+    "اكتب اللقب...",
+    { page: "add_person" }
+  );
+
+  const namePlaceholder = useAppContentString(
+    "add_person_name_placeholder",
+    "مثال: أحمد، محمد، سارة...",
+    { page: "add_person" }
+  );
+
   return (
     <form onSubmit={onContinue} className="text-right">
       <h2 id="add-person-title" className="text-xl font-bold text-slate-900 mb-4">
-        {mapCopy.addPersonTitle}
+        <EditableText id="map_add_person_title" defaultText={mapCopy.addPersonTitle} page="map" />
       </h2>
   
       {/* Step 1: Select Title (Required) */}
       <div className="mb-5">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          اختر اللقب <span className="text-red-500">*</span>
+          <EditableText id="add_person_select_label" defaultText="اختر اللقب" page="add_person" showEditIcon={false} />{" "}
+          <span className="text-red-500">*</span>
         </label>
         <div className="grid grid-cols-3 gap-2">
           {suggestions.map((suggestion: SuggestionCard) => {
@@ -69,7 +84,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
                   <Icon className={`${isSelected ? "text-teal-700" : "text-teal-600"} w-5 h-5`} strokeWidth={2} />
                 </div>
                 <div
-                  className={`min-h-[2.25rem] flex items-center justify-center text-center font-semibold leading-tight ${
+                  className={`min-h-9 flex items-center justify-center text-center font-semibold leading-tight ${
                     isSelected ? "text-teal-900" : "text-slate-900"
                   } text-xs sm:text-sm`}
                 >
@@ -93,8 +108,8 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
             <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
               <span className="text-slate-700 text-lg font-bold leading-none">+</span>
             </div>
-            <div className="min-h-[2.25rem] flex items-center justify-center text-center text-xs sm:text-sm font-semibold text-gray-700 leading-tight">
-              حد تاني
+            <div className="min-h-9 flex items-center justify-center text-center text-xs sm:text-sm font-semibold text-gray-700 leading-tight">
+              <EditableText id="add_person_select_other" defaultText="حد تاني" page="add_person" showEditIcon={false} />
             </div>
           </motion.button>
         </div>
@@ -104,7 +119,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
               type="text"
               value={customTitleInput}
               onChange={(e) => onCustomTitleChange(e.target.value)}
-              placeholder="اكتب اللقب..."
+              placeholder={customTitlePlaceholder}
               className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
               autoFocus
             />
@@ -120,7 +135,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           transition={{ duration: 0.3 }}
         >
           <label htmlFor="person-name-input" className="block text-sm font-medium text-gray-700 mb-2">
-            الاسم (اختياري)
+            <EditableText id="add_person_name_label" defaultText="الاسم (اختياري)" page="add_person" showEditIcon={false} />
           </label>
           <input
             id="person-name-input"
@@ -128,12 +143,13 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
             type="text"
             value={customName}
             onChange={(event) => onNameChange(event.target.value)}
-            placeholder="مثال: أحمد، محمد، سارة..."
+            placeholder={namePlaceholder}
             title="اكتب اسم الشخص (اختياري)"
             className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-base focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
           />
           <p className="text-xs text-gray-500 mt-2">
-            سيظهر كـ: <span className="font-semibold text-teal-700">
+            <EditableText id="add_person_name_preview_prefix" defaultText="سيظهر كـ:" page="add_person" showEditIcon={false} />{" "}
+            <span className="font-semibold text-teal-700">
               {customName.trim() || selectedTitle}
             </span>
           </p>
@@ -149,7 +165,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           onClick={onCancel}
           title="إلغاء وإغلاق النافذة"
         >
-          إلغاء
+          <EditableText id="add_person_cancel" defaultText="إلغاء" page="add_person" editOnClick={false} />
         </button>
         <button
           type="submit"
@@ -157,7 +173,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           className="flex-1 rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold shadow-lg hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
           title={selectedTitle ? "التالي: حلل إحساسك" : "اختر اللقب أولاً"}
         >
-          التالي
+          <EditableText id="add_person_next" defaultText="التالي" page="add_person" editOnClick={false} />
         </button>
       </div>
     </form>

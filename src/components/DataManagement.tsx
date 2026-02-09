@@ -1,7 +1,21 @@
 import type { FC } from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, Upload, X, AlertTriangle, Check, Database, FileJson, HardDrive, FileText, Cloud, LogOut, User } from "lucide-react";
+import {
+  Download,
+  Upload,
+  X,
+  AlertTriangle,
+  Check,
+  Database,
+  FileJson,
+  HardDrive,
+  FileText,
+  Cloud,
+  LogOut,
+  User,
+  ShieldCheck
+} from "lucide-react";
 import { GoogleMark } from "./GoogleMark";
 import {
   exportToJSON,
@@ -20,6 +34,7 @@ import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "..
 import { signInWithGoogle, signOut, updateAccountProfile } from "../services/authService";
 import { isPrivilegedRole } from "../utils/featureFlags";
 import { useAdminState } from "../state/adminState";
+import { useAppContentString } from "../hooks/useAppContentString";
 
 let pdfExportLoader: Promise<typeof import("../services/pdfExport")> | null = null;
 
@@ -76,15 +91,15 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
   const privilegedRoleLabel = (baseRole || "owner").trim().toLowerCase();
   const viewMode = roleOverride ? roleOverride.trim().toLowerCase() : null;
   const isUserView = authRole === "user";
-  const isRealRoleView = viewMode == null;
-  const isDevRoleView = Boolean(import.meta.env.DEV && viewMode && viewMode !== "user");
+  const isRealRoleView = viewMode == null || viewMode === privilegedRoleLabel;
+  const isDevRoleView = Boolean(import.meta.env.DEV && viewMode === "developer");
 
-  const setDevRoleQueryParam = (role: string | null) => {
-    if (typeof window === "undefined" || !import.meta.env.DEV) return;
+  const stripDevRoleQueryParam = () => {
+    if (typeof window === "undefined") return;
     try {
       const url = new URL(window.location.href);
-      if (role && role.trim()) url.searchParams.set("asRole", role.trim());
-      else url.searchParams.delete("asRole");
+      if (!url.searchParams.has("asRole")) return;
+      url.searchParams.delete("asRole");
       window.history.replaceState({}, "", url.toString());
     } catch {
       // ignore URL update errors
@@ -97,18 +112,32 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
     useAdminState.getState().setAdminCode(null);
 
     setRoleOverride("user");
-    setDevRoleQueryParam("user");
+    stripDevRoleQueryParam();
   };
 
   const handleUseRealRole = () => {
     setRoleOverride(null);
-    setDevRoleQueryParam(null);
+    stripDevRoleQueryParam();
   };
 
   const handleUseDevRole = () => {
     if (!import.meta.env.DEV) return;
-    setRoleOverride(privilegedRoleLabel);
-    setDevRoleQueryParam(privilegedRoleLabel);
+    setRoleOverride("developer");
+    stripDevRoleQueryParam();
+  };
+
+  const openAdminDashboard = () => {
+    onClose();
+    if (typeof window === "undefined") return;
+    try {
+      const next = new URL(window.location.href);
+      next.pathname = "/admin";
+      next.search = "";
+      window.history.pushState({}, "", next.toString());
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    } catch {
+      window.location.assign("/admin");
+    }
   };
 
   const [displayName, setDisplayName] = useState(authDisplayName);
@@ -119,6 +148,12 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
 
   const [toneGender, setToneGender] = useState<UserToneGender>(authToneGender);
   const [toneGenderDirty, setToneGenderDirty] = useState(false);
+
+  const displayNamePlaceholder = useAppContentString(
+    "account_display_name_placeholder",
+    "اكتب اسمك",
+    { page: "account" }
+  );
 
   useEffect(() => {
     // Keep field synced to server updates as long as the user hasn't started editing.
@@ -383,7 +418,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
             <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
               {/* Header */}
               <div
-                className={`flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-l ${
+                className={`flex items-center justify-between p-4 border-b border-slate-200 bg-linear-to-l ${
                   isPrivilegedUser ? "from-blue-50 to-white" : "from-teal-50 to-white"
                 }`}
               >
@@ -554,7 +589,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                               setDisplayNameError(null);
                               setDisplayNameMessage(null);
                             }}
-                            placeholder="اكتب اسمك"
+                            placeholder={displayNamePlaceholder}
                             className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-teal-400"
                           />
                         </div>
@@ -671,8 +706,18 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                             </div>
                             <p className="text-[11px] leading-relaxed text-slate-500">
                               مستخدم: استخدام المنصة كمستخدم عادي بدون أدوات المالك. {privilegedRoleLabel}: أدوات المالك.
-                              {import.meta.env.DEV ? " تطوير: محاكاة الدور عبر asRole (محلي فقط)." : null}
+                              {import.meta.env.DEV ? " تطوير: وضع اختبار محلي." : null}
                             </p>
+                            {!isUserView && (
+                              <button
+                                type="button"
+                                onClick={openAdminDashboard}
+                                className="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-800 hover:bg-teal-100 transition-colors"
+                              >
+                                <ShieldCheck className="w-4 h-4" />
+                                افتح لوحة التحكم
+                              </button>
+                            )}
                           </div>
                         )}
                         <p className="text-sm text-slate-700">مسجل كـ {authUser.email ?? "مستخدم"}</p>
@@ -807,7 +852,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4"
+                className="fixed inset-0 bg-black/60 z-60 flex items-center justify-center p-4"
                 onClick={handleCancelImport}
               >
                 <motion.div
@@ -870,7 +915,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4"
+                className="fixed inset-0 bg-black/60 z-60 flex items-center justify-center p-4"
                 onClick={() => setShowConfirmWipe(false)}
               >
                 <motion.div

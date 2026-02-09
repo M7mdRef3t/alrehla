@@ -178,7 +178,7 @@ function buildFallbackRecoveryPath(input: GeneratePathInput): RecoveryPath {
     },
     path_detox: {
       week1: [
-        { id: "w1-t1", type: "reflection", title: "تمييز الذنب", text: "اكتب 3 جمل ذنب بتطاردك واسمّيها \"ذنب حدود\".", requiresInput: true, placeholder: "مثال: لما بسكت، بحس إني شخص وحش." },
+        { id: "w1-t1", type: "reflection", title: "تمييز الذنب", text: "اكتب 3 أفكار ذنب تطاردك وسمّيها \"ذنب حدود\".", requiresInput: true, placeholder: "مثال: عندما أقول لا، أشعر أنني أنانية" },
         { id: "w1-t2", type: "practice", title: "وقف الاستحضار", text: "كل ما تفكر فيه، قول لنفسك: \"ده مش وقت التفكير\".", requiresInput: false },
         { id: "w1-t3", type: "breathing", title: "تهدئة الذهن", text: "تنفس 90 ثانية لما يشتغل الاجترار.", requiresInput: false }
       ],

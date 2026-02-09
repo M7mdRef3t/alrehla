@@ -7,6 +7,7 @@ import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import { AgentCard, CustomExerciseCard } from "./agentCards";
 import type { CardId, CustomExerciseSpec } from "./agentCards";
 import { buildToneSystemBlock, resolveVoiceMode } from "../copy/toneGuide";
+import { useAppContentString } from "../hooks/useAppContentString";
 
 interface Message {
   id: string;
@@ -49,6 +50,12 @@ export const AIChatbot: FC<AIChatbotProps> = ({
   const cardsForThisTurnRef = useRef<string[]>([]);
   const customExerciseSpecRef = useRef<CustomExerciseSpec | null>(null);
   const { isSupported: speechSupported, isListening, error: speechError, start: startSpeech, stop: stopSpeech } = useSpeechRecognition({ lang: "ar-EG" });
+
+  const questionPlaceholder = useAppContentString(
+    "ai_chat_input_placeholder",
+    "اكتب سؤالك هنا...",
+    { page: "ai_chat" }
+  );
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -298,7 +305,7 @@ ${userMessage.content}`;
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group z-50"
+          className="fixed bottom-6 right-6 w-14 h-14 bg-linear-to-br from-purple-600 to-pink-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group z-50"
           aria-label="فتح مرشد الرحلة"
           title="مرشد الرحلة"
         >
@@ -313,7 +320,7 @@ ${userMessage.content}`;
       {isOpen && (
         <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border-2 border-purple-200">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-2xl">
+          <div className="flex items-center justify-between p-4 bg-linear-to-r from-purple-600 to-pink-600 text-white rounded-t-2xl">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
               <h3 className="font-bold">مرشد الرحلة</h3>
@@ -409,7 +416,7 @@ ${userMessage.content}`;
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="اكتب سؤالك هنا..."
+                placeholder={questionPlaceholder}
                 rows={2}
                 disabled={isStreaming}
                 className="flex-1 resize-none border-2 border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -419,7 +426,7 @@ ${userMessage.content}`;
                   type="button"
                   onClick={handleMicClick}
                   disabled={isStreaming}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
                     isListening
                       ? "bg-red-500 text-white animate-pulse"
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
@@ -433,7 +440,7 @@ ${userMessage.content}`;
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || isStreaming}
-                className="w-10 h-10 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center flex-shrink-0"
+                className="w-10 h-10 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center shrink-0"
                 aria-label="إرسال"
               >
                 <Send className="w-5 h-5" />

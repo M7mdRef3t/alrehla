@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import { getOptionButtonClass } from "../../utils/optionColors";
 import type { OptionTier } from "../../utils/optionColors";
+import { EditableText } from "../EditableText";
 
 interface OptionItem {
   value: string;
@@ -48,10 +49,14 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
 }) => {
   return (
     <form onSubmit={onContinue} className="text-right">
-      <h2 className="text-xl font-bold text-slate-900 mb-4">{title}</h2>
+      <h2 className="text-xl font-bold text-slate-900 mb-4">
+        <EditableText id="add_person_quick_title" defaultText={title} page="add_person" />
+      </h2>
       <div className="space-y-5 mb-6">
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">{question1}</p>
+          <p className="text-sm font-medium text-gray-700 mb-2">
+            <EditableText id="add_person_quick_q1" defaultText={question1} page="add_person" showEditIcon={false} />
+          </p>
           <div className="flex flex-wrap gap-2">
             {options1.map((opt) => {
               const tier = getTier1(opt.value);
@@ -69,7 +74,9 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
           </div>
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">{question2}</p>
+          <p className="text-sm font-medium text-gray-700 mb-2">
+            <EditableText id="add_person_quick_q2" defaultText={question2} page="add_person" showEditIcon={false} />
+          </p>
           <div className="flex flex-wrap gap-2">
             {options2.map((opt) => {
               const tier = getTier2(opt.value);
@@ -87,21 +94,33 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
           </div>
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">هل الوضع طوارئ؟ (إيذاء بدني، ابتزاز خطير)</p>
+          <p className="text-sm font-medium text-gray-700 mb-2">
+            <EditableText
+              id="add_person_emergency_q"
+              defaultText="هل الوضع طوارئ؟ (إيذاء بدني، ابتزاز خطير)"
+              page="add_person"
+              showEditIcon={false}
+            />
+          </p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => onSelectEmergency(false)}
               className={getOptionButtonClass("green", !isEmergency)}
             >
-              لا
+              <EditableText id="add_person_emergency_no" defaultText="لا" page="add_person" editOnClick={false} />
             </button>
             <button
               type="button"
               onClick={() => onSelectEmergency(true)}
               className={getOptionButtonClass("red", isEmergency)}
             >
-              نعم — طوارئ
+              <EditableText
+                id="add_person_emergency_yes"
+                defaultText="نعم — طوارئ"
+                page="add_person"
+                editOnClick={false}
+              />
             </button>
           </div>
         </div>
@@ -112,14 +131,14 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
           className="flex-1 rounded-full bg-gray-100 px-6 py-3 text-sm text-gray-700 font-medium hover:bg-gray-200"
           onClick={onBack}
         >
-          رجوع
+          <EditableText id="add_person_quick_back" defaultText="رجوع" page="add_person" editOnClick={false} />
         </button>
         <button
           type="submit"
           disabled={disableSubmit}
           className="flex-1 rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {nextLabel}
+          <EditableText id="add_person_quick_next" defaultText={nextLabel} page="add_person" editOnClick={false} />
         </button>
       </div>
     </form>

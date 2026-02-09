@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { X, User } from "lucide-react";
 import { Landing } from "./components/Landing";
 import { useNotificationState } from "./state/notificationState";
@@ -20,6 +20,7 @@ import { useAdminState } from "./state/adminState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "./utils/featureFlags";
 import type { FeatureFlagKey } from "./config/features";
 import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "./state/authState";
+import { initAppContentRealtime } from "./state/appContentState";
 import { InstallHintBanner } from "./components/InstallHintBanner";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
 import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
@@ -65,17 +66,17 @@ const hasSupabaseEnv = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.
 type AgentModule = typeof import("./agent");
 
 function buildStartRecoveryWelcome(firstName: string | null, toneGender: UserToneGender): string {
-  const prefix = firstName ? `أهلاً يا ${firstName}..` : "أهلاً..";
-  if (toneGender === "female") return `${prefix} جاهزة نرسم أول دايرة؟`;
-  if (toneGender === "male") return `${prefix} جاهز نرسم أول دايرة؟`;
-  return `${prefix} نبدأ نرسم أول دايرة؟`;
+  const prefix = firstName ? `أهلاً يا ${firstName}` : "أهلاً";
+  if (toneGender === "female") return `${prefix}، هل أنتِ مستعدة لبدء الرحلة؟`;
+  if (toneGender === "male") return `${prefix}، هل أنت مستعد لبدء الرحلة؟`;
+  return `${prefix}، هل أنت مستعد لبدء الرحلة؟`;
 }
 
 function buildWelcomePrompt(firstName: string | null, toneGender: UserToneGender): string {
-  const toneLabel = toneGender === "female" ? "مؤنث" : toneGender === "male" ? "مذكر" : "محايد بدون تذكير/تأنيث";
+  const toneLabel = toneGender === "female" ? "مؤنث دافئ" : toneGender === "male" ? "مذكر دافئ" : "محايد ودود";
   const namePart = firstName ? ` لمستخدم اسمه "${firstName}"` : "";
   const tonePart = toneGender === "neutral" ? "بدون تذكير/تأنيث مباشر" : `بصيغة مخاطبة ${toneLabel}`;
-  return `اكتب ترحيب قصير باللهجة المصرية${namePart}. جملة واحدة فقط + سؤال. بدون إيموجي. بدون علامات اقتباس. أقل من 12 كلمة. ${tonePart}.`;
+  return `اكتب ترحيب قصير ودود باللهجة المصرية${namePart}. جملة واحدة بشكل طبيعي (بدون سؤال منفصل). بدون إيموجي. بدون علامات اقتباس. أقل من 15 كلمة. ${tonePart}. لا تكرر الاسم كثيراً.`;
 }
 
 function cleanSingleLine(text: string): string {
@@ -114,6 +115,10 @@ export default function App() {
   );
   const [postAuthIntent, setPostAuthIntentState] = useState<PostAuthIntent | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  /** لما المستخدم يضغط "مش دلوقتي" بعد ضبط البوصلة، نتخطى إظهار البوصلة تاني في نفس الجلسة */
+  const skipNextPulseCheckRef = useRef(false);
+  /** آخر شاشة — عشان ضبط البوصلة (everyOpen) يظهر فقط عند الخروج من الـ landing، مش عند الانتقال من هدف لخريطة */
+  const prevScreenRef = useRef<Screen>("landing");
   const [showDataManagement, setShowDataManagement] = useState(false);
   const [welcome, setWelcome] = useState<{ message: string; source: WelcomeSource } | null>(null);
 
@@ -133,6 +138,7 @@ export default function App() {
   const setTheme = useThemeState((s) => s.setTheme);
   const lastPulse = usePulseState((s) => s.lastPulse);
   const pulseLogs = usePulseState((s) => s.logs);
+  const weekdayLabels = usePulseState((s) => s.weekdayLabels);
   const snoozedUntil = usePulseState((s) => s.snoozedUntil);
   const pulseCheckMode = usePulseState((s) => s.checkInMode);
   const logPulse = usePulseState((s) => s.logPulse);
@@ -210,6 +216,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const stop = initAppContentRealtime();
+    return () => stop();
+  }, []);
+
+  useEffect(() => {
     if (!hasSupabaseEnv) return;
     let cancelled = false;
     import("./services/adminApi")
@@ -232,10 +243,22 @@ export default function App() {
 
   useEffect(() => {
     if (!canUsePulseCheck) return;
-    // Don't show the micro-compass automatically on initial entry (landing).
-    // It's used later in the journey, while still allowing explicit opens (e.g. startRecovery gate).
-    if (screen === "landing") return;
+    if (skipNextPulseCheckRef.current) {
+      skipNextPulseCheckRef.current = false;
+      prevScreenRef.current = screen;
+      return;
+    }
+    if (screen === "landing") {
+      prevScreenRef.current = "landing";
+      return;
+    }
     if (pulseCheckMode === "everyOpen") {
+      // ضبط البوصلة (everyOpen) يظهر فقط عند الخروج من الـ landing، مش عند الانتقال من هدف → خريطة
+      if (prevScreenRef.current !== "landing") {
+        prevScreenRef.current = screen;
+        return;
+      }
+      prevScreenRef.current = screen;
       const t = window.setTimeout(() => {
         setPulseCheckContext("regular");
         setShowPulseCheck(true);
@@ -250,7 +273,11 @@ export default function App() {
       lastPulseDate.getFullYear() === now.getFullYear() &&
       lastPulseDate.getMonth() === now.getMonth() &&
       lastPulseDate.getDate() === now.getDate();
-    if (isSameDay) return;
+    if (isSameDay) {
+      prevScreenRef.current = screen;
+      return;
+    }
+    prevScreenRef.current = screen;
     const t = window.setTimeout(() => {
       setPulseCheckContext("regular");
       setShowPulseCheck(true);
@@ -491,7 +518,10 @@ export default function App() {
     [agentModule, nodes, availableFeatures]
   );
 
-  const pulseInsight = useMemo(() => getWeeklyPulseInsight(pulseLogs), [pulseLogs]);
+  const pulseInsight = useMemo(
+    () => getWeeklyPulseInsight(pulseLogs, weekdayLabels),
+    [pulseLogs, weekdayLabels]
+  );
 
   const pulseMode = useMemo(() => {
     if (!lastPulse) return "normal";
@@ -679,10 +709,13 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex transition-colors" dir="rtl">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex transition-colors relative overflow-hidden isolate" dir="rtl">
       <InstallHintBanner />
+      <div className="pointer-events-none absolute inset-0 hidden dark:block opacity-[0.06] -z-10" aria-hidden="true">
+        <div className="absolute inset-0 ops-room-pattern" />
+      </div>
       {isSupabaseReady && !isAdminRoute && !showAuthModal && !showPulseCheck && (
-        <div className="fixed z-[80] top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4" dir="ltr">
+        <div className="fixed z-80 top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4" dir="ltr">
           <button
             type="button"
             onClick={() => {
@@ -729,8 +762,9 @@ export default function App() {
         </Suspense>
       )}
       <main
-        className="flex-1 min-w-0 flex items-center justify-center px-4 transition-[margin]"
+        className={`flex-1 min-w-0 flex items-center justify-center px-4 transition-[margin] ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""}`}
         style={{ marginRight: isPrivilegedUser ? SIDEBAR_TAB_MARGIN : "0px" }}
+        aria-hidden={showPulseCheck}
       >
         <Suspense fallback={<div className="text-slate-500 text-sm">...جاري التحميل</div>}>
             <div key={screen} className="w-full flex justify-center max-w-2xl">
@@ -953,6 +987,7 @@ export default function App() {
             setPostAuthIntentState(null);
             clearPostAuthIntent();
             setWelcome(null);
+            skipNextPulseCheckRef.current = true;
             openDawayirSetup();
           }}
         />

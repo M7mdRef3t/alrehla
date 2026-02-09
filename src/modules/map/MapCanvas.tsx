@@ -167,10 +167,18 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
               : "bg-white border border-gray-200 text-slate-900"
         }`}
       >
+        {/* أفاتار: صورة أو أول حرف من الاسم */}
+        <span className="shrink-0 w-8 h-8 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-sm font-bold text-slate-600 dark:text-slate-200 border border-slate-300 dark:border-slate-500">
+          {node.avatarUrl ? (
+            <img src={node.avatarUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <span aria-hidden>{node.label.trim() ? node.label.trim()[0] : "؟"}</span>
+          )}
+        </span>
         <motion.button
           type="button"
           onClick={handleClick}
-          className="rounded-l-full pl-5 pr-2 py-2.5 text-sm font-semibold cursor-pointer flex-1 text-right min-w-0"
+          className="rounded-l-full pl-3 pr-2 py-2.5 text-sm font-semibold cursor-pointer flex-1 text-right min-w-0"
           title={
             hasMismatch
               ? `⚠️ تعارض — اضغط للتفاصيل`
@@ -262,6 +270,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     a.id === b.id &&
     a.label === b.label &&
     a.ring === b.ring &&
+    a.avatarUrl === b.avatarUrl &&
     a.isDetached === b.isDetached &&
     a.analysis?.recommendedRing === b.analysis?.recommendedRing &&
     prev.nodeIndex === next.nodeIndex &&
@@ -378,9 +387,9 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
         const toRing = overId as Ring;
         if (node.isDetached) {
           setDetached(activeId, false);
-          setPendingMove({ nodeId: node.id, nodeLabel: node.label, fromRing: node.ring, toRing });
+          moveNodeToRing(activeId, toRing);
         } else if (node.ring !== toRing) {
-          setPendingMove({ nodeId: node.id, nodeLabel: node.label, fromRing: node.ring, toRing });
+          moveNodeToRing(activeId, toRing);
         }
         setJustDraggedId(node.id);
         if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current);
@@ -388,7 +397,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
         return;
       }
     },
-    [nodes, setDetached]
+    [nodes, setDetached, moveNodeToRing]
   );
 
   const confirmPlacement = useCallback(() => {

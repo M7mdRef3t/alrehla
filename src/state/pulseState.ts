@@ -15,15 +15,21 @@ export interface PulseEntry {
 
 export type PulseCheckMode = "daily" | "everyOpen";
 
+/** ربط يوم أسبوع (0=أحد .. 6=سبت) بنشاط أو شخص — لتقرير التقلبات الأعمق */
+export type WeekdayLabels = Record<number, string>;
+
 interface PulseState {
   lastPulse: PulseEntry | null;
   logs: PulseEntry[];
   snoozedUntil: number | null;
   checkInMode: PulseCheckMode;
+  /** اختياري: "الثلاثاء" → "اجتماع مع المدير" لاستخدامه في تقرير النبض */
+  weekdayLabels: WeekdayLabels;
   logPulse: (entry: Omit<PulseEntry, "timestamp">) => void;
   snoozeNotifications: (minutes: number) => void;
   clearSnooze: () => void;
   setCheckInMode: (mode: PulseCheckMode) => void;
+  setWeekdayLabel: (day: number, label: string | null) => void;
 }
 
 const STORAGE_KEY = "dawayir-pulse";
@@ -36,6 +42,7 @@ export const usePulseState = create<PulseState>()(
       logs: [],
       snoozedUntil: null,
       checkInMode: "daily",
+      weekdayLabels: {},
       logPulse: (entry) => {
         const next: PulseEntry = { ...entry, timestamp: Date.now() };
         const logs = [next, ...(get().logs ?? [])].slice(0, MAX_LOGS);
@@ -47,7 +54,20 @@ export const usePulseState = create<PulseState>()(
         set({ snoozedUntil: until });
       },
       clearSnooze: () => set({ snoozedUntil: null }),
-      setCheckInMode: (mode) => set({ checkInMode: mode })
+      setCheckInMode: (mode) => set({ checkInMode: mode }),
+      setWeekdayLabel: (day, label) => {
+        const d = day >= 0 && day <= 6 ? day : null;
+        if (d == null) return;
+        set((s) => ({
+          weekdayLabels: label
+            ? { ...s.weekdayLabels, [d]: label.trim() }
+            : (() => {
+                const next = { ...s.weekdayLabels };
+                delete next[d];
+                return next;
+              })()
+        }));
+      }
     }),
     { name: STORAGE_KEY }
   )

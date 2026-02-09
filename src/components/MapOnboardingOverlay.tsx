@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { mapCopy } from "../copy/map";
 import { setOnboardingSeen } from "../utils/mapOnboarding";
+import { EditableText } from "./EditableText";
 
 interface MapOnboardingOverlayProps {
   onClose: () => void;
@@ -39,7 +40,11 @@ export const MapOnboardingOverlay: FC<MapOnboardingOverlayProps> = ({ onClose })
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="onboarding-title" className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-          {step === 1 ? "مرحبتين بالخريطة" : "معنى الدوائر"}
+          {step === 1 ? (
+            <EditableText id="map_onboarding_title_1" defaultText="مرحبتين بالخريطة" page="map" showEditIcon={false} />
+          ) : (
+            <EditableText id="map_onboarding_title_2" defaultText="معنى الدوائر" page="map" showEditIcon={false} />
+          )}
         </h2>
         <AnimatePresence mode="wait">
           <motion.p
@@ -50,7 +55,13 @@ export const MapOnboardingOverlay: FC<MapOnboardingOverlayProps> = ({ onClose })
             exit={{ opacity: 0, x: -8 }}
             transition={{ duration: 0.2 }}
           >
-            {current.text}
+            <EditableText
+              id={current.id === 1 ? "map_onboarding_step_1" : "map_onboarding_step_2"}
+              defaultText={current.text}
+              page="map"
+              multiline
+              showEditIcon={false}
+            />
           </motion.p>
         </AnimatePresence>
         <div className="flex gap-3 justify-end">
@@ -61,7 +72,7 @@ export const MapOnboardingOverlay: FC<MapOnboardingOverlayProps> = ({ onClose })
               className="rounded-full bg-teal-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
               whileTap={{ scale: 0.98 }}
             >
-              التالي
+              <EditableText id="map_onboarding_next" defaultText="التالي" page="map" editOnClick={false} />
             </motion.button>
           ) : null}
           <motion.button
@@ -70,7 +81,7 @@ export const MapOnboardingOverlay: FC<MapOnboardingOverlayProps> = ({ onClose })
             className="rounded-full bg-teal-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
             whileTap={{ scale: 0.98 }}
           >
-            {mapCopy.onboardingCta}
+            <EditableText id="map_onboarding_cta" defaultText={mapCopy.onboardingCta} page="map" editOnClick={false} />
           </motion.button>
         </div>
       </motion.div>

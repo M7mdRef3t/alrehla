@@ -1,8 +1,8 @@
 import { STANDARD_OPTIONS_MAP } from "./standardOptions";
 
 export const realityCopy = {
-  title: "خلّينا نفهم علاقتك بالشخص ده دلوقتي",
-  bodyPrefix: "جاوب بصراحة عن الواقع الفعلي لـ ",
+  title: "الواقع الفعلي للعلاقة",
+  bodyPrefix: "جاوب عن الحقيقة مع ",
   q1: "بتكلمه/تشوفه كل يوم تقريباً؟",
   q2: "بتشاركه قراراتك المهمة؟",
   q3: "لو احتجت حاجة ضرورية، هتكلمه فوراً؟",

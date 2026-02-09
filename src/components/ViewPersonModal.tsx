@@ -8,6 +8,8 @@ import { mapCopy } from "../copy/map";
 import { getPersonViewData } from "../modules/personView/personViewData";
 import { generatePersonSolution } from "../utils/personSolutionAI";
 import { generatePersonViewInsightsFromAI } from "../utils/personViewAI";
+import { ResultScreen } from "./AddPersonModal/ResultScreen";
+import type { QuickAnswer2 } from "../utils/suggestInitialRing";
 
 interface ViewPersonModalProps {
   nodeId: string;
@@ -156,147 +158,149 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               transition={{ duration: 0.3 }}
               className="text-center"
             >
-              <div className="mb-5 rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-center">
-                <p className="text-xs font-semibold text-teal-800">قراءة الجبهة الحالية</p>
-                <h3 className="mt-1 text-xl font-extrabold leading-tight text-slate-900">
-                  علاقتك مع{" "}
-                  <span className="inline-block max-w-[72vw] truncate align-bottom text-teal-700 sm:max-w-full" title={node.label}>
-                    {node.label}
-                  </span>
-                </h3>
-                <p className="mt-1 text-xs text-slate-600">
-                  {relationshipToneText}
-                </p>
-              </div>
-              {/* النتيجة الرئيسية — محتوى التشخيص بدون كلمة التشخيص */}
-              <div className="p-6 bg-linear-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-2xl mb-6">
-                <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
-                  <span>{diagnosis.personalizedTitle}</span>
-                  {hasAIInsights && (
-                    <span
-                      className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700"
-                      title="تم توليده/تعديله بالذكاء الاصطناعي"
-                    >
-                      AI
-                    </span>
-                  )}
-                </h2>
-                <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500 text-center">
-                  <p>
-                    الحالة: <span className="font-semibold text-slate-700">{diagnosis.stateLabel}</span>
-                  </p>
-                  {diagnosis.goalAction && (
-                    <p className="w-full">
-                      الهدف: <span className="font-semibold text-slate-700">{diagnosis.goalAction}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* فهم الوضع */}
-              <div className="p-5 bg-blue-50 border-2 border-blue-200 rounded-xl text-right mb-6">
-                <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
-                  <span>🔍</span> فهم الوضع
-                  {hasAIInsights && (
-                    <span
-                      className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700"
-                      title="تم توليده/تعديله بالذكاء الاصطناعي"
-                    >
-                      AI
-                    </span>
-                  )}
-                </h3>
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  {diagnosis.understanding}
-                </p>
-                {diagnosis.understandingSubtext && (
-                  <p className="text-sm text-teal-800 mt-3 font-medium leading-relaxed">
-                    {diagnosis.understandingSubtext}
-                  </p>
-                )}
-              </div>
-
-              {onOpenMission && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onOpenMission(node.id);
-                    onClose();
-                  }}
-                  className="w-full mb-6 rounded-full bg-slate-900 text-white px-6 py-3 text-sm font-semibold shadow hover:bg-slate-800 active:scale-[0.99] transition-all duration-200"
-                >
-                  افتح شاشة المناورة
-                </button>
-              )}
-
-              {diagnosis.showDetachmentSections && (
-                <div className="p-5 bg-violet-50 border-2 border-violet-200 rounded-xl text-right mb-6">
-                  <h3 className="text-sm font-bold text-violet-900 mb-2 flex items-center gap-2">
-                    <span>توضيح الحالة</span>
-                    {hasAIInsights && (
-                      <span
-                        className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700"
-                        title="تم توليده/تعديله بالذكاء الاصطناعي"
-                      >
-                        AI
+              {node.realityAnswers && node.analysis ? (
+                <ResultScreen
+                  personLabel={node.label}
+                  personTitle={node.label}
+                  score={node.analysis.score}
+                  feelingAnswers={node.analysis.answers}
+                  realityAnswers={node.realityAnswers}
+                  isEmergency={node.isEmergency}
+                  safetyAnswer={node.safetyAnswer as QuickAnswer2 | undefined}
+                  summaryOnly={false}
+                  addedNodeId={node.id}
+                  onOpenMission={onOpenMission}
+                />
+              ) : (
+                <>
+                  <div className="mb-5 rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-center">
+                    <p className="text-xs font-semibold text-teal-800">قراءة الجبهة الحالية</p>
+                    <h3 className="mt-1 text-xl font-extrabold leading-tight text-slate-900">
+                      علاقتك مع{" "}
+                      <span className="inline-block max-w-[72vw] truncate align-bottom text-teal-700 sm:max-w-full" title={node.label}>
+                        {node.label}
                       </span>
-                    )}
-                  </h3>
-                  <p className="text-sm text-gray-700 leading-relaxed">{diagnosis.enemyExplanation}</p>
-                </div>
-              )}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-600">
+                      {relationshipToneText}
+                    </p>
+                  </div>
+                  <div className="p-6 bg-linear-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-2xl mb-6">
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
+                      <span>{diagnosis.personalizedTitle}</span>
+                      {hasAIInsights && (
+                        <span
+                          className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700"
+                          title="تم توليده/تعديله بالذكاء الاصطناعي"
+                        >
+                          AI
+                        </span>
+                      )}
+                    </h2>
+                    <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500 text-center">
+                      <p>
+                        الحالة: <span className="font-semibold text-slate-700">{diagnosis.stateLabel}</span>
+                      </p>
+                      {diagnosis.goalAction && (
+                        <p className="w-full">
+                          الهدف: <span className="font-semibold text-slate-700">{diagnosis.goalAction}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
-              {diagnosis.diagnosisSummary && (
-                <div className="rounded-xl border-2 border-violet-200 overflow-hidden mb-6">
-                  <motion.button
-                    type="button"
-                    onClick={() => setShowDiagnosisInsight((v) => !v)}
-                    className="w-full flex items-center justify-between gap-2 px-4 py-3 text-right bg-violet-50 hover:bg-violet-100 transition-colors duration-200 text-sm font-semibold text-violet-900"
-                    whileTap={{ scale: 0.995 }}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span>✨</span> {mapCopy.diagnosisReadInsight}
-                    </span>
-                    <motion.span
-                      animate={{ rotate: showDiagnosisInsight ? 180 : 0 }}
-                      transition={{ duration: 0.25, ease: "easeOut" }}
-                    >
-                      <ChevronDown className="w-4 h-4 shrink-0" />
-                    </motion.span>
-                  </motion.button>
-                  <AnimatePresence initial={false}>
-                    {showDiagnosisInsight && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25, ease: "easeOut" }}
-                        className="overflow-hidden"
-                      >
-                        <div className="p-4 bg-violet-50/80 border-t border-violet-100 text-right">
-                          <p className="text-sm text-gray-700 leading-relaxed">{diagnosis.diagnosisSummary}</p>
-                          <button
-                            type="button"
-                            onClick={() => setShowDiagnosisInsight(false)}
-                            className="mt-2 text-xs text-slate-500 hover:text-slate-700 transition-colors duration-150"
+                  <div className="p-5 bg-blue-50 border-2 border-blue-200 rounded-xl text-right mb-6">
+                    <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
+                      <span>🔍</span> فهم الوضع
+                      {hasAIInsights && (
+                        <span
+                          className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700"
+                          title="تم توليده/تعديله بالذكاء الاصطناعي"
+                        >
+                          AI
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {diagnosis.understanding}
+                    </p>
+                    {diagnosis.understandingSubtext && (
+                      <p className="text-sm text-teal-800 mt-3 font-medium leading-relaxed">
+                        {diagnosis.understandingSubtext}
+                      </p>
+                    )}
+                  </div>
+
+                  {diagnosis.showDetachmentSections && (
+                    <div className="p-5 bg-violet-50 border-2 border-violet-200 rounded-xl text-right mb-6">
+                      <h3 className="text-sm font-bold text-violet-900 mb-2 flex items-center gap-2">
+                        <span>توضيح الحالة</span>
+                        {hasAIInsights && (
+                          <span
+                            className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700"
+                            title="تم توليده/تعديله بالذكاء الاصطناعي"
                           >
-                            {mapCopy.diagnosisCollapse}
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
+                            AI
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-sm text-gray-700 leading-relaxed">{diagnosis.enemyExplanation}</p>
+                    </div>
+                  )}
 
-              <button
-                type="button"
-                onClick={() => setViewScreen("solution")}
-                className="w-full mt-6 rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                <span>الحل</span>
-                <ArrowRight className="w-5 h-5" />
-              </button>
+                  {diagnosis.diagnosisSummary && (
+                    <div className="rounded-xl border-2 border-violet-200 overflow-hidden mb-6">
+                      <motion.button
+                        type="button"
+                        onClick={() => setShowDiagnosisInsight((v) => !v)}
+                        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-right bg-violet-50 hover:bg-violet-100 transition-colors duration-200 text-sm font-semibold text-violet-900"
+                        whileTap={{ scale: 0.995 }}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span>✨</span> {mapCopy.diagnosisReadInsight}
+                        </span>
+                        <motion.span
+                          animate={{ rotate: showDiagnosisInsight ? 180 : 0 }}
+                          transition={{ duration: 0.25, ease: "easeOut" }}
+                        >
+                          <ChevronDown className="w-4 h-4 shrink-0" />
+                        </motion.span>
+                      </motion.button>
+                      <AnimatePresence initial={false}>
+                        {showDiagnosisInsight && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-4 bg-violet-50/80 border-t border-violet-100 text-right">
+                              <p className="text-sm text-gray-700 leading-relaxed">{diagnosis.diagnosisSummary}</p>
+                              <button
+                                type="button"
+                                onClick={() => setShowDiagnosisInsight(false)}
+                                className="mt-2 text-xs text-slate-500 hover:text-slate-700 transition-colors duration-150"
+                              >
+                                {mapCopy.diagnosisCollapse}
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setViewScreen("solution")}
+                    className="w-full mt-6 rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <span>الحل</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
             </motion.div>
           )}
 
@@ -326,7 +330,24 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
                   <h3 className="text-sm font-bold text-teal-900 mb-2 flex items-center gap-2">
                     <span>💡</span> الحل المخصص
                   </h3>
-                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{solutionText}</p>
+                  <div
+                    className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap [&_.sh]:font-bold [&_.sh]:text-amber-800 [&_.sh]:block [&_.sh]:mt-3 [&_.sh]:mb-1"
+                    dangerouslySetInnerHTML={{
+                      __html: solutionText
+                        .replace(/•\s*محكمة الضمير/g, "• <span class=\"sh\">⚖️ محكمة الضمير</span>")
+                        .replace(/•\s*إشارة قف/g, "• <span class=\"sh\">🛑 إشارة قف</span>")
+                        .replace(/•\s*الصيام الشعوري/g, "• <span class=\"sh\">✂️ الصيام الشعوري</span>")
+                        .replace(/•\s*الطاقة اللي/g, "• <span class=\"sh\">✂️ الطاقة اللي</span>")
+                        .replace(/•\s*قص الحبل/g, "• <span class=\"sh\">✂️ قص الحبل</span>")
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setViewScreen("diagnosis")}
+                    className="w-full mt-6 rounded-full bg-teal-600 text-white px-6 py-3 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
+                  >
+                    تمام، فهمت الخطة ✅
+                  </button>
                 </div>
               ) : null}
             </motion.div>

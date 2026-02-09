@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { X, PenLine, Wind, Shield } from "lucide-react";
 import { useMeState, type BatteryState } from "../state/meState";
 import { useMapState } from "../state/mapState";
+import { useAppContentString } from "../hooks/useAppContentString";
 
 interface MeNodeDetailsProps {
   onClose: () => void;
@@ -21,6 +22,12 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
   const nodes = useMapState((s) => s.nodes);
   const [showJournal, setShowJournal] = useState(false);
   const [journalInput, setJournalInput] = useState("");
+
+  const journalPlaceholder = useAppContentString(
+    "me_journal_placeholder",
+    "اكتب هنا...",
+    { page: "me_node" }
+  );
 
   const redCount = nodes.filter((n) => n.ring === "red").length;
   const yellowCount = nodes.filter((n) => n.ring === "yellow").length;
@@ -176,7 +183,7 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
       {/* مودال فضفضة حرة */}
       {showJournal && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+          className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 p-4"
           onClick={() => setShowJournal(false)}
         >
           <motion.div
@@ -189,7 +196,7 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
             <textarea
               value={journalInput}
               onChange={(e) => setJournalInput(e.target.value)}
-              placeholder="اكتب هنا..."
+              placeholder={journalPlaceholder}
               rows={5}
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />

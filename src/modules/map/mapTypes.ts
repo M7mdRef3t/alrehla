@@ -128,6 +128,8 @@ export interface MapNode {
   id: string;
   label: string;
   ring: Ring;
+  /** اختياري: رابط صورة الشخص — يظهر كأفاتار في الدائرة */
+  avatarUrl?: string;
   x: number;
   y: number;
   analysis?: AnalysisResult;

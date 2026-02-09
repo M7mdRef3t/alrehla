@@ -1,14 +1,12 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Download, Share2 } from "lucide-react";
+import { ArrowUpRight, Download, Share2 } from "lucide-react";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 };
-
-const DISMISS_KEY = "dawayir-install-hint-dismissed";
 
 const useMediaMatch = (query: string, fallback = false) => {
   const [matches, setMatches] = useState(fallback);
@@ -34,17 +32,12 @@ const isStandaloneDisplay = () => {
 
 export const InstallHintBanner: FC = () => {
   const isMobile = useMediaMatch("(max-width: 768px)");
-  const [dismissed, setDismissed] = useState(false);
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isIPad, setIsIPad] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    setDismissed(window.localStorage.getItem(DISMISS_KEY) === "true");
-  }, []);
+  const [isAndroid, setIsAndroid] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -56,6 +49,7 @@ export const InstallHintBanner: FC = () => {
     const isPad = iPadUA || iPadOS;
     setIsIPad(isPad);
     setIsIOS(iPhoneIPod || isPad);
+    setIsAndroid(/Android/i.test(ua));
   }, []);
 
   useEffect(() => {
@@ -70,9 +64,10 @@ export const InstallHintBanner: FC = () => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!isMobile || dismissed || isStandalone) return;
-
     const handler = (event: Event) => {
+      const isMobileNow = window.matchMedia("(max-width: 768px)").matches;
+      const isStandaloneNow = isStandaloneDisplay();
+      if (!isMobileNow || isStandaloneNow) return;
       event.preventDefault();
       setInstallEvent(event as BeforeInstallPromptEvent);
       setIsVisible(true);
@@ -80,7 +75,16 @@ export const InstallHintBanner: FC = () => {
 
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, [isMobile, dismissed, isStandalone]);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!isMobile || isStandalone) return;
+    if (!isAndroid || isIOS) return;
+
+    const t = window.setTimeout(() => setIsVisible(true), 800);
+    return () => window.clearTimeout(t);
+  }, [isMobile, isStandalone, isAndroid, isIOS]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -94,15 +98,6 @@ export const InstallHintBanner: FC = () => {
     return () => window.removeEventListener("appinstalled", handler);
   }, []);
 
-  const dismiss = () => {
-    setIsVisible(false);
-    setInstallEvent(null);
-    setDismissed(true);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(DISMISS_KEY, "true");
-    }
-  };
-
   const triggerInstall = async () => {
     if (!installEvent) return;
     await installEvent.prompt();
@@ -112,11 +107,11 @@ export const InstallHintBanner: FC = () => {
       // Ignore prompt errors to avoid blocking the UI.
     }
     setInstallEvent(null);
-    setIsVisible(false);
+    // Keep banner visible until app is actually installed (appinstalled event).
   };
 
-  const canRender = isMobile && !dismissed && !isStandalone;
-  const showAndroidPrompt = isVisible && canRender && Boolean(installEvent);
+  const canRender = isMobile && !isStandalone;
+  const showAndroidPrompt = isVisible && canRender && isAndroid && !isIOS;
   const showIOSHint = canRender && isIOS;
   if (!showAndroidPrompt && !showIOSHint) return null;
 
@@ -125,7 +120,7 @@ export const InstallHintBanner: FC = () => {
       {showAndroidPrompt && (
         <motion.div
           key="android-install"
-          className="fixed left-1/2 -translate-x-1/2 z-[40] w-[min(92vw,26rem)] top-[calc(env(safe-area-inset-top)+0.75rem)]"
+          className="fixed right-4 z-[40] w-[min(92vw,26rem)] top-[calc(env(safe-area-inset-top)+0.75rem)]"
           initial={{ opacity: 0, y: -12, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -133,7 +128,11 @@ export const InstallHintBanner: FC = () => {
           role="status"
           aria-live="polite"
         >
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/95 backdrop-blur px-4 py-3 shadow-xl dark:border-emerald-900/60 dark:bg-slate-900/90">
+          <div className="relative rounded-2xl border border-emerald-200 bg-emerald-50/95 backdrop-blur px-4 py-3 shadow-xl dark:border-emerald-900/60 dark:bg-slate-900/90">
+            <div
+              className="absolute -top-2 right-6 w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-emerald-50/95 dark:border-b-slate-900/90"
+              aria-hidden="true"
+            />
             <div className="flex items-start gap-3">
               <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white shadow">
                 <Download className="h-5 w-5" />
@@ -143,23 +142,34 @@ export const InstallHintBanner: FC = () => {
                   ثبّت الرحلة كتطبيق
                 </p>
                 <p className="text-xs text-emerald-800 dark:text-emerald-200 mt-1">
-                  هتلاقي أيقونة التثبيت في شريط العنوان بالأعلى — اضغطها عشان تضيف المنصة على موبايلك.
+                  {installEvent ? (
+                    <>
+                      هتلاقي أيقونة التثبيت في شريط العنوان بالأعلى{" "}
+                      <span className="inline-flex align-middle mx-0.5 text-emerald-700 dark:text-emerald-200">
+                        <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+                      </span>
+                      اضغطها عشان تضيف المنصة على موبايلك.
+                    </>
+                  ) : (
+                    <>
+                      لو ظهرت أيقونة التثبيت في شريط العنوان بالأعلى{" "}
+                      <span className="inline-flex align-middle mx-0.5 text-emerald-700 dark:text-emerald-200">
+                        <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+                      </span>
+                      اضغطها. ولو مش ظاهرة: افتح قائمة المتصفح (⋮) واختر "تثبيت التطبيق" أو "إضافة للشاشة الرئيسية".
+                    </>
+                  )}
                 </p>
                 <div className="mt-3 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={triggerInstall}
-                    className="rounded-full bg-emerald-600 text-white px-3 py-1.5 text-xs font-semibold hover:bg-emerald-700 transition-colors"
-                  >
-                    تثبيت الآن
-                  </button>
-                  <button
-                    type="button"
-                    onClick={dismiss}
-                    className="text-xs font-semibold text-emerald-700 hover:text-emerald-900 dark:text-emerald-200 dark:hover:text-white transition-colors"
-                  >
-                    إخفاء
-                  </button>
+                  {installEvent && (
+                    <button
+                      type="button"
+                      onClick={triggerInstall}
+                      className="rounded-full bg-emerald-600 text-white px-3 py-1.5 text-xs font-semibold hover:bg-emerald-700 transition-colors"
+                    >
+                      تثبيت الآن
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -194,15 +204,6 @@ export const InstallHintBanner: FC = () => {
                   </span>
                   ثم «إضافة إلى الشاشة الرئيسية».
                 </p>
-                <div className="mt-3 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={dismiss}
-                    className="rounded-full bg-emerald-600 text-white px-3 py-1.5 text-xs font-semibold hover:bg-emerald-700 transition-colors"
-                  >
-                    فهمت
-                  </button>
-                </div>
               </div>
             </div>
           </div>

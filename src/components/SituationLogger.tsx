@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, FileText, X, Calendar } from "lucide-react";
 import type { SituationLog } from "../types/recoveryPlan";
+import { useAppContentString } from "../hooks/useAppContentString";
 
 interface SituationLoggerProps {
   logs: SituationLog[];
@@ -23,6 +24,36 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
     outcome: "",
     lesson: ""
   });
+
+  const situationPlaceholder = useAppContentString(
+    "situation_log_situation_placeholder",
+    "مثال: طلب مني فلوس بشكل مفاجئ",
+    { page: "situation_log" }
+  );
+
+  const feelingPlaceholder = useAppContentString(
+    "situation_log_feeling_placeholder",
+    "مثال: ضغط + ذنب",
+    { page: "situation_log" }
+  );
+
+  const responsePlaceholder = useAppContentString(
+    "situation_log_response_placeholder",
+    'مثال: قولت "مش مناسب دلوقتي"',
+    { page: "situation_log" }
+  );
+
+  const outcomePlaceholder = useAppContentString(
+    "situation_log_outcome_placeholder",
+    "مثال: حصل شد بسيط وبعدها هدوء",
+    { page: "situation_log" }
+  );
+
+  const lessonPlaceholder = useAppContentString(
+    "situation_log_lesson_placeholder",
+    "مثال: الوضوح بيقلل النزيف",
+    { page: "situation_log" }
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +124,7 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
                   type="text"
                   value={newLog.situation}
                   onChange={(e) => setNewLog({ ...newLog, situation: e.target.value })}
-                  placeholder="مثال: طلب مني فلوس بشكل مفاجئ"
+                  placeholder={situationPlaceholder}
                   className="w-full border border-purple-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   dir="rtl"
                 />
@@ -107,7 +138,7 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
                   type="text"
                   value={newLog.feeling}
                   onChange={(e) => setNewLog({ ...newLog, feeling: e.target.value })}
-                  placeholder="مثال: ضغط + ذنب"
+                  placeholder={feelingPlaceholder}
                   className="w-full border border-purple-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   dir="rtl"
                 />
@@ -121,7 +152,7 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
                   type="text"
                   value={newLog.response}
                   onChange={(e) => setNewLog({ ...newLog, response: e.target.value })}
-                  placeholder='مثال: قولت "مش مناسب دلوقتي"'
+                  placeholder={responsePlaceholder}
                   className="w-full border border-purple-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   dir="rtl"
                 />
@@ -135,7 +166,7 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
                   type="text"
                   value={newLog.outcome}
                   onChange={(e) => setNewLog({ ...newLog, outcome: e.target.value })}
-                  placeholder="مثال: حصل شد بسيط وبعدها هدوء"
+                  placeholder={outcomePlaceholder}
                   className="w-full border border-purple-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   dir="rtl"
                 />
@@ -149,7 +180,7 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
                   type="text"
                   value={newLog.lesson}
                   onChange={(e) => setNewLog({ ...newLog, lesson: e.target.value })}
-                  placeholder="مثال: الوضوح بيقلل النزيف"
+                  placeholder={lessonPlaceholder}
                   className="w-full border border-purple-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   dir="rtl"
                 />

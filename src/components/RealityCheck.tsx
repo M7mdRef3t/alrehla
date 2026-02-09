@@ -2,6 +2,7 @@ import type { FC } from "react";
 import React from "react";
 import { ArrowLeft } from "lucide-react";
 import { realityCopy } from "../copy/reality";
+import { EditableText } from "./EditableText";
 import { getOptionButtonClass, realityTier } from "../utils/optionColors";
 
 export type RealityOption = "often" | "sometimes" | "rarely" | "never";
@@ -59,20 +60,24 @@ export const RealityCheck: FC<RealityCheckProps> = ({
           aria-label="رجوع"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span className="font-medium">رجوع</span>
+          <span className="font-medium">
+            <EditableText id="reality_back" defaultText="رجوع" page="reality" editOnClick={false} />
+          </span>
         </button>
       )}
       <h2 id="reality-title" className="text-2xl font-bold text-slate-900 mb-2">
-        {realityCopy.title}
+        <EditableText id="reality_title" defaultText={realityCopy.title} page="reality" />
       </h2>
       <p className="text-base text-gray-600 leading-relaxed">
-        {realityCopy.bodyPrefix}{personLabel}
+        <EditableText id="reality_body_prefix" defaultText={realityCopy.bodyPrefix} page="reality" showEditIcon={false} />{personLabel}
       </p>
 
       <ul className="list-none mt-8 space-y-4 text-sm text-slate-800 max-w-md mx-auto">
         {(["q1", "q2", "q3"] as const).map((key) => (
           <li key={key} className="p-4 bg-white border border-gray-200 rounded-xl text-right">
-            <p className="font-medium mb-3">{realityCopy[key]}</p>
+            <p className="font-medium mb-3">
+              <EditableText id={`reality_${key}`} defaultText={realityCopy[key]} page="reality" showEditIcon={false} />
+            </p>
             <div className="flex gap-2 items-stretch">
               {OPTIONS.map((opt) => {
                 const isSelected = answers[key] === opt;
@@ -103,7 +108,7 @@ export const RealityCheck: FC<RealityCheckProps> = ({
           onClick={() => onDone(answers)}
           title={allAnswered ? realityCopy.cta : "جاوب على كل الأسئلة الأول"}
         >
-          {realityCopy.cta}
+          <EditableText id="reality_cta" defaultText={realityCopy.cta} page="reality" editOnClick={false} />
         </button>
       </div>
     </section>

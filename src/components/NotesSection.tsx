@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, MessageSquare, X } from "lucide-react";
 import type { PersonNote } from "../modules/map/mapTypes";
+import { useAppContentString } from "../hooks/useAppContentString";
 
 interface NotesSectionProps {
   personLabel: string;
@@ -21,6 +22,12 @@ export const NotesSection: FC<NotesSectionProps> = ({
   const [newNoteText, setNewNoteText] = useState("");
   const [newNoteComment, setNewNoteComment] = useState("");
   const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
+
+  const noteCommentPlaceholder = useAppContentString(
+    "note_comment_placeholder",
+    "مثال: لأني ده يدخلني في جسمه وبتحبس جوا وبشوف العالم من خلاله...",
+    { page: "notes" }
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +101,7 @@ export const NotesSection: FC<NotesSectionProps> = ({
                 id="note-comment"
                 value={newNoteComment}
                 onChange={(e) => setNewNoteComment(e.target.value)}
-                placeholder="مثال: لأني ده يدخلني في جسمه وبتحبس جوا وبشوف العالم من خلاله..."
+                placeholder={noteCommentPlaceholder}
                 className="w-full border border-teal-300 rounded-lg px-4 py-3 text-base resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 rows={2}
                 dir="rtl"

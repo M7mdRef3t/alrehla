@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useEmergencyState } from "../state/emergencyState";
 import { emergencyCopy } from "../copy/emergency";
+import { EditableText } from "./EditableText";
 
 export interface EmergencyOverlayProps {
   /** عند الضغط على «تمرين تنفس» — إن وُجد يُستدعى ثم يُغلق الـ overlay */
@@ -56,10 +57,10 @@ export const EmergencyOverlay: FC<EmergencyOverlayProps> = ({
           id="emergency-title"
           className="text-4xl md:text-5xl font-bold text-white mb-6"
         >
-          غرفة الطوارئ
+          <EditableText id="emergency_room_title" defaultText="غرفة الطوارئ" page="emergency" showEditIcon={false} />
         </h2>
         <p className="text-lg md:text-xl text-white/90 leading-relaxed mb-10">
-          وقف. خد نفس. مش دورك دلوقتي.
+          <EditableText id="emergency_title" defaultText={emergencyCopy.title} page="emergency" multiline showEditIcon={false} />
         </p>
 
         {showRoomActions && (
@@ -71,7 +72,12 @@ export const EmergencyOverlay: FC<EmergencyOverlayProps> = ({
                 onClick={handleBreathing}
                 aria-label="تمرين تنفس دقيقة"
               >
-                تمرين تنفس (دقيقة)
+                <EditableText
+                  id="emergency_breathing_cta"
+                  defaultText="تمرين تنفس (دقيقة)"
+                  page="emergency"
+                  editOnClick={false}
+                />
               </button>
             )}
             {onStartScenario && (
@@ -81,7 +87,12 @@ export const EmergencyOverlay: FC<EmergencyOverlayProps> = ({
                 onClick={handleScenario}
                 aria-label="سيناريو رد احترافي"
               >
-                سيناريو رد احترافي
+                <EditableText
+                  id="emergency_scenario_cta"
+                  defaultText="سيناريو رد احترافي"
+                  page="emergency"
+                  editOnClick={false}
+                />
               </button>
             )}
           </div>
@@ -94,17 +105,24 @@ export const EmergencyOverlay: FC<EmergencyOverlayProps> = ({
           title="خروج هادي"
           aria-label="خروج هادي"
         >
-          {emergencyCopy.exit}
+          <EditableText id="emergency_exit" defaultText={emergencyCopy.exit} page="emergency" editOnClick={false} />
         </button>
         {emergencyCopy.supportLines.length > 0 && (
           <div className="mt-10 pt-8 border-t border-white/20 text-right">
             <h3 className="text-lg font-semibold text-white mb-3">
-              {emergencyCopy.supportTitle}
+              <EditableText id="emergency_support_title" defaultText={emergencyCopy.supportTitle} page="emergency" showEditIcon={false} />
             </h3>
             <ul className="space-y-3">
-              {emergencyCopy.supportLines.map((line) => (
+              {emergencyCopy.supportLines.map((line, i) => (
                 <li key={line.phone} className="text-white/90 text-sm">
-                  <span className="font-medium">{line.name}</span>
+                  <span className="font-medium">
+                    <EditableText
+                      id={`emergency_support_${i + 1}_name`}
+                      defaultText={line.name}
+                      page="emergency"
+                      showEditIcon={false}
+                    />
+                  </span>
                   {" — "}
                   <a
                     href={`tel:${line.phone}`}
@@ -113,7 +131,13 @@ export const EmergencyOverlay: FC<EmergencyOverlayProps> = ({
                     {line.phone}
                   </a>
                   <span className="block text-white/70 text-xs mt-0.5">
-                    {line.description}
+                    <EditableText
+                      id={`emergency_support_${i + 1}_desc`}
+                      defaultText={line.description}
+                      page="emergency"
+                      multiline
+                      showEditIcon={false}
+                    />
                   </span>
                 </li>
               ))}

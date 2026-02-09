@@ -147,13 +147,13 @@ const PathProgressPanel: FC<{
       </div>
       {pathId === "path_detox" && onUpdateBoundaryLegitimacyScore && (
         <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl mb-3 text-right">
-          <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 mb-1">مؤشر ثبات الدرع</p>
-          <p className="text-xs text-amber-800 dark:text-amber-300 mb-2">وضعك مع تفعيل الحدود دلوقتي عامل إزاي؟</p>
+          <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 mb-1">كيفك مع الحدود؟</p>
+          <p className="text-xs text-amber-800 dark:text-amber-300 mb-2">ركز على إحساسك الآن مع تفعيل الحدود</p>
           <div className="flex flex-wrap gap-2">
             {[
-              { value: 0, label: "بحس إني معتدي لما بقول لأ" },
-              { value: 50, label: "عارف إنه حقي بس لسه في سحب ذنب" },
-              { value: 100, label: "ده حقي الطبيعي ودرعي ثابت" }
+              { value: 0, label: "أشعر بالذنب لما أقول لا" },
+              { value: 50, label: "عارف حقي لكن لسه فيه شعور بالذنب" },
+              { value: 100, label: "أنا واثق من حقي والحدود طبيعية" }
             ].map(({ value, label }) => (
               <button
                 key={value}

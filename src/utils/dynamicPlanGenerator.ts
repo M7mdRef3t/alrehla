@@ -175,7 +175,7 @@ function generateWeek1Understanding(
       id: 'w1-meaning',
       type: 'writing',
       text: 'اكتب بكلامك: إيه معنى ده ليك؟ وإزاي بيأثر عليك؟',
-      placeholder: 'مثال: بحس إني لو رفضت أي حاجة، يبقى أنا شخص وحش...',
+      placeholder: 'مثال: عندما أرفض طلب ما، أشعر أنني شخص سيء...',
       requiresInput: true
     },
     {

@@ -7,22 +7,25 @@ import {
   Heart,
   Wallet,
   HelpCircle,
+  Users,
   type LucideIcon
 } from "lucide-react";
 import { resolveAdviceCategory, type AdviceCategory } from "../data/adviceScripts";
 import { goalPickerCopy } from "../copy/goalPicker";
+import { EditableText } from "./EditableText";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 
 // Icon lookup for each goal type
 const ICON_MAP: Record<string, LucideIcon> = {
   work: Briefcase,
   family: Home,
+  friends: Users,
   love: Heart,
   money: Wallet,
   unknown: HelpCircle
 };
 
-const ENABLED_GOAL_ID = "family";
+const ENABLED_GOAL_IDS = ["family", "friends", "work", "love", "money", "unknown"];
 
 const tileVariants: Variants = {
   hidden: { opacity: 0, y: 12 },
@@ -46,7 +49,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
   onContinue
 }) => {
   const handleSelect = (goalId: string) => {
-    if (goalId !== ENABLED_GOAL_ID) return;
+    if (!ENABLED_GOAL_IDS.includes(goalId)) return;
     const category = resolveAdviceCategory(goalId);
     trackEvent(AnalyticsEvents.GOAL_SELECTED, { goal_id: goalId, category });
     onContinue(category, goalId);
@@ -61,10 +64,16 @@ export const GoalPicker: FC<GoalPickerProps> = ({
         id="goal-title"
         className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4"
       >
-        {goalPickerCopy.title}
+        <EditableText id="goal_picker_title" defaultText={goalPickerCopy.title} page="goal_picker" />
       </h1>
       <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-md mx-auto mb-10">
-        {goalPickerCopy.subtitle}
+        <EditableText
+          id="goal_picker_subtitle"
+          defaultText={goalPickerCopy.subtitle}
+          page="goal_picker"
+          multiline
+          showEditIcon={false}
+        />
       </p>
 
       <div
@@ -74,7 +83,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
       >
         {goalPickerCopy.options.map((option, i) => {
           const Icon = ICON_MAP[option.id];
-          const isEnabled = option.id === ENABLED_GOAL_ID;
+          const isEnabled = ENABLED_GOAL_IDS.includes(option.id);
           const isSelected = initialGoalId != null && option.id === initialGoalId;
           return (
             <motion.button
@@ -98,7 +107,12 @@ export const GoalPicker: FC<GoalPickerProps> = ({
             >
               {!isEnabled && (
                 <span className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/90 dark:bg-slate-900/90 opacity-0 group-hover/card:opacity-100 transition-opacity z-10 text-base font-bold text-slate-600 dark:text-slate-300">
-                  قريبًا
+                  <EditableText
+                    id="goal_picker_coming_soon"
+                    defaultText="قريبًا"
+                    page="goal_picker"
+                    showEditIcon={false}
+                  />
                 </span>
               )}
               <div className="flex justify-center mb-3">
@@ -108,10 +122,21 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                 />
               </div>
               <p className={`text-base font-bold mb-1 ${!isEnabled ? "text-slate-500 dark:text-slate-500" : "text-slate-900 dark:text-white"}`}>
-                {option.label}
+                <EditableText
+                  id={`goal_picker_option_${option.id}_label`}
+                  defaultText={option.label}
+                  page="goal_picker"
+                  editOnClick={false}
+                />
               </p>
               <p className={`text-sm leading-relaxed ${!isEnabled ? "text-slate-400 dark:text-slate-500" : "text-slate-500 dark:text-slate-400"}`}>
-                {option.subtitle}
+                <EditableText
+                  id={`goal_picker_option_${option.id}_subtitle`}
+                  defaultText={option.subtitle}
+                  page="goal_picker"
+                  multiline
+                  editOnClick={false}
+                />
               </p>
             </motion.button>
           );
@@ -126,7 +151,12 @@ export const GoalPicker: FC<GoalPickerProps> = ({
           title="رجوع للشاشة السابقة"
           aria-label="رجوع"
         >
-          {goalPickerCopy.buttons.back}
+          <EditableText
+            id="goal_picker_back"
+            defaultText={goalPickerCopy.buttons.back}
+            page="goal_picker"
+            editOnClick={false}
+          />
         </button>
       </div>
     </main>

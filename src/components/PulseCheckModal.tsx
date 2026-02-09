@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import type { PulseFocus, PulseMood } from "../state/pulseState";
+import { energyColorHex, energyPct } from "../utils/pulseUi";
 
 interface PulseCheckModalProps {
   isOpen: boolean;
@@ -19,12 +20,20 @@ const MOODS: Array<{ id: PulseMood; label: string; emoji: string }> = [
   { id: "sad", label: "حزين", emoji: "🌧️" }
 ];
 
-const FOCUS_OPTIONS: Array<{ id: PulseFocus; label: string }> = [
-  { id: "event", label: "موقف حصل" },
-  { id: "thought", label: "فكرة مش بتروح" },
-  { id: "body", label: "جسدي تعبان" },
-  { id: "none", label: "ولا حاجة، جاي أكمل" }
+const FOCUS_OPTIONS_BASE: Array<{ id: PulseFocus; labelKey: "event" | "thought" | "body" | "none_new" | "none_returning" }> = [
+  { id: "event", labelKey: "event" },
+  { id: "thought", labelKey: "thought" },
+  { id: "body", labelKey: "body" },
+  { id: "none", labelKey: "none_returning" }
 ];
+
+const FOCUS_LABELS: Record<string, string> = {
+  event: "موقف حصل",
+  thought: "فكرة مش بتروح",
+  body: "جسدي تعبان",
+  none_returning: "ولا حاجة، جاي أكمل",
+  none_new: "ولا حاجة، جاي أكتشف"
+};
 
 const MOOD_STYLE: Record<
   PulseMood,
@@ -57,10 +66,7 @@ const MOOD_STYLE: Record<
   }
 };
 
-const FOCUS_STYLE: Record<
-  PulseFocus,
-  { selected: string; hover: string; ring: string }
-> = {
+const FOCUS_STYLE: Record<PulseFocus, { selected: string; hover: string; ring: string }> = {
   event: {
     selected: "bg-teal-500 text-white border-teal-600 shadow-sm",
     hover: "hover:bg-teal-50 hover:border-teal-200 hover:text-teal-800",
@@ -83,19 +89,19 @@ const FOCUS_STYLE: Record<
   }
 };
 
-function energyColorHex(energy: number): string {
-  if (energy <= 3) return "#f43f5e"; // rose-500
-  if (energy <= 6) return "#f59e0b"; // amber-500
-  return "#14b8a6"; // teal-500
-}
-
-export const PulseCheckModal: FC<PulseCheckModalProps> = ({ isOpen, context: _context = "regular", onSubmit, onClose }) => {
+export const PulseCheckModal: FC<PulseCheckModalProps> = ({
+  isOpen,
+  context = "regular",
+  onSubmit,
+  onClose
+}) => {
+  const isStartRecovery = context === "start_recovery";
   const [energy, setEnergy] = useState(5);
   const [mood, setMood] = useState<PulseMood>("calm");
   const [focus, setFocus] = useState<PulseFocus>("none");
   const fillHex = energyColorHex(energy);
   // Range is 1..10, so normalize using (value-min)/(max-min) to match the thumb position.
-  const pct = Math.max(0, Math.min(100, ((energy - 1) / 9) * 100));
+  const pct = energyPct(energy, { min: 1, max: 10 });
 
   useEffect(() => {
     if (!isOpen) return;
@@ -116,7 +122,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({ isOpen, context: _co
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 z-50"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
             onClick={onClose}
           />
           <motion.div
@@ -198,33 +204,39 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({ isOpen, context: _co
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">التركيز الحالي 🎯</label>
                 <div className="grid grid-cols-2 gap-2">
-                  {FOCUS_OPTIONS.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        setFocus(item.id);
-                      }}
-                      className={`px-3 py-2 rounded-xl border text-xs font-semibold transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                        focus === item.id
-                          ? `${FOCUS_STYLE[item.id].selected} ${FOCUS_STYLE[item.id].ring}`
-                          : `border-slate-200 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-slate-300 ${FOCUS_STYLE[item.id].hover} focus-visible:ring-slate-300`
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
+                  {FOCUS_OPTIONS_BASE.map((item) => {
+                    const label =
+                      item.id === "none"
+                        ? FOCUS_LABELS[isStartRecovery ? "none_new" : "none_returning"]
+                        : FOCUS_LABELS[item.labelKey];
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          setFocus(item.id);
+                        }}
+                        className={`px-3 py-2 rounded-xl border text-xs font-semibold transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                          focus === item.id
+                            ? `${FOCUS_STYLE[item.id].selected} ${FOCUS_STYLE[item.id].ring}`
+                            : `border-slate-200 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-slate-300 ${FOCUS_STYLE[item.id].hover} focus-visible:ring-slate-300`
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
-            <div className="p-4 border-t border-slate-200 bg-slate-50 flex gap-3">
+            <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 flex gap-3">
               <button
                 type="button"
                 onClick={handleSubmit}
                 className="flex-1 rounded-full bg-teal-600 text-white py-3 text-sm font-semibold hover:bg-teal-700 transition-all"
               >
-                جاهز
+                {isStartRecovery ? "احفظ القراية وادخل" : "جاهز"}
               </button>
             </div>
           </motion.div>

@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import React from "react";
 import { feelingCopy } from "../copy/feeling";
+import { EditableText } from "./EditableText";
 import { getOptionButtonClass, impactTier } from "../utils/optionColors";
 
 export type FeelingOption = "often" | "sometimes" | "rarely" | "never";
@@ -46,16 +47,19 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
       aria-labelledby="feeling-title"
     >
       <h2 id="feeling-title" className="text-2xl font-bold text-slate-900 mb-2">
-        {feelingCopy.title}
+        <EditableText id="feeling_title" defaultText={feelingCopy.title} page="feeling" />
       </h2>
       <p className="text-base text-gray-600 leading-relaxed">
-        {feelingCopy.body} <span className="font-semibold text-slate-800">({personLabel})</span>
+        <EditableText id="feeling_body" defaultText={feelingCopy.body} page="feeling" multiline showEditIcon={false} />{" "}
+        <span className="font-semibold text-slate-800">({personLabel})</span>
       </p>
 
       <ul className="list-none mt-8 space-y-4 text-sm text-slate-800 max-w-md mx-auto">
         {(["q1", "q2", "q3"] as const).map((key) => (
           <li key={key} className="p-4 bg-white border border-gray-200 rounded-xl text-right">
-            <p className="font-medium mb-3">{feelingCopy[key]}</p>
+            <p className="font-medium mb-3">
+              <EditableText id={`feeling_${key}`} defaultText={feelingCopy[key]} page="feeling" showEditIcon={false} />
+            </p>
             <div className="flex gap-2 items-stretch">
               {OPTIONS.map((opt) => {
                 const isSelected = answers[key] === opt;
@@ -86,7 +90,7 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
           onClick={() => onDone(answers)}
           title={answered.q1 && answered.q2 && answered.q3 ? "التالي: فين الشخص في حياتك؟" : "جاوب على كل الأسئلة الأول"}
         >
-          {feelingCopy.cta}
+          <EditableText id="feeling_cta" defaultText={feelingCopy.cta} page="feeling" editOnClick={false} />
         </button>
       </div>
     </section>

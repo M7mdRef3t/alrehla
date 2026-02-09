@@ -53,6 +53,8 @@ interface MapState {
   addSituationLog: (nodeId: string, log: Omit<SituationLog, "id" | "date">) => void;
   deleteSituationLog: (nodeId: string, logId: string) => void;
   deleteNode: (id: string) => void;
+  /** اختياري: تحديث صورة الشخص في الخريطة */
+  updateNodeAvatar: (nodeId: string, avatarUrl: string | null) => void;
   resetMap: () => void;
   updateLastViewedStep: (nodeId: string, step: "result" | "firstStep" | "recoveryPlan") => void;
   updateNodeSymptoms: (nodeId: string, symptomIds: string[]) => void;
@@ -229,6 +231,13 @@ export const useMapState = create<MapState>((set, get) => ({
   },
   deleteNode: (id) => {
     const nextNodes = get().nodes.filter((node) => node.id !== id);
+    saveStoredState({ nodes: nextNodes });
+    set({ nodes: nextNodes });
+  },
+  updateNodeAvatar: (nodeId, avatarUrl) => {
+    const nextNodes = get().nodes.map((node) =>
+      node.id === nodeId ? { ...node, avatarUrl: avatarUrl ?? undefined } : node
+    );
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
   },

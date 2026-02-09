@@ -4,10 +4,11 @@ import {
   Heart,
   Wallet,
   HelpCircle,
+  Users,
   type LucideIcon
 } from "lucide-react";
 
-export type GoalId = "work" | "family" | "love" | "money" | "unknown" | "general";
+export type GoalId = "work" | "family" | "friends" | "love" | "money" | "unknown" | "general";
 
 export interface GoalMeta {
   id: GoalId;
@@ -17,7 +18,7 @@ export interface GoalMeta {
   buttonClasses: string;
 }
 
-export const GOAL_ORDER: GoalId[] = ["family", "work", "love", "money", "general", "unknown"];
+export const GOAL_ORDER: GoalId[] = ["family", "friends", "work", "love", "money", "general", "unknown"];
 
 export const GOAL_META: Record<GoalId, GoalMeta> = {
   family: {
@@ -27,6 +28,14 @@ export const GOAL_META: Record<GoalId, GoalMeta> = {
     badgeClasses:
       "border-teal-200 bg-teal-100 text-teal-800 dark:border-teal-700 dark:bg-teal-900/40 dark:text-teal-200",
     buttonClasses: "border-teal-200 hover:border-teal-300 hover:bg-teal-50 text-teal-700"
+  },
+  friends: {
+    id: "friends",
+    label: "الأصدقاء",
+    icon: Users,
+    badgeClasses:
+      "border-violet-200 bg-violet-100 text-violet-800 dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-200",
+    buttonClasses: "border-violet-200 hover:border-violet-300 hover:bg-violet-50 text-violet-700"
   },
   work: {
     id: "work",
@@ -46,7 +55,7 @@ export const GOAL_META: Record<GoalId, GoalMeta> = {
   },
   money: {
     id: "money",
-    label: "الفلوس",
+    label: "المستقبل والأمان",
     icon: Wallet,
     badgeClasses:
       "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200",

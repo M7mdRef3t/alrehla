@@ -2,9 +2,9 @@ import { STANDARD_OPTIONS } from "./standardOptions";
 
 /** أسئلة سريعة لاقتراح الدائرة المناسبة عند إضافة شخص — نفس الصيغة القياسية لكل التطبيق */
 export const addPersonCopy = {
-  quickQuestionsTitle: "سؤالين سريعين",
-  question1: "هل العلاقة دي بتستنزفك أو بتسبب ألم؟",
-  question2: "هل تحس بأمان وحدود واضحة مع الشخص؟",
+  quickQuestionsTitle: "اختبار سريع",
+  question1: "العلاقة دي بتستنزفك؟",
+  question2: "أنت آمن وعند حدود واضحة مع الشخص؟",
   /** صيغة قياسية: دايماً/جداً، أحياناً، نادراً، أبداً/لأ */
   options1: [...STANDARD_OPTIONS],
   options2: [...STANDARD_OPTIONS],

@@ -17,52 +17,58 @@ export interface SuggestionCard {
 
 export const SUGGESTIONS: Record<string, SuggestionCard[]> = {
   family: [
-    { label: "أب", icon: User },
-    { label: "أم", icon: Heart },
-    { label: "أخ", icon: Users },
-    { label: "أخت", icon: UserCircle },
-    { label: "ابن", icon: UserCheck },
-    { label: "ابنة", icon: UserCircle },
-    { label: "زوج", icon: Heart },
-    { label: "زوجة", icon: Heart },
-    { label: "زوجة الأخ", icon: Users },
-    { label: "زوج الأخت", icon: Users },
-    { label: "قريب", icon: Users }
+    { label: "الأب", icon: User },
+    { label: "الأم", icon: Heart },
+    { label: "الأخ", icon: Users },
+    { label: "الأخت", icon: UserCircle },
+    { label: "الابن", icon: UserCheck },
+    { label: "الابنة", icon: UserCircle },
+    { label: "الزوج", icon: Heart },
+    { label: "الزوجة", icon: Heart },
+    { label: "الجد", icon: User },
+    { label: "الجدة", icon: Heart },
+    { label: "العم", icon: Users },
+    { label: "الخال", icon: Users }
   ],
   work: [
-    { label: "مدير", icon: Briefcase },
-    { label: "زميل", icon: Users },
-    { label: "عميل", icon: Building2 },
-    { label: "مدير سابق", icon: UserX }
+    { label: "المدير", icon: Briefcase },
+    { label: "الزميل", icon: Users },
+    { label: "العميل", icon: Building2 },
+    { label: "الموظف", icon: User },
+    { label: "الرئيس السابق", icon: UserX }
   ],
   love: [
-    { label: "شريك", icon: Heart },
-    { label: "خطيب", icon: Heart },
-    { label: "زوج", icon: Heart },
-    { label: "إكس", icon: UserX }
+    { label: "الشريك", icon: Heart },
+    { label: "الحبيب", icon: Heart },
+    { label: "الخطيب", icon: Heart },
+    { label: "الزوج", icon: Heart },
+    { label: "الإكس", icon: UserX }
   ],
   money: [
-    { label: "صديق", icon: Users },
-    { label: "جار", icon: UserCheck },
-    { label: "معرفة", icon: UserCircle }
+    { label: "الصديق", icon: Users },
+    { label: "الشريك التجاري", icon: Briefcase },
+    { label: "الجار", icon: UserCheck },
+    { label: "المقرض", icon: Building2 }
   ],
   unknown: [
-    { label: "صديق", icon: Users },
-    { label: "جار", icon: UserCheck },
-    { label: "معرفة", icon: UserCircle }
+    { label: "الصديق", icon: Users },
+    { label: "المعرفة", icon: UserCircle },
+    { label: "الجار", icon: UserCheck },
+    { label: "الزميل", icon: Users }
   ],
   general: [
-    { label: "صديق", icon: Users },
-    { label: "جار", icon: UserCheck },
-    { label: "معرفة", icon: UserCircle }
+    { label: "الصديق", icon: Users },
+    { label: "المعرفة", icon: UserCircle },
+    { label: "الجار", icon: UserCheck },
+    { label: "الزميل", icon: Users }
   ]
 };
 
 export const PLACEHOLDERS: Record<string, string> = {
-  family: "مثال: ماما / الأب / الأخ الكبير",
-  work: "مثال: المدير / الزميل / العميل",
-  love: "مثال: الشريك / الخطيب / الإكس",
-  money: "مثال: الصديق / الجار",
-  unknown: "مثال: الشخص اللي في بالك",
-  general: "مثال: الشخص اللي في بالك"
+  family: "مثلاً: ماما، الأب، الأخ الكبير",
+  work: "مثلاً: المدير، الزميل",
+  love: "مثلاً: الشريك، الخطيب",
+  money: "مثلاً: الشريك التجاري",
+  unknown: "مثلاً: الشخص اللي في بالك",
+  general: "مثلاً: الشخص اللي في بالك"
 };

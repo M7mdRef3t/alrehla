@@ -110,3 +110,64 @@ create policy user_state_service_role on user_state
   for all
   using (auth.role() = 'service_role')
   with check (auth.role() = 'service_role');
+
+-- App content (public read, owner write)
+alter table app_content enable row level security;
+
+-- Everyone can read UI content (even anonymous visitors).
+drop policy if exists app_content_public_select on app_content;
+create policy app_content_public_select on app_content
+  for select
+  using (true);
+
+-- Service role can manage content (scripts / admin API).
+drop policy if exists app_content_service_role on app_content;
+create policy app_content_service_role on app_content
+  for all
+  using (auth.role() = 'service_role')
+  with check (auth.role() = 'service_role');
+
+-- Owner write access (authenticated only, based on profiles.role).
+drop policy if exists app_content_owner_insert on app_content;
+create policy app_content_owner_insert on app_content
+  for insert
+  with check (
+    exists (
+      select 1
+      from profiles p
+      where p.id = auth.uid()::text
+        and p.role in ('owner', 'superadmin')
+    )
+  );
+
+drop policy if exists app_content_owner_update on app_content;
+create policy app_content_owner_update on app_content
+  for update
+  using (
+    exists (
+      select 1
+      from profiles p
+      where p.id = auth.uid()::text
+        and p.role in ('owner', 'superadmin')
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from profiles p
+      where p.id = auth.uid()::text
+        and p.role in ('owner', 'superadmin')
+    )
+  );
+
+drop policy if exists app_content_owner_delete on app_content;
+create policy app_content_owner_delete on app_content
+  for delete
+  using (
+    exists (
+      select 1
+      from profiles p
+      where p.id = auth.uid()::text
+        and p.role in ('owner', 'superadmin')
+    )
+  );

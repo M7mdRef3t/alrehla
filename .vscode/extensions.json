@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "anthropic.claude-code",
-        "openai.chatgpt"
+        "openai.chatgpt",
+        "github.copilot-chat"
     ]
 }

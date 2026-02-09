@@ -19,7 +19,10 @@ interface AuthState {
 }
 
 const ROLE_OVERRIDE_KEY = "dawayir-role-override";
-const ROLE_OVERRIDE_QUERY_KEY = "asRole";
+// Legacy: the app used to support role overrides via `?asRole=...`.
+// This caused confusing URLs and made "owner" vs "developer" feel the same.
+// We now strip it on load and rely on localStorage + UI controls instead.
+const LEGACY_ROLE_OVERRIDE_QUERY_KEY = "asRole";
 const hasSupabaseEnv = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 let supabaseClient: SupabaseClient | null = null;
 let supabaseAuthInitialized = false;
@@ -81,29 +84,40 @@ function getToneGenderFromUser(user: User | null): UserToneGender {
   return normalizeToneGender(raw);
 }
 
-function getRoleOverrideFromUrl(): string | null {
-  if (typeof window === "undefined" || !import.meta.env.DEV) return null;
+function stripLegacyRoleOverrideQueryParam(): void {
+  if (typeof window === "undefined") return;
   try {
     const url = new URL(window.location.href);
-    const raw = url.searchParams.get(ROLE_OVERRIDE_QUERY_KEY);
-    if (!raw || !raw.trim()) return null;
-    return raw.trim();
+    if (!url.searchParams.has(LEGACY_ROLE_OVERRIDE_QUERY_KEY)) return;
+    url.searchParams.delete(LEGACY_ROLE_OVERRIDE_QUERY_KEY);
+    window.history.replaceState({}, "", url.toString());
   } catch {
-    return null;
+    // ignore URL update errors
   }
 }
 
 function getInitialRoleOverride(): string | null {
   if (typeof window === "undefined") return null;
 
-  // DEV: allow overriding via URL param for fast testing.
-  if (import.meta.env.DEV) {
-    const fromUrl = getRoleOverrideFromUrl();
-    if (fromUrl) {
-      window.localStorage.setItem(ROLE_OVERRIDE_KEY, fromUrl);
-      return fromUrl;
+  // ?asRole=user → وضع المستخدم: نطبّق ونمسح الرابط.
+  try {
+    const url = new URL(window.location.href);
+    const fromUrl = normalizeRole(url.searchParams.get(LEGACY_ROLE_OVERRIDE_QUERY_KEY));
+    if (fromUrl === "user") {
+      if (window.localStorage) window.localStorage.setItem(ROLE_OVERRIDE_KEY, "user");
+      stripLegacyRoleOverrideQueryParam();
+      return "user";
     }
-    return window.localStorage.getItem(ROLE_OVERRIDE_KEY);
+  } catch {
+    /* ignore */
+  }
+
+  stripLegacyRoleOverrideQueryParam();
+
+  // DEV: allow overriding via localStorage for fast testing.
+  if (import.meta.env.DEV) {
+    const stored = window.localStorage.getItem(ROLE_OVERRIDE_KEY);
+    return stored && stored.trim() ? stored.trim() : null;
   }
 
   // Production: allow a persisted *down-scope* to `user` only.

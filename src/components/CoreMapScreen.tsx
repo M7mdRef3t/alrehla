@@ -10,9 +10,12 @@ import { MeNodeDetails } from "./MeNodeDetails";
 import { BreathingOverlay } from "./BreathingOverlay";
 import { MapOnboardingOverlay } from "./MapOnboardingOverlay";
 import { hasSeenOnboarding } from "../utils/mapOnboarding";
-import { UserPlus, Map, TreeDeciduous } from "lucide-react";
+import { UserPlus, Map, TreeDeciduous, X } from "lucide-react";
 import { mapCopy } from "../copy/map";
+import { EditableText } from "./EditableText";
 import { useMapState } from "../state/mapState";
+import { usePulseState } from "../state/pulseState";
+import { PULSE_DAY_NAMES } from "../utils/pulseInsights";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { useAdminState } from "../state/adminState";
 import { getEffectiveFeatureAccess } from "../utils/featureFlags";
@@ -61,6 +64,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [showAddPerson, setShowAddPerson] = useState(false);
   const [showMeCard, setShowMeCard] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
+  const [showWeekdayLabelsModal, setShowWeekdayLabelsModal] = useState(false);
+  const weekdayLabels = usePulseState((s) => s.weekdayLabels);
+  const setWeekdayLabel = usePulseState((s) => s.setWeekdayLabel);
   const [legendTooltip, setLegendTooltip] = useState<"green" | "yellow" | "red" | null>(null);
   const [viewMode, setViewMode] = useState<"map" | "tree">("map");
   const [galaxyMode, setGalaxyMode] = useState(false);
@@ -159,6 +165,24 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       ? mapCopy.familyTreeSubtitle
       : mapCopy.subtitle;
 
+  const pageTitleKey =
+    canUseGalaxyView && galaxyMode
+      ? galaxySubView === "forest"
+        ? "map_forest_title"
+        : "map_galaxy_title"
+      : canUseFamilyTreeView && isFamily && viewMode === "tree"
+        ? "map_family_tree_title"
+        : `map_title_${goalId}`;
+
+  const subtitleKey =
+    canUseGalaxyView && galaxyMode
+      ? galaxySubView === "forest"
+        ? "map_forest_hint"
+        : "map_galaxy_hint"
+      : canUseFamilyTreeView && isFamily && viewMode === "tree"
+        ? "map_family_tree_subtitle"
+        : "map_subtitle";
+
   return (
     <main
       className="w-full max-w-2xl py-10 md:py-14 text-center"
@@ -170,25 +194,66 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             id="core-map-title"
             className="text-3xl md:text-4xl font-bold text-slate-900"
           >
-            {pageTitle}
+            <EditableText id={pageTitleKey} defaultText={pageTitle} page="map" />
           </h1>
         </div>
         <p className="text-base md:text-lg text-gray-600 leading-relaxed max-w-md mx-auto">
-          {subtitle}
+          <EditableText id={subtitleKey} defaultText={subtitle} page="map" multiline showEditIcon={false} />
         </p>
       </header>
 
-      {pulseInsight && (
-        <div className="mt-4 mx-auto max-w-md rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-right">
-          <p className="text-xs font-semibold text-indigo-700">{pulseInsight.title}</p>
-          <p className="text-xs text-indigo-600 mt-1 leading-relaxed">{pulseInsight.body}</p>
+      {showWeekdayLabelsModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          role="dialog"
+          aria-labelledby="weekday-labels-title"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-600 p-4 text-right">
+            <div className="flex items-center justify-between mb-3">
+              <h2 id="weekday-labels-title" className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                ربط أيام الأسبوع بنشاط أو شخص
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowWeekdayLabelsModal(false)}
+                className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
+                aria-label="إغلاق"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+              لو يوم معيّن دايماً طاقتك فيه منخفضة، اربطه بنشاط أو شخص عشان التقرير يذكّرك.
+            </p>
+            <div className="space-y-2">
+              {PULSE_DAY_NAMES.map((dayName, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="w-20 shrink-0 text-xs font-medium text-slate-600 dark:text-slate-300">{dayName}</span>
+                  <input
+                    type="text"
+                    value={weekdayLabels[i] ?? ""}
+                    onChange={(e) => setWeekdayLabel(i, e.target.value || null)}
+                    placeholder="مثلاً: اجتماع مع المدير"
+                    className="flex-1 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowWeekdayLabelsModal(false)}
+              className="mt-4 w-full rounded-full bg-indigo-600 text-white py-2 text-sm font-semibold hover:bg-indigo-700"
+            >
+              تم
+            </button>
+          </div>
         </div>
       )}
 
       {pulseMode === "low" && (
-        <div className="mt-4 mx-auto max-w-md rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-right">
-          <p className="text-sm font-semibold text-slate-800">الطاقة منخفضة.. أولويتنا وقف النزيف</p>
-          <p className="text-xs text-slate-600 mt-1">
+        <div className="mt-4 mx-auto max-w-md rounded-2xl border border-slate-200 bg-slate-50 dark:bg-slate-800/60 dark:border-slate-600 px-4 py-4 text-right">
+          <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">الطاقة منخفضة.. أولويتنا وقف النزيف</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
             نفّذ خطوة صيانة واحدة وبس، من غير أي اشتباك.
           </p>
           <button
@@ -201,6 +266,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         </div>
       )}
 
+      {/* عند طاقة منخفضة: نظهر كارد الشرنقة فقط، ولا نعرض الخريطة ولا المهام ولا أزرار الإضافة */}
+      {pulseMode === "low" ? null : (
+        <>
       {pulseMode === "angry" && (
         <div className="mt-4 mx-auto max-w-md rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-right">
           <p className="text-sm font-semibold text-rose-700">الرادار بيقول ضجيج عالي.. ثبّت موقعك الأول</p>
@@ -245,7 +313,11 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           }`}
           title={galaxyMode ? "رجوع لسياق واحد" : "عرض كل الجبهات"}
         >
-          {galaxyMode ? mapCopy.viewSingleCta : mapCopy.viewAllCta}
+          {galaxyMode ? (
+            <EditableText id="map_view_single_cta" defaultText={mapCopy.viewSingleCta} page="map" editOnClick={false} />
+          ) : (
+            <EditableText id="map_view_all_cta" defaultText={mapCopy.viewAllCta} page="map" editOnClick={false} />
+          )}
         </button>
         {canUseGalaxyView && galaxyMode && (
           <div className="flex rounded-full bg-slate-100 p-1 border border-slate-200">
@@ -256,7 +328,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 galaxySubView === "map" ? "bg-teal-600 text-white shadow" : "text-slate-600 hover:bg-slate-200"
               }`}
             >
-              {mapCopy.galaxyTitle}
+              <EditableText id="map_galaxy_title" defaultText={mapCopy.galaxyTitle} page="map" editOnClick={false} />
             </button>
             <button
               type="button"
@@ -265,7 +337,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 galaxySubView === "forest" ? "bg-teal-600 text-white shadow" : "text-slate-600 hover:bg-slate-200"
               }`}
             >
-              {mapCopy.forestTitle}
+              <EditableText id="map_forest_title" defaultText={mapCopy.forestTitle} page="map" editOnClick={false} />
             </button>
           </div>
         )}
@@ -273,6 +345,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           <div className="flex flex-wrap justify-center gap-2">
             {(["family", "work", "love", "general"] as const).map((ctx) => {
               const label = ctx === "family" ? mapCopy.contextFamily : ctx === "work" ? mapCopy.contextWork : ctx === "love" ? mapCopy.contextLove : mapCopy.contextGeneral;
+              const labelKey =
+                ctx === "family"
+                  ? "map_context_family"
+                  : ctx === "work"
+                    ? "map_context_work"
+                    : ctx === "love"
+                      ? "map_context_love"
+                      : "map_context_general";
               const on = selectedContexts.includes(ctx);
               return (
                 <button
@@ -283,7 +363,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     on ? "bg-teal-600 text-white" : "bg-slate-200 text-slate-600"
                   }`}
                 >
-                  {label}
+                  <EditableText id={labelKey} defaultText={label} page="map" editOnClick={false} />
                 </button>
               );
             })}
@@ -300,7 +380,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               title="عرض الخريطة"
             >
               <Map className="w-4 h-4" />
-              الخريطة
+              <EditableText id="map_view_mode_map" defaultText="الخريطة" page="map" editOnClick={false} />
             </button>
             <button
               type="button"
@@ -321,7 +401,11 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               title="شجرة العيلة"
             >
               <TreeDeciduous className="w-4 h-4" />
-              {canUseFamilyTree ? "شجرة العيلة" : "شجرة العيلة 🔒"}
+              {canUseFamilyTree ? (
+                <EditableText id="map_view_mode_tree" defaultText="شجرة العيلة" page="map" editOnClick={false} />
+              ) : (
+                <EditableText id="map_view_mode_tree_locked" defaultText="شجرة العيلة 🔒" page="map" editOnClick={false} />
+              )}
             </button>
           </div>
         )}
@@ -337,9 +421,23 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           whileTap={{ scale: 0.97 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
         >
-          + {mapCopy.addPersonLabel}
+          + <EditableText id="map_add_person_label" defaultText={mapCopy.addPersonLabel} page="map" editOnClick={false} />
         </motion.button>
       </div>
+
+      {pulseInsight && (
+        <div className="mt-4 mx-auto max-w-md rounded-2xl border border-indigo-200 bg-indigo-50 dark:bg-indigo-950/40 dark:border-indigo-800 px-4 py-3 text-right">
+          <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">{pulseInsight.title}</p>
+          <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1 leading-relaxed">{pulseInsight.body}</p>
+          <button
+            type="button"
+            onClick={() => setShowWeekdayLabelsModal(true)}
+            className="mt-2 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+          >
+            ربط يوم بنشاط أو شخص
+          </button>
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         {canUseGalaxyView && galaxyMode && galaxySubView === "forest" ? (
@@ -416,10 +514,13 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         >
           <UserPlus className="w-10 h-10 mx-auto text-slate-400 dark:text-slate-500 mb-3" aria-hidden />
           <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-            {mapCopy.emptyMapTitle}
+            <EditableText id="map_empty_title" defaultText={mapCopy.emptyMapTitle} page="map" showEditIcon={false} />
           </p>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            {mapCopy.emptyMapHint}
+            <EditableText id="map_empty_hint" defaultText={mapCopy.emptyMapHint} page="map" multiline showEditIcon={false} />
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+            <EditableText id="map_empty_reassurance" defaultText={mapCopy.emptyMapReassurance} page="map" showEditIcon={false} />
           </p>
         </motion.div>
       )}
@@ -434,7 +535,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           role="status"
           aria-live="polite"
         >
-          <span>{mapCopy.firstPlacementTooltip}</span>
+          <span>
+            <EditableText id="map_first_placement_tooltip" defaultText={mapCopy.firstPlacementTooltip} page="map" showEditIcon={false} />
+          </span>
           <button
             type="button"
             onClick={dismissPlacementTooltip}
@@ -455,9 +558,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         {(["green", "yellow", "red"] as const).map((key) => {
           const isActive = legendTooltip === key;
           const config = {
-            green: { label: mapCopy.legendGreen, dot: "bg-teal-600 shadow-[0_0_8px_rgba(15,118,110,0.35)]", pill: "bg-teal-100 text-teal-800" },
-            yellow: { label: mapCopy.legendYellow, dot: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]", pill: "bg-amber-100 text-amber-800" },
-            red: { label: mapCopy.legendRed, dot: "bg-rose-600 shadow-[0_0_8px_rgba(190,24,93,0.32)]", pill: "bg-rose-100 text-rose-800" }
+            green: { label: mapCopy.legendGreen, labelKey: "map_legend_green", dot: "bg-teal-600 shadow-[0_0_8px_rgba(15,118,110,0.35)]", pill: "bg-teal-100 text-teal-800" },
+            yellow: { label: mapCopy.legendYellow, labelKey: "map_legend_yellow", dot: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]", pill: "bg-amber-100 text-amber-800" },
+            red: { label: mapCopy.legendRed, labelKey: "map_legend_red", dot: "bg-rose-600 shadow-[0_0_8px_rgba(190,24,93,0.32)]", pill: "bg-rose-100 text-rose-800" }
           }[key];
           return (
             <div key={key} className="relative">
@@ -466,7 +569,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-medium whitespace-nowrap shadow-lg z-10"
                   role="tooltip"
                 >
-                  {config.label}
+                  <EditableText id={config.labelKey} defaultText={config.label} page="map" showEditIcon={false} />
                   <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
                 </div>
               )}
@@ -478,15 +581,41 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 aria-expanded={isActive}
               >
                 <span className={`w-2.5 h-2.5 rounded-full ${config.dot}`} />
-                {config.label}
+                <EditableText id={config.labelKey} defaultText={config.label} page="map" editOnClick={false} />
               </button>
             </div>
           );
         })}
       </div>
       <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400" title={mapCopy.threatLevelHint}>
-        {mapCopy.threatLevelHint}
+        <EditableText
+          id="map_threat_level_hint"
+          defaultText={mapCopy.threatLevelHint}
+          page="map"
+          multiline
+          showEditIcon={false}
+        />
       </p>
+
+      {journeyMode && onJourneyComplete && (
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={onJourneyComplete}
+            disabled={!canCompleteJourneyStep}
+            className="px-6 py-3 rounded-full font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-teal-600 text-white hover:bg-teal-700 disabled:bg-slate-300 disabled:text-slate-500"
+          >
+            كمل الرحلة
+          </button>
+          {!canCompleteJourneyStep && nodes.length > 0 && (
+            <p className="text-sm text-slate-500 max-w-xs text-center">
+              افتح الجبهة، راجع النتيجة وبروتوكول الدفاع أو كمّل التدريب، وبعدها اضغط "كمل الرحلة"
+            </p>
+          )}
+        </div>
+      )}
+        </>
+      )}
 
       {showAddPerson && (
         <AddPersonModal
@@ -523,24 +652,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {showBreathing && !onOpenBreathing && (
         <BreathingOverlay onClose={() => setShowBreathing(false)} />
-      )}
-
-      {journeyMode && onJourneyComplete && (
-        <div className="mt-8 flex flex-col items-center gap-2">
-          <button
-            type="button"
-            onClick={onJourneyComplete}
-            disabled={!canCompleteJourneyStep}
-            className="px-6 py-3 rounded-full font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-teal-600 text-white hover:bg-teal-700 disabled:bg-slate-300 disabled:text-slate-500"
-          >
-            كمل الرحلة
-          </button>
-          {!canCompleteJourneyStep && nodes.length > 0 && (
-            <p className="text-sm text-slate-500 max-w-xs text-center">
-              افتح الجبهة، راجع النتيجة وبروتوكول الدفاع أو كمّل التدريب، وبعدها اضغط "كمل الرحلة"
-            </p>
-          )}
-        </div>
       )}
     </main>
   );

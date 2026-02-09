@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import { useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Star } from "lucide-react";
 import { landingCopy } from "../copy/landing";
 import { getJourneyToolsView } from "../data/journeyTools";
@@ -9,6 +10,7 @@ import { useAchievementState } from "../state/achievementState";
 import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
 import { getGoalMeta } from "../data/goalMeta";
 import type { FeatureFlagKey } from "../config/features";
+import { EditableText } from "./EditableText";
 
 interface LandingProps {
   onStartJourney: () => void;
@@ -67,9 +69,52 @@ export const Landing: FC<LandingProps> = ({
   const badgePulseClass = badgePulse ? "animate-bounce" : "";
   const fallbackBadgeClasses =
     "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200";
+  const reduceMotion = useReducedMotion();
+  const fogEase = [0.22, 1, 0.36, 1] as const;
+
+  const fogContainer = {
+    hidden: {},
+    visible: {
+      transition: reduceMotion ? {} : { staggerChildren: 0.18, delayChildren: 0.1 }
+    }
+  };
+
+  const fogTitleContainer = {
+    hidden: {},
+    visible: {
+      transition: reduceMotion ? {} : { staggerChildren: 0.18 }
+    }
+  };
+
+  // Keep a tiny blur in the final state to avoid a last-frame "jump" on some mobile browsers
+  // when switching between filtered/unfiltered text rendering pipelines.
+  const fogFinalBlur = "blur(0.01px)";
+
+  const fogItem = {
+    hidden: reduceMotion ? { opacity: 1, y: 0, filter: fogFinalBlur } : { opacity: 0, y: 10, filter: "blur(18px)" },
+    visible: {
+      opacity: 1,
+      y: 0,
+      filter: fogFinalBlur,
+      transition: reduceMotion ? { duration: 0 } : { duration: 1.6, ease: fogEase }
+    }
+  };
+
+  const fogCta = {
+    hidden: reduceMotion
+      ? { opacity: 1, y: 0, scale: 1, filter: fogFinalBlur }
+      : { opacity: 0, y: 14, scale: 0.985, filter: "blur(18px)" },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      filter: fogFinalBlur,
+      transition: reduceMotion ? { duration: 0 } : { duration: 1.6, ease: fogEase, delay: 0.25 }
+    }
+  };
 
   return (
-    <div className="relative w-full max-w-xl min-h-[70vh] py-10 md:py-14 flex flex-col items-center justify-center">
+    <div className="relative w-full max-w-xl min-h-[70vh] min-h-[70svh] py-6 sm:py-10 md:py-14 px-4 sm:px-0 flex flex-col items-center justify-center">
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0" aria-hidden="true">
         <div
           className="w-[min(80vmax,520px)] h-[min(80vmax,520px)] rounded-full blur-2xl dark:hidden animate-pulse"
@@ -92,61 +137,120 @@ export const Landing: FC<LandingProps> = ({
             onClick={onOpenTools}
             className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full bg-slate-900 text-white px-4 py-2 text-xs font-semibold shadow-sm hover:bg-slate-800 transition-all"
           >
-            <span>{landingCopy.toolsCta}</span>
-            <span className="text-[10px] text-slate-200">{landingCopy.toolsCtaHint}</span>
+            <span>
+              <EditableText
+                id="landing_tools_cta"
+                defaultText={landingCopy.toolsCta}
+                page="landing"
+                editOnClick={false}
+              />
+            </span>
+            <span className="text-[10px] text-slate-200">
+              <EditableText
+                id="landing_tools_cta_hint"
+                defaultText={landingCopy.toolsCtaHint}
+                page="landing"
+                showEditIcon={false}
+              />
+            </span>
           </button>
         )}
 
-        <h1
-          id="landing-title"
-          className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-6 leading-normal"
-          style={{ fontFamily: "'Almarai', sans-serif", willChange: "transform, opacity" }}
-        >
-          <span className="block">{landingCopy.titleLine1}</span>
-          <span className="block mt-2">{landingCopy.titleLine2}</span>
-        </h1>
-
-        <p
-          className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-md mx-auto whitespace-pre-line"
-          style={{ willChange: "transform, opacity" }}
-        >
-          {landingCopy.subtitle}
-        </p>
-
-        <div className="mt-8">
-          <button
-            type="button"
-            onClick={handleStartJourney}
-            className="rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 transition-transform disabled:opacity-60 disabled:hover:bg-teal-600"
+        <motion.div variants={fogContainer} initial="hidden" animate="visible">
+          <motion.h1
+            id="landing-title"
+            className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4 sm:mb-6 leading-tight sm:leading-normal"
+            style={{ fontFamily: "'Almarai', sans-serif", willChange: "transform, opacity, filter" }}
+            variants={fogTitleContainer}
           >
-            {landingCopy.ctaJourney}
-          </button>
-          {showPostStartContent && onOpenTools && (
-            <div className="mt-4 flex flex-col items-center gap-2">
+            <motion.span className="block" variants={fogItem}>
+              <EditableText id="landing_title_line1" defaultText={landingCopy.titleLine1} page="landing" />
+            </motion.span>
+            <motion.span className="block mt-2" variants={fogItem}>
+              <EditableText id="landing_title_line2" defaultText={landingCopy.titleLine2} page="landing" />
+            </motion.span>
+          </motion.h1>
+
+          <motion.p
+            className="text-sm sm:text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-md mx-auto whitespace-pre-line"
+            style={{ willChange: "transform, opacity, filter" }}
+            variants={fogItem}
+          >
+            <EditableText
+              id="landing_subtitle"
+              defaultText={landingCopy.subtitle}
+              page="landing"
+              multiline
+              className="whitespace-pre-line"
+            />
+          </motion.p>
+
+          <motion.div className="mt-6 sm:mt-8" style={{ willChange: "transform, opacity, filter" }} variants={fogCta}>
+            <div className="relative inline-block">
+              <div
+                className="pointer-events-none absolute -inset-4 rounded-full bg-teal-500/20 blur-2xl dark:bg-teal-400/20"
+                aria-hidden="true"
+              />
               <button
                 type="button"
-                onClick={onOpenTools}
-                className="text-sm font-semibold text-teal-700 hover:text-teal-800 underline decoration-teal-200"
+                onClick={handleStartJourney}
+                className="relative rounded-full bg-teal-600 text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 transition-colors"
               >
-                {landingCopy.toolsCta}
+                <EditableText
+                  id="landing_cta_journey"
+                  defaultText={landingCopy.ctaJourney}
+                  page="landing"
+                  editOnClick={false}
+                />
               </button>
-              <p className="text-xs text-slate-500">{landingCopy.toolsCtaHint}</p>
             </div>
-          )}
-        </div>
+
+            {showPostStartContent && onOpenTools && (
+              <div className="mt-4 flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onOpenTools}
+                  className="text-sm font-semibold text-teal-700 hover:text-teal-800 underline decoration-teal-200"
+                >
+                  <EditableText
+                    id="landing_tools_cta"
+                    defaultText={landingCopy.toolsCta}
+                    page="landing"
+                    showEditIcon={false}
+                  />
+                </button>
+                <p className="text-xs text-slate-500">
+                  <EditableText
+                    id="landing_tools_cta_hint"
+                    defaultText={landingCopy.toolsCtaHint}
+                    page="landing"
+                    showEditIcon={false}
+                  />
+                </p>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
 
         {showPostStartContent && (
-          <section className="mt-10 text-right max-w-md mx-auto" aria-labelledby="landing-what-is">
-            <h2 id="landing-what-is" className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-              {landingCopy.whatIsTitle}
+          <section className="mt-8 sm:mt-10 text-right max-w-md mx-auto px-4 sm:px-0" aria-labelledby="landing-what-is">
+            <h2 id="landing-what-is" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+              <EditableText id="landing_what_is_title" defaultText={landingCopy.whatIsTitle} page="landing" />
             </h2>
-            <ul className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed space-y-1.5 list-none pr-0">
+            <ul className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed space-y-1.5 list-none pr-0">
               {landingCopy.whatIsPoints.map((point, i) => (
                 <li key={i} className="flex gap-2 items-start">
                   <span className="text-teal-500 mt-0.5 shrink-0" aria-hidden>
                     •
                   </span>
-                  <span>{point}</span>
+                  <span>
+                    <EditableText
+                      id={`landing_what_is_point_${i + 1}`}
+                      defaultText={point}
+                      page="landing"
+                      showEditIcon={false}
+                    />
+                  </span>
                 </li>
               ))}
             </ul>
@@ -154,21 +258,39 @@ export const Landing: FC<LandingProps> = ({
         )}
 
         {showPostStartContent && (
-          <section className="mt-6 text-center max-w-md mx-auto" aria-labelledby="landing-trust">
-            <p id="landing-trust" className="text-sm font-semibold text-slate-600 dark:text-slate-400">
-              {landingCopy.trustTitle}
+          <section className="mt-6 sm:mt-8 text-center max-w-md mx-auto px-4 sm:px-0" aria-labelledby="landing-trust">
+            <p id="landing-trust" className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400">
+              <EditableText id="landing_trust_title" defaultText={landingCopy.trustTitle} page="landing" showEditIcon={false} />
             </p>
-            <p className="text-lg font-bold text-teal-600 dark:text-teal-400 mt-0.5">
-              {landingCopy.trustCount} {landingCopy.trustSuffix}
+            <p className="text-base sm:text-lg font-bold text-teal-600 dark:text-teal-400 mt-0.5">
+              <EditableText id="landing_trust_count" defaultText={landingCopy.trustCount} page="landing" showEditIcon={false} />
+              {" "}
+              <EditableText id="landing_trust_suffix" defaultText={landingCopy.trustSuffix} page="landing" showEditIcon={false} />
             </p>
             <div className="mt-4 space-y-3">
               {landingCopy.testimonials.map((t, i) => (
                 <blockquote
                   key={i}
-                  className="text-sm text-slate-600 dark:text-slate-400 italic border-r-2 border-teal-200 dark:border-teal-700 pr-3 text-right"
+                  className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 italic border-r-2 border-teal-200 dark:border-teal-700 pr-3 text-right"
                 >
-                  "{t.quote}"
-                  <cite className="block text-xs not-italic text-slate-500 dark:text-slate-500 mt-1">— {t.author}</cite>
+                  "
+                  <EditableText
+                    id={`landing_testimonial_${i + 1}_quote`}
+                    defaultText={t.quote}
+                    page="landing"
+                    multiline
+                    showEditIcon={false}
+                  />
+                  "
+                  <cite className="block text-xs not-italic text-slate-500 dark:text-slate-500 mt-1">
+                    —{" "}
+                    <EditableText
+                      id={`landing_testimonial_${i + 1}_author`}
+                      defaultText={t.author}
+                      page="landing"
+                      showEditIcon={false}
+                    />
+                  </cite>
                 </blockquote>
               ))}
             </div>
@@ -178,7 +300,7 @@ export const Landing: FC<LandingProps> = ({
         {showPostStartContent && showToolsSection && (
           <section className="mt-8 text-right max-w-md mx-auto" aria-labelledby="landing-tools">
             <h2 id="landing-tools" className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">
-              {landingCopy.toolsTitle}
+              <EditableText id="landing_tools_title" defaultText={landingCopy.toolsTitle} page="landing" showEditIcon={false} />
             </h2>
             <div className="space-y-3">
               {tools.map((tool) => (

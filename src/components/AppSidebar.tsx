@@ -1,7 +1,30 @@
 import type { FC } from "react";
 import { Suspense, lazy, useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Target, ArrowLeft, ClipboardList, PanelRightOpen, X, Bell, Database, Share2, BookOpen, Wind, AlertCircle, Palette, Trophy, BarChart3, MessageCircle, Globe, Sparkles, Layers, Move, Compass, Star } from "lucide-react";
+import {
+  Target,
+  ArrowLeft,
+  ClipboardList,
+  PanelRightOpen,
+  X,
+  Bell,
+  Database,
+  Share2,
+  BookOpen,
+  Wind,
+  AlertCircle,
+  Palette,
+  Trophy,
+  BarChart3,
+  MessageCircle,
+  Globe,
+  Sparkles,
+  Layers,
+  Move,
+  Compass,
+  Star,
+  ShieldCheck
+} from "lucide-react";
 import { useJourneyState } from "../state/journeyState";
 import { useNotificationState } from "../state/notificationState";
 import { useEmergencyState } from "../state/emergencyState";
@@ -183,6 +206,19 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const handleClose = () => setIsOpen(false);
   const handleOpen = () => setIsOpen(true);
 
+  const openAdminDashboard = () => {
+    if (typeof window === "undefined") return;
+    try {
+      const next = new URL(window.location.href);
+      next.pathname = "/admin";
+      next.search = "";
+      window.history.pushState({}, "", next.toString());
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    } catch {
+      window.location.assign("/admin");
+    }
+  };
+
   useEffect(() => {
     if (!lastGoalLabel) return;
     if (lastGoalRef.current && lastGoalRef.current !== lastGoalLabel) {
@@ -226,22 +262,31 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           )}
           <HealthBar />
           <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
-          {canShowJourneyToolsEntry && (
-            <button
-              type="button"
-              onClick={() => onOpenJourneyTools?.()}
-              className="w-full flex items-center gap-3 rounded-xl bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100/70 dark:hover:bg-teal-900/40 transition-all text-right shrink-0 whitespace-nowrap"
-              title="لوحة العمليات"
-            >
-              <Compass className="w-5 h-5 shrink-0" />
-              لوحة العمليات
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => onOpenDawayir?.()}
-            className="w-full flex items-center gap-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-all text-right shrink-0 whitespace-nowrap"
-            title="افتح أداة دواير"
+           {canShowJourneyToolsEntry && (
+             <button
+               type="button"
+               onClick={() => onOpenJourneyTools?.()}
+                className="w-full flex items-center gap-3 rounded-xl bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100/70 dark:hover:bg-teal-900/40 transition-all text-right shrink-0 whitespace-nowrap"
+               title="لوحة العمليات"
+             >
+               <Compass className="w-5 h-5 shrink-0" />
+               لوحة العمليات
+             </button>
+           )}
+           <button
+             type="button"
+             onClick={openAdminDashboard}
+             className="w-full flex items-center gap-3 rounded-xl bg-slate-50/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap"
+             title="لوحة التحكم"
+           >
+             <ShieldCheck className="w-5 h-5 shrink-0 text-teal-600" />
+             لوحة التحكم
+           </button>
+           <button
+             type="button"
+             onClick={() => onOpenDawayir?.()}
+             className="w-full flex items-center gap-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-all text-right shrink-0 whitespace-nowrap"
+             title="افتح أداة دواير"
           >
             <Compass className="w-5 h-5 shrink-0 text-teal-600" />
             <span className="flex flex-col items-start">
@@ -683,6 +728,18 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     <span>لوحة العمليات</span>
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    openAdminDashboard();
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right"
+                  title="لوحة التحكم"
+                >
+                  <ShieldCheck className="w-6 h-6 shrink-0 text-teal-600" />
+                  <span>لوحة التحكم</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => {

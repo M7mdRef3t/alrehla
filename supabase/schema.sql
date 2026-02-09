@@ -10,6 +10,34 @@ create table if not exists system_settings (
   updated_at timestamptz not null default now()
 );
 
+-- محتوى المنصة (Dynamic CMS / In-place Editing)
+-- تخزين نصوص الواجهة بحيث يمكن للـ Owner تعديلها بدون Deploy.
+create table if not exists app_content (
+  key text primary key,
+  content text not null,
+  page text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists app_content_page_idx on app_content (page);
+
+-- Keep updated_at current on edits
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists app_content_set_updated_at on app_content;
+create trigger app_content_set_updated_at
+before update on app_content
+for each row execute function public.set_updated_at();
+
 -- سجل الذكاء الاصطناعي (للمراجعة)
 create table if not exists admin_ai_logs (
   id text primary key,
