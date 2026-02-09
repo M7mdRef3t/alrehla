@@ -10,6 +10,19 @@ function getRedirectUrl(): string | undefined {
     (import.meta.env.VITE_PUBLIC_APP_URL as string | undefined) ||
     "";
   const base = configured.trim() || window.location.origin;
+  
+  // Fix for development: ensure we use the correct port
+  const isDev = import.meta.env.DEV;
+  if (isDev && base.includes('localhost:3000')) {
+    return 'http://localhost:5000/';
+  }
+  
+  // For production, ensure we use the correct domain
+  if (!isDev) {
+    // Force the correct production domain
+    return 'https://www.alrehla.app/';
+  }
+  
   return base.endsWith("/") ? base : `${base}/`;
 }
 

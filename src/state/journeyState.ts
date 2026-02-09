@@ -197,9 +197,19 @@ export const useJourneyState = create<JourneyState>((set, get) => ({
 async function hydrateJourneyState() {
   const stored = await loadJourney();
   let currentStepId = stored.currentStepId ?? defaultState.currentStepId;
+  
+  // Only force move from baseline if it's completed AND no other step is completed
   if (stored.baselineCompletedAt != null && currentStepId === "baseline") {
-    currentStepId = "goal";
+    // Check if user has already progressed beyond baseline
+    const hasProgressBeyondBaseline = stored.completedStepIds?.some(step => 
+      step !== "baseline"
+    );
+    
+    if (!hasProgressBeyondBaseline) {
+      currentStepId = "goal";
+    }
   }
+  
   const next: StoredJourney = {
     ...defaultState,
     ...stored,

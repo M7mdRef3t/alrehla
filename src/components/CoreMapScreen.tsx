@@ -97,7 +97,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   };
   const showPlacementTooltip = useMapState((s) => s.showPlacementTooltip);
   const dismissPlacementTooltip = useMapState((s) => s.dismissPlacementTooltip);
-  const [showOnboarding, setShowOnboarding] = useState(() => nodes.length === 0 && !hasSeenOnboarding());
+  const [showOnboarding, setShowOnboarding] = useState(() => nodes.length === 0 && !hasSeenOnboarding() && !journeyMode);
 
   useEffect(() => {
     if (!showPlacementTooltip) return;
@@ -503,7 +503,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         ) : null}
       </AnimatePresence>
 
-      {nodes.length === 0 && !showOnboarding && (
+      {nodes.length === 0 && !showOnboarding && !journeyMode && (
         <motion.div
           className="mt-6 mx-auto max-w-sm p-5 rounded-2xl bg-slate-100/80 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-600 border-dashed text-center"
           initial={{ opacity: 0, y: 8 }}
@@ -512,10 +512,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           role="status"
           aria-live="polite"
         >
-          <UserPlus className="w-10 h-10 mx-auto text-slate-400 dark:text-slate-500 mb-3" aria-hidden />
-          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-            <EditableText id="map_empty_title" defaultText={mapCopy.emptyMapTitle} page="map" showEditIcon={false} />
-          </p>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+            <EditableText id="map_empty_title" defaultText={mapCopy.emptyMapTitle} page="map" />
+          </h3>
           <p className="text-sm text-slate-600 dark:text-slate-400">
             <EditableText id="map_empty_hint" defaultText={mapCopy.emptyMapHint} page="map" multiline showEditIcon={false} />
           </p>
@@ -525,7 +524,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         </motion.div>
       )}
 
-      {showOnboarding && nodes.length === 0 && (
+      {showOnboarding && nodes.length === 0 && !journeyMode && (
         <MapOnboardingOverlay onClose={() => setShowOnboarding(false)} />
       )}
 

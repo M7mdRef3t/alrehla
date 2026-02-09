@@ -122,13 +122,13 @@ export class ErrorBoundary extends Component<Props, State> {
                 >
                   ← العودة للصفحة الرئيسية
                 </a>
-                <a
-                  href="javascript:void(0)"
-                  onClick={() => window.open("mailto:support@alrahla.app")}
+                <button
+                  type="button"
+                  onClick={() => window.open("mailto:support@alrehla.app")}
                   className="text-sm text-slate-600 hover:text-slate-700 font-semibold"
                 >
                   📧 التواصل مع الدعم
-                </a>
+                </button>
               </div>
             </div>
           </div>

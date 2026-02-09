@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Star, Target, Shield, Smartphone, ArrowRight, CheckCircle2 } from "lucide-react";
 import { landingCopy } from "../copy/landing";
 import { getJourneyToolsView } from "../data/journeyTools";
 import { useJourneyState } from "../state/journeyState";
@@ -114,16 +114,15 @@ export const Landing: FC<LandingProps> = ({
   };
 
   return (
-    <div className="relative w-full max-w-xl min-h-[70vh] min-h-[70svh] py-6 sm:py-10 md:py-14 px-4 sm:px-0 flex flex-col items-center justify-center">
+    <div className="relative w-full max-w-xl min-h-[70vh] min-h-[70svh] py-4 sm:py-10 md:py-14 px-3 sm:px-0 flex flex-col items-center justify-center">
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0" aria-hidden="true">
         <div
-          className="w-[min(80vmax,520px)] h-[min(80vmax,520px)] rounded-full blur-2xl dark:hidden animate-pulse"
+          className="w-[min(85vmax,560px)] h-[min(85vmax,560px)] rounded-full blur-3xl dark:hidden animate-pulse"
           style={{
-            background:
-              "radial-gradient(circle at center, rgba(71,85,105,0.24), rgba(148,163,184,0.16) 42%, rgba(255,255,255,0) 72%)"
+            background: "radial-gradient(circle at center, rgba(6,182,212,0.32), rgba(59,130,246,0.24) 42%, rgba(255,255,255,0) 72%)"
           }}
         />
-        <div className="hidden w-[min(80vmax,520px)] h-[min(80vmax,520px)] rounded-full bg-teal-900/40 blur-3xl dark:block animate-pulse" />
+        <div className="hidden w-[min(85vmax,560px)] h-[min(85vmax,560px)] rounded-full bg-gradient-to-br from-teal-600/40 to-blue-600/30 blur-3xl dark:block animate-pulse" />
       </div>
 
       <main
@@ -132,12 +131,15 @@ export const Landing: FC<LandingProps> = ({
         aria-labelledby="landing-title"
       >
         {onOpenTools && showTopToolsButton && (
-          <button
+          <motion.button
             type="button"
             onClick={onOpenTools}
-            className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full bg-slate-900 text-white px-4 py-2 text-xs font-semibold shadow-sm hover:bg-slate-800 transition-all"
+            className="mx-auto mb-4 sm:mb-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-slate-900 to-slate-800 text-white px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold shadow-sm hover:from-slate-800 hover:to-slate-700 transition-all"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
           >
-            <span>
+            <Smartphone className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">
               <EditableText
                 id="landing_tools_cta"
                 defaultText={landingCopy.toolsCta}
@@ -145,7 +147,8 @@ export const Landing: FC<LandingProps> = ({
                 editOnClick={false}
               />
             </span>
-            <span className="text-[10px] text-slate-200">
+            <span className="sm:hidden">مثالي للموبايل</span>
+            <span className="text-[10px] text-slate-200 hidden sm:inline">
               <EditableText
                 id="landing_tools_cta_hint"
                 defaultText={landingCopy.toolsCtaHint}
@@ -153,20 +156,20 @@ export const Landing: FC<LandingProps> = ({
                 showEditIcon={false}
               />
             </span>
-          </button>
+          </motion.button>
         )}
 
         <motion.div variants={fogContainer} initial="hidden" animate="visible">
           <motion.h1
             id="landing-title"
-            className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4 sm:mb-6 leading-tight sm:leading-normal"
+            className="text-xl sm:text-2xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3 sm:mb-6 leading-tight sm:leading-normal transition-all duration-300 hover:scale-[1.02]"
             style={{ fontFamily: "'Almarai', sans-serif", willChange: "transform, opacity, filter" }}
             variants={fogTitleContainer}
           >
-            <motion.span className="block" variants={fogItem}>
+            <motion.span className="block" variants={fogItem} whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}>
               <EditableText id="landing_title_line1" defaultText={landingCopy.titleLine1} page="landing" />
             </motion.span>
-            <motion.span className="block mt-2" variants={fogItem}>
+            <motion.span className="block mt-2" variants={fogItem} whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}>
               <EditableText id="landing_title_line2" defaultText={landingCopy.titleLine2} page="landing" />
             </motion.span>
           </motion.h1>
@@ -185,24 +188,29 @@ export const Landing: FC<LandingProps> = ({
             />
           </motion.p>
 
-          <motion.div className="mt-6 sm:mt-8" style={{ willChange: "transform, opacity, filter" }} variants={fogCta}>
+          <motion.div className="mt-4 sm:mt-8" style={{ willChange: "transform, opacity, filter" }} variants={fogCta}>
             <div className="relative inline-block">
               <div
-                className="pointer-events-none absolute -inset-4 rounded-full bg-teal-500/20 blur-2xl dark:bg-teal-400/20"
+                className="pointer-events-none absolute -inset-4 rounded-full bg-gradient-to-r from-teal-500/30 to-blue-500/30 blur-2xl dark:from-teal-400/25 dark:to-blue-400/25 animate-pulse"
                 aria-hidden="true"
               />
-              <button
+              <motion.button
                 type="button"
                 onClick={handleStartJourney}
-                className="relative rounded-full bg-teal-600 text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 transition-colors"
+                className="relative rounded-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base font-semibold shadow-lg hover:shadow-xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 transition-all duration-300"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <EditableText
-                  id="landing_cta_journey"
-                  defaultText={landingCopy.ctaJourney}
-                  page="landing"
-                  editOnClick={false}
-                />
-              </button>
+                <span className="flex items-center gap-2">
+                  <EditableText
+                    id="landing_cta_journey"
+                    defaultText={landingCopy.ctaJourney}
+                    page="landing"
+                    editOnClick={false}
+                  />
+                  <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </span>
+              </motion.button>
             </div>
 
             {showPostStartContent && onOpenTools && (
@@ -233,17 +241,23 @@ export const Landing: FC<LandingProps> = ({
         </motion.div>
 
         {showPostStartContent && (
-          <section className="mt-8 sm:mt-10 text-right max-w-md mx-auto px-4 sm:px-0" aria-labelledby="landing-what-is">
-            <h2 id="landing-what-is" className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+          <section className="mt-6 sm:mt-10 text-right max-w-md mx-auto px-4 sm:px-0" aria-labelledby="landing-what-is">
+            <h2 id="landing-what-is" className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 sm:mb-4">
               <EditableText id="landing_what_is_title" defaultText={landingCopy.whatIsTitle} page="landing" />
             </h2>
-            <ul className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed space-y-1.5 list-none pr-0">
+            <ul className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-2 sm:space-y-3 list-none pr-0">
               {landingCopy.whatIsPoints.map((point, i) => (
-                <li key={i} className="flex gap-2 items-start">
-                  <span className="text-teal-500 mt-0.5 shrink-0" aria-hidden>
-                    •
+                <motion.li 
+                  key={i} 
+                  className="flex gap-3 items-start group hover:translate-x-1 transition-all duration-300"
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <span className="text-teal-500 dark:text-teal-400 mt-0.5 shrink-0" aria-hidden>
+                    {i === 0 && <Target className="w-4 h-4" />}
+                    {i === 1 && <Shield className="w-4 h-4" />}
+                    {i === 2 && <CheckCircle2 className="w-4 h-4" />}
                   </span>
-                  <span>
+                  <span className="flex-1">
                     <EditableText
                       id={`landing_what_is_point_${i + 1}`}
                       defaultText={point}
@@ -251,7 +265,7 @@ export const Landing: FC<LandingProps> = ({
                       showEditIcon={false}
                     />
                   </span>
-                </li>
+                </motion.li>
               ))}
             </ul>
           </section>

@@ -11,31 +11,31 @@ export interface BaselineQuestion {
 export const BASELINE_QUESTIONS: BaselineQuestion[] = [
   {
     id: "q1",
-    text: "إيه درجة وضوح حدودك في علاقاتك دلوقتي؟",
+    text: "بتقدر تقول 'لا' لحد قريب منك من غير شعور بالذنب؟",
     type: "scale",
-    scaleLabels: { low: "مش واضحة", high: "واضحة جداً" }
+    scaleLabels: { low: "صعب جداً", high: "بكل سهولة" }
   },
   {
     id: "q2",
-    text: "قد إيه حاسس إن علاقاتك بتاخد من طاقتك؟",
+    text: "بعد اجتماع بالعيلة أو الأصدقاء، بتكون محتاج راحة ولا طبيعي؟",
     type: "scale",
-    scaleLabels: { low: "مش بتاخد", high: "بتاخد جداً" }
+    scaleLabels: { low: "مستعد أكتر", high: "مستنزف تماماً" }
   },
   {
     id: "q3",
-    text: "حاسس إنك عارف مين قريب منك بجد ومين لا؟",
+    text: "لو حصلت أزمة، مين أول حد هتكلمله ومتأكد إنه هيساعدك؟",
     type: "choice",
     options: [
-      { value: "no", label: "لأ، مش واضح" },
-      { value: "little", label: "شوية" },
-      { value: "yes", label: "أيوه، عارف" }
+      { value: "no", label: "لأ، مش واضح معاي" },
+      { value: "little", label: "شخص أو اتنين بس" },
+      { value: "yes", label: "أيوه، عارف مين هيدوني" }
     ]
   },
   {
     id: "q4",
-    text: "إيه مستوى رغبتك في تحسين وضعك مع العلاقات؟",
+    text: "قد إيه رغبتك الحقيقية في تحسين علاقاتك دلوقتي؟",
     type: "scale",
-    scaleLabels: { low: "ضعيفة", high: "قوية جداً" }
+    scaleLabels: { low: "مش مستعجل", high: "محتاج أغير حالي" }
   }
 ];
 
