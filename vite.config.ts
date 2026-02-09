@@ -264,7 +264,7 @@ export default defineConfig(({ mode }) => {
       devOptions: { enabled: false }
     })
   ],
-  server: { port: 5173, host: true },
+  server: { port: 5000, host: "0.0.0.0", allowedHosts: true },
   build: {
     target: "esnext",
     minify: "esbuild",
