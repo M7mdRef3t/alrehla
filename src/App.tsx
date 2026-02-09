@@ -27,6 +27,7 @@ import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/Onboar
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
 import { geminiClient } from "./services/geminiClient";
 import { isSupabaseReady } from "./services/supabaseClient";
+import { consciousnessService } from "./services/consciousnessService";
 
 type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
 type PulseCheckContext = "regular" | "start_recovery";
@@ -121,6 +122,7 @@ export default function App() {
   const prevScreenRef = useRef<Screen>("landing");
   const [showDataManagement, setShowDataManagement] = useState(false);
   const [welcome, setWelcome] = useState<{ message: string; source: WelcomeSource } | null>(null);
+  const [consciousnessInsight, setConsciousnessInsight] = useState<any>(null);
 
   const recordUserActivity = useNotificationState((s) => s.recordUserActivity);
   const notificationSettings = useNotificationState((s) => s.settings);
@@ -329,6 +331,10 @@ export default function App() {
 
     let cancelled = false;
     void (async () => {
+      // تحليل الوعي الأولي عند الدخول
+      const insight = await consciousnessService.analyzeConsciousness(`بدأ المستخدم ${authFirstName || ""} رحلة جديدة`);
+      if (!cancelled) setConsciousnessInsight(insight);
+
       if (!geminiClient.isAvailable()) return;
       const prompt = buildWelcomePrompt(authFirstName, authToneGender);
       const out = await geminiClient.generate(prompt);
@@ -997,6 +1003,12 @@ export default function App() {
         <Suspense fallback={null}>
           <DataManagement isOpen={showDataManagement} onClose={() => setShowDataManagement(false)} />
         </Suspense>
+      )}
+      {consciousnessInsight && screen !== "landing" && (
+        <div className="fixed bottom-20 left-4 right-4 bg-teal-50 p-4 rounded-2xl border border-teal-100 shadow-sm z-50 animate-in fade-in slide-in-from-bottom-4">
+          <p className="text-teal-800 text-sm font-bold mb-1">بصيرة الوعي:</p>
+          <p className="text-teal-700 text-xs">{consciousnessInsight.suggestedAction}</p>
+        </div>
       )}
     </div>
   );
