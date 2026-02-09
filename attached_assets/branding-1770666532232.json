@@ -1,0 +1,111 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "Almarai",
+      "role": "heading"
+    }
+  ],
+  "colors": {
+    "primary": "#45556C",
+    "accent": "#009689",
+    "background": "#F9FAFB",
+    "textPrimary": "#009689",
+    "link": "#009689"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Almarai",
+      "heading": "Almarai"
+    },
+    "fontStacks": {
+      "heading": [
+        "Almarai",
+        "sans-serif"
+      ],
+      "body": [
+        "Almarai",
+        "system-ui",
+        "-apple-system",
+        "BlinkMacSystemFont",
+        "Segoe UI",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "Almarai",
+        "system-ui",
+        "-apple-system",
+        "BlinkMacSystemFont",
+        "Segoe UI",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "36px",
+      "h2": "36px",
+      "body": "18px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 8,
+    "borderRadius": "9999px"
+  },
+  "components": {
+    "buttonPrimary": {
+      "background": "#009689",
+      "textColor": "#FFFFFF",
+      "borderRadius": "33554400px",
+      "borderRadiusCorners": {
+        "topLeft": "33554400px",
+        "topRight": "33554400px",
+        "bottomRight": "33554400px",
+        "bottomLeft": "33554400px"
+      },
+      "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px"
+    }
+  },
+  "images": {
+    "logo": null,
+    "favicon": "File saved at: attached_assets/favicon.png",
+    "ogImage": null
+  },
+  "__framework_hints": [],
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 0,
+      "text": "ابدأ الرحلة",
+      "reasoning": "The button with the text 'ابدأ الرحلة' is the primary call-to-action due to its vibrant green color (#009689), which is consistent with the accent color of the site. The text 'ابدأ الرحلة' translates to 'Start the Journey', indicating a strong action-oriented message."
+    },
+    "secondary": {
+      "index": -1,
+      "text": "N/A",
+      "reasoning": "There is only one button detected, so no secondary button is available with a different color."
+    },
+    "confidence": 0.95
+  },
+  "personality": {
+    "tone": "modern",
+    "energy": "medium",
+    "targetAudience": "Arabic-speaking professionals or individuals interested in relationship management tools."
+  },
+  "designSystem": {
+    "framework": "tailwind",
+    "componentLibrary": ""
+  },
+  "confidence": {
+    "buttons": 0.95,
+    "colors": 0.9,
+    "overall": 0.925
+  },
+  "__llm_metadata": {
+    "logoSelection": {
+      "llmCalled": false,
+      "llmSucceeded": false,
+      "finalSource": "none"
+    },
+    "buttonClassification": {
+      "llmCalled": true,
+      "llmSucceeded": true
+    }
+  }
+}
