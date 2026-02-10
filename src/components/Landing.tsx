@@ -99,41 +99,22 @@ export const Landing: FC<LandingProps> = ({
   const badgePulseClass = badgePulse ? "animate-bounce" : "";
 
   return (
-    <div className="relative w-full min-h-[70vh] min-h-[70svh] py-6 sm:py-10 md:py-14 px-3 sm:px-0 flex flex-col items-center justify-center">
+    <div className="relative w-full min-h-screen py-10 sm:py-14 md:py-16 flex flex-col items-center justify-center">
+      <div className="w-full max-w-5xl mx-auto px-4 sm:px-6">
 
       {/* ── Cosmic Ambient Glow ── */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0" aria-hidden="true">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden" aria-hidden="true">
         <motion.div
-          className="w-[min(80vmax,480px)] h-[min(80vmax,480px)] rounded-full"
+          className="w-[100vmax] h-[100vmax] rounded-full"
           style={{
-            background: "radial-gradient(circle at center, rgba(45, 212, 191, 0.12), rgba(139, 92, 246, 0.08) 45%, transparent 70%)",
-            filter: "blur(60px)"
+            background: "radial-gradient(circle at center, rgba(45, 212, 191, 0.14), rgba(245, 166, 35, 0.08) 40%, transparent 70%)",
+            filter: "blur(80px)"
           }}
           animate={reduceMotion ? {} : {
             scale: [1, 1.08, 1],
-            opacity: [0.6, 0.8, 0.6]
+            opacity: [0.7, 0.9, 0.7]
           }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
-
-      {/* ── Abstract Orbits on the sides (breaking empty space) ── */}
-      <div className="pointer-events-none absolute inset-0 z-0 hidden md:block" aria-hidden="true">
-        <div
-          className="absolute -left-20 top-1/3 w-40 h-40 rounded-full border border-white/8"
-          style={{
-            background: "radial-gradient(circle at 30% 30%, rgba(45,212,191,0.18), transparent 65%)",
-            filter: "blur(18px)",
-            opacity: 0.55
-          }}
-        />
-        <div
-          className="absolute -right-16 bottom-1/4 w-32 h-32 rounded-full border border-white/10"
-          style={{
-            background: "radial-gradient(circle at 70% 70%, rgba(148,163,184,0.35), transparent 65%)",
-            filter: "blur(20px)",
-            opacity: 0.4
-          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 
@@ -142,64 +123,43 @@ export const Landing: FC<LandingProps> = ({
         style={{ willChange: "transform, opacity" }}
         aria-labelledby="landing-title"
       >
-        {/* ── Top Tools Badge ── */}
-        {onOpenTools && showTopToolsButton && (
-          <motion.button
-            type="button"
-            onClick={onOpenTools}
-            className="mx-auto mb-5 sm:mb-7 inline-flex items-center gap-2 glass-button px-4 py-2 text-xs font-semibold"
-            style={{ color: "var(--text-secondary)" }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Smartphone className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">
-              <EditableText
-                id="landing_tools_cta"
-                defaultText={landingCopy.toolsCta}
-                page="landing"
-                editOnClick={false}
-              />
-            </span>
-            <span className="sm:hidden">مثالي للموبايل</span>
-          </motion.button>
-        )}
 
-        {/* ── Hero Section ── */}
+        {/* ── Hero Block ── */}
         <motion.div variants={staggerContainer} initial="hidden" animate="visible">
           <motion.h1
             id="landing-title"
-            className="text-xl sm:text-2xl md:text-4xl font-bold mb-6 sm:mb-10 leading-tight sm:leading-snug"
-            style={{
-              color: "var(--text-primary)",
-              letterSpacing: "var(--tracking-wider)",
-              willChange: "transform, opacity, filter"
-            }}
+            className="mb-8 sm:mb-10 leading-[1.15] tracking-tight"
+            style={{ color: "var(--text-primary)", willChange: "transform, opacity, filter" }}
           >
-            {/* السطر الأساسي — يجذب العين أولاً */}
             <motion.span
-              className="block text-2xl sm:text-3xl md:text-[2.6rem]"
+              className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-4 sm:mb-5"
               variants={cosmicFadeUp}
+              style={{
+                background: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(45,212,191,0.8) 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
             >
-              <EditableText id="landing_title_line1" defaultText={landingCopy.titleLine1} page="landing" />
+              {landingCopy.titleLine1}
             </motion.span>
-            {/* السطر التاني — يدعم الفكرة بنبرة أهدى */}
             <motion.span
-              className="block mt-3 text-sm sm:text-base md:text-lg font-medium"
+              className="block text-lg sm:text-xl md:text-2xl font-bold tracking-tight"
               variants={cosmicFadeUp}
-              style={{ color: "var(--soft-teal)" }}
+              style={{
+                background: "linear-gradient(135deg, rgba(45,212,191,0.9) 0%, rgba(245,166,35,0.7) 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
             >
-              <EditableText id="landing_title_line2" defaultText={landingCopy.titleLine2} page="landing" />
+              {landingCopy.titleLine2}
             </motion.span>
           </motion.h1>
 
           <motion.p
-            className="text-sm sm:text-base leading-relaxed max-w-md mx-auto whitespace-pre-line mt-1"
-            style={{
-              color: "var(--text-secondary)",
-              letterSpacing: "var(--tracking-wide)",
-              willChange: "transform, opacity, filter"
-            }}
+            className="text-base sm:text-lg leading-relaxed max-w-2xl mx-auto whitespace-pre-line mb-8"
+            style={{ color: "var(--text-secondary)", willChange: "transform, opacity, filter" }}
             variants={staggerItem}
           >
             <EditableText
@@ -211,296 +171,205 @@ export const Landing: FC<LandingProps> = ({
             />
           </motion.p>
 
-          {/* ── CTA Button ── */}
-          <motion.div className="mt-8 sm:mt-12" variants={staggerItem}>
+          {/* ── CTA Block ── */}
+          <motion.div className="mt-8 sm:mt-10" variants={staggerItem}>
             <div className="relative inline-block">
+              <div
+                className="absolute inset-0 rounded-xl blur-lg opacity-50"
+                style={{
+                  background: "linear-gradient(135deg, #f5a623, #d97706)",
+                  transform: "scale(1.05)"
+                }}
+              />
               <motion.button
                 type="button"
                 onClick={onStartJourney}
-                className="relative cta-primary px-7 sm:px-10 py-3.5 sm:py-4 text-sm sm:text-base font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0"
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="relative px-8 sm:px-10 py-4 sm:py-5 text-base sm:text-lg font-bold rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--space-void)]"
+                style={{
+                  background: "linear-gradient(135deg, #f5a623 0%, #fbbf24 50%, #f5a623 100%)",
+                  backgroundSize: "200% 100%",
+                  color: "#000",
+                  boxShadow: "0 8px 32px rgba(245, 166, 35, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25)"
+                }}
+                whileHover={{
+                  scale: 1.04,
+                  y: -2,
+                  boxShadow: "0 12px 48px rgba(245, 166, 35, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
+                }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
               >
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 sm:gap-3">
                   <EditableText
                     id="landing_cta_journey"
                     defaultText={landingCopy.ctaJourney}
                     page="landing"
                     editOnClick={false}
                   />
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
                 </span>
               </motion.button>
             </div>
-            <p className="mt-3 text-xs" style={{ color: "rgba(255, 255, 255, 0.72)" }}>
+            <p className="mt-4 text-sm sm:text-base" style={{ color: "var(--text-secondary)" }}>
               {hasExistingJourney ? "هنكمل من آخر مدار كنت واقف عنده." : "خطوة واحدة بسيطة عشان نرسم أول نسخة من خريطة وعيك."}
             </p>
-
-            {showPostStartContent && onOpenTools && (
-              <div className="mt-5 flex flex-col items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={onOpenTools}
-                  className="text-sm font-semibold hover:underline"
-                  style={{ color: "var(--soft-teal)" }}
-                >
-                  <EditableText
-                    id="landing_tools_cta"
-                    defaultText={landingCopy.toolsCta}
-                    page="landing"
-                    showEditIcon={false}
-                  />
-                </button>
-                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                  <EditableText
-                    id="landing_tools_cta_hint"
-                    defaultText={landingCopy.toolsCtaHint}
-                    page="landing"
-                    showEditIcon={false}
-                  />
-                </p>
-              </div>
-            )}
           </motion.div>
         </motion.div>
 
-        {/* ── "What Is" Section — Glass Cards ── */}
+        {/* ── What Is Block — 3 كروت ── */}
         {showPostStartContent && (
           <motion.section
-            className="mt-8 sm:mt-12 text-right max-w-md mx-auto px-4 sm:px-0"
+            className="mt-16 sm:mt-20 md:mt-24"
             aria-labelledby="landing-what-is"
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
+            viewport={{ once: true, margin: "-80px" }}
           >
             <motion.h2
               id="landing-what-is"
-              className="text-xs sm:text-sm font-bold mb-4"
+              className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-center"
               style={{ color: "var(--text-primary)", letterSpacing: "var(--tracking-wider)" }}
               variants={staggerItem}
             >
-              <EditableText id="landing_what_is_title" defaultText={landingCopy.whatIsTitle} page="landing" />
+              <EditableText id="landing_what_is_title" defaultText={landingCopy.whatIsTitle} page="landing" showEditIcon={false} />
             </motion.h2>
-            <ul className="text-xs sm:text-sm leading-relaxed space-y-3 list-none pr-0">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               {landingCopy.whatIsPoints.map((point, i) => (
-                <motion.li
+                <motion.div
                   key={i}
-                  className="flex gap-3 items-start glass-card px-4 py-3"
+                  className="relative group"
                   variants={staggerItem}
                 >
-                  <span className="mt-0.5 shrink-0" style={{ color: "var(--soft-teal)" }} aria-hidden>
-                    {i === 0 && <Target className="w-4 h-4" />}
-                    {i === 1 && <Shield className="w-4 h-4" />}
-                    {i === 2 && <CheckCircle2 className="w-4 h-4" />}
-                  </span>
-                  <span className="flex-1" style={{ color: "var(--text-secondary)" }}>
-                    <EditableText
-                      id={`landing_what_is_point_${i + 1}`}
-                      defaultText={point}
-                      page="landing"
-                      showEditIcon={false}
-                    />
-                  </span>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.section>
-        )}
+                  {/* Glow على hover */}
+                  <div
+                    className="absolute inset-0 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"
+                    style={{
+                      background: i === 0 ? "rgba(45, 212, 191, 0.4)" : i === 1 ? "rgba(245, 166, 35, 0.4)" : "rgba(16, 185, 129, 0.4)"
+                    }}
+                  />
 
-        {/* ── Trust Section — Social Proof ── */}
-        {showPostStartContent && (
-          <motion.section
-            className="mt-8 text-center max-w-md mx-auto px-4 sm:px-0"
-            aria-labelledby="landing-trust"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-          >
-            <motion.p
-              id="landing-trust"
-              className="text-xs sm:text-sm font-semibold"
-              style={{ color: "var(--text-muted)" }}
-              variants={staggerItem}
-            >
-              <EditableText id="landing_trust_title" defaultText={landingCopy.trustTitle} page="landing" showEditIcon={false} />
-            </motion.p>
-            <motion.p
-              className="text-base sm:text-lg font-bold mt-1"
-              style={{ color: "var(--soft-teal)" }}
-              variants={staggerItem}
-            >
-              <EditableText id="landing_trust_count" defaultText={landingCopy.trustCount} page="landing" showEditIcon={false} />
-              {" "}
-              <EditableText id="landing_trust_suffix" defaultText={landingCopy.trustSuffix} page="landing" showEditIcon={false} />
-            </motion.p>
-
-            {/* Testimonials */}
-            <div className="mt-5 space-y-3">
-              {landingCopy.testimonials.map((t, i) => (
-                <motion.blockquote
-                  key={i}
-                  className="glass-card px-4 py-3 text-right"
-                  style={{ borderRightWidth: "2px", borderRightColor: "rgba(45, 212, 191, 0.3)" }}
-                  variants={staggerItem}
-                >
-                  <p className="text-xs sm:text-sm italic" style={{ color: "var(--text-secondary)" }}>
-                    &ldquo;
-                    <EditableText
-                      id={`landing_testimonial_${i + 1}_quote`}
-                      defaultText={t.quote}
-                      page="landing"
-                      multiline
-                      showEditIcon={false}
-                    />
-                    &rdquo;
-                  </p>
-                  <cite className="block text-xs not-italic mt-1.5" style={{ color: "var(--text-muted)" }}>
-                    &mdash;{" "}
-                    <EditableText
-                      id={`landing_testimonial_${i + 1}_author`}
-                      defaultText={t.author}
-                      page="landing"
-                      showEditIcon={false}
-                    />
-                  </cite>
-                </motion.blockquote>
-              ))}
-            </div>
-          </motion.section>
-        )}
-
-        {/* ── Tools Section — Glass Cards ── */}
-        {showPostStartContent && showToolsSection && (
-          <motion.section
-            className="mt-10 text-right max-w-md mx-auto"
-            aria-labelledby="landing-tools"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-          >
-            <motion.h2
-              id="landing-tools"
-              className="text-sm font-bold mb-4"
-              style={{ color: "var(--text-primary)", letterSpacing: "var(--tracking-wider)" }}
-              variants={staggerItem}
-            >
-              <EditableText id="landing_tools_title" defaultText={landingCopy.toolsTitle} page="landing" showEditIcon={false} />
-            </motion.h2>
-            <div className="space-y-3">
-              {tools.map((tool) => (
-                <motion.button
-                  key={tool.id}
-                  type="button"
-                  onClick={() => {
-                    if (!tool.locked || !tool.featureKey || !onFeatureLocked) return;
-                    onFeatureLocked(tool.featureKey);
-                  }}
-                  className="glass-card w-full text-right px-4 py-3 transition-all"
-                  style={{
-                    borderColor: tool.locked
-                      ? "rgba(255, 255, 255, 0.06)"
-                      : "rgba(45, 212, 191, 0.2)"
-                  }}
-                  variants={staggerItem}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-                        style={{
-                          background: tool.locked
-                            ? "rgba(255, 255, 255, 0.05)"
-                            : "rgba(45, 212, 191, 0.1)",
-                          color: tool.locked
-                            ? "var(--text-muted)"
-                            : "var(--soft-teal)",
-                          border: `1px solid ${tool.locked ? "rgba(255, 255, 255, 0.06)" : "rgba(45, 212, 191, 0.2)"}`
-                        }}
-                      >
-                        <span aria-hidden="true">{tool.icon}</span>
-                      </div>
-                      <div className="text-right min-w-0">
-                        <p className="text-sm font-bold truncate" style={{ color: "var(--text-primary)" }}>{tool.name}</p>
-                        <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{tool.tagline}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="text-[10px] font-semibold rounded-full px-2 py-0.5 whitespace-nowrap"
-                        style={{
-                          background: tool.locked
-                            ? "rgba(255, 255, 255, 0.05)"
-                            : "rgba(45, 212, 191, 0.1)",
-                          color: tool.locked
-                            ? "var(--text-muted)"
-                            : "var(--soft-teal)",
-                          border: `1px solid ${tool.locked ? "rgba(255, 255, 255, 0.06)" : "rgba(45, 212, 191, 0.2)"}`
-                        }}
-                      >
-                        {tool.status}
-                      </span>
-                      {!tool.locked && tool.id !== "dawayir" && (
-                        <span
-                          className="text-[10px] font-semibold rounded-full px-2 py-0.5 whitespace-nowrap"
-                          style={{
-                            background: "rgba(45, 212, 191, 0.12)",
-                            color: "var(--soft-teal)",
-                            border: "1px solid rgba(45, 212, 191, 0.25)"
-                          }}
-                        >
-                          تم فتحها
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-xs mt-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>{tool.description}</p>
-                </motion.button>
-              ))}
-            </div>
-
-            {/* Tools CTA card */}
-            {showPostStartContent && onOpenTools && (
-              <motion.div
-                className="mt-4 glass-card flex items-center justify-between px-4 py-3"
-                style={{ borderColor: "rgba(45, 212, 191, 0.2)" }}
-                variants={staggerItem}
-              >
-                <div className="text-right">
-                  <p className="text-sm font-semibold" style={{ color: "var(--soft-teal)" }}>{landingCopy.toolsCta}</p>
-                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>{landingCopy.toolsCtaHint}</p>
-                  {lastGoalLabel && (
-                    <span
-                      className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${badgePulseClass}`}
+                  <div
+                    className="relative bento-block h-full px-5 py-5 sm:px-6 sm:py-6"
+                    style={{
+                      borderColor: i === 0 ? "rgba(45, 212, 191, 0.2)" : i === 1 ? "rgba(245, 166, 35, 0.2)" : "rgba(16, 185, 129, 0.2)"
+                    }}
+                  >
+                    <div
+                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 mx-auto"
                       style={{
-                        background: "rgba(245, 166, 35, 0.1)",
-                        border: "1px solid rgba(245, 166, 35, 0.25)",
-                        color: "var(--warm-amber)"
+                        background: i === 0 ? "rgba(45, 212, 191, 0.12)" : i === 1 ? "rgba(245, 166, 35, 0.12)" : "rgba(16, 185, 129, 0.12)",
+                        border: `1px solid ${i === 0 ? "rgba(45, 212, 191, 0.25)" : i === 1 ? "rgba(245, 166, 35, 0.25)" : "rgba(16, 185, 129, 0.25)"}`
                       }}
                     >
-                      {lastGoalMeta ? <lastGoalMeta.icon className="w-3 h-3" /> : <Star className="w-3 h-3" />}
-                      آخر هدف محفوظ: {lastGoalLabel}
-                    </span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={onOpenTools}
-                  className="text-sm font-semibold hover:underline"
-                  style={{ color: "var(--soft-teal)" }}
+                      {i === 0 && <Target className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "var(--soft-teal)" }} />}
+                      {i === 1 && <Shield className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "var(--warm-amber)" }} />}
+                      {i === 2 && <CheckCircle2 className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "var(--soft-emerald)" }} />}
+                    </div>
+                    <p className="text-sm sm:text-base leading-relaxed text-center" style={{ color: "var(--text-secondary)" }}>
+                      <EditableText
+                        id={`landing_what_is_point_${i + 1}`}
+                        defaultText={point}
+                        page="landing"
+                        showEditIcon={false}
+                      />
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        {/* ── Trust Block ── */}
+        {showPostStartContent && (
+          <motion.section
+            className="mt-14 sm:mt-16 text-center"
+            aria-labelledby="landing-trust"
+            variants={staggerItem}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
+            <p id="landing-trust" className="text-xs sm:text-sm font-semibold mb-3" style={{ color: "var(--text-muted)" }}>
+              <EditableText id="landing_trust_title" defaultText={landingCopy.trustTitle} page="landing" showEditIcon={false} />
+            </p>
+            <div className="inline-flex items-baseline gap-2 sm:gap-3">
+              <span
+                className="text-4xl sm:text-5xl font-black"
+                style={{
+                  background: "linear-gradient(135deg, rgba(45,212,191,0.9) 0%, rgba(16,185,129,0.7) 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text"
+                }}
+              >
+                <EditableText id="landing_trust_count" defaultText={landingCopy.trustCount} page="landing" showEditIcon={false} />
+              </span>
+              <span className="text-base sm:text-lg font-bold" style={{ color: "var(--text-secondary)" }}>
+                <EditableText id="landing_trust_suffix" defaultText={landingCopy.trustSuffix} page="landing" showEditIcon={false} />
+              </span>
+            </div>
+          </motion.section>
+        )}
+
+        {/* ── Final CTA Block ── */}
+        {showPostStartContent && onOpenTools && (
+          <motion.section
+            className="mt-14 sm:mt-16 md:mt-20 text-center"
+            variants={staggerItem}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
+            <h2 className="text-xl sm:text-2xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>
+              جاهز تبدأ؟
+            </h2>
+            <p className="text-base sm:text-lg mb-6" style={{ color: "var(--text-secondary)" }}>
+              دوس على الزرار واتحرك خطوة واحدة لقدام
+            </p>
+            <div className="relative inline-block">
+              <div
+                className="absolute inset-0 rounded-xl blur-lg opacity-50"
+                style={{
+                  background: "linear-gradient(135deg, #f5a623, #d97706)",
+                  transform: "scale(1.05)"
+                }}
+              />
+              <motion.button
+                type="button"
+                onClick={onStartJourney}
+                className="relative px-10 py-5 text-lg font-bold rounded-xl"
+                style={{
+                  background: "linear-gradient(135deg, #f5a623 0%, #fbbf24 50%, #f5a623 100%)",
+                  color: "#000",
+                  boxShadow: "0 8px 32px rgba(245, 166, 35, 0.35)"
+                }}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                ابدأ الرحلة الآن
+              </motion.button>
+            </div>
+            {lastGoalLabel && (
+              <div className="mt-6">
+                <span
+                  className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${badgePulseClass}`}
+                  style={{
+                    background: "rgba(45, 212, 191, 0.12)",
+                    border: "1px solid rgba(45, 212, 191, 0.25)",
+                    color: "var(--soft-teal)"
+                  }}
                 >
-                  افتح
-                </button>
-              </motion.div>
+                  {lastGoalMeta ? <lastGoalMeta.icon className="w-4 h-4" /> : <Star className="w-4 h-4" />}
+                  آخر هدف: {lastGoalLabel}
+                </span>
+              </div>
             )}
           </motion.section>
         )}
       </main>
+      </div>
     </div>
   );
 };

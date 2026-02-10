@@ -748,41 +748,50 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex transition-colors relative overflow-hidden isolate" dir="rtl"
-      style={{ background: "var(--space-void, #0a0a1a)" }}
+      style={{ background: "var(--space-void)" }}
     >
-      {/* 🌌 Nebula Background — Cosmic Canvas */}
+      {/* 🌌 Nebula Background — Deep Cosmic Blue Canvas */}
       <div className="nebula-bg" aria-hidden="true" />
 
       <InstallHintBanner />
       {lastPulseInsights.length > 0 && (
-        <div className="fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto">
-          <div className="glass-card px-4 py-3" style={{ borderColor: "rgba(245, 166, 35, 0.25)" }}>
-            <div className="flex items-start gap-2">
-              <div className="mt-0.5" style={{ color: "var(--warm-amber)" }}>&#x2728;</div>
-              <div className="text-right flex-1">
-                <p className="text-xs font-semibold mb-1" style={{ color: "var(--warm-amber)" }}>
+        <div className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-lg mx-auto">
+          <div className="bento-block" style={{ borderColor: "rgba(245, 166, 35, 0.25)", padding: "1.5rem" }}>
+            <div className="flex items-start gap-4 mb-4">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+                style={{
+                  background: "rgba(245, 166, 35, 0.12)",
+                  border: "1px solid rgba(245, 166, 35, 0.25)",
+                  color: "var(--warm-amber)"
+                }}
+              >
+                ✨
+              </div>
+              <div className="text-right flex-1 min-w-0">
+                <h3 className="text-sm font-bold mb-3" style={{ color: "var(--warm-amber)" }}>
                   ومضة من الذاكرة
-                </p>
-                <div className="flex gap-2 overflow-x-auto py-1 no-scrollbar">
+                </h3>
+                <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                   {lastPulseInsights.map((insight) => (
                     <div
                       key={insight.id}
-                      className="min-w-[200px] max-w-[260px] rounded-xl px-3 py-2"
+                      className="min-w-[220px] max-w-[280px] rounded-xl px-4 py-3"
                       style={{
                         background: "rgba(245, 166, 35, 0.08)",
                         border: "1px solid rgba(245, 166, 35, 0.15)"
                       }}
                     >
-                      <p className="text-[11px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                      <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                         شعورك دلوقتي بيشبه موقف{" "}
                         {insight.created_at && (
-                          <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                          <span className="font-bold" style={{ color: "var(--text-primary)" }}>
                             حصل يوم{" "}
                             {new Date(insight.created_at).toLocaleDateString("ar-EG")}
                           </span>
                         )}
                         {": "}
-                        <span className="font-medium" style={{ color: "var(--text-primary)" }}>
+                        <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
                           {insight.content.slice(0, 90)}
                           {insight.content.length > 90 ? "..." : ""}
                         </span>
@@ -795,8 +804,8 @@ export default function App() {
             <button
               type="button"
               onClick={() => setLastPulseInsights([])}
-              className="mt-2 w-full text-[11px] font-medium hover:underline text-center"
-              style={{ color: "rgba(245, 166, 35, 0.7)" }}
+              className="glass-button w-full text-xs font-bold"
+              style={{ color: "var(--warm-amber)" }}
             >
               تم · إخفاء الومضة
             </button>
@@ -1118,27 +1127,39 @@ export default function App() {
         </div>
       )}
       {consciousnessInsight && screen !== "landing" && (
-        <div className="fixed bottom-24 left-4 right-4 glass-card p-5 z-50"
-          style={{ borderColor: "rgba(45, 212, 191, 0.2)" }}
+        <div className="fixed bottom-28 left-6 right-6 bento-block z-50 max-w-lg mx-auto"
+          style={{ borderColor: "rgba(45, 212, 191, 0.25)", padding: "1.5rem" }}
         >
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "var(--soft-teal)" }} />
-            <p className="text-sm font-bold" style={{ color: "var(--soft-teal)" }}>بصيرة الوعي</p>
-          </div>
-          <p className="text-sm leading-relaxed mb-3" style={{ color: "var(--text-secondary)" }}>
-            {consciousnessInsight.suggestedAction}
-          </p>
-          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-            <span className="shrink-0 px-3 py-1 text-[10px] font-bold rounded-full"
-              style={{ background: "var(--soft-teal-dim)", color: "var(--soft-teal)" }}
+          <div className="flex items-start gap-4 mb-4">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{
+                background: "rgba(45, 212, 191, 0.12)",
+                border: "1px solid rgba(45, 212, 191, 0.25)"
+              }}
             >
-              {consciousnessInsight.emotionalState}
-            </span>
-            <span className="shrink-0 px-3 py-1 text-[10px] font-bold rounded-full"
-              style={{ background: "rgba(139, 92, 246, 0.12)", color: "rgba(167, 139, 250, 0.9)" }}
-            >
-              نمط: {consciousnessInsight.underlyingPattern}
-            </span>
+              <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "var(--soft-teal)" }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold mb-3" style={{ color: "var(--soft-teal)" }}>
+                بصيرة الوعي
+              </h3>
+              <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--text-secondary)" }}>
+                {consciousnessInsight.suggestedAction}
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                <span className="px-3 py-1.5 text-xs font-bold rounded-full"
+                  style={{ background: "var(--soft-teal-dim)", color: "var(--soft-teal)" }}
+                >
+                  {consciousnessInsight.emotionalState}
+                </span>
+                <span className="px-3 py-1.5 text-xs font-bold rounded-full"
+                  style={{ background: "rgba(139, 92, 246, 0.12)", color: "rgba(167, 139, 250, 0.9)" }}
+                >
+                  نمط: {consciousnessInsight.underlyingPattern}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       )}
