@@ -1005,9 +1005,22 @@ export default function App() {
         </Suspense>
       )}
       {consciousnessInsight && screen !== "landing" && (
-        <div className="fixed bottom-20 left-4 right-4 bg-teal-50 p-4 rounded-2xl border border-teal-100 shadow-sm z-50 animate-in fade-in slide-in-from-bottom-4">
-          <p className="text-teal-800 text-sm font-bold mb-1">بصيرة الوعي:</p>
-          <p className="text-teal-700 text-xs">{consciousnessInsight.suggestedAction}</p>
+        <div className="fixed bottom-24 left-4 right-4 bg-white/80 backdrop-blur-md p-5 rounded-3xl border border-teal-100 shadow-xl z-50 animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
+            <p className="text-teal-900 text-sm font-bold">بصيرة الوعي</p>
+          </div>
+          <p className="text-teal-800 text-sm leading-relaxed mb-3">
+            {consciousnessInsight.suggestedAction}
+          </p>
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            <span className="shrink-0 px-3 py-1 bg-teal-100 text-teal-700 text-[10px] font-bold rounded-full">
+              {consciousnessInsight.emotionalState}
+            </span>
+            <span className="shrink-0 px-3 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-full">
+              نمط: {consciousnessInsight.underlyingPattern}
+            </span>
+          </div>
         </div>
       )}
     </div>

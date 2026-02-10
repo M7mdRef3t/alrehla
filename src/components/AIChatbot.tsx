@@ -9,6 +9,8 @@ import type { CardId, CustomExerciseSpec } from "./agentCards";
 import { buildToneSystemBlock, resolveVoiceMode } from "../copy/toneGuide";
 import { useAppContentString } from "../hooks/useAppContentString";
 
+import { consciousnessService } from "../services/consciousnessService";
+
 interface Message {
   id: string;
   role: "user" | "assistant";
@@ -97,6 +99,9 @@ export const AIChatbot: FC<AIChatbotProps> = ({
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsStreaming(true);
+
+    // تسجيل الرسالة في ذاكرة الوعي
+    consciousnessService.addToMemory(`المستخدم: ${userMessage.content}`);
 
     const assistantId = `assistant-${Date.now()}`;
     const useTools = agentActions != null && systemPromptOverride != null;
@@ -236,6 +241,8 @@ ${userMessage.content}`;
             ];
           });
         }
+        // تسجيل رد المساعد في ذاكرة الوعي
+        consciousnessService.addToMemory(`المساعد: ${assistantContent}`);
       }
     } catch (error) {
       if (typeof import.meta !== "undefined" && (import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
