@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, GripVertical } from "lucide-react";
 import { DndContext, TouchSensor, MouseSensor, useSensor, useSensors, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
 import type { Ring, MapNode as MapNodeType } from "./mapTypes";
@@ -9,54 +9,70 @@ import { useMeState } from "../../state/meState";
 import { mapCopy } from "../../copy/map";
 import { getMissionProgressSummary } from "../../utils/missionProgress";
 
+/* ════════════════════════════════════════════════
+   🌌 COSMIC MAP CANVAS — Digital Sanctuary
+   ════════════════════════════════════════════════ */
+
+/* ── Orbital Ring (Breathing) ── */
+
 interface RingProps {
   ring: Ring;
   label: string;
   radius: number;
-  strokeWidth: number;
   color: string;
+  glowColor: string;
+  breatheDuration: number;
 }
 
-const RingView: FC<RingProps> = memo(({ label, radius, strokeWidth, color }) => {
+const OrbitalRing: FC<RingProps> = memo(({ label, radius, color, glowColor, breatheDuration }) => {
   return (
     <g aria-label={label}>
-      {/* Background Track - Faint ring to show structure */}
-      <circle
+      {/* Ambient glow layer */}
+      <motion.circle
         cx="50"
         cy="50"
         r={radius}
         fill="none"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        className="text-slate-100 opacity-40"
+        stroke={glowColor}
+        strokeWidth={4}
+        opacity={0.15}
+        animate={{
+          strokeWidth: [3, 5, 3],
+          opacity: [0.1, 0.2, 0.1]
+        }}
+        transition={{
+          duration: breatheDuration,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
       />
-      
-      {/* Active Ring */}
-      <circle
+      {/* Main breathing ring */}
+      <motion.circle
         cx="50"
         cy="50"
         r={radius}
         fill="none"
         stroke={color}
-        strokeWidth={strokeWidth}
-        opacity={0.9}
-        className="transition-all duration-200"
+        className="orbital-ring"
+        animate={{
+          strokeWidth: [1.0, 1.6, 1.0],
+          opacity: [0.45, 0.8, 0.45]
+        }}
+        transition={{
+          duration: breatheDuration,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        style={{
+          filter: `drop-shadow(0 0 12px ${glowColor})`
+        }}
       />
     </g>
   );
 });
 
-interface NodeProps {
-  node: MapNodeType;
-  nodeIndex: number;
-  totalInRing: number;
-  /** عند العرض في المنطقة الرمادية */
-  position?: { x: number; y: number };
-  onClick?: (id: string) => void;
-  justDraggedId?: string | null;
-}
+/* ── Node Position Calculations ── */
 
-// Helper function to calculate position based on ring, index, and total nodes in ring
 const getRingPosition = (ring: Ring, nodeIndex: number, totalInRing: number): { x: number; y: number } => {
   const angleStep = (2 * Math.PI) / Math.max(totalInRing, 1);
   const angle = nodeIndex * angleStep - Math.PI / 2;
@@ -69,11 +85,6 @@ const getRingPosition = (ring: Ring, nodeIndex: number, totalInRing: number): { 
   return { x, y };
 };
 
-/**
- * المنطقة الرمادي حوالين الخريطة
- * عشان تبان كاملة جوّه SVG (viewBox 0–100 مع strokeWidth 8)
- * لازم الشعاع يبقى ≤ 46 تقريباً، غير كده بتتقص من فوق/تحت.
- */
 const GREY_ZONE_RADIUS = 46;
 const GREY_ZONE_STROKE_RADIUS = 48;
 const getGreyZonePosition = (nodeIndex: number, totalInGrey: number): { x: number; y: number } => {
@@ -84,19 +95,38 @@ const getGreyZonePosition = (nodeIndex: number, totalInGrey: number): { x: numbe
   return { x, y };
 };
 
-/** لون حلقة التهديد حسب الدائرة: أحمر عالي، أصفر متوسط، أخضر منخفض، رمادي للمنفصل */
-const MAP_RING_COLORS = {
-  red: "#BE123C",
-  yellow: "#F59E0B",
-  green: "#0F766E",
-  grey: "#94A3B8"
+/* ── Node Colors (Cosmic) ── */
+
+const RING_COLORS = {
+  safe: { stroke: "#2dd4bf", glow: "rgba(45, 212, 191, 0.5)" },
+  caution: { stroke: "#fbbf24", glow: "rgba(251, 191, 36, 0.45)" },
+  danger: { stroke: "#f87171", glow: "rgba(248, 113, 113, 0.5)" },
+  detached: { stroke: "#94A3B8", glow: "rgba(148, 163, 184, 0.2)" }
 } as const;
 
-const THREAT_RING_CLASS: Record<Ring, string> = {
-  red: "border-rose-600 shadow-[0_0_10px_rgba(190,24,93,0.35)]",
-  yellow: "border-amber-500 shadow-[0_0_9px_rgba(245,158,11,0.28)]",
-  green: "border-teal-600 shadow-[0_0_8px_rgba(15,118,110,0.28)]"
+const MAP_RING_COLORS = {
+  red: RING_COLORS.danger.stroke,
+  yellow: RING_COLORS.caution.stroke,
+  green: RING_COLORS.safe.stroke,
+  grey: RING_COLORS.detached.stroke
+} as const;
+
+const NODE_GLOW_CLASS: Record<Ring, string> = {
+  red: "node-threat-danger",
+  yellow: "node-threat-caution",
+  green: "node-threat-safe"
 };
+
+/* ── Map Node View (Glass Orb) ── */
+
+interface NodeProps {
+  node: MapNodeType;
+  nodeIndex: number;
+  totalInRing: number;
+  position?: { x: number; y: number };
+  onClick?: (id: string) => void;
+  justDraggedId?: string | null;
+}
 
 const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, justDraggedId }) => {
   const [showDelete, setShowDelete] = useState(false);
@@ -109,13 +139,9 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     [position, node.ring, nodeIndex, totalInRing]
   );
   const isDetached = !!node.isDetached;
-  const threatRingClass = isDetached
-    ? "border-slate-400 shadow-[0_0_6px_rgba(148,163,184,0.25)]"
-    : THREAT_RING_CLASS[node.ring];
+  const glowClass = isDetached ? "" : NODE_GLOW_CLASS[node.ring];
 
-  const missionBadge = useMemo(() => getMissionProgressSummary(node), [
-    node
-  ]);
+  const missionBadge = useMemo(() => getMissionProgressSummary(node), [node]);
 
   const style: React.CSSProperties = {
     position: "absolute",
@@ -134,6 +160,23 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     if (onClick) onClick(node.id);
   }, [node.id, justDraggedId, onClick]);
 
+  /* ── Ring color for the breathing aura ── */
+  const auraColor = isDetached
+    ? "rgba(148, 163, 184, 0.15)"
+    : node.ring === "red"
+      ? "rgba(248, 113, 113, 0.25)"
+      : node.ring === "yellow"
+        ? "rgba(251, 191, 36, 0.2)"
+        : "rgba(45, 212, 191, 0.2)";
+
+  const auraBorderColor = isDetached
+    ? "rgba(148, 163, 184, 0.25)"
+    : node.ring === "red"
+      ? "rgba(248, 113, 113, 0.4)"
+      : node.ring === "yellow"
+        ? "rgba(251, 191, 36, 0.35)"
+        : "rgba(45, 212, 191, 0.35)";
+
   return (
     <div
       style={style}
@@ -141,82 +184,95 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
       onMouseLeave={() => setShowDelete(false)}
       className="relative z-20"
     >
-      {/* حلقة مستوى التهديد النابضة */}
+      {/* Breathing aura ring */}
       <motion.div
-        className={`absolute -inset-1.5 rounded-full border-2 pointer-events-none ${threatRingClass}`}
-        style={{ zIndex: 0 }}
+        className="absolute -inset-2 rounded-full pointer-events-none"
+        style={{
+          zIndex: 0,
+          border: `1.5px solid ${auraBorderColor}`,
+          boxShadow: `0 0 20px ${auraColor}`
+        }}
         animate={{
-          opacity: [0.5, 1, 0.5],
-          scale: [1, 1.06, 1]
+          opacity: [0.4, 0.8, 0.4],
+          scale: [1, 1.08, 1]
         }}
         transition={{
-          duration: 2.2,
+          duration: 3,
           repeat: Infinity,
           ease: "easeInOut"
         }}
       />
+
+      {/* Main node body — Glass Orb */}
       <div
         ref={setNodeRef}
-        className={`relative z-10 rounded-full shadow-sm hover:shadow-lg transition-all duration-200 select-none flex items-center gap-0.5 pr-1 ${
+        className={`relative z-10 node-glass ${glowClass} select-none flex items-center gap-0.5 pr-1 ${
           isDragging ? "opacity-90 scale-105" : ""
         } ${
-          isDetached
-            ? "bg-slate-200 border border-slate-400 text-slate-600 saturate-0"
-            : hasMismatch
-              ? "bg-amber-50 border-2 border-amber-500 text-amber-900"
-              : "bg-white border border-gray-200 text-slate-900"
+          isDetached ? "saturate-50 opacity-60" : ""
+        } ${
+          hasMismatch ? "border-amber-500/50!" : ""
         }`}
       >
-        {/* أفاتار: صورة أو أول حرف من الاسم */}
-        <span className="shrink-0 w-8 h-8 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-sm font-bold text-slate-600 dark:text-slate-200 border border-slate-300 dark:border-slate-500">
+        {/* Avatar — cosmic circle */}
+        <span className="shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold"
+          style={{
+            background: isDetached
+              ? "rgba(100, 116, 139, 0.3)"
+              : "linear-gradient(135deg, rgba(45, 212, 191, 0.15), rgba(139, 92, 246, 0.1))",
+            color: "var(--text-primary)",
+            border: "1px solid rgba(255, 255, 255, 0.1)"
+          }}
+        >
           {node.avatarUrl ? (
             <img src={node.avatarUrl} alt="" className="w-full h-full object-cover" />
           ) : (
-            <span aria-hidden>{node.label.trim() ? node.label.trim()[0] : "؟"}</span>
+            <span aria-hidden className="text-xs">{node.label.trim() ? node.label.trim()[0] : "؟"}</span>
           )}
         </span>
+
+        {/* Clickable label */}
         <motion.button
           type="button"
           onClick={handleClick}
-          className="rounded-l-full pl-3 pr-2 py-2.5 text-sm font-semibold cursor-pointer flex-1 text-right min-w-0"
+          className="rounded-l-full pl-3 pr-2 py-2.5 text-sm font-medium cursor-pointer flex-1 text-right min-w-0"
+          style={{ color: "var(--text-primary)", letterSpacing: "0.03em" }}
           title={
             hasMismatch
               ? `⚠️ تعارض — اضغط للتفاصيل`
               : `اضغط لرؤية تفاصيل ${node.label}`
           }
-          whileHover={{
-            scale: 1.02,
-            boxShadow: hasMismatch
-              ? "0 10px 25px -5px rgba(245, 158, 11, 0.3), 0 4px 6px -2px rgba(245, 158, 11, 0.15)"
-              : "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
-          }}
-          whileTap={{
-            scale: 0.98,
-            boxShadow: hasMismatch
-              ? "0 20px 40px -10px rgba(245, 158, 11, 0.4), 0 8px 12px -4px rgba(245, 158, 11, 0.2)"
-              : "0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 8px 12px -4px rgba(0, 0, 0, 0.08)"
-          }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
         >
           <span className="flex flex-col items-start">
             <span className="text-xs md:text-sm font-semibold">{node.label}</span>
             {missionBadge ? (
               <span
-                className={`mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
-                  missionBadge.tone === "done"
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-amber-50 text-amber-700 border-amber-200"
-                }`}
+                className="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                style={{
+                  background: missionBadge.tone === "done"
+                    ? "rgba(45, 212, 191, 0.15)"
+                    : "rgba(251, 191, 36, 0.15)",
+                  color: missionBadge.tone === "done"
+                    ? "var(--ring-safe)"
+                    : "var(--ring-caution)",
+                  border: `1px solid ${missionBadge.tone === "done" ? "rgba(45, 212, 191, 0.3)" : "rgba(251, 191, 36, 0.3)"}`
+                }}
               >
                 {missionBadge.label}
               </span>
             ) : null}
           </span>
         </motion.button>
+
+        {/* Drag handle */}
         <span
           {...listeners}
           {...attributes}
-          className={`shrink-0 p-1.5 rounded-r-full cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 hover:bg-slate-100/80 touch-none`}
+          className="shrink-0 p-1.5 rounded-r-full cursor-grab active:cursor-grabbing touch-none"
+          style={{ color: "var(--text-muted)" }}
           title="اسحب لتحريك الدائرة"
           aria-label="اسحب لتحريك"
         >
@@ -224,43 +280,49 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         </span>
       </div>
 
-      {/* Warning indicator for mismatch */}
+      {/* Mismatch warning */}
       {hasMismatch && (
         <motion.div
-          className="absolute -top-1 -left-1 w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-amber-500 flex items-center justify-center shadow-md z-30"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ 
-            scale: [1, 1.1, 1],
-            opacity: 1
+          className="absolute -top-1 -left-1 w-5 h-5 rounded-full flex items-center justify-center z-30"
+          style={{
+            background: "linear-gradient(135deg, #fbbf24, #f59e0b)",
+            boxShadow: "0 0 12px rgba(251, 191, 36, 0.4)"
           }}
-          transition={{ 
-            scale: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut"
-            },
-            opacity: { duration: 0.2 }
+          animate={{
+            scale: [1, 1.15, 1],
+            boxShadow: [
+              "0 0 8px rgba(251, 191, 36, 0.3)",
+              "0 0 20px rgba(251, 191, 36, 0.5)",
+              "0 0 8px rgba(251, 191, 36, 0.3)"
+            ]
           }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
-          <span className="text-white text-xs font-bold">!</span>
+          <span className="text-white text-[10px] font-bold">!</span>
         </motion.div>
       )}
 
-      {/* Delete Button - Shows on hover or always on mobile */}
-      {showDelete && (
-        <motion.button
-          type="button"
-          onClick={handleDelete}
-          className="absolute -top-2 -right-2 w-9 h-9 sm:w-6 sm:h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg hover:bg-rose-600 active:scale-95 transition-all duration-150 z-30"
-          title="احذف الشخص من الخريطة"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0, opacity: 0 }}
-          transition={{ duration: 0.15 }}
-        >
-          <X className="w-5 h-5 sm:w-4 sm:h-4" strokeWidth={2.5} />
-        </motion.button>
-      )}
+      {/* Delete button */}
+      <AnimatePresence>
+        {showDelete && (
+          <motion.button
+            type="button"
+            onClick={handleDelete}
+            className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center z-30"
+            style={{
+              background: "linear-gradient(135deg, #f87171, #dc2626)",
+              boxShadow: "0 0 12px rgba(248, 113, 113, 0.3)"
+            }}
+            title="احذف الشخص من الخريطة"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+          >
+            <X className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }, (prev, next) => {
@@ -282,48 +344,62 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   );
 });
 
+/* ── Ring Labels ── */
+
 const RING_LABELS: Record<Ring, string> = {
   green: mapCopy.legendGreen,
   yellow: mapCopy.legendYellow,
   red: mapCopy.legendRed
 };
 
+/* ── Droppable Ring Zone ── */
+
 const DroppableRing: FC<{ id: Ring | "grey"; sizePct: number; zIndex: number }> = memo(({ id, sizePct, zIndex }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
-  const bg =
-    id === "grey" ? MAP_RING_COLORS.grey : id === "green" ? MAP_RING_COLORS.green : id === "yellow" ? MAP_RING_COLORS.yellow : MAP_RING_COLORS.red;
+  const colorMap: Record<string, string> = {
+    grey: RING_COLORS.detached.stroke,
+    green: RING_COLORS.safe.stroke,
+    yellow: RING_COLORS.caution.stroke,
+    red: RING_COLORS.danger.stroke
+  };
   return (
     <div
       ref={setNodeRef}
-      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-auto transition-opacity"
+      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-auto transition-all duration-300"
       style={{
         width: `${sizePct}%`,
         height: `${sizePct}%`,
         zIndex,
-        opacity: isOver ? 0.18 : 0,
-        backgroundColor: bg
+        opacity: isOver ? 0.15 : 0,
+        backgroundColor: colorMap[id] ?? colorMap.grey,
+        boxShadow: isOver ? `0 0 40px ${colorMap[id]}40` : "none"
       }}
       aria-hidden
     />
   );
 });
 
-interface MapCanvasProps {
-  onNodeClick?: (id: string) => void;
-  onMeClick?: () => void;
-  /** عرض سياق واحد: نعرض فقط العقد اللي goalId بتاعها = goalIdFilter (أو general) */
-  goalIdFilter?: string;
-  /** عرض الكل (Galaxy): نعرض العقد اللي goalId بتاعها في القائمة */
-  galaxyGoalIds?: string[];
-}
+/* ── Me Center Colors (Cosmic Orb) ── */
 
-const ME_CENTER_COLORS: Record<string, { fill: string; shadow: string }> = {
-  drained: { fill: "#64748b", shadow: "0 2px 8px rgba(100, 116, 139, 0.25)" },
-  okay: { fill: "#0F172A", shadow: "0 2px 8px rgba(15, 23, 42, 0.15)" },
-  charged: { fill: "#0D9488", shadow: "0 2px 12px rgba(13, 148, 136, 0.5)" }
+const ME_CENTER_STYLES: Record<string, { fill: string; glow: string; pulseScale: number[] }> = {
+  drained: {
+    fill: "url(#meDrained)",
+    glow: "rgba(100, 116, 139, 0.3)",
+    pulseScale: [1, 1.03, 1]
+  },
+  okay: {
+    fill: "url(#meOkay)",
+    glow: "rgba(45, 212, 191, 0.3)",
+    pulseScale: [1, 1.06, 1]
+  },
+  charged: {
+    fill: "url(#meCharged)",
+    glow: "rgba(45, 212, 191, 0.6)",
+    pulseScale: [1, 1.1, 1]
+  }
 };
 
-type PendingMove = { nodeId: string; nodeLabel: string; fromRing: Ring; toRing: Ring };
+/* ── Filter Context Nodes ── */
 
 function filterNodesByContext(
   nodes: MapNodeType[],
@@ -334,7 +410,6 @@ function filterNodesByContext(
     return nodes.filter((n) => galaxyGoalIds.includes(n.goalId ?? "general"));
   }
   if (goalIdFilter != null && goalIdFilter !== "") {
-    // عائلة: goalId = family أو null أو اللي مربوطين في شجرة العيلة (treeRelation نوع عيلة)
     if (goalIdFilter === "family") {
       return nodes.filter(
         (n) =>
@@ -348,6 +423,17 @@ function filterNodesByContext(
   return nodes;
 }
 
+/* ════════════════════════════════════════════════
+   🌌 MAIN CANVAS COMPONENT
+   ════════════════════════════════════════════════ */
+
+interface MapCanvasProps {
+  onNodeClick?: (id: string) => void;
+  onMeClick?: () => void;
+  goalIdFilter?: string;
+  galaxyGoalIds?: string[];
+}
+
 export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFilter, galaxyGoalIds }) => {
   const allNodes = useMapState((s) => s.nodes);
   const nodes = useMemo(
@@ -357,9 +443,9 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
   const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
   const setDetached = useMapState((s) => s.setDetached);
   const battery = useMeState((s) => s.battery);
-  const meStyle = ME_CENTER_COLORS[battery] ?? ME_CENTER_COLORS.okay;
+  const meStyle = ME_CENTER_STYLES[battery] ?? ME_CENTER_STYLES.okay;
 
-  const [pendingMove, setPendingMove] = useState<PendingMove | null>(null);
+  const [pendingMove, setPendingMove] = useState<{ nodeId: string; nodeLabel: string; fromRing: Ring; toRing: Ring } | null>(null);
   const [justDraggedId, setJustDraggedId] = useState<string | null>(null);
   const dragTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current); }, []);
@@ -423,7 +509,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
   return (
     <div className="w-full mx-auto mt-6 flex flex-col gap-3">
       <div
-        className="relative w-full min-h-[260px] sm:min-h-[320px] md:min-h-[380px]"
+        className="relative w-full min-h-[280px] sm:min-h-[340px] md:min-h-[400px]"
         id="map-canvas"
       >
       <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
@@ -431,58 +517,124 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
         <svg
           viewBox="0 0 100 100"
           className="w-full h-full"
-          style={{ filter: "drop-shadow(0 2px 8px rgba(0, 0, 0, 0.04))" }}
         >
-          <RingView ring="red" label="دائرة الخطر والاستنزاف" radius={40} strokeWidth={12} color={MAP_RING_COLORS.red} />
-          <RingView ring="yellow" label="دائرة القرب المشروط" radius={29} strokeWidth={12} color={MAP_RING_COLORS.yellow} />
-          <RingView ring="green" label="دائرة القرب الصحي" radius={18} strokeWidth={12} color={MAP_RING_COLORS.green} />
+          {/* SVG Gradients for cosmic orb */}
+          <defs>
+            <radialGradient id="meDrained" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#475569" />
+            </radialGradient>
+            <radialGradient id="meOkay" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#2dd4bf" />
+              <stop offset="100%" stopColor="#0d9488" />
+            </radialGradient>
+            <radialGradient id="meCharged" cx="50%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#5eead4" />
+              <stop offset="50%" stopColor="#2dd4bf" />
+              <stop offset="100%" stopColor="#0f766e" />
+            </radialGradient>
+            {/* Cosmic glow filter */}
+            <filter id="cosmicGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
 
-          {/* Center "Me" — لون حسب البطارية */}
-          <motion.g>
+          {/* ── Orbital Rings (Breathing) ── */}
+          <OrbitalRing
+            ring="red"
+            label="دائرة الخطر والاستنزاف"
+            radius={40}
+            color={RING_COLORS.danger.stroke}
+            glowColor={RING_COLORS.danger.glow}
+            breatheDuration={5}
+          />
+          <OrbitalRing
+            ring="yellow"
+            label="دائرة القرب المشروط"
+            radius={29}
+            color={RING_COLORS.caution.stroke}
+            glowColor={RING_COLORS.caution.glow}
+            breatheDuration={4.5}
+          />
+          <OrbitalRing
+            ring="green"
+            label="دائرة القرب الصحي"
+            radius={18}
+            color={RING_COLORS.safe.stroke}
+            glowColor={RING_COLORS.safe.glow}
+            breatheDuration={4}
+          />
+
+          {/* ── Detachment Zone (Dashed Orbit) ── */}
+          <motion.circle
+            cx="50"
+            cy="50"
+            r={GREY_ZONE_STROKE_RADIUS}
+            fill="none"
+            stroke="rgba(148, 163, 184, 0.25)"
+            strokeWidth={1}
+            strokeDasharray="2 2.5"
+            className="pointer-events-none"
+            animate={{ opacity: [0.2, 0.4, 0.2] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          />
+
+          {/* ── Center "Me" — Cosmic Orb ── */}
+          <g filter="url(#cosmicGlow)">
+            {/* Outer aura */}
+            <motion.circle
+              cx="50"
+              cy="50"
+              r="9"
+              fill="none"
+              stroke={battery === "drained" ? "rgba(148, 163, 184, 0.1)" : "rgba(45, 212, 191, 0.12)"}
+              strokeWidth="0.5"
+              animate={{
+                r: [8, 11, 8],
+                opacity: [0.3, 0.15, 0.3]
+              }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            />
+            {/* Main orb */}
             <motion.circle
               cx="50"
               cy="50"
               r="6"
               fill={meStyle.fill}
-              className="transition-colors duration-300"
-              style={{ filter: `drop-shadow(${meStyle.shadow})` }}
               animate={{
-                scale: battery === "charged" ? [1, 1.08, 1] : [1, 1.05, 1],
-                opacity: battery === "drained" ? [0.7, 0.85, 0.7] : [0.9, 1, 0.9]
+                scale: meStyle.pulseScale,
+                opacity: battery === "drained" ? [0.6, 0.8, 0.6] : [0.85, 1, 0.85]
               }}
               transition={{
-                duration: battery === "charged" ? 2.5 : 3,
+                duration: battery === "charged" ? 2.5 : 3.5,
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
+              style={{
+                filter: `drop-shadow(0 0 ${battery === "charged" ? "20px" : "10px"} ${meStyle.glow})`
+              }}
             />
+            {/* "أنت" label */}
             <text
               x="50"
               y="50"
               textAnchor="middle"
               dominantBaseline="middle"
-              className="text-[3px] font-bold fill-white select-none pointer-events-none"
+              className="select-none pointer-events-none"
+              style={{
+                fontSize: "3px",
+                fontWeight: 700,
+                fill: "white",
+                letterSpacing: "0.08em"
+              }}
             >
               أنت
             </text>
-          </motion.g>
-
-          {/* المنطقة الرمادية: خارج الأحمر — عزل تعافي */}
-          <g aria-hidden>
-            <circle
-              cx="50"
-              cy="50"
-              r={GREY_ZONE_STROKE_RADIUS}
-              fill="none"
-              stroke={MAP_RING_COLORS.grey}
-              strokeWidth={3}
-              strokeDasharray="1.2 1.2"
-              opacity={0.9}
-              className="pointer-events-none"
-            />
           </g>
         </svg>
 
+        {/* ── Node Overlays ── */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="relative w-full h-full pointer-events-auto">
             {ringNodes.map((node) => {
@@ -514,13 +666,13 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
           </div>
         </div>
 
-        {/* مناطق إفلات الدوائر — الرمادي خلف الأحمر عشان الإسقاط على الحافة يعدّ رمادي */}
+        {/* ── Droppable Zones ── */}
         <DroppableRing id="grey" sizePct={92} zIndex={9} />
         <DroppableRing id="red" sizePct={80} zIndex={10} />
         <DroppableRing id="yellow" sizePct={58} zIndex={11} />
         <DroppableRing id="green" sizePct={36} zIndex={12} />
 
-        {/* منطقة نقر مركز "أنا" — تفتح بطاقة أنا */}
+        {/* ── Me click zone ── */}
         {onMeClick && (
           <button
             type="button"
@@ -528,7 +680,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
               e.stopPropagation();
               onMeClick();
             }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[20%] min-w-[56px] h-[20%] min-h-[56px] rounded-full z-30 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[20%] min-w-[56px] h-[20%] min-h-[56px] rounded-full z-30 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50 focus-visible:ring-offset-0"
             title="بطاقتك — حالتك اليوم"
             aria-label="افتح بطاقة أنا"
           />
@@ -536,28 +688,34 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
       </div>
       </DndContext>
 
+      {/* ── Pending Move Confirmation (Glass) ── */}
       {pendingMove && (
-        <div className="relative z-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 px-4 py-3 rounded-xl bg-teal-50 border-2 border-teal-200 text-right shadow-lg">
-          <p className="text-sm font-semibold text-slate-800 flex-1">
+        <motion.div
+          className="relative z-50 glass-card flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 px-5 py-4 text-right"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          <p className="text-sm font-semibold flex-1" style={{ color: "var(--text-primary)" }}>
             نقل "{pendingMove.nodeLabel}" إلى {RING_LABELS[pendingMove.toRing]}؟
           </p>
           <div className="flex gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setPendingMove(null)}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-200 text-slate-700 hover:bg-slate-300"
+              className="cta-muted px-4 py-2 text-sm font-medium"
             >
               إلغاء
             </button>
             <button
               type="button"
               onClick={confirmPlacement}
-              className="px-4 py-2 rounded-lg text-sm font-semibold bg-teal-600 text-white hover:bg-teal-700"
+              className="cta-primary px-4 py-2 text-sm font-semibold"
             >
               {mapCopy.confirmPlacement}
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
     </div>

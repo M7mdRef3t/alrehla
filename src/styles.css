@@ -1,109 +1,484 @@
 @import "tailwindcss";
 
+/* ════════════════════════════════════════════════
+   🌌 AL-REHLA — COSMIC SANCTUARY DESIGN SYSTEM
+   ════════════════════════════════════════════════ */
+
 @layer base {
+  :root {
+    /* ── Deep Space Palette ── */
+    --space-void: #0a0a1a;
+    --space-deep: #0d1026;
+    --space-mid: #131640;
+    --space-nebula: #1a1250;
+    --space-aurora: #1e2a5e;
+
+    /* ── Warm Accents ── */
+    --warm-amber: #f5a623;
+    --warm-amber-soft: rgba(245, 166, 35, 0.15);
+    --warm-amber-glow: rgba(245, 166, 35, 0.3);
+    --soft-teal: #2dd4bf;
+    --soft-teal-dim: rgba(45, 212, 191, 0.12);
+    --soft-teal-glow: rgba(45, 212, 191, 0.35);
+
+    /* ── Glassmorphism ── */
+    --glass-bg: rgba(255, 255, 255, 0.06);
+    --glass-bg-hover: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border-active: rgba(255, 255, 255, 0.2);
+    --glass-blur: 16px;
+    --glass-blur-heavy: 24px;
+
+    /* ── Ring Colors (Orbit Zones) ── */
+    --ring-safe: #2dd4bf;
+    --ring-safe-glow: rgba(45, 212, 191, 0.5);
+    --ring-caution: #fbbf24;
+    --ring-caution-glow: rgba(251, 191, 36, 0.45);
+    --ring-danger: #f87171;
+    --ring-danger-glow: rgba(248, 113, 113, 0.5);
+    --ring-detached: rgba(148, 163, 184, 0.4);
+
+    /* ── Text ── */
+    --text-primary: rgba(255, 255, 255, 0.92);
+    --text-secondary: rgba(255, 255, 255, 0.55);
+    --text-muted: rgba(255, 255, 255, 0.3);
+    --text-accent: var(--soft-teal);
+
+    /* ── Spacing for letter tracking ── */
+    --tracking-wide: 0.04em;
+    --tracking-wider: 0.06em;
+  }
+
+  html {
+    background: var(--space-void);
+    color-scheme: dark;
+  }
+
   body {
-    font-family: "Almarai", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background-color: #f9fafb;
-    color: #111827;
-    line-height: 1.65;
+    font-family: "IBM Plex Sans Arabic", system-ui, -apple-system, sans-serif;
+    background: linear-gradient(
+      170deg,
+      var(--space-void) 0%,
+      var(--space-deep) 25%,
+      var(--space-mid) 50%,
+      var(--space-nebula) 75%,
+      var(--space-deep) 100%
+    );
+    color: var(--text-primary);
+    line-height: 1.75;
+    letter-spacing: var(--tracking-wide);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  /* إلغاء scrollbar ظاهر */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
   }
 }
 
-/* ========================================
-   Subtle Background Pattern (Ops Room)
-   ======================================== */
-.ops-room-pattern {
+/* ════════════════════════════════════════════════
+   🌌 NEBULA BACKGROUND — Animated Cosmic Canvas
+   ════════════════════════════════════════════════ */
+
+.nebula-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(99, 54, 181, 0.15) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 20%, rgba(45, 212, 191, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(245, 166, 35, 0.06) 0%, transparent 45%),
+    linear-gradient(170deg, var(--space-void), var(--space-deep), var(--space-mid));
+}
+
+.nebula-bg::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background:
+    radial-gradient(circle at 30% 40%, rgba(139, 92, 246, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 70% 60%, rgba(45, 212, 191, 0.08) 0%, transparent 35%);
+  animation: nebulaFloat 25s ease-in-out infinite;
+}
+
+.nebula-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
   background-image:
-    repeating-radial-gradient(circle at 50% 50%, rgba(148, 163, 184, 0.12) 0 1px, transparent 1px 72px),
-    repeating-linear-gradient(0deg, rgba(148, 163, 184, 0.08) 0 1px, transparent 1px 56px),
-    repeating-linear-gradient(90deg, rgba(148, 163, 184, 0.08) 0 1px, transparent 1px 56px);
-  background-position: center;
+    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 40%, rgba(255,255,255,0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 30%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 20% 90%, rgba(255,255,255,0.15) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 10%, rgba(255,255,255,0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 50%, rgba(255,255,255,0.2) 0%, transparent 100%);
+  animation: starsTwinkle 8s ease-in-out infinite;
 }
 
-/* ========================================
-   APPLE FITNESS RINGS - SVG Architecture
-   ======================================== */
-
-/* SVG Rings are now rendered via <circle> elements with neon glow */
-/* The dark container creates the "Apple Watch" aesthetic */
-
-/* Additional utility classes for enhanced visual depth */
-.ring-glow-green {
-  filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.6));
+@keyframes nebulaFloat {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(2%, -1%) rotate(0.5deg); }
+  50% { transform: translate(-1%, 2%) rotate(-0.3deg); }
+  75% { transform: translate(-2%, -1%) rotate(0.2deg); }
 }
 
-.ring-glow-yellow {
-  filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.6));
+@keyframes starsTwinkle {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 
-.ring-glow-red {
-  filter: drop-shadow(0 0 12px rgba(251, 113, 133, 0.6));
+/* ════════════════════════════════════════════════
+   🔮 GLASSMORPHISM COMPONENTS
+   ════════════════════════════════════════════════ */
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 1.25rem;
 }
 
-/* ========================================
-   Micro-interactions — خفيفة على القلب
-   ======================================== */
+.glass-heavy {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(var(--glass-blur-heavy));
+  -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.5rem;
+}
+
+.glass-card {
+  background: rgba(15, 20, 50, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-card:hover {
+  background: rgba(15, 20, 50, 0.7);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.glass-button {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.glass-button:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(45, 212, 191, 0.15);
+}
+
+.glass-button-active {
+  background: rgba(45, 212, 191, 0.15);
+  border-color: rgba(45, 212, 191, 0.3);
+  color: var(--soft-teal);
+}
+
+/* ════════════════════════════════════════════════
+   🌀 BREATHING RINGS — Orbital System
+   ════════════════════════════════════════════════ */
+
+.orbital-ring {
+  fill: none;
+  transition: all 0.4s ease;
+}
+
+.orbital-ring-safe {
+  stroke: var(--ring-safe);
+  filter: drop-shadow(0 0 18px var(--ring-safe-glow));
+  animation: breatheRingSafe 4s ease-in-out infinite;
+}
+
+.orbital-ring-caution {
+  stroke: var(--ring-caution);
+  filter: drop-shadow(0 0 16px var(--ring-caution-glow));
+  animation: breatheRingCaution 4.5s ease-in-out infinite;
+}
+
+.orbital-ring-danger {
+  stroke: var(--ring-danger);
+  filter: drop-shadow(0 0 20px var(--ring-danger-glow));
+  animation: breatheRingDanger 5s ease-in-out infinite;
+}
+
+.orbital-ring-detached {
+  stroke: var(--ring-detached);
+  stroke-dasharray: 2 2;
+  filter: drop-shadow(0 0 6px rgba(148, 163, 184, 0.2));
+  animation: breatheRingDetached 6s ease-in-out infinite;
+}
+
+@keyframes breatheRingSafe {
+  0%, 100% { opacity: 0.55; stroke-width: 1.2; }
+  50% { opacity: 0.85; stroke-width: 1.8; }
+}
+
+@keyframes breatheRingCaution {
+  0%, 100% { opacity: 0.5; stroke-width: 1.2; }
+  50% { opacity: 0.8; stroke-width: 1.6; }
+}
+
+@keyframes breatheRingDanger {
+  0%, 100% { opacity: 0.5; stroke-width: 1.0; }
+  50% { opacity: 0.75; stroke-width: 1.5; }
+}
+
+@keyframes breatheRingDetached {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.45; }
+}
+
+/* ════════════════════════════════════════════════
+   ✨ ME CENTER — Cosmic Orb
+   ════════════════════════════════════════════════ */
+
+.me-orb {
+  filter:
+    drop-shadow(0 0 20px rgba(45, 212, 191, 0.5))
+    drop-shadow(0 0 40px rgba(45, 212, 191, 0.2));
+}
+
+.me-orb-pulse {
+  animation: meOrbPulse 3s ease-in-out infinite;
+}
+
+@keyframes meOrbPulse {
+  0%, 100% {
+    opacity: 0.7;
+    r: 5.5;
+    filter: drop-shadow(0 0 15px rgba(45, 212, 191, 0.3));
+  }
+  50% {
+    opacity: 1;
+    r: 6.5;
+    filter: drop-shadow(0 0 30px rgba(45, 212, 191, 0.6));
+  }
+}
+
+/* ════════════════════════════════════════════════
+   🪐 NODE (Person) — Glass Orbs
+   ════════════════════════════════════════════════ */
+
+.node-glass {
+  background: rgba(15, 20, 50, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.node-glass:hover {
+  background: rgba(20, 25, 60, 0.8);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.node-threat-safe {
+  border-color: rgba(45, 212, 191, 0.35);
+  box-shadow:
+    0 0 15px rgba(45, 212, 191, 0.2),
+    0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.node-threat-caution {
+  border-color: rgba(251, 191, 36, 0.35);
+  box-shadow:
+    0 0 15px rgba(251, 191, 36, 0.2),
+    0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.node-threat-danger {
+  border-color: rgba(248, 113, 113, 0.4);
+  box-shadow:
+    0 0 15px rgba(248, 113, 113, 0.25),
+    0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ════════════════════════════════════════════════
+   🫧 STATUS CARDS — Mood-Responsive Glass
+   ════════════════════════════════════════════════ */
+
+.status-card-low {
+  background: rgba(100, 116, 139, 0.12);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+.status-card-angry {
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+.status-card-high {
+  background: rgba(45, 212, 191, 0.08);
+  border: 1px solid rgba(45, 212, 191, 0.2);
+}
+
+.status-card-insight {
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* ════════════════════════════════════════════════
+   🎯 CTA BUTTONS — Cosmic Gradients
+   ════════════════════════════════════════════════ */
+
+.cta-primary {
+  background: linear-gradient(135deg, var(--soft-teal), #0d9488);
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  box-shadow:
+    0 4px 20px rgba(45, 212, 191, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
+}
+
+.cta-primary:hover {
+  box-shadow:
+    0 8px 32px rgba(45, 212, 191, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.cta-danger {
+  background: linear-gradient(135deg, #f87171, #dc2626);
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  box-shadow: 0 4px 20px rgba(248, 113, 113, 0.25);
+}
+
+.cta-muted {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  border-radius: 9999px;
+}
+
+.cta-muted:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+/* ════════════════════════════════════════════════
+   🏷️ LEGEND PILLS — Ring Identity
+   ════════════════════════════════════════════════ */
+
+.legend-pill {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  padding: 0.375rem 0.875rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.legend-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.legend-pill-safe { border-color: rgba(45, 212, 191, 0.3); }
+.legend-pill-safe:hover { background: rgba(45, 212, 191, 0.1); }
+
+.legend-pill-caution { border-color: rgba(251, 191, 36, 0.3); }
+.legend-pill-caution:hover { background: rgba(251, 191, 36, 0.1); }
+
+.legend-pill-danger { border-color: rgba(248, 113, 113, 0.3); }
+.legend-pill-danger:hover { background: rgba(248, 113, 113, 0.1); }
+
+/* ════════════════════════════════════════════════
+   🌀 MICRO-INTERACTIONS
+   ════════════════════════════════════════════════ */
 @layer utilities {
-  /* ضغط لطيف على الأزرار والكروت */
   .tap-press {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
   .tap-press:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
   }
-  /* ظهور ناعم للمحتوى القابل للطي */
+
   .expand-enter {
-    animation: expandIn 0.25s ease-out;
+    animation: expandIn 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
   @keyframes expandIn {
-    from {
-      opacity: 0;
-      transform: translateY(-4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
-  /* إكمال مرحلة — نبضة لطيفة */
+
   .milestone-done {
-    animation: milestonePop 0.4s ease-out;
+    animation: milestonePop 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   }
   @keyframes milestonePop {
     0% { transform: scale(1); }
-    50% { transform: scale(1.15); }
+    40% { transform: scale(1.12); }
     100% { transform: scale(1); }
+  }
+
+  /* Cosmic shimmer for important elements */
+  .cosmic-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .cosmic-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.04) 50%,
+      transparent 70%
+    );
+    animation: shimmerSlide 4s ease-in-out infinite;
+  }
+  @keyframes shimmerSlide {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
   }
 }
 
-/* ========================================
+/* ════════════════════════════════════════════════
    Pulse (Micro Compass) Range Styling
-   ========================================
-   Uses CSS variables set inline:
-   --pulse-fill: hex color for fill/thumb
-*/
+   ════════════════════════════════════════════════ */
 .pulse-range {
-  --pulse-fill: #14b8a6;
+  --pulse-fill: var(--soft-teal);
   -webkit-appearance: none;
   appearance: none;
   height: 10px;
   border-radius: 9999px;
   background: transparent;
-  /* Force a consistent RTL slider across browsers (incl. Safari). */
   direction: ltr;
   transform: scaleX(-1);
   transform-origin: center;
 }
 
-.dark .pulse-range {
-  background: transparent;
-}
-
-.pulse-range:focus {
-  outline: none;
-}
+.pulse-range:focus { outline: none; }
 
 .pulse-range::-webkit-slider-runnable-track {
   height: 10px;
@@ -114,14 +489,14 @@
 .pulse-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 9999px;
   background: var(--pulse-fill);
-  border: 3px solid #ffffff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.4);
   cursor: pointer;
-  margin-top: -4px;
+  margin-top: -5px;
 }
 
 .pulse-range::-moz-range-track {
@@ -130,22 +505,18 @@
   background: transparent;
 }
 
-.dark .pulse-range::-moz-range-track {
-  background: transparent;
-}
-
-.pulse-range::-moz-range-progress {
-  height: 10px;
-  border-radius: 9999px;
-  background: transparent;
-}
-
 .pulse-range::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 9999px;
   background: var(--pulse-fill);
-  border: 3px solid #ffffff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.4);
   cursor: pointer;
 }
+
+/* ════════════════════════════════════════════════
+   📱 No-scrollbar utility (for horizontal scrolls)
+   ════════════════════════════════════════════════ */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
