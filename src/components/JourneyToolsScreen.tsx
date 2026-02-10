@@ -112,14 +112,14 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
       >
         <div className="flex items-center justify-center gap-2 text-teal-600">
           <Compass className="w-6 h-6" />
-          <span className="text-sm font-semibold">غرفة العمليات</span>
+          <span className="text-sm font-semibold">فضاء الرحلة</span>
         </div>
         <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
-          لوحة العمليات
+          أدوات الرحلة
         </h1>
         <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-xl mx-auto">
-          كل أداة هي مناورة. البداية من <strong className="text-slate-800">دواير</strong>،
-          والباقي يتفعل مع تقدّمك في الجبهات.
+          كل أداة هي خطوة. البداية من <strong className="text-slate-800">دواير</strong>،
+          والباقي يتفعل مع تقدّمك في المدارات.
         </p>
       </motion.header>
 
@@ -188,7 +188,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
         <section className="mt-6 text-right">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-sm font-bold text-slate-700">تبديل المسار</h2>
-            <span className="text-[11px] text-slate-500">مناورة سريعة</span>
+            <span className="text-[11px] text-slate-500">خطوة سريعة</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {savedGoals.map((goal) => (

@@ -60,12 +60,12 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   const isEmotionalPrisoner = result.scenarioKey === "emotional_prisoner";
 
   const relationshipToneText = useMemo(() => {
-    if (isEmotionalPrisoner) return "في هدوء خارجي، بس لسه محتاجين نقفل الاختراق الداخلي.";
+    if (isEmotionalPrisoner) return "في هدوء خارجي، بس لسه محتاجين نقفل الضغط الداخلي.";
     const label = result.state_label ?? "";
-    if (label.includes("حمراء") || label.includes("استنزاف")) return "الجبهة دي ضاغطة، وأولوية المرحلة حماية مواردك.";
-    if (label.includes("صفراء")) return "في إشارات استنزاف، ومع ضبط الدرع الوضع يتحسن بسرعة.";
-    if (label.includes("خضراء")) return "الجبهة متوازنة، والهدف دلوقتي الحفاظ على استقرارها.";
-    return "دي خلاصة واضحة لوضع الجبهة بناءً على إجاباتك.";
+    if (label.includes("حمراء") || label.includes("استنزاف")) return "المدار ده ضاغط، وأولوية المرحلة حماية طاقتك.";
+    if (label.includes("صفراء")) return "في إشارات ضغط، ومع ضبط المساحة الوضع يتحسن بسرعة.";
+    if (label.includes("خضراء")) return "المدار متوازن، والهدف دلوقتي الحفاظ على استقراره.";
+    return "دي خلاصة واضحة لوضع المدار بناءً على إجاباتك.";
   }, [isEmotionalPrisoner, result.state_label]);
 
   const missionProgress = useMapState((s) =>
@@ -87,10 +87,10 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   const isMissionStarted = Boolean(missionProgress?.startedAt);
   const isMissionCompleted = Boolean(missionProgress?.isCompleted);
   const missionButtonLabel = isMissionCompleted
-    ? "المناورة اتقفلت"
+    ? "الخطوة اتقفلت"
     : isMissionStarted
-      ? "كمّل المناورة"
-      : "ابدأ المناورة";
+      ? "كمّل الخطوة"
+      : "ابدأ الخطوة";
   const missionButtonTone = isMissionCompleted
     ? "bg-emerald-600 hover:bg-emerald-700"
     : "bg-slate-900 hover:bg-slate-800";
@@ -117,8 +117,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
       className="text-center"
     >
       <>
-        <div className="mb-5 rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-center">
-          <p className="text-xs font-semibold text-teal-800">قراءة الجبهة الحالية</p>
+        <div className="mb-5 card-unified bg-teal-50/80 border border-teal-100 px-4 py-3 text-center">
+          <p className="text-xs font-semibold text-teal-800">قراءة المدار الحالي</p>
           <h3 className="mt-1 text-xl font-extrabold leading-tight text-slate-900">
             علاقتك مع{" "}
             <span className="inline-block max-w-[72vw] truncate align-bottom text-teal-700 sm:max-w-full" title={displayName}>
@@ -135,7 +135,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           </p>
         </div>
 
-        <div className="p-6 bg-linear-to-b from-slate-50 to-white border border-slate-200 rounded-2xl mb-6 shadow-sm">
+        <div className="p-6 card-unified bg-linear-to-b from-slate-50 to-white border border-slate-200 mb-6 text-center">
           <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
             <span>
               {isEmotionalPrisoner ? `الحالة: ${result.state_label}` : result.title}
@@ -156,7 +156,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500 text-center">
             {isEmotionalPrisoner ? (
               <p className="w-full">
-                التكتيك: <span className="font-semibold text-slate-700">العزل الصحي</span>
+                الأسلوب: <span className="font-semibold text-slate-700">مساحة الراحة</span>
               </p>
             ) : (
               <p>
@@ -173,7 +173,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               {shortPromiseBody}
             </p>
             <div className="w-full mt-2 rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-xs text-slate-600">
-            <span className="font-semibold text-slate-700">المناورة:</span>{" "}
+            <span className="font-semibold text-slate-700">الخطوة:</span>{" "}
               {result.mission_label} —{" "}
               <span className="font-semibold text-slate-700">{result.mission_goal}</span>
             </div>
@@ -182,7 +182,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
 
         {!summaryOnly && (
           <>
-            <div className="p-5 bg-sky-50/60 border border-sky-200 rounded-xl text-right mb-6 shadow-sm">
+            <div className="p-5 card-unified bg-sky-50/70 border border-sky-200 text-right mb-6">
               <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
                 <span>🔍</span> {result.understanding_title}
               </h3>
@@ -191,16 +191,16 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               </p>
             </div>
 
-            <div className="p-5 bg-violet-50/60 border border-violet-200 rounded-xl text-right mb-6 shadow-sm">
+            <div className="p-5 card-unified bg-violet-50/70 border border-violet-200 text-right mb-6">
               <h3 className="text-sm font-bold text-violet-900 mb-2 flex items-center gap-2">
                 {result.explanation_title}
               </h3>
               <p className="text-sm text-gray-700 leading-relaxed">{result.explanation_body}</p>
             </div>
 
-            <div className="p-5 bg-amber-50/70 border border-amber-200 rounded-xl text-right mb-6 shadow-sm">
+            <div className="p-5 card-unified bg-amber-50/80 border border-amber-200 text-right mb-6">
               <h3 className="text-sm font-bold text-amber-900 mb-3 flex items-center gap-2">
-                <span>🎒</span> العتاد المطلوب
+                <span>🎒</span> أدواتك المطلوبة
               </h3>
               <ul className="space-y-2 text-sm text-slate-700">
                 {result.requirements.map((item, index) => {
@@ -256,7 +256,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
 
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-700">
               <div className="flex flex-col gap-1">
-                <span className="font-semibold text-slate-800">لو جاهز، ابدأ المناورة</span>
+                <span className="font-semibold text-slate-800">لو جاهز، ابدأ خطوتك</span>
                 <span className="text-xs text-slate-500">تقدر تتابع التنفيذ في شاشة مستقلة.</span>
               </div>
               <div className="flex flex-col items-end gap-2">
@@ -280,9 +280,9 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               </div>
             </div>
 
-            <div className="p-5 bg-emerald-50/60 border border-emerald-200 rounded-xl text-right mb-6 shadow-sm">
+            <div className="p-5 card-unified bg-emerald-50/70 border border-emerald-200 text-right mb-6">
               <h3 className="text-sm font-bold text-emerald-900 mb-3 flex items-center gap-2">
-                <span>🗺️</span> خطة المناورة
+                <span>🗺️</span> خطة الخطوة
               </h3>
               <ol className="space-y-2 text-sm text-slate-700 list-decimal list-inside">
                 {result.steps.map((step, index) => (
@@ -293,9 +293,9 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               </ol>
             </div>
 
-            <div className="p-5 bg-rose-50/55 border border-rose-200 rounded-xl text-right mb-6 shadow-sm">
+            <div className="p-5 card-unified bg-rose-50/70 border border-rose-200 text-right mb-6">
               <h3 className="text-sm font-bold text-rose-900 mb-3 flex items-center gap-2">
-                <span>⚠️</span> الكمائن المتوقعة
+                <span>⚠️</span> التحديات المتوقعة
               </h3>
               <ul className="space-y-2 text-sm text-slate-700">
                 {normalizedObstacles.map((item, index) => {
@@ -348,7 +348,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               </ul>
             </div>
 
-            <div className="p-5 bg-slate-50 border border-slate-300 rounded-xl text-right mb-6 shadow-sm">
+            <div className="p-5 card-unified bg-slate-50/90 border border-slate-300 text-right mb-6">
               <h3 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
                 <span>🎯</span> {result.suggested_zone_title}
               </h3>

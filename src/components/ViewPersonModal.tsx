@@ -38,12 +38,12 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   const diagnosis = viewData?.diagnosis ?? null;
   const relationshipToneText = useMemo(() => {
     const label = diagnosis?.stateLabel ?? "";
-    if (diagnosis?.isEmotionalCaptivity) return "في هدوء خارجي، بس لسه محتاجين نقفل الاختراق الداخلي.";
-    if (label.includes("رمادية")) return "في هدوء خارجي، بس لسه محتاجين نقفل الاختراق الداخلي.";
-    if (label.includes("حمراء") || label.includes("استنزاف")) return "الجبهة دي ضاغطة، وأولوية المرحلة حماية الموارد.";
-    if (label.includes("صفراء")) return "في إشارات استنزاف، ومع ضبط الدرع الوضع يتحسن بسرعة.";
-    if (label.includes("خضراء")) return "الجبهة متوازنة، والهدف الحفاظ على الاستقرار.";
-    return "ده ملخص وضع الجبهة الحالي عشان القرار يبقى أوضح.";
+    if (diagnosis?.isEmotionalCaptivity) return "في هدوء خارجي، بس لسه محتاجين نقفل الضغط الداخلي.";
+    if (label.includes("رمادية")) return "في هدوء خارجي، بس لسه محتاجين نقفل الضغط الداخلي.";
+    if (label.includes("حمراء") || label.includes("استنزاف")) return "المدار ده ضاغط، وأولوية المرحلة حماية طاقتك.";
+    if (label.includes("صفراء")) return "في إشارات ضغط، ومع ضبط المساحة الوضع يتحسن بسرعة.";
+    if (label.includes("خضراء")) return "المدار متوازن، والهدف الحفاظ على الاستقرار.";
+    return "ده ملخص وضع المدار الحالي عشان القرار يبقى أوضح.";
   }, [diagnosis?.isEmotionalCaptivity, diagnosis?.stateLabel]);
 
   // توليد تشخيص / فهم / هدف مخصص من الذكاء الاصطناعي، مربوط بكل ما نعرفه عن الشخص
@@ -174,7 +174,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               ) : (
                 <>
                   <div className="mb-5 rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-center">
-                    <p className="text-xs font-semibold text-teal-800">قراءة الجبهة الحالية</p>
+                    <p className="text-xs font-semibold text-teal-800">قراءة المدار الحالي</p>
                     <h3 className="mt-1 text-xl font-extrabold leading-tight text-slate-900">
                       علاقتك مع{" "}
                       <span className="inline-block max-w-[72vw] truncate align-bottom text-teal-700 sm:max-w-full" title={node.label}>

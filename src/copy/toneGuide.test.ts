@@ -3,15 +3,15 @@ import { buildToneSystemBlock, resolveVoiceMode } from "./toneGuide";
 import type { PulseEntry } from "../state/pulseState";
 
 describe("tone guide", () => {
-  it("resolves low energy as field medic", () => {
-    expect(resolveVoiceMode(2)).toBe("field_medic");
+  it("resolves low energy as warm healer", () => {
+    expect(resolveVoiceMode(2)).toBe("warm_healer");
   });
 
-  it("resolves high energy as motivator", () => {
-    expect(resolveVoiceMode(9)).toBe("general_motivator");
+  it("resolves high energy as gentle companion", () => {
+    expect(resolveVoiceMode(9)).toBe("gentle_companion");
   });
 
-  it("builds a tone block with tactical dictionary", () => {
+  it("builds a tone block with orbital dictionary", () => {
     const pulse: PulseEntry = {
       energy: 5,
       mood: "calm",
@@ -19,7 +19,7 @@ describe("tone guide", () => {
       timestamp: Date.now()
     };
     const block = buildToneSystemBlock(pulse);
-    expect(block).toContain("القاموس التكتيكي");
-    expect(block).toContain("جبهة / ملف");
+    expect(block).toContain("مفردات المدار");
+    expect(block).toContain("مدار / شخص");
   });
 });

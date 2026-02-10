@@ -1,36 +1,36 @@
 /**
- * روح الحراسة (Guardian / Tactical RPG)
- * المستخدم = قائد ميداني بيحمي مملكته. المصطلحات بتخدم "غرفة العمليات".
+ * مفردات المدار (Orbital Vocabulary)
+ * المستخدم = شخص في مركز مداره، بيفهم مساحته ويحدد مسافاته.
  */
 export const guardianCopy = {
   /** الصفحة الرئيسية */
-  commandCenter: "مركز القيادة",
-  ctaEnter: "ادخل مركز القيادة",
-  ctaMobilize: "استنفار",
-  /** المهام والخطة */
-  fieldMissions: "مهمات الميدان",
-  defenseProtocol: "بروتوكول الدفاع",
-  recoveryPlan: "بروتوكول الدفاع",
+  commandCenter: "محطة الانطلاق",
+  ctaEnter: "ادخل محطة الانطلاق",
+  ctaMobilize: "خطوة جديدة",
+  /** الخطوات والمسار */
+  fieldMissions: "خطوات الرحلة",
+  defenseProtocol: "مسار الحماية",
+  recoveryPlan: "مسار الحماية",
   /** الأدوات */
-  activateShield: "تفعيل الدرع",
-  signalJamming: "تشويش الإشارة",
-  quarantineZone: "منطقة العزل",
-  /** الجبهات والعلاقات */
-  front: "جبهة",
-  internalBreach: "اختراق داخلي",
-  /** المسارات (معروفين بالفعل) */
-  pathProtection: "درع الحماية",
-  pathDetox: "الصيام الشعوري",
+  activateShield: "ثبّت مساحتك",
+  signalJamming: "هدوء مؤقت",
+  quarantineZone: "مساحة الراحة",
+  /** العلاقات والمدارات */
+  front: "مدار",
+  internalBreach: "ضغط داخلي",
+  /** المسارات */
+  pathProtection: "مسار الحماية",
+  pathDetox: "مساحة الراحة",
   /** نبرة التشجيع */
-  holdPosition: "ثبت موقعك",
-  enemyRetreated: "العدو تراجع",
-  shieldActive: "الدرع مفعّل",
+  holdPosition: "ثبّت مكانك",
+  enemyRetreated: "المسافة اشتغلت",
+  shieldActive: "مساحتك محمية",
   /** الخريطة */
-  myTerritory: "مملكتك",
-  noEntryWithoutPermission: "الدايرة الأولى.. بداية الحكاية.",
-  threatLevel: "مستوى التهديد",
-  /** لوحة القيادة */
-  dashboardTitle: "مركز القيادة",
-  whatYouDoHere: "مهماتك في الميدان",
-  inventory: "العتاد",
+  myTerritory: "مساحتك",
+  noEntryWithoutPermission: "المدار الأول.. بداية الحكاية.",
+  threatLevel: "مستوى التأثير",
+  /** لوحة الرحلة */
+  dashboardTitle: "محطة الانطلاق",
+  whatYouDoHere: "خطواتك في الرحلة",
+  inventory: "أدواتك",
 };

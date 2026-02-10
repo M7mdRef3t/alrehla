@@ -2,10 +2,10 @@ import { STANDARD_OPTIONS_MAP } from "./standardOptions";
 
 export const feelingCopy = {
   title: "إحساسك مع الشخص ده",
-  body: "جاوب عن مشاعرك الحقيقية:",
-  q1: "بعد ما تقابله — طاقتك تنخفض وجسمك يتعب؟",
-  q2: "بتفكر فيه طول الوقت بدون اختيار؟",
-  q3: "لو بعدت عنه أو قلت لا — بتحس بذنب أو خوف؟",
+  body: "جاوب من إحساسك الحقيقي:",
+  q1: "بعد ما تقابله — بتحس إن طاقتك اتسحبت؟",
+  q2: "بتلاقي نفسك بتفكر فيه من غير ما تختار؟",
+  q3: "لو حطيت مسافة أو قلت لأ — بتحس بذنب أو خوف؟",
   /** صيغة قياسية: دايماً/جداً، أحياناً، نادراً، أبداً/لأ */
   options: {
     often: STANDARD_OPTIONS_MAP.high,
@@ -13,6 +13,5 @@ export const feelingCopy = {
     rarely: STANDARD_OPTIONS_MAP.low,
     never: STANDARD_OPTIONS_MAP.zero
   } as const,
-  cta: "التالي: فين الشخص في حياتك؟"
+  cta: "يلا نكمل: فين الشخص في مدارك؟"
 };
-

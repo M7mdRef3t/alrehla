@@ -61,10 +61,10 @@ export const TodayTaskStrip: FC<TodayTaskStripProps> = ({ onOpenRecoveryPlan }) 
       type="button"
       onClick={() => onOpenRecoveryPlan(task.nodeId)}
       className="w-full text-right rounded-xl border-2 border-teal-200 dark:border-teal-700 bg-teal-50/80 dark:bg-teal-900/30 px-3 py-2.5 hover:bg-teal-100 dark:hover:bg-teal-900/50 transition-colors group"
-      title={`${task.taskTitle} — لـ ${task.nodeLabel}. اضغط لفتح بروتوكول الدفاع.`}
+      title={`${task.taskTitle} — لـ ${task.nodeLabel}. اضغط لفتح مسار الحماية.`}
     >
       <p className="text-xs font-semibold text-teal-800 dark:text-teal-200 mb-0.5">
-        مهمة اليوم
+        خطوة اليوم
       </p>
       <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-2 group-hover:text-teal-700 dark:group-hover:text-teal-300">
         {task.taskTitle}
@@ -74,7 +74,7 @@ export const TodayTaskStrip: FC<TodayTaskStripProps> = ({ onOpenRecoveryPlan }) 
       </p>
       <span className="inline-flex items-center gap-1 text-xs text-teal-600 dark:text-teal-400 mt-1">
         <Target className="w-3.5 h-3.5" />
-        افتح البروتوكول
+        افتح مسار الحماية
       </span>
     </button>
   );

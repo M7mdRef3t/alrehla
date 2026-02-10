@@ -267,10 +267,10 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                type="button"
                onClick={() => onOpenJourneyTools?.()}
                 className="w-full flex items-center gap-3 rounded-xl bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100/70 dark:hover:bg-teal-900/40 transition-all text-right shrink-0 whitespace-nowrap"
-               title="لوحة العمليات"
+               title="أدوات الرحلة"
              >
                <Compass className="w-5 h-5 shrink-0" />
-               لوحة العمليات
+               أدوات الرحلة
              </button>
            )}
            <button
@@ -304,7 +304,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           {activeMissions.length > 0 && (
             <div className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 text-right">
               <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
-                <span>الجبهات المفتوحة</span>
+                <span>المدارات النشطة</span>
                 <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5">
                   {activeMissions.length}
                 </span>
@@ -372,7 +372,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           {archivedMissions.length > 0 && (
             <div className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 px-3 py-3 text-right">
               <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
-                <span>الأرشيف التكتيكي</span>
+                <span>الأرشيف</span>
                 <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5">
                   {archivedMissions.length}
                 </span>
@@ -414,7 +414,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               title="تدرب على سيناريوهات حقيقية قبل ما تبدأ"
             >
               <Target className="w-5 h-5 shrink-0" />
-              تجربة ميدانية سريعة
+              تجربة سريعة
             </button>
           )}
           <button
@@ -424,7 +424,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             title="قائمة الأهداف"
           >
             <ArrowLeft className="w-5 h-5 shrink-0" />
-            ابدأ مهمتك
+            ابدأ رحلتك
           </button>
           <button
             type="button"
@@ -516,10 +516,10 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             type="button"
             onClick={() => { setInitialRecoveryOptions(null); setShowRecoveryPlan(true); }}
             className="w-full flex items-center gap-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 px-4 py-3 text-sm font-semibold hover:border-teal-400 hover:bg-teal-50 hover:text-teal-700 transition-all text-right shrink-0 whitespace-nowrap"
-            title="مهمات الميدان — بروتوكول الدفاع"
+            title="خطوات الرحلة — مسار الحماية"
           >
             <Target className="w-5 h-5 shrink-0" />
-            مهمات الميدان
+            خطوات الرحلة
           </button>
           <button
             type="button"
@@ -574,7 +574,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           
           {/* فاصل */}
           <div className="border-t border-slate-200 dark:border-slate-700 my-2" />
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-1 pt-0.5 pb-0.5 text-right" title="أدوات سريعة — تشويش الإشارة، تنفس، بروتوكول الدفاع">
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-1 pt-0.5 pb-0.5 text-right" title="أدوات سريعة — تشويش الإشارة، تنفس، مسار الحماية">
             {guardianCopy.inventory}
           </p>
           {/* أزرار الدعم والطوارئ */}
@@ -598,7 +598,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             title="تمرين تنفس للهدوء"
           >
             <Wind className="w-5 h-5 shrink-0" />
-            ثبت موقعك
+            ثبّت مكانك
           </button>
           <button
             type="button"
@@ -617,7 +617,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         {/* تاب صغير ظاهر دايماً — تحريك الماوس عليه يفتح الشريط */}
         <div
           className="h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-600 text-white border-l border-teal-700 shadow-md cursor-default py-4"
-          title="افتح مركز القيادة"
+          title="افتح محطة الانطلاق"
         >
           <PanelRightOpen className="w-5 h-5" />
         </div>
@@ -628,7 +628,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         type="button"
         onClick={handleOpen}
         className="fixed top-4 right-4 z-40 md:hidden w-12 h-12 flex items-center justify-center bg-teal-600 text-white rounded-full shadow-lg active:scale-95 transition-transform"
-        title="افتح مركز القيادة"
+        title="افتح محطة الانطلاق"
       >
         <PanelRightOpen className="w-6 h-6" />
       </button>
@@ -656,7 +656,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             >
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">مركز القيادة</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">محطة الانطلاق</h2>
                 <button
                   type="button"
                   onClick={handleClose}
@@ -679,7 +679,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right"
                   >
                     <Target className="w-6 h-6 shrink-0" />
-                    <span>تجربة ميدانية سريعة</span>
+                    <span>تجربة سريعة</span>
                   </button>
                 )}
                 <button
@@ -691,7 +691,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   className="w-full flex items-center gap-3 rounded-xl bg-teal-600 text-white px-4 py-3 text-sm font-semibold active:scale-95 hover:bg-teal-700 dark:hover:bg-teal-600 transition-all text-right"
                 >
                   <ArrowLeft className="w-6 h-6 shrink-0" />
-                  <span>ابدأ مهمتك</span>
+                  <span>ابدأ رحلتك</span>
                 </button>
                 <button
                   type="button"
@@ -725,7 +725,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     className="w-full flex items-center gap-3 rounded-xl bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100/70 dark:hover:bg-teal-900/40 transition-all text-right"
                   >
                     <Compass className="w-6 h-6 shrink-0" />
-                    <span>لوحة العمليات</span>
+                    <span>أدوات الرحلة</span>
                   </button>
                 )}
                 <button
@@ -764,7 +764,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 {activeMissions.length > 0 && (
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
                     <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
-                      <span>الجبهات المفتوحة</span>
+                      <span>المدارات النشطة</span>
                       <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5">
                         {activeMissions.length}
                       </span>
@@ -838,7 +838,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 {archivedMissions.length > 0 && (
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 p-3">
                     <div className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
-                      <span>الأرشيف التكتيكي</span>
+                      <span>الأرشيف</span>
                       <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5">
                         {archivedMissions.length}
                       </span>
@@ -943,7 +943,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   className="w-full flex items-center gap-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-700 transition-all text-right"
                 >
                   <Target className="w-6 h-6 shrink-0" />
-                  <span>مهمات الميدان</span>
+                  <span>خطوات الرحلة</span>
                 </button>
                 <button
                   type="button"
@@ -1043,7 +1043,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   className="w-full flex items-center gap-3 rounded-xl bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-all text-right"
                 >
                   <Wind className="w-6 h-6 shrink-0" />
-                  <span>ثبت موقعك</span>
+                  <span>ثبّت مكانك</span>
                 </button>
                 <button
                   type="button"

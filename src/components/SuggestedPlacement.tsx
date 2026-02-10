@@ -36,10 +36,10 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
           <CheckCircle2 className="w-6 h-6 text-green-600 shrink-0 mt-0.5" />
           <div className="flex-1">
             <h3 className="text-base font-bold text-green-900 mb-1">
-              ✅ الجبهة في مكانها الصح
+              ✅ المدار في مكانه الصح
             </h3>
             <p className="text-sm text-green-800 leading-relaxed">
-              جبهتك مع <span className="font-bold">{personLabel}</span> مستقرة ومتوازنة.
+              مدارك مع <span className="font-bold">{personLabel}</span> مستقر ومتوازن.
               كمّل بنفس الإيقاع.
             </p>
           </div>
@@ -48,7 +48,7 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
         {/* Maintenance Steps */}
         <div className="mt-4 pt-4 border-t border-green-200">
           <p className="text-xs font-semibold text-green-900 mb-2">
-            💡 للحفاظ على استقرار الجبهة:
+            💡 للحفاظ على استقرار المدار:
           </p>
           <ul className="space-y-2">
             {placement.steps.map((step, index) => (
@@ -75,11 +75,11 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
           <AlertTriangle className="w-6 h-6 text-red-600 shrink-0 mt-0.5" />
           <div className="flex-1">
             <h3 className="text-base font-bold text-red-900 mb-1">
-              🛡️ درعك شغال.. إنت في المكان الصح
+              🛡️ مساحتك محمية.. إنت في المكان الصح
             </h3>
             <p className="text-sm text-red-800 leading-relaxed">
-              الجبهة مع <span className="font-bold">{personLabel}</span> مستنزفة.
-              ثبّت الحدود الصارمة وكمل حماية مواردك.
+              المدار مع <span className="font-bold">{personLabel}</span> بياخد من طاقتك.
+              ثبّت الحدود الصارمة وكمل حماية طاقتك.
             </p>
           </div>
         </div>
@@ -118,7 +118,7 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
             🎯 التموضع الصحيح المقترح
           </h3>
           <p className="text-xs text-purple-800">
-            بناءً على القراءة، ده أنسب تموضع للجبهة عشان تحمي مواردك وتقلل النزيف.
+            بناءً على القراءة، ده أنسب تموضع للمدار عشان تحمي طاقتك وتقلل الضغط.
           </p>
         </div>
       </div>
@@ -176,7 +176,7 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
         <p className="text-xs font-semibold text-slate-900 mb-3 flex items-center gap-2">
           <span>🎯</span>
           <span>
-            إزاي تنقل جبهتك مع {personLabel} للتموضع الصح:
+            إزاي تنقل مدارك مع {personLabel} للتموضع الصح:
           </span>
         </p>
         <ul className="space-y-2.5">
@@ -196,8 +196,8 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
       {/* Important Note */}
       <div className="mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded-lg">
         <p className="text-xs text-yellow-900 leading-relaxed">
-          <span className="font-bold">⚠️ مهم:</span> النقل محتاج ثبات تكتيكي.
-          أي تنازل بدري ممكن يرجّع الجبهة للمنطقة الحمراء.
+          <span className="font-bold">⚠️ مهم:</span> النقل محتاج ثبات.
+          أي تنازل بدري ممكن يرجّع المدار للمنطقة الحمراء.
         </p>
       </div>
     </motion.div>

@@ -52,7 +52,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
   const testOptions: { value: TestAnswer; label: string; color: string }[] = [
     { value: "green", label: "هدوء / استقرار", color: "bg-teal-100 border-teal-400 text-teal-800" },
     { value: "yellow", label: "حذر / شدّ", color: "bg-amber-100 border-amber-400 text-amber-800" },
-    { value: "red", label: "نزيف / ضجيج / اختناق", color: "bg-rose-100 border-rose-400 text-rose-800" }
+    { value: "red", label: "ضغط / ضجيج / اختناق", color: "bg-rose-100 border-rose-400 text-rose-800" }
   ];
   const setTestAnswer = (qIndex: 0 | 1 | 2, value: TestAnswer) => {
     setTestAnswers((prev) => {
@@ -65,7 +65,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
   const testResult: TestAnswer | null = testComplete
     ? (testAnswers.includes("red") ? "red" : testAnswers.includes("yellow") ? "yellow" : "green")
     : null;
-  const testResultLabel = testResult === "green" ? "🟢 هدوء / استقرار" : testResult === "yellow" ? "🟡 حذر / شدّ" : testResult === "red" ? "🔴 نزيف / ضجيج / اختناق" : null;
+  const testResultLabel = testResult === "green" ? "🟢 هدوء / استقرار" : testResult === "yellow" ? "🟡 حذر / شدّ" : testResult === "red" ? "🔴 ضغط / ضجيج / اختناق" : null;
   const testResultColor = testResult === "green" ? "bg-teal-50 border-teal-300 text-teal-800" : testResult === "yellow" ? "bg-amber-50 border-amber-300 text-amber-800" : testResult === "red" ? "bg-rose-50 border-rose-300 text-rose-800" : "";
 
   // مزامنة الاختيارات مع القيم المحفوظة (عند إعادة فتح النافذة أو تغيير الشخص)
@@ -156,7 +156,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
   const weightVerdictYellow = !weightVerdictRed && totalWeight >= WEIGHT_THRESHOLD_YELLOW;
 
   const getRingLabel = (r: Ring) =>
-    r === "green" ? "تموضع آمن" : r === "yellow" ? "منطقة حذر" : "استنزاف";
+    r === "green" ? "تموضع آمن" : r === "yellow" ? "منطقة حذر" : "مدار بعيد";
 
   const getImpactCopy = () => {
     if (impactLevel === "none") return null;
@@ -164,19 +164,19 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
     const levelColor = impactLevel === "light" ? "text-teal-700 bg-teal-50 border-teal-200" : impactLevel === "medium" ? "text-amber-800 bg-amber-50 border-amber-200" : "text-rose-800 bg-rose-50 border-rose-200";
     const summaries: Record<Ring, Record<"light" | "medium" | "high", string>> = {
       green: {
-        light: "الجبهة مستقرة والتأثير محدود. كمل على نفس القواعد.",
-        medium: "الجبهة في تموضع آمن، بس في إشارات محتاجة مراقبة وضبط درع.",
-        high: "حتى مع تموضع آمن، الإشارات كتير. راجع المسافة لو لسه النزيف مستمر."
+        light: "المدار مستقر والتأثير محدود. كمل على نفس القواعد.",
+        medium: "المدار في تموضع آمن، بس في إشارات محتاجة مراقبة وضبط مساحة.",
+        high: "حتى مع تموضع آمن، الإشارات كتير. راجع المسافة لو لسه الضغط مستمر."
       },
       yellow: {
-        light: "الجبهة في منطقة حذر والتأثير خفيف. تفعيل الدرع بدري يمنع الانزلاق.",
-        medium: "إشارات الحذر واضحة. محتاج بروتوكول استعادة وحدود أوضح.",
-        high: "الجبهة قربت من الخطر. لازم مسافة أوضح وقواعد أقوى فورًا."
+        light: "المدار في منطقة حذر والتأثير خفيف. ثبّت مساحتك بدري يمنع الانزلاق.",
+        medium: "إشارات الحذر واضحة. محتاج مسار حماية وحدود أوضح.",
+        high: "المدار قرب من الخطر. لازم مسافة أوضح وقواعد أقوى فورًا."
       },
       red: {
-        light: "الجبهة مستنزفة حتى لو الإشارات قليلة. الدرع الصارم ضروري.",
-        medium: "الاستنزاف واضح. محتاج بروتوكول استعادة مع حدود حاسمة.",
-        high: "الاستنزاف شديد. لازم مساحة آمنة فورًا وتخفيف الاحتكاك لأقل درجة."
+        light: "المدار بياخد من طاقتك حتى لو الإشارات قليلة. حماية المساحة ضرورية.",
+        medium: "الضغط واضح. محتاج مسار حماية مع حدود حاسمة.",
+        high: "الضغط شديد. لازم مساحة آمنة فورًا وتخفيف الاحتكاك لأقل درجة."
       }
     };
     const summary = summaries[ring][impactLevel];
@@ -188,7 +188,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
   return (
     <div className="space-y-3">
       <p className="text-sm font-semibold text-purple-900 text-right">
-        📋 اختار كل الإشارات اللي ظهرت مع جبهة {personLabel}
+        📋 اختار كل الإشارات اللي ظهرت مع مدار {personLabel}
       </p>
 
       {/* تابات الفئات */}
@@ -296,14 +296,14 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
         >
           <div className="flex flex-wrap items-center justify-end gap-2 mb-2">
             <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/80">درجة التأثير: {impactCopy.levelText}</span>
-            {impactCopy.relationshipLabel && <span className="text-xs font-semibold">حالة الجبهة: {impactCopy.relationshipLabel}</span>}
+            {impactCopy.relationshipLabel && <span className="text-xs font-semibold">حالة المدار: {impactCopy.relationshipLabel}</span>}
             {dominantLabels && <span className="text-xs font-semibold">الغالب: {dominantLabels}</span>}
             <span className="text-xs text-slate-600">نقاط: {totalWeight}</span>
           </div>
           <p className="text-sm leading-relaxed">{impactCopy.summary}</p>
           {(weightVerdictRed || weightVerdictYellow) && (
             <p className={`text-xs font-bold mt-2 pt-2 border-t border-current/20 ${weightVerdictRed ? "text-rose-700" : "text-amber-700"}`} dir="rtl">
-              {weightVerdictRed ? "🛑 الرادار حسمها: الجبهة دي في أحمر واضح." : "⚠ إجمالي الإشارات في منطقة حذر: ثبّت الدرع فورًا."}
+              {weightVerdictRed ? "🛑 الرادار حسمها: المدار ده في أحمر واضح." : "⚠ إجمالي الإشارات في منطقة حذر: ثبّت مساحتك فورًا."}
             </p>
           )}
         </motion.div>
@@ -316,7 +316,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
           onClick={() => setShowHealthyRef((v) => !v)}
           className="w-full flex items-center justify-between gap-2 px-3 py-2 text-xs font-semibold text-teal-800 text-right"
         >
-          <span>🟢 مرجع: مؤشرات الجبهة الآمنة</span>
+          <span>🟢 مرجع: مؤشرات المدار الآمن</span>
           {showHealthyRef ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronLeft className="w-4 h-4 shrink-0 rotate-180" />}
         </button>
         {showHealthyRef && (

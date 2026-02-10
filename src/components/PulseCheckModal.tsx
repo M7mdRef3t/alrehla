@@ -8,7 +8,7 @@ import { energyColorHex, energyPct } from "../utils/pulseUi";
 interface PulseCheckModalProps {
   isOpen: boolean;
   context?: "regular" | "start_recovery";
-  onSubmit: (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean }) => void;
+  onSubmit: (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => void;
   onClose: () => void;
 }
 
@@ -35,58 +35,65 @@ const FOCUS_LABELS: Record<string, string> = {
   none_new: "ولا حاجة، جاي أكتشف"
 };
 
-const MOOD_STYLE: Record<
-  PulseMood,
-  { selected: string; hover: string; ring: string }
-> = {
+/* ── Cosmic Mood Colors ── */
+const MOOD_COSMIC: Record<PulseMood, { bg: string; border: string; glow: string; text: string }> = {
   bright: {
-    selected: "bg-yellow-300 text-slate-900 border-yellow-400 shadow-sm",
-    hover: "hover:bg-yellow-50 hover:border-yellow-200 hover:text-yellow-900",
-    ring: "focus-visible:ring-yellow-400"
+    bg: "rgba(250, 204, 21, 0.15)",
+    border: "rgba(250, 204, 21, 0.4)",
+    glow: "0 0 20px rgba(250, 204, 21, 0.25)",
+    text: "#facc15"
   },
   calm: {
-    selected: "bg-teal-500 text-white border-teal-600 shadow-sm",
-    hover: "hover:bg-teal-50 hover:border-teal-200 hover:text-teal-800",
-    ring: "focus-visible:ring-teal-400"
+    bg: "rgba(45, 212, 191, 0.15)",
+    border: "rgba(45, 212, 191, 0.4)",
+    glow: "0 0 20px rgba(45, 212, 191, 0.25)",
+    text: "#2dd4bf"
   },
   anxious: {
-    selected: "bg-amber-500 text-white border-amber-600 shadow-sm",
-    hover: "hover:bg-amber-50 hover:border-amber-200 hover:text-amber-800",
-    ring: "focus-visible:ring-amber-400"
+    bg: "rgba(251, 191, 36, 0.15)",
+    border: "rgba(251, 191, 36, 0.4)",
+    glow: "0 0 20px rgba(251, 191, 36, 0.25)",
+    text: "#fbbf24"
   },
   angry: {
-    selected: "bg-rose-500 text-white border-rose-600 shadow-sm",
-    hover: "hover:bg-rose-50 hover:border-rose-200 hover:text-rose-800",
-    ring: "focus-visible:ring-rose-400"
+    bg: "rgba(248, 113, 113, 0.15)",
+    border: "rgba(248, 113, 113, 0.4)",
+    glow: "0 0 20px rgba(248, 113, 113, 0.25)",
+    text: "#f87171"
   },
   sad: {
-    selected: "bg-sky-500 text-white border-sky-600 shadow-sm",
-    hover: "hover:bg-sky-50 hover:border-sky-200 hover:text-sky-800",
-    ring: "focus-visible:ring-sky-400"
+    bg: "rgba(96, 165, 250, 0.15)",
+    border: "rgba(96, 165, 250, 0.4)",
+    glow: "0 0 20px rgba(96, 165, 250, 0.25)",
+    text: "#60a5fa"
   }
 };
 
-const FOCUS_STYLE: Record<PulseFocus, { selected: string; hover: string; ring: string }> = {
-  event: {
-    selected: "bg-teal-500 text-white border-teal-600 shadow-sm",
-    hover: "hover:bg-teal-50 hover:border-teal-200 hover:text-teal-800",
-    ring: "focus-visible:ring-teal-400"
-  },
-  thought: {
-    selected: "bg-amber-500 text-white border-amber-600 shadow-sm",
-    hover: "hover:bg-amber-50 hover:border-amber-200 hover:text-amber-800",
-    ring: "focus-visible:ring-amber-400"
-  },
-  body: {
-    selected: "bg-rose-500 text-white border-rose-600 shadow-sm",
-    hover: "hover:bg-rose-50 hover:border-rose-200 hover:text-rose-800",
-    ring: "focus-visible:ring-rose-400"
-  },
-  none: {
-    selected: "bg-emerald-500 text-white border-emerald-600 shadow-sm",
-    hover: "hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-800",
-    ring: "focus-visible:ring-emerald-400"
-  }
+const FOCUS_COSMIC: Record<PulseFocus, { bg: string; border: string; text: string }> = {
+  event: { bg: "rgba(45, 212, 191, 0.12)", border: "rgba(45, 212, 191, 0.3)", text: "#2dd4bf" },
+  thought: { bg: "rgba(167, 139, 250, 0.12)", border: "rgba(167, 139, 250, 0.3)", text: "#a78bfa" },
+  body: { bg: "rgba(248, 113, 113, 0.12)", border: "rgba(248, 113, 113, 0.3)", text: "#f87171" },
+  none: { bg: "rgba(45, 212, 191, 0.08)", border: "rgba(45, 212, 191, 0.2)", text: "#2dd4bf" }
+};
+
+/* ── Energy → Background Gradient (ambient color shift) ── */
+function energyGradient(energy: number): string {
+  if (energy <= 2) return "radial-gradient(ellipse at 50% 60%, rgba(248, 113, 113, 0.12) 0%, transparent 60%)";
+  if (energy <= 4) return "radial-gradient(ellipse at 50% 60%, rgba(251, 191, 36, 0.1) 0%, transparent 60%)";
+  if (energy <= 6) return "radial-gradient(ellipse at 50% 60%, rgba(45, 212, 191, 0.08) 0%, transparent 55%)";
+  if (energy <= 8) return "radial-gradient(ellipse at 50% 60%, rgba(45, 212, 191, 0.12) 0%, transparent 55%)";
+  return "radial-gradient(ellipse at 50% 60%, rgba(45, 212, 191, 0.18) 0%, rgba(139, 92, 246, 0.06) 40%, transparent 65%)";
+}
+
+/* ── Cosmic Fade Animation ── */
+const cosmicUp = {
+  hidden: { opacity: 0, y: 20, filter: "blur(8px)" },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.6, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }
+  })
 };
 
 export const PulseCheckModal: FC<PulseCheckModalProps> = ({
@@ -99,8 +106,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [energy, setEnergy] = useState(5);
   const [mood, setMood] = useState<PulseMood>("calm");
   const [focus, setFocus] = useState<PulseFocus>("none");
+  const [notes, setNotes] = useState("");
   const fillHex = energyColorHex(energy);
-  // Range is 1..10, so normalize using (value-min)/(max-min) to match the thumb position.
   const pct = energyPct(energy, { min: 1, max: 10 });
 
   useEffect(() => {
@@ -108,139 +115,266 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     setEnergy(5);
     setMood("calm");
     setFocus("none");
+    setNotes("");
   }, [isOpen]);
 
   const handleSubmit = () => {
-    onSubmit({ energy, mood, focus });
+    onSubmit({ energy, mood, focus, notes: notes.trim() || undefined });
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          {/* ── Full-screen cosmic backdrop — reacts to energy ── */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `
+                ${energyGradient(energy)},
+                radial-gradient(ellipse at 20% 30%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(45, 212, 191, 0.06) 0%, transparent 45%),
+                var(--space-void, #0a0a1a)
+              `,
+              transition: "background 0.8s ease"
+            }}
             onClick={onClose}
           />
+
+          {/* ── Floating star particles ── */}
+          <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 rounded-full"
+                style={{
+                  background: "rgba(255, 255, 255, 0.3)",
+                  top: `${15 + i * 14}%`,
+                  left: `${10 + (i * 17) % 80}%`
+                }}
+                animate={{
+                  opacity: [0.2, 0.6, 0.2],
+                  scale: [1, 1.5, 1]
+                }}
+                transition={{
+                  duration: 3 + i * 0.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 0.4
+                }}
+              />
+            ))}
+          </div>
+
+          {/* ── Glass Card Content ── */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            className="relative z-10 w-[calc(100%-2rem)] max-w-md max-h-[90vh] overflow-y-auto no-scrollbar"
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96 }}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md mx-auto bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden"
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              background: "rgba(15, 20, 50, 0.7)",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              borderRadius: "1.5rem",
+              boxShadow: "0 24px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05)"
+            }}
           >
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-              <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">ضبط البوصلة</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">النبض اللحظي قبل كل شيء</p>
-              </div>
+            {/* ── Header ── */}
+            <div className="flex items-center justify-between p-5">
+              <motion.div custom={0} variants={cosmicUp} initial="hidden" animate="visible">
+                <h2
+                  className="text-lg font-bold"
+                  style={{ color: "var(--text-primary)", letterSpacing: "0.04em" }}
+                >
+                  ضبط البوصلة
+                </h2>
+                <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                  النبض اللحظي قبل كل شيء
+                </p>
+              </motion.div>
               <button
                 type="button"
                 onClick={onClose}
-                className="w-9 h-9 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center"
+                className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+                style={{ color: "var(--text-muted)", background: "rgba(255, 255, 255, 0.05)" }}
+                aria-label="إغلاق"
               >
-                <X className="w-5 h-5 text-slate-500" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">مؤشر طاقتك 🔋</label>
+            {/* ── Content ── */}
+            <div className="px-5 pb-5 space-y-5">
+
+              {/* ── Energy Slider — The Emotional Compass Core ── */}
+              <motion.div className="space-y-3" custom={1} variants={cosmicUp} initial="hidden" animate="visible">
+                <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                  مؤشر طاقتك
+                </label>
+
+                {/* Cosmic energy orb — breathing visualization */}
+                <div className="flex justify-center py-3">
+                  <motion.div
+                    className="relative w-20 h-20 rounded-full flex items-center justify-center"
+                    style={{
+                      background: `radial-gradient(circle at 40% 35%, ${fillHex}40, ${fillHex}15 60%, transparent 80%)`,
+                      boxShadow: `0 0 ${energy * 4}px ${fillHex}30, inset 0 0 20px ${fillHex}10`,
+                      border: `1.5px solid ${fillHex}40`
+                    }}
+                    animate={{
+                      scale: [1, 1 + energy * 0.008, 1],
+                      boxShadow: [
+                        `0 0 ${energy * 3}px ${fillHex}20`,
+                        `0 0 ${energy * 6}px ${fillHex}40`,
+                        `0 0 ${energy * 3}px ${fillHex}20`
+                      ]
+                    }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <span className="text-2xl font-bold" style={{ color: fillHex }}>
+                      {energy}
+                    </span>
+                  </motion.div>
+                </div>
+
+                {/* Slider track */}
                 <div className="relative w-full py-2">
-                  <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 rounded-full bg-slate-200 dark:bg-slate-600" />
                   <div
-                    className="absolute right-0 top-1/2 -translate-y-1/2 h-2 rounded-full"
-                    style={{ width: `${pct}%`, backgroundColor: fillHex }}
+                    className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 rounded-full"
+                    style={{ background: "rgba(255, 255, 255, 0.08)" }}
+                  />
+                  <div
+                    className="absolute right-0 top-1/2 -translate-y-1/2 h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${pct}%`,
+                      background: `linear-gradient(90deg, ${fillHex}80, ${fillHex})`,
+                      boxShadow: `0 0 12px ${fillHex}40`
+                    }}
                   />
                   <input
                     type="range"
                     min={1}
                     max={10}
                     value={energy}
-                    onChange={(e) => {
-                      setEnergy(Number(e.target.value));
-                    }}
+                    onChange={(e) => setEnergy(Number(e.target.value))}
                     className="pulse-range relative w-full"
-                    style={
-                      {
-                        accentColor: fillHex,
-                        "--pulse-fill": fillHex
-                      } as React.CSSProperties
-                    }
+                    style={{ accentColor: fillHex, "--pulse-fill": fillHex } as React.CSSProperties}
                   />
                 </div>
-                <div className="flex items-center justify-between text-xs text-slate-500">
+                <div className="flex items-center justify-between text-xs" style={{ color: "var(--text-muted)" }}>
                   <span>فاصل شحن</span>
-                  <span className="font-semibold">{energy}/10</span>
+                  <span className="font-semibold" style={{ color: fillHex }}>{energy}/10</span>
                   <span>فايق ومستعد</span>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">الطقس الداخلي 🌦️</label>
+              {/* ── Mood — Inner Weather ── */}
+              <motion.div className="space-y-3" custom={2} variants={cosmicUp} initial="hidden" animate="visible">
+                <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                  الطقس الداخلي
+                </label>
                 <div className="flex flex-wrap gap-2">
-                  {MOODS.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        setMood(item.id);
-                      }}
-                      className={`inline-flex items-center gap-1 px-3 py-2 rounded-xl border text-xs font-semibold transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                        mood === item.id
-                          ? `${MOOD_STYLE[item.id].selected} ${MOOD_STYLE[item.id].ring}`
-                          : `border-slate-200 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-slate-300 ${MOOD_STYLE[item.id].hover} focus-visible:ring-slate-300`
-                      }`}
-                    >
-                      <span>{item.emoji}</span>
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">التركيز الحالي 🎯</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {FOCUS_OPTIONS_BASE.map((item) => {
-                    const label =
-                      item.id === "none"
-                        ? FOCUS_LABELS[isStartRecovery ? "none_new" : "none_returning"]
-                        : FOCUS_LABELS[item.labelKey];
+                  {MOODS.map((item) => {
+                    const isSelected = mood === item.id;
+                    const mStyle = MOOD_COSMIC[item.id];
                     return (
-                      <button
+                      <motion.button
                         key={item.id}
                         type="button"
-                        onClick={() => {
-                          setFocus(item.id);
+                        onClick={() => setMood(item.id)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
+                        style={{
+                          background: isSelected ? mStyle.bg : "rgba(255, 255, 255, 0.05)",
+                          border: `1px solid ${isSelected ? mStyle.border : "rgba(255, 255, 255, 0.08)"}`,
+                          color: isSelected ? mStyle.text : "var(--text-secondary)",
+                          boxShadow: isSelected ? mStyle.glow : "none"
                         }}
-                        className={`px-3 py-2 rounded-xl border text-xs font-semibold transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-                          focus === item.id
-                            ? `${FOCUS_STYLE[item.id].selected} ${FOCUS_STYLE[item.id].ring}`
-                            : `border-slate-200 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-slate-300 ${FOCUS_STYLE[item.id].hover} focus-visible:ring-slate-300`
-                        }`}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        {label}
-                      </button>
+                        <span className="text-base">{item.emoji}</span>
+                        {item.label}
+                      </motion.button>
                     );
                   })}
                 </div>
-              </div>
-            </div>
+              </motion.div>
 
-            <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 flex gap-3">
-              <button
-                type="button"
-                onClick={handleSubmit}
-                className="flex-1 rounded-full bg-teal-600 text-white py-3 text-sm font-semibold hover:bg-teal-700 transition-all"
-              >
-                {isStartRecovery ? "احفظ القراية وادخل" : "جاهز"}
-              </button>
+              {/* ── Focus — Current Anchor ── */}
+              <motion.div className="space-y-3" custom={3} variants={cosmicUp} initial="hidden" animate="visible">
+                <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                  التركيز الحالي
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {FOCUS_OPTIONS_BASE.map((item) => {
+                    const isSelected = focus === item.id;
+                    const label = item.id === "none"
+                      ? FOCUS_LABELS[isStartRecovery ? "none_new" : "none_returning"]
+                      : FOCUS_LABELS[item.labelKey];
+                    const fStyle = FOCUS_COSMIC[item.id];
+                    return (
+                      <motion.button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setFocus(item.id)}
+                        className="px-3 py-2.5 rounded-xl text-xs font-semibold transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
+                        style={{
+                          background: isSelected ? fStyle.bg : "rgba(255, 255, 255, 0.04)",
+                          border: `1px solid ${isSelected ? fStyle.border : "rgba(255, 255, 255, 0.06)"}`,
+                          color: isSelected ? fStyle.text : "var(--text-secondary)"
+                        }}
+                        whileTap={{ scale: 0.96 }}
+                      >
+                        {label}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+
+              {/* ── Notes — Optional Depth ── */}
+              <motion.div className="space-y-2" custom={4} variants={cosmicUp} initial="hidden" animate="visible">
+                <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                  لو حابب تشرح أكتر
+                </label>
+                <textarea
+                  rows={3}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="اكتب جملة أو موقف: أنا مخنوق عشان حصل كذا..."
+                  className="w-full rounded-xl px-4 py-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0 resize-none"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.04)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    color: "var(--text-primary)",
+                    letterSpacing: "0.02em"
+                  }}
+                />
+              </motion.div>
+
+              {/* ── Submit — Cosmic CTA ── */}
+              <motion.div custom={5} variants={cosmicUp} initial="hidden" animate="visible">
+                <motion.button
+                  type="button"
+                  onClick={handleSubmit}
+                  className="w-full cta-primary py-3.5 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0"
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {isStartRecovery ? "احفظ القراية وادخل" : "جاهز"}
+                </motion.button>
+              </motion.div>
             </div>
           </motion.div>
-        </>
+        </motion.div>
       )}
     </AnimatePresence>
   );

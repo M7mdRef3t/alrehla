@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Readex+Pro:wght@500;600;700&family=IBM+Plex+Sans:wght@300;400;500&display=swap");
 
 /* ════════════════════════════════════════════════
    🌌 AL-REHLA — COSMIC SANCTUARY DESIGN SYSTEM
@@ -55,7 +56,7 @@
   }
 
   body {
-    font-family: "IBM Plex Sans Arabic", system-ui, -apple-system, sans-serif;
+    font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
     background: linear-gradient(
       170deg,
       var(--space-void) 0%,
@@ -65,11 +66,23 @@
       var(--space-deep) 100%
     );
     color: var(--text-primary);
-    line-height: 1.75;
+    line-height: 1.8;
     letter-spacing: var(--tracking-wide);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
+  }
+
+  /* عناوين واضحة ومميزة */
+  h1,
+  h2,
+  h3,
+  h4,
+  .heading-font {
+    font-family: "Readex Pro", system-ui, -apple-system, sans-serif;
+    font-weight: 700;
+    letter-spacing: var(--tracking-wider);
+    line-height: 1.3;
   }
 
   /* إلغاء scrollbar ظاهر */
@@ -271,6 +284,32 @@
     opacity: 1;
     r: 6.5;
     filter: drop-shadow(0 0 30px rgba(45, 212, 191, 0.6));
+  }
+}
+
+/* ════════════════════════════════════════════════
+   📐 LAYOUT SYSTEM — APP SHELL & CARDS
+   ════════════════════════════════════════════════ */
+
+@layer components {
+  /* حاوية أساسية لكل الشاشات — 8pt grid + max-width */
+  .app-shell-main {
+    @apply w-full max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-8;
+  }
+
+  /* لوحة رئيسية في المنتصف — للمحتوى الأساسي (Landing / Map / Mission..) */
+  .app-panel-main {
+    @apply w-full max-w-2xl mx-auto rounded-3xl bg-slate-900/90 border border-slate-800 shadow-xl px-4 sm:px-8 py-6 sm:py-8;
+  }
+
+  /* كارت موحّد صغير — يستخدم للكروت العامة */
+  .card-unified {
+    @apply rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md;
+  }
+
+  /* سطح موحّد للمودالات الكبيرة / النوافذ العائمة (Chat, Overlays) */
+  .modal-surface {
+    @apply rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md;
   }
 }
 

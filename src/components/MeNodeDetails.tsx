@@ -102,7 +102,7 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
               className="mb-6 p-4 rounded-xl bg-white/15 border border-white/20"
             >
               <p className="text-sm text-white/95 mb-3">
-                تحب نعمل وضع &quot;الدرع&quot; (Shield Mode) ونخفي إشعارات الناس اللي في الأحمر دلوقتي؟
+                تحب نحمي مساحتك ونخفي إشعارات الناس اللي في الأحمر دلوقتي؟
               </p>
               <div className="flex gap-2">
                 <button
@@ -111,7 +111,7 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
                   className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/25 hover:bg-white/35 text-sm font-semibold"
                 >
                   <Shield className="w-4 h-4" />
-                  تفعيل الدرع
+                  ثبّت مساحتك
                 </button>
                 <button
                   type="button"
@@ -123,7 +123,7 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
               </div>
               {shieldMode && (
                 <p className="mt-2 text-xs text-white/80">
-                  وضع الدرع مفعّل — إشعارات الأحمر مخفية.
+                  مساحتك محمية — إشعارات الأحمر مخفية.
                 </p>
               )}
             </motion.div>

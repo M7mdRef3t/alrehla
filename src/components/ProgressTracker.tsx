@@ -15,16 +15,16 @@ export const ProgressTracker: FC<ProgressTrackerProps> = ({
   
   const milestones = [
     { label: "البداية", percent: 0 },
-    { label: "تثبيت الموقع", percent: 20 },
+    { label: "تثبيت المكان", percent: 20 },
     { label: "فك النمط", percent: 40 },
-    { label: "درع ثابت", percent: 70 },
-    { label: "سيطرة كاملة", percent: 100 }
+    { label: "مساحة ثابتة", percent: 70 },
+    { label: "استقرار كامل", percent: 100 }
   ];
 
   return (
     <div className="mt-6 p-5 bg-gradient-to-br from-teal-50 to-blue-50 rounded-xl border border-teal-200">
       <h3 className="text-lg font-bold text-slate-900 mb-4 text-center">
-        📊 تقدمك في بروتوكول الدفاع
+        📊 تقدمك في مسار الحماية
       </h3>
 
       {/* Progress Bar */}
@@ -53,7 +53,7 @@ export const ProgressTracker: FC<ProgressTrackerProps> = ({
         <p className="text-2xl font-bold text-teal-700">
           {completedSteps} <span className="text-slate-400">/</span> {totalSteps}
         </p>
-        <p className="text-sm text-slate-600 mt-1">مناورة مكتملة</p>
+        <p className="text-sm text-slate-600 mt-1">خطوة مكتملة</p>
       </div>
 
       {/* Milestones */}
@@ -118,12 +118,12 @@ export const ProgressTracker: FC<ProgressTrackerProps> = ({
       {/* Encouragement Message */}
       <div className="mt-6 p-4 bg-white rounded-lg border border-teal-200">
         <p className="text-sm text-center text-slate-700 leading-relaxed">
-          {percentage === 0 && "🎯 ثبّت موقعك وابدأ أول مناورة."}
+          {percentage === 0 && "🎯 ثبّت مكانك وابدأ أول خطوة."}
           {percentage > 0 && percentage < 30 && "💪 بداية قوية. كمّل بنفس الإيقاع."}
-          {percentage >= 30 && percentage < 60 && "🌟 القراءة أوضح والسيطرة بتزيد."}
-          {percentage >= 60 && percentage < 90 && "🔥 ممتاز. باقي خطوة أو خطوتين على الحسم."}
-          {percentage >= 90 && percentage < 100 && "🎊 قربت توصل لسيطرة كاملة."}
-          {percentage === 100 && "🎉 ممتاز! الجبهة تحت سيطرتك."}
+          {percentage >= 30 && percentage < 60 && "🌟 القراءة أوضح والاستقرار بيزيد."}
+          {percentage >= 60 && percentage < 90 && "🔥 ممتاز. باقي خطوة أو خطوتين على الاستقرار."}
+          {percentage >= 90 && percentage < 100 && "🎊 قربت توصل لاستقرار كامل."}
+          {percentage === 100 && "🎉 ممتاز! المدار مستقر تحت حمايتك."}
         </p>
       </div>
     </div>

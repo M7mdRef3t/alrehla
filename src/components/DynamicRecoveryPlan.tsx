@@ -55,15 +55,15 @@ interface DynamicRecoveryPlanProps {
 }
 
 function getPlanTitle(personLabel: string, ring: Ring): string {
-  if (ring === "red") return `بروتوكول تأمين جبهة (${personLabel})`;
-  if (ring === "yellow") return `بروتوكول توازن جبهة (${personLabel})`;
-  return `بروتوكول تعزيز جبهة (${personLabel})`;
+  if (ring === "red") return `مسار حماية مدار (${personLabel})`;
+  if (ring === "yellow") return `مسار توازن مدار (${personLabel})`;
+  return `مسار تعزيز مدار (${personLabel})`;
 }
 
 function buildInsightFromSymptoms(selectedSymptoms: string[]): string {
   if (selectedSymptoms.length === 0) return "";
   const labels = selectedSymptoms.map(getSymptomLabel).join(" و ");
-  return `بناءً على إشارات (${labels})، ركزنا في الأسبوع الأول على تأمين درعك الداخلي وحدودك بدون قسوة.`;
+  return `بناءً على إشارات (${labels})، ركزنا في الأسبوع الأول على حماية مساحتك الداخلية وحدودك بدون قسوة.`;
 }
 
 const LAST_N_DAYS = 14;
@@ -124,13 +124,13 @@ const PathProgressPanel: FC<{
   return (
     <div className="p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-right">
       <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-3">
-        <span>📊</span> لوحة القيادة — أنت واقف فين؟
+        <span>📊</span> لوحة المتابعة — أنت واقف فين؟
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
         <div className="p-3 bg-white border border-teal-200 rounded-lg">
-          <p className="text-xs text-slate-600 mb-0.5">مناعة الجبهة</p>
-          <p className="text-lg font-bold text-teal-600">مناورات درع مُنجزة: {completedStepsCount}</p>
-          <p className="text-xs text-slate-500">كل مناورة درع بتزوّد قوة الجبهة</p>
+          <p className="text-xs text-slate-600 mb-0.5">قوة المدار</p>
+          <p className="text-lg font-bold text-teal-600">خطوات حماية مُنجزة: {completedStepsCount}</p>
+          <p className="text-xs text-slate-500">كل خطوة حماية بتزوّد قوة المدار</p>
         </div>
         <div className="p-3 bg-white border border-amber-200 rounded-lg">
           <p className="text-xs text-slate-600 mb-0.5">هدوء الرادار</p>
@@ -140,9 +140,9 @@ const PathProgressPanel: FC<{
           <p className="text-xs text-slate-500">{avgMood != null ? "متوسط آخر 7 أيام" : "كل ما قل الضجيج، المؤشر يزيد"}</p>
         </div>
         <div className="p-3 bg-white border border-violet-200 rounded-lg">
-          <p className="text-xs text-slate-600 mb-0.5">تحكم ميداني</p>
-          <p className="text-lg font-bold text-violet-600">أيام حسم: {completedDaysCount}</p>
-          <p className="text-xs text-slate-500">كل يوم حسم بيثبّت سيطرتك</p>
+          <p className="text-xs text-slate-600 mb-0.5">تقدم عملي</p>
+          <p className="text-lg font-bold text-violet-600">أيام إنجاز: {completedDaysCount}</p>
+          <p className="text-xs text-slate-500">كل يوم إنجاز بيثبّت استقرارك</p>
         </div>
       </div>
       {pathId === "path_detox" && onUpdateBoundaryLegitimacyScore && (
@@ -376,7 +376,7 @@ const PathEngineBlock: FC<{
                         className="mt-3 w-full py-2.5 px-4 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
                       >
                         <CheckCircle2 className="w-4 h-4" />
-                        المناورة اتنفذت ✅
+                        الخطوة اتنفذت ✅
                       </button>
                     )}
                     {!isCurrentDone && moodPromptForTaskId === currentTask.id && (
@@ -614,7 +614,7 @@ const DetachmentCurriculaBlock: FC<{ personLabel: string }> = ({ personLabel }) 
   if (loading) {
     return (
       <div className="p-4 bg-slate-100 border border-slate-200 rounded-xl text-right">
-        <p className="text-sm text-slate-600">جاري تجهيز بروتوكولات الاستعادة...</p>
+        <p className="text-sm text-slate-600">جاري تجهيز مسارات الحماية...</p>
       </div>
     );
   }
@@ -622,7 +622,7 @@ const DetachmentCurriculaBlock: FC<{ personLabel: string }> = ({ personLabel }) 
   return (
     <div className="space-y-4 p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-right">
       <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-        <span>📚</span> بروتوكولات الاستعادة
+        <span>📚</span> مسارات الحماية
       </h3>
       <p className="text-sm font-semibold text-slate-700">{result.status_title}</p>
       <p className="text-sm text-slate-600 leading-relaxed">{result.deep_explanation}</p>
@@ -775,7 +775,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
       <div className="p-6 bg-teal-50 border-2 border-teal-300 rounded-xl text-center">
         <Sparkles className="w-8 h-8 text-teal-600 mx-auto mb-3 animate-pulse" />
         <p className="text-sm font-semibold text-teal-900 mb-2">جاري تجهيز مسار الاستعادة...</p>
-        <p className="text-xs text-teal-800">بنصمّم مناورات الأسبوع الأول مخصوص ليك.</p>
+        <p className="text-xs text-teal-800">بنصمّم خطوات الأسبوع الأول مخصوص ليك.</p>
       </div>
     );
   }
@@ -789,8 +789,8 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
         </p>
         <p className="text-xs text-purple-800">
           {geminiClient.isAvailable() 
-            ? 'الذكاء الاصطناعي بيحلل تقاريرك ويبني بروتوكول مخصص ليك...'
-            : 'بنحلل تقاريرك وبنبني بروتوكول مخصص ليك...'}
+            ? 'الذكاء الاصطناعي بيحلل تقاريرك ويبني مسار مخصص ليك...'
+            : 'بنحلل تقاريرك وبنبني مسار مخصص ليك...'}
         </p>
       </div>
     );
@@ -1020,7 +1020,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
               )}
             </div>
             <p className="text-sm text-purple-800">
-              من واقع المواقف اللي سجلتها، جهزنا بروتوكول استعادة مخصص ليك على مدار {plan.totalWeeks} أسابيع
+              من واقع المواقف اللي سجلتها، جهزنا مسار حماية مخصص ليك على مدار {plan.totalWeeks} أسابيع
             </p>
           </div>
         </div>
@@ -1147,8 +1147,8 @@ const WeekCard: FC<WeekCardProps> = ({
 
   const whyBoxText =
     selectedSymptoms.length > 0
-      ? `لأن جبهتك مع (${personLabel}) فيها ${selectedSymptoms.map(getSymptomLabel).join(" + ")}، فالتركيز هنا على تقوية الدرع وحدودك بدون قسوة.`
-      : `التركيز هنا على تقوية الدرع ووضوح احتياجاتك مع (${personLabel}).`;
+      ? `لأن مدارك مع (${personLabel}) فيه ${selectedSymptoms.map(getSymptomLabel).join(" + ")}، فالتركيز هنا على حماية مساحتك وحدودك بدون قسوة.`
+      : `التركيز هنا على حماية مساحتك ووضوح احتياجاتك مع (${personLabel}).`;
 
   return (
     <div className="border-2 border-purple-200 rounded-xl overflow-hidden bg-white">
@@ -1195,7 +1195,7 @@ const WeekCard: FC<WeekCardProps> = ({
         <div className="p-5 space-y-4 text-right border-t-2 border-purple-200">
           {/* Why Box */}
           <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl">
-            <p className="text-xs font-semibold text-amber-900 mb-1">💡 ليه المناورات دي؟</p>
+            <p className="text-xs font-semibold text-amber-900 mb-1">💡 ليه الخطوات دي؟</p>
             <p className="text-sm text-amber-800">{whyBoxText}</p>
           </div>
 
@@ -1361,7 +1361,7 @@ const ActionItem: FC<ActionItemProps> = ({
               className="mt-3 w-full py-2.5 px-4 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               <CheckCircle2 className="w-4 h-4" />
-              المناورة اتنفذت ✅
+              الخطوة اتنفذت ✅
             </button>
           )}
           {isCompleted && (
@@ -1380,7 +1380,7 @@ const ActionItem: FC<ActionItemProps> = ({
                 className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
               >
                 <HelpCircle className="w-3.5 h-3.5" />
-                حاسس إن المناورة دي مش مناسبة؟
+                حاسس إن الخطوة دي مش مناسبة؟
               </button>
               {showFeedbackOptions && (
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -1411,7 +1411,7 @@ const ActionItem: FC<ActionItemProps> = ({
               )}
               {stepFeedbackValue && (
                 <p className="mt-1 text-xs text-purple-600">
-                  ملاحظتك اتسجلت — هنظبط المناورات الجاية عليها
+                  ملاحظتك اتسجلت — هنظبط الخطوات الجاية عليها
                 </p>
               )}
             </div>

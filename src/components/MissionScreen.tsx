@@ -55,7 +55,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
   const scenarioTheme: Record<ResultScenarioKey, { title: string; description: string; tone: string; border: string; accent: string }> = {
     emergency: {
       title: "رسالة طوارئ",
-      description: "أولوية قصوى: أمّن موقعك أولًا، وبعدها نفّذ بهدوء ومن غير استعجال.",
+      description: "أولوية قصوى: أمّن مكانك أولًا، وبعدها نفّذ بهدوء ومن غير استعجال.",
       tone: "from-rose-50 to-rose-100",
       border: "border-rose-200",
       accent: "text-rose-800"
@@ -90,7 +90,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
     },
     safe_harbor: {
       title: "رسالة امتنان",
-      description: "الجبهات الآمنة محتاجة رعاية مستمرة. خطوتك اليوم استثمار ذكي.",
+      description: "المدارات الآمنة محتاجة رعاية مستمرة. خطوتك اليوم استثمار ذكي.",
       tone: "from-teal-50 to-emerald-50",
       border: "border-teal-200",
       accent: "text-teal-800"
@@ -147,9 +147,9 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
           <ArrowRight className="w-4 h-4" />
           رجوع للخريطة
         </button>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900 mb-2">المناورة غير جاهزة دلوقتي</h2>
-          <p className="text-sm text-slate-600">لازم يكون ملف الجبهة فيه قراءة محفوظة عشان تشتغل المناورة.</p>
+        <div className="card-unified bg-white/90 p-6 text-left">
+          <h2 className="text-lg font-bold text-slate-900 mb-2">الخطوة مش جاهزة دلوقتي</h2>
+          <p className="text-sm text-slate-600">لازم يكون ملف المدار فيه قراءة محفوظة عشان تشتغل الخطوة.</p>
         </div>
       </div>
     );
@@ -186,7 +186,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
           `}</style>
           <div className="absolute inset-x-0 -top-6 flex justify-center pointer-events-none z-20">
             <div className="rounded-full bg-emerald-600 text-white px-4 py-2 text-xs font-semibold shadow-lg animate-bounce">
-              إنجاز جديد: المناورة اتحسمت 🎉
+              إنجاز جديد: الخطوة اتنفذت 🎉
             </div>
           </div>
         </>
@@ -200,9 +200,9 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
         رجوع للخريطة
       </button>
 
-      <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mb-6 card-unified bg-white/90 p-6 text-left">
         <h1 className="text-2xl font-bold text-slate-900 mb-2">
-          مناورة جبهة {node.label}
+          خطوة مدار {node.label}
         </h1>
         <p className="text-sm text-slate-600">
           الهدف المباشر: <span className="font-semibold text-slate-800">{result.mission_label} — {result.mission_goal}</span>
@@ -213,7 +213,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
           <div className="text-xs text-slate-500">
-            التقدم الميداني: {completedSteps}/{totalSteps}
+            التقدم: {completedSteps}/{totalSteps}
           </div>
           <div className="flex flex-wrap gap-2 items-center">
             <button
@@ -222,7 +222,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
               disabled={missionStarted}
               className={`rounded-full bg-slate-900 text-white px-4 py-2 text-xs font-semibold shadow hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed ${missionStarted && !missionCompleted ? "animate-pulse ring-2 ring-emerald-400/60 ring-offset-2" : ""}`}
             >
-              {missionStarted ? "المناورة شغالة" : "ابدأ المناورة"}
+              {missionStarted ? "الخطوة شغالة" : "ابدأ الخطوة"}
             </button>
             {missionStarted && !missionCompleted && (
               <span className="text-xs text-emerald-600 font-medium">نشط الآن</span>
@@ -233,7 +233,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
                 onClick={() => resetMission(node.id)}
                 className="rounded-full bg-white text-slate-700 px-4 py-2 text-xs font-semibold border border-slate-200 hover:border-slate-300"
               >
-                إعادة ضبط المناورة
+                إعادة ضبط الخطوة
               </button>
             ) : null}
           </div>
@@ -241,22 +241,22 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
       </div>
 
       {missionCompleted && (
-        <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-right">
+        <div className="mb-6 card-unified bg-emerald-50/90 border border-emerald-200 p-5 text-right">
           <h2 className="text-sm font-bold text-emerald-900 mb-2">تثبيت المكسب</h2>
           <p className="text-sm text-emerald-800 leading-relaxed">
-            نفّذت المناورة بنجاح. الاستمرارية هي اللي بتحوّل المكسب لسيطرة ثابتة.
+            نفّذت الخطوة بنجاح. الاستمرارية هي اللي بتحوّل المكسب لاستقرار ثابت.
           </p>
           {completionDate && (
             <p className="mt-2 text-xs text-emerald-700">
-              تاريخ حسم المناورة: {completionDate}
+              تاريخ إتمام الخطوة: {completionDate}
             </p>
           )}
         </div>
       )}
 
-      <div className="p-5 bg-amber-50 border-2 border-amber-200 rounded-xl text-right mb-6">
+      <div className="p-5 card-unified bg-amber-50/80 border border-amber-200 text-right mb-6">
         <h3 className="text-sm font-bold text-amber-900 mb-3 flex items-center gap-2">
-          <span>🎒</span> العتاد المطلوب
+          <span>🎒</span> أدواتك المطلوبة
         </h3>
         <ul className="space-y-2 text-sm text-slate-700">
           {result.requirements.map((item, index) => {
@@ -307,10 +307,10 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
         )}
       </div>
 
-      <div className="p-5 bg-emerald-50 border-2 border-emerald-200 rounded-xl text-right mb-6">
+      <div className="p-5 card-unified bg-emerald-50/80 border border-emerald-200 text-right mb-6">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
-            <span>🗺️</span> خطة المناورة
+            <span>🗺️</span> خطة الخطوة
           </h3>
           <span className="text-xs text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-full px-2 py-1">
             التقدم: {completedSteps}/{totalSteps}
@@ -348,8 +348,8 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
       </div>
 
       {canComplete && (
-        <div className="mb-6 rounded-xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-700 flex flex-wrap items-center justify-between gap-3">
-          <span className="font-semibold text-slate-800">كل خطوات المناورة اتحسمت ✔️</span>
+        <div className="mb-6 card-unified bg-white/80 px-4 py-3 text-sm text-slate-700 flex flex-wrap items-center justify-between gap-3">
+          <span className="font-semibold text-slate-800">كل الخطوات اتنفذت ✔️</span>
           <button
             type="button"
             onClick={() => {
@@ -363,9 +363,9 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
         </div>
       )}
 
-      <div className="p-5 bg-rose-50 border-2 border-rose-200 rounded-xl text-right mb-6">
+      <div className="p-5 card-unified bg-rose-50/80 border border-rose-200 text-right mb-6">
         <h3 className="text-sm font-bold text-rose-900 mb-3 flex items-center gap-2">
-          <span>⚠️</span> الكمائن المتوقعة
+          <span>⚠️</span> التحديات المتوقعة
         </h3>
         <ul className="space-y-2 text-sm text-slate-700">
           {result.obstacles.map((item, index) => {

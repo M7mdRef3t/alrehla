@@ -38,10 +38,10 @@ export const RecoveryPlanView: FC<RecoveryPlanViewProps> = ({
       {/* Header */}
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-slate-900 mb-2">
-          بروتوكول الدفاع - {plan.duration} يوم
+          مسار الحماية - {plan.duration} يوم
         </h2>
         <p className="text-sm text-gray-600">
-          بروتوكول ميداني لتأمين جبهتك مع {personLabel}
+          مسار عملي لحماية مدارك مع {personLabel}
         </p>
       </div>
 
@@ -55,7 +55,7 @@ export const RecoveryPlanView: FC<RecoveryPlanViewProps> = ({
       <div className="mt-6 space-y-3">
         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-blue-600" />
-          مهمات الميدان الأسبوعية
+          خطوات الرحلة الأسبوعية
         </h3>
         
         {plan.weeks.map((week) => {

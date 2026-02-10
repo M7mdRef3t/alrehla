@@ -32,7 +32,7 @@ const cosmicFade = {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] }
+    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }
   }
 };
 
@@ -306,11 +306,11 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/* ── Status Cards (Pulse Modes) ── */}
       {pulseMode === "low" && (
         <motion.div
-          className="mt-5 mx-auto max-w-md glass-card status-card-low px-5 py-4 text-right"
+          className="mt-5 mx-auto max-w-md card-unified status-card-low px-4 py-4 text-right"
           variants={cosmicFade}
         >
           <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-            الطاقة منخفضة.. أولويتنا وقف النزيف
+            الطاقة منخفضة.. أولويتنا وقف الضغط
           </p>
           <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
             نفّذ خطوة صيانة واحدة وبس، من غير أي اشتباك.
@@ -330,11 +330,11 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         <>
       {pulseMode === "angry" && (
         <motion.div
-          className="mt-5 mx-auto max-w-md glass-card status-card-angry px-5 py-4 text-right"
+          className="mt-5 mx-auto max-w-md card-unified status-card-angry px-4 py-4 text-right"
           variants={cosmicFade}
         >
           <p className="text-sm font-semibold" style={{ color: "var(--ring-danger)" }}>
-            الرادار بيقول ضجيج عالي.. ثبّت موقعك الأول
+            الرادار بيقول ضجيج عالي.. ثبّت مكانك الأول
           </p>
           <p className="text-xs mt-1" style={{ color: "rgba(248, 113, 113, 0.7)" }}>
             قبل أي قرار، افصل الشوشرة وارجع للتحكم.
@@ -351,11 +351,11 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {pulseMode === "high" && (
         <motion.div
-          className="mt-5 mx-auto max-w-md glass-card status-card-high px-5 py-4 text-right"
+          className="mt-5 mx-auto max-w-md card-unified status-card-high px-4 py-4 text-right"
           variants={cosmicFade}
         >
           <p className="text-sm font-semibold" style={{ color: "var(--ring-safe)" }}>
-            طاقتك جاهزة.. وقت حسم جبهة
+            طاقتك جاهزة.. وقت حسم مدار
           </p>
           <p className="text-xs mt-1" style={{ color: "rgba(45, 212, 191, 0.7)" }}>
             {challengeLabel ?? "جاهز لمناورة النهاردة؟"}
@@ -381,7 +381,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           className={`glass-button px-4 py-2.5 text-sm font-semibold ${
             galaxyMode ? "glass-button-active" : ""
           }`}
-          title={galaxyMode ? "رجوع لسياق واحد" : "عرض كل الجبهات"}
+          title={galaxyMode ? "رجوع لسياق واحد" : "عرض كل المدارات"}
         >
           {galaxyMode ? (
             <EditableText id="map_view_single_cta" defaultText={mapCopy.viewSingleCta} page="map" editOnClick={false} />
@@ -473,7 +473,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {/* ── Pulse Insight ── */}
       {pulseInsight && (
-        <motion.div className="mt-4 mx-auto max-w-md glass-card status-card-insight px-5 py-4 text-right" variants={cosmicFade}>
+        <motion.div className="mt-4 mx-auto max-w-md card-unified status-card-insight px-4 py-4 text-right" variants={cosmicFade}>
           <p className="text-xs font-semibold" style={{ color: "rgba(167, 139, 250, 0.9)" }}>{pulseInsight.title}</p>
           <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(167, 139, 250, 0.6)" }}>{pulseInsight.body}</p>
           <button
@@ -519,7 +519,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/* ── Empty state ── */}
       {nodes.length === 0 && !showOnboarding && !journeyMode && (
         <motion.div
-          className="mt-6 mx-auto max-w-sm p-5 glass-card text-center"
+          className="mt-6 mx-auto max-w-sm p-4 card-unified text-center"
           style={{ borderStyle: "dashed", borderColor: "rgba(255, 255, 255, 0.1)" }}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -607,7 +607,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           </button>
           {!canCompleteJourneyStep && nodes.length > 0 && (
             <p className="text-sm max-w-xs text-center" style={{ color: "var(--text-muted)" }}>
-              افتح الجبهة، راجع النتيجة وبروتوكول الدفاع أو كمّل التدريب، وبعدها اضغط "كمل الرحلة"
+              افتح المدار، راجع النتيجة ومسار الحماية أو كمّل التدريب، وبعدها اضغط "كمل الرحلة"
             </p>
           )}
         </div>

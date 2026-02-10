@@ -8,8 +8,8 @@
 -- 5. (اختياري) لترقية حسابك لـ owner: شغّل الاستعلام في نهاية الملف بعد ما تحط id حسابك
 -- =============================================================================
 
--- ---------- Schema ----------
 create extension if not exists "pgcrypto";
+create extension if not exists vector with schema public;
 
 create table if not exists system_settings (
   key text primary key,
@@ -70,6 +70,22 @@ create table if not exists admin_reports (
   payload jsonb not null,
   created_at timestamptz not null default now()
 );
+
+create table if not exists consciousness_vectors (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users (id),
+  content text not null,
+  embedding vector(768) not null,
+  created_at timestamptz not null default now()
+);
+
+alter table if exists consciousness_vectors
+  add column if not exists source text;
+
+alter table if exists consciousness_vectors
+  add column if not exists hidden boolean not null default false,
+  add column if not exists tags text[],
+  add column if not exists manual_notes text;
 
 create table if not exists journey_events (
   id uuid primary key default gen_random_uuid(),
@@ -155,6 +171,75 @@ create index if not exists user_state_updated_at_idx on user_state (updated_at d
 create unique index if not exists user_state_owner_idx on user_state (owner_id) where owner_id is not null;
 create index if not exists profiles_last_seen_idx on profiles (last_seen desc);
 create index if not exists admin_reports_created_at_idx on admin_reports (created_at desc);
+create index if not exists consciousness_vectors_embedding_cosine_idx
+  on public.consciousness_vectors
+  using ivfflat (embedding vector_cosine_ops)
+  with (lists = 100);
+
+create or replace function public.match_consciousness_vectors(
+  query_embedding vector(768),
+  match_limit int default 5,
+  match_threshold float default 0.2
+)
+returns table (
+  id uuid,
+  user_id uuid,
+  content text,
+  similarity float,
+  created_at timestamptz,
+  source text,
+  tags text[],
+  manual_notes text
+)
+language plpgsql
+as $$
+begin
+  return query
+  select
+    cv.id,
+    cv.user_id,
+    cv.content,
+    1 - (cv.embedding <=> query_embedding) as similarity,
+    cv.created_at,
+    cv.source,
+    cv.tags,
+    cv.manual_notes
+  from public.consciousness_vectors as cv
+  where cv.hidden is not true
+    and 1 - (cv.embedding <=> query_embedding) >= match_threshold
+  order by cv.embedding <=> query_embedding
+  limit match_limit;
+end;
+$$;
+
+create or replace function public.get_consciousness_archive(limit_count int default 200)
+returns table (
+  id uuid,
+  user_id uuid,
+  content text,
+  source text,
+  created_at timestamptz,
+  tags text[],
+  manual_notes text,
+  hidden boolean
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    cv.id,
+    cv.user_id,
+    cv.content,
+    cv.source,
+    cv.created_at,
+    cv.tags,
+    cv.manual_notes,
+    cv.hidden
+  from public.consciousness_vectors as cv
+  order by cv.created_at desc
+  limit limit_count;
+$$;
 
 -- ---------- RLS ----------
 alter table system_settings enable row level security;
@@ -180,6 +265,11 @@ create policy admin_broadcasts_service_role on admin_broadcasts for all
 alter table admin_reports enable row level security;
 drop policy if exists admin_reports_service_role on admin_reports;
 create policy admin_reports_service_role on admin_reports for all
+  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+
+alter table consciousness_vectors enable row level security;
+drop policy if exists consciousness_vectors_service_role on consciousness_vectors;
+create policy consciousness_vectors_service_role on consciousness_vectors for all
   using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
 
 alter table journey_events enable row level security;

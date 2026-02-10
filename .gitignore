@@ -40,3 +40,5 @@ test-results/
 # Temp files
 *.tmp
 .cache/
+.claude/
+supabase/.temp/

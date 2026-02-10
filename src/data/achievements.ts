@@ -1,11 +1,11 @@
 /**
- * تعريفات الإنجازات — نصوص داعمة ومحفزة لاستكمال الرحلة
+ * تعريفات الإنجازات — نصوص دافئة ومحفزة لاستكمال الرحلة
  */
 export interface Achievement {
   id: string;
   title: string;
   description: string;
-  /** رسالة قصيرة عند الفتح — تحفيز */
+  /** رسالة قصيرة عند الفتح — تشجيع */
   hint: string;
   icon: string;
   /** ترتيب العرض */
@@ -17,55 +17,55 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "first_step",
     title: "أول خطوة",
     description: "أضفت أول شخص على الخريطة",
-    hint: "بداية جميلة! كل رحلة تبدأ بخطوة.",
+    hint: "بداية حلوة! كل رحلة بتبدأ بخطوة.",
     icon: "🌱",
     order: 1
   },
   {
     id: "writer",
     title: "كاتب",
-    description: "كتبت أول موقف",
-    hint: "الكتابة بتخلّي الصورة أوضح. استمر.",
+    description: "سجّلت أول موقف",
+    hint: "الكتابة بتوضّح الصورة. كمّل.",
     icon: "✍️",
     order: 2
   },
   {
     id: "plan_seeker",
-    title: "مخلص",
-    description: "كتبت موقفين وفتحت الخطة",
-    hint: "خطتك المخصصة جاهزة. خطوة قوية!",
+    title: "صاحب مسار",
+    description: "سجّلت موقفين وفتحت مسار الحماية",
+    hint: "مسارك المخصص جاهز. خطوة جميلة!",
     icon: "📋",
     order: 3
   },
   {
     id: "trained",
-    title: "متدرب",
-    description: "خلصت تدريب مع شخص",
-    hint: "التدرب على الحدود بيقوّيك. فخورين بيك.",
+    title: "متمرّس",
+    description: "خلّصت تمرين مع شخص",
+    hint: "التمرّن على المسافات بيقوّيك. فخورين بيك.",
     icon: "🎯",
     order: 4
   },
   {
     id: "growing_map",
-    title: "خريطتك تنمو",
-    description: "عندك 3 أشخاص على الخريطة",
-    hint: "واضح إنك جاد في فهم علاقاتك. كمل.",
+    title: "خريطتك بتكبر",
+    description: "عندك ٣ أشخاص على الخريطة",
+    hint: "واضح إنك جاد في فهم مداراتك. كمّل.",
     icon: "🗺️",
     order: 5
   },
   {
     id: "boundary_keeper",
-    title: "صاحب حدود",
-    description: "عندك 5 أشخاص على الخريطة",
-    hint: "إنجاز كبير! أنت تبني مساحتك بوضوح.",
+    title: "صاحب مساحة",
+    description: "عندك ٥ أشخاص على الخريطة",
+    hint: "إنجاز كبير! أنت بتبني مساحتك بوضوح.",
     icon: "🛡️",
     order: 6
   },
   {
     id: "measured",
-    title: "مقيس",
-    description: "خلصت القياس الأولي",
-    hint: "معرفة نقطة البداية أول خطوة للتقدّم.",
+    title: "واعي",
+    description: "خلّصت الاستكشاف الأولي",
+    hint: "معرفة نقطة البداية أول خطوة للوضوح.",
     icon: "📊",
     order: 7
   },
@@ -73,13 +73,13 @@ export const ACHIEVEMENTS: Achievement[] = [
     id: "reader",
     title: "قارئ",
     description: "فتحت المكتبة التعليمية",
-    hint: "المعرفة سلاحك. استمر تتعلم.",
+    hint: "المعرفة بتنوّر الطريق. كمّل اقرأ.",
     icon: "📚",
     order: 8
   },
   {
     id: "breather",
-    title: "هادئ",
+    title: "هادي",
     description: "استخدمت تمرين التنفس",
     hint: "إنك تهتم بنفسك ده إنجاز بحد ذاته.",
     icon: "🌬️",
@@ -87,9 +87,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: "mission_complete",
-    title: "قائد ميداني",
-    description: "أنهيت مهمة كاملة",
-    hint: "أول مهمة مكتملة… دلوقتي أنت بتقود الخطة بجد.",
+    title: "رحّال",
+    description: "خلّصت خطوة كاملة في الرحلة",
+    hint: "أول خطوة مكتملة… دلوقتي أنت ماشي بجد.",
     icon: "🏁",
     order: 10
   }

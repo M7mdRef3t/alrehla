@@ -17,7 +17,8 @@ type SystemSettingKey =
   | "system_prompt"
   | "scoring_weights"
   | "scoring_thresholds"
-  | "pulse_check_mode";
+  | "pulse_check_mode"
+  | "theme_palette";
 
 const SETTINGS_TABLE = "system_settings";
 const ADMIN_API_BASE = import.meta.env.VITE_ADMIN_API_BASE ?? "";
@@ -70,6 +71,15 @@ const toSettingMap = (rows: Array<{ key: string; value: unknown }>) => {
   rows.forEach((row) => map.set(row.key, row.value));
   return map;
 };
+
+export interface ThemePalette {
+  primary?: string; // teal — الأزرار الأساسية / النيون
+  accent?: string; // amber — التنبيهات / الهايلايت
+  nebulaBase?: string; // خلفية الفضاء الأساسية (space-mid / nebula)
+  nebulaAccent?: string; // لون التوهج الجانبي في الخلفية
+  glassBackground?: string; // درجة شفافية الكروت الزجاجية
+  glassBorder?: string; // لون حدود الكروت الزجاجية
+}
 
 async function fetchSettings(keys: SystemSettingKey[]) {
   if (!isSupabaseReady || !supabase) return null;
@@ -136,6 +146,22 @@ export async function fetchAdminConfig() {
     scoringThresholds: settings.get("scoring_thresholds") as ScoringThresholds | undefined,
     pulseCheckMode: settings.get("pulse_check_mode") as PulseCheckMode | undefined
   };
+}
+
+export async function fetchThemePalette(): Promise<ThemePalette | null> {
+  const settings = await fetchSettings(["theme_palette"]);
+  if (!settings) return null;
+  const palette = settings.get("theme_palette") as ThemePalette | undefined;
+  return palette ?? null;
+}
+
+export async function saveThemePalette(palette: ThemePalette): Promise<boolean> {
+  const apiRes = await callAdminApi<{ ok: boolean }>("config", {
+    method: "POST",
+    body: JSON.stringify({ theme_palette: palette })
+  });
+  if (apiRes?.ok) return true;
+  return saveSetting("theme_palette", palette);
 }
 
 export async function saveFeatureFlags(flags: Record<FeatureFlagKey, FeatureFlagMode>) {

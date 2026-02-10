@@ -202,7 +202,7 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
                 </div>
                 {nodes.length === 0 && (
                   <p className="text-slate-500 text-sm">
-                    مفيش جبهات في الميدان. أضف جبهة أولاً من مركز القيادة.
+                    مفيش مدارات لسه. أضف مدار أولاً من محطة الانطلاق.
                   </p>
                 )}
                 <button

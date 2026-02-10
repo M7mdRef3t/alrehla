@@ -7,6 +7,7 @@ import { useMapState } from "./state/mapState";
 import { useJourneyState } from "./state/journeyState";
 import { useAchievementState, getLibraryOpenedAt, getBreathingUsedAt } from "./state/achievementState";
 import { useThemeState } from "./state/themeState";
+import { initThemePalette } from "./services/themePalette";
 import { usePulseState } from "./state/pulseState";
 import type { PulseFocus, PulseMood } from "./state/pulseState";
 import { trackPageView, trackEvent, AnalyticsEvents } from "./services/analytics";
@@ -20,6 +21,7 @@ import { useAdminState } from "./state/adminState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "./utils/featureFlags";
 import type { FeatureFlagKey } from "./config/features";
 import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "./state/authState";
+import { consciousnessService, type MemoryMatch } from "./services/consciousnessService";
 import { initAppContentRealtime } from "./state/appContentState";
 import { InstallHintBanner } from "./components/InstallHintBanner";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
@@ -27,7 +29,6 @@ import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/Onboar
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
 import { geminiClient } from "./services/geminiClient";
 import { isSupabaseReady } from "./services/supabaseClient";
-import { consciousnessService } from "./services/consciousnessService";
 
 type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
 type PulseCheckContext = "regular" | "start_recovery";
@@ -52,6 +53,9 @@ const AchievementToast = lazy(() =>
   import("./components/AchievementToast").then((m) => ({ default: m.AchievementToast }))
 );
 const AIChatbot = lazy(() => import("./components/AIChatbot").then((m) => ({ default: m.AIChatbot })));
+const ConsciousnessArchiveModal = lazy(
+  () => import("./components/ConsciousnessArchiveModal").then((m) => ({ default: m.ConsciousnessArchiveModal }))
+);
 const EmergencyOverlay = lazy(() => import("./components/EmergencyOverlay").then((m) => ({ default: m.EmergencyOverlay })));
 const GuidedJourneyFlow = lazy(() => import("./components/GuidedJourneyFlow").then((m) => ({ default: m.GuidedJourneyFlow })));
 const MissionScreen = lazy(() => import("./components/MissionScreen").then((m) => ({ default: m.MissionScreen })));
@@ -110,6 +114,8 @@ export default function App() {
   const [showCocoon, setShowCocoon] = useState(false);
   const [showNoiseSilencingPulse, setShowNoiseSilencingPulse] = useState(false);
   const [pendingCocoonAfterNoise, setPendingCocoonAfterNoise] = useState(false);
+  const [lastPulseInsights, setLastPulseInsights] = useState<MemoryMatch[]>([]);
+  const [showConsciousnessArchive, setShowConsciousnessArchive] = useState(false);
   const [themeBeforePulse, setThemeBeforePulse] = useState<"light" | "dark" | "system" | null>(null);
   const [agentModule, setAgentModule] = useState<AgentModule | null>(null);
   const [lockedFeature, setLockedFeature] = useState<FeatureFlagKey | null>(null);
@@ -180,6 +186,10 @@ export default function App() {
   const canShowAIChatbot = canUseAIField && isPrivilegedUser;
   const canUsePulseCheck = availableFeatures.pulse_check;
   const shouldGateStartWithAuth = isSupabaseReady && !authUser && !isPrivilegedUser;
+
+  useEffect(() => {
+    void initThemePalette();
+  }, []);
 
   useEffect(() => {
     if (!canShowAIChatbot) return;
@@ -438,7 +448,7 @@ export default function App() {
     setPulseCheckContext("regular");
   };
 
-  const handlePulseGateSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean }) => {
+  const handlePulseGateSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => {
     trackEvent(AnalyticsEvents.MICRO_COMPASS_COMPLETED, {
       gate: "pulse",
       pulse_energy: payload.energy,
@@ -457,9 +467,29 @@ export default function App() {
     setShowAuthModal(true);
   };
 
-  const handlePulseSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean }) => {
+  const handlePulseSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => {
     logPulse(payload);
     closePulseCheck();
+
+    // توصيل البوصلة بمرآة الوعي (غير معطِّل للتجربة)
+    const numericPart = `طاقة ${payload.energy}/10، مزاج ${payload.mood}, تركيز ${payload.focus}`;
+    const feelingText = payload.notes ? `${payload.notes.trim()}\n\n(${numericPart})` : numericPart;
+    const userId = authUser?.id ?? null;
+    void (async () => {
+      try {
+        await consciousnessService.saveMoment(userId, feelingText);
+        const matches = await consciousnessService.recallSimilarMoments(feelingText, {
+          threshold: 0.7,
+          limit: 3,
+          sources: ["pulse"]
+        });
+        if (matches && matches.length > 0) {
+          setLastPulseInsights(matches.slice(0, 3));
+        }
+      } catch (err) {
+        console.error("Pulse consciousness wiring error:", err);
+      }
+    })();
 
     const isLow = payload.energy <= 3;
     const isAngry = payload.mood === "angry";
@@ -703,7 +733,7 @@ export default function App() {
 
   if (isAdminRoute) {
     return (
-      <Suspense fallback={<div className="min-h-screen bg-gray-50 dark:bg-slate-900" />}>
+      <Suspense fallback={<div className="min-h-screen" style={{ background: "var(--space-void)" }} />}>
         <AdminDashboard
           onExit={() => {
             if (typeof window !== "undefined") {
@@ -717,11 +747,63 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex transition-colors relative overflow-hidden isolate" dir="rtl">
+    <div className="min-h-screen flex transition-colors relative overflow-hidden isolate" dir="rtl"
+      style={{ background: "var(--space-void, #0a0a1a)" }}
+    >
+      {/* 🌌 Nebula Background — Cosmic Canvas */}
+      <div className="nebula-bg" aria-hidden="true" />
+
       <InstallHintBanner />
-      <div className="pointer-events-none absolute inset-0 hidden dark:block opacity-[0.06] -z-10" aria-hidden="true">
-        <div className="absolute inset-0 ops-room-pattern" />
-      </div>
+      {lastPulseInsights.length > 0 && (
+        <div className="fixed bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto">
+          <div className="glass-card px-4 py-3" style={{ borderColor: "rgba(245, 166, 35, 0.25)" }}>
+            <div className="flex items-start gap-2">
+              <div className="mt-0.5" style={{ color: "var(--warm-amber)" }}>&#x2728;</div>
+              <div className="text-right flex-1">
+                <p className="text-xs font-semibold mb-1" style={{ color: "var(--warm-amber)" }}>
+                  ومضة من الذاكرة
+                </p>
+                <div className="flex gap-2 overflow-x-auto py-1 no-scrollbar">
+                  {lastPulseInsights.map((insight) => (
+                    <div
+                      key={insight.id}
+                      className="min-w-[200px] max-w-[260px] rounded-xl px-3 py-2"
+                      style={{
+                        background: "rgba(245, 166, 35, 0.08)",
+                        border: "1px solid rgba(245, 166, 35, 0.15)"
+                      }}
+                    >
+                      <p className="text-[11px] leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                        شعورك دلوقتي بيشبه موقف{" "}
+                        {insight.created_at && (
+                          <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                            حصل يوم{" "}
+                            {new Date(insight.created_at).toLocaleDateString("ar-EG")}
+                          </span>
+                        )}
+                        {": "}
+                        <span className="font-medium" style={{ color: "var(--text-primary)" }}>
+                          {insight.content.slice(0, 90)}
+                          {insight.content.length > 90 ? "..." : ""}
+                        </span>
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setLastPulseInsights([])}
+              className="mt-2 w-full text-[11px] font-medium hover:underline text-center"
+              style={{ color: "rgba(245, 166, 35, 0.7)" }}
+            >
+              تم · إخفاء الومضة
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Legacy pattern removed — nebula-bg handles the cosmic background */}
       {isSupabaseReady && !isAdminRoute && !showAuthModal && !showPulseCheck && (
         <div className="fixed z-80 top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4" dir="ltr">
           <button
@@ -738,18 +820,24 @@ export default function App() {
               setPostAuthIntentState(intent);
               setShowAuthModal(true);
             }}
-            className="w-11 h-11 flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent cursor-pointer"
+            className="group w-11 h-11 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 cursor-pointer relative"
+            style={{ color: "var(--text-secondary)" }}
             aria-label={authUser ? "حسابي" : "تسجيل الدخول"}
-            title={authUser ? "حسابي" : "تسجيل الدخول"}
           >
             <span className="relative inline-flex items-center justify-center">
               <User className="w-5 h-5" />
               {authUser && (
                 <span
-                  className="absolute top-0 right-0 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"
+                  className="absolute top-0 right-0 w-2 h-2 rounded-full"
+                  style={{ background: "var(--soft-teal)", boxShadow: "0 0 0 2px var(--space-void)" }}
                   aria-hidden="true"
                 />
               )}
+            </span>
+            <span
+              className="pointer-events-none absolute top-full mt-1 right-0 max-w-48 rounded-2xl px-3 py-1 text-[11px] font-medium leading-snug opacity-0 translate-y-1 bg-slate-900/90 text-slate-50 shadow-lg border border-white/10 backdrop-blur-md group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 text-center"
+            >
+              {authUser ? "افتح حسابك" : "سجّل دخولك واحفظ رحلتك"}
             </span>
           </button>
         </div>
@@ -770,12 +858,12 @@ export default function App() {
         </Suspense>
       )}
       <main
-        className={`flex-1 min-w-0 flex items-center justify-center px-4 transition-[margin] ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""}`}
+        className={`flex-1 min-w-0 flex items-center justify-center transition-[margin] ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""}`}
         style={{ marginRight: isPrivilegedUser ? SIDEBAR_TAB_MARGIN : "0px" }}
         aria-hidden={showPulseCheck}
       >
-        <Suspense fallback={<div className="text-slate-500 text-sm">...جاري التحميل</div>}>
-            <div key={screen} className="w-full flex justify-center max-w-2xl">
+        <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...جاري التحميل</div>}>
+          <div key={screen} className={screen === "landing" ? "" : "app-panel-main"}>
             {screen === "landing" && (
               <Landing
                 onStartJourney={startRecovery}
@@ -918,6 +1006,24 @@ export default function App() {
             onNavigateToMap={() => setScreen("map")}
           />
         )}
+
+        {/* زر إضافي لفتح أرشيف الوعي من شاشة الهبوط — وضع التطوير فقط */}
+        {screen === "landing" && role?.toLowerCase() === "developer" && (
+          <button
+            type="button"
+            onClick={() => setShowConsciousnessArchive(true)}
+            className="fixed bottom-6 left-6 z-40 glass-button text-xs px-4 py-2 flex items-center gap-2"
+            style={{ color: "var(--warm-amber)", borderColor: "rgba(245, 166, 35, 0.25)" }}
+          >
+            <span>&#x2728;</span>
+            <span>أرشيف الوعي</span>
+          </button>
+        )}
+
+        <ConsciousnessArchiveModal
+          isOpen={showConsciousnessArchive}
+          onClose={() => setShowConsciousnessArchive(false)}
+        />
         {lastNewAchievementId && <AchievementToast />}
 
         {showPulseCheck && (
@@ -1006,25 +1112,31 @@ export default function App() {
           <DataManagement isOpen={showDataManagement} onClose={() => setShowDataManagement(false)} />
         </Suspense>
       )}
-      {screen === "landing" && (
+      {screen === "landing" && role?.toLowerCase() === "developer" && (
         <div className="fixed top-24 left-4 right-4 z-10 max-w-md mx-auto">
           <ConsciousnessHistoryMap />
         </div>
       )}
       {consciousnessInsight && screen !== "landing" && (
-        <div className="fixed bottom-24 left-4 right-4 bg-white/80 backdrop-blur-md p-5 rounded-3xl border border-teal-100 shadow-xl z-50 animate-in fade-in slide-in-from-bottom-6 duration-700">
+        <div className="fixed bottom-24 left-4 right-4 glass-card p-5 z-50"
+          style={{ borderColor: "rgba(45, 212, 191, 0.2)" }}
+        >
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
-            <p className="text-teal-900 text-sm font-bold">بصيرة الوعي</p>
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "var(--soft-teal)" }} />
+            <p className="text-sm font-bold" style={{ color: "var(--soft-teal)" }}>بصيرة الوعي</p>
           </div>
-          <p className="text-teal-800 text-sm leading-relaxed mb-3">
+          <p className="text-sm leading-relaxed mb-3" style={{ color: "var(--text-secondary)" }}>
             {consciousnessInsight.suggestedAction}
           </p>
           <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-            <span className="shrink-0 px-3 py-1 bg-teal-100 text-teal-700 text-[10px] font-bold rounded-full">
+            <span className="shrink-0 px-3 py-1 text-[10px] font-bold rounded-full"
+              style={{ background: "var(--soft-teal-dim)", color: "var(--soft-teal)" }}
+            >
               {consciousnessInsight.emotionalState}
             </span>
-            <span className="shrink-0 px-3 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded-full">
+            <span className="shrink-0 px-3 py-1 text-[10px] font-bold rounded-full"
+              style={{ background: "rgba(139, 92, 246, 0.12)", color: "rgba(167, 139, 250, 0.9)" }}
+            >
               نمط: {consciousnessInsight.underlyingPattern}
             </span>
           </div>

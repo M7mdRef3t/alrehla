@@ -213,10 +213,10 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
 
   const ringLabel =
     ring === "green"
-      ? "قرب صحي"
+      ? "مدار قريب"
       : ring === "yellow"
-      ? "قرب مشروط"
-      : "استنزاف";
+      ? "مدار متذبذب"
+      : "مدار بعيد";
 
   // First action steps based on ring
   type StepType = { text: string; requiresInput?: boolean; placeholder?: string; inputCount?: number };
@@ -257,7 +257,7 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
   const understanding = {
     red: "العلاقة دي بتاخد منك أكتر مما بتديك. جسمك بيحذرك - اسمع له.",
     yellow: "في أنماط مش صحية محتاجة انتباه. الحدود هتحميك.",
-    green: "الجبهة آمنة ومتوازنة. حافظ على نفس القواعد."
+    green: "المدار آمن ومتوازن. حافظ على نفس القواعد."
   };
 
   return (
@@ -305,7 +305,7 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
         </p>
         {!compactMode && (
           <p className="text-xs text-teal-600 mb-3">
-            📝 اكتب المواقف المطلوبة عشان نولّد ليك بروتوكول استعادة مخصص (30 يوم)
+            📝 اكتب المواقف المطلوبة عشان نولّد ليك مسار حماية مخصص (30 يوم)
           </p>
         )}
         <div className="space-y-3">
@@ -531,7 +531,7 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
             🎯 هيحصل إيه بعد كده؟
           </p>
           <p className="text-xs text-gray-600 leading-relaxed">
-            بعد ما تكتب المواقف المطلوبة فوق، هنولّد ليك بروتوكول دفاع كامل (30 يوم) مخصص ليك بناءً على الأنماط اللي لقيناها. هتلاقي مهمات الميدان تظهر تلقائياً أول ما تكمل الكتابة.
+            بعد ما تكتب المواقف المطلوبة فوق، هنولّد ليك مسار حماية كامل (30 يوم) مخصص ليك بناءً على الأنماط اللي لقيناها. هتلاقي خطوات الرحلة تظهر تلقائياً أول ما تكمل الكتابة.
           </p>
         </div>
       )}

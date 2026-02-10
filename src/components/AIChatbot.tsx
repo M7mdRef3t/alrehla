@@ -1,5 +1,5 @@
 import React, { type FC, useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Sparkles, Loader2, Mic, MicOff } from "lucide-react";
+import { MessageCircle, X, Send, Sparkles, Loader2, Mic, MicOff, History } from "lucide-react";
 import { geminiClient } from "../services/geminiClient";
 import { getAgentToolDeclarations, executeToolCall } from "../agent";
 import type { AgentContext, AgentActions } from "../agent";
@@ -9,7 +9,8 @@ import type { CardId, CustomExerciseSpec } from "./agentCards";
 import { buildToneSystemBlock, resolveVoiceMode } from "../copy/toneGuide";
 import { useAppContentString } from "../hooks/useAppContentString";
 
-import { consciousnessService } from "../services/consciousnessService";
+import { consciousnessService, type MemoryMatch } from "../services/consciousnessService";
+import { ConsciousnessArchiveModal } from "./ConsciousnessArchiveModal";
 
 interface Message {
   id: string;
@@ -47,6 +48,9 @@ export const AIChatbot: FC<AIChatbotProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [mirrorMatches, setMirrorMatches] = useState<MemoryMatch[]>([]);
+  const [mirrorSourceFilter, setMirrorSourceFilter] = useState<"both" | "pulse" | "chat">("both");
+  const [showArchive, setShowArchive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const cardsForThisTurnRef = useRef<string[]>([]);
@@ -100,8 +104,27 @@ export const AIChatbot: FC<AIChatbotProps> = ({
     setInput("");
     setIsStreaming(true);
 
-    // تسجيل الرسالة في ذاكرة الوعي
+    // تسجيل الرسالة في ذاكرة الوعي (local + Supabase) + استرجاع مرآة الوعي
     consciousnessService.addToMemory(`المستخدم: ${userMessage.content}`);
+    void (async () => {
+      try {
+        await consciousnessService.saveMoment(null, userMessage.content, "chat");
+        const sourceList =
+          mirrorSourceFilter === "pulse"
+            ? (["pulse"] as Array<"pulse" | "chat">)
+            : mirrorSourceFilter === "chat"
+              ? (["chat"] as Array<"pulse" | "chat">)
+              : (["pulse", "chat"] as Array<"pulse" | "chat">);
+        const matches = await consciousnessService.recallSimilarMoments(userMessage.content, {
+          threshold: 0.7,
+          limit: 3,
+          sources: sourceList
+        });
+        setMirrorMatches(matches);
+      } catch {
+        // نتجاهل أي خطأ عشان ما يبوظش تجربة الشات
+      }
+    })();
 
     const assistantId = `assistant-${Date.now()}`;
     const useTools = agentActions != null && systemPromptOverride != null;
@@ -207,12 +230,49 @@ export const AIChatbot: FC<AIChatbotProps> = ({
         })();
         const toneContext = buildToneSystemBlock(agentContext?.pulse);
 
+        // دمج أفضل 2–3 Matches من مرآة الوعي (مع الوسوم) في سياق النظام
+        const mirrorContextBlock = (() => {
+          if (!mirrorMatches?.length) return "";
+          const top = mirrorMatches.slice(0, 3);
+          const allTags = Array.from(
+            new Set(
+              top
+                .flatMap((m) => (Array.isArray(m.tags) ? m.tags : []))
+                .map((t) => t.trim())
+                .filter(Boolean)
+            )
+          );
+          const lines = top.map((m, idx) => {
+            const dateLabel = m.created_at
+              ? new Date(m.created_at).toLocaleString("ar-EG")
+              : "تاريخ غير معروف";
+            const sourceLabel =
+              m.source === "chat" ? "من الشات" : m.source === "pulse" ? "من البوصلة" : "ملاحظة";
+            const tagsLabel =
+              Array.isArray(m.tags) && m.tags.length > 0
+                ? ` | الوسوم: ${m.tags.join(", ")}`
+                : "";
+            return `- [${idx + 1}] (${sourceLabel} – ${dateLabel}) ${m.content}${tagsLabel}`;
+          });
+          const tagsBlock = allTags.length
+            ? `\n**ملحوظة الموديل عن الوسوم:** اعتبر أن هذه الوسوم تمثل مواضيع متكررة في وعي المستخدم (مثلاً: ${allTags.join(
+                ", "
+              )}). اربط ردّك بالمواضيع دي لكن بدون تكرار الوسوم حرفياً للمستخدم.\n`
+            : "";
+          return top.length
+            ? `\n**ومضات من أرشيف وعي المستخدم (لا تكررها حرفياً، بل استخدمها كخلفية لفهم النمط):**\n${lines.join(
+                "\n"
+              )}\n${tagsBlock}`
+            : "";
+        })();
+
         const systemContext = `أنت مرشد الرحلة في منصة "الرحلة". دورك توجيه المستخدم بين أدوات الرحلة، وخصوصًا أداة "دواير" لتنظيم العلاقات وبناء الحدود الصحية.
 
 ${personLabel ? `**السياق:** المستخدم بيتعامل مع شخص اسمه "${personLabel}"` : ""}
 ${context ? `**المرحلة الحالية:** ${context}` : ""}
 ${pulseInfo}
 ${toneContext}
+${mirrorContextBlock}
 
 **أسلوب التنفيذ:**
 - استخدم العامية المصرية الذكية.
@@ -288,22 +348,22 @@ ${userMessage.content}`;
     const trimmed = text.trim();
     const mode = resolveVoiceMode(agentContext?.pulse?.energy ?? null);
     const modePrefix =
-      mode === "field_medic"
-        ? "أولوية دلوقتي: وقف النزيف."
-        : mode === "general_motivator"
-          ? "طاقتك تسمح بخطوة حاسمة."
-          : "خلّينا نفكك الموقف بهدوء.";
-    if (!trimmed) return `${modePrefix} احكيلي الجبهة اللي محتاجة تدخل دلوقتي.`;
+      mode === "warm_healer"
+        ? "أنا معاك. خد نفس الأول."
+        : mode === "gentle_companion"
+          ? "طاقتك حلوة النهاردة. يلا نخطو خطوة."
+          : "خلّينا نفهم الصورة بهدوء.";
+    if (!trimmed) return `${modePrefix} احكيلي عن المدار اللي واخد مساحة من طاقتك.`;
     if (trimmed.includes("مش عارف") || trimmed.includes("مش قادر")) {
-      return `${modePrefix} اختار موقف واحد حصل قريب، واحنا نقفله خطوة خطوة.`;
+      return `${modePrefix} اختار موقف واحد حصل قريب، ونفهمه مع بعض خطوة خطوة.`;
     }
     if (trimmed.includes("خوف") || trimmed.includes("قلق")) {
-      return `${modePrefix} خُد نفس عميق 4 مرات وثبّت موقعك، وبعدها قولي إيه مصدر الضجيج بالظبط.`;
+      return `${modePrefix} خد نفس عميق ٤ مرات وثبّت مكانك، وبعدها قولي إيه اللي واخد مساحة من تفكيرك.`;
     }
     if (trimmed.includes("حدود") || trimmed.includes("لا")) {
-      return `${modePrefix} ممتاز. نفعّل الدرع بجملة واحدة جاهزة للموقف الجاي؟`;
+      return `${modePrefix} حلو. نثبّت المسافة دي بجملة واحدة جاهزة للموقف الجاي؟`;
     }
-    return `${modePrefix} احكيلي موقف محدد: حصل إمتى، واتقال فيه إيه، وسحب منك طاقة قد إيه؟`;
+    return `${modePrefix} احكيلي عن موقف محدد: حصل إمتى، واتقال فيه إيه، وسحب من طاقتك قد إيه؟`;
   };
 
   return (
@@ -325,7 +385,7 @@ ${userMessage.content}`;
 
       {/* Chat Window — يعمل مع/بدون AI */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border-2 border-purple-200">
+        <div className="fixed bottom-6 right-4 sm:right-6 w-[20rem] sm:w-[24rem] h-[32rem] modal-surface shadow-2xl flex flex-col z-50">
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-linear-to-r from-purple-600 to-pink-600 text-white rounded-t-2xl">
             <div className="flex items-center gap-2">
@@ -338,6 +398,12 @@ ${userMessage.content}`;
               )}
             </div>
             <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="hidden"
+                aria-hidden
+              />
               {agentContext?.screen !== "map" && onNavigateToMap != null && (
                 <button
                   type="button"
@@ -349,27 +415,37 @@ ${userMessage.content}`;
                 </button>
               )}
               <button
+                type="button"
                 onClick={() => setIsOpen(false)}
                 className="hover:bg-white/20 rounded-full p-1 transition-colors"
                 aria-label="إغلاق"
               >
                 <X className="w-5 h-5" />
               </button>
+              <button
+                type="button"
+                onClick={() => setShowArchive(true)}
+                className="hover:bg-white/20 rounded-full p-1 transition-colors"
+                aria-label="أرشيف الوعي"
+                title="أرشيف الوعي"
+              >
+                <History className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
             {messages.map((msg) => (
               <div
                 key={msg.id}
                 className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2 ${
+                  className={`max-w-[80%] px-4 py-2 ${
                     msg.role === "user"
-                      ? "bg-purple-600 text-white"
-                      : "bg-white text-gray-900 border border-gray-200"
+                      ? "rounded-2xl bg-purple-600 text-white"
+                      : "card-unified bg-white text-gray-900 border border-transparent"
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
@@ -411,6 +487,80 @@ ${userMessage.content}`;
             )}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* Mirror Card + Filters + كروت متعددة */}
+          {mirrorMatches.length > 0 && (
+            <div className="px-4 pt-3 pb-1 border-t border-gray-200 bg-amber-50/80">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 shadow-sm space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[11px] font-semibold text-amber-900 flex items-center gap-1">
+                    <span>💡</span>
+                    <span>مرآة الوعي</span>
+                  </p>
+                  <div className="flex items-center gap-1 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => setMirrorSourceFilter("both")}
+                      className={`px-2 py-0.5 rounded-full border ${
+                        mirrorSourceFilter === "both"
+                          ? "bg-amber-600 text-white border-amber-700"
+                          : "bg-white/60 text-amber-800 border-amber-200"
+                      }`}
+                    >
+                      الكل
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMirrorSourceFilter("pulse")}
+                      className={`px-2 py-0.5 rounded-full border ${
+                        mirrorSourceFilter === "pulse"
+                          ? "bg-amber-600 text-white border-amber-700"
+                          : "bg-white/60 text-amber-800 border-amber-200"
+                      }`}
+                    >
+                      من البوصلة
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMirrorSourceFilter("chat")}
+                      className={`px-2 py-0.5 rounded-full border ${
+                        mirrorSourceFilter === "chat"
+                          ? "bg-amber-600 text-white border-amber-700"
+                          : "bg-white/60 text-amber-800 border-amber-200"
+                      }`}
+                    >
+                      من الشات
+                    </button>
+                  </div>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {mirrorMatches.slice(0, 3).map((m) => (
+                    <div
+                      key={m.id}
+                      className="min-w-[180px] max-w-[220px] card-unified bg-white px-2.5 py-2 shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+                    >
+                      <p className="text-[10px] text-slate-500 mb-1">
+                        {m.created_at
+                          ? new Date(m.created_at).toLocaleDateString("ar-EG")
+                          : "تاريخ غير معروف"}
+                      </p>
+                      <p className="text-[11px] text-slate-900 leading-relaxed">
+                        {m.content.slice(0, 110)}
+                        {m.content.length > 110 ? "..." : ""}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMirrorMatches([])}
+                  className="mt-1 w-full text-[10px] text-amber-800 font-medium hover:underline text-center"
+                >
+                  تم · إخفاء المرآة
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Input */}
           <div className="p-4 border-t border-gray-200 bg-white rounded-b-2xl">
@@ -460,6 +610,7 @@ ${userMessage.content}`;
           </div>
         </div>
       )}
+      <ConsciousnessArchiveModal isOpen={showArchive} onClose={() => setShowArchive(false)} />
     </>
   );
 };

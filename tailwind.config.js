@@ -5,11 +5,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Dawayir Brand Colors - Calming Teal/Cyan Palette
-        calm: {
-          background: "#FAFAF9",      // Warm neutral base
-          breathe: "#E0F2F1",         // Subtle teal mist (for breathing background)
-          glow: "rgba(20, 184, 166, 0.12)" // Teal glow overlay
+        // 🌌 Cosmic Sanctuary Palette
+        space: {
+          void: "#0a0a1a",
+          deep: "#0d1026",
+          mid: "#131640",
+          nebula: "#1a1250",
+          aurora: "#1e2a5e"
+        },
+        // Warm Accents
+        amber: {
+          warm: "#f5a623"
         },
         // Override Tailwind's teal to match our brand
         teal: {
@@ -18,11 +24,18 @@ module.exports = {
           200: "#99F6E4",
           300: "#5EEAD4",
           400: "#2DD4BF",
-          500: "#14B8A6",  // Primary brand color
-          600: "#0D9488",  // Primary CTA color
+          500: "#14B8A6",
+          600: "#0D9488",
           700: "#0F766E",
           800: "#115E59",
           900: "#134E4A"
+        },
+        // Ring / Orbit Zone Colors
+        ring: {
+          safe: "#2dd4bf",
+          caution: "#fbbf24",
+          danger: "#f87171",
+          detached: "#94a3b8"
         }
       }
     }

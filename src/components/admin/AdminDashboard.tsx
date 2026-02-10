@@ -16,7 +16,8 @@ import {
   ThumbsDown,
   LineChart as LineChartIcon,
   X,
-  User
+  User,
+  History
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { FEATURE_FLAGS, type FeatureFlagMode } from "../../config/features";
@@ -51,13 +52,18 @@ import {
   saveSystemPrompt,
   rateAiLog as rateAiLogRemote,
   deleteBroadcast,
-  deleteMission
+  deleteMission,
+  fetchThemePalette,
+  saveThemePalette,
+  type ThemePalette
 } from "../../services/adminApi";
+import { applyThemePalette } from "../../services/themePalette";
 import type { JourneyMapSnapshot, UserStateRow } from "../../services/adminApi";
 import { isSupabaseReady, supabase } from "../../services/supabaseClient";
+import { consciousnessService, type MemoryMatch } from "../../services/consciousnessService";
 import { loadStoredState } from "../../services/localStore";
 
-type AdminTab = "overview" | "feature-flags" | "ai-studio" | "content" | "users" | "user-state";
+type AdminTab = "overview" | "feature-flags" | "ai-studio" | "content" | "users" | "user-state" | "consciousness";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
@@ -69,7 +75,8 @@ const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
   { id: "ai-studio", label: "مختبر الذكاء", icon: <Brain className="w-4 h-4" /> },
   { id: "content", label: "إدارة المحتوى", icon: <Database className="w-4 h-4" /> },
   { id: "users", label: "شؤون المسافرين", icon: <Users className="w-4 h-4" /> },
-  { id: "user-state", label: "سحابة البيانات", icon: <Database className="w-4 h-4" /> }
+  { id: "user-state", label: "سحابة البيانات", icon: <Database className="w-4 h-4" /> },
+  { id: "consciousness", label: "أرشيف الوعي", icon: <History className="w-4 h-4" /> }
 ];
 
 const DEV_ONLY_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
@@ -414,6 +421,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
           {effectiveTab === "content" && <ContentPanel />}
           {effectiveTab === "users" && <UsersPanel />}
           {isDeveloper && effectiveTab === "user-state" && <UserStatePanel />}
+          {effectiveTab === "consciousness" && <ConsciousnessArchivePanel />}
         </main>
 
         <Suspense fallback={null}>
@@ -438,6 +446,57 @@ const OverviewPanel: FC = () => {
   const [weeklyReport, setWeeklyReport] = useState<Awaited<ReturnType<typeof fetchWeeklyReport>>>(null);
   const [weeklyLoading, setWeeklyLoading] = useState(false);
   const [weeklyError, setWeeklyError] = useState("");
+  const [themePrimary, setThemePrimary] = useState("#2dd4bf");
+  const [themeAccent, setThemeAccent] = useState("#f5a623");
+  const [themeNebulaBase, setThemeNebulaBase] = useState("#131640");
+  const [themeNebulaAccent, setThemeNebulaAccent] = useState("#1e2a5e");
+  const [themeGlassBg, setThemeGlassBg] = useState("rgba(255, 255, 255, 0.06)");
+  const [themeGlassBorder, setThemeGlassBorder] = useState("rgba(255, 255, 255, 0.1)");
+  const [themeSaving, setThemeSaving] = useState(false);
+  const [themeMessage, setThemeMessage] = useState<string | null>(null);
+
+  const THEME_PRESETS: Array<{
+    id: string;
+    label: string;
+    palette: ThemePalette;
+  }> = [
+    {
+      id: "sunrise",
+      label: "🌅 وضع الشروق",
+      palette: {
+        primary: "#f97316", // برتقالي دافئ
+        accent: "#facc15",
+        nebulaBase: "#1f2937",
+        nebulaAccent: "#7c2d12",
+        glassBackground: "rgba(248, 250, 252, 0.08)",
+        glassBorder: "rgba(248, 250, 252, 0.18)"
+      }
+    },
+    {
+      id: "midnight",
+      label: "🌌 منتصف الليل",
+      palette: {
+        primary: "#22d3ee",
+        accent: "#a855f7",
+        nebulaBase: "#020617",
+        nebulaAccent: "#1d2445",
+        glassBackground: "rgba(15, 23, 42, 0.7)",
+        glassBorder: "rgba(148, 163, 184, 0.3)"
+      }
+    },
+    {
+      id: "desert",
+      label: "🏜️ وضع الصحراء",
+      palette: {
+        primary: "#f97316",
+        accent: "#eab308",
+        nebulaBase: "#422006",
+        nebulaAccent: "#713f12",
+        glassBackground: "rgba(250, 250, 249, 0.06)",
+        glassBorder: "rgba(250, 250, 249, 0.14)"
+      }
+    }
+  ];
 
   useEffect(() => {
     let mounted = true;
@@ -455,6 +514,47 @@ const OverviewPanel: FC = () => {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchThemePalette()
+      .then((palette: ThemePalette | null) => {
+        if (!mounted || !palette) return;
+        if (palette.primary) setThemePrimary(palette.primary);
+        if (palette.accent) setThemeAccent(palette.accent);
+        if (palette.nebulaBase) setThemeNebulaBase(palette.nebulaBase);
+        if (palette.nebulaAccent) setThemeNebulaAccent(palette.nebulaAccent);
+        if (palette.glassBackground) setThemeGlassBg(palette.glassBackground);
+        if (palette.glassBorder) setThemeGlassBorder(palette.glassBorder);
+      })
+      .catch(() => {
+        // تجاهل الخطأ، نكمّل بالقيم الافتراضية
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const handleSaveTheme = async () => {
+    setThemeSaving(true);
+    setThemeMessage(null);
+    const palette: ThemePalette = {
+      primary: themePrimary,
+      accent: themeAccent,
+      nebulaBase: themeNebulaBase,
+      nebulaAccent: themeNebulaAccent,
+      glassBackground: themeGlassBg,
+      glassBorder: themeGlassBorder
+    };
+    const ok = await saveThemePalette(palette);
+    if (ok) {
+      applyThemePalette(palette);
+      setThemeMessage("تم حفظ ألوان المنصة وتطبيقها مباشرة.");
+    } else {
+      setThemeMessage("تعذر حفظ الألوان حالياً. جرّب تاني بعد شوية.");
+    }
+    setThemeSaving(false);
+  };
 
   useEffect(() => {
     if (!isSupabaseReady) return;
@@ -648,6 +748,159 @@ const OverviewPanel: FC = () => {
               )}
             </div>
           </div>
+        )}
+      </div>
+
+      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold">ألوان المنصة (Owner)</h3>
+          <button
+            type="button"
+            onClick={handleSaveTheme}
+            disabled={themeSaving}
+            className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200 hover:border-teal-400 disabled:opacity-50"
+          >
+            {themeSaving ? "جاري الحفظ..." : "حفظ الألوان"}
+          </button>
+        </div>
+        <p className="text-xs text-slate-400">
+          تحكم في اللون الرئيسي، اللكنة، خلفية النيبيولا، وشفافية الكروت الزجاجية. التغييرات تنطبق على كل المنصة فوراً.
+        </p>
+        <div className="flex flex-wrap gap-2 text-[11px]">
+          {THEME_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => {
+                const p = preset.palette;
+                if (p.primary) setThemePrimary(p.primary);
+                if (p.accent) setThemeAccent(p.accent);
+                if (p.nebulaBase) setThemeNebulaBase(p.nebulaBase);
+                if (p.nebulaAccent) setThemeNebulaAccent(p.nebulaAccent);
+                if (p.glassBackground) setThemeGlassBg(p.glassBackground);
+                if (p.glassBorder) setThemeGlassBorder(p.glassBorder);
+                setThemeMessage(`تم تحميل ${preset.label}. اضغط "حفظ الألوان" لتثبيته على جميع المستخدمين.`);
+              }}
+              className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200 hover:border-teal-400 bg-slate-900/60"
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1 text-xs">
+            <p className="text-slate-300">اللون الرئيسي (Teal — الأزرار واللمسات الأساسية)</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={themePrimary}
+                onChange={(e) => setThemePrimary(e.target.value)}
+                className="w-10 h-10 rounded-full border border-slate-600 bg-slate-900 cursor-pointer"
+              />
+              <input
+                type="text"
+                value={themePrimary}
+                onChange={(e) => setThemePrimary(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-700 bg-slate-950/60 px-2 py-1 text-[11px] text-slate-100"
+                placeholder="#2dd4bf"
+              />
+            </div>
+          </div>
+          <div className="space-y-1 text-xs">
+            <p className="text-slate-300">لون اللكنة (Amber — التنبيهات والهايلايت)</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={themeAccent}
+                onChange={(e) => setThemeAccent(e.target.value)}
+                className="w-10 h-10 rounded-full border border-slate-600 bg-slate-900 cursor-pointer"
+              />
+              <input
+                type="text"
+                value={themeAccent}
+                onChange={(e) => setThemeAccent(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-700 bg-slate-950/60 px-2 py-1 text-[11px] text-slate-100"
+                placeholder="#f5a623"
+              />
+            </div>
+          </div>
+          <div className="space-y-1 text-xs">
+            <p className="text-slate-300">خلفية الفضاء (Nebula Base)</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={themeNebulaBase}
+                onChange={(e) => setThemeNebulaBase(e.target.value)}
+                className="w-10 h-10 rounded-full border border-slate-600 bg-slate-900 cursor-pointer"
+              />
+              <input
+                type="text"
+                value={themeNebulaBase}
+                onChange={(e) => setThemeNebulaBase(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-700 bg-slate-950/60 px-2 py-1 text-[11px] text-slate-100"
+                placeholder="#131640"
+              />
+            </div>
+          </div>
+          <div className="space-y-1 text-xs">
+            <p className="text-slate-300">لون توهج الخلفية (Nebula Accent)</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={themeNebulaAccent}
+                onChange={(e) => setThemeNebulaAccent(e.target.value)}
+                className="w-10 h-10 rounded-full border border-slate-600 bg-slate-900 cursor-pointer"
+              />
+              <input
+                type="text"
+                value={themeNebulaAccent}
+                onChange={(e) => setThemeNebulaAccent(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-700 bg-slate-950/60 px-2 py-1 text-[11px] text-slate-100"
+                placeholder="#1e2a5e"
+              />
+            </div>
+          </div>
+          <div className="space-y-1 text-xs sm:col-span-2">
+            <p className="text-slate-300">خلفية الكروت الزجاجية (Glass Background)</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={themeGlassBg.startsWith("#") ? themeGlassBg : "#ffffff"}
+                onChange={(e) => setThemeGlassBg(e.target.value)}
+                className="w-10 h-10 rounded-full border border-slate-600 bg-slate-900 cursor-pointer"
+              />
+              <input
+                type="text"
+                value={themeGlassBg}
+                onChange={(e) => setThemeGlassBg(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-700 bg-slate-950/60 px-2 py-1 text-[11px] text-slate-100"
+                placeholder="rgba(255, 255, 255, 0.06)"
+              />
+            </div>
+          </div>
+          <div className="space-y-1 text-xs sm:col-span-2">
+            <p className="text-slate-300">حدود الكروت الزجاجية (Glass Border)</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={themeGlassBorder.startsWith("#") ? themeGlassBorder : "#ffffff"}
+                onChange={(e) => setThemeGlassBorder(e.target.value)}
+                className="w-10 h-10 rounded-full border border-slate-600 bg-slate-900 cursor-pointer"
+              />
+              <input
+                type="text"
+                value={themeGlassBorder}
+                onChange={(e) => setThemeGlassBorder(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-700 bg-slate-950/60 px-2 py-1 text-[11px] text-slate-100"
+                placeholder="rgba(255, 255, 255, 0.1)"
+              />
+            </div>
+          </div>
+        </div>
+        {themeMessage && (
+          <p className="text-[11px] text-teal-300">
+            {themeMessage}
+          </p>
         )}
       </div>
     </div>
@@ -1531,6 +1784,413 @@ const UserStatePanel: FC = () => {
             </pre>
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+const ConsciousnessArchivePanel: FC = () => {
+  const [items, setItems] = useState<MemoryMatch[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<"all" | "pulse" | "chat" | "note">("all");
+  const [exportingCsv, setExportingCsv] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [tagEdits, setTagEdits] = useState<Record<string, string>>({});
+  const [noteEdits, setNoteEdits] = useState<Record<string, string>>({});
+
+  const loadArchive = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await consciousnessService.fetchArchive({ limit: 1000 });
+      setItems(data ?? []);
+    } catch (e) {
+      console.error("فشل تحميل أرشيف الوعي", e);
+      setError("فشل تحميل الأرشيف من Supabase.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadArchive();
+  }, []);
+
+  const filteredItems =
+    sourceFilter === "all"
+      ? items
+      : items.filter((i) => (i.source ?? "pulse") === sourceFilter);
+
+  const handleExportCsv = () => {
+    if (!items.length) return;
+    setExportingCsv(true);
+    try {
+      const header = ["id", "created_at", "source", "user_id", "hidden", "tags", "manual_notes", "content"];
+      const rows = items.map((m) => [
+        m.id ?? "",
+        m.created_at ?? "",
+        m.source ?? "",
+        m.user_id ?? "",
+        m.hidden ? "true" : "false",
+        Array.isArray(m.tags) ? m.tags.join("|") : "",
+        m.manual_notes ?? "",
+        (m.content ?? "").replace(/\s+/g, " ").slice(0, 500)
+      ]);
+      const csv =
+        [header.join(","), ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join(
+          "\n"
+        );
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `consciousness-archive-${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      setExportingCsv(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    if (!items.length) return;
+    setExportingPdf(true);
+    try {
+      const JsPdfModule = await import("jspdf");
+      const JsPdf = JsPdfModule.default;
+      const pdf = new JsPdf({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      let y = margin;
+
+      pdf.setFont("helvetica");
+      pdf.setLanguage("ar");
+
+      pdf.setFontSize(16);
+      pdf.text("أرشيف الوعي — دواير", pageWidth / 2, y, { align: "center" });
+      y += 10;
+
+      pdf.setFontSize(10);
+      const dateStr = new Date().toLocaleString("ar-EG");
+      pdf.text(dateStr, pageWidth / 2, y, { align: "center" });
+      y += 10;
+
+      pdf.setFontSize(11);
+
+      const addLine = (text: string) => {
+        const lines = pdf.splitTextToSize(text, pageWidth - margin * 2);
+        for (const line of lines) {
+          if (y + 6 > pageHeight - margin) {
+            pdf.addPage();
+            y = margin;
+          }
+          pdf.text(line, margin, y);
+          y += 5;
+        }
+      };
+
+      filteredItems.forEach((item, index) => {
+        if (index > 0) {
+          if (y + 10 > pageHeight - margin) {
+            pdf.addPage();
+            y = margin;
+          }
+          pdf.setDrawColor(148, 163, 184);
+          pdf.line(margin, y, pageWidth - margin, y);
+          y += 6;
+        }
+
+        pdf.setFontSize(11);
+        addLine(
+          `#${index + 1} | المصدر: ${item.source ?? "غير محدد"} | التاريخ: ${
+            item.created_at ? new Date(item.created_at).toLocaleString("ar-EG") : "—"
+          }`
+        );
+        pdf.setFontSize(10);
+        addLine(`المحتوى: ${(item.content ?? "").slice(0, 900)}`);
+      });
+
+      pdf.save(`consciousness-archive-${Date.now()}.pdf`);
+    } catch (e) {
+      console.error("فشل تصدير PDF لأرشيف الوعي", e);
+      setError("فشل إنشاء ملف PDF للأرشيف.");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
+  const handleToggleHidden = async (item: MemoryMatch) => {
+    const id = item.id;
+    if (!id || !supabase) return;
+    setUpdatingId(id);
+    try {
+      const isHidden = Boolean(item.hidden);
+      const { error: updateError } = await supabase
+        .from("consciousness_vectors")
+        .update({ hidden: !isHidden })
+        .eq("id", id);
+      if (updateError) {
+        console.error("فشل تحديث حالة الإخفاء في الأرشيف", updateError);
+        setError("فشل تحديث حالة الإخفاء في Supabase.");
+      } else {
+        await loadArchive();
+      }
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleSaveMeta = async (item: MemoryMatch) => {
+    const id = item.id;
+    if (!id || !supabase) return;
+    setSavingId(id);
+    setError(null);
+    try {
+      const rawTags =
+        tagEdits[id] ??
+        (Array.isArray(item.tags) ? item.tags.join(", ") : "");
+      const tags = rawTags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      const rawNotes =
+        noteEdits[id] ?? (item.manual_notes != null ? item.manual_notes : "");
+      const manualNotes = rawNotes.trim() === "" ? null : rawNotes.trim();
+
+      const { error: updateError } = await supabase
+        .from("consciousness_vectors")
+        .update({
+          tags: tags.length > 0 ? tags : null,
+          manual_notes: manualNotes
+        })
+        .eq("id", id);
+
+      if (updateError) {
+        console.error("فشل حفظ الوسوم/الملاحظات في الأرشيف", updateError);
+        setError("فشل حفظ الوسوم أو الملاحظات في Supabase.");
+      } else {
+        await loadArchive();
+        // نفرّغ القيم المؤقتة بعد الحفظ الناجح
+        setTagEdits((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+        setNoteEdits((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+      }
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Brain className="w-4 h-4 text-teal-300" />
+              أرشيف الوعي
+            </h3>
+            <p className="text-xs text-slate-400">
+              كل اللحظات المخزّنة من البوصلة والشات، مع إمكانية التصدير، الوسوم، والإخفاء من الواجهة.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              disabled={exportingCsv || !items.length}
+              className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200 hover:border-teal-400 disabled:opacity-50"
+            >
+              {exportingCsv ? "جاري التصدير..." : "تصدير CSV"}
+            </button>
+            <button
+              type="button"
+              onClick={handleExportPdf}
+              disabled={exportingPdf || !items.length}
+              className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200 hover:border-rose-400 disabled:opacity-50"
+            >
+              {exportingPdf ? "جاري إنشاء PDF..." : "تصدير PDF"}
+            </button>
+            <button
+              type="button"
+              onClick={loadArchive}
+              disabled={loading}
+              className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200 hover:border-indigo-400 disabled:opacity-50"
+            >
+              إعادة تحميل
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setSourceFilter("all")}
+            className={`px-3 py-1 rounded-full text-[11px] ${
+              sourceFilter === "all"
+                ? "bg-teal-500/20 text-teal-100 border border-teal-400/50"
+                : "bg-slate-900 text-slate-300 border border-slate-700"
+            }`}
+          >
+            الكل
+          </button>
+          <button
+            type="button"
+            onClick={() => setSourceFilter("pulse")}
+            className={`px-3 py-1 rounded-full text-[11px] ${
+              sourceFilter === "pulse"
+                ? "bg-emerald-500/20 text-emerald-100 border border-emerald-400/50"
+                : "bg-slate-900 text-slate-300 border border-slate-700"
+            }`}
+          >
+            من البوصلة
+          </button>
+          <button
+            type="button"
+            onClick={() => setSourceFilter("chat")}
+            className={`px-3 py-1 rounded-full text-[11px] ${
+              sourceFilter === "chat"
+                ? "bg-sky-500/20 text-sky-100 border border-sky-400/50"
+                : "bg-slate-900 text-slate-300 border border-slate-700"
+            }`}
+          >
+            من الشات
+          </button>
+          <button
+            type="button"
+            onClick={() => setSourceFilter("note")}
+            className={`px-3 py-1 rounded-full text-[11px] ${
+              sourceFilter === "note"
+                ? "bg-amber-500/20 text-amber-100 border border-amber-400/50"
+                : "bg-slate-900 text-slate-300 border border-slate-700"
+            }`}
+          >
+            ملاحظات
+          </button>
+        </div>
+        {error && <p className="text-xs text-rose-300">{error}</p>}
+        {loading && <p className="text-xs text-slate-500">جاري تحميل الأرشيف...</p>}
+      </div>
+
+      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+        {!loading && filteredItems.length === 0 && (
+          <p className="text-xs text-slate-500">لا توجد لحظات في الأرشيف بعد.</p>
+        )}
+        <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
+          {filteredItems.map((item) => (
+            <div
+              key={item.id ?? `${item.created_at}-${item.content?.slice(0, 20) ?? ""}`}
+              className="border border-slate-800 rounded-xl px-3 py-2 text-xs space-y-1 bg-slate-950/60"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] ${
+                      (item.source ?? "pulse") === "chat"
+                        ? "bg-sky-500/20 text-sky-100 border border-sky-400/40"
+                        : (item.source ?? "pulse") === "note"
+                          ? "bg-amber-500/20 text-amber-100 border border-amber-400/40"
+                          : "bg-emerald-500/20 text-emerald-100 border border-emerald-400/40"
+                    }`}
+                  >
+                    {item.source === "chat"
+                      ? "من الشات"
+                      : item.source === "note"
+                        ? "ملاحظة"
+                        : "من البوصلة"}
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    {item.created_at
+                      ? new Date(item.created_at).toLocaleString("ar-EG")
+                      : "—"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSaveMeta(item)}
+                    disabled={savingId === item.id}
+                    className="text-[10px] text-teal-300 hover:text-teal-100 disabled:opacity-50"
+                  >
+                    {savingId === item.id ? "جاري الحفظ..." : "حفظ الوسوم/الملاحظات"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleHidden(item)}
+                    disabled={updatingId === item.id}
+                    className="text-[10px] text-amber-300 hover:text-amber-200 disabled:opacity-50"
+                  >
+                    {updatingId === item.id
+                      ? "جاري التحديث..."
+                      : item.hidden
+                        ? "إعادة إظهار في الواجهة"
+                        : "إخفاء من الواجهة"}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] text-slate-400">الوسوم (افصل بينهم بفاصلة ,)</label>
+                  <input
+                    type="text"
+                    value={
+                      tagEdits[item.id] ??
+                      (Array.isArray(item.tags) ? item.tags.join(", ") : "")
+                    }
+                    onChange={(e) =>
+                      setTagEdits((prev) => ({
+                        ...prev,
+                        [item.id]: e.target.value
+                      }))
+                    }
+                    className="w-full rounded-lg border border-slate-800 bg-slate-900/80 px-2 py-1 text-[11px] text-slate-100"
+                    placeholder="مثال: انفصال, عمل, نوم"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] text-slate-400">ملاحظات للمشرف</label>
+                  <textarea
+                    value={
+                      noteEdits[item.id] ??
+                      (item.manual_notes != null ? item.manual_notes : "")
+                    }
+                    onChange={(e) =>
+                      setNoteEdits((prev) => ({
+                        ...prev,
+                        [item.id]: e.target.value
+                      }))
+                    }
+                    className="w-full rounded-lg border border-slate-800 bg-slate-900/80 px-2 py-1 text-[11px] text-slate-100 min-h-[40px] resize-none"
+                    placeholder="مثال: لحظة حرجة تخص علاقة سابقة..."
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-100 whitespace-pre-wrap leading-relaxed">
+                {item.content}
+              </p>
+              {item.user_id && (
+                <p className="text-[10px] text-slate-500">user: {item.user_id}</p>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

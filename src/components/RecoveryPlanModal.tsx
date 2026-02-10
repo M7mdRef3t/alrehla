@@ -85,9 +85,9 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
                     <Target className="w-5 h-5 text-teal-700" />
                   </div>
                   <div className="text-right">
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">بروتوكول الدفاع</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">مسار الحماية</h2>
                     <p className="text-xs text-slate-500">
-                      اختَر الجبهة وشوف خطة الميدان الأسبوعية.
+                      اختَر المدار وشوف خطة الرحلة الأسبوعية.
                     </p>
                   </div>
                 </div>
@@ -104,9 +104,9 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
               <div className="p-4 space-y-4 overflow-y-auto">
                 {!hasNodes && (
                   <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-right text-sm text-slate-700">
-                    لسه مفيش جبهات على الخريطة.
+                    لسه مفيش مدارات على الخريطة.
                     <br />
-                    ابدأ بإضافة جبهة وسجّل موقفين على الأقل، وبعدها مهمات الميدان هتظهر هنا.
+                    ابدأ بإضافة مدار وسجّل موقفين على الأقل، وبعدها خطوات الرحلة هتظهر هنا.
                   </div>
                 )}
 
@@ -115,7 +115,7 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
                     {/* Person selector */}
                     <div className="space-y-2">
                       <label className="block text-xs font-semibold text-slate-600 text-right">
-                        اختَر الجبهة
+                        اختَر المدار
                       </label>
                       <select
                         value={effectiveSelectedId ?? ""}

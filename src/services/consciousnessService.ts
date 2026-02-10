@@ -1,6 +1,7 @@
-import { geminiClient } from './geminiClient';
-import { AICache } from './geminiEnhancements';
-import { useConsciousnessHistory } from '../state/consciousnessHistoryState';
+import { geminiClient } from "./geminiClient";
+import { AICache } from "./geminiEnhancements";
+import { useConsciousnessHistory } from "../state/consciousnessHistoryState";
+import { supabase } from "./supabaseClient";
 
 export interface ConsciousnessInsight {
   emotionalState: string;
@@ -9,9 +10,53 @@ export interface ConsciousnessInsight {
   intensity: number; // 1-10
 }
 
+export interface MemoryMatch {
+  id: string;
+  user_id?: string;
+  content: string;
+  similarity: number;
+  created_at?: string;
+  source?: string;
+   tags?: string[] | null;
+   manual_notes?: string | null;
+   hidden?: boolean;
+}
+
 class ConsciousnessService {
   private cache = new AICache();
   private memory: string[] = [];
+
+  /**
+   * استدعاء Edge Function في Supabase للحصول على الـ Embedding (vector 768)
+   */
+  private async getEmbedding(text: string): Promise<number[] | null> {
+    if (!supabase) {
+      console.warn("Supabase client غير مهيأ، لن يتم استدعاء gemini_embeddings.");
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke("gemini_embeddings", {
+        body: { text }
+      });
+
+      if (error) {
+        console.error("Embedding Error:", error);
+        return null;
+      }
+
+      const embedding = (data as { embedding?: number[] } | null)?.embedding;
+      if (!embedding || !Array.isArray(embedding) || embedding.length === 0) {
+        console.error("Embedding response فارغ أو غير صالح.");
+        return null;
+      }
+
+      return embedding;
+    } catch (err) {
+      console.error("Failed to invoke gemini_embeddings function:", err);
+      return null;
+    }
+  }
 
   /**
    * إضافة حدث أو شعور لذاكرة الوعي (محاكاة لذاكرة الـ Vector)
@@ -19,6 +64,101 @@ class ConsciousnessService {
   addToMemory(event: string) {
     this.memory.push(`${new Date().toISOString()}: ${event}`);
     if (this.memory.length > 50) this.memory.shift(); // الحفاظ على آخر 50 ذكرى
+  }
+
+  /**
+   * تخزين لحظة وعي في جدول consciousness_vectors (لو Supabase جاهز)
+   */
+  async saveMoment(
+    userId: string | null | undefined,
+    content: string,
+    source: "pulse" | "chat" | "note" = "pulse"
+  ): Promise<boolean> {
+    const embedding = await this.getEmbedding(content);
+    if (!embedding || !supabase) return false;
+
+    const payload: Record<string, unknown> = {
+      content,
+      embedding,
+      source
+    };
+    if (userId) payload.user_id = userId;
+
+    const { error } = await supabase.from("consciousness_vectors").insert(payload);
+
+    if (error) {
+      console.error("Save consciousness moment error:", error);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * استرجاع ذكريات مشابهة (مرآة الوعي) باستخدام match_consciousness_vectors
+   */
+  async recallSimilarMoments(
+    queryText: string,
+    options?: { threshold?: number; limit?: number; sources?: Array<"pulse" | "chat" | "note"> }
+  ): Promise<MemoryMatch[]> {
+    const threshold = options?.threshold ?? 0.7;
+    const limit = options?.limit ?? 3;
+    const allowedSources = options?.sources;
+
+    const queryEmbedding = await this.getEmbedding(queryText);
+    if (!queryEmbedding || !supabase) return [];
+
+    try {
+      const { data, error } = await supabase.rpc("match_consciousness_vectors", {
+        query_embedding: queryEmbedding,
+        match_threshold: threshold,
+        match_limit: limit
+      });
+
+      if (error) {
+        console.error("Recall similar moments error:", error);
+        return [];
+      }
+
+      let matches = (data as MemoryMatch[]) ?? [];
+      if (allowedSources && allowedSources.length > 0) {
+        matches = matches.filter((m) => !m.source || allowedSources.includes(m.source as any));
+      }
+
+      return matches;
+    } catch (err) {
+      console.error("Recall similar moments unexpected error:", err);
+      return [];
+    }
+  }
+
+  /**
+   * أرشيف الوعي الكامل من Supabase (بدون تصفية تشابه)
+   */
+  async fetchArchive(options?: { limit?: number; sources?: Array<"pulse" | "chat" | "note"> }): Promise<MemoryMatch[]> {
+    if (!supabase) return [];
+    const limit = options?.limit ?? 200;
+    const allowedSources = options?.sources;
+
+    try {
+      const { data, error } = await supabase.rpc("get_consciousness_archive", {
+        limit_count: limit
+      });
+      if (error) {
+        console.error("Fetch consciousness archive error:", error);
+        return [];
+      }
+      let matches = (data as MemoryMatch[]) ?? [];
+      // استبعاد العناصر المخفية من الواجهات الافتراضية
+      matches = matches.filter((m) => !m.hidden);
+      if (allowedSources && allowedSources.length > 0) {
+        matches = matches.filter((m) => !m.source || allowedSources.includes(m.source as any));
+      }
+      return matches;
+    } catch (err) {
+      console.error("Fetch consciousness archive unexpected error:", err);
+      return [];
+    }
   }
 
   /**

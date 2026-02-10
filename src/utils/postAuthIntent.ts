@@ -3,7 +3,7 @@ import type { PulseFocus, PulseMood } from "../state/pulseState";
 export type PostAuthIntent =
   | {
       kind: "start_recovery";
-      pulse: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean };
+      pulse: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string };
       createdAt: number;
     }
   | {
@@ -24,13 +24,14 @@ function clampEnergy(n: number): number {
   return v;
 }
 
-function isValidPulse(pulse: unknown): pulse is { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean } {
+function isValidPulse(pulse: unknown): pulse is { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string } {
   if (!pulse || typeof pulse !== "object") return false;
   const obj = pulse as Record<string, unknown>;
   if (typeof obj.energy !== "number" || !Number.isFinite(obj.energy)) return false;
   if (typeof obj.mood !== "string" || !VALID_MOODS.has(obj.mood as PulseMood)) return false;
   if (typeof obj.focus !== "string" || !VALID_FOCUS.has(obj.focus as PulseFocus)) return false;
   if (obj.auto != null && typeof obj.auto !== "boolean") return false;
+  if (obj.notes != null && typeof obj.notes !== "string") return false;
   return true;
 }
 

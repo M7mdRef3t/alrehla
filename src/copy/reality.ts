@@ -13,5 +13,5 @@ export const realityCopy = {
     rarely: STANDARD_OPTIONS_MAP.low,
     never: STANDARD_OPTIONS_MAP.zero
   } as const,
-  cta: "التالي"
+  cta: "يلا نكمل"
 };

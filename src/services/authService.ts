@@ -5,24 +5,17 @@ export type UserToneGender = "male" | "female" | "neutral";
 
 function getRedirectUrl(): string | undefined {
   if (typeof window === "undefined") return undefined;
+  const origin = window.location.origin;
+  // لو التطبيق شغال على localhost (سواء dev أو production build محلي) → الـ redirect يبقى على نفس السيرفر المحلي
+  if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
+    return origin.endsWith("/") ? origin : `${origin}/`;
+  }
+  // على السيرفر الحقيقي: استخدم المتغير أو دومين الإنتاج
   const configured =
     (import.meta.env.VITE_AUTH_REDIRECT_URL as string | undefined) ||
     (import.meta.env.VITE_PUBLIC_APP_URL as string | undefined) ||
-    "";
-  const base = configured.trim() || window.location.origin;
-  
-  // Fix for development: ensure we use the correct port
-  const isDev = import.meta.env.DEV;
-  if (isDev && base.includes('localhost:3000')) {
-    return 'http://localhost:5000/';
-  }
-  
-  // For production, ensure we use the correct domain
-  if (!isDev) {
-    // Force the correct production domain
-    return 'https://www.alrehla.app/';
-  }
-  
+    "https://www.alrehla.app";
+  const base = configured.trim();
   return base.endsWith("/") ? base : `${base}/`;
 }
 
