@@ -93,6 +93,8 @@ function cleanWelcomeMessage(text: string | null): string | null {
   return unquoted.length > 140 ? `${unquoted.slice(0, 140).trim()}...` : unquoted;
 }
 
+import { ConsciousnessHistoryMap } from "./components/ConsciousnessHistoryMap";
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>("landing");
   const [category, setCategory] = useState<AdviceCategory>("general");
@@ -1003,6 +1005,11 @@ export default function App() {
         <Suspense fallback={null}>
           <DataManagement isOpen={showDataManagement} onClose={() => setShowDataManagement(false)} />
         </Suspense>
+      )}
+      {screen === "landing" && (
+        <div className="fixed top-24 left-4 right-4 z-10 max-w-md mx-auto">
+          <ConsciousnessHistoryMap />
+        </div>
       )}
       {consciousnessInsight && screen !== "landing" && (
         <div className="fixed bottom-24 left-4 right-4 bg-white/80 backdrop-blur-md p-5 rounded-3xl border border-teal-100 shadow-xl z-50 animate-in fade-in slide-in-from-bottom-6 duration-700">

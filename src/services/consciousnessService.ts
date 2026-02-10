@@ -1,5 +1,6 @@
 import { geminiClient } from './geminiClient';
 import { AICache } from './geminiEnhancements';
+import { useConsciousnessHistory } from '../state/consciousnessHistoryState';
 
 export interface ConsciousnessInsight {
   emotionalState: string;
@@ -49,6 +50,14 @@ class ConsciousnessService {
       const response = await geminiClient.generateJSON<ConsciousnessInsight>(prompt);
       if (response) {
         this.addToMemory(`تحليل: ${response.emotionalState} - ${response.underlyingPattern}`);
+        
+        // تسجيل النقطة في تاريخ الوعي
+        useConsciousnessHistory.getState().addPoint({
+          timestamp: Date.now(),
+          emotionalState: response.emotionalState,
+          intensity: response.intensity,
+          pattern: response.underlyingPattern
+        });
       }
       return response;
     } catch (error) {
