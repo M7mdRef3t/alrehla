@@ -24,7 +24,8 @@ import {
   Compass,
   Star,
   ShieldCheck,
-  ScrollText
+  ScrollText,
+  Smartphone
 } from "lucide-react";
 import { useJourneyState } from "../state/journeyState";
 import { useNotificationState } from "../state/notificationState";
@@ -45,6 +46,7 @@ import { useAdminState } from "../state/adminState";
 import { getEffectiveRoleFromState, useAuthState } from "../state/authState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "../utils/featureFlags";
 import type { FeatureFlagKey } from "../config/features";
+import { usePWAInstall } from "../contexts/PWAInstallContext";
 
 const NotificationSettings = lazy(() =>
   import("./NotificationSettings").then((m) => ({ default: m.NotificationSettings }))
@@ -236,6 +238,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     lastGoalRef.current = lastGoalLabel;
   }, [lastGoalLabel]);
 
+  const pwaInstall = usePWAInstall();
   const badgePulseClass = badgePulse ? "animate-bounce" : "";
   const fallbackBadgeClasses =
     "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200";
@@ -547,6 +550,20 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             <Palette className="w-5 h-5 shrink-0" />
             المظهر
           </button>
+          {pwaInstall?.canShowInstallButton && (
+            <button
+              type="button"
+              onClick={() => {
+                if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
+                else pwaInstall.showInstallHint();
+              }}
+              className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+              title="تثبيت التطبيق على الجهاز"
+            >
+              <Smartphone className="w-5 h-5 shrink-0" />
+              تثبيت التطبيق
+            </button>
+          )}
           <button
             type="button"
             onClick={() => openWithFeatureGate("internal_boundaries", () => setShowAdvancedTools(true))}
@@ -973,6 +990,21 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <Palette className="w-6 h-6 shrink-0" />
                   <span>المظهر</span>
                 </button>
+                {pwaInstall?.canShowInstallButton && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
+                      else pwaInstall.showInstallHint();
+                      handleClose();
+                    }}
+                    className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right"
+                    title="تثبيت التطبيق"
+                  >
+                    <Smartphone className="w-6 h-6 shrink-0" />
+                    <span>تثبيت التطبيق</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {

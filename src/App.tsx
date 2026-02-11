@@ -25,6 +25,7 @@ import type { FeatureFlagKey } from "./config/features";
 import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "./state/authState";
 import { consciousnessService, type MemoryMatch } from "./services/consciousnessService";
 import { initAppContentRealtime } from "./state/appContentState";
+import { PWAInstallProvider } from "./contexts/PWAInstallContext";
 import { InstallHintBanner } from "./components/InstallHintBanner";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
 import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
@@ -786,6 +787,7 @@ export default function App() {
   }
 
   return (
+    <PWAInstallProvider>
     <div className="min-h-screen flex transition-colors relative overflow-hidden isolate" dir="rtl"
       style={{ background: "var(--space-void)" }}
     >
@@ -1267,5 +1269,6 @@ export default function App() {
         </div>
       )}
     </div>
+    </PWAInstallProvider>
   );
 }

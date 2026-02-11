@@ -4,8 +4,9 @@ import { recordFlowEvent } from "../services/journeyTracking";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   Star, ArrowLeft, Sparkles, Heart, Compass, Map, Orbit, Quote,
-  Zap, Users, TrendingUp
+  Zap, Users, TrendingUp, Smartphone
 } from "lucide-react";
+import { usePWAInstall } from "../contexts/PWAInstallContext";
 import { landingCopy } from "../copy/landing";
 import { getJourneyToolsView } from "../data/journeyTools";
 import { useJourneyState } from "../state/journeyState";
@@ -159,6 +160,7 @@ export const Landing: FC<LandingProps> = ({
   const reduceMotion = useReducedMotion();
   const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
   const landingViewedAt = useRef<number | null>(null);
+  const pwaInstall = usePWAInstall();
 
   useEffect(() => {
     if (landingViewedAt.current == null) {
@@ -312,6 +314,27 @@ export const Landing: FC<LandingProps> = ({
               </>
               }
             </p>
+
+            {/* زر التثبيت — يظهر لجميع المستخدمين (وضع المستخدم) على موبايل/تابلت */}
+            {pwaInstall?.canShowInstallButton && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
+                  else pwaInstall.showInstallHint();
+                }}
+                className="mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-medium border transition-colors"
+                style={{
+                  borderColor: "rgba(59, 130, 246, 0.5)",
+                  color: "rgba(147, 197, 253, 0.95)",
+                  background: "rgba(59, 130, 246, 0.12)"
+                }}
+                aria-label="تثبيت التطبيق"
+              >
+                <Smartphone className="w-4 h-4" />
+                تثبيت التطبيق
+              </button>
+            )}
           </motion.div>
 
           {/* scroll indicator */}
