@@ -203,7 +203,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
                 type="button"
                 onClick={() => setActiveTab(category)}
                 className={`shrink-0 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
-                  isActive ? "bg-white text-purple-900 shadow-sm border border-purple-200" : "text-slate-600 hover:bg-white/60"
+                  isActive ? "bg-white text-purple-900 border border-purple-200" : "text-slate-600 hover:bg-white/60"
                 }`}
               >
                 <span>{getCategoryEmoji(category)}</span>
@@ -258,7 +258,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
                 disabled={readOnly}
                 className={`w-full p-4 rounded-xl border-2 text-right transition-all duration-200 ${
                   isSelectedSymptom
-                    ? "bg-teal-50 border-teal-500 shadow-sm"
+                    ? "bg-teal-50 border-teal-500"
                     : "bg-white border-gray-200 hover:border-teal-300 hover:bg-teal-50/50"
                 } ${readOnly ? "cursor-default" : "cursor-pointer active:scale-[0.99]"}`}
                 whileTap={!readOnly ? { scale: 0.98 } : {}}

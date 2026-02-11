@@ -33,7 +33,7 @@ export const MapOnboardingOverlay: FC<MapOnboardingOverlayProps> = ({ onClose })
       aria-labelledby="onboarding-title"
     >
       <motion.div
-        className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-6 text-right"
+        className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 text-right"
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
@@ -41,9 +41,9 @@ export const MapOnboardingOverlay: FC<MapOnboardingOverlayProps> = ({ onClose })
       >
         <h2 id="onboarding-title" className="text-lg font-bold text-slate-900 dark:text-white mb-4">
           {step === 1 ? (
-            <EditableText id="map_onboarding_title_1" defaultText="مرحبتين بالخريطة" page="map" showEditIcon={false} />
+            <EditableText id="map_onboarding_title_1" defaultText="أهلاً بيك في خريطة مداراتك" page="map" showEditIcon={false} />
           ) : (
-            <EditableText id="map_onboarding_title_2" defaultText="معنى الدوائر" page="map" showEditIcon={false} />
+            <EditableText id="map_onboarding_title_2" defaultText="المدارات وإحساسك" page="map" showEditIcon={false} />
           )}
         </h2>
         <AnimatePresence mode="wait">

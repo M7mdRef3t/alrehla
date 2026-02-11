@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, User } from "lucide-react";
 import { Landing } from "./components/Landing";
 import { useNotificationState } from "./state/notificationState";
@@ -11,6 +12,7 @@ import { initThemePalette } from "./services/themePalette";
 import { usePulseState } from "./state/pulseState";
 import type { PulseFocus, PulseMood } from "./state/pulseState";
 import { trackPageView, trackEvent, AnalyticsEvents } from "./services/analytics";
+import { recordFlowEvent } from "./services/journeyTracking";
 import { sendNotification, sendPresetNotification, NOTIFICATION_TYPES } from "./services/notifications";
 import type { AdviceCategory } from "./data/adviceScripts";
 import type { AgentActions, AgentContext } from "./agent/types";
@@ -98,6 +100,7 @@ function cleanWelcomeMessage(text: string | null): string | null {
 }
 
 import { ConsciousnessHistoryMap } from "./components/ConsciousnessHistoryMap";
+import { JourneyTimeline } from "./components/JourneyTimeline";
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("landing");
@@ -112,8 +115,11 @@ export default function App() {
   const [showPulseCheck, setShowPulseCheck] = useState(false);
   const [pulseCheckContext, setPulseCheckContext] = useState<PulseCheckContext>("regular");
   const [showCocoon, setShowCocoon] = useState(false);
+  /** عند إغلاق التنفس: لو فُتح من الخريطة (دقيقة شحن) نرجع لشاشة الأهداف بدل البقاء على الخريطة */
+  const [returnToGoalOnBreathingClose, setReturnToGoalOnBreathingClose] = useState(false);
   const [showNoiseSilencingPulse, setShowNoiseSilencingPulse] = useState(false);
   const [pendingCocoonAfterNoise, setPendingCocoonAfterNoise] = useState(false);
+  const [postNoiseSessionMessage, setPostNoiseSessionMessage] = useState(false);
   const [lastPulseInsights, setLastPulseInsights] = useState<MemoryMatch[]>([]);
   const [showConsciousnessArchive, setShowConsciousnessArchive] = useState(false);
   const [themeBeforePulse, setThemeBeforePulse] = useState<"light" | "dark" | "system" | null>(null);
@@ -131,6 +137,7 @@ export default function App() {
   const [showDataManagement, setShowDataManagement] = useState(false);
   const [welcome, setWelcome] = useState<{ message: string; source: WelcomeSource } | null>(null);
   const [consciousnessInsight, setConsciousnessInsight] = useState<any>(null);
+  const [showJourneyTimeline, setShowJourneyTimeline] = useState(false);
 
   const recordUserActivity = useNotificationState((s) => s.recordUserActivity);
   const notificationSettings = useNotificationState((s) => s.settings);
@@ -232,6 +239,20 @@ export default function App() {
   useEffect(() => {
     const stop = initAppContentRealtime();
     return () => stop();
+  }, []);
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      import("./utils/seedStressTestData").then(({ seedStressTestData }) => {
+        (window as Window & { __seedStressTest?: () => { nodeCount: number; eventCount: number } }).__seedStressTest =
+          () => {
+            const result = seedStressTestData();
+            console.log("[Stress Test] تم: ", result.nodeCount, "عُقدة،", result.eventCount, "حدث. إعادة تحميل...");
+            setTimeout(() => window.location.reload(), 500);
+            return result;
+          };
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -366,6 +387,7 @@ export default function App() {
       setLockedFeature("dawayir_map");
       return;
     }
+    skipNextPulseCheckRef.current = true;
     setScreen("goal");
   };
 
@@ -417,6 +439,7 @@ export default function App() {
       setLockedFeature("journey_tools");
       return;
     }
+    recordFlowEvent("tools_opened");
     setToolsBackScreen(screen === "tools" ? "landing" : screen);
     setScreen("tools");
   };
@@ -440,15 +463,28 @@ export default function App() {
       setLockedFeature("dawayir_map");
       return;
     }
+    skipNextPulseCheckRef.current = true;
     setScreen("goal");
   };
 
-  const closePulseCheck = () => {
+  const pulseOpenedAtRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (showPulseCheck) {
+      pulseOpenedAtRef.current = Date.now();
+      recordFlowEvent("pulse_opened");
+    }
+  }, [showPulseCheck]);
+  const closePulseCheck = (completed = false) => {
+    if (!completed && pulseOpenedAtRef.current != null) {
+      recordFlowEvent("pulse_abandoned");
+    }
+    pulseOpenedAtRef.current = null;
     setShowPulseCheck(false);
     setPulseCheckContext("regular");
   };
 
   const handlePulseGateSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => {
+    recordFlowEvent("pulse_completed");
     trackEvent(AnalyticsEvents.MICRO_COMPASS_COMPLETED, {
       gate: "pulse",
       pulse_energy: payload.energy,
@@ -456,7 +492,7 @@ export default function App() {
       pulse_focus: payload.focus,
       pulse_auto: payload.auto ?? false
     });
-    closePulseCheck();
+    closePulseCheck(true);
 
     const intent: PostAuthIntent = {
       kind: "start_recovery",
@@ -468,8 +504,9 @@ export default function App() {
   };
 
   const handlePulseSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => {
+    recordFlowEvent("pulse_completed");
     logPulse(payload);
-    closePulseCheck();
+    closePulseCheck(true);
 
     // توصيل البوصلة بمرآة الوعي (غير معطِّل للتجربة)
     const numericPart = `طاقة ${payload.energy}/10، مزاج ${payload.mood}, تركيز ${payload.focus}`;
@@ -563,6 +600,8 @@ export default function App() {
 
   const pulseMode = useMemo(() => {
     if (!lastPulse) return "normal";
+    const ageMs = Date.now() - (lastPulse.timestamp ?? 0);
+    if (ageMs > 24 * 60 * 60 * 1000) return "normal"; // آخر نبض خلال ٢٤ ساعة فقط
     if (lastPulse.mood === "angry") return "angry";
     if (lastPulse.energy <= 3) return "low";
     if (lastPulse.energy >= 8) return "high";
@@ -754,6 +793,34 @@ export default function App() {
       <div className="nebula-bg" aria-hidden="true" />
 
       <InstallHintBanner />
+      <AnimatePresence>
+        {postNoiseSessionMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.35 }}
+            className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
+            role="status"
+            aria-live="polite"
+          >
+            <div
+              className="bento-block text-center py-4 px-6"
+              style={{
+                borderColor: "rgba(34, 197, 94, 0.25)",
+                background: "rgba(34, 197, 94, 0.06)"
+              }}
+            >
+              <p className="text-base font-medium" style={{ color: "var(--text-primary)" }}>
+                حمد لله على السلامة 🌿
+              </p>
+              <p className="text-sm mt-1 opacity-90" style={{ color: "var(--text-secondary)" }}>
+                يومك بقى أخف دلوقتي
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {lastPulseInsights.length > 0 && (
         <div className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-lg mx-auto">
           <div className="bento-block" style={{ borderColor: "rgba(245, 166, 35, 0.25)", padding: "1.5rem" }}>
@@ -818,6 +885,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => {
+              recordFlowEvent("profile_clicked");
               if (authUser) {
                 setShowDataManagement(true);
                 return;
@@ -844,7 +912,7 @@ export default function App() {
               )}
             </span>
             <span
-              className="pointer-events-none absolute top-full mt-1 right-0 max-w-48 rounded-2xl px-3 py-1 text-[11px] font-medium leading-snug opacity-0 translate-y-1 bg-slate-900/90 text-slate-50 shadow-lg border border-white/10 backdrop-blur-md group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 text-center"
+              className="pointer-events-none absolute top-full mt-1 right-0 max-w-48 rounded-2xl px-3 py-1 text-[11px] font-medium leading-snug opacity-0 translate-y-1 bg-slate-900/90 text-slate-50 border border-white/10 backdrop-blur-md group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 text-center"
             >
               {authUser ? "افتح حسابك" : "سجّل دخولك واحفظ رحلتك"}
             </span>
@@ -860,19 +928,34 @@ export default function App() {
             onOpenGuidedJourney={() => setScreen("guided")}
             onOpenMission={openMissionScreen}
             onOpenJourneyTools={openJourneyTools}
+            onOpenJourneyTimeline={() => {
+              setScreen("map");
+              setShowJourneyTimeline(true);
+            }}
             onOpenDawayir={openDawayirTool}
             onFeatureLocked={setLockedFeature}
             viewingNodeId={screen === "map" ? selectedNodeId : null}
+            onNoiseSessionComplete={() => {
+              setPostNoiseSessionMessage(true);
+              setTimeout(() => setPostNoiseSessionMessage(false), 4500);
+            }}
           />
         </Suspense>
       )}
       <main
-        className={`flex-1 min-w-0 flex items-center justify-center transition-[margin] ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""}`}
+        className={`flex-1 min-w-0 flex transition-[margin] ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""}`}
         style={{ marginRight: isPrivilegedUser ? SIDEBAR_TAB_MARGIN : "0px" }}
         aria-hidden={showPulseCheck}
       >
+        {screen === "map" && (
+          <JourneyTimeline
+            isOpen={showJourneyTimeline}
+            onClose={() => setShowJourneyTimeline(false)}
+            onCardClick={(nodeId) => setSelectedNodeId(nodeId)}
+          />
+        )}
         <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...جاري التحميل</div>}>
-          <div key={screen} className={screen === "landing" ? "" : "app-panel-main"}>
+          <div key={screen} className={`flex-1 min-w-0 flex items-center justify-center transition-all duration-300 ease-in-out ${screen === "landing" ? "" : "app-panel-main"}`}>
             {screen === "landing" && (
               <Landing
                 onStartJourney={startRecovery}
@@ -886,7 +969,7 @@ export default function App() {
             )}
 
             {screen === "goal" && (
-              <div className="w-full">
+              <div className="w-full flex-1 min-h-0 max-h-[100dvh] overflow-hidden flex flex-col px-4">
                 {welcome && (
                   <OnboardingWelcomeBubble
                     message={welcome.message}
@@ -901,6 +984,7 @@ export default function App() {
                     setCategory(nextCategory);
                     setGoalId(nextGoalId);
                     useJourneyState.getState().setLastGoal(nextGoalId, nextCategory);
+                    skipNextPulseCheckRef.current = true;
                     setScreen("map");
                   }}
                 />
@@ -973,7 +1057,7 @@ export default function App() {
 
         {showBaseline && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-            <div className="relative bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-auto">
+            <div className="relative bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-auto">
               <button
                 type="button"
                 onClick={() => setShowBaseline(false)}
@@ -1055,6 +1139,7 @@ export default function App() {
             isOpen={showCocoon}
             onStart={() => {
               setShowCocoon(false);
+              setReturnToGoalOnBreathingClose(true);
               setShowBreathing(true);
             }}
             onClose={() => setShowCocoon(false)}
@@ -1071,6 +1156,15 @@ export default function App() {
                 setShowCocoon(true);
               }
             }}
+            onSessionComplete={() => {
+              setShowNoiseSilencingPulse(false);
+              if (pendingCocoonAfterNoise) {
+                setPendingCocoonAfterNoise(false);
+                setShowCocoon(true);
+              }
+              setPostNoiseSessionMessage(true);
+              setTimeout(() => setPostNoiseSessionMessage(false), 4500);
+            }}
           />
         )}
 
@@ -1083,7 +1177,15 @@ export default function App() {
         )}
 
         {showBreathing && (
-          <BreathingOverlay onClose={() => setShowBreathing(false)} />
+          <BreathingOverlay
+            onClose={() => {
+              setShowBreathing(false);
+              if (returnToGoalOnBreathingClose) {
+                setReturnToGoalOnBreathingClose(false);
+                setScreen("goal");
+              }
+            }}
+          />
         )}
 
         {isEmergencyOpen && (
@@ -1105,12 +1207,13 @@ export default function App() {
           isOpen={showAuthModal}
           intent={postAuthIntent}
           onClose={() => setShowAuthModal(false)}
-          onNotNow={() => {
+          onNotNow={(pulseToSave) => {
             setShowAuthModal(false);
             setPostAuthIntentState(null);
             clearPostAuthIntent();
             setWelcome(null);
             skipNextPulseCheckRef.current = true;
+            if (pulseToSave) logPulse(pulseToSave);
             openDawayirSetup();
           }}
         />

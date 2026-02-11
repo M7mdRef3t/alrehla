@@ -40,7 +40,7 @@ export const WeekCard: FC<WeekCardProps> = ({
 
   return (
     <motion.div
-      className="border border-purple-200 dark:border-purple-900/40 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all dark:bg-slate-800/50"
+      className="border border-purple-200 dark:border-purple-900/40 rounded-2xl overflow-hidden transition-all dark:bg-slate-800/50"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
     >

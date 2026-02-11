@@ -10,10 +10,12 @@ interface BreathingOverlayProps {
 }
 
 const CYCLE_DURATION_MS = 8000; // 4s inhale + 4s exhale
+/** دقيقة واحدة ≈ 8 دورات كاملة (8×8 ثوانٍ) */
+const DEFAULT_CLOSE_AFTER_CYCLES = 8;
 
 export const BreathingOverlay: FC<BreathingOverlayProps> = ({
   onClose,
-  autoCloseAfterCycles = 0
+  autoCloseAfterCycles = DEFAULT_CLOSE_AFTER_CYCLES
 }) => {
   const [phase, setPhase] = useState<"in" | "out">("in");
   const [cycleCount, setCycleCount] = useState(0);
@@ -47,18 +49,18 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
       <button
         type="button"
         onClick={onClose}
-        className="absolute top-4 left-4 p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors z-10"
+        className="absolute top-4 right-4 p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors z-10"
         aria-label="إغلاق"
       >
         <X className="w-5 h-5" />
       </button>
 
-      <p className="text-white/90 text-lg font-medium mb-8">
+      <p className="text-white/90 text-lg font-medium mb-10 mt-6">
         {phase === "in" ? "شهيق" : "زفير"}
       </p>
 
       <motion.div
-        className="w-48 h-48 rounded-full bg-teal-400/30 border-4 border-teal-300/50"
+        className="w-48 h-48 rounded-full bg-teal-400/30 border-4 border-teal-300/50 shrink-0"
         animate={{
           scale: phase === "in" ? [0.8, 1.4] : [1.4, 0.8],
           opacity: phase === "in" ? [0.6, 1] : [1, 0.6]
@@ -68,7 +70,7 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
           ease: "easeInOut"
         }}
       />
-      <p className="text-white/70 text-sm mt-8 max-w-xs text-center">
+      <p className="text-white/70 text-sm mt-10 max-w-xs text-center px-4">
         خد وقتك — دقيقة واحدة من التنفس الهادئ
       </p>
     </div>

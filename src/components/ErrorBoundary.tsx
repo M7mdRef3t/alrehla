@@ -55,7 +55,7 @@ export class ErrorBoundary extends Component<Props, State> {
           className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50 flex items-center justify-center p-4"
           dir="rtl"
         >
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 text-center">
+          <div className="bg-white rounded-3xl max-w-md w-full p-8 text-center">
             {/* أيقونة الخطأ */}
             <div className="mb-6">
               <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto">
@@ -99,7 +99,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex flex-col gap-3 mb-4">
               <button
                 onClick={this.handleReset}
-                className="w-full py-3 px-6 bg-gradient-to-l from-teal-600 to-teal-500 text-white font-semibold rounded-xl hover:from-teal-700 hover:to-teal-600 transition-all duration-200 shadow-lg shadow-teal-500/30"
+                className="w-full py-3 px-6 bg-gradient-to-l from-teal-600 to-teal-500 text-white font-semibold rounded-xl hover:from-teal-700 hover:to-teal-600 transition-all duration-200"
               >
                 🔄 تحديث الصفحة
               </button>

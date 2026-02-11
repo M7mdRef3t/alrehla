@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushPulseLog } from "../services/pulseSync";
 
-export type PulseMood = "bright" | "calm" | "anxious" | "angry" | "sad";
+export type PulseMood = "bright" | "calm" | "anxious" | "angry" | "sad" | "tense" | "hopeful" | "overwhelmed";
 export type PulseFocus = "event" | "thought" | "body" | "none";
 
 export interface PulseEntry {

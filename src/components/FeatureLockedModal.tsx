@@ -31,7 +31,7 @@ export const FeatureLockedModal: FC<FeatureLockedModalProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 16, scale: 0.96 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl text-center space-y-4"
+          className="w-full max-w-md rounded-3xl bg-white p-6 text-center space-y-4"
         >
           <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
             <Lock className="w-6 h-6" />

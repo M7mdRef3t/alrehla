@@ -124,7 +124,7 @@ export const RelationshipGym: React.FC<RelationshipGymProps> = ({ onClose, onSta
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 p-8 text-center"
+          className="relative bg-white rounded-2xl max-w-md w-full overflow-hidden border border-slate-200 p-8 text-center"
         >
           <button
             type="button"
@@ -180,7 +180,7 @@ export const RelationshipGym: React.FC<RelationshipGymProps> = ({ onClose, onSta
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200"
+        className="relative bg-white rounded-2xl max-w-lg w-full overflow-hidden border border-slate-200"
       >
         {/* Header */}
         <div className="bg-gradient-to-br from-teal-50 to-cyan-50 p-6 border-b border-teal-100 flex justify-between items-center">

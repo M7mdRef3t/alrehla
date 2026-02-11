@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Shield, Users, Heart, Loader } from "lucide-react";
+import { X, Shield, Users, Heart, Loader, Sparkles } from "lucide-react";
 import { signInWithGoogle } from "../services/authService";
 import { AnalyticsEvents, trackEvent } from "../services/analytics";
 import { isSupabaseReady } from "../services/supabaseClient";
@@ -13,7 +13,8 @@ interface GoogleAuthModalProps {
   isOpen: boolean;
   intent: PostAuthIntent;
   onClose: () => void;
-  onNotNow?: () => void;
+  /** يُستدعى عند "مش دلوقتي" — يُمرّر pulse للحفظ المحلي (Guest Mode) */
+  onNotNow?: (pulseToSave?: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => void;
 }
 
 function valueToLabel(value: number): string {
@@ -29,7 +30,10 @@ const MOOD_LABEL: Record<PulseMood, string> = {
   calm: "هادئ",
   anxious: "قلقان",
   angry: "غضبان",
-  sad: "حزين"
+  sad: "حزين",
+  tense: "متوتر",
+  hopeful: "متفائل",
+  overwhelmed: "مغ overwhelm"
 };
 
 const FOCUS_LABEL: Record<PulseFocus, string> = {
@@ -38,6 +42,16 @@ const FOCUS_LABEL: Record<PulseFocus, string> = {
   body: "جسدي تعبان",
   none: "ولا حاجة، جاي أكمل"
 };
+
+function getAuthTitle(intent: PostAuthIntent): string {
+  if (intent.kind !== "start_recovery") return "أهلاً بيك في الرحلة";
+  const { mood, energy } = intent.pulse;
+  const negativeMood = mood === "sad" || mood === "anxious" || mood === "angry" || mood === "tense" || mood === "overwhelmed";
+  if (negativeMood) return "قرايتك وصلت، واحنا مقدرينها";
+  const isPositive = mood === "bright" || mood === "calm" || mood === "hopeful" || energy >= 6;
+  if (isPositive) return "قرايتك جميلة جداً!";
+  return "يلا نحفظ اللحظة دي";
+}
 
 export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
   isOpen,
@@ -98,7 +112,7 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
 
   const handleNotNow = () => {
     if (intent.kind === "start_recovery" && onNotNow) {
-      onNotNow();
+      onNotNow(intent.pulse);
       return;
     }
     onClose();
@@ -108,32 +122,61 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
     <AnimatePresence>
       {isOpen && (
         <>
+          {/* ── backdrop — dark cosmic blur ── */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[90] bg-gradient-to-br from-blue-50/95 to-teal-50/95 backdrop-blur-md"
+            className="fixed inset-0 z-[90]"
+            style={{
+              background: "rgba(10, 14, 31, 0.85)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+            }}
             onClick={onClose}
           />
+
+          {/* ── modal ── */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 20 }}
-            transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 25 }}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[95] max-w-md mx-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden"
+            exit={{ opacity: 0, scale: 0.95, y: 24 }}
+            transition={{ duration: 0.35, type: "spring", stiffness: 280, damping: 24 }}
+            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[95] max-w-md mx-auto overflow-hidden"
+            style={{
+              background: "rgba(15, 22, 41, 0.95)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              borderRadius: "1.5rem",
+              boxShadow: "0 24px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(45, 212, 191, 0.06)",
+            }}
             role="dialog"
             aria-modal="true"
             aria-label="تسجيل الدخول"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header with gradient */}
-            <div className="bg-gradient-to-r from-blue-600 to-teal-600 p-6 sm:p-4">
-              <div className="flex items-start justify-between gap-3">
+            {/* ── header ── */}
+            <div
+              className="relative p-6 sm:p-5 overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, rgba(45, 212, 191, 0.12) 0%, rgba(245, 166, 35, 0.08) 100%)",
+                borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+              }}
+            >
+              {/* subtle glow */}
+              <div
+                className="absolute top-0 right-0 w-32 h-32 rounded-full pointer-events-none"
+                style={{ background: "radial-gradient(circle, rgba(45,212,191,0.15) 0%, transparent 70%)" }}
+              />
+
+              <div className="relative flex items-start justify-between gap-3">
                 <div className="text-right flex-1">
-                  <h2 className="text-xl sm:text-lg font-bold text-white">
-                    {intent.kind === "start_recovery" ? "قرايتك جميلة جداً! 💙" : "أهلاً بيك في الرحلة 🌟"}
-                  </h2>
-                  <p className="text-sm sm:text-xs text-white/90 mt-2 leading-relaxed">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4" style={{ color: "#2dd4bf" }} />
+                    <h2 className="text-lg font-bold text-white">
+                      {getAuthTitle(intent)}
+                    </h2>
+                  </div>
+                  <p className="text-[13px] leading-relaxed" style={{ color: "rgba(203, 213, 225, 0.8)" }}>
                     {intent.kind === "start_recovery"
                       ? "سجل دخول عشان نحفظها ونكمل رحلتك سوا"
                       : "سجل دخول بحساب جوجل عشان نحفظ تقدمك"}
@@ -142,66 +185,88 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-10 h-10 sm:w-8 sm:h-8 rounded-full hover:bg-white/20 flex items-center justify-center transition-colors"
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.06)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                  }}
                   aria-label="إغلاق"
                 >
-                  <X className="w-5 h-4 text-white" />
+                  <X className="w-4 h-4" style={{ color: "rgba(203, 213, 225, 0.7)" }} />
                 </button>
               </div>
             </div>
 
-            <div className="p-6 sm:p-4 space-y-4 text-right">
-              {/* Trust signals */}
-              <div className="flex items-center justify-center gap-4 text-xs text-green-600 dark:text-green-400">
-                <div className="flex items-center gap-1">
-                  <Shield className="w-3 h-3" />
-                  <span>اتصال آمن</span>
+            {/* ── body ── */}
+            <div className="p-6 sm:p-5 space-y-4 text-right">
+
+              {/* trust signals */}
+              <div className="flex items-center justify-center gap-5">
+                <div className="flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5" style={{ color: "#2dd4bf" }} />
+                  <span className="text-[12px] font-medium" style={{ color: "rgba(45, 212, 191, 0.8)" }}>اتصال آمن</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Users className="w-3 h-3" />
-                  <span>1000+ مستخدم</span>
+                <div
+                  className="w-px h-3"
+                  style={{ background: "rgba(255, 255, 255, 0.1)" }}
+                />
+                <div className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5" style={{ color: "#fbbf24" }} />
+                  <span className="text-[12px] font-medium" style={{ color: "rgba(251, 191, 36, 0.8)" }}>+١٬٠٠٠ مستخدم</span>
                 </div>
               </div>
 
+              {/* pulse data (recovery intent) */}
               {intent.kind === "start_recovery" && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-950 dark:to-teal-950 p-4"
+                  className="rounded-xl p-4"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.03)",
+                    border: "1px solid rgba(255, 255, 255, 0.06)",
+                  }}
                 >
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full flex items-center justify-center">
-                      <Heart className="w-5 h-5 text-white" />
+                    <div
+                      className="w-9 h-9 rounded-lg flex items-center justify-center"
+                      style={{
+                        background: "rgba(45, 212, 191, 0.1)",
+                        border: "1px solid rgba(45, 212, 191, 0.2)",
+                      }}
+                    >
+                      <Heart className="w-4 h-4" style={{ color: "#2dd4bf" }} />
                     </div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">قراءتك اللحظية</p>
+                    <p className="text-[14px] font-semibold text-white">قراءتك اللحظية</p>
                   </div>
-                  <div className="grid grid-cols-1 gap-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-slate-600 dark:text-slate-400">البطارية:</span>
-                      <span className="font-semibold text-slate-900 dark:text-white">
-                        {valueToLabel(intent.pulse.energy)} ({intent.pulse.energy}/10)
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600 dark:text-slate-400">الطقس:</span>
-                      <span className="font-semibold text-slate-900 dark:text-white">{MOOD_LABEL[intent.pulse.mood]}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600 dark:text-slate-400">التركيز:</span>
-                      <span className="font-semibold text-slate-900 dark:text-white">{FOCUS_LABEL[intent.pulse.focus]}</span>
-                    </div>
+                  <div className="space-y-2">
+                    {[
+                      { label: "البطارية", value: `${valueToLabel(intent.pulse.energy)} (${intent.pulse.energy}/10)` },
+                      { label: "الطقس", value: MOOD_LABEL[intent.pulse.mood] },
+                      { label: "التركيز", value: FOCUS_LABEL[intent.pulse.focus] },
+                    ].map((row, i) => (
+                      <div key={i} className="flex justify-between text-[13px]">
+                        <span style={{ color: "rgba(148, 163, 184, 0.7)" }}>{row.label}</span>
+                        <span className="font-semibold text-white">{row.value}</span>
+                      </div>
+                    ))}
                   </div>
                 </motion.div>
               )}
 
-              {/* Google button with enhanced design */}
+              {/* Google sign-in button */}
               <motion.button
                 type="button"
                 onClick={handleGoogle}
                 disabled={loading}
-                className="w-full inline-flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-4 sm:py-3 text-base sm:text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
-                whileHover={!loading ? { scale: 1.02 } : {}}
+                className="w-full inline-flex items-center justify-center gap-3 rounded-xl px-6 py-3.5 text-[15px] font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: "rgba(255, 255, 255, 0.95)",
+                  color: "#1a1a2e",
+                  boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)",
+                }}
+                whileHover={!loading ? { y: -1, boxShadow: "0 8px 28px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15)" } : {}}
                 whileTap={!loading ? { scale: 0.98 } : {}}
               >
                 {loading ? (
@@ -209,59 +274,78 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-5 h-5"
                     >
-                      <Loader className="w-full h-full text-white" />
+                      <Loader className="w-5 h-5" style={{ color: "#1a1a2e" }} />
                     </motion.div>
                     <span>بنوصل بجوجل...</span>
                   </>
                 ) : (
                   <>
-                    <GoogleMark className="w-5 h-4" />
+                    <GoogleMark className="w-5 h-5" />
                     <span>تسجيل الدخول بجوجل</span>
                   </>
                 )}
               </motion.button>
 
-              {/* Privacy note with better design */}
-              <div className="rounded-xl bg-slate-50 dark:bg-slate-950 p-3">
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">خصوصيتنا:</span> بنستخدم تسجيل الدخول بس عشان نحفظ قرايتك وتقدمك. مفيش نشر أو مشاركة بياناتك مع حد.
+              {/* privacy note */}
+              <div
+                className="rounded-xl p-3.5"
+                style={{
+                  background: "rgba(255, 255, 255, 0.03)",
+                  border: "1px solid rgba(255, 255, 255, 0.05)",
+                }}
+              >
+                <p className="text-[12px] leading-relaxed" style={{ color: "rgba(148, 163, 184, 0.65)" }}>
+                  <span className="font-semibold" style={{ color: "rgba(203, 213, 225, 0.85)" }}>خصوصيتنا:</span>{" "}
+                  بنستخدم تسجيل الدخول بس عشان نحفظ قرايتك وتقدمك. مفيش نشر أو مشاركة بياناتك مع حد.
                 </p>
               </div>
 
-              {/* Not now button */}
+              {/* not now button */}
               <motion.button
                 type="button"
                 onClick={handleNotNow}
-                className="w-full inline-flex items-center justify-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6 py-3 sm:py-2.5 text-sm sm:text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
-                whileHover={{ scale: 1.02 }}
+                className="w-full inline-flex items-center justify-center rounded-xl px-6 py-3 text-[14px] font-medium transition-all duration-200"
+                style={{
+                  background: "rgba(255, 255, 255, 0.04)",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  color: "rgba(203, 213, 225, 0.7)",
+                }}
+                whileHover={{ background: "rgba(255, 255, 255, 0.07)" }}
                 whileTap={{ scale: 0.98 }}
               >
                 مش دلوقتي
               </motion.button>
 
-              {/* Error message with better design */}
+              {/* error message */}
               {error && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3"
+                  className="rounded-xl p-3.5"
+                  style={{
+                    background: "rgba(248, 113, 113, 0.08)",
+                    border: "1px solid rgba(248, 113, 113, 0.2)",
+                  }}
                 >
-                  <p className="text-sm text-red-700 dark:text-red-300">
+                  <p className="text-[13px]" style={{ color: "#f87171" }}>
                     {error}
                   </p>
                 </motion.div>
               )}
 
-              {/* Success message */}
+              {/* success message */}
               {message && !error && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-2xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3"
+                  className="rounded-xl p-3.5"
+                  style={{
+                    background: "rgba(45, 212, 191, 0.08)",
+                    border: "1px solid rgba(45, 212, 191, 0.2)",
+                  }}
                 >
-                  <p className="text-sm text-green-700 dark:text-green-300">
+                  <p className="text-[13px]" style={{ color: "#2dd4bf" }}>
                     {message}
                   </p>
                 </motion.div>

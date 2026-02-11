@@ -148,6 +148,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     if (selectedNodeId && !nodes.some((n) => n.id === selectedNodeId)) onSelectNode(null);
   }, [selectedNodeId, nodes, onSelectNode]);
 
+  useEffect(() => {
+    if (selectedNodeId && showPlacementTooltip) dismissPlacementTooltip();
+  }, [selectedNodeId, showPlacementTooltip, dismissPlacementTooltip]);
+
   const canCompleteJourneyStep =
     journeyMode &&
     onJourneyComplete &&
@@ -217,7 +221,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   return (
     <motion.main
-      className="w-full max-w-2xl py-10 md:py-14 text-center relative"
+      className="w-full max-w-2xl text-center relative"
       aria-labelledby="core-map-title"
       variants={staggerContainer}
       initial="hidden"
@@ -321,7 +325,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             className="mt-3 w-full cta-muted py-2.5 text-sm font-semibold transition-all hover:bg-white/10"
             style={{ borderColor: "rgba(148, 163, 184, 0.3)" }}
           >
-            وضع الشرنقة
+            دقيقة شحن
           </button>
         </motion.div>
       )}
@@ -467,7 +471,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           whileTap={{ scale: 0.97 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
         >
-          + <EditableText id="map_add_person_label" defaultText={mapCopy.addPersonLabel} page="map" editOnClick={false} />
+          <EditableText id="map_add_person_label" defaultText={mapCopy.addPersonLabel} page="map" editOnClick={false} />
         </motion.button>
       </motion.div>
 
@@ -499,6 +503,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               onNodeClick={(id) => onSelectNode(id)}
               onMeClick={() => { if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; } setShowMeCard(true); }}
               galaxyGoalIds={selectedContexts.length > 0 ? selectedContexts : ["family", "work", "love", "general"]}
+              highlightNodeId={selectedNodeId}
             />
           </motion.div>
         ) : !canUseFamilyTreeView || viewMode === "map" ? (
@@ -507,6 +512,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               onNodeClick={(id) => onSelectNode(id)}
               onMeClick={() => { if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; } setShowMeCard(true); }}
               goalIdFilter={goalId}
+              highlightNodeId={selectedNodeId}
             />
           </motion.div>
         ) : canUseFamilyTreeView && isFamily ? (

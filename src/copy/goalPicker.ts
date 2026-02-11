@@ -7,6 +7,7 @@ export const goalPickerCopy = {
     { id: "work", label: "الشغل", subtitle: "نجاح مهني، نمو وتطور، وتوازن." },
     { id: "love", label: "الحب", subtitle: "علاقة صحية، نمو عاطفي، وشراكة حقيقية." },
     { id: "money", label: "المستقبل والأمان", subtitle: "استقرار، تخطيط للمستقبل، وطمأنينة." },
+    { id: "self", label: "خريطة نفسك", subtitle: "علاقتك مع نفسك: حدود، راحة، وصوتك الحقيقي." },
     { id: "unknown", label: "مش عارف لسه", subtitle: "اكتشاف الذات، وضوح، وبداية جديدة." }
   ],
   buttons: {
@@ -22,6 +23,7 @@ export const goalActions: Record<string, string> = {
   friends: "مسافات صحية في الصداقات",
   love: "مسافات صحية في الحب",
   money: "مسافات مالية واضحة",
+  self: "علاقتك مع نفسك",
   unknown: "أولويات في العلاقات",
   general: "أولويات في العلاقات"
 };

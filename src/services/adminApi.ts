@@ -401,6 +401,51 @@ export async function fetchUsers(): Promise<AdminUserRow[] | null> {
   }));
 }
 
+export interface AwarenessGapStats {
+  totalGreen: number;
+  gapCount: number;
+  gapPercent: number;
+  usersWithGap: number;
+}
+
+export interface FunnelStep {
+  label: string;
+  count: number;
+  key: string;
+}
+
+export interface TopScenario {
+  key: string;
+  label: string;
+  count: number;
+  percent: number;
+}
+
+export interface EmergencyLogEntry {
+  personLabel: string;
+  createdAt: string;
+}
+
+export interface TaskFrictionEntry {
+  label: string;
+  started: number;
+  completed: number;
+  escapeRate: number;
+}
+
+export interface WeeklyRhythmDay {
+  day: number;
+  dayName: string;
+  avg: number | null;
+  count: number;
+}
+
+export interface WeeklyRhythm {
+  byDay: WeeklyRhythmDay[];
+  lowestDay: number;
+  lowestDayName: string | null;
+}
+
 export interface OverviewStats {
   totalUsers: number | null;
   activeNow: number | null;
@@ -408,6 +453,17 @@ export interface OverviewStats {
   aiTokensUsed: number | null;
   growthData: Array<{ date: string; paths: number; nodes: number }>;
   zones: Array<{ label: string; count: number }>;
+  awarenessGap?: AwarenessGapStats | null;
+  funnel?: { steps: FunnelStep[] } | null;
+  topScenarios?: TopScenario[] | null;
+  emergencyLogs?: EmergencyLogEntry[] | null;
+  taskFriction?: TaskFrictionEntry[] | null;
+  weeklyRhythm?: WeeklyRhythm | null;
+  flowStats?: {
+    byStep: Record<string, number>;
+    avgTimeToActionMs: number | null;
+    addPersonCompletionRate: number | null;
+  } | null;
 }
 
 export interface JourneyMapSnapshot {
@@ -554,7 +610,7 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       supabase.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", fiveMinAgo),
       supabase
         .from("journey_events")
-        .select("type,payload,created_at")
+        .select("session_id,type,payload,created_at")
         .gte("created_at", thirtyDaysAgo)
         .order("created_at", { ascending: true })
         .limit(1000),
@@ -567,7 +623,8 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     avgMood: null,
     aiTokensUsed: aiLogsCount ?? null,
     growthData: [],
-    zones: []
+    zones: [],
+    funnel: { steps: [] }
   };
 
   const growthMap = new Map<string, { paths: number; nodes: number }>();
@@ -601,12 +658,29 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
   }));
   const zones = Array.from(zoneMap.entries()).map(([label, count]) => ({ label, count }));
 
+  const sessionsByType = { node_added: new Set<string>(), path_started: new Set<string>(), task_completed: new Set<string>() };
+  for (const row of events as Array<Record<string, unknown>>) {
+    const sid = String(row.session_id ?? "anonymous");
+    const type = String(row.type ?? "");
+    if (type === "node_added") sessionsByType.node_added.add(sid);
+    if (type === "path_started") sessionsByType.path_started.add(sid);
+    if (type === "task_completed") sessionsByType.task_completed.add(sid);
+  }
+  const funnel = {
+    steps: [
+      { label: "أضاف شخصاً", count: sessionsByType.node_added.size, key: "identification" },
+      { label: "بدأ مساراً", count: sessionsByType.path_started.size, key: "commitment" },
+      { label: "نفّذ مهمة", count: sessionsByType.task_completed.size, key: "success" }
+    ]
+  };
+
   return {
     totalUsers: usersCount ?? null,
     activeNow: activeCount ?? null,
     avgMood: moodCount ? Math.round((moodSum / moodCount) * 10) / 10 : null,
     aiTokensUsed: aiLogsCount ?? null,
     growthData,
-    zones
+    zones,
+    funnel
   };
 }

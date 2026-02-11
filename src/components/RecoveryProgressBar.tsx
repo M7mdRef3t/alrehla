@@ -102,7 +102,7 @@ export const RecoveryProgressBar: FC<RecoveryProgressBarProps> = ({ node }) => {
               <motion.span
                 key={`${m.id}-${done ? "done" : "pending"}`}
                 className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm transition-colors duration-300 ${
-                  done ? "bg-teal-500 text-white shadow-sm" : "bg-slate-200 text-slate-400"
+                  done ? "bg-teal-500 text-white" : "bg-slate-200 text-slate-400"
                 }`}
                 initial={done ? { scale: 1.2 } : false}
                 animate={{ scale: 1 }}

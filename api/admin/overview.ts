@@ -54,32 +54,177 @@ async function sendResend(subject: string, html: string): Promise<void> {
   });
 }
 
+/** Default weights/thresholds — نفس منطق feelingScore (استنزاف = score > 2) */
+const FEELING_WEIGHTS: Record<string, number> = { often: 3, sometimes: 2, rarely: 1, never: 0 };
+const FEELING_DRAIN_THRESHOLD = 2; // score > 2 => شعور استنزاف
+
+function feelingScore(answers: { q1?: string; q2?: string; q3?: string } | null): number {
+  if (!answers) return 0;
+  const pt = (q: string) => FEELING_WEIGHTS[q] ?? 0;
+  return pt(String(answers.q1)) + pt(String(answers.q2)) + pt(String(answers.q3));
+}
+
+function computeAwarenessGap(maps: Array<{ session_id: string; nodes: unknown }>) {
+  let totalGreen = 0;
+  let gapCount = 0;
+  const sessionsWithGap = new Set<string>();
+
+  for (const row of maps) {
+    const nodes = Array.isArray(row.nodes) ? row.nodes : [];
+    for (const n of nodes) {
+      const node = n as Record<string, unknown>;
+      const ring = String(node.ring ?? "");
+      if (ring !== "green") continue;
+      totalGreen += 1;
+      const analysis = node.analysis as Record<string, unknown> | null | undefined;
+      const answers = analysis?.answers as { q1?: string; q2?: string; q3?: string } | null | undefined;
+      const score = feelingScore(answers);
+      if (score > FEELING_DRAIN_THRESHOLD) {
+        gapCount += 1;
+        sessionsWithGap.add(String(row.session_id ?? ""));
+      }
+    }
+  }
+
+  const gapPercent = totalGreen > 0 ? Math.round((gapCount / totalGreen) * 100) : 0;
+  return { totalGreen, gapCount, gapPercent, usersWithGap: sessionsWithGap.size };
+}
+
+const SCENARIO_LABELS: Record<string, string> = {
+  emergency: "طوارئ",
+  emotional_prisoner: "سجين ذهني",
+  active_battlefield: "استنزاف نشط",
+  eggshells: "علاقة مشروطة",
+  safe_harbor: "ميناء آمن",
+  fading_echo: "صدى ذاهب"
+};
+
+function resolveScenario(node: Record<string, unknown>): string {
+  const isEmergency = Boolean(node.isEmergency);
+  if (isEmergency) return "emergency";
+
+  const feel = node.analysis as Record<string, unknown> | null | undefined;
+  const answers = feel?.answers as { q1?: string; q2?: string; q3?: string } | null | undefined;
+  const symptomScore = feelingScore(answers);
+  const reality = node.realityAnswers as { q1?: string; q2?: string; q3?: string } | null | undefined;
+  const contactScore = feelingScore(reality);
+  const safetyHigh = String(node.safetyAnswer ?? "") === "high";
+
+  const lowMax = 2;
+  const mediumMax = 5;
+  const scoreLevel = (s: number) => (s > mediumMax ? "high" : s > lowMax ? "medium" : "low");
+  const symptomLevel = answers?.q3 === "often" ? "high" : scoreLevel(symptomScore);
+  const contactLevel = scoreLevel(contactScore);
+
+  if (symptomLevel === "high" && contactLevel === "low") return "emotional_prisoner";
+  if (symptomLevel === "high" && (contactLevel === "medium" || contactLevel === "high")) return "active_battlefield";
+  if (symptomLevel === "medium") return "eggshells";
+  if (symptomLevel === "low" && safetyHigh) return "safe_harbor";
+  if (symptomLevel === "low" && contactLevel === "low") return "fading_echo";
+  return "safe_harbor";
+}
+
+function computeTopScenarios(maps: Array<{ session_id: string; nodes: unknown }>) {
+  const counts: Record<string, number> = {};
+  for (const row of maps) {
+    const nodes = Array.isArray(row.nodes) ? row.nodes : [];
+    for (const n of nodes) {
+      const node = n as Record<string, unknown>;
+      const key = resolveScenario(node);
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+  }
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  return Object.entries(counts)
+    .map(([key, count]) => ({
+      key,
+      label: SCENARIO_LABELS[key] ?? key,
+      count,
+      percent: total > 0 ? Math.round((count / total) * 100) : 0
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+}
+
 async function handleOverview(client: any, res: any) {
   const now = new Date();
   const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [{ count: usersCount }, { count: activeCount }, { data: events }, { count: aiLogsCount }] =
-    await Promise.all([
-      client.from("profiles").select("id", { count: "exact", head: true }),
-      client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", fiveMinAgo),
-      client
-        .from("journey_events")
-        .select("type,payload,created_at")
-        .gte("created_at", thirtyDaysAgo)
-        .order("created_at", { ascending: true })
-        .limit(1000),
-      client.from("admin_ai_logs").select("id", { count: "exact", head: true })
-    ]);
+  const DAY_NAMES = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+
+  const [
+    { count: usersCount },
+    { count: activeCount },
+    { data: events },
+    { count: aiLogsCount },
+    { data: maps },
+    { data: pulseLogs }
+  ] = await Promise.all([
+    client.from("profiles").select("id", { count: "exact", head: true }),
+    client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", fiveMinAgo),
+    client
+      .from("journey_events")
+      .select("session_id,type,payload,created_at")
+      .gte("created_at", thirtyDaysAgo)
+      .order("created_at", { ascending: true })
+      .limit(1000),
+    client.from("admin_ai_logs").select("id", { count: "exact", head: true }),
+    client.from("journey_maps").select("session_id,nodes").limit(1000),
+    client.from("daily_pulse_logs").select("energy,created_at").gte("created_at", thirtyDaysAgo).limit(2000)
+  ]);
+
+  const energyByDay = new Map<number, { total: number; count: number }>();
+  for (const row of (pulseLogs ?? []) as Array<{ energy?: number; created_at?: string }>) {
+    const energy = Number(row.energy);
+    if (Number.isNaN(energy) || energy < 1 || energy > 10) continue;
+    const day = new Date(String(row.created_at ?? "")).getDay();
+    const cur = energyByDay.get(day) ?? { total: 0, count: 0 };
+    cur.total += energy;
+    cur.count += 1;
+    energyByDay.set(day, cur);
+  }
+  const weeklyRhythmByDay = [0, 1, 2, 3, 4, 5, 6].map((day) => {
+    const b = energyByDay.get(day) ?? { total: 0, count: 0 };
+    return {
+      day,
+      dayName: DAY_NAMES[day],
+      avg: b.count > 0 ? Math.round((b.total / b.count) * 10) / 10 : null,
+      count: b.count
+    };
+  });
+  let lowestDay = -1;
+  let lowestAvg = Infinity;
+  energyByDay.forEach((b, day) => {
+    const avg = b.total / b.count;
+    if (avg < lowestAvg) {
+      lowestAvg = avg;
+      lowestDay = day;
+    }
+  });
+  const weeklyRhythm = {
+    byDay: weeklyRhythmByDay,
+    lowestDay,
+    lowestDayName: lowestDay >= 0 ? DAY_NAMES[lowestDay] : null
+  };
 
   if (!events) {
+    const awarenessGap = maps?.length ? computeAwarenessGap(maps as Array<{ session_id: string; nodes: unknown }>) : null;
+    const topScenarios = maps?.length ? computeTopScenarios(maps as Array<{ session_id: string; nodes: unknown }>) : [];
     res.status(200).json({
       totalUsers: usersCount ?? null,
       activeNow: activeCount ?? null,
       avgMood: null,
       aiTokensUsed: aiLogsCount ?? null,
       growthData: [],
-      zones: []
+      zones: [],
+      awarenessGap: awarenessGap ?? undefined,
+      funnel: { steps: [] },
+      topScenarios,
+      emergencyLogs: [],
+      taskFriction: [],
+      weeklyRhythm,
+      flowStats: { byStep: {}, avgTimeToActionMs: null, addPersonCompletionRate: null }
     });
     return;
   }
@@ -115,13 +260,99 @@ async function handleOverview(client: any, res: any) {
   }));
   const zones = Array.from(zoneMap.entries()).map(([label, count]) => ({ label, count }));
 
+  const awarenessGap = maps?.length ? computeAwarenessGap(maps as Array<{ session_id: string; nodes: unknown }>) : null;
+  const topScenarios = maps?.length ? computeTopScenarios(maps as Array<{ session_id: string; nodes: unknown }>) : [];
+
+  const sessionsByType = {
+    node_added: new Set<string>(),
+    path_started: new Set<string>(),
+    task_completed: new Set<string>()
+  };
+  for (const row of events as Array<Record<string, unknown>>) {
+    const sid = String(row.session_id ?? "anonymous");
+    const type = String(row.type ?? "");
+    if (type === "node_added") sessionsByType.node_added.add(sid);
+    if (type === "path_started") sessionsByType.path_started.add(sid);
+    if (type === "task_completed") sessionsByType.task_completed.add(sid);
+  }
+  const funnel = {
+    steps: [
+      { label: "أضاف شخصاً", count: sessionsByType.node_added.size, key: "identification" },
+      { label: "بدأ مساراً", count: sessionsByType.path_started.size, key: "commitment" },
+      { label: "نفّذ مهمة", count: sessionsByType.task_completed.size, key: "success" }
+    ]
+  };
+
+  const emergencyLogs = (events as Array<Record<string, unknown>>)
+    .filter((row) => String(row.type ?? "") === "node_added" && (row.payload as Record<string, unknown>)?.isEmergency === true)
+    .map((row) => ({
+      personLabel: String((row.payload as Record<string, unknown>)?.personLabel ?? "—"),
+      createdAt: String(row.created_at ?? "")
+    }))
+    .slice(-5)
+    .reverse();
+
+  const taskByLabel = new Map<string, { started: number; completed: number }>();
+  for (const row of events as Array<Record<string, unknown>>) {
+    const type = String(row.type ?? "");
+    const p = row.payload as Record<string, unknown> | null;
+    const label = String(p?.taskLabel ?? (p?.taskId ?? ""));
+    if (!label) continue;
+    if (!taskByLabel.has(label)) taskByLabel.set(label, { started: 0, completed: 0 });
+    const bucket = taskByLabel.get(label)!;
+    if (type === "task_started") bucket.started += 1;
+    if (type === "task_completed") bucket.completed += 1;
+  }
+  const taskFriction = Array.from(taskByLabel.entries())
+    .filter(([, b]) => b.started > 0)
+    .map(([label, b]) => ({
+      label,
+      started: b.started,
+      completed: b.completed,
+      escapeRate: Math.round(((b.started - b.completed) / b.started) * 100)
+    }))
+    .sort((a, b) => b.escapeRate - a.escapeRate)
+    .slice(0, 8);
+
+  const flowCounts: Record<string, number> = {};
+  let flowTimeToActionSum = 0;
+  let flowTimeToActionCount = 0;
+  for (const row of events as Array<Record<string, unknown>>) {
+    if (String(row.type ?? "") !== "flow_event") continue;
+    const p = row.payload as Record<string, unknown> | null;
+    const step = String(p?.step ?? "");
+    if (!step) continue;
+    flowCounts[step] = (flowCounts[step] ?? 0) + 1;
+    if (p?.timeToAction != null && typeof p.timeToAction === "number") {
+      flowTimeToActionSum += p.timeToAction;
+      flowTimeToActionCount += 1;
+    }
+  }
+  const addPersonOpened = flowCounts["add_person_opened"] ?? 0;
+  const addPersonDropped = flowCounts["add_person_dropped"] ?? 0;
+  const addPersonCompletionRate =
+    addPersonOpened > 0 ? Math.round(((addPersonOpened - addPersonDropped) / addPersonOpened) * 100) : null;
+
+  const flowStats = {
+    byStep: flowCounts,
+    avgTimeToActionMs: flowTimeToActionCount > 0 ? Math.round(flowTimeToActionSum / flowTimeToActionCount) : null,
+    addPersonCompletionRate
+  };
+
   res.status(200).json({
     totalUsers: usersCount ?? null,
     activeNow: activeCount ?? null,
     avgMood: moodCount ? Math.round((moodSum / moodCount) * 10) / 10 : null,
     aiTokensUsed: aiLogsCount ?? null,
     growthData,
-    zones
+    zones,
+    awarenessGap: awarenessGap ?? undefined,
+    funnel,
+    topScenarios,
+    emergencyLogs,
+    taskFriction,
+    weeklyRhythm,
+    flowStats
   });
 }
 

@@ -74,7 +74,7 @@ export const AtlasDashboard: FC<AtlasDashboardProps> = ({ isOpen, onClose }) => 
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}
-        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col"
+        className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shrink-0">

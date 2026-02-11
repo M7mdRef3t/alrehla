@@ -15,8 +15,11 @@ export function buildAgentSystemPrompt(context: AgentContext): string {
       bright: "رايق",
       calm: "هادي",
       anxious: "قلقان",
-      angry: "متوتر",
-      sad: "حزين"
+      angry: "غضبان",
+      sad: "حزين",
+      tense: "متوتر",
+      hopeful: "متفائل",
+      overwhelmed: "مغ overwhelm"
     };
     return map[context.pulse.mood] ?? context.pulse.mood;
   })();
@@ -35,16 +38,32 @@ export function buildAgentSystemPrompt(context: AgentContext): string {
     : "- النبض اللحظي: غير متوفر.";
   const pulseInstruction = (() => {
     if (!context.pulse) return "";
-    if (context.pulse.mood === "angry") {
-      return "تعليمات حرجة: المستخدم في حالة توتر عالي. ركّز على الاحتواء أولاً (تنفّس/هدوء) وتجنب أي خطوات مواجهة أو تصعيد.";
+    const parts: string[] = [];
+    if (context.pulse.mood === "angry" || context.pulse.mood === "tense") {
+      parts.push("المستخدم في حالة توتر عالي. ركّز على الاحتواء أولاً (تنفّس/هدوء) وتجنب أي خطوات مواجهة أو تصعيد.");
+    }
+    if (context.pulse.mood === "anxious") {
+      parts.push("المستخدم قلقان. قدّم اقتراحات لتهدئة القلق: تنفس، استراحة قصيرة، أو خطوة خفيفة جداً.");
+    }
+    if (context.pulse.mood === "overwhelmed") {
+      parts.push("المستخدم مُغ overwhelm — قدّم خطوات قصيرة جداً، أو خيار «استراحة سلبية» بدون عبء فعل.");
+    }
+    if (context.pulse.focus === "body") {
+      parts.push("تركيز المستخدم على الجسد (تعبان). اهتم بالراحة الجسدية: استرخاء، تنفس، أو خطوات قصيرة جداً بدون إجهاد.");
     }
     if (context.pulse.energy <= 3) {
-      return "تعليمات حرجة: طاقة المستخدم هادية. اهتم بالاحتواء والراحة. لا تقترح خطوات طويلة أو مواجهة.";
+      parts.push("طاقة المستخدم هادية جداً. اهتم بالاحتواء والراحة. لا تقترح خطوات طويلة أو مواجهة.");
+      if (context.pulse.focus === "body" || context.pulse.mood === "anxious" || context.pulse.mood === "overwhelmed") {
+        parts.push("قدّم خيار «محتوى سلبي»: استمع لتأمل موجه أو موسيقى هادية — المستخدم يسمع وهو مغمض عينه، مفيش عبء «فعل». أو اقترح «انسِ التمارين دلوقتي، خد ٥ دقائق راحة سلبية».");
+      }
+    } else if (context.pulse.energy <= 4 && (context.pulse.focus === "body" || context.pulse.mood === "anxious" || context.pulse.mood === "overwhelmed")) {
+      parts.push("ممكن تقترح خيار سلبي (تأمل موجه أو موسيقى) كبديل للتمارين لو المستخدم مش قادر على فعل.");
     }
-    if (context.pulse.energy >= 8) {
-      return "تعليمات: الطاقة عالية. ممكن تقترح خطوة واحدة واضحة من المسار بلغة مشجعة، من غير ضغط.";
+    if (context.pulse.energy >= 8 && context.pulse.mood !== "angry" && context.pulse.mood !== "anxious" && context.pulse.mood !== "tense") {
+      parts.push("الطاقة عالية. ممكن تقترح خطوة واحدة واضحة من المسار بلغة مشجعة، من غير ضغط.");
     }
-    return "";
+    if (parts.length === 0) return "";
+    return parts.join(" ");
   })();
   const featureLines = Object.entries(context.availableFeatures)
     .map(([key, enabled]) => `  - ${key}: ${enabled ? "enabled" : "disabled"}`)

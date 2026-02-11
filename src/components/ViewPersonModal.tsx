@@ -9,6 +9,8 @@ import { getPersonViewData } from "../modules/personView/personViewData";
 import { generatePersonSolution } from "../utils/personSolutionAI";
 import { generatePersonViewInsightsFromAI } from "../utils/personViewAI";
 import { ResultScreen } from "./AddPersonModal/ResultScreen";
+import { JourneyMemories } from "./JourneyMemories";
+import { getLastTaskForNode } from "../services/journeyTracking";
 import type { QuickAnswer2 } from "../utils/suggestInitialRing";
 
 interface ViewPersonModalProps {
@@ -35,6 +37,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   const [solutionLoading, setSolutionLoading] = useState(false);
   const hasAIInsights = !!node?.analysis?.insights;
   const viewData = node && node.analysis ? getPersonViewData(node, category, goalId) : null;
+  const lastTask = useMemo(() => (nodeId ? getLastTaskForNode(nodeId) : null), [nodeId]);
   const diagnosis = viewData?.diagnosis ?? null;
   const relationshipToneText = useMemo(() => {
     const label = diagnosis?.stateLabel ?? "";
@@ -92,7 +95,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
         onClick={onClose}
       >
         <motion.div
-          className="relative bg-white border border-gray-200 rounded-2xl px-8 py-8 max-w-md w-full shadow-xl"
+          className="relative bg-white border border-gray-200 rounded-2xl px-8 py-8 max-w-md w-full"
           onClick={(e) => e.stopPropagation()}
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -117,7 +120,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
+              className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
             >
               إغلاق
             </button>
@@ -133,7 +136,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
       onClick={onClose}
     >
       <motion.div
-        className="relative bg-white border border-gray-200 rounded-2xl px-8 py-8 max-w-md w-full shadow-xl max-h-[90vh] overflow-y-auto"
+        className="relative bg-white border border-gray-200 rounded-2xl px-8 py-8 max-w-md w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         initial={{ scale: 0.95, opacity: 0, y: 10 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -159,8 +162,10 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               className="text-center"
             >
               {node.realityAnswers && node.analysis ? (
-                <ResultScreen
-                  personLabel={node.label}
+                <>
+                  <JourneyMemories nodeId={node.id} ring={node.ring} />
+                  <ResultScreen
+                    personLabel={node.label}
                   personTitle={node.label}
                   score={node.analysis.score}
                   feelingAnswers={node.analysis.answers}
@@ -171,6 +176,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
                   addedNodeId={node.id}
                   onOpenMission={onOpenMission}
                 />
+                </>
               ) : (
                 <>
                   <div className="mb-5 rounded-2xl border border-teal-100 bg-teal-50/70 px-4 py-3 text-center">
@@ -185,6 +191,11 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
                       {relationshipToneText}
                     </p>
                   </div>
+                  {lastTask && (
+                    <div className="mb-5">
+                      <JourneyMemories nodeId={node.id} ring={node.ring} />
+                    </div>
+                  )}
                   <div className="p-6 bg-linear-to-br from-slate-50 to-gray-50 border-2 border-slate-200 rounded-2xl mb-6">
                     <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
                       <span>{diagnosis.personalizedTitle}</span>
@@ -294,7 +305,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setViewScreen("solution")}
-                    className="w-full mt-6 rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+                    className="w-full mt-6 rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold hover:bg-teal-700 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
                   >
                     <span>الحل</span>
                     <ArrowRight className="w-5 h-5" />
@@ -344,7 +355,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setViewScreen("diagnosis")}
-                    className="w-full mt-6 rounded-full bg-teal-600 text-white px-6 py-3 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
+                    className="w-full mt-6 rounded-full bg-teal-600 text-white px-6 py-3 text-base font-semibold hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
                   >
                     تمام، فهمت الخطة ✅
                   </button>

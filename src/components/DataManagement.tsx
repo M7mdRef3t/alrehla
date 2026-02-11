@@ -415,7 +415,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md mx-auto"
           >
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-white rounded-2xl overflow-hidden">
               {/* Header */}
               <div
                 className={`flex items-center justify-between p-4 border-b border-slate-200 bg-linear-to-l ${
@@ -580,7 +580,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                     {authUser ? (
                       <div className="space-y-2">
                         <div className="space-y-1">
-                          <p className="text-xs text-slate-500">اسمك</p>
+                          <p className="text-sm font-medium text-slate-700">اسمك</p>
                           <input
                             value={displayName}
                             onChange={(e) => {
@@ -590,7 +590,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                               setDisplayNameMessage(null);
                             }}
                             placeholder={displayNamePlaceholder}
-                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-teal-400"
+                            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-teal-400"
                           />
                         </div>
 
@@ -725,7 +725,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                           type="button"
                           onClick={handleSignOut}
                           disabled={authLoading}
-                          className="w-full flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm hover:border-rose-400 hover:bg-rose-50 disabled:opacity-50"
+                          className="w-full flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 hover:border-rose-400 hover:bg-rose-100 disabled:opacity-50"
                         >
                           <LogOut className="w-4 h-4 text-rose-600" />
                           تسجيل خروج
@@ -860,7 +860,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   onClick={(e) => e.stopPropagation()}
-                  className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+                  className="relative bg-white rounded-2xl p-6 max-w-sm w-full"
                 >
                   <button
                     type="button"
@@ -923,7 +923,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   onClick={(e) => e.stopPropagation()}
-                  className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+                  className="relative bg-white rounded-2xl p-6 max-w-sm w-full"
                 >
                   <button
                     type="button"

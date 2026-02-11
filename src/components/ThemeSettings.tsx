@@ -37,7 +37,7 @@ export const ThemeSettings: FC<ThemeSettingsProps> = ({ isOpen, onClose }) => {
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-sm mx-auto"
           >
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-3">

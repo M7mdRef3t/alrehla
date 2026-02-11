@@ -122,7 +122,7 @@ const TreeNodeButton: FC<TreeNodeButtonProps> = ({ node, onSelect }) => {
       <motion.button
         type="button"
         onClick={() => onSelect(node.id)}
-        className={`flex items-center gap-2 rounded-full border-2 px-4 py-2.5 text-right shadow-sm hover:shadow-md transition-all shrink-0 ${style.border} ${style.bg}`}
+        className={`flex items-center gap-2 rounded-full border-2 px-4 py-2.5 text-right transition-all shrink-0 ${style.border} ${style.bg}`}
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.98 }}
         title={`${mapCopy.legendGreen}/${mapCopy.legendYellow}/${mapCopy.legendRed} — اضغط للتفاصيل`}

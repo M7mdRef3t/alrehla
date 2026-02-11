@@ -1,4 +1,4 @@
-import React, { type FC, useState, useEffect } from "react";
+import React, { type FC, useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, CheckCircle2, Circle, AlertTriangle, Sparkles, HelpCircle, LayoutTemplate } from "lucide-react";
 import type { Ring, DailyPathProgress } from "../modules/map/mapTypes";
@@ -217,7 +217,8 @@ const PathEngineBlock: FC<{
   onUpdateStepInput: (stepId: string, value: string) => void;
   nodeId?: string;
   onAddDailyPathProgress?: (nodeId: string, entry: DailyPathProgress) => void;
-}> = ({ pathSnapshot, pathNameAr, completedSteps, onToggleStep, stepInputs, onUpdateStepInput, nodeId, onAddDailyPathProgress }) => {
+  personLabel?: string;
+}> = ({ pathSnapshot, pathNameAr, completedSteps, onToggleStep, stepInputs, onUpdateStepInput, nodeId, onAddDailyPathProgress, personLabel }) => {
   const [selectedWeek, setSelectedWeek] = useState<1 | 2 | 3>(1);
   const [selectedDay, setSelectedDay] = useState(0);
   const [moodPromptForTaskId, setMoodPromptForTaskId] = useState<string | null>(null);
@@ -241,6 +242,8 @@ const PathEngineBlock: FC<{
 
   const handleMarkDone = (taskId: string, moodScore?: number) => {
     const date = new Date().toISOString().slice(0, 10);
+    const task = [...(pathSnapshot.phases.week1?.tasks ?? []), ...(pathSnapshot.phases.week2?.tasks ?? []), ...(pathSnapshot.phases.week3?.tasks ?? [])].find((t) => t.id === taskId);
+    const taskLabel = task?.step;
     onToggleStep(taskId);
     if (nodeId && onAddDailyPathProgress) {
       onAddDailyPathProgress(nodeId, {
@@ -254,12 +257,27 @@ const PathEngineBlock: FC<{
       pathId: pathSnapshot.id,
       taskId,
       date,
-      moodScore: moodScore ?? undefined
+      moodScore: moodScore ?? undefined,
+      taskLabel,
+      personLabel,
+      nodeId
     });
     setMoodPromptForTaskId(null);
   };
 
+  const startedTasksRef = useRef<Set<string>>(new Set());
   const handleClickDone = (taskId: string) => {
+    if (!startedTasksRef.current.has(taskId)) {
+      startedTasksRef.current.add(taskId);
+      const task = [...(pathSnapshot.phases.week1?.tasks ?? []), ...(pathSnapshot.phases.week2?.tasks ?? []), ...(pathSnapshot.phases.week3?.tasks ?? [])].find((t) => t.id === taskId);
+      recordJourneyEvent("task_started", {
+        pathId: pathSnapshot.id,
+        taskId,
+        taskLabel: task?.step,
+        personLabel,
+        nodeId
+      });
+    }
     setMoodPromptForTaskId(taskId);
   };
 
@@ -893,6 +911,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
                 onUpdateStepInput={onUpdateStepInput}
                 nodeId={nodeId}
                 onAddDailyPathProgress={onAddDailyPathProgress}
+                personLabel={personLabel}
               />
             </>
           )}
@@ -989,6 +1008,7 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
             onUpdateStepInput={onUpdateStepInput}
             nodeId={nodeId}
             onAddDailyPathProgress={onAddDailyPathProgress}
+            personLabel={personLabel}
           />
         </>
       )}

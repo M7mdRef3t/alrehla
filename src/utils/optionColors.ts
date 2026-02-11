@@ -10,22 +10,22 @@ const TIER_STYLES: Record<
   { selected: string; unselected: string; unselectedHover: string }
 > = {
   red: {
-    selected: "bg-rose-500 text-white border-2 border-rose-600 shadow-sm",
+    selected: "bg-rose-500 text-white border-2 border-rose-600",
     unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
     unselectedHover: "hover:bg-rose-50 hover:border-rose-200 hover:text-rose-800"
   },
   amber: {
-    selected: "bg-amber-500 text-white border-2 border-amber-600 shadow-sm",
+    selected: "bg-amber-500 text-white border-2 border-amber-600",
     unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
     unselectedHover: "hover:bg-amber-50 hover:border-amber-200 hover:text-amber-800"
   },
   yellow: {
-    selected: "bg-yellow-300 text-slate-900 border-2 border-yellow-400 shadow-sm",
+    selected: "bg-yellow-300 text-slate-900 border-2 border-yellow-400",
     unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
     unselectedHover: "hover:bg-yellow-50 hover:border-yellow-200 hover:text-yellow-900"
   },
   green: {
-    selected: "bg-teal-500 text-white border-2 border-teal-600 shadow-sm",
+    selected: "bg-teal-500 text-white border-2 border-teal-600",
     unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
     unselectedHover: "hover:bg-teal-50 hover:border-teal-200 hover:text-teal-800"
   }

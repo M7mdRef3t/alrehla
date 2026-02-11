@@ -79,7 +79,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             onClick={(e) => e.stopPropagation()}
-            className="fixed inset-4 z-50 bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-w-4xl mx-auto my-auto"
+            className="fixed inset-4 z-50 bg-white rounded-2xl overflow-hidden flex flex-col max-w-4xl mx-auto my-auto"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-linear-to-l from-indigo-50 to-white shrink-0">
@@ -251,7 +251,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
 const VideoCard: FC<{ video: VideoContent }> = ({ video }) => {
   const hasVideo = Boolean(video.videoUrl);
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-md transition-all">
+    <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-indigo-300 transition-all">
       <div className="flex gap-3">
         <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-linear-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
           {video.thumbnailUrl ? (
@@ -292,7 +292,7 @@ const StoryCard: FC<{ story: SuccessStory }> = ({ story }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-purple-300 hover:shadow-md transition-all">
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-purple-300 transition-all">
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}

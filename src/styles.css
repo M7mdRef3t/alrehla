@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Readex+Pro:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap");
 
 /* ════════════════════════════════════════════════
    🌌 الرحلة — THERAPEUTIC SPACESHIP DASHBOARD
@@ -43,12 +43,12 @@
     --soft-teal-glow: rgba(45, 212, 191, 0.25);
 
     /* ── 🔮 Glassmorphism — زجاج شفاف ثقيل ── */
-    --glass-bg: rgba(15, 20, 50, 0.6);         /* شفافية 60% */
-    --glass-bg-hover: rgba(15, 20, 50, 0.75);  /* عند التحويم */
-    --glass-border: rgba(255, 255, 255, 0.05); /* حدود خفيفة جداً */
-    --glass-border-hover: rgba(255, 255, 255, 0.12);
-    --glass-blur: 20px;                         /* تمويه قوي */
-    --glass-blur-xl: 32px;                      /* تمويه أقوى */
+    --glass-bg: rgba(12, 17, 40, 0.78);         /* أغمق وأوضح */
+    --glass-bg-hover: rgba(15, 22, 50, 0.88);   /* عند التحويم */
+    --glass-border: rgba(255, 255, 255, 0.1);   /* حدود مرئية */
+    --glass-border-hover: rgba(255, 255, 255, 0.18);
+    --glass-blur: 20px;
+    --glass-blur-xl: 32px;
 
     /* ── Ring Colors (Orbit Zones) ── */
     --ring-safe: #2dd4bf;
@@ -60,9 +60,9 @@
     --ring-detached: rgba(148, 163, 184, 0.35);
 
     /* ── ✍️ Typography — تسلسل بصري واضح ── */
-    --text-primary: rgba(255, 255, 255, 0.95);     /* أبيض ساطع للعناوين */
-    --text-secondary: rgba(148, 163, 184, 0.85);   /* slate-400 للنصوص الثانوية */
-    --text-muted: rgba(148, 163, 184, 0.45);       /* slate-500 للمعلومات الهامشية */
+    --text-primary: #ffffff;                          /* أبيض نقي للعناوين */
+    --text-secondary: rgba(203, 213, 225, 0.95);    /* slate-300 واضح */
+    --text-muted: rgba(148, 163, 184, 0.7);         /* slate-400 مقروء */
     --text-accent: var(--soft-teal);
 
     /* ── Spacing & Rhythm ── */
@@ -78,7 +78,7 @@
   }
 
   body {
-    font-family: "IBM Plex Sans Arabic", "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    font-family: "Almarai", system-ui, -apple-system, sans-serif;
     background: linear-gradient(
       165deg,
       var(--space-void) 0%,
@@ -95,19 +95,18 @@
     min-height: 100vh;
   }
 
-  /* ── 📐 Typography Hierarchy — Big, Bold, Bright ── */
+  /* ── 📐 Typography — خط واحد + تدرج واضح ── */
   h1, h2, h3, h4, h5, h6, .heading-font {
-    font-family: "Readex Pro", "IBM Plex Sans Arabic", system-ui, sans-serif;
-    font-weight: 700;
+    font-family: "Almarai", system-ui, sans-serif;
     letter-spacing: var(--tracking-tight);
     line-height: 1.3;
     color: var(--text-primary);
   }
 
-  h1 { font-size: 2.25rem; font-weight: 800; }      /* 36px — Hero */
-  h2 { font-size: 1.875rem; font-weight: 700; }     /* 30px — Section */
-  h3 { font-size: 1.5rem; font-weight: 700; }       /* 24px — Card Title */
-  h4 { font-size: 1.125rem; font-weight: 600; }     /* 18px — Subtitle */
+  h1 { font-size: 2.75rem; font-weight: 700; }       /* 44px — Hero  */
+  h2 { font-size: 1.75rem; font-weight: 700; }       /* 28px — Section */
+  h3 { font-size: 1.25rem; font-weight: 600; }       /* 20px — Card  */
+  h4 { font-size: 1.0625rem; font-weight: 600; }     /* 17px — Sub   */
 
   /* ── Custom Scrollbar — شريط تمرير أنيق ── */
   ::-webkit-scrollbar {
@@ -203,37 +202,28 @@
 }
 
 .glass-heavy {
-  background: rgba(15, 20, 50, 0.7);
+  background: rgba(10, 14, 35, 0.85);
   backdrop-filter: blur(var(--glass-blur-xl));
   -webkit-backdrop-filter: blur(var(--glass-blur-xl));
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 1.5rem;
-  box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ── 🧱 Bento Card — الكتلة المعلوماتية الأساسية ── */
 .glass-card {
-  background: rgba(15, 23, 42, 0.6);        /* slate-900 مع شفافية */
+  background: rgba(12, 17, 40, 0.8);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1.25rem;
-  padding: 1.5rem;                           /* p-6 — مساحة تنفس */
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  padding: 1.5rem;
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .glass-card:hover {
-  background: rgba(15, 23, 42, 0.75);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 22, 50, 0.9);
+  border-color: rgba(255, 255, 255, 0.16);
   transform: translateY(-2px);
-  box-shadow:
-    0 12px 48px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ── 🔘 Glass Button — زر شفاف ── */
@@ -253,7 +243,6 @@
 .glass-button:hover {
   background: rgba(255, 255, 255, 0.14);
   border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 20px rgba(45, 212, 191, 0.2);
 }
 
 .glass-button-active {
@@ -273,22 +262,15 @@
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow:
-    0 4px 20px rgba(245, 166, 35, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .cta-primary:hover {
   background: linear-gradient(135deg, #fbbf24 0%, var(--warm-amber) 100%);
   transform: translateY(-2px);
-  box-shadow:
-    0 8px 32px rgba(245, 166, 35, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .cta-primary:active {
   transform: translateY(0);
-  box-shadow: 0 2px 12px rgba(245, 166, 35, 0.3);
 }
 
 /* ── 🌿 CTA Success — Emerald Green للطمأنينة ── */
@@ -302,17 +284,11 @@
   font-size: 0.9375rem;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow:
-    0 4px 20px rgba(16, 185, 129, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .cta-success:hover {
   background: linear-gradient(135deg, #34d399 0%, var(--soft-emerald) 100%);
   transform: translateY(-2px);
-  box-shadow:
-    0 8px 32px rgba(16, 185, 129, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 /* ════════════════════════════════════════════════
@@ -334,25 +310,19 @@
 
 /* ── Bento Block — الكتلة الأساسية ── */
 .bento-block {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(12, 17, 40, 0.8);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1.25rem;
-  padding: 1.5rem;                          /* p-6 */
+  padding: 1.5rem;
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .bento-block:hover {
-  background: rgba(15, 23, 42, 0.75);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 22, 50, 0.9);
+  border-color: rgba(255, 255, 255, 0.16);
   transform: translateY(-2px);
-  box-shadow:
-    0 12px 48px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ── Bento Block sizes — أحجام مختلفة ── */
@@ -400,26 +370,22 @@
 
 .orbital-ring-safe {
   stroke: var(--ring-safe);
-  filter: drop-shadow(0 0 18px var(--ring-safe-glow));
   animation: breatheRingSafe 4s ease-in-out infinite;
 }
 
 .orbital-ring-caution {
   stroke: var(--ring-caution);
-  filter: drop-shadow(0 0 16px var(--ring-caution-glow));
   animation: breatheRingCaution 4.5s ease-in-out infinite;
 }
 
 .orbital-ring-danger {
   stroke: var(--ring-danger);
-  filter: drop-shadow(0 0 20px var(--ring-danger-glow));
   animation: breatheRingDanger 5s ease-in-out infinite;
 }
 
 .orbital-ring-detached {
   stroke: var(--ring-detached);
   stroke-dasharray: 2 2;
-  filter: drop-shadow(0 0 6px rgba(148, 163, 184, 0.2));
   animation: breatheRingDetached 6s ease-in-out infinite;
 }
 
@@ -447,12 +413,6 @@
    ✨ ME CENTER — Cosmic Orb
    ════════════════════════════════════════════════ */
 
-.me-orb {
-  filter:
-    drop-shadow(0 0 20px rgba(45, 212, 191, 0.5))
-    drop-shadow(0 0 40px rgba(45, 212, 191, 0.2));
-}
-
 .me-orb-pulse {
   animation: meOrbPulse 3s ease-in-out infinite;
 }
@@ -461,12 +421,10 @@
   0%, 100% {
     opacity: 0.7;
     r: 5.5;
-    filter: drop-shadow(0 0 15px rgba(45, 212, 191, 0.3));
   }
   50% {
     opacity: 1;
     r: 6.5;
-    filter: drop-shadow(0 0 30px rgba(45, 212, 191, 0.6));
   }
 }
 
@@ -482,7 +440,7 @@
 
   /* لوحة رئيسية في المنتصف — للمحتوى الأساسي (Landing / Map / Mission..) */
   .app-panel-main {
-    @apply w-full max-w-2xl mx-auto rounded-3xl bg-slate-900/90 border border-slate-800 shadow-xl px-4 sm:px-8 py-6 sm:py-8;
+    @apply w-full max-w-2xl mx-auto rounded-3xl bg-slate-900/90 border border-slate-800 px-4 sm:px-8 py-6 sm:py-8;
   }
 
   /* كارت موحّد صغير — يستخدم للكروت العامة */
@@ -506,39 +464,24 @@
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 9999px;
-  box-shadow:
-    0 4px 20px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .node-glass:hover {
   background: rgba(20, 25, 60, 0.8);
   border-color: rgba(255, 255, 255, 0.18);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .node-threat-safe {
   border-color: rgba(45, 212, 191, 0.35);
-  box-shadow:
-    0 0 15px rgba(45, 212, 191, 0.2),
-    0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .node-threat-caution {
   border-color: rgba(251, 191, 36, 0.35);
-  box-shadow:
-    0 0 15px rgba(251, 191, 36, 0.2),
-    0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .node-threat-danger {
   border-color: rgba(248, 113, 113, 0.4);
-  box-shadow:
-    0 0 15px rgba(248, 113, 113, 0.25),
-    0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* ════════════════════════════════════════════════
@@ -574,16 +517,10 @@
   color: white;
   border: none;
   border-radius: 9999px;
-  box-shadow:
-    0 4px 20px rgba(45, 212, 191, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transition: all 0.3s ease;
 }
 
 .cta-primary:hover {
-  box-shadow:
-    0 8px 32px rgba(45, 212, 191, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
 }
 
@@ -592,7 +529,6 @@
   color: white;
   border: none;
   border-radius: 9999px;
-  box-shadow: 0 4px 20px rgba(248, 113, 113, 0.25);
 }
 
 .cta-muted {
@@ -639,7 +575,7 @@
    ════════════════════════════════════════════════ */
 @layer utilities {
   .tap-press {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease;
   }
   .tap-press:active {
     transform: scale(0.97);
@@ -716,7 +652,6 @@
   border-radius: 9999px;
   background: var(--pulse-fill);
   border: 3px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 12px rgba(45, 212, 191, 0.4);
   cursor: pointer;
   margin-top: -5px;
 }
@@ -733,7 +668,6 @@
   border-radius: 9999px;
   background: var(--pulse-fill);
   border: 3px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 12px rgba(45, 212, 191, 0.4);
   cursor: pointer;
 }
 
@@ -742,3 +676,41 @@
    ════════════════════════════════════════════════ */
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ════════════════════════════════════════════════
+   🛸 قمرة القيادة — Admin Dashboard (وضع فاتح)
+   ════════════════════════════════════════════════ */
+.admin-cockpit {
+  background: #e2e8f0;
+  position: relative;
+  overflow: hidden;
+}
+.admin-glass {
+  background: #fff;
+  border: 1px solid #94a3b8;
+  border-radius: 0.75rem;
+}
+.admin-glass-card {
+  background: #fff;
+  border: 1px solid #94a3b8;
+  border-radius: 0.75rem;
+}
+.admin-glass-card:hover {
+  border-color: #64748b;
+}
+.admin-sidebar {
+  background: #0f172a;
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* ════════════════════════════════════════════════
+   🧠 Flow Mind Map — Miro-style infinite canvas
+   ════════════════════════════════════════════════ */
+.flow-miro-root {
+  position: relative;
+  width: 100%;
+}
+.flow-miro-canvas {
+  -webkit-user-select: none;
+  user-select: none;
+}

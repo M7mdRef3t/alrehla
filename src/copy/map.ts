@@ -76,8 +76,8 @@ export const mapCopy = {
   planPreviewTitle: "معاينة مسار الحماية",
   planPreviewCta: "اكتب موقفين عشان نرسم لك مسار مخصص كامل.",
   /** أونبوردينج الخريطة */
-  onboardingStep1: "أنت في المركز. المساحة دي بتاعتك — أنت اللي بتحدد المسافات.",
-  onboardingStep2: "لون المدار = إحساسك: أخضر = قريب، أصفر = متذبذب، أحمر = بعيد.",
+  onboardingStep1: "أنت في المركز. المساحة دي بتاعتك — إحساسك هو البوصلة وانت اللي بتحدد المسافات.",
+  onboardingStep2: "لون كل مدار = إحساسك: أخضر قريب، أصفر متذبذب، أحمر بعيد.",
   onboardingCta: "فهمت، يلا بينا",
 
   // Dynamic titles based on goalId
@@ -86,6 +86,7 @@ export const mapCopy = {
     work: "خريطة الشغل",
     love: "خريطة الحب",
     money: "خريطة الفلوس",
+    self: "خريطة نفسك",
     unknown: "خريطتك",
     general: "خريطتك"
   }

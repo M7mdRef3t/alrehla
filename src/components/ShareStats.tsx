@@ -94,7 +94,7 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-md w-full"
+          className="bg-white rounded-2xl overflow-hidden max-w-md w-full"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-l from-purple-50 to-white">
@@ -122,19 +122,19 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
 
             {/* Main Stats */}
             <div className="grid grid-cols-3 gap-3 mb-6">
-              <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+              <div className="bg-white rounded-xl p-4 text-center">
                 <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-2">
                   <span className="text-xl font-bold text-green-600">{greenCount}</span>
                 </div>
                 <p className="text-xs text-slate-600">علاقات صحية</p>
               </div>
-              <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+              <div className="bg-white rounded-xl p-4 text-center">
                 <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-2">
                   <span className="text-xl font-bold text-amber-600">{yellowCount}</span>
                 </div>
                 <p className="text-xs text-slate-600">تحتاج انتباه</p>
               </div>
-              <div className="bg-white rounded-xl p-4 text-center shadow-sm">
+              <div className="bg-white rounded-xl p-4 text-center">
                 <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-2">
                   <span className="text-xl font-bold text-rose-600">{redCount}</span>
                 </div>
@@ -144,7 +144,7 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
 
             {/* Additional Stats */}
             <div className="space-y-3">
-              <div className="bg-white rounded-xl p-4 flex items-center gap-3 shadow-sm">
+              <div className="bg-white rounded-xl p-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
                   <Users className="w-5 h-5 text-blue-600" />
                 </div>
@@ -155,7 +155,7 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
               </div>
 
               {journeyDuration > 0 && (
-                <div className="bg-white rounded-xl p-4 flex items-center gap-3 shadow-sm">
+                <div className="bg-white rounded-xl p-4 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
                     <Calendar className="w-5 h-5 text-purple-600" />
                   </div>
@@ -167,7 +167,7 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
               )}
 
               {completedStepsCount > 0 && (
-                <div className="bg-white rounded-xl p-4 flex items-center gap-3 shadow-sm">
+                <div className="bg-white rounded-xl p-4 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center shrink-0">
                     <Check className="w-5 h-5 text-teal-600" />
                   </div>
@@ -179,7 +179,7 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
               )}
 
               {improvement !== null && improvement > 0 && (
-                <div className="bg-white rounded-xl p-4 flex items-center gap-3 shadow-sm">
+                <div className="bg-white rounded-xl p-4 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
                     <TrendingUp className="w-5 h-5 text-green-600" />
                   </div>

@@ -23,7 +23,7 @@ export const Achievements: FC<AchievementsProps> = ({ onClose }) => {
       aria-labelledby="achievements-title"
     >
       <motion.div
-        className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full max-h-[85vh] flex flex-col border border-slate-200 dark:border-slate-600"
+        className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full max-h-[85vh] flex flex-col border border-slate-200 dark:border-slate-600"
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}

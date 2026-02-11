@@ -104,7 +104,7 @@ export const RealityCheck: FC<RealityCheckProps> = ({
         <button
           type="button"
           disabled={!allAnswered}
-          className="rounded-full bg-teal-600 text-white px-10 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.99] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          className="rounded-full bg-teal-600 text-white px-10 py-4 text-base font-semibold hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.99] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
           onClick={() => onDone(answers)}
           title={allAnswered ? realityCopy.cta : "جاوب على كل الأسئلة الأول"}
         >

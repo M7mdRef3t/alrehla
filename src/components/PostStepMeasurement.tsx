@@ -84,7 +84,7 @@ export const PostStepMeasurement: FC<PostStepMeasurementProps> = ({ onComplete }
                   }
                   className={`w-12 h-12 rounded-full font-bold text-lg transition-all ${
                     answers[question.id] === n
-                      ? "bg-teal-600 text-white scale-110 shadow-lg"
+                      ? "bg-teal-600 text-white scale-110"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >

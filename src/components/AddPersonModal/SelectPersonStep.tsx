@@ -11,6 +11,7 @@ interface SelectPersonStepProps {
   customTitleInput: string;
   showCustomTitleInput: boolean;
   customName: string;
+  encouragementHint?: boolean;
   afterNameContent?: ReactNode;
   onTitleSelect: (title: string) => void;
   onCustomTitleChange: (value: string) => void;
@@ -25,6 +26,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
   customTitleInput,
   showCustomTitleInput,
   customName,
+  encouragementHint,
   afterNameContent,
   onTitleSelect,
   onCustomTitleChange,
@@ -69,7 +71,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
                 onClick={() => onTitleSelect(suggestion.label)}
                 className={`w-full h-24 sm:h-28 flex flex-col items-center justify-center gap-2 rounded-xl border-2 p-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-1 ${
                   isSelected
-                    ? "bg-teal-50 border-teal-500 shadow-md"
+                    ? "bg-teal-50 border-teal-500"
                     : "bg-white border-gray-100 hover:border-teal-300 hover:bg-teal-50"
                 }`}
                 title={`اختر "${suggestion.label}"`}
@@ -153,7 +155,22 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
               {customName.trim() || selectedTitle}
             </span>
           </p>
+          {encouragementHint && (
+            <p className="text-xs text-teal-600 mt-2 bg-teal-50 rounded-lg px-3 py-2 border border-teal-100">
+              تقدر تستخدم لقب أو رمز (مثل: س، المدير، أو الحرف الأول) لخصوصية كاملة.
+            </p>
+          )}
         </motion.div>
+      )}
+
+      {encouragementHint && !selectedTitle && (
+        <motion.p
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-xs text-teal-600 mt-3 bg-teal-50 rounded-lg px-3 py-2 border border-teal-100"
+        >
+          تقدر تستخدم لقب أو رمز (مثل: س، المدير، أو الحرف الأول) لخصوصية كاملة.
+        </motion.p>
       )}
 
       {afterNameContent}
@@ -170,7 +187,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
         <button
           type="submit"
           disabled={!selectedTitle}
-          className="flex-1 rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold shadow-lg hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          className="flex-1 rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
           title={selectedTitle ? "التالي: حلل إحساسك" : "اختر اللقب أولاً"}
         >
           <EditableText id="add_person_next" defaultText="التالي" page="add_person" editOnClick={false} />

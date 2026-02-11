@@ -62,8 +62,8 @@ module.exports = {
         }
       },
       fontFamily: {
-        sans: ['IBM Plex Sans Arabic', 'IBM Plex Sans', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['Readex Pro', 'IBM Plex Sans Arabic', 'system-ui', 'sans-serif']
+        sans: ['Almarai', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Almarai', 'system-ui', 'sans-serif']
       },
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1.5', letterSpacing: '0.02em' }],

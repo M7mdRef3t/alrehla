@@ -537,7 +537,7 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
       )}
 
       {toast && (
-        <div className="fixed left-1/2 -translate-x-1/2 bottom-24 rounded-full bg-[#32D74B] text-white px-5 py-2 text-sm font-semibold shadow-lg z-50">
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-24 rounded-full bg-[#32D74B] text-white px-5 py-2 text-sm font-semibold z-50">
           {toast}
         </div>
       )}

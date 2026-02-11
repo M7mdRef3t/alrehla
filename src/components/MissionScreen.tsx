@@ -185,7 +185,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
             }
           `}</style>
           <div className="absolute inset-x-0 -top-6 flex justify-center pointer-events-none z-20">
-            <div className="rounded-full bg-emerald-600 text-white px-4 py-2 text-xs font-semibold shadow-lg animate-bounce">
+            <div className="rounded-full bg-emerald-600 text-white px-4 py-2 text-xs font-semibold animate-bounce">
               إنجاز جديد: الخطوة اتنفذت 🎉
             </div>
           </div>
@@ -220,7 +220,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
               type="button"
               onClick={() => startMission(node.id)}
               disabled={missionStarted}
-              className={`rounded-full bg-slate-900 text-white px-4 py-2 text-xs font-semibold shadow hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed ${missionStarted && !missionCompleted ? "animate-pulse ring-2 ring-emerald-400/60 ring-offset-2" : ""}`}
+              className={`rounded-full bg-slate-900 text-white px-4 py-2 text-xs font-semibold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed ${missionStarted && !missionCompleted ? "animate-pulse ring-2 ring-emerald-400/60 ring-offset-2" : ""}`}
             >
               {missionStarted ? "الخطوة شغالة" : "ابدأ الخطوة"}
             </button>
@@ -356,7 +356,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
               completeMission(node.id);
               unlockAchievement("mission_complete");
             }}
-            className="rounded-full bg-emerald-600 text-white px-4 py-2 text-xs font-semibold shadow hover:bg-emerald-700"
+            className="rounded-full bg-emerald-600 text-white px-4 py-2 text-xs font-semibold hover:bg-emerald-700"
           >
             تثبيت الإغلاق
           </button>

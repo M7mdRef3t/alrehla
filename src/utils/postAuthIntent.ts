@@ -14,7 +14,7 @@ export type PostAuthIntent =
 const STORAGE_KEY = "dawayir-post-auth-intent";
 const MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
 
-const VALID_MOODS: ReadonlySet<PulseMood> = new Set(["bright", "calm", "anxious", "angry", "sad"]);
+const VALID_MOODS: ReadonlySet<PulseMood> = new Set(["bright", "calm", "anxious", "angry", "sad", "tense", "hopeful", "overwhelmed"]);
 const VALID_FOCUS: ReadonlySet<PulseFocus> = new Set(["event", "thought", "body", "none"]);
 
 function clampEnergy(n: number): number {

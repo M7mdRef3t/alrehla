@@ -1,4 +1,4 @@
-﻿# Al-Rehla Cursor Rules (Wave-Based Launch)
+# Al-Rehla Cursor Rules (Wave-Based Launch)
 
 ## 1) Product Phasing Is Mandatory
 - Build all Phase 1, 2, and 3 code paths early.
@@ -30,12 +30,17 @@
 - Validators must run on load/save so hidden features still keep valid schema.
 - Export/import must preserve tree relation data even when UI is locked.
 
-## 7) User-Centric Decision Rule
+## 7) App Environment (وضع المستخدم vs وضع التطوير)
+- Three modes: **user** (what is published to the public), **dev** (all features, internal testing), **owner** (role-based, full control).
+- When editing any user-facing surface (landing, map, goal picker, copy, colors), assume **user mode** unless the user explicitly asks for "وضع التطوير" or "development".
+- Source: `src/config/appEnv.ts` — `VITE_APP_ENV=user` | `dev`; see AGENTS.md "أوضاع التطبيق".
+
+## 8) User-Centric Decision Rule
 - Every new UI/behavior change must answer: why this helps the owner daily.
 - Prefer reuse over duplicate components.
 - Before major edits, run a discovery pass with `rg` on App/Sidebar/state/modules.
 
-## 8) Platform Access Persistence (Supabase/Vercel)
+## 9) Platform Access Persistence (Supabase/Vercel)
 - Never block on permissions without first running `npm run access:doctor`.
 - Access bootstrap source of truth is `scripts/bootstrap-access.ps1`.
 - Required keys for full autonomous ops:

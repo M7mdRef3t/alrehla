@@ -23,7 +23,8 @@ import {
   Move,
   Compass,
   Star,
-  ShieldCheck
+  ShieldCheck,
+  ScrollText
 } from "lucide-react";
 import { useJourneyState } from "../state/journeyState";
 import { useNotificationState } from "../state/notificationState";
@@ -94,11 +95,14 @@ interface AppSidebarProps {
   onOpenBaseline: () => void;
   onOpenGuidedJourney: () => void;
   onOpenJourneyTools?: () => void;
+  onOpenJourneyTimeline?: () => void;
   onOpenDawayir?: () => void;
   onFeatureLocked?: (feature: FeatureFlagKey) => void;
   onOpenMission?: (nodeId: string) => void;
   /** عند فتح نافذة شخص: نعرض بار المراحل واسمه فوق المحتوى */
   viewingNodeId?: string | null;
+  /** يُستدعى عند إتمام جلسة تشويش الإشارة — لعرض رسالة "حمد لله على السلامة" */
+  onNoiseSessionComplete?: () => void;
 }
 
 export const AppSidebar: FC<AppSidebarProps> = ({
@@ -107,10 +111,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   onOpenBaseline,
   onOpenGuidedJourney,
   onOpenJourneyTools,
+  onOpenJourneyTimeline,
   onOpenDawayir,
   onFeatureLocked,
   onOpenMission,
-  viewingNodeId = null
+  viewingNodeId = null,
+  onNoiseSessionComplete
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
@@ -250,7 +256,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         {/* المحتوى — يظهر عند تحريك الماوس على التاب أو الشريط؛ wrapper يمنع ظهور أي جزء عند الإغلاق */}
         <div className="h-full w-0 group-hover/sidebar:w-52 shrink-0 overflow-hidden transition-[width] duration-200 ease-out">
           <aside
-            className="h-full w-52 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 shadow-lg flex flex-col gap-2 py-6 px-3 min-w-0 invisible group-hover/sidebar:visible"
+            className="h-full w-52 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 flex flex-col gap-2 py-6 px-3 min-w-0 invisible group-hover/sidebar:visible"
           >
           {viewingNode?.analysis && (
             <div className="shrink-0 space-y-1 mb-1">
@@ -271,6 +277,17 @@ export const AppSidebar: FC<AppSidebarProps> = ({
              >
                <Compass className="w-5 h-5 shrink-0" />
                أدوات الرحلة
+             </button>
+           )}
+           {onOpenJourneyTimeline && (
+             <button
+               type="button"
+               onClick={() => onOpenJourneyTimeline()}
+               className="w-full flex items-center gap-3 rounded-xl bg-amber-50/80 dark:bg-amber-900/20 text-amber-700 dark:text-amber-200 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-600 hover:bg-amber-100/70 dark:hover:bg-amber-900/30 transition-all text-right shrink-0 whitespace-nowrap"
+               title="سجل الرحلة"
+             >
+               <ScrollText className="w-5 h-5 shrink-0" />
+               سجل الرحلة
              </button>
            )}
            <button
@@ -616,7 +633,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         </div>
         {/* تاب صغير ظاهر دايماً — تحريك الماوس عليه يفتح الشريط */}
         <div
-          className="h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-600 text-white border-l border-teal-700 shadow-md cursor-default py-4"
+          className="h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-600 text-white border-l border-teal-700 cursor-default py-4"
           title="افتح محطة الانطلاق"
         >
           <PanelRightOpen className="w-5 h-5" />
@@ -627,7 +644,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       <button
         type="button"
         onClick={handleOpen}
-        className="fixed top-4 right-4 z-40 md:hidden w-12 h-12 flex items-center justify-center bg-teal-600 text-white rounded-full shadow-lg active:scale-95 transition-transform"
+        className="fixed top-4 right-4 z-40 md:hidden w-12 h-12 flex items-center justify-center bg-teal-600 text-white rounded-full active:scale-95 transition-transform"
         title="افتح محطة الانطلاق"
       >
         <PanelRightOpen className="w-6 h-6" />
@@ -652,7 +669,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-72 bg-white dark:bg-slate-800 shadow-2xl z-50 md:hidden flex flex-col"
+              className="fixed top-0 right-0 h-full w-72 bg-white dark:bg-slate-800 z-50 md:hidden flex flex-col"
             >
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
@@ -1105,10 +1122,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
       {/* Breathing Overlay */}
       {showBreathing && (
-        <BreathingOverlay
-          onClose={() => setShowBreathing(false)}
-          autoCloseAfterCycles={0}
-        />
+        <BreathingOverlay onClose={() => setShowBreathing(false)} />
       )}
 
       {/* Theme Settings Modal */}
@@ -1161,6 +1175,10 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           <NoiseSilencingModal
             isOpen={showNoiseSilencing}
             onClose={() => setShowNoiseSilencing(false)}
+            onSessionComplete={() => {
+              setShowNoiseSilencing(false);
+              onNoiseSessionComplete?.();
+            }}
           />
         </Suspense>
       )}

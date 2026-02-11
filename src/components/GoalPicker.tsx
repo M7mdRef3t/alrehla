@@ -9,12 +9,16 @@ import {
   Wallet,
   HelpCircle,
   Users,
+  UserCircle,
   Star,
   Target
 } from "lucide-react";
 import { resolveAdviceCategory, type AdviceCategory } from "../data/adviceScripts";
+import { isUserMode } from "../config/appEnv";
 import { goalPickerCopy } from "../copy/goalPicker";
 import { useJourneyState } from "../state/journeyState";
+import { usePulseState } from "../state/pulseState";
+import type { PulseFocus, PulseMood } from "../state/pulseState";
 import { EditableText } from "./EditableText";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 
@@ -28,10 +32,13 @@ const ICON_MAP: Record<string, any> = {
   friends: Users,
   love: Heart,
   money: Wallet,
+  self: UserCircle,
   unknown: HelpCircle
 };
 
-const ENABLED_GOAL_IDS = ["family", "friends", "work", "love", "money", "unknown"];
+const ALL_GOAL_IDS = ["family", "friends", "work", "love", "money", "self", "unknown"];
+/** وضع المستخدم: العيلة فقط. وضع التطوير: كل الخرائط. */
+const ENABLED_GOAL_IDS = isUserMode ? ["family"] : ALL_GOAL_IDS;
 
 const cosmicEase = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
@@ -60,8 +67,31 @@ const fadeUp = {
   }
 };
 
-function getSmartRecommendations(baselineAnswers?: any): string[] {
-  if (!baselineAnswers) return [];
+/** توصيات من البوصلة: event+غضبان=صراعات، body+طاقة منخفضة=مستقبل/اكتشاف، thought+قلق=توهان */
+function getPulseRecommendations(pulse: { mood: PulseMood; focus: PulseFocus; energy: number }): string[] {
+  const { mood, focus, energy } = pulse;
+  const recs: string[] = [];
+  if (focus === "event" && (mood === "angry" || mood === "anxious" || mood === "tense")) {
+    recs.push("family", "work");
+  }
+  if (focus === "event" && mood === "sad") {
+    recs.push("family", "friends");
+  }
+  if (focus === "thought" && (mood === "anxious" || mood === "sad" || mood === "overwhelmed")) {
+    recs.push("unknown", "friends");
+  }
+  if (focus === "body" || energy <= 3) {
+    recs.push("money", "unknown");
+  }
+  if (focus === "none" && energy >= 6) {
+    recs.push("money", "work");
+  }
+  return recs.length > 0 ? [...new Set(recs)] : ["unknown"];
+}
+
+function getSmartRecommendations(baselineAnswers?: any, pulse?: { mood: PulseMood; focus: PulseFocus; energy: number } | null): string[] {
+  const pulseRecs = pulse ? getPulseRecommendations(pulse) : [];
+  if (!baselineAnswers) return pulseRecs.length > 0 ? pulseRecs : ["unknown"];
   const recommendations: string[] = [];
   if (baselineAnswers.q1 && baselineAnswers.q1 <= 2) {
     recommendations.push("family", "friends");
@@ -75,7 +105,8 @@ function getSmartRecommendations(baselineAnswers?: any): string[] {
   if (baselineAnswers.q4 && baselineAnswers.q4 >= 4) {
     return ENABLED_GOAL_IDS;
   }
-  return recommendations.length > 0 ? recommendations : ["family"];
+  const baseline = recommendations.length > 0 ? recommendations : ["family"];
+  return pulseRecs.length > 0 ? [...new Set([...pulseRecs, ...baseline])] : baseline;
 }
 
 interface GoalPickerProps {
@@ -91,11 +122,13 @@ export const GoalPicker: FC<GoalPickerProps> = ({
 }) => {
   const [recommendedGoals, setRecommendedGoals] = useState<string[]>([]);
   const baselineAnswers = useJourneyState((s) => s.baselineAnswers);
+  const lastPulse = usePulseState((s) => s.lastPulse);
 
   useEffect(() => {
-    const recommendations = getSmartRecommendations(baselineAnswers);
+    const pulse = lastPulse ? { mood: lastPulse.mood, focus: lastPulse.focus, energy: lastPulse.energy } : null;
+    const recommendations = getSmartRecommendations(baselineAnswers, pulse);
     setRecommendedGoals(recommendations);
-  }, [baselineAnswers]);
+  }, [baselineAnswers, lastPulse]);
 
   const handleSelect = (goalId: string) => {
     if (!ENABLED_GOAL_IDS.includes(goalId)) return;
@@ -106,7 +139,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
 
   return (
     <main
-      className="w-full max-w-4xl py-10 md:py-14 text-center"
+      className="w-full max-w-4xl py-4 sm:py-6 md:py-8 text-center overflow-hidden flex flex-col flex-1 min-h-0"
       aria-labelledby="goal-title"
     >
       {/* Progress indicator — cosmic style */}
@@ -114,7 +147,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="mb-8"
+        className="mb-4 sm:mb-5 shrink-0"
       >
         <div className="flex items-center justify-center gap-3">
           <div
@@ -158,17 +191,17 @@ export const GoalPicker: FC<GoalPickerProps> = ({
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="mb-12"
+        className="mb-4 sm:mb-6 shrink-0"
       >
         <h1
           id="goal-title"
-          className="text-3xl md:text-4xl font-bold mb-6"
+          className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4"
           style={{ color: "var(--text-primary)", letterSpacing: "var(--tracking-wider)" }}
         >
           <EditableText id="goal_picker_title" defaultText={goalPickerCopy.title} page="goal_picker" />
         </h1>
         <p
-          className="text-lg md:text-xl leading-relaxed max-w-2xl mx-auto"
+          className="text-base sm:text-lg md:text-xl leading-relaxed max-w-2xl mx-auto"
           style={{ color: "var(--text-secondary)" }}
         >
           <EditableText
@@ -183,7 +216,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
 
       {/* Goal cards — Glass Orbs */}
       <div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 justify-items-center max-w-4xl mx-auto mb-12"
+        className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 grid-rows-3 lg:grid-rows-2 items-stretch justify-items-stretch max-w-4xl mx-auto mb-6 flex-1 min-h-0"
         role="group"
         aria-label="اختر أكثر حاجة شاغلة بالك"
       >
@@ -200,7 +233,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
               variants={tileVariants}
               initial="hidden"
               animate="visible"
-              className="relative group"
+              className="relative group h-full min-h-0 flex"
             >
               {/* Recommended badge */}
               {isRecommended && (
@@ -227,7 +260,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
 
               <motion.button
                 type="button"
-                className="group/card relative w-full max-w-[320px] text-center transition-all duration-300 focus-visible:outline-none select-none"
+                className="group/card relative w-full min-w-0 h-full flex flex-col text-center transition-all duration-300 focus-visible:outline-none select-none"
                 style={{
                   background: isSelected
                     ? "rgba(45, 212, 191, 0.08)"
@@ -242,7 +275,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                         : "rgba(255, 255, 255, 0.08)"
                   }`,
                   borderRadius: "1.25rem",
-                  padding: "2rem",
+                  padding: "1rem 1.25rem",
                   boxShadow: isSelected
                     ? "0 0 30px rgba(45, 212, 191, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)"
                     : "0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
@@ -272,7 +305,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                   </span>
                 )}
 
-                <div className="flex justify-center mb-4">
+                <div className="flex justify-center mb-2 sm:mb-3 shrink-0">
                   <motion.div
                     className="w-16 h-16 rounded-full flex items-center justify-center"
                     style={{
@@ -296,7 +329,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                 </div>
 
                 <p
-                  className="text-lg font-bold mb-2"
+                  className="text-base sm:text-lg font-bold mb-1 sm:mb-2 shrink-0"
                   style={{ color: isEnabled ? "var(--text-primary)" : "var(--text-muted)" }}
                 >
                   <EditableText
@@ -308,7 +341,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                 </p>
 
                 <p
-                  className="text-sm leading-relaxed"
+                  className="text-xs sm:text-sm leading-relaxed flex-1 min-h-0 overflow-hidden line-clamp-3"
                   style={{ color: isEnabled ? "var(--text-secondary)" : "var(--text-muted)" }}
                 >
                   <EditableText

@@ -24,6 +24,7 @@ export interface RecoveryPlanOpenWith {
 interface MapState {
   nodes: MapNode[];
   showPlacementTooltip: boolean;
+  lastAddedNodeId: string | null;
   recoveryPlanOpenWith: RecoveryPlanOpenWith | null;
   setRecoveryPlanOpenWith: (v: RecoveryPlanOpenWith | null) => void;
   addNode: (
@@ -101,9 +102,10 @@ function deriveNextId(nodes: MapNode[]) {
 export const useMapState = create<MapState>((set, get) => ({
   nodes: [],
   showPlacementTooltip: false,
+  lastAddedNodeId: null,
   recoveryPlanOpenWith: null,
   setRecoveryPlanOpenWith: (v) => set({ recoveryPlanOpenWith: v }),
-  dismissPlacementTooltip: () => set({ showPlacementTooltip: false }),
+  dismissPlacementTooltip: () => set({ showPlacementTooltip: false, lastAddedNodeId: null }),
   addNode: (
     label: string,
     ring: Ring = "yellow",
@@ -177,7 +179,7 @@ export const useMapState = create<MapState>((set, get) => ({
     };
     const nextNodes = [...get().nodes, newNode];
     saveStoredState({ nodes: nextNodes });
-    set({ nodes: nextNodes, showPlacementTooltip: true });
+    set({ nodes: nextNodes, showPlacementTooltip: true, lastAddedNodeId: nodeId });
     return nodeId;
   },
   moveNodeToRing: (id, ring, realityAnswers) => {

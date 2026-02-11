@@ -1,7 +1,11 @@
 import type { FC } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
+import { recordFlowEvent } from "../services/journeyTracking";
 import { motion, useReducedMotion } from "framer-motion";
-import { Star, Target, Shield, Smartphone, ArrowRight, CheckCircle2 } from "lucide-react";
+import {
+  Star, ArrowLeft, Sparkles, Heart, Compass, Map, Orbit, Quote,
+  Zap, Users, TrendingUp
+} from "lucide-react";
 import { landingCopy } from "../copy/landing";
 import { getJourneyToolsView } from "../data/journeyTools";
 import { useJourneyState } from "../state/journeyState";
@@ -12,9 +16,9 @@ import { getGoalMeta } from "../data/goalMeta";
 import type { FeatureFlagKey } from "../config/features";
 import { EditableText } from "./EditableText";
 
-/* ════════════════════════════════════════════════
-   🌌 LANDING — Digital Sanctuary Gateway
-   ════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   LANDING — Dawayir
+   ══════════════════════════════════════════ */
 
 interface LandingProps {
   onStartJourney: () => void;
@@ -26,34 +30,104 @@ interface LandingProps {
   availableFeatures?: Partial<Record<FeatureFlagKey, boolean>>;
 }
 
-/* ── Cosmic Animations ── */
-const cosmicEase = [0.22, 1, 0.36, 1] as [number, number, number, number];
+/* ── animation tokens ── */
+const ease = [0.25, 1, 0.5, 1] as [number, number, number, number];
+const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease } } };
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.12 } } };
+const item = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } };
 
-const cosmicFadeUp = {
-  hidden: { opacity: 0, y: 16, filter: "blur(10px)" },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 1.2, ease: cosmicEase }
-  }
+/* ── reusable card style ── */
+const CARD = {
+  background: "rgba(255,255,255,0.04)",
+  border: "1px solid rgba(255,255,255,0.08)",
+  borderRadius: "1.25rem",
+} as const;
+
+/* ═══════════════════════════════════
+   🌌 Floating Particles — خلفية متحركة
+   ═══════════════════════════════════ */
+const FloatingParticles: FC = () => {
+  const particles = useMemo(() =>
+    Array.from({ length: 30 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 2.5 + 1,
+      duration: Math.random() * 25 + 20,
+      delay: Math.random() * 10,
+      opacity: Math.random() * 0.35 + 0.08,
+      color: i % 4 === 0 ? "rgba(45,212,191," :
+             i % 4 === 1 ? "rgba(167,139,250," :
+             i % 4 === 2 ? "rgba(125,211,252," : "rgba(52,211,153,",
+    })),
+    []
+  );
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((p) => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-full"
+          style={{
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            width: p.size,
+            height: p.size,
+            background: `${p.color}${p.opacity})`,
+            boxShadow: `0 0 ${p.size * 3}px ${p.color}${p.opacity * 0.5})`,
+          }}
+          animate={{
+            y: [0, -30, 10, -20, 0],
+            x: [0, 15, -10, 5, 0],
+            opacity: [p.opacity, p.opacity * 1.5, p.opacity * 0.7, p.opacity * 1.3, p.opacity],
+          }}
+          transition={{
+            duration: p.duration,
+            repeat: Infinity,
+            delay: p.delay,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
 };
 
-const staggerContainer = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.18, delayChildren: 0.15 } }
+/* ═══════════════════════════════════
+   🪐 Orbital Rings — مدارات دائرية
+   ═══════════════════════════════════ */
+const OrbitalRings: FC = () => {
+  const rings = [
+    { size: 280, border: "rgba(45,212,191,0.08)", duration: 45, dash: "4 12" },
+    { size: 420, border: "rgba(167,139,250,0.06)", duration: 60, dash: "6 18" },
+    { size: 560, border: "rgba(125,211,252,0.05)", duration: 80, dash: "3 20" },
+  ];
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {rings.map((r, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            width: r.size,
+            height: r.size,
+            border: `1px solid transparent`,
+            borderImage: `repeating-linear-gradient(0deg, ${r.border}, ${r.border} 4px, transparent 4px, transparent 12px) 1`,
+            borderRadius: "50%",
+            borderStyle: "dashed",
+            borderColor: r.border,
+          }}
+          animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
+          transition={{ duration: r.duration, repeat: Infinity, ease: "linear" }}
+        />
+      ))}
+    </div>
+  );
 };
 
-const staggerItem = {
-  hidden: { opacity: 0, y: 12, filter: "blur(6px)" },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.8, ease: cosmicEase }
-  }
-};
-
+/* ══════ MAIN ══════ */
 export const Landing: FC<LandingProps> = ({
   onStartJourney,
   onOpenTools,
@@ -84,6 +158,20 @@ export const Landing: FC<LandingProps> = ({
   });
   const reduceMotion = useReducedMotion();
   const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
+  const landingViewedAt = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (landingViewedAt.current == null) {
+      landingViewedAt.current = Date.now();
+      recordFlowEvent("landing_viewed");
+    }
+  }, []);
+
+  const handleStartJourney = () => {
+    const timeToAction = landingViewedAt.current ? Date.now() - landingViewedAt.current : undefined;
+    recordFlowEvent("landing_clicked_start", { timeToAction });
+    onStartJourney();
+  };
 
   useEffect(() => {
     if (!lastGoalLabel) return;
@@ -96,71 +184,91 @@ export const Landing: FC<LandingProps> = ({
     lastGoalRef.current = lastGoalLabel;
   }, [lastGoalLabel]);
 
-  const badgePulseClass = badgePulse ? "animate-bounce" : "";
+  const features = [
+    { icon: Compass, title: "خريطة الوعي", desc: landingCopy.whatIsPoints[0], accent: "#2dd4bf" },
+    { icon: Orbit, title: "المدارات الذكية", desc: landingCopy.whatIsPoints[1], accent: "#fbbf24" },
+    { icon: Map, title: "خطة التحرك", desc: landingCopy.whatIsPoints[2], accent: "#34d399" },
+  ];
+
+  const stats = [
+    { icon: Users, val: "١٬٠٠٠+", label: "شخص بدأ رحلته", accent: "#2dd4bf" },
+    { icon: TrendingUp, val: "٩٣٪", label: "شافوا فرق حقيقي", accent: "#fbbf24" },
+    { icon: Zap, val: "٥ دقائق", label: "لبداية التغيير", accent: "#34d399" },
+  ];
 
   return (
-    <div className="relative w-full min-h-screen py-10 sm:py-14 md:py-16 flex flex-col items-center justify-center">
-      <div className="w-full max-w-5xl mx-auto px-4 sm:px-6">
+    <div className="relative w-full min-h-screen overflow-hidden">
 
-      {/* ── Cosmic Ambient Glow ── */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden" aria-hidden="true">
-        <motion.div
-          className="w-[100vmax] h-[100vmax] rounded-full"
-          style={{
-            background: "radial-gradient(circle at center, rgba(45, 212, 191, 0.14), rgba(245, 166, 35, 0.08) 40%, transparent 70%)",
-            filter: "blur(80px)"
-          }}
-          animate={reduceMotion ? {} : {
-            scale: [1, 1.08, 1],
-            opacity: [0.7, 0.9, 0.7]
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        />
+      {/* ── 🌌 animated background ── */}
+      <div className="fixed inset-0 pointer-events-none z-0" aria-hidden="true">
+        {/* gradient base — لمسات أزرق فاتح وبنفسجي للهدوء النفسي */}
+        <div className="absolute inset-0" style={{
+          background: "radial-gradient(ellipse at 30% 20%, rgba(167,139,250,0.07) 0%, transparent 55%), radial-gradient(ellipse at 70% 70%, rgba(125,211,252,0.06) 0%, transparent 55%), radial-gradient(ellipse at 50% 50%, rgba(45,212,191,0.05) 0%, transparent 60%), radial-gradient(ellipse at 15% 80%, rgba(192,132,252,0.04) 0%, transparent 45%)"
+        }} />
+        {/* particles */}
+        {!reduceMotion && <FloatingParticles />}
+        {/* orbital rings */}
+        {!reduceMotion && <OrbitalRings />}
       </div>
 
-      <main
-        className="relative z-10 w-full text-center"
-        style={{ willChange: "transform, opacity" }}
-        aria-labelledby="landing-title"
-      >
+      <div className="relative z-10 w-full max-w-[680px] mx-auto px-5 sm:px-6">
 
-        {/* ── Hero Block ── */}
-        <motion.div variants={staggerContainer} initial="hidden" animate="visible">
+        {/* ════════════════════════════════
+            HERO
+           ════════════════════════════════ */}
+        <motion.section
+          className="flex flex-col items-center justify-center text-center min-h-screen py-12"
+          variants={stagger}
+          initial="hidden"
+          animate="visible"
+        >
+          {/* pill badge */}
+          <motion.div
+            className="flex items-center gap-2 rounded-full px-4 py-1.5 mb-8"
+            variants={fadeUp}
+            style={{ background: "rgba(45,212,191,0.08)", border: "1px solid rgba(45,212,191,0.18)" }}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-teal-400" />
+            <span className="text-[13px] font-medium text-teal-300/90">مساحتك الآمنة</span>
+          </motion.div>
+
+          {/* hook — فوق العنوان */}
+          <motion.p
+            className="text-[15px] sm:text-base leading-[1.8] max-w-[420px] mx-auto mb-4"
+            style={{ color: "rgba(203,213,225,0.92)" }}
+            variants={fadeUp}
+          >
+            <EditableText
+              id="landing_hook"
+              defaultText={landingCopy.hook}
+              page="landing"
+            />
+          </motion.p>
+
+          {/* headline — يحتفظ بفونت IBM Plex Sans Arabic */}
           <motion.h1
             id="landing-title"
-            className="mb-8 sm:mb-10 leading-[1.15] tracking-tight"
-            style={{ color: "var(--text-primary)", willChange: "transform, opacity, filter" }}
+            className="text-[2rem] sm:text-[2.5rem] md:text-[2.85rem] font-bold leading-[1.25] mb-3"
+            style={{ fontFamily: '"IBM Plex Sans Arabic", system-ui, sans-serif' }}
+            variants={fadeUp}
           >
-            <motion.span
-              className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-4 sm:mb-5"
-              variants={cosmicFadeUp}
-              style={{
-                background: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(45,212,191,0.8) 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text"
-              }}
-            >
-              {landingCopy.titleLine1}
-            </motion.span>
-            <motion.span
-              className="block text-lg sm:text-xl md:text-2xl font-bold tracking-tight"
-              variants={cosmicFadeUp}
-              style={{
-                background: "linear-gradient(135deg, rgba(45,212,191,0.9) 0%, rgba(245,166,35,0.7) 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text"
-              }}
-            >
-              {landingCopy.titleLine2}
-            </motion.span>
+            {landingCopy.titleLine1}
           </motion.h1>
 
+          {/* sub-headline — teal — يحتفظ بفونت IBM Plex Sans Arabic */}
           <motion.p
-            className="text-base sm:text-lg leading-relaxed max-w-2xl mx-auto whitespace-pre-line mb-8"
-            style={{ color: "var(--text-secondary)", willChange: "transform, opacity, filter" }}
-            variants={staggerItem}
+            className="text-lg sm:text-xl font-semibold mb-6"
+            style={{ color: "#2dd4bf", fontFamily: '"IBM Plex Sans Arabic", system-ui, sans-serif' }}
+            variants={fadeUp}
+          >
+            {landingCopy.titleLine2}
+          </motion.p>
+
+          {/* body copy — opacity أعلى للقراءة على خلفية كحلي */}
+          <motion.p
+            className="text-[15px] sm:text-base leading-[1.8] max-w-[420px] mx-auto mb-10"
+            style={{ color: "rgba(203,213,225,0.92)" }}
+            variants={item}
           >
             <EditableText
               id="landing_subtitle"
@@ -171,108 +279,113 @@ export const Landing: FC<LandingProps> = ({
             />
           </motion.p>
 
-          {/* ── CTA Block ── */}
-          <motion.div className="mt-8 sm:mt-10" variants={staggerItem}>
-            <div className="relative inline-block">
-              <div
-                className="absolute inset-0 rounded-xl blur-lg opacity-50"
-                style={{
-                  background: "linear-gradient(135deg, #f5a623, #d97706)",
-                  transform: "scale(1.05)"
-                }}
+          {/* CTA — centered */}
+          <motion.div className="flex flex-col items-center" variants={item}>
+            <motion.button
+              type="button"
+              onClick={handleStartJourney}
+              className="group inline-flex items-center justify-center gap-2.5 rounded-full px-8 py-3.5 text-[15px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/40"
+              style={{
+                background: "linear-gradient(135deg, #10b981 0%, #34d399 100%)",
+                color: "#fff",
+                boxShadow: "0 4px 24px rgba(16,185,129,0.3), 0 1px 3px rgba(0,0,0,0.2)"
+              }}
+              whileHover={{ y: -2, boxShadow: "0 8px 36px rgba(16,185,129,0.4), 0 2px 8px rgba(0,0,0,0.15)" }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.2 }}
+            >
+              <EditableText
+                id="landing_cta_journey"
+                defaultText={landingCopy.ctaJourney}
+                page="landing"
+                editOnClick={false}
               />
-              <motion.button
-                type="button"
-                onClick={onStartJourney}
-                className="relative px-8 sm:px-10 py-4 sm:py-5 text-base sm:text-lg font-bold rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--space-void)]"
-                style={{
-                  background: "linear-gradient(135deg, #f5a623 0%, #fbbf24 50%, #f5a623 100%)",
-                  backgroundSize: "200% 100%",
-                  color: "#000",
-                  boxShadow: "0 8px 32px rgba(245, 166, 35, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25)"
-                }}
-                whileHover={{
-                  scale: 1.04,
-                  y: -2,
-                  boxShadow: "0 12px 48px rgba(245, 166, 35, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
-                }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-              >
-                <span className="flex items-center gap-2 sm:gap-3">
-                  <EditableText
-                    id="landing_cta_journey"
-                    defaultText={landingCopy.ctaJourney}
-                    page="landing"
-                    editOnClick={false}
-                  />
-                  <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
-                </span>
-              </motion.button>
-            </div>
-            <p className="mt-4 text-sm sm:text-base" style={{ color: "var(--text-secondary)" }}>
-              {hasExistingJourney ? "هنكمل من آخر مدار كنت واقف عنده." : "خطوة واحدة بسيطة عشان نرسم أول نسخة من خريطة وعيك."}
+            </motion.button>
+
+            <p className="mt-2.5 text-[15px] text-center font-medium" style={{ color: "rgba(203,213,225,0.94)" }}>
+              {hasExistingJourney
+                ? "هنكمل من آخر مدار كنت واقف عنده"
+                : <>
+                خطوة واحدة بسيطة عشان نرسم أول نسخة
+                <br />
+                من خريطة وعيك
+              </>
+              }
             </p>
           </motion.div>
-        </motion.div>
 
-        {/* ── What Is Block — 3 كروت ── */}
+          {/* scroll indicator */}
+          {showPostStartContent && (
+            <motion.div
+              className="mt-auto pt-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5, duration: 1 }}
+            >
+              <motion.div
+                className="w-5 h-8 rounded-full border border-white/15 flex justify-center pt-1.5 mx-auto"
+                animate={{ opacity: [0.4, 0.8, 0.4] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <motion.div
+                  className="w-1 h-2 rounded-full bg-teal-400/50"
+                  animate={{ y: [0, 8, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </motion.section>
+
+        {/* ════════════════════════════════
+            FEATURES — 3 cards
+           ════════════════════════════════ */}
         {showPostStartContent && (
           <motion.section
-            className="mt-16 sm:mt-20 md:mt-24"
-            aria-labelledby="landing-what-is"
-            variants={staggerContainer}
+            className="py-12 sm:py-16"
+            variants={stagger}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-80px" }}
+            viewport={{ once: true, margin: "-60px" }}
           >
+            {/* section label */}
+            <motion.p
+              className="text-[13px] font-semibold tracking-wide text-center mb-2"
+              style={{ color: "rgba(148,163,184,0.5)", letterSpacing: "0.05em" }}
+              variants={item}
+            >
+              إزاي بتشتغل
+            </motion.p>
             <motion.h2
-              id="landing-what-is"
-              className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 text-center"
-              style={{ color: "var(--text-primary)", letterSpacing: "var(--tracking-wider)" }}
-              variants={staggerItem}
+              className="text-xl sm:text-2xl font-bold text-center mb-10"
+              variants={item}
             >
               <EditableText id="landing_what_is_title" defaultText={landingCopy.whatIsTitle} page="landing" showEditIcon={false} />
             </motion.h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-              {landingCopy.whatIsPoints.map((point, i) => (
+
+            <div className="space-y-4">
+              {features.map((f, i) => (
                 <motion.div
                   key={i}
-                  className="relative group"
-                  variants={staggerItem}
+                  className="flex gap-4 items-start rounded-2xl p-5 transition-colors duration-300 hover:bg-white/[0.06]"
+                  style={CARD}
+                  variants={item}
                 >
-                  {/* Glow على hover */}
+                  {/* icon */}
                   <div
-                    className="absolute inset-0 rounded-2xl blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"
-                    style={{
-                      background: i === 0 ? "rgba(45, 212, 191, 0.4)" : i === 1 ? "rgba(245, 166, 35, 0.4)" : "rgba(16, 185, 129, 0.4)"
-                    }}
-                  />
-
-                  <div
-                    className="relative bento-block h-full px-5 py-5 sm:px-6 sm:py-6"
-                    style={{
-                      borderColor: i === 0 ? "rgba(45, 212, 191, 0.2)" : i === 1 ? "rgba(245, 166, 35, 0.2)" : "rgba(16, 185, 129, 0.2)"
-                    }}
+                    className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center mt-0.5"
+                    style={{ background: `${f.accent}12`, border: `1px solid ${f.accent}22` }}
                   >
-                    <div
-                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 mx-auto"
-                      style={{
-                        background: i === 0 ? "rgba(45, 212, 191, 0.12)" : i === 1 ? "rgba(245, 166, 35, 0.12)" : "rgba(16, 185, 129, 0.12)",
-                        border: `1px solid ${i === 0 ? "rgba(45, 212, 191, 0.25)" : i === 1 ? "rgba(245, 166, 35, 0.25)" : "rgba(16, 185, 129, 0.25)"}`
-                      }}
-                    >
-                      {i === 0 && <Target className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "var(--soft-teal)" }} />}
-                      {i === 1 && <Shield className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "var(--warm-amber)" }} />}
-                      {i === 2 && <CheckCircle2 className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "var(--soft-emerald)" }} />}
-                    </div>
-                    <p className="text-sm sm:text-base leading-relaxed text-center" style={{ color: "var(--text-secondary)" }}>
-                      <EditableText
-                        id={`landing_what_is_point_${i + 1}`}
-                        defaultText={point}
-                        page="landing"
-                        showEditIcon={false}
-                      />
+                    <f.icon className="w-5 h-5" style={{ color: f.accent }} />
+                  </div>
+
+                  {/* text */}
+                  <div className="min-w-0">
+                    <h3 className="text-[15px] font-semibold mb-1" style={{ color: "#fff" }}>
+                      {f.title}
+                    </h3>
+                    <p className="text-[14px] leading-[1.75]" style={{ color: "rgba(203,213,225,0.75)" }}>
+                      {f.desc}
                     </p>
                   </div>
                 </motion.div>
@@ -281,94 +394,158 @@ export const Landing: FC<LandingProps> = ({
           </motion.section>
         )}
 
-        {/* ── Trust Block ── */}
+        {/* ════════════════════════════════
+            STATS — horizontal row
+           ════════════════════════════════ */}
         {showPostStartContent && (
           <motion.section
-            className="mt-14 sm:mt-16 text-center"
-            aria-labelledby="landing-trust"
-            variants={staggerItem}
+            className="py-10 sm:py-14"
+            variants={stagger}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "-60px" }}
           >
-            <p id="landing-trust" className="text-xs sm:text-sm font-semibold mb-3" style={{ color: "var(--text-muted)" }}>
-              <EditableText id="landing_trust_title" defaultText={landingCopy.trustTitle} page="landing" showEditIcon={false} />
-            </p>
-            <div className="inline-flex items-baseline gap-2 sm:gap-3">
-              <span
-                className="text-4xl sm:text-5xl font-black"
-                style={{
-                  background: "linear-gradient(135deg, rgba(45,212,191,0.9) 0%, rgba(16,185,129,0.7) 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text"
-                }}
-              >
-                <EditableText id="landing_trust_count" defaultText={landingCopy.trustCount} page="landing" showEditIcon={false} />
-              </span>
-              <span className="text-base sm:text-lg font-bold" style={{ color: "var(--text-secondary)" }}>
-                <EditableText id="landing_trust_suffix" defaultText={landingCopy.trustSuffix} page="landing" showEditIcon={false} />
-              </span>
+            <div
+              className="rounded-2xl p-6 sm:p-8 grid grid-cols-3 divide-x divide-white/[0.06]"
+              style={CARD}
+            >
+              {stats.map((s, i) => (
+                <motion.div key={i} className="flex flex-col items-center text-center px-2" variants={item}>
+                  <s.icon className="w-5 h-5 mb-2 opacity-60" style={{ color: s.accent }} />
+                  <div
+                    className="text-xl sm:text-2xl font-bold mb-1"
+                    style={{ color: s.accent }}
+                  >
+                    {s.val}
+                  </div>
+                  <p className="text-[12px] sm:text-[13px] leading-snug" style={{ color: "rgba(148,163,184,0.7)" }}>
+                    {s.label}
+                  </p>
+                </motion.div>
+              ))}
             </div>
           </motion.section>
         )}
 
-        {/* ── Final CTA Block ── */}
-        {showPostStartContent && onOpenTools && (
+        {/* ════════════════════════════════
+            TESTIMONIALS
+           ════════════════════════════════ */}
+        {showPostStartContent && landingCopy.testimonials?.length > 0 && (
           <motion.section
-            className="mt-14 sm:mt-16 md:mt-20 text-center"
-            variants={staggerItem}
+            className="py-10 sm:py-14"
+            variants={stagger}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: "-60px" }}
           >
-            <h2 className="text-xl sm:text-2xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>
-              جاهز تبدأ؟
-            </h2>
-            <p className="text-base sm:text-lg mb-6" style={{ color: "var(--text-secondary)" }}>
-              دوس على الزرار واتحرك خطوة واحدة لقدام
-            </p>
-            <div className="relative inline-block">
-              <div
-                className="absolute inset-0 rounded-xl blur-lg opacity-50"
-                style={{
-                  background: "linear-gradient(135deg, #f5a623, #d97706)",
-                  transform: "scale(1.05)"
-                }}
-              />
+            <motion.p
+              className="text-[13px] font-semibold tracking-wide text-center mb-2"
+              style={{ color: "rgba(148,163,184,0.5)", letterSpacing: "0.05em" }}
+              variants={item}
+            >
+              تجارب حقيقية
+            </motion.p>
+            <motion.h2
+              className="text-xl sm:text-2xl font-bold text-center mb-8"
+              variants={item}
+            >
+              قالوا عن تجربتهم
+            </motion.h2>
+
+            <div className="space-y-4">
+              {landingCopy.testimonials.map((t, i) => (
+                <motion.div
+                  key={i}
+                  className="rounded-2xl p-5 sm:p-6"
+                  style={CARD}
+                  variants={item}
+                >
+                  <Quote className="w-5 h-5 mb-3" style={{ color: i === 0 ? "rgba(45,212,191,0.35)" : "rgba(251,191,36,0.35)" }} />
+                  <p className="text-[14px] sm:text-[15px] leading-[1.8] mb-4" style={{ color: "rgba(203,213,225,0.85)" }}>
+                    "{t.quote}"
+                  </p>
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center"
+                      style={{
+                        background: i === 0 ? "rgba(45,212,191,0.12)" : "rgba(251,191,36,0.12)",
+                        border: `1px solid ${i === 0 ? "rgba(45,212,191,0.25)" : "rgba(251,191,36,0.25)"}`
+                      }}
+                    >
+                      <Heart className="w-3 h-3" style={{ color: i === 0 ? "#2dd4bf" : "#fbbf24" }} />
+                    </div>
+                    <span className="text-[13px] font-medium" style={{ color: "rgba(148,163,184,0.6)" }}>
+                      {t.author}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        {/* ════════════════════════════════
+            FINAL CTA
+           ════════════════════════════════ */}
+        {showPostStartContent && (
+          <motion.section
+            className="py-16 sm:py-20 flex flex-col items-center text-center"
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+          >
+            <motion.h2
+              className="text-xl sm:text-2xl font-bold mb-3"
+              variants={item}
+            >
+              جاهز تبدأ رحلتك؟
+            </motion.h2>
+            <motion.p
+              className="text-[14px] sm:text-[15px] mb-8 max-w-sm mx-auto"
+              style={{ color: "rgba(148,163,184,0.75)", lineHeight: 1.75 }}
+              variants={item}
+            >
+              خطوة واحدة بتفرق… ابدأ دلوقتي واكتشف خريطة وعيك
+            </motion.p>
+
+            <motion.div className="flex flex-col items-center" variants={item}>
               <motion.button
                 type="button"
-                onClick={onStartJourney}
-                className="relative px-10 py-5 text-lg font-bold rounded-xl"
+                onClick={handleStartJourney}
+                className="group inline-flex items-center justify-center gap-2.5 rounded-full px-8 py-3.5 text-[15px] font-semibold"
                 style={{
-                  background: "linear-gradient(135deg, #f5a623 0%, #fbbf24 50%, #f5a623 100%)",
-                  color: "#000",
-                  boxShadow: "0 8px 32px rgba(245, 166, 35, 0.35)"
+                  background: "linear-gradient(135deg, #10b981 0%, #34d399 100%)",
+                  color: "#fff",
+                  boxShadow: "0 4px 24px rgba(16,185,129,0.3), 0 1px 3px rgba(0,0,0,0.2)"
                 }}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ y: -2, boxShadow: "0 8px 36px rgba(16,185,129,0.4), 0 2px 8px rgba(0,0,0,0.15)" }}
+                whileTap={{ scale: 0.97 }}
               >
                 ابدأ الرحلة الآن
+                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
               </motion.button>
-            </div>
+            </motion.div>
+
             {lastGoalLabel && (
-              <div className="mt-6">
+              <motion.div className="mt-6" variants={item}>
                 <span
-                  className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${badgePulseClass}`}
+                  className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[13px] font-medium ${badgePulse ? "animate-bounce" : ""}`}
                   style={{
-                    background: "rgba(45, 212, 191, 0.12)",
-                    border: "1px solid rgba(45, 212, 191, 0.25)",
-                    color: "var(--soft-teal)"
+                    background: "rgba(45,212,191,0.08)",
+                    border: "1px solid rgba(45,212,191,0.2)",
+                    color: "#2dd4bf"
                   }}
                 >
-                  {lastGoalMeta ? <lastGoalMeta.icon className="w-4 h-4" /> : <Star className="w-4 h-4" />}
+                  {lastGoalMeta ? <lastGoalMeta.icon className="w-3.5 h-3.5" /> : <Star className="w-3.5 h-3.5" />}
                   آخر هدف: {lastGoalLabel}
                 </span>
-              </div>
+              </motion.div>
             )}
           </motion.section>
         )}
-      </main>
+
+        <div className="h-8" />
       </div>
     </div>
   );

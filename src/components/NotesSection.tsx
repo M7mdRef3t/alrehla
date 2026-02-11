@@ -119,7 +119,7 @@ export const NotesSection: FC<NotesSectionProps> = ({
               <button
                 type="submit"
                 disabled={!newNoteText.trim()}
-                className="rounded-full bg-teal-600 text-white px-5 py-2 text-sm font-semibold shadow-sm hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+                className="rounded-full bg-teal-600 text-white px-5 py-2 text-sm font-semibold hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
               >
                 حفظ
               </button>

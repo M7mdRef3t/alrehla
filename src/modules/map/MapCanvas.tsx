@@ -64,7 +64,7 @@ const OrbitalRing: FC<RingProps> = memo(({ label, radius, color, glowColor, brea
           ease: "easeInOut"
         }}
         style={{
-          filter: `drop-shadow(0 0 12px ${glowColor})`
+          filter: "none"
         }}
       />
     </g>
@@ -126,11 +126,24 @@ interface NodeProps {
   position?: { x: number; y: number };
   onClick?: (id: string) => void;
   justDraggedId?: string | null;
+  justAdded?: boolean;
+  isHighlighted?: boolean;
 }
 
-const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, justDraggedId }) => {
+const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, justDraggedId, justAdded, isHighlighted }) => {
   const [showDelete, setShowDelete] = useState(false);
+  const [pulseDone, setPulseDone] = useState(false);
   const deleteNode = useMapState((s) => s.deleteNode);
+
+  useEffect(() => {
+    if (isHighlighted) {
+      setPulseDone(false);
+      const t = setTimeout(() => setPulseDone(true), 2500);
+      return () => clearTimeout(t);
+    } else {
+      setPulseDone(false);
+    }
+  }, [isHighlighted]);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: node.id });
 
   const hasMismatch = node.analysis?.recommendedRing && node.ring !== node.analysis.recommendedRing;
@@ -178,13 +191,16 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         : "rgba(45, 212, 191, 0.35)";
 
   return (
-    <div
+    <motion.div
       style={style}
       onMouseEnter={() => setShowDelete(true)}
       onMouseLeave={() => setShowDelete(false)}
       className="relative z-20"
+      initial={justAdded ? { scale: 0, opacity: 0 } : false}
+      animate={justAdded ? { scale: 1, opacity: 1 } : undefined}
+      transition={justAdded ? { type: "spring", stiffness: 280, damping: 22, mass: 0.6 } : undefined}
     >
-      {/* Breathing aura ring */}
+      {/* Breathing aura ring — نبضة أقوى عند التحديد من السجل */}
       <motion.div
         className="absolute -inset-2 rounded-full pointer-events-none"
         style={{
@@ -192,14 +208,14 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           border: `1.5px solid ${auraBorderColor}`,
           boxShadow: `0 0 20px ${auraColor}`
         }}
-        animate={{
-          opacity: [0.4, 0.8, 0.4],
-          scale: [1, 1.08, 1]
-        }}
+        animate={isHighlighted && !pulseDone
+          ? { opacity: [0.6, 1, 0.6], scale: [1, 1.25, 1] }
+          : { opacity: [0.4, 0.8, 0.4], scale: [1, 1.08, 1] }
+        }
         transition={{
-          duration: 3,
-          repeat: Infinity,
-          ease: "easeInOut"
+          duration: isHighlighted && !pulseDone ? 1.2 : 3,
+          repeat: isHighlighted && !pulseDone ? 2 : Infinity,
+          ease: isHighlighted && !pulseDone ? "easeOut" : "easeInOut"
         }}
       />
 
@@ -323,7 +339,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           </motion.button>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }, (prev, next) => {
   const a = prev.node;
@@ -338,6 +354,8 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     prev.nodeIndex === next.nodeIndex &&
     prev.totalInRing === next.totalInRing &&
     prev.justDraggedId === next.justDraggedId &&
+    prev.justAdded === next.justAdded &&
+    prev.isHighlighted === next.isHighlighted &&
     (prev.position?.x ?? null) === (next.position?.x ?? null) &&
     (prev.position?.y ?? null) === (next.position?.y ?? null) &&
     prev.onClick === next.onClick
@@ -432,10 +450,13 @@ interface MapCanvasProps {
   onMeClick?: () => void;
   goalIdFilter?: string;
   galaxyGoalIds?: string[];
+  /** عند الضغط من السجل — العقدة تعمل نبضة بلون مدارها */
+  highlightNodeId?: string | null;
 }
 
-export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFilter, galaxyGoalIds }) => {
+export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFilter, galaxyGoalIds, highlightNodeId }) => {
   const allNodes = useMapState((s) => s.nodes);
+  const lastAddedNodeId = useMapState((s) => s.lastAddedNodeId);
   const nodes = useMemo(
     () => filterNodesByContext(allNodes, goalIdFilter, galaxyGoalIds),
     [allNodes, goalIdFilter, galaxyGoalIds]
@@ -612,7 +633,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
                 ease: "easeInOut"
               }}
               style={{
-                filter: `drop-shadow(0 0 ${battery === "charged" ? "20px" : "10px"} ${meStyle.glow})`
+                filter: "none"
               }}
             />
             {/* "أنت" label */}
@@ -649,6 +670,8 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
                   totalInRing={totalInRing}
                   onClick={onNodeClick}
                   justDraggedId={justDraggedId}
+                  justAdded={lastAddedNodeId === node.id}
+                  isHighlighted={highlightNodeId === node.id}
                 />
               );
             })}
@@ -661,6 +684,8 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
                 position={getGreyZonePosition(i, detachedNodes.length)}
                 onClick={onNodeClick}
                 justDraggedId={justDraggedId}
+                justAdded={lastAddedNodeId === node.id}
+                isHighlighted={highlightNodeId === node.id}
               />
             ))}
           </div>

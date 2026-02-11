@@ -163,7 +163,8 @@ export function buildResultTemplateFromAnswers(input: ResultTemplateInput): Resu
       answerPoints(input.realityAnswers.q2) +
       answerPoints(input.realityAnswers.q3)
     : 0;
-  const symptomLevel = scoreLevel(symptomScore);
+  let symptomLevel = scoreLevel(symptomScore);
+  if (input.feelingAnswers?.q3 === "often") symptomLevel = "high";
   const contactLevel = scoreLevel(contactScore);
   const safetyHigh = input.safetyAnswer === "high";
 

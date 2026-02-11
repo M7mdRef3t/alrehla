@@ -48,7 +48,7 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
       aria-labelledby="me-card-title"
     >
       <motion.div
-        className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden bg-linear-to-br from-indigo-500 via-purple-500 to-indigo-700 text-white"
+        className="w-full max-w-md rounded-2xl overflow-hidden bg-linear-to-br from-indigo-500 via-purple-500 to-indigo-700 text-white"
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
@@ -83,7 +83,7 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
                   onClick={() => setBattery(opt.value)}
                   className={`flex-1 flex flex-col items-center gap-1 py-2.5 px-2 rounded-lg text-sm font-medium transition-all ${
                     battery === opt.value
-                      ? "bg-white text-indigo-700 shadow"
+                      ? "bg-white text-indigo-700"
                       : "text-white/90 hover:bg-white/10"
                   }`}
                 >
@@ -187,7 +187,7 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
           onClick={() => setShowJournal(false)}
         >
           <motion.div
-            className="w-full max-w-md rounded-xl bg-white p-4 shadow-xl text-left"
+            className="w-full max-w-md rounded-xl bg-white p-4 text-left"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             onClick={(e) => e.stopPropagation()}

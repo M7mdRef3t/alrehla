@@ -50,6 +50,13 @@ export const SUGGESTIONS: Record<string, SuggestionCard[]> = {
     { label: "الجار", icon: UserCheck },
     { label: "المقرض", icon: Building2 }
   ],
+  self: [
+    { label: "الناقد الداخلي", icon: User },
+    { label: "الطفل الداخلي", icon: UserCircle },
+    { label: "صوتي الحقيقي", icon: UserCheck },
+    { label: "الذات المرهقة", icon: UserX },
+    { label: "الجسم", icon: User }
+  ],
   unknown: [
     { label: "الصديق", icon: Users },
     { label: "المعرفة", icon: UserCircle },
@@ -69,6 +76,7 @@ export const PLACEHOLDERS: Record<string, string> = {
   work: "مثلاً: المدير، الزميل",
   love: "مثلاً: الشريك، الخطيب",
   money: "مثلاً: الشريك التجاري",
+  self: "مثلاً: الناقد الداخلي، الطفل الداخلي، صوتي الحقيقي",
   unknown: "مثلاً: الشخص اللي في بالك",
   general: "مثلاً: الشخص اللي في بالك"
 };

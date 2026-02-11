@@ -7,7 +7,9 @@ import type { RealityAnswers } from "../RealityCheck";
 import type { QuickAnswer2 } from "../../utils/suggestInitialRing";
 import type { PersonGender } from "../../utils/resultScreenAI";
 import { buildResultTemplateFromAnswers } from "../../utils/resultScreenTemplates";
+import { realityScoreToRing } from "../../utils/realityScore";
 import { useMapState } from "../../state/mapState";
+import { emergencyCopy } from "../../copy/emergency";
 
 interface ResultScreenProps {
   personLabel: string;
@@ -19,6 +21,8 @@ interface ResultScreenProps {
   addedNodeId?: string;
   onClose?: (openNodeId?: string) => void;
   onOpenMission?: (nodeId: string) => void;
+  /** عند الطوارئ — فتح غرفة الطوارئ (تمرين تنفس، أرقام نجدة) */
+  onOpenEmergency?: () => void;
   realityAnswers?: RealityAnswers;
   feelingAnswers?: FeelingAnswers;
   isEmergency?: boolean;
@@ -36,6 +40,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   addedNodeId,
   onClose,
   onOpenMission,
+  onOpenEmergency,
   realityAnswers,
   feelingAnswers,
   isEmergency,
@@ -59,14 +64,22 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   }), [score, feelingAnswers, realityAnswers, isEmergency, safetyAnswer, personGender]);
   const isEmotionalPrisoner = result.scenarioKey === "emotional_prisoner";
 
+  const ring = useMemo(() => (realityAnswers ? realityScoreToRing(realityAnswers) : "green"), [realityAnswers]);
+  const ringInsight = useMemo(() => {
+    const presence = personGender === "female" ? "وجودها" : personGender === "male" ? "وجوده" : "وجود الشخص ده";
+    if (ring === "red") return `علاقتك بـ ${displayName} بتسحب طاقتك. ${presence} في المدار الأحمر حماية ليك.`;
+    if (ring === "yellow") return `علاقتك بـ ${displayName} بتتبدل. ضبط المسافة هيساعدك.`;
+    return `علاقتك بـ ${displayName} مصدر أمان. حافظ عليها.`;
+  }, [ring, displayName, personGender]);
   const relationshipToneText = useMemo(() => {
     if (isEmotionalPrisoner) return "في هدوء خارجي، بس لسه محتاجين نقفل الضغط الداخلي.";
+    if (summaryOnly) return ringInsight;
     const label = result.state_label ?? "";
     if (label.includes("حمراء") || label.includes("استنزاف")) return "المدار ده ضاغط، وأولوية المرحلة حماية طاقتك.";
     if (label.includes("صفراء")) return "في إشارات ضغط، ومع ضبط المساحة الوضع يتحسن بسرعة.";
     if (label.includes("خضراء")) return "المدار متوازن، والهدف دلوقتي الحفاظ على استقراره.";
     return "دي خلاصة واضحة لوضع المدار بناءً على إجاباتك.";
-  }, [isEmotionalPrisoner, result.state_label]);
+  }, [isEmotionalPrisoner, summaryOnly, ringInsight, result.state_label]);
 
   const missionProgress = useMapState((s) =>
     addedNodeId ? s.nodes.find((node) => node.id === addedNodeId)?.missionProgress : undefined
@@ -117,11 +130,28 @@ export const ResultScreen: FC<ResultScreenProps> = ({
       className="text-center"
     >
       <>
-        <div className="mb-5 card-unified bg-teal-50/80 border border-teal-100 px-4 py-3 text-center">
-          <p className="text-xs font-semibold text-teal-800">قراءة المدار الحالي</p>
+        <motion.div
+          className={`mb-5 card-unified border px-4 py-3 text-center ${
+            ring === "red"
+              ? "bg-rose-50/80 border-rose-200"
+              : ring === "yellow"
+                ? "bg-amber-50/80 border-amber-200"
+                : "bg-teal-50/80 border-teal-100"
+          }`}
+          animate={summaryOnly ? { scale: [1, 1.015, 1] } : {}}
+          transition={{ duration: 1.5, repeat: summaryOnly ? Infinity : 0, repeatDelay: 2.5 }}
+        >
+          <p className={`text-xs font-semibold ${ring === "red" ? "text-rose-800" : ring === "yellow" ? "text-amber-800" : "text-teal-800"}`}>
+            قراءة المدار الحالي
+          </p>
           <h3 className="mt-1 text-xl font-extrabold leading-tight text-slate-900">
             علاقتك مع{" "}
-            <span className="inline-block max-w-[72vw] truncate align-bottom text-teal-700 sm:max-w-full" title={displayName}>
+            <span
+              className={`inline-flex items-center rounded-full px-3 py-1 font-bold text-white max-w-[72vw] truncate sm:max-w-full ${
+                ring === "red" ? "bg-rose-500" : ring === "yellow" ? "bg-amber-500" : "bg-teal-500"
+              }`}
+              title={displayName}
+            >
               {displayName}
             </span>
           </h3>
@@ -133,7 +163,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           <p className="mt-1 text-xs text-slate-600">
             {relationshipToneText}
           </p>
-        </div>
+        </motion.div>
 
         <div className="p-6 card-unified bg-linear-to-b from-slate-50 to-white border border-slate-200 mb-6 text-center">
           <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
@@ -268,7 +298,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                     if (!isMissionStarted) startMission(addedNodeId);
                     onOpenMission?.(addedNodeId);
                   }}
-                  className={`rounded-full text-white px-4 py-2 text-xs font-semibold shadow disabled:opacity-50 disabled:cursor-not-allowed ${missionButtonTone}`}
+                  className={`rounded-full text-white px-4 py-2 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${missionButtonTone}`}
                 >
                   {missionButtonLabel}
                 </button>
@@ -363,10 +393,42 @@ export const ResultScreen: FC<ResultScreenProps> = ({
 
       {summaryOnly && onClose ? (
         <div className="flex flex-col gap-3">
+          {isEmergency && (
+            <div className="rounded-xl border-2 border-rose-300 bg-rose-50/90 p-4 text-right mb-2">
+              <p className="text-sm font-semibold text-rose-900 mb-2">سلامتك أولاً</p>
+              <p className="text-xs text-rose-800 leading-relaxed mb-3">
+                الشخص اتضاف في المدار الأحمر. لو محتاج تتكلم مع حد الآن:
+              </p>
+              {emergencyCopy.supportLines.length > 0 && (
+                <ul className="space-y-2 mb-3">
+                  {emergencyCopy.supportLines.map((line) => (
+                    <li key={line.phone} className="flex items-center justify-end gap-2">
+                      <a
+                        href={`tel:${line.phone}`}
+                        className="text-rose-700 font-bold hover:text-rose-900 underline"
+                      >
+                        {line.phone}
+                      </a>
+                      <span className="text-rose-800 text-xs">{line.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {onOpenEmergency && (
+                <button
+                  type="button"
+                  onClick={onOpenEmergency}
+                  className="w-full rounded-full bg-rose-600 text-white px-6 py-3 text-sm font-semibold hover:bg-rose-700 active:scale-[0.98] transition-all"
+                >
+                  غرفة الطوارئ — تنفس ودعم
+                </button>
+              )}
+            </div>
+          )}
           <button
             type="button"
-            onClick={() => onClose(addedNodeId)}
-            className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold shadow-lg hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
+            onClick={() => onClose()}
+            className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
           >
             أضف الشخص
           </button>

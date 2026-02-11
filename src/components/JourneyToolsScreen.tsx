@@ -137,7 +137,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
               if (!tool.locked || !tool.featureKey || !onFeatureLocked) return;
               onFeatureLocked(tool.featureKey);
             }}
-            className={`w-full rounded-2xl border px-5 py-4 shadow-sm text-right ${
+            className={`w-full rounded-2xl border px-5 py-4 text-right ${
               tool.locked
                 ? "border-slate-200 bg-white"
                 : "border-teal-200 bg-teal-50/70"
@@ -217,7 +217,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
         <button
           type="button"
           onClick={handleOpenDawayir}
-          className="inline-flex items-center gap-2 rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold shadow-md hover:bg-teal-700 transition-all"
+          className="inline-flex items-center gap-2 rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold hover:bg-teal-700 transition-all"
         >
           افتح غرفة دواير
           <ArrowRight className="w-4 h-4" />

@@ -16,17 +16,21 @@ export type TrackingMode = "anonymous" | "identified";
 
 export type JourneyEventType =
   | "path_started"
+  | "task_started"
   | "task_completed"
   | "path_regenerated"
   | "node_added"
-  | "mood_logged";
+  | "mood_logged"
+  | "flow_event";
 
 export interface JourneyEventPayload {
   path_started: { pathId: string; zone: string; symptomType?: string; relationshipRole?: string };
-  task_completed: { pathId: string; taskId: string; date: string; moodScore?: number };
+  task_started: { pathId: string; taskId: string; taskLabel?: string; personLabel?: string; nodeId?: string };
+  task_completed: { pathId: string; taskId: string; date: string; moodScore?: number; taskLabel?: string; personLabel?: string; nodeId?: string };
   path_regenerated: { pathId: string; reason?: string };
-  node_added: { ring: string; detachmentMode?: boolean; isEmergency?: boolean };
+  node_added: { ring: string; detachmentMode?: boolean; isEmergency?: boolean; personLabel?: string; nodeId?: string };
   mood_logged: { pathId: string; date: string; moodScore: number };
+  flow_event: { step: string; timeToAction?: number; extra?: Record<string, unknown> };
 }
 
 export type JourneyEvent = {
@@ -156,6 +160,76 @@ function saveEvents(events: JourneyEvent[]): void {
     localStorage.setItem(KEY_EVENTS, JSON.stringify(trimmed));
   } catch (e) {
     if (import.meta.env.DEV) console.warn("journeyTracking: save failed", e);
+  }
+}
+
+/** أحداث السجل التخطيطي — للأحدث للأقدم */
+const TIMELINE_EVENT_TYPES: JourneyEventType[] = ["task_completed", "node_added", "path_started"];
+
+export function getTimelineEvents(): JourneyEvent[] {
+  const events = loadEvents().filter((e) => TIMELINE_EVENT_TYPES.includes(e.type));
+  return [...events].sort((a, b) => b.timestamp - a.timestamp);
+}
+
+/** آخر مهمة مكتملة لشخص — لـ "ذكريات الرحلة" في ViewPersonModal */
+export interface LastTaskForNode {
+  taskLabel: string;
+  timestamp: number;
+}
+
+export function getLastTaskForNode(nodeId: string): LastTaskForNode | null {
+  const events = loadEvents();
+  const tasks = events
+    .filter((e): e is JourneyEvent & { type: "task_completed" } => e.type === "task_completed")
+    .map((e) => ({ event: e, payload: e.payload as JourneyEventPayload["task_completed"] }))
+    .filter(({ payload }) => payload.nodeId === nodeId)
+    .sort((a, b) => b.event.timestamp - a.event.timestamp);
+  const task = tasks[0];
+  if (!task) return null;
+  const { event, payload } = task;
+  const taskLabel = payload.taskLabel?.trim() || "خطوة";
+  return { taskLabel, timestamp: event.timestamp };
+}
+
+/** نقاط تدفق الزائر — للوحة الأونر (خريطة القرارات) */
+export type FlowStep =
+  | "landing_viewed"
+  | "landing_clicked_start"
+  | "profile_clicked"
+  | "pulse_opened"
+  | "pulse_abandoned"
+  | "pulse_completed"
+  | "add_person_opened"
+  | "add_person_dropped"
+  | "tools_opened";
+
+export function recordFlowEvent(
+  step: FlowStep,
+  extra?: { timeToAction?: number; atStep?: string }
+): void {
+  const event = {
+    type: "flow_event" as const,
+    payload: {
+      step,
+      timeToAction: extra?.timeToAction,
+      extra: extra?.atStep ? { atStep: extra.atStep } : undefined
+    } as JourneyEventPayload["flow_event"],
+    timestamp: Date.now(),
+    sessionId: getOrCreateSessionId()
+  } as JourneyEvent;
+  const events = loadEvents();
+  events.push(event);
+  saveEvents(events);
+  queueSupabaseSync(getTrackingMode(), event);
+  const apiUrl = getTrackingApiUrl();
+  if (apiUrl) {
+    fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: getTrackingMode(), event })
+    }).catch((err) => {
+      if (import.meta.env.DEV) console.warn("journeyTracking: flow send failed", err);
+    });
   }
 }
 

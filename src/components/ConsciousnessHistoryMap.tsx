@@ -29,14 +29,14 @@ export const ConsciousnessHistoryMap: React.FC = () => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-xl p-6 rounded-[2rem] border border-teal-100 shadow-2xl relative overflow-hidden"
+      className="bg-white/80 backdrop-blur-xl p-6 rounded-[2rem] border border-teal-100 relative overflow-hidden"
     >
       {/* Background Decorative Element */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
       
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-teal-200">
+          <div className="w-10 h-10 bg-teal-600 rounded-2xl flex items-center justify-center">
             <TrendingUp className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -93,7 +93,7 @@ export const ConsciousnessHistoryMap: React.FC = () => {
               exit={{ opacity: 0, scale: 0.9, y: 10 }}
               className="absolute top-0 left-0 right-0 pointer-events-none flex justify-center"
             >
-              <div className="bg-teal-900/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl border border-teal-700/50 text-center">
+              <div className="bg-teal-900/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-teal-700/50 text-center">
                 <p className="text-white font-bold text-sm">{hoveredPoint.state}</p>
                 <p className="text-teal-300 text-[10px]">{hoveredPoint.pattern}</p>
               </div>

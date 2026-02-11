@@ -5,10 +5,11 @@ import {
   Wallet,
   HelpCircle,
   Users,
+  UserCircle,
   type LucideIcon
 } from "lucide-react";
 
-export type GoalId = "work" | "family" | "friends" | "love" | "money" | "unknown" | "general";
+export type GoalId = "work" | "family" | "friends" | "love" | "money" | "self" | "unknown" | "general";
 
 export interface GoalMeta {
   id: GoalId;
@@ -18,7 +19,7 @@ export interface GoalMeta {
   buttonClasses: string;
 }
 
-export const GOAL_ORDER: GoalId[] = ["family", "friends", "work", "love", "money", "general", "unknown"];
+export const GOAL_ORDER: GoalId[] = ["family", "friends", "work", "love", "money", "self", "general", "unknown"];
 
 export const GOAL_META: Record<GoalId, GoalMeta> = {
   family: {
@@ -60,6 +61,14 @@ export const GOAL_META: Record<GoalId, GoalMeta> = {
     badgeClasses:
       "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200",
     buttonClasses: "border-amber-200 hover:border-amber-300 hover:bg-amber-50 text-amber-700"
+  },
+  self: {
+    id: "self",
+    label: "خريطة نفسك",
+    icon: UserCircle,
+    badgeClasses:
+      "border-indigo-200 bg-indigo-100 text-indigo-800 dark:border-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200",
+    buttonClasses: "border-indigo-200 hover:border-indigo-300 hover:bg-indigo-50 text-indigo-700"
   },
   general: {
     id: "general",

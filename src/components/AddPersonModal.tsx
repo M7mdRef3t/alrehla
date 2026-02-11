@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { addPersonCopy } from "../copy/addPerson";
@@ -10,7 +10,8 @@ import { feelingScore } from "../utils/feelingScore";
 import { realityScoreToRing } from "../utils/realityScore";
 import type { QuickAnswer1, QuickAnswer2 } from "../utils/suggestInitialRing";
 import type { ContactLevel } from "../modules/pathEngine/pathTypes";
-import { recordJourneyEvent } from "../services/journeyTracking";
+import { recordJourneyEvent, recordFlowEvent } from "../services/journeyTracking";
+import { useEmergencyState } from "../state/emergencyState";
 import { quick1Tier, quick2Tier } from "../utils/optionColors";
 import { SelectPersonStep } from "./AddPersonModal/SelectPersonStep";
 import { QuickQuestionsStep } from "./AddPersonModal/QuickQuestionsStep";
@@ -77,8 +78,10 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
   const [linkToParentId, setLinkToParentId] = useState<string | null>(null);
   const [lastRealityAnswers, setLastRealityAnswers] = useState<RealityAnswers | null>(null);
   const [isEmergency, setIsEmergency] = useState(false);
+  const [showEncouragementHint, setShowEncouragementHint] = useState(false);
   const addNode = useMapState((s) => s.addNode);
   const nodes = useMapState((s) => s.nodes);
+  const openEmergency = useEmergencyState((s) => s.open);
   const familyNodes = goalId === "family" ? nodes.filter((n) => n.goalId === "family" || n.goalId == null) : [];
 
   const handleContinue = (event: React.FormEvent) => {
@@ -107,7 +110,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
 
   const handleRealityDone = (answers: Parameters<typeof realityScoreToRing>[0]) => {
     if (!pendingPlacement) return;
-    const ring = realityScoreToRing(answers);
+    const ring = isEmergency ? "red" : realityScoreToRing(answers);
     setLastRealityAnswers(answers);
     const { finalLabel, score, healthAnswers } = pendingPlacement;
     const treeRelation =
@@ -128,10 +131,25 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
       answers,
       quickAnswer2 ?? undefined
     );
-    recordJourneyEvent("node_added", { ring, detachmentMode: detachmentMode ?? false, isEmergency: isEmergency ?? false });
+    recordJourneyEvent("node_added", { ring, detachmentMode: detachmentMode ?? false, isEmergency: isEmergency ?? false, personLabel: finalLabel, nodeId });
     setAddedNodeId(nodeId);
     setPendingPlacement(null);
     setStep("result");
+  };
+
+  useEffect(() => {
+    recordFlowEvent("add_person_opened");
+  }, []);
+
+  useEffect(() => {
+    if (step !== "select") return;
+    const t = setTimeout(() => setShowEncouragementHint(true), 15_000);
+    return () => clearTimeout(t);
+  }, [step]);
+
+  const handleClose = (openNodeId?: string) => {
+    if (step !== "result") recordFlowEvent("add_person_dropped");
+    onClose(openNodeId);
   };
 
   const handleTitleSelect = (title: string) => {
@@ -148,13 +166,13 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
-      onClick={() => onClose()}
+      onClick={() => handleClose()}
       aria-labelledby="add-person-title"
       role="dialog"
       aria-modal="true"
     >
       <motion.div
-        className="relative bg-white border border-gray-200 rounded-2xl px-8 py-8 max-w-md w-full shadow-xl max-h-[90vh] overflow-y-auto"
+        className="relative bg-white border border-gray-200 rounded-2xl px-8 py-8 max-w-md w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         initial={{ scale: 0.95, opacity: 0, y: 10 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -162,7 +180,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
       >
         <button
           type="button"
-          onClick={() => onClose()}
+          onClick={() => handleClose()}
           className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-slate-500 hover:text-slate-700"
           aria-label="إغلاق"
         >
@@ -175,13 +193,14 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
             customTitleInput={customTitleInput}
             showCustomTitleInput={showCustomTitleInput}
             customName={customName}
+            encouragementHint={showEncouragementHint}
             onTitleSelect={handleTitleSelect}
             onCustomTitleChange={(value) => {
               setCustomTitleInput(value);
               setSelectedTitle(value.trim());
             }}
             onNameChange={(value) => setCustomName(value)}
-            onCancel={onClose}
+            onCancel={handleClose}
             onContinue={handleContinue}
             afterNameContent={
               goalId === "family" && familyNodes.length > 0 ? (
@@ -252,8 +271,9 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
             score={healthScore}
             summaryOnly
             addedNodeId={addedNodeId ?? undefined}
-            onClose={onClose}
+            onClose={handleClose}
             onOpenMission={onOpenMission}
+            onOpenEmergency={isEmergency ? openEmergency : undefined}
             realityAnswers={lastRealityAnswers ?? undefined}
             feelingAnswers={lastFeelingAnswers ?? undefined}
             isEmergency={isEmergency}

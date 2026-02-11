@@ -68,7 +68,7 @@ export const EmergencyOverlay: FC<EmergencyOverlayProps> = ({
             {onStartBreathing && (
               <button
                 type="button"
-                className="w-full rounded-2xl bg-rose-500 text-white px-8 py-5 text-lg font-semibold shadow-lg hover:bg-rose-600 active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-red-950"
+                className="w-full rounded-2xl bg-rose-500 text-white px-8 py-5 text-lg font-semibold hover:bg-rose-600 active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-red-950"
                 onClick={handleBreathing}
                 aria-label="تمرين تنفس دقيقة"
               >
@@ -100,7 +100,7 @@ export const EmergencyOverlay: FC<EmergencyOverlayProps> = ({
 
         <button
           type="button"
-          className="rounded-full bg-rose-400 text-white px-10 py-4 text-base font-semibold shadow-sm hover:bg-rose-500 active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-red-950"
+          className="rounded-full bg-rose-400 text-white px-10 py-4 text-base font-semibold hover:bg-rose-500 active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-red-950"
           onClick={close}
           title="خروج هادي"
           aria-label="خروج هادي"

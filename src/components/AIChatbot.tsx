@@ -207,7 +207,10 @@ export const AIChatbot: FC<AIChatbotProps> = ({
             calm: "هادئ",
             anxious: "قلقان",
             angry: "غضبان",
-            sad: "حزين"
+            sad: "حزين",
+            tense: "متوتر",
+            hopeful: "متفائل",
+            overwhelmed: "مغ overwhelm"
           };
           const focusMap: Record<string, string> = {
             event: "موقف حصل",
@@ -219,7 +222,7 @@ export const AIChatbot: FC<AIChatbotProps> = ({
           const focusLabel = focusMap[pulse.focus] ?? pulse.focus;
           const line = `**النبض اللحظي:** طاقة ${pulse.energy}/10، مزاج: ${moodLabel}، تركيز: ${focusLabel}.`;
           const directive =
-            pulse.mood === "angry"
+            (pulse.mood === "angry" || pulse.mood === "tense")
               ? "تعليمات: المستخدم متوتر/غضبان. ركّز على التهدئة أولاً ولا تقترح مواجهات."
               : pulse.energy <= 3
                 ? "تعليمات: طاقة منخفضة. قدّم خطوات خفيفة ودعم قصير فقط."
@@ -372,7 +375,7 @@ ${userMessage.content}`;
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-linear-to-br from-purple-600 to-pink-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group z-50"
+          className="fixed bottom-6 right-6 w-14 h-14 bg-linear-to-br from-purple-600 to-pink-600 text-white rounded-full transition-all duration-200 flex items-center justify-center group z-50"
           aria-label="فتح مرشد الرحلة"
           title="مرشد الرحلة"
         >
@@ -385,7 +388,7 @@ ${userMessage.content}`;
 
       {/* Chat Window — يعمل مع/بدون AI */}
       {isOpen && (
-        <div className="fixed bottom-6 right-4 sm:right-6 w-[20rem] sm:w-[24rem] h-[32rem] modal-surface shadow-2xl flex flex-col z-50">
+        <div className="fixed bottom-6 right-4 sm:right-6 w-[20rem] sm:w-[24rem] h-[32rem] modal-surface flex flex-col z-50">
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-linear-to-r from-purple-600 to-pink-600 text-white rounded-t-2xl">
             <div className="flex items-center gap-2">
@@ -491,7 +494,7 @@ ${userMessage.content}`;
           {/* Mirror Card + Filters + كروت متعددة */}
           {mirrorMatches.length > 0 && (
             <div className="px-4 pt-3 pb-1 border-t border-gray-200 bg-amber-50/80">
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 shadow-sm space-y-2">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-[11px] font-semibold text-amber-900 flex items-center gap-1">
                     <span>💡</span>
@@ -537,7 +540,7 @@ ${userMessage.content}`;
                   {mirrorMatches.slice(0, 3).map((m) => (
                     <div
                       key={m.id}
-                      className="min-w-[180px] max-w-[220px] card-unified bg-white px-2.5 py-2 shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+                      className="min-w-[180px] max-w-[220px] card-unified bg-white px-2.5 py-2"
                     >
                       <p className="text-[10px] text-slate-500 mb-1">
                         {m.created_at

@@ -90,7 +90,7 @@ export const NotificationSettings: FC<NotificationSettingsProps> = ({
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md mx-auto"
           >
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-white rounded-2xl overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-gradient-to-l from-teal-50 to-white">
                 <div className="flex items-center gap-3">
@@ -134,7 +134,7 @@ export const NotificationSettings: FC<NotificationSettingsProps> = ({
                     } ${isLoading ? "opacity-50" : ""}`}
                   >
                     <motion.div
-                      className="absolute top-1 w-6 h-6 bg-white rounded-full shadow"
+                      className="absolute top-1 w-6 h-6 bg-white rounded-full"
                       animate={{ x: settings.enabled ? 28 : 4 }}
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}
                     />

@@ -1,11 +1,12 @@
 import type { FC } from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mic, MicOff, Flame, MessageSquare, Send, Wind } from "lucide-react";
+import { X, Mic, MicOff, Flame, MessageSquare, Send, Wind, MessageCircle, Lightbulb, Heart } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import { realityCheckImaginaryArgument } from "../utils/noiseSilencingAI";
 import { BreathingOverlay } from "./BreathingOverlay";
 import { useAppContentString } from "../hooks/useAppContentString";
+import { useContinuousSpeechRecognition } from "../hooks/useContinuousSpeechRecognition";
 
 type Step = "who" | "awareness" | "dump" | "reality" | "closure" | "done";
 
@@ -17,9 +18,11 @@ const CLOSURE_TEMPLATE = `أنا بقرر دلوقتي أقفل الملف ده.
 interface NoiseSilencingModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** يُستدعى عند إتمام الجلسة (إنهاء الجلسة / خلصت) — ليعرض رسالة استمرارية */
+  onSessionComplete?: () => void;
 }
 
-export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onClose }) => {
+export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onClose, onSessionComplete }) => {
   const nodes = useMapState((s) => s.nodes);
   const [step, setStep] = useState<Step>("who");
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -28,6 +31,7 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
   const [closureText, setClosureText] = useState(CLOSURE_TEMPLATE);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [insightAcknowledged, setInsightAcknowledged] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
 
   const rantPlaceholder = useAppContentString(
@@ -47,6 +51,28 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
   const personLabel = selectedNode?.label ?? "";
   const canRecord = typeof MediaRecorder !== "undefined";
 
+  const {
+    isSupported: sttSupported,
+    isListening: sttListening,
+    transcript: sttTranscript,
+    error: sttError,
+    start: sttStart,
+    stop: sttStop,
+    clear: sttClear
+  } = useContinuousSpeechRecognition({ lang: "ar-EG" });
+
+  const wasSttListeningRef = useRef(false);
+  useEffect(() => {
+    if (wasSttListeningRef.current && !sttListening && sttTranscript) {
+      setRantText((prev) => (prev ? `${prev} ` : "") + sttTranscript);
+    }
+    wasSttListeningRef.current = sttListening;
+  }, [sttListening, sttTranscript]);
+
+  useEffect(() => {
+    if (!isOpen) sttClear();
+  }, [isOpen, sttClear]);
+
   useEffect(() => {
     if (!isOpen) {
       setStep("who");
@@ -55,6 +81,7 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
       setRantText("");
       setClosureText(CLOSURE_TEMPLATE);
       setAiResponse(null);
+      setInsightAcknowledged(false);
       setRecordedBlob(null);
       setBurning(false);
     }
@@ -131,6 +158,7 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
   const runRealityCheck = async () => {
     setAiLoading(true);
     setAiResponse(null);
+    setInsightAcknowledged(false);
     const text = rantText.trim() || undefined;
     const res = await realityCheckImaginaryArgument(text ?? "", personLabel);
     setAiResponse(res ?? "تعذر الاتصال بالذكاء الاصطناعي. جرب مرة تانية.");
@@ -145,24 +173,28 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
     setStep("done");
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
-      <AnimatePresence>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/50 z-50"
-        />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96 }}
-          className="fixed inset-x-4 top-[10%] bottom-[10%] z-50 max-w-lg mx-auto rounded-2xl bg-white dark:bg-slate-800 shadow-2xl overflow-hidden flex flex-col"
-        >
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            key="noise-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/50 z-50"
+          />
+          <motion.div
+            key="noise-panel"
+            initial={{ opacity: 0, scale: 0.96, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-x-4 top-[10%] bottom-[10%] z-50 max-w-lg mx-auto rounded-2xl bg-white dark:bg-slate-800 overflow-hidden flex flex-col"
+          >
           <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">
               تشويش الإشارة
@@ -239,16 +271,68 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
                   طلع اللي في نفسك هنا. صوت أو كتابة — ثم نحرق الشريط.
                 </p>
                 {canRecord && (
-                  <div className="rounded-xl border border-slate-200 dark:border-slate-600 p-4">
-                    {!recording && !recordedBlob && (
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-600 p-4 space-y-3">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        onClick={startRecording}
-                        className="flex items-center gap-2 text-teal-600 dark:text-teal-400"
+                        onClick={() => {
+                          if (navigator.vibrate) navigator.vibrate(50);
+                          startRecording();
+                        }}
+                        disabled={sttListening}
+                        className="flex items-center gap-2 text-teal-600 dark:text-teal-400 disabled:opacity-50"
                       >
                         <Mic className="w-5 h-5" />
-                        تسجيل صوتي
+                        تسجيل صوتي (حرق الشريط)
                       </button>
+                      {sttSupported && (
+                        <>
+                          {!sttListening ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (navigator.vibrate) navigator.vibrate(50);
+                                sttStart();
+                              }}
+                              disabled={recording}
+                              className="flex items-center gap-2 text-violet-600 dark:text-violet-400 disabled:opacity-50"
+                            >
+                              <MessageCircle className="w-5 h-5" />
+                              فضفضة للـ AI
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (navigator.vibrate) navigator.vibrate([50, 80, 50]);
+                                sttStop();
+                              }}
+                              className="flex items-center gap-2 text-violet-600 dark:text-violet-400"
+                            >
+                              <MicOff className="w-4 h-4" /> خلصت
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    {sttListening && (
+                      <div className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                        <div>
+                          <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse inline-block ml-1" />
+                          بيتكتب وراك.. وقف لما تخلص
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-500">
+                          لو سكت شوية وانقطع، اضغط «فضفضة للـ AI» تاني عشان تكمل
+                        </p>
+                      </div>
+                    )}
+                    {sttTranscript && sttListening && (
+                      <p className="text-sm text-slate-700 dark:text-slate-300 rounded-lg bg-slate-100 dark:bg-slate-700 p-2" dir="rtl">
+                        {sttTranscript}
+                      </p>
+                    )}
+                    {sttError && (
+                      <p className="text-xs text-rose-600">{sttError}</p>
                     )}
                     {recording && (
                       <div className="flex items-center gap-2">
@@ -256,7 +340,10 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
                         <span className="text-sm">جاري التسجيل...</span>
                         <button
                           type="button"
-                          onClick={stopRecording}
+                          onClick={() => {
+                            if (navigator.vibrate) navigator.vibrate([50, 80, 50]);
+                            stopRecording();
+                          }}
                           className="flex items-center gap-1 text-red-600"
                         >
                           <MicOff className="w-4 h-4" /> إيقاف
@@ -271,9 +358,21 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
                       </div>
                     )}
                     {burning && (
-                      <p className="text-sm text-slate-600 dark:text-slate-400 py-2">
-                        الكلام خرج من جسمك.. مبقاش ملكك خلاص.
-                      </p>
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex items-center gap-2 py-2"
+                      >
+                        <motion.span
+                          animate={{ opacity: [1, 0.4, 1], color: ["#f97316", "#dc2626", "#f97316"] }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          <Flame className="w-5 h-5" />
+                        </motion.span>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          الكلام خرج من جسمك.. مبقاش ملكك خلاص.
+                        </p>
+                      </motion.div>
                     )}
                   </div>
                 )}
@@ -292,7 +391,10 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
                 {(recordedBlob || rantText.trim()) && (
                   <button
                     type="button"
-                    onClick={recordedBlob ? burnTape : skipBurnAndGoToReality}
+                    onClick={() => {
+                      if (navigator.vibrate) navigator.vibrate(recordedBlob ? [80, 120, 80] : 50);
+                      recordedBlob ? burnTape() : skipBurnAndGoToReality();
+                    }}
                     className="w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 text-white bg-teal-600"
                   >
                     {recordedBlob ? (
@@ -326,18 +428,75 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
                   <p className="text-slate-500 text-sm">جاري التحليل...</p>
                 )}
                 {aiResponse && (
-                  <div className="rounded-xl bg-slate-100 dark:bg-slate-700 p-4 text-slate-800 dark:text-slate-200 whitespace-pre-wrap text-sm">
-                    {aiResponse}
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    className={`rounded-2xl border-2 border-teal-200 dark:border-teal-800 bg-linear-to-br from-teal-50/80 to-slate-50 dark:from-teal-950/40 dark:to-slate-800/80 p-5 transition-opacity duration-500 ${
+                      insightAcknowledged ? "opacity-75" : ""
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-teal-100 dark:bg-teal-900/50">
+                        <Lightbulb className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-teal-700 dark:text-teal-300 mb-2">بصيرة من المرساة</p>
+                        <p className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap text-sm leading-relaxed">
+                          {aiResponse}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (navigator.vibrate) navigator.vibrate(50);
+                            setInsightAcknowledged(true);
+                          }}
+                          disabled={insightAcknowledged}
+                          className={`mt-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
+                            insightAcknowledged
+                              ? "bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-400"
+                              : "bg-teal-600 text-white hover:bg-teal-700"
+                          }`}
+                        >
+                          {insightAcknowledged ? (
+                            <>
+                              <Heart className="w-3.5 h-3.5 fill-teal-600 dark:fill-teal-400" />
+                              وصلت
+                            </>
+                          ) : (
+                            <>
+                              <Heart className="w-3.5 h-3.5" />
+                              وصلت
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
-                <button
-                  type="button"
-                  onClick={goToClosure}
-                  disabled={aiLoading}
-                  className="w-full py-3 rounded-xl bg-slate-700 dark:bg-slate-600 text-white font-semibold"
-                >
-                  كمل — رسالة الوداع
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={goToClosure}
+                    disabled={aiLoading}
+                    className="w-full py-3 rounded-xl bg-slate-700 dark:bg-slate-600 text-white font-semibold"
+                  >
+                    كمل — رسالة الوداع
+                  </button>
+                  {insightAcknowledged && aiResponse && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (navigator.vibrate) navigator.vibrate(50);
+                        onSessionComplete?.();
+                        onClose();
+                      }}
+                      className="w-full py-2.5 rounded-xl border-2 border-teal-300 dark:border-teal-700 text-teal-700 dark:text-teal-300 font-semibold hover:bg-teal-50 dark:hover:bg-teal-950/50 transition-colors"
+                    >
+                      إنهاء الجلسة
+                    </button>
+                  )}
+                </div>
               </>
             )}
 
@@ -378,7 +537,10 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
                 </button>
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={() => {
+                    onSessionComplete?.();
+                    onClose();
+                  }}
                   className="w-full py-3 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300"
                 >
                   خلصت
@@ -387,15 +549,17 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
             )}
           </div>
         </motion.div>
-      </AnimatePresence>
+        </>
+      )}
+    </AnimatePresence>
 
       {showBreathing && (
         <BreathingOverlay
           onClose={() => {
             setShowBreathing(false);
+            onSessionComplete?.();
             onClose();
           }}
-          autoCloseAfterCycles={0}
         />
       )}
     </>

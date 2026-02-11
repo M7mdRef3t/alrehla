@@ -73,7 +73,7 @@ export const PersonalizedTraining: React.FC<PersonalizedTrainingProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+          className="relative bg-white rounded-2xl max-w-md w-full p-6"
         >
           <button
             type="button"
@@ -162,7 +162,7 @@ export const PersonalizedTraining: React.FC<PersonalizedTrainingProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden p-6 text-center"
+          className="relative bg-white rounded-2xl max-w-md w-full overflow-hidden p-6 text-center"
         >
           <button
             type="button"
@@ -202,7 +202,7 @@ export const PersonalizedTraining: React.FC<PersonalizedTrainingProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-linear-to-br from-white to-teal-50 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+          className="bg-linear-to-br from-white to-teal-50 rounded-2xl max-w-md w-full overflow-hidden"
         >
           <div className="bg-linear-to-br from-teal-500 to-cyan-600 p-6 text-white text-center relative">
             <button
@@ -262,7 +262,7 @@ export const PersonalizedTraining: React.FC<PersonalizedTrainingProps> = ({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden"
+        className="bg-white rounded-2xl max-w-2xl w-full overflow-hidden"
       >
         {/* Header */}
         <div className="bg-linear-to-br from-teal-50 to-cyan-50 p-6 border-b border-teal-100">

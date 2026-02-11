@@ -78,7 +78,7 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
                         key={step.id}
                         className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-150 ${
                           isCompleted
-                            ? "bg-purple-100 border-purple-400 shadow-sm"
+                            ? "bg-purple-100 border-purple-400"
                             : "bg-white border-gray-200 hover:bg-purple-50"
                         }`}
                       >

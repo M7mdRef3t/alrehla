@@ -55,7 +55,7 @@ export const ManualPlacementModal: FC<ManualPlacementModalProps> = ({ isOpen, on
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-2xl mx-auto"
           >
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="bg-white rounded-2xl overflow-hidden max-h-[90vh] flex flex-col">
               <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-linear-to-l from-amber-50 to-white">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">

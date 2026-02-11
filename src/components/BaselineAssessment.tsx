@@ -167,7 +167,7 @@ export const BaselineAssessment: FC<BaselineAssessmentProps> = ({ onComplete }) 
                     }
                     className={`w-14 h-14 sm:w-12 sm:h-12 rounded-full font-bold text-lg transition-all ${
                       answers[question.id] === n
-                        ? "bg-gradient-to-r from-teal-600 to-blue-600 text-white scale-110 shadow-lg"
+                        ? "bg-gradient-to-r from-teal-600 to-blue-600 text-white scale-110"
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     }`}
                     whileHover={{ scale: 1.1 }}
@@ -192,7 +192,7 @@ export const BaselineAssessment: FC<BaselineAssessmentProps> = ({ onComplete }) 
                   }
                   className={`p-4 rounded-xl text-right transition-all ${
                     answers[question.id] === option.value
-                      ? "bg-gradient-to-r from-teal-600 to-blue-600 text-white shadow-lg"
+                      ? "bg-gradient-to-r from-teal-600 to-blue-600 text-white"
                       : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                   }`}
                   whileHover={{ scale: 1.02, x: 4 }}
@@ -230,7 +230,7 @@ export const BaselineAssessment: FC<BaselineAssessmentProps> = ({ onComplete }) 
           className={`px-6 py-3 rounded-full font-medium transition-all ${
             !canNext
               ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-              : "bg-gradient-to-r from-teal-600 to-blue-600 text-white hover:from-teal-700 hover:to-blue-700 shadow-lg"
+              : "bg-gradient-to-r from-teal-600 to-blue-600 text-white hover:from-teal-700 hover:to-blue-700"
           }`}
           whileHover={canNext ? { scale: 1.05 } : {}}
           whileTap={canNext ? { scale: 0.95 } : {}}

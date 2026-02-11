@@ -21,7 +21,7 @@ export function DroppableZone({ ring, label, bg, border, onPlace, highlight }: D
       ref={setNodeRef}
       onClick={() => onPlace(ring)}
       className={`flex flex-col items-center justify-center rounded-2xl border-2 min-h-[80px] transition-all ${bg} ${border} ${
-        isOver ? "ring-4 ring-teal-400 ring-offset-2 scale-[1.02]" : highlight ? "ring-2 ring-teal-500 ring-offset-2 shadow-md" : "hover:scale-[1.02]"
+        isOver ? "ring-4 ring-teal-400 ring-offset-2 scale-[1.02]" : highlight ? "ring-2 ring-teal-500 ring-offset-2" : "hover:scale-[1.02]"
       }`}
     >
       <span className="text-sm font-semibold text-slate-800">{label}</span>

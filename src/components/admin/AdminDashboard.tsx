@@ -3,6 +3,7 @@ import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import {
   Activity,
   Brain,
+  Workflow,
   Compass,
   Flag,
   Lock,
@@ -19,7 +20,7 @@ import {
   User,
   History
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { FEATURE_FLAGS, type FeatureFlagMode } from "../../config/features";
 import { useAdminState, ADMIN_ACCESS_CODE } from "../../state/adminState";
 import { getEffectiveRoleFromState, useAuthState } from "../../state/authState";
@@ -59,11 +60,14 @@ import {
 } from "../../services/adminApi";
 import { applyThemePalette } from "../../services/themePalette";
 import type { JourneyMapSnapshot, UserStateRow } from "../../services/adminApi";
+import { EditableText } from "../EditableText";
+import { FlowMindMap } from "./FlowMindMap";
+import { buildFlowNodes, VISITOR_FLOW_LINKS } from "../../data/visitorFlowWorkflow";
 import { isSupabaseReady, supabase } from "../../services/supabaseClient";
 import { consciousnessService, type MemoryMatch } from "../../services/consciousnessService";
 import { loadStoredState } from "../../services/localStore";
 
-type AdminTab = "overview" | "feature-flags" | "ai-studio" | "content" | "users" | "user-state" | "consciousness";
+type AdminTab = "overview" | "flow-map" | "feature-flags" | "ai-studio" | "content" | "users" | "user-state" | "consciousness";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
@@ -71,6 +75,7 @@ const DataManagementModal = lazy(() =>
 
 const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
   { id: "overview", label: "نبض الرحلة", icon: <Activity className="w-4 h-4" /> },
+  { id: "flow-map", label: "خريطة التدفق", icon: <Compass className="w-4 h-4" /> },
   { id: "feature-flags", label: "التحكم في الزمن", icon: <Flag className="w-4 h-4" /> },
   { id: "ai-studio", label: "مختبر الذكاء", icon: <Brain className="w-4 h-4" /> },
   { id: "content", label: "إدارة المحتوى", icon: <Database className="w-4 h-4" /> },
@@ -200,17 +205,14 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   if (adminAccess) return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-slate-950 via-slate-950 to-slate-900 text-slate-100 flex items-center justify-center p-6 relative overflow-hidden isolate">
-      <div className="pointer-events-none absolute inset-0 opacity-[0.06] -z-10" aria-hidden="true">
-        <div className="absolute inset-0 ops-room-pattern" />
-      </div>
-      <div className="w-full max-w-md rounded-3xl border border-slate-800/80 bg-slate-950/70 p-6 space-y-4 shadow-2xl shadow-black/30">
+    <div className="min-h-screen bg-slate-100 text-slate-800 flex items-center justify-center p-6">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 space-y-4">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-teal-500/20 text-teal-300 flex items-center justify-center">
+          <div className="w-11 h-11 rounded-xl bg-slate-200 text-slate-600 flex items-center justify-center">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div className="text-right">
-            <p className="text-sm text-slate-300">بوابة القمرة</p>
+            <p className="text-sm text-slate-500">بوابة القمرة</p>
             <h1 className="text-xl font-bold">لوحة التحكم</h1>
           </div>
         </div>
@@ -224,14 +226,14 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="••••••"
-            className="w-full rounded-xl bg-slate-950/60 border border-slate-700 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+            className="w-full rounded-xl bg-slate-50 border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400"
           />
           {error && <p className="text-xs text-rose-300">{error}</p>}
         </div>
         <button
           type="button"
           onClick={handleLogin}
-          className="w-full rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold py-2"
+          className="w-full rounded-xl bg-slate-600 hover:bg-slate-500 text-white font-semibold py-2"
         >
           دخول القمرة
         </button>
@@ -320,19 +322,15 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
   return (
     <AdminGate>
-      <div className="min-h-screen bg-linear-to-b from-slate-950 via-slate-950 to-slate-900 text-slate-100 flex relative overflow-hidden isolate">
-        <div className="pointer-events-none absolute inset-0 opacity-[0.06] -z-10" aria-hidden="true">
-          <div className="absolute inset-0 ops-room-pattern" />
-        </div>
-
-        <aside className="w-64 bg-slate-950/70 border-r border-slate-800/80 px-4 py-6 space-y-6">
+      <div className="admin-cockpit min-h-screen text-slate-800 flex relative overflow-hidden isolate">
+        <aside className="admin-sidebar w-64 px-5 py-6 space-y-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-teal-500/20 text-teal-300 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-slate-700 text-slate-200 flex items-center justify-center">
               <Compass className="w-5 h-5" />
             </div>
             <div className="text-right">
               <p className="text-xs text-slate-400">الرحلة</p>
-              <h2 className="text-lg font-bold">قمرة القيادة</h2>
+              <h2 className="text-lg font-bold text-slate-100">قمرة القيادة</h2>
             </div>
           </div>
           <nav className="space-y-2">
@@ -341,10 +339,10 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 key={item.id}
                 type="button"
                 onClick={() => handleTabChange(item.id)}
-                className={`w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-all ${
+                className={`w-full flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-all ${
                   effectiveTab === item.id
-                    ? "bg-teal-400/10 text-teal-100 border border-teal-400/30"
-                    : "text-slate-300 hover:bg-slate-900/60"
+                    ? "bg-slate-700 text-slate-100 border border-slate-600"
+                    : "text-slate-300 hover:bg-slate-800/60"
                 }`}
               >
                 {item.icon}
@@ -352,7 +350,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
               </button>
             ))}
           </nav>
-          <div className="pt-4 border-t border-slate-800 space-y-2">
+          <div className="pt-4 border-t border-slate-700 space-y-2">
             <button
               type="button"
               onClick={() => {
@@ -360,7 +358,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 setAdminCode(null);
                 onExit?.();
               }}
-              className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-300 hover:bg-slate-900"
+              className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-300 hover:bg-slate-800"
             >
               <LogOut className="w-4 h-4" />
               تسجيل خروج
@@ -368,15 +366,15 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
           </div>
         </aside>
 
-        <main className="flex-1 min-w-0 p-6 space-y-6">
+        <main className="flex-1 min-w-0 p-8 space-y-8">
           <header className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs text-slate-400">حالة النظام</p>
+              <p className="text-xs text-slate-500">حالة النظام</p>
               <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${aiOnline ? "bg-emerald-400" : "bg-rose-400"}`} />
+                <span className={`w-2 h-2 rounded-full ${aiOnline ? "bg-emerald-500" : "bg-slate-400"}`} />
                 <p className="text-sm font-semibold">{aiOnline ? "الذكاء متصل" : "الذكاء غير متاح"}</p>
               </div>
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] text-slate-600 mt-1">
                 {remoteStatus === "connected"
                   ? "Supabase متصل"
                   : remoteStatus === "error"
@@ -392,30 +390,31 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 <button
                   type="button"
                   onClick={onExit}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-900/60 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                   title="الرجوع للمنصة"
                 >
-                  <Compass className="w-4 h-4 text-teal-300" />
+                  <Compass className="w-4 h-4 text-slate-500" />
                   الرجوع
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => setShowAccount(true)}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-900/60 transition-colors"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                 title="الحساب / وضع الصلاحية"
               >
-                <User className="w-4 h-4 text-slate-200" />
+                <User className="w-4 h-4 text-slate-600" />
                 الحساب
               </button>
               <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Sparkles className="w-4 h-4 text-teal-300" />
+                <Sparkles className="w-4 h-4 text-slate-400" />
                 <span>Admin Mode</span>
               </div>
             </div>
           </header>
 
           {effectiveTab === "overview" && <OverviewPanel />}
+          {effectiveTab === "flow-map" && <FlowMapPanel />}
           {isDeveloper && effectiveTab === "feature-flags" && <FeatureFlagsPanel />}
           {isDeveloper && effectiveTab === "ai-studio" && <AIStudioPanel />}
           {effectiveTab === "content" && <ContentPanel />}
@@ -429,6 +428,69 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
         </Suspense>
       </div>
     </AdminGate>
+  );
+};
+
+const FlowMapPanel: FC = () => {
+  const [remoteStats, setRemoteStats] = useState<Awaited<ReturnType<typeof fetchOverviewStats>>>(null);
+  useEffect(() => {
+    if (!isSupabaseReady) return;
+    let mounted = true;
+    fetchOverviewStats()
+      .then((data) => {
+        if (!mounted) return;
+        if (data) setRemoteStats(data);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setRemoteStats(null);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+  const flowStats = remoteStats?.flowStats;
+
+  return (
+    <div className="space-y-6">
+      <div className="admin-glass-card p-6">
+        <div className="flex items-center justify-between gap-4 flex-wrap mb-5">
+          <div className="flex items-center gap-2">
+            <Compass className="w-5 h-5 text-slate-600" />
+            <h2 className="text-lg font-semibold text-slate-800">خريطة تدفق الزائر</h2>
+          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-400 bg-slate-200 px-3 py-1 text-xs font-medium text-slate-700">
+            <Workflow className="w-3.5 h-3.5" />
+            Automated Workflow
+          </span>
+        </div>
+
+        {flowStats && Object.keys(flowStats.byStep).length > 0 && (
+          <div className="mb-5 flex flex-wrap gap-4 text-xs text-slate-600">
+            {flowStats.avgTimeToActionMs != null && (
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
+                متوسط زمن القرار: <strong>{Math.round(flowStats.avgTimeToActionMs / 1000)} ثانية</strong>
+              </span>
+            )}
+            {flowStats.addPersonCompletionRate != null && (
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
+                نسبة إتمام الإضافة: <strong>{flowStats.addPersonCompletionRate}%</strong>
+              </span>
+            )}
+          </div>
+        )}
+
+        <FlowMindMap
+          nodes={buildFlowNodes(flowStats?.byStep)}
+          links={VISITOR_FLOW_LINKS}
+          allowAddCards
+        />
+
+        <p className="mt-4 text-[11px] text-slate-400">
+          اسحب الكروت لتحريكها • كليك يمين على الكروت المخصصة للحذف
+        </p>
+      </div>
+    </div>
   );
 };
 
@@ -619,20 +681,63 @@ const OverviewPanel: FC = () => {
     setWeeklyLoading(false);
   };
 
+  const awarenessGap = remoteStats?.awarenessGap;
+  const funnelSteps = remoteStats?.funnel?.steps ?? [];
+  const topScenarios = remoteStats?.topScenarios ?? [];
+  const emergencyLogs = remoteStats?.emergencyLogs ?? [];
+  const taskFriction = remoteStats?.taskFriction ?? [];
+  const weeklyRhythm = remoteStats?.weeklyRhythm;
+  const flowStats = remoteStats?.flowStats;
+  const FLOW_LABELS: Record<string, string> = {
+    landing_viewed: "شاهد الهبوط",
+    landing_clicked_start: "ضغط يلا نبدأ",
+    profile_clicked: "ضغط الحساب",
+    pulse_opened: "فتح البوصلة",
+    pulse_abandoned: "هروب من البوصلة",
+    pulse_completed: "أكمل البوصلة",
+    add_person_opened: "فتح إضافة شخص",
+    add_person_dropped: "هروب من إضافة شخص",
+    tools_opened: "فتح أدوات"
+  };
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {awarenessGap && awarenessGap.totalGreen > 0 && (
+        <div className="admin-glass-card p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-slate-600">✦</span>
+            <h3 className="text-sm font-semibold text-slate-800">فجوة الوعي</h3>
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 text-xs font-bold" title="واقع: قريب">
+                قريب
+              </span>
+              <span className="text-slate-600">→</span>
+              <span className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 text-xs font-bold" title="شعور: استنزاف">
+                استنزاف
+              </span>
+            </div>
+            <div className="text-2xl font-bold text-slate-800">{awarenessGap.gapPercent}%</div>
+            <p className="text-xs text-slate-600">
+              من العلاقات القريبة (واقع) اكتُشفت كمستنزِفة (شعور). {awarenessGap.usersWithGap} مستخدم اكتشفوا الحقيقة الصادمة.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
         <StatCard title="إجمالي المسافرين" value={formatNumber(totalUsers)} hint={isSupabaseReady ? "من Supabase" : "جلسات محلية"} />
         <StatCard title="نشط الآن" value={formatNumber(activeNowValue)} hint={`آخر نشاط: ${formatTimeAgo(lastActive)}`} />
         <StatCard title="متوسط طاقة اليوم" value={formatNumber(avgMoodValue)} hint="من سجل النبض" />
         <StatCard title="استدعاءات AI" value={formatNumber(aiTokensUsed)} hint={isSupabaseReady ? "من سجل AI" : "مؤقتاً من المهام"} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 rounded-3xl border border-slate-800 bg-slate-900/60 p-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 admin-glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <LineChartIcon className="w-4 h-4 text-teal-300" />
-            <h3 className="text-sm font-semibold">نمو التفاعل (آخر الأيام)</h3>
+            <LineChartIcon className="w-4 h-4 text-slate-600" />
+            <h3 className="text-sm font-semibold text-slate-800">نمو التفاعل (آخر الأيام)</h3>
           </div>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
@@ -640,36 +745,177 @@ const OverviewPanel: FC = () => {
                 <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} />
                 <YAxis stroke="#94a3b8" fontSize={10} />
                 <Tooltip />
-                <Line type="monotone" dataKey="paths" stroke="#14b8a6" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="nodes" stroke="#f97316" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="paths" stroke="#94a3b8" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="nodes" stroke="#64748b" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-4">
+        <div className="admin-glass-card p-5 space-y-4">
           <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4 text-amber-300" />
-            <h3 className="text-sm font-semibold">مناطق الاحتكاك الأعلى</h3>
+            <Lock className="w-4 h-4 text-slate-600" />
+            <h3 className="text-sm font-semibold text-slate-800">مناطق الاحتكاك الأعلى</h3>
           </div>
           {topZones.length === 0 ? (
-            <p className="text-xs text-slate-400">لا توجد بيانات كافية بعد.</p>
+            <p className="text-xs text-slate-600">لا توجد بيانات كافية بعد.</p>
           ) : (
             <div className="space-y-2">
               {topZones.map(([zone, count]) => (
-                <div key={zone} className="flex items-center justify-between text-xs text-slate-300">
+                <div key={zone} className="flex items-center justify-between text-xs text-slate-600">
                   <span>{zone}</span>
-                  <span className="text-teal-200 font-semibold">{count}</span>
+                  <span className="text-slate-800 font-semibold">{count}</span>
                 </div>
               ))}
             </div>
           )}
-          <div className="pt-3 border-t border-slate-800 text-xs text-slate-400">
+          <div className="pt-3 border-t border-slate-200 text-xs text-slate-600">
             آخر نبضة: {formatTimeAgo(lastActive)}
           </div>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+      {funnelSteps.length > 0 && (
+        <div className="admin-glass-card p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="w-4 h-4 text-slate-600" />
+            <h3 className="text-sm font-semibold text-slate-800">قمع التحويل (آخر 30 يوم)</h3>
+          </div>
+          <div className="flex flex-col gap-2">
+            {funnelSteps.map((step, i) => {
+              const maxCount = Math.max(1, funnelSteps[0]?.count ?? 1);
+              const pct = Math.round((step.count / maxCount) * 100);
+              return (
+                <div key={step.key} className="flex items-center gap-3">
+                  <span className="text-slate-600 text-xs w-8">{i + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between text-xs mb-0.5">
+                      <span className="text-slate-600">{step.label}</span>
+                      <span className="text-slate-800 font-semibold">{formatNumber(step.count)} جلسة</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-teal-500/70 transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {topScenarios.length > 0 && (
+        <div className="admin-glass-card p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-4 h-4 text-slate-400" />
+            <h3 className="text-sm font-semibold">أكتر سيناريو بيتكرر</h3>
+          </div>
+          <p className="text-xs text-slate-400 mb-3">توزيع نوع العلاقات اللي الناس بيضيفوها (استنزاف، سجين ذهني، إلخ).</p>
+          <div className="space-y-2">
+            {topScenarios.map((s) => (
+              <div key={s.key} className="flex items-center justify-between text-xs">
+                <span className="text-slate-300">{s.label}</span>
+                <span className="text-slate-200 font-semibold">{s.count} ({s.percent}%)</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {emergencyLogs.length > 0 && (
+          <div className="rounded-3xl border border-rose-500/40 bg-rose-900/20 p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-slate-400">⛔</span>
+              <h3 className="text-sm font-semibold">طلبات الاستغاثة (آخر 5)</h3>
+            </div>
+            <div className="space-y-2 text-xs">
+              {emergencyLogs.map((log, i) => (
+                <div key={i} className="flex justify-between text-slate-300">
+                  <span>{log.personLabel}</span>
+                  <span className="text-slate-500">{formatTimeAgo(log.createdAt ? new Date(log.createdAt).getTime() : null)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {taskFriction.length > 0 && (
+          <div className="admin-glass-card p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Activity className="w-4 h-4 text-slate-400" />
+              <h3 className="text-sm font-semibold">المهام الأكثر هروباً</h3>
+            </div>
+            <p className="text-xs text-slate-400 mb-3">نسبة الهروب = بدأ ولم ينفّذ. مرتبة من الأصعب.</p>
+            <div className="space-y-2">
+              {taskFriction.map((t) => (
+                <div key={t.label} className="flex items-center justify-between text-xs">
+                  <span className="text-slate-300 truncate max-w-[80%]" title={t.label}>{t.label}</span>
+                  <span className="text-slate-300 font-semibold">{t.escapeRate}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {flowStats && Object.keys(flowStats.byStep).length > 0 && (
+        <div className="admin-glass-card p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="w-4 h-4 text-slate-400" />
+            <h3 className="text-sm font-semibold">مسارات التدفق (آخر 30 يوم)</h3>
+          </div>
+          <div className="flex flex-wrap gap-4 text-xs text-slate-400 mb-3">
+            {flowStats.avgTimeToActionMs != null && (
+              <span>متوسط زمن القرار (حتى "يلا نبدأ"): {Math.round(flowStats.avgTimeToActionMs / 1000)} ثانية</span>
+            )}
+            {flowStats.addPersonCompletionRate != null && (
+              <span>نسبة إتمام الإضافة: {flowStats.addPersonCompletionRate}%</span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(flowStats.byStep)
+              .sort(([, a], [, b]) => b - a)
+              .map(([step, count]) => (
+                <span key={step} className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">
+                  {FLOW_LABELS[step] ?? step}: {count}
+                </span>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {weeklyRhythm && weeklyRhythm.byDay.some((d) => d.avg != null) && (
+        <div className="admin-glass-card p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="w-4 h-4 text-slate-400" />
+            <h3 className="text-sm font-semibold">إيقاع الطاقة الأسبوعي</h3>
+          </div>
+          {weeklyRhythm.lowestDayName && (
+            <p className="text-xs text-slate-400 mb-3">
+              يوم استنزاف الطاقة: <span className="font-semibold">{weeklyRhythm.lowestDayName}</span>
+            </p>
+          )}
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weeklyRhythm.byDay} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+                <XAxis dataKey="dayName" stroke="#94a3b8" fontSize={10} />
+                <YAxis stroke="#94a3b8" fontSize={10} domain={[0, 10]} />
+                <Tooltip formatter={(v: number) => [`${v}/10`, "متوسط الطاقة"]} />
+                <Bar
+                  dataKey="avg"
+                  fill={(entry) => (entry?.day === weeklyRhythm.lowestDay ? "#f97316" : "#14b8a6")}
+                  radius={[4, 4, 0, 0]}
+                  name="طاقة"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      <div className="admin-glass-card p-5 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">التقرير اليومي</h3>
           <button
@@ -710,7 +956,7 @@ const OverviewPanel: FC = () => {
         )}
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+      <div className="admin-glass-card p-5 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">التقرير الأسبوعي</h3>
           <button
@@ -751,7 +997,7 @@ const OverviewPanel: FC = () => {
         )}
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+      <div className="admin-glass-card p-5 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">ألوان المنصة (Owner)</h3>
           <button
@@ -898,7 +1144,7 @@ const OverviewPanel: FC = () => {
           </div>
         </div>
         {themeMessage && (
-          <p className="text-[11px] text-teal-300">
+          <p className="text-[11px] text-slate-400">
             {themeMessage}
           </p>
         )}
@@ -925,7 +1171,7 @@ const FeatureFlagsPanel: FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4">
+      <div className="admin-glass-card p-5">
         <h3 className="text-sm font-semibold mb-2">مفاتيح الإطلاق</h3>
         <p className="text-xs text-slate-400">
           غيّر حالة كل ميزة فوراً. وضع Beta يفتحها لمجموعة تجريبية فقط.
@@ -936,7 +1182,7 @@ const FeatureFlagsPanel: FC = () => {
         {FEATURE_FLAGS.map((flag) => {
           const mode = featureFlags[flag.key];
           return (
-            <div key={flag.key} className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4">
+            <div key={flag.key} className="admin-glass-card p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold">{flag.label}</p>
@@ -959,7 +1205,7 @@ const FeatureFlagsPanel: FC = () => {
                       }}
                       className={`rounded-full px-3 py-1 text-xs font-semibold border transition-all ${
                         active
-                          ? "border-teal-400 bg-teal-500/20 text-teal-200"
+                          ? "border-teal-400 bg-teal-500/20 text-slate-200"
                           : "border-slate-700 text-slate-400 hover:border-teal-500/40"
                       }`}
                     >
@@ -980,7 +1226,7 @@ const FeatureFlagsPanel: FC = () => {
         <p className="text-xs text-slate-400">جاري حفظ الإعدادات على Supabase...</p>
       )}
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4">
+      <div className="admin-glass-card p-5">
         <h4 className="text-sm font-semibold mb-2">صلاحية Beta لهذا الجهاز</h4>
         <p className="text-xs text-slate-400 mb-3">فعّلها لتجربة الميزات في وضع Beta.</p>
         <button
@@ -1067,7 +1313,7 @@ const AIStudioPanel: FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+      <div className="admin-glass-card p-5 space-y-3">
         <h3 className="text-sm font-semibold">System Prompt Editor</h3>
         <textarea
           value={promptDraft}
@@ -1093,7 +1339,7 @@ const AIStudioPanel: FC = () => {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-4">
+      <div className="admin-glass-card p-5 space-y-4">
         <h3 className="text-sm font-semibold">معادلة الحساب</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {(["often", "sometimes", "rarely", "never"] as const).map((key) => (
@@ -1137,7 +1383,7 @@ const AIStudioPanel: FC = () => {
         </button>
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-4">
+      <div className="admin-glass-card p-5 space-y-4">
         <h3 className="text-sm font-semibold">Test Playground</h3>
         <div className="rounded-2xl border border-slate-700 bg-slate-950/60 p-3 h-52 overflow-auto space-y-2 text-xs">
           {playMessages.length === 0 && (
@@ -1146,7 +1392,7 @@ const AIStudioPanel: FC = () => {
           {playMessages.map((msg, idx) => (
             <div key={idx} className={msg.role === "user" ? "text-right" : "text-left"}>
               <p className={`inline-block px-3 py-2 rounded-xl ${
-                msg.role === "user" ? "bg-teal-500/20 text-teal-200" : "bg-slate-800 text-slate-200"
+                msg.role === "user" ? "bg-teal-500/20 text-slate-200" : "bg-slate-800 text-slate-200"
               }`}>
                 {msg.content}
               </p>
@@ -1172,7 +1418,7 @@ const AIStudioPanel: FC = () => {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+      <div className="admin-glass-card p-5 space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">آخر ردود الذكاء</h3>
           <button
@@ -1276,7 +1522,7 @@ const ContentPanel: FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+      <div className="admin-glass-card p-5 space-y-3">
         <h3 className="text-sm font-semibold">مكتبة المهمات</h3>
         <div className="grid md:grid-cols-3 gap-2">
           <input
@@ -1338,7 +1584,7 @@ const ContentPanel: FC = () => {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+      <div className="admin-glass-card p-5 space-y-3">
         <h3 className="text-sm font-semibold">رسائل الطوارئ العامة</h3>
         <input
           value={broadcastTitle}
@@ -1471,7 +1717,7 @@ const UsersPanel: FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+      <div className="admin-glass-card p-5 space-y-3">
         <h3 className="text-sm font-semibold">جدول المسافرين</h3>
         <input
           value={query}
@@ -1481,7 +1727,7 @@ const UsersPanel: FC = () => {
         />
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4">
+      <div className="admin-glass-card p-5">
         {loading && <p className="text-xs text-slate-500">جاري تحميل المستخدمين...</p>}
         {!loading && remoteUsers && (
           <div className="space-y-2">
@@ -1692,7 +1938,7 @@ const UserStatePanel: FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+      <div className="admin-glass-card p-5 space-y-3">
         <h3 className="text-sm font-semibold">لقطات السحابة</h3>
         <div className="flex flex-wrap gap-2">
           <button
@@ -1736,7 +1982,7 @@ const UserStatePanel: FC = () => {
         />
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+      <div className="admin-glass-card p-5 space-y-3">
         {loading && <p className="text-xs text-slate-500">جاري تحميل البيانات...</p>}
         {!loading && rows && (
           <div className="space-y-2">
@@ -1771,7 +2017,7 @@ const UserStatePanel: FC = () => {
         )}
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+      <div className="admin-glass-card p-5 space-y-3">
         <h4 className="text-sm font-semibold">تفاصيل المستخدم</h4>
         {detailLoading && <p className="text-xs text-slate-500">جاري التحميل...</p>}
         {detailError && <p className="text-xs text-rose-300">{detailError}</p>}
@@ -2001,11 +2247,11 @@ const ConsciousnessArchivePanel: FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+      <div className="admin-glass-card p-5 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold flex items-center gap-2">
-              <Brain className="w-4 h-4 text-teal-300" />
+              <Brain className="w-4 h-4 text-slate-400" />
               أرشيف الوعي
             </h3>
             <p className="text-xs text-slate-400">
@@ -2045,7 +2291,7 @@ const ConsciousnessArchivePanel: FC = () => {
             onClick={() => setSourceFilter("all")}
             className={`px-3 py-1 rounded-full text-[11px] ${
               sourceFilter === "all"
-                ? "bg-teal-500/20 text-teal-100 border border-teal-400/50"
+                ? "bg-teal-500/20 text-slate-100 border border-teal-400/50"
                 : "bg-slate-900 text-slate-300 border border-slate-700"
             }`}
           >
@@ -2089,7 +2335,7 @@ const ConsciousnessArchivePanel: FC = () => {
         {loading && <p className="text-xs text-slate-500">جاري تحميل الأرشيف...</p>}
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4 space-y-3">
+      <div className="admin-glass-card p-5 space-y-3">
         {!loading && filteredItems.length === 0 && (
           <p className="text-xs text-slate-500">لا توجد لحظات في الأرشيف بعد.</p>
         )}
@@ -2127,7 +2373,7 @@ const ConsciousnessArchivePanel: FC = () => {
                     type="button"
                     onClick={() => handleSaveMeta(item)}
                     disabled={savingId === item.id}
-                    className="text-[10px] text-teal-300 hover:text-teal-100 disabled:opacity-50"
+                    className="text-[10px] text-slate-400 hover:text-slate-100 disabled:opacity-50"
                   >
                     {savingId === item.id ? "جاري الحفظ..." : "حفظ الوسوم/الملاحظات"}
                   </button>
@@ -2220,7 +2466,7 @@ const GodViewModal: FC<{
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
-        className="w-full max-w-3xl rounded-3xl border border-slate-800 bg-slate-950 text-white shadow-xl"
+        className="w-full max-w-3xl rounded-3xl border border-slate-800 bg-slate-950 text-white"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
@@ -2252,7 +2498,7 @@ const GodViewModal: FC<{
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
                 <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3">
                   <p className="text-xs text-slate-400">إجمالي العلاقات</p>
-                  <p className="text-lg font-semibold text-teal-300">{nodes.length}</p>
+                  <p className="text-lg font-semibold text-slate-400">{nodes.length}</p>
                 </div>
                 <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-3">
                   <p className="text-xs text-slate-400">أحمر</p>
@@ -2301,9 +2547,9 @@ const GodViewModal: FC<{
 };
 
 const StatCard: FC<{ title: string; value: string; hint?: string }> = ({ title, value, hint }) => (
-  <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-4">
-    <p className="text-xs text-slate-400">{title}</p>
-    <p className="text-2xl font-bold text-white mt-1">{value}</p>
-    {hint && <p className="text-[11px] text-slate-500 mt-2">{hint}</p>}
+  <div className="admin-glass-card p-5">
+    <p className="text-xs text-slate-600">{title}</p>
+    <p className="text-2xl font-bold text-slate-800 mt-1">{value}</p>
+    {hint && <p className="text-[11px] text-slate-600 mt-2">{hint}</p>}
   </div>
 );

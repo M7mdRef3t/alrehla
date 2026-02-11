@@ -156,7 +156,7 @@ export function EditableText({
             setOpen(true);
             setLocalError(null);
           }}
-          className="absolute -right-7 top-1/2 -translate-y-1/2 rounded-full border border-slate-200 bg-white/90 px-2 py-2 text-slate-600 shadow-sm hover:text-slate-900 hover:bg-white dark:border-slate-800 dark:bg-slate-950/90 dark:text-slate-300 dark:hover:text-white transition-opacity opacity-30 group-hover/edit:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+          className="absolute -right-7 top-1/2 -translate-y-1/2 rounded-full border border-slate-200 bg-white/90 px-2 py-2 text-slate-600 hover:text-slate-900 hover:bg-white dark:border-slate-800 dark:bg-slate-950/90 dark:text-slate-300 dark:hover:text-white transition-opacity opacity-30 group-hover/edit:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
           aria-label="تعديل النص"
           title="تعديل النص"
         >
@@ -167,7 +167,7 @@ export function EditableText({
       {open && canEdit && (
         <div
           ref={popoverRef}
-          className="absolute z-[90] top-full right-0 mt-2 w-[min(90vw,360px)] rounded-2xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-800 dark:bg-slate-950"
+          className="absolute z-[90] top-full right-0 mt-2 w-[min(90vw,360px)] rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950"
           role="dialog"
           aria-label="تعديل النص"
         >

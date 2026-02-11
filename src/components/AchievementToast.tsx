@@ -20,7 +20,7 @@ export const AchievementToast: FC = () => {
     <AnimatePresence>
       {achievement && (
         <motion.div
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] max-w-sm w-full mx-4 px-4 py-3 rounded-2xl bg-amber-100 dark:bg-amber-900/80 border-2 border-amber-300 dark:border-amber-700 shadow-lg text-center"
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] max-w-sm w-full mx-4 px-4 py-3 rounded-2xl bg-amber-100 dark:bg-amber-900/80 border-2 border-amber-300 dark:border-amber-700 text-center"
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10 }}

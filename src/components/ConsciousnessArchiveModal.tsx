@@ -52,12 +52,12 @@ export const ConsciousnessArchiveModal: FC<ConsciousnessArchiveModalProps> = ({ 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-4 sm:inset-auto sm:bottom-10 sm:right-10 sm:w-[420px] sm:h-[520px] bg-white rounded-3xl shadow-2xl border border-slate-200 z-50 flex flex-col"
+            className="fixed inset-4 sm:inset-auto sm:bottom-10 sm:right-10 sm:w-[420px] sm:h-[520px] bg-white rounded-3xl border border-slate-200 z-50 flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-2xl bg-teal-600 text-white flex items-center justify-center shadow">
+                <div className="w-8 h-8 rounded-2xl bg-teal-600 text-white flex items-center justify-center">
                   <Brain className="w-4 h-4" />
                 </div>
                 <div className="text-right">
@@ -140,7 +140,7 @@ export const ConsciousnessArchiveModal: FC<ConsciousnessArchiveModalProps> = ({ 
                 filteredItems.map((item) => (
                   <div
                     key={item.id}
-                    className="rounded-xl bg-white border border-slate-200 px-3 py-2 shadow-sm text-right"
+                    className="rounded-xl bg-white border border-slate-200 px-3 py-2 text-right"
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] text-slate-400">
