@@ -126,7 +126,11 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
     setDismissed(false);
     setForceShowHint(true);
     setIsVisible(true);
-  }, []);
+    if (typeof window !== "undefined" && !hasInstallPrompt && isIOS) {
+      // إرشاد بسيط بدل البانر
+      window.alert("لتثبيت التطبيق على الآيفون/الآيباد: افتح زر المشاركة ⋯ ثم اختر \"إضافة إلى الشاشة الرئيسية\".");
+    }
+  }, [hasInstallPrompt, isIOS]);
 
   const dismissBanner = useCallback(() => {
     setDismissed(true);

@@ -26,7 +26,6 @@ import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "./
 import { consciousnessService, type MemoryMatch } from "./services/consciousnessService";
 import { initAppContentRealtime } from "./state/appContentState";
 import { PWAInstallProvider } from "./contexts/PWAInstallContext";
-import { InstallHintBanner } from "./components/InstallHintBanner";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
 import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
@@ -793,8 +792,6 @@ export default function App() {
     >
       {/* 🌌 Nebula Background — Deep Cosmic Blue Canvas */}
       <div className="nebula-bg" aria-hidden="true" />
-
-      <InstallHintBanner />
       <AnimatePresence>
         {postNoiseSessionMessage && (
           <motion.div
