@@ -2,7 +2,6 @@ import { useMemo, useEffect } from "react";
 import { useAdminState } from "../state/adminState";
 import { useAuthState, getEffectiveRoleFromState } from "../state/authState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "../utils/featureFlags";
-import type { FeatureFlagKey } from "../config/features";
 
 const hasSupabaseEnv = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 

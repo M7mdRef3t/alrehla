@@ -1,5 +1,11 @@
 import { Component, type ReactNode } from "react";
 
+declare global {
+  interface Window {
+    __errorReporter?: (payload: { error: string; stack?: string; timestamp: string }) => void;
+  }
+}
+
 interface Props {
   children: ReactNode;
 }
@@ -26,7 +32,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (typeof window !== "undefined" && window.__errorReporter) {
       window.__errorReporter({
         error: error.toString(),
-        stack: errorInfo.componentStack,
+        stack: errorInfo.componentStack ?? undefined,
         timestamp: new Date().toISOString()
       });
     }

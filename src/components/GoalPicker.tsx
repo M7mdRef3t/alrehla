@@ -13,12 +13,14 @@ import {
   Star,
   Target
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { resolveAdviceCategory, type AdviceCategory } from "../data/adviceScripts";
 import { isUserMode } from "../config/appEnv";
 import { goalPickerCopy } from "../copy/goalPicker";
 import { useJourneyState } from "../state/journeyState";
 import { usePulseState } from "../state/pulseState";
 import type { PulseFocus, PulseMood } from "../state/pulseState";
+import type { BaselineAnswers } from "../data/baselineQuestions";
 import { EditableText } from "./EditableText";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 
@@ -26,7 +28,7 @@ import { trackEvent, AnalyticsEvents } from "../services/analytics";
    🌌 GOAL PICKER — Cosmic Orbit Selection
    ════════════════════════════════════════════════ */
 
-const ICON_MAP: Record<string, any> = {
+const ICON_MAP: Record<string, LucideIcon> = {
   work: Briefcase,
   family: Home,
   friends: Users,
@@ -89,20 +91,27 @@ function getPulseRecommendations(pulse: { mood: PulseMood; focus: PulseFocus; en
   return recs.length > 0 ? [...new Set(recs)] : ["unknown"];
 }
 
-function getSmartRecommendations(baselineAnswers?: any, pulse?: { mood: PulseMood; focus: PulseFocus; energy: number } | null): string[] {
+function getSmartRecommendations(
+  baselineAnswers?: BaselineAnswers | null,
+  pulse?: { mood: PulseMood; focus: PulseFocus; energy: number } | null
+): string[] {
   const pulseRecs = pulse ? getPulseRecommendations(pulse) : [];
   if (!baselineAnswers) return pulseRecs.length > 0 ? pulseRecs : ["unknown"];
   const recommendations: string[] = [];
-  if (baselineAnswers.q1 && baselineAnswers.q1 <= 2) {
+  const q1 = typeof baselineAnswers.q1 === "number" ? baselineAnswers.q1 : null;
+  const q2 = typeof baselineAnswers.q2 === "number" ? baselineAnswers.q2 : null;
+  const q3 = typeof baselineAnswers.q3 === "string" ? baselineAnswers.q3 : null;
+  const q4 = typeof baselineAnswers.q4 === "number" ? baselineAnswers.q4 : null;
+  if (q1 != null && q1 <= 2) {
     recommendations.push("family", "friends");
   }
-  if (baselineAnswers.q2 && baselineAnswers.q2 >= 4) {
+  if (q2 != null && q2 >= 4) {
     recommendations.push("work", "money");
   }
-  if (baselineAnswers.q3 === "no") {
+  if (q3 === "no") {
     recommendations.push("love");
   }
-  if (baselineAnswers.q4 && baselineAnswers.q4 >= 4) {
+  if (q4 != null && q4 >= 4) {
     return ENABLED_GOAL_IDS;
   }
   const baseline = recommendations.length > 0 ? recommendations : ["family"];

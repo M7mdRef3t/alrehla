@@ -393,7 +393,11 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
                     type="button"
                     onClick={() => {
                       if (navigator.vibrate) navigator.vibrate(recordedBlob ? [80, 120, 80] : 50);
-                      recordedBlob ? burnTape() : skipBurnAndGoToReality();
+                      if (recordedBlob) {
+                        burnTape();
+                      } else {
+                        skipBurnAndGoToReality();
+                      }
                     }}
                     className="w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 text-white bg-teal-600"
                   >

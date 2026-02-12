@@ -35,6 +35,7 @@ import { useAchievementState } from "../state/achievementState";
 import { useMapState } from "../state/mapState";
 import type { RecoveryPlanOpenWith } from "../state/mapState";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
+import { recordFlowEvent } from "../services/journeyTracking";
 import { HealthBar } from "./HealthBar";
 import { TodayTaskStrip } from "./TodayTaskStrip";
 import { RecoveryProgressBar } from "./RecoveryProgressBar";
@@ -554,6 +555,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             <button
               type="button"
               onClick={() => {
+                recordFlowEvent("install_clicked");
                 if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
                 else pwaInstall.showInstallHint();
               }}
@@ -994,6 +996,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <button
                     type="button"
                     onClick={() => {
+                      recordFlowEvent("install_clicked");
                       if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
                       else pwaInstall.showInstallHint();
                       handleClose();

@@ -15,6 +15,7 @@ export function usePulseCheckLogic(
   const [showPulseCheck, setShowPulseCheck] = useState(false);
   const [pulseCheckContext, setPulseCheckContext] = useState<PulseCheckContext>("regular");
   const skipNextPulseCheckRef = useRef(false);
+  const prevScreenRef = useRef<string>("landing");
 
   const lastPulse = usePulseState((s) => s.lastPulse);
   const pulseCheckMode = usePulseState((s) => s.checkInMode);
@@ -24,11 +25,21 @@ export function usePulseCheckLogic(
     if (!canUsePulseCheck) return;
     if (skipNextPulseCheckRef.current) {
       skipNextPulseCheckRef.current = false;
+      prevScreenRef.current = currentScreen;
       return;
     }
-    // Don't show on landing screen
-    if (currentScreen === "landing") return;
+    if (currentScreen === "landing") {
+      prevScreenRef.current = "landing";
+      return;
+    }
+
     if (pulseCheckMode === "everyOpen") {
+      // Show only when navigating out from landing, not on every in-app screen change.
+      if (prevScreenRef.current !== "landing") {
+        prevScreenRef.current = currentScreen;
+        return;
+      }
+      prevScreenRef.current = currentScreen;
       const t = window.setTimeout(() => {
         setPulseCheckContext("regular");
         setShowPulseCheck(true);
@@ -43,8 +54,12 @@ export function usePulseCheckLogic(
       lastPulseDate.getFullYear() === now.getFullYear() &&
       lastPulseDate.getMonth() === now.getMonth() &&
       lastPulseDate.getDate() === now.getDate();
-    if (isSameDay) return;
+    if (isSameDay) {
+      prevScreenRef.current = currentScreen;
+      return;
+    }
 
+    prevScreenRef.current = currentScreen;
     const t = window.setTimeout(() => {
       setPulseCheckContext("regular");
       setShowPulseCheck(true);
@@ -55,9 +70,8 @@ export function usePulseCheckLogic(
   // Hide pulse check if feature becomes unavailable
   useEffect(() => {
     if (canUsePulseCheck) return;
-    if (showPulseCheck && pulseCheckContext === "regular") {
-      setShowPulseCheck(false);
-    }
+    if (showPulseCheck) setShowPulseCheck(false);
+    if (pulseCheckContext !== "regular") setPulseCheckContext("regular");
   }, [canUsePulseCheck, showPulseCheck, pulseCheckContext]);
 
   const skipNextCheck = useCallback(() => {

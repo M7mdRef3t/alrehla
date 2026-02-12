@@ -463,6 +463,7 @@ export interface OverviewStats {
     byStep: Record<string, number>;
     avgTimeToActionMs: number | null;
     addPersonCompletionRate: number | null;
+    pulseAbandonedByReason?: Record<string, number>;
   } | null;
 }
 
@@ -617,21 +618,33 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       supabase.from("admin_ai_logs").select("id", { count: "exact", head: true })
     ]);
 
-  if (!events) return {
-    totalUsers: usersCount ?? null,
-    activeNow: activeCount ?? null,
-    avgMood: null,
-    aiTokensUsed: aiLogsCount ?? null,
-    growthData: [],
-    zones: [],
-    funnel: { steps: [] }
-  };
+  if (!events) {
+    return {
+      totalUsers: usersCount ?? null,
+      activeNow: activeCount ?? null,
+      avgMood: null,
+      aiTokensUsed: aiLogsCount ?? null,
+      growthData: [],
+      zones: [],
+      funnel: { steps: [] },
+      flowStats: {
+        byStep: {},
+        avgTimeToActionMs: null,
+        addPersonCompletionRate: null,
+        pulseAbandonedByReason: {}
+      }
+    };
+  }
 
   const growthMap = new Map<string, { paths: number; nodes: number }>();
   const zoneMap = new Map<string, number>();
   let moodSum = 0;
   let moodCount = 0;
 
+  const flowCounts: Record<string, number> = {};
+  const pulseAbandonedByReason: Record<string, number> = {};
+  let flowTimeToActionSum = 0;
+  let flowTimeToActionCount = 0;
   for (const row of events as Array<Record<string, unknown>>) {
     const createdAt = String(row.created_at ?? "");
     const date = createdAt ? createdAt.slice(5, 10) : "--";
@@ -648,6 +661,21 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     if (payload?.zone) {
       const zone = String(payload.zone);
       zoneMap.set(zone, (zoneMap.get(zone) ?? 0) + 1);
+    }
+    if (type === "flow_event") {
+      const step = String(payload?.step ?? "");
+      if (step) {
+        flowCounts[step] = (flowCounts[step] ?? 0) + 1;
+        if (step === "pulse_abandoned") {
+          const extra = payload?.extra as Record<string, unknown> | undefined;
+          const reason = typeof extra?.closeReason === "string" ? extra.closeReason : "unknown";
+          pulseAbandonedByReason[reason] = (pulseAbandonedByReason[reason] ?? 0) + 1;
+        }
+      }
+      if (typeof payload?.timeToAction === "number") {
+        flowTimeToActionSum += payload.timeToAction;
+        flowTimeToActionCount += 1;
+      }
     }
   }
 
@@ -674,6 +702,16 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     ]
   };
 
+  const addPersonOpened = flowCounts["add_person_opened"] ?? 0;
+  const addPersonDropped = flowCounts["add_person_dropped"] ?? 0;
+  const addPersonCompletionRate =
+    addPersonOpened > 0 ? Math.round(((addPersonOpened - addPersonDropped) / addPersonOpened) * 100) : null;
+
+  // Derived flow counters used by the admin flow map
+  flowCounts["pulse_closed_to_landing"] =
+    (pulseAbandonedByReason["backdrop"] ?? 0) + (pulseAbandonedByReason["close_button"] ?? 0);
+  flowCounts["pulse_abandoned_browser_close"] = pulseAbandonedByReason["browser_close"] ?? 0;
+
   return {
     totalUsers: usersCount ?? null,
     activeNow: activeCount ?? null,
@@ -681,6 +719,12 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     aiTokensUsed: aiLogsCount ?? null,
     growthData,
     zones,
-    funnel
+    funnel,
+    flowStats: {
+      byStep: flowCounts,
+      avgTimeToActionMs: flowTimeToActionCount > 0 ? Math.round(flowTimeToActionSum / flowTimeToActionCount) : null,
+      addPersonCompletionRate,
+      pulseAbandonedByReason
+    }
   };
 }

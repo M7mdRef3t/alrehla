@@ -148,9 +148,17 @@ export function EditableText({
       </span>
 
       {canEdit && showEditIcon && (
-        <button
-          type="button"
+        <span
+          role="button"
+          tabIndex={0}
           onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setOpen(true);
+            setLocalError(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter" && e.key !== " ") return;
             e.preventDefault();
             e.stopPropagation();
             setOpen(true);
@@ -161,7 +169,7 @@ export function EditableText({
           title="تعديل النص"
         >
           <Pencil className="w-3.5 h-3.5" />
-        </button>
+        </span>
       )}
 
       {open && canEdit && (

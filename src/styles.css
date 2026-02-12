@@ -671,6 +671,36 @@
   cursor: pointer;
 }
 
+/* Pulse modal spacing variant: roomier only on tall screens */
+@media (min-height: 880px) {
+  .pulse-check-shell {
+    height: min(92dvh, 820px) !important;
+  }
+
+  .pulse-check-header {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  .pulse-check-content {
+    padding-bottom: 1rem !important;
+    row-gap: 0.95rem !important;
+  }
+
+  .pulse-check-section {
+    row-gap: 0.65rem !important;
+  }
+
+  .pulse-check-energy-orb {
+    width: 3.75rem !important;
+    height: 3.75rem !important;
+  }
+
+  .pulse-check-mood-grid {
+    gap: 0.6rem !important;
+  }
+}
+
 /* ════════════════════════════════════════════════
    📱 No-scrollbar utility (for horizontal scrolls)
    ════════════════════════════════════════════════ */

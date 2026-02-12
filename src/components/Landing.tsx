@@ -8,10 +8,8 @@ import {
 } from "lucide-react";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
 import { landingCopy } from "../copy/landing";
-import { getJourneyToolsView } from "../data/journeyTools";
 import { useJourneyState } from "../state/journeyState";
 import { useMapState } from "../state/mapState";
-import { useAchievementState } from "../state/achievementState";
 import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
 import { getGoalMeta } from "../data/goalMeta";
 import type { FeatureFlagKey } from "../config/features";
@@ -131,12 +129,12 @@ const OrbitalRings: FC = () => {
 /* ══════ MAIN ══════ */
 export const Landing: FC<LandingProps> = ({
   onStartJourney,
-  onOpenTools,
-  showTopToolsButton = true,
+  onOpenTools: _onOpenTools,
+  showTopToolsButton: _showTopToolsButton = true,
   showPostStartContent = true,
-  showToolsSection = true,
-  onFeatureLocked,
-  availableFeatures
+  showToolsSection: _showToolsSection = true,
+  onFeatureLocked: _onFeatureLocked,
+  availableFeatures: _availableFeatures
 }) => {
   const nodesCount = useMapState((s) => s.nodes.length);
   const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
@@ -148,18 +146,11 @@ export const Landing: FC<LandingProps> = ({
   const lastGoalMeta = getGoalMeta(lastGoalRecord?.goalId);
   const [badgePulse, setBadgePulse] = useState(false);
   const lastGoalRef = useRef<string | null>(lastGoalLabel ?? null);
-  const unlockedIds = useAchievementState((s) => s.unlockedIds);
-  const hasMissionCompleted = useMapState((s) => s.nodes.some((n) => n.missionProgress?.isCompleted));
-  const tools = getJourneyToolsView({
-    nodesCount,
-    baselineCompletedAt: baselineCompletedAt ?? null,
-    unlockedIds,
-    hasMissionCompleted,
-    availableFeatures
-  });
   const reduceMotion = useReducedMotion();
   const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
   const landingViewedAt = useRef<number | null>(null);
+  const didStartJourneyRef = useRef(false);
+  const didTrackLandingClosedRef = useRef(false);
   const pwaInstall = usePWAInstall();
 
   useEffect(() => {
@@ -170,10 +161,35 @@ export const Landing: FC<LandingProps> = ({
   }, []);
 
   const handleStartJourney = () => {
+    didStartJourneyRef.current = true;
     const timeToAction = landingViewedAt.current ? Date.now() - landingViewedAt.current : undefined;
     recordFlowEvent("landing_clicked_start", { timeToAction });
     onStartJourney();
   };
+
+  useEffect(() => {
+    const trackLandingClosedOnce = () => {
+      if (didStartJourneyRef.current) return;
+      if (didTrackLandingClosedRef.current) return;
+      didTrackLandingClosedRef.current = true;
+      recordFlowEvent("landing_closed");
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") trackLandingClosedOnce();
+    };
+
+    const onPageHide = () => {
+      trackLandingClosedOnce();
+    };
+
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", onPageHide);
+    };
+  }, []);
 
   useEffect(() => {
     if (!lastGoalLabel) return;
@@ -231,7 +247,7 @@ export const Landing: FC<LandingProps> = ({
             style={{ background: "rgba(45,212,191,0.08)", border: "1px solid rgba(45,212,191,0.18)" }}
           >
             <Sparkles className="w-3.5 h-3.5 text-teal-400" />
-            <span className="text-[13px] font-medium text-teal-300/90">مساحتك الآمنة</span>
+            <span className="text-[13px] font-bold text-teal-300/90">رحلتك بدأت</span>
           </motion.div>
 
           {/* hook — فوق العنوان */}
@@ -301,6 +317,7 @@ export const Landing: FC<LandingProps> = ({
                 defaultText={landingCopy.ctaJourney}
                 page="landing"
                 editOnClick={false}
+                showEditIcon={false}
               />
             </motion.button>
 
@@ -320,6 +337,7 @@ export const Landing: FC<LandingProps> = ({
               <button
                 type="button"
                 onClick={() => {
+                  recordFlowEvent("install_clicked");
                   if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
                   else pwaInstall.showInstallHint();
                 }}

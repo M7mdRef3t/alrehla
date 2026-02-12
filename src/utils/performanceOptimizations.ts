@@ -8,7 +8,7 @@
  * @example
  * const debouncedSearch = debounce((query) => search(query), 300);
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delayMs: number
 ): (...args: Parameters<T>) => void {
@@ -25,7 +25,7 @@ export function debounce<T extends (...args: any[]) => any>(
  * @example
  * const throttledScroll = throttle(() => handleScroll(), 100);
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delayMs: number
 ): (...args: Parameters<T>) => void {
@@ -54,16 +54,16 @@ export function throttle<T extends (...args: any[]) => any>(
  * @example
  * const memoizedExpensive = memoize((x, y) => expensiveCalc(x, y));
  */
-export function memoize<T extends (...args: any[]) => any>(fn: T): T {
-  const cache = new Map<string, any>();
+export function memoize<T extends (...args: unknown[]) => unknown>(fn: T): T {
+  const cache = new Map<string, ReturnType<T>>();
 
   return ((...args: Parameters<T>) => {
     const key = JSON.stringify(args);
     if (cache.has(key)) {
-      return cache.get(key);
+      return cache.get(key) as ReturnType<T>;
     }
 
-    const result = fn(...args);
+    const result = fn(...args) as ReturnType<T>;
     cache.set(key, result);
     return result;
   }) as T;
@@ -127,7 +127,7 @@ export function getWebVitals(): {
 
   try {
     const entries = performance.getEntriesByType("navigation");
-    const navigationTiming = entries[0] as any;
+    const navigationTiming = entries[0] as PerformanceNavigationTiming | undefined;
 
     if (navigationTiming) {
       // FCP - First Contentful Paint
@@ -138,13 +138,13 @@ export function getWebVitals(): {
     const observer = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       if (entries.length > 0) {
-        const lastEntry = entries[entries.length - 1] as any;
-        results.lcp = lastEntry.renderTime || lastEntry.loadTime;
+        const lastEntry = entries[entries.length - 1] as PerformanceEntry & Partial<{ renderTime: number; loadTime: number }>;
+        results.lcp = lastEntry.renderTime ?? lastEntry.loadTime ?? null;
       }
     });
     observer.observe({ type: "largest-contentful-paint", buffered: true });
     setTimeout(() => observer.disconnect(), 5000);
-  } catch (e) {
+  } catch {
     // Performance API not available
   }
 
@@ -186,21 +186,22 @@ export function detectMemoryLeaks(
   report: () => void;
 } {
   let initialMemory = 0;
+  const perf = performance as Performance & { memory?: { usedJSHeapSize: number } };
 
-  if (performance.memory) {
-    initialMemory = performance.memory.usedJSHeapSize;
+  if (perf.memory) {
+    initialMemory = perf.memory.usedJSHeapSize;
   }
 
   return {
     measure(): number {
-      if (performance.memory) {
-        return performance.memory.usedJSHeapSize - initialMemory;
+      if (perf.memory) {
+        return perf.memory.usedJSHeapSize - initialMemory;
       }
       return 0;
     },
     report(): void {
       const delta = this.measure();
-      console.log(`[${componentName}] Memory delta: ${(delta / 1024 / 1024).toFixed(2)}MB`);
+      console.warn(`[${componentName}] Memory delta: ${(delta / 1024 / 1024).toFixed(2)}MB`);
     }
   };
 }
@@ -229,13 +230,21 @@ export function extractStyles(element: HTMLElement): string {
  *   // Low priority work
  * });
  */
-export function requestIdleCallback(callback: () => void, options?: any): number {
+type IdleCallback = (deadline?: { didTimeout: boolean; timeRemaining: () => number }) => void;
+type IdleOptions = { timeout?: number };
+type IdleWindow = Window & {
+  requestIdleCallback?: (cb: IdleCallback, options?: IdleOptions) => number;
+  cancelIdleCallback?: (id: number) => void;
+};
+
+export function requestIdleCallback(callback: IdleCallback, options?: IdleOptions): number {
   if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-    return (window as any).requestIdleCallback(callback, options);
+    const idleWindow = window as IdleWindow;
+    return idleWindow.requestIdleCallback ? idleWindow.requestIdleCallback(callback, options) : 0;
   }
 
   // Fallback for browsers without requestIdleCallback
-  return setTimeout(callback, 1000) as unknown as number;
+  return setTimeout(() => callback({ didTimeout: false, timeRemaining: () => 0 }), 1000) as unknown as number;
 }
 
 /**
@@ -243,7 +252,8 @@ export function requestIdleCallback(callback: () => void, options?: any): number
  */
 export function cancelIdleCallback(id: number): void {
   if (typeof window !== "undefined" && "cancelIdleCallback" in window) {
-    (window as any).cancelIdleCallback(id);
+    const idleWindow = window as IdleWindow;
+    idleWindow.cancelIdleCallback?.(id);
   } else {
     clearTimeout(id);
   }

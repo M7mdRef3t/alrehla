@@ -183,7 +183,7 @@ export const AtlasDashboard: FC<AtlasDashboardProps> = ({ isOpen, onClose }) => 
               </p>
             ) : (
               <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
                   <BarChart
                     data={symptomData.slice(0, 20).map((d) => ({
                       name: `${d.symptomLabel} (${d.roleLabel})`,
@@ -219,7 +219,7 @@ export const AtlasDashboard: FC<AtlasDashboardProps> = ({ isOpen, onClose }) => 
               </p>
             ) : (
               <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
                   <BarChart
                     data={recoveryData}
                     margin={{ top: 8, right: 8, left: 8, bottom: 8 }}
@@ -259,7 +259,7 @@ export const AtlasDashboard: FC<AtlasDashboardProps> = ({ isOpen, onClose }) => 
               </p>
             ) : (
               <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
                   <LineChart
                     data={timeSeriesData.map((d) => ({
                       ...d,
@@ -312,4 +312,3 @@ export const AtlasDashboard: FC<AtlasDashboardProps> = ({ isOpen, onClose }) => 
     </div>
   );
 };
-

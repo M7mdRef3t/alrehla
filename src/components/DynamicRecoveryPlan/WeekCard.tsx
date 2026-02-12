@@ -1,6 +1,6 @@
 import React, { type FC, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, CheckCircle2, AlertTriangle } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { DynamicStep } from "../../utils/dynamicPlanGenerator";
 
 interface WeekCardProps {
@@ -31,7 +31,7 @@ export const WeekCard: FC<WeekCardProps> = ({
   const [selectedDay, setSelectedDay] = useState(1);
 
   const totalActions = step.actions.length;
-  const completedCount = step.actions.filter((a: any) => completedSteps.includes(a.id)).length;
+  const completedCount = step.actions.filter((a) => completedSteps.includes(a.id)).length;
   const progressPct = totalActions > 0 ? Math.round((completedCount / totalActions) * 100) : 0;
   const isComplete = completedCount === totalActions;
 
@@ -84,7 +84,7 @@ export const WeekCard: FC<WeekCardProps> = ({
           >
             {/* Day selector */}
             <div className="flex gap-1 flex-wrap justify-center">
-              {step.actions.map((_: any, i: number) => {
+              {step.actions.map((_, i: number) => {
                 const dayNum = i + 1;
                 const done = completedSteps.includes(step.actions[i].id);
                 const active = selectedDay === dayNum;
@@ -112,7 +112,7 @@ export const WeekCard: FC<WeekCardProps> = ({
               <div className="p-4 bg-purple-50 dark:bg-slate-700/50 rounded-xl space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{(currentAction as any).description || "خطوة"}</p>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{currentAction.text || "خطوة"}</p>
                   </div>
                   {isCurrentCompleted && <span className="text-green-600 text-sm font-bold shrink-0">✓</span>}
                 </div>

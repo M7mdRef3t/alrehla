@@ -9,7 +9,7 @@ interface PulseCheckModalProps {
   isOpen: boolean;
   context?: "regular" | "start_recovery";
   onSubmit: (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => void;
-  onClose: () => void;
+  onClose: (reason?: "backdrop" | "close_button") => void;
 }
 
 const MOODS: Array<{ id: PulseMood; label: string; emoji: string }> = [
@@ -183,7 +183,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               `,
               transition: "background 0.8s ease"
             }}
-            onClick={onClose}
+            onClick={() => onClose("backdrop")}
           />
 
           {/* ── Floating star particles ── */}
@@ -213,7 +213,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
           {/* ── Glass Card Content ── */}
           <motion.div
-            className="relative z-10 w-[calc(100%-2rem)] max-w-md max-h-[90vh] overflow-hidden"
+            className="pulse-check-shell relative z-10 w-[calc(100%-1rem)] max-w-md h-[min(96dvh,740px)] overflow-hidden flex flex-col"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -223,15 +223,14 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               backdropFilter: "blur(24px)",
               WebkitBackdropFilter: "blur(24px)",
               border: "1px solid rgba(255, 255, 255, 0.08)",
-              borderRadius: "1.5rem",
-              boxShadow: "0 24px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05)"
+              borderRadius: "1.5rem"
             }}
           >
             {/* ── Header ── */}
-            <div className="flex items-center justify-between p-4">
+            <div className="pulse-check-header flex items-center justify-between p-3.5 sm:p-4">
               <motion.div custom={0} variants={cosmicUp} initial="hidden" animate="visible">
                 <h2
-                  className="text-lg font-bold"
+                  className="text-base sm:text-lg font-bold"
                   style={{ color: "var(--text-primary)", letterSpacing: "0.04em" }}
                 >
                   ضبط البوصلة
@@ -242,7 +241,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               </motion.div>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => onClose("close_button")}
                 className="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
                 style={{ color: "var(--text-muted)", background: "rgba(255, 255, 255, 0.05)" }}
                 aria-label="إغلاق"
@@ -251,19 +250,19 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               </button>
             </div>
 
-            {/* ── Content ── */}
-            <div className="px-5 pb-4 space-y-4">
+            {/* ── Content — مضغوط لعرض كل العناصر بدون سكرول ── */}
+            <div className="pulse-check-content px-4 sm:px-5 pb-3 sm:pb-4 flex-1 min-h-0 flex flex-col justify-between gap-2 sm:gap-2.5">
 
               {/* ── Energy Slider — The Emotional Compass Core ── */}
-              <motion.div className="space-y-2" custom={1} variants={cosmicUp} initial="hidden" animate="visible">
+              <motion.div className="pulse-check-section flex flex-col gap-2" custom={1} variants={cosmicUp} initial="hidden" animate="visible">
                 <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                   مؤشر طاقتك
                 </label>
 
                 {/* Cosmic energy orb — breathing visualization */}
-                <div className="flex justify-center py-2">
+                <div className="flex justify-center py-1.5">
                   <motion.div
-                    className="relative w-16 h-16 rounded-full flex items-center justify-center"
+                    className="pulse-check-energy-orb relative w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center"
                     style={{
                       background: `radial-gradient(circle at 40% 35%, ${fillHex}40, ${fillHex}15 60%, transparent 80%)`,
                       boxShadow: `0 0 ${energy * 4}px ${fillHex}30, inset 0 0 20px ${fillHex}10`,
@@ -279,7 +278,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                     }}
                     transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
                     >
-                    <span className="text-xl font-bold" style={{ color: fillHex }}>
+                    <span className="text-base sm:text-lg font-bold" style={{ color: fillHex }}>
                       {energy}
                     </span>
                   </motion.div>
@@ -317,11 +316,11 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               </motion.div>
 
               {/* ── Mood — Inner Weather ── */}
-              <motion.div className="space-y-2" custom={2} variants={cosmicUp} initial="hidden" animate="visible">
-                <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+              <motion.div className="pulse-check-section flex flex-col gap-2" custom={2} variants={cosmicUp} initial="hidden" animate="visible">
+                <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
                   الطقس الداخلي
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="pulse-check-mood-grid grid grid-cols-4 gap-2">
                   {MOODS.map((item) => {
                     const isSelected = selectedMoods.includes(item.id);
                     const mStyle = MOOD_COSMIC[item.id];
@@ -339,7 +338,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                             return [...prev, item.id];
                           })
                         }
-                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-full text-xs font-semibold min-w-[112px] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
+                        className="inline-flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
                         style={{
                           background: isSelected ? mStyle.bg : "rgba(255, 255, 255, 0.05)",
                           border: `1px solid ${isSelected ? mStyle.border : "rgba(255, 255, 255, 0.08)"}`,
@@ -348,8 +347,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                         }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <span className="text-base">{item.emoji}</span>
-                        {item.label}
+                        <span>{item.emoji}</span>
+                        <span className="truncate">{item.label}</span>
                       </motion.button>
                     );
                   })}
@@ -357,8 +356,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               </motion.div>
 
               {/* ── Focus — Current Anchor ── */}
-              <motion.div className="space-y-2" custom={3} variants={cosmicUp} initial="hidden" animate="visible">
-                <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+              <motion.div className="pulse-check-section flex flex-col gap-2" custom={3} variants={cosmicUp} initial="hidden" animate="visible">
+                <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
                   التركيز الحالي
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -373,7 +372,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                         key={item.id}
                         type="button"
                         onClick={() => setFocus(item.id)}
-                        className="px-3 py-2 rounded-xl text-xs font-semibold transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
+                        className="px-2 py-2 rounded-lg text-xs font-semibold transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
                         style={{
                           background: isSelected ? fStyle.bg : "rgba(255, 255, 255, 0.04)",
                           border: `1px solid ${isSelected ? fStyle.border : "rgba(255, 255, 255, 0.06)"}`,
@@ -389,16 +388,16 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               </motion.div>
 
               {/* ── Notes — Optional Depth ── */}
-              <motion.div className="space-y-1.5" custom={4} variants={cosmicUp} initial="hidden" animate="visible">
-                <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+              <motion.div className="pulse-check-section flex flex-col gap-1.5" custom={4} variants={cosmicUp} initial="hidden" animate="visible">
+                <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
                   لو حابب تشرح أكتر
                 </label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="اكتب جملة أو موقف: أنا مخنوق عشان حصل كذا..."
-                  className="w-full rounded-xl px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0 resize-none"
+                  className="w-full rounded-lg px-2.5 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0 resize-none"
                   style={{
                     background: "rgba(255, 255, 255, 0.04)",
                     border: "1px solid rgba(255, 255, 255, 0.08)",
@@ -409,11 +408,11 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               </motion.div>
 
               {/* ── Submit — Cosmic CTA ── */}
-              <motion.div custom={5} variants={cosmicUp} initial="hidden" animate="visible">
+              <motion.div custom={5} variants={cosmicUp} initial="hidden" animate="visible" className="pt-1">
                 <motion.button
                   type="button"
                   onClick={handleSubmit}
-                  className="w-full cta-primary py-3 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0"
+                  className="w-full cta-primary py-2.5 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0"
                   whileHover={{ scale: 1.02, y: -1 }}
                   whileTap={{ scale: 0.98 }}
                 >

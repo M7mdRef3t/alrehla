@@ -20,6 +20,8 @@ export const PhaseOverview: FC<PhaseOverviewProps> = ({
 
   const totalWeeks = plan.steps.length;
   const progressPct = totalWeeks > 0 ? Math.round((completedWeeks / totalWeeks) * 100) : 0;
+  const planTitle = plan.steps[0]?.title ? `خطة ${plan.steps[0].title}` : "خطة التعافي";
+  const planDescription = plan.insights?.[0] ?? "";
 
   return (
     <motion.div
@@ -34,8 +36,8 @@ export const PhaseOverview: FC<PhaseOverviewProps> = ({
           <Sparkles className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">{(plan as any).title || "خطة التعافي"}</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{(plan as any).description || ""}</p>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">{planTitle}</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{planDescription}</p>
         </div>
       </div>
 

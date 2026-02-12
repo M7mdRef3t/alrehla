@@ -72,7 +72,6 @@ export function seedMapNodes(count: number): string[] {
 export function seedJourneyEvents(nodeIds: string[], count: number): void {
   const events = loadEvents();
   const now = Date.now();
-  const types = ["task_completed", "node_added", "path_started"] as const;
 
   for (let i = 0; i < count; i++) {
     const nodeId = nodeIds[i % nodeIds.length]!;

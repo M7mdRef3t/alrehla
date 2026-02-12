@@ -33,15 +33,15 @@ const MOOD_LABEL: Record<PulseMood, string> = {
   sad: "حزين",
   tense: "متوتر",
   hopeful: "متفائل",
-  overwhelmed: "مغ overwhelm"
+  overwhelmed: "مرهق"
 };
 
-const FOCUS_LABEL: Record<PulseFocus, string> = {
-  event: "موقف حصل",
-  thought: "فكرة مش بتروح",
-  body: "جسدي تعبان",
-  none: "ولا حاجة، جاي أكمل"
-};
+function getFocusLabel(focus: PulseFocus, intent: PostAuthIntent): string {
+  if (focus === "event") return "موقف حصل";
+  if (focus === "thought") return "فكرة مش بتروح";
+  if (focus === "body") return "جسدي تعبان";
+  return intent.kind === "start_recovery" ? "ولا حاجة، جاي أكتشف" : "ولا حاجة، جاي أكمل";
+}
 
 function getAuthTitle(intent: PostAuthIntent): string {
   if (intent.kind !== "start_recovery") return "أهلاً بيك في الرحلة";
@@ -244,7 +244,7 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
                     {[
                       { label: "البطارية", value: `${valueToLabel(intent.pulse.energy)} (${intent.pulse.energy}/10)` },
                       { label: "الطقس", value: MOOD_LABEL[intent.pulse.mood] },
-                      { label: "التركيز", value: FOCUS_LABEL[intent.pulse.focus] },
+                      { label: "التركيز", value: getFocusLabel(intent.pulse.focus, intent) },
                     ].map((row, i) => (
                       <div key={i} className="flex justify-between text-[13px]">
                         <span style={{ color: "rgba(148, 163, 184, 0.7)" }}>{row.label}</span>

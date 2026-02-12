@@ -104,13 +104,6 @@ const RING_COLORS = {
   detached: { stroke: "#94A3B8", glow: "rgba(148, 163, 184, 0.2)" }
 } as const;
 
-const MAP_RING_COLORS = {
-  red: RING_COLORS.danger.stroke,
-  yellow: RING_COLORS.caution.stroke,
-  green: RING_COLORS.safe.stroke,
-  grey: RING_COLORS.detached.stroke
-} as const;
-
 const NODE_GLOW_CLASS: Record<Ring, string> = {
   red: "node-threat-danger",
   yellow: "node-threat-caution",

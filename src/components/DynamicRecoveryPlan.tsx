@@ -243,7 +243,7 @@ const PathEngineBlock: FC<{
   const handleMarkDone = (taskId: string, moodScore?: number) => {
     const date = new Date().toISOString().slice(0, 10);
     const task = [...(pathSnapshot.phases.week1?.tasks ?? []), ...(pathSnapshot.phases.week2?.tasks ?? []), ...(pathSnapshot.phases.week3?.tasks ?? [])].find((t) => t.id === taskId);
-    const taskLabel = task?.step;
+    const taskLabel = task?.title;
     onToggleStep(taskId);
     if (nodeId && onAddDailyPathProgress) {
       onAddDailyPathProgress(nodeId, {
@@ -273,7 +273,7 @@ const PathEngineBlock: FC<{
       recordJourneyEvent("task_started", {
         pathId: pathSnapshot.id,
         taskId,
-        taskLabel: task?.step,
+        taskLabel: task?.title,
         personLabel,
         nodeId
       });

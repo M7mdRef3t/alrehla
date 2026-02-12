@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
@@ -126,11 +127,10 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
     setDismissed(false);
     setForceShowHint(true);
     setIsVisible(true);
-    if (typeof window !== "undefined" && !hasInstallPrompt && isIOS) {
-      // إرشاد بسيط بدل البانر
+    if (typeof window !== "undefined" && !installEvent && isIOS) {
       window.alert("لتثبيت التطبيق على الآيفون/الآيباد: افتح زر المشاركة ⋯ ثم اختر \"إضافة إلى الشاشة الرئيسية\".");
     }
-  }, [hasInstallPrompt, isIOS]);
+  }, [installEvent, isIOS]);
 
   const dismissBanner = useCallback(() => {
     setDismissed(true);
@@ -140,8 +140,9 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
     }
   }, []);
 
+  /** موبايل + تابلت: شاشة حتى 1024px أو جهاز لمس (يغطي التابلت أفقي وعمودي) */
   const canShowInstallButton =
-    !isStandalone && typeof window !== "undefined" && (window.matchMedia("(max-width: 768px)").matches || isTouchDevice);
+    !isStandalone && typeof window !== "undefined" && (window.matchMedia("(max-width: 1024px)").matches || isTouchDevice);
   const hasInstallPrompt = Boolean(installEvent);
   const canRenderBanner = !dismissed && (isTouchDevice || (typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches));
   const showAndroidBanner = canRenderBanner && (forceShowHint || isVisible) && isAndroid;

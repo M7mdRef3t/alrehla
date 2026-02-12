@@ -2,7 +2,9 @@ import type { FC } from "react";
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import {
   Plus, RotateCcw, ZoomIn, ZoomOut, Maximize2,
-  GripVertical, MousePointer2, Hand, Trash2
+  GripVertical, MousePointer2, Hand, Trash2, Save,
+  Undo2, Redo2, Copy, Search, Download, Upload, ArrowRightLeft,
+  CheckCircle2, XCircle, Grid3X3, Lock, Unlock
 } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════
@@ -18,11 +20,20 @@ export interface FlowNode {
   accent?: "teal" | "amber" | "rose" | "slate";
 }
 
+export interface FlowMapActionEvent {
+  action: string;
+  nodeId?: string | null;
+  nodeTitle?: string | null;
+  payload?: Record<string, unknown>;
+}
+
 interface FlowMindMapProps {
   nodes: FlowNode[];
   links: Array<[string, string]>;
   showReset?: boolean;
   allowAddCards?: boolean;
+  nodeMetrics?: Record<string, { conversionRate: number | null; dropOffCount: number | null }> | null;
+  onAction?: (event: FlowMapActionEvent) => void;
 }
 
 type Position = { x: number; y: number };
@@ -32,6 +43,14 @@ type FlowNodeOverride = {
   action?: string;
 };
 type EditorMode = "add" | "edit";
+type FlowSnapshot = {
+  customNodes: FlowNode[];
+  customLinks: Array<[string, string]>;
+  positions: Record<string, Position>;
+  baseOverrides: Record<string, FlowNodeOverride>;
+  hiddenBaseNodeIds: Set<string>;
+  lockedNodeIds: Set<string>;
+};
 
 /* ═══════════════════════════════════════════════════
    Constants
@@ -40,6 +59,9 @@ const STORAGE_KEY = "flow-map-custom";
 const POS_STORAGE_KEY = "flow-map-positions";
 const ZOOM_STORAGE_KEY = "flow-map-zoom";
 const OVERRIDES_STORAGE_KEY = "flow-map-overrides";
+const HIDDEN_BASE_STORAGE_KEY = "flow-map-hidden-base";
+const DEFAULT_POS_STORAGE_KEY = "flow-map-default-positions";
+const LOCKED_NODE_STORAGE_KEY = "flow-map-locked-nodes";
 
 const CARD_W = 200;
 const CARD_H = 100;
@@ -153,6 +175,12 @@ function getStyle(node: FlowNode): CardStyle {
   return variantConfig[getVariantKey(node)] || variantConfig.branch;
 }
 
+function getDecisionOutcome(node: FlowNode): "success" | "failure" | "neutral" {
+  if (node.accent === "teal") return "success";
+  if (node.accent === "rose") return "failure";
+  return "neutral";
+}
+
 function isValidAccent(value: unknown): value is NonNullable<FlowNode["accent"]> {
   return value === "teal" || value === "amber" || value === "rose" || value === "slate";
 }
@@ -196,6 +224,15 @@ function arePositionsEqual(a: Record<string, Position>, b: Record<string, Positi
     if (posA.x !== posB.x || posA.y !== posB.y) return false;
   }
   return true;
+}
+
+function isOverlapping(a: Position, b: Position): boolean {
+  return !(
+    a.x + CARD_W <= b.x
+    || b.x + CARD_W <= a.x
+    || a.y + CARD_H <= b.y
+    || b.y + CARD_H <= a.y
+  );
 }
 
 /* ═══════════════════════════════════════════════════
@@ -335,6 +372,36 @@ function loadPositions(): Record<string, Position> | null {
 function savePositions(pos: Record<string, Position>) {
   try { localStorage.setItem(POS_STORAGE_KEY, JSON.stringify(pos)); } catch { /* */ }
 }
+
+function loadDefaultPositions(): Record<string, Position> | null {
+  try {
+    const raw = localStorage.getItem(DEFAULT_POS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (!parsed || typeof parsed !== "object") return null;
+    const positions: Record<string, Position> = {};
+    for (const [id, value] of Object.entries(parsed)) {
+      if (!isPosition(value)) continue;
+      if (Math.abs(value.x) > MAX_ABS_COORD || Math.abs(value.y) > MAX_ABS_COORD) continue;
+      positions[id] = { x: value.x, y: value.y };
+    }
+    return positions;
+  } catch {
+    return null;
+  }
+}
+
+function saveDefaultPositions(pos: Record<string, Position> | null) {
+  try {
+    if (!pos || Object.keys(pos).length === 0) {
+      localStorage.removeItem(DEFAULT_POS_STORAGE_KEY);
+      return;
+    }
+    localStorage.setItem(DEFAULT_POS_STORAGE_KEY, JSON.stringify(pos));
+  } catch {
+    // ignore write errors
+  }
+}
 function loadZoom(): { zoom: number; panX: number; panY: number } | null {
   try {
     const raw = localStorage.getItem(ZOOM_STORAGE_KEY);
@@ -379,12 +446,98 @@ function saveOverrides(overrides: Record<string, FlowNodeOverride>) {
   try { localStorage.setItem(OVERRIDES_STORAGE_KEY, JSON.stringify(overrides)); } catch { /* */ }
 }
 
+function loadHiddenBaseIds(allowedIds: Set<string>): Set<string> {
+  try {
+    const raw = localStorage.getItem(HIDDEN_BASE_STORAGE_KEY);
+    if (!raw) return new Set<string>();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return new Set<string>();
+    const result = new Set<string>();
+    for (const item of parsed) {
+      if (typeof item !== "string") continue;
+      if (!allowedIds.has(item)) continue;
+      result.add(item);
+    }
+    return result;
+  } catch {
+    return new Set<string>();
+  }
+}
+
+function saveHiddenBaseIds(hiddenIds: Set<string>) {
+  try {
+    if (hiddenIds.size === 0) {
+      localStorage.removeItem(HIDDEN_BASE_STORAGE_KEY);
+      return;
+    }
+    localStorage.setItem(HIDDEN_BASE_STORAGE_KEY, JSON.stringify(Array.from(hiddenIds)));
+  } catch {
+    // ignore write errors
+  }
+}
+
+function loadLockedNodeIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(LOCKED_NODE_STORAGE_KEY);
+    if (!raw) return new Set<string>();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return new Set<string>();
+    const result = new Set<string>();
+    for (const item of parsed) {
+      if (typeof item !== "string") continue;
+      result.add(item);
+    }
+    return result;
+  } catch {
+    return new Set<string>();
+  }
+}
+
+function saveLockedNodeIds(lockedIds: Set<string>) {
+  try {
+    if (lockedIds.size === 0) {
+      localStorage.removeItem(LOCKED_NODE_STORAGE_KEY);
+      return;
+    }
+    localStorage.setItem(LOCKED_NODE_STORAGE_KEY, JSON.stringify(Array.from(lockedIds)));
+  } catch {
+    // ignore write errors
+  }
+}
+
 function areLinksEqual(a: Array<[string, string]>, b: Array<[string, string]>): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i += 1) {
     if (a[i][0] !== b[i][0] || a[i][1] !== b[i][1]) return false;
   }
   return true;
+}
+
+function applyPresetToLayout(
+  preset: Record<string, Position> | null,
+  layout: Record<string, Position>
+): Record<string, Position> {
+  if (!preset) return layout;
+  const next: Record<string, Position> = {};
+  for (const [id, fallback] of Object.entries(layout)) {
+    next[id] = preset[id] ?? fallback;
+  }
+  return next;
+}
+
+function cloneSnapshot(snapshot: FlowSnapshot): FlowSnapshot {
+  return {
+    customNodes: snapshot.customNodes.map((node) => ({ ...node })),
+    customLinks: snapshot.customLinks.map(([childId, parentId]) => [childId, parentId] as [string, string]),
+    positions: Object.fromEntries(
+      Object.entries(snapshot.positions).map(([id, pos]) => [id, { x: pos.x, y: pos.y }])
+    ),
+    baseOverrides: Object.fromEntries(
+      Object.entries(snapshot.baseOverrides).map(([id, override]) => [id, { ...override }])
+    ),
+    hiddenBaseNodeIds: new Set(snapshot.hiddenBaseNodeIds),
+    lockedNodeIds: new Set(snapshot.lockedNodeIds)
+  };
 }
 
 /* ═══════════════════════════════════════════════════
@@ -394,17 +547,63 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
   nodes: baseNodes,
   links: baseLinks,
   showReset = true,
-  allowAddCards = true
+  allowAddCards = true,
+  nodeMetrics = null,
+  onAction
 }) => {
   /* ── Data ── */
   const initialCustom = useMemo(() => loadCustom(), []);
   const [baseOverrides, setBaseOverrides] = useState<Record<string, FlowNodeOverride>>(() => loadOverrides());
   const [customNodes, setCustomNodes] = useState<FlowNode[]>(initialCustom.nodes);
   const [customLinks, setCustomLinks] = useState<Array<[string, string]>>(initialCustom.links);
+  const [defaultPositions, setDefaultPositions] = useState<Record<string, Position> | null>(() => loadDefaultPositions());
+  const [historyPast, setHistoryPast] = useState<FlowSnapshot[]>([]);
+  const [historyFuture, setHistoryFuture] = useState<FlowSnapshot[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [decisionFilter, setDecisionFilter] = useState<"all" | "success" | "failure">("all");
+  const [snapToGrid, setSnapToGrid] = useState(false);
+  const [lockedNodeIds, setLockedNodeIds] = useState<Set<string>>(() => loadLockedNodeIds());
+  const [reparentState, setReparentState] = useState<{ nodeId: string; parentId: string } | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const baseNodeById = useMemo(() => new Map(baseNodes.map((node) => [node.id, node])), [baseNodes]);
+  const baseNodeIds = useMemo(() => new Set(baseNodes.map((node) => node.id)), [baseNodes]);
+  const [hiddenBaseNodeIds, setHiddenBaseNodeIds] = useState<Set<string>>(() => loadHiddenBaseIds(baseNodeIds));
+  useEffect(() => {
+    setHiddenBaseNodeIds((prev) => {
+      let changed = false;
+      const next = new Set<string>();
+      for (const id of prev) {
+        if (baseNodeIds.has(id)) {
+          next.add(id);
+        } else {
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [baseNodeIds]);
   const customNodeIds = useMemo(() => new Set(customNodes.map((node) => node.id)), [customNodes]);
+  const effectiveBaseNodes = useMemo(
+    () =>
+      baseNodes
+        .filter((node) => !hiddenBaseNodeIds.has(node.id))
+        .map((node) => {
+          const override = baseOverrides[node.id];
+          if (!override) return node;
+          return {
+            ...node,
+            scenarioLabel: override.scenarioLabel ?? node.scenarioLabel,
+            title: override.title ?? node.title,
+            action: override.action ?? node.action
+          };
+        }),
+    [baseNodes, baseOverrides, hiddenBaseNodeIds]
+  );
   const allParentIds = useMemo(
-    () => new Set([...baseNodes.map((node) => node.id), ...customNodes.map((node) => node.id)]),
-    [baseNodes, customNodes]
+    () => new Set([...effectiveBaseNodes.map((node) => node.id), ...customNodes.map((node) => node.id)]),
+    [effectiveBaseNodes, customNodes]
   );
   const validCustomLinks = useMemo(
     () =>
@@ -413,27 +612,61 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
       ),
     [allParentIds, customLinks, customNodeIds]
   );
-  const baseNodeById = useMemo(() => new Map(baseNodes.map((node) => [node.id, node])), [baseNodes]);
-  const effectiveBaseNodes = useMemo(
-    () =>
-      baseNodes.map((node) => {
-        const override = baseOverrides[node.id];
-        if (!override) return node;
-        return {
-          ...node,
-          scenarioLabel: override.scenarioLabel ?? node.scenarioLabel,
-          title: override.title ?? node.title,
-          action: override.action ?? node.action
-        };
-      }),
-    [baseNodes, baseOverrides]
-  );
   const nodes = useMemo(() => [...effectiveBaseNodes, ...customNodes], [effectiveBaseNodes, customNodes]);
-  const links = useMemo(() => [...baseLinks, ...validCustomLinks], [baseLinks, validCustomLinks]);
+  const rootNodeIds = useMemo(
+    () => new Set(nodes.filter((node) => node.variant === "root").map((node) => node.id)),
+    [nodes]
+  );
+  const visibleNodeIds = useMemo(() => new Set(nodes.map((node) => node.id)), [nodes]);
+  const links = useMemo(
+    () => [
+      ...baseLinks.filter(([childId, parentId]) => visibleNodeIds.has(childId) && visibleNodeIds.has(parentId)),
+      ...validCustomLinks
+    ],
+    [baseLinks, validCustomLinks, visibleNodeIds]
+  );
+  const hierarchyLinks = useMemo(
+    // Exclude feedback links targeting root from tree/hierarchy operations
+    () => links.filter(([childId]) => !rootNodeIds.has(childId)),
+    [links, rootNodeIds]
+  );
+  const renderedNodeIds = useMemo(() => {
+    if (decisionFilter === "all") return new Set(nodes.map((node) => node.id));
+    const ids = new Set<string>();
+    const rootIds = new Set(nodes.filter((node) => node.variant === "root").map((node) => node.id));
+    rootIds.forEach((id) => ids.add(id));
+
+    const parentByChild = new Map<string, string>();
+    for (const [childId, parentId] of hierarchyLinks) {
+      if (!parentByChild.has(childId)) parentByChild.set(childId, parentId);
+    }
+
+    for (const node of nodes) {
+      const outcome = getDecisionOutcome(node);
+      if (decisionFilter === "success" && outcome !== "success") continue;
+      if (decisionFilter === "failure" && outcome !== "failure") continue;
+      let cur: string | undefined = node.id;
+      while (cur) {
+        ids.add(cur);
+        cur = parentByChild.get(cur);
+      }
+    }
+    return ids;
+  }, [decisionFilter, hierarchyLinks, nodes]);
+  const renderedNodes = useMemo(
+    () => nodes.filter((node) => renderedNodeIds.has(node.id)),
+    [nodes, renderedNodeIds]
+  );
+  const renderedLinks = useMemo(
+    () => links.filter(([childId, parentId]) => renderedNodeIds.has(childId) && renderedNodeIds.has(parentId)),
+    [links, renderedNodeIds]
+  );
 
   /* ── Tree layout ── */
-  const autoLayout = useMemo(() => computeTreeLayout(nodes, links), [nodes, links]);
+  const autoLayout = useMemo(() => computeTreeLayout(nodes, hierarchyLinks), [nodes, hierarchyLinks]);
   const nodeById = useMemo(() => new Map(nodes.map((node) => [node.id, node])), [nodes]);
+  const canUndo = historyPast.length > 0;
+  const canRedo = historyFuture.length > 0;
 
   const [positions, setPositions] = useState<Record<string, Position>>(() => {
     const stored = loadPositions();
@@ -453,12 +686,12 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
 
   const visiblePositions = useMemo(() => {
     const next: Record<string, Position> = {};
-    for (const node of nodes) {
+    for (const node of renderedNodes) {
       const pos = positions[node.id] ?? autoLayout[node.id];
       if (pos) next[node.id] = pos;
     }
     return next;
-  }, [autoLayout, nodes, positions]);
+  }, [autoLayout, renderedNodes, positions]);
 
   useEffect(() => {
     setPositions(prev => {
@@ -467,6 +700,37 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
     });
   }, [autoLayout]);
 
+  // Auto-fix old persisted positions that can stack cards after structural flow changes.
+  const didFixOverlapRef = useRef(false);
+  useEffect(() => {
+    if (didFixOverlapRef.current) return;
+    const baseEntries = effectiveBaseNodes
+      .map((node) => ({ id: node.id, pos: positions[node.id] ?? autoLayout[node.id] }))
+      .filter((entry): entry is { id: string; pos: Position } => Boolean(entry.pos));
+    if (baseEntries.length < 2) return;
+
+    let hasOverlap = false;
+    for (let i = 0; i < baseEntries.length && !hasOverlap; i += 1) {
+      for (let j = i + 1; j < baseEntries.length; j += 1) {
+        if (isOverlapping(baseEntries[i].pos, baseEntries[j].pos)) {
+          hasOverlap = true;
+          break;
+        }
+      }
+    }
+    if (!hasOverlap) return;
+
+    didFixOverlapRef.current = true;
+    setPositions((prev) => {
+      const next = { ...prev };
+      for (const node of effectiveBaseNodes) {
+        const autoPos = autoLayout[node.id];
+        if (autoPos) next[node.id] = { x: autoPos.x, y: autoPos.y };
+      }
+      return next;
+    });
+  }, [autoLayout, effectiveBaseNodes, positions]);
+
   useEffect(() => {
     if (areLinksEqual(customLinks, validCustomLinks)) return;
     setCustomLinks(validCustomLinks);
@@ -474,7 +738,54 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
 
   useEffect(() => { saveOverrides(baseOverrides); }, [baseOverrides]);
   useEffect(() => { saveCustom(customNodes, validCustomLinks); }, [customNodes, validCustomLinks]);
+  useEffect(() => { saveHiddenBaseIds(hiddenBaseNodeIds); }, [hiddenBaseNodeIds]);
+  useEffect(() => { saveDefaultPositions(defaultPositions); }, [defaultPositions]);
+  useEffect(() => { saveLockedNodeIds(lockedNodeIds); }, [lockedNodeIds]);
   useEffect(() => { savePositions(positions); }, [positions]);
+  useEffect(() => {
+    setLockedNodeIds((prev) => {
+      let changed = false;
+      const next = new Set<string>();
+      for (const id of prev) {
+        if (visibleNodeIds.has(id)) next.add(id);
+        else changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [visibleNodeIds]);
+
+  const makeSnapshot = useCallback((): FlowSnapshot => ({
+    customNodes: customNodes.map((node) => ({ ...node })),
+    customLinks: customLinks.map(([childId, parentId]) => [childId, parentId] as [string, string]),
+    positions: Object.fromEntries(
+      Object.entries(positions).map(([id, pos]) => [id, { x: pos.x, y: pos.y }])
+    ),
+    baseOverrides: Object.fromEntries(
+      Object.entries(baseOverrides).map(([id, override]) => [id, { ...override }])
+    ),
+    hiddenBaseNodeIds: new Set(hiddenBaseNodeIds),
+    lockedNodeIds: new Set(lockedNodeIds)
+  }), [baseOverrides, customLinks, customNodes, hiddenBaseNodeIds, lockedNodeIds, positions]);
+
+  const applySnapshot = useCallback((snapshot: FlowSnapshot) => {
+    const snap = cloneSnapshot(snapshot);
+    setCustomNodes(snap.customNodes);
+    setCustomLinks(snap.customLinks);
+    setPositions(snap.positions);
+    setBaseOverrides(snap.baseOverrides);
+    setHiddenBaseNodeIds(snap.hiddenBaseNodeIds);
+    setLockedNodeIds(snap.lockedNodeIds);
+    setSelectedId(null);
+    setSelectedIds(new Set());
+    setContextMenu(null);
+    setEditorState(null);
+  }, []);
+
+  const pushHistory = useCallback(() => {
+    const snap = makeSnapshot();
+    setHistoryPast((prev) => [...prev.slice(-39), snap]);
+    setHistoryFuture([]);
+  }, [makeSnapshot]);
 
   /* ── Zoom & Pan (infinite canvas) ── */
   const containerRef = useRef<HTMLDivElement>(null);
@@ -490,8 +801,8 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
   // Refs that always hold latest values — eliminates stale closures in callbacks
   const positionsRef = useRef(positions);
   positionsRef.current = positions;
-  const linksRef = useRef(links);
-  linksRef.current = links;
+  const linksRef = useRef(hierarchyLinks);
+  linksRef.current = hierarchyLinks;
   const zoomRef = useRef(zoom);
   zoomRef.current = zoom;
 
@@ -499,7 +810,41 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
   type Tool = "select" | "pan";
   const [tool, setTool] = useState<Tool>("select");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    if (renderedNodeIds.has(selectedId)) return;
+    setSelectedId(null);
+  }, [renderedNodeIds, selectedId]);
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      let changed = false;
+      const next = new Set<string>();
+      for (const id of prev) {
+        if (renderedNodeIds.has(id)) next.add(id);
+        else changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [renderedNodeIds]);
+
+  const emitAction = useCallback((event: FlowMapActionEvent) => {
+    onAction?.(event);
+  }, [onAction]);
+
+  const focusNode = useCallback((nodeId: string) => {
+    const container = containerRef.current;
+    const pos = positionsRef.current[nodeId] ?? autoLayout[nodeId];
+    if (!container || !pos) return;
+    const rect = container.getBoundingClientRect();
+    const currentZoom = zoomRef.current;
+    setSelectedId(nodeId);
+    setSelectedIds(new Set([nodeId]));
+    setPanX(rect.width / 2 - (pos.x + CARD_W / 2) * currentZoom);
+    setPanY(rect.height / 2 - (pos.y + CARD_H / 2) * currentZoom);
+  }, [autoLayout]);
 
   /* ── Canvas panning ── */
   const isPanning = useRef(false);
@@ -511,6 +856,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
 
     // Deselect
     setSelectedId(null);
+    setSelectedIds(new Set());
 
     // Pan with middle button, or in pan tool mode, or with space held
     if (e.button === 1 || tool === "pan" || spaceHeld.current) {
@@ -585,6 +931,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
   const handleNodePointerDown = useCallback((id: string, e: React.PointerEvent) => {
     if (tool !== "select") return;
     if (e.button !== 0) return;
+    if (lockedNodeIds.has(id)) return;
     const target = e.target as HTMLElement;
     if (target.closest("input") || target.closest("button")) return;
     e.stopPropagation();
@@ -592,21 +939,37 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     const pos = positions[id];
     if (!pos) return;
-    setSelectedId(id);
+    if (e.shiftKey) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        if (next.size === 0) setSelectedId(null);
+        else setSelectedId(id);
+        return next;
+      });
+    } else {
+      setSelectedId(id);
+      setSelectedIds(new Set([id]));
+    }
     setDraggingId(id);
     dragRef.current = { id, startX: e.clientX, startY: e.clientY, startLeft: pos.x, startTop: pos.y };
-  }, [tool, positions]);
+  }, [tool, lockedNodeIds, positions]);
 
   const handleNodePointerMove = useCallback((e: React.PointerEvent) => {
     const d = dragRef.current;
     if (!d) return;
     const dx = (e.clientX - d.startX) / zoom;
     const dy = (e.clientY - d.startY) / zoom;
+    const nextX = d.startLeft + dx;
+    const nextY = d.startTop + dy;
+    const x = snapToGrid ? Math.round(nextX / 20) * 20 : nextX;
+    const y = snapToGrid ? Math.round(nextY / 20) * 20 : nextY;
     setPositions(prev => ({
       ...prev,
-      [d.id]: { x: d.startLeft + dx, y: d.startTop + dy }
+      [d.id]: { x, y }
     }));
-  }, [zoom]);
+  }, [snapToGrid, zoom]);
 
   const handleNodePointerUp = useCallback(() => {
     setDraggingId(null);
@@ -659,6 +1022,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
   }, [nodeById]);
 
   const createCustomNode = useCallback((parentId: string): FlowNode | null => {
+    pushHistory();
     // Read latest values from refs to avoid stale closures
     const latestPositions = positionsRef.current;
     const latestLinks = linksRef.current;
@@ -683,6 +1047,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
     setCustomLinks(prev => [...prev, [newId, parentId] as [string, string]]);
     setPositions(prev => ({ ...prev, [newId]: { x: newX, y: newY } }));
     setSelectedId(newId);
+    setSelectedIds(new Set([newId]));
     setNewlyCreatedId(newId);
 
     // Pan camera to center on the new card (synchronous — React batches all together)
@@ -696,8 +1061,15 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
     // Clear the "newly created" highlight after animation
     setTimeout(() => setNewlyCreatedId(null), 1200);
 
+    emitAction({
+      action: "create_node",
+      nodeId: newId,
+      nodeTitle: newNode.title,
+      payload: { parentId }
+    });
+
     return newNode;
-  }, []);
+  }, [emitAction, pushHistory]);
 
   const handleSaveEditor = useCallback(() => {
     if (!editorState) return;
@@ -705,6 +1077,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
     const title = editorTitle.trim();
     const action = editorAction.trim();
     if (!title) return;
+    pushHistory();
 
     if (editorState.isCustom) {
       setCustomNodes((prev) =>
@@ -735,17 +1108,27 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
         });
       }
     }
+    emitAction({
+      action: "edit_node",
+      nodeId: editorState.nodeId,
+      nodeTitle: title,
+      payload: { isCustom: editorState.isCustom }
+    });
     setEditorState(null);
-  }, [baseNodeById, editorAction, editorScenarioLabel, editorState, editorTitle]);
+  }, [baseNodeById, editorAction, editorScenarioLabel, editorState, editorTitle, emitAction, pushHistory]);
 
   /* ── Actions ── */
   const handleReset = () => {
+    pushHistory();
     // Clear ALL custom data and reset to base layout
     setCustomNodes([]);
     setCustomLinks([]);
     setBaseOverrides({});
+    setHiddenBaseNodeIds(new Set());
+    setLockedNodeIds(new Set());
     setNewlyCreatedId(null);
     setSelectedId(null);
+    setSelectedIds(new Set());
     setContextMenu(null);
     setEditorState(null);
     try {
@@ -753,27 +1136,311 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(ZOOM_STORAGE_KEY);
       localStorage.removeItem(OVERRIDES_STORAGE_KEY);
+      localStorage.removeItem(HIDDEN_BASE_STORAGE_KEY);
+      localStorage.removeItem(LOCKED_NODE_STORAGE_KEY);
     } catch { /* */ }
     // Recompute fresh layout from base nodes only
-    const freshLayout = computeTreeLayout(baseNodes, baseLinks);
+    const freshLayout = applyPresetToLayout(defaultPositions, computeTreeLayout(baseNodes, baseLinks));
     setPositions(freshLayout);
+    emitAction({
+      action: "reset_map",
+      payload: {
+        hiddenBaseCount: hiddenBaseNodeIds.size,
+        customCount: customNodes.length
+      }
+    });
     // Fit view after reset
     requestAnimationFrame(() => fitToView());
   };
 
-  const handleDeleteNode = useCallback((nodeId: string) => {
-    // Use ref to get latest links
+  const handleSaveCurrentAsDefault = useCallback(() => {
+    const snapshot: Record<string, Position> = {};
+    for (const [id, pos] of Object.entries(positions)) {
+      snapshot[id] = { x: pos.x, y: pos.y };
+    }
+    setDefaultPositions(snapshot);
+    emitAction({
+      action: "save_default_layout",
+      payload: { count: Object.keys(snapshot).length }
+    });
+  }, [emitAction, positions]);
+
+  const handleUndo = useCallback(() => {
+    const current = makeSnapshot();
+    let prevSnapshot: FlowSnapshot | null = null;
+    setHistoryPast((prev) => {
+      if (prev.length === 0) return prev;
+      prevSnapshot = prev[prev.length - 1];
+      return prev.slice(0, -1);
+    });
+    if (!prevSnapshot) return;
+    setHistoryFuture((prev) => [current, ...prev].slice(0, 40));
+    applySnapshot(prevSnapshot);
+    emitAction({ action: "undo" });
+  }, [applySnapshot, emitAction, makeSnapshot]);
+
+  const handleRedo = useCallback(() => {
+    const current = makeSnapshot();
+    let nextSnapshot: FlowSnapshot | null = null;
+    setHistoryFuture((prev) => {
+      if (prev.length === 0) return prev;
+      nextSnapshot = prev[0];
+      return prev.slice(1);
+    });
+    if (!nextSnapshot) return;
+    setHistoryPast((prev) => [...prev.slice(-39), current]);
+    applySnapshot(nextSnapshot);
+    emitAction({ action: "redo" });
+  }, [applySnapshot, emitAction, makeSnapshot]);
+
+  const handleDuplicateNode = useCallback((nodeId: string) => {
+    const source = nodeById.get(nodeId);
+    if (!source || nodeId === "root") return;
+    pushHistory();
+    const parentId = linksRef.current.find(([childId]) => childId === nodeId)?.[1] ?? "root";
+    const newId = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const sourcePos = positionsRef.current[nodeId] ?? autoLayout[nodeId];
+    const duplicate: FlowNode = {
+      id: newId,
+      scenarioLabel: source.scenarioLabel,
+      title: `${source.title} (نسخة)`,
+      action: source.action,
+      variant: source.variant === "root" ? "sub" : source.variant,
+      accent: source.accent
+    };
+    setCustomNodes((prev) => [...prev, duplicate]);
+    setCustomLinks((prev) => [...prev, [newId, parentId] as [string, string]]);
+    if (sourcePos) {
+      setPositions((prev) => ({ ...prev, [newId]: { x: sourcePos.x + 26, y: sourcePos.y + 26 } }));
+    }
+    setSelectedId(newId);
+    setSelectedIds(new Set([newId]));
+    setContextMenu(null);
+    setNewlyCreatedId(newId);
+    setTimeout(() => setNewlyCreatedId(null), 1200);
+    emitAction({
+      action: "duplicate_node",
+      nodeId: newId,
+      nodeTitle: duplicate.title,
+      payload: { sourceNodeId: nodeId, parentId }
+    });
+  }, [autoLayout, emitAction, nodeById, pushHistory]);
+
+  const handleExportJson = useCallback(() => {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data: {
+        customNodes,
+        customLinks,
+        positions,
+        baseOverrides,
+        hiddenBaseNodeIds: Array.from(hiddenBaseNodeIds),
+        lockedNodeIds: Array.from(lockedNodeIds),
+        defaultPositions
+      }
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `flow-map-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    emitAction({
+      action: "export_json",
+      payload: { customCount: customNodes.length, hiddenBaseCount: hiddenBaseNodeIds.size }
+    });
+  }, [baseOverrides, customLinks, customNodes, defaultPositions, emitAction, hiddenBaseNodeIds, lockedNodeIds, positions]);
+
+  const handleImportJson = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const raw = JSON.parse(String(reader.result ?? "{}")) as {
+          data?: {
+            customNodes?: unknown;
+            customLinks?: unknown;
+            positions?: unknown;
+            baseOverrides?: unknown;
+            hiddenBaseNodeIds?: unknown;
+            lockedNodeIds?: unknown;
+            defaultPositions?: unknown;
+          };
+        };
+        const data = raw.data ?? {};
+        const importedNodes = Array.isArray(data.customNodes) ? data.customNodes : [];
+        const nextNodes: FlowNode[] = [];
+        for (const item of importedNodes) {
+          if (!item || typeof item !== "object") continue;
+          const node = item as Partial<FlowNode>;
+          const id = typeof node.id === "string" ? node.id.trim() : "";
+          if (!id || !id.startsWith("custom-")) continue;
+          nextNodes.push({
+            id,
+            scenarioLabel: typeof node.scenarioLabel === "string" ? node.scenarioLabel : "",
+            title: typeof node.title === "string" ? node.title : "كارت",
+            action: typeof node.action === "string" ? node.action : "",
+            variant: isValidVariant(node.variant) ? node.variant : "sub",
+            accent: isValidAccent(node.accent) ? node.accent : undefined,
+            count: typeof node.count === "number" ? node.count : undefined
+          });
+        }
+
+        const nodeIds = new Set(nextNodes.map((node) => node.id));
+        const importedLinks = Array.isArray(data.customLinks) ? data.customLinks : [];
+        const nextLinks: Array<[string, string]> = [];
+        for (const item of importedLinks) {
+          if (!Array.isArray(item) || item.length < 2) continue;
+          const childId = typeof item[0] === "string" ? item[0] : "";
+          const parentId = typeof item[1] === "string" ? item[1] : "";
+          if (!nodeIds.has(childId) || !parentId) continue;
+          nextLinks.push([childId, parentId]);
+        }
+
+        const importedPos = (data.positions && typeof data.positions === "object") ? data.positions as Record<string, unknown> : {};
+        const nextPositions: Record<string, Position> = {};
+        for (const [id, value] of Object.entries(importedPos)) {
+          if (!isPosition(value)) continue;
+          nextPositions[id] = { x: value.x, y: value.y };
+        }
+
+        const importedOverrides = (data.baseOverrides && typeof data.baseOverrides === "object")
+          ? data.baseOverrides as Record<string, unknown>
+          : {};
+        const nextOverrides: Record<string, FlowNodeOverride> = {};
+        for (const [id, value] of Object.entries(importedOverrides)) {
+          if (!value || typeof value !== "object") continue;
+          const candidate = value as Partial<FlowNodeOverride>;
+          const override: FlowNodeOverride = {};
+          if (typeof candidate.scenarioLabel === "string") override.scenarioLabel = candidate.scenarioLabel;
+          if (typeof candidate.title === "string") override.title = candidate.title;
+          if (typeof candidate.action === "string") override.action = candidate.action;
+          if (Object.keys(override).length > 0) nextOverrides[id] = override;
+        }
+
+        const importedHidden = Array.isArray(data.hiddenBaseNodeIds) ? data.hiddenBaseNodeIds : [];
+        const nextHidden = new Set<string>();
+        for (const item of importedHidden) {
+          if (typeof item !== "string") continue;
+          if (!baseNodeById.has(item)) continue;
+          if (item === "root") continue;
+          nextHidden.add(item);
+        }
+
+        const importedLocked = Array.isArray(data.lockedNodeIds) ? data.lockedNodeIds : [];
+        const nextLocked = new Set<string>();
+        for (const item of importedLocked) {
+          if (typeof item !== "string") continue;
+          if (item === "root") continue;
+          nextLocked.add(item);
+        }
+
+        const importedDefaults = (data.defaultPositions && typeof data.defaultPositions === "object")
+          ? data.defaultPositions as Record<string, unknown>
+          : null;
+        const nextDefaults: Record<string, Position> | null = importedDefaults
+          ? Object.fromEntries(
+            Object.entries(importedDefaults)
+              .filter(([, value]) => isPosition(value))
+              .map(([id, value]) => [id, { x: (value as Position).x, y: (value as Position).y }])
+          )
+          : null;
+
+        pushHistory();
+        setCustomNodes(nextNodes);
+        setCustomLinks(nextLinks);
+        setPositions((prev) => ({ ...prev, ...nextPositions }));
+        setBaseOverrides(nextOverrides);
+        setHiddenBaseNodeIds(nextHidden);
+        setLockedNodeIds(nextLocked);
+        setDefaultPositions(nextDefaults);
+        setSelectedId(null);
+        setSelectedIds(new Set());
+        emitAction({
+          action: "import_json",
+          payload: {
+            customCount: nextNodes.length,
+            linksCount: nextLinks.length,
+            hiddenBaseCount: nextHidden.size
+          }
+        });
+      } catch {
+        // ignore invalid file
+      }
+    };
+    reader.readAsText(file);
+  }, [baseNodeById, emitAction, pushHistory]);
+
+  const handleReparentCustomNode = useCallback((nodeId: string, parentId: string) => {
+    if (!nodeId.startsWith("custom-")) return;
+    if (nodeId === parentId) return;
+    const allLinks = linksRef.current;
+    const descendants = new Set<string>();
+    const walk = (id: string) => {
+      descendants.add(id);
+      for (const [childId, pid] of allLinks) {
+        if (pid === id && !descendants.has(childId)) walk(childId);
+      }
+    };
+    walk(nodeId);
+    if (descendants.has(parentId)) return;
+    pushHistory();
+    setCustomLinks((prev) =>
+      prev.map(([childId, pid]) => (childId === nodeId ? [childId, parentId] as [string, string] : [childId, pid]))
+    );
+    emitAction({
+      action: "reparent_node",
+      nodeId,
+      nodeTitle: nodeById.get(nodeId)?.title ?? null,
+      payload: { parentId }
+    });
+    setReparentState(null);
+    setContextMenu(null);
+  }, [emitAction, nodeById, pushHistory]);
+
+  const handleDeleteNodes = useCallback((nodeIds: Iterable<string>) => {
+    const initialTargets = Array.from(new Set(nodeIds))
+      .filter((nodeId) => nodeId !== "root" && !lockedNodeIds.has(nodeId) && nodeById.has(nodeId));
+    if (initialTargets.length === 0) return;
+
     const allLinks = linksRef.current;
     const toDelete = new Set<string>();
-    function collect(id: string) {
+    const collect = (id: string) => {
+      if (lockedNodeIds.has(id)) return;
       toDelete.add(id);
       for (const [childId, parentId] of allLinks) {
         if (parentId === id && !toDelete.has(childId)) collect(childId);
       }
-    }
-    collect(nodeId);
+    };
+    initialTargets.forEach((id) => collect(id));
+    if (toDelete.size === 0) return;
+
+    pushHistory();
+    setHiddenBaseNodeIds((prev) => {
+      let changed = false;
+      const next = new Set(prev);
+      for (const id of toDelete) {
+        if (!baseNodeById.has(id) || next.has(id)) continue;
+        next.add(id);
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+    setBaseOverrides((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const id of toDelete) {
+        if (!(id in next)) continue;
+        delete next[id];
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
     setCustomNodes(p => p.filter(n => !toDelete.has(n.id)));
-    setCustomLinks(p => p.filter(([c]) => !toDelete.has(c)));
+    setCustomLinks(p => p.filter(([childId, parentId]) => !toDelete.has(childId) && !toDelete.has(parentId)));
     setPositions((prev) => {
       let changed = false;
       const next: Record<string, Position> = {};
@@ -788,9 +1455,159 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
     });
     setContextMenu(null);
     setSelectedId(null);
-  }, []);
+    setSelectedIds(new Set());
+    setLockedNodeIds((prev) => {
+      if (prev.size === 0) return prev;
+      let changed = false;
+      const next = new Set<string>();
+      for (const id of prev) {
+        if (toDelete.has(id)) {
+          changed = true;
+          continue;
+        }
+        next.add(id);
+      }
+      return changed ? next : prev;
+    });
+    emitAction({
+      action: "delete_nodes",
+      payload: { count: toDelete.size }
+    });
+  }, [baseNodeById, emitAction, lockedNodeIds, nodeById, pushHistory]);
+
+  const handleDeleteNode = useCallback((nodeId: string) => {
+    handleDeleteNodes([nodeId]);
+  }, [handleDeleteNodes]);
+
+  const handleRestoreHiddenBase = useCallback(() => {
+    if (hiddenBaseNodeIds.size === 0) return;
+    pushHistory();
+    setHiddenBaseNodeIds(new Set());
+    emitAction({
+      action: "restore_base_nodes",
+      payload: { count: hiddenBaseNodeIds.size }
+    });
+  }, [emitAction, hiddenBaseNodeIds.size, pushHistory]);
+
+  const toggleLockByIds = useCallback((nodeIds: Iterable<string>) => {
+    const targets = Array.from(new Set(nodeIds))
+      .filter((id) => id !== "root" && nodeById.has(id));
+    if (targets.length === 0) return;
+    const allLocked = targets.every((id) => lockedNodeIds.has(id));
+    pushHistory();
+    setLockedNodeIds((prev) => {
+      const next = new Set(prev);
+      for (const id of targets) {
+        if (allLocked) next.delete(id);
+        else next.add(id);
+      }
+      return next;
+    });
+    emitAction({
+      action: allLocked ? "unlock_nodes" : "lock_nodes",
+      payload: { count: targets.length }
+    });
+  }, [emitAction, lockedNodeIds, nodeById, pushHistory]);
+
+  const toggleLockSelection = useCallback(() => {
+    if (selectedIds.size > 0) {
+      toggleLockByIds(selectedIds);
+      return;
+    }
+    if (selectedId) toggleLockByIds([selectedId]);
+  }, [selectedId, selectedIds, toggleLockByIds]);
+
+  const applySelectionPositions = useCallback((transform: (current: Record<string, Position>) => Record<string, Position>) => {
+    if (selectedIds.size < 2) return;
+    pushHistory();
+    setPositions((prev) => {
+      const selectedPos: Record<string, Position> = {};
+      for (const id of selectedIds) {
+        if (lockedNodeIds.has(id)) continue;
+        const pos = prev[id] ?? autoLayout[id];
+        if (!pos) continue;
+        selectedPos[id] = pos;
+      }
+      if (Object.keys(selectedPos).length < 2) return prev;
+      const patched = transform(selectedPos);
+      return { ...prev, ...patched };
+    });
+  }, [autoLayout, lockedNodeIds, pushHistory, selectedIds]);
+
+  const alignSelectionLeft = useCallback(() => {
+    applySelectionPositions((selectedPos) => {
+      const minX = Math.min(...Object.values(selectedPos).map((p) => p.x));
+      const next: Record<string, Position> = {};
+      for (const [id, pos] of Object.entries(selectedPos)) next[id] = { x: minX, y: pos.y };
+      return next;
+    });
+    emitAction({ action: "align_left", payload: { count: selectedIds.size } });
+  }, [applySelectionPositions, emitAction, selectedIds.size]);
+
+  const alignSelectionTop = useCallback(() => {
+    applySelectionPositions((selectedPos) => {
+      const minY = Math.min(...Object.values(selectedPos).map((p) => p.y));
+      const next: Record<string, Position> = {};
+      for (const [id, pos] of Object.entries(selectedPos)) next[id] = { x: pos.x, y: minY };
+      return next;
+    });
+    emitAction({ action: "align_top", payload: { count: selectedIds.size } });
+  }, [applySelectionPositions, emitAction, selectedIds.size]);
+
+  const alignSelectionRight = useCallback(() => {
+    applySelectionPositions((selectedPos) => {
+      const maxX = Math.max(...Object.values(selectedPos).map((p) => p.x));
+      const next: Record<string, Position> = {};
+      for (const [id, pos] of Object.entries(selectedPos)) next[id] = { x: maxX, y: pos.y };
+      return next;
+    });
+    emitAction({ action: "align_right", payload: { count: selectedIds.size } });
+  }, [applySelectionPositions, emitAction, selectedIds.size]);
+
+  const alignSelectionBottom = useCallback(() => {
+    applySelectionPositions((selectedPos) => {
+      const maxY = Math.max(...Object.values(selectedPos).map((p) => p.y));
+      const next: Record<string, Position> = {};
+      for (const [id, pos] of Object.entries(selectedPos)) next[id] = { x: pos.x, y: maxY };
+      return next;
+    });
+    emitAction({ action: "align_bottom", payload: { count: selectedIds.size } });
+  }, [applySelectionPositions, emitAction, selectedIds.size]);
+
+  const distributeSelectionHorizontally = useCallback(() => {
+    applySelectionPositions((selectedPos) => {
+      const entries = Object.entries(selectedPos).sort((a, b) => a[1].x - b[1].x);
+      if (entries.length < 3) return selectedPos;
+      const first = entries[0][1].x;
+      const last = entries[entries.length - 1][1].x;
+      const step = (last - first) / (entries.length - 1);
+      const next: Record<string, Position> = {};
+      entries.forEach(([id, pos], index) => {
+        next[id] = { x: Math.round(first + step * index), y: pos.y };
+      });
+      return next;
+    });
+    emitAction({ action: "distribute_horizontal", payload: { count: selectedIds.size } });
+  }, [applySelectionPositions, emitAction, selectedIds.size]);
+
+  const distributeSelectionVertically = useCallback(() => {
+    applySelectionPositions((selectedPos) => {
+      const entries = Object.entries(selectedPos).sort((a, b) => a[1].y - b[1].y);
+      if (entries.length < 3) return selectedPos;
+      const first = entries[0][1].y;
+      const last = entries[entries.length - 1][1].y;
+      const step = (last - first) / (entries.length - 1);
+      const next: Record<string, Position> = {};
+      entries.forEach(([id, pos], index) => {
+        next[id] = { x: pos.x, y: Math.round(first + step * index) };
+      });
+      return next;
+    });
+    emitAction({ action: "distribute_vertical", payload: { count: selectedIds.size } });
+  }, [applySelectionPositions, emitAction, selectedIds.size]);
 
   const handleResetBaseText = useCallback((nodeId: string) => {
+    pushHistory();
     setBaseOverrides((prev) => {
       if (!prev[nodeId]) return prev;
       const next = { ...prev };
@@ -798,7 +1615,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
       return next;
     });
     setContextMenu(null);
-  }, []);
+  }, [pushHistory]);
 
   const fitToView = useCallback(() => {
     const container = containerRef.current;
@@ -836,7 +1653,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
     const rect = container.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
 
-    const entries = nodes
+    const entries = renderedNodes
       .map((node) => ({ id: node.id, pos: positions[node.id] ?? autoLayout[node.id] }))
       .filter((entry): entry is { id: string; pos: Position } => Boolean(entry.pos));
     if (!entries.length) return;
@@ -854,7 +1671,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
     if (now - lastRecoverAtRef.current < 800) return;
     lastRecoverAtRef.current = now;
     fitToView();
-  }, [autoLayout, fitToView, nodes, panX, panY, positions, zoom]);
+  }, [autoLayout, fitToView, panX, panY, positions, renderedNodes, zoom]);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => recoverViewportIfNeeded());
@@ -885,18 +1702,37 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
   /* ── Delete key ── */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.key === "Delete" || e.key === "Backspace") && selectedId?.startsWith("custom-") && !(e.target as HTMLElement).closest("input,textarea")) {
-        handleDeleteNode(selectedId);
+      if (e.key === "?" && !(e.target as HTMLElement).closest("input,textarea")) {
+        e.preventDefault();
+        setShortcutsOpen((prev) => !prev);
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && (e.key.toLowerCase() === "y" || (e.shiftKey && e.key.toLowerCase() === "z"))) {
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
+      if (
+        (e.key === "Delete" || e.key === "Backspace")
+        && selectedIds.size > 0
+        && !(e.target as HTMLElement).closest("input,textarea")
+      ) {
+        handleDeleteNodes(selectedIds);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [handleDeleteNode, selectedId]);
+  }, [handleDeleteNodes, handleRedo, handleUndo, selectedIds]);
 
   /* ── SVG paths ── */
   const svgPaths = useMemo(() => {
     const result: Array<{ d: string; color: string }> = [];
-    for (const [childId, parentId] of links) {
+    for (const [childId, parentId] of renderedLinks) {
       const from = positions[parentId] ?? autoLayout[parentId];
       const to = positions[childId] ?? autoLayout[childId];
       if (!from || !to) continue;
@@ -912,7 +1748,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
       result.push({ d: connectorPath(x1, y1, x2, y2), color: style.stripe });
     }
     return result;
-  }, [links, positions, autoLayout, nodeById]);
+  }, [renderedLinks, positions, autoLayout, nodeById]);
 
   /* ── Minimap ── */
   const minimap = useMemo(() => {
@@ -959,9 +1795,32 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
   const cursorStyle = tool === "pan" || spaceHeld.current || isPanning.current
     ? "cursor-grab active:cursor-grabbing"
     : "cursor-default";
+  const searchMatches = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return nodes.filter((node) => {
+      return (
+        node.title.toLowerCase().includes(q)
+        || node.scenarioLabel.toLowerCase().includes(q)
+        || node.action.toLowerCase().includes(q)
+      );
+    });
+  }, [nodes, searchQuery]);
   const contextNode = contextMenu ? nodeById.get(contextMenu.nodeId) ?? null : null;
   const contextIsCustom = Boolean(contextNode?.id.startsWith("custom-"));
+  const contextCanDelete = Boolean(contextNode && contextNode.id !== "root");
   const contextHasBaseOverride = Boolean(contextNode && !contextIsCustom && baseOverrides[contextNode.id]);
+  const selectedCount = selectedIds.size;
+  const canAlignSelection = selectedCount >= 2;
+  const canDistributeSelection = selectedCount >= 3;
+  const selectedAllLocked = selectedCount > 0 && Array.from(selectedIds).every((id) => lockedNodeIds.has(id));
+  const handleDecisionFilterToggle = useCallback((target: "success" | "failure") => {
+    setDecisionFilter((prev) => {
+      const next = prev === target ? "all" : target;
+      emitAction({ action: `filter_${next}` });
+      return next;
+    });
+  }, [emitAction]);
 
   return (
     <div className="flow-miro-root" style={{ position: "relative", width: "100%", height: "550px" }}>
@@ -1045,14 +1904,17 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
           </svg>
 
           {/* Cards */}
-          {nodes.map(node => {
+          {renderedNodes.map(node => {
             const pos = positions[node.id] ?? autoLayout[node.id];
             if (!pos) return null;
             const s = getStyle(node);
+            const metric = nodeMetrics?.[node.id] ?? null;
+            const outcome = getDecisionOutcome(node);
             const isDragging = draggingId === node.id;
-            const isSelected = selectedId === node.id;
+            const isSelected = selectedIds.has(node.id);
             const isHovered = hoveredId === node.id;
             const isNewlyCreated = newlyCreatedId === node.id;
+            const isLocked = lockedNodeIds.has(node.id);
 
             return (
               <div
@@ -1079,7 +1941,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
                         : `0 2px 8px ${s.glow}`,
                   transform: isDragging ? "scale(1.04)" : isNewlyCreated ? "scale(1.08)" : isHovered ? "scale(1.01)" : "scale(1)",
                   transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
-                  cursor: tool === "select" ? (isDragging ? "grabbing" : "grab") : undefined,
+                  cursor: tool === "select" ? (isLocked ? "not-allowed" : isDragging ? "grabbing" : "grab") : undefined,
                   zIndex: isDragging ? 100 : isSelected ? 50 : 10,
                   touchAction: "none",
                   userSelect: isDragging ? "none" : undefined,
@@ -1095,6 +1957,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
                 onContextMenu={(e) => {
                   e.preventDefault();
                   setSelectedId(node.id);
+                  setSelectedIds(new Set([node.id]));
                   setContextMenu({ nodeId: node.id, x: e.clientX, y: e.clientY });
                 }}
               >
@@ -1114,6 +1977,14 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
                     textTransform: "uppercase"
                   }}>
                     {node.scenarioLabel}
+                  </div>
+                )}
+                {isLocked && (
+                  <div style={{ marginBottom: 4, fontSize: 10, fontWeight: 700, color: "#64748b" }}>مقفول</div>
+                )}
+                {outcome !== "neutral" && (
+                  <div style={{ marginBottom: 5, fontSize: 10, fontWeight: 700, color: outcome === "success" ? "#0f766e" : "#be123c" }}>
+                    {outcome === "success" ? "نجاح" : "فشل"}
                   </div>
                 )}
 
@@ -1138,6 +2009,14 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
                       background: s.countColor, opacity: 0.6
                     }} />
                     {node.count} زائر
+                  </div>
+                )}
+                {metric?.conversionRate != null && (
+                  <div style={{ color: "#64748b", fontSize: 10, marginTop: 4 }}>
+                    تحويل من الأب: {metric.conversionRate}%
+                    {metric.dropOffCount != null && metric.dropOffCount > 0
+                      ? ` • تسرب ${metric.dropOffCount}`
+                      : ""}
                   </div>
                 )}
 
@@ -1173,6 +2052,74 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
           zIndex: 30
         }}
       >
+        <ToolbarBtn onClick={handleUndo} disabled={!canUndo} title="تراجع">
+          <Undo2 size={16} />
+        </ToolbarBtn>
+        <ToolbarBtn onClick={handleRedo} disabled={!canRedo} title="إعادة">
+          <Redo2 size={16} />
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={() => {
+            if (!selectedId) return;
+            handleDuplicateNode(selectedId);
+          }}
+          disabled={!selectedId || selectedId === "root"}
+          title="نسخ الكارت المحدد"
+        >
+          <Copy size={16} />
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={toggleLockSelection}
+          disabled={selectedCount === 0}
+          title={selectedAllLocked ? "فك قفل المحدد" : "قفل المحدد"}
+        >
+          {selectedAllLocked ? <Unlock size={16} /> : <Lock size={16} />}
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={alignSelectionLeft}
+          disabled={!canAlignSelection}
+          title="محاذاة يسار للمحدد"
+        >
+          <span style={{ fontSize: 12, fontWeight: 700 }}>L</span>
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={alignSelectionTop}
+          disabled={!canAlignSelection}
+          title="محاذاة أعلى للمحدد"
+        >
+          <span style={{ fontSize: 12, fontWeight: 700 }}>T</span>
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={alignSelectionRight}
+          disabled={!canAlignSelection}
+          title="محاذاة يمين للمحدد"
+        >
+          <span style={{ fontSize: 12, fontWeight: 700 }}>R</span>
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={alignSelectionBottom}
+          disabled={!canAlignSelection}
+          title="محاذاة أسفل للمحدد"
+        >
+          <span style={{ fontSize: 12, fontWeight: 700 }}>B</span>
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={distributeSelectionHorizontally}
+          disabled={!canDistributeSelection}
+          title="توزيع أفقي للمحدد"
+        >
+          <span style={{ fontSize: 11, fontWeight: 700 }}>≡</span>
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={distributeSelectionVertically}
+          disabled={!canDistributeSelection}
+          title="توزيع رأسي للمحدد"
+        >
+          <span style={{ fontSize: 11, fontWeight: 700 }}>⋮</span>
+        </ToolbarBtn>
+
+        <div style={{ width: 1, height: 24, background: "#e2e8f0", margin: "0 4px" }} />
+
         {/* Tool: Select */}
         <ToolbarBtn
           active={tool === "select"}
@@ -1227,10 +2174,72 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
 
         {/* Reset layout */}
         {showReset && (
-          <ToolbarBtn onClick={handleReset} title="إعادة ترتيب تلقائي">
+          <ToolbarBtn onClick={handleReset} title="إعادة ضبط كاملة">
             <RotateCcw size={16} />
           </ToolbarBtn>
         )}
+        <ToolbarBtn
+          onClick={handleSaveCurrentAsDefault}
+          active={Boolean(defaultPositions)}
+          title="تثبيت الترتيب الحالي كافتراضي"
+        >
+          <Save size={16} />
+        </ToolbarBtn>
+        {hiddenBaseNodeIds.size > 0 && (
+          <ToolbarBtn
+            onClick={handleRestoreHiddenBase}
+            title="استرجاع الكروت الأساسية"
+          >
+            <RotateCcw size={16} />
+          </ToolbarBtn>
+        )}
+
+        <div style={{ width: 1, height: 24, background: "#e2e8f0", margin: "0 4px" }} />
+
+        <ToolbarBtn onClick={handleExportJson} title="تصدير JSON">
+          <Download size={16} />
+        </ToolbarBtn>
+        <ToolbarBtn
+          onClick={() => importInputRef.current?.click()}
+          title="استيراد JSON"
+        >
+          <Upload size={16} />
+        </ToolbarBtn>
+        <ToolbarBtn
+          active={searchOpen}
+          onClick={() => setSearchOpen((prev) => !prev)}
+          title="بحث عن كارت"
+        >
+          <Search size={16} />
+        </ToolbarBtn>
+        <ToolbarBtn
+          active={shortcutsOpen}
+          onClick={() => setShortcutsOpen((prev) => !prev)}
+          title="لوحة الاختصارات"
+        >
+          <span style={{ fontSize: 12, fontWeight: 700 }}>?</span>
+        </ToolbarBtn>
+        <ToolbarBtn
+          active={decisionFilter === "success"}
+          onClick={() => handleDecisionFilterToggle("success")}
+          title="إظهار مسارات النجاح"
+        >
+          <CheckCircle2 size={16} />
+        </ToolbarBtn>
+        <ToolbarBtn
+          active={decisionFilter === "failure"}
+          onClick={() => handleDecisionFilterToggle("failure")}
+          title="إظهار مسارات الفشل"
+        >
+          <XCircle size={16} />
+        </ToolbarBtn>
+        <ToolbarBtn
+          active={snapToGrid}
+          onClick={() => setSnapToGrid((prev) => !prev)}
+          title="تثبيت السحب على شبكة"
+        >
+          <Grid3X3 size={16} />
+        </ToolbarBtn>
 
         {/* Add card */}
         {allowAddCards && (
@@ -1295,6 +2304,99 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
           </div>
         )}
       </div>
+      {searchOpen && (
+        <div
+          data-toolbar
+          style={{
+            position: "absolute",
+            bottom: 66,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 31,
+            background: "white",
+            borderRadius: 10,
+            border: "1px solid #e2e8f0",
+            padding: "8px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+            minWidth: 280,
+            direction: "rtl"
+          }}
+        >
+          <input
+            type="text"
+            placeholder="ابحث بالعنوان أو السيناريو أو الإجراء"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter") return;
+              if (searchMatches.length === 0) return;
+              focusNode(searchMatches[0].id);
+            }}
+            style={{
+              width: "100%",
+              border: "1px solid #e2e8f0",
+              borderRadius: 8,
+              padding: "8px 10px",
+              fontSize: 12,
+              outline: "none",
+              background: "#f8fafc"
+            }}
+          />
+          <div style={{ marginTop: 6, fontSize: 11, color: "#64748b", display: "flex", justifyContent: "space-between" }}>
+            <span>{searchMatches.length} نتيجة</span>
+            {searchMatches[0] && (
+              <button
+                type="button"
+                onClick={() => focusNode(searchMatches[0].id)}
+                style={{ border: "none", background: "transparent", color: "#0f766e", cursor: "pointer", fontWeight: 600 }}
+              >
+                تركيز أول نتيجة
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+      {shortcutsOpen && (
+        <div
+          data-toolbar
+          style={{
+            position: "absolute",
+            bottom: 66,
+            left: 16,
+            zIndex: 31,
+            background: "white",
+            borderRadius: 10,
+            border: "1px solid #e2e8f0",
+            padding: "10px 12px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+            minWidth: 260,
+            direction: "rtl"
+          }}
+        >
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#1e293b", marginBottom: 6 }}>
+            اختصارات وأدوات الخريطة
+          </div>
+          <div style={{ fontSize: 11, color: "#475569", display: "grid", gap: 4, lineHeight: 1.5 }}>
+            <div>Shift+Click: تحديد متعدد</div>
+            <div>Delete / Backspace: حذف المحدد</div>
+            <div>Ctrl/Cmd+Z: تراجع</div>
+            <div>Ctrl/Cmd+Y أو Shift+Ctrl/Cmd+Z: إعادة</div>
+            <div>Space + سحب: تحريك الكانفس</div>
+            <div>?: فتح/إغلاق لوحة الاختصارات</div>
+          </div>
+        </div>
+      )}
+      <input
+        ref={importInputRef}
+        type="file"
+        accept="application/json"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleImportJson(file);
+          e.currentTarget.value = "";
+        }}
+        style={{ display: "none" }}
+      />
 
       {/* ═══ Minimap ═══ */}
       {minimap && (
@@ -1319,7 +2421,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
                 width={n.w} height={n.h}
                 rx={2}
                 fill={n.color}
-                opacity={selectedId === n.id ? 1 : 0.5}
+                opacity={selectedIds.has(n.id) ? 1 : 0.5}
               />
             ))}
             {viewportRect && (
@@ -1387,7 +2489,72 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
             </button>
           )}
 
+          {contextNode && contextNode.id !== "root" && (
+            <button
+              type="button"
+              data-cm-duplicate
+              onClick={() => handleDuplicateNode(contextNode.id)}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                width: "100%", padding: "8px 14px",
+                fontSize: 13, color: "#334155",
+                border: "none", background: "transparent", cursor: "pointer"
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+            >
+              <Copy size={14} />
+              عمل نسخة
+            </button>
+          )}
+          {contextNode && contextNode.id !== "root" && (
+            <button
+              type="button"
+              data-cm-lock
+              onClick={() => {
+                setSelectedId(contextNode.id);
+                setSelectedIds(new Set([contextNode.id]));
+                toggleLockByIds([contextNode.id]);
+                setContextMenu(null);
+              }}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                width: "100%", padding: "8px 14px",
+                fontSize: 13, color: "#475569",
+                border: "none", background: "transparent", cursor: "pointer"
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+            >
+              {lockedNodeIds.has(contextNode.id) ? <Unlock size={14} /> : <Lock size={14} />}
+              {lockedNodeIds.has(contextNode.id) ? "فك القفل" : "قفل الكارت"}
+            </button>
+          )}
+
           {contextIsCustom && (
+            <button
+              type="button"
+              data-cm-reparent
+              onClick={() => {
+                const currentParentId = links.find(([childId]) => childId === contextNode.id)?.[1] ?? "root";
+                setReparentState({ nodeId: contextNode.id, parentId: currentParentId });
+                setContextMenu(null);
+              }}
+              style={{
+                display: "flex", alignItems: "center", gap: 8,
+                width: "100%", padding: "8px 14px",
+                fontSize: 13, color: "#0f766e",
+                border: "none", background: "transparent", cursor: "pointer"
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#f0fdfa")}
+              onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+            >
+              <ArrowRightLeft size={14} />
+              نقل تحت كارت آخر
+            </button>
+          )}
+
+          {contextCanDelete && (
             <button
               type="button"
               data-cm-delete
@@ -1405,6 +2572,81 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
             حذف الكارت
             </button>
           )}
+        </div>
+      )}
+
+      {/* ═══ Re-parent modal ═══ */}
+      {reparentState && (
+        <div
+          data-modal
+          style={{
+            position: "fixed", inset: 0, zIndex: 50,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(0,0,0,0.2)", backdropFilter: "blur(4px)"
+          }}
+          onClick={() => setReparentState(null)}
+        >
+          <div
+            style={{
+              width: 360, background: "white",
+              borderRadius: 16, padding: 24,
+              boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+              direction: "rtl"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1e293b", marginBottom: 12 }}>
+              نقل الكارت تحت أب جديد
+            </h3>
+            <select
+              value={reparentState.parentId}
+              onChange={(e) => setReparentState((prev) => (prev ? { ...prev, parentId: e.target.value } : prev))}
+              style={{
+                width: "100%",
+                border: "1.5px solid #e2e8f0",
+                borderRadius: 10,
+                padding: "10px 12px",
+                marginBottom: 14,
+                fontSize: 14,
+                background: "#f8fafc",
+                outline: "none"
+              }}
+            >
+              {nodes
+                .filter((node) => node.id !== reparentState.nodeId)
+                .map((node) => (
+                  <option key={node.id} value={node.id}>
+                    {node.title}
+                  </option>
+                ))}
+            </select>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => handleReparentCustomNode(reparentState.nodeId, reparentState.parentId)}
+                style={{
+                  padding: "8px 20px", borderRadius: 10,
+                  border: "none", background: "#0f766e",
+                  color: "white", fontSize: 13, fontWeight: 600,
+                  cursor: "pointer"
+                }}
+              >
+                حفظ
+              </button>
+              <button
+                type="button"
+                onClick={() => setReparentState(null)}
+                style={{
+                  padding: "8px 20px", borderRadius: 10,
+                  border: "1.5px solid #e2e8f0", background: "white",
+                  color: "#475569", fontSize: 13, fontWeight: 600,
+                  cursor: "pointer"
+                }}
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1513,6 +2755,21 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
       >
         <kbd style={kbdStyle}>Scroll = تكبير/تصغير</kbd>
         <kbd style={kbdStyle}>Space + سحب = تحريك</kbd>
+        <kbd style={kbdStyle}>Ctrl/Cmd+Z = تراجع</kbd>
+      </div>
+      <div
+        style={{
+          position: "absolute", top: 42, left: 12, zIndex: 20,
+          background: "rgba(255,255,255,0.9)", border: "1px solid #e2e8f0",
+          borderRadius: 8, padding: "6px 8px", fontSize: 10, color: "#475569", direction: "rtl"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#14b8a6" }} />
+          <span>نجاح</span>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f43f5e", marginRight: 6 }} />
+          <span>فشل</span>
+        </div>
       </div>
     </div>
   );
@@ -1535,22 +2792,24 @@ const ToolbarBtn: FC<{
   onClick: () => void;
   active?: boolean;
   title?: string;
-}> = ({ children, onClick, active, title }) => (
+  disabled?: boolean;
+}> = ({ children, onClick, active, title, disabled = false }) => (
   <button
     type="button"
     onClick={onClick}
+    disabled={disabled}
     title={title}
     style={{
       width: 32, height: 32,
       display: "flex", alignItems: "center", justifyContent: "center",
       borderRadius: 8, border: "none",
       background: active ? "#e0e7ff" : "transparent",
-      color: active ? "#3b82f6" : "#475569",
-      cursor: "pointer",
+      color: disabled ? "#cbd5e1" : active ? "#3b82f6" : "#475569",
+      cursor: disabled ? "not-allowed" : "pointer",
       transition: "all 0.15s"
     }}
     onMouseEnter={e => {
-      if (!active) e.currentTarget.style.background = "#f1f5f9";
+      if (!active && !disabled) e.currentTarget.style.background = "#f1f5f9";
     }}
     onMouseLeave={e => {
       if (!active) e.currentTarget.style.background = "transparent";

@@ -224,7 +224,12 @@ async function handleOverview(client: any, res: any) {
       emergencyLogs: [],
       taskFriction: [],
       weeklyRhythm,
-      flowStats: { byStep: {}, avgTimeToActionMs: null, addPersonCompletionRate: null }
+      flowStats: {
+        byStep: {},
+        avgTimeToActionMs: null,
+        addPersonCompletionRate: null,
+        pulseAbandonedByReason: {}
+      }
     });
     return;
   }
@@ -315,6 +320,7 @@ async function handleOverview(client: any, res: any) {
     .slice(0, 8);
 
   const flowCounts: Record<string, number> = {};
+  const pulseAbandonedByReason: Record<string, number> = {};
   let flowTimeToActionSum = 0;
   let flowTimeToActionCount = 0;
   for (const row of events as Array<Record<string, unknown>>) {
@@ -323,6 +329,11 @@ async function handleOverview(client: any, res: any) {
     const step = String(p?.step ?? "");
     if (!step) continue;
     flowCounts[step] = (flowCounts[step] ?? 0) + 1;
+    if (step === "pulse_abandoned") {
+      const extra = p?.extra as Record<string, unknown> | undefined;
+      const reason = typeof extra?.closeReason === "string" ? extra.closeReason : "unknown";
+      pulseAbandonedByReason[reason] = (pulseAbandonedByReason[reason] ?? 0) + 1;
+    }
     if (p?.timeToAction != null && typeof p.timeToAction === "number") {
       flowTimeToActionSum += p.timeToAction;
       flowTimeToActionCount += 1;
@@ -336,7 +347,8 @@ async function handleOverview(client: any, res: any) {
   const flowStats = {
     byStep: flowCounts,
     avgTimeToActionMs: flowTimeToActionCount > 0 ? Math.round(flowTimeToActionSum / flowTimeToActionCount) : null,
-    addPersonCompletionRate
+    addPersonCompletionRate,
+    pulseAbandonedByReason
   };
 
   res.status(200).json({

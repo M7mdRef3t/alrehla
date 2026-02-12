@@ -16,6 +16,38 @@ create policy admin_ai_logs_service_role on admin_ai_logs
   using (auth.role() = 'service_role')
   with check (auth.role() = 'service_role');
 
+-- Flow map audit logs (owner/admin read+insert + service role)
+alter table admin_flow_audit_logs enable row level security;
+drop policy if exists admin_flow_audit_logs_service_role on admin_flow_audit_logs;
+create policy admin_flow_audit_logs_service_role on admin_flow_audit_logs
+  for all
+  using (auth.role() = 'service_role')
+  with check (auth.role() = 'service_role');
+
+drop policy if exists admin_flow_audit_logs_owner_select on admin_flow_audit_logs;
+create policy admin_flow_audit_logs_owner_select on admin_flow_audit_logs
+  for select
+  using (
+    exists (
+      select 1
+      from profiles p
+      where p.id = auth.uid()::text
+        and p.role in ('admin', 'developer', 'owner', 'superadmin')
+    )
+  );
+
+drop policy if exists admin_flow_audit_logs_owner_insert on admin_flow_audit_logs;
+create policy admin_flow_audit_logs_owner_insert on admin_flow_audit_logs
+  for insert
+  with check (
+    exists (
+      select 1
+      from profiles p
+      where p.id = auth.uid()::text
+        and p.role in ('admin', 'developer', 'owner', 'superadmin')
+    )
+  );
+
 -- Admin missions (admin only)
 alter table admin_missions enable row level security;
 drop policy if exists admin_missions_service_role on admin_missions;

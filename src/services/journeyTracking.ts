@@ -195,24 +195,34 @@ export function getLastTaskForNode(nodeId: string): LastTaskForNode | null {
 export type FlowStep =
   | "landing_viewed"
   | "landing_clicked_start"
+  | "landing_closed"
+  | "install_clicked"
   | "profile_clicked"
   | "pulse_opened"
   | "pulse_abandoned"
   | "pulse_completed"
+  | "pulse_completed_with_choices"
+  | "pulse_completed_without_choices"
   | "add_person_opened"
   | "add_person_dropped"
   | "tools_opened";
 
 export function recordFlowEvent(
   step: FlowStep,
-  extra?: { timeToAction?: number; atStep?: string }
+  extra?: { timeToAction?: number; atStep?: string; closeReason?: "backdrop" | "close_button" | "programmatic" | "browser_close" }
 ): void {
+  const hasExtra = Boolean(extra?.atStep || extra?.closeReason);
   const event = {
     type: "flow_event" as const,
     payload: {
       step,
       timeToAction: extra?.timeToAction,
-      extra: extra?.atStep ? { atStep: extra.atStep } : undefined
+      extra: hasExtra
+        ? {
+            ...(extra?.atStep ? { atStep: extra.atStep } : {}),
+            ...(extra?.closeReason ? { closeReason: extra.closeReason } : {})
+          }
+        : undefined
     } as JourneyEventPayload["flow_event"],
     timestamp: Date.now(),
     sessionId: getOrCreateSessionId()
@@ -477,6 +487,3 @@ export function clearSessionId(): void {
   if (!isBrowser) return;
   localStorage.removeItem(KEY_SESSION_ID);
 }
-
-
-

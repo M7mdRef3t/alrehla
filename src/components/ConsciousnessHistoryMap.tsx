@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { useConsciousnessHistory } from '../state/consciousnessHistoryState';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, TrendingUp, History, Sparkles, MessageCircle } from 'lucide-react';
+import { Brain, TrendingUp, Sparkles, MessageCircle } from 'lucide-react';
+
+type HoverPoint = {
+  state: string;
+  pattern: string;
+};
 
 export const ConsciousnessHistoryMap: React.FC = () => {
   const history = useConsciousnessHistory((s) => s.history);
-  const [hoveredPoint, setHoveredPoint] = useState<any>(null);
+  const [hoveredPoint, setHoveredPoint] = useState<HoverPoint | null>(null);
 
   if (history.length < 1) {
     return (
@@ -53,11 +58,12 @@ export const ConsciousnessHistoryMap: React.FC = () => {
       </div>
 
       <div className="h-56 w-full mb-8 relative">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
           <AreaChart 
             data={chartData}
-            onMouseMove={(e: any) => {
-              if (e && e.activePayload) setHoveredPoint(e.activePayload[0].payload);
+            onMouseMove={(e: unknown) => {
+              const payload = (e as { activePayload?: Array<{ payload?: HoverPoint }> } | null)?.activePayload?.[0]?.payload;
+              if (payload) setHoveredPoint(payload);
             }}
             onMouseLeave={() => setHoveredPoint(null)}
           >

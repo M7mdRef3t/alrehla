@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from "react";
-import { useEffect, useState, useRef, lazy, Suspense } from "react";
+import { useEffect, useState, useRef, lazy, Suspense, useMemo, useCallback } from "react";
 import {
   Activity,
   Brain,
@@ -20,7 +20,7 @@ import {
   User,
   History
 } from "lucide-react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { FEATURE_FLAGS, type FeatureFlagMode } from "../../config/features";
 import { useAdminState, ADMIN_ACCESS_CODE } from "../../state/adminState";
 import { getEffectiveRoleFromState, useAuthState } from "../../state/authState";
@@ -60,12 +60,18 @@ import {
 } from "../../services/adminApi";
 import { applyThemePalette } from "../../services/themePalette";
 import type { JourneyMapSnapshot, UserStateRow } from "../../services/adminApi";
-import { EditableText } from "../EditableText";
-import { FlowMindMap } from "./FlowMindMap";
-import { buildFlowNodes, VISITOR_FLOW_LINKS } from "../../data/visitorFlowWorkflow";
+import { FlowMindMap, type FlowMapActionEvent } from "./FlowMindMap";
+import { buildFlowNodes, VISITOR_FLOW_LINKS, type PulseAbandonReasonFilter } from "../../data/visitorFlowWorkflow";
+import { buildFlowNodeMetrics } from "../../utils/flowAnalytics";
 import { isSupabaseReady, supabase } from "../../services/supabaseClient";
 import { consciousnessService, type MemoryMatch } from "../../services/consciousnessService";
 import { loadStoredState } from "../../services/localStore";
+import {
+  fetchFlowAuditLogs,
+  saveFlowAuditLog,
+  subscribeFlowAuditLogs,
+  type FlowAuditLogEntry
+} from "../../services/flowAudit";
 
 type AdminTab = "overview" | "flow-map" | "feature-flags" | "ai-studio" | "content" | "users" | "user-state" | "consciousness";
 
@@ -433,6 +439,9 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
 const FlowMapPanel: FC = () => {
   const [remoteStats, setRemoteStats] = useState<Awaited<ReturnType<typeof fetchOverviewStats>>>(null);
+  const [pulseCloseReasonFilter, setPulseCloseReasonFilter] = useState<PulseAbandonReasonFilter>("all");
+  const [auditLogs, setAuditLogs] = useState<FlowAuditLogEntry[]>([]);
+  const [auditLoading, setAuditLoading] = useState(true);
   useEffect(() => {
     if (!isSupabaseReady) return;
     let mounted = true;
@@ -450,6 +459,92 @@ const FlowMapPanel: FC = () => {
     };
   }, []);
   const flowStats = remoteStats?.flowStats;
+  const pulseAbandonedByReason = useMemo(
+    () => flowStats?.pulseAbandonedByReason ?? {},
+    [flowStats?.pulseAbandonedByReason]
+  );
+  const pulseAbandonedTotal = useMemo(
+    () => Object.values(pulseAbandonedByReason).reduce((sum, value) => sum + (value ?? 0), 0),
+    [pulseAbandonedByReason]
+  );
+  const getPulseReasonPercent = useCallback(
+    (count: number) => (pulseAbandonedTotal > 0 ? Math.round((count / pulseAbandonedTotal) * 100) : 0),
+    [pulseAbandonedTotal]
+  );
+  const hasPulseReasonStats = Object.values(pulseAbandonedByReason).some((v) => (v ?? 0) > 0);
+  const flowNodes = useMemo(
+    () =>
+      buildFlowNodes(flowStats?.byStep, {
+        selectedPulseAbandonReason: pulseCloseReasonFilter,
+        pulseAbandonedByReason
+      }),
+    [flowStats?.byStep, pulseCloseReasonFilter, pulseAbandonedByReason]
+  );
+  const flowNodeMetrics = useMemo(
+    () => buildFlowNodeMetrics(flowNodes, VISITOR_FLOW_LINKS),
+    [flowNodes]
+  );
+  useEffect(() => {
+    let mounted = true;
+    setAuditLoading(true);
+    fetchFlowAuditLogs(40)
+      .then((logs) => {
+        if (!mounted) return;
+        setAuditLogs(logs);
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setAuditLoading(false);
+      });
+    const unsubscribe = subscribeFlowAuditLogs((entry) => {
+      if (!mounted) return;
+      setAuditLogs((prev) => [entry, ...prev.filter((item) => item.id !== entry.id)].slice(0, 80));
+    });
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  const flowActionLabel = useCallback((action: string) => {
+    const map: Record<string, string> = {
+      create_node: "إضافة كارت",
+      edit_node: "تعديل كارت",
+      duplicate_node: "نسخ كارت",
+      delete_nodes: "حذف كروت",
+      reparent_node: "نقل كارت",
+      lock_nodes: "قفل كروت",
+      unlock_nodes: "فك قفل كروت",
+      align_left: "محاذاة يسار",
+      align_top: "محاذاة أعلى",
+      align_right: "محاذاة يمين",
+      align_bottom: "محاذاة أسفل",
+      distribute_horizontal: "توزيع أفقي",
+      distribute_vertical: "توزيع رأسي",
+      save_default_layout: "تثبيت ترتيب افتراضي",
+      restore_base_nodes: "استرجاع الكروت الأساسية",
+      import_json: "استيراد JSON",
+      export_json: "تصدير JSON",
+      reset_map: "إعادة ضبط كاملة",
+      undo: "تراجع",
+      redo: "إعادة",
+      filter_success: "فلتر النجاح",
+      filter_failure: "فلتر الفشل",
+      filter_all: "إلغاء الفلاتر"
+    };
+    return map[action] ?? action;
+  }, []);
+
+  const handleFlowMapAction = useCallback((event: FlowMapActionEvent) => {
+    void saveFlowAuditLog({
+      action: event.action,
+      targetNodeId: event.nodeId ?? null,
+      targetNodeTitle: event.nodeTitle ?? null,
+      payload: event.payload ?? null
+    }).then((entry) => {
+      setAuditLogs((prev) => [entry, ...prev.filter((item) => item.id !== entry.id)].slice(0, 80));
+    });
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -479,16 +574,87 @@ const FlowMapPanel: FC = () => {
             )}
           </div>
         )}
+        {hasPulseReasonStats && (
+          <div className="mb-5">
+            <p className="text-xs text-slate-500 mb-2">فلتر سبب الهروب من البوصلة</p>
+            <div className="flex flex-wrap gap-2 text-xs">
+              {[
+                { id: "all", label: "الكل" },
+                {
+                  id: "backdrop",
+                  label: `الخلفية (${pulseAbandonedByReason.backdrop ?? 0} • ${getPulseReasonPercent(
+                    pulseAbandonedByReason.backdrop ?? 0
+                  )}%)`
+                },
+                {
+                  id: "close_button",
+                  label: `زر الإغلاق (${pulseAbandonedByReason.close_button ?? 0} • ${getPulseReasonPercent(
+                    pulseAbandonedByReason.close_button ?? 0
+                  )}%)`
+                },
+                {
+                  id: "programmatic",
+                  label: `برمجي (${pulseAbandonedByReason.programmatic ?? 0} • ${getPulseReasonPercent(
+                    pulseAbandonedByReason.programmatic ?? 0
+                  )}%)`
+                }
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setPulseCloseReasonFilter(opt.id as PulseAbandonReasonFilter)}
+                  className={`rounded-full border px-3 py-1.5 transition-colors ${
+                    pulseCloseReasonFilter === opt.id
+                      ? "border-rose-300 bg-rose-50 text-rose-700"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <FlowMindMap
-          nodes={buildFlowNodes(flowStats?.byStep)}
+          nodes={flowNodes}
           links={VISITOR_FLOW_LINKS}
+          nodeMetrics={flowNodeMetrics}
           allowAddCards
+          onAction={handleFlowMapAction}
         />
 
         <p className="mt-4 text-[11px] text-slate-400">
-          اسحب الكروت لتحريكها • كليك يمين على الكروت المخصصة للحذف
+          Shift+Click لتحديد متعدد • كليك يمين: تعديل/نسخ/قفل/نقل/حذف • الشريط: Undo/Redo/Align/Lock/بحث/فلاتر/Snap/استيراد/تصدير
         </p>
+
+        <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-slate-800">سجل تعديلات خريطة التدفق</h3>
+            <span className="text-xs text-slate-500">{auditLogs.length} عملية</span>
+          </div>
+          {auditLoading ? (
+            <p className="text-xs text-slate-500">جاري تحميل السجل...</p>
+          ) : auditLogs.length === 0 ? (
+            <p className="text-xs text-slate-500">لا توجد عمليات بعد.</p>
+          ) : (
+            <div className="space-y-2">
+              {auditLogs.slice(0, 12).map((log) => (
+                <div key={log.id} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-slate-800">{flowActionLabel(log.action)}</span>
+                    <span>{new Date(log.createdAt).toLocaleString("ar-EG", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                    {log.targetNodeTitle && <span>الكارت: {log.targetNodeTitle}</span>}
+                    {log.actorRole && <span>الدور: {log.actorRole}</span>}
+                    {log.source === "local" && <span className="text-amber-600">محلي (fallback)</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -688,13 +854,21 @@ const OverviewPanel: FC = () => {
   const taskFriction = remoteStats?.taskFriction ?? [];
   const weeklyRhythm = remoteStats?.weeklyRhythm;
   const flowStats = remoteStats?.flowStats;
+  const pulseAbandonedByReason = flowStats?.pulseAbandonedByReason ?? {};
+  const pulseAbandonedTotal = Object.values(pulseAbandonedByReason).reduce((sum, value) => sum + (value ?? 0), 0);
   const FLOW_LABELS: Record<string, string> = {
     landing_viewed: "شاهد الهبوط",
     landing_clicked_start: "ضغط يلا نبدأ",
+    landing_closed: "قفل المنصة من الهبوط",
+    install_clicked: "ضغط تثبيت التطبيق",
     profile_clicked: "ضغط الحساب",
     pulse_opened: "فتح البوصلة",
     pulse_abandoned: "هروب من البوصلة",
+    pulse_closed_to_landing: "إغلاق البوصلة والرجوع",
+    pulse_abandoned_browser_close: "إغلاق المتصفح أثناء البوصلة",
     pulse_completed: "أكمل البوصلة",
+    pulse_completed_with_choices: "حفظ البوصلة مع اختيارات",
+    pulse_completed_without_choices: "حفظ البوصلة بدون اختيارات",
     add_person_opened: "فتح إضافة شخص",
     add_person_dropped: "هروب من إضافة شخص",
     tools_opened: "فتح أدوات"
@@ -740,7 +914,7 @@ const OverviewPanel: FC = () => {
             <h3 className="text-sm font-semibold text-slate-800">نمو التفاعل (آخر الأيام)</h3>
           </div>
           <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
               <LineChart data={growthData}>
                 <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} />
                 <YAxis stroke="#94a3b8" fontSize={10} />
@@ -883,6 +1057,21 @@ const OverviewPanel: FC = () => {
                 </span>
               ))}
           </div>
+          {flowStats.pulseAbandonedByReason && Object.values(flowStats.pulseAbandonedByReason).some((v) => v > 0) && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {[
+                { key: "backdrop", label: "هروب بالخلفية" },
+                { key: "close_button", label: "هروب بزر الإغلاق" },
+                { key: "programmatic", label: "إغلاق برمجي" }
+              ].map((item) => (
+                <span key={item.key} className="rounded-full border border-rose-900/40 bg-rose-950/20 px-3 py-1 text-xs text-rose-200">
+                  {item.label}: {pulseAbandonedByReason[item.key] ?? 0}
+                  {" "}
+                  ({pulseAbandonedTotal > 0 ? Math.round(((pulseAbandonedByReason[item.key] ?? 0) / pulseAbandonedTotal) * 100) : 0}%)
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -898,17 +1087,30 @@ const OverviewPanel: FC = () => {
             </p>
           )}
           <div className="h-40">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
               <BarChart data={weeklyRhythm.byDay} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
                 <XAxis dataKey="dayName" stroke="#94a3b8" fontSize={10} />
                 <YAxis stroke="#94a3b8" fontSize={10} domain={[0, 10]} />
-                <Tooltip formatter={(v: number) => [`${v}/10`, "متوسط الطاقة"]} />
+                <Tooltip
+                  formatter={(v: number | string | Array<number | string> | undefined) => {
+                    const raw = Array.isArray(v) ? v[0] : v;
+                    const numeric = typeof raw === "number" ? raw : Number(raw);
+                    const safe = Number.isFinite(numeric) ? numeric : 0;
+                    return [`${safe}/10`, "متوسط الطاقة"];
+                  }}
+                />
                 <Bar
                   dataKey="avg"
-                  fill={(entry) => (entry?.day === weeklyRhythm.lowestDay ? "#f97316" : "#14b8a6")}
                   radius={[4, 4, 0, 0]}
                   name="طاقة"
-                />
+                >
+                  {weeklyRhythm.byDay.map((entry) => (
+                    <Cell
+                      key={`bar-${entry.day}`}
+                      fill={entry.day === weeklyRhythm.lowestDay ? "#f97316" : "#14b8a6"}
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, User } from "lucide-react";
 import { Landing } from "./components/Landing";
@@ -23,7 +23,7 @@ import { useAdminState } from "./state/adminState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "./utils/featureFlags";
 import type { FeatureFlagKey } from "./config/features";
 import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "./state/authState";
-import { consciousnessService, type MemoryMatch } from "./services/consciousnessService";
+import { consciousnessService, type ConsciousnessInsight, type MemoryMatch } from "./services/consciousnessService";
 import { initAppContentRealtime } from "./state/appContentState";
 import { PWAInstallProvider } from "./contexts/PWAInstallContext";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
@@ -31,9 +31,9 @@ import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/Onboar
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
 import { geminiClient } from "./services/geminiClient";
 import { isSupabaseReady } from "./services/supabaseClient";
+import { usePulseCheckLogic } from "./hooks/usePulseCheckLogic";
 
 type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
-type PulseCheckContext = "regular" | "start_recovery";
 
 /** مسافة للمينيو — تاب صغير ظاهر (الشريط يظهر عند التحريك) */
 const SIDEBAR_TAB_MARGIN = "2.5rem"; // w-10
@@ -112,8 +112,6 @@ export default function App() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [missionNodeId, setMissionNodeId] = useState<string | null>(null);
   const [toolsBackScreen, setToolsBackScreen] = useState<Screen>("landing");
-  const [showPulseCheck, setShowPulseCheck] = useState(false);
-  const [pulseCheckContext, setPulseCheckContext] = useState<PulseCheckContext>("regular");
   const [showCocoon, setShowCocoon] = useState(false);
   /** عند إغلاق التنفس: لو فُتح من الخريطة (دقيقة شحن) نرجع لشاشة الأهداف بدل البقاء على الخريطة */
   const [returnToGoalOnBreathingClose, setReturnToGoalOnBreathingClose] = useState(false);
@@ -130,13 +128,12 @@ export default function App() {
   );
   const [postAuthIntent, setPostAuthIntentState] = useState<PostAuthIntent | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  /** لما المستخدم يضغط "مش دلوقتي" بعد ضبط البوصلة، نتخطى إظهار البوصلة تاني في نفس الجلسة */
-  const skipNextPulseCheckRef = useRef(false);
-  /** آخر شاشة — عشان ضبط البوصلة (everyOpen) يظهر فقط عند الخروج من الـ landing، مش عند الانتقال من هدف لخريطة */
-  const prevScreenRef = useRef<Screen>("landing");
+  /** ربط الرجوع بالتاتش/زر الرجوع بالشاشة السابقة بدل إغلاق التطبيق */
+  const fromPopStateRef = useRef(false);
+  const hasHistorySyncedRef = useRef(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
   const [welcome, setWelcome] = useState<{ message: string; source: WelcomeSource } | null>(null);
-  const [consciousnessInsight, setConsciousnessInsight] = useState<any>(null);
+  const [consciousnessInsight, setConsciousnessInsight] = useState<ConsciousnessInsight | null>(null);
   const [showJourneyTimeline, setShowJourneyTimeline] = useState(false);
 
   const recordUserActivity = useNotificationState((s) => s.recordUserActivity);
@@ -157,7 +154,6 @@ export default function App() {
   const pulseLogs = usePulseState((s) => s.logs);
   const weekdayLabels = usePulseState((s) => s.weekdayLabels);
   const snoozedUntil = usePulseState((s) => s.snoozedUntil);
-  const pulseCheckMode = usePulseState((s) => s.checkInMode);
   const logPulse = usePulseState((s) => s.logPulse);
   const snoozeNotifications = usePulseState((s) => s.snoozeNotifications);
   const featureFlags = useAdminState((s) => s.featureFlags);
@@ -193,6 +189,13 @@ export default function App() {
   const canShowAIChatbot = canUseAIField && isPrivilegedUser;
   const canUsePulseCheck = availableFeatures.pulse_check;
   const shouldGateStartWithAuth = isSupabaseReady && !authUser && !isPrivilegedUser;
+  const {
+    showPulseCheck,
+    setShowPulseCheck,
+    pulseCheckContext,
+    setPulseCheckContext,
+    skipNextCheck: skipNextPulseCheck
+  } = usePulseCheckLogic(canUsePulseCheck, screen, shouldGateStartWithAuth);
 
   useEffect(() => {
     void initThemePalette();
@@ -236,6 +239,34 @@ export default function App() {
     return () => window.removeEventListener("popstate", handler);
   }, []);
 
+  /** ربط History API بالشاشات — الرجوع بالتاتش/زر الرجوع يرجع للشاشة السابقة بدل إغلاق التطبيق */
+  useEffect(() => {
+    if (typeof window === "undefined" || window.location.pathname.startsWith("/admin")) return;
+    if (fromPopStateRef.current) {
+      fromPopStateRef.current = false;
+      return;
+    }
+    const state = { screen };
+    const url = "/";
+    if (!hasHistorySyncedRef.current) {
+      hasHistorySyncedRef.current = true;
+      window.history.replaceState(state, "", url);
+      return;
+    }
+    window.history.pushState(state, "", url);
+  }, [screen]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || window.location.pathname.startsWith("/admin")) return;
+    const handler = (e: PopStateEvent) => {
+      const next = (e.state as { screen?: Screen } | null)?.screen ?? "landing";
+      fromPopStateRef.current = true;
+      setScreen(next);
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
+
   useEffect(() => {
     const stop = initAppContentRealtime();
     return () => stop();
@@ -247,7 +278,7 @@ export default function App() {
         (window as Window & { __seedStressTest?: () => { nodeCount: number; eventCount: number } }).__seedStressTest =
           () => {
             const result = seedStressTestData();
-            console.log("[Stress Test] تم: ", result.nodeCount, "عُقدة،", result.eventCount, "حدث. إعادة تحميل...");
+            console.warn("[Stress Test] تم: ", result.nodeCount, "عُقدة،", result.eventCount, "حدث. إعادة تحميل...");
             setTimeout(() => window.location.reload(), 500);
             return result;
           };
@@ -275,55 +306,6 @@ export default function App() {
       cancelled = true;
     };
   }, [setFeatureFlags, setSystemPrompt, setScoringWeights, setScoringThresholds, setPulseCheckMode]);
-
-  useEffect(() => {
-    if (!canUsePulseCheck) return;
-    if (skipNextPulseCheckRef.current) {
-      skipNextPulseCheckRef.current = false;
-      prevScreenRef.current = screen;
-      return;
-    }
-    if (screen === "landing") {
-      prevScreenRef.current = "landing";
-      return;
-    }
-    if (pulseCheckMode === "everyOpen") {
-      // ضبط البوصلة (everyOpen) يظهر فقط عند الخروج من الـ landing، مش عند الانتقال من هدف → خريطة
-      if (prevScreenRef.current !== "landing") {
-        prevScreenRef.current = screen;
-        return;
-      }
-      prevScreenRef.current = screen;
-      const t = window.setTimeout(() => {
-        setPulseCheckContext("regular");
-        setShowPulseCheck(true);
-      }, 350);
-      return () => window.clearTimeout(t);
-    }
-
-    const now = new Date();
-    const lastPulseDate = lastPulse ? new Date(lastPulse.timestamp) : null;
-    const isSameDay =
-      lastPulseDate &&
-      lastPulseDate.getFullYear() === now.getFullYear() &&
-      lastPulseDate.getMonth() === now.getMonth() &&
-      lastPulseDate.getDate() === now.getDate();
-    if (isSameDay) {
-      prevScreenRef.current = screen;
-      return;
-    }
-    prevScreenRef.current = screen;
-    const t = window.setTimeout(() => {
-      setPulseCheckContext("regular");
-      setShowPulseCheck(true);
-    }, 350);
-    return () => window.clearTimeout(t);
-  }, [lastPulse, pulseCheckMode, canUsePulseCheck, screen, shouldGateStartWithAuth]);
-
-  useEffect(() => {
-    if (canUsePulseCheck) return;
-    if (showPulseCheck && pulseCheckContext === "regular") setShowPulseCheck(false);
-  }, [canUsePulseCheck, showPulseCheck, pulseCheckContext]);
 
   useEffect(() => {
     const pageNames: Record<Screen, string> = {
@@ -380,25 +362,31 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [authStatus, authUser, authFirstName, authToneGender, logPulse]);
+  }, [authStatus, authUser, authFirstName, authToneGender, logPulse, setPulseCheckContext, setShowPulseCheck]);
 
   const goToGoals = () => {
     if (!canUseMap) {
       setLockedFeature("dawayir_map");
       return;
     }
-    skipNextPulseCheckRef.current = true;
+    skipNextPulseCheck();
     setScreen("goal");
   };
 
   const startRecovery = () => {
-    if (shouldGateStartWithAuth) {
+    if (shouldGateStartWithAuth && canUsePulseCheck) {
       trackEvent(AnalyticsEvents.MICRO_COMPASS_OPENED, { source: "landing", gate: "pulse" });
       setWelcome(null);
       setPostAuthIntentState(null);
       setShowAuthModal(false);
       setPulseCheckContext("start_recovery");
       setShowPulseCheck(true);
+      return;
+    }
+    if (shouldGateStartWithAuth && !canUsePulseCheck) {
+      setWelcome(null);
+      setPostAuthIntentState({ kind: "login", createdAt: Date.now() });
+      setShowAuthModal(true);
       return;
     }
     goToGoals();
@@ -463,7 +451,7 @@ export default function App() {
       setLockedFeature("dawayir_map");
       return;
     }
-    skipNextPulseCheckRef.current = true;
+    skipNextPulseCheck();
     setScreen("goal");
   };
 
@@ -474,17 +462,33 @@ export default function App() {
       recordFlowEvent("pulse_opened");
     }
   }, [showPulseCheck]);
-  const closePulseCheck = (completed = false) => {
+  const closePulseCheck = useCallback((completed = false, closeReason?: "backdrop" | "close_button" | "programmatic" | "browser_close") => {
     if (!completed && pulseOpenedAtRef.current != null) {
-      recordFlowEvent("pulse_abandoned");
+      recordFlowEvent("pulse_abandoned", { closeReason });
     }
     pulseOpenedAtRef.current = null;
     setShowPulseCheck(false);
     setPulseCheckContext("regular");
+  }, [setPulseCheckContext, setShowPulseCheck]);
+
+  const isDefaultPulseSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => {
+    const notes = payload.notes?.trim() ?? "";
+    return payload.energy === 5 && payload.mood === "calm" && payload.focus === "none" && notes.length === 0;
   };
+
+  useEffect(() => {
+    const onPageHide = () => {
+      if (!showPulseCheck) return;
+      closePulseCheck(false, "browser_close");
+    };
+    window.addEventListener("pagehide", onPageHide);
+    return () => window.removeEventListener("pagehide", onPageHide);
+  }, [closePulseCheck, showPulseCheck]);
 
   const handlePulseGateSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => {
     recordFlowEvent("pulse_completed");
+    if (isDefaultPulseSubmit(payload)) recordFlowEvent("pulse_completed_without_choices");
+    else recordFlowEvent("pulse_completed_with_choices");
     trackEvent(AnalyticsEvents.MICRO_COMPASS_COMPLETED, {
       gate: "pulse",
       pulse_energy: payload.energy,
@@ -492,7 +496,7 @@ export default function App() {
       pulse_focus: payload.focus,
       pulse_auto: payload.auto ?? false
     });
-    closePulseCheck(true);
+    closePulseCheck(true, "programmatic");
 
     const intent: PostAuthIntent = {
       kind: "start_recovery",
@@ -505,8 +509,10 @@ export default function App() {
 
   const handlePulseSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => {
     recordFlowEvent("pulse_completed");
+    if (isDefaultPulseSubmit(payload)) recordFlowEvent("pulse_completed_without_choices");
+    else recordFlowEvent("pulse_completed_with_choices");
     logPulse(payload);
-    closePulseCheck(true);
+    closePulseCheck(true, "programmatic");
 
     // توصيل البوصلة بمرآة الوعي (غير معطِّل للتجربة)
     const numericPart = `طاقة ${payload.energy}/10، مزاج ${payload.mood}, تركيز ${payload.focus}`;
@@ -983,7 +989,7 @@ export default function App() {
                     setCategory(nextCategory);
                     setGoalId(nextGoalId);
                     useJourneyState.getState().setLastGoal(nextGoalId, nextCategory);
-                    skipNextPulseCheckRef.current = true;
+                    skipNextPulseCheck();
                     setScreen("map");
                   }}
                 />
@@ -1129,7 +1135,7 @@ export default function App() {
               }
               handlePulseSubmit(payload);
             }}
-            onClose={closePulseCheck}
+            onClose={(reason) => closePulseCheck(false, reason)}
           />
         )}
 
@@ -1211,7 +1217,7 @@ export default function App() {
             setPostAuthIntentState(null);
             clearPostAuthIntent();
             setWelcome(null);
-            skipNextPulseCheckRef.current = true;
+            skipNextPulseCheck();
             if (pulseToSave) logPulse(pulseToSave);
             openDawayirSetup();
           }}

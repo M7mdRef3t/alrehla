@@ -49,6 +49,17 @@ create table if not exists admin_ai_logs (
   rating text
 );
 
+create table if not exists admin_flow_audit_logs (
+  id text primary key,
+  created_at timestamptz not null default now(),
+  action text not null,
+  actor_user_id uuid,
+  actor_role text,
+  target_node_id text,
+  target_node_title text,
+  payload jsonb not null default '{}'::jsonb
+);
+
 create table if not exists admin_missions (
   id text primary key,
   title text not null,
@@ -171,6 +182,7 @@ create index if not exists user_state_updated_at_idx on user_state (updated_at d
 create unique index if not exists user_state_owner_idx on user_state (owner_id) where owner_id is not null;
 create index if not exists profiles_last_seen_idx on profiles (last_seen desc);
 create index if not exists admin_reports_created_at_idx on admin_reports (created_at desc);
+create index if not exists admin_flow_audit_logs_created_at_idx on admin_flow_audit_logs (created_at desc);
 create index if not exists consciousness_vectors_embedding_cosine_idx
   on public.consciousness_vectors
   using ivfflat (embedding vector_cosine_ops)
@@ -251,6 +263,19 @@ alter table admin_ai_logs enable row level security;
 drop policy if exists admin_ai_logs_service_role on admin_ai_logs;
 create policy admin_ai_logs_service_role on admin_ai_logs for all
   using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+
+alter table admin_flow_audit_logs enable row level security;
+drop policy if exists admin_flow_audit_logs_service_role on admin_flow_audit_logs;
+create policy admin_flow_audit_logs_service_role on admin_flow_audit_logs for all
+  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+drop policy if exists admin_flow_audit_logs_owner_select on admin_flow_audit_logs;
+create policy admin_flow_audit_logs_owner_select on admin_flow_audit_logs for select using (
+  exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('admin', 'developer', 'owner', 'superadmin'))
+);
+drop policy if exists admin_flow_audit_logs_owner_insert on admin_flow_audit_logs;
+create policy admin_flow_audit_logs_owner_insert on admin_flow_audit_logs for insert with check (
+  exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('admin', 'developer', 'owner', 'superadmin'))
+);
 
 alter table admin_missions enable row level security;
 drop policy if exists admin_missions_service_role on admin_missions;

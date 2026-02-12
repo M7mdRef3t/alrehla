@@ -22,6 +22,8 @@ export interface MemoryMatch {
    hidden?: boolean;
 }
 
+type MemorySource = "pulse" | "chat" | "note";
+
 class ConsciousnessService {
   private cache = new AICache();
   private memory: string[] = [];
@@ -122,7 +124,7 @@ class ConsciousnessService {
 
       let matches = (data as MemoryMatch[]) ?? [];
       if (allowedSources && allowedSources.length > 0) {
-        matches = matches.filter((m) => !m.source || allowedSources.includes(m.source as any));
+        matches = matches.filter((m) => !m.source || allowedSources.includes(m.source as MemorySource));
       }
 
       return matches;
@@ -152,7 +154,7 @@ class ConsciousnessService {
       // استبعاد العناصر المخفية من الواجهات الافتراضية
       matches = matches.filter((m) => !m.hidden);
       if (allowedSources && allowedSources.length > 0) {
-        matches = matches.filter((m) => !m.source || allowedSources.includes(m.source as any));
+        matches = matches.filter((m) => !m.source || allowedSources.includes(m.source as MemorySource));
       }
       return matches;
     } catch (err) {
