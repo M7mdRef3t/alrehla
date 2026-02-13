@@ -99,6 +99,27 @@ function cleanWelcomeMessage(text: string | null): string | null {
   return unquoted.length > 140 ? `${unquoted.slice(0, 140).trim()}...` : unquoted;
 }
 
+function hasOAuthCallbackParams(): boolean {
+  if (typeof window === "undefined") return false;
+
+  const search = new URLSearchParams(window.location.search);
+  if (search.has("code") || search.has("state") || search.has("error") || search.has("error_description")) {
+    return true;
+  }
+
+  const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+  const hashParams = new URLSearchParams(hash);
+  return (
+    hashParams.has("access_token") ||
+    hashParams.has("refresh_token") ||
+    hashParams.has("expires_in") ||
+    hashParams.has("token_type") ||
+    hashParams.has("type") ||
+    hashParams.has("error") ||
+    hashParams.has("error_description")
+  );
+}
+
 import { ConsciousnessHistoryMap } from "./components/ConsciousnessHistoryMap";
 import { JourneyTimeline } from "./components/JourneyTimeline";
 
@@ -242,19 +263,20 @@ export default function App() {
   /** ربط History API بالشاشات — الرجوع بالتاتش/زر الرجوع يرجع للشاشة السابقة بدل إغلاق التطبيق */
   useEffect(() => {
     if (typeof window === "undefined" || window.location.pathname.startsWith("/admin")) return;
+    if (hasOAuthCallbackParams()) return;
     if (fromPopStateRef.current) {
       fromPopStateRef.current = false;
       return;
     }
     const state = { screen };
-    const url = "/";
+    const url = window.location.pathname || "/";
     if (!hasHistorySyncedRef.current) {
       hasHistorySyncedRef.current = true;
       window.history.replaceState(state, "", url);
       return;
     }
     window.history.pushState(state, "", url);
-  }, [screen]);
+  }, [screen, authStatus]);
 
   useEffect(() => {
     if (typeof window === "undefined" || window.location.pathname.startsWith("/admin")) return;
