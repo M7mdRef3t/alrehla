@@ -721,12 +721,13 @@
   border-radius: 0.75rem;
 }
 .admin-glass-card {
-  background: #fff;
-  border: 1px solid #94a3b8;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
   border-radius: 0.75rem;
+  color: #334155;
 }
 .admin-glass-card:hover {
-  border-color: #64748b;
+  border-color: #94a3b8;
 }
 .admin-sidebar {
   background: #0f172a;

@@ -15,7 +15,6 @@ import {
   Loader2,
   ThumbsUp,
   ThumbsDown,
-  LineChart as LineChartIcon,
   X,
   User,
   History,
@@ -385,7 +384,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
         <main className="flex-1 min-w-0 p-8 space-y-8">
           <header className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs text-slate-500">حالة النظام</p>
+              <p className="text-xs text-slate-600 font-medium">حالة النظام</p>
               <div className="flex items-center gap-2">
                 <span className={`w-2 h-2 rounded-full ${aiOnline ? "bg-emerald-500" : "bg-slate-400"}`} />
                 <p className="text-sm font-semibold">{aiOnline ? "الذكاء متصل" : "الذكاء غير متاح"}</p>
@@ -422,8 +421,8 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 <User className="w-4 h-4 text-slate-600" />
                 الحساب
               </button>
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Sparkles className="w-4 h-4 text-slate-400" />
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <Sparkles className="w-4 h-4 text-slate-600" />
                 <span>Admin Mode</span>
               </div>
             </div>
@@ -587,7 +586,7 @@ const FlowMapPanel: FC = () => {
         )}
         {hasPulseReasonStats && (
           <div className="mb-5">
-            <p className="text-xs text-slate-500 mb-2">فلتر سبب الهروب من البوصلة</p>
+            <p className="text-xs text-slate-600 mb-2">فلتر سبب الهروب من البوصلة</p>
             <div className="flex flex-wrap gap-2 text-xs">
               {[
                 { id: "all", label: "الكل" },
@@ -635,19 +634,19 @@ const FlowMapPanel: FC = () => {
           onAction={handleFlowMapAction}
         />
 
-        <p className="mt-4 text-[11px] text-slate-400">
+        <p className="mt-4 text-[11px] text-slate-600">
           Shift+Click لتحديد متعدد • كليك يمين: تعديل/نسخ/قفل/نقل/حذف • الشريط: Undo/Redo/Align/Lock/بحث/فلاتر/Snap/استيراد/تصدير
         </p>
 
         <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h3 className="text-sm font-semibold text-slate-800">سجل تعديلات خريطة التدفق</h3>
-            <span className="text-xs text-slate-500">{auditLogs.length} عملية</span>
+            <span className="text-xs text-slate-600">{auditLogs.length} عملية</span>
           </div>
           {auditLoading ? (
-            <p className="text-xs text-slate-500">جاري تحميل السجل...</p>
+            <p className="text-xs text-slate-600">جاري تحميل السجل...</p>
           ) : auditLogs.length === 0 ? (
-            <p className="text-xs text-slate-500">لا توجد عمليات بعد.</p>
+            <p className="text-xs text-slate-600">لا توجد عمليات بعد.</p>
           ) : (
             <div className="space-y-2">
               {auditLogs.slice(0, 12).map((log) => (
@@ -895,6 +894,14 @@ const OverviewPanel: FC = () => {
     "الواقع الفعلي",
     "النتيجة"
   ] as const;
+
+  const [chartPeriod, setChartPeriod] = useState<7 | 28>(28);
+  const growthDataFiltered = useMemo(() => {
+    if (!growthData.length) return growthData;
+    const take = chartPeriod === 7 ? 7 : 28;
+    return growthData.slice(-take);
+  }, [growthData, chartPeriod]);
+
   const FLOW_LABELS: Record<string, string> = {
     landing_viewed: "شاهد الهبوط",
     landing_clicked_start: "ضغط يلا نبدأ",
@@ -918,10 +925,44 @@ const OverviewPanel: FC = () => {
     tools_opened: "فتح أدوات"
   };
 
+  const isStandalone = typeof window !== "undefined" && window.location.pathname === "/analytics";
+
   return (
     <div className="space-y-6">
+      {/* رابط منفصل لملء الشاشة (مثل YouTube Studio) — يظهر فقط داخل لوحة الإدارة */}
+      {!isStandalone && (
+        <div className="flex justify-end">
+          <a
+            href="/analytics"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-medium px-3 py-2 rounded-lg border border-slate-600/50 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:text-white transition-colors"
+          >
+            فتح في نافذة جديدة (شاشة كاملة)
+          </a>
+        </div>
+      )}
+
+      {/* بطاقة شبيهة بـ YouTube Studio: رقم رئيسي + تحديث مباشر */}
+      <div className="admin-glass-card p-6 rounded-2xl border border-slate-700/50 bg-slate-900/40">
+        <div className="flex flex-col items-center text-center">
+          <div className="flex items-center gap-2 mb-1">
+<span className="text-slate-300 text-xs">تحديث مباشر</span>
+            <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" aria-hidden />
+          </div>
+          <p className="text-4xl md:text-5xl font-bold text-white tabular-nums">
+          {formatNumber(totalUsers)}
+          </p>
+          <p className="text-slate-300 text-sm mt-1">المسافرون</p>
+        </div>
+      </div>
+
       {awarenessGap && awarenessGap.totalGreen > 0 && (
         <div className="admin-glass-card p-5">
+          <div className="flex items-center gap-1.5 text-slate-600 text-xs mb-2">
+            <span>تحديث مباشر</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
+          </div>
           <div className="flex items-center gap-2 mb-3">
             <span className="text-slate-600">✦</span>
             <h3 className="text-sm font-semibold text-slate-800">فجوة الوعي</h3>
@@ -945,6 +986,10 @@ const OverviewPanel: FC = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+        <div className="md:col-span-4 flex items-center gap-1.5 text-slate-600 text-xs mb-1">
+          <span>تحديث مباشر</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
+        </div>
         <StatCard title="إجمالي المسافرين" value={formatNumber(totalUsers)} hint={isSupabaseReady ? "من Supabase" : "جلسات محلية"} />
         <StatCard title="نشط الآن" value={formatNumber(activeNowValue)} hint={`آخر نشاط: ${formatTimeAgo(lastActive)}`} />
         <StatCard title="متوسط طاقة اليوم" value={formatNumber(avgMoodValue)} hint="من سجل النبض" />
@@ -952,10 +997,14 @@ const OverviewPanel: FC = () => {
       </div>
 
       <div className="admin-glass-card p-5 space-y-4">
+        <div className="flex items-center gap-1.5 text-slate-600 text-xs mb-2">
+          <span>تحديث مباشر</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
+        </div>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
             <h3 className="text-sm font-semibold text-slate-800">هدف المرحلة الأولى</h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-600 mt-1">
               هدفنا: 10 تسجيل + 10 تثبيت + 10 أشخاص مضافين على الخرائط.
             </p>
           </div>
@@ -1012,24 +1061,57 @@ const OverviewPanel: FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 admin-glass-card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <LineChartIcon className="w-4 h-4 text-slate-600" />
-            <h3 className="text-sm font-semibold text-slate-800">نمو التفاعل (آخر الأيام)</h3>
+        <div className="lg:col-span-2 admin-glass-card p-5 rounded-2xl border border-slate-700/50 bg-slate-900/30">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <div className="flex items-center gap-1.5 text-slate-300 text-xs mb-0.5">
+                <span>تحديث مباشر</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
+              </div>
+              <h3 className="text-sm font-semibold text-slate-100">تطور المنصة</h3>
+              <p className="text-xs text-slate-300 mt-0.5">إجمالي التفاعل (بدايات رحلات + أشخاص مضافين)</p>
+            </div>
+            <div className="flex items-center gap-1 rounded-lg border border-slate-600/50 bg-slate-800/50 p-1">
+              <button
+                type="button"
+                onClick={() => setChartPeriod(7)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  chartPeriod === 7 ? "bg-teal-500/80 text-white" : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                آخر 7 أيام
+              </button>
+              <button
+                type="button"
+                onClick={() => setChartPeriod(28)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  chartPeriod === 28 ? "bg-teal-500/80 text-white" : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                آخر 28 يومًا
+              </button>
+            </div>
           </div>
-          <div className="h-48">
+          <div className="h-52">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
-              <LineChart data={growthData}>
-                <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} />
-                <YAxis stroke="#94a3b8" fontSize={10} />
-                <Tooltip />
-                <Line type="monotone" dataKey="paths" stroke="#94a3b8" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="nodes" stroke="#64748b" strokeWidth={2} dot={false} />
+              <LineChart data={growthDataFiltered}>
+                <XAxis dataKey="date" stroke="#64748b" fontSize={10} tick={{ fill: "#94a3b8" }} />
+                <YAxis stroke="#64748b" fontSize={10} tick={{ fill: "#94a3b8" }} />
+                <Tooltip
+                  contentStyle={{ background: "rgba(15,23,42,0.9)", border: "1px solid rgba(148,163,184,0.3)", borderRadius: "8px" }}
+                  labelStyle={{ color: "#94a3b8" }}
+                />
+                <Line type="monotone" dataKey="paths" name="بدايات رحلات" stroke="#2dd4bf" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="nodes" name="أشخاص مضافين" stroke="#a78bfa" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
         <div className="admin-glass-card p-5 space-y-4">
+          <div className="flex items-center gap-1.5 text-slate-600 text-xs mb-2">
+            <span>تحديث مباشر</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
+          </div>
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-slate-600" />
             <h3 className="text-sm font-semibold text-slate-800">مناطق الاحتكاك الأعلى</h3>
@@ -1054,6 +1136,10 @@ const OverviewPanel: FC = () => {
 
       {funnelSteps.length > 0 && (
         <div className="admin-glass-card p-5">
+          <div className="flex items-center gap-1.5 text-slate-600 text-xs mb-2">
+            <span>تحديث مباشر</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
+          </div>
           <div className="flex items-center gap-2 mb-4">
             <Activity className="w-4 h-4 text-slate-600" />
             <h3 className="text-sm font-semibold text-slate-800">قمع التحويل (آخر 30 يوم)</h3>
@@ -1086,16 +1172,20 @@ const OverviewPanel: FC = () => {
 
       {topScenarios.length > 0 && (
         <div className="admin-glass-card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="w-4 h-4 text-slate-400" />
-            <h3 className="text-sm font-semibold">أكتر سيناريو بيتكرر</h3>
+          <div className="flex items-center gap-1.5 text-slate-600 text-xs mb-2">
+            <span>تحديث مباشر</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
           </div>
-          <p className="text-xs text-slate-400 mb-3">توزيع نوع العلاقات اللي الناس بيضيفوها (استنزاف، سجين ذهني، إلخ).</p>
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-4 h-4 text-slate-600" />
+            <h3 className="text-sm font-semibold text-slate-800">أكتر سيناريو بيتكرر</h3>
+          </div>
+          <p className="text-xs text-slate-600 mb-3">توزيع نوع العلاقات اللي الناس بيضيفوها (استنزاف، سجين ذهني، إلخ).</p>
           <div className="space-y-2">
             {topScenarios.map((s) => (
               <div key={s.key} className="flex items-center justify-between text-xs">
-                <span className="text-slate-300">{s.label}</span>
-                <span className="text-slate-200 font-semibold">{s.count} ({s.percent}%)</span>
+                <span className="text-slate-700">{s.label}</span>
+                <span className="text-slate-800 font-semibold">{s.count} ({s.percent}%)</span>
               </div>
             ))}
           </div>
@@ -1104,16 +1194,20 @@ const OverviewPanel: FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {emergencyLogs.length > 0 && (
-          <div className="rounded-3xl border border-rose-500/40 bg-rose-900/20 p-4">
+          <div className="rounded-3xl border border-rose-400/60 bg-rose-900/30 p-4">
+            <div className="flex items-center gap-1.5 text-rose-200 text-xs mb-2">
+              <span>تحديث مباشر</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
+            </div>
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-slate-400">⛔</span>
-              <h3 className="text-sm font-semibold">طلبات الاستغاثة (آخر 5)</h3>
+              <span className="text-rose-300">⛔</span>
+              <h3 className="text-sm font-semibold text-slate-100">طلبات الاستغاثة (آخر 5)</h3>
             </div>
             <div className="space-y-2 text-xs">
               {emergencyLogs.map((log, i) => (
-                <div key={i} className="flex justify-between text-slate-300">
+                <div key={i} className="flex justify-between text-slate-200">
                   <span>{log.personLabel}</span>
-                  <span className="text-slate-500">{formatTimeAgo(log.createdAt ? new Date(log.createdAt).getTime() : null)}</span>
+                  <span className="text-slate-300">{formatTimeAgo(log.createdAt ? new Date(log.createdAt).getTime() : null)}</span>
                 </div>
               ))}
             </div>
@@ -1121,16 +1215,20 @@ const OverviewPanel: FC = () => {
         )}
         {taskFriction.length > 0 && (
           <div className="admin-glass-card p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Activity className="w-4 h-4 text-slate-400" />
-              <h3 className="text-sm font-semibold">المهام الأكثر هروباً</h3>
+            <div className="flex items-center gap-1.5 text-slate-600 text-xs mb-2">
+              <span>تحديث مباشر</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
             </div>
-            <p className="text-xs text-slate-400 mb-3">نسبة الهروب = بدأ ولم ينفّذ. مرتبة من الأصعب.</p>
+            <div className="flex items-center gap-2 mb-4">
+              <Activity className="w-4 h-4 text-slate-600" />
+              <h3 className="text-sm font-semibold text-slate-800">المهام الأكثر هروباً</h3>
+            </div>
+            <p className="text-xs text-slate-600 mb-3">نسبة الهروب = بدأ ولم ينفّذ. مرتبة من الأصعب.</p>
             <div className="space-y-2">
               {taskFriction.map((t) => (
                 <div key={t.label} className="flex items-center justify-between text-xs">
-                  <span className="text-slate-300 truncate max-w-[80%]" title={t.label}>{t.label}</span>
-                  <span className="text-slate-300 font-semibold">{t.escapeRate}%</span>
+                  <span className="text-slate-700 truncate max-w-[80%]" title={t.label}>{t.label}</span>
+                  <span className="text-slate-800 font-semibold">{t.escapeRate}%</span>
                 </div>
               ))}
             </div>
@@ -1140,11 +1238,15 @@ const OverviewPanel: FC = () => {
 
       {flowStats && Object.keys(flowStats.byStep).length > 0 && (
         <div className="admin-glass-card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Activity className="w-4 h-4 text-slate-400" />
-            <h3 className="text-sm font-semibold">مسارات التدفق (آخر 30 يوم)</h3>
+          <div className="flex items-center gap-1.5 text-slate-600 text-xs mb-2">
+            <span>تحديث مباشر</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
           </div>
-          <div className="flex flex-wrap gap-4 text-xs text-slate-400 mb-3">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="w-4 h-4 text-slate-600" />
+            <h3 className="text-sm font-semibold text-slate-800">مسارات التدفق (آخر 30 يوم)</h3>
+          </div>
+          <div className="flex flex-wrap gap-4 text-xs text-slate-600 mb-3">
             {flowStats.avgTimeToActionMs != null && (
               <span>متوسط زمن القرار (حتى "يلا نبدأ"): {Math.round(flowStats.avgTimeToActionMs / 1000)} ثانية</span>
             )}
@@ -1156,7 +1258,7 @@ const OverviewPanel: FC = () => {
             {Object.entries(flowStats.byStep)
               .sort(([, a], [, b]) => b - a)
               .map(([step, count]) => (
-                <span key={step} className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">
+                <span key={step} className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs text-slate-700">
                   {FLOW_LABELS[step] ?? step}: {count}
                 </span>
               ))}
@@ -1181,13 +1283,17 @@ const OverviewPanel: FC = () => {
 
       {weeklyRhythm && weeklyRhythm.byDay.some((d) => d.avg != null) && (
         <div className="admin-glass-card p-5">
+          <div className="flex items-center gap-1.5 text-slate-600 text-xs mb-2">
+            <span>تحديث مباشر</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
+          </div>
           <div className="flex items-center gap-2 mb-4">
-            <Activity className="w-4 h-4 text-slate-400" />
-            <h3 className="text-sm font-semibold">إيقاع الطاقة الأسبوعي</h3>
+            <Activity className="w-4 h-4 text-slate-600" />
+            <h3 className="text-sm font-semibold text-slate-800">إيقاع الطاقة الأسبوعي</h3>
           </div>
           {weeklyRhythm.lowestDayName && (
-            <p className="text-xs text-slate-400 mb-3">
-              يوم استنزاف الطاقة: <span className="font-semibold">{weeklyRhythm.lowestDayName}</span>
+            <p className="text-xs text-slate-600 mb-3">
+              يوم استنزاف الطاقة: <span className="font-semibold text-slate-800">{weeklyRhythm.lowestDayName}</span>
             </p>
           )}
           <div className="h-40">
@@ -1223,36 +1329,36 @@ const OverviewPanel: FC = () => {
 
       <div className="admin-glass-card p-5 space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">التقرير اليومي</h3>
+          <h3 className="text-sm font-semibold text-slate-800">التقرير اليومي</h3>
           <button
             type="button"
             onClick={handleDailyReport}
-            className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400"
+            className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs text-slate-700 hover:border-teal-400 hover:bg-slate-100"
             disabled={dailyLoading}
           >
             {dailyLoading ? "جاري التوليد..." : "توليد التقرير"}
           </button>
         </div>
-        {dailyError && <p className="text-xs text-rose-300">{dailyError}</p>}
+        {dailyError && <p className="text-xs text-rose-600">{dailyError}</p>}
         {dailyReport && (
-          <div className="space-y-2 text-xs text-slate-300">
+          <div className="space-y-2 text-xs text-slate-700">
             <p>تاريخ التقرير: {dailyReport.date}</p>
             <p>إجمالي الأحداث: {dailyReport.totalEvents}</p>
             <p>جلسات نشطة: {dailyReport.uniqueSessions}</p>
             <div className="flex flex-wrap gap-2">
               {Object.entries(dailyReport.typeCounts).map(([type, count]) => (
-                <span key={type} className="rounded-full border border-slate-700 px-2 py-1">
+                <span key={type} className="rounded-full border border-slate-300 bg-slate-50 px-2 py-1 text-slate-700">
                   {type}: {count}
                 </span>
               ))}
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-slate-400">أكثر الجلسات نشاطاً:</p>
+              <p className="text-xs text-slate-600 font-medium">أكثر الجلسات نشاطاً:</p>
               {dailyReport.topSessions.length === 0 ? (
-                <p className="text-xs text-slate-500">لا توجد جلسات اليوم.</p>
+                <p className="text-xs text-slate-600">لا توجد جلسات اليوم.</p>
               ) : (
                 dailyReport.topSessions.map((row) => (
-                  <div key={row.sessionId} className="text-xs text-slate-300">
+                  <div key={row.sessionId} className="text-xs text-slate-700">
                     {row.sessionId.slice(0, 14)}… — {row.total} حدث
                   </div>
                 ))
@@ -1264,36 +1370,36 @@ const OverviewPanel: FC = () => {
 
       <div className="admin-glass-card p-5 space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">التقرير الأسبوعي</h3>
+          <h3 className="text-sm font-semibold text-slate-800">التقرير الأسبوعي</h3>
           <button
             type="button"
             onClick={handleWeeklyReport}
-            className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400"
+            className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs text-slate-700 hover:border-teal-400 hover:bg-slate-100"
             disabled={weeklyLoading}
           >
             {weeklyLoading ? "جاري التوليد..." : "توليد التقرير"}
           </button>
         </div>
-        {weeklyError && <p className="text-xs text-rose-300">{weeklyError}</p>}
+        {weeklyError && <p className="text-xs text-rose-600">{weeklyError}</p>}
         {weeklyReport && (
-          <div className="space-y-2 text-xs text-slate-300">
+          <div className="space-y-2 text-xs text-slate-700">
             <p>الفترة: {weeklyReport.from} → {weeklyReport.to}</p>
             <p>إجمالي الأحداث: {weeklyReport.totalEvents}</p>
             <p>جلسات فريدة: {weeklyReport.uniqueSessions}</p>
             <div className="flex flex-wrap gap-2">
               {Object.entries(weeklyReport.typeCounts).map(([type, count]) => (
-                <span key={type} className="rounded-full border border-slate-700 px-2 py-1">
+                <span key={type} className="rounded-full border border-slate-300 bg-slate-50 px-2 py-1 text-slate-700">
                   {type}: {count}
                 </span>
               ))}
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-slate-400">أكثر الجلسات نشاطاً:</p>
+              <p className="text-xs text-slate-600 font-medium">أكثر الجلسات نشاطاً:</p>
               {weeklyReport.topSessions.length === 0 ? (
-                <p className="text-xs text-slate-500">لا توجد جلسات كافية.</p>
+                <p className="text-xs text-slate-600">لا توجد جلسات كافية.</p>
               ) : (
                 weeklyReport.topSessions.map((row) => (
-                  <div key={row.sessionId} className="text-xs text-slate-300">
+                  <div key={row.sessionId} className="text-xs text-slate-700">
                     {row.sessionId.slice(0, 14)}… — {row.total} حدث
                   </div>
                 ))
@@ -1305,17 +1411,17 @@ const OverviewPanel: FC = () => {
 
       <div className="admin-glass-card p-5 space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">ألوان المنصة (Owner)</h3>
+          <h3 className="text-sm font-semibold text-slate-800">ألوان المنصة (Owner)</h3>
           <button
             type="button"
             onClick={handleSaveTheme}
             disabled={themeSaving}
-            className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-200 hover:border-teal-400 disabled:opacity-50"
+            className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs text-slate-700 hover:border-teal-400 hover:bg-slate-100 disabled:opacity-50"
           >
             {themeSaving ? "جاري الحفظ..." : "حفظ الألوان"}
           </button>
         </div>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-600">
           تحكم في اللون الرئيسي، اللكنة، خلفية النيبيولا، وشفافية الكروت الزجاجية. التغييرات تنطبق على كل المنصة فوراً.
         </p>
         <div className="flex flex-wrap gap-2 text-[11px]">
@@ -1341,7 +1447,7 @@ const OverviewPanel: FC = () => {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1 text-xs">
-            <p className="text-slate-300">اللون الرئيسي (Teal — الأزرار واللمسات الأساسية)</p>
+            <p className="text-slate-700">اللون الرئيسي (Teal — الأزرار واللمسات الأساسية)</p>
             <div className="flex items-center gap-2">
               <input
                 type="color"
@@ -1359,7 +1465,7 @@ const OverviewPanel: FC = () => {
             </div>
           </div>
           <div className="space-y-1 text-xs">
-            <p className="text-slate-300">لون اللكنة (Amber — التنبيهات والهايلايت)</p>
+            <p className="text-slate-700">لون اللكنة (Amber — التنبيهات والهايلايت)</p>
             <div className="flex items-center gap-2">
               <input
                 type="color"
@@ -1377,7 +1483,7 @@ const OverviewPanel: FC = () => {
             </div>
           </div>
           <div className="space-y-1 text-xs">
-            <p className="text-slate-300">خلفية الفضاء (Nebula Base)</p>
+            <p className="text-slate-700">خلفية الفضاء (Nebula Base)</p>
             <div className="flex items-center gap-2">
               <input
                 type="color"
@@ -1395,7 +1501,7 @@ const OverviewPanel: FC = () => {
             </div>
           </div>
           <div className="space-y-1 text-xs">
-            <p className="text-slate-300">لون توهج الخلفية (Nebula Accent)</p>
+            <p className="text-slate-700">لون توهج الخلفية (Nebula Accent)</p>
             <div className="flex items-center gap-2">
               <input
                 type="color"
@@ -1413,7 +1519,7 @@ const OverviewPanel: FC = () => {
             </div>
           </div>
           <div className="space-y-1 text-xs sm:col-span-2">
-            <p className="text-slate-300">خلفية الكروت الزجاجية (Glass Background)</p>
+            <p className="text-slate-700">خلفية الكروت الزجاجية (Glass Background)</p>
             <div className="flex items-center gap-2">
               <input
                 type="color"
@@ -1431,7 +1537,7 @@ const OverviewPanel: FC = () => {
             </div>
           </div>
           <div className="space-y-1 text-xs sm:col-span-2">
-            <p className="text-slate-300">حدود الكروت الزجاجية (Glass Border)</p>
+            <p className="text-slate-700">حدود الكروت الزجاجية (Glass Border)</p>
             <div className="flex items-center gap-2">
               <input
                 type="color"
@@ -1496,13 +1602,13 @@ const FeedbackPanel: FC = () => {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-sm font-semibold text-slate-800">رسائل المستخدمين</h3>
-            <p className="text-xs text-slate-500 mt-1">كل الرسائل المرسلة من نموذج "شاركنا رأيك".</p>
+            <p className="text-xs text-slate-600 mt-1">كل الرسائل المرسلة من نموذج "شاركنا رأيك".</p>
           </div>
           <button
             type="button"
             onClick={() => void loadFeedback(query || undefined)}
             disabled={loading}
-            className="rounded-full border border-slate-700 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-900/50 disabled:opacity-50"
+            className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-50"
           >
             {loading ? "جاري التحديث..." : "تحديث"}
           </button>
@@ -1513,7 +1619,7 @@ const FeedbackPanel: FC = () => {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="بحث بالنص أو الفئة أو رقم الجلسة..."
-            className="flex-1 min-w-[240px] rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
+            className="flex-1 min-w-[240px] rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-400"
           />
           <button
             type="button"
@@ -1524,24 +1630,24 @@ const FeedbackPanel: FC = () => {
           </button>
         </div>
 
-        {status && <p className="text-xs text-rose-300">{status}</p>}
+        {status && <p className="text-xs text-rose-600">{status}</p>}
 
         <div className="space-y-2 max-h-[560px] overflow-auto pr-1">
           {!loading && entries.length === 0 && (
-            <p className="text-xs text-slate-500">لا توجد رسائل حالياً.</p>
+            <p className="text-xs text-slate-600">لا توجد رسائل حالياً.</p>
           )}
           {entries.map((entry) => (
-            <div key={entry.id} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-3 space-y-2">
+            <div key={entry.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3 space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
-                <span className="rounded-full border border-slate-700 px-2 py-0.5 text-slate-300">
+                <span className="rounded-full border border-slate-300 bg-white px-2 py-0.5 text-slate-700">
                   الفئة: {entry.category}
                 </span>
-                <span className="text-slate-500">
+                <span className="text-slate-600">
                   {entry.createdAt ? new Date(entry.createdAt).toLocaleString("ar-EG") : "—"}
                 </span>
               </div>
-              <p className="text-xs text-slate-200 whitespace-pre-wrap">{entry.message}</p>
-              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+              <p className="text-xs text-slate-800 whitespace-pre-wrap">{entry.message}</p>
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600">
                 <span>التقييم: {entry.rating ?? "—"}</span>
                 <span>الجلسة: {entry.sessionId}</span>
               </div>
@@ -1572,8 +1678,8 @@ const FeatureFlagsPanel: FC = () => {
   return (
     <div className="space-y-6">
       <div className="admin-glass-card p-5">
-        <h3 className="text-sm font-semibold mb-2">مفاتيح الإطلاق</h3>
-        <p className="text-xs text-slate-400">
+        <h3 className="text-sm font-semibold text-slate-800 mb-2">مفاتيح الإطلاق</h3>
+        <p className="text-xs text-slate-600">
           غيّر حالة كل ميزة فوراً. وضع Beta يفتحها لمجموعة تجريبية فقط.
         </p>
       </div>
@@ -1585,8 +1691,8 @@ const FeatureFlagsPanel: FC = () => {
             <div key={flag.key} className="admin-glass-card p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold">{flag.label}</p>
-                  <p className="text-xs text-slate-400 mt-1">{flag.description}</p>
+                  <p className="text-sm font-semibold text-slate-800">{flag.label}</p>
+                  <p className="text-xs text-slate-600 mt-1">{flag.description}</p>
                 </div>
                 <div className="flex gap-2">
                   {(["on", "off", "beta"] as FeatureFlagMode[]).map((opt) => {
@@ -1606,7 +1712,7 @@ const FeatureFlagsPanel: FC = () => {
                       className={`rounded-full px-3 py-1 text-xs font-semibold border transition-all ${
                         active
                           ? "border-teal-400 bg-teal-500/20 text-slate-200"
-                          : "border-slate-700 text-slate-400 hover:border-teal-500/40"
+                          : "border-slate-300 text-slate-600 hover:border-teal-500/40"
                       }`}
                     >
                       {opt === "on" ? "ON" : opt === "off" ? "OFF" : "BETA"}
@@ -1615,7 +1721,7 @@ const FeatureFlagsPanel: FC = () => {
                 })}
               </div>
             </div>
-            <p className="text-[11px] text-slate-500 mt-3">
+            <p className="text-[11px] text-slate-600 mt-3">
               الحالة الحالية: {effectiveAccess[flag.key] ? "مفعّلة لهذا الجهاز" : "مقفولة لهذا الجهاز"}
             </p>
           </div>
@@ -1623,12 +1729,12 @@ const FeatureFlagsPanel: FC = () => {
       })}
       </div>
       {saving && (
-        <p className="text-xs text-slate-400">جاري حفظ الإعدادات على Supabase...</p>
+        <p className="text-xs text-slate-600">جاري حفظ الإعدادات على Supabase...</p>
       )}
 
       <div className="admin-glass-card p-5">
         <h4 className="text-sm font-semibold mb-2">صلاحية Beta لهذا الجهاز</h4>
-        <p className="text-xs text-slate-400 mb-3">فعّلها لتجربة الميزات في وضع Beta.</p>
+        <p className="text-xs text-slate-600 mb-3">فعّلها لتجربة الميزات في وضع Beta.</p>
         <button
           type="button"
           onClick={async () => {
@@ -1638,7 +1744,7 @@ const FeatureFlagsPanel: FC = () => {
             await saveFeatureFlags({ ...featureFlags });
           }}
           className={`rounded-full px-4 py-2 text-xs font-semibold border ${
-            betaAccess ? "border-emerald-400 bg-emerald-500/20 text-emerald-200" : "border-slate-700 text-slate-400"
+            betaAccess ? "border-emerald-400 bg-emerald-500/20 text-emerald-800" : "border-slate-300 text-slate-600"
           }`}
         >
           {betaAccess ? "Beta مفعّل" : "Beta مغلق"}
@@ -3249,3 +3355,5 @@ const StatCard: FC<{ title: string; value: string; hint?: string }> = ({ title, 
     {hint && <p className="text-[11px] text-slate-600 mt-2">{hint}</p>}
   </div>
 );
+
+export { OverviewPanel };

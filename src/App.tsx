@@ -71,6 +71,9 @@ const MissionScreen = lazy(() => import("./components/MissionScreen").then((m) =
 const JourneyToolsScreen = lazy(() => import("./components/JourneyToolsScreen").then((m) => ({ default: m.JourneyToolsScreen })));
 const AppSidebar = lazy(() => import("./components/AppSidebar").then((m) => ({ default: m.AppSidebar })));
 const AdminDashboard = lazy(() => import("./components/admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
+const AdminOverviewPanel = lazy(() =>
+  import("./components/admin/AdminDashboard").then((m) => ({ default: m.OverviewPanel }))
+);
 const DataManagement = lazy(() => import("./components/DataManagement").then((m) => ({ default: m.DataManagement })));
 
 const preloadCoreMap = () => import("./components/CoreMapScreen");
@@ -208,6 +211,9 @@ export default function App() {
   const [isAdminRoute, setIsAdminRoute] = useState(() =>
     typeof window !== "undefined" ? window.location.pathname.startsWith("/admin") : false
   );
+  const [isAnalyticsRoute, setIsAnalyticsRoute] = useState(() =>
+    typeof window !== "undefined" ? window.location.pathname === "/analytics" : false
+  );
   const [postAuthIntent, setPostAuthIntentState] = useState<PostAuthIntent | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   /** ربط الرجوع بالتاتش/زر الرجوع بالشاشة السابقة بدل إغلاق التطبيق */
@@ -261,7 +267,7 @@ export default function App() {
   const isPrivilegedUser = isPrivilegedRole(role);
   const normalizedRole = typeof role === "string" ? role.trim().toLowerCase() : "";
   const isOwnerWatcher = normalizedRole === "owner" || normalizedRole === "superadmin" || adminAccess;
-  const isLockedPhaseOne = isPhaseOneUserFlow;
+  const isLockedPhaseOne = isPhaseOneUserFlow && !isOwnerWatcher;
   const showTopToolsButton = isPrivilegedUser && !isLockedPhaseOne;
   const availableFeatures = useMemo(
     () =>
@@ -396,8 +402,10 @@ export default function App() {
   ]);
 
   useEffect(() => {
-    const handler = () =>
+    const handler = () => {
       setIsAdminRoute(window.location.pathname.startsWith("/admin"));
+      setIsAnalyticsRoute(window.location.pathname === "/analytics");
+    };
     window.addEventListener("popstate", handler);
     return () => window.removeEventListener("popstate", handler);
   }, []);
@@ -1051,6 +1059,23 @@ export default function App() {
     nodes,
     snoozedUntil
   ]);
+
+  if (isAnalyticsRoute && isOwnerWatcher) {
+    return (
+      <div
+        className="min-h-screen min-h-[100dvh] w-full overflow-auto isolate relative"
+        style={{ background: "var(--space-void)" }}
+        dir="rtl"
+      >
+        <div className="nebula-bg absolute inset-0 -z-10" aria-hidden="true" />
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ background: "var(--space-void)" }} />}>
+          <div className="p-4 sm:p-6 max-w-6xl mx-auto">
+            <AdminOverviewPanel />
+          </div>
+        </Suspense>
+      </div>
+    );
+  }
 
   if (isAdminRoute) {
     return (

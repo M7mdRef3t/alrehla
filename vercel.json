@@ -1,4 +1,9 @@
 {
+  "rewrites": [
+    { "source": "/analytics", "destination": "/index.html" },
+    { "source": "/admin", "destination": "/index.html" },
+    { "source": "/admin/:path*", "destination": "/index.html" }
+  ],
   "crons": [
     {
       "path": "/api/admin?path=overview&kind=cron-report&period=daily",
