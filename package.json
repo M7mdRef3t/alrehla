@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "push:dev": "git push origin develop",
+    "release": "node scripts/release-to-main.mjs",
     "start": "vite --open",
     "access:doctor": "powershell -ExecutionPolicy Bypass -File scripts/access-doctor.ps1",
     "access:bootstrap": "powershell -ExecutionPolicy Bypass -File scripts/bootstrap-access.ps1",
@@ -39,6 +41,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.1.18",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

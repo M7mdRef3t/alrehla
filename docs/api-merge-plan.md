@@ -30,9 +30,9 @@
 
 ### الخيار 1 (مُطبَّق): دمج كل Admin في دالة واحدة
 
-- **ملف واحد للتوجيه:** `api/admin/index.ts` — يستقبل الطلبات على `/api/admin?path=config` أو `path=overview&kind=...` ويستدعي الـ handler المناسب.
-- **باقي ملفات admin:** تبقى كوحدات وتصدّر دوالاً مسماة (بدون `export default`)، ويستدعيها الـ router.
-- **النتيجة:** 1 دالة admin بدل 16 → الإجمالي: 1 + 2 (user) + 3 (gemini) = **6 دوال**.
+- **ملف واحد في api/:** `api/admin/index.ts` فقط — يستقبل الطلبات على `/api/admin?path=config` أو `path=overview&kind=...` ويستدعي الـ handler المناسب.
+- **الـ handlers خارج api/:** في `server/admin/` (overview، config، users، …، _shared) حتى **لا يحسبهم Vercel كدوال**؛ أي ملف .ts داخل api/ قد يُحسب دالة.
+- **النتيجة:** 1 دالة admin → الإجمالي في api/: **6 دوال** (1 admin + 2 user + 3 gemini).
 
 ### ما يُبقى كملفات مسار منفصلة (بدون دمج)
 

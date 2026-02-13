@@ -124,6 +124,22 @@ export const ACHIEVEMENTS: Achievement[] = [
     hint: "كل حفظ بيديك وضوح أكتر لخطوتك الجاية.",
     icon: "✅",
     order: 14
+  },
+  {
+    id: "login_success",
+    title: "دخول ناجح",
+    description: "سجّلت الدخول بعد شاشة ضبط البوصلة",
+    hint: "جميل. حسابك اتفعل ورحلتك محفوظة.",
+    icon: "🔐",
+    order: 15
+  },
+  {
+    id: "person_located_on_map",
+    title: "حددت مكانه",
+    description: "بعد إضافة شخص ضغطت «تم، ورّيني مكانه على الخريطة»",
+    hint: "خطوة ممتازة. كده الصورة على الخريطة بقت أوضح.",
+    icon: "📍",
+    order: 16
   }
 ].sort((a, b) => a.order - b.order);
 

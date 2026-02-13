@@ -66,6 +66,7 @@ const ACTION_POINTS: Record<string, number> = {
   flow_pulse_completed_with_choices: 6,
   flow_pulse_completed_without_choices: 2,
   flow_add_person_opened: 3,
+  flow_add_person_done_show_on_map: 7,
   flow_feedback_submitted: 5,
   flow_tools_opened: 2,
 
@@ -85,9 +86,11 @@ const ACTION_POINTS: Record<string, number> = {
 
 const ACTION_ACHIEVEMENTS: Record<string, string> = {
   flow_landing_clicked_start: "starter_click",
+  flow_auth_login_success: "login_success",
   flow_install_clicked: "installer_click",
   flow_pulse_notes_used: "pulse_explainer",
-  flow_pulse_completed: "pulse_saver"
+  flow_pulse_completed: "pulse_saver",
+  flow_add_person_done_show_on_map: "person_located_on_map"
 };
 
 export const useAchievementState = create<AchievementState>()(

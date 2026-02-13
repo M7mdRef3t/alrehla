@@ -148,7 +148,9 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
   }, [step]);
 
   const handleClose = (openNodeId?: string) => {
-    if (step !== "result") {
+    if (step === "result" && openNodeId) {
+      recordFlowEvent("add_person_done_show_on_map", { meta: { nodeId: openNodeId } });
+    } else if (step !== "result") {
       recordFlowEvent("add_person_dropped", { atStep: step });
     }
     onClose(openNodeId);

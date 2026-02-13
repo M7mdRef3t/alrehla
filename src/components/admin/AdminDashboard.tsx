@@ -911,6 +911,7 @@ const OverviewPanel: FC = () => {
     pulse_completed_with_choices: "حفظ البوصلة مع اختيارات",
     pulse_completed_without_choices: "حفظ البوصلة بدون اختيارات",
     add_person_opened: "فتح إضافة شخص",
+    add_person_done_show_on_map: "أنهى الإضافة وطلب عرض الشخص على الخريطة",
     add_person_dropped: "هروب من إضافة شخص",
     feedback_opened: "فتح نموذج الرأي",
     feedback_submitted: "إرسال تغذية راجعة",
