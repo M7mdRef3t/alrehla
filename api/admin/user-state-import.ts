@@ -7,7 +7,7 @@ type UserStateImportRow = {
   updated_at?: string;
 };
 
-export default async function handler(req: any, res: any) {
+export async function handleUserStateImportStandalone(req: any, res: any) {
   if (!(await verifyAdmin(req, res))) return;
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });

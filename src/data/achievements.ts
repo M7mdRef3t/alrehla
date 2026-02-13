@@ -14,12 +14,28 @@ export interface Achievement {
 
 export const ACHIEVEMENTS: Achievement[] = [
   {
+    id: "starter_click",
+    title: "انطلاق",
+    description: "ضغطت على زر «أنطلق»",
+    hint: "قررت تبدأ، ودي أهم خطوة في الرحلة.",
+    icon: "🚀",
+    order: 1
+  },
+  {
+    id: "installer_click",
+    title: "جاهز دايمًا",
+    description: "ضغطت على «تثبيت التطبيق»",
+    hint: "قرار ذكي يخلي المنصة قريبة منك في أي وقت.",
+    icon: "📲",
+    order: 2
+  },
+  {
     id: "first_step",
     title: "أول خطوة",
     description: "أضفت أول شخص على الخريطة",
     hint: "بداية حلوة! كل رحلة بتبدأ بخطوة.",
     icon: "🌱",
-    order: 1
+    order: 3
   },
   {
     id: "writer",
@@ -27,7 +43,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "سجّلت أول موقف",
     hint: "الكتابة بتوضّح الصورة. كمّل.",
     icon: "✍️",
-    order: 2
+    order: 4
   },
   {
     id: "plan_seeker",
@@ -35,7 +51,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "سجّلت موقفين وفتحت مسار الحماية",
     hint: "مسارك المخصص جاهز. خطوة جميلة!",
     icon: "📋",
-    order: 3
+    order: 5
   },
   {
     id: "trained",
@@ -43,7 +59,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "خلّصت تمرين مع شخص",
     hint: "التمرّن على المسافات بيقوّيك. فخورين بيك.",
     icon: "🎯",
-    order: 4
+    order: 6
   },
   {
     id: "growing_map",
@@ -51,7 +67,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "عندك ٣ أشخاص على الخريطة",
     hint: "واضح إنك جاد في فهم مداراتك. كمّل.",
     icon: "🗺️",
-    order: 5
+    order: 7
   },
   {
     id: "boundary_keeper",
@@ -59,7 +75,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "عندك ٥ أشخاص على الخريطة",
     hint: "إنجاز كبير! أنت بتبني مساحتك بوضوح.",
     icon: "🛡️",
-    order: 6
+    order: 8
   },
   {
     id: "measured",
@@ -67,7 +83,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "خلّصت الاستكشاف الأولي",
     hint: "معرفة نقطة البداية أول خطوة للوضوح.",
     icon: "📊",
-    order: 7
+    order: 9
   },
   {
     id: "reader",
@@ -75,7 +91,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "فتحت المكتبة التعليمية",
     hint: "المعرفة بتنوّر الطريق. كمّل اقرأ.",
     icon: "📚",
-    order: 8
+    order: 10
   },
   {
     id: "breather",
@@ -83,7 +99,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "استخدمت تمرين التنفس",
     hint: "إنك تهتم بنفسك ده إنجاز بحد ذاته.",
     icon: "🌬️",
-    order: 9
+    order: 11
   },
   {
     id: "mission_complete",
@@ -91,7 +107,23 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: "خلّصت خطوة كاملة في الرحلة",
     hint: "أول خطوة مكتملة… دلوقتي أنت ماشي بجد.",
     icon: "🏁",
-    order: 10
+    order: 12
+  },
+  {
+    id: "pulse_explainer",
+    title: "فضفضة واعية",
+    description: "كتبت في «لو حابب تشرح أكتر» في ضبط البوصلة",
+    hint: "الشرح بيوصلك لفهم أعمق لنفسك.",
+    icon: "📝",
+    order: 13
+  },
+  {
+    id: "pulse_saver",
+    title: "ثبّت حالتك",
+    description: "حفظت حالتك من شاشة ضبط البوصلة",
+    hint: "كل حفظ بيديك وضوح أكتر لخطوتك الجاية.",
+    icon: "✅",
+    order: 14
   }
 ].sort((a, b) => a.order - b.order);
 

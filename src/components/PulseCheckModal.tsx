@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import type { PulseFocus, PulseMood } from "../state/pulseState";
 import { energyColorHex, energyPct } from "../utils/pulseUi";
+import { recordFlowEvent } from "../services/journeyTracking";
 
 interface PulseCheckModalProps {
   isOpen: boolean;
@@ -130,6 +131,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [focus, setFocus] = useState<PulseFocus | null>(null);
   const [showRequiredHint, setShowRequiredHint] = useState(false);
   const [notes, setNotes] = useState("");
+  const [hasTrackedNotesUsage, setHasTrackedNotesUsage] = useState(false);
   const fillHex = energyColorHex(energy);
   const pct = energyPct(energy, { min: 1, max: 10 });
   const isComplete = useMemo(() => hasPickedEnergy && Boolean(mood) && Boolean(focus), [hasPickedEnergy, mood, focus]);
@@ -142,6 +144,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     setFocus(null);
     setShowRequiredHint(false);
     setNotes("");
+    setHasTrackedNotesUsage(false);
   }, [isOpen]);
 
   // إيقاف أي سكرول في الخلفية أثناء فتح شاشة البوصلة
@@ -397,7 +400,14 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 <textarea
                   rows={3}
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setNotes(value);
+                    if (!hasTrackedNotesUsage && value.trim().length > 0) {
+                      recordFlowEvent("pulse_notes_used");
+                      setHasTrackedNotesUsage(true);
+                    }
+                  }}
                   placeholder="اكتب جملة أو موقف: أنا مخنوق عشان حصل كذا..."
                   className="w-full rounded-lg px-2.5 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0 resize-none"
                   style={{

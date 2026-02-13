@@ -40,6 +40,14 @@ function remapAdminPathForHobby(path: string): string {
   return `overview?kind=${encodeURIComponent(base)}${query ? `&${query}` : ""}`;
 }
 
+/** بناء مسار الاستعلام لدالة admin الموحدة (?path=...) */
+function buildAdminQuery(path: string): string {
+  const effectivePath = remapAdminPathForHobby(path);
+  const [pathPart, ...queryParts] = effectivePath.split("?");
+  const queryPart = queryParts.join("?");
+  return `path=${encodeURIComponent(pathPart)}${queryPart ? `&${queryPart}` : ""}`;
+}
+
 function getAdminCode(): string | null {
   const state = useAdminState.getState();
   return state.adminCode || import.meta.env.VITE_ADMIN_CODE || ADMIN_ACCESS_CODE || null;
@@ -49,9 +57,9 @@ async function callAdminApi<T>(path: string, options?: RequestInit): Promise<T |
   const code = getAdminCode();
   const authToken = getAuthToken();
   if (!code && !authToken) return null;
-  const effectivePath = remapAdminPathForHobby(path);
+  const query = buildAdminQuery(path);
   try {
-    const res = await fetch(`${ADMIN_API_PATH}/${effectivePath}`, {
+    const res = await fetch(`${ADMIN_API_PATH}?${query}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",

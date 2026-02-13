@@ -10,6 +10,7 @@ interface AchievementsProps {
 
 export const Achievements: FC<AchievementsProps> = ({ onClose }) => {
   const unlockedIds = useAchievementState((s) => s.unlockedIds);
+  const totalPoints = useAchievementState((s) => s.totalPoints);
 
   const unlockedCount = unlockedIds.length;
   const totalCount = ACHIEVEMENTS.length;
@@ -49,6 +50,9 @@ export const Achievements: FC<AchievementsProps> = ({ onClose }) => {
           {unlockedCount === totalCount
             ? "ماشاء الله! خلصت كل الإنجازات 🎉"
             : `حققتَ ${unlockedCount} من ${totalCount} — كمل الرحلة عشان تفتح الباقي`}
+        </p>
+        <p className="px-4 pb-2 text-sm font-semibold text-amber-700 dark:text-amber-300 text-right">
+          نقاطك: {totalPoints.toLocaleString("ar-EG")}
         </p>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">

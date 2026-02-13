@@ -78,7 +78,7 @@ function computeAwarenessGap(maps: Array<{ session_id: string; nodes: unknown }>
       totalGreen += 1;
       const analysis = node.analysis as Record<string, unknown> | null | undefined;
       const answers = analysis?.answers as { q1?: string; q2?: string; q3?: string } | null | undefined;
-      const score = feelingScore(answers);
+      const score = feelingScore(answers ?? null);
       if (score > FEELING_DRAIN_THRESHOLD) {
         gapCount += 1;
         sessionsWithGap.add(String(row.session_id ?? ""));
@@ -105,9 +105,9 @@ function resolveScenario(node: Record<string, unknown>): string {
 
   const feel = node.analysis as Record<string, unknown> | null | undefined;
   const answers = feel?.answers as { q1?: string; q2?: string; q3?: string } | null | undefined;
-  const symptomScore = feelingScore(answers);
+  const symptomScore = feelingScore(answers ?? null);
   const reality = node.realityAnswers as { q1?: string; q2?: string; q3?: string } | null | undefined;
-  const contactScore = feelingScore(reality);
+  const contactScore = feelingScore(reality ?? null);
   const safetyHigh = String(node.safetyAnswer ?? "") === "high";
 
   const lowMax = 2;
@@ -409,8 +409,17 @@ async function handleFeedback(client: any, req: any, res: any) {
     return;
   }
 
+  type FeedbackEntry = {
+    id: string;
+    session_id: string;
+    category: string;
+    rating: number | null;
+    message: string;
+    created_at: string;
+  };
+
   const entries = (data ?? [])
-    .map((row: Record<string, unknown>) => {
+    .map((row: Record<string, unknown>): FeedbackEntry | null => {
       const payload = row.payload as Record<string, unknown> | null;
       if (String(payload?.step ?? "") !== "feedback_submitted") return null;
       const extra = payload?.extra as Record<string, unknown> | undefined;
@@ -424,17 +433,10 @@ async function handleFeedback(client: any, req: any, res: any) {
         created_at: String(row.created_at ?? "")
       };
     })
-    .filter((entry): entry is {
-      id: string;
-      session_id: string;
-      category: string;
-      rating: number | null;
-      message: string;
-      created_at: string;
-    } => Boolean(entry && entry.message));
+    .filter((entry: FeedbackEntry | null): entry is FeedbackEntry => Boolean(entry && entry.message));
 
   const filtered = search
-    ? entries.filter((entry) =>
+    ? entries.filter((entry: FeedbackEntry) =>
         `${entry.message} ${entry.category} ${entry.session_id}`.toLowerCase().includes(search)
       )
     : entries;
@@ -868,7 +870,7 @@ async function handleCronReport(req: any, res: any) {
   res.status(200).json({ ok: true, period });
 }
 
-export default async function handler(req: any, res: any) {
+export async function overviewRouter(req: any, res: any) {
   const method = String(req.method ?? "GET").toUpperCase();
   const kind = String(req.query?.kind ?? "overview");
 

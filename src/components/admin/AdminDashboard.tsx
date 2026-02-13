@@ -903,6 +903,7 @@ const OverviewPanel: FC = () => {
     install_clicked: "ضغط تثبيت التطبيق",
     profile_clicked: "ضغط الحساب",
     pulse_opened: "فتح البوصلة",
+    pulse_notes_used: "كتب شرح في البوصلة",
     pulse_abandoned: "هروب من البوصلة",
     pulse_closed_to_landing: "إغلاق البوصلة والرجوع",
     pulse_abandoned_browser_close: "إغلاق المتصفح أثناء البوصلة",

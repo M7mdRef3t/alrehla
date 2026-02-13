@@ -1,11 +1,11 @@
 {
   "crons": [
     {
-      "path": "/api/admin/overview?kind=cron-report&period=daily",
+      "path": "/api/admin?path=overview&kind=cron-report&period=daily",
       "schedule": "0 20 * * *"
     },
     {
-      "path": "/api/admin/overview?kind=cron-report&period=weekly",
+      "path": "/api/admin?path=overview&kind=cron-report&period=weekly",
       "schedule": "0 8 * * 1"
     }
   ]

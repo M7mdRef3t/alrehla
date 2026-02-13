@@ -27,6 +27,8 @@ function hasCompletedMission(nodes: MapNode[]): boolean {
 
 export interface AchievementState {
   unlockedIds: string[];
+  totalPoints: number;
+  actionCounts: Record<string, number>;
   lastNewAchievementId: string | null;
   /** فتح إنجاز (يُستدعى من الواجهة أو من فحص تلقائي). يفعّل عرض التهاني إن كان أول فتح. */
   unlock: (id: string) => void;
@@ -38,6 +40,8 @@ export interface AchievementState {
   markLibraryOpened: () => void;
   /** تسجيل أن المستخدم استخدم التنفس */
   markBreathingUsed: () => void;
+  /** إضافة نقاط مقابل إجراء محدد */
+  addActionPoints: (actionKey: string, amount?: number) => number;
   /** فحص الشروط من بيانات التطبيق وتحديث الإنجازات المفتوحة */
   checkAndUnlock: (options: {
     nodes: MapNode[];
@@ -47,10 +51,51 @@ export interface AchievementState {
   }) => string | null;
 }
 
+const DEFAULT_ACTION_POINTS = 1;
+
+const ACTION_POINTS: Record<string, number> = {
+  // Flow steps
+  flow_landing_viewed: 1,
+  flow_landing_clicked_start: 3,
+  flow_auth_login_success: 6,
+  flow_install_clicked: 8,
+  flow_profile_clicked: 1,
+  flow_pulse_opened: 2,
+  flow_pulse_notes_used: 3,
+  flow_pulse_completed: 4,
+  flow_pulse_completed_with_choices: 6,
+  flow_pulse_completed_without_choices: 2,
+  flow_add_person_opened: 3,
+  flow_feedback_submitted: 5,
+  flow_tools_opened: 2,
+
+  // Journey events
+  journey_path_started: 5,
+  journey_task_started: 2,
+  journey_task_completed: 8,
+  journey_path_regenerated: 4,
+  journey_node_added: 10,
+  journey_mood_logged: 3,
+  journey_flow_event: 1,
+
+  // Direct actions not always covered by journey events
+  action_library_opened: 4,
+  action_breathing_used: 4
+};
+
+const ACTION_ACHIEVEMENTS: Record<string, string> = {
+  flow_landing_clicked_start: "starter_click",
+  flow_install_clicked: "installer_click",
+  flow_pulse_notes_used: "pulse_explainer",
+  flow_pulse_completed: "pulse_saver"
+};
+
 export const useAchievementState = create<AchievementState>()(
   persist(
     (set, get) => ({
       unlockedIds: [],
+      totalPoints: 0,
+      actionCounts: {},
       lastNewAchievementId: null,
 
       unlock: (id: string) => {
@@ -79,6 +124,7 @@ export const useAchievementState = create<AchievementState>()(
         if (typeof window !== "undefined" && !window.localStorage.getItem(key)) {
           window.localStorage.setItem(key, String(Date.now()));
         }
+        get().addActionPoints("action_library_opened");
         get().unlock("reader");
       },
 
@@ -87,7 +133,30 @@ export const useAchievementState = create<AchievementState>()(
         if (typeof window !== "undefined" && !window.localStorage.getItem(key)) {
           window.localStorage.setItem(key, String(Date.now()));
         }
+        get().addActionPoints("action_breathing_used");
         get().unlock("breather");
+      },
+
+      addActionPoints: (actionKey, amount) => {
+        const normalized = String(actionKey ?? "").trim();
+        if (!normalized) return get().totalPoints;
+        const points = typeof amount === "number" && Number.isFinite(amount)
+          ? Math.max(0, Math.floor(amount))
+          : ACTION_POINTS[normalized] ?? DEFAULT_ACTION_POINTS;
+        if (points <= 0) return get().totalPoints;
+
+        set((state) => ({
+          totalPoints: state.totalPoints + points,
+          actionCounts: {
+            ...state.actionCounts,
+            [normalized]: (state.actionCounts[normalized] ?? 0) + 1
+          }
+        }));
+        const achievementId = ACTION_ACHIEVEMENTS[normalized];
+        if (achievementId) {
+          get().unlock(achievementId);
+        }
+        return get().totalPoints;
       },
 
       checkAndUnlock: (options) => {
@@ -122,7 +191,14 @@ export const useAchievementState = create<AchievementState>()(
         return newlyUnlocked;
       }
     }),
-    { name: STORAGE_KEY, partialize: (s) => ({ unlockedIds: s.unlockedIds }) }
+    {
+      name: STORAGE_KEY,
+      partialize: (s) => ({
+        unlockedIds: s.unlockedIds,
+        totalPoints: s.totalPoints,
+        actionCounts: s.actionCounts
+      })
+    }
   )
 );
 
@@ -138,4 +214,12 @@ export function getBreathingUsedAt(): number | null {
   if (typeof window === "undefined") return null;
   const v = window.localStorage.getItem(`${STORAGE_KEY}-breathing-used`);
   return v ? Number(v) : null;
+}
+
+export function awardPointsForFlowStep(step: string): void {
+  useAchievementState.getState().addActionPoints(`flow_${step}`);
+}
+
+export function awardPointsForJourneyType(type: string): void {
+  useAchievementState.getState().addActionPoints(`journey_${type}`);
 }

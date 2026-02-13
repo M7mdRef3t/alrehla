@@ -37,7 +37,7 @@ async function sendResend(subject: string, html: string): Promise<void> {
   });
 }
 
-export default async function handler(req: any, res: any) {
+export async function handleCronReportStandalone(req: any, res: any) {
   if (!verifyCron(req)) {
     res.status(401).json({ error: "Unauthorized" });
     return;

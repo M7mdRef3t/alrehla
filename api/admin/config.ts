@@ -15,7 +15,7 @@ function toSettingMap(rows: Array<{ key: string; value: unknown }>) {
   return map;
 }
 
-export default async function handler(req: any, res: any) {
+export async function handleConfig(req: any, res: any) {
   if (!(await verifyAdmin(req, res))) return;
   const client = getAdminSupabase();
   if (!client) {

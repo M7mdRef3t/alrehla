@@ -1,6 +1,6 @@
 import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared";
 
-export default async function handler(req: any, res: any) {
+export async function handleAiLogs(req: any, res: any) {
   if (!(await verifyAdmin(req, res))) return;
   const client = getAdminSupabase();
   if (!client) {

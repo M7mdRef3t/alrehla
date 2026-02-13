@@ -3,6 +3,7 @@
  */
 
 import { isSupabaseReady, supabase } from "./supabaseClient";
+import { awardPointsForFlowStep, awardPointsForJourneyType } from "../state/achievementState";
 
 const KEY_MODE = "dawayir-tracking-mode";
 const KEY_EVENTS = "dawayir-journey-events";
@@ -200,6 +201,7 @@ export type FlowStep =
   | "install_clicked"
   | "profile_clicked"
   | "pulse_opened"
+  | "pulse_notes_used"
   | "pulse_abandoned"
   | "pulse_completed"
   | "pulse_completed_with_choices"
@@ -239,6 +241,7 @@ export function recordFlowEvent(
   const events = loadEvents();
   events.push(event);
   saveEvents(events);
+  awardPointsForFlowStep(step);
   queueSupabaseSync(getTrackingMode(), event);
   const apiUrl = getTrackingApiUrl();
   if (apiUrl) {
@@ -271,6 +274,7 @@ export function recordJourneyEvent(
   const events = loadEvents();
   events.push(event);
   saveEvents(events);
+  awardPointsForJourneyType(type);
   queueSupabaseSync(mode, event);
 
   const apiUrl = getTrackingApiUrl();

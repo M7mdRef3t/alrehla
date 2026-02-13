@@ -4,6 +4,41 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getAchievementById } from "../data/achievements";
 import { useAchievementState } from "../state/achievementState";
 
+function playAchievementSuccessSound(): void {
+  if (typeof window === "undefined") return;
+  const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AudioContextCtor) return;
+  try {
+    const context = new AudioContextCtor();
+    const now = context.currentTime;
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.09, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+    gain.connect(context.destination);
+
+    const first = context.createOscillator();
+    first.type = "sine";
+    first.frequency.setValueAtTime(740, now);
+    first.connect(gain);
+    first.start(now);
+    first.stop(now + 0.11);
+
+    const second = context.createOscillator();
+    second.type = "sine";
+    second.frequency.setValueAtTime(988, now + 0.12);
+    second.connect(gain);
+    second.start(now + 0.12);
+    second.stop(now + 0.25);
+
+    window.setTimeout(() => {
+      void context.close();
+    }, 420);
+  } catch {
+    // تجاهل أي خطأ تشغيل صوتي (مثل سياسات المتصفح)
+  }
+}
+
 /** تهنئة صغيرة تظهر عند فتح إنجاز جديد */
 export const AchievementToast: FC = () => {
   const lastNewAchievementId = useAchievementState((s) => s.lastNewAchievementId);
@@ -12,6 +47,7 @@ export const AchievementToast: FC = () => {
 
   useEffect(() => {
     if (!lastNewAchievementId) return;
+    playAchievementSuccessSound();
     const t = setTimeout(clearLastNew, 4000);
     return () => clearTimeout(t);
   }, [lastNewAchievementId, clearLastNew]);
