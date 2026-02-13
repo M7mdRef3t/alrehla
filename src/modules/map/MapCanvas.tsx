@@ -126,6 +126,7 @@ interface NodeProps {
 const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, justDraggedId, justAdded, isHighlighted }) => {
   const [showDelete, setShowDelete] = useState(false);
   const [pulseDone, setPulseDone] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const deleteNode = useMapState((s) => s.deleteNode);
 
   useEffect(() => {
@@ -137,6 +138,20 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
       setPulseDone(false);
     }
   }, [isHighlighted]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia("(hover: none)");
+    const sync = () => setIsTouchDevice(media.matches);
+    sync();
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", sync);
+      return () => media.removeEventListener("change", sync);
+    }
+    media.addListener(sync);
+    return () => media.removeListener(sync);
+  }, []);
+
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: node.id });
 
   const hasMismatch = node.analysis?.recommendedRing && node.ring !== node.analysis.recommendedRing;
@@ -157,9 +172,17 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   };
 
   const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
+    const ok = typeof window === "undefined" ? true : window.confirm(`هل تريد حذف "${node.label}" من الخريطة؟`);
+    if (!ok) return;
     deleteNode(node.id);
-  }, [deleteNode, node.id]);
+  }, [deleteNode, node.id, node.label]);
+
+  const blockDeletePointer = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
 
   const handleClick = useCallback(() => {
     if (node.id === justDraggedId) return;
@@ -313,10 +336,11 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
 
       {/* Delete button */}
       <AnimatePresence>
-        {showDelete && (
+        {(showDelete || isTouchDevice) && (
           <motion.button
             type="button"
             onClick={handleDelete}
+            onPointerDown={blockDeletePointer}
             className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center z-30"
             style={{
               background: "linear-gradient(135deg, #f87171, #dc2626)",

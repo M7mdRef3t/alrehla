@@ -28,28 +28,17 @@ export const RealityCheck: FC<RealityCheckProps> = ({
   onDone,
   onBack
 }) => {
-  const [answers, setAnswers] = React.useState<RealityAnswers>({
-    q1: "sometimes",
-    q2: "sometimes",
-    q3: "sometimes"
-  });
-
-  const [answered, setAnswered] = React.useState<Record<string, boolean>>({
-    q1: true,
-    q2: true,
-    q3: true
-  });
+  const [answers, setAnswers] = React.useState<Partial<RealityAnswers>>({});
 
   const handleAnswer = (key: keyof RealityAnswers, value: RealityOption) => {
     setAnswers((prev) => ({ ...prev, [key]: value }));
-    setAnswered((prev) => ({ ...prev, [key]: true }));
   };
 
-  const allAnswered = answered.q1 && answered.q2 && answered.q3;
+  const allAnswered = Boolean(answers.q1 && answers.q2 && answers.q3);
 
   return (
     <section
-      className="mt-10 text-center"
+      className="mt-0 text-center h-full min-h-0 flex flex-col"
       aria-labelledby="reality-title"
     >
       {onBack && (
@@ -72,7 +61,7 @@ export const RealityCheck: FC<RealityCheckProps> = ({
         <EditableText id="reality_body_prefix" defaultText={realityCopy.bodyPrefix} page="reality" showEditIcon={false} />{personLabel}
       </p>
 
-      <ul className="list-none mt-8 space-y-4 text-sm text-slate-800 max-w-md mx-auto">
+      <ul className="list-none mt-6 flex-1 min-h-0 overflow-y-auto pr-1 space-y-4 text-sm text-slate-800 max-w-md mx-auto">
         {(["q1", "q2", "q3"] as const).map((key) => (
           <li key={key} className="p-4 bg-white border border-gray-200 rounded-xl text-right">
             <p className="font-medium mb-3">
@@ -100,12 +89,19 @@ export const RealityCheck: FC<RealityCheckProps> = ({
         ))}
       </ul>
 
-      <div className="mt-8">
+      <div className="mt-4 shrink-0">
         <button
           type="button"
           disabled={!allAnswered}
           className="rounded-full bg-teal-600 text-white px-10 py-4 text-base font-semibold hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.99] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-          onClick={() => onDone(answers)}
+          onClick={() => {
+            if (!allAnswered) return;
+            onDone({
+              q1: answers.q1 as RealityOption,
+              q2: answers.q2 as RealityOption,
+              q3: answers.q3 as RealityOption
+            });
+          }}
           title={allAnswered ? realityCopy.cta : "جاوب على كل الأسئلة الأول"}
         >
           <EditableText id="reality_cta" defaultText={realityCopy.cta} page="reality" editOnClick={false} />

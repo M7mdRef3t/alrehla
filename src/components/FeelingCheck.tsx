@@ -24,26 +24,23 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
   personLabel,
   onDone
 }) => {
-  const [answers, setAnswers] = React.useState<FeelingAnswers>({
-    q1: "sometimes",
-    q2: "sometimes",
-    q3: "sometimes"
-  });
-
-  const [answered, setAnswered] = React.useState<Record<string, boolean>>({
-    q1: true,
-    q2: true,
-    q3: true
-  });
+  const [answers, setAnswers] = React.useState<Partial<FeelingAnswers>>({});
 
   const handleAnswer = (key: keyof FeelingAnswers, value: FeelingOption) => {
     setAnswers((prev) => ({ ...prev, [key]: value }));
-    setAnswered((prev) => ({ ...prev, [key]: true }));
   };
+
+  const answered = {
+    q1: Boolean(answers.q1),
+    q2: Boolean(answers.q2),
+    q3: Boolean(answers.q3)
+  };
+
+  const allAnswered = answered.q1 && answered.q2 && answered.q3;
 
   return (
     <section
-      className="mt-10 text-center"
+      className="mt-0 text-center h-full min-h-0 flex flex-col"
       aria-labelledby="feeling-title"
     >
       <h2 id="feeling-title" className="text-2xl font-bold text-slate-900 mb-2">
@@ -54,7 +51,7 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
         <span className="font-semibold text-slate-800">({personLabel})</span>
       </p>
 
-      <ul className="list-none mt-8 space-y-4 text-sm text-slate-800 max-w-md mx-auto">
+      <ul className="list-none mt-6 flex-1 min-h-0 overflow-y-auto pr-1 space-y-4 text-sm text-slate-800 max-w-md mx-auto">
         {(["q1", "q2", "q3"] as const).map((key) => (
           <li key={key} className="p-4 bg-white border border-gray-200 rounded-xl text-right">
             <p className="font-medium mb-3">
@@ -82,13 +79,20 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
         ))}
       </ul>
 
-      <div className="mt-8">
+      <div className="mt-4 shrink-0">
         <button
           type="button"
-          disabled={!answered.q1 || !answered.q2 || !answered.q3}
+          disabled={!allAnswered}
           className="rounded-full bg-teal-600 text-white px-10 py-4 text-base font-semibold hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.99] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-          onClick={() => onDone(answers)}
-          title={answered.q1 && answered.q2 && answered.q3 ? "التالي: فين الشخص في حياتك؟" : "جاوب على كل الأسئلة الأول"}
+          onClick={() => {
+            if (!allAnswered) return;
+            onDone({
+              q1: answers.q1 as FeelingOption,
+              q2: answers.q2 as FeelingOption,
+              q3: answers.q3 as FeelingOption
+            });
+          }}
+          title={allAnswered ? "التالي: فين الشخص في حياتك؟" : "جاوب على كل الأسئلة الأول"}
         >
           <EditableText id="feeling_cta" defaultText={feelingCopy.cta} page="feeling" editOnClick={false} />
         </button>

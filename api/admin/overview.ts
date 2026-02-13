@@ -159,7 +159,9 @@ async function handleOverview(client: any, res: any) {
     { data: events },
     { count: aiLogsCount },
     { data: maps },
-    { data: pulseLogs }
+    { data: pulseLogs },
+    { count: addedPeopleCount },
+    { data: installedSessionsRows }
   ] = await Promise.all([
     client.from("profiles").select("id", { count: "exact", head: true }),
     client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", fiveMinAgo),
@@ -171,8 +173,21 @@ async function handleOverview(client: any, res: any) {
       .limit(1000),
     client.from("admin_ai_logs").select("id", { count: "exact", head: true }),
     client.from("journey_maps").select("session_id,nodes").limit(1000),
-    client.from("daily_pulse_logs").select("energy,created_at").gte("created_at", thirtyDaysAgo).limit(2000)
+    client.from("daily_pulse_logs").select("energy,created_at").gte("created_at", thirtyDaysAgo).limit(2000),
+    client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "node_added"),
+    client
+      .from("journey_events")
+      .select("session_id")
+      .eq("type", "flow_event")
+      .contains("payload", { step: "install_clicked" })
+      .not("session_id", "is", null)
+      .limit(5000)
   ]);
+  const installedUsers = new Set(
+    ((installedSessionsRows ?? []) as Array<{ session_id?: unknown }>)
+      .map((row) => String(row.session_id ?? "").trim())
+      .filter(Boolean)
+  ).size;
 
   const energyByDay = new Map<number, { total: number; count: number }>();
   for (const row of (pulseLogs ?? []) as Array<{ energy?: number; created_at?: string }>) {
@@ -218,6 +233,11 @@ async function handleOverview(client: any, res: any) {
       aiTokensUsed: aiLogsCount ?? null,
       growthData: [],
       zones: [],
+      phaseOneGoal: {
+        registeredUsers: usersCount ?? 0,
+        installedUsers,
+        addedPeople: addedPeopleCount ?? 0
+      },
       awarenessGap: awarenessGap ?? undefined,
       funnel: { steps: [] },
       topScenarios,
@@ -358,6 +378,11 @@ async function handleOverview(client: any, res: any) {
     aiTokensUsed: aiLogsCount ?? null,
     growthData,
     zones,
+    phaseOneGoal: {
+      registeredUsers: usersCount ?? 0,
+      installedUsers,
+      addedPeople: addedPeopleCount ?? 0
+    },
     awarenessGap: awarenessGap ?? undefined,
     funnel,
     topScenarios,
@@ -365,6 +390,194 @@ async function handleOverview(client: any, res: any) {
     taskFriction,
     weeklyRhythm,
     flowStats
+  });
+}
+
+async function handleFeedback(client: any, req: any, res: any) {
+  const limit = safeLimit(req.query?.limit, 100, 500);
+  const search = String(req.query?.search ?? "").trim().toLowerCase();
+
+  const { data, error } = await client
+    .from("journey_events")
+    .select("id,session_id,payload,created_at")
+    .eq("type", "flow_event")
+    .order("created_at", { ascending: false })
+    .limit(2000);
+
+  if (error) {
+    res.status(500).json({ error: "Failed to fetch feedback entries" });
+    return;
+  }
+
+  const entries = (data ?? [])
+    .map((row: Record<string, unknown>) => {
+      const payload = row.payload as Record<string, unknown> | null;
+      if (String(payload?.step ?? "") !== "feedback_submitted") return null;
+      const extra = payload?.extra as Record<string, unknown> | undefined;
+      const message = String(extra?.message ?? "").trim();
+      return {
+        id: String(row.id ?? row.created_at ?? ""),
+        session_id: String(row.session_id ?? "anonymous"),
+        category: String(extra?.category ?? "general"),
+        rating: typeof extra?.rating === "number" ? extra.rating : null,
+        message,
+        created_at: String(row.created_at ?? "")
+      };
+    })
+    .filter((entry): entry is {
+      id: string;
+      session_id: string;
+      category: string;
+      rating: number | null;
+      message: string;
+      created_at: string;
+    } => Boolean(entry && entry.message));
+
+  const filtered = search
+    ? entries.filter((entry) =>
+        `${entry.message} ${entry.category} ${entry.session_id}`.toLowerCase().includes(search)
+      )
+    : entries;
+
+  res.status(200).json({
+    entries: filtered.slice(0, limit)
+  });
+}
+
+async function handleOwnerAlerts(client: any, req: any, res: any) {
+  const now = new Date();
+  const sinceRaw = String(req.query?.since ?? "").trim();
+  const phaseTarget = safeLimit(req.query?.phaseTarget, 10, 100);
+  const fallbackSince = new Date(now.getTime() - 5 * 60 * 1000);
+  const parsedSince = sinceRaw
+    ? (() => {
+        const asNumber = Number(sinceRaw);
+        if (Number.isFinite(asNumber)) return new Date(asNumber);
+        return new Date(sinceRaw);
+      })()
+    : fallbackSince;
+  const sinceDate =
+    Number.isNaN(parsedSince.getTime()) ? fallbackSince : parsedSince;
+  const sinceIso = sinceDate.toISOString();
+
+  const [{ data: recentEvents, error: eventsError }, { count: registeredUsersCount }, { count: addedPeopleCount }, { data: installedSessionsRows }] =
+    await Promise.all([
+      client
+        .from("journey_events")
+        .select("session_id,type,payload,created_at")
+        .gte("created_at", sinceIso)
+        .order("created_at", { ascending: true })
+        .limit(5000),
+      client.from("profiles").select("id", { count: "exact", head: true }),
+      client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "node_added"),
+      client
+        .from("journey_events")
+        .select("session_id")
+        .eq("type", "flow_event")
+        .contains("payload", { step: "install_clicked" })
+        .not("session_id", "is", null)
+        .limit(10000)
+    ]);
+
+  if (eventsError) {
+    res.status(500).json({ error: "Failed to fetch owner alerts" });
+    return;
+  }
+
+  const events = (recentEvents ?? []) as Array<Record<string, unknown>>;
+
+  const sessionCandidates = Array.from(
+    new Set(
+      events
+        .map((row) => String(row.session_id ?? "").trim())
+        .filter(Boolean)
+    )
+  );
+
+  let previousSessionRows: Array<{ session_id?: string }> = [];
+  if (sessionCandidates.length > 0) {
+    const { data } = await client
+      .from("journey_events")
+      .select("session_id,created_at")
+      .in("session_id", sessionCandidates)
+      .lt("created_at", sinceIso)
+      .limit(10000);
+    previousSessionRows = (data ?? []) as Array<{ session_id?: string }>;
+  }
+
+  const existingBeforeWindow = new Set(
+    previousSessionRows.map((row) => String(row.session_id ?? "").trim()).filter(Boolean)
+  );
+  const newVisitorSessionIds = sessionCandidates.filter((sid) => !existingBeforeWindow.has(sid));
+
+  const loginSessionIds = Array.from(
+    new Set(
+      events
+        .filter((row) => {
+          if (String(row.type ?? "") !== "flow_event") return false;
+          const payload = row.payload as Record<string, unknown> | null;
+          return String(payload?.step ?? "") === "auth_login_success";
+        })
+        .map((row) => String(row.session_id ?? "").trim())
+        .filter(Boolean)
+    )
+  );
+
+  const installSessionIds = Array.from(
+    new Set(
+      events
+        .filter((row) => {
+          if (String(row.type ?? "") !== "flow_event") return false;
+          const payload = row.payload as Record<string, unknown> | null;
+          return String(payload?.step ?? "") === "install_clicked";
+        })
+        .map((row) => String(row.session_id ?? "").trim())
+        .filter(Boolean)
+    )
+  );
+
+  const installedUsers = new Set(
+    ((installedSessionsRows ?? []) as Array<{ session_id?: unknown }>)
+      .map((row) => String(row.session_id ?? "").trim())
+      .filter(Boolean)
+  ).size;
+
+  const phaseProgress = {
+    registeredUsers: registeredUsersCount ?? 0,
+    installedUsers,
+    addedPeople: addedPeopleCount ?? 0,
+    target: phaseTarget
+  };
+
+  const phaseMilestones = {
+    registeredReached: phaseProgress.registeredUsers >= phaseTarget,
+    installedReached: phaseProgress.installedUsers >= phaseTarget,
+    addedReached: phaseProgress.addedPeople >= phaseTarget
+  };
+
+  res.status(200).json({
+    generatedAt: now.toISOString(),
+    since: sinceIso,
+    newVisitors: {
+      count: newVisitorSessionIds.length,
+      sessionIds: newVisitorSessionIds.slice(0, 200)
+    },
+    logins: {
+      count: loginSessionIds.length,
+      sessionIds: loginSessionIds.slice(0, 200)
+    },
+    installs: {
+      count: installSessionIds.length,
+      sessionIds: installSessionIds.slice(0, 200)
+    },
+    phaseOne: {
+      ...phaseProgress,
+      ...phaseMilestones,
+      fullyCompleted:
+        phaseMilestones.registeredReached &&
+        phaseMilestones.installedReached &&
+        phaseMilestones.addedReached
+    }
   });
 }
 
@@ -678,6 +891,8 @@ export default async function handler(req: any, res: any) {
 
   if (method === "GET") {
     if (kind === "overview") return handleOverview(client, res);
+    if (kind === "feedback") return handleFeedback(client, req, res);
+    if (kind === "owner-alerts") return handleOwnerAlerts(client, req, res);
     if (kind === "daily-report") return handleDailyReport(client, req, res);
     if (kind === "weekly-report") return handleWeeklyReport(client, req, res);
     if (kind === "full-export") return handleFullExport(client, req, res);

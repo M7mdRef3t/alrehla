@@ -148,7 +148,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
 
   return (
     <main
-      className="w-full max-w-4xl py-4 sm:py-6 md:py-8 text-center overflow-hidden flex flex-col flex-1 min-h-0"
+      className="w-full max-w-4xl h-full min-h-0 py-2 sm:py-3 text-center overflow-hidden flex flex-col"
       aria-labelledby="goal-title"
     >
       {/* Progress indicator — cosmic style */}
@@ -156,7 +156,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="mb-4 sm:mb-5 shrink-0"
+        className="mb-1.5 sm:mb-2 shrink-0"
       >
         <div className="flex items-center justify-center gap-3">
           <div
@@ -200,17 +200,17 @@ export const GoalPicker: FC<GoalPickerProps> = ({
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="mb-4 sm:mb-6 shrink-0"
+        className="mb-2 sm:mb-3 shrink-0"
       >
         <h1
           id="goal-title"
-          className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4"
+          className="text-lg sm:text-xl md:text-2xl font-bold mb-1.5 sm:mb-2"
           style={{ color: "var(--text-primary)", letterSpacing: "var(--tracking-wider)" }}
         >
           <EditableText id="goal_picker_title" defaultText={goalPickerCopy.title} page="goal_picker" />
         </h1>
         <p
-          className="text-base sm:text-lg md:text-xl leading-relaxed max-w-2xl mx-auto"
+          className="text-xs sm:text-sm md:text-base leading-relaxed max-w-2xl mx-auto"
           style={{ color: "var(--text-secondary)" }}
         >
           <EditableText
@@ -223,9 +223,10 @@ export const GoalPicker: FC<GoalPickerProps> = ({
         </p>
       </motion.div>
 
-      {/* Goal cards — Glass Orbs */}
+      {/* Goal cards — تملأ الارتفاع بدون سكرول */}
       <div
-        className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 grid-rows-3 lg:grid-rows-2 items-stretch justify-items-stretch max-w-4xl mx-auto mb-6 flex-1 min-h-0"
+        className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5 items-stretch justify-items-stretch max-w-4xl mx-auto w-full flex-1 min-h-0 overflow-hidden mb-2 sm:mb-3"
+        style={{ gridAutoRows: "minmax(0, 1fr)" }}
         role="group"
         aria-label="اختر أكثر حاجة شاغلة بالك"
       >
@@ -242,34 +243,11 @@ export const GoalPicker: FC<GoalPickerProps> = ({
               variants={tileVariants}
               initial="hidden"
               animate="visible"
-              className="relative group h-full min-h-0 flex"
+              className="group h-full min-h-0 flex"
             >
-              {/* Recommended badge */}
-              {isRecommended && (
-                <motion.div
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.5 + i * 0.1, type: "spring", stiffness: 400 }}
-                  className="absolute -top-3 -right-3 z-10"
-                >
-                  <div
-                    className="px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1"
-                    style={{
-                      background: "linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(139, 92, 246, 0.15))",
-                      border: "1px solid rgba(45, 212, 191, 0.35)",
-                      color: "var(--soft-teal)",
-                      boxShadow: "0 0 16px rgba(45, 212, 191, 0.2)"
-                    }}
-                  >
-                    <Star className="w-3 h-3" />
-                    موصى به
-                  </div>
-                </motion.div>
-              )}
-
               <motion.button
                 type="button"
-                className="group/card relative w-full min-w-0 h-full flex flex-col text-center transition-all duration-300 focus-visible:outline-none select-none"
+                className="group/card relative w-full min-w-0 h-full min-h-0 flex flex-col text-center transition-all duration-300 focus-visible:outline-none select-none"
                 style={{
                   background: isSelected
                     ? "rgba(45, 212, 191, 0.08)"
@@ -283,8 +261,8 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                         ? "rgba(45, 212, 191, 0.35)"
                         : "rgba(255, 255, 255, 0.08)"
                   }`,
-                  borderRadius: "1.25rem",
-                  padding: "1rem 1.25rem",
+                  borderRadius: "1rem",
+                  padding: "0.75rem 0.9rem",
                   boxShadow: isSelected
                     ? "0 0 30px rgba(45, 212, 191, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)"
                     : "0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
@@ -295,8 +273,30 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                 title={isEnabled ? option.label : "قريبًا"}
                 disabled={!isEnabled}
                 whileTap={isEnabled ? { scale: 0.97 } : undefined}
-                whileHover={isEnabled ? { scale: 1.03, y: -4 } : {}}
+                whileHover={isEnabled ? { scale: 1.02 } : {}}
               >
+                {isRecommended && (
+                  <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.45 + i * 0.08, type: "spring", stiffness: 320 }}
+                    className="mb-1 sm:mb-1.5 flex justify-center shrink-0"
+                  >
+                    <span
+                      className="px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1"
+                      style={{
+                        background: "linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(139, 92, 246, 0.15))",
+                        border: "1px solid rgba(45, 212, 191, 0.35)",
+                        color: "var(--soft-teal)",
+                        boxShadow: "0 0 12px rgba(45, 212, 191, 0.16)"
+                      }}
+                    >
+                      <Star className="w-3 h-3" />
+                      موصى به
+                    </span>
+                  </motion.div>
+                )}
+
                 {!isEnabled && (
                   <span
                     className="absolute inset-0 flex items-center justify-center rounded-[1.25rem] opacity-0 group-hover/card:opacity-100 transition-opacity z-10 text-base font-bold"
@@ -314,9 +314,9 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                   </span>
                 )}
 
-                <div className="flex justify-center mb-2 sm:mb-3 shrink-0">
+                <div className="flex justify-center mb-1 sm:mb-2 shrink-0">
                   <motion.div
-                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center"
                     style={{
                       background: isEnabled
                         ? "radial-gradient(circle at 40% 35%, rgba(45, 212, 191, 0.15), rgba(139, 92, 246, 0.08) 60%, transparent 80%)"
@@ -328,7 +328,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                     transition={{ type: "spring", stiffness: 300 }}
                   >
                     <Icon
-                      className="w-8 h-8"
+                      className="w-5 h-5 sm:w-6 sm:h-6"
                       style={{
                         color: isEnabled ? "var(--soft-teal)" : "var(--text-muted)"
                       }}
@@ -338,7 +338,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                 </div>
 
                 <p
-                  className="text-base sm:text-lg font-bold mb-1 sm:mb-2 shrink-0"
+                  className="text-xs sm:text-sm font-bold mb-0.5 sm:mb-1 shrink-0 line-clamp-1"
                   style={{ color: isEnabled ? "var(--text-primary)" : "var(--text-muted)" }}
                 >
                   <EditableText
@@ -350,7 +350,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                 </p>
 
                 <p
-                  className="text-xs sm:text-sm leading-relaxed flex-1 min-h-0 overflow-hidden line-clamp-3"
+                  className="text-[11px] sm:text-xs leading-relaxed min-h-0 flex-1 line-clamp-2 overflow-hidden"
                   style={{ color: isEnabled ? "var(--text-secondary)" : "var(--text-muted)" }}
                 >
                   <EditableText
@@ -372,11 +372,11 @@ export const GoalPicker: FC<GoalPickerProps> = ({
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className="flex justify-center"
+        className="flex justify-center pt-1 shrink-0"
       >
         <motion.button
           type="button"
-          className="glass-button px-8 py-4 text-base font-medium select-none"
+          className="glass-button px-6 py-3 text-sm sm:text-base font-medium select-none"
           style={{ color: "var(--text-secondary)" }}
           onClick={onBack}
           title="رجوع للشاشة السابقة"

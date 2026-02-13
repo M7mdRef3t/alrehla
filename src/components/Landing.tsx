@@ -247,20 +247,16 @@ export const Landing: FC<LandingProps> = ({
             style={{ background: "rgba(45,212,191,0.08)", border: "1px solid rgba(45,212,191,0.18)" }}
           >
             <Sparkles className="w-3.5 h-3.5 text-teal-400" />
-            <span className="text-[13px] font-bold text-teal-300/90">رحلتك بدأت</span>
+            <span className="text-[13px] font-bold text-teal-300/90">من هنا هنبدأ الحكاية</span>
           </motion.div>
 
-          {/* hook — فوق العنوان */}
+          {/* hook — فوق العنوان (ثابت من الكود) */}
           <motion.p
             className="text-[15px] sm:text-base leading-[1.8] max-w-[420px] mx-auto mb-4"
             style={{ color: "rgba(203,213,225,0.92)" }}
             variants={fadeUp}
           >
-            <EditableText
-              id="landing_hook"
-              defaultText={landingCopy.hook}
-              page="landing"
-            />
+            {landingCopy.hook}
           </motion.p>
 
           {/* headline — يحتفظ بفونت IBM Plex Sans Arabic */}

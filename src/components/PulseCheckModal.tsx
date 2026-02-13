@@ -125,25 +125,22 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 }) => {
   const isStartRecovery = context === "start_recovery";
   const [energy, setEnergy] = useState(5);
-  const [selectedMoods, setSelectedMoods] = useState<PulseMood[]>(["calm"]);
-  const [focus, setFocus] = useState<PulseFocus>("none");
+  const [hasPickedEnergy, setHasPickedEnergy] = useState(false);
+  const [mood, setMood] = useState<PulseMood | null>(null);
+  const [focus, setFocus] = useState<PulseFocus | null>(null);
+  const [showRequiredHint, setShowRequiredHint] = useState(false);
   const [notes, setNotes] = useState("");
   const fillHex = energyColorHex(energy);
   const pct = energyPct(energy, { min: 1, max: 10 });
-
-  const primaryMood: PulseMood = useMemo(() => {
-    if (!selectedMoods.length) return "calm";
-    const priority: PulseMood[] = ["overwhelmed", "angry", "tense", "anxious", "sad", "calm", "bright", "hopeful"];
-    const copy = [...selectedMoods];
-    copy.sort((a, b) => priority.indexOf(a) - priority.indexOf(b));
-    return copy[0] ?? "calm";
-  }, [selectedMoods]);
+  const isComplete = useMemo(() => hasPickedEnergy && Boolean(mood) && Boolean(focus), [hasPickedEnergy, mood, focus]);
 
   useEffect(() => {
     if (!isOpen) return;
     setEnergy(5);
-    setSelectedMoods(["calm"]);
-    setFocus("none");
+    setHasPickedEnergy(false);
+    setMood(null);
+    setFocus(null);
+    setShowRequiredHint(false);
     setNotes("");
   }, [isOpen]);
 
@@ -158,7 +155,11 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   }, [isOpen]);
 
   const handleSubmit = () => {
-    onSubmit({ energy, mood: primaryMood, focus, notes: notes.trim() || undefined });
+    if (!isComplete || !mood || !focus) {
+      setShowRequiredHint(true);
+      return;
+    }
+    onSubmit({ energy, mood, focus, notes: notes.trim() || undefined });
   };
 
   return (
@@ -256,7 +257,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               {/* ── Energy Slider — The Emotional Compass Core ── */}
               <motion.div className="pulse-check-section flex flex-col gap-2" custom={1} variants={cosmicUp} initial="hidden" animate="visible">
                 <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                  مؤشر طاقتك
+                  مؤشر طاقتك <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
                 </label>
 
                 {/* Cosmic energy orb — breathing visualization */}
@@ -303,7 +304,11 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                     min={1}
                     max={10}
                     value={energy}
-                    onChange={(e) => setEnergy(Number(e.target.value))}
+                    onChange={(e) => {
+                      setEnergy(Number(e.target.value));
+                      setHasPickedEnergy(true);
+                      if (showRequiredHint) setShowRequiredHint(false);
+                    }}
                     className="pulse-range relative w-full"
                     style={{ accentColor: fillHex, "--pulse-fill": fillHex } as React.CSSProperties}
                   />
@@ -318,26 +323,20 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               {/* ── Mood — Inner Weather ── */}
               <motion.div className="pulse-check-section flex flex-col gap-2" custom={2} variants={cosmicUp} initial="hidden" animate="visible">
                 <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
-                  الطقس الداخلي
+                  الطقس الداخلي <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
                 </label>
                 <div className="pulse-check-mood-grid grid grid-cols-4 gap-2">
                   {MOODS.map((item) => {
-                    const isSelected = selectedMoods.includes(item.id);
+                    const isSelected = mood === item.id;
                     const mStyle = MOOD_COSMIC[item.id];
                     return (
                       <motion.button
                         key={item.id}
                         type="button"
-                        onClick={() =>
-                          setSelectedMoods((prev) => {
-                            const exists = prev.includes(item.id);
-                            if (exists) {
-                              const next = prev.filter((m) => m !== item.id);
-                              return next.length ? next : ["calm"];
-                            }
-                            return [...prev, item.id];
-                          })
-                        }
+                        onClick={() => {
+                          setMood(item.id);
+                          if (showRequiredHint) setShowRequiredHint(false);
+                        }}
                         className="inline-flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
                         style={{
                           background: isSelected ? mStyle.bg : "rgba(255, 255, 255, 0.05)",
@@ -358,7 +357,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               {/* ── Focus — Current Anchor ── */}
               <motion.div className="pulse-check-section flex flex-col gap-2" custom={3} variants={cosmicUp} initial="hidden" animate="visible">
                 <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
-                  التركيز الحالي
+                  التركيز الحالي <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {FOCUS_OPTIONS_BASE.map((item) => {
@@ -371,7 +370,10 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       <motion.button
                         key={item.id}
                         type="button"
-                        onClick={() => setFocus(item.id)}
+                        onClick={() => {
+                          setFocus(item.id);
+                          if (showRequiredHint) setShowRequiredHint(false);
+                        }}
                         className="px-2 py-2 rounded-lg text-xs font-semibold transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
                         style={{
                           background: isSelected ? fStyle.bg : "rgba(255, 255, 255, 0.04)",
@@ -409,14 +411,27 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
               {/* ── Submit — Cosmic CTA ── */}
               <motion.div custom={5} variants={cosmicUp} initial="hidden" animate="visible" className="pt-1">
+                {!isComplete && !showRequiredHint && (
+                  <p className="text-xs mb-2 text-center" style={{ color: "var(--text-muted)" }}>
+                    اختَر الطاقة والطقس الداخلي والتركيز الحالي أولًا لتفعيل الحفظ.
+                  </p>
+                )}
+                {showRequiredHint && !isComplete && (
+                  <p className="text-xs mb-2 text-center" style={{ color: "rgba(248, 113, 113, 0.95)" }}>
+                    اختَر مؤشر الطاقة والطقس الداخلي والتركيز الحالي أولًا.
+                  </p>
+                )}
                 <motion.button
                   type="button"
                   onClick={handleSubmit}
-                  className="w-full cta-primary py-2.5 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0"
+                  aria-disabled={!isComplete}
+                  className={`w-full cta-primary py-2.5 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 ${
+                    isComplete ? "" : "opacity-80"
+                  }`}
                   whileHover={{ scale: 1.02, y: -1 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {isStartRecovery ? "احفظ القراية وادخل" : "جاهز"}
+                  احفظ حالتك
                 </motion.button>
               </motion.div>
             </div>

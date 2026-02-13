@@ -16,3 +16,11 @@ export const APP_ENV: AppEnv =
 
 export const isUserMode = APP_ENV === "user";
 export const isDevMode = APP_ENV === "dev";
+
+/**
+ * Phase-1 flow lock:
+ * - default ON in user mode
+ * - can be explicitly disabled with VITE_PHASE_ONE_USER_FLOW=false
+ */
+const phaseOneRaw = import.meta.env.VITE_PHASE_ONE_USER_FLOW as string | undefined;
+export const isPhaseOneUserFlow = isUserMode && phaseOneRaw !== "false";

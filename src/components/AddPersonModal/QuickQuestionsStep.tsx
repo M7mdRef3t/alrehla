@@ -48,11 +48,11 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
   nextLabel
 }) => {
   return (
-    <form onSubmit={onContinue} className="text-right">
+    <form onSubmit={onContinue} className="text-right h-full min-h-0 flex flex-col">
       <h2 className="text-xl font-bold text-slate-900 mb-4">
         <EditableText id="add_person_quick_title" defaultText={title} page="add_person" />
       </h2>
-      <div className="space-y-5 mb-6">
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-5 mb-6">
         <div>
           <p className="text-sm font-medium text-gray-700 mb-2">
             <EditableText id="add_person_quick_q1" defaultText={question1} page="add_person" showEditIcon={false} />
@@ -125,7 +125,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
           </div>
         </div>
       </div>
-      <div className="flex gap-3">
+      <div className="mt-4 shrink-0 flex gap-3">
         <button
           type="button"
           className="flex-1 rounded-full bg-gray-100 px-6 py-3 text-sm text-gray-700 font-medium hover:bg-gray-200"

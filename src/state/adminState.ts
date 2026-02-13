@@ -5,6 +5,7 @@ import {
   type FeatureFlagKey,
   type FeatureFlagMode
 } from "../config/features";
+import type { BroadcastAudience } from "../utils/broadcastAudience";
 import { getAuthRole } from "./authState";
 import { getEffectiveFeatureAccess } from "../utils/featureFlags";
 
@@ -41,6 +42,7 @@ export interface AdminBroadcast {
   id: string;
   title: string;
   body: string;
+  audience: BroadcastAudience;
   createdAt: number;
 }
 

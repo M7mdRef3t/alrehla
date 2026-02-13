@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, User } from "lucide-react";
+import { X, User, MessageCircle } from "lucide-react";
 import { Landing } from "./components/Landing";
 import { useNotificationState } from "./state/notificationState";
 import { useEmergencyState } from "./state/emergencyState";
@@ -14,6 +14,12 @@ import type { PulseFocus, PulseMood } from "./state/pulseState";
 import { trackPageView, trackEvent, AnalyticsEvents } from "./services/analytics";
 import { recordFlowEvent } from "./services/journeyTracking";
 import { sendNotification, sendPresetNotification, NOTIFICATION_TYPES } from "./services/notifications";
+import {
+  fetchPublicBroadcasts,
+  doesBroadcastMatchAudience,
+  isAppInstalledMode,
+  type PublicBroadcast
+} from "./services/broadcasts";
 import type { AdviceCategory } from "./data/adviceScripts";
 import type { AgentActions, AgentContext } from "./agent/types";
 import { getIncompleteMissionSteps } from "./utils/missionProgress";
@@ -32,6 +38,7 @@ import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./u
 import { geminiClient } from "./services/geminiClient";
 import { isSupabaseReady } from "./services/supabaseClient";
 import { usePulseCheckLogic } from "./hooks/usePulseCheckLogic";
+import { isPhaseOneUserFlow } from "./config/appEnv";
 
 type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
 
@@ -71,6 +78,10 @@ const preloadChatbot = () => import("./components/AIChatbot");
 const preloadGym = () => import("./components/RelationshipGym");
 const hasSupabaseEnv = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 type AgentModule = typeof import("./agent");
+const LAST_SEEN_BROADCAST_KEY = "dawayir-last-seen-broadcast-id";
+const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
+const OWNER_ALERTS_LAST_CHECK_KEY = "dawayir-owner-alerts-last-check";
+const OWNER_ALERTS_MILESTONES_KEY = "dawayir-owner-alerts-milestones";
 
 function buildStartRecoveryWelcome(firstName: string | null, toneGender: UserToneGender): string {
   const prefix = firstName ? `أهلاً يا ${firstName}` : "أهلاً";
@@ -120,6 +131,54 @@ function hasOAuthCallbackParams(): boolean {
   );
 }
 
+function normalizeArabicDigits(value: string): string {
+  return value
+    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632))
+    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776));
+}
+
+function normalizeWhatsAppPhone(rawPhone: string): string {
+  let digits = normalizeArabicDigits(rawPhone).replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("020")) digits = digits.slice(1);
+  if (digits.startsWith("0") && digits.length === 11) digits = `20${digits.slice(1)}`;
+  if (digits.startsWith("2") && digits.length === 12) return digits;
+  if (digits.startsWith("20")) return digits;
+  return digits;
+}
+
+type OwnerMilestonesState = {
+  registeredReached: boolean;
+  installedReached: boolean;
+  addedReached: boolean;
+  fullyCompleted: boolean;
+};
+
+function loadOwnerMilestonesState(): OwnerMilestonesState {
+  if (typeof window === "undefined") {
+    return { registeredReached: false, installedReached: false, addedReached: false, fullyCompleted: false };
+  }
+  try {
+    const raw = window.localStorage.getItem(OWNER_ALERTS_MILESTONES_KEY);
+    if (!raw) return { registeredReached: false, installedReached: false, addedReached: false, fullyCompleted: false };
+    const parsed = JSON.parse(raw) as Partial<OwnerMilestonesState>;
+    return {
+      registeredReached: Boolean(parsed.registeredReached),
+      installedReached: Boolean(parsed.installedReached),
+      addedReached: Boolean(parsed.addedReached),
+      fullyCompleted: Boolean(parsed.fullyCompleted)
+    };
+  } catch {
+    return { registeredReached: false, installedReached: false, addedReached: false, fullyCompleted: false };
+  }
+}
+
+function saveOwnerMilestonesState(value: OwnerMilestonesState): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(OWNER_ALERTS_MILESTONES_KEY, JSON.stringify(value));
+}
+
 import { ConsciousnessHistoryMap } from "./components/ConsciousnessHistoryMap";
 import { JourneyTimeline } from "./components/JourneyTimeline";
 
@@ -134,8 +193,10 @@ export default function App() {
   const [missionNodeId, setMissionNodeId] = useState<string | null>(null);
   const [toolsBackScreen, setToolsBackScreen] = useState<Screen>("landing");
   const [showCocoon, setShowCocoon] = useState(false);
-  /** عند إغلاق التنفس: لو فُتح من الخريطة (دقيقة شحن) نرجع لشاشة الأهداف بدل البقاء على الخريطة */
+  /** عند إغلاق التنفس: لو فُتح من مسار دقيقة شحن نرجع لشاشة الخريطة */
   const [returnToGoalOnBreathingClose, setReturnToGoalOnBreathingClose] = useState(false);
+  const [suppressCocoonReopen, setSuppressCocoonReopen] = useState(false);
+  const cocoonSuppressTimerRef = useRef<number | null>(null);
   const [showNoiseSilencingPulse, setShowNoiseSilencingPulse] = useState(false);
   const [pendingCocoonAfterNoise, setPendingCocoonAfterNoise] = useState(false);
   const [postNoiseSessionMessage, setPostNoiseSessionMessage] = useState(false);
@@ -156,6 +217,12 @@ export default function App() {
   const [welcome, setWelcome] = useState<{ message: string; source: WelcomeSource } | null>(null);
   const [consciousnessInsight, setConsciousnessInsight] = useState<ConsciousnessInsight | null>(null);
   const [showJourneyTimeline, setShowJourneyTimeline] = useState(false);
+  const [activeBroadcast, setActiveBroadcast] = useState<PublicBroadcast | null>(null);
+  const whatsAppNumber = import.meta.env.VITE_WHATSAPP_CONTACT_NUMBER || DEFAULT_WHATSAPP_CONTACT;
+  const whatsAppLink = useMemo(() => {
+    const normalized = normalizeWhatsAppPhone(whatsAppNumber);
+    return normalized ? `https://wa.me/${normalized}` : null;
+  }, [whatsAppNumber]);
 
   const recordUserActivity = useNotificationState((s) => s.recordUserActivity);
   const notificationSettings = useNotificationState((s) => s.settings);
@@ -192,7 +259,10 @@ export default function App() {
   const authToneGender = useAuthState((s) => s.toneGender);
   const role = useAuthState(getEffectiveRoleFromState);
   const isPrivilegedUser = isPrivilegedRole(role);
-  const showTopToolsButton = isPrivilegedUser;
+  const normalizedRole = typeof role === "string" ? role.trim().toLowerCase() : "";
+  const isOwnerWatcher = normalizedRole === "owner" || normalizedRole === "superadmin" || adminAccess;
+  const isLockedPhaseOne = isPhaseOneUserFlow;
+  const showTopToolsButton = isPrivilegedUser && !isLockedPhaseOne;
   const availableFeatures = useMemo(
     () =>
       getEffectiveFeatureAccess({
@@ -205,8 +275,8 @@ export default function App() {
     [featureFlags, betaAccess, role, adminAccess]
   );
   const canUseMap = availableFeatures.dawayir_map;
-  const canUseJourneyTools = availableFeatures.journey_tools;
-  const canUseAIField = availableFeatures.ai_field;
+  const canUseJourneyTools = availableFeatures.journey_tools && !isLockedPhaseOne;
+  const canUseAIField = availableFeatures.ai_field && !isLockedPhaseOne;
   const canShowAIChatbot = canUseAIField && isPrivilegedUser;
   const canUsePulseCheck = availableFeatures.pulse_check;
   const shouldGateStartWithAuth = isSupabaseReady && !authUser && !isPrivilegedUser;
@@ -217,6 +287,30 @@ export default function App() {
     setPulseCheckContext,
     skipNextCheck: skipNextPulseCheck
   } = usePulseCheckLogic(canUsePulseCheck, screen, shouldGateStartWithAuth);
+
+  const openCocoonModal = useCallback(() => {
+    if (suppressCocoonReopen) return;
+    setShowCocoon(true);
+  }, [suppressCocoonReopen]);
+
+  const suppressCocoonFor = useCallback((ms = 2000) => {
+    setSuppressCocoonReopen(true);
+    if (cocoonSuppressTimerRef.current != null) {
+      window.clearTimeout(cocoonSuppressTimerRef.current);
+    }
+    cocoonSuppressTimerRef.current = window.setTimeout(() => {
+      setSuppressCocoonReopen(false);
+      cocoonSuppressTimerRef.current = null;
+    }, ms);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (cocoonSuppressTimerRef.current != null) {
+        window.clearTimeout(cocoonSuppressTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     void initThemePalette();
@@ -252,6 +346,54 @@ export default function App() {
       recordUserActivity();
     }
   }, [screen, recordUserActivity]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || isAdminRoute) return;
+    let cancelled = false;
+
+    const checkBroadcasts = async () => {
+      const list = await fetchPublicBroadcasts();
+      if (cancelled || !list || list.length === 0) return;
+
+      const candidate = list.find((item) =>
+        doesBroadcastMatchAudience(item.audience, {
+          isLoggedIn: Boolean(authUser),
+          isInstalled: isAppInstalledMode()
+        })
+      );
+      if (!candidate) return;
+
+      const seenId = window.localStorage.getItem(LAST_SEEN_BROADCAST_KEY);
+      if (seenId === candidate.id) return;
+
+      setActiveBroadcast(candidate);
+      window.localStorage.setItem(LAST_SEEN_BROADCAST_KEY, candidate.id);
+
+      if (notificationSupported && notificationPermission === "granted" && notificationSettings.enabled) {
+        void sendNotification({
+          title: candidate.title,
+          body: candidate.body,
+          tag: `broadcast-${candidate.id}`
+        });
+      }
+    };
+
+    void checkBroadcasts();
+    const timer = window.setInterval(() => {
+      void checkBroadcasts();
+    }, 60_000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [
+    authUser,
+    isAdminRoute,
+    notificationPermission,
+    notificationSettings.enabled,
+    notificationSupported
+  ]);
 
   useEffect(() => {
     const handler = () =>
@@ -342,11 +484,109 @@ export default function App() {
   }, [screen]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!isOwnerWatcher) return;
+    let cancelled = false;
+
+    const sendOwnerNotification = async (title: string, body: string, tag: string) => {
+      if (!notificationSupported || notificationPermission !== "granted" || !notificationSettings.enabled) return;
+      await sendNotification({ title, body, tag });
+    };
+
+    const pollOwnerAlerts = async () => {
+      const since = window.localStorage.getItem(OWNER_ALERTS_LAST_CHECK_KEY) ?? new Date(Date.now() - 2 * 60 * 1000).toISOString();
+      const { fetchOwnerAlerts } = await import("./services/adminApi");
+      const alerts = await fetchOwnerAlerts({ since, phaseTarget: 10 });
+      if (!alerts || cancelled) return;
+
+      for (const sessionId of alerts.newVisitors.sessionIds) {
+        await sendOwnerNotification(
+          "زائر جديد دخل المنصة",
+          `Session: ${sessionId.slice(0, 14)}…`,
+          `owner-visitor-${sessionId}`
+        );
+      }
+
+      for (const sessionId of alerts.logins.sessionIds) {
+        await sendOwnerNotification(
+          "زائر أكمل تسجيل الدخول",
+          `Session: ${sessionId.slice(0, 14)}…`,
+          `owner-login-${sessionId}`
+        );
+      }
+
+      for (const sessionId of alerts.installs.sessionIds) {
+        await sendOwnerNotification(
+          "زائر ثبت التطبيق",
+          `Session: ${sessionId.slice(0, 14)}…`,
+          `owner-install-${sessionId}`
+        );
+      }
+
+      const prevMilestones = loadOwnerMilestonesState();
+      const nextMilestones: OwnerMilestonesState = {
+        registeredReached: alerts.phaseOne.registeredReached,
+        installedReached: alerts.phaseOne.installedReached,
+        addedReached: alerts.phaseOne.addedReached,
+        fullyCompleted: alerts.phaseOne.fullyCompleted
+      };
+
+      if (!prevMilestones.registeredReached && nextMilestones.registeredReached) {
+        await sendOwnerNotification(
+          "تحقق الهدف: 10 تسجيلات",
+          `تم الوصول إلى ${alerts.phaseOne.registeredUsers} مستخدمين مسجلين.`,
+          "owner-goal-registered"
+        );
+      }
+      if (!prevMilestones.installedReached && nextMilestones.installedReached) {
+        await sendOwnerNotification(
+          "تحقق الهدف: 10 تثبيتات",
+          `تم الوصول إلى ${alerts.phaseOne.installedUsers} مستخدمين ثبتوا التطبيق.`,
+          "owner-goal-installed"
+        );
+      }
+      if (!prevMilestones.addedReached && nextMilestones.addedReached) {
+        await sendOwnerNotification(
+          "تحقق الهدف: 10 أشخاص مضافين",
+          `تم الوصول إلى ${alerts.phaseOne.addedPeople} أشخاص مضافين على الخرائط.`,
+          "owner-goal-added"
+        );
+      }
+      if (!prevMilestones.fullyCompleted && nextMilestones.fullyCompleted) {
+        await sendOwnerNotification(
+          "اكتمل هدف المرحلة الأولى",
+          "10 تسجيلات + 10 تثبيتات + 10 أشخاص مضافين تحققوا بالكامل.",
+          "owner-goal-phase-one-complete"
+        );
+      }
+
+      saveOwnerMilestonesState(nextMilestones);
+      window.localStorage.setItem(OWNER_ALERTS_LAST_CHECK_KEY, alerts.generatedAt || new Date().toISOString());
+    };
+
+    void pollOwnerAlerts();
+    const timer = window.setInterval(() => {
+      void pollOwnerAlerts();
+    }, 45_000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [
+    isOwnerWatcher,
+    notificationPermission,
+    notificationSettings.enabled,
+    notificationSupported
+  ]);
+
+  useEffect(() => {
     if (authStatus !== "ready") return;
     if (!authUser) return;
     const intent = getPostAuthIntent();
     if (!intent) return;
     clearPostAuthIntent();
+    recordFlowEvent("auth_login_success", { meta: { intent: intent.kind } });
     if (intent.kind === "login") {
       setPulseCheckContext("regular");
       setShowPulseCheck(false);
@@ -440,11 +680,25 @@ export default function App() {
     if (screen === "tools") setScreen("landing");
   }, [canUseJourneyTools, screen]);
 
+  useEffect(() => {
+    if (!isLockedPhaseOne) return;
+    if (screen === "guided" || screen === "mission" || screen === "tools") {
+      setScreen("map");
+    }
+  }, [isLockedPhaseOne, screen]);
+
+  useEffect(() => {
+    if (!isLockedPhaseOne) return;
+    if (goalId !== "family") setGoalId("family");
+  }, [goalId, isLockedPhaseOne]);
+
   const openMissionScreen = (nodeId: string) => {
+    if (isLockedPhaseOne) return;
     setMissionNodeId(nodeId);
     setScreen("mission");
   };
   const openJourneyTools = () => {
+    if (isLockedPhaseOne) return;
     if (!canUseJourneyTools) {
       setLockedFeature("journey_tools");
       return;
@@ -529,7 +783,7 @@ export default function App() {
     setShowAuthModal(true);
   };
 
-  const handlePulseSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => {
+  const handlePulseSubmit = useCallback((payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => {
     recordFlowEvent("pulse_completed");
     if (isDefaultPulseSubmit(payload)) recordFlowEvent("pulse_completed_without_choices");
     else recordFlowEvent("pulse_completed_with_choices");
@@ -577,9 +831,9 @@ export default function App() {
     }
 
     if (isLow) {
-      setShowCocoon(true);
+      openCocoonModal();
     }
-  };
+  }, [authUser, closePulseCheck, logPulse, openCocoonModal, setTheme, setThemeBeforePulse, snoozeNotifications, theme, themeBeforePulse]);
 
   const agentContext = useMemo<AgentContext>(
     () => ({
@@ -821,6 +1075,40 @@ export default function App() {
       {/* 🌌 Nebula Background — Deep Cosmic Blue Canvas */}
       <div className="nebula-bg" aria-hidden="true" />
       <AnimatePresence>
+        {activeBroadcast && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+            className="fixed top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-50 max-w-lg"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="glass-card px-4 py-3 border border-amber-300/40 bg-amber-50/10 backdrop-blur-xl">
+              <div className="flex items-start justify-between gap-3">
+                <div className="text-right">
+                  <p className="text-xs font-semibold mb-1" style={{ color: "var(--soft-gold, #fbbf24)" }}>
+                    رسالة من إدارة الرحلة
+                  </p>
+                  <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{activeBroadcast.title}</p>
+                  <p className="text-xs mt-1 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                    {activeBroadcast.body}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveBroadcast(null)}
+                  className="rounded-full px-2.5 py-1 text-xs font-semibold border border-white/15 hover:bg-white/5 transition-colors"
+                  style={{ color: "var(--text-primary)" }}
+                  aria-label="إخفاء الرسالة"
+                >
+                  إخفاء
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
         {postNoiseSessionMessage && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -946,7 +1234,21 @@ export default function App() {
           </button>
         </div>
       )}
-      {isPrivilegedUser && (
+      {whatsAppLink && !isAdminRoute && !showAuthModal && !showPulseCheck && (
+        <button
+          type="button"
+          onClick={() => {
+            trackEvent("whatsapp_contact_clicked", { placement: "app_floating" });
+            window.open(whatsAppLink, "_blank", "noopener,noreferrer");
+          }}
+          className="fixed z-40 right-4 md:right-6 bottom-[calc(env(safe-area-inset-bottom)+1rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all"
+          title="تواصل واتساب"
+          aria-label="تواصل واتساب"
+        >
+          <MessageCircle className="w-5 h-5 shrink-0" />
+        </button>
+      )}
+      {!isLockedPhaseOne && isPrivilegedUser && (
         <Suspense fallback={null}>
           <AppSidebar
             onOpenGym={() => setShowGym(true)}
@@ -971,7 +1273,7 @@ export default function App() {
       )}
       <main
         className={`flex-1 min-w-0 flex transition-[margin] ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""}`}
-        style={{ marginRight: isPrivilegedUser ? SIDEBAR_TAB_MARGIN : "0px" }}
+        style={{ marginRight: !isLockedPhaseOne && isPrivilegedUser ? SIDEBAR_TAB_MARGIN : "0px" }}
         aria-hidden={showPulseCheck}
       >
         {screen === "map" && (
@@ -988,15 +1290,15 @@ export default function App() {
                 onStartJourney={startRecovery}
                 onOpenTools={openJourneyTools}
                 showTopToolsButton={showTopToolsButton}
-                showPostStartContent={isPrivilegedUser}
-                showToolsSection
+                showPostStartContent={!isLockedPhaseOne && isPrivilegedUser}
+                showToolsSection={!isLockedPhaseOne}
                 onFeatureLocked={setLockedFeature}
                 availableFeatures={availableFeatures}
               />
             )}
 
             {screen === "goal" && (
-              <div className="w-full flex-1 min-h-0 max-h-[100dvh] overflow-hidden flex flex-col px-4">
+              <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col px-3 sm:px-4">
                 {welcome && (
                   <OnboardingWelcomeBubble
                     message={welcome.message}
@@ -1028,7 +1330,7 @@ export default function App() {
                 onOpenMission={openMissionScreen}
                 pulseMode={pulseMode}
                 pulseInsight={pulseInsight}
-                onOpenCocoon={() => setShowCocoon(true)}
+                onOpenCocoon={openCocoonModal}
                 onOpenNoise={() => setShowNoiseSilencingPulse(true)}
                 canUseBasicDiagnosis={availableFeatures.basic_diagnosis}
                 onFeatureLocked={setLockedFeature}
@@ -1180,14 +1482,14 @@ export default function App() {
               setShowNoiseSilencingPulse(false);
               if (pendingCocoonAfterNoise) {
                 setPendingCocoonAfterNoise(false);
-                setShowCocoon(true);
+                openCocoonModal();
               }
             }}
             onSessionComplete={() => {
               setShowNoiseSilencingPulse(false);
               if (pendingCocoonAfterNoise) {
                 setPendingCocoonAfterNoise(false);
-                setShowCocoon(true);
+                openCocoonModal();
               }
               setPostNoiseSessionMessage(true);
               setTimeout(() => setPostNoiseSessionMessage(false), 4500);
@@ -1209,7 +1511,10 @@ export default function App() {
               setShowBreathing(false);
               if (returnToGoalOnBreathingClose) {
                 setReturnToGoalOnBreathingClose(false);
-                setScreen("goal");
+                setShowCocoon(false);
+                setPendingCocoonAfterNoise(false);
+                suppressCocoonFor(4000);
+                setScreen("map");
               }
             }}
           />

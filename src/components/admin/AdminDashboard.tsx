@@ -18,7 +18,8 @@ import {
   LineChart as LineChartIcon,
   X,
   User,
-  History
+  History,
+  MessageSquare
 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { FEATURE_FLAGS, type FeatureFlagMode } from "../../config/features";
@@ -45,19 +46,26 @@ import {
   fetchMissions,
   fetchOverviewStats,
   fetchUsers,
+  fetchFeedbackEntries,
   saveAiLog,
+  saveAppContentEntry,
   saveBroadcast,
   saveFeatureFlags,
   saveMission,
   saveScoring,
   saveSystemPrompt,
+  fetchAppContentEntries,
   rateAiLog as rateAiLogRemote,
+  deleteAppContentEntry,
   deleteBroadcast,
   deleteMission,
   fetchThemePalette,
   saveThemePalette,
-  type ThemePalette
+  type ThemePalette,
+  type AdminContentEntry,
+  type AdminFeedbackEntry
 } from "../../services/adminApi";
+import type { BroadcastAudience } from "../../utils/broadcastAudience";
 import { applyThemePalette } from "../../services/themePalette";
 import type { JourneyMapSnapshot, UserStateRow } from "../../services/adminApi";
 import { FlowMindMap, type FlowMapActionEvent } from "./FlowMindMap";
@@ -66,6 +74,7 @@ import { buildFlowNodeMetrics } from "../../utils/flowAnalytics";
 import { isSupabaseReady, supabase } from "../../services/supabaseClient";
 import { consciousnessService, type MemoryMatch } from "../../services/consciousnessService";
 import { loadStoredState } from "../../services/localStore";
+import { useAppContentState } from "../../state/appContentState";
 import {
   fetchFlowAuditLogs,
   saveFlowAuditLog,
@@ -73,7 +82,7 @@ import {
   type FlowAuditLogEntry
 } from "../../services/flowAudit";
 
-type AdminTab = "overview" | "flow-map" | "feature-flags" | "ai-studio" | "content" | "users" | "user-state" | "consciousness";
+type AdminTab = "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "content" | "users" | "user-state" | "consciousness";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
@@ -82,6 +91,7 @@ const DataManagementModal = lazy(() =>
 const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
   { id: "overview", label: "نبض الرحلة", icon: <Activity className="w-4 h-4" /> },
   { id: "flow-map", label: "خريطة التدفق", icon: <Compass className="w-4 h-4" /> },
+  { id: "feedback", label: "التغذية الراجعة", icon: <MessageSquare className="w-4 h-4" /> },
   { id: "feature-flags", label: "التحكم في الزمن", icon: <Flag className="w-4 h-4" /> },
   { id: "ai-studio", label: "مختبر الذكاء", icon: <Brain className="w-4 h-4" /> },
   { id: "content", label: "إدارة المحتوى", icon: <Database className="w-4 h-4" /> },
@@ -421,6 +431,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
           {effectiveTab === "overview" && <OverviewPanel />}
           {effectiveTab === "flow-map" && <FlowMapPanel />}
+          {effectiveTab === "feedback" && <FeedbackPanel />}
           {isDeveloper && effectiveTab === "feature-flags" && <FeatureFlagsPanel />}
           {isDeveloper && effectiveTab === "ai-studio" && <AIStudioPanel />}
           {effectiveTab === "content" && <ContentPanel />}
@@ -856,10 +867,39 @@ const OverviewPanel: FC = () => {
   const flowStats = remoteStats?.flowStats;
   const pulseAbandonedByReason = flowStats?.pulseAbandonedByReason ?? {};
   const pulseAbandonedTotal = Object.values(pulseAbandonedByReason).reduce((sum, value) => sum + (value ?? 0), 0);
+  const phaseGoal = remoteStats?.phaseOneGoal ?? null;
+  const phaseRegisteredUsers = phaseGoal?.registeredUsers ?? totalUsers ?? 0;
+  const phaseInstalledUsers = phaseGoal?.installedUsers ?? (flowStats?.byStep?.install_clicked ?? 0);
+  const phaseAddedPeople = phaseGoal?.addedPeople ?? stats.totalNodesAdded;
+  const phaseTarget = 10;
+  const phaseProgressItems = [
+    { key: "registered", label: "مستخدمين سجلوا", value: phaseRegisteredUsers, target: phaseTarget },
+    { key: "installed", label: "مستخدمين ثبّتوا التطبيق", value: phaseInstalledUsers, target: phaseTarget },
+    { key: "added", label: "أشخاص مضافين على الخرائط", value: phaseAddedPeople, target: phaseTarget }
+  ] as const;
+  const phaseCompletedGoals = phaseProgressItems.filter((item) => item.value >= item.target).length;
+  const phaseOverallProgress = Math.round(
+    (phaseProgressItems.reduce((sum, item) => sum + Math.min(item.value, item.target), 0) /
+      (phaseProgressItems.length * phaseTarget)) *
+      100
+  );
+  const phaseFlowSteps = [
+    "الصفحة الرئيسية (زر انطلق)",
+    "شاشة ضبط البوصلة",
+    "شاشة تسجيل الدخول",
+    "شاشة الخرائط — خريطة العائلة فقط",
+    "رسائل الترحيب عند دخول الخريطة",
+    "إضافة شخص",
+    "الاستكشاف السريع",
+    "إحساسك مع الشخص ده",
+    "الواقع الفعلي",
+    "النتيجة"
+  ] as const;
   const FLOW_LABELS: Record<string, string> = {
     landing_viewed: "شاهد الهبوط",
     landing_clicked_start: "ضغط يلا نبدأ",
     landing_closed: "قفل المنصة من الهبوط",
+    auth_login_success: "نجح تسجيل الدخول",
     install_clicked: "ضغط تثبيت التطبيق",
     profile_clicked: "ضغط الحساب",
     pulse_opened: "فتح البوصلة",
@@ -871,6 +911,8 @@ const OverviewPanel: FC = () => {
     pulse_completed_without_choices: "حفظ البوصلة بدون اختيارات",
     add_person_opened: "فتح إضافة شخص",
     add_person_dropped: "هروب من إضافة شخص",
+    feedback_opened: "فتح نموذج الرأي",
+    feedback_submitted: "إرسال تغذية راجعة",
     tools_opened: "فتح أدوات"
   };
 
@@ -905,6 +947,66 @@ const OverviewPanel: FC = () => {
         <StatCard title="نشط الآن" value={formatNumber(activeNowValue)} hint={`آخر نشاط: ${formatTimeAgo(lastActive)}`} />
         <StatCard title="متوسط طاقة اليوم" value={formatNumber(avgMoodValue)} hint="من سجل النبض" />
         <StatCard title="استدعاءات AI" value={formatNumber(aiTokensUsed)} hint={isSupabaseReady ? "من سجل AI" : "مؤقتاً من المهام"} />
+      </div>
+
+      <div className="admin-glass-card p-5 space-y-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-800">هدف المرحلة الأولى</h3>
+            <p className="text-xs text-slate-500 mt-1">
+              هدفنا: 10 تسجيل + 10 تثبيت + 10 أشخاص مضافين على الخرائط.
+            </p>
+          </div>
+          <span className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+            {phaseCompletedGoals}/3 أهداف مكتملة
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {phaseProgressItems.map((item) => {
+            const ratio = Math.min(item.value / item.target, 1);
+            const progressPercent = Math.round(ratio * 100);
+            const done = item.value >= item.target;
+            return (
+              <div key={item.key} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="text-slate-600">{item.label}</span>
+                  <span className={`font-semibold ${done ? "text-emerald-600" : "text-slate-700"}`}>
+                    {item.value}/{item.target}
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+                  <div
+                    className={`h-full ${done ? "bg-emerald-500" : "bg-amber-500"}`}
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-[11px] text-slate-500">{progressPercent}%</p>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white/70 p-3">
+          <div className="flex items-center justify-between mb-2 text-xs">
+            <span className="text-slate-600">تقدم المرحلة بالكامل</span>
+            <span className="font-semibold text-slate-800">{phaseOverallProgress}%</span>
+          </div>
+          <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+            <div className="h-full bg-teal-500" style={{ width: `${phaseOverallProgress}%` }} />
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white/70 p-3">
+          <p className="text-xs font-semibold text-slate-700 mb-2">مسار المنصة في هذه المرحلة</p>
+          <div className="flex flex-wrap gap-2">
+            {phaseFlowSteps.map((step, idx) => (
+              <span key={step} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] text-slate-600">
+                {idx + 1}. {step}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1355,6 +1457,100 @@ const OverviewPanel: FC = () => {
   );
 };
 
+const FeedbackPanel: FC = () => {
+  const [entries, setEntries] = useState<AdminFeedbackEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState("");
+  const [query, setQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+
+  const loadFeedback = useCallback(async (search?: string) => {
+    setLoading(true);
+    setStatus("");
+    const data = await fetchFeedbackEntries({ limit: 200, search });
+    if (!data) {
+      setEntries([]);
+      setStatus("تعذر تحميل رسائل التغذية الراجعة حالياً.");
+      setLoading(false);
+      return;
+    }
+    setEntries(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void loadFeedback();
+  }, [loadFeedback]);
+
+  const handleSearch = () => {
+    const next = searchInput.trim();
+    setQuery(next);
+    void loadFeedback(next || undefined);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="admin-glass-card p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-800">رسائل المستخدمين</h3>
+            <p className="text-xs text-slate-500 mt-1">كل الرسائل المرسلة من نموذج "شاركنا رأيك".</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadFeedback(query || undefined)}
+            disabled={loading}
+            className="rounded-full border border-slate-700 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-900/50 disabled:opacity-50"
+          >
+            {loading ? "جاري التحديث..." : "تحديث"}
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="بحث بالنص أو الفئة أو رقم الجلسة..."
+            className="flex-1 min-w-[240px] rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
+          />
+          <button
+            type="button"
+            onClick={handleSearch}
+            className="rounded-full bg-teal-500 text-slate-950 px-4 py-2 text-xs font-semibold"
+          >
+            بحث
+          </button>
+        </div>
+
+        {status && <p className="text-xs text-rose-300">{status}</p>}
+
+        <div className="space-y-2 max-h-[560px] overflow-auto pr-1">
+          {!loading && entries.length === 0 && (
+            <p className="text-xs text-slate-500">لا توجد رسائل حالياً.</p>
+          )}
+          {entries.map((entry) => (
+            <div key={entry.id} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-3 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                <span className="rounded-full border border-slate-700 px-2 py-0.5 text-slate-300">
+                  الفئة: {entry.category}
+                </span>
+                <span className="text-slate-500">
+                  {entry.createdAt ? new Date(entry.createdAt).toLocaleString("ar-EG") : "—"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-200 whitespace-pre-wrap">{entry.message}</p>
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+                <span>التقييم: {entry.rating ?? "—"}</span>
+                <span>الجلسة: {entry.sessionId}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const FeatureFlagsPanel: FC = () => {
   const featureFlags = useAdminState((s) => s.featureFlags);
   const updateFeatureFlag = useAdminState((s) => s.updateFeatureFlag);
@@ -1689,6 +1885,66 @@ const ContentPanel: FC = () => {
 
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastBody, setBroadcastBody] = useState("");
+  const [broadcastAudience, setBroadcastAudience] = useState<BroadcastAudience>("all");
+  const upsertContentInStore = useAppContentState((s) => s.upsert);
+
+  const [contentEntries, setContentEntries] = useState<AdminContentEntry[]>([]);
+  const [contentDrafts, setContentDrafts] = useState<Record<string, { content: string; page: string }>>({});
+  const [contentLoading, setContentLoading] = useState(false);
+  const [contentSearch, setContentSearch] = useState("");
+  const [contentPageFilter, setContentPageFilter] = useState("");
+  const [contentStatus, setContentStatus] = useState("");
+  const [savingContentKey, setSavingContentKey] = useState<string | null>(null);
+  const [deletingContentKey, setDeletingContentKey] = useState<string | null>(null);
+  const [newContentKey, setNewContentKey] = useState("");
+  const [newContentPage, setNewContentPage] = useState("");
+  const [newContentValue, setNewContentValue] = useState("");
+
+  const updateContentDraft = (key: string, next: Partial<{ content: string; page: string }>) => {
+    setContentDrafts((prev) => ({
+      ...prev,
+      [key]: {
+        content: next.content ?? prev[key]?.content ?? "",
+        page: next.page ?? prev[key]?.page ?? ""
+      }
+    }));
+  };
+
+  const loadContentEntries = useCallback(async () => {
+    setContentLoading(true);
+    setContentStatus("");
+    try {
+      const data = await fetchAppContentEntries({
+        page: contentPageFilter.trim() || undefined,
+        limit: 300
+      });
+      if (!data) {
+        setContentStatus("تعذر تحميل نصوص المنصة حالياً.");
+        return;
+      }
+      setContentEntries(data);
+      setContentDrafts(
+        data.reduce<Record<string, { content: string; page: string }>>((acc, row) => {
+          acc[row.key] = { content: row.content, page: row.page ?? "" };
+          return acc;
+        }, {})
+      );
+    } finally {
+      setContentLoading(false);
+    }
+  }, [contentPageFilter]);
+
+  useEffect(() => {
+    void loadContentEntries();
+  }, [loadContentEntries]);
+
+  const filteredContentEntries = useMemo(() => {
+    const query = contentSearch.trim().toLowerCase();
+    if (!query) return contentEntries;
+    return contentEntries.filter((entry) =>
+      `${entry.key} ${entry.page ?? ""} ${entry.content}`.toLowerCase().includes(query)
+    );
+  }, [contentEntries, contentSearch]);
 
   const handleAddMission = async () => {
     if (!missionTitle.trim()) return;
@@ -1712,6 +1968,7 @@ const ContentPanel: FC = () => {
       id: `broadcast_${Date.now()}`,
       title: broadcastTitle.trim(),
       body: broadcastBody.trim(),
+      audience: broadcastAudience,
       createdAt: Date.now()
     } as const;
     addBroadcast(broadcast);
@@ -1720,10 +1977,226 @@ const ContentPanel: FC = () => {
     }
     setBroadcastTitle("");
     setBroadcastBody("");
+    setBroadcastAudience("all");
+  };
+
+  const handleSaveContent = async (key: string) => {
+    const draft = contentDrafts[key];
+    if (!draft) return;
+    setSavingContentKey(key);
+    setContentStatus("");
+    const ok = await saveAppContentEntry({
+      key,
+      content: draft.content,
+      page: draft.page.trim() || null
+    });
+    if (!ok) {
+      setContentStatus(`فشل حفظ النص: ${key}`);
+      setSavingContentKey(null);
+      return;
+    }
+
+    await upsertContentInStore(key, draft.content, { page: draft.page.trim() || undefined });
+    setContentEntries((prev) =>
+      prev.map((entry) =>
+        entry.key === key
+          ? {
+              ...entry,
+              content: draft.content,
+              page: draft.page.trim() || null,
+              updatedAt: new Date().toISOString()
+            }
+          : entry
+      )
+    );
+    setContentStatus(`تم حفظ النص: ${key}`);
+    setSavingContentKey(null);
+  };
+
+  const handleDeleteContent = async (key: string) => {
+    setDeletingContentKey(key);
+    setContentStatus("");
+    const ok = await deleteAppContentEntry(key);
+    if (!ok) {
+      setContentStatus(`فشل حذف النص: ${key}`);
+      setDeletingContentKey(null);
+      return;
+    }
+    setContentEntries((prev) => prev.filter((entry) => entry.key !== key));
+    setContentDrafts((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+    setContentStatus(`تم حذف النص: ${key}`);
+    setDeletingContentKey(null);
+  };
+
+  const handleCreateContent = async () => {
+    const key = newContentKey.trim();
+    const content = newContentValue.trim();
+    if (!key || !content) {
+      setContentStatus("أدخل المفتاح والنص قبل الإضافة.");
+      return;
+    }
+    if (contentEntries.some((entry) => entry.key === key)) {
+      setContentStatus("هذا المفتاح موجود بالفعل.");
+      return;
+    }
+
+    setSavingContentKey(key);
+    setContentStatus("");
+    const ok = await saveAppContentEntry({
+      key,
+      content,
+      page: newContentPage.trim() || null
+    });
+    if (!ok) {
+      setContentStatus("فشل إضافة النص الجديد.");
+      setSavingContentKey(null);
+      return;
+    }
+
+    await upsertContentInStore(key, content, { page: newContentPage.trim() || undefined });
+
+    const nextEntry: AdminContentEntry = {
+      key,
+      content,
+      page: newContentPage.trim() || null,
+      updatedAt: new Date().toISOString()
+    };
+    setContentEntries((prev) => [nextEntry, ...prev]);
+    setContentDrafts((prev) => ({
+      ...prev,
+      [key]: {
+        content,
+        page: newContentPage.trim()
+      }
+    }));
+    setNewContentKey("");
+    setNewContentPage("");
+    setNewContentValue("");
+    setContentStatus(`تمت إضافة النص: ${key}`);
+    setSavingContentKey(null);
   };
 
   return (
     <div className="space-y-6">
+      <div className="admin-glass-card p-5 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold">محرر نصوص المنصة</h3>
+          <button
+            type="button"
+            onClick={() => void loadContentEntries()}
+            disabled={contentLoading}
+            className="rounded-full border border-slate-700 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-900/50 disabled:opacity-50"
+          >
+            {contentLoading ? "جاري التحديث..." : "تحديث القائمة"}
+          </button>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-2">
+          <input
+            value={contentSearch}
+            onChange={(e) => setContentSearch(e.target.value)}
+            placeholder="بحث بالمفتاح أو النص..."
+            className="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
+          />
+          <input
+            value={contentPageFilter}
+            onChange={(e) => setContentPageFilter(e.target.value)}
+            placeholder="فلتر الصفحة (مثال: map)"
+            className="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
+          />
+        </div>
+
+        <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-3 space-y-2">
+          <p className="text-xs text-slate-400">إضافة نص جديد</p>
+          <div className="grid md:grid-cols-2 gap-2">
+            <input
+              value={newContentKey}
+              onChange={(e) => setNewContentKey(e.target.value)}
+              placeholder="key (مثال: landing_title)"
+              className="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
+            />
+            <input
+              value={newContentPage}
+              onChange={(e) => setNewContentPage(e.target.value)}
+              placeholder="page (اختياري)"
+              className="rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
+            />
+          </div>
+          <textarea
+            value={newContentValue}
+            onChange={(e) => setNewContentValue(e.target.value)}
+            rows={3}
+            placeholder="النص"
+            className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
+          />
+          <button
+            type="button"
+            onClick={handleCreateContent}
+            disabled={savingContentKey === newContentKey.trim() && Boolean(newContentKey.trim())}
+            className="rounded-full bg-teal-500 text-slate-950 px-4 py-2 text-xs font-semibold disabled:opacity-50"
+          >
+            إضافة النص
+          </button>
+        </div>
+
+        {contentStatus && <p className="text-xs text-amber-300">{contentStatus}</p>}
+
+        <div className="space-y-2 max-h-[460px] overflow-auto pr-1">
+          {!contentLoading && filteredContentEntries.length === 0 && (
+            <p className="text-xs text-slate-500">لا توجد نصوص مطابقة.</p>
+          )}
+          {filteredContentEntries.map((entry) => {
+            const draft = contentDrafts[entry.key] ?? { content: entry.content, page: entry.page ?? "" };
+            return (
+              <div key={entry.key} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-3 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs font-semibold text-slate-200">{entry.key}</p>
+                  <p className="text-[10px] text-slate-500">
+                    آخر تحديث: {entry.updatedAt ? new Date(entry.updatedAt).toLocaleString("ar-EG") : "—"}
+                  </p>
+                </div>
+
+                <input
+                  value={draft.page}
+                  onChange={(e) => updateContentDraft(entry.key, { page: e.target.value })}
+                  placeholder="page (اختياري)"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
+                />
+                <textarea
+                  value={draft.content}
+                  onChange={(e) => updateContentDraft(entry.key, { content: e.target.value })}
+                  rows={3}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
+                />
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleSaveContent(entry.key)}
+                    disabled={savingContentKey === entry.key}
+                    className="rounded-full bg-emerald-400 text-slate-950 px-4 py-1.5 text-xs font-semibold disabled:opacity-50"
+                  >
+                    {savingContentKey === entry.key ? "جاري الحفظ..." : "حفظ"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleDeleteContent(entry.key)}
+                    disabled={deletingContentKey === entry.key}
+                    className="rounded-full bg-rose-400 text-slate-950 px-4 py-1.5 text-xs font-semibold disabled:opacity-50"
+                  >
+                    {deletingContentKey === entry.key ? "جاري الحذف..." : "حذف"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="admin-glass-card p-5 space-y-3">
         <h3 className="text-sm font-semibold">مكتبة المهمات</h3>
         <div className="grid md:grid-cols-3 gap-2">
@@ -1801,6 +2274,16 @@ const ContentPanel: FC = () => {
           rows={3}
           className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
         />
+        <select
+          value={broadcastAudience}
+          onChange={(e) => setBroadcastAudience(e.target.value as BroadcastAudience)}
+          className="w-full rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-200"
+        >
+          <option value="all">الكل (زوار + مستخدمين + مثبتين)</option>
+          <option value="users">المستخدمين المسجلين فقط</option>
+          <option value="installed">اللي ثبّتوا التطبيق فقط</option>
+          <option value="visitors">الزوار فقط</option>
+        </select>
         <button
           type="button"
           onClick={handleAddBroadcast}
@@ -1814,6 +2297,15 @@ const ContentPanel: FC = () => {
             <div key={b.id} className="flex items-start justify-between gap-3 text-xs bg-slate-950/60 border border-slate-800 rounded-xl px-3 py-2">
               <div>
                 <p className="font-semibold text-slate-200">{b.title}</p>
+                <p className="text-[10px] text-amber-300 mt-0.5">
+                  الجمهور: {(b.audience ?? "all") === "all"
+                    ? "الكل"
+                    : (b.audience ?? "all") === "users"
+                      ? "المستخدمين"
+                      : (b.audience ?? "all") === "installed"
+                        ? "المثبتين"
+                        : "الزوار"}
+                </p>
                 <p className="text-slate-500 mt-1">{b.body}</p>
               </div>
               <button

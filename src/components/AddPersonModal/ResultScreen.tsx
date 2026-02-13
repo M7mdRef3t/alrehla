@@ -427,10 +427,10 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           )}
           <button
             type="button"
-            onClick={() => onClose()}
+            onClick={() => onClose(addedNodeId)}
             className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
           >
-            أضف الشخص
+            تم، ورّيني مكانه على الخريطة
           </button>
         </div>
       ) : null}

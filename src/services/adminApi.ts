@@ -9,6 +9,7 @@ import type {
   AdminMission,
   AdminBroadcast
 } from "../state/adminState";
+import { getBroadcastAudienceFromId, withBroadcastAudienceId } from "../utils/broadcastAudience";
 import type { MapNode } from "../modules/map/mapTypes";
 import type { PulseCheckMode } from "../state/pulseState";
 
@@ -323,6 +324,7 @@ export async function fetchBroadcasts(): Promise<AdminBroadcast[] | null> {
       id: String(row.id ?? row.created_at),
       title: String(row.title ?? ""),
       body: String(row.body ?? ""),
+      audience: getBroadcastAudienceFromId(String(row.id ?? "")),
       createdAt: new Date(String(row.created_at ?? Date.now())).getTime()
     }));
   }
@@ -336,19 +338,26 @@ export async function fetchBroadcasts(): Promise<AdminBroadcast[] | null> {
     id: String(row.id ?? row.created_at),
     title: String(row.title ?? ""),
     body: String(row.body ?? ""),
+    audience: getBroadcastAudienceFromId(String(row.id ?? "")),
     createdAt: new Date(String(row.created_at ?? Date.now())).getTime()
   }));
 }
 
 export async function saveBroadcast(broadcast: AdminBroadcast) {
+  const idWithAudience = withBroadcastAudienceId(broadcast.id, broadcast.audience ?? "all");
   const apiRes = await callAdminApi<{ ok: boolean }>("broadcasts", {
     method: "POST",
-    body: JSON.stringify({ broadcast })
+    body: JSON.stringify({
+      broadcast: {
+        ...broadcast,
+        id: idWithAudience
+      }
+    })
   });
   if (apiRes?.ok) return true;
   if (!isSupabaseReady || !supabase) return false;
   const { error } = await supabase.from("admin_broadcasts").insert({
-    id: broadcast.id,
+    id: idWithAudience,
     title: broadcast.title,
     body: broadcast.body,
     created_at: new Date(broadcast.createdAt).toISOString()
@@ -363,6 +372,103 @@ export async function deleteBroadcast(id: string) {
   if (apiRes?.ok) return true;
   if (!isSupabaseReady || !supabase) return false;
   const { error } = await supabase.from("admin_broadcasts").delete().eq("id", id);
+  return !error;
+}
+
+export interface AdminContentEntry {
+  key: string;
+  content: string;
+  page: string | null;
+  updatedAt: string | null;
+}
+
+export async function fetchAppContentEntries(query?: {
+  page?: string;
+  key?: string;
+  limit?: number;
+}): Promise<AdminContentEntry[] | null> {
+  const params = new URLSearchParams();
+  if (query?.page) params.set("page", query.page);
+  if (query?.key) params.set("key", query.key);
+  if (typeof query?.limit === "number" && Number.isFinite(query.limit) && query.limit > 0) {
+    params.set("limit", String(Math.floor(query.limit)));
+  }
+
+  const apiPath = params.toString() ? `content?${params.toString()}` : "content";
+  const apiData = await callAdminApi<{ entries: Array<Record<string, unknown>> }>(apiPath);
+  if (apiData?.entries) {
+    return apiData.entries.map((row) => ({
+      key: String(row.key ?? ""),
+      content: String(row.content ?? ""),
+      page: typeof row.page === "string" ? row.page : null,
+      updatedAt: typeof row.updated_at === "string"
+        ? row.updated_at
+        : typeof row.updatedAt === "string"
+          ? row.updatedAt
+          : null
+    }));
+  }
+
+  if (!isSupabaseReady || !supabase) return null;
+  let request = supabase
+    .from("app_content")
+    .select("key,content,page,updated_at")
+    .order("updated_at", { ascending: false });
+
+  if (query?.page) {
+    request = request.eq("page", query.page);
+  }
+  if (query?.key) {
+    request = request.ilike("key", `%${query.key}%`);
+  }
+  if (typeof query?.limit === "number" && Number.isFinite(query.limit) && query.limit > 0) {
+    request = request.limit(Math.min(Math.floor(query.limit), 500));
+  } else {
+    request = request.limit(300);
+  }
+
+  const { data, error } = await request;
+  if (error || !data) return null;
+  return data.map((row: Record<string, unknown>) => ({
+    key: String(row.key ?? ""),
+    content: String(row.content ?? ""),
+    page: typeof row.page === "string" ? row.page : null,
+    updatedAt: typeof row.updated_at === "string" ? row.updated_at : null
+  }));
+}
+
+export async function saveAppContentEntry(entry: {
+  key: string;
+  content: string;
+  page?: string | null;
+}) {
+  const payload = {
+    key: String(entry.key ?? "").trim(),
+    content: String(entry.content ?? ""),
+    page: entry.page ? String(entry.page) : null
+  };
+
+  if (!payload.key) return false;
+
+  const apiRes = await callAdminApi<{ ok: boolean }>("content", {
+    method: "POST",
+    body: JSON.stringify({ entry: payload })
+  });
+  if (apiRes?.ok) return true;
+  if (!isSupabaseReady || !supabase) return false;
+  const { error } = await supabase.from("app_content").upsert(payload, { onConflict: "key" });
+  return !error;
+}
+
+export async function deleteAppContentEntry(key: string) {
+  const normalizedKey = String(key ?? "").trim();
+  if (!normalizedKey) return false;
+  const apiRes = await callAdminApi<{ ok: boolean }>(`content?key=${encodeURIComponent(normalizedKey)}`, {
+    method: "DELETE"
+  });
+  if (apiRes?.ok) return true;
+  if (!isSupabaseReady || !supabase) return false;
+  const { error } = await supabase.from("app_content").delete().eq("key", normalizedKey);
   return !error;
 }
 
@@ -446,6 +552,12 @@ export interface WeeklyRhythm {
   lowestDayName: string | null;
 }
 
+export interface PhaseOneGoalProgress {
+  registeredUsers: number;
+  installedUsers: number;
+  addedPeople: number;
+}
+
 export interface OverviewStats {
   totalUsers: number | null;
   activeNow: number | null;
@@ -459,12 +571,49 @@ export interface OverviewStats {
   emergencyLogs?: EmergencyLogEntry[] | null;
   taskFriction?: TaskFrictionEntry[] | null;
   weeklyRhythm?: WeeklyRhythm | null;
+  phaseOneGoal?: PhaseOneGoalProgress | null;
   flowStats?: {
     byStep: Record<string, number>;
     avgTimeToActionMs: number | null;
     addPersonCompletionRate: number | null;
     pulseAbandonedByReason?: Record<string, number>;
   } | null;
+}
+
+export interface AdminFeedbackEntry {
+  id: string;
+  sessionId: string;
+  category: string;
+  rating: number | null;
+  message: string;
+  createdAt: number | null;
+}
+
+export interface OwnerAlertsResponse {
+  generatedAt: string;
+  since: string;
+  newVisitors: {
+    count: number;
+    sessionIds: string[];
+  };
+  logins: {
+    count: number;
+    sessionIds: string[];
+  };
+  installs: {
+    count: number;
+    sessionIds: string[];
+  };
+  phaseOne: {
+    registeredUsers: number;
+    installedUsers: number;
+    addedPeople: number;
+    target: number;
+    registeredReached: boolean;
+    installedReached: boolean;
+    addedReached: boolean;
+    fullyCompleted: boolean;
+  };
 }
 
 export interface JourneyMapSnapshot {
@@ -597,6 +746,49 @@ export async function fetchJourneyMap(sessionId: string): Promise<JourneyMapSnap
   };
 }
 
+export async function fetchFeedbackEntries(query?: {
+  limit?: number;
+  search?: string;
+}): Promise<AdminFeedbackEntry[] | null> {
+  const params = new URLSearchParams();
+  if (typeof query?.limit === "number" && Number.isFinite(query.limit) && query.limit > 0) {
+    params.set("limit", String(Math.floor(query.limit)));
+  }
+  if (query?.search && query.search.trim()) {
+    params.set("search", query.search.trim());
+  }
+  const path = params.toString()
+    ? `overview?kind=feedback&${params.toString()}`
+    : "overview?kind=feedback";
+
+  const apiData = await callAdminApi<{ entries: Array<Record<string, unknown>> }>(path);
+  if (!apiData?.entries) return null;
+
+  return apiData.entries.map((row) => ({
+    id: String(row.id ?? row.created_at ?? row.session_id ?? `${Date.now()}`),
+    sessionId: String(row.session_id ?? row.sessionId ?? "anonymous"),
+    category: String(row.category ?? "general"),
+    rating: typeof row.rating === "number" ? row.rating : null,
+    message: String(row.message ?? ""),
+    createdAt: row.created_at ? new Date(String(row.created_at)).getTime() : null
+  }));
+}
+
+export async function fetchOwnerAlerts(query?: {
+  since?: string;
+  phaseTarget?: number;
+}): Promise<OwnerAlertsResponse | null> {
+  const params = new URLSearchParams();
+  if (query?.since && query.since.trim()) params.set("since", query.since.trim());
+  if (typeof query?.phaseTarget === "number" && Number.isFinite(query.phaseTarget) && query.phaseTarget > 0) {
+    params.set("phaseTarget", String(Math.floor(query.phaseTarget)));
+  }
+  const path = params.toString()
+    ? `overview?kind=owner-alerts&${params.toString()}`
+    : "overview?kind=owner-alerts";
+  return await callAdminApi<OwnerAlertsResponse>(path);
+}
+
 export async function fetchOverviewStats(): Promise<OverviewStats | null> {
   const apiData = await callAdminApi<OverviewStats>("overview");
   if (apiData) return apiData;
@@ -605,7 +797,14 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
   const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [{ count: usersCount }, { count: activeCount }, { data: events }, { count: aiLogsCount }] =
+  const [
+    { count: usersCount },
+    { count: activeCount },
+    { data: events },
+    { count: aiLogsCount },
+    { count: addedPeopleCount },
+    { data: installedSessionsRows }
+  ] =
     await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", fiveMinAgo),
@@ -615,8 +814,21 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
         .gte("created_at", thirtyDaysAgo)
         .order("created_at", { ascending: true })
         .limit(1000),
-      supabase.from("admin_ai_logs").select("id", { count: "exact", head: true })
+      supabase.from("admin_ai_logs").select("id", { count: "exact", head: true }),
+      supabase.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "node_added"),
+      supabase
+        .from("journey_events")
+        .select("session_id")
+        .eq("type", "flow_event")
+        .contains("payload", { step: "install_clicked" })
+        .not("session_id", "is", null)
+        .limit(5000)
     ]);
+  const installedUsers = new Set(
+    ((installedSessionsRows ?? []) as Array<{ session_id?: unknown }>)
+      .map((row) => String(row.session_id ?? "").trim())
+      .filter(Boolean)
+  ).size;
 
   if (!events) {
     return {
@@ -626,6 +838,11 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       aiTokensUsed: aiLogsCount ?? null,
       growthData: [],
       zones: [],
+      phaseOneGoal: {
+        registeredUsers: usersCount ?? 0,
+        installedUsers,
+        addedPeople: addedPeopleCount ?? 0
+      },
       funnel: { steps: [] },
       flowStats: {
         byStep: {},
@@ -719,6 +936,11 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     aiTokensUsed: aiLogsCount ?? null,
     growthData,
     zones,
+    phaseOneGoal: {
+      registeredUsers: usersCount ?? 0,
+      installedUsers,
+      addedPeople: addedPeopleCount ?? 0
+    },
     funnel,
     flowStats: {
       byStep: flowCounts,

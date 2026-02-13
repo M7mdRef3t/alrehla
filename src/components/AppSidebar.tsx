@@ -91,6 +91,29 @@ const ClassicRecoveryModal = lazy(() =>
 const ManualPlacementModal = lazy(() =>
   import("./ManualPlacementModal").then((m) => ({ default: m.ManualPlacementModal }))
 );
+const FeedbackModal = lazy(() =>
+  import("./FeedbackModal").then((m) => ({ default: m.FeedbackModal }))
+);
+
+const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
+
+function normalizeArabicDigits(value: string): string {
+  return value
+    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632))
+    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776));
+}
+
+function normalizeWhatsAppPhone(rawPhone: string): string {
+  let digits = normalizeArabicDigits(rawPhone).replace(/\D/g, "");
+  if (!digits) return "";
+
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("020")) digits = digits.slice(1); // مثال: 0201... -> 201...
+  if (digits.startsWith("0") && digits.length === 11) digits = `20${digits.slice(1)}`; // 01x... -> 201x...
+  if (digits.startsWith("2") && digits.length === 12) return digits;
+  if (digits.startsWith("20")) return digits;
+  return digits;
+}
 
 interface AppSidebarProps {
   onOpenGym: () => void;
@@ -137,7 +160,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [showClassicRecovery, setShowClassicRecovery] = useState(false);
   const [showManualPlacement, setShowManualPlacement] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [initialRecoveryOptions, setInitialRecoveryOptions] = useState<RecoveryPlanOpenWith | null>(null);
+  const whatsAppNumber = import.meta.env.VITE_WHATSAPP_CONTACT_NUMBER || DEFAULT_WHATSAPP_CONTACT;
+  const whatsAppLink = useMemo(() => {
+    const normalized = normalizeWhatsAppPhone(whatsAppNumber);
+    if (!normalized) return null;
+    return `https://wa.me/${normalized}`;
+  }, [whatsAppNumber]);
   const recoveryPlanOpenWith = useMapState((s) => s.recoveryPlanOpenWith);
   const setRecoveryPlanOpenWith = useMapState((s) => s.setRecoveryPlanOpenWith);
 
@@ -213,6 +243,11 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   );
 
   const handleClose = () => setIsOpen(false);
+  const openWhatsAppChat = (placement: "desktop_sidebar" | "mobile_sidebar" | "floating_fab") => {
+    if (!whatsAppLink) return;
+    trackEvent("whatsapp_contact_clicked", { placement });
+    window.open(whatsAppLink, "_blank", "noopener,noreferrer");
+  };
   const handleOpen = () => setIsOpen(true);
 
   const openAdminDashboard = () => {
@@ -616,6 +651,29 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           {/* أزرار الدعم والطوارئ */}
           <button
             type="button"
+            onClick={() => {
+              recordFlowEvent("feedback_opened");
+              setShowFeedback(true);
+            }}
+            className="w-full flex items-center gap-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700 px-4 py-3 text-sm font-semibold hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+            title="شاركنا رأيك"
+          >
+            <MessageCircle className="w-5 h-5 shrink-0" />
+            شاركنا رأيك
+          </button>
+          {whatsAppLink && (
+            <button
+              type="button"
+              onClick={() => openWhatsAppChat("desktop_sidebar")}
+              className="w-full flex items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700 px-4 py-3 text-sm font-semibold hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all"
+              title="تواصل واتساب"
+            >
+              <MessageCircle className="w-5 h-5 shrink-0" />
+              <span className="sr-only">تواصل واتساب</span>
+            </button>
+          )}
+          <button
+            type="button"
             onClick={() => setShowNoiseSilencing(true)}
             className="w-full flex items-center gap-3 rounded-xl bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 px-4 py-3 text-sm font-semibold hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-all text-right shrink-0 whitespace-nowrap"
             title="تشويش الإشارة — إسكات الضجيج"
@@ -627,7 +685,6 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             type="button"
             onClick={() => {
               trackEvent(AnalyticsEvents.BREATHING_USED);
-              useAchievementState.getState().markBreathingUsed();
               setShowBreathing(true);
             }}
             className="w-full flex items-center gap-3 rounded-xl bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-700 px-4 py-3 text-sm font-semibold hover:border-sky-400 dark:hover:border-sky-500 hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-all text-right shrink-0 whitespace-nowrap"
@@ -658,6 +715,18 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           <PanelRightOpen className="w-5 h-5" />
         </div>
       </div>
+
+      {whatsAppLink && (
+        <button
+          type="button"
+          onClick={() => openWhatsAppChat("floating_fab")}
+          className="fixed z-30 right-4 md:right-6 bottom-[calc(env(safe-area-inset-bottom)+1rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all"
+          title="تواصل واتساب"
+          aria-label="تواصل واتساب"
+        >
+          <MessageCircle className="w-5 h-5 shrink-0" />
+        </button>
+      )}
 
       {/* Mobile Menu Button */}
       <button
@@ -1076,6 +1145,31 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <button
                   type="button"
                   onClick={() => {
+                    recordFlowEvent("feedback_opened");
+                    setShowFeedback(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all text-right"
+                >
+                  <MessageCircle className="w-6 h-6 shrink-0" />
+                  <span>شاركنا رأيك</span>
+                </button>
+                {whatsAppLink && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      openWhatsAppChat("mobile_sidebar");
+                      handleClose();
+                    }}
+                    className="w-full flex items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all"
+                  >
+                    <MessageCircle className="w-6 h-6 shrink-0" />
+                    <span className="sr-only">تواصل واتساب</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
                     setShowNoiseSilencing(true);
                     handleClose();
                   }}
@@ -1088,7 +1182,6 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   type="button"
                   onClick={() => {
                     trackEvent(AnalyticsEvents.BREATHING_USED);
-                    useAchievementState.getState().markBreathingUsed();
                     setShowBreathing(true);
                     handleClose();
                   }}
@@ -1250,6 +1343,24 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           <ManualPlacementModal
             isOpen={showManualPlacement}
             onClose={() => setShowManualPlacement(false)}
+          />
+        </Suspense>
+      )}
+
+      {showFeedback && (
+        <Suspense fallback={null}>
+          <FeedbackModal
+            isOpen={showFeedback}
+            onClose={() => setShowFeedback(false)}
+            onSubmit={async (payload) => {
+              recordFlowEvent("feedback_submitted", {
+                meta: {
+                  category: payload.category,
+                  rating: payload.rating,
+                  message: payload.message
+                }
+              });
+            }}
           />
         </Suspense>
       )}

@@ -148,7 +148,9 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
   }, [step]);
 
   const handleClose = (openNodeId?: string) => {
-    if (step !== "result") recordFlowEvent("add_person_dropped");
+    if (step !== "result") {
+      recordFlowEvent("add_person_dropped", { atStep: step });
+    }
     onClose(openNodeId);
   };
 
@@ -172,7 +174,8 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
       aria-modal="true"
     >
       <motion.div
-        className="relative bg-white border border-gray-200 rounded-2xl px-8 py-8 max-w-md w-full max-h-[90vh] overflow-y-auto"
+        className="relative bg-white border border-gray-200 rounded-2xl px-6 py-6 max-w-md w-full min-h-0 flex flex-col overflow-hidden"
+        style={{ height: "min(90vh, fit-content)", maxHeight: "90vh" }}
         onClick={(e) => e.stopPropagation()}
         initial={{ scale: 0.95, opacity: 0, y: 10 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -181,11 +184,12 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
         <button
           type="button"
           onClick={() => handleClose()}
-          className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-slate-500 hover:text-slate-700"
+          className="absolute top-3 left-3 w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-slate-500 hover:text-slate-700 z-10 shrink-0"
           aria-label="إغلاق"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
+        <div className="flex-auto min-h-0 overflow-hidden flex flex-col pt-1">
         {step === "select" ? (
           <SelectPersonStep
             goalId={goalId}
@@ -280,8 +284,8 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
             safetyAnswer={quickAnswer2 ?? undefined}
           />
         ) : null}
+        </div>
       </motion.div>
     </div>
   );
 };
-

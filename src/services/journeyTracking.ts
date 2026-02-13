@@ -196,6 +196,7 @@ export type FlowStep =
   | "landing_viewed"
   | "landing_clicked_start"
   | "landing_closed"
+  | "auth_login_success"
   | "install_clicked"
   | "profile_clicked"
   | "pulse_opened"
@@ -205,13 +206,20 @@ export type FlowStep =
   | "pulse_completed_without_choices"
   | "add_person_opened"
   | "add_person_dropped"
+  | "feedback_opened"
+  | "feedback_submitted"
   | "tools_opened";
 
 export function recordFlowEvent(
   step: FlowStep,
-  extra?: { timeToAction?: number; atStep?: string; closeReason?: "backdrop" | "close_button" | "programmatic" | "browser_close" }
+  extra?: {
+    timeToAction?: number;
+    atStep?: string;
+    closeReason?: "backdrop" | "close_button" | "programmatic" | "browser_close";
+    meta?: Record<string, unknown>;
+  }
 ): void {
-  const hasExtra = Boolean(extra?.atStep || extra?.closeReason);
+  const hasExtra = Boolean(extra?.atStep || extra?.closeReason || extra?.meta);
   const event = {
     type: "flow_event" as const,
     payload: {
@@ -220,7 +228,8 @@ export function recordFlowEvent(
       extra: hasExtra
         ? {
             ...(extra?.atStep ? { atStep: extra.atStep } : {}),
-            ...(extra?.closeReason ? { closeReason: extra.closeReason } : {})
+            ...(extra?.closeReason ? { closeReason: extra.closeReason } : {}),
+            ...(extra?.meta ? extra.meta : {})
           }
         : undefined
     } as JourneyEventPayload["flow_event"],

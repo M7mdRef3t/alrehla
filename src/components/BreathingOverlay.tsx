@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
+import { useAchievementState } from "../state/achievementState";
 
 interface BreathingOverlayProps {
   onClose: () => void;
@@ -19,6 +20,11 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
 }) => {
   const [phase, setPhase] = useState<"in" | "out">("in");
   const [cycleCount, setCycleCount] = useState(0);
+  const markBreathingUsed = useAchievementState((s) => s.markBreathingUsed);
+
+  useEffect(() => {
+    markBreathingUsed();
+  }, [markBreathingUsed]);
 
   useEffect(() => {
     const t = setInterval(() => {

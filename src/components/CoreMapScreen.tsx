@@ -21,6 +21,7 @@ import { useAdminState } from "../state/adminState";
 import { getEffectiveFeatureAccess } from "../utils/featureFlags";
 import { getEffectiveRoleFromState, useAuthState } from "../state/authState";
 import type { FeatureFlagKey } from "../config/features";
+import { isUserMode } from "../config/appEnv";
 
 /* ════════════════════════════════════════════════
    🌌 CORE MAP SCREEN — Digital Sanctuary
@@ -113,8 +114,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     );
   };
   const showPlacementTooltip = useMapState((s) => s.showPlacementTooltip);
+  const lastAddedNodeId = useMapState((s) => s.lastAddedNodeId);
   const dismissPlacementTooltip = useMapState((s) => s.dismissPlacementTooltip);
   const [showOnboarding, setShowOnboarding] = useState(() => nodes.length === 0 && !hasSeenOnboarding() && !journeyMode);
+  const lastAddedNode = lastAddedNodeId ? nodes.find((node) => node.id === lastAddedNodeId) ?? null : null;
 
   useEffect(() => {
     if (!showPlacementTooltip) return;
@@ -217,6 +220,11 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       dotGlow: "var(--ring-danger-glow)",
       pillClass: "legend-pill legend-pill-danger"
     }
+  };
+
+  const handleNodeClick = (id: string) => {
+    if (isUserMode) return;
+    onSelectNode(id);
   };
 
   return (
@@ -495,13 +503,17 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       <AnimatePresence mode="wait">
         {canUseGalaxyView && galaxyMode && galaxySubView === "forest" ? (
           <motion.div key="forest" initial={{ opacity: 0, y: 16, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -12, filter: "blur(4px)" }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
-            <ForestView onNodeClick={(id) => onSelectNode(id)} />
+            <ForestView onNodeClick={handleNodeClick} />
           </motion.div>
         ) : canUseGalaxyView && galaxyMode && galaxySubView === "map" ? (
           <motion.div key="galaxy-map" initial={{ opacity: 0, y: 16, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -12, filter: "blur(4px)" }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
             <MapCanvas
-              onNodeClick={(id) => onSelectNode(id)}
-              onMeClick={() => { if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; } setShowMeCard(true); }}
+              onNodeClick={handleNodeClick}
+              onMeClick={() => {
+                if (isUserMode) return;
+                if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; }
+                setShowMeCard(true);
+              }}
               galaxyGoalIds={selectedContexts.length > 0 ? selectedContexts : ["family", "work", "love", "general"]}
               highlightNodeId={selectedNodeId}
             />
@@ -509,15 +521,19 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         ) : !canUseFamilyTreeView || viewMode === "map" ? (
           <motion.div key="single-map" initial={{ opacity: 0, y: 16, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -12, filter: "blur(4px)" }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
             <MapCanvas
-              onNodeClick={(id) => onSelectNode(id)}
-              onMeClick={() => { if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; } setShowMeCard(true); }}
+              onNodeClick={handleNodeClick}
+              onMeClick={() => {
+                if (isUserMode) return;
+                if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; }
+                setShowMeCard(true);
+              }}
               goalIdFilter={goalId}
               highlightNodeId={selectedNodeId}
             />
           </motion.div>
         ) : canUseFamilyTreeView && isFamily ? (
           <motion.div key="family-tree" initial={{ opacity: 0, y: 16, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -12, filter: "blur(4px)" }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
-            <FamilyTreeView onNodeClick={(id) => onSelectNode(id)} />
+            <FamilyTreeView onNodeClick={handleNodeClick} />
           </motion.div>
         ) : null}
       </AnimatePresence>
@@ -560,11 +576,54 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           aria-live="polite"
         >
           <span>
-            <EditableText id="map_first_placement_tooltip" defaultText={mapCopy.firstPlacementTooltip} page="map" showEditIcon={false} />
+            {lastAddedNode ? (
+              <>
+                تم إضافة <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{lastAddedNode.label}</span>{" "}
+                في{" "}
+                <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                  <span
+                    style={{
+                      color:
+                        lastAddedNode.ring === "green"
+                          ? "var(--ring-safe)"
+                          : lastAddedNode.ring === "yellow"
+                            ? "var(--ring-caution)"
+                            : "var(--ring-danger)"
+                    }}
+                  >
+                    {lastAddedNode.ring === "green"
+                      ? mapCopy.legendGreen
+                      : lastAddedNode.ring === "yellow"
+                        ? mapCopy.legendYellow
+                        : mapCopy.legendRed}
+                  </span>
+                </span>
+                . اضغط عليه للتفاصيل أو اسحبه لو عايز تغيّر مكانه.
+              </>
+            ) : (
+              <EditableText id="map_first_placement_tooltip" defaultText={mapCopy.firstPlacementTooltip} page="map" showEditIcon={false} />
+            )}
           </span>
-          <button type="button" onClick={dismissPlacementTooltip} className="shrink-0 rounded-full p-1.5 transition-colors" style={{ color: "var(--text-muted)" }} title="إغلاق" aria-label="إغلاق">
-            ✕
-          </button>
+          <div className="shrink-0 flex items-center gap-1">
+            {lastAddedNode && (
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectNode(lastAddedNode.id);
+                  dismissPlacementTooltip();
+                }}
+                className="rounded-full px-2.5 py-1 text-xs font-semibold border border-white/15 hover:bg-white/5 transition-colors"
+                style={{ color: "var(--text-primary)" }}
+                title="افتح الشخص"
+                aria-label="افتح الشخص"
+              >
+                افتحه
+              </button>
+            )}
+            <button type="button" onClick={dismissPlacementTooltip} className="rounded-full p-1.5 transition-colors" style={{ color: "var(--text-muted)" }} title="إغلاق" aria-label="إغلاق">
+              ✕
+            </button>
+          </div>
         </motion.div>
       )}
 
@@ -623,7 +682,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {/* ── Modals ── */}
       {showAddPerson && (
-        <AddPersonModal goalId={goalId} onClose={(openNodeId) => { setShowAddPerson(false); if (openNodeId) onSelectNode(openNodeId); else onSelectNode(null); }} onOpenMission={onOpenMission} />
+        <AddPersonModal
+          goalId={goalId}
+          onClose={() => {
+            setShowAddPerson(false);
+            onSelectNode(null);
+          }}
+          onOpenMission={onOpenMission}
+        />
       )}
       {selectedNodeId && canUseBasicDiagnosis && (
         <ViewPersonModal nodeId={selectedNodeId} category={category} goalId={goalId} onOpenMission={onOpenMission} onClose={() => onSelectNode(null)} />

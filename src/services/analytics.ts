@@ -3,9 +3,12 @@
  * 
  * يدعم:
  * - Google Analytics 4
+ * - Microsoft Clarity
+ * - ContentSquare
  * - Custom events للـ debugging
  * - Opt-out للخصوصية
  */
+import { isUserMode } from "../config/appEnv";
 
 // Check if analytics is enabled
 function isAnalyticsEnabled(): boolean {
@@ -18,30 +21,72 @@ function getGAMeasurementId(): string | null {
   return import.meta.env.VITE_GA_MEASUREMENT_ID || null;
 }
 
+// Get Microsoft Clarity project ID from env
+function getClarityProjectId(): string | null {
+  return import.meta.env.VITE_CLARITY_PROJECT_ID || null;
+}
+
+// Get ContentSquare project ID from env
+function getContentSquareProjectId(): string | null {
+  return import.meta.env.VITE_CONTENTSQUARE_PROJECT_ID || null;
+}
+
+function loadScriptOnce(scriptId: string, src: string): void {
+  if (document.getElementById(scriptId)) return;
+
+  const script = document.createElement("script");
+  script.id = scriptId;
+  script.async = true;
+  script.src = src;
+  document.head.appendChild(script);
+}
+
 // Initialize GA4
 export function initAnalytics(): void {
+  if (!isUserMode || !isAnalyticsEnabled()) return;
+
   const measurementId = getGAMeasurementId();
-  if (!measurementId || !isAnalyticsEnabled()) return;
+  if (measurementId) {
+    loadScriptOnce("dawayir-ga4-script", `https://www.googletagmanager.com/gtag/js?id=${measurementId}`);
 
-  // Load gtag script
-  const script = document.createElement("script");
-  script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`;
-  document.head.appendChild(script);
+    // Initialize gtag
+    window.dataLayer = window.dataLayer || [];
+    function gtag(...args: unknown[]) {
+      window.dataLayer.push(args);
+    }
+    gtag("js", new Date());
+    gtag("config", measurementId, {
+      anonymize_ip: true,
+      cookie_flags: "SameSite=None;Secure"
+    });
 
-  // Initialize gtag
-  window.dataLayer = window.dataLayer || [];
-  function gtag(...args: unknown[]) {
-    window.dataLayer.push(args);
+    // Store gtag function globally
+    window.gtag = gtag;
   }
-  gtag("js", new Date());
-  gtag("config", measurementId, {
-    anonymize_ip: true,
-    cookie_flags: "SameSite=None;Secure"
-  });
 
-  // Store gtag function globally
-  window.gtag = gtag;
+  const clarityProjectId = getClarityProjectId();
+  if (clarityProjectId) {
+    if (!window.clarity) {
+      const clarity = ((...args: unknown[]) => {
+        clarity.q = clarity.q || [];
+        clarity.q.push(args);
+      }) as ClarityFn;
+      window.clarity = clarity;
+    }
+
+    loadScriptOnce(
+      "dawayir-clarity-script",
+      `https://www.clarity.ms/tag/${clarityProjectId}`
+    );
+  }
+
+  const contentSquareProjectId = getContentSquareProjectId();
+  if (contentSquareProjectId) {
+    loadScriptOnce(
+      "dawayir-contentsquare-script",
+      `https://t.contentsquare.net/uxa/${contentSquareProjectId}.js`
+    );
+  }
 }
 
 // Track page view
@@ -121,5 +166,10 @@ declare global {
   interface Window {
     dataLayer: unknown[];
     gtag: (...args: unknown[]) => void;
+    clarity?: ClarityFn;
   }
 }
+
+type ClarityFn = ((...args: unknown[]) => void) & {
+  q?: unknown[][];
+};

@@ -75,14 +75,16 @@ export const MapOnboardingOverlay: FC<MapOnboardingOverlayProps> = ({ onClose })
               <EditableText id="map_onboarding_next" defaultText="التالي" page="map" editOnClick={false} />
             </motion.button>
           ) : null}
-          <motion.button
-            type="button"
-            onClick={isLast ? handleFinish : handleFinish}
-            className="rounded-full bg-teal-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-            whileTap={{ scale: 0.98 }}
-          >
-            <EditableText id="map_onboarding_cta" defaultText={mapCopy.onboardingCta} page="map" editOnClick={false} />
-          </motion.button>
+          {isLast ? (
+            <motion.button
+              type="button"
+              onClick={handleFinish}
+              className="rounded-full bg-teal-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+              whileTap={{ scale: 0.98 }}
+            >
+              <EditableText id="map_onboarding_cta" defaultText={mapCopy.onboardingCta} page="map" editOnClick={false} />
+            </motion.button>
+          ) : null}
         </div>
       </motion.div>
     </div>
