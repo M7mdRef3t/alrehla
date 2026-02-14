@@ -73,8 +73,8 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
   const [lastFeelingAnswers, setLastFeelingAnswers] = useState<FeelingAnswers | null>(null);
   const [addedNodeId, setAddedNodeId] = useState<string | null>(null);
   const [pendingPlacement, setPendingPlacement] = useState<{ finalLabel: string; score: number; healthAnswers: FeelingAnswers } | null>(null);
-  const [quickAnswer1, setQuickAnswer1] = useState<QuickAnswer1 | null>(null);
-  const [quickAnswer2, setQuickAnswer2] = useState<QuickAnswer2 | null>(null);
+  const [quickAnswer1, setQuickAnswer1] = useState<QuickAnswer1 | null>("medium");
+  const [quickAnswer2, setQuickAnswer2] = useState<QuickAnswer2 | null>("medium");
   const [linkToParentId, setLinkToParentId] = useState<string | null>(null);
   const [lastRealityAnswers, setLastRealityAnswers] = useState<RealityAnswers | null>(null);
   const [isEmergency, setIsEmergency] = useState(false);
@@ -252,7 +252,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
             onSelectEmergency={(value) => setIsEmergency(value)}
             onBack={() => setStep("select")}
             onContinue={handleQuickQuestionsDone}
-            disableSubmit={quickAnswer1 == null || quickAnswer2 == null}
+            disableSubmit={false}
             getTier1={(value) => quick1Tier[value] ?? "green"}
             getTier2={(value) => quick2Tier[value] ?? "green"}
             nextLabel={addPersonCopy.nextAfterQuestions}

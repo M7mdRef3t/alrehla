@@ -693,9 +693,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {showAddPerson && (
         <AddPersonModal
           goalId={goalId}
-          onClose={() => {
+          onClose={(openNodeId?: string) => {
             setShowAddPerson(false);
-            onSelectNode(null);
+            onSelectNode(openNodeId ?? null);
           }}
           onOpenMission={onOpenMission}
         />
