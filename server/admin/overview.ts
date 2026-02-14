@@ -605,8 +605,11 @@ async function handleOwnerAlerts(client: any, req: any, res: any) {
 async function handleOpsInsights(client: any, res: any) {
   const now = new Date();
   const since1d = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const prev1dStart = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
   const since7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const prev7dStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
   const since30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const since60d = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
 
   const [
     { count: profiles },
@@ -614,21 +617,26 @@ async function handleOpsInsights(client: any, res: any) {
     { count: eventsTotal },
     { count: mapsTotal },
     { count: events1d },
+    { count: eventsPrev1d },
     { count: events7d },
+    { count: eventsPrev7d },
     { count: events30d },
     { count: nodeAdded },
     { count: pathStarted },
     { count: taskCompleted },
     { count: identified },
     { count: anonymous },
-    { data: flowRows }
+    { data: flowRows },
+    { data: recentEventsRows }
   ] = await Promise.all([
     client.from("profiles").select("id", { count: "exact", head: true }),
     client.from("user_state").select("device_token", { count: "exact", head: true }),
     client.from("journey_events").select("id", { count: "exact", head: true }),
     client.from("journey_maps").select("session_id", { count: "exact", head: true }),
     client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", since1d),
+    client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", prev1dStart).lt("created_at", since1d),
     client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", since7d),
+    client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", prev7dStart).lt("created_at", since7d),
     client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", since30d),
     client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "node_added"),
     client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "path_started"),
@@ -641,11 +649,19 @@ async function handleOpsInsights(client: any, res: any) {
       .eq("type", "flow_event")
       .gte("created_at", since30d)
       .order("created_at", { ascending: false })
-      .limit(10000)
+      .limit(10000),
+    client
+      .from("journey_events")
+      .select("session_id,created_at,type,mode")
+      .gte("created_at", since60d)
+      .order("created_at", { ascending: false })
+      .limit(50000)
   ]);
 
   const flowCounts: Record<string, number> = {};
   const sessions30d = new Set<string>();
+  const segmentByChannel: Record<string, number> = {};
+  const segmentByDevice: Record<string, number> = {};
   for (const row of (flowRows ?? []) as Array<Record<string, unknown>>) {
     const payload = row.payload as Record<string, unknown> | null;
     const step = String(payload?.step ?? "");
@@ -653,6 +669,10 @@ async function handleOpsInsights(client: any, res: any) {
     flowCounts[step] = (flowCounts[step] ?? 0) + 1;
     const sid = String(row.session_id ?? "").trim();
     if (sid) sessions30d.add(sid);
+    const channel = String(payload?.source ?? payload?.utm_source ?? payload?.channel ?? payload?.referrer ?? "").trim().toLowerCase();
+    if (channel) segmentByChannel[channel] = (segmentByChannel[channel] ?? 0) + 1;
+    const device = String(payload?.device ?? payload?.platform ?? "").trim().toLowerCase();
+    if (device) segmentByDevice[device] = (segmentByDevice[device] ?? 0) + 1;
   }
 
   const funnel = {
@@ -665,13 +685,71 @@ async function handleOpsInsights(client: any, res: any) {
 
   const identifiedTotal = (identified ?? 0) + (anonymous ?? 0);
   const identifiedRate = identifiedTotal > 0 ? Math.round(((identified ?? 0) / identifiedTotal) * 100) : 0;
+  const cmp = (current: number, previous: number) => (previous > 0 ? Math.round(((current - previous) / previous) * 100) : (current > 0 ? 100 : 0));
+
+  const cohortSessions = new Map<string, { firstAt: number; lastAt: number; hasPath: boolean }>();
+  for (const row of (recentEventsRows ?? []) as Array<Record<string, unknown>>) {
+    const sid = String(row.session_id ?? "").trim();
+    if (!sid) continue;
+    const createdAt = new Date(String(row.created_at ?? "")).getTime();
+    if (Number.isNaN(createdAt)) continue;
+    const type = String(row.type ?? "");
+    const current = cohortSessions.get(sid);
+    if (!current) {
+      cohortSessions.set(sid, { firstAt: createdAt, lastAt: createdAt, hasPath: type === "path_started" });
+      continue;
+    }
+    if (createdAt < current.firstAt) current.firstAt = createdAt;
+    if (createdAt > current.lastAt) current.lastAt = createdAt;
+    if (type === "path_started") current.hasPath = true;
+  }
+
+  const cohort = {
+    newSessions30d: 0,
+    retained7d: 0,
+    retained30d: 0,
+    activationRate: 0
+  };
+  const nowMs = now.getTime();
+  let activatedCount = 0;
+  for (const value of cohortSessions.values()) {
+    const ageDays = (nowMs - value.firstAt) / (24 * 60 * 60 * 1000);
+    if (ageDays <= 30) {
+      cohort.newSessions30d += 1;
+      if (value.hasPath) activatedCount += 1;
+      if (ageDays >= 7 && value.lastAt - value.firstAt >= 7 * 24 * 60 * 60 * 1000) cohort.retained7d += 1;
+      if (ageDays >= 30 && value.lastAt - value.firstAt >= 30 * 24 * 60 * 60 * 1000) cohort.retained30d += 1;
+    }
+  }
+  cohort.activationRate = cohort.newSessions30d > 0 ? Math.round((activatedCount / cohort.newSessions30d) * 100) : 0;
+
   const warnings: string[] = [];
+  const alerts: Array<{ level: "critical" | "warning" | "info"; code: string; title: string; metric: number; threshold: number }> = [];
   if ((mapsTotal ?? 0) === 0 && (nodeAdded ?? 0) > 0) warnings.push("تمت إضافات أشخاص لكن لا توجد خرائط محفوظة.");
   if ((pathStarted ?? 0) === 0) warnings.push("لا توجد أي بدايات مسار.");
   if (funnel.addPersonOpened > 0 && Math.round((funnel.addPersonDone / funnel.addPersonOpened) * 100) < 30) {
     warnings.push("تحويل ما بعد إضافة الشخص منخفض جدًا.");
   }
   if (identifiedRate < 25) warnings.push("نسبة identified منخفضة وتضعف التتبع الفردي.");
+
+  if ((mapsTotal ?? 0) === 0 && (nodeAdded ?? 0) > 0) {
+    alerts.push({ level: "critical", code: "maps_not_persisted", title: "الإضافات لا تتحول لخرائط محفوظة", metric: mapsTotal ?? 0, threshold: 1 });
+  }
+  if ((pathStarted ?? 0) === 0) {
+    alerts.push({ level: "critical", code: "no_path_started", title: "لا يوجد بدء مسار", metric: pathStarted ?? 0, threshold: 1 });
+  }
+  if (identifiedRate < 25) {
+    alerts.push({ level: "warning", code: "low_identified_rate", title: "جودة تتبع ضعيفة", metric: identifiedRate, threshold: 25 });
+  }
+  if (cohort.activationRate < 20) {
+    alerts.push({ level: "warning", code: "low_activation", title: "تفعيل منخفض للمستخدمين الجدد", metric: cohort.activationRate, threshold: 20 });
+  }
+
+  const topSegments = (input: Record<string, number>) =>
+    Object.entries(input)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([key, count]) => ({ key, count }));
 
   res.status(200).json({
     generatedAt: now.toISOString(),
@@ -687,6 +765,10 @@ async function handleOpsInsights(client: any, res: any) {
       events7d: events7d ?? 0,
       events30d: events30d ?? 0
     },
+    comparisons: {
+      events1dDelta: cmp(events1d ?? 0, eventsPrev1d ?? 0),
+      events7dDelta: cmp(events7d ?? 0, eventsPrev7d ?? 0)
+    },
     journey: {
       nodeAdded: nodeAdded ?? 0,
       pathStarted: pathStarted ?? 0,
@@ -697,7 +779,17 @@ async function handleOpsInsights(client: any, res: any) {
       anonymous: anonymous ?? 0,
       identifiedRate
     },
+    segments: {
+      byMode: [
+        { key: "identified", count: identified ?? 0 },
+        { key: "anonymous", count: anonymous ?? 0 }
+      ],
+      byChannel: topSegments(segmentByChannel),
+      byDevice: topSegments(segmentByDevice)
+    },
+    cohort,
     funnel,
+    alerts,
     warnings
   });
 }

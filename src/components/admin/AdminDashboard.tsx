@@ -1044,6 +1044,67 @@ const OverviewPanel: FC = () => {
             <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">add_person_done</p><p className="font-semibold text-slate-800">{opsInsights.funnel.addPersonDone}</p></div>
             <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">start_path_cta</p><p className="font-semibold text-slate-800">{opsInsights.funnel.startPathCTA}</p></div>
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500">delta 24h</p>
+              <p className={`font-semibold ${opsInsights.comparisons.events1dDelta >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                {opsInsights.comparisons.events1dDelta > 0 ? "+" : ""}{opsInsights.comparisons.events1dDelta}%
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500">delta 7d</p>
+              <p className={`font-semibold ${opsInsights.comparisons.events7dDelta >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                {opsInsights.comparisons.events7dDelta > 0 ? "+" : ""}{opsInsights.comparisons.events7dDelta}%
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500">cohort new (30d)</p>
+              <p className="font-semibold text-slate-800">{opsInsights.cohort.newSessions30d}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500">activation</p>
+              <p className="font-semibold text-slate-800">{opsInsights.cohort.activationRate}%</p>
+            </div>
+          </div>
+          {opsInsights.alerts.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {opsInsights.alerts.map((alert) => (
+                <div
+                  key={alert.code}
+                  className={`rounded-xl border p-3 ${
+                    alert.level === "critical"
+                      ? "border-rose-200 bg-rose-50"
+                      : alert.level === "warning"
+                        ? "border-amber-200 bg-amber-50"
+                        : "border-sky-200 bg-sky-50"
+                  }`}
+                >
+                  <p className="text-xs font-semibold text-slate-800">{alert.title}</p>
+                  <p className="text-[11px] text-slate-600">metric: {alert.metric} | threshold: {alert.threshold}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500 mb-1">segments: mode</p>
+              {opsInsights.segments.byMode.map((item) => (
+                <p key={item.key} className="text-slate-700">{item.key}: <span className="font-semibold">{item.count}</span></p>
+              ))}
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500 mb-1">segments: channel</p>
+              {opsInsights.segments.byChannel.length ? opsInsights.segments.byChannel.map((item) => (
+                <p key={item.key} className="text-slate-700">{item.key}: <span className="font-semibold">{item.count}</span></p>
+              )) : <p className="text-slate-500">no data</p>}
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500 mb-1">segments: device</p>
+              {opsInsights.segments.byDevice.length ? opsInsights.segments.byDevice.map((item) => (
+                <p key={item.key} className="text-slate-700">{item.key}: <span className="font-semibold">{item.count}</span></p>
+              )) : <p className="text-slate-500">no data</p>}
+            </div>
+          </div>
           {opsInsights.warnings.length > 0 && (
             <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 space-y-1">
               {opsInsights.warnings.map((warning) => (

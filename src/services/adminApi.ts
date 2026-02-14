@@ -645,6 +645,10 @@ export interface OpsInsights {
     events7d: number;
     events30d: number;
   };
+  comparisons: {
+    events1dDelta: number;
+    events7dDelta: number;
+  };
   journey: {
     nodeAdded: number;
     pathStarted: number;
@@ -655,6 +659,17 @@ export interface OpsInsights {
     anonymous: number;
     identifiedRate: number;
   };
+  segments: {
+    byMode: Array<{ key: string; count: number }>;
+    byChannel: Array<{ key: string; count: number }>;
+    byDevice: Array<{ key: string; count: number }>;
+  };
+  cohort: {
+    newSessions30d: number;
+    retained7d: number;
+    retained30d: number;
+    activationRate: number;
+  };
   funnel: {
     landingViewed: number;
     startClicked: number;
@@ -662,6 +677,13 @@ export interface OpsInsights {
     addPersonDone: number;
     startPathCTA: number;
   };
+  alerts: Array<{
+    level: "critical" | "warning" | "info";
+    code: string;
+    title: string;
+    metric: number;
+    threshold: number;
+  }>;
   warnings: string[];
 }
 
