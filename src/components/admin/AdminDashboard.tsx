@@ -954,6 +954,20 @@ const OverviewPanel: FC = () => {
       : conversionStatusLabel === "مراقبة"
         ? "text-amber-700 bg-amber-50 border-amber-200"
         : "text-emerald-700 bg-emerald-50 border-emerald-200";
+  const conversionActions = [
+    conversionHealth && conversionHealth.pathStarted24h === 0
+      ? "فعّل حملة دفع فورية: رسالة واضحة بعد إضافة الشخص بزر واحد \"ابدأ المسار الآن\"."
+      : null,
+    conversionHealth && conversionHealth.journeyMapsTotal === 0
+      ? "راجع نقطة حفظ الخريطة: نفّذ اختبار داخلي (إضافة شخص > تحديث > تأكد من ظهور الخريطة بعد إعادة الدخول)."
+      : null,
+    addPersonCompletionRatio != null && addPersonCompletionRatio < 40
+      ? "بسّط خطوة إضافة الشخص: قلّل الحقول الإلزامية واجعل الإكمال في خطوة واحدة."
+      : null,
+    flowStats && (flowStats.byStep?.pulse_abandoned ?? 0) > (flowStats.byStep?.pulse_completed ?? 0)
+      ? "خفّض احتكاك البوصلة: أضف خيار \"تخطي الآن\" مع حفظ تلقائي للحالة الجزئية."
+      : null
+  ].filter(Boolean) as string[];
 
   const [chartPeriod, setChartPeriod] = useState<7 | 28>(28);
   const growthDataFiltered = useMemo(() => {
@@ -1167,6 +1181,19 @@ const OverviewPanel: FC = () => {
               {conversionAlerts.map((alert) => (
                 <p key={alert} className="text-xs text-rose-700">{alert}</p>
               ))}
+            </div>
+          )}
+
+          {conversionActions.length > 0 && (
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-xs font-semibold text-slate-700 mb-2">إجراءات مقترحة تلقائيًا</p>
+              <div className="space-y-2">
+                {conversionActions.map((action) => (
+                  <p key={action} className="text-xs text-slate-600">
+                    • {action}
+                  </p>
+                ))}
+              </div>
             </div>
           )}
         </div>
