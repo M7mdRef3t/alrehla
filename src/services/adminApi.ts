@@ -536,6 +536,7 @@ export interface TopScenario {
 }
 
 export interface EmergencyLogEntry {
+  sessionId: string;
   personLabel: string;
   createdAt: string;
 }

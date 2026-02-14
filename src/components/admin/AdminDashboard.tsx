@@ -1344,9 +1344,19 @@ const OverviewPanel: FC = () => {
             </div>
             <div className="space-y-2 text-xs">
               {emergencyLogs.map((log, i) => (
-                <div key={i} className="flex justify-between text-slate-200">
-                  <span>{log.personLabel}</span>
-                  <span className="text-slate-300">{formatTimeAgo(log.createdAt ? new Date(log.createdAt).getTime() : null)}</span>
+                <div key={`${log.sessionId || "no-session"}-${i}`} className="flex items-center justify-between gap-3 text-slate-200">
+                  <div className="min-w-0">
+                    <p className="truncate">{log.personLabel}</p>
+                    <p className="text-slate-300">{formatTimeAgo(log.createdAt ? new Date(log.createdAt).getTime() : null)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!log.sessionId}
+                    onClick={() => log.sessionId && void openJourneyLog(log.sessionId)}
+                    className="shrink-0 rounded-full border border-rose-300/50 px-3 py-1 text-[11px] font-semibold text-rose-100 hover:bg-rose-800/40 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    متابعة الحالة
+                  </button>
                 </div>
               ))}
             </div>

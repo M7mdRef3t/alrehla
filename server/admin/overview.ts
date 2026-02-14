@@ -322,6 +322,7 @@ async function handleOverview(client: any, res: any) {
   const emergencyLogs = (events as Array<Record<string, unknown>>)
     .filter((row) => String(row.type ?? "") === "node_added" && (row.payload as Record<string, unknown>)?.isEmergency === true)
     .map((row) => ({
+      sessionId: String(row.session_id ?? ""),
       personLabel: String((row.payload as Record<string, unknown>)?.personLabel ?? "—"),
       createdAt: String(row.created_at ?? "")
     }))
