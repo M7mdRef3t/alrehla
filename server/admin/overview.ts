@@ -1,4 +1,4 @@
-import { getAdminSupabase, parseJsonBody, verifyAdmin } from "./_shared.js";
+import { getAdminSupabase, parseJsonBody, recordAdminAudit, verifyAdmin, verifyAdminWithRoles } from "./_shared.js";
 
 type UserStateImportRow = {
   device_token?: string;
@@ -6,6 +6,26 @@ type UserStateImportRow = {
   data?: Record<string, unknown>;
   updated_at?: string;
 };
+
+const overviewRuntimeStats = {
+  startedAt: Date.now(),
+  requests: 0,
+  errors: 0,
+  lastErrorAt: 0,
+  latencyMs: [] as number[]
+};
+
+function pushLatencySample(ms: number): void {
+  overviewRuntimeStats.latencyMs.push(ms);
+  if (overviewRuntimeStats.latencyMs.length > 200) overviewRuntimeStats.latencyMs.shift();
+}
+
+function percentile(values: number[], p: number): number {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.min(sorted.length - 1, Math.max(0, Math.floor((p / 100) * sorted.length)));
+  return Math.round(sorted[index]);
+}
 
 function toDateOnly(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -902,6 +922,35 @@ async function handleExecutiveReport(client: any, res: any) {
   });
 }
 
+async function handleSystemHealth(client: any, res: any) {
+  const probeStart = Date.now();
+  const { error } = await client.from("journey_events").select("id", { count: "exact", head: true }).limit(1);
+  const probeMs = Date.now() - probeStart;
+  const uptimeSec = Math.max(0, Math.round((Date.now() - overviewRuntimeStats.startedAt) / 1000));
+  const recent = overviewRuntimeStats.latencyMs;
+  const errRate = overviewRuntimeStats.requests > 0
+    ? Math.round((overviewRuntimeStats.errors / overviewRuntimeStats.requests) * 1000) / 10
+    : 0;
+
+  res.status(200).json({
+    generatedAt: new Date().toISOString(),
+    status: error ? "degraded" : "healthy",
+    probe: {
+      supabaseReachable: !error,
+      supabaseProbeMs: probeMs
+    },
+    api: {
+      uptimeSec,
+      requests: overviewRuntimeStats.requests,
+      errors: overviewRuntimeStats.errors,
+      errorRate: errRate,
+      p50LatencyMs: percentile(recent, 50),
+      p95LatencyMs: percentile(recent, 95),
+      lastErrorAt: overviewRuntimeStats.lastErrorAt ? new Date(overviewRuntimeStats.lastErrorAt).toISOString() : null
+    }
+  });
+}
+
 async function handleDailyReport(client: any, req: any, res: any) {
   const dateParam = String(req.query?.date ?? "");
   const baseDate = dateParam ? new Date(`${dateParam}T00:00:00Z`) : new Date();
@@ -1190,46 +1239,63 @@ async function handleCronReport(req: any, res: any) {
 }
 
 export async function overviewRouter(req: any, res: any) {
+  const reqStart = Date.now();
+  overviewRuntimeStats.requests += 1;
   const method = String(req.method ?? "GET").toUpperCase();
   const kind = String(req.query?.kind ?? "overview");
 
-  if (kind === "cron-report") {
-    if (method !== "GET") {
-      res.status(405).json({ error: "Method not allowed" });
+  try {
+    if (kind === "cron-report") {
+      if (method !== "GET") {
+        res.status(405).json({ error: "Method not allowed" });
+        return;
+      }
+      await handleCronReport(req, res);
       return;
     }
-    await handleCronReport(req, res);
-    return;
+
+    const isSensitive =
+      kind === "full-export" || kind === "user-state-export" || kind === "user-state-import";
+    const authorized = isSensitive
+      ? await verifyAdminWithRoles(req, res, ["owner", "superadmin"])
+      : await verifyAdmin(req, res);
+    if (!authorized) return;
+
+    const client = getAdminSupabase();
+    if (!client) {
+      res.status(503).json({ error: "Supabase not configured" });
+      return;
+    }
+
+    if (method === "GET") {
+      if (kind === "overview") return handleOverview(client, res);
+      if (kind === "ops-insights") return handleOpsInsights(client, res);
+      if (kind === "executive-report") return handleExecutiveReport(client, res);
+      if (kind === "system-health") return handleSystemHealth(client, res);
+      if (kind === "feedback") return handleFeedback(client, req, res);
+      if (kind === "owner-alerts") return handleOwnerAlerts(client, req, res);
+      if (kind === "daily-report") return handleDailyReport(client, req, res);
+      if (kind === "weekly-report") return handleWeeklyReport(client, req, res);
+      if (kind === "full-export") return handleFullExport(client, req, res);
+      if (kind === "user-state") return handleUserState(client, req, res);
+      if (kind === "user-state-export") return handleUserStateExport(client, req, res);
+      res.status(400).json({ error: `Unsupported kind for GET: ${kind}` });
+      return;
+    }
+
+    if (method === "POST") {
+      if (kind === "user-state-import") return handleUserStateImport(client, req, res);
+      res.status(400).json({ error: `Unsupported kind for POST: ${kind}` });
+      return;
+    }
+
+    res.status(405).json({ error: "Method not allowed" });
+  } catch (error) {
+    overviewRuntimeStats.errors += 1;
+    overviewRuntimeStats.lastErrorAt = Date.now();
+    await recordAdminAudit(req, "admin_api_error", { kind, method, message: (error as Error)?.message ?? "unknown" });
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    pushLatencySample(Date.now() - reqStart);
   }
-
-  if (!(await verifyAdmin(req, res))) return;
-
-  const client = getAdminSupabase();
-  if (!client) {
-    res.status(503).json({ error: "Supabase not configured" });
-    return;
-  }
-
-  if (method === "GET") {
-    if (kind === "overview") return handleOverview(client, res);
-    if (kind === "ops-insights") return handleOpsInsights(client, res);
-    if (kind === "executive-report") return handleExecutiveReport(client, res);
-    if (kind === "feedback") return handleFeedback(client, req, res);
-    if (kind === "owner-alerts") return handleOwnerAlerts(client, req, res);
-    if (kind === "daily-report") return handleDailyReport(client, req, res);
-    if (kind === "weekly-report") return handleWeeklyReport(client, req, res);
-    if (kind === "full-export") return handleFullExport(client, req, res);
-    if (kind === "user-state") return handleUserState(client, req, res);
-    if (kind === "user-state-export") return handleUserStateExport(client, req, res);
-    res.status(400).json({ error: `Unsupported kind for GET: ${kind}` });
-    return;
-  }
-
-  if (method === "POST") {
-    if (kind === "user-state-import") return handleUserStateImport(client, req, res);
-    res.status(400).json({ error: `Unsupported kind for POST: ${kind}` });
-    return;
-  }
-
-  res.status(405).json({ error: "Method not allowed" });
 }

@@ -87,6 +87,86 @@ export async function verifyAdmin(req: any, res: any): Promise<boolean> {
   return true;
 }
 
+function getAllowedRolesSet(raw?: string): Set<string> {
+  const value = raw || process.env.ADMIN_ALLOWED_ROLES || "admin,owner,superadmin,developer";
+  return new Set(
+    value
+      .split(",")
+      .map((r) => r.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+export async function verifyAdminWithRoles(req: any, res: any, allowedRoles: string[]): Promise<boolean> {
+  if (!(await verifyAdmin(req, res))) return false;
+  const code = getRequestAdminCode(req);
+  const secret = getAdminSecret();
+  // Secret-based access remains privileged for automation.
+  if (secret && code && code === secret) return true;
+
+  const client = getAdminSupabase();
+  const bearer = getBearerToken(req);
+  if (!client || !bearer) {
+    res.status(403).json({ error: "Forbidden" });
+    return false;
+  }
+  const { data, error } = await client.auth.getUser(bearer);
+  if (error || !data?.user?.id) {
+    res.status(403).json({ error: "Forbidden" });
+    return false;
+  }
+  const { data: profile, error: profileError } = await client
+    .from("profiles")
+    .select("role")
+    .eq("id", data.user.id)
+    .maybeSingle();
+  if (profileError || !profile?.role) {
+    res.status(403).json({ error: "Forbidden" });
+    return false;
+  }
+  const allowed = getAllowedRolesSet(allowedRoles.join(","));
+  if (!allowed.has(String(profile.role).trim().toLowerCase())) {
+    res.status(403).json({ error: "Forbidden" });
+    return false;
+  }
+  return true;
+}
+
+export async function recordAdminAudit(
+  req: any,
+  action: string,
+  payload?: Record<string, unknown>
+): Promise<void> {
+  try {
+    const client = getAdminSupabase();
+    if (!client) return;
+    const code = getRequestAdminCode(req);
+    const secret = getAdminSecret();
+    let actorId: string | null = null;
+    let actorRole: string | null = null;
+    if (!(secret && code && code === secret)) {
+      const bearer = getBearerToken(req);
+      if (bearer) {
+        const { data } = await client.auth.getUser(bearer);
+        actorId = data?.user?.id ?? null;
+        if (actorId) {
+          const { data: profile } = await client.from("profiles").select("role").eq("id", actorId).maybeSingle();
+          actorRole = typeof profile?.role === "string" ? profile.role : null;
+        }
+      }
+    }
+    await client.from("admin_audit_logs").insert({
+      action,
+      actor_id: actorId,
+      actor_role: actorRole,
+      payload: payload ?? {},
+      created_at: new Date().toISOString()
+    });
+  } catch {
+    // best-effort audit logging only
+  }
+}
+
 export async function parseJsonBody(req: any): Promise<any> {
   if (req.body && typeof req.body === "object") return req.body;
   if (typeof req.body === "string") {

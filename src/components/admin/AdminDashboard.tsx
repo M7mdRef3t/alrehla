@@ -67,6 +67,7 @@ import {
   fetchOverviewStats,
   fetchOpsInsights,
   fetchExecutiveReport,
+  fetchSystemHealth,
   fetchUsers,
   fetchFeedbackEntries,
   saveAiLog,
@@ -479,6 +480,7 @@ const FlowMapPanel: FC = () => {
   const [remoteStats, setRemoteStats] = useState<Awaited<ReturnType<typeof fetchOverviewStats>>>(null);
   const [opsInsights, setOpsInsights] = useState<Awaited<ReturnType<typeof fetchOpsInsights>>>(null);
   const [executiveReport, setExecutiveReport] = useState<Awaited<ReturnType<typeof fetchExecutiveReport>>>(null);
+  const [systemHealth, setSystemHealth] = useState<Awaited<ReturnType<typeof fetchSystemHealth>>>(null);
   const [pulseCloseReasonFilter, setPulseCloseReasonFilter] = useState<PulseAbandonReasonFilter>("all");
   const [auditLogs, setAuditLogs] = useState<FlowAuditLogEntry[]>([]);
   const [auditLoading, setAuditLoading] = useState(true);
@@ -486,18 +488,20 @@ const FlowMapPanel: FC = () => {
     if (!isSupabaseReady) return;
     let mounted = true;
     const refresh = () => {
-      Promise.all([fetchOverviewStats(), fetchOpsInsights(), fetchExecutiveReport()])
-        .then(([overviewData, opsData, executiveData]) => {
+      Promise.all([fetchOverviewStats(), fetchOpsInsights(), fetchExecutiveReport(), fetchSystemHealth()])
+        .then(([overviewData, opsData, executiveData, healthData]) => {
           if (!mounted) return;
           setRemoteStats(overviewData ?? null);
           setOpsInsights(opsData ?? null);
           setExecutiveReport(executiveData ?? null);
+          setSystemHealth(healthData ?? null);
         })
         .catch(() => {
           if (!mounted) return;
           setRemoteStats(null);
           setOpsInsights(null);
           setExecutiveReport(null);
+          setSystemHealth(null);
         });
     };
     refresh();
@@ -1167,6 +1171,28 @@ const OverviewPanel: FC = () => {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {systemHealth && (
+        <div className="admin-glass-card p-5 space-y-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h3 className="text-sm font-semibold text-slate-800">System Health</h3>
+            <span className="text-xs text-slate-500">{new Date(systemHealth.generatedAt).toLocaleString("ar-EG")}</span>
+          </div>
+          <div className={`rounded-xl border p-3 ${systemHealth.status === "healthy" ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}>
+            <p className="text-xs font-semibold text-slate-800">Status: {systemHealth.status}</p>
+            <p className="text-xs text-slate-700">Supabase reachable: {systemHealth.probe.supabaseReachable ? "yes" : "no"}</p>
+            <p className="text-xs text-slate-700">Probe latency: {systemHealth.probe.supabaseProbeMs}ms</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-3 text-xs">
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">uptime</p><p className="font-semibold text-slate-800">{systemHealth.api.uptimeSec}s</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">requests</p><p className="font-semibold text-slate-800">{systemHealth.api.requests}</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">errors</p><p className="font-semibold text-slate-800">{systemHealth.api.errors}</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">error rate</p><p className="font-semibold text-slate-800">{systemHealth.api.errorRate}%</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">p50</p><p className="font-semibold text-slate-800">{systemHealth.api.p50LatencyMs}ms</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">p95</p><p className="font-semibold text-slate-800">{systemHealth.api.p95LatencyMs}ms</p></div>
+          </div>
         </div>
       )}
 

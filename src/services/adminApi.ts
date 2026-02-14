@@ -710,6 +710,24 @@ export interface ExecutiveReport {
   recommendedActions: string[];
 }
 
+export interface SystemHealthReport {
+  generatedAt: string;
+  status: "healthy" | "degraded";
+  probe: {
+    supabaseReachable: boolean;
+    supabaseProbeMs: number;
+  };
+  api: {
+    uptimeSec: number;
+    requests: number;
+    errors: number;
+    errorRate: number;
+    p50LatencyMs: number;
+    p95LatencyMs: number;
+    lastErrorAt: string | null;
+  };
+}
+
 export interface JourneyMapSnapshot {
   sessionId: string;
   nodes: MapNode[];
@@ -1170,5 +1188,10 @@ export async function fetchOpsInsights(): Promise<OpsInsights | null> {
 
 export async function fetchExecutiveReport(): Promise<ExecutiveReport | null> {
   const apiData = await callAdminApi<ExecutiveReport>("overview?kind=executive-report");
+  return apiData ?? null;
+}
+
+export async function fetchSystemHealth(): Promise<SystemHealthReport | null> {
+  const apiData = await callAdminApi<SystemHealthReport>("overview?kind=system-health");
   return apiData ?? null;
 }

@@ -1,7 +1,7 @@
-import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared.js";
+import { getAdminSupabase, verifyAdminWithRoles, parseJsonBody, recordAdminAudit } from "./_shared.js";
 
 export async function handleRoles(req: any, res: any) {
-  if (!(await verifyAdmin(req, res))) return;
+  if (!(await verifyAdminWithRoles(req, res, ["owner", "superadmin"]))) return;
   const client = getAdminSupabase();
   if (!client) {
     res.status(503).json({ error: "Supabase not configured" });
@@ -21,6 +21,7 @@ export async function handleRoles(req: any, res: any) {
       res.status(500).json({ error: "Failed to update role" });
       return;
     }
+    await recordAdminAudit(req, "role_updated", { targetUserId: id, role });
     res.status(200).json({ ok: true });
     return;
   }
