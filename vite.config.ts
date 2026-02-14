@@ -3,6 +3,7 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { VitePWA } from "vite-plugin-pwa";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 const DEFAULT_MODEL_ORDER: string[] = [
   "gemini-2.0-flash-lite",
@@ -222,6 +223,10 @@ function geminiDevProxy() {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const hasSupabaseEnv = Boolean(env.VITE_SUPABASE_URL && env.VITE_SUPABASE_ANON_KEY);
+  const sentryAuthToken = env.SENTRY_AUTH_TOKEN || process.env.SENTRY_AUTH_TOKEN || "";
+  const sentryOrg = env.SENTRY_ORG || process.env.SENTRY_ORG || "";
+  const sentryProject = env.SENTRY_PROJECT || process.env.SENTRY_PROJECT || "";
+  const shouldUploadSourceMaps = Boolean(mode === "production" && sentryAuthToken && sentryOrg && sentryProject);
   if (!process.env.GEMINI_API_KEY && env.GEMINI_API_KEY) {
     process.env.GEMINI_API_KEY = env.GEMINI_API_KEY;
   }
@@ -262,13 +267,25 @@ export default defineConfig(({ mode }) => {
         ]
       },
       devOptions: { enabled: false }
-    })
+    }),
+    ...(shouldUploadSourceMaps
+      ? [
+          sentryVitePlugin({
+            authToken: sentryAuthToken,
+            org: sentryOrg,
+            project: sentryProject,
+            sourcemaps: {
+              assets: "./dist/**"
+            }
+          })
+        ]
+      : [])
   ],
   server: { port: 5000, host: "0.0.0.0", allowedHosts: true },
   build: {
     target: "esnext",
     minify: "esbuild",
-    sourcemap: false,
+    sourcemap: shouldUploadSourceMaps ? "hidden" : false,
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
