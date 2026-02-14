@@ -478,9 +478,6 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
 const FlowMapPanel: FC = () => {
   const [remoteStats, setRemoteStats] = useState<Awaited<ReturnType<typeof fetchOverviewStats>>>(null);
-  const [opsInsights, setOpsInsights] = useState<Awaited<ReturnType<typeof fetchOpsInsights>>>(null);
-  const [executiveReport, setExecutiveReport] = useState<Awaited<ReturnType<typeof fetchExecutiveReport>>>(null);
-  const [systemHealth, setSystemHealth] = useState<Awaited<ReturnType<typeof fetchSystemHealth>>>(null);
   const [pulseCloseReasonFilter, setPulseCloseReasonFilter] = useState<PulseAbandonReasonFilter>("all");
   const [auditLogs, setAuditLogs] = useState<FlowAuditLogEntry[]>([]);
   const [auditLoading, setAuditLoading] = useState(true);
@@ -488,20 +485,14 @@ const FlowMapPanel: FC = () => {
     if (!isSupabaseReady) return;
     let mounted = true;
     const refresh = () => {
-      Promise.all([fetchOverviewStats(), fetchOpsInsights(), fetchExecutiveReport(), fetchSystemHealth()])
-        .then(([overviewData, opsData, executiveData, healthData]) => {
+      fetchOverviewStats()
+        .then((overviewData) => {
           if (!mounted) return;
           setRemoteStats(overviewData ?? null);
-          setOpsInsights(opsData ?? null);
-          setExecutiveReport(executiveData ?? null);
-          setSystemHealth(healthData ?? null);
         })
         .catch(() => {
           if (!mounted) return;
           setRemoteStats(null);
-          setOpsInsights(null);
-          setExecutiveReport(null);
-          setSystemHealth(null);
         });
     };
     refresh();
@@ -721,6 +712,9 @@ const OverviewPanel: FC = () => {
   const [activeNow, setActiveNow] = useState<number | null>(null);
   const [lastActive, setLastActive] = useState<number | null>(null);
   const [remoteStats, setRemoteStats] = useState<Awaited<ReturnType<typeof fetchOverviewStats>>>(null);
+  const [opsInsights, setOpsInsights] = useState<Awaited<ReturnType<typeof fetchOpsInsights>>>(null);
+  const [executiveReport, setExecutiveReport] = useState<Awaited<ReturnType<typeof fetchExecutiveReport>>>(null);
+  const [systemHealth, setSystemHealth] = useState<Awaited<ReturnType<typeof fetchSystemHealth>>>(null);
   const [dailyReport, setDailyReport] = useState<Awaited<ReturnType<typeof fetchDailyReport>>>(null);
   const [dailyLoading, setDailyLoading] = useState(false);
   const [dailyError, setDailyError] = useState("");
@@ -841,14 +835,20 @@ const OverviewPanel: FC = () => {
     if (!isSupabaseReady) return;
     let mounted = true;
     const refresh = () => {
-      fetchOverviewStats()
-        .then((data) => {
+      Promise.all([fetchOverviewStats(), fetchOpsInsights(), fetchExecutiveReport(), fetchSystemHealth()])
+        .then(([overviewData, opsData, executiveData, healthData]) => {
           if (!mounted) return;
-          if (data) setRemoteStats(data);
+          setRemoteStats(overviewData ?? null);
+          setOpsInsights(opsData ?? null);
+          setExecutiveReport(executiveData ?? null);
+          setSystemHealth(healthData ?? null);
         })
         .catch(() => {
           if (!mounted) return;
           setRemoteStats(null);
+          setOpsInsights(null);
+          setExecutiveReport(null);
+          setSystemHealth(null);
         });
     };
     refresh();
