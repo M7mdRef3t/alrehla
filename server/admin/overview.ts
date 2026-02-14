@@ -794,6 +794,114 @@ async function handleOpsInsights(client: any, res: any) {
   });
 }
 
+async function handleExecutiveReport(client: any, res: any) {
+  const now = new Date();
+  const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const since30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [{ data: flowRows }, { count: events24h }, { count: pathStarted24h }, { count: nodesAdded24h }, { count: mapsTotal }] =
+    await Promise.all([
+      client
+        .from("journey_events")
+        .select("payload,session_id,created_at")
+        .eq("type", "flow_event")
+        .gte("created_at", since30d)
+        .order("created_at", { ascending: false })
+        .limit(20000),
+      client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", since24h),
+      client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "path_started").gte("created_at", since24h),
+      client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "node_added").gte("created_at", since24h),
+      client.from("journey_maps").select("session_id", { count: "exact", head: true })
+    ]);
+
+  const channelCounts: Record<string, number> = {};
+  const campaignCounts: Record<string, number> = {};
+  const mediumCounts: Record<string, number> = {};
+  const sessionFirstSeen = new Map<string, number>();
+  const sessionLastSeen = new Map<string, number>();
+  let installClicked = 0;
+  let addPersonOpened = 0;
+  let addPersonDone = 0;
+
+  for (const row of (flowRows ?? []) as Array<Record<string, unknown>>) {
+    const payload = row.payload as Record<string, unknown> | null;
+    const sid = String(row.session_id ?? "").trim();
+    const ts = new Date(String(row.created_at ?? "")).getTime();
+    if (sid && !Number.isNaN(ts)) {
+      const first = sessionFirstSeen.get(sid);
+      const last = sessionLastSeen.get(sid);
+      if (first == null || ts < first) sessionFirstSeen.set(sid, ts);
+      if (last == null || ts > last) sessionLastSeen.set(sid, ts);
+    }
+
+    const step = String(payload?.step ?? "");
+    if (step === "install_clicked") installClicked += 1;
+    if (step === "add_person_opened") addPersonOpened += 1;
+    if (step === "add_person_done_show_on_map") addPersonDone += 1;
+
+    const source = String(payload?.utm_source ?? payload?.source ?? payload?.channel ?? "").trim().toLowerCase();
+    const medium = String(payload?.utm_medium ?? payload?.medium ?? "").trim().toLowerCase();
+    const campaign = String(payload?.utm_campaign ?? payload?.campaign ?? "").trim().toLowerCase();
+    if (source) channelCounts[source] = (channelCounts[source] ?? 0) + 1;
+    if (medium) mediumCounts[medium] = (mediumCounts[medium] ?? 0) + 1;
+    if (campaign) campaignCounts[campaign] = (campaignCounts[campaign] ?? 0) + 1;
+  }
+
+  const top = (input: Record<string, number>, limit = 5) =>
+    Object.entries(input)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([key, count]) => ({ key, count }));
+
+  let retained7d = 0;
+  let eligible7d = 0;
+  const nowMs = now.getTime();
+  for (const [sid, first] of sessionFirstSeen.entries()) {
+    const ageDays = (nowMs - first) / (24 * 60 * 60 * 1000);
+    if (ageDays < 7) continue;
+    eligible7d += 1;
+    const last = sessionLastSeen.get(sid) ?? first;
+    if (last - first >= 7 * 24 * 60 * 60 * 1000) retained7d += 1;
+  }
+  const retention7d = eligible7d > 0 ? Math.round((retained7d / eligible7d) * 100) : 0;
+  const addPersonCompletionRate = addPersonOpened > 0 ? Math.round((addPersonDone / addPersonOpened) * 100) : 0;
+
+  const operationalAlerts: string[] = [];
+  if ((events24h ?? 0) === 0) operationalAlerts.push("انقطاع كامل: لا توجد أحداث خلال 24 ساعة.");
+  if ((nodesAdded24h ?? 0) > 0 && (mapsTotal ?? 0) === 0) operationalAlerts.push("إضافات أشخاص بلا خرائط محفوظة.");
+  if ((pathStarted24h ?? 0) === 0) operationalAlerts.push("لا توجد بدايات مسار خلال 24 ساعة.");
+  if (addPersonOpened > 0 && addPersonCompletionRate < 30) operationalAlerts.push("هبوط قوي في إتمام إضافة الشخص.");
+
+  const recommendedActions: string[] = [];
+  if ((pathStarted24h ?? 0) === 0) recommendedActions.push("فعّل CTA مباشر بعد الإضافة: ابدأ المسار الآن.");
+  if ((mapsTotal ?? 0) === 0 && (nodesAdded24h ?? 0) > 0) recommendedActions.push("اختبر حفظ الخريطة end-to-end فورًا في الإنتاج.");
+  if (retention7d < 20) recommendedActions.push("أضف إعادة تنشيط D+1/D+3 للمستخدمين غير العائدين.");
+  if (!top(channelCounts, 1).length) recommendedActions.push("أكمل تمرير UTM لتحديد مصادر النمو.");
+
+  res.status(200).json({
+    generatedAt: now.toISOString(),
+    kpis: {
+      events24h: events24h ?? 0,
+      pathStarted24h: pathStarted24h ?? 0,
+      nodesAdded24h: nodesAdded24h ?? 0,
+      mapsTotal: mapsTotal ?? 0,
+      addPersonCompletionRate,
+      retention7d
+    },
+    attribution: {
+      topSources: top(channelCounts),
+      topMediums: top(mediumCounts),
+      topCampaigns: top(campaignCounts),
+      installClicked
+    },
+    reliability: {
+      status: operationalAlerts.length > 0 ? "warning" : "healthy",
+      alerts: operationalAlerts
+    },
+    recommendedActions
+  });
+}
+
 async function handleDailyReport(client: any, req: any, res: any) {
   const dateParam = String(req.query?.date ?? "");
   const baseDate = dateParam ? new Date(`${dateParam}T00:00:00Z`) : new Date();
@@ -1105,6 +1213,7 @@ export async function overviewRouter(req: any, res: any) {
   if (method === "GET") {
     if (kind === "overview") return handleOverview(client, res);
     if (kind === "ops-insights") return handleOpsInsights(client, res);
+    if (kind === "executive-report") return handleExecutiveReport(client, res);
     if (kind === "feedback") return handleFeedback(client, req, res);
     if (kind === "owner-alerts") return handleOwnerAlerts(client, req, res);
     if (kind === "daily-report") return handleDailyReport(client, req, res);

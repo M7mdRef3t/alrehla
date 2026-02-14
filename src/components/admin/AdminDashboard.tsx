@@ -66,6 +66,7 @@ import {
   fetchMissions,
   fetchOverviewStats,
   fetchOpsInsights,
+  fetchExecutiveReport,
   fetchUsers,
   fetchFeedbackEntries,
   saveAiLog,
@@ -477,6 +478,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 const FlowMapPanel: FC = () => {
   const [remoteStats, setRemoteStats] = useState<Awaited<ReturnType<typeof fetchOverviewStats>>>(null);
   const [opsInsights, setOpsInsights] = useState<Awaited<ReturnType<typeof fetchOpsInsights>>>(null);
+  const [executiveReport, setExecutiveReport] = useState<Awaited<ReturnType<typeof fetchExecutiveReport>>>(null);
   const [pulseCloseReasonFilter, setPulseCloseReasonFilter] = useState<PulseAbandonReasonFilter>("all");
   const [auditLogs, setAuditLogs] = useState<FlowAuditLogEntry[]>([]);
   const [auditLoading, setAuditLoading] = useState(true);
@@ -484,16 +486,18 @@ const FlowMapPanel: FC = () => {
     if (!isSupabaseReady) return;
     let mounted = true;
     const refresh = () => {
-      Promise.all([fetchOverviewStats(), fetchOpsInsights()])
-        .then(([overviewData, opsData]) => {
+      Promise.all([fetchOverviewStats(), fetchOpsInsights(), fetchExecutiveReport()])
+        .then(([overviewData, opsData, executiveData]) => {
           if (!mounted) return;
           setRemoteStats(overviewData ?? null);
           setOpsInsights(opsData ?? null);
+          setExecutiveReport(executiveData ?? null);
         })
         .catch(() => {
           if (!mounted) return;
           setRemoteStats(null);
           setOpsInsights(null);
+          setExecutiveReport(null);
         });
     };
     refresh();
@@ -1109,6 +1113,57 @@ const OverviewPanel: FC = () => {
             <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 space-y-1">
               {opsInsights.warnings.map((warning) => (
                 <p key={warning} className="text-xs text-rose-700">{warning}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {executiveReport && (
+        <div className="admin-glass-card p-5 space-y-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h3 className="text-sm font-semibold text-slate-800">Executive Report</h3>
+            <span className="text-xs text-slate-500">{new Date(executiveReport.generatedAt).toLocaleString("ar-EG")}</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-3 text-xs">
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">events_24h</p><p className="font-semibold text-slate-800">{executiveReport.kpis.events24h}</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">path_started_24h</p><p className="font-semibold text-slate-800">{executiveReport.kpis.pathStarted24h}</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">nodes_added_24h</p><p className="font-semibold text-slate-800">{executiveReport.kpis.nodesAdded24h}</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">maps_total</p><p className="font-semibold text-slate-800">{executiveReport.kpis.mapsTotal}</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">add_person_completion</p><p className="font-semibold text-slate-800">{executiveReport.kpis.addPersonCompletionRate}%</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">retention_7d</p><p className="font-semibold text-slate-800">{executiveReport.kpis.retention7d}%</p></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500 mb-1">top sources</p>
+              {executiveReport.attribution.topSources.length ? executiveReport.attribution.topSources.map((s) => (
+                <p key={s.key} className="text-slate-700">{s.key}: <span className="font-semibold">{s.count}</span></p>
+              )) : <p className="text-slate-500">no data</p>}
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500 mb-1">top mediums</p>
+              {executiveReport.attribution.topMediums.length ? executiveReport.attribution.topMediums.map((s) => (
+                <p key={s.key} className="text-slate-700">{s.key}: <span className="font-semibold">{s.count}</span></p>
+              )) : <p className="text-slate-500">no data</p>}
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500 mb-1">top campaigns</p>
+              {executiveReport.attribution.topCampaigns.length ? executiveReport.attribution.topCampaigns.map((s) => (
+                <p key={s.key} className="text-slate-700">{s.key}: <span className="font-semibold">{s.count}</span></p>
+              )) : <p className="text-slate-500">no data</p>}
+            </div>
+          </div>
+          <div className={`rounded-xl border p-3 ${executiveReport.reliability.status === "healthy" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
+            <p className="text-xs font-semibold text-slate-800">Reliability: {executiveReport.reliability.status}</p>
+            {executiveReport.reliability.alerts.length ? executiveReport.reliability.alerts.map((item) => (
+              <p key={item} className="text-xs text-slate-700">{item}</p>
+            )) : <p className="text-xs text-slate-700">لا توجد تنبيهات تشغيلية حرجة الآن.</p>}
+          </div>
+          {executiveReport.recommendedActions.length > 0 && (
+            <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3">
+              <p className="text-xs font-semibold text-slate-800 mb-1">Recommended Actions</p>
+              {executiveReport.recommendedActions.map((item) => (
+                <p key={item} className="text-xs text-slate-700">{item}</p>
               ))}
             </div>
           )}

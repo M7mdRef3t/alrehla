@@ -687,6 +687,29 @@ export interface OpsInsights {
   warnings: string[];
 }
 
+export interface ExecutiveReport {
+  generatedAt: string;
+  kpis: {
+    events24h: number;
+    pathStarted24h: number;
+    nodesAdded24h: number;
+    mapsTotal: number;
+    addPersonCompletionRate: number;
+    retention7d: number;
+  };
+  attribution: {
+    topSources: Array<{ key: string; count: number }>;
+    topMediums: Array<{ key: string; count: number }>;
+    topCampaigns: Array<{ key: string; count: number }>;
+    installClicked: number;
+  };
+  reliability: {
+    status: "healthy" | "warning";
+    alerts: string[];
+  };
+  recommendedActions: string[];
+}
+
 export interface JourneyMapSnapshot {
   sessionId: string;
   nodes: MapNode[];
@@ -1142,5 +1165,10 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
 
 export async function fetchOpsInsights(): Promise<OpsInsights | null> {
   const apiData = await callAdminApi<OpsInsights>("overview?kind=ops-insights");
+  return apiData ?? null;
+}
+
+export async function fetchExecutiveReport(): Promise<ExecutiveReport | null> {
+  const apiData = await callAdminApi<ExecutiveReport>("overview?kind=executive-report");
   return apiData ?? null;
 }
