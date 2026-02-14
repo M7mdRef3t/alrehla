@@ -1,0 +1,7 @@
+﻿User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /analytics
+Disallow: /api/
+
+Sitemap: https://www.alrehla.app/sitemap.xml

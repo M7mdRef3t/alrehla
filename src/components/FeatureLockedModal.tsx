@@ -9,6 +9,19 @@ interface FeatureLockedModalProps {
   onClose: () => void;
 }
 
+const LOCK_MESSAGES: Partial<Record<FeatureFlagKey, string>> = {
+  basic_diagnosis: "عرض التفاصيل متوقف حالياً من لوحة التحكم في الزمن.",
+  mirror_tool: "بطاقة (أنا) متوقفة حالياً من لوحة التحكم في الزمن.",
+  family_tree: "شجرة العيلة متوقفة حالياً من لوحة التحكم في الزمن.",
+  dawayir_map: "الخريطة متوقفة حالياً من لوحة التحكم في الزمن.",
+  journey_tools: "أدوات الرحلة متوقفة حالياً من لوحة التحكم في الزمن.",
+  internal_boundaries: "أدوات الحدود الداخلية متوقفة حالياً من لوحة التحكم في الزمن.",
+  global_atlas: "لوحة الأطلس متوقفة حالياً من لوحة التحكم في الزمن.",
+  ai_field: "مرشد الرحلة متوقف حالياً من لوحة التحكم في الزمن.",
+  pulse_check: "ضبط البوصلة متوقف حالياً من لوحة التحكم في الزمن.",
+  generative_ui_mode: "وضع الواجهة الذكي متوقف حالياً من لوحة التحكم في الزمن."
+};
+
 export const FeatureLockedModal: FC<FeatureLockedModalProps> = ({
   isOpen,
   featureKey,
@@ -16,6 +29,9 @@ export const FeatureLockedModal: FC<FeatureLockedModalProps> = ({
 }) => {
   const feature = FEATURE_FLAGS.find((f) => f.key === featureKey);
   if (!isOpen || !feature) return null;
+
+  const message =
+    LOCK_MESSAGES[feature.key] ?? "هذه الميزة متوقفة حالياً من لوحة التحكم في الزمن.";
 
   return (
     <AnimatePresence>
@@ -37,7 +53,7 @@ export const FeatureLockedModal: FC<FeatureLockedModalProps> = ({
             <Lock className="w-6 h-6" />
           </div>
           <h2 className="text-xl font-bold text-slate-900">{feature.label}</h2>
-          <p className="text-sm text-slate-600">هذه الأداة قيد التطوير لرحلتك القادمة</p>
+          <p className="text-sm text-slate-600">{message}</p>
           <button
             type="button"
             onClick={onClose}

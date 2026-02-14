@@ -428,6 +428,29 @@ export interface SessionSummary {
   moodScores: number[];
 }
 
+export interface SessionTimelineEvent {
+  type: JourneyEventType;
+  payload: JourneyEventPayload[JourneyEventType];
+  timestamp: number;
+  sessionId?: string;
+}
+
+export function getSessionTimelineEvents(sessionId: string, limit = 200): SessionTimelineEvent[] {
+  const sid = sessionId.trim();
+  if (!sid) return [];
+  const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 1000) : 200;
+  return loadEvents()
+    .filter((e) => e.sessionId === sid)
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, safeLimit)
+    .map((e) => ({
+      type: e.type,
+      payload: e.payload,
+      timestamp: e.timestamp,
+      sessionId: e.sessionId
+    }));
+}
+
 export function getSessionsWithProgress(): SessionSummary[] {
   const events = loadEvents().filter((e) => e.sessionId);
   const bySession = new Map<string, JourneyEvent[]>();

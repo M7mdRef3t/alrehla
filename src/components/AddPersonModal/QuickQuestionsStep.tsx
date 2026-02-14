@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { getOptionButtonClass } from "../../utils/optionColors";
 import type { OptionTier } from "../../utils/optionColors";
 import { EditableText } from "../EditableText";
+import { isUserMode } from "../../config/appEnv";
 
 interface OptionItem {
   value: string;
@@ -93,37 +94,39 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
             })}
           </div>
         </div>
-        <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">
-            <EditableText
-              id="add_person_emergency_q"
-              defaultText="هل الوضع طوارئ؟ (إيذاء بدني، ابتزاز خطير)"
-              page="add_person"
-              showEditIcon={false}
-            />
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => onSelectEmergency(false)}
-              className={getOptionButtonClass("green", !isEmergency)}
-            >
-              <EditableText id="add_person_emergency_no" defaultText="لا" page="add_person" editOnClick={false} />
-            </button>
-            <button
-              type="button"
-              onClick={() => onSelectEmergency(true)}
-              className={getOptionButtonClass("red", isEmergency)}
-            >
+        {!isUserMode && (
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">
               <EditableText
-                id="add_person_emergency_yes"
-                defaultText="نعم — طوارئ"
+                id="add_person_emergency_q"
+                defaultText="هل الوضع طوارئ؟ (إيذاء بدني، ابتزاز خطير)"
                 page="add_person"
-                editOnClick={false}
+                showEditIcon={false}
               />
-            </button>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => onSelectEmergency(false)}
+                className={getOptionButtonClass("green", !isEmergency)}
+              >
+                <EditableText id="add_person_emergency_no" defaultText="لا" page="add_person" editOnClick={false} />
+              </button>
+              <button
+                type="button"
+                onClick={() => onSelectEmergency(true)}
+                className={getOptionButtonClass("red", isEmergency)}
+              >
+                <EditableText
+                  id="add_person_emergency_yes"
+                  defaultText="نعم — طوارئ"
+                  page="add_person"
+                  editOnClick={false}
+                />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
       <div className="mt-4 shrink-0 flex gap-3">
         <button

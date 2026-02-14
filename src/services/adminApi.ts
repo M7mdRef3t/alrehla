@@ -630,6 +630,25 @@ export interface JourneyMapSnapshot {
   updatedAt: number | null;
 }
 
+export interface SessionEventRow {
+  id: string;
+  sessionId: string;
+  type: string;
+  payload: Record<string, unknown> | null;
+  createdAt: number | null;
+}
+
+export interface VisitorSessionSummary {
+  sessionId: string;
+  firstSeen: number | null;
+  lastSeen: number | null;
+  eventsCount: number;
+  pathStarts: number;
+  taskCompletions: number;
+  nodesAdded: number;
+  lastFlowStep: string | null;
+}
+
 export interface UserStateRow {
   deviceToken: string;
   ownerId?: string | null;
@@ -754,6 +773,87 @@ export async function fetchJourneyMap(sessionId: string): Promise<JourneyMapSnap
   };
 }
 
+export async function fetchSessionEvents(
+  sessionId: string,
+  limit = 200
+): Promise<SessionEventRow[] | null> {
+  const sid = sessionId.trim();
+  if (!sid) return null;
+  if (!isSupabaseReady || !supabase) return null;
+  const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 1000) : 200;
+  const { data, error } = await supabase
+    .from("journey_events")
+    .select("id,session_id,type,payload,created_at")
+    .eq("session_id", sid)
+    .order("created_at", { ascending: false })
+    .limit(safeLimit);
+  if (error || !data) return null;
+  return (data as Array<Record<string, unknown>>).map((row) => ({
+    id: String(row.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
+    sessionId: String(row.session_id ?? sid),
+    type: String(row.type ?? "unknown"),
+    payload: (row.payload as Record<string, unknown> | null) ?? null,
+    createdAt: row.created_at ? new Date(String(row.created_at)).getTime() : null
+  }));
+}
+
+export async function fetchVisitorSessions(limit = 300): Promise<VisitorSessionSummary[] | null> {
+  if (!isSupabaseReady || !supabase) return null;
+  const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 1000) : 300;
+  const { data, error } = await supabase
+    .from("journey_events")
+    .select("session_id,type,payload,created_at")
+    .not("session_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(10000);
+  if (error || !data) return null;
+
+  const bySession = new Map<string, VisitorSessionSummary>();
+  for (const row of data as Array<Record<string, unknown>>) {
+    const sid = String(row.session_id ?? "").trim();
+    if (!sid) continue;
+    const createdAt = row.created_at ? new Date(String(row.created_at)).getTime() : null;
+    const type = String(row.type ?? "");
+    const payload = (row.payload as Record<string, unknown> | null) ?? null;
+    const flowStep = type === "flow_event" && typeof payload?.step === "string" ? payload.step : null;
+
+    const existing = bySession.get(sid);
+    if (!existing) {
+      bySession.set(sid, {
+        sessionId: sid,
+        firstSeen: createdAt,
+        lastSeen: createdAt,
+        eventsCount: 1,
+        pathStarts: type === "path_started" ? 1 : 0,
+        taskCompletions: type === "task_completed" ? 1 : 0,
+        nodesAdded: type === "node_added" ? 1 : 0,
+        lastFlowStep: flowStep
+      });
+      continue;
+    }
+
+    existing.eventsCount += 1;
+    if (type === "path_started") existing.pathStarts += 1;
+    if (type === "task_completed") existing.taskCompletions += 1;
+    if (type === "node_added") existing.nodesAdded += 1;
+    if (createdAt != null) {
+      if (existing.firstSeen == null || createdAt < existing.firstSeen) existing.firstSeen = createdAt;
+      if (existing.lastSeen == null || createdAt > existing.lastSeen) {
+        existing.lastSeen = createdAt;
+        if (flowStep) existing.lastFlowStep = flowStep;
+      } else if (existing.lastFlowStep == null && flowStep) {
+        existing.lastFlowStep = flowStep;
+      }
+    } else if (existing.lastFlowStep == null && flowStep) {
+      existing.lastFlowStep = flowStep;
+    }
+  }
+
+  return Array.from(bySession.values())
+    .sort((a, b) => (b.lastSeen ?? 0) - (a.lastSeen ?? 0))
+    .slice(0, safeLimit);
+}
+
 export async function fetchFeedbackEntries(query?: {
   limit?: number;
   search?: string;
@@ -821,7 +921,7 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
         .select("session_id,type,payload,created_at")
         .gte("created_at", thirtyDaysAgo)
         .order("created_at", { ascending: true })
-        .limit(1000),
+        .limit(10000),
       supabase.from("admin_ai_logs").select("id", { count: "exact", head: true }),
       supabase.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "node_added"),
       supabase

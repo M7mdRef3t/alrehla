@@ -11,8 +11,8 @@ interface BreathingOverlayProps {
 }
 
 const CYCLE_DURATION_MS = 8000; // 4s inhale + 4s exhale
-/** دقيقة واحدة ≈ 8 دورات كاملة (8×8 ثوانٍ) */
-const DEFAULT_CLOSE_AFTER_CYCLES = 8;
+/** تجربة أقصر لتجنب الإحساس بالتعليق */
+const DEFAULT_CLOSE_AFTER_CYCLES = 4;
 
 export const BreathingOverlay: FC<BreathingOverlayProps> = ({
   onClose,
@@ -20,7 +20,11 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
 }) => {
   const [phase, setPhase] = useState<"in" | "out">("in");
   const [cycleCount, setCycleCount] = useState(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const markBreathingUsed = useAchievementState((s) => s.markBreathingUsed);
+
+  const totalSeconds = autoCloseAfterCycles > 0 ? autoCloseAfterCycles * (CYCLE_DURATION_MS / 1000) : 0;
+  const remainingSeconds = totalSeconds > 0 ? Math.max(0, totalSeconds - elapsedSeconds) : 0;
 
   useEffect(() => {
     markBreathingUsed();
@@ -44,6 +48,18 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
       onClose();
     }
   }, [autoCloseAfterCycles, cycleCount, onClose]);
+
+  useEffect(() => {
+    setElapsedSeconds(0);
+  }, [autoCloseAfterCycles]);
+
+  useEffect(() => {
+    if (totalSeconds <= 0) return;
+    const t = window.setInterval(() => {
+      setElapsedSeconds((s) => s + 1);
+    }, 1000);
+    return () => window.clearInterval(t);
+  }, [totalSeconds]);
 
   return (
     <div
@@ -76,9 +92,22 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
           ease: "easeInOut"
         }}
       />
+
       <p className="text-white/70 text-sm mt-10 max-w-xs text-center px-4">
-        خد وقتك — دقيقة واحدة من التنفس الهادئ
+        خد وقتك - تمرين تنفس قصير للتهدئة
       </p>
+
+      {totalSeconds > 0 && (
+        <p className="text-white/60 text-xs mt-2">الانتقال التلقائي خلال {remainingSeconds} ثانية</p>
+      )}
+
+      <button
+        type="button"
+        onClick={onClose}
+        className="mt-5 px-5 py-2 rounded-full border border-white/30 text-white/90 text-sm hover:bg-white/10 transition-colors"
+      >
+        إنهاء التنفس والمتابعة
+      </button>
     </div>
   );
 };

@@ -13,5 +13,5 @@ export const feelingCopy = {
     rarely: STANDARD_OPTIONS_MAP.low,
     never: STANDARD_OPTIONS_MAP.zero
   } as const,
-  cta: "يلا نكمل: فين الشخص في مدارك؟"
+  cta: "يلا نكمل"
 };

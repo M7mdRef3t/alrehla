@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Shield, Users, Heart, Loader, Sparkles } from "lucide-react";
+import { X, Shield, Lock, Heart, Loader, Sparkles } from "lucide-react";
 import { signInWithGoogle } from "../services/authService";
 import { AnalyticsEvents, trackEvent } from "../services/analytics";
 import { isSupabaseReady } from "../services/supabaseClient";
@@ -211,8 +211,8 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
                   style={{ background: "rgba(255, 255, 255, 0.1)" }}
                 />
                 <div className="flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5" style={{ color: "#fbbf24" }} />
-                  <span className="text-[12px] font-medium" style={{ color: "rgba(251, 191, 36, 0.8)" }}>+١٬٠٠٠ مستخدم</span>
+                  <Lock className="w-3.5 h-3.5" style={{ color: "#fbbf24" }} />
+                  <span className="text-[12px] font-medium" style={{ color: "rgba(251, 191, 36, 0.8)" }}>بياناتك محمية ومش بتتشارك</span>
                 </div>
               </div>
 

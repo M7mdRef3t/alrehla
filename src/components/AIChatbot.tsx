@@ -29,6 +29,9 @@ interface AIChatbotProps {
   agentContext?: AgentContext;
   agentActions?: AgentActions;
   systemPromptOverride?: string;
+  showLauncher?: boolean;
+  defaultOpen?: boolean;
+  onRequestClose?: () => void;
   /** لفتح تمرين التنفس من داخل البطاقات (مثلاً BreathingCard) */
   onOpenBreathing?: () => void;
   /** للانتقال لشاشة الخريطة (وضع Mod) */
@@ -41,10 +44,13 @@ export const AIChatbot: FC<AIChatbotProps> = ({
   agentContext,
   agentActions,
   systemPromptOverride,
+  showLauncher = true,
+  defaultOpen = false,
+  onRequestClose,
   onOpenBreathing,
   onNavigateToMap
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -74,6 +80,10 @@ export const AIChatbot: FC<AIChatbotProps> = ({
       inputRef.current?.focus();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (defaultOpen) setIsOpen(true);
+  }, [defaultOpen]);
 
   // Welcome message when chat opens for the first time
   useEffect(() => {
@@ -369,10 +379,15 @@ ${userMessage.content}`;
     return `${modePrefix} احكيلي عن موقف محدد: حصل إمتى، واتقال فيه إيه، وسحب من طاقتك قد إيه؟`;
   };
 
+  const handleClose = () => {
+    setIsOpen(false);
+    if (!showLauncher) onRequestClose?.();
+  };
+
   return (
     <>
       {/* Floating Button — يظهر دائماً */}
-      {!isOpen && (
+      {showLauncher && !isOpen && (
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 w-14 h-14 bg-linear-to-br from-purple-600 to-pink-600 text-white rounded-full transition-all duration-200 flex items-center justify-center group z-50"
@@ -403,7 +418,7 @@ ${userMessage.content}`;
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 className="hidden"
                 aria-hidden
               />
@@ -419,7 +434,7 @@ ${userMessage.content}`;
               )}
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={handleClose}
                 className="hover:bg-white/20 rounded-full p-1 transition-colors"
                 aria-label="إغلاق"
               >

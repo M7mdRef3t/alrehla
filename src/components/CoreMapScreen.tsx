@@ -101,7 +101,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     betaAccess,
     role,
     adminAccess,
-    isDev: import.meta.env.DEV
+    isDev: !isUserMode && import.meta.env.DEV
   });
   const canUseFamilyTree = featureAccess.family_tree;
   const canUseMirror = featureAccess.mirror_tool;
@@ -223,7 +223,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   };
 
   const handleNodeClick = (id: string) => {
-    if (isUserMode) return;
+    if (!canUseBasicDiagnosis) {
+      onFeatureLocked?.("basic_diagnosis");
+      return;
+    }
     onSelectNode(id);
   };
 
@@ -509,8 +512,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           <motion.div key="galaxy-map" initial={{ opacity: 0, y: 16, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -12, filter: "blur(4px)" }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
             <MapCanvas
               onNodeClick={handleNodeClick}
+              canOpenDetails={canUseBasicDiagnosis}
               onMeClick={() => {
-                if (isUserMode) return;
                 if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; }
                 setShowMeCard(true);
               }}
@@ -522,8 +525,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           <motion.div key="single-map" initial={{ opacity: 0, y: 16, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -12, filter: "blur(4px)" }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
             <MapCanvas
               onNodeClick={handleNodeClick}
+              canOpenDetails={canUseBasicDiagnosis}
               onMeClick={() => {
-                if (isUserMode) return;
                 if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; }
                 setShowMeCard(true);
               }}
@@ -598,7 +601,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                         : mapCopy.legendRed}
                   </span>
                 </span>
-                . اضغط عليه للتفاصيل أو اسحبه لو عايز تغيّر مكانه.
+                {canUseBasicDiagnosis
+                  ? ". اضغط عليه للتفاصيل أو اسحبه لو عايز تغيّر مكانه."
+                  : ". التفاصيل مقفولة حالياً من Feature Flags."}
               </>
             ) : (
               <EditableText id="map_first_placement_tooltip" defaultText={mapCopy.firstPlacementTooltip} page="map" showEditIcon={false} />
@@ -609,6 +614,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               <button
                 type="button"
                 onClick={() => {
+                  if (!canUseBasicDiagnosis) {
+                    onFeatureLocked?.("basic_diagnosis");
+                    return;
+                  }
                   onSelectNode(lastAddedNode.id);
                   dismissPlacementTooltip();
                 }}

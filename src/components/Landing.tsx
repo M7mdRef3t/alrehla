@@ -27,6 +27,8 @@ interface LandingProps {
   showToolsSection?: boolean;
   onFeatureLocked?: (feature: FeatureFlagKey) => void;
   availableFeatures?: Partial<Record<FeatureFlagKey, boolean>>;
+  ownerInstallRequestNonce?: number;
+  onOwnerInstallRequestHandled?: () => void;
 }
 
 /* ── animation tokens ── */
@@ -134,7 +136,9 @@ export const Landing: FC<LandingProps> = ({
   showPostStartContent = true,
   showToolsSection: _showToolsSection = true,
   onFeatureLocked: _onFeatureLocked,
-  availableFeatures: _availableFeatures
+  availableFeatures: _availableFeatures,
+  ownerInstallRequestNonce = 0,
+  onOwnerInstallRequestHandled
 }) => {
   const nodesCount = useMapState((s) => s.nodes.length);
   const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
@@ -201,6 +205,16 @@ export const Landing: FC<LandingProps> = ({
     }
     lastGoalRef.current = lastGoalLabel;
   }, [lastGoalLabel]);
+
+  useEffect(() => {
+    if (!ownerInstallRequestNonce) return;
+    if (pwaInstall?.canShowInstallButton) {
+      recordFlowEvent("install_clicked");
+      if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
+      else pwaInstall.showInstallHint();
+    }
+    onOwnerInstallRequestHandled?.();
+  }, [ownerInstallRequestNonce, pwaInstall, onOwnerInstallRequestHandled]);
 
   const features = [
     { icon: Compass, title: "خريطة الوعي", desc: landingCopy.whatIsPoints[0], accent: "#2dd4bf" },
@@ -581,6 +595,30 @@ export const Landing: FC<LandingProps> = ({
             )}
           </motion.section>
         )}
+
+        {/* ════════════════════════════════
+            LEGAL — سياسة الخصوصية وشروط الاستخدام
+           ════════════════════════════════ */}
+        <motion.footer
+          className="py-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px]"
+          variants={stagger}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+        >
+          <a
+            href="/privacy"
+            className="text-slate-400 hover:text-teal-400 transition-colors underline underline-offset-2"
+          >
+            سياسة الخصوصية
+          </a>
+          <a
+            href="/terms"
+            className="text-slate-400 hover:text-teal-400 transition-colors underline underline-offset-2"
+          >
+            شروط الاستخدام
+          </a>
+        </motion.footer>
 
         <div className="h-8" />
       </div>

@@ -118,12 +118,13 @@ interface NodeProps {
   totalInRing: number;
   position?: { x: number; y: number };
   onClick?: (id: string) => void;
+  canOpenDetails?: boolean;
   justDraggedId?: string | null;
   justAdded?: boolean;
   isHighlighted?: boolean;
 }
 
-const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, justDraggedId, justAdded, isHighlighted }) => {
+const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, canOpenDetails = true, justDraggedId, justAdded, isHighlighted }) => {
   const [showDelete, setShowDelete] = useState(false);
   const [pulseDone, setPulseDone] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
@@ -271,8 +272,12 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           style={{ color: "var(--text-primary)", letterSpacing: "0.03em" }}
           title={
             hasMismatch
-              ? `⚠️ تعارض — اضغط للتفاصيل`
-              : `اضغط لرؤية تفاصيل ${node.label}`
+              ? canOpenDetails
+                ? "⚠️ تعارض — اضغط للتفاصيل"
+                : "⚠️ تعارض — التفاصيل مقفولة حالياً"
+              : canOpenDetails
+                ? `اضغط لرؤية تفاصيل ${node.label}`
+                : "التفاصيل مقفولة حالياً"
           }
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
@@ -465,13 +470,14 @@ function filterNodesByContext(
 interface MapCanvasProps {
   onNodeClick?: (id: string) => void;
   onMeClick?: () => void;
+  canOpenDetails?: boolean;
   goalIdFilter?: string;
   galaxyGoalIds?: string[];
   /** عند الضغط من السجل — العقدة تعمل نبضة بلون مدارها */
   highlightNodeId?: string | null;
 }
 
-export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFilter, galaxyGoalIds, highlightNodeId }) => {
+export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenDetails = true, goalIdFilter, galaxyGoalIds, highlightNodeId }) => {
   const allNodes = useMapState((s) => s.nodes);
   const lastAddedNodeId = useMapState((s) => s.lastAddedNodeId);
   const nodes = useMemo(
@@ -686,6 +692,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
                   nodeIndex={nodeIndex}
                   totalInRing={totalInRing}
                   onClick={onNodeClick}
+                  canOpenDetails={canOpenDetails}
                   justDraggedId={justDraggedId}
                   justAdded={lastAddedNodeId === node.id}
                   isHighlighted={highlightNodeId === node.id}
@@ -700,6 +707,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, goalIdFi
                 totalInRing={detachedNodes.length}
                 position={getGreyZonePosition(i, detachedNodes.length)}
                 onClick={onNodeClick}
+                canOpenDetails={canOpenDetails}
                 justDraggedId={justDraggedId}
                 justAdded={lastAddedNodeId === node.id}
                 isHighlighted={highlightNodeId === node.id}

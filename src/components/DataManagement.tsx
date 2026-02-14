@@ -13,8 +13,7 @@ import {
   FileText,
   Cloud,
   LogOut,
-  User,
-  ShieldCheck
+  User
 } from "lucide-react";
 import { GoogleMark } from "./GoogleMark";
 import {
@@ -33,7 +32,6 @@ import { fetchRemoteState, pushRemoteState } from "../services/cloudStore";
 import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "../state/authState";
 import { signInWithGoogle, signOut, updateAccountProfile } from "../services/authService";
 import { isPrivilegedRole } from "../utils/featureFlags";
-import { useAdminState } from "../state/adminState";
 import { useAppContentString } from "../hooks/useAppContentString";
 
 let pdfExportLoader: Promise<typeof import("../services/pdfExport")> | null = null;
@@ -48,9 +46,10 @@ async function loadPdfExportService() {
 interface DataManagementProps {
   isOpen: boolean;
   onClose: () => void;
+  accountOnly?: boolean;
 }
 
-export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => {
+export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accountOnly = true }) => {
   const [isImporting, setIsImporting] = useState(false);
   const [importSuccess, setImportSuccess] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
@@ -83,62 +82,13 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
   const setRoleOverride = useAuthState((s) => s.setRoleOverride);
   const authRole = useAuthState(getEffectiveRoleFromState);
   const isPrivilegedUser = isPrivilegedRole(authRole);
+  const showAdminTools = isPrivilegedUser && !accountOnly;
   const canViewAsUser = isPrivilegedRole(baseRole);
+  const isUserView = authRole === "user";
+  const privilegedRoleLabel = (baseRole || "owner").trim().toLowerCase();
 
   const authDisplayName = useAuthState((s) => s.displayName) ?? "";
   const authToneGender = useAuthState((s) => s.toneGender);
-
-  const privilegedRoleLabel = (baseRole || "owner").trim().toLowerCase();
-  const viewMode = roleOverride ? roleOverride.trim().toLowerCase() : null;
-  const isUserView = authRole === "user";
-  const isRealRoleView = viewMode == null || viewMode === privilegedRoleLabel;
-  const isDevRoleView = Boolean(import.meta.env.DEV && viewMode === "developer");
-
-  const stripDevRoleQueryParam = () => {
-    if (typeof window === "undefined") return;
-    try {
-      const url = new URL(window.location.href);
-      if (!url.searchParams.has("asRole")) return;
-      url.searchParams.delete("asRole");
-      window.history.replaceState({}, "", url.toString());
-    } catch {
-      // ignore URL update errors
-    }
-  };
-
-  const handleViewAsUser = () => {
-    // In dev, also clear local admin gate so the UI truly looks like a user.
-    useAdminState.getState().setAdminAccess(false);
-    useAdminState.getState().setAdminCode(null);
-
-    setRoleOverride("user");
-    stripDevRoleQueryParam();
-  };
-
-  const handleUseRealRole = () => {
-    setRoleOverride(null);
-    stripDevRoleQueryParam();
-  };
-
-  const handleUseDevRole = () => {
-    if (!import.meta.env.DEV) return;
-    setRoleOverride("developer");
-    stripDevRoleQueryParam();
-  };
-
-  const openAdminDashboard = () => {
-    onClose();
-    if (typeof window === "undefined") return;
-    try {
-      const next = new URL(window.location.href);
-      next.pathname = "/admin";
-      next.search = "";
-      window.history.pushState({}, "", next.toString());
-      window.dispatchEvent(new PopStateEvent("popstate"));
-    } catch {
-      window.location.assign("/admin");
-    }
-  };
 
   const [displayName, setDisplayName] = useState(authDisplayName);
   const [displayNameDirty, setDisplayNameDirty] = useState(false);
@@ -356,6 +306,25 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
     setAuthLoading(false);
   };
 
+  const handleBackToOwnerView = () => {
+    setRoleOverride(null);
+  };
+
+  const openRoleSwitchInAdmin = () => {
+    onClose();
+    if (typeof window === "undefined") return;
+    try {
+      const next = new URL(window.location.href);
+      next.pathname = "/admin";
+      next.search = "";
+      next.searchParams.set("tab", "feature-flags");
+      window.history.pushState({}, "", next.toString());
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    } catch {
+      window.location.assign("/admin?tab=feature-flags");
+    }
+  };
+
   const handleSaveAccountProfile = async () => {
     const profileDirty = displayNameDirty || toneGenderDirty;
     if (!profileDirty) return;
@@ -419,22 +388,22 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
               {/* Header */}
               <div
                 className={`flex items-center justify-between p-4 border-b border-slate-200 bg-linear-to-l ${
-                  isPrivilegedUser ? "from-blue-50 to-white" : "from-teal-50 to-white"
+                  showAdminTools ? "from-blue-50 to-white" : "from-teal-50 to-white"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      isPrivilegedUser ? "bg-blue-100" : "bg-teal-100"
+                      showAdminTools ? "bg-blue-100" : "bg-teal-100"
                     }`}
                   >
-                    {isPrivilegedUser ? (
+                    {showAdminTools ? (
                       <Database className="w-5 h-5 text-blue-600" />
                     ) : (
                       <User className="w-5 h-5 text-teal-700" />
                     )}
                   </div>
-                  <h2 className="text-lg font-bold text-slate-900">{isPrivilegedUser ? "إدارة البيانات" : "الحساب"}</h2>
+                  <h2 className="text-lg font-bold text-slate-900">{showAdminTools ? "إدارة البيانات" : "الحساب"}</h2>
                 </div>
                 <button
                   type="button"
@@ -447,7 +416,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
 
               {/* Content */}
               <div className="p-4 space-y-4">
-                {isPrivilegedUser && (
+                {showAdminTools && (
                   <>
                     {/* Storage Stats */}
                 <div className="p-4 bg-slate-50 rounded-xl space-y-2">
@@ -664,62 +633,31 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                         {displayNameError && <p className="text-xs text-rose-600">{displayNameError}</p>}
                         {displayNameMessage && <p className="text-xs text-emerald-700">{displayNameMessage}</p>}
 
-                        {authUser && canViewAsUser && (
-                          <div className="space-y-1">
-                            <p className="text-xs text-slate-500">وضع الصلاحية</p>
-                            <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
-                              <button
-                                type="button"
-                                onClick={handleViewAsUser}
-                                className={`flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
-                                  isUserView
-                                    ? "bg-slate-900 text-white"
-                                    : "text-slate-700 hover:bg-slate-50"
-                                }`}
-                              >
-                                مستخدم
-                              </button>
-                              <button
-                                type="button"
-                                onClick={handleUseRealRole}
-                                className={`flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
-                                  isRealRoleView
-                                    ? "bg-teal-700 text-white"
-                                    : "text-slate-700 hover:bg-slate-50"
-                                }`}
-                              >
-                                {privilegedRoleLabel}
-                              </button>
-                              {import.meta.env.DEV && (
-                                <button
-                                  type="button"
-                                  onClick={handleUseDevRole}
-                                  className={`flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
-                                    isDevRoleView
-                                      ? "bg-indigo-700 text-white"
-                                      : "text-slate-700 hover:bg-slate-50"
-                                  }`}
-                                >
-                                  تطوير
-                                </button>
-                              )}
-                            </div>
-                            <p className="text-[11px] leading-relaxed text-slate-500">
-                              مستخدم: استخدام المنصة كمستخدم عادي بدون أدوات المالك. {privilegedRoleLabel}: أدوات المالك.
-                              {import.meta.env.DEV ? " تطوير: وضع اختبار محلي." : null}
+                        {canViewAsUser && accountOnly && (
+                          <button
+                            type="button"
+                            onClick={openRoleSwitchInAdmin}
+                            className="w-full rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-800 hover:bg-teal-100 transition-colors"
+                          >
+                            التحكم في الصلاحية
+                          </button>
+                        )}
+
+                        {authUser && canViewAsUser && isUserView && (
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 space-y-2">
+                            <p className="text-xs text-amber-800">
+                              أنت الآن في عرض المستخدم. اضغط للرجوع إلى وضع {privilegedRoleLabel}.
                             </p>
-                            {!isUserView && (
-                              <button
-                                type="button"
-                                onClick={openAdminDashboard}
-                                className="mt-2 w-full inline-flex items-center justify-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-800 hover:bg-teal-100 transition-colors"
-                              >
-                                <ShieldCheck className="w-4 h-4" />
-                                افتح لوحة التحكم
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={handleBackToOwnerView}
+                              className="w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                            >
+                              الرجوع لوضع المالك
+                            </button>
                           </div>
                         )}
+
                         <p className="text-sm text-slate-700">مسجل كـ {authUser.email ?? "مستخدم"}</p>
                         <button
                           type="button"
@@ -749,7 +687,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                   </div>
                 </div>
 
-                {isPrivilegedUser && (
+                {showAdminTools && (
                   <>
                     {/* Import Section */}
                 <div className="space-y-2">
@@ -834,7 +772,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
                 )}
               </div>
 
-              {isPrivilegedUser && (
+              {showAdminTools && (
                 <div className="p-4 border-t border-slate-200 bg-slate-50">
                   <p className="text-xs text-slate-500 text-center flex items-center justify-center gap-1">
                     <FileJson className="w-3 h-3" />
@@ -845,7 +783,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
             </div>
           </motion.div>
 
-          {isPrivilegedUser && (
+          {showAdminTools && (
             <AnimatePresence>
               {showConfirmImport && (
               <motion.div
@@ -908,7 +846,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose }) => 
             </AnimatePresence>
           )}
 
-          {isPrivilegedUser && (
+          {showAdminTools && (
             <AnimatePresence>
               {showConfirmWipe && (
               <motion.div

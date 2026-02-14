@@ -9,6 +9,7 @@ import { getEffectiveRoleFromState, useAuthState } from "../state/authState";
 import { getEffectiveFeatureAccess } from "../utils/featureFlags";
 import { isSupabaseReady } from "../services/supabaseClient";
 import { savePulseCheckMode } from "../services/adminApi";
+import { isUserMode } from "../config/appEnv";
 
 interface NotificationSettingsProps {
   isOpen: boolean;
@@ -38,7 +39,7 @@ export const NotificationSettings: FC<NotificationSettingsProps> = ({
     betaAccess,
     role,
     adminAccess,
-    isDev: import.meta.env.DEV
+    isDev: !isUserMode && import.meta.env.DEV
   }).pulse_check;
 
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);

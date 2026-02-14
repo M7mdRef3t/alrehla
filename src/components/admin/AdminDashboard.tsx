@@ -2,12 +2,21 @@ import type { FC, ReactNode } from "react";
 import { useEffect, useState, useRef, lazy, Suspense, useMemo, useCallback } from "react";
 import {
   Activity,
+  ArrowLeft,
+  BarChart3,
+  Bell,
   Brain,
+  BookOpen,
+  ClipboardList,
   Workflow,
   Compass,
   Flag,
+  Globe,
+  Layers,
   Lock,
   LogOut,
+  ScrollText,
+  Share2,
   ShieldCheck,
   Sparkles,
   Users,
@@ -18,22 +27,33 @@ import {
   X,
   User,
   History,
-  MessageSquare
+  MessageSquare,
+  Smartphone
 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { FEATURE_FLAGS, type FeatureFlagMode } from "../../config/features";
+import { FEATURE_FLAGS, type FeatureFlagKey, type FeatureFlagMode } from "../../config/features";
 import { useAdminState, ADMIN_ACCESS_CODE } from "../../state/adminState";
 import { getEffectiveRoleFromState, useAuthState } from "../../state/authState";
-import { getAggregateStats, getEventsByDay, getSessionsWithProgress, getTrackingSessionId } from "../../services/journeyTracking";
+import {
+  getAggregateStats,
+  getEventsByDay,
+  getSessionTimelineEvents,
+  getSessionsWithProgress,
+  getTrackingMode,
+  getTrackingSessionId,
+  setTrackingMode
+} from "../../services/journeyTracking";
 import { getLastActivity } from "../../services/notifications";
 import { geminiClient } from "../../services/geminiClient";
 import { usePulseState } from "../../state/pulseState";
-import { getEffectiveFeatureAccess } from "../../utils/featureFlags";
+import { getEffectiveFeatureAccess, isPrivilegedRole } from "../../utils/featureFlags";
 import {
   fetchAdminConfig,
   fetchAiLogs,
   fetchBroadcasts,
   fetchJourneyMap,
+  fetchSessionEvents,
+  fetchVisitorSessions,
   fetchUserStates,
   fetchUserStateDetail,
   exportUserStates,
@@ -62,7 +82,9 @@ import {
   saveThemePalette,
   type ThemePalette,
   type AdminContentEntry,
-  type AdminFeedbackEntry
+  type AdminFeedbackEntry,
+  type SessionEventRow,
+  type VisitorSessionSummary
 } from "../../services/adminApi";
 import type { BroadcastAudience } from "../../utils/broadcastAudience";
 import { applyThemePalette } from "../../services/themePalette";
@@ -99,7 +121,7 @@ const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
   { id: "consciousness", label: "أرشيف الوعي", icon: <History className="w-4 h-4" /> }
 ];
 
-const DEV_ONLY_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
+const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
 
 const getTabFromLocation = (): AdminTab => {
   if (typeof window === "undefined") return "overview";
@@ -318,26 +340,29 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const aiOnline = geminiClient.isAvailable();
 
   const authRole = useAuthState(getEffectiveRoleFromState);
+  const baseRole = useAuthState((s) => s.role);
   const normalizedRole = typeof authRole === "string" ? authRole.trim().toLowerCase() : "";
   const isDeveloper = normalizedRole === "developer";
+  const isOwner = normalizedRole === "owner" || normalizedRole === "superadmin";
+  const canSeeAdvancedTabs = isPrivilegedRole(baseRole) || isDeveloper || isOwner;
 
-  const visibleNavItems = isDeveloper
+  const visibleNavItems = canSeeAdvancedTabs
     ? NAV_ITEMS
-    : NAV_ITEMS.filter((item) => !DEV_ONLY_TABS.includes(item.id));
+    : NAV_ITEMS.filter((item) => !DEVELOPER_PLUS_TABS.includes(item.id));
 
   const effectiveTab: AdminTab =
-    !isDeveloper && DEV_ONLY_TABS.includes(tab) ? "overview" : tab;
+    !canSeeAdvancedTabs && DEVELOPER_PLUS_TABS.includes(tab) ? "overview" : tab;
 
   const handleTabChange = (next: AdminTab) => {
     const safeNext: AdminTab =
-      !isDeveloper && DEV_ONLY_TABS.includes(next) ? "overview" : next;
+      !canSeeAdvancedTabs && DEVELOPER_PLUS_TABS.includes(next) ? "overview" : next;
     setTab(safeNext);
     updateTabInUrl(safeNext);
   };
 
   return (
     <AdminGate>
-      <div className="admin-cockpit min-h-screen text-slate-800 flex relative overflow-hidden isolate">
+      <div className="admin-cockpit min-h-screen text-slate-800 flex relative isolate">
         <aside className="admin-sidebar w-64 px-5 py-6 space-y-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-slate-700 text-slate-200 flex items-center justify-center">
@@ -381,7 +406,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
           </div>
         </aside>
 
-        <main className="flex-1 min-w-0 p-8 space-y-8">
+        <main className="flex-1 min-w-0 p-8 space-y-8 overflow-y-auto">
           <header className="flex items-center justify-between gap-4">
             <div>
               <p className="text-xs text-slate-600 font-medium">حالة النظام</p>
@@ -416,7 +441,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 type="button"
                 onClick={() => setShowAccount(true)}
                 className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                title="الحساب / وضع الصلاحية"
+                title="الحساب"
               >
                 <User className="w-4 h-4 text-slate-600" />
                 الحساب
@@ -431,16 +456,16 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
           {effectiveTab === "overview" && <OverviewPanel />}
           {effectiveTab === "flow-map" && <FlowMapPanel />}
           {effectiveTab === "feedback" && <FeedbackPanel />}
-          {isDeveloper && effectiveTab === "feature-flags" && <FeatureFlagsPanel />}
-          {isDeveloper && effectiveTab === "ai-studio" && <AIStudioPanel />}
+          {canSeeAdvancedTabs && effectiveTab === "feature-flags" && <FeatureFlagsPanel />}
+          {canSeeAdvancedTabs && effectiveTab === "ai-studio" && <AIStudioPanel />}
           {effectiveTab === "content" && <ContentPanel />}
           {effectiveTab === "users" && <UsersPanel />}
-          {isDeveloper && effectiveTab === "user-state" && <UserStatePanel />}
+          {canSeeAdvancedTabs && effectiveTab === "user-state" && <UserStatePanel />}
           {effectiveTab === "consciousness" && <ConsciousnessArchivePanel />}
         </main>
 
         <Suspense fallback={null}>
-          <DataManagementModal isOpen={showAccount} onClose={() => setShowAccount(false)} />
+          <DataManagementModal isOpen={showAccount} onClose={() => setShowAccount(false)} accountOnly />
         </Suspense>
       </div>
     </AdminGate>
@@ -455,17 +480,22 @@ const FlowMapPanel: FC = () => {
   useEffect(() => {
     if (!isSupabaseReady) return;
     let mounted = true;
-    fetchOverviewStats()
-      .then((data) => {
-        if (!mounted) return;
-        if (data) setRemoteStats(data);
-      })
-      .catch(() => {
-        if (!mounted) return;
-        setRemoteStats(null);
-      });
+    const refresh = () => {
+      fetchOverviewStats()
+        .then((data) => {
+          if (!mounted) return;
+          if (data) setRemoteStats(data);
+        })
+        .catch(() => {
+          if (!mounted) return;
+          setRemoteStats(null);
+        });
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 30_000);
     return () => {
       mounted = false;
+      window.clearInterval(timer);
     };
   }, []);
   const flowStats = remoteStats?.flowStats;
@@ -797,17 +827,22 @@ const OverviewPanel: FC = () => {
   useEffect(() => {
     if (!isSupabaseReady) return;
     let mounted = true;
-    fetchOverviewStats()
-      .then((data) => {
-        if (!mounted) return;
-        if (data) setRemoteStats(data);
-      })
-      .catch(() => {
-        if (!mounted) return;
-        setRemoteStats(null);
-      });
+    const refresh = () => {
+      fetchOverviewStats()
+        .then((data) => {
+          if (!mounted) return;
+          if (data) setRemoteStats(data);
+        })
+        .catch(() => {
+          if (!mounted) return;
+          setRemoteStats(null);
+        });
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 30_000);
     return () => {
       mounted = false;
+      window.clearInterval(timer);
     };
   }, []);
 
@@ -826,13 +861,16 @@ const OverviewPanel: FC = () => {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
 
-  const totalUsers = remoteStats?.totalUsers ?? sessions.length;
-  const activeNowValue = remoteStats?.activeNow ?? activeNow;
-  const avgMoodValue = remoteStats?.avgMood ?? avgPulse;
-  const aiTokensUsed = remoteStats?.aiTokensUsed ?? stats.totalTaskCompletions;
-  const growthData = remoteStats?.growthData?.length ? remoteStats.growthData : localGrowthData;
-  const topZones = remoteStats?.zones?.length
-    ? remoteStats.zones.slice(0, 3).map((z) => [z.label, z.count] as const)
+  const useRemoteAsSource = isSupabaseReady;
+  const totalUsers = useRemoteAsSource ? (remoteStats?.totalUsers ?? 0) : sessions.length;
+  const activeNowValue = useRemoteAsSource ? (remoteStats?.activeNow ?? 0) : activeNow;
+  const avgMoodValue = useRemoteAsSource ? (remoteStats?.avgMood ?? null) : avgPulse;
+  const aiTokensUsed = useRemoteAsSource ? (remoteStats?.aiTokensUsed ?? 0) : stats.totalTaskCompletions;
+  const growthData = useRemoteAsSource
+    ? (remoteStats?.growthData ?? [])
+    : localGrowthData;
+  const topZones = useRemoteAsSource
+    ? (remoteStats?.zones?.slice(0, 3).map((z) => [z.label, z.count] as const) ?? [])
     : localZones;
 
   const handleDailyReport = async () => {
@@ -869,7 +907,7 @@ const OverviewPanel: FC = () => {
   const phaseGoal = remoteStats?.phaseOneGoal ?? null;
   const phaseRegisteredUsers = phaseGoal?.registeredUsers ?? totalUsers ?? 0;
   const phaseInstalledUsers = phaseGoal?.installedUsers ?? (flowStats?.byStep?.install_clicked ?? 0);
-  const phaseAddedPeople = phaseGoal?.addedPeople ?? stats.totalNodesAdded;
+  const phaseAddedPeople = phaseGoal?.addedPeople ?? (useRemoteAsSource ? 0 : stats.totalNodesAdded);
   const phaseTarget = 10;
   const phaseProgressItems = [
     { key: "registered", label: "مستخدمين سجلوا", value: phaseRegisteredUsers, target: phaseTarget },
@@ -942,6 +980,14 @@ const OverviewPanel: FC = () => {
           </a>
         </div>
       )}
+
+      <div className="admin-glass-card p-3">
+        <p className="text-xs text-slate-600">
+          مصدر بيانات اللوحة:{" "}
+          <strong>{useRemoteAsSource ? "Supabase (تتبع حقيقي)" : "محلي على هذا الجهاز فقط"}</strong>
+          {useRemoteAsSource && remoteStats == null ? " — لا توجد بيانات متاحة الآن من السيرفر." : ""}
+        </p>
+      </div>
 
       {/* بطاقة شبيهة بـ YouTube Studio: رقم رئيسي + تحديث مباشر */}
       <div className="admin-glass-card p-6 rounded-2xl border border-slate-700/50 bg-slate-900/40">
@@ -1665,8 +1711,14 @@ const FeatureFlagsPanel: FC = () => {
   const betaAccess = useAdminState((s) => s.betaAccess);
   const setBetaAccess = useAdminState((s) => s.setBetaAccess);
   const adminAccess = useAdminState((s) => s.adminAccess);
+  const setAdminAccess = useAdminState((s) => s.setAdminAccess);
+  const setAdminCode = useAdminState((s) => s.setAdminCode);
+  const baseRole = useAuthState((s) => s.role);
+  const roleOverride = useAuthState((s) => s.roleOverride);
+  const setRoleOverride = useAuthState((s) => s.setRoleOverride);
   const role = useAuthState(getEffectiveRoleFromState);
   const [saving, setSaving] = useState(false);
+  const [showDataTools, setShowDataTools] = useState(false);
   const effectiveAccess = getEffectiveFeatureAccess({
     featureFlags,
     betaAccess,
@@ -1674,14 +1726,206 @@ const FeatureFlagsPanel: FC = () => {
     adminAccess,
     isDev: import.meta.env.DEV
   });
+  const openFeaturePreview = (featureKey: FeatureFlagKey) => {
+    if (typeof window === "undefined") return;
+    const next = new URL(window.location.href);
+    if (featureKey === "global_atlas") {
+      next.pathname = "/analytics";
+      next.search = "";
+    } else {
+      next.pathname = "/";
+      next.searchParams.set("previewFeature", featureKey);
+    }
+    window.history.pushState({}, "", next.toString());
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  };
+  const openOwnerAction = (
+    action:
+      | "admin_dashboard"
+      | "consciousness_archive"
+      | "journey_guide_chat"
+      | "journey_tools"
+      | "journey_timeline"
+      | "open_dawayir"
+      | "quick_experience"
+      | "start_journey"
+      | "guided_journey"
+      | "baseline_check"
+      | "notifications"
+      | "tracking_dashboard"
+      | "atlas_dashboard"
+      | "data_tools"
+      | "share_stats"
+      | "library"
+      | "symptoms"
+      | "recovery_plan"
+      | "theme_settings"
+      | "achievements"
+      | "advanced_tools"
+      | "classic_recovery"
+      | "manual_placement"
+      | "feedback_modal"
+      | "install_app"
+      | "noise_silencing"
+      | "breathing_session"
+  ) => {
+    if (typeof window === "undefined") return;
+    const next = new URL(window.location.href);
+    next.pathname = "/";
+    next.search = "";
+    next.searchParams.set("ownerAction", action);
+    window.history.pushState({}, "", next.toString());
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  };
+  const sidebarActions: Array<{ id: Parameters<typeof openOwnerAction>[0]; label: string; icon: ReactNode }> = [
+    { id: "admin_dashboard", label: "لوحة التحكم", icon: <ShieldCheck className="w-4 h-4" /> },
+    { id: "consciousness_archive", label: "أرشيف الوعي", icon: <History className="w-4 h-4" /> },
+    { id: "journey_guide_chat", label: "شات مرشد الرحلة", icon: <MessageSquare className="w-4 h-4" /> },
+    { id: "journey_tools", label: "أدوات الرحلة", icon: <Compass className="w-4 h-4" /> },
+    { id: "journey_timeline", label: "سجل الرحلة", icon: <ScrollText className="w-4 h-4" /> },
+    { id: "open_dawayir", label: "افتح غرفة دوائر", icon: <Compass className="w-4 h-4" /> },
+    { id: "quick_experience", label: "تجربة سريعة", icon: <Sparkles className="w-4 h-4" /> },
+    { id: "start_journey", label: "ابدأ رحلتك", icon: <ArrowLeft className="w-4 h-4" /> },
+    { id: "guided_journey", label: "الرحلة الموجهة", icon: <Layers className="w-4 h-4" /> },
+    { id: "baseline_check", label: "رصد الحالة", icon: <ClipboardList className="w-4 h-4" /> },
+    { id: "notifications", label: "الإشعارات", icon: <Bell className="w-4 h-4" /> },
+    { id: "tracking_dashboard", label: "رادار المتابعة", icon: <BarChart3 className="w-4 h-4" /> },
+    { id: "atlas_dashboard", label: "لوحة الأطلس", icon: <Globe className="w-4 h-4" /> },
+    { id: "data_tools", label: "البيانات", icon: <Database className="w-4 h-4" /> },
+    { id: "share_stats", label: "شارك", icon: <Share2 className="w-4 h-4" /> },
+    { id: "library", label: "المكتبة", icon: <BookOpen className="w-4 h-4" /> },
+    { id: "symptoms", label: "الأعراض", icon: <ClipboardList className="w-4 h-4" /> },
+    { id: "recovery_plan", label: "خطوات الرحلة", icon: <Workflow className="w-4 h-4" /> },
+    { id: "theme_settings", label: "المظهر", icon: <Sparkles className="w-4 h-4" /> },
+    { id: "achievements", label: "إنجازاتك", icon: <History className="w-4 h-4" /> },
+    { id: "advanced_tools", label: "أدوات متقدمة", icon: <Sparkles className="w-4 h-4" /> },
+    { id: "classic_recovery", label: "الخطة الكلاسيكية", icon: <ClipboardList className="w-4 h-4" /> },
+    { id: "manual_placement", label: "تحديد الدائرة يدويًا", icon: <Compass className="w-4 h-4" /> },
+    { id: "feedback_modal", label: "شاركنا رأيك", icon: <MessageSquare className="w-4 h-4" /> },
+    { id: "install_app", label: "تثبيت التطبيق", icon: <Smartphone className="w-4 h-4" /> },
+    { id: "noise_silencing", label: "تشويش الإشارة", icon: <Lock className="w-4 h-4" /> },
+    { id: "breathing_session", label: "جلسة تنفسية", icon: <Activity className="w-4 h-4" /> }
+  ];
+  const privilegedRoleLabel = (baseRole || "owner").trim().toLowerCase();
+  const viewMode = roleOverride ? roleOverride.trim().toLowerCase() : null;
+  const isUserView = role === "user";
+  const isRealRoleView = viewMode == null || viewMode === privilegedRoleLabel;
+  const isDevRoleView = Boolean(import.meta.env.DEV && viewMode === "developer");
+  const canViewAsUser = isPrivilegedRole(baseRole);
+
+  const stripRoleQueryParam = () => {
+    if (typeof window === "undefined") return;
+    try {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has("asRole")) return;
+      url.searchParams.delete("asRole");
+      window.history.replaceState({}, "", url.toString());
+    } catch {
+      // ignore URL update errors
+    }
+  };
+
+  const handleViewAsUser = () => {
+    setAdminAccess(false);
+    setAdminCode(null);
+    setRoleOverride("user");
+    stripRoleQueryParam();
+  };
+
+  const handleUseRealRole = () => {
+    setRoleOverride(null);
+    stripRoleQueryParam();
+  };
+
+  const handleUseDevRole = () => {
+    if (!import.meta.env.DEV) return;
+    setRoleOverride("developer");
+    stripRoleQueryParam();
+  };
 
   return (
     <div className="space-y-6">
       <div className="admin-glass-card p-5">
-        <h3 className="text-sm font-semibold text-slate-800 mb-2">مفاتيح الإطلاق</h3>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h3 className="text-sm font-semibold text-slate-800">مفاتيح الإطلاق</h3>
+          <button
+            type="button"
+            onClick={() => setShowDataTools(true)}
+            className="rounded-full px-3 py-1 text-xs font-semibold border border-slate-300 text-slate-700 hover:border-teal-500/40"
+          >
+            فتح الأدوات المتقدمة
+          </button>
+        </div>
         <p className="text-xs text-slate-600">
           غيّر حالة كل ميزة فوراً. وضع Beta يفتحها لمجموعة تجريبية فقط.
         </p>
+      </div>
+
+      {canViewAsUser && (
+        <div className="admin-glass-card p-5 space-y-2">
+          <p className="text-sm font-semibold text-slate-800">وضع الصلاحية</p>
+          <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1">
+            <button
+              type="button"
+              onClick={handleViewAsUser}
+              className={`flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
+                isUserView
+                  ? "bg-slate-900 text-white"
+                  : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              مستخدم
+            </button>
+            <button
+              type="button"
+              onClick={handleUseRealRole}
+              className={`flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
+                isRealRoleView
+                  ? "bg-teal-700 text-white"
+                  : "text-slate-700 hover:bg-slate-50"
+              }`}
+            >
+              {privilegedRoleLabel}
+            </button>
+            {import.meta.env.DEV && (
+              <button
+                type="button"
+                onClick={handleUseDevRole}
+                className={`flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${
+                  isDevRoleView
+                    ? "bg-indigo-700 text-white"
+                    : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                تطوير
+              </button>
+            )}
+          </div>
+          <p className="text-[11px] leading-relaxed text-slate-500">
+            مستخدم: تجربة المستخدم النهائي. {privilegedRoleLabel}: أدوات المالك.
+            {import.meta.env.DEV ? " تطوير: وضع اختبار محلي." : null}
+          </p>
+        </div>
+      )}
+
+      <div className="admin-glass-card p-5 space-y-3">
+        <h4 className="text-sm font-semibold text-slate-800">اختصارات السلايد الجانبي</h4>
+        <p className="text-xs text-slate-600">
+          اضغط أي زر لفتح نفس الشاشة مباشرة على واجهة المالك.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          {sidebarActions.map((action) => (
+            <button
+              key={action.id}
+              type="button"
+              onClick={() => openOwnerAction(action.id)}
+              className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700 hover:border-teal-500/50 hover:bg-teal-50 transition-colors flex items-center justify-center gap-2"
+            >
+              {action.icon}
+              <span>{action.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -1694,7 +1938,14 @@ const FeatureFlagsPanel: FC = () => {
                   <p className="text-sm font-semibold text-slate-800">{flag.label}</p>
                   <p className="text-xs text-slate-600 mt-1">{flag.description}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap justify-end">
+                  <button
+                    type="button"
+                    onClick={() => openFeaturePreview(flag.key)}
+                    className="rounded-full px-3 py-1 text-xs font-semibold border border-indigo-300 text-indigo-700 hover:border-indigo-500/60"
+                  >
+                    Preview
+                  </button>
                   {(["on", "off", "beta"] as FeatureFlagMode[]).map((opt) => {
                     if (opt === "beta" && !flag.supportsBeta) return null;
                     const active = mode === opt;
@@ -1709,10 +1960,14 @@ const FeatureFlagsPanel: FC = () => {
                         await saveFeatureFlags({ ...featureFlags, [flag.key]: opt });
                         setSaving(false);
                       }}
-                      className={`rounded-full px-3 py-1 text-xs font-semibold border transition-all ${
+                      className={`rounded-full px-3 py-1 text-xs font-bold border transition-all ${
                         active
-                          ? "border-teal-400 bg-teal-500/20 text-slate-200"
-                          : "border-slate-300 text-slate-600 hover:border-teal-500/40"
+                          ? opt === "on"
+                            ? "border-emerald-600 bg-emerald-600 text-white ring-2 ring-emerald-300"
+                            : opt === "off"
+                              ? "border-rose-600 bg-rose-600 text-white ring-2 ring-rose-300"
+                              : "border-amber-500 bg-amber-500 text-slate-950 ring-2 ring-amber-300"
+                          : "border-slate-300 bg-white text-slate-700 hover:border-slate-500"
                       }`}
                     >
                       {opt === "on" ? "ON" : opt === "off" ? "OFF" : "BETA"}
@@ -1750,6 +2005,9 @@ const FeatureFlagsPanel: FC = () => {
           {betaAccess ? "Beta مفعّل" : "Beta مغلق"}
         </button>
       </div>
+      <Suspense fallback={null}>
+        <DataManagementModal isOpen={showDataTools} onClose={() => setShowDataTools(false)} accountOnly={false} />
+      </Suspense>
     </div>
   );
 };
@@ -2438,15 +2696,23 @@ const ContentPanel: FC = () => {
 
 const UsersPanel: FC = () => {
   const [query, setQuery] = useState("");
+  const trackingMode = getTrackingMode();
   const sessions = getSessionsWithProgress();
   const [remoteUsers, setRemoteUsers] = useState<Awaited<ReturnType<typeof fetchUsers>>>(null);
+  const [visitorSessions, setVisitorSessions] = useState<VisitorSessionSummary[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [visitorLoading, setVisitorLoading] = useState(false);
   const [roleSaving, setRoleSaving] = useState<string | null>(null);
   const [godViewOpen, setGodViewOpen] = useState(false);
   const [godViewLoading, setGodViewLoading] = useState(false);
   const [godViewError, setGodViewError] = useState("");
   const [godViewSnapshot, setGodViewSnapshot] = useState<JourneyMapSnapshot | null>(null);
   const [godViewSessionId, setGodViewSessionId] = useState<string | null>(null);
+  const [journeyLogOpen, setJourneyLogOpen] = useState(false);
+  const [journeyLogLoading, setJourneyLogLoading] = useState(false);
+  const [journeyLogError, setJourneyLogError] = useState("");
+  const [journeyLogSessionId, setJourneyLogSessionId] = useState<string | null>(null);
+  const [journeyLogEvents, setJourneyLogEvents] = useState<SessionEventRow[]>([]);
 
   useEffect(() => {
     if (!isSupabaseReady) return;
@@ -2466,14 +2732,89 @@ const UsersPanel: FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isSupabaseReady) return;
+    let mounted = true;
+    const refresh = () => {
+      setVisitorLoading(true);
+      fetchVisitorSessions(300)
+        .then((data) => {
+          if (!mounted) return;
+          setVisitorSessions(data ?? []);
+        })
+        .finally(() => {
+          if (!mounted) return;
+          setVisitorLoading(false);
+        });
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 30_000);
+    return () => {
+      mounted = false;
+      window.clearInterval(timer);
+    };
+  }, []);
+
   const filteredSessions = sessions.filter((s) => s.sessionId.toLowerCase().includes(query.toLowerCase()));
   const filteredUsers =
     remoteUsers?.filter((u) =>
-      `${u.fullName} ${u.email} ${u.id}`.toLowerCase().includes(query.toLowerCase())
+      u.role !== "session" && `${u.fullName} ${u.email} ${u.id}`.toLowerCase().includes(query.toLowerCase())
     ) ?? [];
+  const filteredVisitorSessions =
+    visitorSessions?.filter((s) => s.sessionId.toLowerCase().includes(query.toLowerCase())) ?? [];
 
   // Keep this aligned with actual auth/feature-role logic (see src/utils/featureFlags.ts and AdminGate allowed roles).
   const ROLE_OPTIONS = ["user", "admin", "developer", "owner", "superadmin"];
+
+  const EVENT_LABELS: Record<string, string> = {
+    flow_event: "خطوة في الرحلة",
+    path_started: "بدأ مسار",
+    task_started: "بدأ مهمة",
+    task_completed: "أكمل مهمة",
+    path_regenerated: "إعادة توليد المسار",
+    node_added: "إضافة شخص",
+    mood_logged: "تسجيل مزاج"
+  };
+
+  const FLOW_STEP_LABELS: Record<string, string> = {
+    landing_viewed: "دخل الصفحة الرئيسية",
+    landing_clicked_start: "ضغط ابدأ",
+    auth_login_success: "سجل دخول",
+    install_clicked: "ضغط تثبيت التطبيق",
+    pulse_opened: "فتح البوصلة",
+    pulse_abandoned: "خرج من البوصلة",
+    pulse_completed: "أكمل البوصلة",
+    add_person_opened: "فتح إضافة شخص",
+    add_person_done_show_on_map: "أكمل إضافة الشخص",
+    add_person_dropped: "خرج من إضافة شخص",
+    tools_opened: "فتح الأدوات"
+  };
+
+  const summarizeEvent = (event: SessionEventRow): string => {
+    if (event.type === "flow_event") {
+      const step = typeof event.payload?.step === "string" ? event.payload.step : "";
+      if (!step) return "خطوة غير معرّفة";
+      return FLOW_STEP_LABELS[step] ?? step;
+    }
+    if (event.type === "path_started") {
+      const pathId = typeof event.payload?.pathId === "string" ? event.payload.pathId : "—";
+      return `المسار: ${pathId}`;
+    }
+    if (event.type === "task_completed" || event.type === "task_started") {
+      const task = typeof event.payload?.taskLabel === "string" ? event.payload.taskLabel : "";
+      return task || "بدون اسم مهمة";
+    }
+    if (event.type === "node_added") {
+      const person = typeof event.payload?.personLabel === "string" ? event.payload.personLabel : "";
+      const ring = typeof event.payload?.ring === "string" ? event.payload.ring : "";
+      return person ? `${person}${ring ? ` (${ring})` : ""}` : ring || "تمت إضافة شخص";
+    }
+    if (event.type === "mood_logged") {
+      const score = typeof event.payload?.moodScore === "number" ? event.payload.moodScore : null;
+      return score == null ? "تسجيل مزاج" : `مستوى المزاج: ${score}`;
+    }
+    return "—";
+  };
 
   const openGodView = async (sessionId: string) => {
     setGodViewSessionId(sessionId);
@@ -2517,10 +2858,74 @@ const UsersPanel: FC = () => {
     }
   };
 
+  const openJourneyLog = async (sessionId: string) => {
+    const sid = sessionId.trim();
+    if (!sid) return;
+    setJourneyLogSessionId(sid);
+    setJourneyLogEvents([]);
+    setJourneyLogError("");
+    setJourneyLogOpen(true);
+    setJourneyLogLoading(true);
+    try {
+      if (isSupabaseReady) {
+        const data = await fetchSessionEvents(sid, 300);
+        if (!data) {
+          setJourneyLogError("تعذر تحميل سجل الأحداث من Supabase.");
+        } else {
+          setJourneyLogEvents(data);
+        }
+      } else {
+        const localEvents = getSessionTimelineEvents(sid, 300).map((item, idx) => ({
+          id: `local-${sid}-${idx}-${item.timestamp}`,
+          sessionId: sid,
+          type: item.type,
+          payload: (item.payload as Record<string, unknown>) ?? null,
+          createdAt: item.timestamp
+        }));
+        setJourneyLogEvents(localEvents);
+      }
+    } catch {
+      setJourneyLogError("حدث خطأ أثناء تحميل رحلة الزائر.");
+    } finally {
+      setJourneyLogLoading(false);
+    }
+  };
+
+  const formatTimestamp = (value: number | null) =>
+    value
+      ? new Date(value).toLocaleString("ar-EG", {
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        })
+      : "—";
+
   return (
     <div className="space-y-6">
       <div className="admin-glass-card p-5 space-y-3">
         <h3 className="text-sm font-semibold">جدول المسافرين</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <p className="text-slate-500">
+            Tracking mode:{" "}
+            <span className="font-semibold text-slate-300">{trackingMode === "identified" ? "identified" : "anonymous"}</span>
+          </p>
+          {trackingMode !== "identified" && (
+            <button
+              type="button"
+              onClick={() => setTrackingMode("identified")}
+              className="rounded-full border border-amber-400 px-3 py-1 text-amber-300 hover:bg-amber-500/10"
+            >
+              Enable visitor tracking
+            </button>
+          )}
+        </div>
+        {isSupabaseReady && (
+          <p className="text-[11px] text-slate-500">
+            Real visitor sessions:{" "}
+            <span className="font-semibold text-slate-300">{formatNumber(visitorSessions?.length ?? 0, "0")}</span>
+          </p>
+        )}
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -2530,9 +2935,54 @@ const UsersPanel: FC = () => {
       </div>
 
       <div className="admin-glass-card p-5">
+        {isSupabaseReady && (
+          <div className="space-y-2 pb-5 border-b border-slate-800/60 mb-5">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-slate-200">جلسات الزوار (تتبع حقيقي)</p>
+              {visitorLoading && <p className="text-[11px] text-slate-500">تحديث...</p>}
+            </div>
+            {filteredVisitorSessions.length === 0 ? (
+              <p className="text-xs text-slate-500">لا توجد جلسات زوار مطابقة.</p>
+            ) : (
+              filteredVisitorSessions.map((session) => (
+                <div
+                  key={session.sessionId}
+                  className="flex flex-wrap items-center justify-between gap-3 text-xs border border-slate-800 rounded-xl px-3 py-2"
+                >
+                  <div>
+                    <p className="font-semibold text-slate-200">{session.sessionId}</p>
+                    <p className="text-slate-500">آخر نشاط: {formatTimestamp(session.lastSeen)}</p>
+                  </div>
+                  <div className="text-slate-400">
+                    أحداث: {session.eventsCount} � مسارات: {session.pathStarts} � مهام: {session.taskCompletions} � إضافات: {session.nodesAdded}
+                    {session.lastFlowStep ? ` � Last: ${FLOW_STEP_LABELS[session.lastFlowStep] ?? session.lastFlowStep}` : ""}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400"
+                      onClick={() => openJourneyLog(session.sessionId)}
+                    >
+                      سجل الزائر
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400"
+                      onClick={() => openGodView(session.sessionId)}
+                    >
+                      نظرة الإله
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
         {loading && <p className="text-xs text-slate-500">جاري تحميل المستخدمين...</p>}
         {!loading && remoteUsers && (
           <div className="space-y-2">
+            <p className="text-xs font-semibold text-slate-300 mb-2">إدارة حسابات المستخدمين</p>
             {filteredUsers.length === 0 ? (
               <p className="text-xs text-slate-500">لا توجد نتائج مطابقة.</p>
             ) : (
@@ -2569,18 +3019,12 @@ const UsersPanel: FC = () => {
                       <span className="text-xs text-slate-500">جارٍ الحفظ...</span>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400"
-                    onClick={() => openGodView(user.id)}
-                  >
-                    نظرة الإله
-                  </button>
                 </div>
               ))
             )}
           </div>
         )}
+
         {!loading && !remoteUsers && (
           <>
             {filteredSessions.length === 0 ? (
@@ -2596,13 +3040,22 @@ const UsersPanel: FC = () => {
                     <div className="text-slate-400">
                       مسارات: {session.pathStarts} • مهام: {session.taskCompletions}
                     </div>
-                    <button
-                      type="button"
-                      className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400"
-                      onClick={() => openGodView(session.sessionId)}
-                    >
-                      نظرة الإله
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400"
+                        onClick={() => openJourneyLog(session.sessionId)}
+                      >
+                        سجل الزائر
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-teal-400"
+                        onClick={() => openGodView(session.sessionId)}
+                      >
+                        نظرة الإله
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -2610,6 +3063,7 @@ const UsersPanel: FC = () => {
           </>
         )}
       </div>
+
       <GodViewModal
         isOpen={godViewOpen}
         onClose={() => setGodViewOpen(false)}
@@ -2618,10 +3072,19 @@ const UsersPanel: FC = () => {
         snapshot={godViewSnapshot}
         sessionId={godViewSessionId}
       />
+      <VisitorJourneyModal
+        isOpen={journeyLogOpen}
+        onClose={() => setJourneyLogOpen(false)}
+        loading={journeyLogLoading}
+        error={journeyLogError}
+        sessionId={journeyLogSessionId}
+        events={journeyLogEvents}
+        eventLabels={EVENT_LABELS}
+        summarizeEvent={summarizeEvent}
+      />
     </div>
   );
 };
-
 const UserStatePanel: FC = () => {
   const [rows, setRows] = useState<UserStateRow[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -3244,6 +3707,86 @@ const ConsciousnessArchivePanel: FC = () => {
   );
 };
 
+const VisitorJourneyModal: FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  loading: boolean;
+  error: string;
+  sessionId: string | null;
+  events: SessionEventRow[];
+  eventLabels: Record<string, string>;
+  summarizeEvent: (event: SessionEventRow) => string;
+}> = ({ isOpen, onClose, loading, error, sessionId, events, eventLabels, summarizeEvent }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-3xl rounded-3xl border border-slate-800 bg-slate-950 text-white"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold">سجل رحلة الزائر</h3>
+            <p className="text-xs text-slate-400">{sessionId ?? "—"}</p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-full p-2 hover:bg-slate-800">
+            <X className="w-5 h-5 text-slate-300" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-3 max-h-[70vh] overflow-y-auto">
+          {loading && (
+            <div className="flex items-center gap-2 text-sm text-slate-400">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              جاري تحميل سجل الأحداث...
+            </div>
+          )}
+          {!loading && error && (
+            <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
+              {error}
+            </div>
+          )}
+          {!loading && !error && events.length === 0 && (
+            <p className="text-sm text-slate-400">لا توجد أحداث مسجلة لهذه الجلسة.</p>
+          )}
+          {!loading && !error && events.length > 0 && (
+            <div className="space-y-2">
+              {events.map((event) => (
+                <div key={event.id} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-slate-100">
+                      {eventLabels[event.type] ?? event.type}
+                    </p>
+                    <p className="text-[11px] text-slate-400">
+                      {event.createdAt
+                        ? new Date(event.createdAt).toLocaleString("ar-EG", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          })
+                        : "—"}
+                    </p>
+                  </div>
+                  <p className="text-xs text-slate-300 mt-1">{summarizeEvent(event)}</p>
+                  {event.payload && (
+                    <details className="mt-2">
+                      <summary className="text-[11px] text-slate-500 cursor-pointer">تفاصيل الحدث</summary>
+                      <pre className="mt-1 text-[10px] text-slate-400 whitespace-pre-wrap break-all">
+                        {JSON.stringify(event.payload, null, 2)}
+                      </pre>
+                    </details>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const GodViewModal: FC<{
   isOpen: boolean;
   onClose: () => void;
@@ -3357,3 +3900,4 @@ const StatCard: FC<{ title: string; value: string; hint?: string }> = ({ title, 
 );
 
 export { OverviewPanel };
+

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } fro
 import { motion, AnimatePresence } from "framer-motion";
 import { X, User, MessageCircle } from "lucide-react";
 import { Landing } from "./components/Landing";
+import { LegalPage } from "./components/LegalPage";
 import { useNotificationState } from "./state/notificationState";
 import { useEmergencyState } from "./state/emergencyState";
 import { useMapState } from "./state/mapState";
@@ -20,7 +21,7 @@ import {
   isAppInstalledMode,
   type PublicBroadcast
 } from "./services/broadcasts";
-import type { AdviceCategory } from "./data/adviceScripts";
+import { resolveAdviceCategory, type AdviceCategory } from "./data/adviceScripts";
 import type { AgentActions, AgentContext } from "./agent/types";
 import { getIncompleteMissionSteps } from "./utils/missionProgress";
 import { getLastGoalMeta } from "./utils/goalLabel";
@@ -38,12 +39,96 @@ import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./u
 import { geminiClient } from "./services/geminiClient";
 import { isSupabaseReady } from "./services/supabaseClient";
 import { usePulseCheckLogic } from "./hooks/usePulseCheckLogic";
-import { isPhaseOneUserFlow } from "./config/appEnv";
+import { isPhaseOneUserFlow, isUserMode } from "./config/appEnv";
 
 type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
+type OwnerActionKey =
+  | "admin_dashboard"
+  | "consciousness_archive"
+  | "journey_guide_chat"
+  | "journey_tools"
+  | "journey_timeline"
+  | "open_dawayir"
+  | "quick_experience"
+  | "start_journey"
+  | "guided_journey"
+  | "baseline_check"
+  | "notifications"
+  | "tracking_dashboard"
+  | "atlas_dashboard"
+  | "data_tools"
+  | "share_stats"
+  | "library"
+  | "symptoms"
+  | "recovery_plan"
+  | "theme_settings"
+  | "achievements"
+  | "advanced_tools"
+  | "classic_recovery"
+  | "manual_placement"
+  | "feedback_modal"
+  | "install_app"
+  | "noise_silencing"
+  | "breathing_session";
 
-/** مسافة للمينيو — تاب صغير ظاهر (الشريط يظهر عند التحريك) */
-const SIDEBAR_TAB_MARGIN = "2.5rem"; // w-10
+function normalizePreviewFeature(value: string | null): FeatureFlagKey | null {
+  if (!value) return null;
+  const key = value.trim().toLowerCase();
+  if (
+    key === "dawayir_map" ||
+    key === "journey_tools" ||
+    key === "basic_diagnosis" ||
+    key === "mirror_tool" ||
+    key === "family_tree" ||
+    key === "internal_boundaries" ||
+    key === "generative_ui_mode" ||
+    key === "global_atlas" ||
+    key === "ai_field" ||
+    key === "pulse_check"
+  ) {
+    return key as FeatureFlagKey;
+  }
+  return null;
+}
+
+function normalizeOwnerAction(value: string | null): OwnerActionKey | null {
+  if (!value) return null;
+  const key = value.trim().toLowerCase();
+  if (
+    key === "admin_dashboard" ||
+    key === "consciousness_archive" ||
+    key === "journey_guide_chat" ||
+    key === "journey_tools" ||
+    key === "journey_timeline" ||
+    key === "open_dawayir" ||
+    key === "quick_experience" ||
+    key === "start_journey" ||
+    key === "guided_journey" ||
+    key === "baseline_check" ||
+    key === "notifications" ||
+    key === "tracking_dashboard" ||
+    key === "atlas_dashboard" ||
+    key === "data_tools" ||
+    key === "share_stats" ||
+    key === "library" ||
+    key === "symptoms" ||
+    key === "recovery_plan" ||
+    key === "theme_settings" ||
+    key === "achievements" ||
+    key === "advanced_tools" ||
+    key === "classic_recovery" ||
+    key === "manual_placement" ||
+    key === "feedback_modal" ||
+    key === "install_app" ||
+    key === "noise_silencing" ||
+    key === "breathing_session"
+  ) {
+    return key as OwnerActionKey;
+  }
+  return null;
+}
+
+/** Ù…Ø³Ø§ÙØ© Ù„Ù„Ù…ÙŠÙ†ÙŠÙˆ â€” ØªØ§Ø¨ ØµØºÙŠØ± Ø¸Ø§Ù‡Ø± (Ø§Ù„Ø´Ø±ÙŠØ· ÙŠØ¸Ù‡Ø± Ø¹Ù†Ø¯ Ø§Ù„ØªØ­Ø±ÙŠÙƒ) */
 
 const CoreMapScreen = lazy(() => import("./components/CoreMapScreen").then((m) => ({ default: m.CoreMapScreen })));
 const GoalPicker = lazy(() => import("./components/GoalPicker").then((m) => ({ default: m.GoalPicker })));
@@ -69,12 +154,40 @@ const EmergencyOverlay = lazy(() => import("./components/EmergencyOverlay").then
 const GuidedJourneyFlow = lazy(() => import("./components/GuidedJourneyFlow").then((m) => ({ default: m.GuidedJourneyFlow })));
 const MissionScreen = lazy(() => import("./components/MissionScreen").then((m) => ({ default: m.MissionScreen })));
 const JourneyToolsScreen = lazy(() => import("./components/JourneyToolsScreen").then((m) => ({ default: m.JourneyToolsScreen })));
-const AppSidebar = lazy(() => import("./components/AppSidebar").then((m) => ({ default: m.AppSidebar })));
 const AdminDashboard = lazy(() => import("./components/admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
 const AdminOverviewPanel = lazy(() =>
   import("./components/admin/AdminDashboard").then((m) => ({ default: m.OverviewPanel }))
 );
 const DataManagement = lazy(() => import("./components/DataManagement").then((m) => ({ default: m.DataManagement })));
+const NotificationSettings = lazy(() =>
+  import("./components/NotificationSettings").then((m) => ({ default: m.NotificationSettings }))
+);
+const TrackingDashboard = lazy(() =>
+  import("./components/TrackingDashboard").then((m) => ({ default: m.TrackingDashboard }))
+);
+const AtlasDashboard = lazy(() => import("./components/AtlasDashboard").then((m) => ({ default: m.AtlasDashboard })));
+const ShareStats = lazy(() => import("./components/ShareStats").then((m) => ({ default: m.ShareStats })));
+const EducationalLibrary = lazy(() =>
+  import("./components/EducationalLibrary").then((m) => ({ default: m.EducationalLibrary }))
+);
+const SymptomsOverviewModal = lazy(() =>
+  import("./components/SymptomsOverviewModal").then((m) => ({ default: m.SymptomsOverviewModal }))
+);
+const ThemeSettings = lazy(() => import("./components/ThemeSettings").then((m) => ({ default: m.ThemeSettings })));
+const Achievements = lazy(() => import("./components/Achievements").then((m) => ({ default: m.Achievements })));
+const RecoveryPlanModal = lazy(() =>
+  import("./components/RecoveryPlanModal").then((m) => ({ default: m.RecoveryPlanModal }))
+);
+const AdvancedToolsModal = lazy(() =>
+  import("./components/AdvancedToolsModal").then((m) => ({ default: m.AdvancedToolsModal }))
+);
+const ClassicRecoveryModal = lazy(() =>
+  import("./components/ClassicRecoveryModal").then((m) => ({ default: m.ClassicRecoveryModal }))
+);
+const ManualPlacementModal = lazy(() =>
+  import("./components/ManualPlacementModal").then((m) => ({ default: m.ManualPlacementModal }))
+);
+const FeedbackModal = lazy(() => import("./components/FeedbackModal").then((m) => ({ default: m.FeedbackModal })));
 
 const preloadCoreMap = () => import("./components/CoreMapScreen");
 const preloadChatbot = () => import("./components/AIChatbot");
@@ -87,17 +200,17 @@ const OWNER_ALERTS_LAST_CHECK_KEY = "dawayir-owner-alerts-last-check";
 const OWNER_ALERTS_MILESTONES_KEY = "dawayir-owner-alerts-milestones";
 
 function buildStartRecoveryWelcome(firstName: string | null, toneGender: UserToneGender): string {
-  const prefix = firstName ? `أهلاً يا ${firstName}` : "أهلاً";
-  if (toneGender === "female") return `${prefix}، هل أنتِ مستعدة لبدء الرحلة؟`;
-  if (toneGender === "male") return `${prefix}، هل أنت مستعد لبدء الرحلة؟`;
-  return `${prefix}، هل أنت مستعد لبدء الرحلة؟`;
+  const prefix = firstName ? `Ø£Ù‡Ù„Ø§Ù‹ ÙŠØ§ ${firstName}` : "Ø£Ù‡Ù„Ø§Ù‹";
+  if (toneGender === "female") return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†ØªÙ Ù…Ø³ØªØ¹Ø¯Ø© Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ`;
+  if (toneGender === "male") return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†Øª Ù…Ø³ØªØ¹Ø¯ Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ`;
+  return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†Øª Ù…Ø³ØªØ¹Ø¯ Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ`;
 }
 
 function buildWelcomePrompt(firstName: string | null, toneGender: UserToneGender): string {
-  const toneLabel = toneGender === "female" ? "مؤنث دافئ" : toneGender === "male" ? "مذكر دافئ" : "محايد ودود";
-  const namePart = firstName ? ` لمستخدم اسمه "${firstName}"` : "";
-  const tonePart = toneGender === "neutral" ? "بدون تذكير/تأنيث مباشر" : `بصيغة مخاطبة ${toneLabel}`;
-  return `اكتب ترحيب قصير ودود باللهجة المصرية${namePart}. جملة واحدة بشكل طبيعي (بدون سؤال منفصل). بدون إيموجي. بدون علامات اقتباس. أقل من 15 كلمة. ${tonePart}. لا تكرر الاسم كثيراً.`;
+  const toneLabel = toneGender === "female" ? "Ù…Ø¤Ù†Ø« Ø¯Ø§ÙØ¦" : toneGender === "male" ? "Ù…Ø°ÙƒØ± Ø¯Ø§ÙØ¦" : "Ù…Ø­Ø§ÙŠØ¯ ÙˆØ¯ÙˆØ¯";
+  const namePart = firstName ? ` Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø§Ø³Ù…Ù‡ "${firstName}"` : "";
+  const tonePart = toneGender === "neutral" ? "Ø¨Ø¯ÙˆÙ† ØªØ°ÙƒÙŠØ±/ØªØ£Ù†ÙŠØ« Ù…Ø¨Ø§Ø´Ø±" : `Ø¨ØµÙŠØºØ© Ù…Ø®Ø§Ø·Ø¨Ø© ${toneLabel}`;
+  return `Ø§ÙƒØªØ¨ ØªØ±Ø­ÙŠØ¨ Ù‚ØµÙŠØ± ÙˆØ¯ÙˆØ¯ Ø¨Ø§Ù„Ù„Ù‡Ø¬Ø© Ø§Ù„Ù…ØµØ±ÙŠØ©${namePart}. Ø¬Ù…Ù„Ø© ÙˆØ§Ø­Ø¯Ø© Ø¨Ø´ÙƒÙ„ Ø·Ø¨ÙŠØ¹ÙŠ (Ø¨Ø¯ÙˆÙ† Ø³Ø¤Ø§Ù„ Ù…Ù†ÙØµÙ„). Ø¨Ø¯ÙˆÙ† Ø¥ÙŠÙ…ÙˆØ¬ÙŠ. Ø¨Ø¯ÙˆÙ† Ø¹Ù„Ø§Ù…Ø§Øª Ø§Ù‚ØªØ¨Ø§Ø³. Ø£Ù‚Ù„ Ù…Ù† 15 ÙƒÙ„Ù…Ø©. ${tonePart}. Ù„Ø§ ØªÙƒØ±Ø± Ø§Ù„Ø§Ø³Ù… ÙƒØ«ÙŠØ±Ø§Ù‹.`;
 }
 
 function cleanSingleLine(text: string): string {
@@ -108,7 +221,7 @@ function cleanWelcomeMessage(text: string | null): string | null {
   if (!text) return null;
   const oneLine = cleanSingleLine(text);
   if (!oneLine) return null;
-  const unquoted = oneLine.replace(/^["“]+|["”]+$/g, "").trim();
+  const unquoted = oneLine.replace(/^["â€œ]+|["â€]+$/g, "").trim();
   if (!unquoted) return null;
   return unquoted.length > 140 ? `${unquoted.slice(0, 140).trim()}...` : unquoted;
 }
@@ -136,8 +249,8 @@ function hasOAuthCallbackParams(): boolean {
 
 function normalizeArabicDigits(value: string): string {
   return value
-    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632))
-    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776));
+    .replace(/[Ù -Ù©]/g, (digit) => String(digit.charCodeAt(0) - 1632))
+    .replace(/[Û°-Û¹]/g, (digit) => String(digit.charCodeAt(0) - 1776));
 }
 
 function normalizeWhatsAppPhone(rawPhone: string): string {
@@ -182,7 +295,6 @@ function saveOwnerMilestonesState(value: OwnerMilestonesState): void {
   window.localStorage.setItem(OWNER_ALERTS_MILESTONES_KEY, JSON.stringify(value));
 }
 
-import { ConsciousnessHistoryMap } from "./components/ConsciousnessHistoryMap";
 import { JourneyTimeline } from "./components/JourneyTimeline";
 
 export default function App() {
@@ -196,7 +308,7 @@ export default function App() {
   const [missionNodeId, setMissionNodeId] = useState<string | null>(null);
   const [toolsBackScreen, setToolsBackScreen] = useState<Screen>("landing");
   const [showCocoon, setShowCocoon] = useState(false);
-  /** عند إغلاق التنفس: لو فُتح من مسار دقيقة شحن نرجع لشاشة الخريطة */
+  /** Ø¹Ù†Ø¯ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªÙ†ÙØ³: Ù„Ùˆ ÙÙØªØ­ Ù…Ù† Ù…Ø³Ø§Ø± Ø¯Ù‚ÙŠÙ‚Ø© Ø´Ø­Ù† Ù†Ø±Ø¬Ø¹ Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø®Ø±ÙŠØ·Ø© */
   const [returnToGoalOnBreathingClose, setReturnToGoalOnBreathingClose] = useState(false);
   const [suppressCocoonReopen, setSuppressCocoonReopen] = useState(false);
   const cocoonSuppressTimerRef = useRef<number | null>(null);
@@ -216,13 +328,31 @@ export default function App() {
   );
   const [postAuthIntent, setPostAuthIntentState] = useState<PostAuthIntent | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  /** ربط الرجوع بالتاتش/زر الرجوع بالشاشة السابقة بدل إغلاق التطبيق */
+  /** Ø±Ø¨Ø· Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„ØªØ§ØªØ´/Ø²Ø± Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø³Ø§Ø¨Ù‚Ø© Ø¨Ø¯Ù„ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ */
   const fromPopStateRef = useRef(false);
   const hasHistorySyncedRef = useRef(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
+  const [showOwnerDataTools, setShowOwnerDataTools] = useState(false);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [showTrackingDashboard, setShowTrackingDashboard] = useState(false);
+  const [showAtlasDashboard, setShowAtlasDashboard] = useState(false);
+  const [showShareStats, setShowShareStats] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [showSymptomsOverview, setShowSymptomsOverview] = useState(false);
+  const [showRecoveryPlan, setShowRecoveryPlan] = useState(false);
+  const [showThemeSettings, setShowThemeSettings] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
+  const [showClassicRecovery, setShowClassicRecovery] = useState(false);
+  const [showManualPlacement, setShowManualPlacement] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [ownerInstallRequestNonce, setOwnerInstallRequestNonce] = useState(0);
+  const [showJourneyGuideChat, setShowJourneyGuideChat] = useState(false);
   const [welcome, setWelcome] = useState<{ message: string; source: WelcomeSource } | null>(null);
   const [consciousnessInsight, setConsciousnessInsight] = useState<ConsciousnessInsight | null>(null);
   const [showJourneyTimeline, setShowJourneyTimeline] = useState(false);
+  const [isFeaturePreviewSession, setIsFeaturePreviewSession] = useState(false);
+  const [previewedFeature, setPreviewedFeature] = useState<FeatureFlagKey | null>(null);
   const [activeBroadcast, setActiveBroadcast] = useState<PublicBroadcast | null>(null);
   const whatsAppNumber = import.meta.env.VITE_WHATSAPP_CONTACT_NUMBER || DEFAULT_WHATSAPP_CONTACT;
   const whatsAppLink = useMemo(() => {
@@ -276,7 +406,7 @@ export default function App() {
         betaAccess,
         role,
         adminAccess,
-        isDev: import.meta.env.DEV
+        isDev: !isUserMode && import.meta.env.DEV
       }),
     [featureFlags, betaAccess, role, adminAccess]
   );
@@ -410,7 +540,7 @@ export default function App() {
     return () => window.removeEventListener("popstate", handler);
   }, []);
 
-  /** ربط History API بالشاشات — الرجوع بالتاتش/زر الرجوع يرجع للشاشة السابقة بدل إغلاق التطبيق */
+  /** Ø±Ø¨Ø· History API Ø¨Ø§Ù„Ø´Ø§Ø´Ø§Øª â€” Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„ØªØ§ØªØ´/Ø²Ø± Ø§Ù„Ø±Ø¬ÙˆØ¹ ÙŠØ±Ø¬Ø¹ Ù„Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø³Ø§Ø¨Ù‚Ø© Ø¨Ø¯Ù„ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ */
   useEffect(() => {
     if (typeof window === "undefined" || window.location.pathname.startsWith("/admin")) return;
     if (hasOAuthCallbackParams()) return;
@@ -450,7 +580,7 @@ export default function App() {
         (window as Window & { __seedStressTest?: () => { nodeCount: number; eventCount: number } }).__seedStressTest =
           () => {
             const result = seedStressTestData();
-            console.warn("[Stress Test] تم: ", result.nodeCount, "عُقدة،", result.eventCount, "حدث. إعادة تحميل...");
+            console.warn("[Stress Test] ØªÙ…: ", result.nodeCount, "Ø¹ÙÙ‚Ø¯Ø©ØŒ", result.eventCount, "Ø­Ø¯Ø«. Ø¥Ø¹Ø§Ø¯Ø© ØªØ­Ù…ÙŠÙ„...");
             setTimeout(() => window.location.reload(), 500);
             return result;
           };
@@ -481,14 +611,84 @@ export default function App() {
 
   useEffect(() => {
     const pageNames: Record<Screen, string> = {
-      landing: "الرئيسية",
-      goal: "اختيار الهدف",
-      map: "خريطة العلاقات",
-      guided: "الرحلة الموجهة",
-      mission: "شاشة المهمة",
-      tools: "أدوات الرحلة"
+      landing: "Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©",
+      goal: "Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ù‡Ø¯Ù",
+      map: "Ø®Ø±ÙŠØ·Ø© Ø§Ù„Ø¹Ù„Ø§Ù‚Ø§Øª",
+      guided: "Ø§Ù„Ø±Ø­Ù„Ø© Ø§Ù„Ù…ÙˆØ¬Ù‡Ø©",
+      mission: "Ø´Ø§Ø´Ø© Ø§Ù„Ù…Ù‡Ù…Ø©",
+      tools: "Ø£Ø¯ÙˆØ§Øª Ø§Ù„Ø±Ø­Ù„Ø©"
     };
     trackPageView(pageNames[screen]);
+  }, [screen]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const seoByScreen: Record<Screen, { title: string; description: string }> = {
+      landing: {
+        title: "Alrehla | Relationship Clarity Platform",
+        description: "Alrehla helps you understand your relationships and boundaries with clarity through Dawayir."
+      },
+      goal: {
+        title: "Choose Your Goal | Alrehla",
+        description: "Choose the relationship goal you want to work on and start your guided journey."
+      },
+      map: {
+        title: "Relationship Map | Alrehla",
+        description: "Visualize your relationship circles and set healthier boundaries with confidence."
+      },
+      guided: {
+        title: "Guided Journey | Alrehla",
+        description: "Follow a structured journey with practical steps to regain clarity and control."
+      },
+      mission: {
+        title: "Mission Screen | Alrehla",
+        description: "Complete your mission steps and track progress in real relationship scenarios."
+      },
+      tools: {
+        title: "Journey Tools | Alrehla",
+        description: "Access focused tools that help you regulate, reflect, and take practical action."
+      }
+    };
+
+    const seo = seoByScreen[screen];
+    document.title = seo.title;
+
+    const descriptionTag = document.querySelector('meta[name="description"]');
+    if (descriptionTag) {
+      descriptionTag.setAttribute("content", seo.description);
+    }
+
+    const setMeta = (selector: string, value: string) => {
+      const tag = document.querySelector(selector);
+      if (tag) {
+        tag.setAttribute("content", value);
+      }
+    };
+
+    setMeta('meta[property="og:title"]', seo.title);
+    setMeta('meta[property="og:description"]', seo.description);
+    setMeta('meta[name="twitter:title"]', seo.title);
+    setMeta('meta[name="twitter:description"]', seo.description);
+
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) {
+      const href = `${window.location.origin}${window.location.pathname}`;
+      canonical.setAttribute("href", href);
+      setMeta('meta[property="og:url"]', href);
+    }
+
+    const robotsTag = document.querySelector('meta[name="robots"]');
+    if (robotsTag) {
+      const path = window.location.pathname.toLowerCase();
+      const isPrivatePath = path.startsWith("/admin") || path.startsWith("/analytics");
+      robotsTag.setAttribute(
+        "content",
+        isPrivatePath
+          ? "noindex,nofollow,noarchive"
+          : "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
+      );
+    }
   }, [screen]);
 
   useEffect(() => {
@@ -509,24 +709,24 @@ export default function App() {
 
       for (const sessionId of alerts.newVisitors.sessionIds) {
         await sendOwnerNotification(
-          "زائر جديد دخل المنصة",
-          `Session: ${sessionId.slice(0, 14)}…`,
+          "Ø²Ø§Ø¦Ø± Ø¬Ø¯ÙŠØ¯ Ø¯Ø®Ù„ Ø§Ù„Ù…Ù†ØµØ©",
+          `Session: ${sessionId.slice(0, 14)}â€¦`,
           `owner-visitor-${sessionId}`
         );
       }
 
       for (const sessionId of alerts.logins.sessionIds) {
         await sendOwnerNotification(
-          "زائر أكمل تسجيل الدخول",
-          `Session: ${sessionId.slice(0, 14)}…`,
+          "Ø²Ø§Ø¦Ø± Ø£ÙƒÙ…Ù„ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„",
+          `Session: ${sessionId.slice(0, 14)}â€¦`,
           `owner-login-${sessionId}`
         );
       }
 
       for (const sessionId of alerts.installs.sessionIds) {
         await sendOwnerNotification(
-          "زائر ثبت التطبيق",
-          `Session: ${sessionId.slice(0, 14)}…`,
+          "Ø²Ø§Ø¦Ø± Ø«Ø¨Øª Ø§Ù„ØªØ·Ø¨ÙŠÙ‚",
+          `Session: ${sessionId.slice(0, 14)}â€¦`,
           `owner-install-${sessionId}`
         );
       }
@@ -541,29 +741,29 @@ export default function App() {
 
       if (!prevMilestones.registeredReached && nextMilestones.registeredReached) {
         await sendOwnerNotification(
-          "تحقق الهدف: 10 تسجيلات",
-          `تم الوصول إلى ${alerts.phaseOne.registeredUsers} مستخدمين مسجلين.`,
+          "ØªØ­Ù‚Ù‚ Ø§Ù„Ù‡Ø¯Ù: 10 ØªØ³Ø¬ÙŠÙ„Ø§Øª",
+          `ØªÙ… Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ ${alerts.phaseOne.registeredUsers} Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† Ù…Ø³Ø¬Ù„ÙŠÙ†.`,
           "owner-goal-registered"
         );
       }
       if (!prevMilestones.installedReached && nextMilestones.installedReached) {
         await sendOwnerNotification(
-          "تحقق الهدف: 10 تثبيتات",
-          `تم الوصول إلى ${alerts.phaseOne.installedUsers} مستخدمين ثبتوا التطبيق.`,
+          "ØªØ­Ù‚Ù‚ Ø§Ù„Ù‡Ø¯Ù: 10 ØªØ«Ø¨ÙŠØªØ§Øª",
+          `ØªÙ… Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ ${alerts.phaseOne.installedUsers} Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† Ø«Ø¨ØªÙˆØ§ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚.`,
           "owner-goal-installed"
         );
       }
       if (!prevMilestones.addedReached && nextMilestones.addedReached) {
         await sendOwnerNotification(
-          "تحقق الهدف: 10 أشخاص مضافين",
-          `تم الوصول إلى ${alerts.phaseOne.addedPeople} أشخاص مضافين على الخرائط.`,
+          "ØªØ­Ù‚Ù‚ Ø§Ù„Ù‡Ø¯Ù: 10 Ø£Ø´Ø®Ø§Øµ Ù…Ø¶Ø§ÙÙŠÙ†",
+          `ØªÙ… Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ ${alerts.phaseOne.addedPeople} Ø£Ø´Ø®Ø§Øµ Ù…Ø¶Ø§ÙÙŠÙ† Ø¹Ù„Ù‰ Ø§Ù„Ø®Ø±Ø§Ø¦Ø·.`,
           "owner-goal-added"
         );
       }
       if (!prevMilestones.fullyCompleted && nextMilestones.fullyCompleted) {
         await sendOwnerNotification(
-          "اكتمل هدف المرحلة الأولى",
-          "10 تسجيلات + 10 تثبيتات + 10 أشخاص مضافين تحققوا بالكامل.",
+          "Ø§ÙƒØªÙ…Ù„ Ù‡Ø¯Ù Ø§Ù„Ù…Ø±Ø­Ù„Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰",
+          "10 ØªØ³Ø¬ÙŠÙ„Ø§Øª + 10 ØªØ«Ø¨ÙŠØªØ§Øª + 10 Ø£Ø´Ø®Ø§Øµ Ù…Ø¶Ø§ÙÙŠÙ† ØªØ­Ù‚Ù‚ÙˆØ§ Ø¨Ø§Ù„ÙƒØ§Ù…Ù„.",
           "owner-goal-phase-one-complete"
         );
       }
@@ -612,12 +812,20 @@ export default function App() {
     logPulse(intent.pulse);
 
     setWelcome({ message: buildStartRecoveryWelcome(authFirstName, authToneGender), source: "template" });
-    setScreen("goal");
+    if (isPhaseOneUserFlow) {
+      const defaultGoalId = "family";
+      setGoalId(defaultGoalId);
+      setCategory(resolveAdviceCategory(defaultGoalId));
+      setSelectedNodeId(null);
+      setScreen("map");
+    } else {
+      setScreen("goal");
+    }
 
     let cancelled = false;
     void (async () => {
-      // تحليل الوعي الأولي عند الدخول
-      const insight = await consciousnessService.analyzeConsciousness(`بدأ المستخدم ${authFirstName || ""} رحلة جديدة`);
+      // ØªØ­Ù„ÙŠÙ„ Ø§Ù„ÙˆØ¹ÙŠ Ø§Ù„Ø£ÙˆÙ„ÙŠ Ø¹Ù†Ø¯ Ø§Ù„Ø¯Ø®ÙˆÙ„
+      const insight = await consciousnessService.analyzeConsciousness(`Ø¨Ø¯Ø£ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ${authFirstName || ""} Ø±Ø­Ù„Ø© Ø¬Ø¯ÙŠØ¯Ø©`);
       if (!cancelled) setConsciousnessInsight(insight);
 
       if (!geminiClient.isAvailable()) return;
@@ -632,7 +840,15 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [authStatus, authUser, authFirstName, authToneGender, logPulse, setPulseCheckContext, setShowPulseCheck]);
+  }, [authStatus, authUser, authFirstName, authToneGender, logPulse, setPulseCheckContext, setShowPulseCheck, isPhaseOneUserFlow]);
+
+  const openDefaultGoalMap = () => {
+    const defaultGoalId = "family";
+    setGoalId(defaultGoalId);
+    setCategory(resolveAdviceCategory(defaultGoalId));
+    setSelectedNodeId(null);
+    setScreen("map");
+  };
 
   const goToGoals = () => {
     if (!canUseMap) {
@@ -640,6 +856,10 @@ export default function App() {
       return;
     }
     skipNextPulseCheck();
+    if (isPhaseOneUserFlow) {
+      openDefaultGoalMap();
+      return;
+    }
     setScreen("goal");
   };
 
@@ -728,6 +948,10 @@ export default function App() {
       setSelectedNodeId(null);
       return;
     }
+    if (isPhaseOneUserFlow) {
+      openDefaultGoalMap();
+      return;
+    }
     setScreen("goal");
   };
   const openDawayirSetup = () => {
@@ -736,8 +960,219 @@ export default function App() {
       return;
     }
     skipNextPulseCheck();
+    if (isPhaseOneUserFlow) {
+      openDefaultGoalMap();
+      return;
+    }
     setScreen("goal");
   };
+
+  const goBackToFeatureFlags = useCallback(() => {
+    if (typeof window === "undefined") return;
+    const next = new URL(window.location.href);
+    next.pathname = "/admin";
+    next.search = "";
+    next.searchParams.set("tab", "feature-flags");
+    window.history.pushState({}, "", next.toString());
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    setIsFeaturePreviewSession(false);
+    setPreviewedFeature(null);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || isAdminRoute) return;
+    const currentUrl = new URL(window.location.href);
+    const previewFeature = normalizePreviewFeature(currentUrl.searchParams.get("previewFeature"));
+    if (!previewFeature) return;
+    setIsFeaturePreviewSession(true);
+    setPreviewedFeature(previewFeature);
+
+    const clearPreviewParam = () => {
+      const next = new URL(window.location.href);
+      next.searchParams.delete("previewFeature");
+      window.history.replaceState(window.history.state, "", next.toString());
+    };
+
+    if (previewFeature === "journey_tools") {
+      skipNextPulseCheck();
+      openJourneyTools();
+      clearPreviewParam();
+      return;
+    }
+
+    if (previewFeature === "pulse_check") {
+      setScreen("landing");
+      setPulseCheckContext("regular");
+      setShowPulseCheck(true);
+      clearPreviewParam();
+      return;
+    }
+
+    if (previewFeature === "ai_field") {
+      skipNextPulseCheck();
+      setScreen("landing");
+      clearPreviewParam();
+      return;
+    }
+
+    if (previewFeature === "global_atlas") {
+      if (isOwnerWatcher) {
+        const next = new URL(window.location.href);
+        next.pathname = "/analytics";
+        next.search = "";
+        window.history.pushState({}, "", next.toString());
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      }
+      clearPreviewParam();
+      return;
+    }
+
+    skipNextPulseCheck();
+    setScreen("map");
+    clearPreviewParam();
+  }, [isAdminRoute, isOwnerWatcher, openJourneyTools, setPulseCheckContext, setShowPulseCheck, skipNextPulseCheck]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || isAdminRoute) return;
+    const currentUrl = new URL(window.location.href);
+    const ownerAction = normalizeOwnerAction(currentUrl.searchParams.get("ownerAction"));
+    if (!ownerAction) return;
+
+    const clearOwnerActionParam = () => {
+      const next = new URL(window.location.href);
+      next.searchParams.delete("ownerAction");
+      window.history.replaceState(window.history.state, "", next.toString());
+    };
+
+    skipNextPulseCheck();
+
+    switch (ownerAction) {
+      case "admin_dashboard": {
+        const next = new URL(window.location.href);
+        next.pathname = "/admin";
+        next.search = "";
+        next.searchParams.set("tab", "overview");
+        window.history.pushState({}, "", next.toString());
+        window.dispatchEvent(new PopStateEvent("popstate"));
+        break;
+      }
+      case "consciousness_archive":
+        setShowConsciousnessArchive(true);
+        break;
+      case "journey_guide_chat":
+        if (!canShowAIChatbot) {
+          setLockedFeature("ai_field");
+        } else {
+          setShowJourneyGuideChat(true);
+        }
+        break;
+      case "journey_tools":
+        openJourneyTools();
+        break;
+      case "journey_timeline":
+        setScreen("map");
+        setShowJourneyTimeline(true);
+        break;
+      case "open_dawayir":
+        openDawayirTool();
+        break;
+      case "quick_experience":
+        setShowGym(true);
+        break;
+      case "start_journey":
+        goToGoals();
+        break;
+      case "guided_journey":
+        setScreen("guided");
+        break;
+      case "baseline_check":
+        setShowBaseline(true);
+        break;
+      case "notifications":
+        if (notificationSupported) setShowNotificationSettings(true);
+        break;
+      case "tracking_dashboard":
+        setShowTrackingDashboard(true);
+        break;
+      case "atlas_dashboard":
+        if (!availableFeatures.global_atlas) {
+          setLockedFeature("global_atlas");
+        } else {
+          setShowAtlasDashboard(true);
+        }
+        break;
+      case "data_tools":
+        setShowOwnerDataTools(true);
+        break;
+      case "share_stats":
+        setShowShareStats(true);
+        break;
+      case "library":
+        setShowLibrary(true);
+        break;
+      case "symptoms":
+        setShowSymptomsOverview(true);
+        break;
+      case "recovery_plan":
+        setShowRecoveryPlan(true);
+        break;
+      case "theme_settings":
+        setShowThemeSettings(true);
+        break;
+      case "achievements":
+        setShowAchievements(true);
+        break;
+      case "advanced_tools":
+        if (!availableFeatures.internal_boundaries) {
+          setLockedFeature("internal_boundaries");
+        } else {
+          setShowAdvancedTools(true);
+        }
+        break;
+      case "classic_recovery":
+        if (!availableFeatures.internal_boundaries) {
+          setLockedFeature("internal_boundaries");
+        } else {
+          setShowClassicRecovery(true);
+        }
+        break;
+      case "manual_placement":
+        if (!availableFeatures.internal_boundaries) {
+          setLockedFeature("internal_boundaries");
+        } else {
+          setShowManualPlacement(true);
+        }
+        break;
+      case "feedback_modal":
+        recordFlowEvent("feedback_opened");
+        setShowFeedback(true);
+        break;
+      case "install_app":
+        setScreen("landing");
+        setOwnerInstallRequestNonce((prev) => prev + 1);
+        break;
+      case "noise_silencing":
+        setShowNoiseSilencingPulse(true);
+        break;
+      case "breathing_session":
+        setShowBreathing(true);
+        break;
+      default:
+        break;
+    }
+
+    clearOwnerActionParam();
+  }, [
+    availableFeatures.global_atlas,
+    availableFeatures.internal_boundaries,
+    canShowAIChatbot,
+    goToGoals,
+    isAdminRoute,
+    notificationSupported,
+    openDawayirTool,
+    openJourneyTools,
+    skipNextPulseCheck
+  ]);
 
   const pulseOpenedAtRef = useRef<number | null>(null);
   useEffect(() => {
@@ -798,8 +1233,8 @@ export default function App() {
     logPulse(payload);
     closePulseCheck(true, "programmatic");
 
-    // توصيل البوصلة بمرآة الوعي (غير معطِّل للتجربة)
-    const numericPart = `طاقة ${payload.energy}/10، مزاج ${payload.mood}, تركيز ${payload.focus}`;
+    // ØªÙˆØµÙŠÙ„ Ø§Ù„Ø¨ÙˆØµÙ„Ø© Ø¨Ù…Ø±Ø¢Ø© Ø§Ù„ÙˆØ¹ÙŠ (ØºÙŠØ± Ù…Ø¹Ø·Ù‘ÙÙ„ Ù„Ù„ØªØ¬Ø±Ø¨Ø©)
+    const numericPart = `Ø·Ø§Ù‚Ø© ${payload.energy}/10ØŒ Ù…Ø²Ø§Ø¬ ${payload.mood}, ØªØ±ÙƒÙŠØ² ${payload.focus}`;
     const feelingText = payload.notes ? `${payload.notes.trim()}\n\n(${numericPart})` : numericPart;
     const userId = authUser?.id ?? null;
     void (async () => {
@@ -891,7 +1326,7 @@ export default function App() {
   const pulseMode = useMemo(() => {
     if (!lastPulse) return "normal";
     const ageMs = Date.now() - (lastPulse.timestamp ?? 0);
-    if (ageMs > 24 * 60 * 60 * 1000) return "normal"; // آخر نبض خلال ٢٤ ساعة فقط
+    if (ageMs > 24 * 60 * 60 * 1000) return "normal"; // Ø¢Ø®Ø± Ù†Ø¨Ø¶ Ø®Ù„Ø§Ù„ Ù¢Ù¤ Ø³Ø§Ø¹Ø© ÙÙ‚Ø·
     if (lastPulse.mood === "angry") return "angry";
     if (lastPulse.energy <= 3) return "low";
     if (lastPulse.energy >= 8) return "high";
@@ -926,8 +1361,13 @@ export default function App() {
   }, [nodes]);
 
   const challengeLabel = challengeTarget
-    ? `مع ${challengeTarget.label} — ${challengeTarget.missionLabel} (خطوة ${challengeTarget.stepIndex + 1}/${challengeTarget.total})`
+    ? `Ù…Ø¹ ${challengeTarget.label} â€” ${challengeTarget.missionLabel} (Ø®Ø·ÙˆØ© ${challengeTarget.stepIndex + 1}/${challengeTarget.total})`
     : null;
+
+  const canSkipCocoonBreathing = useMemo(
+    () => nodes.length === 0 && !storedGoalId && goalId === "unknown",
+    [goalId, nodes.length, storedGoalId]
+  );
 
   const hasActiveMission = useMemo(
     () => nodes.some((n) => n.missionProgress?.startedAt && !n.missionProgress?.isCompleted),
@@ -1028,8 +1468,8 @@ export default function App() {
         const reminderTarget = pickMissionReminderTarget(todayKey);
         const send = reminderTarget
           ? sendNotification({
-              title: "مهمتك مستنياك 🎯",
-              body: `مع ${reminderTarget.node.label} — خطوة ${reminderTarget.next.stepIndex + 1}/${reminderTarget.next.total}: ${reminderTarget.next.step}`,
+              title: "Ù…Ù‡Ù…ØªÙƒ Ù…Ø³ØªÙ†ÙŠØ§Ùƒ ðŸŽ¯",
+              body: `Ù…Ø¹ ${reminderTarget.node.label} â€” Ø®Ø·ÙˆØ© ${reminderTarget.next.stepIndex + 1}/${reminderTarget.next.total}: ${reminderTarget.next.step}`,
               tag: "mission-reminder"
             })
           : sendPresetNotification(NOTIFICATION_TYPES.MISSION_REMINDER);
@@ -1060,6 +1500,35 @@ export default function App() {
     snoozedUntil
   ]);
 
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const shouldLockScroll =
+      isUserMode &&
+      screen === "landing" &&
+      !isAdminRoute &&
+      !isAnalyticsRoute &&
+      pathname !== "/privacy" &&
+      pathname !== "/terms";
+    if (!shouldLockScroll) return;
+
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+    };
+  }, [screen, isAdminRoute, isAnalyticsRoute, pathname]);
+
+  if (pathname === "/privacy" || pathname === "/terms") {
+    return (
+      <LegalPage type={pathname === "/privacy" ? "privacy" : "terms"} />
+    );
+  }
+
   if (isAnalyticsRoute && isOwnerWatcher) {
     return (
       <div
@@ -1067,6 +1536,16 @@ export default function App() {
         style={{ background: "var(--space-void)" }}
         dir="rtl"
       >
+        {isFeaturePreviewSession && (
+          <button
+            type="button"
+            onClick={goBackToFeatureFlags}
+            className="fixed z-50 top-4 left-4 rounded-full border border-indigo-300 bg-white/95 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
+            title={previewedFeature ? `Ø§Ù„Ø±Ø¬ÙˆØ¹ Ù…Ù† Ù…Ø¹Ø§ÙŠÙ†Ø©: ${previewedFeature}` : "Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags"}
+          >
+            Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags
+          </button>
+        )}
         <div className="nebula-bg absolute inset-0 -z-10" aria-hidden="true" />
         <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ background: "var(--space-void)" }} />}>
           <div className="p-4 sm:p-6 max-w-6xl mx-auto">
@@ -1097,7 +1576,17 @@ export default function App() {
     <div className="min-h-screen flex transition-colors relative overflow-hidden isolate" dir="rtl"
       style={{ background: "var(--space-void)" }}
     >
-      {/* 🌌 Nebula Background — Deep Cosmic Blue Canvas */}
+      {isFeaturePreviewSession && (
+        <button
+          type="button"
+          onClick={goBackToFeatureFlags}
+          className="fixed z-50 top-4 left-4 rounded-full border border-indigo-300 bg-white/95 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
+          title={previewedFeature ? `Ø§Ù„Ø±Ø¬ÙˆØ¹ Ù…Ù† Ù…Ø¹Ø§ÙŠÙ†Ø©: ${previewedFeature}` : "Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags"}
+        >
+          Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags
+        </button>
+      )}
+      {/* ðŸŒŒ Nebula Background â€” Deep Cosmic Blue Canvas */}
       <div className="nebula-bg" aria-hidden="true" />
       <AnimatePresence>
         {activeBroadcast && (
@@ -1114,7 +1603,7 @@ export default function App() {
               <div className="flex items-start justify-between gap-3">
                 <div className="text-right">
                   <p className="text-xs font-semibold mb-1" style={{ color: "var(--soft-gold, #fbbf24)" }}>
-                    رسالة من إدارة الرحلة
+                    Ø±Ø³Ø§Ù„Ø© Ù…Ù† Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø±Ø­Ù„Ø©
                   </p>
                   <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{activeBroadcast.title}</p>
                   <p className="text-xs mt-1 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
@@ -1126,9 +1615,9 @@ export default function App() {
                   onClick={() => setActiveBroadcast(null)}
                   className="rounded-full px-2.5 py-1 text-xs font-semibold border border-white/15 hover:bg-white/5 transition-colors"
                   style={{ color: "var(--text-primary)" }}
-                  aria-label="إخفاء الرسالة"
+                  aria-label="Ø¥Ø®ÙØ§Ø¡ Ø§Ù„Ø±Ø³Ø§Ù„Ø©"
                 >
-                  إخفاء
+                  Ø¥Ø®ÙØ§Ø¡
                 </button>
               </div>
             </div>
@@ -1152,10 +1641,10 @@ export default function App() {
               }}
             >
               <p className="text-base font-medium" style={{ color: "var(--text-primary)" }}>
-                حمد لله على السلامة 🌿
+                Ø­Ù…Ø¯ Ù„Ù„Ù‡ Ø¹Ù„Ù‰ Ø§Ù„Ø³Ù„Ø§Ù…Ø© ðŸŒ¿
               </p>
               <p className="text-sm mt-1 opacity-90" style={{ color: "var(--text-secondary)" }}>
-                يومك بقى أخف دلوقتي
+                ÙŠÙˆÙ…Ùƒ Ø¨Ù‚Ù‰ Ø£Ø®Ù Ø¯Ù„ÙˆÙ‚ØªÙŠ
               </p>
             </div>
           </motion.div>
@@ -1173,11 +1662,11 @@ export default function App() {
                   color: "var(--warm-amber)"
                 }}
               >
-                ✨
+                âœ¨
               </div>
               <div className="text-right flex-1 min-w-0">
                 <h3 className="text-sm font-bold mb-3" style={{ color: "var(--warm-amber)" }}>
-                  ومضة من الذاكرة
+                  ÙˆÙ…Ø¶Ø© Ù…Ù† Ø§Ù„Ø°Ø§ÙƒØ±Ø©
                 </h3>
                 <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                   {lastPulseInsights.map((insight) => (
@@ -1190,10 +1679,10 @@ export default function App() {
                       }}
                     >
                       <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                        شعورك دلوقتي بيشبه موقف{" "}
+                        Ø´Ø¹ÙˆØ±Ùƒ Ø¯Ù„ÙˆÙ‚ØªÙŠ Ø¨ÙŠØ´Ø¨Ù‡ Ù…ÙˆÙ‚Ù{" "}
                         {insight.created_at && (
                           <span className="font-bold" style={{ color: "var(--text-primary)" }}>
-                            حصل يوم{" "}
+                            Ø­ØµÙ„ ÙŠÙˆÙ…{" "}
                             {new Date(insight.created_at).toLocaleDateString("ar-EG")}
                           </span>
                         )}
@@ -1214,12 +1703,12 @@ export default function App() {
               className="glass-button w-full text-xs font-bold"
               style={{ color: "var(--warm-amber)" }}
             >
-              تم · إخفاء الومضة
+              ØªÙ… Â· Ø¥Ø®ÙØ§Ø¡ Ø§Ù„ÙˆÙ…Ø¶Ø©
             </button>
           </div>
         </div>
       )}
-      {/* Legacy pattern removed — nebula-bg handles the cosmic background */}
+      {/* Legacy pattern removed â€” nebula-bg handles the cosmic background */}
       {isSupabaseReady && !isAdminRoute && !showAuthModal && !showPulseCheck && (
         <div className="fixed z-80 top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4" dir="ltr">
           <button
@@ -1254,8 +1743,7 @@ export default function App() {
             <span
               className="pointer-events-none absolute top-full mt-1 right-0 max-w-48 rounded-2xl px-3 py-1 text-[11px] font-medium leading-snug opacity-0 translate-y-1 bg-slate-900/90 text-slate-50 border border-white/10 backdrop-blur-md group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 text-center"
             >
-              {authUser ? "افتح حسابك" : "سجّل دخولك واحفظ رحلتك"}
-            </span>
+              {authUser ? "افتح حسابك" : "سجّل دخولك واحفظ رحلتك"}            </span>
           </button>
         </div>
       )}
@@ -1267,38 +1755,14 @@ export default function App() {
             window.open(whatsAppLink, "_blank", "noopener,noreferrer");
           }}
           className="fixed z-40 right-4 md:right-6 bottom-[calc(env(safe-area-inset-bottom)+1rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all"
-          title="تواصل واتساب"
-          aria-label="تواصل واتساب"
+          title="ØªÙˆØ§ØµÙ„ ÙˆØ§ØªØ³Ø§Ø¨"
+          aria-label="ØªÙˆØ§ØµÙ„ ÙˆØ§ØªØ³Ø§Ø¨"
         >
           <MessageCircle className="w-5 h-5 shrink-0" />
         </button>
       )}
-      {!isLockedPhaseOne && isPrivilegedUser && (
-        <Suspense fallback={null}>
-          <AppSidebar
-            onOpenGym={() => setShowGym(true)}
-            onStartJourney={goToGoals}
-            onOpenBaseline={() => setShowBaseline(true)}
-            onOpenGuidedJourney={() => setScreen("guided")}
-            onOpenMission={openMissionScreen}
-            onOpenJourneyTools={openJourneyTools}
-            onOpenJourneyTimeline={() => {
-              setScreen("map");
-              setShowJourneyTimeline(true);
-            }}
-            onOpenDawayir={openDawayirTool}
-            onFeatureLocked={setLockedFeature}
-            viewingNodeId={screen === "map" ? selectedNodeId : null}
-            onNoiseSessionComplete={() => {
-              setPostNoiseSessionMessage(true);
-              setTimeout(() => setPostNoiseSessionMessage(false), 4500);
-            }}
-          />
-        </Suspense>
-      )}
       <main
-        className={`flex-1 min-w-0 flex transition-[margin] ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""}`}
-        style={{ marginRight: !isLockedPhaseOne && isPrivilegedUser ? SIDEBAR_TAB_MARGIN : "0px" }}
+        className={`flex-1 min-w-0 flex ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""}`}
         aria-hidden={showPulseCheck}
       >
         {screen === "map" && (
@@ -1308,7 +1772,7 @@ export default function App() {
             onCardClick={(nodeId) => setSelectedNodeId(nodeId)}
           />
         )}
-        <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...جاري التحميل</div>}>
+        <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„</div>}>
           <div key={screen} className={`flex-1 min-w-0 flex items-center justify-center transition-all duration-300 ease-in-out ${screen === "landing" ? "" : "app-panel-main"}`}>
             {screen === "landing" && (
               <Landing
@@ -1319,6 +1783,8 @@ export default function App() {
                 showToolsSection={!isLockedPhaseOne}
                 onFeatureLocked={setLockedFeature}
                 availableFeatures={availableFeatures}
+                ownerInstallRequestNonce={ownerInstallRequestNonce}
+                onOwnerInstallRequestHandled={() => setOwnerInstallRequestNonce(0)}
               />
             )}
 
@@ -1416,16 +1882,16 @@ export default function App() {
                 type="button"
                 onClick={() => setShowBaseline(false)}
                 className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors z-10"
-                aria-label="إغلاق"
+                aria-label="Ø¥ØºÙ„Ø§Ù‚"
               >
                 <X className="w-5 h-5" />
               </button>
               <div className="p-6">
                 <h2 className="text-xl font-bold text-slate-900 mb-2 text-center">
-                  القياس الأولي
+                  Ø§Ù„Ù‚ÙŠØ§Ø³ Ø§Ù„Ø£ÙˆÙ„ÙŠ
                 </h2>
                 <p className="text-sm text-slate-600 mb-6 text-center">
-                  إجابات سريعة عشان نعرف نقطة البداية
+                  Ø¥Ø¬Ø§Ø¨Ø§Øª Ø³Ø±ÙŠØ¹Ø© Ø¹Ø´Ø§Ù† Ù†Ø¹Ø±Ù Ù†Ù‚Ø·Ø© Ø§Ù„Ø¨Ø¯Ø§ÙŠØ©
                 </p>
                 <BaselineAssessment
                   onComplete={() => setShowBaseline(false)}
@@ -1437,36 +1903,27 @@ export default function App() {
                   onClick={() => setShowBaseline(false)}
                   className="w-full py-2 text-sm text-slate-500 hover:text-slate-700"
                 >
-                  إغلاق
+                  Ø¥ØºÙ„Ø§Ù‚
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {canShowAIChatbot && (
+        {showJourneyGuideChat && canShowAIChatbot && (
           <AIChatbot
             agentContext={agentContext}
             agentActions={agentActions}
             systemPromptOverride={agentSystemPrompt}
             onOpenBreathing={() => setShowBreathing(true)}
             onNavigateToMap={() => setScreen("map")}
+            showLauncher={false}
+            defaultOpen
+            onRequestClose={() => setShowJourneyGuideChat(false)}
           />
         )}
 
-        {/* زر إضافي لفتح أرشيف الوعي من شاشة الهبوط — وضع التطوير فقط */}
-        {screen === "landing" && role?.toLowerCase() === "developer" && (
-          <button
-            type="button"
-            onClick={() => setShowConsciousnessArchive(true)}
-            className="fixed bottom-6 left-6 z-40 glass-button text-xs px-4 py-2 flex items-center gap-2"
-            style={{ color: "var(--warm-amber)", borderColor: "rgba(245, 166, 35, 0.25)" }}
-          >
-            <span>&#x2728;</span>
-            <span>أرشيف الوعي</span>
-          </button>
-        )}
-
+        {/* Ø²Ø± Ø¥Ø¶Ø§ÙÙŠ Ù„ÙØªØ­ Ø£Ø±Ø´ÙŠÙ Ø§Ù„ÙˆØ¹ÙŠ Ù…Ù† Ø´Ø§Ø´Ø© Ø§Ù„Ù‡Ø¨ÙˆØ· â€” ÙˆØ¶Ø¹ Ø§Ù„ØªØ·ÙˆÙŠØ± ÙÙ‚Ø· */}
         <ConsciousnessArchiveModal
           isOpen={showConsciousnessArchive}
           onClose={() => setShowConsciousnessArchive(false)}
@@ -1495,6 +1952,13 @@ export default function App() {
               setShowCocoon(false);
               setReturnToGoalOnBreathingClose(true);
               setShowBreathing(true);
+            }}
+            canSkip={canSkipCocoonBreathing}
+            onSkip={() => {
+              setShowCocoon(false);
+              setPendingCocoonAfterNoise(false);
+              suppressCocoonFor(4000);
+              goToGoals();
             }}
             onClose={() => setShowCocoon(false)}
           />
@@ -1578,13 +2042,90 @@ export default function App() {
 
       {showDataManagement && (
         <Suspense fallback={null}>
-          <DataManagement isOpen={showDataManagement} onClose={() => setShowDataManagement(false)} />
+          <DataManagement isOpen={showDataManagement} onClose={() => setShowDataManagement(false)} accountOnly />
         </Suspense>
       )}
-      {screen === "landing" && role?.toLowerCase() === "developer" && (
-        <div className="fixed top-24 left-4 right-4 z-10 max-w-md mx-auto">
-          <ConsciousnessHistoryMap />
-        </div>
+      {showOwnerDataTools && (
+        <Suspense fallback={null}>
+          <DataManagement isOpen={showOwnerDataTools} onClose={() => setShowOwnerDataTools(false)} accountOnly={false} />
+        </Suspense>
+      )}
+      {showNotificationSettings && (
+        <Suspense fallback={null}>
+          <NotificationSettings isOpen={showNotificationSettings} onClose={() => setShowNotificationSettings(false)} />
+        </Suspense>
+      )}
+      {showTrackingDashboard && (
+        <Suspense fallback={null}>
+          <TrackingDashboard isOpen={showTrackingDashboard} onClose={() => setShowTrackingDashboard(false)} />
+        </Suspense>
+      )}
+      {showAtlasDashboard && (
+        <Suspense fallback={null}>
+          <AtlasDashboard isOpen={showAtlasDashboard} onClose={() => setShowAtlasDashboard(false)} />
+        </Suspense>
+      )}
+      {showShareStats && (
+        <Suspense fallback={null}>
+          <ShareStats isOpen={showShareStats} onClose={() => setShowShareStats(false)} />
+        </Suspense>
+      )}
+      {showLibrary && (
+        <Suspense fallback={null}>
+          <EducationalLibrary isOpen={showLibrary} onClose={() => setShowLibrary(false)} />
+        </Suspense>
+      )}
+      {showSymptomsOverview && (
+        <Suspense fallback={null}>
+          <SymptomsOverviewModal isOpen={showSymptomsOverview} onClose={() => setShowSymptomsOverview(false)} />
+        </Suspense>
+      )}
+      {showRecoveryPlan && (
+        <Suspense fallback={null}>
+          <RecoveryPlanModal isOpen={showRecoveryPlan} onClose={() => setShowRecoveryPlan(false)} />
+        </Suspense>
+      )}
+      {showThemeSettings && (
+        <Suspense fallback={null}>
+          <ThemeSettings isOpen={showThemeSettings} onClose={() => setShowThemeSettings(false)} />
+        </Suspense>
+      )}
+      {showAchievements && (
+        <Suspense fallback={null}>
+          <Achievements onClose={() => setShowAchievements(false)} />
+        </Suspense>
+      )}
+      {showAdvancedTools && (
+        <Suspense fallback={null}>
+          <AdvancedToolsModal isOpen={showAdvancedTools} onClose={() => setShowAdvancedTools(false)} />
+        </Suspense>
+      )}
+      {showClassicRecovery && (
+        <Suspense fallback={null}>
+          <ClassicRecoveryModal isOpen={showClassicRecovery} onClose={() => setShowClassicRecovery(false)} />
+        </Suspense>
+      )}
+      {showManualPlacement && (
+        <Suspense fallback={null}>
+          <ManualPlacementModal isOpen={showManualPlacement} onClose={() => setShowManualPlacement(false)} />
+        </Suspense>
+      )}
+      {showFeedback && (
+        <Suspense fallback={null}>
+          <FeedbackModal
+            isOpen={showFeedback}
+            onClose={() => setShowFeedback(false)}
+            onSubmit={async (payload) => {
+              recordFlowEvent("feedback_submitted", {
+                meta: {
+                  category: payload.category,
+                  rating: payload.rating,
+                  message: payload.message
+                }
+              });
+            }}
+          />
+        </Suspense>
       )}
       {consciousnessInsight && screen !== "landing" && (
         <div className="fixed bottom-28 left-6 right-6 bento-block z-50 max-w-lg mx-auto"
@@ -1602,7 +2143,7 @@ export default function App() {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-bold mb-3" style={{ color: "var(--soft-teal)" }}>
-                بصيرة الوعي
+                Ø¨ØµÙŠØ±Ø© Ø§Ù„ÙˆØ¹ÙŠ
               </h3>
               <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--text-secondary)" }}>
                 {consciousnessInsight.suggestedAction}
@@ -1616,7 +2157,7 @@ export default function App() {
                 <span className="px-3 py-1.5 text-xs font-bold rounded-full"
                   style={{ background: "rgba(139, 92, 246, 0.12)", color: "rgba(167, 139, 250, 0.9)" }}
                 >
-                  نمط: {consciousnessInsight.underlyingPattern}
+                  Ù†Ù…Ø·: {consciousnessInsight.underlyingPattern}
                 </span>
               </div>
             </div>

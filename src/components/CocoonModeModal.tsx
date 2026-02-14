@@ -5,10 +5,18 @@ import { Moon, Wind } from "lucide-react";
 interface CocoonModeModalProps {
   isOpen: boolean;
   onStart: () => void;
+  onSkip?: () => void;
+  canSkip?: boolean;
   onClose: () => void;
 }
 
-export const CocoonModeModal: FC<CocoonModeModalProps> = ({ isOpen, onStart, onClose }) => {
+export const CocoonModeModal: FC<CocoonModeModalProps> = ({
+  isOpen,
+  onStart,
+  onSkip,
+  canSkip = false,
+  onClose
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -44,6 +52,16 @@ export const CocoonModeModal: FC<CocoonModeModalProps> = ({ isOpen, onStart, onC
             <Wind className="w-5 h-5" />
             ابدأ دقيقة الشحن
           </button>
+
+          {canSkip && (
+            <button
+              type="button"
+              onClick={onSkip}
+              className="w-full rounded-full border border-slate-600 text-slate-100 py-3 text-sm font-semibold hover:bg-slate-800 transition-all"
+            >
+              تخطي التنفس هذه المرة
+            </button>
+          )}
 
           <button
             type="button"

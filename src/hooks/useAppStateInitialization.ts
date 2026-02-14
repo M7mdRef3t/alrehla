@@ -2,6 +2,7 @@ import { useMemo, useEffect } from "react";
 import { useAdminState } from "../state/adminState";
 import { useAuthState, getEffectiveRoleFromState } from "../state/authState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "../utils/featureFlags";
+import { isUserMode } from "../config/appEnv";
 
 const hasSupabaseEnv = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 
@@ -32,7 +33,7 @@ export function useAppStateInitialization() {
         betaAccess,
         role,
         adminAccess,
-        isDev: import.meta.env.DEV
+        isDev: !isUserMode && import.meta.env.DEV
       }),
     [featureFlags, betaAccess, role, adminAccess]
   );

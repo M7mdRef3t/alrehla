@@ -48,6 +48,7 @@ import { getEffectiveRoleFromState, useAuthState } from "../state/authState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "../utils/featureFlags";
 import type { FeatureFlagKey } from "../config/features";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
+import { isUserMode } from "../config/appEnv";
 
 const NotificationSettings = lazy(() =>
   import("./NotificationSettings").then((m) => ({ default: m.NotificationSettings }))
@@ -237,7 +238,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         betaAccess,
         role,
         adminAccess,
-        isDev: import.meta.env.DEV
+        isDev: !isUserMode && import.meta.env.DEV
       }),
     [featureFlags, betaAccess, role, adminAccess]
   );
