@@ -631,6 +631,40 @@ export interface OwnerAlertsResponse {
   };
 }
 
+export interface OpsInsights {
+  generatedAt: string;
+  totals: {
+    profiles: number;
+    userState: number;
+    eventsTotal: number;
+    mapsTotal: number;
+    sessions30d: number;
+  };
+  activity: {
+    events1d: number;
+    events7d: number;
+    events30d: number;
+  };
+  journey: {
+    nodeAdded: number;
+    pathStarted: number;
+    taskCompleted: number;
+  };
+  tracking: {
+    identified: number;
+    anonymous: number;
+    identifiedRate: number;
+  };
+  funnel: {
+    landingViewed: number;
+    startClicked: number;
+    addPersonOpened: number;
+    addPersonDone: number;
+    startPathCTA: number;
+  };
+  warnings: string[];
+}
+
 export interface JourneyMapSnapshot {
   sessionId: string;
   nodes: MapNode[];
@@ -1082,4 +1116,9 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       addPersonDoneShowOnMap
     }
   };
+}
+
+export async function fetchOpsInsights(): Promise<OpsInsights | null> {
+  const apiData = await callAdminApi<OpsInsights>("overview?kind=ops-insights");
+  return apiData ?? null;
 }

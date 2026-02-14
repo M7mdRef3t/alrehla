@@ -602,6 +602,106 @@ async function handleOwnerAlerts(client: any, req: any, res: any) {
   });
 }
 
+async function handleOpsInsights(client: any, res: any) {
+  const now = new Date();
+  const since1d = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const since7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const since30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [
+    { count: profiles },
+    { count: userState },
+    { count: eventsTotal },
+    { count: mapsTotal },
+    { count: events1d },
+    { count: events7d },
+    { count: events30d },
+    { count: nodeAdded },
+    { count: pathStarted },
+    { count: taskCompleted },
+    { count: identified },
+    { count: anonymous },
+    { data: flowRows }
+  ] = await Promise.all([
+    client.from("profiles").select("id", { count: "exact", head: true }),
+    client.from("user_state").select("device_token", { count: "exact", head: true }),
+    client.from("journey_events").select("id", { count: "exact", head: true }),
+    client.from("journey_maps").select("session_id", { count: "exact", head: true }),
+    client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", since1d),
+    client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", since7d),
+    client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", since30d),
+    client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "node_added"),
+    client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "path_started"),
+    client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "task_completed"),
+    client.from("journey_events").select("id", { count: "exact", head: true }).eq("mode", "identified"),
+    client.from("journey_events").select("id", { count: "exact", head: true }).eq("mode", "anonymous"),
+    client
+      .from("journey_events")
+      .select("payload,session_id")
+      .eq("type", "flow_event")
+      .gte("created_at", since30d)
+      .order("created_at", { ascending: false })
+      .limit(10000)
+  ]);
+
+  const flowCounts: Record<string, number> = {};
+  const sessions30d = new Set<string>();
+  for (const row of (flowRows ?? []) as Array<Record<string, unknown>>) {
+    const payload = row.payload as Record<string, unknown> | null;
+    const step = String(payload?.step ?? "");
+    if (!step) continue;
+    flowCounts[step] = (flowCounts[step] ?? 0) + 1;
+    const sid = String(row.session_id ?? "").trim();
+    if (sid) sessions30d.add(sid);
+  }
+
+  const funnel = {
+    landingViewed: flowCounts.landing_viewed ?? 0,
+    startClicked: flowCounts.landing_clicked_start ?? 0,
+    addPersonOpened: flowCounts.add_person_opened ?? 0,
+    addPersonDone: flowCounts.add_person_done_show_on_map ?? 0,
+    startPathCTA: flowCounts.add_person_start_path_clicked ?? 0
+  };
+
+  const identifiedTotal = (identified ?? 0) + (anonymous ?? 0);
+  const identifiedRate = identifiedTotal > 0 ? Math.round(((identified ?? 0) / identifiedTotal) * 100) : 0;
+  const warnings: string[] = [];
+  if ((mapsTotal ?? 0) === 0 && (nodeAdded ?? 0) > 0) warnings.push("تمت إضافات أشخاص لكن لا توجد خرائط محفوظة.");
+  if ((pathStarted ?? 0) === 0) warnings.push("لا توجد أي بدايات مسار.");
+  if (funnel.addPersonOpened > 0 && Math.round((funnel.addPersonDone / funnel.addPersonOpened) * 100) < 30) {
+    warnings.push("تحويل ما بعد إضافة الشخص منخفض جدًا.");
+  }
+  if (identifiedRate < 25) warnings.push("نسبة identified منخفضة وتضعف التتبع الفردي.");
+
+  res.status(200).json({
+    generatedAt: now.toISOString(),
+    totals: {
+      profiles: profiles ?? 0,
+      userState: userState ?? 0,
+      eventsTotal: eventsTotal ?? 0,
+      mapsTotal: mapsTotal ?? 0,
+      sessions30d: sessions30d.size
+    },
+    activity: {
+      events1d: events1d ?? 0,
+      events7d: events7d ?? 0,
+      events30d: events30d ?? 0
+    },
+    journey: {
+      nodeAdded: nodeAdded ?? 0,
+      pathStarted: pathStarted ?? 0,
+      taskCompleted: taskCompleted ?? 0
+    },
+    tracking: {
+      identified: identified ?? 0,
+      anonymous: anonymous ?? 0,
+      identifiedRate
+    },
+    funnel,
+    warnings
+  });
+}
+
 async function handleDailyReport(client: any, req: any, res: any) {
   const dateParam = String(req.query?.date ?? "");
   const baseDate = dateParam ? new Date(`${dateParam}T00:00:00Z`) : new Date();
@@ -912,6 +1012,7 @@ export async function overviewRouter(req: any, res: any) {
 
   if (method === "GET") {
     if (kind === "overview") return handleOverview(client, res);
+    if (kind === "ops-insights") return handleOpsInsights(client, res);
     if (kind === "feedback") return handleFeedback(client, req, res);
     if (kind === "owner-alerts") return handleOwnerAlerts(client, req, res);
     if (kind === "daily-report") return handleDailyReport(client, req, res);

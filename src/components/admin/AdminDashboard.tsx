@@ -65,6 +65,7 @@ import {
   updateUserRole,
   fetchMissions,
   fetchOverviewStats,
+  fetchOpsInsights,
   fetchUsers,
   fetchFeedbackEntries,
   saveAiLog,
@@ -475,6 +476,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
 const FlowMapPanel: FC = () => {
   const [remoteStats, setRemoteStats] = useState<Awaited<ReturnType<typeof fetchOverviewStats>>>(null);
+  const [opsInsights, setOpsInsights] = useState<Awaited<ReturnType<typeof fetchOpsInsights>>>(null);
   const [pulseCloseReasonFilter, setPulseCloseReasonFilter] = useState<PulseAbandonReasonFilter>("all");
   const [auditLogs, setAuditLogs] = useState<FlowAuditLogEntry[]>([]);
   const [auditLoading, setAuditLoading] = useState(true);
@@ -482,14 +484,16 @@ const FlowMapPanel: FC = () => {
     if (!isSupabaseReady) return;
     let mounted = true;
     const refresh = () => {
-      fetchOverviewStats()
-        .then((data) => {
+      Promise.all([fetchOverviewStats(), fetchOpsInsights()])
+        .then(([overviewData, opsData]) => {
           if (!mounted) return;
-          if (data) setRemoteStats(data);
+          setRemoteStats(overviewData ?? null);
+          setOpsInsights(opsData ?? null);
         })
         .catch(() => {
           if (!mounted) return;
           setRemoteStats(null);
+          setOpsInsights(null);
         });
     };
     refresh();
@@ -1026,6 +1030,29 @@ const OverviewPanel: FC = () => {
           {useRemoteAsSource && remoteStats == null ? " — لا توجد بيانات متاحة الآن من السيرفر." : ""}
         </p>
       </div>
+
+      {opsInsights && (
+        <div className="admin-glass-card p-5 space-y-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h3 className="text-sm font-semibold text-slate-800">Ops Insights</h3>
+            <span className="text-xs text-slate-500">{new Date(opsInsights.generatedAt).toLocaleString("ar-EG")}</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">landing_viewed</p><p className="font-semibold text-slate-800">{opsInsights.funnel.landingViewed}</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">start_clicked</p><p className="font-semibold text-slate-800">{opsInsights.funnel.startClicked}</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">add_person_opened</p><p className="font-semibold text-slate-800">{opsInsights.funnel.addPersonOpened}</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">add_person_done</p><p className="font-semibold text-slate-800">{opsInsights.funnel.addPersonDone}</p></div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3"><p className="text-slate-500">start_path_cta</p><p className="font-semibold text-slate-800">{opsInsights.funnel.startPathCTA}</p></div>
+          </div>
+          {opsInsights.warnings.length > 0 && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 space-y-1">
+              {opsInsights.warnings.map((warning) => (
+                <p key={warning} className="text-xs text-rose-700">{warning}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* بطاقة شبيهة بـ YouTube Studio: رقم رئيسي + تحديث مباشر */}
       <div className="admin-glass-card p-6 rounded-2xl border border-slate-700/50 bg-slate-900/40">
