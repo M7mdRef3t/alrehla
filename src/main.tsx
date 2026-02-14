@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { initAnalytics } from "./services/analytics";
+import { initMonitoring } from "./services/monitoring";
 import "./styles.css";
 
 const Analytics = lazy(() => import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })));
@@ -10,6 +11,7 @@ const SpeedInsights = lazy(() => import("@vercel/speed-insights/react").then((m)
 
 // Initialize analytics (only if consent given)
 initAnalytics();
+initMonitoring();
 
 const rootElement = document.getElementById("root");
 

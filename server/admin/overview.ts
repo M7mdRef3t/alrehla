@@ -1,4 +1,5 @@
 import { getAdminSupabase, parseJsonBody, recordAdminAudit, verifyAdmin, verifyAdminWithRoles } from "./_shared.js";
+import { captureServerError, initServerMonitoring } from "./monitoring.js";
 
 type UserStateImportRow = {
   device_token?: string;
@@ -1239,6 +1240,7 @@ async function handleCronReport(req: any, res: any) {
 }
 
 export async function overviewRouter(req: any, res: any) {
+  initServerMonitoring();
   const reqStart = Date.now();
   overviewRuntimeStats.requests += 1;
   const method = String(req.method ?? "GET").toUpperCase();
@@ -1293,6 +1295,7 @@ export async function overviewRouter(req: any, res: any) {
   } catch (error) {
     overviewRuntimeStats.errors += 1;
     overviewRuntimeStats.lastErrorAt = Date.now();
+    captureServerError(error, { kind, method, area: "overviewRouter" });
     await recordAdminAudit(req, "admin_api_error", { kind, method, message: (error as Error)?.message ?? "unknown" });
     res.status(500).json({ error: "Internal server error" });
   } finally {
