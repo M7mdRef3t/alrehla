@@ -149,6 +149,7 @@ function computeTopScenarios(maps: Array<{ session_id: string; nodes: unknown }>
 async function handleOverview(client: any, res: any) {
   const now = new Date();
   const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
   const DAY_NAMES = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
@@ -161,6 +162,8 @@ async function handleOverview(client: any, res: any) {
     { data: maps },
     { data: pulseLogs },
     { count: addedPeopleCount },
+    { count: journeyMapsTotal },
+    { count: pathStarted24h },
     { data: installedSessionsRows }
   ] = await Promise.all([
     client.from("profiles").select("id", { count: "exact", head: true }),
@@ -175,6 +178,8 @@ async function handleOverview(client: any, res: any) {
     client.from("journey_maps").select("session_id,nodes").limit(1000),
     client.from("daily_pulse_logs").select("energy,created_at").gte("created_at", thirtyDaysAgo).limit(2000),
     client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "node_added"),
+    client.from("journey_maps").select("session_id", { count: "exact", head: true }),
+    client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "path_started").gte("created_at", twentyFourHoursAgo),
     client
       .from("journey_events")
       .select("session_id")
@@ -249,6 +254,12 @@ async function handleOverview(client: any, res: any) {
         avgTimeToActionMs: null,
         addPersonCompletionRate: null,
         pulseAbandonedByReason: {}
+      },
+      conversionHealth: {
+        pathStarted24h: pathStarted24h ?? 0,
+        journeyMapsTotal: journeyMapsTotal ?? 0,
+        addPersonOpened: 0,
+        addPersonDoneShowOnMap: 0
       }
     });
     return;
@@ -361,6 +372,7 @@ async function handleOverview(client: any, res: any) {
   }
   const addPersonOpened = flowCounts["add_person_opened"] ?? 0;
   const addPersonDropped = flowCounts["add_person_dropped"] ?? 0;
+  const addPersonDoneShowOnMap = flowCounts["add_person_done_show_on_map"] ?? 0;
   const addPersonCompletionRate =
     addPersonOpened > 0 ? Math.round(((addPersonOpened - addPersonDropped) / addPersonOpened) * 100) : null;
 
@@ -389,7 +401,13 @@ async function handleOverview(client: any, res: any) {
     emergencyLogs,
     taskFriction,
     weeklyRhythm,
-    flowStats
+    flowStats,
+    conversionHealth: {
+      pathStarted24h: pathStarted24h ?? 0,
+      journeyMapsTotal: journeyMapsTotal ?? 0,
+      addPersonOpened,
+      addPersonDoneShowOnMap
+    }
   });
 }
 

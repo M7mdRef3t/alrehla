@@ -18,6 +18,7 @@ import {
   ScrollText,
   Share2,
   ShieldCheck,
+  TriangleAlert,
   Sparkles,
   Users,
   Database,
@@ -902,6 +903,7 @@ const OverviewPanel: FC = () => {
   const taskFriction = remoteStats?.taskFriction ?? [];
   const weeklyRhythm = remoteStats?.weeklyRhythm;
   const flowStats = remoteStats?.flowStats;
+  const conversionHealth = remoteStats?.conversionHealth;
   const pulseAbandonedByReason = flowStats?.pulseAbandonedByReason ?? {};
   const pulseAbandonedTotal = Object.values(pulseAbandonedByReason).reduce((sum, value) => sum + (value ?? 0), 0);
   const phaseGoal = remoteStats?.phaseOneGoal ?? null;
@@ -932,6 +934,26 @@ const OverviewPanel: FC = () => {
     "الواقع الفعلي",
     "النتيجة"
   ] as const;
+  const conversionAlerts = [
+    conversionHealth && conversionHealth.pathStarted24h === 0
+      ? "لا توجد أي بدايات مسار خلال آخر 24 ساعة."
+      : null,
+    conversionHealth && conversionHealth.journeyMapsTotal === 0
+      ? "لا توجد خرائط محفوظة حتى الآن على السيرفر."
+      : null
+  ].filter(Boolean) as string[];
+  const addPersonCompletionRatio =
+    conversionHealth && conversionHealth.addPersonOpened > 0
+      ? Math.round((conversionHealth.addPersonDoneShowOnMap / conversionHealth.addPersonOpened) * 100)
+      : null;
+  const conversionStatusLabel =
+    conversionAlerts.length > 0 ? "تحذير" : addPersonCompletionRatio != null && addPersonCompletionRatio < 40 ? "مراقبة" : "سليم";
+  const conversionStatusClass =
+    conversionStatusLabel === "تحذير"
+      ? "text-rose-700 bg-rose-50 border-rose-200"
+      : conversionStatusLabel === "مراقبة"
+        ? "text-amber-700 bg-amber-50 border-amber-200"
+        : "text-emerald-700 bg-emerald-50 border-emerald-200";
 
   const [chartPeriod, setChartPeriod] = useState<7 | 28>(28);
   const growthDataFiltered = useMemo(() => {
@@ -1105,6 +1127,50 @@ const OverviewPanel: FC = () => {
           </div>
         </div>
       </div>
+
+      {conversionHealth && (
+        <div className="admin-glass-card p-5 space-y-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <TriangleAlert className="w-4 h-4 text-slate-600" />
+              <h3 className="text-sm font-semibold text-slate-800">تشخيص التحويل</h3>
+            </div>
+            <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${conversionStatusClass}`}>
+              {conversionStatusLabel}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500">بدايات المسار (24 ساعة)</p>
+              <p className="text-base font-semibold text-slate-800">{conversionHealth.pathStarted24h}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500">إجمالي الخرائط المحفوظة</p>
+              <p className="text-base font-semibold text-slate-800">{conversionHealth.journeyMapsTotal}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500">فتح إضافة شخص</p>
+              <p className="text-base font-semibold text-slate-800">{conversionHealth.addPersonOpened}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500">أنهى الإضافة وعرض على الخريطة</p>
+              <p className="text-base font-semibold text-slate-800">
+                {conversionHealth.addPersonDoneShowOnMap}
+                {addPersonCompletionRatio != null ? ` (${addPersonCompletionRatio}%)` : ""}
+              </p>
+            </div>
+          </div>
+
+          {conversionAlerts.length > 0 && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 space-y-1">
+              {conversionAlerts.map((alert) => (
+                <p key={alert} className="text-xs text-rose-700">{alert}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 admin-glass-card p-5 rounded-2xl border border-slate-700/50 bg-slate-900/30">
@@ -3900,4 +3966,3 @@ const StatCard: FC<{ title: string; value: string; hint?: string }> = ({ title, 
 );
 
 export { OverviewPanel };
-
