@@ -60,6 +60,16 @@ create table if not exists admin_flow_audit_logs (
   payload jsonb not null default '{}'::jsonb
 );
 
+-- سجل تدقيق العمليات الإدارية العامة (Security / Ops audit)
+create table if not exists admin_audit_logs (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  action text not null,
+  actor_id uuid,
+  actor_role text,
+  payload jsonb not null default '{}'::jsonb
+);
+
 -- مكتبة المهام
 create table if not exists admin_missions (
   id text primary key,
@@ -198,6 +208,7 @@ create unique index if not exists user_state_owner_idx on user_state (owner_id) 
 create index if not exists profiles_last_seen_idx on profiles (last_seen desc);
 create index if not exists admin_reports_created_at_idx on admin_reports (created_at desc);
 create index if not exists admin_flow_audit_logs_created_at_idx on admin_flow_audit_logs (created_at desc);
+create index if not exists admin_audit_logs_created_at_idx on admin_audit_logs (created_at desc);
 
 create index if not exists consciousness_vectors_embedding_cosine_idx
   on public.consciousness_vectors
