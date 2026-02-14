@@ -1,4 +1,4 @@
-import { getAdminSupabase, verifyAdmin } from "./_shared";
+import { getAdminSupabase, verifyAdmin } from "./_shared.js";
 
 function toDateOnly(date: Date): string {
   return date.toISOString().slice(0, 10);

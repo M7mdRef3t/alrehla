@@ -1,4 +1,4 @@
-import { getServiceSupabase } from "./_shared";
+import { getServiceSupabase } from "./_shared.js";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "GET") {

@@ -4,6 +4,7 @@
 
 import { isSupabaseReady, supabase } from "./supabaseClient";
 import { awardPointsForFlowStep, awardPointsForJourneyType } from "../state/achievementState";
+import { isUserMode } from "../config/appEnv";
 
 const KEY_MODE = "dawayir-tracking-mode";
 const KEY_EVENTS = "dawayir-journey-events";
@@ -70,6 +71,10 @@ export function getTrackingSessionId(): string | null {
 export function getTrackingMode(): TrackingMode {
   if (!isBrowser) return "anonymous";
   const v = localStorage.getItem(KEY_MODE);
+  if (!v && isUserMode) {
+    localStorage.setItem(KEY_MODE, "identified");
+    return "identified";
+  }
   return v === "identified" ? "identified" : "anonymous";
 }
 

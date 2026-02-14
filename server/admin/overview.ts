@@ -1,4 +1,4 @@
-import { getAdminSupabase, parseJsonBody, verifyAdmin } from "./_shared";
+import { getAdminSupabase, parseJsonBody, verifyAdmin } from "./_shared.js";
 
 type UserStateImportRow = {
   device_token?: string;

@@ -2,15 +2,15 @@
  * مدخل واحد لجميع مسارات Admin (حد Vercel Hobby: 12 دالة).
  * الـ handlers في server/admin/ حتى لا يحسبهم Vercel كدوال منفصلة.
  */
-import { overviewRouter } from "../../server/admin/overview";
-import { handleConfig } from "../../server/admin/config";
-import { handleUsers } from "../../server/admin/users";
-import { handleContent } from "../../server/admin/content";
-import { handleRoles } from "../../server/admin/roles";
-import { handleMissions } from "../../server/admin/missions";
-import { handleBroadcasts } from "../../server/admin/broadcasts";
-import { handleAiLogs } from "../../server/admin/ai-logs";
-import { handleJourneyMap } from "../../server/admin/journey-map";
+import { overviewRouter } from "../../server/admin/overview.js";
+import { handleConfig } from "../../server/admin/config.js";
+import { handleUsers } from "../../server/admin/users.js";
+import { handleContent } from "../../server/admin/content.js";
+import { handleRoles } from "../../server/admin/roles.js";
+import { handleMissions } from "../../server/admin/missions.js";
+import { handleBroadcasts } from "../../server/admin/broadcasts.js";
+import { handleAiLogs } from "../../server/admin/ai-logs.js";
+import { handleJourneyMap } from "../../server/admin/journey-map.js";
 
 const ROUTES: Record<string, (req: any, res: any) => Promise<void>> = {
   overview: overviewRouter,

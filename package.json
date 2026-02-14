@@ -2,6 +2,7 @@
   "name": "dawayir-masafaty-mvp",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "push:dev": "git push origin develop",

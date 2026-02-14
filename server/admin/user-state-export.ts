@@ -1,4 +1,4 @@
-import { getAdminSupabase, verifyAdmin } from "./_shared";
+import { getAdminSupabase, verifyAdmin } from "./_shared.js";
 
 export async function handleUserStateExportStandalone(req: any, res: any) {
   if (!(await verifyAdmin(req, res))) return;

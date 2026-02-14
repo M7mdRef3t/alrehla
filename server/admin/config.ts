@@ -1,4 +1,4 @@
-import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared";
+import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared.js";
 
 const SETTINGS_TABLE = "system_settings";
 const ALLOWED_KEYS = new Set([

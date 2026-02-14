@@ -1,4 +1,4 @@
-import { getServiceSupabase, getDeviceToken, getAuthUserId, parseJsonBody } from "./_shared";
+import { getServiceSupabase, getDeviceToken, getAuthUserId, parseJsonBody } from "./_shared.js";
 
 const TABLE = "user_state";
 

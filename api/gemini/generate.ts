@@ -1,4 +1,4 @@
-import { DEFAULT_GENERATION_CONFIG, DEFAULT_MODEL_ORDER, getClient, getModel, isRetryableModelError } from "./_shared";
+import { DEFAULT_GENERATION_CONFIG, DEFAULT_MODEL_ORDER, getClient, getModel, isRetryableModelError } from "./_shared.js";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
