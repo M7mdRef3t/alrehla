@@ -213,6 +213,7 @@ export type FlowStep =
   | "pulse_completed_without_choices"
   | "add_person_opened"
   | "add_person_done_show_on_map"
+  | "add_person_start_path_clicked"
   | "add_person_dropped"
   | "feedback_opened"
   | "feedback_submitted"

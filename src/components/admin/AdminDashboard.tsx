@@ -946,6 +946,7 @@ const OverviewPanel: FC = () => {
     conversionHealth && conversionHealth.addPersonOpened > 0
       ? Math.round((conversionHealth.addPersonDoneShowOnMap / conversionHealth.addPersonOpened) * 100)
       : null;
+  const addPersonStartPathClicked = flowStats?.byStep?.add_person_start_path_clicked ?? 0;
   const conversionStatusLabel =
     conversionAlerts.length > 0 ? "تحذير" : addPersonCompletionRatio != null && addPersonCompletionRatio < 40 ? "مراقبة" : "سليم";
   const conversionStatusClass =
@@ -993,6 +994,7 @@ const OverviewPanel: FC = () => {
     pulse_completed_without_choices: "حفظ البوصلة بدون اختيارات",
     add_person_opened: "فتح إضافة شخص",
     add_person_done_show_on_map: "أنهى الإضافة وطلب عرض الشخص على الخريطة",
+    add_person_start_path_clicked: "ضغط ابدأ المسار الآن",
     add_person_dropped: "هروب من إضافة شخص",
     feedback_opened: "فتح نموذج الرأي",
     feedback_submitted: "إرسال تغذية راجعة",
@@ -1154,7 +1156,7 @@ const OverviewPanel: FC = () => {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
             <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
               <p className="text-slate-500">بدايات المسار (24 ساعة)</p>
               <p className="text-base font-semibold text-slate-800">{conversionHealth.pathStarted24h}</p>
@@ -1173,6 +1175,10 @@ const OverviewPanel: FC = () => {
                 {conversionHealth.addPersonDoneShowOnMap}
                 {addPersonCompletionRatio != null ? ` (${addPersonCompletionRatio}%)` : ""}
               </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p className="text-slate-500">ضغط ابدأ المسار الآن</p>
+              <p className="text-base font-semibold text-slate-800">{addPersonStartPathClicked}</p>
             </div>
           </div>
 
@@ -2889,6 +2895,7 @@ const UsersPanel: FC = () => {
     pulse_completed: "أكمل البوصلة",
     add_person_opened: "فتح إضافة شخص",
     add_person_done_show_on_map: "أكمل إضافة الشخص",
+    add_person_start_path_clicked: "ضغط ابدأ المسار الآن",
     add_person_dropped: "خرج من إضافة شخص",
     tools_opened: "فتح الأدوات"
   };

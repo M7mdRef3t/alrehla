@@ -10,6 +10,7 @@ import { buildResultTemplateFromAnswers } from "../../utils/resultScreenTemplate
 import { realityScoreToRing } from "../../utils/realityScore";
 import { useMapState } from "../../state/mapState";
 import { emergencyCopy } from "../../copy/emergency";
+import { recordFlowEvent } from "../../services/journeyTracking";
 
 interface ResultScreenProps {
   personLabel: string;
@@ -430,6 +431,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
             disabled={!addedNodeId}
             onClick={() => {
               if (!addedNodeId) return;
+              recordFlowEvent("add_person_start_path_clicked", { meta: { nodeId: addedNodeId } });
               if (!isMissionStarted) startMission(addedNodeId);
               onOpenMission?.(addedNodeId);
               onClose();
