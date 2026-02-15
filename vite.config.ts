@@ -237,9 +237,13 @@ export default defineConfig(({ mode }) => {
     geminiDevProxy(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: "auto",
       includeAssets: ["icons/*.png", "icons/*.svg"],
       manifest: false, // We use manifest.json in public
       workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
         runtimeCaching: [
           {

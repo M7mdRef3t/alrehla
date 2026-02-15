@@ -1,9 +1,17 @@
-import type { PulseFocus, PulseMood } from "../state/pulseState";
+import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "../state/pulseState";
 
 export type PostAuthIntent =
   | {
       kind: "start_recovery";
-      pulse: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string };
+      pulse: {
+        energy: number;
+        mood: PulseMood;
+        focus: PulseFocus;
+        auto?: boolean;
+        notes?: string;
+        energyReasons?: string[];
+        energyConfidence?: PulseEnergyConfidence;
+      };
       createdAt: number;
     }
   | {
@@ -19,12 +27,20 @@ const VALID_FOCUS: ReadonlySet<PulseFocus> = new Set(["event", "thought", "body"
 
 function clampEnergy(n: number): number {
   const v = Math.round(n);
-  if (v < 1) return 1;
+  if (v < 0) return 0;
   if (v > 10) return 10;
   return v;
 }
 
-function isValidPulse(pulse: unknown): pulse is { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string } {
+function isValidPulse(pulse: unknown): pulse is {
+  energy: number;
+  mood: PulseMood;
+  focus: PulseFocus;
+  auto?: boolean;
+  notes?: string;
+  energyReasons?: string[];
+  energyConfidence?: PulseEnergyConfidence;
+} {
   if (!pulse || typeof pulse !== "object") return false;
   const obj = pulse as Record<string, unknown>;
   if (typeof obj.energy !== "number" || !Number.isFinite(obj.energy)) return false;
@@ -32,6 +48,8 @@ function isValidPulse(pulse: unknown): pulse is { energy: number; mood: PulseMoo
   if (typeof obj.focus !== "string" || !VALID_FOCUS.has(obj.focus as PulseFocus)) return false;
   if (obj.auto != null && typeof obj.auto !== "boolean") return false;
   if (obj.notes != null && typeof obj.notes !== "string") return false;
+  if (obj.energyReasons != null && (!Array.isArray(obj.energyReasons) || obj.energyReasons.some((x) => typeof x !== "string"))) return false;
+  if (obj.energyConfidence != null && obj.energyConfidence !== "low" && obj.energyConfidence !== "medium" && obj.energyConfidence !== "high") return false;
   return true;
 }
 
@@ -78,7 +96,10 @@ export function getPostAuthIntent(): PostAuthIntent | null {
             energy: clampEnergy(obj.pulse.energy),
             mood: obj.pulse.mood,
             focus: obj.pulse.focus,
-            auto: obj.pulse.auto
+            auto: obj.pulse.auto,
+            notes: obj.pulse.notes,
+            energyReasons: obj.pulse.energyReasons,
+            energyConfidence: obj.pulse.energyConfidence
           },
           createdAt: obj.createdAt
         };

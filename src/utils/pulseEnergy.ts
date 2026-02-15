@@ -1,0 +1,92 @@
+﻿import type { PulseFocus } from "../state/pulseState";
+
+export type EnergyTrend = { direction: "up" | "down" | "flat"; label: string; delta: number };
+export type EnergySuggestion = { cta: string; note: string; focus: PulseFocus };
+export type EnergyCopyVariant = "a" | "b";
+export type WeeklyEnergyRecommendation = { value: number; samples: number; label: string };
+
+export function getEnergySupportLine(energy: number | null): string {
+  if (energy == null) return "\u0627\u062e\u062a\u064e\u0631 \u0627\u0644\u062f\u0631\u062c\u0629 \u0627\u0644\u0644\u064a \u062a\u0639\u0628\u0631 \u0639\u0646 \u0637\u0627\u0642\u062a\u0643 \u0627\u0644\u0622\u0646.";
+  if (energy <= 2) return "\u0627\u0644\u064a\u0648\u0645 \u0645\u0646\u0627\u0633\u0628 \u0644\u0644\u062a\u0647\u062f\u0626\u0629 \u0627\u0644\u0639\u0645\u064a\u0642\u0629 \u0648\u062e\u0637\u0648\u0629 \u0635\u063a\u064a\u0631\u0629 \u062c\u062f\u064b\u0627.";
+  if (energy <= 4) return "\u062e\u0641\u0641 \u0627\u0644\u0648\u062a\u064a\u0631\u0629 \u0648\u062e\u0644\u064a\u0643 \u0645\u0639 \u062e\u0637\u0648\u0629 \u0648\u0627\u062d\u062f\u0629 \u0648\u0627\u0636\u062d\u0629.";
+  if (energy <= 6) return "\u0637\u0627\u0642\u0629 \u0645\u062a\u0648\u0627\u0632\u0646\u0629 \u062a\u0633\u0627\u0639\u062f\u0643 \u062a\u0645\u0634\u064a \u0628\u062e\u0637\u0648\u0627\u062a \u0647\u0627\u062f\u0626\u0629.";
+  if (energy <= 8) return "\u0645\u0645\u062a\u0627\u0632. \u0646\u0641\u0651\u0630 \u062e\u0637\u0648\u0629 \u0639\u0645\u0644\u064a\u0629 \u0648\u0627\u062d\u062f\u0629 \u0628\u062b\u0628\u0627\u062a.";
+  return "\u0637\u0627\u0642\u0629 \u0639\u0627\u0644\u064a\u0629 \u062c\u062f\u064b\u0627. \u0631\u0643\u0651\u0632\u0647\u0627 \u0641\u064a \u0641\u0639\u0644 \u0645\u062d\u062f\u062f \u0628\u062f\u0644 \u0627\u0644\u062a\u0634\u062a\u062a.";
+}
+
+export function getWeeklyEnergyTrend(logs: Array<{ energy: number; timestamp: number }>): EnergyTrend | null {
+  const now = Date.now();
+  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const recent = logs
+    .filter((entry) => entry.timestamp >= sevenDaysAgo)
+    .slice(0, 30)
+    .sort((a, b) => a.timestamp - b.timestamp);
+  if (recent.length < 4) return null;
+
+  const splitAt = Math.max(2, Math.floor(recent.length / 2));
+  const older = recent.slice(0, splitAt);
+  const newer = recent.slice(splitAt);
+  if (older.length === 0 || newer.length === 0) return null;
+
+  const olderAvg = older.reduce((sum, item) => sum + item.energy, 0) / older.length;
+  const newerAvg = newer.reduce((sum, item) => sum + item.energy, 0) / newer.length;
+  const delta = Math.round((newerAvg - olderAvg) * 10) / 10;
+
+  if (delta > 0.35) return { direction: "up", label: "\u0637\u0627\u0644\u0639\u0629", delta };
+  if (delta < -0.35) return { direction: "down", label: "\u0646\u0627\u0632\u0644\u0629", delta };
+  return { direction: "flat", label: "\u0645\u0633\u062a\u0642\u0631\u0629", delta };
+}
+
+export function getEnergySuggestion(energy: number | null): EnergySuggestion | null {
+  if (energy == null) return null;
+  if (energy <= 3) {
+    return {
+      cta: "\u0627\u0642\u062a\u0631\u0627\u062d \u0622\u0646: \u062f\u0642\u064a\u0642\u062a\u064a\u0646 \u062a\u0647\u062f\u0626\u0629",
+      note: "\u062e\u062f \u062f\u0642\u064a\u0642\u062a\u064a\u0646 \u062a\u0646\u0641\u0633 \u0647\u0627\u062f\u064a \u0648\u0627\u0628\u062f\u0623 \u0628\u062e\u0637\u0648\u0629 \u0635\u063a\u064a\u0631\u0629 \u062c\u062f\u064b\u0627.",
+      focus: "body"
+    };
+  }
+  if (energy <= 7) {
+    return {
+      cta: "\u0627\u0642\u062a\u0631\u0627\u062d \u0622\u0646: \u062e\u0637\u0648\u0629 \u0648\u0627\u062d\u062f\u0629 \u0648\u0627\u0636\u062d\u0629",
+      note: "\u062d\u062f\u062f \u062e\u0637\u0648\u0629 \u0648\u0627\u062d\u062f\u0629 \u0644\u0645\u062f\u0629 10 \u062f\u0642\u0627\u0626\u0642 \u0648\u0646\u0641\u0651\u0630\u0647\u0627 \u0628\u062f\u0648\u0646 \u062a\u0634\u062a\u062a.",
+      focus: "thought"
+    };
+  }
+  return {
+    cta: "\u0627\u0642\u062a\u0631\u0627\u062d \u0622\u0646: \u0646\u0641\u0651\u0630 \u0645\u0628\u0627\u0634\u0631\u0629",
+    note: "\u0637\u0627\u0642\u062a\u0643 \u0639\u0627\u0644\u064a\u0629. \u0627\u0628\u062f\u0623 \u0623\u0648\u0644 15 \u062f\u0642\u064a\u0642\u0629 \u0641\u064a \u0645\u0647\u0645\u0629 \u0648\u0627\u062d\u062f\u0629 \u0641\u0642\u0637.",
+    focus: "event"
+  };
+}
+
+export function getEnergySupportLineByVariant(energy: number | null, variant: EnergyCopyVariant): string {
+  if (variant === "b") {
+    if (energy == null) return "\u062d\u0637 \u062f\u0631\u062c\u0629 \u062a\u0642\u0631\u0628 \u0625\u062d\u0633\u0627\u0633\u0643 \u0627\u0644\u062d\u0642\u064a\u0642\u064a \u062f\u0644\u0648\u0642\u062a\u064a.";
+    if (energy <= 2) return "\u0648\u0642\u062a \u0627\u0644\u0647\u062f\u0648\u0621: \u0627\u0628\u062f\u0623 \u0628\u062e\u0637\u0648\u0629 \u0635\u063a\u064a\u0631\u0629 \u062c\u062f\u064b\u0627.";
+    if (energy <= 4) return "\u0647\u062f\u0651\u064a \u0627\u0644\u0631\u064a\u062a\u0645 \u0648\u0631\u0643\u0632 \u0639\u0644\u0649 \u0645\u0647\u0645\u0629 \u0648\u0627\u062d\u062f\u0629.";
+    if (energy <= 6) return "\u0625\u064a\u0642\u0627\u0639\u0643 \u0645\u062a\u0648\u0627\u0632\u0646. \u0643\u0645\u0651\u0644 \u0628\u062e\u0637\u0648\u0627\u062a \u0647\u0627\u062f\u064a\u0629.";
+    if (energy <= 8) return "\u0637\u0627\u0642\u062a\u0643 \u0643\u0648\u064a\u0633\u0629. \u0627\u0646\u0642\u0644 \u0646\u0641\u0633\u0643 \u0644\u062e\u0637\u0648\u0629 \u0639\u0645\u0644\u064a\u0629 \u0648\u0627\u0636\u062d\u0629.";
+    return "\u0637\u0627\u0642\u0629 \u0639\u0627\u0644\u064a\u0629: \u062b\u0628\u062a \u0627\u0646\u062a\u0628\u0627\u0647\u0643 \u0641\u064a \u0647\u062f\u0641 \u0648\u0627\u062d\u062f.";
+  }
+  return getEnergySupportLine(energy);
+}
+
+export function getWeeklyEnergyRecommendation(
+  logs: Array<{ energy: number; timestamp: number }>
+): WeeklyEnergyRecommendation | null {
+  const now = Date.now();
+  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const recent = logs
+    .filter((entry) => entry.timestamp >= sevenDaysAgo)
+    .slice(0, 14);
+  if (recent.length < 3) return null;
+
+  const avg = recent.reduce((sum, item) => sum + item.energy, 0) / recent.length;
+  const value = Math.max(0, Math.min(10, Math.round(avg)));
+  return {
+    value,
+    samples: recent.length,
+    label: `\u0645\u062a\u0648\u0633\u0637 \u0623\u0633\u0628\u0648\u0639\u0643 ${value}/10`
+  };
+}

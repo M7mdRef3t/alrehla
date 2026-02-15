@@ -40,7 +40,7 @@ export type JourneyEvent = {
     type: K;
     payload: JourneyEventPayload[K];
     timestamp: number;
-    /** ????? ??? ?? ??? "?? ????" */
+    /** رقم الجلسة في وضع "مع هوية" */
     sessionId?: string;
   };
 }[JourneyEventType]
@@ -206,7 +206,17 @@ export type FlowStep =
   | "install_clicked"
   | "profile_clicked"
   | "pulse_opened"
+  | "pulse_copy_variant_assigned"
+  | "pulse_energy_changed"
+  | "pulse_energy_unstable"
+  | "pulse_energy_weekly_recommendation_applied"
+  | "pulse_energy_undo_applied"
+  | "pulse_mood_changed"
+  | "pulse_mood_unstable"
+  | "pulse_mood_weekly_recommendation_applied"
+  | "pulse_focus_changed"
   | "pulse_notes_used"
+  | "pulse_notes_quick_chip_applied"
   | "pulse_abandoned"
   | "pulse_completed"
   | "pulse_completed_with_choices"

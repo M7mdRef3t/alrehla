@@ -596,10 +596,10 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 else pwaInstall.showInstallHint();
               }}
               className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right shrink-0 whitespace-nowrap"
-              title="تثبيت التطبيق على الجهاز"
+              title="إضافة التطبيق للشاشة الرئيسية"
             >
               <Smartphone className="w-5 h-5 shrink-0" />
-              تثبيت التطبيق
+              إضافة للشاشة الرئيسية
             </button>
           )}
           <button
@@ -1072,10 +1072,10 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                       handleClose();
                     }}
                     className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right"
-                    title="تثبيت التطبيق"
+                    title="إضافة التطبيق للشاشة الرئيسية"
                   >
                     <Smartphone className="w-6 h-6 shrink-0" />
-                    <span>تثبيت التطبيق</span>
+                    <span>إضافة للشاشة الرئيسية</span>
                   </button>
                 )}
                 <button

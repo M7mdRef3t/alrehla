@@ -12,6 +12,7 @@ import type {
 import { getBroadcastAudienceFromId, withBroadcastAudienceId } from "../utils/broadcastAudience";
 import type { MapNode } from "../modules/map/mapTypes";
 import type { PulseCheckMode } from "../state/pulseState";
+import type { PulseCopyOverrides } from "../state/adminState";
 
 type SystemSettingKey =
   | "feature_flags"
@@ -19,7 +20,8 @@ type SystemSettingKey =
   | "scoring_weights"
   | "scoring_thresholds"
   | "pulse_check_mode"
-  | "theme_palette";
+  | "theme_palette"
+  | "pulse_copy_overrides";
 
 const SETTINGS_TABLE = "system_settings";
 const ADMIN_API_BASE = import.meta.env.VITE_ADMIN_API_BASE ?? "";
@@ -120,6 +122,7 @@ export async function fetchAdminConfig() {
     scoringWeights?: ScoringWeights;
     scoringThresholds?: ScoringThresholds;
     pulseCheckMode?: PulseCheckMode;
+    pulseCopyOverrides?: PulseCopyOverrides;
   }>("config");
   if (apiData) {
     const settings = apiData.settings;
@@ -129,7 +132,8 @@ export async function fetchAdminConfig() {
         systemPrompt: settings.system_prompt as string | undefined,
         scoringWeights: settings.scoring_weights as ScoringWeights | undefined,
         scoringThresholds: settings.scoring_thresholds as ScoringThresholds | undefined,
-        pulseCheckMode: settings.pulse_check_mode as PulseCheckMode | undefined
+        pulseCheckMode: settings.pulse_check_mode as PulseCheckMode | undefined,
+        pulseCopyOverrides: settings.pulse_copy_overrides as PulseCopyOverrides | undefined
       };
     }
     return {
@@ -137,7 +141,8 @@ export async function fetchAdminConfig() {
       systemPrompt: apiData.systemPrompt,
       scoringWeights: apiData.scoringWeights,
       scoringThresholds: apiData.scoringThresholds,
-      pulseCheckMode: apiData.pulseCheckMode
+      pulseCheckMode: apiData.pulseCheckMode,
+      pulseCopyOverrides: apiData.pulseCopyOverrides
     };
   }
   const settings = await fetchSettings([
@@ -145,7 +150,8 @@ export async function fetchAdminConfig() {
     "system_prompt",
     "scoring_weights",
     "scoring_thresholds",
-    "pulse_check_mode"
+    "pulse_check_mode",
+    "pulse_copy_overrides"
   ]);
   if (!settings) return null;
   return {
@@ -153,7 +159,8 @@ export async function fetchAdminConfig() {
     systemPrompt: settings.get("system_prompt") as string | undefined,
     scoringWeights: settings.get("scoring_weights") as ScoringWeights | undefined,
     scoringThresholds: settings.get("scoring_thresholds") as ScoringThresholds | undefined,
-    pulseCheckMode: settings.get("pulse_check_mode") as PulseCheckMode | undefined
+    pulseCheckMode: settings.get("pulse_check_mode") as PulseCheckMode | undefined,
+    pulseCopyOverrides: settings.get("pulse_copy_overrides") as PulseCopyOverrides | undefined
   };
 }
 
@@ -209,6 +216,15 @@ export async function savePulseCheckMode(mode: PulseCheckMode) {
   });
   if (apiRes?.ok) return true;
   return saveSetting("pulse_check_mode", mode);
+}
+
+export async function savePulseCopyOverrides(overrides: PulseCopyOverrides) {
+  const apiRes = await callAdminApi<{ ok: boolean }>("config", {
+    method: "POST",
+    body: JSON.stringify({ pulse_copy_overrides: overrides })
+  });
+  if (apiRes?.ok) return true;
+  return saveSetting("pulse_copy_overrides", overrides);
 }
 
 export async function fetchAiLogs(): Promise<AiLogEntry[] | null> {
@@ -567,6 +583,63 @@ export interface PhaseOneGoalProgress {
   addedPeople: number;
 }
 
+export interface PulseEnergyWeeklyPoint {
+  date: string;
+  changed: number;
+  unstable: number;
+  completed: number;
+  recommended: number;
+  undo: number;
+}
+
+export interface PulseEnergyWeeklyStats {
+  points: PulseEnergyWeeklyPoint[];
+  unstableToCompletedPct: number | null;
+}
+
+export interface MoodWeeklyPoint {
+  date: string;
+  changed: number;
+  unstable: number;
+  completed: number;
+}
+
+export interface MoodWeeklyStats {
+  points: MoodWeeklyPoint[];
+  unstableToCompletedPct: number | null;
+}
+
+export interface PulseCopyVariantSplit {
+  a: number;
+  b: number;
+}
+
+export interface PulseCopyVariantStats {
+  assigned: {
+    energy: PulseCopyVariantSplit;
+    mood: PulseCopyVariantSplit;
+    focus: PulseCopyVariantSplit;
+  };
+  completed: {
+    energy: PulseCopyVariantSplit;
+    mood: PulseCopyVariantSplit;
+    focus: PulseCopyVariantSplit;
+  };
+}
+
+export interface PulseCopyVariantTrendPoint {
+  date: string;
+  aCompleted: number;
+  bCompleted: number;
+  delta: number;
+}
+
+export interface PulseCopyVariantTrendStats {
+  energy: PulseCopyVariantTrendPoint[];
+  mood: PulseCopyVariantTrendPoint[];
+  focus: PulseCopyVariantTrendPoint[];
+}
+
 export interface OverviewStats {
   totalUsers: number | null;
   activeNow: number | null;
@@ -581,6 +654,10 @@ export interface OverviewStats {
   taskFriction?: TaskFrictionEntry[] | null;
   weeklyRhythm?: WeeklyRhythm | null;
   phaseOneGoal?: PhaseOneGoalProgress | null;
+  pulseEnergyWeekly?: PulseEnergyWeeklyStats | null;
+  moodWeekly?: MoodWeeklyStats | null;
+  pulseCopyVariants?: PulseCopyVariantStats | null;
+  pulseCopyVariantTrend?: PulseCopyVariantTrendStats | null;
   flowStats?: {
     byStep: Record<string, number>;
     avgTimeToActionMs: number | null;
@@ -1120,6 +1197,11 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
   if (apiData) return apiData;
   if (!isSupabaseReady || !supabase) return null;
   const now = new Date();
+  const isoDate = (d: Date) => d.toISOString().slice(0, 10);
+  const last7Dates: string[] = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(now.getTime() - (6 - i) * 24 * 60 * 60 * 1000);
+    return isoDate(d);
+  });
   const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -1174,6 +1256,43 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
         installedUsers,
         addedPeople: addedPeopleCount ?? 0
       },
+      pulseEnergyWeekly: {
+        points: last7Dates.map((date) => ({
+          date: date.slice(5),
+          changed: 0,
+          unstable: 0,
+          completed: 0,
+          recommended: 0,
+          undo: 0
+        })),
+        unstableToCompletedPct: null
+      },
+      moodWeekly: {
+        points: last7Dates.map((date) => ({
+          date: date.slice(5),
+          changed: 0,
+          unstable: 0,
+          completed: 0
+        })),
+        unstableToCompletedPct: null
+      },
+      pulseCopyVariants: {
+        assigned: {
+          energy: { a: 0, b: 0 },
+          mood: { a: 0, b: 0 },
+          focus: { a: 0, b: 0 }
+        },
+        completed: {
+          energy: { a: 0, b: 0 },
+          mood: { a: 0, b: 0 },
+          focus: { a: 0, b: 0 }
+        }
+      },
+      pulseCopyVariantTrend: {
+        energy: last7Dates.map((date) => ({ date: date.slice(5), aCompleted: 0, bCompleted: 0, delta: 0 })),
+        mood: last7Dates.map((date) => ({ date: date.slice(5), aCompleted: 0, bCompleted: 0, delta: 0 })),
+        focus: last7Dates.map((date) => ({ date: date.slice(5), aCompleted: 0, bCompleted: 0, delta: 0 }))
+      },
       funnel: { steps: [] },
       flowStats: {
         byStep: {},
@@ -1199,6 +1318,29 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
   const pulseAbandonedByReason: Record<string, number> = {};
   let flowTimeToActionSum = 0;
   let flowTimeToActionCount = 0;
+  const sessionVariantMap = new Map<string, { energy: "a" | "b" | null; mood: "a" | "b" | null; focus: "a" | "b" | null }>();
+  const pulseCopyVariants: PulseCopyVariantStats = {
+    assigned: {
+      energy: { a: 0, b: 0 },
+      mood: { a: 0, b: 0 },
+      focus: { a: 0, b: 0 }
+    },
+    completed: {
+      energy: { a: 0, b: 0 },
+      mood: { a: 0, b: 0 },
+      focus: { a: 0, b: 0 }
+    }
+  };
+  const pulseCopyVariantTrendMap = {
+    energy: new Map<string, { aCompleted: number; bCompleted: number }>(),
+    mood: new Map<string, { aCompleted: number; bCompleted: number }>(),
+    focus: new Map<string, { aCompleted: number; bCompleted: number }>()
+  };
+  for (const date of last7Dates) {
+    pulseCopyVariantTrendMap.energy.set(date, { aCompleted: 0, bCompleted: 0 });
+    pulseCopyVariantTrendMap.mood.set(date, { aCompleted: 0, bCompleted: 0 });
+    pulseCopyVariantTrendMap.focus.set(date, { aCompleted: 0, bCompleted: 0 });
+  }
   for (const row of events as Array<Record<string, unknown>>) {
     const createdAt = String(row.created_at ?? "");
     const date = createdAt ? createdAt.slice(5, 10) : "--";
@@ -1218,8 +1360,36 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     }
     if (type === "flow_event") {
       const step = String(payload?.step ?? "");
+      const sessionId = String(row.session_id ?? "");
       if (step) {
         flowCounts[step] = (flowCounts[step] ?? 0) + 1;
+        if (step === "pulse_copy_variant_assigned") {
+          const extra = payload?.extra as Record<string, unknown> | undefined;
+          const legacyVariant = extra?.variant === "a" || extra?.variant === "b" ? (extra.variant as "a" | "b") : null;
+          const energyVariant =
+            extra?.energyVariant === "a" || extra?.energyVariant === "b"
+              ? (extra.energyVariant as "a" | "b")
+              : legacyVariant;
+          const moodVariant =
+            extra?.moodVariant === "a" || extra?.moodVariant === "b"
+              ? (extra.moodVariant as "a" | "b")
+              : null;
+          const focusVariant =
+            extra?.focusVariant === "a" || extra?.focusVariant === "b"
+              ? (extra.focusVariant as "a" | "b")
+              : null;
+
+          if (energyVariant) pulseCopyVariants.assigned.energy[energyVariant] += 1;
+          if (moodVariant) pulseCopyVariants.assigned.mood[moodVariant] += 1;
+          if (focusVariant) pulseCopyVariants.assigned.focus[focusVariant] += 1;
+          if (sessionId) {
+            sessionVariantMap.set(sessionId, {
+              energy: energyVariant,
+              mood: moodVariant,
+              focus: focusVariant
+            });
+          }
+        }
         if (step === "pulse_abandoned") {
           const extra = payload?.extra as Record<string, unknown> | undefined;
           const reason = typeof extra?.closeReason === "string" ? extra.closeReason : "unknown";
@@ -1232,12 +1402,112 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       }
     }
   }
+  for (const row of events as Array<Record<string, unknown>>) {
+    const createdAt = String(row.created_at ?? "");
+    const day = createdAt.slice(0, 10);
+    if (String(row.type ?? "") !== "flow_event") continue;
+    const payload = row.payload as Record<string, unknown> | null;
+    const step = String(payload?.step ?? "");
+    const sessionId = String(row.session_id ?? "");
+    if (step !== "pulse_completed" || !sessionId) continue;
+    const sessionVariants = sessionVariantMap.get(sessionId);
+    if (!sessionVariants) continue;
+    if (sessionVariants.energy) {
+      pulseCopyVariants.completed.energy[sessionVariants.energy] += 1;
+      if (pulseCopyVariantTrendMap.energy.has(day)) {
+        const p = pulseCopyVariantTrendMap.energy.get(day)!;
+        if (sessionVariants.energy === "a") p.aCompleted += 1;
+        if (sessionVariants.energy === "b") p.bCompleted += 1;
+      }
+    }
+    if (sessionVariants.mood) {
+      pulseCopyVariants.completed.mood[sessionVariants.mood] += 1;
+      if (pulseCopyVariantTrendMap.mood.has(day)) {
+        const p = pulseCopyVariantTrendMap.mood.get(day)!;
+        if (sessionVariants.mood === "a") p.aCompleted += 1;
+        if (sessionVariants.mood === "b") p.bCompleted += 1;
+      }
+    }
+    if (sessionVariants.focus) {
+      pulseCopyVariants.completed.focus[sessionVariants.focus] += 1;
+      if (pulseCopyVariantTrendMap.focus.has(day)) {
+        const p = pulseCopyVariantTrendMap.focus.get(day)!;
+        if (sessionVariants.focus === "a") p.aCompleted += 1;
+        if (sessionVariants.focus === "b") p.bCompleted += 1;
+      }
+    }
+  }
+  const pulseCopyVariantTrend: PulseCopyVariantTrendStats = {
+    energy: last7Dates.map((date) => {
+      const point = pulseCopyVariantTrendMap.energy.get(date) ?? { aCompleted: 0, bCompleted: 0 };
+      return { date: date.slice(5), aCompleted: point.aCompleted, bCompleted: point.bCompleted, delta: point.aCompleted - point.bCompleted };
+    }),
+    mood: last7Dates.map((date) => {
+      const point = pulseCopyVariantTrendMap.mood.get(date) ?? { aCompleted: 0, bCompleted: 0 };
+      return { date: date.slice(5), aCompleted: point.aCompleted, bCompleted: point.bCompleted, delta: point.aCompleted - point.bCompleted };
+    }),
+    focus: last7Dates.map((date) => {
+      const point = pulseCopyVariantTrendMap.focus.get(date) ?? { aCompleted: 0, bCompleted: 0 };
+      return { date: date.slice(5), aCompleted: point.aCompleted, bCompleted: point.bCompleted, delta: point.aCompleted - point.bCompleted };
+    })
+  };
 
   const growthData = Array.from(growthMap.entries()).map(([date, value]) => ({
     date,
     paths: value.paths,
     nodes: value.nodes
   }));
+  const pulseEnergyWeeklyMap = new Map<
+    string,
+    { changed: number; unstable: number; completed: number; recommended: number; undo: number }
+  >();
+  for (const date of last7Dates) {
+    pulseEnergyWeeklyMap.set(date, { changed: 0, unstable: 0, completed: 0, recommended: 0, undo: 0 });
+  }
+  for (const row of events as Array<Record<string, unknown>>) {
+    const createdAt = String(row.created_at ?? "");
+    const day = createdAt.slice(0, 10);
+    if (!pulseEnergyWeeklyMap.has(day) || String(row.type ?? "") !== "flow_event") continue;
+    const payload = row.payload as Record<string, unknown> | null;
+    const step = String(payload?.step ?? "");
+    const point = pulseEnergyWeeklyMap.get(day)!;
+    if (step === "pulse_energy_changed") point.changed += 1;
+    if (step === "pulse_energy_unstable") point.unstable += 1;
+    if (step === "pulse_energy_weekly_recommendation_applied") point.recommended += 1;
+    if (step === "pulse_energy_undo_applied") point.undo += 1;
+    if (step === "pulse_completed") point.completed += 1;
+  }
+  const pulseEnergyWeeklyPoints = last7Dates.map((date) => {
+    const point = pulseEnergyWeeklyMap.get(date) ?? { changed: 0, unstable: 0, completed: 0, recommended: 0, undo: 0 };
+    return { date: date.slice(5), ...point };
+  });
+  const totalWeeklyUnstable = pulseEnergyWeeklyPoints.reduce((sum, item) => sum + item.unstable, 0);
+  const totalWeeklyCompleted = pulseEnergyWeeklyPoints.reduce((sum, item) => sum + item.completed, 0);
+  const unstableToCompletedPct =
+    totalWeeklyCompleted > 0 ? Math.round((totalWeeklyUnstable / totalWeeklyCompleted) * 100) : null;
+  const moodWeeklyMap = new Map<string, { changed: number; unstable: number; completed: number }>();
+  for (const date of last7Dates) {
+    moodWeeklyMap.set(date, { changed: 0, unstable: 0, completed: 0 });
+  }
+  for (const row of events as Array<Record<string, unknown>>) {
+    const createdAt = String(row.created_at ?? "");
+    const day = createdAt.slice(0, 10);
+    if (!moodWeeklyMap.has(day) || String(row.type ?? "") !== "flow_event") continue;
+    const payload = row.payload as Record<string, unknown> | null;
+    const step = String(payload?.step ?? "");
+    const point = moodWeeklyMap.get(day)!;
+    if (step === "pulse_mood_changed") point.changed += 1;
+    if (step === "pulse_mood_unstable") point.unstable += 1;
+    if (step === "pulse_completed") point.completed += 1;
+  }
+  const moodWeeklyPoints = last7Dates.map((date) => {
+    const point = moodWeeklyMap.get(date) ?? { changed: 0, unstable: 0, completed: 0 };
+    return { date: date.slice(5), ...point };
+  });
+  const moodWeeklyUnstable = moodWeeklyPoints.reduce((sum, item) => sum + item.unstable, 0);
+  const moodWeeklyCompleted = moodWeeklyPoints.reduce((sum, item) => sum + item.completed, 0);
+  const moodUnstableToCompletedPct =
+    moodWeeklyCompleted > 0 ? Math.round((moodWeeklyUnstable / moodWeeklyCompleted) * 100) : null;
   const zones = Array.from(zoneMap.entries()).map(([label, count]) => ({ label, count }));
 
   const sessionsByType = { node_added: new Set<string>(), path_started: new Set<string>(), task_completed: new Set<string>() };
@@ -1279,6 +1549,16 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       installedUsers,
       addedPeople: addedPeopleCount ?? 0
     },
+    pulseEnergyWeekly: {
+      points: pulseEnergyWeeklyPoints,
+      unstableToCompletedPct
+    },
+    moodWeekly: {
+      points: moodWeeklyPoints,
+      unstableToCompletedPct: moodUnstableToCompletedPct
+    },
+    pulseCopyVariants,
+    pulseCopyVariantTrend,
     funnel,
     flowStats: {
       byStep: flowCounts,

@@ -150,6 +150,8 @@ create table if not exists daily_pulse_logs (
   energy int not null,
   mood text not null,
   focus text not null,
+  energy_reasons text[] not null default '{}'::text[],
+  energy_confidence text check (energy_confidence in ('low', 'medium', 'high')),
   auto boolean default false,
   created_at timestamptz not null default now()
 );

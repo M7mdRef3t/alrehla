@@ -1,30 +1,46 @@
-import type { CSSProperties, FC } from "react";
+﻿import type { CSSProperties, FC, KeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { PulseFocus, PulseMood } from "../state/pulseState";
+import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "../state/pulseState";
 import { usePulseState } from "../state/pulseState";
+import { useAdminState, type PulseCopyOverrideValue } from "../state/adminState";
 import { energyColorHex, energyPct } from "../utils/pulseUi";
 import { recordFlowEvent } from "../services/journeyTracking";
+import {
+  getEnergySuggestion,
+  getEnergySupportLineByVariant,
+  getWeeklyEnergyTrend,
+  getWeeklyEnergyRecommendation,
+  type EnergyCopyVariant
+} from "../utils/pulseEnergy";
+
 
 interface PulseCheckModalProps {
   isOpen: boolean;
   context?: "regular" | "start_recovery";
-  onSubmit: (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => void;
+  onSubmit: (payload: {
+    energy: number;
+    mood: PulseMood;
+    focus: PulseFocus;
+    auto?: boolean;
+    notes?: string;
+    energyReasons?: string[];
+    energyConfidence?: PulseEnergyConfidence;
+  }) => void;
   onClose: (reason?: "backdrop" | "close_button") => void;
 }
 
-const EARLY_PHASE_NOTES_COLLAPSE_COUNT = 3;
-
 const MOODS: Array<{ id: PulseMood; label: string; emoji: string }> = [
-  { id: "bright", label: "رايق", emoji: "☀️" },
-  { id: "calm", label: "هادئ", emoji: "🌤️" },
-  { id: "tense", label: "متوتر", emoji: "🌪️" },
-  { id: "hopeful", label: "متفائل", emoji: "🌈" },
-  { id: "anxious", label: "قلقان", emoji: "☁️" },
-  { id: "angry", label: "غضبان", emoji: "⛈️" },
-  { id: "sad", label: "حزين", emoji: "🌧️" },
-  { id: "overwhelmed", label: "إرهاق", emoji: "🌫️" }
+  { id: "bright", label: "\u0631\u0627\u064a\u0642", emoji: "\u2600\uFE0F" },
+  { id: "calm", label: "\u0647\u0627\u062f\u0626", emoji: "\uD83C\uDF24\uFE0F" },
+  { id: "tense", label: "\u0645\u062a\u0648\u062a\u0631", emoji: "\uD83C\uDF2A\uFE0F" },
+  { id: "hopeful", label: "\u0645\u062a\u0641\u0627\u0626\u0644", emoji: "\uD83C\uDF08" },
+  { id: "anxious", label: "\u0642\u0644\u0642\u0627\u0646", emoji: "\u2601\uFE0F" },
+  { id: "angry", label: "\u063a\u0636\u0628\u0627\u0646", emoji: "\u26C8\uFE0F" },
+  { id: "sad", label: "\u062d\u0632\u064a\u0646", emoji: "\uD83C\uDF27\uFE0F" },
+  { id: "overwhelmed", label: "\u0625\u0631\u0647\u0627\u0642", emoji: "\uD83C\uDF2B\uFE0F" }
 ];
+const MOOD_PRESETS: PulseMood[] = ["calm", "hopeful", "anxious"];
 
 const FOCUS_OPTIONS: Array<{ id: PulseFocus; labelKey: "event" | "thought" | "body" | "none_new" | "none_returning" }> = [
   { id: "event", labelKey: "event" },
@@ -34,11 +50,11 @@ const FOCUS_OPTIONS: Array<{ id: PulseFocus; labelKey: "event" | "thought" | "bo
 ];
 
 const FOCUS_LABELS: Record<string, string> = {
-  event: "موقف حصل",
-  thought: "فكرة مش بتروح",
-  body: "جسدي تعبان",
-  none_returning: "ولا حاجة، جاي أكمل",
-  none_new: "ولا حاجة، جاي أكتشف"
+  event: "\u0645\u0648\u0642\u0641 \u062d\u0635\u0644",
+  thought: "\u0641\u0643\u0631\u0629 \u0645\u0634 \u0628\u062a\u0631\u0648\u062d",
+  body: "\u062c\u0633\u062f\u064a \u062a\u0639\u0628\u0627\u0646",
+  none_returning: "\u0648\u0644\u0627 \u062d\u0627\u062c\u0629\u060c \u062c\u0627\u064a \u0623\u0643\u0645\u0644",
+  none_new: "\u0648\u0644\u0627 \u062d\u0627\u062c\u0629\u060c \u062c\u0627\u064a \u0623\u0643\u062a\u0634\u0641"
 };
 
 const MOOD_COSMIC: Record<PulseMood, { bg: string; border: string; glow: string; text: string }> = {
@@ -59,12 +75,237 @@ const FOCUS_COSMIC: Record<PulseFocus, { bg: string; border: string; text: strin
   none: { bg: "rgba(45, 212, 191, 0.08)", border: "rgba(45, 212, 191, 0.2)", text: "#2dd4bf" }
 };
 
-function energyGradient(energy: number): string {
+function energyGradient(energy: number | null): string {
+  if (energy == null || energy <= 0) return "radial-gradient(ellipse at 50% 60%, rgba(148, 163, 184, 0.1) 0%, transparent 60%)";
   if (energy <= 2) return "radial-gradient(ellipse at 50% 60%, rgba(248, 113, 113, 0.12) 0%, transparent 60%)";
   if (energy <= 4) return "radial-gradient(ellipse at 50% 60%, rgba(251, 191, 36, 0.1) 0%, transparent 60%)";
   if (energy <= 6) return "radial-gradient(ellipse at 50% 60%, rgba(45, 212, 191, 0.08) 0%, transparent 55%)";
   if (energy <= 8) return "radial-gradient(ellipse at 50% 60%, rgba(45, 212, 191, 0.12) 0%, transparent 55%)";
   return "radial-gradient(ellipse at 50% 60%, rgba(45, 212, 191, 0.18) 0%, rgba(139, 92, 246, 0.06) 40%, transparent 65%)";
+}
+
+function getEnergyStateLabel(energy: number | null): string {
+  if (energy == null) return "\u063a\u064a\u0631 \u0645\u062d\u062f\u062f\u0629";
+  if (energy <= 2) return "\u0645\u0646\u062e\u0641\u0636\u0629 \u062c\u062f\u064b\u0627";
+  if (energy <= 4) return "\u0645\u0646\u062e\u0641\u0636\u0629";
+  if (energy <= 6) return "\u0645\u062a\u0648\u0633\u0637\u0629";
+  if (energy <= 8) return "\u0645\u0631\u062a\u0641\u0639\u0629";
+  return "\u0645\u0631\u062a\u0641\u0639\u0629 \u062c\u062f\u064b\u0627";
+}
+
+
+
+function getEnergyQuickHint(energy: number | null): string {
+  if (energy == null) return "\u0627\u062e\u062a\u0631 \u0627\u0644\u062f\u0631\u062c\u0629";
+  if (energy <= 2) return "\u0628\u0627\u062d\u062a\u0627\u062c \u0647\u062f\u0648\u0621";
+  if (energy <= 4) return "\u0647\u0627\u062f\u064a \u0628\u0634\u0648\u064a\u0629";
+  if (energy <= 6) return "\u0645\u062a\u0648\u0627\u0632\u0646";
+  if (energy <= 8) return "\u062c\u0627\u0647\u0632";
+  return "\u0637\u0627\u0642\u0629 \u0639\u0627\u0644\u064a\u0629";
+}
+
+function getMoodStateLabel(mood: PulseMood | null): string {
+  if (!mood) return "\u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631";
+  switch (mood) {
+    case "bright":
+      return "\u0645\u0632\u0627\u062c \u0645\u0636\u064a\u0621";
+    case "calm":
+      return "\u0647\u062f\u0648\u0621 \u0645\u0633\u062a\u0642\u0631";
+    case "tense":
+      return "\u062a\u0648\u062a\u0631 \u0642\u0627\u0628\u0644 \u0644\u0644\u062a\u0646\u0638\u064a\u0645";
+    case "hopeful":
+      return "\u062f\u0627\u0641\u0639 \u0625\u064a\u062c\u0627\u0628\u064a";
+    case "anxious":
+      return "\u0642\u0644\u0642 \u0645\u062d\u062a\u0627\u062c \u062a\u0647\u062f\u0626\u0629";
+    case "angry":
+      return "\u062d\u062f\u0629 \u0645\u0634\u0627\u0639\u0631";
+    case "sad":
+      return "\u0637\u0627\u0642\u0629 \u0645\u0646\u062e\u0641\u0636\u0629";
+    case "overwhelmed":
+      return "\u062a\u0634\u0628\u0639 \u0648\u0636\u063a\u0637 \u0639\u0627\u0644\u064a";
+    default:
+      return "\u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631";
+  }
+}
+
+function getMoodQuickHint(mood: PulseMood | null): string {
+  if (!mood) return "\u0627\u062e\u062a\u0631 \u0648\u0635\u0641\u0627\u064b \u0642\u0631\u064a\u0628\u0627\u064b \u0645\u0646 \u062d\u0627\u0644\u062a\u0643";
+  switch (mood) {
+    case "bright":
+      return "\u0627\u0633\u062a\u063a\u0644 \u0627\u0644\u0635\u0641\u0627\u0621 \u0628\u062e\u0637\u0648\u0629 \u0645\u0628\u0627\u0634\u0631\u0629.";
+    case "calm":
+      return "\u0645\u0645\u062a\u0627\u0632\u060c \u0627\u062d\u0627\u0641\u0638 \u0639\u0644\u0649 \u0627\u0644\u0646\u0633\u0642 \u0627\u0644\u0647\u0627\u062f\u0626.";
+    case "tense":
+      return "\u0646\u0641\u0633 \u0642\u0635\u064a\u0631 \u064a\u0642\u0644\u0644 \u0627\u0644\u062a\u0648\u062a\u0631 \u0642\u0628\u0644 \u0627\u0644\u062e\u0637\u0648\u0629.";
+    case "hopeful":
+      return "\u062e\u0644\u0651 \u0627\u0644\u062d\u0645\u0627\u0633 \u064a\u062a\u062d\u0648\u0644 \u0644\u062a\u0646\u0641\u064a\u0630 \u0641\u0639\u0644\u064a.";
+    case "anxious":
+      return "\u0627\u0628\u062f\u0623 \u0628\u062e\u0637\u0648\u0629 \u0645\u0648\u0636\u062d\u0629 \u0648\u0648\u0627\u062d\u062f\u0629 \u0641\u0642\u0637.";
+    case "angry":
+      return "\u062d\u0648\u0651\u0644 \u0627\u0644\u0627\u0646\u062f\u0641\u0627\u0639 \u0644\u0642\u0631\u0627\u0631 \u0645\u062d\u0633\u0648\u0628.";
+    case "sad":
+      return "\u0627\u0633\u0645\u062d \u0628\u062e\u0637\u0648\u0629 \u0635\u063a\u064a\u0631\u0629 \u0645\u0631\u0646\u0629.";
+    case "overwhelmed":
+      return "\u0628\u0633\u0651\u0637 \u0627\u0644\u0645\u0634\u0647\u062f: \u062e\u064a\u0627\u0631 \u0648\u0627\u062d\u062f \u0627\u0644\u0622\u0646.";
+    default:
+      return "\u0627\u062e\u062a\u0631 \u0648\u0635\u0641\u0627\u064b \u0642\u0631\u064a\u0628\u0627\u064b \u0645\u0646 \u062d\u0627\u0644\u062a\u0643";
+  }
+}
+
+function getFocusStateLabel(focus: PulseFocus | null, isStartRecovery: boolean): string {
+  if (!focus) return "\u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631";
+  if (focus === "event") return "\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0644\u0649 \u0645\u0648\u0642\u0641 \u0645\u062d\u062f\u062f";
+  if (focus === "thought") return "\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0644\u0649 \u0641\u0643\u0631\u0629 \u0645\u062a\u0643\u0631\u0631\u0629";
+  if (focus === "body") return "\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0644\u0649 \u0625\u0634\u0627\u0631\u0627\u062a \u0627\u0644\u062c\u0633\u062f";
+  return isStartRecovery
+    ? "\u0628\u062f\u0627\u064a\u0629 \u0645\u0631\u0646\u0629 \u0644\u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641"
+    : "\u0639\u0648\u062f\u0629 \u0644\u0644\u0625\u0643\u0645\u0627\u0644 \u0628\u062f\u0648\u0646 \u0645\u0634\u062a\u062a\u0627\u062a";
+}
+
+function getFocusQuickHint(focus: PulseFocus | null, isStartRecovery: boolean): string {
+  if (!focus) return "\u0627\u062e\u062a\u0631 \u0623\u064a\u0646 \u062a\u0631\u064a\u062f \u062a\u0648\u062c\u064a\u0647 \u0627\u0646\u062a\u0628\u0627\u0647\u0643 \u0627\u0644\u0622\u0646";
+  if (focus === "event") return "\u0627\u0628\u062f\u0623 \u0628\u0648\u0635\u0641 \u0645\u0648\u0642\u0641 \u0648\u0627\u062d\u062f \u0628\u0648\u0636\u0648\u062d.";
+  if (focus === "thought") return "\u062d\u062f\u062f \u0627\u0644\u0641\u0643\u0631\u0629 \u0648\u0627\u062e\u062a\u0628\u0631\u0647\u0627 \u0628\u0647\u062f\u0648\u0621.";
+  if (focus === "body") return "\u0644\u0627\u062d\u0638 \u0627\u0644\u0625\u062d\u0633\u0627\u0633 \u0627\u0644\u062c\u0633\u062f\u064a \u0642\u0628\u0644 \u0623\u064a \u062e\u0637\u0648\u0629.";
+  return isStartRecovery
+    ? "\u062c\u064a\u062f\u060c \u0646\u0628\u062f\u0623 \u0628\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0647\u0627\u062f\u0626."
+    : "\u0645\u0645\u062a\u0627\u0632\u060c \u0643\u0645\u0651\u0644 \u0645\u0646 \u062d\u064a\u062b \u062a\u0648\u0642\u0641\u062a.";
+}
+
+type EnergyConfidence = "low" | "medium" | "high";
+type PulseDraft = {
+  energy: number | null;
+  previousEnergy: number | null;
+  hasPickedEnergy: boolean;
+  mood: PulseMood | null;
+  focus: PulseFocus | null;
+  notes: string;
+  energyReasons: string[];
+  energyConfidence: EnergyConfidence | null;
+  showEnergyDetails: boolean;
+  quickMode: boolean;
+  step: 1 | 2 | 3 | 4;
+};
+
+type EnergyUndoSnapshot = {
+  energy: number | null;
+  previousEnergy: number | null;
+  hasPickedEnergy: boolean;
+  focus: PulseFocus | null;
+  notes: string;
+  suggestionApplied: boolean;
+  immediateActionApplied: boolean;
+  source: "weekly_recommendation" | "immediate_action";
+};
+
+type MoodWeeklyRecommendation = {
+  mood: PulseMood;
+  count: number;
+};
+type CopyVariant = "a" | "b";
+
+
+
+
+
+
+
+function getEnergyCopyVariant(forced: PulseCopyOverrideValue): EnergyCopyVariant {
+  return getStoredCopyVariant("dawayir-energy-copy-variant", forced);
+}
+
+function getMoodCopyVariant(forced: PulseCopyOverrideValue): CopyVariant {
+  return getStoredCopyVariant("dawayir-mood-copy-variant", forced);
+}
+
+function getFocusCopyVariant(forced: PulseCopyOverrideValue): CopyVariant {
+  return getStoredCopyVariant("dawayir-focus-copy-variant", forced);
+}
+
+function getStoredCopyVariant(key: string, forced: PulseCopyOverrideValue): CopyVariant {
+  if (forced === "a" || forced === "b") return forced;
+  if (typeof window === "undefined") return "a";
+  try {
+    const existing = window.localStorage.getItem(key);
+    if (existing === "a" || existing === "b") return existing;
+    const next: CopyVariant = Math.random() < 0.5 ? "a" : "b";
+    window.localStorage.setItem(key, next);
+    return next;
+  } catch {
+    return "a";
+  }
+}
+
+function getMoodVariantSubtitle(variant: CopyVariant): string {
+  return variant === "a" ? "اختر وصفًا أقرب لإحساسك الآن." : "سمِّ الجو الداخلي بسرعة حتى نكمل بوضوح.";
+}
+
+function getFocusVariantSubtitle(variant: CopyVariant): string {
+  return variant === "a" ? "حدد نقطة البداية الأكثر تأثيرًا الآن." : "اختر أين تضع انتباهك أولًا.";
+}
+
+function getPostSaveAction(energy: number): string {
+  if (energy <= 3) return "\u062e\u0637\u0648\u0629 \u062a\u0627\u0644\u064a\u0629: \u062f\u0642\u064a\u0642\u062a\u064a\u0646 \u062a\u0646\u0641\u0633 \u062b\u0645 \u062e\u0637\u0648\u0629 \u0635\u063a\u064a\u0631\u0629.";
+  if (energy <= 7) return "\u062e\u0637\u0648\u0629 \u062a\u0627\u0644\u064a\u0629: \u0645\u0647\u0645\u0629 \u0648\u0627\u062d\u062f\u0629 \u0644\u0645\u062f\u0629 10 \u062f\u0642\u0627\u0626\u0642.";
+  return "\u062e\u0637\u0648\u0629 \u062a\u0627\u0644\u064a\u0629: \u0627\u0628\u062f\u0623 \u0623\u0648\u0644 15 \u062f\u0642\u064a\u0642\u0629 \u0627\u0644\u0622\u0646.";
+}
+
+function getImmediateEnergyAction(energy: number | null): { cta: string; hint: string } | null {
+  if (energy == null) return null;
+  if (energy <= 3) {
+    return {
+      cta: "\u0628\u062f\u0623 \u062a\u0646\u0641\u0633 \u062f\u0642\u064a\u0642\u062a\u064a\u0646",
+      hint: "\u062b\u0645 \u0627\u0644\u062a\u0632\u0645 \u0628\u062e\u0637\u0648\u0629 \u0635\u063a\u064a\u0631\u0629 \u0648\u0627\u062d\u062f\u0629."
+    };
+  }
+  if (energy <= 7) {
+    return {
+      cta: "\u062b\u0628\u0651\u062a \u0645\u0647\u0645\u0629 10 \u062f\u0642\u0627\u0626\u0642",
+      hint: "\u0645\u0647\u0645\u0629 \u0648\u0627\u062d\u062f\u0629 \u0628\u062f\u0648\u0646 \u062a\u0634\u062a\u062a."
+    };
+  }
+  return {
+    cta: "\u0627\u0628\u062f\u0623 \u0623\u0648\u0644 15 \u062f\u0642\u064a\u0642\u0629 \u0627\u0644\u0622\u0646",
+    hint: "\u0637\u0627\u0642\u0629 \u0639\u0627\u0644\u064a\u0629 \u062a\u062d\u062a\u0627\u062c \u0628\u062f\u0627\u064a\u0629 \u0633\u0631\u064a\u0639\u0629."
+  };
+}
+
+const ENERGY_ANCHORS = [0, 3, 6, 10] as const;
+const ENERGY_FEEDBACK_POINTS = new Set<number>(ENERGY_ANCHORS);
+const ENERGY_PRESETS: Array<{ value: number; label: string }> = [
+  { value: 2, label: "\u0645\u0646\u0647\u0643" },
+  { value: 6, label: "\u0645\u062a\u0648\u0627\u0632\u0646" },
+  { value: 9, label: "\u062c\u0627\u0647\u0632" }
+];
+const ENERGY_REASON_TAGS = [
+  "\u0646\u0648\u0645",
+  "\u0636\u063a\u0637",
+  "\u0623\u0643\u0644",
+  "\u0645\u062c\u0647\u0648\u062f",
+  "\u0645\u0632\u0627\u062c"
+] as const;
+const PULSE_DRAFT_STORAGE_KEY = "dawayir-pulse-check-draft-v1";
+const NOTES_QUICK_CHIPS = [
+  "\u0641\u064a \u0645\u0648\u0642\u0641 \u0645\u0639\u064a\u0646 \u0645\u0636\u0627\u064a\u0642\u0646\u064a",
+  "\u0641\u0643\u0631\u0629 \u0645\u062a\u0643\u0631\u0631\u0629 \u0645\u0634 \u0631\u0627\u0636\u064a\u0629 \u062a\u0633\u064a\u0628\u0646\u064a",
+  "\u062c\u0633\u0645\u064a \u062a\u0639\u0628\u0627\u0646 \u0648\u0645\u062d\u062a\u0627\u062c \u0647\u062f\u0648\u0621",
+  "\u0628\u0633 \u062d\u0627\u0628\u0628 \u0623\u0641\u0636\u0641\u0636 \u0628\u062c\u0645\u0644\u0629 \u0633\u0631\u064a\u0639\u0629"
+] as const;
+
+function getWeeklyMoodRecommendation(
+  logs: Array<{ mood: PulseMood; timestamp: number }>,
+  now = Date.now()
+): MoodWeeklyRecommendation | null {
+  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const recent = logs.filter((item) => item.timestamp >= sevenDaysAgo).slice(0, 14);
+  if (recent.length < 3) return null;
+  const counts = new Map<PulseMood, number>();
+  for (const item of recent) {
+    counts.set(item.mood, (counts.get(item.mood) ?? 0) + 1);
+  }
+  const top = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0];
+  if (!top) return null;
+  return { mood: top[0], count: top[1] };
 }
 
 const cosmicUp = {
@@ -85,49 +326,341 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 }) => {
   const isStartRecovery = context === "start_recovery";
   const pulseLogs = usePulseState((s) => s.logs);
+  const pulseCopyOverrides = useAdminState((s) => s.pulseCopyOverrides);
   const isFirstPulse = pulseLogs.length === 0;
-  const isEarlyPhase = pulseLogs.length < EARLY_PHASE_NOTES_COLLAPSE_COUNT;
   const allowSkip = !isFirstPulse;
 
-  const [energy, setEnergy] = useState(5);
-  const [hasPickedEnergy, setHasPickedEnergy] = useState(true);
+  const [energy, setEnergy] = useState<number | null>(null);
+  const [previousEnergy, setPreviousEnergy] = useState<number | null>(null);
+  const [hasPickedEnergy, setHasPickedEnergy] = useState(false);
   const [mood, setMood] = useState<PulseMood | null>(null);
   const [focus, setFocus] = useState<PulseFocus | null>(null);
   const [notes, setNotes] = useState("");
-  const [notesExpanded, setNotesExpanded] = useState(!isEarlyPhase);
+  const [energyReasons, setEnergyReasons] = useState<string[]>([]);
+  const [energyConfidence, setEnergyConfidence] = useState<EnergyConfidence | null>(null);
   const [showRequiredHint, setShowRequiredHint] = useState(false);
   const [hasTrackedNotesUsage, setHasTrackedNotesUsage] = useState(false);
-  const [isCompactMobile, setIsCompactMobile] = useState(false);
-  const [step, setStep] = useState<1 | 2>(1);
+  const [showEnergyDetails, setShowEnergyDetails] = useState(false);
+  const [suggestionApplied, setSuggestionApplied] = useState(false);
+  const [isSavingPulse, setIsSavingPulse] = useState(false);
+  const [saveToastText, setSaveToastText] = useState("\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643");
+  const [keyboardEnergyHint, setKeyboardEnergyHint] = useState<number | null>(null);
+  const [isEnergySelectionUnstable, setIsEnergySelectionUnstable] = useState(false);
+  const [needsEnergyConfirmation, setNeedsEnergyConfirmation] = useState(false);
+  const [energyConfirmPulseActive, setEnergyConfirmPulseActive] = useState(false);
+  const [energyUndoSnapshot, setEnergyUndoSnapshot] = useState<EnergyUndoSnapshot | null>(null);
+  const [energyUndoLabel, setEnergyUndoLabel] = useState<string | null>(null);
+  const [immediateActionApplied, setImmediateActionApplied] = useState(false);
+  const [notesChars, setNotesChars] = useState(0);
+  const [quickMode, setQuickMode] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const notesRef = useRef<HTMLTextAreaElement | null>(null);
+  const lastFeedbackAnchorRef = useRef<number | null>(null);
+  const lastHapticAtRef = useRef<number>(0);
+  const keyboardHintTimerRef = useRef<number | null>(null);
+  const undoTimerRef = useRef<number | null>(null);
+  const confirmPulseTimerRef = useRef<number | null>(null);
+  const moodAdjustmentsRef = useRef<number[]>([]);
+  const lastTrackedMoodRef = useRef<PulseMood | null>(null);
+  const moodChangeLastTrackedAtRef = useRef<number>(0);
+  const moodUnstableEventTrackedRef = useRef(false);
+  const [isMoodSelectionUnstable, setIsMoodSelectionUnstable] = useState(false);
+  const [needsMoodConfirmation, setNeedsMoodConfirmation] = useState(false);
+  const energyAdjustmentsRef = useRef<number[]>([]);
+  const lastTrackedEnergyRef = useRef<number | null>(null);
+  const energyChangeLastTrackedAtRef = useRef<number>(0);
+  const unstableEventTrackedRef = useRef(false);
+  const copyVariantTrackedRef = useRef(false);
+  const lastEnergyValue = pulseLogs[0]?.energy ?? null;
 
-  const fillHex = energyColorHex(energy);
-  const pct = energyPct(energy, { min: 1, max: 10 });
+  const fillHex = hasPickedEnergy && energy != null ? energyColorHex(energy) : "rgba(148, 163, 184, 0.85)";
+  const isEnergyDefault = !hasPickedEnergy || energy == null;
+  const pct = hasPickedEnergy && energy != null ? energyPct(energy, { min: 0, max: 10 }) : 0;
+  const energyStateLabel = getEnergyStateLabel(energy);
+  const energyQuickHint = getEnergyQuickHint(energy);
+  const selectedMood = mood ? MOODS.find((item) => item.id === mood) ?? null : null;
+  const moodStateLabel = getMoodStateLabel(mood);
+  const moodQuickHint = getMoodQuickHint(mood);
+  const selectedFocusLabel = focus
+    ? (focus === "none"
+      ? FOCUS_LABELS[isStartRecovery ? "none_new" : "none_returning"]
+      : FOCUS_LABELS[focus])
+    : null;
+  const focusStateLabel = getFocusStateLabel(focus, isStartRecovery);
+  const focusQuickHint = getFocusQuickHint(focus, isStartRecovery);
+  const energyCopyVariant = useMemo(
+    () => getEnergyCopyVariant(pulseCopyOverrides.energy),
+    [pulseCopyOverrides.energy]
+  );
+  const moodCopyVariant = useMemo(
+    () => getMoodCopyVariant(pulseCopyOverrides.mood),
+    [pulseCopyOverrides.mood]
+  );
+  const focusCopyVariant = useMemo(
+    () => getFocusCopyVariant(pulseCopyOverrides.focus),
+    [pulseCopyOverrides.focus]
+  );
+  const energySupportLine = getEnergySupportLineByVariant(energy, energyCopyVariant);
+  const moodSubtitle = getMoodVariantSubtitle(moodCopyVariant);
+  const focusSubtitle = getFocusVariantSubtitle(focusCopyVariant);
+  const weeklyTrend = useMemo(() => getWeeklyEnergyTrend(pulseLogs), [pulseLogs]);
+  const weeklyEnergyRecommendation = useMemo(() => getWeeklyEnergyRecommendation(pulseLogs), [pulseLogs]);
+  const weeklyMoodRecommendation = useMemo(
+    () => getWeeklyMoodRecommendation(pulseLogs.map((item) => ({ mood: item.mood, timestamp: item.timestamp }))),
+    [pulseLogs]
+  );
+  const shouldOfferWeeklyMoodRecommendation = Boolean(
+    weeklyMoodRecommendation && (!mood || mood !== weeklyMoodRecommendation.mood)
+  );
+  const immediateEnergyAction = useMemo(() => getImmediateEnergyAction(energy), [energy]);
+  const energySuggestion = useMemo(() => getEnergySuggestion(energy), [energy]);
+  const shouldOfferWeeklyRecommendation = Boolean(
+    weeklyEnergyRecommendation && (!hasPickedEnergy || energy == null || Math.abs(weeklyEnergyRecommendation.value - energy) >= 2)
+  );
+  const suggestionHelperText = useMemo(() => {
+    if (!energySuggestion) return "";
+    const hasSuggestedNote = notes.trim().includes(energySuggestion.note);
+    return hasSuggestedNote
+      ? "\u0627\u0644\u0645\u0644\u0627\u062d\u0638\u0629 \u0627\u0644\u0630\u0643\u064a\u0629 \u0645\u062e\u0632\u0646\u0629 \u0641\u0639\u0644\u064b\u0627."
+      : "\u0633\u064a\u062a\u0645 \u0625\u0636\u0627\u0641\u0629 \u0645\u0644\u0627\u062d\u0638\u0629 \u062c\u0627\u0647\u0632\u0629 \u0628\u062f\u0648\u0646 \u062a\u0643\u0631\u0627\u0631.";
+  }, [energySuggestion, notes]);
+  const recentEnergySparkline = useMemo(() => {
+    const values = pulseLogs
+      .slice(0, 7)
+      .map((item) => Math.max(0, Math.min(10, item.energy)))
+      .reverse();
+    if (values.length < 2) return null;
+    const width = 120;
+    const height = 28;
+    const xStep = width / (values.length - 1);
+    const points = values.map((value, idx) => {
+      const x = idx * xStep;
+      const y = height - (value / 10) * height;
+      return `${x},${y}`;
+    });
+    return { points: points.join(" "), width, height };
+  }, [pulseLogs]);
+  const totalSteps = quickMode ? 3 : 4;
   const isComplete = useMemo(() => hasPickedEnergy && Boolean(mood) && Boolean(focus), [hasPickedEnergy, mood, focus]);
+  const currentStepComplete = useMemo(() => {
+    if (step === 1) return quickMode ? (hasPickedEnergy && Boolean(mood)) : hasPickedEnergy;
+    if (quickMode && step === 2) return Boolean(focus);
+    if (step === 2) return Boolean(mood);
+    if (step === 3) return Boolean(focus);
+    return true;
+  }, [quickMode, step, hasPickedEnergy, mood, focus]);
 
-  useEffect(() => {
-    const updateCompact = () => {
-      if (typeof window === "undefined") return;
-      const compact = window.matchMedia("(max-width: 640px)").matches || window.innerHeight < 760;
-      setIsCompactMobile(compact);
+  const clearDraft = () => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.removeItem(PULSE_DRAFT_STORAGE_KEY);
+    } catch {
+      // no-op
+    }
+  };
+
+  const clearUndoState = () => {
+    if (undoTimerRef.current != null) {
+      window.clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+    setEnergyUndoSnapshot(null);
+    setEnergyUndoLabel(null);
+  };
+
+  const rememberUndoSnapshot = (
+    label: string,
+    source: EnergyUndoSnapshot["source"]
+  ) => {
+    const snapshot: EnergyUndoSnapshot = {
+      energy,
+      previousEnergy,
+      hasPickedEnergy,
+      focus,
+      notes,
+      suggestionApplied,
+      immediateActionApplied,
+      source
     };
-    updateCompact();
-    window.addEventListener("resize", updateCompact);
-    return () => window.removeEventListener("resize", updateCompact);
-  }, []);
+    setEnergyUndoSnapshot(snapshot);
+    setEnergyUndoLabel(label);
+    if (undoTimerRef.current != null) window.clearTimeout(undoTimerRef.current);
+    undoTimerRef.current = window.setTimeout(() => {
+      setEnergyUndoSnapshot(null);
+      setEnergyUndoLabel(null);
+      undoTimerRef.current = null;
+    }, 3000);
+  };
+
+  const restoreUndoSnapshot = () => {
+    if (!energyUndoSnapshot) return;
+    recordFlowEvent("pulse_energy_undo_applied", {
+      meta: { source: energyUndoSnapshot.source }
+    });
+    setEnergy(energyUndoSnapshot.energy);
+    setPreviousEnergy(energyUndoSnapshot.previousEnergy);
+    setHasPickedEnergy(energyUndoSnapshot.hasPickedEnergy);
+    setFocus(energyUndoSnapshot.focus);
+    setNotes(energyUndoSnapshot.notes);
+    setSuggestionApplied(energyUndoSnapshot.suggestionApplied);
+    setImmediateActionApplied(energyUndoSnapshot.immediateActionApplied);
+    setNeedsEnergyConfirmation(false);
+    clearUndoState();
+  };
+
+  const triggerEnergyConfirmPulse = () => {
+    setEnergyConfirmPulseActive(false);
+    window.setTimeout(() => {
+      setEnergyConfirmPulseActive(true);
+      if (confirmPulseTimerRef.current != null) window.clearTimeout(confirmPulseTimerRef.current);
+      confirmPulseTimerRef.current = window.setTimeout(() => {
+        setEnergyConfirmPulseActive(false);
+        confirmPulseTimerRef.current = null;
+      }, 560);
+    }, 0);
+  };
 
   useEffect(() => {
     if (!isOpen) return;
-    setEnergy(5);
-    setHasPickedEnergy(true);
-    setMood(null);
-    setFocus(null);
-    setNotes("");
-    setNotesExpanded(!isEarlyPhase);
+    let restored = false;
+    if (typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem(PULSE_DRAFT_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as PulseDraft;
+          if (parsed && typeof parsed === "object") {
+            setEnergy(typeof parsed.energy === "number" ? parsed.energy : null);
+            setPreviousEnergy(typeof parsed.previousEnergy === "number" ? parsed.previousEnergy : null);
+            setHasPickedEnergy(Boolean(parsed.hasPickedEnergy));
+            setMood(parsed.mood ?? null);
+            setFocus(parsed.focus ?? null);
+            setNotes(typeof parsed.notes === "string" ? parsed.notes : "");
+            setEnergyReasons(Array.isArray(parsed.energyReasons) ? parsed.energyReasons.filter((x) => typeof x === "string") : []);
+            setEnergyConfidence(parsed.energyConfidence ?? null);
+            setShowEnergyDetails(Boolean(parsed.showEnergyDetails));
+            setQuickMode(Boolean(parsed.quickMode));
+            setStep(parsed.step ?? 1);
+            lastFeedbackAnchorRef.current = typeof parsed.energy === "number" ? parsed.energy : null;
+            restored = true;
+          }
+        }
+      } catch {
+        // ignore invalid drafts
+      }
+    }
+    if (!restored) {
+      if (typeof lastEnergyValue === "number") {
+        setEnergy(lastEnergyValue);
+        setPreviousEnergy(lastEnergyValue);
+        setHasPickedEnergy(true);
+        lastFeedbackAnchorRef.current = lastEnergyValue;
+      } else {
+        setEnergy(null);
+        setPreviousEnergy(null);
+        setHasPickedEnergy(false);
+        lastFeedbackAnchorRef.current = null;
+      }
+      setMood(null);
+      setFocus(null);
+      setNotes("");
+      setEnergyReasons([]);
+      setEnergyConfidence(null);
+      setShowEnergyDetails(false);
+      setQuickMode(false);
+      setStep(1);
+    }
     setShowRequiredHint(false);
     setHasTrackedNotesUsage(false);
-    setStep(1);
-  }, [isOpen, isEarlyPhase]);
+    setSuggestionApplied(false);
+    setIsSavingPulse(false);
+    setSaveToastText("\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643");
+    setKeyboardEnergyHint(null);
+    setIsEnergySelectionUnstable(false);
+    setNeedsEnergyConfirmation(false);
+    setIsMoodSelectionUnstable(false);
+    setNeedsMoodConfirmation(false);
+    setEnergyConfirmPulseActive(false);
+    setImmediateActionApplied(false);
+    setNotesChars(0);
+    clearUndoState();
+    energyAdjustmentsRef.current = [];
+    moodAdjustmentsRef.current = [];
+    lastTrackedEnergyRef.current = null;
+    lastTrackedMoodRef.current = null;
+    energyChangeLastTrackedAtRef.current = 0;
+    moodChangeLastTrackedAtRef.current = 0;
+    unstableEventTrackedRef.current = false;
+    moodUnstableEventTrackedRef.current = false;
+    copyVariantTrackedRef.current = false;
+  }, [isOpen, lastEnergyValue]);
+
+  useEffect(() => {
+    if (!isOpen || copyVariantTrackedRef.current) return;
+    recordFlowEvent("pulse_copy_variant_assigned", {
+      meta: {
+        energyVariant: energyCopyVariant,
+        moodVariant: moodCopyVariant,
+        focusVariant: focusCopyVariant
+      }
+    });
+    copyVariantTrackedRef.current = true;
+  }, [isOpen, energyCopyVariant, moodCopyVariant, focusCopyVariant]);
+
+  useEffect(() => {
+    setNotesChars(notes.trim().length);
+  }, [notes]);
+
+  useEffect(() => {
+    return () => {
+      if (keyboardHintTimerRef.current != null) {
+        window.clearTimeout(keyboardHintTimerRef.current);
+        keyboardHintTimerRef.current = null;
+      }
+      if (undoTimerRef.current != null) {
+        window.clearTimeout(undoTimerRef.current);
+        undoTimerRef.current = null;
+      }
+      if (confirmPulseTimerRef.current != null) {
+        window.clearTimeout(confirmPulseTimerRef.current);
+        confirmPulseTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen || typeof window === "undefined") return;
+    const draft: PulseDraft = {
+      energy,
+      previousEnergy,
+      hasPickedEnergy,
+      mood,
+      focus,
+      notes,
+      energyReasons,
+      energyConfidence,
+      showEnergyDetails,
+      quickMode,
+      step
+    };
+    try {
+      window.localStorage.setItem(PULSE_DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    } catch {
+      // no-op
+    }
+  }, [
+    isOpen,
+    energy,
+    previousEnergy,
+    hasPickedEnergy,
+    mood,
+    focus,
+    notes,
+    energyReasons,
+    energyConfidence,
+    showEnergyDetails,
+    quickMode,
+    step
+  ]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -144,26 +677,340 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   };
 
   const handleSubmit = () => {
+    if (isSavingPulse) return;
     if (!isComplete || !mood || !focus) {
       setShowRequiredHint(true);
       return;
     }
-    onSubmit({ energy, mood, focus, notes: notes.trim() || undefined });
+    const reasonsLine = energyReasons.length > 0
+      ? `\u0623\u0633\u0628\u0627\u0628 \u0627\u0644\u0637\u0627\u0642\u0629: ${energyReasons.join("\u060c ")}`
+      : "";
+    const confidenceLine = energyConfidence
+      ? `\u062b\u0642\u0629 \u0627\u0644\u0642\u064a\u0627\u0633: ${
+        energyConfidence === "low"
+          ? "\u0645\u0646\u062e\u0641\u0636\u0629"
+          : energyConfidence === "medium"
+            ? "\u0645\u062a\u0648\u0633\u0637\u0629"
+            : "\u0639\u0627\u0644\u064a\u0629"
+      }`
+      : "";
+    const mergedNotes = [reasonsLine, confidenceLine, notes.trim()].filter(Boolean).join("\n");
+    const weeklyDiffLine = (() => {
+      if (!weeklyEnergyRecommendation || energy == null) return "";
+      const delta = energy - weeklyEnergyRecommendation.value;
+      if (Math.abs(delta) < 1) return "\u0645\u0644\u0627\u062d\u0638\u0629: \u0637\u0627\u0642\u062a\u0643 \u0642\u0631\u064a\u0628\u0629 \u0645\u0646 \u0645\u062a\u0648\u0633\u0637 \u0627\u0644\u0623\u0633\u0628\u0648\u0639.";
+      if (delta > 0) return `\u0645\u0644\u0627\u062d\u0638\u0629: \u0637\u0627\u0642\u062a\u0643 \u0623\u0639\u0644\u0649 \u0645\u0646 \u0645\u062a\u0648\u0633\u0637 \u0627\u0644\u0623\u0633\u0628\u0648\u0639 \u0628\u0640 ${delta}.`;
+      return `\u0645\u0644\u0627\u062d\u0638\u0629: \u0637\u0627\u0642\u062a\u0643 \u0623\u0642\u0644 \u0645\u0646 \u0645\u062a\u0648\u0633\u0637 \u0627\u0644\u0623\u0633\u0628\u0648\u0639 \u0628\u0640 ${Math.abs(delta)}.`;
+    })();
+    setIsSavingPulse(true);
+    setSaveToastText(
+      `\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643 \u2022 ${getPostSaveAction(energy ?? 0)}${weeklyDiffLine ? ` \u2022 ${weeklyDiffLine}` : ""}`
+    );
+    window.setTimeout(() => {
+      onSubmit({
+        energy: energy!,
+        mood,
+        focus,
+        notes: mergedNotes || undefined,
+        energyReasons: energyReasons.length > 0 ? energyReasons : undefined,
+        energyConfidence: energyConfidence ?? undefined
+      });
+      clearDraft();
+      clearUndoState();
+      setIsSavingPulse(false);
+    }, 220);
   };
 
   const handleNextStep = () => {
-    if (!isComplete) {
+    if (!currentStepComplete) {
       setShowRequiredHint(true);
       return;
     }
-    setStep(2);
+    if (step === 1 && isEnergySelectionUnstable && !needsEnergyConfirmation) {
+      setNeedsEnergyConfirmation(true);
+      return;
+    }
+    if (step === 1 && needsEnergyConfirmation) {
+      triggerEnergyConfirmPulse();
+    }
+    if (quickMode && step === 1 && isMoodSelectionUnstable && !needsMoodConfirmation) {
+      setNeedsMoodConfirmation(true);
+      return;
+    }
+    if (quickMode && step === 1 && needsMoodConfirmation) {
+      setNeedsMoodConfirmation(false);
+    }
+    if (step === 2 && isMoodSelectionUnstable && !needsMoodConfirmation) {
+      setNeedsMoodConfirmation(true);
+      return;
+    }
+    if (step === 2 && needsMoodConfirmation) {
+      setNeedsMoodConfirmation(false);
+    }
+    setNeedsEnergyConfirmation(false);
+    setShowRequiredHint(false);
+    if (quickMode && step === 1) {
+      setStep(3);
+      return;
+    }
+    setStep((prev) => (prev < 4 ? ((prev + 1) as 1 | 2 | 3 | 4) : prev));
+  };
+
+  const handlePreviousStep = () => {
+    setShowRequiredHint(false);
+    setNeedsEnergyConfirmation(false);
+    setNeedsMoodConfirmation(false);
+    if (quickMode && step === 3) {
+      setStep(1);
+      return;
+    }
+    setStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3 | 4) : prev));
+  };
+
+  const toggleEnergyReason = (reason: string) => {
+    setEnergyReasons((prev) => (
+      prev.includes(reason) ? prev.filter((item) => item !== reason) : [...prev, reason]
+    ));
+  };
+
+  const applyEnergySuggestion = () => {
+    if (!energySuggestion) return;
+    setNotes((prev) => {
+      const trimmed = prev.trim();
+      if (trimmed.includes(energySuggestion.note)) return prev;
+      return trimmed.length > 0 ? `${trimmed}\n${energySuggestion.note}` : energySuggestion.note;
+    });
+    if (!hasTrackedNotesUsage) {
+      recordFlowEvent("pulse_notes_used");
+      setHasTrackedNotesUsage(true);
+    }
+    if (!focus) setFocus(energySuggestion.focus);
+    setSuggestionApplied(true);
+    setImmediateActionApplied(true);
+    window.setTimeout(() => setSuggestionApplied(false), 1800);
+  };
+
+  const applyWeeklyRecommendation = () => {
+    if (!weeklyEnergyRecommendation) return;
+    rememberUndoSnapshot(
+      "\u062a\u0645 \u062a\u0637\u0628\u064a\u0642 \u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639.",
+      "weekly_recommendation"
+    );
+    recordFlowEvent("pulse_energy_weekly_recommendation_applied", {
+      meta: { value: weeklyEnergyRecommendation.value, samples: weeklyEnergyRecommendation.samples }
+    });
+    setEnergyValue(weeklyEnergyRecommendation.value);
+    setNeedsEnergyConfirmation(false);
+  };
+
+  const applyImmediateEnergyAction = () => {
+    rememberUndoSnapshot(
+      "\u062a\u0645 \u062a\u0637\u0628\u064a\u0642 \u0627\u0644\u062e\u0637\u0648\u0629 \u0627\u0644\u0641\u0648\u0631\u064a\u0629.",
+      "immediate_action"
+    );
+    applyEnergySuggestion();
+    setImmediateActionApplied(true);
+  };
+
+  const setMoodValue = (nextMood: PulseMood) => {
+    const now = Date.now();
+    if (mood !== nextMood) {
+      const windowMs = 8000;
+      const recent = moodAdjustmentsRef.current.filter((ts) => now - ts <= windowMs);
+      recent.push(now);
+      moodAdjustmentsRef.current = recent;
+      const unstableNow = recent.length >= 4;
+      setIsMoodSelectionUnstable(unstableNow);
+      if (unstableNow && !moodUnstableEventTrackedRef.current) {
+        recordFlowEvent("pulse_mood_unstable", {
+          meta: { changes: recent.length, windowMs, step, quickMode }
+        });
+        moodUnstableEventTrackedRef.current = true;
+      }
+      if (lastTrackedMoodRef.current !== nextMood || now - moodChangeLastTrackedAtRef.current > 150) {
+        recordFlowEvent("pulse_mood_changed", {
+          meta: { mood: nextMood, step, quickMode }
+        });
+        lastTrackedMoodRef.current = nextMood;
+        moodChangeLastTrackedAtRef.current = now;
+      }
+    }
+    setMood(nextMood);
+    setNeedsMoodConfirmation(false);
+    if (showRequiredHint) setShowRequiredHint(false);
+  };
+
+  const applyWeeklyMoodRecommendation = () => {
+    if (!weeklyMoodRecommendation) return;
+    setMoodValue(weeklyMoodRecommendation.mood);
+    recordFlowEvent("pulse_mood_weekly_recommendation_applied", {
+      meta: { mood: weeklyMoodRecommendation.mood, count: weeklyMoodRecommendation.count }
+    });
+  };
+
+  const setFocusValue = (nextFocus: PulseFocus) => {
+    if (focus !== nextFocus) {
+      recordFlowEvent("pulse_focus_changed", {
+        meta: { focus: nextFocus, step, quickMode }
+      });
+    }
+    setFocus(nextFocus);
+    if (showRequiredHint) setShowRequiredHint(false);
+  };
+
+  const applyNotesQuickChip = (chip: string) => {
+    setNotes((prev) => {
+      const trimmed = prev.trim();
+      if (trimmed.includes(chip)) return prev;
+      const next = trimmed.length > 0 ? `${trimmed}\n${chip}` : chip;
+      if (!hasTrackedNotesUsage && next.trim().length > 0) {
+        recordFlowEvent("pulse_notes_used");
+        setHasTrackedNotesUsage(true);
+      }
+      return next;
+    });
+  };
+
+  const pulseAtAnchor = () => {
+    if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+      navigator.vibrate(10);
+    }
+    try {
+      const Ctx = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.value = 420;
+      gain.gain.value = 0.0001;
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      const t0 = ctx.currentTime;
+      gain.gain.exponentialRampToValueAtTime(0.0075, t0 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.05);
+      oscillator.start(t0);
+      oscillator.stop(t0 + 0.06);
+      window.setTimeout(() => void ctx.close(), 100);
+    } catch {
+      // Optional enhancement only.
+    }
+  };
+
+  const triggerSoftHaptic = () => {
+    if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return;
+    const now = Date.now();
+    if (now - lastHapticAtRef.current < 45) return;
+    lastHapticAtRef.current = now;
+    navigator.vibrate(6);
+  };
+
+  const setEnergyValue = (raw: number, options?: { skipHaptic?: boolean }) => {
+    const next = Math.max(0, Math.min(10, Math.round(raw)));
+    if (energy != null) setPreviousEnergy(energy);
+    if (next !== energy) {
+      const now = Date.now();
+      const windowMs = 8000;
+      const recent = energyAdjustmentsRef.current.filter((ts) => now - ts <= windowMs);
+      recent.push(now);
+      energyAdjustmentsRef.current = recent;
+      const unstableNow = recent.length >= 5;
+      setIsEnergySelectionUnstable(unstableNow);
+      if (unstableNow && !unstableEventTrackedRef.current) {
+        recordFlowEvent("pulse_energy_unstable", {
+          meta: { changes: recent.length, windowMs, step, quickMode }
+        });
+        unstableEventTrackedRef.current = true;
+      }
+      if (lastTrackedEnergyRef.current !== next || now - energyChangeLastTrackedAtRef.current > 150) {
+        recordFlowEvent("pulse_energy_changed", {
+          meta: { energy: next, step, quickMode }
+        });
+        lastTrackedEnergyRef.current = next;
+        energyChangeLastTrackedAtRef.current = now;
+      }
+    }
+    setEnergy(next);
+    setHasPickedEnergy(true);
+    setNeedsEnergyConfirmation(false);
+    setImmediateActionApplied(false);
+    if (!options?.skipHaptic && next !== energy) {
+      triggerSoftHaptic();
+    }
+    if (ENERGY_FEEDBACK_POINTS.has(next) && lastFeedbackAnchorRef.current !== next) {
+      lastFeedbackAnchorRef.current = next;
+      pulseAtAnchor();
+    } else if (!ENERGY_FEEDBACK_POINTS.has(next)) {
+      lastFeedbackAnchorRef.current = null;
+    }
+    if (showRequiredHint) setShowRequiredHint(false);
+  };
+
+  const snapToAnchor = () => {
+    if (energy == null) return;
+    const closest = ENERGY_ANCHORS.reduce((acc, n) => {
+      return Math.abs(n - energy) < Math.abs(acc - energy) ? n : acc;
+    }, ENERGY_ANCHORS[0]);
+    if (Math.abs(closest - energy) <= 1) {
+      setEnergyValue(closest, { skipHaptic: true });
+    }
+  };
+
+  const handleEnergyKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
+    snapToAnchor();
+    const key = e?.key ?? "";
+    if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(key)) return;
+    setKeyboardEnergyHint(energy ?? 0);
+    if (keyboardHintTimerRef.current != null) window.clearTimeout(keyboardHintTimerRef.current);
+    keyboardHintTimerRef.current = window.setTimeout(() => {
+      setKeyboardEnergyHint(null);
+      keyboardHintTimerRef.current = null;
+    }, 900);
+  };
+
+  useEffect(() => {
+    if (step !== 4) return;
     window.setTimeout(() => {
       notesRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }, 100);
-  };
+  }, [step]);
 
-  const shouldShowNotesSection = !isCompactMobile || step === 2;
-  const shouldShowCoreSection = !isCompactMobile || step === 1;
+  const stepLabel = step === 1
+    ? "\u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629"
+    : step === 2
+      ? "\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a"
+      : step === 3
+        ? "\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u062d\u0627\u0644\u064a"
+        : "\u0644\u0648 \u062d\u0627\u0628\u0628 \u062a\u0634\u0631\u062d \u0623\u0643\u062a\u0631";
+
+  const footerHintText = needsEnergyConfirmation && step === 1
+    ? `\u0627\u062e\u062a\u064a\u0627\u0631\u0643 \u0643\u0627\u0646 \u0645\u062a\u0630\u0628\u0630\u0628\u064b\u0627. \u0627\u0636\u063a\u0637 \u00ab\u0627\u0644\u062a\u0627\u0644\u064a\u00bb \u0645\u0631\u0629 \u0623\u062e\u0631\u0649 \u0644\u062a\u0623\u0643\u064a\u062f \u0642\u064a\u0645\u0629 ${energy ?? 0}/10.`
+    : needsMoodConfirmation && step === 2
+      ? "\u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0643\u0627\u0646 \u0645\u062a\u0630\u0628\u0630\u0628\u064b\u0627. \u0627\u0636\u063a\u0637 \u00ab\u0627\u0644\u062a\u0627\u0644\u064a\u00bb \u0645\u0631\u0629 \u062b\u0627\u0646\u064a\u0629 \u0644\u0644\u062a\u0623\u0643\u064a\u062f."
+    : showRequiredHint && !currentStepComplete
+      ? (step === 1
+        ? (quickMode
+          ? "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0648\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629."
+          : "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629.")
+        : step === 2
+          ? "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629."
+          : "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u062d\u0627\u0644\u064a \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629.")
+      : (!currentStepComplete
+        ? (step === 1
+          ? (quickMode
+            ? "\u0627\u062e\u062a\u064e\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0648\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0623\u0648\u0644\u0627\u064b."
+            : "\u0627\u062e\u062a\u064e\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0623\u0648\u0644\u0627\u064b.")
+          : step === 2
+            ? "\u0627\u062e\u062a\u064e\u0631 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0623\u0648\u0644\u0627\u064b."
+            : "\u0627\u062e\u062a\u064e\u0631 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u062d\u0627\u0644\u064a \u0623\u0648\u0644\u0627\u064b.")
+        : "\u00A0");
+  const footerHintColor = needsEnergyConfirmation && step === 1
+    ? "rgba(251,191,36,0.96)"
+    : needsMoodConfirmation && step === 2
+      ? "rgba(251,191,36,0.96)"
+    : showRequiredHint && !currentStepComplete
+      ? "rgba(248, 113, 113, 0.95)"
+      : "var(--text-muted)";
 
   return (
     <AnimatePresence>
@@ -191,7 +1038,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
           </div>
 
           <motion.div
-            className="pulse-check-shell relative z-10 w-[calc(100%-0.9rem)] max-w-md h-[min(96dvh,740px)] overflow-hidden flex flex-col"
+            data-testid="pulse-check-shell"
+            className="pulse-check-shell relative z-10 w-[calc(100%-0.9rem)] max-w-md max-h-[min(98dvh,740px)] overflow-hidden flex flex-col"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -204,13 +1052,36 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               borderRadius: "1.5rem"
             }}
           >
+            {isSavingPulse && (
+              <div
+                className="absolute top-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <div
+                  className="rounded-full px-3 py-1 text-[11px] font-semibold"
+                  style={{
+                    color: "var(--text-primary)",
+                    background: "rgba(16, 185, 129, 0.2)",
+                    border: "1px solid rgba(16, 185, 129, 0.45)",
+                    boxShadow: "0 8px 24px rgba(16,185,129,0.2)"
+                  }}
+                >
+                  {saveToastText}
+                </div>
+              </div>
+            )}
+            <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+              {isSavingPulse ? saveToastText : ""}
+            </p>
             <div className="pulse-check-header flex items-center justify-between p-3.5 sm:p-4">
               <motion.div custom={0} variants={cosmicUp} initial="hidden" animate="visible">
                 <h2 className="text-base sm:text-lg font-bold" style={{ color: "var(--text-primary)", letterSpacing: "0.04em" }}>
-                  ضبط البوصلة
+                  {"\u0636\u0628\u0637 \u0627\u0644\u0628\u0648\u0635\u0644\u0629"}
                 </h2>
                 <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                  {isCompactMobile ? `خطوة ${step} من 2` : "النبض اللحظي قبل كل شيء"}
+                  {`\u062e\u0637\u0648\u0629 ${quickMode && step > 1 ? step - 1 : step} \u0645\u0646 ${totalSteps} \u2022 ${stepLabel}`}
                 </p>
               </motion.div>
               {allowSkip && (
@@ -219,230 +1090,707 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   onClick={() => handleClose("close_button")}
                   className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors"
                   style={{ color: "var(--text-muted)", background: "rgba(255, 255, 255, 0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
-                  aria-label="تخطي اليوم"
+                  aria-label={"\u062a\u062e\u0637\u064a \u0627\u0644\u064a\u0648\u0645"}
                 >
-                  تخطي اليوم
+                  {"\u062a\u062e\u0637\u064a \u0627\u0644\u064a\u0648\u0645"}
                 </button>
               )}
             </div>
 
-            <div className="pulse-check-content flex-1 min-h-0 overflow-y-auto px-4 sm:px-5 pb-28 sm:pb-24 scroll-pb-28">
-              {shouldShowCoreSection && (
-                <>
-                  <motion.div className="pulse-check-section flex flex-col gap-2" custom={1} variants={cosmicUp} initial="hidden" animate="visible">
-                    <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                      مؤشر طاقتك <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
-                    </label>
-                    <div className="flex justify-center py-1.5">
-                      <motion.div
-                        className="pulse-check-energy-orb relative w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center"
-                        style={{
-                          background: `radial-gradient(circle at 40% 35%, ${fillHex}40, ${fillHex}15 60%, transparent 80%)`,
-                          boxShadow: `0 0 ${energy * 4}px ${fillHex}30, inset 0 0 20px ${fillHex}10`,
-                          border: `1.5px solid ${fillHex}40`
-                        }}
-                        animate={{
-                          scale: [1, 1 + energy * 0.008, 1],
-                          boxShadow: [`0 0 ${energy * 3}px ${fillHex}20`, `0 0 ${energy * 6}px ${fillHex}40`, `0 0 ${energy * 3}px ${fillHex}20`]
-                        }}
-                        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                      >
-                        <span className="text-base sm:text-lg font-bold" style={{ color: fillHex }}>
-                          {energy}
-                        </span>
-                      </motion.div>
-                    </div>
-                    <div className="relative w-full py-2">
-                      <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 rounded-full" style={{ background: "rgba(255, 255, 255, 0.08)" }} />
-                      <div
-                        className="absolute right-0 top-1/2 -translate-y-1/2 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${fillHex}80, ${fillHex})`, boxShadow: `0 0 12px ${fillHex}40` }}
-                      />
-                      <input
-                        type="range"
-                        min={1}
-                        max={10}
-                        value={energy}
-                        onChange={(e) => {
-                          setEnergy(Number(e.target.value));
-                          setHasPickedEnergy(true);
-                          if (showRequiredHint) setShowRequiredHint(false);
-                        }}
-                        className="pulse-range relative w-full"
-                        style={{ accentColor: fillHex, "--pulse-fill": fillHex } as CSSProperties}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between text-xs" style={{ color: "var(--text-muted)" }}>
-                      <span>فاصل شحن</span>
-                      <span className="font-semibold" style={{ color: fillHex }}>{energy}/10</span>
-                      <span>فايق ومستعد</span>
-                    </div>
-                  </motion.div>
-
-                  <motion.div className="pulse-check-section mt-3 flex flex-col gap-2" custom={2} variants={cosmicUp} initial="hidden" animate="visible">
-                    <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
-                      الطقس الداخلي <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
-                    </label>
-                    <div className="pulse-check-mood-grid grid grid-cols-4 gap-2">
-                      {MOODS.map((item) => {
-                        const isSelected = mood === item.id;
-                        const mStyle = MOOD_COSMIC[item.id];
-                        return (
-                          <motion.button
-                            key={item.id}
-                            type="button"
-                            onClick={() => {
-                              setMood(item.id);
-                              if (showRequiredHint) setShowRequiredHint(false);
-                            }}
-                            className="inline-flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
-                            style={{
-                              background: isSelected ? mStyle.bg : "rgba(255, 255, 255, 0.05)",
-                              border: `1px solid ${isSelected ? mStyle.border : "rgba(255, 255, 255, 0.08)"}`,
-                              color: isSelected ? mStyle.text : "var(--text-secondary)",
-                              boxShadow: isSelected ? mStyle.glow : "none"
-                            }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <span>{item.emoji}</span>
-                            <span className="truncate">{item.label}</span>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-
-                  <motion.div className="pulse-check-section mt-3 flex flex-col gap-2" custom={3} variants={cosmicUp} initial="hidden" animate="visible">
-                    <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
-                      التركيز الحالي <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {FOCUS_OPTIONS.map((item) => {
-                        const isSelected = focus === item.id;
-                        const label = item.id === "none"
-                          ? FOCUS_LABELS[isStartRecovery ? "none_new" : "none_returning"]
-                          : FOCUS_LABELS[item.labelKey];
-                        const fStyle = FOCUS_COSMIC[item.id];
-                        return (
-                          <motion.button
-                            key={item.id}
-                            type="button"
-                            onClick={() => {
-                              setFocus(item.id);
-                              if (showRequiredHint) setShowRequiredHint(false);
-                            }}
-                            className="px-2 py-2 rounded-lg text-xs font-semibold transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
-                            style={{
-                              background: isSelected ? fStyle.bg : "rgba(255, 255, 255, 0.04)",
-                              border: `1px solid ${isSelected ? fStyle.border : "rgba(255, 255, 255, 0.06)"}`,
-                              color: isSelected ? fStyle.text : "var(--text-secondary)"
-                            }}
-                            whileTap={{ scale: 0.96 }}
-                          >
-                            {label}
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                </>
-              )}
-
-              {shouldShowNotesSection && (
-                <motion.div className="pulse-check-section mt-4 flex flex-col gap-2" custom={4} variants={cosmicUp} initial="hidden" animate="visible">
-                  {!notesExpanded ? (
+            <div className="pulse-check-content flex-1 min-h-0 overflow-hidden px-3.5 sm:px-5 pb-2 sm:pb-4">
+              {step === 1 && (
+                <motion.div className="pulse-check-section mt-1 sm:mt-2 flex flex-col gap-0.5 sm:gap-1.5" custom={1} variants={cosmicUp} initial="hidden" animate="visible">
+                  <div className="flex items-center justify-center pb-1">
                     <button
                       type="button"
-                      onClick={() => setNotesExpanded(true)}
-                      className="w-full rounded-xl px-3 py-2 text-sm font-semibold text-right transition-colors"
-                      style={{ color: "var(--text-secondary)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                      onClick={() => setQuickMode((prev) => !prev)}
+                      className="rounded-full px-3 py-1 text-[11px] font-semibold transition-colors"
+                      style={{
+                        color: quickMode ? "var(--text-primary)" : "var(--text-secondary)",
+                        background: quickMode ? "rgba(45,212,191,0.16)" : "rgba(255,255,255,0.05)",
+                        border: `1px solid ${quickMode ? "rgba(45,212,191,0.38)" : "rgba(255,255,255,0.12)"}`
+                      }}
                     >
-                      إضافة ملاحظة (اختياري)
+                      {quickMode ? "\u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u0633\u0631\u064a\u0639 \u0645\u0641\u0639\u0644" : "\u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u0633\u0631\u064a\u0639"}
                     </button>
-                  ) : (
-                    <>
-                      <div className="flex items-center justify-between gap-2">
-                        <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                          لو حابب تشرح أكتر
-                        </label>
-                        {isEarlyPhase && (
-                          <button
-                            type="button"
-                            onClick={() => setNotesExpanded(false)}
-                            className="text-xs font-semibold"
-                            style={{ color: "var(--text-muted)" }}
+                  </div>
+                  <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                    {"\u0645\u0624\u0634\u0631 \u0637\u0627\u0642\u062a\u0643"} <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
+                  </label>
+                  <div className="flex justify-center py-0.5 sm:py-3">
+                    <motion.div
+                      data-testid="pulse-energy-orb"
+                      className="pulse-check-energy-orb relative w-30 h-30 sm:w-44 sm:h-44 rounded-full flex items-center justify-center"
+                      style={{
+                        background: isEnergyDefault
+                          ? "radial-gradient(circle at 40% 35%, rgba(148,163,184,0.32), rgba(148,163,184,0.14) 64%, rgba(148,163,184,0.04) 86%)"
+                          : `radial-gradient(circle at 40% 35%, ${fillHex}40, ${fillHex}14 60%, transparent 85%)`,
+                        boxShadow: isEnergyDefault
+                          ? "0 0 44px rgba(148,163,184,0.35), inset 0 0 48px rgba(148,163,184,0.16)"
+                          : `0 0 ${32 + energy! * 3}px ${fillHex}35, inset 0 0 40px ${fillHex}10`,
+                        border: isEnergyDefault ? "2px solid rgba(148,163,184,0.55)" : `2px solid ${fillHex}45`
+                      }}
+                      animate={{
+                        scale: [1, hasPickedEnergy && energy != null ? 1.08 : 1.05, 1],
+                        boxShadow: [
+                          isEnergyDefault ? "0 0 28px rgba(148,163,184,0.26)" : `0 0 ${26 + energy! * 2}px ${fillHex}25`,
+                          isEnergyDefault ? "0 0 46px rgba(148,163,184,0.42)" : `0 0 ${40 + energy! * 2}px ${fillHex}45`,
+                          isEnergyDefault ? "0 0 28px rgba(148,163,184,0.26)" : `0 0 ${26 + energy! * 2}px ${fillHex}25`
+                        ]
+                      }}
+                      transition={{ duration: 2.3, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      {energyConfirmPulseActive && (
+                        <motion.span
+                          className="absolute inset-0 rounded-full pointer-events-none"
+                          style={{ border: `2px solid ${fillHex}` }}
+                          initial={{ scale: 1, opacity: 0.9 }}
+                          animate={{ scale: 1.22, opacity: 0 }}
+                          transition={{ duration: 0.55, ease: "easeOut" }}
+                        />
+                      )}
+                      <div className="flex items-center gap-2">
+                        <span className="text-3xl sm:text-5xl font-bold leading-none" style={{ color: fillHex }}>
+                          {hasPickedEnergy && energy != null ? energy : "-"}
+                        </span>
+                        {weeklyTrend && hasPickedEnergy && (
+                          <span
+                            className="rounded-full px-2 py-0.5 text-[10px] font-bold"
+                            style={{
+                              color:
+                                weeklyTrend.direction === "up"
+                                  ? "#2dd4bf"
+                                  : weeklyTrend.direction === "down"
+                                    ? "#f87171"
+                                    : "var(--text-secondary)",
+                              background:
+                                weeklyTrend.direction === "up"
+                                  ? "rgba(45,212,191,0.14)"
+                                  : weeklyTrend.direction === "down"
+                                    ? "rgba(248,113,113,0.14)"
+                                    : "rgba(148,163,184,0.14)",
+                              border:
+                                weeklyTrend.direction === "up"
+                                  ? "1px solid rgba(45,212,191,0.35)"
+                                  : weeklyTrend.direction === "down"
+                                    ? "1px solid rgba(248,113,113,0.35)"
+                                    : "1px solid rgba(148,163,184,0.28)"
+                            }}
                           >
-                            إخفاء
-                          </button>
+                            {weeklyTrend.direction === "up" ? "\u2197" : weeklyTrend.direction === "down" ? "\u2198" : "\u2192"} {weeklyTrend.label}
+                          </span>
                         )}
                       </div>
-                      <textarea
-                        ref={notesRef}
-                        rows={isCompactMobile ? 4 : 3}
-                        value={notes}
-                        onFocus={(e) => {
-                          window.setTimeout(() => {
-                            e.currentTarget.scrollIntoView({ behavior: "smooth", block: "center" });
-                          }, 120);
-                        }}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setNotes(value);
-                          if (!hasTrackedNotesUsage && value.trim().length > 0) {
-                            recordFlowEvent("pulse_notes_used");
-                            setHasTrackedNotesUsage(true);
-                          }
-                        }}
-                        placeholder="اكتب جملة أو موقف: أنا مخنوق عشان حصل كذا..."
-                        className="w-full rounded-lg px-2.5 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0 resize-y max-h-36 overflow-auto"
-                        style={{
-                          background: "rgba(255, 255, 255, 0.04)",
-                          border: "1px solid rgba(255, 255, 255, 0.08)",
-                          color: "var(--text-primary)",
-                          letterSpacing: "0.02em"
-                        }}
-                      />
-                    </>
+                    </motion.div>
+                  </div>
+                  <p className="text-center text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
+                    {energyStateLabel}
+                  </p>
+                  {weeklyTrend && (
+                    <p className="text-center text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
+                      {`\u0627\u062a\u062c\u0627\u0647 7 \u0623\u064a\u0627\u0645: ${weeklyTrend.label} (${weeklyTrend.delta > 0 ? `+${weeklyTrend.delta}` : weeklyTrend.delta})`}
+                    </p>
                   )}
+                  <p className="text-center text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
+                    {energyQuickHint}
+                  </p>
+                  <div className="relative w-full py-1.5">
+                    <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 rounded-full" style={{ background: "rgba(255, 255, 255, 0.08)" }} />
+                    <div
+                      className="absolute right-0 top-1/2 -translate-y-1/2 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${fillHex}80, ${fillHex})`, boxShadow: `0 0 12px ${fillHex}40` }}
+                    />
+                    <input
+                      data-testid="pulse-energy-slider"
+                      type="range"
+                      min={0}
+                      max={10}
+                      step={1}
+                      value={energy ?? 0}
+                      aria-label={"\u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629"}
+                      aria-valuemin={0}
+                      aria-valuemax={10}
+                      aria-valuenow={energy ?? 0}
+                      aria-valuetext={hasPickedEnergy && energy != null
+                        ? `\u0645\u0633\u062a\u0648\u0649 \u0627\u0644\u0637\u0627\u0642\u0629 ${energy} \u0645\u0646 10\u060c \u062d\u0627\u0644\u062a\u0643 ${energyStateLabel}\u060c ${energyQuickHint}.`
+                        : "\u0644\u0645 \u064a\u062a\u0645 \u0627\u062e\u062a\u064a\u0627\u0631 \u0645\u0633\u062a\u0648\u0649 \u0627\u0644\u0637\u0627\u0642\u0629 \u0628\u0639\u062f. \u0627\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u0623\u0633\u0647\u0645 \u0644\u0644\u062a\u0639\u062f\u064a\u0644 \u0645\u0646 \u0635\u0641\u0631 \u0625\u0644\u0649 \u0639\u0634\u0631\u0629."}
+                      aria-describedby="pulse-energy-help"
+                      onChange={(e) => setEnergyValue(Number(e.target.value))}
+                      onPointerUp={snapToAnchor}
+                      onPointerCancel={snapToAnchor}
+                      onKeyUp={handleEnergyKeyUp}
+                      onBlur={snapToAnchor}
+                      onMouseUp={snapToAnchor}
+                      onTouchEnd={snapToAnchor}
+                      className="pulse-range relative w-full"
+                      style={{ accentColor: fillHex, "--pulse-fill": fillHex } as CSSProperties}
+                    />
+                  </div>
+                  <p id="pulse-energy-help" className="sr-only">
+                    {"\u0627\u0633\u062a\u062e\u062f\u0645 \u0623\u0632\u0631\u0627\u0631 \u0627\u0644\u0623\u0633\u0647\u0645 \u0644\u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0642\u064a\u0645\u0629\u060c \u0645\u0646 \u0635\u0641\u0631 \u0625\u0644\u0649 \u0639\u0634\u0631\u0629."}
+                  </p>
+                  {keyboardEnergyHint != null && (
+                    <p className="text-center text-[11px] font-semibold" style={{ color: "var(--text-secondary)" }}>
+                      {`\u0627\u0644\u0642\u064a\u0645\u0629: ${keyboardEnergyHint}/10`}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between px-0.5 -mt-1 text-[11px]" style={{ color: "var(--text-muted)" }}>
+                    <span>0</span>
+                    <span>5</span>
+                    <span>10</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs" style={{ color: "var(--text-muted)" }}>
+                    <span>{"\u0641\u0627\u0635\u0644 \u0634\u062d\u0646"}</span>
+                    <span className="font-semibold" style={{ color: fillHex }}>
+                      {hasPickedEnergy && energy != null ? `${energy}/10` : "-"}
+                    </span>
+                    <span>{"\u0641\u0627\u064a\u0642 \u0648\u0645\u0633\u062a\u0639\u062f"}</span>
+                  </div>
+                  {isEnergySelectionUnstable && (
+                    <p className="text-center text-[11px] font-semibold" style={{ color: "rgba(251,191,36,0.95)" }}>
+                      {"\u0628\u062f\u0648 \u0625\u0646\u0643 \u0628\u062a\u062d\u0631\u0643 \u0643\u062a\u064a\u0631 \u0628\u064a\u0646 \u0627\u0644\u0642\u064a\u0645\u060c \u062c\u0631\u0628 \u062a\u062b\u0628\u062a \u062b\u0627\u0646\u064a\u0629 \u0639\u0644\u0649 \u0623\u0642\u0631\u0628 \u0642\u064a\u0645\u0629 \u0644\u0625\u062d\u0633\u0627\u0633\u0643."}
+                    </p>
+                  )}
+                  {needsEnergyConfirmation && (
+                    <p className="text-center text-[11px] font-semibold" style={{ color: "rgba(251,191,36,0.98)" }}>
+                      {`\u0627\u0636\u063a\u0637 \u00ab\u0627\u0644\u062a\u0627\u0644\u064a\u00bb \u0645\u0631\u0629 \u0623\u062e\u0631\u0649 \u0644\u062a\u0623\u0643\u064a\u062f ${energy ?? 0}/10.`}
+                    </p>
+                  )}
+                  {shouldOfferWeeklyRecommendation && weeklyEnergyRecommendation && (
+                    <div className="flex flex-col items-center gap-1 py-0.5">
+                      <button
+                        type="button"
+                        onClick={applyWeeklyRecommendation}
+                        className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                        style={{
+                          color: "var(--text-primary)",
+                          background: "rgba(59,130,246,0.16)",
+                          border: "1px solid rgba(59,130,246,0.4)"
+                        }}
+                      >
+                        {`\u0627\u0633\u062a\u062e\u062f\u0645 \u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639 ${weeklyEnergyRecommendation.value}/10`}
+                      </button>
+                      <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                        {`\u0645\u0628\u0646\u064a \u0639\u0644\u0649 \u0622\u062e\u0631 ${weeklyEnergyRecommendation.samples} \u0642\u0631\u0627\u0621\u0627\u062a.`}
+                      </p>
+                    </div>
+                  )}
+                  {energySuggestion && hasPickedEnergy && (
+                    <div className="flex flex-col items-center gap-1 py-0.5">
+                      <button
+                        type="button"
+                        onClick={applyImmediateEnergyAction}
+                        className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                        style={{
+                          color: "var(--text-primary)",
+                          background: "rgba(15, 185, 177, 0.16)",
+                          border: "1px solid rgba(15, 185, 177, 0.38)"
+                        }}
+                      >
+                        {immediateEnergyAction?.cta ?? energySuggestion.cta}
+                      </button>
+                      <p className="text-[11px]" style={{ color: suggestionApplied ? "rgba(45,212,191,0.95)" : "var(--text-muted)" }}>
+                        {suggestionApplied
+                          ? "\u062a\u0645 \u062a\u062c\u0647\u064a\u0632 \u062e\u0637\u0648\u062a\u0643 \u0627\u0644\u062a\u0627\u0644\u064a\u0629."
+                          : immediateActionApplied
+                            ? "\u0645\u0645\u062a\u0627\u0632\u060c \u0627\u0644\u0622\u0646 \u0643\u0645\u0644 \u0628\u0627\u0644\u062e\u0637\u0648\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629."
+                            : (immediateEnergyAction?.hint ?? suggestionHelperText)}
+                      </p>
+                    </div>
+                  )}
+                  {energyUndoSnapshot && (
+                    <div className="flex items-center justify-center gap-2 py-0.5">
+                      <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                        {energyUndoLabel ?? "\u0622\u062e\u0631 \u062a\u0639\u062f\u064a\u0644 \u0642\u0627\u0628\u0644 \u0644\u0644\u062a\u0631\u0627\u062c\u0639"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={restoreUndoSnapshot}
+                        className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-colors"
+                        style={{
+                          color: "var(--text-primary)",
+                          background: "rgba(148,163,184,0.15)",
+                          border: "1px solid rgba(148,163,184,0.35)"
+                        }}
+                      >
+                        {"\u062a\u0631\u0627\u062c\u0639"}
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-center gap-1.5 py-0.5">
+                    {ENERGY_PRESETS.map((preset) => {
+                      const isSelected = hasPickedEnergy && energy === preset.value;
+                      return (
+                        <button
+                          key={preset.value}
+                          type="button"
+                          onClick={() => setEnergyValue(preset.value)}
+                          className="rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors"
+                          style={{
+                            color: isSelected ? "var(--text-primary)" : "var(--text-secondary)",
+                            background: isSelected ? "rgba(45, 212, 191, 0.18)" : "rgba(255,255,255,0.06)",
+                            border: `1px solid ${isSelected ? "rgba(45, 212, 191, 0.45)" : "rgba(255,255,255,0.12)"}`
+                          }}
+                        >
+                          {preset.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="flex items-center justify-center gap-1.5 py-0.5">
+                    {typeof lastEnergyValue === "number" && (
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                        style={{
+                          color: "var(--text-secondary)",
+                          background: "rgba(255,255,255,0.05)",
+                          border: "1px solid rgba(255,255,255,0.1)"
+                        }}
+                      >
+                        {`\u0622\u062e\u0631 \u0642\u064a\u0645\u0629: ${lastEnergyValue}/10`}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEnergy(null);
+                        setPreviousEnergy(null);
+                        setHasPickedEnergy(false);
+                        setEnergyConfidence(null);
+                        setShowRequiredHint(false);
+                        setNeedsEnergyConfirmation(false);
+                        setEnergyReasons([]);
+                        setSuggestionApplied(false);
+                        setImmediateActionApplied(false);
+                        lastFeedbackAnchorRef.current = null;
+                        clearDraft();
+                        clearUndoState();
+                      }}
+                      className="rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors"
+                      style={{
+                        color: "var(--text-secondary)",
+                        background: "rgba(255,255,255,0.05)",
+                        border: "1px solid rgba(255,255,255,0.12)"
+                      }}
+                    >
+                      {"\u0627\u0628\u062f\u0623 \u0645\u0646 \u062c\u062f\u064a\u062f"}
+                    </button>
+                    {previousEnergy != null && energy != null && previousEnergy !== energy && (
+                      <button
+                        type="button"
+                        onClick={() => setEnergyValue(previousEnergy)}
+                        className="rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors"
+                        style={{
+                          color: "var(--text-secondary)",
+                          background: "rgba(255,255,255,0.05)",
+                          border: "1px solid rgba(255,255,255,0.12)"
+                        }}
+                      >
+                        {"\u062a\u0631\u0627\u062c\u0639"}
+                      </button>
+                    )}
+                  </div>
+                  {showEnergyDetails && <div className="flex flex-col gap-1">
+                    <p className="text-[11px] text-center font-semibold" style={{ color: "var(--text-muted)" }}>
+                      {"\u062b\u0642\u0629 \u0627\u0644\u0642\u064a\u0627\u0633"}
+                    </p>
+                    <div className="flex items-center justify-center gap-1.5">
+                      {([
+                        { id: "low", label: "\u0645\u0646\u062e\u0641\u0636\u0629" },
+                        { id: "medium", label: "\u0645\u062a\u0648\u0633\u0637\u0629" },
+                        { id: "high", label: "\u0639\u0627\u0644\u064a\u0629" }
+                      ] as const).map((item) => {
+                        const active = energyConfidence === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setEnergyConfidence(item.id)}
+                            className="rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors"
+                            style={{
+                              color: active ? "var(--text-primary)" : "var(--text-secondary)",
+                              background: active ? "rgba(45,212,191,0.18)" : "rgba(255,255,255,0.05)",
+                              border: active ? "1px solid rgba(45,212,191,0.4)" : "1px solid rgba(255,255,255,0.12)"
+                            }}
+                          >
+                            {item.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>}
+                  {showEnergyDetails && <div className="flex flex-col gap-1">
+                    <p className="text-[11px] text-center font-semibold" style={{ color: "var(--text-muted)" }}>
+                      {"\u0623\u0633\u0628\u0627\u0628 \u0627\u0644\u0637\u0627\u0642\u0629 (\u0627\u062e\u062a\u064a\u0627\u0631\u064a)"}
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-1.5">
+                      {ENERGY_REASON_TAGS.map((reason) => {
+                        const active = energyReasons.includes(reason);
+                        return (
+                          <button
+                            key={reason}
+                            type="button"
+                            onClick={() => toggleEnergyReason(reason)}
+                            className="rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors"
+                            style={{
+                              color: active ? "var(--text-primary)" : "var(--text-secondary)",
+                              background: active ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.06)",
+                              border: active ? "1px solid rgba(167,139,250,0.4)" : "1px solid rgba(255,255,255,0.12)"
+                            }}
+                          >
+                            {reason}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>}
+                  {quickMode && (
+                    <div className="pt-1">
+                      <label className="text-xs font-semibold mb-1 block text-center" style={{ color: "var(--text-primary)" }}>
+                        {"\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a"} <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
+                      </label>
+                      <div className="pulse-check-mood-grid grid grid-cols-4 gap-2">
+                        {MOODS.map((item) => {
+                          const isSelected = mood === item.id;
+                          const mStyle = MOOD_COSMIC[item.id];
+                          return (
+                            <motion.button
+                              key={item.id}
+                              type="button"
+                              onClick={() => {
+                                setMoodValue(item.id);
+                              }}
+                              className="inline-flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
+                              style={{
+                                background: isSelected ? mStyle.bg : "rgba(255, 255, 255, 0.05)",
+                                border: `1px solid ${isSelected ? mStyle.border : "rgba(255, 255, 255, 0.08)"}`,
+                                color: isSelected ? mStyle.text : "var(--text-secondary)",
+                                boxShadow: isSelected ? mStyle.glow : "none"
+                              }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <span>{item.emoji}</span>
+                              <span className="truncate">{item.label}</span>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                      {isMoodSelectionUnstable && (
+                        <p className="mt-1 text-center text-[11px] font-semibold" style={{ color: "rgba(251,191,36,0.95)" }}>
+                          {"\u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631 \u0628\u064a\u0646 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0645\u062a\u0630\u0628\u0630\u0628\u060c \u062b\u0628\u0651\u062a \u0627\u0644\u062d\u0627\u0644\u0629 \u0627\u0644\u0623\u0642\u0631\u0628 \u0644\u0634\u0639\u0648\u0631\u0643."}
+                        </p>
+                      )}
+                      {shouldOfferWeeklyMoodRecommendation && weeklyMoodRecommendation && (
+                        <div className="mt-1 flex flex-col items-center gap-1 py-0.5">
+                          <button
+                            type="button"
+                            onClick={applyWeeklyMoodRecommendation}
+                            className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                            style={{
+                              color: "var(--text-primary)",
+                              background: "rgba(59,130,246,0.16)",
+                              border: "1px solid rgba(59,130,246,0.4)"
+                            }}
+                          >
+                            {`\u0627\u0633\u062a\u062e\u062f\u0645 \u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639: ${MOODS.find((m) => m.id === weeklyMoodRecommendation.mood)?.label ?? ""}`}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <p className="text-center text-sm" style={{ color: "var(--text-muted)" }}>
+                    {showEnergyDetails ? energySupportLine : "\u062a\u0641\u0627\u0635\u064a\u0644 \u0645\u062e\u062a\u0635\u0631\u0629"}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowEnergyDetails((prev) => !prev)}
+                    className="text-xs font-semibold self-center"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {showEnergyDetails ? "\u0625\u062e\u0641\u0627\u0621 \u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644" : "\u0634\u0631\u062d \u0623\u0643\u062b\u0631"}
+                  </button>{showEnergyDetails && recentEnergySparkline && (
+                    <div className="pt-1.5 flex flex-col items-center gap-1">
+                      <span className="text-[10px] font-semibold" style={{ color: "var(--text-muted)" }}>
+                        {"\u0622\u062e\u0631 7 \u0642\u0631\u0627\u0621\u0627\u062a \u0637\u0627\u0642\u0629"}
+                      </span>
+                      <svg
+                        width={recentEnergySparkline.width}
+                        height={recentEnergySparkline.height}
+                        viewBox={`0 0 ${recentEnergySparkline.width} ${recentEnergySparkline.height}`}
+                        role="img"
+                        aria-label={"\u0631\u0633\u0645 \u0622\u062e\u0631 7 \u0642\u0631\u0627\u0621\u0627\u062a \u0644\u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629"}
+                      >
+                        <polyline
+                          fill="none"
+                          stroke={fillHex}
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          points={recentEnergySparkline.points}
+                          opacity={0.95}
+                        />
+                      </svg>
+                    </div>
+                  )}                </motion.div>
+              )}
+
+              {!quickMode && step === 2 && (
+                <motion.div className="pulse-check-section mt-1 flex flex-col gap-2" custom={2} variants={cosmicUp} initial="hidden" animate="visible">
+                  <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
+                    {"\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a"} <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
+                  </label>
+                  <p className="text-[11px] -mt-1 mb-0.5" style={{ color: "var(--text-muted)", minHeight: "1rem" }}>
+                    {moodSubtitle}
+                  </p>
+                  <div
+                    data-testid="pulse-mood-summary"
+                    className="rounded-xl px-3 py-2 text-center"
+                    style={{
+                      background: selectedMood ? MOOD_COSMIC[selectedMood.id].bg : "rgba(148,163,184,0.08)",
+                      border: `1px solid ${selectedMood ? MOOD_COSMIC[selectedMood.id].border : "rgba(148,163,184,0.22)"}`
+                    }}
+                  >
+                    <p className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
+                      {selectedMood ? `${selectedMood.emoji} ${selectedMood.label}` : "\u0627\u062e\u062a\u0631 \u062d\u0627\u0644\u0629 \u062a\u0634\u0628\u0647\u0643 \u0627\u0644\u0622\u0646"}
+                    </p>
+                    <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+                      {moodStateLabel}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-1.5">
+                    {MOOD_PRESETS.map((presetId) => {
+                      const preset = MOODS.find((item) => item.id === presetId);
+                      if (!preset) return null;
+                      const active = mood === preset.id;
+                      const style = MOOD_COSMIC[preset.id];
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => setMoodValue(preset.id)}
+                          className="rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors"
+                          style={{
+                            color: active ? style.text : "var(--text-secondary)",
+                            background: active ? style.bg : "rgba(255,255,255,0.06)",
+                            border: `1px solid ${active ? style.border : "rgba(255,255,255,0.14)"}`
+                          }}
+                        >
+                          {`${preset.emoji} ${preset.label}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="pulse-check-mood-grid grid grid-cols-4 gap-2">
+                    {MOODS.map((item) => {
+                      const isSelected = mood === item.id;
+                      const mStyle = MOOD_COSMIC[item.id];
+                      return (
+                        <motion.button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setMoodValue(item.id);
+                          }}
+                          className="inline-flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
+                          style={{
+                            background: isSelected ? mStyle.bg : "rgba(255, 255, 255, 0.05)",
+                            border: `1px solid ${isSelected ? mStyle.border : "rgba(255, 255, 255, 0.08)"}`,
+                            color: isSelected ? mStyle.text : "var(--text-secondary)",
+                            boxShadow: isSelected ? mStyle.glow : "none"
+                          }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <span>{item.emoji}</span>
+                          <span className="truncate">{item.label}</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-center text-[11px]" style={{ color: isMoodSelectionUnstable ? "rgba(251,191,36,0.95)" : "var(--text-muted)", minHeight: "1rem" }}>
+                    {isMoodSelectionUnstable
+                      ? "\u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631 \u0628\u064a\u0646 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0645\u062a\u0630\u0628\u0630\u0628\u060c \u062b\u0628\u0651\u062a \u0627\u0644\u062d\u0627\u0644\u0629 \u0627\u0644\u0623\u0642\u0631\u0628 \u0644\u0634\u0639\u0648\u0631\u0643."
+                      : moodQuickHint}
+                  </p>
+                  {needsMoodConfirmation && (
+                    <p className="text-center text-[11px] font-semibold" style={{ color: "rgba(251,191,36,0.98)" }}>
+                      {"\u0627\u0636\u063a\u0637 \u00ab\u0627\u0644\u062a\u0627\u0644\u064a\u00bb \u0645\u0631\u0629 \u0623\u062e\u0631\u0649 \u0644\u062a\u0623\u0643\u064a\u062f \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a."}
+                    </p>
+                  )}
+                  {shouldOfferWeeklyMoodRecommendation && weeklyMoodRecommendation && (
+                    <div className="flex flex-col items-center gap-1 py-0.5">
+                      <button
+                        type="button"
+                        onClick={applyWeeklyMoodRecommendation}
+                        className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                        style={{
+                          color: "var(--text-primary)",
+                          background: "rgba(59,130,246,0.16)",
+                          border: "1px solid rgba(59,130,246,0.4)"
+                        }}
+                      >
+                        {`\u0627\u0633\u062a\u062e\u062f\u0645 \u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639: ${MOODS.find((m) => m.id === weeklyMoodRecommendation.mood)?.label ?? ""}`}
+                      </button>
+                      <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
+                        {`\u0645\u0628\u0646\u064a \u0639\u0644\u0649 ${weeklyMoodRecommendation.count} \u0642\u0631\u0627\u0621\u0629 \u0645\u0624\u062e\u0631\u0629.`}
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {step === 3 && (
+                <motion.div className="pulse-check-section mt-1 flex flex-col gap-2" custom={3} variants={cosmicUp} initial="hidden" animate="visible">
+                  <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
+                    {"\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u062d\u0627\u0644\u064a"} <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
+                  </label>
+                  <p className="text-[11px] -mt-1 mb-0.5" style={{ color: "var(--text-muted)", minHeight: "1rem" }}>
+                    {focusSubtitle}
+                  </p>
+                  <div
+                    data-testid="pulse-focus-summary"
+                    className="rounded-xl px-3 py-2 text-center"
+                    style={{
+                      background: focus ? FOCUS_COSMIC[focus].bg : "rgba(148,163,184,0.08)",
+                      border: `1px solid ${focus ? FOCUS_COSMIC[focus].border : "rgba(148,163,184,0.22)"}`
+                    }}
+                  >
+                    <p className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
+                      {selectedFocusLabel ?? "\u062d\u062f\u062f \u0646\u0642\u0637\u0629 \u0628\u062f\u0627\u064a\u0629 \u0627\u0644\u062a\u0631\u0643\u064a\u0632"}
+                    </p>
+                    <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+                      {focusStateLabel}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {FOCUS_OPTIONS.map((item) => {
+                      const isSelected = focus === item.id;
+                      const label = item.id === "none"
+                        ? FOCUS_LABELS[isStartRecovery ? "none_new" : "none_returning"]
+                        : FOCUS_LABELS[item.labelKey];
+                      const fStyle = FOCUS_COSMIC[item.id];
+                      return (
+                        <motion.button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setFocusValue(item.id);
+                          }}
+                          className="px-2 py-2 rounded-lg text-xs font-semibold transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
+                          style={{
+                            background: isSelected ? fStyle.bg : "rgba(255, 255, 255, 0.04)",
+                            border: `1px solid ${isSelected ? fStyle.border : "rgba(255, 255, 255, 0.06)"}`,
+                            color: isSelected ? fStyle.text : "var(--text-secondary)"
+                          }}
+                          whileTap={{ scale: 0.96 }}
+                        >
+                          {label}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-center text-[11px]" style={{ color: "var(--text-muted)" }}>
+                    {focusQuickHint}
+                  </p>
+                </motion.div>
+              )}
+
+              {step === 4 && (
+                <motion.div className="pulse-check-section mt-1 flex flex-col gap-2" custom={4} variants={cosmicUp} initial="hidden" animate="visible">
+                  <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                    {"\u0644\u0648 \u062d\u0627\u0628\u0628 \u062a\u0634\u0631\u062d \u0623\u0643\u062a\u0631"} <span style={{ color: "var(--text-muted)" }}>{"(\u0627\u062e\u062a\u064a\u0627\u0631\u064a)"}</span>
+                  </label>
+                  <div className="rounded-xl px-3 py-2 text-center" style={{ background: "rgba(148,163,184,0.08)", border: "1px solid rgba(148,163,184,0.2)" }}>
+                    <p className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
+                      {notesChars > 0 ? "\u062a\u0645 \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u0628\u0646\u062c\u0627\u062d" : "\u0627\u0644\u0643\u062a\u0627\u0628\u0629 \u0647\u0646\u0627 \u062a\u0633\u0627\u0639\u062f\u0643 \u062a\u0634\u0648\u0641 \u0635\u0648\u0631\u0629 \u0623\u0648\u0636\u062d"}
+                    </p>
+                    <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+                      {notesChars > 0 ? `\u062a\u0645 \u0643\u062a\u0627\u0628\u0629 ${notesChars} \u062d\u0631\u0641.` : "\u062c\u0645\u0644\u0629 \u0648\u0627\u062d\u062f\u0629 \u0643\u0641\u0627\u064a\u0629 \u0644\u0628\u062f\u0627\u064a\u0629 \u062c\u064a\u062f\u0629."}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {NOTES_QUICK_CHIPS.map((chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => {
+                          recordFlowEvent("pulse_notes_quick_chip_applied", { meta: { chip } });
+                          applyNotesQuickChip(chip);
+                        }}
+                        className="rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors"
+                        style={{
+                          color: "var(--text-secondary)",
+                          background: "rgba(255,255,255,0.06)",
+                          border: "1px solid rgba(255,255,255,0.14)"
+                        }}
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    ref={notesRef}
+                    rows={4}
+                    value={notes}
+                    onFocus={(e) => {
+                      window.setTimeout(() => {
+                        e.currentTarget.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }, 120);
+                    }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setNotes(value);
+                      if (!hasTrackedNotesUsage && value.trim().length > 0) {
+                        recordFlowEvent("pulse_notes_used");
+                        setHasTrackedNotesUsage(true);
+                      }
+                    }}
+                    placeholder={"\u0627\u0643\u062a\u0628 \u062c\u0645\u0644\u0629 \u0623\u0648 \u0645\u0648\u0642\u0641: \u0623\u0646\u0627 \u0645\u062e\u0646\u0648\u0642 \u0639\u0634\u0627\u0646 \u062d\u0635\u0644 \u0643\u0630\u0627..."}
+                    className="w-full rounded-lg px-2.5 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0 resize-y max-h-36 overflow-auto"
+                    style={{
+                      background: "rgba(255, 255, 255, 0.04)",
+                      border: "1px solid rgba(255, 255, 255, 0.08)",
+                      color: "var(--text-primary)",
+                      letterSpacing: "0.02em"
+                    }}
+                  />
                 </motion.div>
               )}
             </div>
 
             <div
-              className="absolute bottom-0 left-0 right-0 px-4 sm:px-5 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
-              style={{ background: "linear-gradient(180deg, rgba(15,20,50,0) 0%, rgba(15,20,50,0.92) 35%)" }}
+              data-testid="pulse-footer"
+              className="px-4 sm:px-5 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+              style={{
+                background: "linear-gradient(180deg, rgba(15,20,50,0.12) 0%, rgba(15,20,50,0.92) 36%, rgba(15,20,50,0.98) 100%)",
+                borderTop: "1px solid rgba(255,255,255,0.08)",
+                backdropFilter: "blur(8px)"
+              }}
             >
-              {!isComplete && !showRequiredHint && (
-                <p className="text-xs mb-2 text-center" style={{ color: "var(--text-muted)" }}>
-                  اختَر الطاقة والطقس الداخلي والتركيز الحالي أولاً.
-                </p>
-              )}
-              {showRequiredHint && !isComplete && (
-                <p className="text-xs mb-2 text-center" style={{ color: "rgba(248, 113, 113, 0.95)" }}>
-                  مطلوب اختيار الطاقة والمزاج والتركيز قبل المتابعة.
-                </p>
-              )}
+              <p className="text-xs mb-2 text-center" style={{ color: footerHintColor, minHeight: "1rem" }}>
+                {footerHintText}
+              </p>
 
               <div className="flex items-center gap-2">
-                {isCompactMobile && step === 2 && (
+                {step > 1 && (
                   <button
                     type="button"
-                    onClick={() => setStep(1)}
+                    onClick={handlePreviousStep}
                     className="rounded-xl px-3 py-2 text-sm font-semibold"
                     style={{ color: "var(--text-secondary)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
                   >
-                    رجوع
+                    {"\u0631\u062c\u0648\u0639"}
                   </button>
                 )}
                 <motion.button
+                  data-testid="pulse-primary-action"
                   type="button"
-                  onClick={isCompactMobile && step === 1 ? handleNextStep : handleSubmit}
-                  aria-disabled={!isComplete}
-                  className={`w-full cta-primary py-2.5 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 ${isComplete ? "" : "opacity-80"}`}
+                  onClick={step < 4 ? handleNextStep : handleSubmit}
+                  aria-disabled={step < 4 ? !currentStepComplete : !isComplete}
+                  className={`w-full cta-primary py-2.5 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 ${(step < 4 ? currentStepComplete : isComplete) ? "" : "opacity-80"}`}
                   whileHover={{ scale: 1.01, y: -1 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {isCompactMobile && step === 1 ? "التالي" : "احفظ حالتك"}
+                  {step < 4 ? "\u0627\u0644\u062a\u0627\u0644\u064a" : (isSavingPulse ? "\u062a\u0645 \u0627\u0644\u062d\u0641\u0638" : "\u0627\u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643")}
                 </motion.button>
               </div>
             </div>
@@ -452,3 +1800,10 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     </AnimatePresence>
   );
 };
+
+
+
+
+
+
+

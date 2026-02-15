@@ -11,7 +11,7 @@ import { useAchievementState, getLibraryOpenedAt, getBreathingUsedAt } from "./s
 import { useThemeState } from "./state/themeState";
 import { initThemePalette } from "./services/themePalette";
 import { usePulseState } from "./state/pulseState";
-import type { PulseFocus, PulseMood } from "./state/pulseState";
+import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "./state/pulseState";
 import { trackPageView, trackEvent, AnalyticsEvents } from "./services/analytics";
 import { recordFlowEvent } from "./services/journeyTracking";
 import { sendNotification, sendPresetNotification, NOTIFICATION_TYPES } from "./services/notifications";
@@ -38,10 +38,20 @@ import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/Onboar
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
 import { geminiClient } from "./services/geminiClient";
 import { isSupabaseReady } from "./services/supabaseClient";
+import { fetchAdminConfig, fetchOwnerAlerts } from "./services/adminApi";
 import { usePulseCheckLogic } from "./hooks/usePulseCheckLogic";
 import { isPhaseOneUserFlow, isUserMode } from "./config/appEnv";
 
 type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
+type PulseSubmitPayload = {
+  energy: number;
+  mood: PulseMood;
+  focus: PulseFocus;
+  auto?: boolean;
+  notes?: string;
+  energyReasons?: string[];
+  energyConfidence?: PulseEnergyConfidence;
+};
 type OwnerActionKey =
   | "admin_dashboard"
   | "consciousness_archive"
@@ -198,6 +208,113 @@ const LAST_SEEN_BROADCAST_KEY = "dawayir-last-seen-broadcast-id";
 const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
 const OWNER_ALERTS_LAST_CHECK_KEY = "dawayir-owner-alerts-last-check";
 const OWNER_ALERTS_MILESTONES_KEY = "dawayir-owner-alerts-milestones";
+const LAST_UI_STATE_STORAGE_KEY_PREFIX = "dawayir-last-ui-state";
+const LAST_SCREEN_STORAGE_KEY_PREFIX = "dawayir-last-screen";
+
+type PersistedModalState = {
+  showJourneyGuideChat: boolean;
+  showOwnerDataTools: boolean;
+  showNotificationSettings: boolean;
+  showTrackingDashboard: boolean;
+  showAtlasDashboard: boolean;
+  showShareStats: boolean;
+  showLibrary: boolean;
+  showSymptomsOverview: boolean;
+  showRecoveryPlan: boolean;
+  showThemeSettings: boolean;
+  showAchievements: boolean;
+  showAdvancedTools: boolean;
+  showClassicRecovery: boolean;
+  showManualPlacement: boolean;
+  showFeedback: boolean;
+};
+
+type PersistedUiState = {
+  version: 1;
+  screen: Screen;
+  modals: PersistedModalState;
+};
+
+type PulseDeltaToastTone = "up" | "down" | "same" | "neutral";
+type PulseDeltaToast = { title: string; body: string; tone: PulseDeltaToastTone };
+
+function getUserLastScreenStorageKey(userId: string): string {
+  return `${LAST_SCREEN_STORAGE_KEY_PREFIX}:${userId}`;
+}
+
+function getUserLastUiStateStorageKey(userId: string): string {
+  return `${LAST_UI_STATE_STORAGE_KEY_PREFIX}:${userId}`;
+}
+
+function normalizeRestorableScreen(value: string | null): Screen | null {
+  if (value === "landing" || value === "goal" || value === "map" || value === "guided" || value === "tools") {
+    return value;
+  }
+  return null;
+}
+
+function toBoolean(value: unknown): boolean {
+  return value === true;
+}
+
+function normalizePersistedModals(input: unknown): PersistedModalState {
+  const value = (input ?? {}) as Partial<PersistedModalState>;
+  return {
+    showJourneyGuideChat: toBoolean(value.showJourneyGuideChat),
+    showOwnerDataTools: toBoolean(value.showOwnerDataTools),
+    showNotificationSettings: toBoolean(value.showNotificationSettings),
+    showTrackingDashboard: toBoolean(value.showTrackingDashboard),
+    showAtlasDashboard: toBoolean(value.showAtlasDashboard),
+    showShareStats: toBoolean(value.showShareStats),
+    showLibrary: toBoolean(value.showLibrary),
+    showSymptomsOverview: toBoolean(value.showSymptomsOverview),
+    showRecoveryPlan: toBoolean(value.showRecoveryPlan),
+    showThemeSettings: toBoolean(value.showThemeSettings),
+    showAchievements: toBoolean(value.showAchievements),
+    showAdvancedTools: toBoolean(value.showAdvancedTools),
+    showClassicRecovery: toBoolean(value.showClassicRecovery),
+    showManualPlacement: toBoolean(value.showManualPlacement),
+    showFeedback: toBoolean(value.showFeedback)
+  };
+}
+
+function getYesterdayPulseEnergy(logs: Array<{ energy: number; timestamp: number }>, now = Date.now()): number | null {
+  const current = new Date(now);
+  const yesterdayStart = new Date(current.getFullYear(), current.getMonth(), current.getDate() - 1).getTime();
+  const todayStart = new Date(current.getFullYear(), current.getMonth(), current.getDate()).getTime();
+  const yesterdayLog = logs.find((entry) => entry.timestamp >= yesterdayStart && entry.timestamp < todayStart);
+  return yesterdayLog?.energy ?? null;
+}
+
+function buildPulseDeltaToast(currentEnergy: number, yesterdayEnergy: number | null): PulseDeltaToast {
+  if (yesterdayEnergy == null) {
+    return {
+      title: "\u062a\u0645 \u062d\u0641\u0638 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629",
+      body: "\u0645\u0627\u0641\u064a\u0634 \u0642\u064a\u0627\u0633 \u0623\u0645\u0628\u0627\u0631\u062d \u0644\u0644\u0645\u0642\u0627\u0631\u0646\u0629.",
+      tone: "neutral"
+    };
+  }
+  const delta = currentEnergy - yesterdayEnergy;
+  if (delta > 0) {
+    return {
+      title: `\u0637\u0627\u0642\u062a\u0643 \u0627\u0644\u0646\u0647\u0627\u0631\u062f\u0647 \u0623\u0639\u0644\u0649 \u0645\u0646 \u0623\u0645\u0628\u0627\u0631\u062d \u2197 (+${delta})`,
+      body: `\u0627\u0644\u064a\u0648\u0645 ${currentEnergy}/10 \u0645\u0642\u0627\u0628\u0644 ${yesterdayEnergy}/10 \u0623\u0645\u0628\u0627\u0631\u062d.`,
+      tone: "up"
+    };
+  }
+  if (delta < 0) {
+    return {
+      title: `\u0637\u0627\u0642\u062a\u0643 \u0627\u0644\u0646\u0647\u0627\u0631\u062f\u0647 \u0623\u0642\u0644 \u0645\u0646 \u0623\u0645\u0628\u0627\u0631\u062d \u2198 (${delta})`,
+      body: `\u0627\u0644\u064a\u0648\u0645 ${currentEnergy}/10 \u0645\u0642\u0627\u0628\u0644 ${yesterdayEnergy}/10 \u0623\u0645\u0628\u0627\u0631\u062d.`,
+      tone: "down"
+    };
+  }
+  return {
+    title: "\u0637\u0627\u0642\u062a\u0643 \u0632\u064a \u0623\u0645\u0628\u0627\u0631\u062d \u2192",
+    body: `\u062b\u0628\u0627\u062a \u062c\u064a\u062f: ${currentEnergy}/10 \u0632\u064a \u0627\u0644\u0642\u0631\u0627\u064a\u0629 \u0627\u0644\u0644\u064a \u0642\u0628\u0644\u064a\u0647\u0627.`,
+    tone: "same"
+  };
+}
 
 function buildStartRecoveryWelcome(firstName: string | null, toneGender: UserToneGender): string {
   const prefix = firstName ? `Ø£Ù‡Ù„Ø§Ù‹ ÙŠØ§ ${firstName}` : "Ø£Ù‡Ù„Ø§Ù‹";
@@ -315,6 +432,7 @@ export default function App() {
   const [showNoiseSilencingPulse, setShowNoiseSilencingPulse] = useState(false);
   const [pendingCocoonAfterNoise, setPendingCocoonAfterNoise] = useState(false);
   const [postNoiseSessionMessage, setPostNoiseSessionMessage] = useState(false);
+  const [pulseDeltaToast, setPulseDeltaToast] = useState<PulseDeltaToast | null>(null);
   const [lastPulseInsights, setLastPulseInsights] = useState<MemoryMatch[]>([]);
   const [showConsciousnessArchive, setShowConsciousnessArchive] = useState(false);
   const [themeBeforePulse, setThemeBeforePulse] = useState<"light" | "dark" | "system" | null>(null);
@@ -331,6 +449,8 @@ export default function App() {
   /** Ø±Ø¨Ø· Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„ØªØ§ØªØ´/Ø²Ø± Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø³Ø§Ø¨Ù‚Ø© Ø¨Ø¯Ù„ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ */
   const fromPopStateRef = useRef(false);
   const hasHistorySyncedRef = useRef(false);
+  const restoredLastScreenForUserRef = useRef<string | null>(null);
+  const hasHydratedUiStateRef = useRef(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
   const [showOwnerDataTools, setShowOwnerDataTools] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
@@ -354,6 +474,7 @@ export default function App() {
   const [isFeaturePreviewSession, setIsFeaturePreviewSession] = useState(false);
   const [previewedFeature, setPreviewedFeature] = useState<FeatureFlagKey | null>(null);
   const [activeBroadcast, setActiveBroadcast] = useState<PublicBroadcast | null>(null);
+  const pulseDeltaTimerRef = useRef<number | null>(null);
   const whatsAppNumber = import.meta.env.VITE_WHATSAPP_CONTACT_NUMBER || DEFAULT_WHATSAPP_CONTACT;
   const whatsAppLink = useMemo(() => {
     const normalized = normalizeWhatsAppPhone(whatsAppNumber);
@@ -570,6 +691,104 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (authStatus !== "ready") return;
+    const userId = authUser?.id ?? null;
+    if (!userId) {
+      hasHydratedUiStateRef.current = false;
+      return;
+    }
+    if (restoredLastScreenForUserRef.current === userId) return;
+
+    restoredLastScreenForUserRef.current = userId;
+    const savedUiState = window.localStorage.getItem(getUserLastUiStateStorageKey(userId));
+    if (savedUiState) {
+      try {
+        const parsed = JSON.parse(savedUiState) as Partial<PersistedUiState>;
+        const restoredScreen = normalizeRestorableScreen(typeof parsed.screen === "string" ? parsed.screen : null);
+        const restoredModals = normalizePersistedModals(parsed.modals);
+        if (restoredScreen) setScreen(restoredScreen);
+        setShowJourneyGuideChat(restoredModals.showJourneyGuideChat);
+        setShowOwnerDataTools(restoredModals.showOwnerDataTools);
+        setShowNotificationSettings(restoredModals.showNotificationSettings);
+        setShowTrackingDashboard(restoredModals.showTrackingDashboard);
+        setShowAtlasDashboard(restoredModals.showAtlasDashboard);
+        setShowShareStats(restoredModals.showShareStats);
+        setShowLibrary(restoredModals.showLibrary);
+        setShowSymptomsOverview(restoredModals.showSymptomsOverview);
+        setShowRecoveryPlan(restoredModals.showRecoveryPlan);
+        setShowThemeSettings(restoredModals.showThemeSettings);
+        setShowAchievements(restoredModals.showAchievements);
+        setShowAdvancedTools(restoredModals.showAdvancedTools);
+        setShowClassicRecovery(restoredModals.showClassicRecovery);
+        setShowManualPlacement(restoredModals.showManualPlacement);
+        setShowFeedback(restoredModals.showFeedback);
+        hasHydratedUiStateRef.current = true;
+        return;
+      } catch {
+        // fallback to legacy screen-only key below
+      }
+    }
+
+    const legacySavedScreen = window.localStorage.getItem(getUserLastScreenStorageKey(userId));
+    const restored = normalizeRestorableScreen(legacySavedScreen);
+    if (restored) setScreen(restored);
+    hasHydratedUiStateRef.current = true;
+  }, [authStatus, authUser?.id]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const userId = authUser?.id ?? null;
+    if (!userId) return;
+    if (!hasHydratedUiStateRef.current) return;
+    const restorable = normalizeRestorableScreen(screen);
+    if (!restorable) return;
+
+    const payload: PersistedUiState = {
+      version: 1,
+      screen: restorable,
+      modals: {
+        showJourneyGuideChat,
+        showOwnerDataTools,
+        showNotificationSettings,
+        showTrackingDashboard,
+        showAtlasDashboard,
+        showShareStats,
+        showLibrary,
+        showSymptomsOverview,
+        showRecoveryPlan,
+        showThemeSettings,
+        showAchievements,
+        showAdvancedTools,
+        showClassicRecovery,
+        showManualPlacement,
+        showFeedback
+      }
+    };
+
+    window.localStorage.setItem(getUserLastUiStateStorageKey(userId), JSON.stringify(payload));
+    window.localStorage.setItem(getUserLastScreenStorageKey(userId), restorable);
+  }, [
+    authUser?.id,
+    screen,
+    showJourneyGuideChat,
+    showOwnerDataTools,
+    showNotificationSettings,
+    showTrackingDashboard,
+    showAtlasDashboard,
+    showShareStats,
+    showLibrary,
+    showSymptomsOverview,
+    showRecoveryPlan,
+    showThemeSettings,
+    showAchievements,
+    showAdvancedTools,
+    showClassicRecovery,
+    showManualPlacement,
+    showFeedback
+  ]);
+
+  useEffect(() => {
     const stop = initAppContentRealtime();
     return () => stop();
   }, []);
@@ -591,8 +810,7 @@ export default function App() {
   useEffect(() => {
     if (!hasSupabaseEnv) return;
     let cancelled = false;
-    import("./services/adminApi")
-      .then(({ fetchAdminConfig }) => fetchAdminConfig())
+    fetchAdminConfig()
       .then((config) => {
         if (!config || cancelled) return;
         if (config.featureFlags) setFeatureFlags(config.featureFlags);
@@ -703,7 +921,6 @@ export default function App() {
 
     const pollOwnerAlerts = async () => {
       const since = window.localStorage.getItem(OWNER_ALERTS_LAST_CHECK_KEY) ?? new Date(Date.now() - 2 * 60 * 1000).toISOString();
-      const { fetchOwnerAlerts } = await import("./services/adminApi");
       const alerts = await fetchOwnerAlerts({ since, phaseTarget: 10 });
       if (!alerts || cancelled) return;
 
@@ -840,17 +1057,17 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [authStatus, authUser, authFirstName, authToneGender, logPulse, setPulseCheckContext, setShowPulseCheck, isPhaseOneUserFlow]);
+  }, [authStatus, authUser, authFirstName, authToneGender, logPulse, setPulseCheckContext, setShowPulseCheck]);
 
-  const openDefaultGoalMap = () => {
+  const openDefaultGoalMap = useCallback(() => {
     const defaultGoalId = "family";
     setGoalId(defaultGoalId);
     setCategory(resolveAdviceCategory(defaultGoalId));
     setSelectedNodeId(null);
     setScreen("map");
-  };
+  }, [setCategory, setGoalId, setScreen, setSelectedNodeId]);
 
-  const goToGoals = () => {
+  const goToGoals = useCallback(() => {
     if (!canUseMap) {
       setLockedFeature("dawayir_map");
       return;
@@ -861,7 +1078,7 @@ export default function App() {
       return;
     }
     setScreen("goal");
-  };
+  }, [canUseMap, openDefaultGoalMap, setLockedFeature, setScreen, skipNextPulseCheck]);
 
   const startRecovery = () => {
     if (shouldGateStartWithAuth && canUsePulseCheck) {
@@ -925,7 +1142,7 @@ export default function App() {
     setMissionNodeId(nodeId);
     setScreen("mission");
   };
-  const openJourneyTools = () => {
+  const openJourneyTools = useCallback(() => {
     if (isLockedPhaseOne) return;
     if (!canUseJourneyTools) {
       setLockedFeature("journey_tools");
@@ -934,8 +1151,8 @@ export default function App() {
     recordFlowEvent("tools_opened");
     setToolsBackScreen(screen === "tools" ? "landing" : screen);
     setScreen("tools");
-  };
-  const openDawayirTool = () => {
+  }, [canUseJourneyTools, isLockedPhaseOne, screen, setLockedFeature, setScreen, setToolsBackScreen]);
+  const openDawayirTool = useCallback(() => {
     if (!canUseMap) {
       setLockedFeature("dawayir_map");
       return;
@@ -953,7 +1170,18 @@ export default function App() {
       return;
     }
     setScreen("goal");
-  };
+  }, [
+    canUseMap,
+    lastGoalById,
+    openDefaultGoalMap,
+    setCategory,
+    setGoalId,
+    setLockedFeature,
+    setScreen,
+    setSelectedNodeId,
+    storedCategory,
+    storedGoalId
+  ]);
   const openDawayirSetup = () => {
     if (!canUseMap) {
       setLockedFeature("dawayir_map");
@@ -1190,10 +1418,38 @@ export default function App() {
     setPulseCheckContext("regular");
   }, [setPulseCheckContext, setShowPulseCheck]);
 
-  const isDefaultPulseSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => {
+  useEffect(() => {
+    return () => {
+      if (pulseDeltaTimerRef.current != null) {
+        window.clearTimeout(pulseDeltaTimerRef.current);
+      }
+    };
+  }, []);
+
+  const showPulseDeltaFeedback = useCallback((currentEnergy: number) => {
+    const yesterdayEnergy = getYesterdayPulseEnergy(pulseLogs);
+    const nextToast = buildPulseDeltaToast(currentEnergy, yesterdayEnergy);
+    setPulseDeltaToast(nextToast);
+    if (pulseDeltaTimerRef.current != null) {
+      window.clearTimeout(pulseDeltaTimerRef.current);
+    }
+    pulseDeltaTimerRef.current = window.setTimeout(() => {
+      setPulseDeltaToast(null);
+      pulseDeltaTimerRef.current = null;
+    }, 4600);
+  }, [pulseLogs]);
+
+  const isDefaultPulseSubmit = (payload: PulseSubmitPayload) => {
     const notes = payload.notes?.trim() ?? "";
     return payload.energy === 5 && payload.mood === "calm" && payload.focus === "none" && notes.length === 0;
   };
+
+  const buildAutoPulsePayload = (): PulseSubmitPayload => ({
+    energy: 5,
+    mood: "calm",
+    focus: "none",
+    auto: true
+  });
 
   useEffect(() => {
     const onPageHide = () => {
@@ -1204,7 +1460,7 @@ export default function App() {
     return () => window.removeEventListener("pagehide", onPageHide);
   }, [closePulseCheck, showPulseCheck]);
 
-  const handlePulseGateSubmit = (payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => {
+  const handlePulseGateSubmit = (payload: PulseSubmitPayload) => {
     recordFlowEvent("pulse_completed");
     if (isDefaultPulseSubmit(payload)) recordFlowEvent("pulse_completed_without_choices");
     else recordFlowEvent("pulse_completed_with_choices");
@@ -1226,11 +1482,12 @@ export default function App() {
     setShowAuthModal(true);
   };
 
-  const handlePulseSubmit = useCallback((payload: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => {
+  const handlePulseSubmit = useCallback((payload: PulseSubmitPayload) => {
     recordFlowEvent("pulse_completed");
     if (isDefaultPulseSubmit(payload)) recordFlowEvent("pulse_completed_without_choices");
     else recordFlowEvent("pulse_completed_with_choices");
     logPulse(payload);
+    showPulseDeltaFeedback(payload.energy);
     closePulseCheck(true, "programmatic");
 
     // ØªÙˆØµÙŠÙ„ Ø§Ù„Ø¨ÙˆØµÙ„Ø© Ø¨Ù…Ø±Ø¢Ø© Ø§Ù„ÙˆØ¹ÙŠ (ØºÙŠØ± Ù…Ø¹Ø·Ù‘ÙÙ„ Ù„Ù„ØªØ¬Ø±Ø¨Ø©)
@@ -1276,7 +1533,7 @@ export default function App() {
     if (isLow) {
       openCocoonModal();
     }
-  }, [authUser, closePulseCheck, logPulse, openCocoonModal, setTheme, setThemeBeforePulse, snoozeNotifications, theme, themeBeforePulse]);
+  }, [authUser, closePulseCheck, logPulse, openCocoonModal, setTheme, setThemeBeforePulse, showPulseDeltaFeedback, snoozeNotifications, theme, themeBeforePulse]);
 
   const agentContext = useMemo<AgentContext>(
     () => ({
@@ -1649,6 +1906,43 @@ export default function App() {
             </div>
           </motion.div>
         )}
+        {pulseDeltaToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.3 }}
+            className="fixed left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
+            style={{ bottom: postNoiseSessionMessage ? "7.1rem" : (lastPulseInsights.length > 0 ? "8.8rem" : "1.5rem") }}
+            role="status"
+            aria-live="polite"
+          >
+            <div
+              className="bento-block text-center py-3.5 px-5"
+              style={{
+                borderColor:
+                  pulseDeltaToast.tone === "up"
+                    ? "rgba(45, 212, 191, 0.35)"
+                    : pulseDeltaToast.tone === "down"
+                      ? "rgba(248, 113, 113, 0.32)"
+                      : "rgba(148, 163, 184, 0.3)",
+                background:
+                  pulseDeltaToast.tone === "up"
+                    ? "rgba(45, 212, 191, 0.1)"
+                    : pulseDeltaToast.tone === "down"
+                      ? "rgba(248, 113, 113, 0.09)"
+                      : "rgba(148, 163, 184, 0.08)"
+              }}
+            >
+              <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                {pulseDeltaToast.title}
+              </p>
+              <p className="text-xs mt-1 opacity-90" style={{ color: "var(--text-secondary)" }}>
+                {pulseDeltaToast.body}
+              </p>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
       {lastPulseInsights.length > 0 && (
         <div className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-lg mx-auto">
@@ -1941,7 +2235,20 @@ export default function App() {
               }
               handlePulseSubmit(payload);
             }}
-            onClose={(reason) => closePulseCheck(false, reason)}
+            onClose={(reason) => {
+              if (reason === "close_button") {
+                const autoPayload = buildAutoPulsePayload();
+                if (pulseCheckContext === "start_recovery") {
+                  logPulse(autoPayload);
+                  closePulseCheck(true, "programmatic");
+                  openDawayirSetup();
+                  return;
+                }
+                closePulseCheck(false, "close_button");
+                return;
+              }
+              closePulseCheck(false, reason);
+            }}
           />
         )}
 

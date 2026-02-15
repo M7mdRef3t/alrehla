@@ -87,6 +87,7 @@ import {
   deleteMission,
   fetchThemePalette,
   saveThemePalette,
+  savePulseCopyOverrides,
   type ThemePalette,
   type AdminContentEntry,
   type AdminFeedbackEntry,
@@ -299,11 +300,15 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const setAiLogs = useAdminState((s) => s.setAiLogs);
   const setMissions = useAdminState((s) => s.setMissions);
   const setBroadcasts = useAdminState((s) => s.setBroadcasts);
+  const setPulseCopyOverrides = useAdminState((s) => s.setPulseCopyOverrides);
+  const pulseCopyOverrides = useAdminState((s) => s.pulseCopyOverrides);
   const setPulseCheckMode = usePulseState((s) => s.setCheckInMode);
   const [remoteStatus, setRemoteStatus] = useState<"local" | "connected" | "error">(
     isSupabaseReady ? "connected" : "local"
   );
   const [remoteMessage, setRemoteMessage] = useState<string | null>(null);
+  const [copyWinnerSaving, setCopyWinnerSaving] = useState<null | "energy" | "mood" | "focus">(null);
+  const [copyWinnerMessage, setCopyWinnerMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const handler = () => setTab(getTabFromLocation());
@@ -328,6 +333,13 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
         if (config?.scoringWeights) setScoringWeights(config.scoringWeights);
         if (config?.scoringThresholds) setScoringThresholds(config.scoringThresholds);
         if (config?.pulseCheckMode) setPulseCheckMode(config.pulseCheckMode);
+        if (config?.pulseCopyOverrides) {
+          setPulseCopyOverrides({
+            energy: config.pulseCopyOverrides.energy ?? "auto",
+            mood: config.pulseCopyOverrides.mood ?? "auto",
+            focus: config.pulseCopyOverrides.focus ?? "auto"
+          });
+        }
         if (aiLogs) setAiLogs(aiLogs);
         if (missions) setMissions(missions);
         if (broadcasts) setBroadcasts(broadcasts);
@@ -343,7 +355,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     return () => {
       cancelled = true;
     };
-  }, [setFeatureFlags, setSystemPrompt, setScoringWeights, setScoringThresholds, setAiLogs, setMissions, setBroadcasts, setPulseCheckMode]);
+  }, [setFeatureFlags, setSystemPrompt, setScoringWeights, setScoringThresholds, setAiLogs, setMissions, setBroadcasts, setPulseCheckMode, setPulseCopyOverrides]);
 
   const aiOnline = geminiClient.isAvailable();
 
@@ -713,6 +725,8 @@ const OverviewPanel: FC = () => {
   const eventsByDay = getEventsByDay();
   const sessions = getSessionsWithProgress();
   const pulseLogs = usePulseState((s) => s.logs);
+  const pulseCopyOverrides = useAdminState((s) => s.pulseCopyOverrides);
+  const setPulseCopyOverrides = useAdminState((s) => s.setPulseCopyOverrides);
   const [activeNow, setActiveNow] = useState<number | null>(null);
   const [lastActive, setLastActive] = useState<number | null>(null);
   const [remoteStats, setRemoteStats] = useState<Awaited<ReturnType<typeof fetchOverviewStats>>>(null);
@@ -733,6 +747,8 @@ const OverviewPanel: FC = () => {
   const [themeGlassBorder, setThemeGlassBorder] = useState("rgba(255, 255, 255, 0.1)");
   const [themeSaving, setThemeSaving] = useState(false);
   const [themeMessage, setThemeMessage] = useState<string | null>(null);
+  const [copyWinnerSaving, setCopyWinnerSaving] = useState<null | "energy" | "mood" | "focus">(null);
+  const [copyWinnerMessage, setCopyWinnerMessage] = useState<string | null>(null);
 
   const THEME_PRESETS: Array<{
     id: string;
@@ -868,27 +884,39 @@ const OverviewPanel: FC = () => {
       ? Math.round((pulseLogs.reduce((s, p) => s + p.energy, 0) / pulseLogs.length) * 10) / 10
       : null;
 
-  const localGrowthData = eventsByDay.map((d) => ({
-    date: d.date.slice(5),
-    paths: d.pathStarts,
-    nodes: d.nodesAdded
-  }));
+  const localGrowthData = useMemo(
+    () =>
+      eventsByDay.map((d) => ({
+        date: d.date.slice(5),
+        paths: d.pathStarts,
+        nodes: d.nodesAdded
+      })),
+    [eventsByDay]
+  );
 
-  const localZones = Object.entries(stats.byZone)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3);
+  const localZones = useMemo(
+    () =>
+      Object.entries(stats.byZone)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3),
+    [stats.byZone]
+  );
 
   const useRemoteAsSource = isSupabaseReady;
   const totalUsers = useRemoteAsSource ? (remoteStats?.totalUsers ?? 0) : sessions.length;
   const activeNowValue = useRemoteAsSource ? (remoteStats?.activeNow ?? 0) : activeNow;
   const avgMoodValue = useRemoteAsSource ? (remoteStats?.avgMood ?? null) : avgPulse;
   const aiTokensUsed = useRemoteAsSource ? (remoteStats?.aiTokensUsed ?? 0) : stats.totalTaskCompletions;
-  const growthData = useRemoteAsSource
-    ? (remoteStats?.growthData ?? [])
-    : localGrowthData;
-  const topZones = useRemoteAsSource
-    ? (remoteStats?.zones?.slice(0, 3).map((z) => [z.label, z.count] as const) ?? [])
-    : localZones;
+  const growthData = useMemo(
+    () => (useRemoteAsSource ? (remoteStats?.growthData ?? []) : localGrowthData),
+    [localGrowthData, remoteStats?.growthData, useRemoteAsSource]
+  );
+  const topZones = useMemo(
+    () => (useRemoteAsSource
+      ? (remoteStats?.zones?.slice(0, 3).map((z) => [z.label, z.count] as const) ?? [])
+      : localZones),
+    [localZones, remoteStats?.zones, useRemoteAsSource]
+  );
 
   const handleDailyReport = async () => {
     setDailyLoading(true);
@@ -918,10 +946,65 @@ const OverviewPanel: FC = () => {
   const emergencyLogs = remoteStats?.emergencyLogs ?? [];
   const taskFriction = remoteStats?.taskFriction ?? [];
   const weeklyRhythm = remoteStats?.weeklyRhythm;
+  const pulseEnergyWeekly = remoteStats?.pulseEnergyWeekly ?? null;
+  const moodWeekly = remoteStats?.moodWeekly ?? null;
+  const pulseCopyVariants = remoteStats?.pulseCopyVariants ?? null;
+  const pulseCopyVariantTrend = remoteStats?.pulseCopyVariantTrend ?? null;
+  const energyUnstableToCompletedPct = pulseEnergyWeekly?.unstableToCompletedPct ?? null;
+  const energyStabilityRate = energyUnstableToCompletedPct == null ? null : Math.max(0, 100 - energyUnstableToCompletedPct);
+  const isEnergyStabilityRisk = energyUnstableToCompletedPct != null && energyUnstableToCompletedPct > 35;
+  const moodUnstableToCompletedPct = moodWeekly?.unstableToCompletedPct ?? null;
+  const moodStabilityRate = moodUnstableToCompletedPct == null ? null : Math.max(0, 100 - moodUnstableToCompletedPct);
+  const isMoodStabilityRisk = moodUnstableToCompletedPct != null && moodUnstableToCompletedPct > 35;
   const flowStats = remoteStats?.flowStats;
   const conversionHealth = remoteStats?.conversionHealth;
   const pulseAbandonedByReason = flowStats?.pulseAbandonedByReason ?? {};
   const pulseAbandonedTotal = Object.values(pulseAbandonedByReason).reduce((sum, value) => sum + (value ?? 0), 0);
+  const pulseCompletedCount = flowStats?.byStep?.pulse_completed ?? 0;
+  const energyRecommendationApplied = flowStats?.byStep?.pulse_energy_weekly_recommendation_applied ?? 0;
+  const energyUndoApplied = flowStats?.byStep?.pulse_energy_undo_applied ?? 0;
+  const moodRecommendationApplied = flowStats?.byStep?.pulse_mood_weekly_recommendation_applied ?? 0;
+  const moodRecommendationRate =
+    pulseCompletedCount > 0 ? Math.round((moodRecommendationApplied / pulseCompletedCount) * 100) : null;
+  const focusChangedCount = flowStats?.byStep?.pulse_focus_changed ?? 0;
+  const notesUsedCount = flowStats?.byStep?.pulse_notes_used ?? 0;
+  const notesQuickChipCount = flowStats?.byStep?.pulse_notes_quick_chip_applied ?? 0;
+  const focusToCompletedRate =
+    pulseCompletedCount > 0 ? Math.round((focusChangedCount / pulseCompletedCount) * 100) : null;
+  const notesToCompletedRate =
+    pulseCompletedCount > 0 ? Math.round((notesUsedCount / pulseCompletedCount) * 100) : null;
+  const variantSections = pulseCopyVariants
+    ? ([
+        { key: "energy", label: "مؤشر الطاقة" },
+        { key: "mood", label: "الطقس الداخلي" },
+        { key: "focus", label: "التركيز الحالي" }
+      ] as const)
+    : [];
+  const variantMinSamples = 30;
+
+  const handleSetCopyOverride = useCallback(
+    async (section: "energy" | "mood" | "focus", value: "auto" | "a" | "b") => {
+      setCopyWinnerSaving(section);
+      setCopyWinnerMessage(null);
+      const nextOverrides = { ...pulseCopyOverrides, [section]: value };
+      const ok = await savePulseCopyOverrides(nextOverrides);
+      if (ok) {
+        setPulseCopyOverrides(nextOverrides);
+        setCopyWinnerMessage(
+          value === "auto"
+            ? `تم إرجاع قسم ${section} إلى الوضع التلقائي (Auto).`
+            : `تم تثبيت نسخة ${value.toUpperCase()} كافتراضي لقسم ${section}.`
+        );
+      } else {
+        setCopyWinnerMessage("تعذر حفظ Winner حاليًا. جرّب مرة أخرى.");
+      }
+      setCopyWinnerSaving(null);
+    },
+    [pulseCopyOverrides, setPulseCopyOverrides]
+  );
+  const energyRecommendationRate =
+    pulseCompletedCount > 0 ? Math.round((energyRecommendationApplied / pulseCompletedCount) * 100) : null;
+  const energyUndoRate = energyRecommendationApplied > 0 ? Math.round((energyUndoApplied / energyRecommendationApplied) * 100) : null;
   const phaseGoal = remoteStats?.phaseOneGoal ?? null;
   const phaseRegisteredUsers = phaseGoal?.registeredUsers ?? totalUsers ?? 0;
   const phaseInstalledUsers = phaseGoal?.installedUsers ?? (flowStats?.byStep?.install_clicked ?? 0);
@@ -1001,7 +1084,17 @@ const OverviewPanel: FC = () => {
     install_clicked: "ضغط تثبيت التطبيق",
     profile_clicked: "ضغط الحساب",
     pulse_opened: "فتح البوصلة",
+    pulse_copy_variant_assigned: "توزيع نسخ A/B",
+    pulse_energy_changed: "تغيير قيمة مؤشر الطاقة",
+    pulse_energy_unstable: "تذبذب متكرر في مؤشر الطاقة",
+    pulse_energy_weekly_recommendation_applied: "تطبيق اقتراح الأسبوع للطاقة",
+    pulse_energy_undo_applied: "تراجع بعد اقتراح الطاقة",
+    pulse_mood_changed: "تغيير الطقس الداخلي",
+    pulse_mood_unstable: "تذبذب اختيار الطقس الداخلي",
+    pulse_mood_weekly_recommendation_applied: "تطبيق اقتراح الأسبوع للطقس الداخلي",
+    pulse_focus_changed: "تغيير التركيز الحالي",
     pulse_notes_used: "كتب شرح في البوصلة",
+    pulse_notes_quick_chip_applied: "استخدم اختصار كتابة جاهز",
     pulse_abandoned: "هروب من البوصلة",
     pulse_closed_to_landing: "إغلاق البوصلة والرجوع",
     pulse_abandoned_browser_close: "إغلاق المتصفح أثناء البوصلة",
@@ -1242,14 +1335,23 @@ const OverviewPanel: FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-        <div className="md:col-span-4 flex items-center gap-1.5 text-slate-600 text-xs mb-1">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
+        <div className="md:col-span-5 flex items-center gap-1.5 text-slate-600 text-xs mb-1">
           <span>تحديث مباشر</span>
           <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
         </div>
         <StatCard title="إجمالي المسافرين" value={formatNumber(totalUsers)} hint={isSupabaseReady ? "من Supabase" : "جلسات محلية"} />
         <StatCard title="نشط الآن" value={formatNumber(activeNowValue)} hint={`آخر نشاط: ${formatTimeAgo(lastActive)}`} />
         <StatCard title="متوسط طاقة اليوم" value={formatNumber(avgMoodValue)} hint="من سجل النبض" />
+        <StatCard
+          title="استقرار مؤشر الطاقة"
+          value={energyStabilityRate == null ? "—" : `${formatNumber(energyStabilityRate)}%`}
+          hint={
+            energyUnstableToCompletedPct == null
+              ? "لا توجد بيانات كافية"
+              : `تذبذب/إكمال: ${energyUnstableToCompletedPct}%`
+          }
+        />
         <StatCard title="استدعاءات AI" value={formatNumber(aiTokensUsed)} hint={isSupabaseReady ? "من سجل AI" : "مؤقتاً من المهام"} />
       </div>
 
@@ -1656,6 +1758,251 @@ const OverviewPanel: FC = () => {
           </div>
         </div>
       )}
+
+      {pulseEnergyWeekly && pulseEnergyWeekly.points.length > 0 && (
+        <div className="admin-glass-card p-5">
+          <div className="flex items-center gap-1.5 text-slate-600 text-xs mb-2">
+            <span>تحديث مباشر</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
+          </div>
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-slate-600" />
+              <h3 className="text-sm font-semibold text-slate-800">مؤشر استقرار اختيار الطاقة (7 أيام)</h3>
+            </div>
+            <span className="text-xs text-slate-600">
+              {energyUnstableToCompletedPct == null
+                ? "لا توجد إكمالات كافية"
+                : `نسبة التذبذب/الإكمال: ${energyUnstableToCompletedPct}%`}
+            </span>
+          </div>
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px]">
+            <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-sky-700">
+              {energyRecommendationRate == null
+                ? `\u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639: ${energyRecommendationApplied}`
+                : `\u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639: ${energyRecommendationApplied} (${energyRecommendationRate}% \u0645\u0646 \u0627\u0644\u0625\u0643\u0645\u0627\u0644)`}
+            </span>
+            <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-1 text-slate-700">
+              {energyUndoRate == null
+                ? `\u0627\u0644\u062a\u0631\u0627\u062c\u0639: ${energyUndoApplied}`
+                : `\u0627\u0644\u062a\u0631\u0627\u062c\u0639: ${energyUndoApplied} (${energyUndoRate}% \u0645\u0646 \u0627\u0644\u0627\u0642\u062a\u0631\u0627\u062d\u0627\u062a)`}
+            </span>
+          </div>
+          {isEnergyStabilityRisk && (
+            <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              {"تنبيه: معدل تذبذب اختيار الطاقة مرتفع هذا الأسبوع. راجع تجربة السلايدر ونصوص التوجيه."}
+            </div>
+          )}
+          <div className="h-44">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
+              <LineChart data={pulseEnergyWeekly.points}>
+                <XAxis dataKey="date" stroke="#64748b" fontSize={10} tick={{ fill: "#94a3b8" }} />
+                <YAxis stroke="#64748b" fontSize={10} tick={{ fill: "#94a3b8" }} />
+                <Tooltip
+                  contentStyle={{ background: "rgba(15,23,42,0.9)", border: "1px solid rgba(148,163,184,0.3)", borderRadius: "8px" }}
+                  labelStyle={{ color: "#94a3b8" }}
+                />
+                <Line type="monotone" dataKey="changed" name="تغييرات الطاقة" stroke="#0ea5e9" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="unstable" name="تذبذب الاختيار" stroke="#f97316" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="recommended" name="\u062a\u0637\u0628\u064a\u0642 \u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639" stroke="#2563eb" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="undo" name="\u0627\u0644\u062a\u0631\u0627\u062c\u0639 \u0628\u0639\u062f \u0627\u0644\u062a\u0637\u0628\u064a\u0642" stroke="#64748b" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="completed" name="إكمال البوصلة" stroke="#14b8a6" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {moodWeekly && moodWeekly.points.length > 0 && (
+        <div className="admin-glass-card p-5">
+          <div className="flex items-center gap-1.5 text-slate-600 text-xs mb-2">
+            <span>تحديث مباشر</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
+          </div>
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-slate-600" />
+              <h3 className="text-sm font-semibold text-slate-800">مؤشر استقرار اختيار الطقس الداخلي (7 أيام)</h3>
+            </div>
+            <span className="text-xs text-slate-600">
+              {moodUnstableToCompletedPct == null
+                ? "لا توجد إكمالات كافية"
+                : `نسبة التذبذب/الإكمال: ${moodUnstableToCompletedPct}%`}
+            </span>
+          </div>
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px]">
+            <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-sky-700">
+              {moodRecommendationRate == null
+                ? `اقتراح الأسبوع: ${moodRecommendationApplied}`
+                : `اقتراح الأسبوع: ${moodRecommendationApplied} (${moodRecommendationRate}% من الإكمال)`}
+            </span>
+            <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-1 text-slate-700">
+              {moodStabilityRate == null ? "استقرار الطقس: —" : `استقرار الطقس: ${moodStabilityRate}%`}
+            </span>
+          </div>
+          {isMoodStabilityRisk && (
+            <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              {"تنبيه: معدل تذبذب اختيار الطقس الداخلي مرتفع هذا الأسبوع. راجع صياغة الخيارات وترتيب الخطوة."}
+            </div>
+          )}
+          <div className="h-44">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
+              <LineChart data={moodWeekly.points}>
+                <XAxis dataKey="date" stroke="#64748b" fontSize={10} tick={{ fill: "#94a3b8" }} />
+                <YAxis stroke="#64748b" fontSize={10} tick={{ fill: "#94a3b8" }} />
+                <Tooltip
+                  contentStyle={{ background: "rgba(15,23,42,0.9)", border: "1px solid rgba(148,163,184,0.3)", borderRadius: "8px" }}
+                  labelStyle={{ color: "#94a3b8" }}
+                />
+                <Line type="monotone" dataKey="changed" name="تغييرات الطقس الداخلي" stroke="#0ea5e9" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="unstable" name="تذبذب الاختيار" stroke="#f97316" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="completed" name="إكمال البوصلة" stroke="#14b8a6" strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {pulseCopyVariants && (
+        <div className="admin-glass-card p-5">
+          <div className="flex items-center gap-1.5 text-slate-600 text-xs mb-2">
+            <span>تحديث مباشر</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
+          </div>
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="w-4 h-4 text-slate-600" />
+            <h3 className="text-sm font-semibold text-slate-800">مقارنة نسخ A/B (الطاقة/الطقس/التركيز)</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {variantSections.map((section) => {
+              const assigned = pulseCopyVariants.assigned[section.key];
+              const completed = pulseCopyVariants.completed[section.key];
+              const trend = pulseCopyVariantTrend?.[section.key] ?? [];
+              const assignedTotal = assigned.a + assigned.b;
+              const completedTotal = completed.a + completed.b;
+              const aShare = assignedTotal > 0 ? Math.round((assigned.a / assignedTotal) * 100) : null;
+              const bShare = assignedTotal > 0 ? Math.round((assigned.b / assignedTotal) * 100) : null;
+              const aCompletion = assigned.a > 0 ? Math.round((completed.a / assigned.a) * 100) : null;
+              const bCompletion = assigned.b > 0 ? Math.round((completed.b / assigned.b) * 100) : null;
+              const hasEnoughSamples = assigned.a >= variantMinSamples && assigned.b >= variantMinSamples;
+              const winnerLabel =
+                !hasEnoughSamples
+                  ? `بيانات غير كافية (حد أدنى ${variantMinSamples}/${variantMinSamples})`
+                  : aCompletion == null || bCompletion == null
+                  ? "بيانات غير كافية"
+                  : aCompletion === bCompletion
+                    ? "تعادل"
+                    : aCompletion > bCompletion
+                      ? "الفائز الحالي: A"
+                      : "الفائز الحالي: B";
+              const winnerClass =
+                winnerLabel === "بيانات غير كافية"
+                  ? "text-slate-700 bg-slate-100 border-slate-200"
+                  : winnerLabel === "تعادل"
+                    ? "text-amber-700 bg-amber-50 border-amber-200"
+                    : "text-emerald-700 bg-emerald-50 border-emerald-200";
+              return (
+                <div key={section.key} className="rounded-xl border border-slate-200 bg-white/70 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold text-slate-700">{section.label}</p>
+                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${winnerClass}`}>
+                      {winnerLabel}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">التوزيع</p>
+                  <div className="flex items-center justify-between text-xs text-slate-700">
+                    <span>A: {assigned.a}{aShare == null ? "" : ` (${aShare}%)`}</span>
+                    <span>B: {assigned.b}{bShare == null ? "" : ` (${bShare}%)`}</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">الإكمال بعد الظهور</p>
+                  <div className="flex items-center justify-between text-xs text-slate-700">
+                    <span>A: {completed.a}{aCompletion == null ? "" : ` (${aCompletion}%)`}</span>
+                    <span>B: {completed.b}{bCompletion == null ? "" : ` (${bCompletion}%)`}</span>
+                  </div>
+                  {trend.length > 0 && (
+                    <div className="h-20 rounded-lg border border-slate-200 bg-slate-50/60 p-1">
+                      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={1}>
+                        <LineChart data={trend}>
+                          <XAxis dataKey="date" hide />
+                          <YAxis hide />
+                          <Tooltip />
+                          <Line type="monotone" dataKey="aCompleted" name="A" stroke="#14b8a6" strokeWidth={2} dot={false} />
+                          <Line type="monotone" dataKey="bCompleted" name="B" stroke="#f97316" strokeWidth={2} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                  {winnerLabel === "الفائز الحالي: A" && (
+                    <button
+                      type="button"
+                      onClick={() => void handleSetCopyOverride(section.key, "a")}
+                      disabled={copyWinnerSaving === section.key || pulseCopyOverrides[section.key] === "a"}
+                      className="w-full rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-800 disabled:opacity-60"
+                    >
+                      {copyWinnerSaving === section.key ? "جارٍ التطبيق..." : "تطبيق Winner A كافتراضي"}
+                    </button>
+                  )}
+                  {winnerLabel === "الفائز الحالي: B" && (
+                    <button
+                      type="button"
+                      onClick={() => void handleSetCopyOverride(section.key, "b")}
+                      disabled={copyWinnerSaving === section.key || pulseCopyOverrides[section.key] === "b"}
+                      className="w-full rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-800 disabled:opacity-60"
+                    >
+                      {copyWinnerSaving === section.key ? "جارٍ التطبيق..." : "تطبيق Winner B كافتراضي"}
+                    </button>
+                  )}
+                  {pulseCopyOverrides[section.key] !== "auto" && (
+                    <button
+                      type="button"
+                      onClick={() => void handleSetCopyOverride(section.key, "auto")}
+                      disabled={copyWinnerSaving === section.key}
+                      className="w-full rounded-lg border border-slate-300 bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-700 disabled:opacity-60"
+                    >
+                      {copyWinnerSaving === section.key ? "جارٍ التطبيق..." : "الرجوع إلى Auto"}
+                    </button>
+                  )}
+                  <p className="text-[11px] text-slate-500">إجمالي الإكمال: {completedTotal}</p>
+                </div>
+              );
+            })}
+          </div>
+          {copyWinnerMessage && <p className="mt-3 text-xs text-slate-600">{copyWinnerMessage}</p>}
+        </div>
+      )}
+
+      <div className="admin-glass-card p-5">
+        <div className="flex items-center gap-1.5 text-slate-600 text-xs mb-2">
+          <span>تحديث مباشر</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" aria-hidden />
+        </div>
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4 text-slate-600" />
+            <h3 className="text-sm font-semibold text-slate-800">قوة الخطوتين 3 و4 (التركيز والشرح)</h3>
+          </div>
+          <span className="text-xs text-slate-600">
+            {flowStats?.avgTimeToActionMs == null ? "لا يوجد زمن تفاعل كافٍ" : `متوسط زمن التفاعل: ${Math.round(flowStats.avgTimeToActionMs / 1000)}ث`}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+            <p className="text-xs text-slate-500 mb-1">تغيير التركيز الحالي</p>
+            <p className="text-lg font-semibold text-slate-800">{focusChangedCount}</p>
+            <p className="text-[11px] text-slate-600 mt-1">
+              {focusToCompletedRate == null ? "—" : `${focusToCompletedRate}% من إجمالي الإكمالات`}
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+            <p className="text-xs text-slate-500 mb-1">استخدام خطوة الشرح</p>
+            <p className="text-lg font-semibold text-slate-800">{notesUsedCount}</p>
+            <p className="text-[11px] text-slate-600 mt-1">
+              {notesToCompletedRate == null ? "—" : `${notesToCompletedRate}% من إجمالي الإكمالات`}
+            </p>
+            <p className="text-[11px] text-slate-500 mt-1">اختصارات سريعة مستخدمة: {notesQuickChipCount}</p>
+          </div>
+        </div>
+      </div>
 
       <div className="admin-glass-card p-5 space-y-3">
         <div className="flex items-center justify-between gap-2">
@@ -3190,6 +3537,16 @@ const UsersPanel: FC = () => {
     auth_login_success: "سجل دخول",
     install_clicked: "ضغط تثبيت التطبيق",
     pulse_opened: "فتح البوصلة",
+    pulse_copy_variant_assigned: "توزيع نسخة النص",
+    pulse_energy_changed: "غيّر مؤشر الطاقة",
+    pulse_energy_unstable: "تذبذب في اختيار الطاقة",
+    pulse_energy_weekly_recommendation_applied: "تطبيق اقتراح الأسبوع للطاقة",
+    pulse_energy_undo_applied: "تراجع بعد اقتراح الطاقة",
+    pulse_mood_changed: "غيّر الطقس الداخلي",
+    pulse_mood_unstable: "تذبذب في اختيار الطقس الداخلي",
+    pulse_mood_weekly_recommendation_applied: "تطبيق اقتراح الأسبوع للطقس الداخلي",
+    pulse_focus_changed: "غيّر التركيز الحالي",
+    pulse_notes_quick_chip_applied: "استخدم اختصار كتابة جاهز",
     pulse_abandoned: "خرج من البوصلة",
     pulse_completed: "أكمل البوصلة",
     add_person_opened: "فتح إضافة شخص",
@@ -3363,8 +3720,8 @@ const UsersPanel: FC = () => {
                     <p className="text-slate-500">آخر نشاط: {formatTimestamp(session.lastSeen)}</p>
                   </div>
                   <div className="text-slate-400">
-                    أحداث: {session.eventsCount} � مسارات: {session.pathStarts} � مهام: {session.taskCompletions} � إضافات: {session.nodesAdded}
-                    {session.lastFlowStep ? ` � Last: ${FLOW_STEP_LABELS[session.lastFlowStep] ?? session.lastFlowStep}` : ""}
+                    أحداث: {session.eventsCount} | مسارات: {session.pathStarts} | مهام: {session.taskCompletions} | إضافات: {session.nodesAdded}
+                    {session.lastFlowStep ? ` | آخر خطوة: ${FLOW_STEP_LABELS[session.lastFlowStep] ?? session.lastFlowStep}` : ""}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -4309,3 +4666,4 @@ const StatCard: FC<{ title: string; value: string; hint?: string }> = ({ title, 
 );
 
 export { OverviewPanel };
+

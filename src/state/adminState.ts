@@ -47,6 +47,13 @@ export interface AdminBroadcast {
   createdAt: number;
 }
 
+export type PulseCopyOverrideValue = "auto" | "a" | "b";
+export interface PulseCopyOverrides {
+  energy: PulseCopyOverrideValue;
+  mood: PulseCopyOverrideValue;
+  focus: PulseCopyOverrideValue;
+}
+
 interface AdminState {
   adminAccess: boolean;
   adminCode: string | null;
@@ -58,6 +65,7 @@ interface AdminState {
   aiLogs: AiLogEntry[];
   missions: AdminMission[];
   broadcasts: AdminBroadcast[];
+  pulseCopyOverrides: PulseCopyOverrides;
   setAdminAccess: (value: boolean) => void;
   setAdminCode: (value: string | null) => void;
   setFeatureFlags: (flags: Record<FeatureFlagKey, FeatureFlagMode>) => void;
@@ -76,6 +84,7 @@ interface AdminState {
   addBroadcast: (broadcast: AdminBroadcast) => void;
   setBroadcasts: (broadcasts: AdminBroadcast[]) => void;
   removeBroadcast: (id: string) => void;
+  setPulseCopyOverrides: (overrides: PulseCopyOverrides) => void;
 }
 
 const DEFAULT_PROMPT =
@@ -106,6 +115,7 @@ export const useAdminState = create<AdminState>()(
       aiLogs: [],
       missions: [],
       broadcasts: [],
+      pulseCopyOverrides: { energy: "auto", mood: "auto", focus: "auto" },
       setAdminAccess: (value) => set({ adminAccess: value }),
       setAdminCode: (value) => set({ adminCode: value }),
       setFeatureFlags: (flags) =>
@@ -142,7 +152,8 @@ export const useAdminState = create<AdminState>()(
         set((state) => ({ broadcasts: [broadcast, ...state.broadcasts] })),
       setBroadcasts: (broadcasts) => set({ broadcasts }),
       removeBroadcast: (id) =>
-        set((state) => ({ broadcasts: state.broadcasts.filter((b) => b.id !== id) }))
+        set((state) => ({ broadcasts: state.broadcasts.filter((b) => b.id !== id) })),
+      setPulseCopyOverrides: (overrides) => set({ pulseCopyOverrides: overrides })
     }),
     {
       name: "dawayir-admin-state"

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import { isPrivilegedRole } from "../utils/featureFlags";
+import { supabase } from "../services/supabaseClient";
 
 export type UserToneGender = "male" | "female" | "neutral";
 
@@ -243,7 +244,6 @@ async function initSupabaseAuth(): Promise<void> {
   }
 
   try {
-    const { supabase } = await import("../services/supabaseClient");
     if (!supabase) {
       useAuthState.getState().setSession(null);
       useAuthState.getState().setRole(null);

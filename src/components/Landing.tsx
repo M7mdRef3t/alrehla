@@ -344,24 +344,29 @@ export const Landing: FC<LandingProps> = ({
 
             {/* زر التثبيت — يظهر لجميع المستخدمين (وضع المستخدم) على موبايل/تابلت */}
             {pwaInstall?.canShowInstallButton && (
-              <button
-                type="button"
-                onClick={() => {
-                  recordFlowEvent("install_clicked");
-                  if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
-                  else pwaInstall.showInstallHint();
-                }}
-                className="mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-medium border transition-colors"
-                style={{
-                  borderColor: "rgba(59, 130, 246, 0.5)",
-                  color: "rgba(147, 197, 253, 0.95)",
-                  background: "rgba(59, 130, 246, 0.12)"
-                }}
-                aria-label="تثبيت التطبيق"
-              >
-                <Smartphone className="w-4 h-4" />
-                تثبيت التطبيق
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    recordFlowEvent("install_clicked");
+                    if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
+                    else pwaInstall.showInstallHint();
+                  }}
+                  className="mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-medium border transition-colors"
+                  style={{
+                    borderColor: "rgba(59, 130, 246, 0.5)",
+                    color: "rgba(147, 197, 253, 0.95)",
+                    background: "rgba(59, 130, 246, 0.12)"
+                  }}
+                  aria-label="إضافة للشاشة الرئيسية"
+                >
+                  <Smartphone className="w-4 h-4" />
+                  إضافة للشاشة الرئيسية
+                </button>
+                <p className="mt-2 text-[12px] text-center" style={{ color: "rgba(147, 197, 253, 0.9)" }}>
+                  بدون Google Play وبدون تنزيل APK
+                </p>
+              </>
             )}
           </motion.div>
 

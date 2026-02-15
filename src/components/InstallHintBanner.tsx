@@ -51,6 +51,9 @@ export const InstallHintBanner: FC = () => {
                 <p className="text-sm font-bold text-blue-900 dark:text-blue-100">
                   تطبيق الرحلة أسرع وأفضل
                 </p>
+                <p className="mt-1 text-[11px] text-blue-700 dark:text-blue-300">
+                  هذا ليس تنزيلًا من المتجر، هو اختصار يضيف التطبيق للشاشة الرئيسية.
+                </p>
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
                     <Zap className="h-3 w-3" />
@@ -64,7 +67,7 @@ export const InstallHintBanner: FC = () => {
                 <p className="text-xs text-blue-700 dark:text-blue-300 mt-2 font-medium">
                   {installEvent ? (
                     <>
-                      اضغط زر "تثبيت التطبيق" هنا تحت أو في القائمة الجانبية.
+                      اضغط زر "إضافة للشاشة الرئيسية" هنا تحت أو في القائمة الجانبية.
                     </>
                   ) : (
                     <>
@@ -72,7 +75,7 @@ export const InstallHintBanner: FC = () => {
                       <span className="inline-flex align-middle mx-0.5 text-blue-600 dark:text-blue-300">
                         <ArrowUpRight className="h-3.5 w-3.5 animate-pulse" aria-hidden />
                       </span>
-                      أو افتح قائمة المتصفح واختر "تثبيت التطبيق".
+                      أو افتح قائمة المتصفح واختر "إضافة للشاشة الرئيسية".
                     </>
                   )}
                 </p>
@@ -83,7 +86,7 @@ export const InstallHintBanner: FC = () => {
                       onClick={triggerInstall}
                       className="rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-1.5 text-xs font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all"
                     >
-                      تثبيت التطبيق
+                      إضافة للشاشة الرئيسية
                     </button>
                   )}
                 </div>
@@ -118,6 +121,9 @@ export const InstallHintBanner: FC = () => {
               <div className="flex-1">
                 <p className="text-sm font-bold text-blue-900 dark:text-blue-100">
                   تطبيق الرحلة أسرع وأفضل
+                </p>
+                <p className="mt-1 text-[11px] text-blue-700 dark:text-blue-300">
+                  هذا ليس تنزيلًا من المتجر، هو اختصار يضيف التطبيق للشاشة الرئيسية.
                 </p>
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">

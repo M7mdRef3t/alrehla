@@ -28,6 +28,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Arabic Encoding Guard
+        run: npm run check:arabic-encoding
+
       - name: Unit Tests
         run: npm run test:run
 

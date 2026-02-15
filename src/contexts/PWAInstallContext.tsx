@@ -13,6 +13,10 @@ function isStandaloneDisplay(): boolean {
   return window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
 }
 
+function isLikelyInAppBrowser(ua: string): boolean {
+  return /(FBAN|FBAV|Instagram|Line|TikTok|Snapchat|wv)/i.test(ua);
+}
+
 interface PWAInstallContextValue {
   canShowInstallButton: boolean;
   triggerInstall: () => Promise<void>;
@@ -113,7 +117,22 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
   }, []);
 
   const triggerInstall = useCallback(async () => {
-    if (!installEvent) return;
+    if (!installEvent) {
+      setDismissed(false);
+      setForceShowHint(true);
+      setIsVisible(true);
+      if (typeof window !== "undefined") {
+        const ua = window.navigator.userAgent ?? "";
+        if (isLikelyInAppBrowser(ua)) {
+          window.alert('هذا المتصفح لا يدعم تثبيت التطبيق مباشرة. افتح الصفحة في Chrome أو Safari ثم جرّب "تثبيت التطبيق".');
+        } else if (isAndroid) {
+          window.alert('لو لم تظهر نافذة التثبيت: افتح قائمة المتصفح ثم اختر "تثبيت التطبيق" أو "Add to Home screen".');
+        } else if (isIOS) {
+          window.alert('لتثبيت التطبيق على iPhone/iPad: اضغط زر المشاركة ثم "إضافة إلى الشاشة الرئيسية".');
+        }
+      }
+      return;
+    }
     await installEvent.prompt();
     try {
       await installEvent.userChoice;
@@ -121,7 +140,7 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
       // ignore
     }
     setInstallEvent(null);
-  }, [installEvent]);
+  }, [installEvent, isAndroid, isIOS]);
 
   const showInstallHint = useCallback(() => {
     setDismissed(false);

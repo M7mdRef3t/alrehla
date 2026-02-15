@@ -5,7 +5,7 @@ import { X, Shield, Lock, Heart, Loader, Sparkles } from "lucide-react";
 import { signInWithGoogle } from "../services/authService";
 import { AnalyticsEvents, trackEvent } from "../services/analytics";
 import { isSupabaseReady } from "../services/supabaseClient";
-import type { PulseFocus, PulseMood } from "../state/pulseState";
+import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "../state/pulseState";
 import { GoogleMark } from "./GoogleMark";
 import { clearPostAuthIntent, setPostAuthIntent, type PostAuthIntent } from "../utils/postAuthIntent";
 
@@ -14,7 +14,15 @@ interface GoogleAuthModalProps {
   intent: PostAuthIntent;
   onClose: () => void;
   /** يُستدعى عند "مش دلوقتي" — يُمرّر pulse للحفظ المحلي (Guest Mode) */
-  onNotNow?: (pulseToSave?: { energy: number; mood: PulseMood; focus: PulseFocus; auto?: boolean; notes?: string }) => void;
+  onNotNow?: (pulseToSave?: {
+    energy: number;
+    mood: PulseMood;
+    focus: PulseFocus;
+    auto?: boolean;
+    notes?: string;
+    energyReasons?: string[];
+    energyConfidence?: PulseEnergyConfidence;
+  }) => void;
 }
 
 function valueToLabel(value: number): string {

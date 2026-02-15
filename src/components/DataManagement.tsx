@@ -78,7 +78,6 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
   const authStatus = useAuthState((s) => s.status);
   const authUser = useAuthState((s) => s.user);
   const baseRole = useAuthState((s) => s.role);
-  const roleOverride = useAuthState((s) => s.roleOverride);
   const setRoleOverride = useAuthState((s) => s.setRoleOverride);
   const authRole = useAuthState(getEffectiveRoleFromState);
   const isPrivilegedUser = isPrivilegedRole(authRole);

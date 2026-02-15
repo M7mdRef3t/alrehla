@@ -4,11 +4,14 @@ import { pushPulseLog } from "../services/pulseSync";
 
 export type PulseMood = "bright" | "calm" | "anxious" | "angry" | "sad" | "tense" | "hopeful" | "overwhelmed";
 export type PulseFocus = "event" | "thought" | "body" | "none";
+export type PulseEnergyConfidence = "low" | "medium" | "high";
 
 export interface PulseEntry {
   energy: number; // 1-10
   mood: PulseMood;
   focus: PulseFocus;
+  energyReasons?: string[];
+  energyConfidence?: PulseEnergyConfidence;
   timestamp: number;
   auto?: boolean;
 }

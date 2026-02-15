@@ -3,6 +3,7 @@ import { useAdminState } from "../state/adminState";
 import { useAuthState, getEffectiveRoleFromState } from "../state/authState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "../utils/featureFlags";
 import { isUserMode } from "../config/appEnv";
+import { fetchAdminConfig } from "../services/adminApi";
 
 const hasSupabaseEnv = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 
@@ -18,6 +19,7 @@ export function useAppStateInitialization() {
   const setSystemPrompt = useAdminState((s) => s.setSystemPrompt);
   const setScoringWeights = useAdminState((s) => s.setScoringWeights);
   const setScoringThresholds = useAdminState((s) => s.setScoringThresholds);
+  const setPulseCopyOverrides = useAdminState((s) => s.setPulseCopyOverrides);
 
   const authStatus = useAuthState((s) => s.status);
   const authUser = useAuthState((s) => s.user);
@@ -49,14 +51,20 @@ export function useAppStateInitialization() {
   useEffect(() => {
     if (!hasSupabaseEnv) return;
     let cancelled = false;
-    import("../services/adminApi")
-      .then(({ fetchAdminConfig }) => fetchAdminConfig())
+    fetchAdminConfig()
       .then((config) => {
         if (!config || cancelled) return;
         if (config.featureFlags) setFeatureFlags(config.featureFlags);
         if (config.systemPrompt) setSystemPrompt(config.systemPrompt);
         if (config.scoringWeights) setScoringWeights(config.scoringWeights);
         if (config.scoringThresholds) setScoringThresholds(config.scoringThresholds);
+        if (config.pulseCopyOverrides) {
+          setPulseCopyOverrides({
+            energy: config.pulseCopyOverrides.energy ?? "auto",
+            mood: config.pulseCopyOverrides.mood ?? "auto",
+            focus: config.pulseCopyOverrides.focus ?? "auto"
+          });
+        }
       })
       .catch(() => {
         // ignore remote errors, fallback to local
@@ -64,7 +72,7 @@ export function useAppStateInitialization() {
     return () => {
       cancelled = true;
     };
-  }, [setFeatureFlags, setSystemPrompt, setScoringWeights, setScoringThresholds]);
+  }, [setFeatureFlags, setSystemPrompt, setScoringWeights, setScoringThresholds, setPulseCopyOverrides]);
 
   return {
     authStatus,

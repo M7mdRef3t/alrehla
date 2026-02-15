@@ -2,7 +2,9 @@
   "name": "الرحلة",
   "short_name": "الرحلة",
   "description": "الرحلة منصة تساعدك تشوف علاقاتك وحدودك بوضوح. أداة دواير هي البوصلة الأولى.",
-  "start_url": "/",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#0D9488",
@@ -66,7 +68,7 @@
       "name": "افتح دواير",
       "short_name": "دواير",
       "description": "افتح أداة دواير لترتيب علاقاتك",
-      "url": "/?action=start",
+      "url": "./?action=start",
       "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     }
   ]
