@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2026-02-14T21:29:53.254Z",
+  "totals": {
+    "profiles": 4,
+    "userState": 1,
+    "eventsTotal": 1552,
+    "mapsTotal": 0,
+    "sessions30d": 181
+  },
+  "activity": {
+    "events1d": 584,
+    "events7d": 1552,
+    "events30d": 1552
+  },
+  "journey": {
+    "nodeAdded": 22,
+    "pathStarted": 0,
+    "taskCompleted": 0
+  },
+  "tracking": {
+    "identified": 97,
+    "anonymous": 1455,
+    "identifiedRate": 6
+  },
+  "funnel": {
+    "landingViewed": 422,
+    "startClicked": 110,
+    "addPersonOpened": 36,
+    "addPersonDone": 9,
+    "startPathCTA": 0
+  },
+  "funnelRates": {
+    "startClickRate": 26,
+    "addPersonRateFromStart": 33,
+    "addPersonDoneRate": 25,
+    "startPathCtaRate": 0
+  },
+  "pulseAbandonByReason": {
+    "backdrop": 2,
+    "close_button": 17,
+    "programmatic": 0,
+    "browser_close": 0,
+    "unknown": 0
+  },
+  "emergency": [
+    {
+      "sessionId": "",
+      "personLabel": "الأب",
+      "createdAt": "2026-02-13T15:58:53.227+00:00"
+    }
+  ],
+  "warnings": [
+    "تمت إضافات أشخاص لكن لا توجد خرائط محفوظة.",
+    "لا توجد أي بدايات مسار.",
+    "تحويل ما بعد إضافة الشخص منخفض جدًا.",
+    "نسبة identified منخفضة وتضعف التتبع الفردي."
+  ]
+}
