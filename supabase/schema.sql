@@ -38,6 +38,7 @@ create trigger app_content_set_updated_at
 before update on app_content
 for each row execute function public.set_updated_at();
 
+
 -- سجل الذكاء الاصطناعي (للمراجعة)
 create table if not exists admin_ai_logs (
   id text primary key,
@@ -69,6 +70,27 @@ create table if not exists admin_audit_logs (
   actor_role text,
   payload jsonb not null default '{}'::jsonb
 );
+
+-- تذاكر الدعم (Owner Support Desk)
+create table if not exists support_tickets (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  source text not null default 'manual',
+  status text not null default 'open',
+  priority text not null default 'normal',
+  title text not null,
+  message text not null,
+  session_id text,
+  category text,
+  assignee text,
+  metadata jsonb not null default '{}'::jsonb
+);
+
+drop trigger if exists support_tickets_set_updated_at on support_tickets;
+create trigger support_tickets_set_updated_at
+before update on support_tickets
+for each row execute function public.set_updated_at();
 
 -- مكتبة المهام
 create table if not exists admin_missions (
@@ -209,11 +231,29 @@ create index if not exists profiles_last_seen_idx on profiles (last_seen desc);
 create index if not exists admin_reports_created_at_idx on admin_reports (created_at desc);
 create index if not exists admin_flow_audit_logs_created_at_idx on admin_flow_audit_logs (created_at desc);
 create index if not exists admin_audit_logs_created_at_idx on admin_audit_logs (created_at desc);
+create index if not exists support_tickets_created_at_idx on support_tickets (created_at desc);
+create index if not exists support_tickets_status_idx on support_tickets (status);
+create index if not exists support_tickets_updated_at_idx on support_tickets (updated_at desc);
 
 create index if not exists consciousness_vectors_embedding_cosine_idx
   on public.consciousness_vectors
   using ivfflat (embedding vector_cosine_ops)
   with (lists = 100);
+
+-- يضمن بث تغييرات المحتوى عبر Realtime
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'app_content'
+  ) then
+    alter publication supabase_realtime add table app_content;
+  end if;
+end
+$$;
 
 create or replace function public.match_consciousness_vectors(
   query_embedding vector(768),

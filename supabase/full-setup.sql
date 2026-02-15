@@ -4,7 +4,7 @@
 -- 1. افتح Supabase → مشروعك → SQL Editor
 -- 2. انسخ هذا الملف كاملاً والصقه في الاستعلام
 -- 3. اضغط Run
--- 4. بعدها: Database → Replication → فعّل Realtime لجدول app_content
+-- 4. Realtime لجدول app_content يتفعل تلقائياً من هذا السكربت (publication)
 -- 5. (اختياري) لترقية حسابك لـ owner: شغّل الاستعلام في نهاية الملف بعد ما تحط id حسابك
 -- =============================================================================
 
@@ -68,6 +68,26 @@ create table if not exists admin_audit_logs (
   actor_role text,
   payload jsonb not null default '{}'::jsonb
 );
+
+create table if not exists support_tickets (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  source text not null default 'manual',
+  status text not null default 'open',
+  priority text not null default 'normal',
+  title text not null,
+  message text not null,
+  session_id text,
+  category text,
+  assignee text,
+  metadata jsonb not null default '{}'::jsonb
+);
+
+drop trigger if exists support_tickets_set_updated_at on support_tickets;
+create trigger support_tickets_set_updated_at
+before update on support_tickets
+for each row execute function public.set_updated_at();
 
 create table if not exists admin_missions (
   id text primary key,
@@ -193,6 +213,9 @@ create index if not exists profiles_last_seen_idx on profiles (last_seen desc);
 create index if not exists admin_reports_created_at_idx on admin_reports (created_at desc);
 create index if not exists admin_flow_audit_logs_created_at_idx on admin_flow_audit_logs (created_at desc);
 create index if not exists admin_audit_logs_created_at_idx on admin_audit_logs (created_at desc);
+create index if not exists support_tickets_created_at_idx on support_tickets (created_at desc);
+create index if not exists support_tickets_status_idx on support_tickets (status);
+create index if not exists support_tickets_updated_at_idx on support_tickets (updated_at desc);
 create index if not exists consciousness_vectors_embedding_cosine_idx
   on public.consciousness_vectors
   using ivfflat (embedding vector_cosine_ops)
@@ -296,6 +319,23 @@ create policy admin_audit_logs_owner_select on admin_audit_logs for select using
   exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('owner', 'superadmin'))
 );
 
+alter table support_tickets enable row level security;
+drop policy if exists support_tickets_service_role on support_tickets;
+create policy support_tickets_service_role on support_tickets for all
+  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+drop policy if exists support_tickets_owner_select on support_tickets;
+create policy support_tickets_owner_select on support_tickets for select using (
+  exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('owner', 'superadmin'))
+);
+drop policy if exists support_tickets_owner_update on support_tickets;
+create policy support_tickets_owner_update on support_tickets for update
+  using (
+    exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('owner', 'superadmin'))
+  )
+  with check (
+    exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('owner', 'superadmin'))
+  );
+
 alter table admin_missions enable row level security;
 drop policy if exists admin_missions_service_role on admin_missions;
 create policy admin_missions_service_role on admin_missions for all
@@ -370,6 +410,22 @@ drop policy if exists app_content_owner_delete on app_content;
 create policy app_content_owner_delete on app_content for delete using (
   exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('owner', 'superadmin'))
 );
+
+-- ---------- Realtime ----------
+-- يضمن أن تغييرات app_content تُبث عبر Supabase Realtime
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'app_content'
+  ) then
+    alter publication supabase_realtime add table app_content;
+  end if;
+end
+$$;
 
 -- ---------- ترقية حسابك لـ owner (شغّله مرة واحدة بعد ما تحط الـ id) ----------
 -- احصل على الـ id من: Authentication → Users → انسخ User UID

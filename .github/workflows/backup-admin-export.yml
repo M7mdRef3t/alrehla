@@ -1,0 +1,37 @@
+name: Admin Backup
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Run backup export
+        env:
+          PUBLIC_APP_URL: ${{ secrets.PUBLIC_APP_URL }}
+          ADMIN_API_SECRET: ${{ secrets.ADMIN_API_SECRET }}
+          ADMIN_EXPORT_ENDPOINT: ${{ secrets.ADMIN_EXPORT_ENDPOINT }}
+          ADMIN_EXPORT_ADMIN_CODE: ${{ secrets.ADMIN_EXPORT_ADMIN_CODE }}
+        run: npm run backup:admin
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: admin-backup-${{ github.run_id }}
+          path: backups/admin/*.json
+          if-no-files-found: error

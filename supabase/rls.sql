@@ -68,6 +68,46 @@ create policy admin_audit_logs_owner_select on admin_audit_logs
     )
   );
 
+-- Support tickets (service role full access + owner/superadmin read/write)
+alter table support_tickets enable row level security;
+drop policy if exists support_tickets_service_role on support_tickets;
+create policy support_tickets_service_role on support_tickets
+  for all
+  using (auth.role() = 'service_role')
+  with check (auth.role() = 'service_role');
+
+drop policy if exists support_tickets_owner_select on support_tickets;
+create policy support_tickets_owner_select on support_tickets
+  for select
+  using (
+    exists (
+      select 1
+      from profiles p
+      where p.id = auth.uid()::text
+        and p.role in ('owner', 'superadmin')
+    )
+  );
+
+drop policy if exists support_tickets_owner_update on support_tickets;
+create policy support_tickets_owner_update on support_tickets
+  for update
+  using (
+    exists (
+      select 1
+      from profiles p
+      where p.id = auth.uid()::text
+        and p.role in ('owner', 'superadmin')
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from profiles p
+      where p.id = auth.uid()::text
+        and p.role in ('owner', 'superadmin')
+    )
+  );
+
 -- Admin missions (admin only)
 alter table admin_missions enable row level security;
 drop policy if exists admin_missions_service_role on admin_missions;

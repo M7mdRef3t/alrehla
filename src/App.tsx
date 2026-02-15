@@ -249,8 +249,8 @@ function hasOAuthCallbackParams(): boolean {
 
 function normalizeArabicDigits(value: string): string {
   return value
-    .replace(/[Ù -Ù©]/g, (digit) => String(digit.charCodeAt(0) - 1632))
-    .replace(/[Û°-Û¹]/g, (digit) => String(digit.charCodeAt(0) - 1776));
+    .replace(/[\u0660-\u0669]/g, (digit) => String(digit.charCodeAt(0) - 1632))
+    .replace(/[\u06F0-\u06F9]/g, (digit) => String(digit.charCodeAt(0) - 1776));
 }
 
 function normalizeWhatsAppPhone(rawPhone: string): string {

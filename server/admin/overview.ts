@@ -486,6 +486,103 @@ async function handleFeedback(client: any, req: any, res: any) {
   });
 }
 
+async function handleSupportTicketsGet(client: any, req: any, res: any) {
+  const limit = safeLimit(req.query?.limit, 100, 500);
+  const search = String(req.query?.search ?? "").trim().toLowerCase();
+  const status = String(req.query?.status ?? "").trim().toLowerCase();
+
+  const { data, error } = await client
+    .from("support_tickets")
+    .select("id,created_at,updated_at,source,status,priority,title,message,session_id,category,assignee,metadata")
+    .order("updated_at", { ascending: false })
+    .limit(2000);
+
+  if (error) {
+    res.status(500).json({ error: "Failed to fetch support tickets" });
+    return;
+  }
+
+  const tickets = ((data ?? []) as Array<Record<string, unknown>>).filter((row) => {
+    const rowStatus = String(row.status ?? "open").toLowerCase();
+    if (status && rowStatus !== status) return false;
+    if (!search) return true;
+    const blob = `${row.title ?? ""} ${row.message ?? ""} ${row.category ?? ""} ${row.session_id ?? ""}`.toLowerCase();
+    return blob.includes(search);
+  });
+
+  res.status(200).json({ tickets: tickets.slice(0, limit) });
+}
+
+async function handleSupportTicketsPost(client: any, req: any, res: any) {
+  const body = await parseJsonBody(req);
+  const action = String(body?.action ?? "create");
+
+  if (action === "create") {
+    const title = String(body?.title ?? "").trim();
+    const message = String(body?.message ?? "").trim();
+    if (!title || !message) {
+      res.status(400).json({ error: "title and message are required" });
+      return;
+    }
+    const insertPayload = {
+      source: String(body?.source ?? "manual"),
+      status: String(body?.status ?? "open"),
+      priority: String(body?.priority ?? "normal"),
+      title,
+      message,
+      session_id: body?.sessionId ? String(body.sessionId) : null,
+      category: body?.category ? String(body.category) : null,
+      assignee: body?.assignee ? String(body.assignee) : null,
+      metadata: body?.metadata && typeof body.metadata === "object" ? body.metadata : {}
+    };
+    const { data, error } = await client
+      .from("support_tickets")
+      .insert(insertPayload)
+      .select("id,created_at,updated_at,source,status,priority,title,message,session_id,category,assignee,metadata")
+      .single();
+    if (error) {
+      res.status(500).json({ error: "Failed to create support ticket" });
+      return;
+    }
+    await recordAdminAudit(req, "support_ticket_create", {
+      ticketId: String((data as Record<string, unknown> | null)?.id ?? ""),
+      source: insertPayload.source,
+      priority: insertPayload.priority
+    });
+    res.status(200).json({ ok: true, ticket: data });
+    return;
+  }
+
+  if (action === "update-status") {
+    const id = String(body?.id ?? "").trim();
+    const nextStatus = String(body?.status ?? "").trim();
+    if (!id || !nextStatus) {
+      res.status(400).json({ error: "id and status are required" });
+      return;
+    }
+    const patch: Record<string, unknown> = { status: nextStatus };
+    if (body?.assignee != null) patch.assignee = String(body.assignee || "");
+    const { data, error } = await client
+      .from("support_tickets")
+      .update(patch)
+      .eq("id", id)
+      .select("id,created_at,updated_at,source,status,priority,title,message,session_id,category,assignee,metadata")
+      .single();
+    if (error) {
+      res.status(500).json({ error: "Failed to update support ticket" });
+      return;
+    }
+    await recordAdminAudit(req, "support_ticket_status_update", {
+      ticketId: id,
+      status: nextStatus
+    });
+    res.status(200).json({ ok: true, ticket: data });
+    return;
+  }
+
+  res.status(400).json({ error: "Unsupported action" });
+}
+
 async function handleOwnerAlerts(client: any, req: any, res: any) {
   const now = new Date();
   const sinceRaw = String(req.query?.since ?? "").trim();
@@ -1275,6 +1372,7 @@ export async function overviewRouter(req: any, res: any) {
       if (kind === "executive-report") return handleExecutiveReport(client, res);
       if (kind === "system-health") return handleSystemHealth(client, res);
       if (kind === "feedback") return handleFeedback(client, req, res);
+      if (kind === "support-tickets") return handleSupportTicketsGet(client, req, res);
       if (kind === "owner-alerts") return handleOwnerAlerts(client, req, res);
       if (kind === "daily-report") return handleDailyReport(client, req, res);
       if (kind === "weekly-report") return handleWeeklyReport(client, req, res);
@@ -1286,6 +1384,7 @@ export async function overviewRouter(req: any, res: any) {
     }
 
     if (method === "POST") {
+      if (kind === "support-tickets") return handleSupportTicketsPost(client, req, res);
       if (kind === "user-state-import") return handleUserStateImport(client, req, res);
       res.status(400).json({ error: `Unsupported kind for POST: ${kind}` });
       return;

@@ -604,6 +604,21 @@ export interface AdminFeedbackEntry {
   createdAt: number | null;
 }
 
+export interface SupportTicketEntry {
+  id: string;
+  createdAt: number | null;
+  updatedAt: number | null;
+  source: string;
+  status: string;
+  priority: string;
+  title: string;
+  message: string;
+  sessionId: string | null;
+  category: string | null;
+  assignee: string | null;
+  metadata: Record<string, unknown> | null;
+}
+
 export interface OwnerAlertsResponse {
   generatedAt: string;
   since: string;
@@ -999,6 +1014,105 @@ export async function fetchOwnerAlerts(query?: {
     ? `overview?kind=owner-alerts&${params.toString()}`
     : "overview?kind=owner-alerts";
   return await callAdminApi<OwnerAlertsResponse>(path);
+}
+
+export async function fetchSupportTickets(query?: {
+  limit?: number;
+  search?: string;
+  status?: string;
+}): Promise<SupportTicketEntry[] | null> {
+  const params = new URLSearchParams();
+  if (typeof query?.limit === "number" && Number.isFinite(query.limit) && query.limit > 0) {
+    params.set("limit", String(Math.floor(query.limit)));
+  }
+  if (query?.search && query.search.trim()) params.set("search", query.search.trim());
+  if (query?.status && query.status.trim()) params.set("status", query.status.trim());
+
+  const path = params.toString()
+    ? `overview?kind=support-tickets&${params.toString()}`
+    : "overview?kind=support-tickets";
+  const apiData = await callAdminApi<{ tickets: Array<Record<string, unknown>> }>(path);
+  if (!apiData?.tickets) return null;
+  return apiData.tickets.map((row) => ({
+    id: String(row.id ?? ""),
+    createdAt: row.created_at ? new Date(String(row.created_at)).getTime() : null,
+    updatedAt: row.updated_at ? new Date(String(row.updated_at)).getTime() : null,
+    source: String(row.source ?? "manual"),
+    status: String(row.status ?? "open"),
+    priority: String(row.priority ?? "normal"),
+    title: String(row.title ?? ""),
+    message: String(row.message ?? ""),
+    sessionId: row.session_id ? String(row.session_id) : null,
+    category: row.category ? String(row.category) : null,
+    assignee: row.assignee ? String(row.assignee) : null,
+    metadata: row.metadata && typeof row.metadata === "object" ? (row.metadata as Record<string, unknown>) : null
+  }));
+}
+
+export async function createSupportTicket(payload: {
+  title: string;
+  message: string;
+  source?: string;
+  priority?: string;
+  status?: string;
+  sessionId?: string | null;
+  category?: string | null;
+  assignee?: string | null;
+  metadata?: Record<string, unknown>;
+}): Promise<SupportTicketEntry | null> {
+  const apiData = await callAdminApi<{ ticket?: Record<string, unknown> }>("overview?kind=support-tickets", {
+    method: "POST",
+    body: JSON.stringify({
+      action: "create",
+      ...payload
+    })
+  });
+  const row = apiData?.ticket;
+  if (!row) return null;
+  return {
+    id: String(row.id ?? ""),
+    createdAt: row.created_at ? new Date(String(row.created_at)).getTime() : null,
+    updatedAt: row.updated_at ? new Date(String(row.updated_at)).getTime() : null,
+    source: String(row.source ?? "manual"),
+    status: String(row.status ?? "open"),
+    priority: String(row.priority ?? "normal"),
+    title: String(row.title ?? ""),
+    message: String(row.message ?? ""),
+    sessionId: row.session_id ? String(row.session_id) : null,
+    category: row.category ? String(row.category) : null,
+    assignee: row.assignee ? String(row.assignee) : null,
+    metadata: row.metadata && typeof row.metadata === "object" ? (row.metadata as Record<string, unknown>) : null
+  };
+}
+
+export async function updateSupportTicketStatus(payload: {
+  id: string;
+  status: "open" | "in_progress" | "resolved";
+  assignee?: string | null;
+}): Promise<SupportTicketEntry | null> {
+  const apiData = await callAdminApi<{ ticket?: Record<string, unknown> }>("overview?kind=support-tickets", {
+    method: "POST",
+    body: JSON.stringify({
+      action: "update-status",
+      ...payload
+    })
+  });
+  const row = apiData?.ticket;
+  if (!row) return null;
+  return {
+    id: String(row.id ?? ""),
+    createdAt: row.created_at ? new Date(String(row.created_at)).getTime() : null,
+    updatedAt: row.updated_at ? new Date(String(row.updated_at)).getTime() : null,
+    source: String(row.source ?? "manual"),
+    status: String(row.status ?? "open"),
+    priority: String(row.priority ?? "normal"),
+    title: String(row.title ?? ""),
+    message: String(row.message ?? ""),
+    sessionId: row.session_id ? String(row.session_id) : null,
+    category: row.category ? String(row.category) : null,
+    assignee: row.assignee ? String(row.assignee) : null,
+    metadata: row.metadata && typeof row.metadata === "object" ? (row.metadata as Record<string, unknown>) : null
+  };
 }
 
 export async function fetchOverviewStats(): Promise<OverviewStats | null> {

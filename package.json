@@ -24,6 +24,7 @@
     "generate-icons": "node scripts/generate-icons.js",
     "supabase:apply-setup": "node scripts/apply-supabase-setup.mjs",
     "report:production": "node scripts/production-insights.mjs",
+    "backup:admin": "node scripts/backup-admin-export.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

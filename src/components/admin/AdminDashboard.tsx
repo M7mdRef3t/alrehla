@@ -70,6 +70,9 @@ import {
   fetchSystemHealth,
   fetchUsers,
   fetchFeedbackEntries,
+  fetchSupportTickets,
+  createSupportTicket,
+  updateSupportTicketStatus,
   saveAiLog,
   saveAppContentEntry,
   saveBroadcast,
@@ -87,6 +90,7 @@ import {
   type ThemePalette,
   type AdminContentEntry,
   type AdminFeedbackEntry,
+  type SupportTicketEntry,
   type SessionEventRow,
   type VisitorSessionSummary
 } from "../../services/adminApi";
@@ -1527,7 +1531,9 @@ const OverviewPanel: FC = () => {
                   <button
                     type="button"
                     disabled={!log.sessionId}
-                    onClick={() => log.sessionId && void openJourneyLog(log.sessionId)}
+                    onClick={() => {
+                      if (log.sessionId) window.alert(`Session: ${log.sessionId}`);
+                    }}
                     className="shrink-0 rounded-full border border-rose-300/50 px-3 py-1 text-[11px] font-semibold text-rose-100 hover:bg-rose-800/40 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     متابعة الحالة
@@ -1891,10 +1897,17 @@ const OverviewPanel: FC = () => {
 
 const FeedbackPanel: FC = () => {
   const [entries, setEntries] = useState<AdminFeedbackEntry[]>([]);
+  const [tickets, setTickets] = useState<SupportTicketEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [query, setQuery] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [ticketForm, setTicketForm] = useState({
+    title: "",
+    message: "",
+    priority: "normal" as "low" | "normal" | "high" | "urgent"
+  });
 
   const loadFeedback = useCallback(async (search?: string) => {
     setLoading(true);
@@ -1910,18 +1923,135 @@ const FeedbackPanel: FC = () => {
     setLoading(false);
   }, []);
 
+  const loadTickets = useCallback(async (search?: string) => {
+    setTicketsLoading(true);
+    const data = await fetchSupportTickets({ limit: 200, search });
+    setTickets(data ?? []);
+    setTicketsLoading(false);
+  }, []);
+
   useEffect(() => {
     void loadFeedback();
-  }, [loadFeedback]);
+    void loadTickets();
+  }, [loadFeedback, loadTickets]);
 
   const handleSearch = () => {
     const next = searchInput.trim();
     setQuery(next);
     void loadFeedback(next || undefined);
+    void loadTickets(next || undefined);
+  };
+
+  const submitTicket = async () => {
+    const title = ticketForm.title.trim();
+    const message = ticketForm.message.trim();
+    if (!title || !message) {
+      setStatus("العنوان والرسالة مطلوبان لإنشاء تذكرة.");
+      return;
+    }
+    const created = await createSupportTicket({
+      title,
+      message,
+      source: "owner",
+      priority: ticketForm.priority
+    });
+    if (!created) {
+      setStatus("تعذر إنشاء التذكرة حالياً.");
+      return;
+    }
+    setTicketForm({ title: "", message: "", priority: "normal" });
+    setStatus("تم إنشاء تذكرة الدعم بنجاح.");
+    void loadTickets(query || undefined);
+  };
+
+  const changeTicketStatus = async (id: string, nextStatus: "open" | "in_progress" | "resolved") => {
+    const updated = await updateSupportTicketStatus({ id, status: nextStatus });
+    if (!updated) {
+      setStatus("تعذر تحديث حالة التذكرة.");
+      return;
+    }
+    void loadTickets(query || undefined);
   };
 
   return (
     <div className="space-y-6">
+      <div className="admin-glass-card p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-800">مكتب الدعم (Support Tickets)</h3>
+            <p className="text-xs text-slate-600 mt-1">تتبّع مشاكل المالك والعملاء بحالات واضحة.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadTickets(query || undefined)}
+            disabled={ticketsLoading}
+            className="rounded-full border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+          >
+            {ticketsLoading ? "جاري التحديث..." : "تحديث التذاكر"}
+          </button>
+        </div>
+
+        <div className="grid gap-2 md:grid-cols-4">
+          <input
+            value={ticketForm.title}
+            onChange={(e) => setTicketForm((prev) => ({ ...prev, title: e.target.value }))}
+            placeholder="عنوان المشكلة"
+            className="md:col-span-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800"
+          />
+          <select
+            value={ticketForm.priority}
+            onChange={(e) => setTicketForm((prev) => ({ ...prev, priority: e.target.value as "low" | "normal" | "high" | "urgent" }))}
+            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800"
+          >
+            <option value="low">أولوية منخفضة</option>
+            <option value="normal">أولوية عادية</option>
+            <option value="high">أولوية عالية</option>
+            <option value="urgent">أولوية عاجلة</option>
+          </select>
+          <button
+            type="button"
+            onClick={submitTicket}
+            className="rounded-full bg-indigo-500 text-white px-4 py-2 text-xs font-semibold"
+          >
+            إنشاء تذكرة
+          </button>
+          <textarea
+            value={ticketForm.message}
+            onChange={(e) => setTicketForm((prev) => ({ ...prev, message: e.target.value }))}
+            placeholder="وصف المشكلة أو الطلب..."
+            rows={3}
+            className="md:col-span-4 rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800"
+          />
+        </div>
+
+        <div className="space-y-2 max-h-[360px] overflow-auto pr-1">
+          {!ticketsLoading && tickets.length === 0 && (
+            <p className="text-xs text-slate-600">لا توجد تذاكر حالياً.</p>
+          )}
+          {tickets.map((ticket) => (
+            <div key={ticket.id} className="rounded-2xl border border-slate-200 bg-white p-3 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                <span className="font-semibold text-slate-800">{ticket.title}</span>
+                <span className="text-slate-600">
+                  {ticket.updatedAt ? new Date(ticket.updatedAt).toLocaleString("ar-EG") : "—"}
+                </span>
+              </div>
+              <p className="text-xs text-slate-700 whitespace-pre-wrap">{ticket.message}</p>
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-600">
+                <span>الحالة: {ticket.status}</span>
+                <span>الأولوية: {ticket.priority}</span>
+                <span>المصدر: {ticket.source}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => void changeTicketStatus(ticket.id, "open")} className="rounded-full border border-slate-300 px-3 py-1 text-[11px] text-slate-700">Open</button>
+                <button type="button" onClick={() => void changeTicketStatus(ticket.id, "in_progress")} className="rounded-full border border-amber-300 px-3 py-1 text-[11px] text-amber-700">In Progress</button>
+                <button type="button" onClick={() => void changeTicketStatus(ticket.id, "resolved")} className="rounded-full border border-emerald-300 px-3 py-1 text-[11px] text-emerald-700">Resolved</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="admin-glass-card p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
