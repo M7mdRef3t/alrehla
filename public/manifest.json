@@ -62,7 +62,26 @@
     }
   ],
   "categories": ["lifestyle", "health", "self-improvement"],
-  "screenshots": [],
+  "screenshots": [
+    {
+      "src": "/screenshots/hero-1.png",
+      "sizes": "1200x628",
+      "type": "image/png",
+      "label": "خريطة دواير — واجهة"
+    },
+    {
+      "src": "/screenshots/hero-2.png",
+      "sizes": "800x600",
+      "type": "image/png",
+      "label": "نافذة إضافة شخص"
+    },
+    {
+      "src": "/screenshots/hero-3.png",
+      "sizes": "640x360",
+      "type": "image/png",
+      "label": "خريطة المدارات"
+    }
+  ],
   "shortcuts": [
     {
       "name": "افتح دواير",

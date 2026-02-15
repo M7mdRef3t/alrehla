@@ -1,4 +1,9 @@
 import { Component, type ReactNode } from "react";
+import { clearLocalStorage } from "../services/browserStorage";
+import { reloadPage } from "../services/navigation";
+import { openMailto } from "../services/clientDom";
+import { getWindowOrNull } from "../services/clientRuntime";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 declare global {
   interface Window {
@@ -29,8 +34,9 @@ export class ErrorBoundary extends Component<Props, State> {
     // تسجيل الخطأ
     console.error("Error caught by ErrorBoundary:", error, errorInfo);
     // يمكن إرسال الخطأ إلى Sentry أو خدمة مراقبة أخرى
-    if (typeof window !== "undefined" && window.__errorReporter) {
-      window.__errorReporter({
+    const windowRef = getWindowOrNull();
+    if (windowRef?.__errorReporter) {
+      windowRef.__errorReporter({
         error: error.toString(),
         stack: errorInfo.componentStack ?? undefined,
         timestamp: new Date().toISOString()
@@ -40,7 +46,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   handleReset = () => {
     this.setState({ hasError: false, error: null });
-    window.location.reload();
+    reloadPage();
   };
 
   handleClearData = () => {
@@ -49,8 +55,8 @@ export class ErrorBoundary extends Component<Props, State> {
         "هل أنت متأكد؟ هيتم مسح كل البيانات المحفوظة والبدء من جديد."
       )
     ) {
-      localStorage.clear();
-      window.location.reload();
+      clearLocalStorage();
+      reloadPage();
     }
   };
 
@@ -93,7 +99,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
 
             {/* تفاصيل الخطأ (للمطورين فقط في وضع التطوير) */}
-            {import.meta.env.DEV && this.state.error && (
+            {runtimeEnv.isDev && this.state.error && (
               <div className="mb-6 p-4 bg-red-50 rounded-lg text-right">
                 <p className="text-xs text-red-800 font-mono break-all">
                   {this.state.error.toString()}
@@ -130,7 +136,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 </a>
                 <button
                   type="button"
-                  onClick={() => window.open("mailto:support@alrehla.app")}
+                  onClick={() => openMailto("support@alrehla.app")}
                   className="text-sm text-slate-600 hover:text-slate-700 font-semibold"
                 >
                   📧 التواصل مع الدعم

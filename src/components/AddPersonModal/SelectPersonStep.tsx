@@ -1,4 +1,4 @@
-import type { FC, ReactNode } from "react";
+﻿import type { FC, ReactNode } from "react";
 import { motion } from "framer-motion";
 import { mapCopy } from "../../copy/map";
 import { SUGGESTIONS, type SuggestionCard } from "./constants";
@@ -12,6 +12,7 @@ interface SelectPersonStepProps {
   showCustomTitleInput: boolean;
   customName: string;
   encouragementHint?: boolean;
+  contextualHint?: string;
   afterNameContent?: ReactNode;
   onTitleSelect: (title: string) => void;
   onCustomTitleChange: (value: string) => void;
@@ -27,6 +28,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
   showCustomTitleInput,
   customName,
   encouragementHint,
+  contextualHint,
   afterNameContent,
   onTitleSelect,
   onCustomTitleChange,
@@ -159,7 +161,12 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
               {customName.trim() || selectedTitle}
             </span>
           </p>
-          {encouragementHint && (
+          {contextualHint ? (
+            <p className="text-xs text-indigo-700 mt-1 bg-indigo-50 rounded-lg px-2 py-1.5 border border-indigo-100">
+              {contextualHint}
+            </p>
+          ) : null}
+          {encouragementHint && !contextualHint && (
             <p className="text-xs text-teal-600 mt-1 bg-teal-50 rounded-lg px-2 py-1.5 border border-teal-100">
               تقدر تستخدم لقب أو رمز (مثل: س، المدير، أو الحرف الأول) لخصوصية كاملة.
             </p>

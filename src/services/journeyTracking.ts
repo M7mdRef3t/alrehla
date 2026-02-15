@@ -5,11 +5,14 @@
 import { isSupabaseReady, supabase } from "./supabaseClient";
 import { awardPointsForFlowStep, awardPointsForJourneyType } from "../state/achievementState";
 import { isUserMode } from "../config/appEnv";
+import { runtimeEnv } from "../config/runtimeEnv";
+import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "./browserStorage";
 
 const KEY_MODE = "dawayir-tracking-mode";
 const KEY_EVENTS = "dawayir-journey-events";
 const KEY_SESSION_ID = "dawayir-session-id";
 const KEY_API_URL = "dawayir-tracking-api-url";
+const KEY_UTM = "dawayir-utm-params";
 const MAX_EVENTS = 2000;
 const SUPABASE_EVENTS_TABLE = "journey_events";
 const SUPABASE_PROFILES_TABLE = "profiles";
@@ -52,12 +55,26 @@ const supabaseQueue: Array<{
   event: JourneyEvent;
 }> = [];
 
+/** Dwell time tracking — وقت الإقامة بين الخطوات */
+let lastFlowStepTimestamp: number | null = null;
+let lastFlowStepName: string | null = null;
+
+/** UTM params reader — مخزنة من main.tsx عند أول زيارة */
+function getStoredUtmParams(): Record<string, string> | null {
+  if (!isBrowser) return null;
+  try {
+    const raw = getFromLocalStorage(KEY_UTM);
+    if (!raw) return null;
+    return JSON.parse(raw) as Record<string, string>;
+  } catch { return null; }
+}
+
 function getOrCreateSessionId(): string {
   if (!isBrowser) return "";
-  let id = localStorage.getItem(KEY_SESSION_ID);
+  let id = getFromLocalStorage(KEY_SESSION_ID);
   if (!id) {
     id = "sess_" + Date.now() + "_" + Math.random().toString(36).slice(2, 11);
-    localStorage.setItem(KEY_SESSION_ID, id);
+    setInLocalStorage(KEY_SESSION_ID, id);
   }
   return id;
 }
@@ -70,9 +87,9 @@ export function getTrackingSessionId(): string | null {
 
 export function getTrackingMode(): TrackingMode {
   if (!isBrowser) return "anonymous";
-  const v = localStorage.getItem(KEY_MODE);
+  const v = getFromLocalStorage(KEY_MODE);
   if (!v && isUserMode) {
-    localStorage.setItem(KEY_MODE, "identified");
+    setInLocalStorage(KEY_MODE, "identified");
     return "identified";
   }
   return v === "identified" ? "identified" : "anonymous";
@@ -80,20 +97,20 @@ export function getTrackingMode(): TrackingMode {
 
 export function setTrackingMode(mode: TrackingMode): void {
   if (!isBrowser) return;
-  localStorage.setItem(KEY_MODE, mode);
+  setInLocalStorage(KEY_MODE, mode);
 }
 
 /** رابط الخادم (باكند) — لو مضبوط، الأحداث تُرسل له تلقائياً */
 export function getTrackingApiUrl(): string | null {
   if (!isBrowser) return null;
-  const v = localStorage.getItem(KEY_API_URL);
+  const v = getFromLocalStorage(KEY_API_URL);
   return v && v.trim() ? v.trim() : null;
 }
 
 export function setTrackingApiUrl(url: string | null): void {
   if (!isBrowser) return;
-  if (url == null || !url.trim()) localStorage.removeItem(KEY_API_URL);
-  else localStorage.setItem(KEY_API_URL, url.trim());
+  if (url == null || !url.trim()) removeFromLocalStorage(KEY_API_URL);
+  else setInLocalStorage(KEY_API_URL, url.trim());
 }
 
 function queueSupabaseSync(mode: TrackingMode, event: JourneyEvent) {
@@ -119,7 +136,7 @@ async function flushSupabaseSync(): Promise<void> {
   }));
 
   const { error } = await supabase.from(SUPABASE_EVENTS_TABLE).insert(rows);
-  if (error && import.meta.env.DEV) {
+  if (error && runtimeEnv.isDev) {
     console.warn("journeyTracking: supabase insert failed", error);
   }
 
@@ -142,15 +159,37 @@ async function flushSupabaseSync(): Promise<void> {
   const { error: profileError } = await supabase.from(SUPABASE_PROFILES_TABLE).upsert(profileRows, {
     onConflict: "id"
   });
-  if (profileError && import.meta.env.DEV) {
+  if (profileError && runtimeEnv.isDev) {
     console.warn("journeyTracking: profile upsert failed", profileError);
+  }
+
+  // Session → User stitching: ربط الجلسة بالمستخدم عند تسجيل الدخول
+  for (const { event } of batch) {
+    if (event.type !== "flow_event" || !event.sessionId) continue;
+    const payload = event.payload as JourneyEventPayload["flow_event"];
+    if (payload?.step !== "auth_login_success") continue;
+    const extra = payload?.extra as Record<string, unknown> | undefined;
+    const userId = typeof extra?.userId === "string" ? extra.userId : null;
+    const email = typeof extra?.email === "string" ? extra.email : null;
+    if (!userId) continue;
+    const { error: stitchError } = await supabase.from(SUPABASE_PROFILES_TABLE).upsert({
+      id: event.sessionId,
+      full_name: event.sessionId,
+      role: "session",
+      user_id: userId,
+      email: email ?? undefined,
+      last_seen: now
+    }, { onConflict: "id" });
+    if (stitchError && runtimeEnv.isDev) {
+      console.warn("journeyTracking: session-user stitch failed", stitchError);
+    }
   }
 }
 
 function loadEvents(): JourneyEvent[] {
   if (!isBrowser) return [];
   try {
-    const raw = localStorage.getItem(KEY_EVENTS);
+    const raw = getFromLocalStorage(KEY_EVENTS);
     if (!raw) return [];
     const arr = JSON.parse(raw) as JourneyEvent[];
     return Array.isArray(arr) ? arr : [];
@@ -163,9 +202,9 @@ function saveEvents(events: JourneyEvent[]): void {
   if (!isBrowser) return;
   const trimmed = events.slice(-MAX_EVENTS);
   try {
-    localStorage.setItem(KEY_EVENTS, JSON.stringify(trimmed));
+    setInLocalStorage(KEY_EVENTS, JSON.stringify(trimmed));
   } catch (e) {
-    if (import.meta.env.DEV) console.warn("journeyTracking: save failed", e);
+    if (runtimeEnv.isDev) console.warn("journeyTracking: save failed", e);
   }
 }
 
@@ -227,7 +266,8 @@ export type FlowStep =
   | "add_person_dropped"
   | "feedback_opened"
   | "feedback_submitted"
-  | "tools_opened";
+  | "tools_opened"
+  | "utm_captured";
 
 export function recordFlowEvent(
   step: FlowStep,
@@ -238,7 +278,21 @@ export function recordFlowEvent(
     meta?: Record<string, unknown>;
   }
 ): void {
-  const hasExtra = Boolean(extra?.atStep || extra?.closeReason || extra?.meta);
+  const now = Date.now();
+
+  // Dwell time — وقت الإقامة بين هذه الخطوة والسابقة
+  const dwellTime = lastFlowStepTimestamp != null ? now - lastFlowStepTimestamp : null;
+  const previousStep = lastFlowStepName;
+  lastFlowStepTimestamp = now;
+  lastFlowStepName = step;
+
+  // UTM params — مصدر الزيارة التسويقي
+  const utmParams = getStoredUtmParams();
+
+  const hasExtra = Boolean(
+    extra?.atStep || extra?.closeReason || extra?.meta ||
+    utmParams || dwellTime != null || previousStep
+  );
   const event = {
     type: "flow_event" as const,
     payload: {
@@ -248,11 +302,14 @@ export function recordFlowEvent(
         ? {
             ...(extra?.atStep ? { atStep: extra.atStep } : {}),
             ...(extra?.closeReason ? { closeReason: extra.closeReason } : {}),
-            ...(extra?.meta ? extra.meta : {})
+            ...(extra?.meta ? extra.meta : {}),
+            ...(utmParams ? { utm: utmParams } : {}),
+            ...(dwellTime != null ? { dwellTime } : {}),
+            ...(previousStep ? { previousStep } : {})
           }
         : undefined
     } as JourneyEventPayload["flow_event"],
-    timestamp: Date.now(),
+    timestamp: now,
     sessionId: getOrCreateSessionId()
   } as JourneyEvent;
   const events = loadEvents();
@@ -267,7 +324,7 @@ export function recordFlowEvent(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mode: getTrackingMode(), event })
     }).catch((err) => {
-      if (import.meta.env.DEV) console.warn("journeyTracking: flow send failed", err);
+      if (runtimeEnv.isDev) console.warn("journeyTracking: flow send failed", err);
     });
   }
 }
@@ -302,7 +359,7 @@ export function recordJourneyEvent(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     }).catch((err) => {
-      if (import.meta.env.DEV) console.warn("journeyTracking: send to backend failed", err);
+      if (runtimeEnv.isDev) console.warn("journeyTracking: send to backend failed", err);
     });
   }
 }
@@ -533,10 +590,10 @@ export function getSessionsWithProgress(): SessionSummary[] {
 
 export function clearAllJourneyEvents(): void {
   if (!isBrowser) return;
-  localStorage.removeItem(KEY_EVENTS);
+  removeFromLocalStorage(KEY_EVENTS);
 }
 
 export function clearSessionId(): void {
   if (!isBrowser) return;
-  localStorage.removeItem(KEY_SESSION_ID);
+  removeFromLocalStorage(KEY_SESSION_ID);
 }

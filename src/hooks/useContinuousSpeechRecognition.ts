@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import { getWindowOrNull } from "../services/clientRuntime";
 
 declare global {
   interface Window {
@@ -26,9 +27,10 @@ export function useContinuousSpeechRecognition(options?: { lang?: string }) {
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const accumulatedRef = useRef<string[]>([]);
 
-  const isSupported =
-    typeof window !== "undefined" &&
-    (window.SpeechRecognition != null || window.webkitSpeechRecognition != null);
+  const isSupported = (() => {
+    const windowRef = getWindowOrNull();
+    return Boolean(windowRef && (windowRef.SpeechRecognition != null || windowRef.webkitSpeechRecognition != null));
+  })();
 
   const start = useCallback(() => {
     if (!isSupported) {
@@ -38,7 +40,9 @@ export function useContinuousSpeechRecognition(options?: { lang?: string }) {
     setError(null);
     setTranscript("");
     accumulatedRef.current = [];
-    const Recognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+    const windowRef = getWindowOrNull();
+    if (!windowRef) return;
+    const Recognition = windowRef.SpeechRecognition ?? windowRef.webkitSpeechRecognition;
     if (!Recognition) return;
     const recognition = new Recognition();
     recognition.continuous = true;

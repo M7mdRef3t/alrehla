@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { isAdminPath, subscribePopstate } from "../services/navigation";
 
 /**
  * Hook to manage modal states for various overlays
@@ -11,16 +12,12 @@ export function useModals() {
   const [themeBeforePulse, setThemeBeforePulse] = useState<"light" | "dark" | "system" | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
-  const [isAdminRoute, setIsAdminRoute] = useState(() =>
-    typeof window !== "undefined" ? window.location.pathname.startsWith("/admin") : false
-  );
+  const [isAdminRoute, setIsAdminRoute] = useState(() => isAdminPath());
 
   // Handle route changes for admin route detection
   useEffect(() => {
-    const handler = () =>
-      setIsAdminRoute(window.location.pathname.startsWith("/admin"));
-    window.addEventListener("popstate", handler);
-    return () => window.removeEventListener("popstate", handler);
+    const handler = () => setIsAdminRoute(isAdminPath());
+    return subscribePopstate(handler);
   }, []);
 
   const toggleCocoon = useCallback(() => {

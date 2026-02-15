@@ -7,6 +7,7 @@ import { geminiClient } from "../services/geminiClient";
 import type { PathId, SymptomType } from "../modules/pathEngine/pathTypes";
 import type { RecoveryPath } from "../modules/pathEngine/pathTypes";
 import { PATH_NAMES } from "../modules/pathEngine/pathResolver";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 const PATH_DESCRIPTIONS: Record<PathId, string> = {
   path_protection: "مسرح الحدود الخارجية: المعركة بينك وبين الشخص. السلاح: لا، التجاهل، الوقت، المسافة. استنزاف نشط (احتكاك عالي). الهدف: وقف النزيف، حدود صارمة، فنون الرد البارد — «قول لا للغير».",
@@ -142,7 +143,7 @@ ${philosophyRule}${roleLine ? roleLine + "\n" : ""}${symptomLine ? symptomLine +
     const result = await geminiClient.generateJSON<RecoveryPath>(prompt);
     if (result?.id && result?.phases?.week1) return { ...result, aiGenerated: true };
   } catch (e) {
-    if (import.meta.env.DEV) console.warn("pathGenerator: Gemini failed", e);
+    if (runtimeEnv.isDev) console.warn("pathGenerator: Gemini failed", e);
   }
   return buildFallbackRecoveryPath(input);
 }

@@ -3,10 +3,10 @@ import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getAchievementById } from "../data/achievements";
 import { useAchievementState } from "../state/achievementState";
+import { getAudioContextConstructor } from "../services/clientDom";
 
 function playAchievementSuccessSound(): void {
-  if (typeof window === "undefined") return;
-  const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  const AudioContextCtor = getAudioContextConstructor();
   if (!AudioContextCtor) return;
   try {
     const context = new AudioContextCtor();

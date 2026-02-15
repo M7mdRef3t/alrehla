@@ -1,20 +1,51 @@
 import { lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import { AnalyticsConsentBanner } from "./components/AnalyticsConsentBanner";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { initAnalytics } from "./services/analytics";
 import { initMonitoring } from "./services/monitoring";
+import { getDocumentOrNull, getWindowOrNull } from "./services/clientRuntime";
+import { runtimeEnv } from "./config/runtimeEnv";
 import "./styles.css";
 import { registerSW } from "virtual:pwa-register";
 
 const Analytics = lazy(() => import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })));
 const SpeedInsights = lazy(() => import("@vercel/speed-insights/react").then((m) => ({ default: m.SpeedInsights })));
 
+// --- UTM Capture — التقاط مصدر الزيارة التسويقي قبل أي تتبع ---
+const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
+const UTM_STORAGE_KEY = "dawayir-utm-params";
+
+(function captureUtmParams() {
+  if (typeof window === "undefined") return;
+  try {
+    const url = new URL(window.location.href);
+    const params: Record<string, string> = {};
+    let hasAny = false;
+    for (const key of UTM_KEYS) {
+      const val = url.searchParams.get(key);
+      if (val) { params[key] = val; hasAny = true; }
+    }
+    if (hasAny) {
+      window.localStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(params));
+    }
+  } catch { /* ignore */ }
+})();
+
+// Fire utm_captured event (deferred to avoid circular import timing issues)
+void import("./services/journeyTracking").then(({ recordFlowEvent }) => {
+  try {
+    const stored = window.localStorage.getItem(UTM_STORAGE_KEY);
+    if (stored) recordFlowEvent("utm_captured", { meta: JSON.parse(stored) });
+  } catch { /* ignore */ }
+});
+
 // Initialize analytics (only if consent given)
 initAnalytics();
 initMonitoring();
 
-if (import.meta.env.PROD) {
+if (runtimeEnv.isProd) {
   const updateSW = registerSW({
     immediate: true,
     onNeedRefresh() {
@@ -23,18 +54,20 @@ if (import.meta.env.PROD) {
     }
   });
 
-  window.setInterval(() => {
+  const windowRef = getWindowOrNull();
+  windowRef?.setInterval(() => {
     void updateSW();
   }, 60_000);
 }
 
-const rootElement = document.getElementById("root");
+const rootElement = getDocumentOrNull()?.getElementById("root") ?? null;
 
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <ErrorBoundary>
       <App />
+      <AnalyticsConsentBanner />
       <Suspense fallback={null}>
         <Analytics />
         <SpeedInsights />

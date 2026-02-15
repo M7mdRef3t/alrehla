@@ -1,4 +1,6 @@
 import type { MapNode } from "../modules/map/mapTypes";
+import { downloadBlobFile } from "./clientDom";
+import { getDocumentOrNull } from "./clientRuntime";
 
 let html2canvasLoader: Promise<typeof import("html2canvas")> | null = null;
 let jsPdfLoader: Promise<typeof import("jspdf")> | null = null;
@@ -25,7 +27,9 @@ async function loadJsPdf() {
 export async function exportMapAsImage(elementId = "map-canvas"): Promise<Blob | null> {
   try {
     const html2canvas = await loadHtml2Canvas();
-    const element = document.getElementById(elementId);
+    const documentRef = getDocumentOrNull();
+    if (!documentRef) throw new Error("DOM unavailable");
+    const element = documentRef.getElementById(elementId);
     if (!element) {
       throw new Error("عنصر الخريطة غير موجود");
     }
@@ -57,14 +61,7 @@ export async function downloadMapImage(): Promise<void> {
     throw new Error("فشل في إنشاء الصورة");
   }
 
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `journey-map-${Date.now()}.png`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  downloadBlobFile(blob, `journey-map-${Date.now()}.png`);
 }
 
 /**

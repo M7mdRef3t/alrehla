@@ -1,6 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
+import { getWindowOrNull } from "../services/clientRuntime";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -8,9 +10,10 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 function isStandaloneDisplay(): boolean {
-  if (typeof window === "undefined") return false;
-  const nav = window.navigator as Navigator & { standalone?: boolean };
-  return window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
+  const windowRef = getWindowOrNull();
+  if (!windowRef) return false;
+  const nav = windowRef.navigator as Navigator & { standalone?: boolean };
+  return windowRef.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
 }
 
 function isLikelyInAppBrowser(ua: string): boolean {
@@ -22,9 +25,7 @@ interface PWAInstallContextValue {
   triggerInstall: () => Promise<void>;
   hasInstallPrompt: boolean;
   showInstallHint: () => void;
-  /** للبانر: هل نعرض رسالة أندرويد */
   showAndroidBanner: boolean;
-  /** للبانر: هل نعرض رسالة iOS */
   showIOSBanner: boolean;
   dismissBanner: () => void;
   isIOS: boolean;
@@ -44,6 +45,7 @@ interface PWAInstallProviderProps {
 }
 
 export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
+  const [hasMounted, setHasMounted] = useState(false);
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
@@ -51,19 +53,22 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
   const [isIPad, setIsIPad] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
-  const [dismissed, setDismissed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    const stored = localStorage.getItem("install-banner-dismissed");
-    if (!stored) return false;
-    const ts = parseInt(stored, 10);
-    const week = 7 * 24 * 60 * 60 * 1000;
-    return Date.now() - ts < week;
-  });
+  const [dismissed, setDismissed] = useState(false);
   const [forceShowHint, setForceShowHint] = useState(false);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const nav = window.navigator;
+    setHasMounted(true);
+    const stored = getFromLocalStorage("install-banner-dismissed");
+    if (!stored) return;
+    const ts = parseInt(stored, 10);
+    const week = 7 * 24 * 60 * 60 * 1000;
+    setDismissed(Date.now() - ts < week);
+  }, []);
+
+  useEffect(() => {
+    const windowRef = getWindowOrNull();
+    if (!windowRef) return;
+    const nav = windowRef.navigator;
     const ua = nav.userAgent ?? "";
     const iPadOS = nav.platform === "MacIntel" && nav.maxTouchPoints > 1;
     const iPadUA = /iPad/.test(ua);
@@ -71,49 +76,53 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
     setIsIPad(iPadUA || iPadOS);
     setIsIOS(iPhoneIPod || iPadUA || iPadOS);
     setIsAndroid(/Android/i.test(ua));
-    setIsTouchDevice("ontouchstart" in window || nav.maxTouchPoints > 0);
+    setIsTouchDevice("ontouchstart" in windowRef || nav.maxTouchPoints > 0);
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    const windowRef = getWindowOrNull();
+    if (!windowRef) return;
     const update = () => setIsStandalone(isStandaloneDisplay());
     update();
-    const media = window.matchMedia("(display-mode: standalone)");
+    const media = windowRef.matchMedia("(display-mode: standalone)");
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    const windowRef = getWindowOrNull();
+    if (!windowRef) return;
     const handler = (event: Event) => {
-      const isMobileNow = window.matchMedia("(max-width: 768px)").matches;
-      const isTouchNow = "ontouchstart" in window || window.navigator.maxTouchPoints > 0;
+      const isMobileNow = windowRef.matchMedia("(max-width: 768px)").matches;
+      const isTouchNow = "ontouchstart" in windowRef || windowRef.navigator.maxTouchPoints > 0;
       if ((!isMobileNow && !isTouchNow) || isStandaloneDisplay()) return;
       event.preventDefault();
       setInstallEvent(event as BeforeInstallPromptEvent);
       setIsVisible(true);
     };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    windowRef.addEventListener("beforeinstallprompt", handler);
+    return () => windowRef.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!isTouchDevice && !window.matchMedia("(max-width: 768px)").matches) return;
+    const windowRef = getWindowOrNull();
+    if (!windowRef) return;
+    if (!isTouchDevice && !windowRef.matchMedia("(max-width: 768px)").matches) return;
     if (isStandalone) return;
-    const t = window.setTimeout(() => setIsVisible(true), 800);
-    return () => window.clearTimeout(t);
+    const t = windowRef.setTimeout(() => setIsVisible(true), 800);
+    return () => windowRef.clearTimeout(t);
   }, [isTouchDevice, isStandalone]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    const windowRef = getWindowOrNull();
+    if (!windowRef) return;
     const handler = () => {
       setIsVisible(false);
       setInstallEvent(null);
       setIsStandalone(true);
     };
-    window.addEventListener("appinstalled", handler);
-    return () => window.removeEventListener("appinstalled", handler);
+    windowRef.addEventListener("appinstalled", handler);
+    return () => windowRef.removeEventListener("appinstalled", handler);
   }, []);
 
   const triggerInstall = useCallback(async () => {
@@ -121,18 +130,21 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
       setDismissed(false);
       setForceShowHint(true);
       setIsVisible(true);
-      if (typeof window !== "undefined") {
-        const ua = window.navigator.userAgent ?? "";
+
+      const windowRef = getWindowOrNull();
+      if (windowRef) {
+        const ua = windowRef.navigator.userAgent ?? "";
         if (isLikelyInAppBrowser(ua)) {
-          window.alert('هذا المتصفح لا يدعم تثبيت التطبيق مباشرة. افتح الصفحة في Chrome أو Safari ثم جرّب "تثبيت التطبيق".');
+          windowRef.alert('??? ??????? ?? ???? ????? ??????? ??????. ???? ?????? ?? Chrome ?? Safari ?? ???? "????? ???????".');
         } else if (isAndroid) {
-          window.alert('لو لم تظهر نافذة التثبيت: افتح قائمة المتصفح ثم اختر "تثبيت التطبيق" أو "Add to Home screen".');
+          windowRef.alert('?? ?? ???? ????? ???????: ???? ????? ??????? ?? ???? "????? ???????" ?? "Add to Home screen".');
         } else if (isIOS) {
-          window.alert('لتثبيت التطبيق على iPhone/iPad: اضغط زر المشاركة ثم "إضافة إلى الشاشة الرئيسية".');
+          windowRef.alert('?????? ??????? ??? iPhone/iPad: ???? ?? ???????? ?? "????? ??? ?????? ????????".');
         }
       }
       return;
     }
+
     await installEvent.prompt();
     try {
       await installEvent.userChoice;
@@ -146,24 +158,27 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
     setDismissed(false);
     setForceShowHint(true);
     setIsVisible(true);
-    if (typeof window !== "undefined" && !installEvent && isIOS) {
-      window.alert("لتثبيت التطبيق على الآيفون/الآيباد: افتح زر المشاركة ⋯ ثم اختر \"إضافة إلى الشاشة الرئيسية\".");
+
+    const windowRef = getWindowOrNull();
+    if (windowRef && !installEvent && isIOS) {
+      windowRef.alert('?????? ??????? ??? ???????/???????: ???? ?? ???????? ?? ???? "????? ??? ?????? ????????".');
     }
   }, [installEvent, isIOS]);
 
   const dismissBanner = useCallback(() => {
     setDismissed(true);
     setForceShowHint(false);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("install-banner-dismissed", Date.now().toString());
+    if (getWindowOrNull()) {
+      setInLocalStorage("install-banner-dismissed", Date.now().toString());
     }
   }, []);
 
-  /** موبايل + تابلت: شاشة حتى 1024px أو جهاز لمس (يغطي التابلت أفقي وعمودي) */
+  const windowRef = hasMounted ? getWindowOrNull() : null;
   const canShowInstallButton =
-    !isStandalone && typeof window !== "undefined" && (window.matchMedia("(max-width: 1024px)").matches || isTouchDevice);
+    hasMounted && !isStandalone && ((windowRef?.matchMedia("(max-width: 1024px)").matches ?? false) || isTouchDevice);
   const hasInstallPrompt = Boolean(installEvent);
-  const canRenderBanner = !dismissed && (isTouchDevice || (typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches));
+  const canRenderBanner =
+    hasMounted && !dismissed && (isTouchDevice || (windowRef?.matchMedia("(max-width: 768px)").matches ?? false));
   const showAndroidBanner = canRenderBanner && (forceShowHint || isVisible) && isAndroid;
   const showIOSBanner = canRenderBanner && (forceShowHint || isVisible) && isIOS;
 
@@ -181,9 +196,5 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
     installEvent
   };
 
-  return (
-    <PWAInstallContext.Provider value={value}>
-      {children}
-    </PWAInstallContext.Provider>
-  );
+  return <PWAInstallContext.Provider value={value}>{children}</PWAInstallContext.Provider>;
 }

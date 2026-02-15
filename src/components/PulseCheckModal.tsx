@@ -1,4 +1,4 @@
-﻿import type { CSSProperties, FC, KeyboardEvent } from "react";
+import type { CSSProperties, FC, KeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "../state/pulseState";
@@ -13,6 +13,8 @@ import {
   getWeeklyEnergyRecommendation,
   type EnergyCopyVariant
 } from "../utils/pulseEnergy";
+import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
+import { getAudioContextConstructor, setDocumentBodyOverflow } from "../services/clientDom";
 
 
 interface PulseCheckModalProps {
@@ -226,10 +228,10 @@ function getStoredCopyVariant(key: string, forced: PulseCopyOverrideValue): Copy
   if (forced === "a" || forced === "b") return forced;
   if (typeof window === "undefined") return "a";
   try {
-    const existing = window.localStorage.getItem(key);
+    const existing = getFromLocalStorage(key);
     if (existing === "a" || existing === "b") return existing;
     const next: CopyVariant = Math.random() < 0.5 ? "a" : "b";
-    window.localStorage.setItem(key, next);
+    setInLocalStorage(key, next);
     return next;
   } catch {
     return "a";
@@ -237,11 +239,15 @@ function getStoredCopyVariant(key: string, forced: PulseCopyOverrideValue): Copy
 }
 
 function getMoodVariantSubtitle(variant: CopyVariant): string {
-  return variant === "a" ? "اختر وصفًا أقرب لإحساسك الآن." : "سمِّ الجو الداخلي بسرعة حتى نكمل بوضوح.";
+  return variant === "a"
+    ? "\u0627\u062e\u062a\u0627\u0631 \u0648\u0635\u0641 \u0642\u0631\u064a\u0628 \u0645\u0646 \u0625\u062d\u0633\u0627\u0633\u0643 \u062f\u0644\u0648\u0642\u062a\u064a."
+    : "\u0645\u0632\u0627\u062c\u0643 \u0627\u0644\u062d\u0627\u0644\u064a \u0628\u064a\u0648\u0636\u062d \u0634\u0643\u0644 \u062e\u0637\u0648\u062a\u0643 \u0627\u0644\u062c\u0627\u064a\u0629.";
 }
 
 function getFocusVariantSubtitle(variant: CopyVariant): string {
-  return variant === "a" ? "حدد نقطة البداية الأكثر تأثيرًا الآن." : "اختر أين تضع انتباهك أولًا.";
+  return variant === "a"
+    ? "\u062d\u062f\u062f \u0627\u0643\u062a\u0631 \u062d\u0627\u062c\u0629 \u0648\u0627\u062e\u062f\u0629 \u0627\u0646\u062a\u0628\u0627\u0647\u0643 \u062f\u0644\u0648\u0642\u062a\u064a."
+    : "\u0633\u0645\u064a \u0645\u0635\u062f\u0631 \u0627\u0644\u062a\u0634\u062a\u064a\u062a \u0639\u0634\u0627\u0646 \u062a\u0628\u062f\u0623 \u0628\u0648\u0636\u0648\u062d.";
 }
 
 function getPostSaveAction(energy: number): string {
@@ -453,7 +459,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const clearDraft = () => {
     if (typeof window === "undefined") return;
     try {
-      window.localStorage.removeItem(PULSE_DRAFT_STORAGE_KEY);
+      removeFromLocalStorage(PULSE_DRAFT_STORAGE_KEY);
     } catch {
       // no-op
     }
@@ -525,7 +531,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     let restored = false;
     if (typeof window !== "undefined") {
       try {
-        const raw = window.localStorage.getItem(PULSE_DRAFT_STORAGE_KEY);
+        const raw = getFromLocalStorage(PULSE_DRAFT_STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw) as PulseDraft;
           if (parsed && typeof parsed === "object") {
@@ -643,7 +649,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       step
     };
     try {
-      window.localStorage.setItem(PULSE_DRAFT_STORAGE_KEY, JSON.stringify(draft));
+      setInLocalStorage(PULSE_DRAFT_STORAGE_KEY, JSON.stringify(draft));
     } catch {
       // no-op
     }
@@ -664,10 +670,9 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const restoreOverflow = setDocumentBodyOverflow("hidden");
     return () => {
-      document.body.style.overflow = previous;
+      restoreOverflow?.();
     };
   }, [isOpen]);
 
@@ -876,7 +881,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       navigator.vibrate(10);
     }
     try {
-      const Ctx = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      const Ctx = getAudioContextConstructor();
       if (!Ctx) return;
       const ctx = new Ctx();
       const oscillator = ctx.createOscillator();

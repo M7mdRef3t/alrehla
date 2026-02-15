@@ -1,4 +1,6 @@
 import { getAuthToken } from "../state/authState";
+import { runtimeEnv } from "../config/runtimeEnv";
+import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 
 const DEVICE_TOKEN_KEY = "dawayir-device-token";
 const EXCLUDED_KEYS = new Set([
@@ -9,7 +11,7 @@ const EXCLUDED_KEYS = new Set([
   "dawayir-session-id"
 ]);
 
-const API_BASE = import.meta.env.VITE_ADMIN_API_BASE ?? "";
+const API_BASE = runtimeEnv.adminApiBase;
 const USER_STATE_ENDPOINT = `${API_BASE}/api/user/state`;
 const REMOTE_SYNC_ENABLED = Boolean(API_BASE);
 
@@ -31,7 +33,7 @@ function shouldSyncKey(key: string): boolean {
 
 function getDeviceToken(): string | null {
   if (!isBrowser()) return null;
-  const existing = window.localStorage.getItem(DEVICE_TOKEN_KEY);
+  const existing = getFromLocalStorage(DEVICE_TOKEN_KEY);
   if (existing) return existing;
   let token = "";
   if (window.crypto?.randomUUID) {
@@ -43,7 +45,7 @@ function getDeviceToken(): string | null {
   } else {
     token = `dev_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   }
-  window.localStorage.setItem(DEVICE_TOKEN_KEY, token);
+  setInLocalStorage(DEVICE_TOKEN_KEY, token);
   return token;
 }
 

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { MapNode } from "../modules/map/mapTypes";
 import { ACHIEVEMENTS } from "../data/achievements";
+import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
 
 const STORAGE_KEY = "dawayir-achievements";
 
@@ -124,8 +125,8 @@ export const useAchievementState = create<AchievementState>()(
 
       markLibraryOpened: () => {
         const key = `${STORAGE_KEY}-library-opened`;
-        if (typeof window !== "undefined" && !window.localStorage.getItem(key)) {
-          window.localStorage.setItem(key, String(Date.now()));
+        if (!getFromLocalStorage(key)) {
+          setInLocalStorage(key, String(Date.now()));
         }
         get().addActionPoints("action_library_opened");
         get().unlock("reader");
@@ -133,8 +134,8 @@ export const useAchievementState = create<AchievementState>()(
 
       markBreathingUsed: () => {
         const key = `${STORAGE_KEY}-breathing-used`;
-        if (typeof window !== "undefined" && !window.localStorage.getItem(key)) {
-          window.localStorage.setItem(key, String(Date.now()));
+        if (!getFromLocalStorage(key)) {
+          setInLocalStorage(key, String(Date.now()));
         }
         get().addActionPoints("action_breathing_used");
         get().unlock("breather");
@@ -207,15 +208,13 @@ export const useAchievementState = create<AchievementState>()(
 
 /** قراءة وقت آخر فتح للمكتبة من localStorage */
 export function getLibraryOpenedAt(): number | null {
-  if (typeof window === "undefined") return null;
-  const v = window.localStorage.getItem(`${STORAGE_KEY}-library-opened`);
+  const v = getFromLocalStorage(`${STORAGE_KEY}-library-opened`);
   return v ? Number(v) : null;
 }
 
 /** قراءة وقت آخر استخدام للتنفس */
 export function getBreathingUsedAt(): number | null {
-  if (typeof window === "undefined") return null;
-  const v = window.localStorage.getItem(`${STORAGE_KEY}-breathing-used`);
+  const v = getFromLocalStorage(`${STORAGE_KEY}-breathing-used`);
   return v ? Number(v) : null;
 }
 

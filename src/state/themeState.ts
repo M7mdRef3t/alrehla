@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { getDocumentOrNull, getWindowOrNull } from "../services/clientRuntime";
 
 type Theme = "light" | "dark" | "system";
 
@@ -10,14 +11,16 @@ interface ThemeState {
 }
 
 function getSystemTheme(): "light" | "dark" {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  const windowRef = getWindowOrNull();
+  if (!windowRef) return "light";
+  return windowRef.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 function applyTheme(resolvedTheme: "light" | "dark") {
-  if (typeof document === "undefined") return;
-  
-  const root = document.documentElement;
+  const documentRef = getDocumentOrNull();
+  if (!documentRef) return;
+
+  const root = documentRef.documentElement;
   if (resolvedTheme === "dark") {
     root.classList.add("dark");
   } else {
@@ -50,8 +53,9 @@ export const useThemeState = create<ThemeState>()(
 );
 
 // Listen for system theme changes
-if (typeof window !== "undefined") {
-  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+const windowRef = getWindowOrNull();
+if (windowRef) {
+  windowRef.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
     const state = useThemeState.getState();
     if (state.theme === "system") {
       const resolvedTheme = e.matches ? "dark" : "light";

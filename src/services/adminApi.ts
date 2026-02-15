@@ -1,6 +1,7 @@
 import { supabase, isSupabaseReady } from "./supabaseClient";
 import { useAdminState, ADMIN_ACCESS_CODE } from "../state/adminState";
 import { getAuthToken } from "../state/authState";
+import { runtimeEnv } from "../config/runtimeEnv";
 import type { FeatureFlagKey, FeatureFlagMode } from "../config/features";
 import type {
   ScoringWeights,
@@ -24,7 +25,7 @@ type SystemSettingKey =
   | "pulse_copy_overrides";
 
 const SETTINGS_TABLE = "system_settings";
-const ADMIN_API_BASE = import.meta.env.VITE_ADMIN_API_BASE ?? "";
+const ADMIN_API_BASE = runtimeEnv.adminApiBase;
 const ADMIN_API_PATH = `${ADMIN_API_BASE}/api/admin`;
 const HOBBY_REMAP_BASES = new Set([
   "daily-report",
@@ -52,7 +53,7 @@ function buildAdminQuery(path: string): string {
 
 function getAdminCode(): string | null {
   const state = useAdminState.getState();
-  return state.adminCode || import.meta.env.VITE_ADMIN_CODE || ADMIN_ACCESS_CODE || null;
+  return state.adminCode || runtimeEnv.adminCode || ADMIN_ACCESS_CODE || null;
 }
 
 async function callAdminApi<T>(path: string, options?: RequestInit): Promise<T | null> {
@@ -640,6 +641,18 @@ export interface PulseCopyVariantTrendStats {
   focus: PulseCopyVariantTrendPoint[];
 }
 
+export interface RetentionCohortRow {
+  cohortDate: string;
+  cohortSize: number;
+  d1: number; d3: number; d7: number; d30: number;
+  d1Pct: number; d3Pct: number; d7Pct: number; d30Pct: number;
+}
+
+export interface UtmBreakdownEntry {
+  key: string;
+  count: number;
+}
+
 export interface OverviewStats {
   totalUsers: number | null;
   activeNow: number | null;
@@ -669,6 +682,13 @@ export interface OverviewStats {
     journeyMapsTotal: number;
     addPersonOpened: number;
     addPersonDoneShowOnMap: number;
+  } | null;
+  avgDwellByStep?: Record<string, number> | null;
+  retentionCohorts?: RetentionCohortRow[] | null;
+  utmBreakdown?: {
+    sources: UtmBreakdownEntry[];
+    mediums: UtmBreakdownEntry[];
+    campaigns: UtmBreakdownEntry[];
   } | null;
 }
 
@@ -843,6 +863,8 @@ export interface VisitorSessionSummary {
   taskCompletions: number;
   nodesAdded: number;
   lastFlowStep: string | null;
+  linkedUserId?: string | null;
+  linkedEmail?: string | null;
 }
 
 export interface UserStateRow {
@@ -1045,9 +1067,36 @@ export async function fetchVisitorSessions(limit = 300): Promise<VisitorSessionS
     }
   }
 
-  return Array.from(bySession.values())
+  const results = Array.from(bySession.values())
     .sort((a, b) => (b.lastSeen ?? 0) - (a.lastSeen ?? 0))
     .slice(0, safeLimit);
+
+  // Session → User stitching: إضافة بيانات المستخدم المرتبط
+  const sessionIds = results.map((r) => r.sessionId).slice(0, 300);
+  if (sessionIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, user_id, email")
+      .in("id", sessionIds);
+    if (profiles) {
+      const profileMap = new Map<string, { userId: string | null; email: string | null }>();
+      for (const p of profiles as Array<Record<string, unknown>>) {
+        profileMap.set(String(p.id), {
+          userId: p.user_id ? String(p.user_id) : null,
+          email: p.email ? String(p.email) : null
+        });
+      }
+      for (const session of results) {
+        const profile = profileMap.get(session.sessionId);
+        if (profile) {
+          session.linkedUserId = profile.userId;
+          session.linkedEmail = profile.email;
+        }
+      }
+    }
+  }
+
+  return results;
 }
 
 export async function fetchFeedbackEntries(query?: {
@@ -1341,6 +1390,19 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     pulseCopyVariantTrendMap.mood.set(date, { aCompleted: 0, bCompleted: 0 });
     pulseCopyVariantTrendMap.focus.set(date, { aCompleted: 0, bCompleted: 0 });
   }
+
+  // Dwell time aggregation — متوسط وقت الإقامة بين الخطوات
+  const dwellTimeByStep = new Map<string, { sum: number; count: number }>();
+
+  // UTM breakdown — توزيع مصادر التسويق
+  const utmSources = new Map<string, number>();
+  const utmMediums = new Map<string, number>();
+  const utmCampaigns = new Map<string, number>();
+
+  // Retention cohorts — تتبع العودة حسب يوم أول ظهور
+  const sessionFirstSeen = new Map<string, string>();
+  const sessionActiveDays = new Map<string, Set<string>>();
+
   for (const row of events as Array<Record<string, unknown>>) {
     const createdAt = String(row.created_at ?? "");
     const date = createdAt ? createdAt.slice(5, 10) : "--";
@@ -1400,6 +1462,34 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
         flowTimeToActionSum += payload.timeToAction;
         flowTimeToActionCount += 1;
       }
+      // Dwell time aggregation
+      if (step) {
+        const extra = payload?.extra as Record<string, unknown> | undefined;
+        const dwell = typeof extra?.dwellTime === "number" ? extra.dwellTime : null;
+        if (dwell != null && dwell > 0 && dwell < 3600000) {
+          const b = dwellTimeByStep.get(step) ?? { sum: 0, count: 0 };
+          b.sum += dwell;
+          b.count += 1;
+          dwellTimeByStep.set(step, b);
+        }
+        // UTM breakdown
+        const utm = extra?.utm as Record<string, string> | undefined;
+        if (utm) {
+          if (utm.utm_source) utmSources.set(utm.utm_source, (utmSources.get(utm.utm_source) ?? 0) + 1);
+          if (utm.utm_medium) utmMediums.set(utm.utm_medium, (utmMediums.get(utm.utm_medium) ?? 0) + 1);
+          if (utm.utm_campaign) utmCampaigns.set(utm.utm_campaign, (utmCampaigns.get(utm.utm_campaign) ?? 0) + 1);
+        }
+      }
+    }
+    // Retention cohort data — تجميع أيام النشاط لكل جلسة
+    const sid = String(row.session_id ?? "").trim();
+    const fullDay = createdAt.slice(0, 10);
+    if (sid && fullDay.length === 10) {
+      if (!sessionFirstSeen.has(sid) || fullDay < sessionFirstSeen.get(sid)!) {
+        sessionFirstSeen.set(sid, fullDay);
+      }
+      if (!sessionActiveDays.has(sid)) sessionActiveDays.set(sid, new Set());
+      sessionActiveDays.get(sid)!.add(fullDay);
     }
   }
   for (const row of events as Array<Record<string, unknown>>) {
@@ -1537,6 +1627,56 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     (pulseAbandonedByReason["backdrop"] ?? 0) + (pulseAbandonedByReason["close_button"] ?? 0);
   flowCounts["pulse_abandoned_browser_close"] = pulseAbandonedByReason["browser_close"] ?? 0;
 
+  // Dwell time averages — متوسط وقت الإقامة لكل خطوة
+  const avgDwellByStep: Record<string, number> = {};
+  dwellTimeByStep.forEach((val, key) => {
+    avgDwellByStep[key] = Math.round(val.sum / val.count);
+  });
+
+  // UTM breakdown — تجميع مصادر التسويق
+  const toSortedEntries = (map: Map<string, number>): UtmBreakdownEntry[] =>
+    Array.from(map.entries())
+      .map(([key, count]) => ({ key, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  const utmBreakdown = utmSources.size > 0 || utmMediums.size > 0 || utmCampaigns.size > 0
+    ? { sources: toSortedEntries(utmSources), mediums: toSortedEntries(utmMediums), campaigns: toSortedEntries(utmCampaigns) }
+    : null;
+
+  // Retention cohorts — حساب نسب العودة D1/D3/D7/D30
+  const cohortSessions = new Map<string, string[]>();
+  sessionFirstSeen.forEach((firstDay, sessionId) => {
+    const list = cohortSessions.get(firstDay) ?? [];
+    list.push(sessionId);
+    cohortSessions.set(firstDay, list);
+  });
+  const dayOffsets = [1, 3, 7, 30] as const;
+  const retentionCohorts: RetentionCohortRow[] = [];
+  cohortSessions.forEach((sessions, cohortDate) => {
+    const cohortSize = sessions.length;
+    if (cohortSize === 0) return;
+    const cohortMs = new Date(cohortDate).getTime();
+    const counts = { d1: 0, d3: 0, d7: 0, d30: 0 };
+    for (const sessionId of sessions) {
+      const activeDays = sessionActiveDays.get(sessionId);
+      if (!activeDays) continue;
+      for (const offset of dayOffsets) {
+        const target = new Date(cohortMs + offset * 86400000).toISOString().slice(0, 10);
+        if (activeDays.has(target)) counts[`d${offset}` as keyof typeof counts] += 1;
+      }
+    }
+    retentionCohorts.push({
+      cohortDate,
+      cohortSize,
+      ...counts,
+      d1Pct: Math.round((counts.d1 / cohortSize) * 100),
+      d3Pct: Math.round((counts.d3 / cohortSize) * 100),
+      d7Pct: Math.round((counts.d7 / cohortSize) * 100),
+      d30Pct: Math.round((counts.d30 / cohortSize) * 100),
+    });
+  });
+  retentionCohorts.sort((a, b) => b.cohortDate.localeCompare(a.cohortDate));
+
   return {
     totalUsers: usersCount ?? null,
     activeNow: activeCount ?? null,
@@ -1571,7 +1711,10 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       journeyMapsTotal: journeyMapsTotal ?? 0,
       addPersonOpened,
       addPersonDoneShowOnMap
-    }
+    },
+    avgDwellByStep: Object.keys(avgDwellByStep).length > 0 ? avgDwellByStep : null,
+    retentionCohorts: retentionCohorts.length > 0 ? retentionCohorts.slice(0, 14) : null,
+    utmBreakdown
   };
 }
 

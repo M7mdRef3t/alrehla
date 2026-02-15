@@ -2,6 +2,7 @@ import { geminiClient } from "../services/geminiClient";
 import type { MapNode, PersonViewInsights } from "../modules/map/mapTypes";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { PATH_NAMES } from "../modules/pathEngine/pathResolver";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 interface AIDiagnosisResponse {
   diagnosisTitle?: string;
@@ -138,7 +139,7 @@ ${summary}
 
     return insights;
   } catch (error) {
-    if (import.meta.env.DEV) {
+    if (runtimeEnv.isDev) {
       console.error("Error generating AI person view insights:", error);
     }
     return null;

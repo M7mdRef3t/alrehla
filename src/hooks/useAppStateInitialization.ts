@@ -3,9 +3,10 @@ import { useAdminState } from "../state/adminState";
 import { useAuthState, getEffectiveRoleFromState } from "../state/authState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "../utils/featureFlags";
 import { isUserMode } from "../config/appEnv";
+import { runtimeEnv } from "../config/runtimeEnv";
 import { fetchAdminConfig } from "../services/adminApi";
 
-const hasSupabaseEnv = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+const hasSupabaseEnv = Boolean(runtimeEnv.supabaseUrl && runtimeEnv.supabaseAnonKey);
 
 /**
  * Hook to manage app-level state initialization and feature access
@@ -35,7 +36,7 @@ export function useAppStateInitialization() {
         betaAccess,
         role,
         adminAccess,
-        isDev: !isUserMode && import.meta.env.DEV
+        isDev: !isUserMode && runtimeEnv.isDev
       }),
     [featureFlags, betaAccess, role, adminAccess]
   );

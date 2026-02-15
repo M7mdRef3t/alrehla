@@ -41,6 +41,23 @@ import { isSupabaseReady } from "./services/supabaseClient";
 import { fetchAdminConfig, fetchOwnerAlerts } from "./services/adminApi";
 import { usePulseCheckLogic } from "./hooks/usePulseCheckLogic";
 import { isPhaseOneUserFlow, isUserMode } from "./config/appEnv";
+import {
+  createCurrentUrl,
+  getHash,
+  getOrigin,
+  getPathname,
+  getSearch,
+  isAdminPath,
+  isAnalyticsPath,
+  pushUrl,
+  reloadPage,
+  replaceUrl,
+  subscribePopstate
+} from "./services/navigation";
+import { getFromLocalStorage, setInLocalStorage } from "./services/browserStorage";
+import { openInNewTab } from "./services/clientDom";
+import { getDocumentOrNull, getWindowOrNull } from "./services/clientRuntime";
+import { runtimeEnv } from "./config/runtimeEnv";
 
 type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
 type PulseSubmitPayload = {
@@ -202,7 +219,7 @@ const FeedbackModal = lazy(() => import("./components/FeedbackModal").then((m) =
 const preloadCoreMap = () => import("./components/CoreMapScreen");
 const preloadChatbot = () => import("./components/AIChatbot");
 const preloadGym = () => import("./components/RelationshipGym");
-const hasSupabaseEnv = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+const hasSupabaseEnv = Boolean(runtimeEnv.supabaseUrl && runtimeEnv.supabaseAnonKey);
 type AgentModule = typeof import("./agent");
 const LAST_SEEN_BROADCAST_KEY = "dawayir-last-seen-broadcast-id";
 const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
@@ -344,14 +361,13 @@ function cleanWelcomeMessage(text: string | null): string | null {
 }
 
 function hasOAuthCallbackParams(): boolean {
-  if (typeof window === "undefined") return false;
-
-  const search = new URLSearchParams(window.location.search);
+  const search = new URLSearchParams(getSearch());
   if (search.has("code") || search.has("state") || search.has("error") || search.has("error_description")) {
     return true;
   }
 
-  const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+  const rawHash = getHash();
+  const hash = rawHash.startsWith("#") ? rawHash.slice(1) : rawHash;
   const hashParams = new URLSearchParams(hash);
   return (
     hashParams.has("access_token") ||
@@ -393,7 +409,7 @@ function loadOwnerMilestonesState(): OwnerMilestonesState {
     return { registeredReached: false, installedReached: false, addedReached: false, fullyCompleted: false };
   }
   try {
-    const raw = window.localStorage.getItem(OWNER_ALERTS_MILESTONES_KEY);
+    const raw = getFromLocalStorage(OWNER_ALERTS_MILESTONES_KEY);
     if (!raw) return { registeredReached: false, installedReached: false, addedReached: false, fullyCompleted: false };
     const parsed = JSON.parse(raw) as Partial<OwnerMilestonesState>;
     return {
@@ -409,7 +425,7 @@ function loadOwnerMilestonesState(): OwnerMilestonesState {
 
 function saveOwnerMilestonesState(value: OwnerMilestonesState): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(OWNER_ALERTS_MILESTONES_KEY, JSON.stringify(value));
+  setInLocalStorage(OWNER_ALERTS_MILESTONES_KEY, JSON.stringify(value));
 }
 
 import { JourneyTimeline } from "./components/JourneyTimeline";
@@ -438,12 +454,8 @@ export default function App() {
   const [themeBeforePulse, setThemeBeforePulse] = useState<"light" | "dark" | "system" | null>(null);
   const [agentModule, setAgentModule] = useState<AgentModule | null>(null);
   const [lockedFeature, setLockedFeature] = useState<FeatureFlagKey | null>(null);
-  const [isAdminRoute, setIsAdminRoute] = useState(() =>
-    typeof window !== "undefined" ? window.location.pathname.startsWith("/admin") : false
-  );
-  const [isAnalyticsRoute, setIsAnalyticsRoute] = useState(() =>
-    typeof window !== "undefined" ? window.location.pathname === "/analytics" : false
-  );
+  const [isAdminRoute, setIsAdminRoute] = useState(() => isAdminPath());
+  const [isAnalyticsRoute, setIsAnalyticsRoute] = useState(() => isAnalyticsPath());
   const [postAuthIntent, setPostAuthIntentState] = useState<PostAuthIntent | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   /** Ø±Ø¨Ø· Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„ØªØ§ØªØ´/Ø²Ø± Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø³Ø§Ø¨Ù‚Ø© Ø¨Ø¯Ù„ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ */
@@ -475,7 +487,7 @@ export default function App() {
   const [previewedFeature, setPreviewedFeature] = useState<FeatureFlagKey | null>(null);
   const [activeBroadcast, setActiveBroadcast] = useState<PublicBroadcast | null>(null);
   const pulseDeltaTimerRef = useRef<number | null>(null);
-  const whatsAppNumber = import.meta.env.VITE_WHATSAPP_CONTACT_NUMBER || DEFAULT_WHATSAPP_CONTACT;
+  const whatsAppNumber = runtimeEnv.whatsappContactNumber || DEFAULT_WHATSAPP_CONTACT;
   const whatsAppLink = useMemo(() => {
     const normalized = normalizeWhatsAppPhone(whatsAppNumber);
     return normalized ? `https://wa.me/${normalized}` : null;
@@ -527,7 +539,7 @@ export default function App() {
         betaAccess,
         role,
         adminAccess,
-        isDev: !isUserMode && import.meta.env.DEV
+        isDev: !isUserMode && runtimeEnv.isDev
       }),
     [featureFlags, betaAccess, role, adminAccess]
   );
@@ -536,6 +548,7 @@ export default function App() {
   const canUseAIField = availableFeatures.ai_field && !isLockedPhaseOne;
   const canShowAIChatbot = canUseAIField && isPrivilegedUser;
   const canUsePulseCheck = availableFeatures.pulse_check;
+  const shouldPromptAuthAfterPulse = !authUser && !isPrivilegedUser;
   const shouldGateStartWithAuth = isSupabaseReady && !authUser && !isPrivilegedUser;
   const {
     showPulseCheck,
@@ -553,9 +566,11 @@ export default function App() {
   const suppressCocoonFor = useCallback((ms = 2000) => {
     setSuppressCocoonReopen(true);
     if (cocoonSuppressTimerRef.current != null) {
-      window.clearTimeout(cocoonSuppressTimerRef.current);
+      clearTimeout(cocoonSuppressTimerRef.current);
     }
-    cocoonSuppressTimerRef.current = window.setTimeout(() => {
+    const windowRef = getWindowOrNull();
+    if (!windowRef) return;
+    cocoonSuppressTimerRef.current = windowRef.setTimeout(() => {
       setSuppressCocoonReopen(false);
       cocoonSuppressTimerRef.current = null;
     }, ms);
@@ -564,7 +579,7 @@ export default function App() {
   useEffect(() => {
     return () => {
       if (cocoonSuppressTimerRef.current != null) {
-        window.clearTimeout(cocoonSuppressTimerRef.current);
+        clearTimeout(cocoonSuppressTimerRef.current);
       }
     };
   }, []);
@@ -620,11 +635,11 @@ export default function App() {
       );
       if (!candidate) return;
 
-      const seenId = window.localStorage.getItem(LAST_SEEN_BROADCAST_KEY);
+      const seenId = getFromLocalStorage(LAST_SEEN_BROADCAST_KEY);
       if (seenId === candidate.id) return;
 
       setActiveBroadcast(candidate);
-      window.localStorage.setItem(LAST_SEEN_BROADCAST_KEY, candidate.id);
+      setInLocalStorage(LAST_SEEN_BROADCAST_KEY, candidate.id);
 
       if (notificationSupported && notificationPermission === "granted" && notificationSettings.enabled) {
         void sendNotification({
@@ -636,13 +651,13 @@ export default function App() {
     };
 
     void checkBroadcasts();
-    const timer = window.setInterval(() => {
+    const timer = setInterval(() => {
       void checkBroadcasts();
     }, 60_000);
 
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      clearInterval(timer);
     };
   }, [
     authUser,
@@ -654,40 +669,38 @@ export default function App() {
 
   useEffect(() => {
     const handler = () => {
-      setIsAdminRoute(window.location.pathname.startsWith("/admin"));
-      setIsAnalyticsRoute(window.location.pathname === "/analytics");
+      setIsAdminRoute(isAdminPath());
+      setIsAnalyticsRoute(isAnalyticsPath());
     };
-    window.addEventListener("popstate", handler);
-    return () => window.removeEventListener("popstate", handler);
+    return subscribePopstate(handler);
   }, []);
 
   /** Ø±Ø¨Ø· History API Ø¨Ø§Ù„Ø´Ø§Ø´Ø§Øª â€” Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„ØªØ§ØªØ´/Ø²Ø± Ø§Ù„Ø±Ø¬ÙˆØ¹ ÙŠØ±Ø¬Ø¹ Ù„Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø³Ø§Ø¨Ù‚Ø© Ø¨Ø¯Ù„ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ */
   useEffect(() => {
-    if (typeof window === "undefined" || window.location.pathname.startsWith("/admin")) return;
+    if (isAdminPath()) return;
     if (hasOAuthCallbackParams()) return;
     if (fromPopStateRef.current) {
       fromPopStateRef.current = false;
       return;
     }
     const state = { screen };
-    const url = window.location.pathname || "/";
+    const url = getPathname() || "/";
     if (!hasHistorySyncedRef.current) {
       hasHistorySyncedRef.current = true;
-      window.history.replaceState(state, "", url);
+      replaceUrl(url, state);
       return;
     }
-    window.history.pushState(state, "", url);
+    pushUrl(url, state);
   }, [screen, authStatus]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || window.location.pathname.startsWith("/admin")) return;
+    if (isAdminPath()) return;
     const handler = (e: PopStateEvent) => {
       const next = (e.state as { screen?: Screen } | null)?.screen ?? "landing";
       fromPopStateRef.current = true;
       setScreen(next);
     };
-    window.addEventListener("popstate", handler);
-    return () => window.removeEventListener("popstate", handler);
+    return subscribePopstate(handler);
   }, []);
 
   useEffect(() => {
@@ -701,7 +714,7 @@ export default function App() {
     if (restoredLastScreenForUserRef.current === userId) return;
 
     restoredLastScreenForUserRef.current = userId;
-    const savedUiState = window.localStorage.getItem(getUserLastUiStateStorageKey(userId));
+    const savedUiState = getFromLocalStorage(getUserLastUiStateStorageKey(userId));
     if (savedUiState) {
       try {
         const parsed = JSON.parse(savedUiState) as Partial<PersistedUiState>;
@@ -730,7 +743,7 @@ export default function App() {
       }
     }
 
-    const legacySavedScreen = window.localStorage.getItem(getUserLastScreenStorageKey(userId));
+    const legacySavedScreen = getFromLocalStorage(getUserLastScreenStorageKey(userId));
     const restored = normalizeRestorableScreen(legacySavedScreen);
     if (restored) setScreen(restored);
     hasHydratedUiStateRef.current = true;
@@ -766,8 +779,8 @@ export default function App() {
       }
     };
 
-    window.localStorage.setItem(getUserLastUiStateStorageKey(userId), JSON.stringify(payload));
-    window.localStorage.setItem(getUserLastScreenStorageKey(userId), restorable);
+    setInLocalStorage(getUserLastUiStateStorageKey(userId), JSON.stringify(payload));
+    setInLocalStorage(getUserLastScreenStorageKey(userId), restorable);
   }, [
     authUser?.id,
     screen,
@@ -794,13 +807,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (import.meta.env.DEV) {
+    if (runtimeEnv.isDev) {
       import("./utils/seedStressTestData").then(({ seedStressTestData }) => {
         (window as Window & { __seedStressTest?: () => { nodeCount: number; eventCount: number } }).__seedStressTest =
           () => {
             const result = seedStressTestData();
             console.warn("[Stress Test] ØªÙ…: ", result.nodeCount, "Ø¹ÙÙ‚Ø¯Ø©ØŒ", result.eventCount, "Ø­Ø¯Ø«. Ø¥Ø¹Ø§Ø¯Ø© ØªØ­Ù…ÙŠÙ„...");
-            setTimeout(() => window.location.reload(), 500);
+            setTimeout(() => reloadPage(), 500);
             return result;
           };
       });
@@ -870,15 +883,17 @@ export default function App() {
     };
 
     const seo = seoByScreen[screen];
-    document.title = seo.title;
+    const documentRef = getDocumentOrNull();
+    if (!documentRef) return;
+    documentRef.title = seo.title;
 
-    const descriptionTag = document.querySelector('meta[name="description"]');
+    const descriptionTag = documentRef.querySelector('meta[name="description"]');
     if (descriptionTag) {
       descriptionTag.setAttribute("content", seo.description);
     }
 
     const setMeta = (selector: string, value: string) => {
-      const tag = document.querySelector(selector);
+      const tag = documentRef.querySelector(selector);
       if (tag) {
         tag.setAttribute("content", value);
       }
@@ -889,16 +904,16 @@ export default function App() {
     setMeta('meta[name="twitter:title"]', seo.title);
     setMeta('meta[name="twitter:description"]', seo.description);
 
-    const canonical = document.querySelector('link[rel="canonical"]');
+    const canonical = documentRef.querySelector('link[rel="canonical"]');
     if (canonical) {
-      const href = `${window.location.origin}${window.location.pathname}`;
+      const href = `${getOrigin()}${getPathname()}`;
       canonical.setAttribute("href", href);
       setMeta('meta[property="og:url"]', href);
     }
 
-    const robotsTag = document.querySelector('meta[name="robots"]');
+    const robotsTag = documentRef.querySelector('meta[name="robots"]');
     if (robotsTag) {
-      const path = window.location.pathname.toLowerCase();
+      const path = getPathname().toLowerCase();
       const isPrivatePath = path.startsWith("/admin") || path.startsWith("/analytics");
       robotsTag.setAttribute(
         "content",
@@ -920,7 +935,7 @@ export default function App() {
     };
 
     const pollOwnerAlerts = async () => {
-      const since = window.localStorage.getItem(OWNER_ALERTS_LAST_CHECK_KEY) ?? new Date(Date.now() - 2 * 60 * 1000).toISOString();
+      const since = getFromLocalStorage(OWNER_ALERTS_LAST_CHECK_KEY) ?? new Date(Date.now() - 2 * 60 * 1000).toISOString();
       const alerts = await fetchOwnerAlerts({ since, phaseTarget: 10 });
       if (!alerts || cancelled) return;
 
@@ -986,17 +1001,17 @@ export default function App() {
       }
 
       saveOwnerMilestonesState(nextMilestones);
-      window.localStorage.setItem(OWNER_ALERTS_LAST_CHECK_KEY, alerts.generatedAt || new Date().toISOString());
+      setInLocalStorage(OWNER_ALERTS_LAST_CHECK_KEY, alerts.generatedAt || new Date().toISOString());
     };
 
     void pollOwnerAlerts();
-    const timer = window.setInterval(() => {
+    const timer = setInterval(() => {
       void pollOwnerAlerts();
     }, 45_000);
 
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      clearInterval(timer);
     };
   }, [
     isOwnerWatcher,
@@ -1011,7 +1026,7 @@ export default function App() {
     const intent = getPostAuthIntent();
     if (!intent) return;
     clearPostAuthIntent();
-    recordFlowEvent("auth_login_success", { meta: { intent: intent.kind } });
+    recordFlowEvent("auth_login_success", { meta: { intent: intent.kind, userId: authUser.id, email: authUser.email ?? null } });
     if (intent.kind === "login") {
       setPulseCheckContext("regular");
       setShowPulseCheck(false);
@@ -1069,6 +1084,11 @@ export default function App() {
 
   const goToGoals = useCallback(() => {
     if (!canUseMap) {
+      if (isUserMode) {
+        skipNextPulseCheck();
+        openDefaultGoalMap();
+        return;
+      }
       setLockedFeature("dawayir_map");
       return;
     }
@@ -1081,7 +1101,7 @@ export default function App() {
   }, [canUseMap, openDefaultGoalMap, setLockedFeature, setScreen, skipNextPulseCheck]);
 
   const startRecovery = () => {
-    if (shouldGateStartWithAuth && canUsePulseCheck) {
+    if (canUsePulseCheck) {
       trackEvent(AnalyticsEvents.MICRO_COMPASS_OPENED, { source: "landing", gate: "pulse" });
       setWelcome(null);
       setPostAuthIntentState(null);
@@ -1090,7 +1110,7 @@ export default function App() {
       setShowPulseCheck(true);
       return;
     }
-    if (shouldGateStartWithAuth && !canUsePulseCheck) {
+    if (shouldGateStartWithAuth) {
       setWelcome(null);
       setPostAuthIntentState({ kind: "login", createdAt: Date.now() });
       setShowAuthModal(true);
@@ -1114,11 +1134,11 @@ export default function App() {
   }, [screen]);
 
   useEffect(() => {
-    if (canUseMap) return;
+    if (canUseMap || isUserMode) return;
     if (screen === "goal" || screen === "map" || screen === "mission" || screen === "guided") {
       setScreen("landing");
     }
-  }, [canUseMap, screen]);
+  }, [canUseMap, isUserMode, screen]);
 
   useEffect(() => {
     if (canUseJourneyTools) return;
@@ -1196,29 +1216,30 @@ export default function App() {
   };
 
   const goBackToFeatureFlags = useCallback(() => {
-    if (typeof window === "undefined") return;
-    const next = new URL(window.location.href);
+    const next = createCurrentUrl();
+    if (!next) return;
     next.pathname = "/admin";
     next.search = "";
     next.searchParams.set("tab", "feature-flags");
-    window.history.pushState({}, "", next.toString());
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    pushUrl(next);
     setIsFeaturePreviewSession(false);
     setPreviewedFeature(null);
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined" || isAdminRoute) return;
-    const currentUrl = new URL(window.location.href);
+    if (isAdminRoute) return;
+    const currentUrl = createCurrentUrl();
+    if (!currentUrl) return;
     const previewFeature = normalizePreviewFeature(currentUrl.searchParams.get("previewFeature"));
     if (!previewFeature) return;
     setIsFeaturePreviewSession(true);
     setPreviewedFeature(previewFeature);
 
     const clearPreviewParam = () => {
-      const next = new URL(window.location.href);
+      const next = createCurrentUrl();
+      if (!next) return;
       next.searchParams.delete("previewFeature");
-      window.history.replaceState(window.history.state, "", next.toString());
+      replaceUrl(next);
     };
 
     if (previewFeature === "journey_tools") {
@@ -1245,11 +1266,11 @@ export default function App() {
 
     if (previewFeature === "global_atlas") {
       if (isOwnerWatcher) {
-        const next = new URL(window.location.href);
+        const next = createCurrentUrl();
+        if (!next) return;
         next.pathname = "/analytics";
         next.search = "";
-        window.history.pushState({}, "", next.toString());
-        window.dispatchEvent(new PopStateEvent("popstate"));
+        pushUrl(next);
       }
       clearPreviewParam();
       return;
@@ -1261,27 +1282,29 @@ export default function App() {
   }, [isAdminRoute, isOwnerWatcher, openJourneyTools, setPulseCheckContext, setShowPulseCheck, skipNextPulseCheck]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || isAdminRoute) return;
-    const currentUrl = new URL(window.location.href);
+    if (isAdminRoute) return;
+    const currentUrl = createCurrentUrl();
+    if (!currentUrl) return;
     const ownerAction = normalizeOwnerAction(currentUrl.searchParams.get("ownerAction"));
     if (!ownerAction) return;
 
     const clearOwnerActionParam = () => {
-      const next = new URL(window.location.href);
+      const next = createCurrentUrl();
+      if (!next) return;
       next.searchParams.delete("ownerAction");
-      window.history.replaceState(window.history.state, "", next.toString());
+      replaceUrl(next);
     };
 
     skipNextPulseCheck();
 
     switch (ownerAction) {
       case "admin_dashboard": {
-        const next = new URL(window.location.href);
+        const next = createCurrentUrl();
+        if (!next) return;
         next.pathname = "/admin";
         next.search = "";
         next.searchParams.set("tab", "overview");
-        window.history.pushState({}, "", next.toString());
-        window.dispatchEvent(new PopStateEvent("popstate"));
+        pushUrl(next);
         break;
       }
       case "consciousness_archive":
@@ -1421,7 +1444,7 @@ export default function App() {
   useEffect(() => {
     return () => {
       if (pulseDeltaTimerRef.current != null) {
-        window.clearTimeout(pulseDeltaTimerRef.current);
+        clearTimeout(pulseDeltaTimerRef.current);
       }
     };
   }, []);
@@ -1431,9 +1454,11 @@ export default function App() {
     const nextToast = buildPulseDeltaToast(currentEnergy, yesterdayEnergy);
     setPulseDeltaToast(nextToast);
     if (pulseDeltaTimerRef.current != null) {
-      window.clearTimeout(pulseDeltaTimerRef.current);
+      clearTimeout(pulseDeltaTimerRef.current);
     }
-    pulseDeltaTimerRef.current = window.setTimeout(() => {
+    const windowRef = getWindowOrNull();
+    if (!windowRef) return;
+    pulseDeltaTimerRef.current = windowRef.setTimeout(() => {
       setPulseDeltaToast(null);
       pulseDeltaTimerRef.current = null;
     }, 4600);
@@ -1456,8 +1481,10 @@ export default function App() {
       if (!showPulseCheck) return;
       closePulseCheck(false, "browser_close");
     };
-    window.addEventListener("pagehide", onPageHide);
-    return () => window.removeEventListener("pagehide", onPageHide);
+    const windowRef = getWindowOrNull();
+    if (!windowRef) return;
+    windowRef.addEventListener("pagehide", onPageHide);
+    return () => windowRef.removeEventListener("pagehide", onPageHide);
   }, [closePulseCheck, showPulseCheck]);
 
   const handlePulseGateSubmit = (payload: PulseSubmitPayload) => {
@@ -1473,13 +1500,19 @@ export default function App() {
     });
     closePulseCheck(true, "programmatic");
 
-    const intent: PostAuthIntent = {
-      kind: "start_recovery",
-      pulse: payload,
-      createdAt: Date.now()
-    };
-    setPostAuthIntentState(intent);
-    setShowAuthModal(true);
+    if (shouldPromptAuthAfterPulse) {
+      const intent: PostAuthIntent = {
+        kind: "start_recovery",
+        pulse: payload,
+        createdAt: Date.now()
+      };
+      setPostAuthIntentState(intent);
+      setShowAuthModal(true);
+      return;
+    }
+
+    logPulse(payload);
+    openDawayirSetup();
   };
 
   const handlePulseSubmit = useCallback((payload: PulseSubmitPayload) => {
@@ -1658,7 +1691,7 @@ export default function App() {
             let lastDate: string | null = null;
             if (typeof window !== "undefined") {
               try {
-                const stored = window.localStorage.getItem(cycleKey);
+                const stored = getFromLocalStorage(cycleKey);
                 if (stored) {
                   const parsed = JSON.parse(stored) as { lastIndex?: number; lastDate?: string };
                   if (typeof parsed.lastIndex === "number") lastIndex = parsed.lastIndex;
@@ -1720,7 +1753,7 @@ export default function App() {
       if (now.getHours() !== targetHour || now.getMinutes() !== targetMinute) return;
       const todayKey = now.toISOString().slice(0, 10);
       if (typeof window !== "undefined") {
-        const lastSent = window.localStorage.getItem(storageKey);
+        const lastSent = getFromLocalStorage(storageKey);
         if (lastSent === todayKey) return;
         const reminderTarget = pickMissionReminderTarget(todayKey);
         const send = reminderTarget
@@ -1731,9 +1764,9 @@ export default function App() {
             })
           : sendPresetNotification(NOTIFICATION_TYPES.MISSION_REMINDER);
         void send.then(() => {
-          window.localStorage.setItem(storageKey, todayKey);
+          setInLocalStorage(storageKey, todayKey);
           if (reminderTarget?.cycleStorage) {
-            window.localStorage.setItem(
+            setInLocalStorage(
               reminderTarget.cycleStorage.key,
               JSON.stringify({ lastDate: todayKey, lastIndex: reminderTarget.cycleStorage.index })
             );
@@ -1743,8 +1776,8 @@ export default function App() {
     };
 
     checkAndSend();
-    const id = window.setInterval(checkAndSend, 60 * 1000);
-    return () => window.clearInterval(id);
+    const id = setInterval(checkAndSend, 60 * 1000);
+    return () => clearInterval(id);
   }, [
     notificationSupported,
     notificationPermission,
@@ -1757,9 +1790,10 @@ export default function App() {
     snoozedUntil
   ]);
 
-  const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+  const pathname = getPathname();
   useEffect(() => {
-    if (typeof document === "undefined") return;
+    const documentRef = getDocumentOrNull();
+    if (!documentRef) return;
     const shouldLockScroll =
       isUserMode &&
       screen === "landing" &&
@@ -1769,14 +1803,14 @@ export default function App() {
       pathname !== "/terms";
     if (!shouldLockScroll) return;
 
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    const prevBodyOverflow = document.body.style.overflow;
-    document.documentElement.style.overflow = "hidden";
-    document.body.style.overflow = "hidden";
+    const prevHtmlOverflow = documentRef.documentElement.style.overflow;
+    const prevBodyOverflow = documentRef.body.style.overflow;
+    documentRef.documentElement.style.overflow = "hidden";
+    documentRef.body.style.overflow = "hidden";
 
     return () => {
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      document.body.style.overflow = prevBodyOverflow;
+      documentRef.documentElement.style.overflow = prevHtmlOverflow;
+      documentRef.body.style.overflow = prevBodyOverflow;
     };
   }, [screen, isAdminRoute, isAnalyticsRoute, pathname]);
 
@@ -1818,10 +1852,8 @@ export default function App() {
       <Suspense fallback={<div className="min-h-screen" style={{ background: "var(--space-void)" }} />}>
         <AdminDashboard
           onExit={() => {
-            if (typeof window !== "undefined") {
-              window.history.pushState({}, "", "/");
-              setIsAdminRoute(false);
-            }
+            pushUrl("/");
+            setIsAdminRoute(false);
           }}
         />
       </Suspense>
@@ -2046,7 +2078,7 @@ export default function App() {
           type="button"
           onClick={() => {
             trackEvent("whatsapp_contact_clicked", { placement: "app_floating" });
-            window.open(whatsAppLink, "_blank", "noopener,noreferrer");
+            openInNewTab(whatsAppLink);
           }}
           className="fixed z-40 right-4 md:right-6 bottom-[calc(env(safe-area-inset-bottom)+1rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all"
           title="ØªÙˆØ§ØµÙ„ ÙˆØ§ØªØ³Ø§Ø¨"

@@ -25,13 +25,14 @@ interface RingProps {
 }
 
 const OrbitalRing: FC<RingProps> = memo(({ label, radius, color, glowColor, breatheDuration }) => {
+  const safeRadius = Number.isFinite(radius) ? radius : 0;
   return (
     <g aria-label={label}>
       {/* Ambient glow layer */}
       <motion.circle
         cx="50"
         cy="50"
-        r={radius}
+        r={safeRadius}
         fill="none"
         stroke={glowColor}
         strokeWidth={4}
@@ -50,7 +51,7 @@ const OrbitalRing: FC<RingProps> = memo(({ label, radius, color, glowColor, brea
       <motion.circle
         cx="50"
         cy="50"
-        r={radius}
+        r={safeRadius}
         fill="none"
         stroke={color}
         className="orbital-ring"
@@ -614,7 +615,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
           <motion.circle
             cx="50"
             cy="50"
-            r={GREY_ZONE_STROKE_RADIUS}
+            r={Number.isFinite(GREY_ZONE_STROKE_RADIUS) ? GREY_ZONE_STROKE_RADIUS : 0}
             fill="none"
             stroke="rgba(148, 163, 184, 0.25)"
             strokeWidth={1}
@@ -630,12 +631,11 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
             <motion.circle
               cx="50"
               cy="50"
-              r="9"
+              r={9}
               fill="none"
               stroke={battery === "drained" ? "rgba(148, 163, 184, 0.1)" : "rgba(45, 212, 191, 0.12)"}
               strokeWidth="0.5"
               animate={{
-                r: [8, 11, 8],
                 opacity: [0.3, 0.15, 0.3]
               }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -644,7 +644,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
             <motion.circle
               cx="50"
               cy="50"
-              r="6"
+              r={6}
               fill={meStyle.fill}
               animate={{
                 scale: meStyle.pulseScale,

@@ -46,7 +46,7 @@ export const loadStoredState = async (): Promise<StoredState | null> => {
     });
     return { nodes: migratedNodes };
   } catch (error) {
-    if (import.meta.env.DEV) console.error("Error loading from localStorage:", error);
+    if (runtimeEnv.isDev) console.error("Error loading from localStorage:", error);
     return null;
   }
 };
@@ -65,3 +65,4 @@ export const saveStoredState = (state: StoredState) => {
     queueMapSync(safeState.nodes);
   }, 100); // 100ms debounce
 };
+import { runtimeEnv } from "../config/runtimeEnv";

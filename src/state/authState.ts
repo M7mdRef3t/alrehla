@@ -2,6 +2,9 @@ import { create } from "zustand";
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import { isPrivilegedRole } from "../utils/featureFlags";
 import { supabase } from "../services/supabaseClient";
+import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
+import { createCurrentUrl, replaceUrl } from "../services/navigation";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 export type UserToneGender = "male" | "female" | "neutral";
 
@@ -24,7 +27,7 @@ const ROLE_OVERRIDE_KEY = "dawayir-role-override";
 // This caused confusing URLs and made "owner" vs "developer" feel the same.
 // We now strip it on load and rely on localStorage + UI controls instead.
 const LEGACY_ROLE_OVERRIDE_QUERY_KEY = "asRole";
-const hasSupabaseEnv = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+const hasSupabaseEnv = Boolean(runtimeEnv.supabaseUrl && runtimeEnv.supabaseAnonKey);
 let supabaseClient: SupabaseClient | null = null;
 let supabaseAuthInitialized = false;
 
@@ -47,7 +50,7 @@ export function getEffectiveRoleFromState(
   const override = normalizeRole(state.roleOverride);
   if (!override) return base;
 
-  const isDev = options?.isDev ?? import.meta.env.DEV;
+  const isDev = options?.isDev ?? runtimeEnv.isDev;
   if (isDev) return override;
 
   // Production: allow privileged users to *down-scope* only (view-as user).
@@ -86,12 +89,12 @@ function getToneGenderFromUser(user: User | null): UserToneGender {
 }
 
 function stripLegacyRoleOverrideQueryParam(): void {
-  if (typeof window === "undefined") return;
   try {
-    const url = new URL(window.location.href);
+    const url = createCurrentUrl();
+    if (!url) return;
     if (!url.searchParams.has(LEGACY_ROLE_OVERRIDE_QUERY_KEY)) return;
     url.searchParams.delete(LEGACY_ROLE_OVERRIDE_QUERY_KEY);
-    window.history.replaceState({}, "", url.toString());
+    replaceUrl(url, {});
   } catch {
     // ignore URL update errors
   }
@@ -102,10 +105,11 @@ function getInitialRoleOverride(): string | null {
 
   // ?asRole=user → وضع المستخدم: نطبّق ونمسح الرابط.
   try {
-    const url = new URL(window.location.href);
+    const url = createCurrentUrl();
+    if (!url) return null;
     const fromUrl = normalizeRole(url.searchParams.get(LEGACY_ROLE_OVERRIDE_QUERY_KEY));
     if (fromUrl === "user") {
-      if (window.localStorage) window.localStorage.setItem(ROLE_OVERRIDE_KEY, "user");
+      setInLocalStorage(ROLE_OVERRIDE_KEY, "user");
       stripLegacyRoleOverrideQueryParam();
       return "user";
     }
@@ -116,13 +120,13 @@ function getInitialRoleOverride(): string | null {
   stripLegacyRoleOverrideQueryParam();
 
   // DEV: allow overriding via localStorage for fast testing.
-  if (import.meta.env.DEV) {
-    const stored = window.localStorage.getItem(ROLE_OVERRIDE_KEY);
+  if (runtimeEnv.isDev) {
+    const stored = getFromLocalStorage(ROLE_OVERRIDE_KEY);
     return stored && stored.trim() ? stored.trim() : null;
   }
 
   // Production: allow a persisted *down-scope* to `user` only.
-  const stored = normalizeRole(window.localStorage.getItem(ROLE_OVERRIDE_KEY));
+  const stored = normalizeRole(getFromLocalStorage(ROLE_OVERRIDE_KEY));
   return stored === "user" ? "user" : null;
 }
 
@@ -153,13 +157,13 @@ export const useAuthState = create<AuthState>((set) => ({
     set(() => {
       const normalized = role && role.trim() ? role.trim() : null;
       if (typeof window !== "undefined") {
-        if (import.meta.env.DEV) {
-          if (normalized) window.localStorage.setItem(ROLE_OVERRIDE_KEY, normalized);
-          else window.localStorage.removeItem(ROLE_OVERRIDE_KEY);
+        if (runtimeEnv.isDev) {
+          if (normalized) setInLocalStorage(ROLE_OVERRIDE_KEY, normalized);
+          else removeFromLocalStorage(ROLE_OVERRIDE_KEY);
         } else {
           const safe = normalizeRole(normalized);
-          if (safe === "user") window.localStorage.setItem(ROLE_OVERRIDE_KEY, "user");
-          else window.localStorage.removeItem(ROLE_OVERRIDE_KEY);
+          if (safe === "user") setInLocalStorage(ROLE_OVERRIDE_KEY, "user");
+          else removeFromLocalStorage(ROLE_OVERRIDE_KEY);
         }
       }
       return { roleOverride: normalized };
@@ -269,7 +273,7 @@ if (typeof window !== "undefined") {
   void initSupabaseAuth();
 }
 
-if (typeof window !== "undefined" && import.meta.env.DEV) {
+if (typeof window !== "undefined" && runtimeEnv.isDev) {
   const helper = {
     get: () => getAuthRole(),
     set: (role: string) => useAuthState.getState().setRoleOverride(role),

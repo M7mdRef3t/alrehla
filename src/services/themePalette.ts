@@ -1,8 +1,10 @@
 import { fetchThemePalette as fetchThemePaletteSetting, type ThemePalette } from "./adminApi";
+import { getDocumentOrNull } from "./clientRuntime";
 
 function applyThemePaletteInternal(palette: ThemePalette | null) {
-  if (typeof document === "undefined" || !palette) return;
-  const root = document.documentElement;
+  const documentRef = getDocumentOrNull();
+  if (!documentRef || !palette) return;
+  const root = documentRef.documentElement;
   if (palette.primary) {
     root.style.setProperty("--soft-teal", palette.primary);
   }

@@ -49,6 +49,9 @@ import { getEffectiveFeatureAccess, isPrivilegedRole } from "../utils/featureFla
 import type { FeatureFlagKey } from "../config/features";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
 import { isUserMode } from "../config/appEnv";
+import { runtimeEnv } from "../config/runtimeEnv";
+import { assignUrl, getHref, pushUrl } from "../services/navigation";
+import { openInNewTab } from "../services/clientDom";
 
 const NotificationSettings = lazy(() =>
   import("./NotificationSettings").then((m) => ({ default: m.NotificationSettings }))
@@ -163,7 +166,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showManualPlacement, setShowManualPlacement] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [initialRecoveryOptions, setInitialRecoveryOptions] = useState<RecoveryPlanOpenWith | null>(null);
-  const whatsAppNumber = import.meta.env.VITE_WHATSAPP_CONTACT_NUMBER || DEFAULT_WHATSAPP_CONTACT;
+  const whatsAppNumber = runtimeEnv.whatsappContactNumber || DEFAULT_WHATSAPP_CONTACT;
   const whatsAppLink = useMemo(() => {
     const normalized = normalizeWhatsAppPhone(whatsAppNumber);
     if (!normalized) return null;
@@ -238,7 +241,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         betaAccess,
         role,
         adminAccess,
-        isDev: !isUserMode && import.meta.env.DEV
+        isDev: !isUserMode && runtimeEnv.isDev
       }),
     [featureFlags, betaAccess, role, adminAccess]
   );
@@ -247,20 +250,18 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const openWhatsAppChat = (placement: "desktop_sidebar" | "mobile_sidebar" | "floating_fab") => {
     if (!whatsAppLink) return;
     trackEvent("whatsapp_contact_clicked", { placement });
-    window.open(whatsAppLink, "_blank", "noopener,noreferrer");
+    openInNewTab(whatsAppLink);
   };
   const handleOpen = () => setIsOpen(true);
 
   const openAdminDashboard = () => {
-    if (typeof window === "undefined") return;
     try {
-      const next = new URL(window.location.href);
+      const next = new URL(getHref());
       next.pathname = "/admin";
       next.search = "";
-      window.history.pushState({}, "", next.toString());
-      window.dispatchEvent(new PopStateEvent("popstate"));
+      pushUrl(next);
     } catch {
-      window.location.assign("/admin");
+      assignUrl("/admin");
     }
   };
 
@@ -276,6 +277,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   }, [lastGoalLabel]);
 
   const pwaInstall = usePWAInstall();
+  const [hasMounted, setHasMounted] = useState(false);
+  const canShowInstallButton = hasMounted && Boolean(pwaInstall?.canShowInstallButton);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
   const badgePulseClass = badgePulse ? "animate-bounce" : "";
   const fallbackBadgeClasses =
     "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200";
@@ -285,6 +292,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       return;
     }
     onAllowed();
+  };
+  const triggerPwaInstall = () => {
+    if (!pwaInstall || !canShowInstallButton) return;
+    recordFlowEvent("install_clicked");
+    if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
+    else pwaInstall.showInstallHint();
   };
 
   return (
@@ -587,14 +600,10 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             <Palette className="w-5 h-5 shrink-0" />
             المظهر
           </button>
-          {pwaInstall?.canShowInstallButton && (
+          {canShowInstallButton && (
             <button
               type="button"
-              onClick={() => {
-                recordFlowEvent("install_clicked");
-                if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
-                else pwaInstall.showInstallHint();
-              }}
+              onClick={triggerPwaInstall}
               className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right shrink-0 whitespace-nowrap"
               title="إضافة التطبيق للشاشة الرئيسية"
             >
@@ -1062,13 +1071,11 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <Palette className="w-6 h-6 shrink-0" />
                   <span>المظهر</span>
                 </button>
-                {pwaInstall?.canShowInstallButton && (
+                {canShowInstallButton && (
                   <button
                     type="button"
                     onClick={() => {
-                      recordFlowEvent("install_clicked");
-                      if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
-                      else pwaInstall.showInstallHint();
+                      triggerPwaInstall();
                       handleClose();
                     }}
                     className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right"

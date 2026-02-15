@@ -9,50 +9,59 @@
  * - Opt-out للخصوصية
  */
 import { isUserMode } from "../config/appEnv";
+import { runtimeEnv } from "../config/runtimeEnv";
+import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
+import { getHref } from "./navigation";
+import { getDocumentOrNull, getWindowOrNull, isClientRuntime } from "./clientRuntime";
 
 // Check if analytics is enabled
 function isAnalyticsEnabled(): boolean {
-  const consent = localStorage.getItem("dawayir-analytics-consent");
+  const consent = getFromLocalStorage("dawayir-analytics-consent");
   return consent === "true";
 }
 
 // Get GA Measurement ID from env
 function getGAMeasurementId(): string | null {
-  return import.meta.env.VITE_GA_MEASUREMENT_ID || null;
+  return runtimeEnv.gaMeasurementId || null;
 }
 
 // Get Microsoft Clarity project ID from env
 function getClarityProjectId(): string | null {
-  return import.meta.env.VITE_CLARITY_PROJECT_ID || null;
+  return runtimeEnv.clarityProjectId || null;
 }
 
 // Get ContentSquare project ID from env
 function getContentSquareProjectId(): string | null {
-  return import.meta.env.VITE_CONTENTSQUARE_PROJECT_ID || null;
+  return runtimeEnv.contentsquareProjectId || null;
 }
 
 function loadScriptOnce(scriptId: string, src: string): void {
-  if (document.getElementById(scriptId)) return;
+  const documentRef = getDocumentOrNull();
+  if (!documentRef) return;
+  if (documentRef.getElementById(scriptId)) return;
 
-  const script = document.createElement("script");
+  const script = documentRef.createElement("script");
   script.id = scriptId;
   script.async = true;
   script.src = src;
-  document.head.appendChild(script);
+  documentRef.head.appendChild(script);
 }
 
 // Initialize GA4
 export function initAnalytics(): void {
+  if (!isClientRuntime()) return;
   if (!isUserMode || !isAnalyticsEnabled()) return;
+  const windowRef = getWindowOrNull();
+  if (!windowRef) return;
 
   const measurementId = getGAMeasurementId();
   if (measurementId) {
     loadScriptOnce("dawayir-ga4-script", `https://www.googletagmanager.com/gtag/js?id=${measurementId}`);
 
     // Initialize gtag
-    window.dataLayer = window.dataLayer || [];
+    const dataLayer = (windowRef.dataLayer = windowRef.dataLayer || []);
     function gtag(...args: unknown[]) {
-      window.dataLayer.push(args);
+      dataLayer.push(args);
     }
     gtag("js", new Date());
     gtag("config", measurementId, {
@@ -61,17 +70,17 @@ export function initAnalytics(): void {
     });
 
     // Store gtag function globally
-    window.gtag = gtag;
+    windowRef.gtag = gtag;
   }
 
   const clarityProjectId = getClarityProjectId();
   if (clarityProjectId) {
-    if (!window.clarity) {
+    if (!windowRef.clarity) {
       const clarity = ((...args: unknown[]) => {
         clarity.q = clarity.q || [];
         clarity.q.push(args);
       }) as ClarityFn;
-      window.clarity = clarity;
+      windowRef.clarity = clarity;
     }
 
     loadScriptOnce(
@@ -91,17 +100,19 @@ export function initAnalytics(): void {
 
 // Track page view
 export function trackPageView(pageName: string): void {
+  if (!isClientRuntime()) return;
   if (!isAnalyticsEnabled()) return;
-  
-  if (window.gtag) {
-    window.gtag("event", "page_view", {
+
+  const windowRef = getWindowOrNull();
+  if (windowRef?.gtag) {
+    windowRef.gtag("event", "page_view", {
       page_title: pageName,
-      page_location: window.location.href
+      page_location: getHref()
     });
   }
   
   // Dev logging
-  if (import.meta.env.DEV) {
+  if (runtimeEnv.isDev) {
     console.warn(`[Analytics] Page: ${pageName}`);
   }
 }
@@ -111,20 +122,25 @@ export function trackEvent(
   eventName: string,
   params?: Record<string, string | number | boolean>
 ): void {
+  if (!isClientRuntime()) return;
   if (!isAnalyticsEnabled()) return;
-  
-  if (window.gtag) {
-    window.gtag("event", eventName, params);
+
+  const windowRef = getWindowOrNull();
+  if (windowRef?.gtag) {
+    windowRef.gtag("event", eventName, params);
   }
   
   // Dev logging
-  if (import.meta.env.DEV) {
+  if (runtimeEnv.isDev) {
     console.warn(`[Analytics] Event: ${eventName}`, params);
   }
 }
 
 // Predefined events
 export const AnalyticsEvents = {
+  // Navigation
+  PAGE_VIEW: "page_view",
+  
   // Journey events
   JOURNEY_STARTED: "journey_started",
   GOAL_SELECTED: "goal_selected",
@@ -145,12 +161,16 @@ export const AnalyticsEvents = {
   // Engagement
   TRAINING_COMPLETED: "training_completed",
   STEP_COMPLETED: "recovery_step_completed",
-  AI_CHAT_USED: "ai_chat_used"
+  AI_CHAT_USED: "ai_chat_used",
+  
+  // Consent events
+  CONSENT_GIVEN: "consent_given",
+  CONSENT_DENIED: "consent_denied"
 } as const;
 
 // Analytics consent management
 export function setAnalyticsConsent(consent: boolean): void {
-  localStorage.setItem("dawayir-analytics-consent", String(consent));
+  setInLocalStorage("dawayir-analytics-consent", String(consent));
   
   if (consent) {
     initAnalytics();
@@ -158,7 +178,7 @@ export function setAnalyticsConsent(consent: boolean): void {
 }
 
 export function getAnalyticsConsent(): boolean {
-  return localStorage.getItem("dawayir-analytics-consent") === "true";
+  return getFromLocalStorage("dawayir-analytics-consent") === "true";
 }
 
 // Extend window type for gtag

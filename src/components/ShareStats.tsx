@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Share2, Download, TrendingUp, Users, Calendar, Check } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import { useJourneyState } from "../state/journeyState";
+import { downloadBlobFile } from "../services/clientDom";
 
 interface ShareStatsProps {
   isOpen: boolean;
@@ -56,14 +57,7 @@ export const ShareStats: FC<ShareStatsProps> = ({ isOpen, onClose }) => {
 
       canvas.toBlob((blob) => {
         if (blob) {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `journey-stats-${Date.now()}.png`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
+          downloadBlobFile(blob, `journey-stats-${Date.now()}.png`);
           
           setExportSuccess(true);
           setTimeout(() => {

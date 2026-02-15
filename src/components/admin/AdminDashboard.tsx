@@ -33,8 +33,13 @@ import {
 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { FEATURE_FLAGS, type FeatureFlagKey, type FeatureFlagMode } from "../../config/features";
-import { useAdminState, ADMIN_ACCESS_CODE } from "../../state/adminState";
+import { runtimeEnv } from "../../config/runtimeEnv";
+import { useAdminState, ADMIN_ACCESS_CODE, getScoringThresholds, getScoringWeights } from "../../state/adminState";
 import { getEffectiveRoleFromState, useAuthState } from "../../state/authState";
+import { buildResultTemplateFromAnswers } from "../../utils/resultScreenTemplates";
+import { RESULT_SCREEN_RULES, RESULT_SCREEN_SCENARIOS } from "../../data/resultScreenTemplates";
+import type { PersonGender } from "../../utils/resultScreenAI";
+import type { QuickAnswer2 } from "../../utils/suggestInitialRing";
 import {
   getAggregateStats,
   getEventsByDay,
@@ -111,6 +116,16 @@ import {
   subscribeFlowAuditLogs,
   type FlowAuditLogEntry
 } from "../../services/flowAudit";
+import {
+  createCurrentUrl,
+  getHref,
+  getPathname,
+  getSearch,
+  pushUrl,
+  replaceUrl,
+  subscribePopstate
+} from "../../services/navigation";
+import { downloadBlobFile } from "../../services/clientDom";
 
 type AdminTab = "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "content" | "users" | "user-state" | "consciousness";
 
@@ -133,17 +148,16 @@ const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
 const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
 
 const getTabFromLocation = (): AdminTab => {
-  if (typeof window === "undefined") return "overview";
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(getSearch());
   const tab = params.get("tab") as AdminTab | null;
   return NAV_ITEMS.some((item) => item.id === tab) ? tab! : "overview";
 };
 
 const updateTabInUrl = (tab: AdminTab) => {
-  if (typeof window === "undefined") return;
-  const url = new URL(window.location.href);
+  const url = createCurrentUrl();
+  if (!url) return;
   url.searchParams.set("tab", tab);
-  window.history.pushState({}, "", url.toString());
+  pushUrl(url);
 };
 
 const formatNumber = (value: number | null, fallback = "—") =>
@@ -161,6 +175,19 @@ const formatTimeAgo = (ts: number | null) => {
   return `منذ ${days} يوم`;
 };
 
+type ResultAnswerOption = "often" | "sometimes" | "rarely" | "never";
+
+const RESULT_ANSWER_OPTIONS: ResultAnswerOption[] = ["often", "sometimes", "rarely", "never"];
+
+const RESULT_ANSWER_LABELS: Record<ResultAnswerOption, string> = {
+  often: "Often",
+  sometimes: "Sometimes",
+  rarely: "Rarely",
+  never: "Never"
+};
+
+const SAFETY_OPTIONS: QuickAnswer2[] = ["high", "medium", "low", "zero"];
+
 const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   const adminAccess = useAdminState((s) => s.adminAccess);
   const adminCode = useAdminState((s) => s.adminCode);
@@ -174,14 +201,14 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
 
   useEffect(() => {
     if (adminAccess && !adminCode) {
-      const fallback = import.meta.env.VITE_ADMIN_CODE || ADMIN_ACCESS_CODE;
+      const fallback = runtimeEnv.adminCode || ADMIN_ACCESS_CODE;
       if (fallback) setAdminCode(fallback);
     }
   }, [adminAccess, adminCode, setAdminCode]);
 
   useEffect(() => {
     let mounted = true;
-    const allowedRoles = (import.meta.env.VITE_ADMIN_ALLOWED_ROLES || "admin,owner,superadmin,developer")
+    const allowedRoles = (runtimeEnv.adminAllowedRoles || "admin,owner,superadmin,developer")
       .split(",")
       .map((r: string) => r.trim().toLowerCase())
       .filter(Boolean);
@@ -238,7 +265,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   }, [adminAccess, authRole, authUser, roleOverride, setAdminAccess, setAdminCode]);
 
   const handleLogin = () => {
-    const expected = import.meta.env.VITE_ADMIN_CODE || ADMIN_ACCESS_CODE;
+    const expected = runtimeEnv.adminCode || ADMIN_ACCESS_CODE;
     if (code.trim() === expected) {
       setAdminAccess(true);
       setAdminCode(code.trim());
@@ -312,8 +339,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
   useEffect(() => {
     const handler = () => setTab(getTabFromLocation());
-    window.addEventListener("popstate", handler);
-    return () => window.removeEventListener("popstate", handler);
+    return subscribePopstate(handler);
   }, []);
 
   useEffect(() => {
@@ -518,6 +544,7 @@ const FlowMapPanel: FC = () => {
       window.clearInterval(timer);
     };
   }, []);
+
   const flowStats = remoteStats?.flowStats;
   const pulseAbandonedByReason = useMemo(
     () => flowStats?.pulseAbandonedByReason ?? {},
@@ -749,6 +776,10 @@ const OverviewPanel: FC = () => {
   const [themeMessage, setThemeMessage] = useState<string | null>(null);
   const [copyWinnerSaving, setCopyWinnerSaving] = useState<null | "energy" | "mood" | "focus">(null);
   const [copyWinnerMessage, setCopyWinnerMessage] = useState<string | null>(null);
+  const [weeklyDecisionLogs, setWeeklyDecisionLogs] = useState<FlowAuditLogEntry[]>([]);
+  const [weeklyDecisionLoading, setWeeklyDecisionLoading] = useState(true);
+  const [decisionSaving, setDecisionSaving] = useState(false);
+  const [decisionMessage, setDecisionMessage] = useState<string | null>(null);
 
   const THEME_PRESETS: Array<{
     id: string;
@@ -879,6 +910,29 @@ const OverviewPanel: FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    setWeeklyDecisionLoading(true);
+    fetchFlowAuditLogs(120)
+      .then((logs) => {
+        if (!mounted) return;
+        setWeeklyDecisionLogs(logs.filter((log) => log.action === "weekly_success_decision"));
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setWeeklyDecisionLoading(false);
+      });
+    const unsubscribe = subscribeFlowAuditLogs((entry) => {
+      if (!mounted) return;
+      if (entry.action !== "weekly_success_decision") return;
+      setWeeklyDecisionLogs((prev) => [entry, ...prev.filter((item) => item.id !== entry.id)].slice(0, 20));
+    });
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
+
   const avgPulse =
     pulseLogs.length > 0
       ? Math.round((pulseLogs.reduce((s, p) => s + p.energy, 0) / pulseLogs.length) * 10) / 10
@@ -958,6 +1012,9 @@ const OverviewPanel: FC = () => {
   const isMoodStabilityRisk = moodUnstableToCompletedPct != null && moodUnstableToCompletedPct > 35;
   const flowStats = remoteStats?.flowStats;
   const conversionHealth = remoteStats?.conversionHealth;
+  const avgDwellByStep = remoteStats?.avgDwellByStep;
+  const retentionCohorts = remoteStats?.retentionCohorts;
+  const utmBreakdown = remoteStats?.utmBreakdown;
   const pulseAbandonedByReason = flowStats?.pulseAbandonedByReason ?? {};
   const pulseAbandonedTotal = Object.values(pulseAbandonedByReason).reduce((sum, value) => sum + (value ?? 0), 0);
   const pulseCompletedCount = flowStats?.byStep?.pulse_completed ?? 0;
@@ -1068,6 +1125,134 @@ const OverviewPanel: FC = () => {
       ? "خفّض احتكاك البوصلة: أضف خيار \"تخطي الآن\" مع حفظ تلقائي للحالة الجزئية."
       : null
   ].filter(Boolean) as string[];
+  const funnelByStep = flowStats?.byStep ?? {};
+  const landingViewedCount = funnelByStep.landing_viewed ?? 0;
+  const startClickedCount = funnelByStep.landing_clicked_start ?? 0;
+  const authSuccessCount = funnelByStep.auth_login_success ?? 0;
+  const pulseCompletionRate =
+    startClickedCount > 0 ? Math.round((pulseCompletedCount / startClickedCount) * 100) : null;
+  const startClickRate =
+    landingViewedCount > 0 ? Math.round((startClickedCount / landingViewedCount) * 100) : null;
+  const authSuccessRateFromPulse =
+    pulseCompletedCount > 0 ? Math.round((authSuccessCount / pulseCompletedCount) * 100) : null;
+  const retention7d = executiveReport?.kpis?.retention7d ?? null;
+  const normalizedMetric = (value: number | null, target: number) => {
+    if (value == null || target <= 0) return 0;
+    const ratio = (value / target) * 100;
+    return Math.max(0, Math.min(100, Math.round(ratio)));
+  };
+  const successIndex = Math.round(
+    normalizedMetric(startClickRate, 35) * 0.2 +
+    normalizedMetric(pulseCompletionRate, 60) * 0.3 +
+    normalizedMetric(authSuccessRateFromPulse, 40) * 0.3 +
+    normalizedMetric(addPersonCompletionRatio, 45) * 0.1 +
+    normalizedMetric(retention7d, 15) * 0.1
+  );
+  const successSampleSize = Math.max(landingViewedCount, startClickedCount, pulseCompletedCount);
+  const hasReliableSample = successSampleSize >= 30;
+  const successDecision: "scale" | "optimize" | "pivot" | "insufficient" =
+    !hasReliableSample
+      ? "insufficient"
+      : successIndex >= 75
+        ? "scale"
+        : successIndex >= 50
+          ? "optimize"
+          : "pivot";
+  const successDecisionLabel =
+    successDecision === "scale"
+      ? "القرار: كمل ووسّع"
+      : successDecision === "optimize"
+        ? "القرار: كمل مع تحسينات مركزة"
+        : successDecision === "pivot"
+          ? "القرار: راجع الفرضية بجدية (Pivot محتمل)"
+          : "القرار: البيانات غير كافية";
+  const successDecisionClass =
+    successDecision === "scale"
+      ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+      : successDecision === "optimize"
+        ? "text-amber-700 bg-amber-50 border-amber-200"
+        : successDecision === "pivot"
+          ? "text-rose-700 bg-rose-50 border-rose-200"
+          : "text-slate-700 bg-slate-50 border-slate-200";
+  const weakestMetric = [
+    { key: "start", value: startClickRate, label: "التحويل من الهبوط إلى زر أنطلق" },
+    { key: "pulse", value: pulseCompletionRate, label: "إكمال ضبط البوصلة بعد الضغط على أنطلق" },
+    { key: "auth", value: authSuccessRateFromPulse, label: "نجاح تسجيل الدخول بعد حفظ الحالة" },
+    { key: "add_person", value: addPersonCompletionRatio, label: "إتمام إضافة شخص" }
+  ]
+    .filter((metric) => metric.value != null)
+    .sort((a, b) => (a.value ?? 0) - (b.value ?? 0))[0];
+  const successRecommendations = [
+    !hasReliableSample ? "اجمع عينة أكبر (30+ جلسة) قبل قرار كبير على المشروع." : null,
+    startClickRate != null && startClickRate < 35
+      ? "ضعف في رسالة القيمة: حسّن عنوان الصفحة الرئيسية وCTA \"أنطلق\"."
+      : null,
+    pulseCompletionRate != null && pulseCompletionRate < 60
+      ? "احتكاك في البوصلة: بسّط الخطوات والنصوص وقلّل التشتت قبل \"احفظ حالتك\"."
+      : null,
+    authSuccessRateFromPulse != null && authSuccessRateFromPulse < 40
+      ? "تسريب بعد الحفظ: اختصر شاشة تسجيل الدخول وزوّد سطر طمأنة حفظ التقدم."
+      : null,
+    retention7d != null && retention7d < 15
+      ? "احتفاظ منخفض: أضف trigger متابعة في اليوم التالي بمهمة واحدة قصيرة."
+      : null
+  ].filter(Boolean) as string[];
+  const weeklyDecisionEntries = useMemo(
+    () =>
+      weeklyDecisionLogs.slice(0, 8).map((log) => {
+        const payload = (log.payload ?? {}) as Record<string, unknown>;
+        return {
+          id: log.id,
+          createdAt: log.createdAt,
+          score: typeof payload.successIndex === "number" ? payload.successIndex : null,
+          decisionLabel:
+            typeof payload.successDecisionLabel === "string" ? payload.successDecisionLabel : "قرار أسبوعي",
+          sampleSize: typeof payload.sampleSize === "number" ? payload.sampleSize : null
+        };
+      }),
+    [weeklyDecisionLogs]
+  );
+  const handleSaveWeeklyDecision = useCallback(async () => {
+    setDecisionSaving(true);
+    setDecisionMessage(null);
+    try {
+      const entry = await saveFlowAuditLog({
+        action: "weekly_success_decision",
+        payload: {
+          successIndex,
+          successDecision,
+          successDecisionLabel,
+          sampleSize: successSampleSize,
+          metrics: {
+            startClickRate,
+            pulseCompletionRate,
+            authSuccessRateFromPulse,
+            addPersonCompletionRatio,
+            retention7d
+          },
+          recommendations: successRecommendations,
+          decidedAt: new Date().toISOString()
+        }
+      });
+      setWeeklyDecisionLogs((prev) => [entry, ...prev.filter((item) => item.id !== entry.id)].slice(0, 20));
+      setDecisionMessage("تم اعتماد قرار الأسبوع وتسجيله في السجل.");
+    } catch {
+      setDecisionMessage("تعذر حفظ القرار الآن. حاول مرة أخرى.");
+    } finally {
+      setDecisionSaving(false);
+    }
+  }, [
+    addPersonCompletionRatio,
+    authSuccessRateFromPulse,
+    pulseCompletionRate,
+    retention7d,
+    startClickRate,
+    successDecision,
+    successDecisionLabel,
+    successIndex,
+    successRecommendations,
+    successSampleSize
+  ]);
 
   const [chartPeriod, setChartPeriod] = useState<7 | 28>(28);
   const growthDataFiltered = useMemo(() => {
@@ -1107,10 +1292,11 @@ const OverviewPanel: FC = () => {
     add_person_dropped: "هروب من إضافة شخص",
     feedback_opened: "فتح نموذج الرأي",
     feedback_submitted: "إرسال تغذية راجعة",
-    tools_opened: "فتح أدوات"
+    tools_opened: "فتح أدوات",
+    utm_captured: "التقاط مصدر التسويق"
   };
 
-  const isStandalone = typeof window !== "undefined" && window.location.pathname === "/analytics";
+  const isStandalone = getPathname() === "/analytics";
 
   return (
     <div className="space-y-6">
@@ -1477,6 +1663,202 @@ const OverviewPanel: FC = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      <div className="admin-glass-card p-5 space-y-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-slate-600" />
+            <h3 className="text-sm font-semibold text-slate-800">مؤشر نجاح المشروع</h3>
+          </div>
+          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${successDecisionClass}`}>
+            {successDecisionLabel}
+          </span>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+          <div className="flex items-center justify-between text-xs mb-2">
+            <span className="text-slate-600">Success Index</span>
+            <span className="font-semibold text-slate-800">{successIndex}/100</span>
+          </div>
+          <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
+            <div
+              className={`h-full ${
+                successIndex >= 75 ? "bg-emerald-500" : successIndex >= 50 ? "bg-amber-500" : "bg-rose-500"
+              }`}
+              style={{ width: `${Math.max(0, Math.min(100, successIndex))}%` }}
+            />
+          </div>
+          <p className="mt-2 text-[11px] text-slate-500">
+            عينة القرار: {successSampleSize} جلسة {hasReliableSample ? "(كافية)" : "(غير كافية)"}
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
+          <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+            <p className="text-slate-500">Landing → Start</p>
+            <p className="text-base font-semibold text-slate-800">{startClickRate == null ? "—" : `${startClickRate}%`}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+            <p className="text-slate-500">Start → Pulse</p>
+            <p className="text-base font-semibold text-slate-800">{pulseCompletionRate == null ? "—" : `${pulseCompletionRate}%`}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+            <p className="text-slate-500">Pulse → Auth</p>
+            <p className="text-base font-semibold text-slate-800">{authSuccessRateFromPulse == null ? "—" : `${authSuccessRateFromPulse}%`}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+            <p className="text-slate-500">إتمام إضافة شخص</p>
+            <p className="text-base font-semibold text-slate-800">{addPersonCompletionRatio == null ? "—" : `${addPersonCompletionRatio}%`}</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+            <p className="text-slate-500">Retention 7D</p>
+            <p className="text-base font-semibold text-slate-800">{retention7d == null ? "—" : `${retention7d}%`}</p>
+          </div>
+        </div>
+        {weakestMetric && (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs text-slate-600">
+              أضعف نقطة حاليًا: <span className="font-semibold text-slate-800">{weakestMetric.label}</span>
+            </p>
+          </div>
+        )}
+        {successRecommendations.length > 0 && (
+          <div className="rounded-xl border border-slate-200 bg-white/70 p-3">
+            <p className="text-xs font-semibold text-slate-700 mb-2">إجراءات القرار</p>
+            <div className="space-y-2">
+              {successRecommendations.map((item) => (
+                <p key={item} className="text-xs text-slate-600">• {item}</p>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="rounded-xl border border-slate-200 bg-white/70 p-3 space-y-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-xs font-semibold text-slate-700">اعتماد قرار الأسبوع</p>
+            <button
+              type="button"
+              onClick={handleSaveWeeklyDecision}
+              disabled={decisionSaving}
+              className="rounded-full border border-slate-300 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {decisionSaving ? "جارٍ الحفظ..." : "اعتماد القرار للأسبوع"}
+            </button>
+          </div>
+          {decisionMessage && <p className="text-xs text-slate-600">{decisionMessage}</p>}
+          {weeklyDecisionLoading ? (
+            <p className="text-xs text-slate-500">جارٍ تحميل سجل القرارات...</p>
+          ) : weeklyDecisionEntries.length === 0 ? (
+            <p className="text-xs text-slate-500">لا يوجد قرارات أسبوعية محفوظة بعد.</p>
+          ) : (
+            <div className="space-y-2">
+              {weeklyDecisionEntries.map((entry) => (
+                <div key={entry.id} className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-600">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-slate-800">{entry.decisionLabel}</span>
+                    <span>{new Date(entry.createdAt).toLocaleDateString("ar-EG")}</span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-3 text-[11px] text-slate-500">
+                    <span>Index: {entry.score ?? "—"}</span>
+                    <span>Sample: {entry.sampleSize ?? "—"}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ═══════ متوسط وقت الإقامة بين الخطوات ═══════ */}
+      {avgDwellByStep && Object.keys(avgDwellByStep).length > 0 && (
+        <div className="admin-glass-card p-5">
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">متوسط الوقت بين الخطوات</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            {Object.entries(avgDwellByStep)
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 12)
+              .map(([step, avg]) => (
+              <div key={step} className="rounded-xl border border-slate-200 bg-white/70 p-2.5">
+                <p className="text-slate-500 truncate">{FLOW_LABELS[step] ?? step}</p>
+                <p className="font-semibold text-slate-800 mt-0.5">
+                  {avg > 60000 ? `${(avg / 60000).toFixed(1)} د` : `${(avg / 1000).toFixed(1)} ث`}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ═══════ مصادر التسويق (UTM) ═══════ */}
+      {utmBreakdown && (
+        <div className="admin-glass-card p-5">
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">مصادر التسويق (UTM)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { title: "المصدر (Source)", data: utmBreakdown.sources },
+              { title: "الوسيط (Medium)", data: utmBreakdown.mediums },
+              { title: "الحملة (Campaign)", data: utmBreakdown.campaigns }
+            ].map((section) => (
+              <div key={section.title} className="rounded-xl border border-slate-200 bg-white/70 p-3">
+                <p className="text-xs font-semibold text-slate-600 mb-2">{section.title}</p>
+                {section.data.length === 0 ? (
+                  <p className="text-xs text-slate-400">لا توجد بيانات بعد</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {section.data.map((entry) => (
+                      <div key={entry.key} className="flex items-center justify-between text-xs">
+                        <span className="text-slate-700 truncate">{entry.key}</span>
+                        <span className="text-slate-800 font-semibold">{entry.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ═══════ جدول الاحتفاظ بالمستخدمين (Retention Cohorts) ═══════ */}
+      {retentionCohorts && retentionCohorts.length > 0 && (
+        <div className="admin-glass-card p-5">
+          <h3 className="text-sm font-semibold text-slate-800 mb-3">جدول الاحتفاظ بالمستخدمين</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-right">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="p-2 text-slate-500">تاريخ الفوج</th>
+                  <th className="p-2 text-slate-500">الحجم</th>
+                  <th className="p-2 text-slate-500">يوم ١</th>
+                  <th className="p-2 text-slate-500">يوم ٣</th>
+                  <th className="p-2 text-slate-500">يوم ٧</th>
+                  <th className="p-2 text-slate-500">يوم ٣٠</th>
+                </tr>
+              </thead>
+              <tbody>
+                {retentionCohorts.map((row) => (
+                  <tr key={row.cohortDate} className="border-b border-slate-100">
+                    <td className="p-2 text-slate-700 font-medium">{row.cohortDate.slice(5)}</td>
+                    <td className="p-2 font-semibold text-slate-800">{row.cohortSize}</td>
+                    <td className={`p-2 font-semibold ${row.d1Pct > 30 ? "text-emerald-700" : row.d1Pct > 10 ? "text-amber-700" : "text-rose-700"}`}>
+                      {row.d1Pct}%
+                    </td>
+                    <td className={`p-2 font-semibold ${row.d3Pct > 30 ? "text-emerald-700" : row.d3Pct > 10 ? "text-amber-700" : "text-rose-700"}`}>
+                      {row.d3Pct}%
+                    </td>
+                    <td className={`p-2 font-semibold ${row.d7Pct > 30 ? "text-emerald-700" : row.d7Pct > 10 ? "text-amber-700" : "text-rose-700"}`}>
+                      {row.d7Pct}%
+                    </td>
+                    <td className={`p-2 font-semibold ${row.d30Pct > 30 ? "text-emerald-700" : row.d30Pct > 10 ? "text-amber-700" : "text-rose-700"}`}>
+                      {row.d30Pct}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[11px] text-slate-400 mt-2">
+            أخضر: &gt;30% | أصفر: 10-30% | أحمر: &lt;10%
+          </p>
         </div>
       )}
 
@@ -2479,11 +2861,11 @@ const FeatureFlagsPanel: FC = () => {
     betaAccess,
     role,
     adminAccess,
-    isDev: import.meta.env.DEV
+    isDev: runtimeEnv.isDev
   });
   const openFeaturePreview = (featureKey: FeatureFlagKey) => {
-    if (typeof window === "undefined") return;
-    const next = new URL(window.location.href);
+    const next = createCurrentUrl();
+    if (!next) return;
     if (featureKey === "global_atlas") {
       next.pathname = "/analytics";
       next.search = "";
@@ -2491,8 +2873,7 @@ const FeatureFlagsPanel: FC = () => {
       next.pathname = "/";
       next.searchParams.set("previewFeature", featureKey);
     }
-    window.history.pushState({}, "", next.toString());
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    pushUrl(next);
   };
   const openOwnerAction = (
     action:
@@ -2524,13 +2905,12 @@ const FeatureFlagsPanel: FC = () => {
       | "noise_silencing"
       | "breathing_session"
   ) => {
-    if (typeof window === "undefined") return;
-    const next = new URL(window.location.href);
+    const next = createCurrentUrl();
+    if (!next) return;
     next.pathname = "/";
     next.search = "";
     next.searchParams.set("ownerAction", action);
-    window.history.pushState({}, "", next.toString());
-    window.dispatchEvent(new PopStateEvent("popstate"));
+    pushUrl(next);
   };
   const sidebarActions: Array<{ id: Parameters<typeof openOwnerAction>[0]; label: string; icon: ReactNode }> = [
     { id: "admin_dashboard", label: "لوحة التحكم", icon: <ShieldCheck className="w-4 h-4" /> },
@@ -2565,16 +2945,16 @@ const FeatureFlagsPanel: FC = () => {
   const viewMode = roleOverride ? roleOverride.trim().toLowerCase() : null;
   const isUserView = role === "user";
   const isRealRoleView = viewMode == null || viewMode === privilegedRoleLabel;
-  const isDevRoleView = Boolean(import.meta.env.DEV && viewMode === "developer");
+  const isDevRoleView = Boolean(runtimeEnv.isDev && viewMode === "developer");
   const canViewAsUser = isPrivilegedRole(baseRole);
 
   const stripRoleQueryParam = () => {
-    if (typeof window === "undefined") return;
     try {
-      const url = new URL(window.location.href);
+      const url = createCurrentUrl();
+      if (!url) return;
       if (!url.searchParams.has("asRole")) return;
       url.searchParams.delete("asRole");
-      window.history.replaceState({}, "", url.toString());
+      replaceUrl(url, {});
     } catch {
       // ignore URL update errors
     }
@@ -2593,7 +2973,7 @@ const FeatureFlagsPanel: FC = () => {
   };
 
   const handleUseDevRole = () => {
-    if (!import.meta.env.DEV) return;
+    if (!runtimeEnv.isDev) return;
     setRoleOverride("developer");
     stripRoleQueryParam();
   };
@@ -2642,7 +3022,7 @@ const FeatureFlagsPanel: FC = () => {
             >
               {privilegedRoleLabel}
             </button>
-            {import.meta.env.DEV && (
+            {runtimeEnv.isDev && (
               <button
                 type="button"
                 onClick={handleUseDevRole}
@@ -2658,7 +3038,7 @@ const FeatureFlagsPanel: FC = () => {
           </div>
           <p className="text-[11px] leading-relaxed text-slate-500">
             مستخدم: تجربة المستخدم النهائي. {privilegedRoleLabel}: أدوات المالك.
-            {import.meta.env.DEV ? " تطوير: وضع اختبار محلي." : null}
+            {runtimeEnv.isDev ? " تطوير: وضع اختبار محلي." : null}
           </p>
         </div>
       )}
@@ -3020,6 +3400,69 @@ const ContentPanel: FC = () => {
   const [newContentKey, setNewContentKey] = useState("");
   const [newContentPage, setNewContentPage] = useState("");
   const [newContentValue, setNewContentValue] = useState("");
+  const [resultPersonGender, setResultPersonGender] = useState<PersonGender>("unknown");
+  const [resultSafety, setResultSafety] = useState<QuickAnswer2>("medium");
+  const [resultEmergency, setResultEmergency] = useState(false);
+  const [feelingAnswers, setFeelingAnswers] = useState<{ q1: ResultAnswerOption; q2: ResultAnswerOption; q3: ResultAnswerOption }>({
+    q1: "sometimes",
+    q2: "sometimes",
+    q3: "sometimes"
+  });
+  const [realityAnswers, setRealityAnswers] = useState<{ q1: ResultAnswerOption; q2: ResultAnswerOption; q3: ResultAnswerOption }>({
+    q1: "sometimes",
+    q2: "sometimes",
+    q3: "sometimes"
+  });
+
+  const scoreWeights = getScoringWeights();
+  const scoreThresholds = getScoringThresholds();
+  const resultPoints = useCallback((value: ResultAnswerOption) => {
+    if (value === "often") return scoreWeights.often;
+    if (value === "sometimes") return scoreWeights.sometimes;
+    if (value === "rarely") return scoreWeights.rarely;
+    return scoreWeights.never;
+  }, [scoreWeights.never, scoreWeights.often, scoreWeights.rarely, scoreWeights.sometimes]);
+  const resultScoreLevel = useCallback((score: number): "low" | "medium" | "high" => {
+    if (score > scoreThresholds.mediumMax) return "high";
+    if (score > scoreThresholds.lowMax) return "medium";
+    return "low";
+  }, [scoreThresholds.lowMax, scoreThresholds.mediumMax]);
+  const symptomScore = resultPoints(feelingAnswers.q1) + resultPoints(feelingAnswers.q2) + resultPoints(feelingAnswers.q3);
+  const contactScore = resultPoints(realityAnswers.q1) + resultPoints(realityAnswers.q2) + resultPoints(realityAnswers.q3);
+  const symptomLevel = feelingAnswers.q3 === "often" ? "high" : resultScoreLevel(symptomScore);
+  const contactLevel = resultScoreLevel(contactScore);
+  const selectedResultTemplate = useMemo(() => buildResultTemplateFromAnswers({
+    score: symptomScore,
+    feelingAnswers,
+    realityAnswers,
+    isEmergency: resultEmergency,
+    safetyAnswer: resultSafety,
+    personGender: resultPersonGender
+  }), [symptomScore, feelingAnswers, realityAnswers, resultEmergency, resultSafety, resultPersonGender]);
+  const matchedRule = useMemo(
+    () =>
+      RESULT_SCREEN_RULES.find((rule) => {
+        const when = rule.when;
+        if (when.emergency !== undefined && when.emergency !== resultEmergency) return false;
+        if (when.safetyHigh !== undefined && when.safetyHigh !== (resultSafety === "high")) return false;
+        if (when.symptomLevel !== undefined) {
+          if (Array.isArray(when.symptomLevel)) {
+            if (!when.symptomLevel.includes(symptomLevel)) return false;
+          } else if (when.symptomLevel !== symptomLevel) {
+            return false;
+          }
+        }
+        if (when.contactLevel !== undefined) {
+          if (Array.isArray(when.contactLevel)) {
+            if (!when.contactLevel.includes(contactLevel)) return false;
+          } else if (when.contactLevel !== contactLevel) {
+            return false;
+          }
+        }
+        return true;
+      }) ?? null,
+    [contactLevel, resultEmergency, resultSafety, symptomLevel]
+  );
 
   const updateContentDraft = (key: string, next: Partial<{ content: string; page: string }>) => {
     setContentDrafts((prev) => ({
@@ -3203,6 +3646,142 @@ const ContentPanel: FC = () => {
 
   return (
     <div className="space-y-6">
+      <div className="admin-glass-card p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold">Result Matrix (Add Person)</h3>
+          <p className="text-xs text-slate-400">Source: buildResultTemplateFromAnswers + RESULT_SCREEN_RULES</p>
+        </div>
+
+        <div className="grid xl:grid-cols-3 gap-4">
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4 space-y-3">
+            <p className="text-xs font-semibold text-slate-200">Inputs</p>
+            <div className="grid sm:grid-cols-2 gap-2">
+              <label className="text-[11px] text-slate-400">
+                Person Gender
+                <select value={resultPersonGender} onChange={(e) => setResultPersonGender(e.target.value as PersonGender)} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-200">
+                  <option value="unknown">Unknown</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </label>
+              <label className="text-[11px] text-slate-400">
+                Safety Answer
+                <select value={resultSafety} onChange={(e) => setResultSafety(e.target.value as QuickAnswer2)} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-200">
+                  {SAFETY_OPTIONS.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <label className="flex items-center gap-2 text-xs text-slate-300">
+              <input type="checkbox" checked={resultEmergency} onChange={(e) => setResultEmergency(e.target.checked)} />
+              Emergency Override
+            </label>
+            <div className="space-y-2">
+              <p className="text-[11px] text-slate-400">Feeling Answers</p>
+              {(["q1", "q2", "q3"] as const).map((key) => (
+                <label key={`feeling-${key}`} className="text-[11px] text-slate-400 block">
+                  {key}
+                  <select
+                    value={feelingAnswers[key]}
+                    onChange={(e) => setFeelingAnswers((prev: { q1: ResultAnswerOption; q2: ResultAnswerOption; q3: ResultAnswerOption }) => ({ ...prev, [key]: e.target.value as ResultAnswerOption }))}
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-200"
+                  >
+                    {RESULT_ANSWER_OPTIONS.map((option) => (
+                      <option key={option} value={option}>{RESULT_ANSWER_LABELS[option]}</option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+            </div>
+            <div className="space-y-2">
+              <p className="text-[11px] text-slate-400">Reality Answers</p>
+              {(["q1", "q2", "q3"] as const).map((key) => (
+                <label key={`reality-${key}`} className="text-[11px] text-slate-400 block">
+                  {key}
+                  <select
+                    value={realityAnswers[key]}
+                    onChange={(e) => setRealityAnswers((prev: { q1: ResultAnswerOption; q2: ResultAnswerOption; q3: ResultAnswerOption }) => ({ ...prev, [key]: e.target.value as ResultAnswerOption }))}
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-200"
+                  >
+                    {RESULT_ANSWER_OPTIONS.map((option) => (
+                      <option key={option} value={option}>{RESULT_ANSWER_LABELS[option]}</option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4 space-y-3">
+            <p className="text-xs font-semibold text-slate-200">Decision Engine</p>
+            <div className="grid sm:grid-cols-2 gap-2 text-xs">
+              <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-2"><p className="text-slate-500">symptomScore</p><p className="font-semibold text-slate-100">{symptomScore}</p></div>
+              <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-2"><p className="text-slate-500">contactScore</p><p className="font-semibold text-slate-100">{contactScore}</p></div>
+              <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-2"><p className="text-slate-500">symptomLevel</p><p className="font-semibold text-slate-100">{symptomLevel}</p></div>
+              <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-2"><p className="text-slate-500">contactLevel</p><p className="font-semibold text-slate-100">{contactLevel}</p></div>
+            </div>
+            <div className="rounded-xl border border-emerald-800 bg-emerald-950/30 p-3 text-xs">
+              <p className="text-emerald-300">Matched Rule</p>
+              <p className="font-semibold text-emerald-100">{matchedRule?.id ?? "none"}</p>
+              <p className="text-emerald-200/80 mt-1">Scenario: {selectedResultTemplate.scenarioKey}</p>
+            </div>
+            <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-3 text-xs max-h-56 overflow-auto">
+              <p className="text-slate-300 mb-2 font-semibold">Rules Matrix</p>
+              <div className="space-y-2">
+                {RESULT_SCREEN_RULES.map((rule) => (
+                  <div key={rule.id} className={`rounded-lg border px-2 py-1.5 ${matchedRule?.id === rule.id ? "border-emerald-500 bg-emerald-950/30" : "border-slate-700 bg-slate-950/40"}`}>
+                    <p className="text-slate-100">{rule.id}</p>
+                    <p className="text-slate-400">when: {JSON.stringify(rule.when)}</p>
+                    <p className="text-slate-400">scenario: {rule.scenario}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4 space-y-3">
+            <p className="text-xs font-semibold text-slate-200">Result Output Preview</p>
+            <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-3 text-xs space-y-2 max-h-[560px] overflow-auto">
+              <p className="text-slate-300"><span className="text-slate-500">Title:</span> {selectedResultTemplate.title}</p>
+              <p className="text-slate-300"><span className="text-slate-500">State:</span> {selectedResultTemplate.state_label}</p>
+              <p className="text-slate-300"><span className="text-slate-500">Goal:</span> {selectedResultTemplate.goal_label}</p>
+              <p className="text-slate-300"><span className="text-slate-500">Mission:</span> {selectedResultTemplate.mission_label} - {selectedResultTemplate.mission_goal}</p>
+              <p className="text-slate-300"><span className="text-slate-500">Promise:</span> {selectedResultTemplate.promise_label}</p>
+              <p className="text-slate-400">{selectedResultTemplate.promise_body}</p>
+              <div>
+                <p className="text-slate-300 font-semibold">Requirements</p>
+                {selectedResultTemplate.requirements.map((item: { title: string; detail: string }, index: number) => (
+                  <p key={`${item.title}-${index}`} className="text-slate-400">- {item.title}: {item.detail}</p>
+                ))}
+              </div>
+              <div>
+                <p className="text-slate-300 font-semibold">Steps</p>
+                {selectedResultTemplate.steps.map((item: string, index: number) => (
+                  <p key={`${item}-${index}`} className="text-slate-400">{index + 1}. {item}</p>
+                ))}
+              </div>
+              <div>
+                <p className="text-slate-300 font-semibold">Obstacles</p>
+                {selectedResultTemplate.obstacles.map((item: { title: string; solution: string }, index: number) => (
+                  <p key={`${item.title}-${index}`} className="text-slate-400">- {item.title}: {item.solution}</p>
+                ))}
+              </div>
+              <p className="text-slate-300 font-semibold">Understanding</p>
+              <p className="text-slate-400">{selectedResultTemplate.understanding_body}</p>
+              <p className="text-slate-300 font-semibold">Explanation</p>
+              <p className="text-slate-400">{selectedResultTemplate.explanation_body}</p>
+              <p className="text-slate-300 font-semibold">Suggested Zone</p>
+              <p className="text-slate-400">{selectedResultTemplate.suggested_zone_label}</p>
+              <p className="text-slate-400">{selectedResultTemplate.suggested_zone_body}</p>
+            </div>
+            <div className="rounded-xl border border-slate-700 bg-slate-900/60 p-2 text-[11px] text-slate-400">
+              Active scenario copy source: <span className="text-slate-200">{RESULT_SCREEN_SCENARIOS[selectedResultTemplate.scenarioKey].title}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="admin-glass-card p-5 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">محرر نصوص المنصة</h3>
@@ -3616,7 +4195,7 @@ const UsersPanel: FC = () => {
       }
     } catch (error) {
       setGodViewError("حصل خطأ أثناء تحميل بيانات الخريطة.");
-      if (import.meta.env.DEV) {
+      if (runtimeEnv.isDev) {
         console.warn("God View load failed", error);
       }
     } finally {
@@ -3906,14 +4485,7 @@ const UserStatePanel: FC = () => {
     const data = await exportUserStates(500);
     if (data) {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `user-state-export-${Date.now()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlobFile(blob, `user-state-export-${Date.now()}.json`);
     }
     setExporting(false);
   };
@@ -3923,14 +4495,7 @@ const UserStatePanel: FC = () => {
     const data = await exportFullData(5000);
     if (data) {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `full-export-${Date.now()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlobFile(blob, `full-export-${Date.now()}.json`);
     }
     setFullExporting(false);
   };
@@ -4121,14 +4686,7 @@ const ConsciousnessArchivePanel: FC = () => {
           "\n"
         );
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `consciousness-archive-${Date.now()}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      downloadBlobFile(blob, `consciousness-archive-${Date.now()}.csv`);
     } finally {
       setExportingCsv(false);
     }

@@ -1,5 +1,11 @@
 import { loadStoredState } from "./localStore";
 import { getJSON, setJSON, getItem } from "./secureStore";
+import {
+  getFromLocalStorage,
+  getLocalStorageKey,
+  getLocalStorageLength
+} from "./browserStorage";
+import { downloadBlobFile } from "./clientDom";
 
 /**
  * واجهة بيانات النسخة الاحتياطية
@@ -138,15 +144,7 @@ export async function restoreBackupData(data: BackupData): Promise<void> {
 export function downloadBackupFile(data: BackupData, fileNamePrefix = "journey-backup"): void {
   const jsonString = JSON.stringify(data, null, 2);
   const blob = new Blob([jsonString], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${fileNamePrefix}-${Date.now()}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  downloadBlobFile(blob, `${fileNamePrefix}-${Date.now()}.json`);
 }
 
 export function backupToKeyValues(data: BackupData): Record<string, string> {
@@ -197,10 +195,10 @@ export function buildBackupFromKeyValues(values: Record<string, string>): Backup
  */
 export function getStorageSize(): number {
   let total = 0;
-  for (let i = 0; i < localStorage.length; i += 1) {
-    const key = localStorage.key(i);
+  for (let i = 0; i < getLocalStorageLength(); i += 1) {
+    const key = getLocalStorageKey(i);
     if (!key || !key.startsWith("dawayir-")) continue;
-    const value = localStorage.getItem(key);
+    const value = getFromLocalStorage(key);
     if (value != null) {
       total += value.length + key.length;
     }
@@ -233,7 +231,11 @@ export async function getStorageStats(): Promise<{
 }
 
 export async function hasAnyStoredData(): Promise<boolean> {
-  const keys = Object.keys(localStorage).filter((key) => key.startsWith("dawayir-"));
+  const keys: string[] = [];
+  for (let i = 0; i < getLocalStorageLength(); i += 1) {
+    const key = getLocalStorageKey(i);
+    if (key && key.startsWith("dawayir-")) keys.push(key);
+  }
   if (keys.length === 0) return false;
   const mapData = await getItem("dawayir-map-nodes");
   return mapData != null;

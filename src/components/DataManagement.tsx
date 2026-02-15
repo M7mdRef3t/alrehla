@@ -33,6 +33,7 @@ import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "..
 import { signInWithGoogle, signOut, updateAccountProfile } from "../services/authService";
 import { isPrivilegedRole } from "../utils/featureFlags";
 import { useAppContentString } from "../hooks/useAppContentString";
+import { assignUrl, getHref, pushUrl, reloadPage } from "../services/navigation";
 
 let pdfExportLoader: Promise<typeof import("../services/pdfExport")> | null = null;
 
@@ -210,7 +211,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
 
       // إعادة تحميل الصفحة لتطبيق البيانات الجديدة
       setTimeout(() => {
-        window.location.reload();
+        reloadPage();
       }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "فشل الاستيراد");
@@ -234,7 +235,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
 
   const handleConfirmWipe = () => {
     clearLocalData();
-    window.location.reload();
+    reloadPage();
   };
 
   const handleCloudExport = async () => {
@@ -278,7 +279,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
       const backup = buildBackupFromKeyValues(remote);
       await restoreBackupData(backup);
       setCloudSuccess("تم استعادة نسخة السحابة");
-      setTimeout(() => window.location.reload(), 1200);
+      setTimeout(() => reloadPage(), 1200);
     } catch {
       setCloudError("فشل استعادة بيانات السحابة");
     } finally {
@@ -311,16 +312,14 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
 
   const openRoleSwitchInAdmin = () => {
     onClose();
-    if (typeof window === "undefined") return;
     try {
-      const next = new URL(window.location.href);
+      const next = new URL(getHref());
       next.pathname = "/admin";
       next.search = "";
       next.searchParams.set("tab", "feature-flags");
-      window.history.pushState({}, "", next.toString());
-      window.dispatchEvent(new PopStateEvent("popstate"));
+      pushUrl(next);
     } catch {
-      window.location.assign("/admin?tab=feature-flags");
+      assignUrl("/admin?tab=feature-flags");
     }
   };
 

@@ -5,6 +5,8 @@
 
 import { useMapState } from "../state/mapState";
 import type { JourneyEvent, JourneyEventPayload } from "../services/journeyTracking";
+import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 const KEY_EVENTS = "dawayir-journey-events";
 const MAX_EVENTS = 2000;
@@ -28,7 +30,7 @@ const TASK_LABELS = [
 function loadEvents(): JourneyEvent[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(KEY_EVENTS);
+    const raw = getFromLocalStorage(KEY_EVENTS);
     if (!raw) return [];
     const arr = JSON.parse(raw) as JourneyEvent[];
     return Array.isArray(arr) ? arr : [];
@@ -41,9 +43,9 @@ function saveEvents(events: JourneyEvent[]): void {
   if (typeof window === "undefined") return;
   const trimmed = events.slice(-MAX_EVENTS);
   try {
-    localStorage.setItem(KEY_EVENTS, JSON.stringify(trimmed));
+    setInLocalStorage(KEY_EVENTS, JSON.stringify(trimmed));
   } catch (e) {
-    if (import.meta.env.DEV) console.warn("seedStressTest: save failed", e);
+    if (runtimeEnv.isDev) console.warn("seedStressTest: save failed", e);
   }
 }
 

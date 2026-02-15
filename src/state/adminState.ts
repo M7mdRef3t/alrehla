@@ -9,6 +9,7 @@ import type { BroadcastAudience } from "../utils/broadcastAudience";
 import { getAuthRole } from "./authState";
 import { getEffectiveFeatureAccess } from "../utils/featureFlags";
 import { isUserMode } from "../config/appEnv";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 export interface ScoringWeights {
   often: number;
@@ -168,7 +169,7 @@ export function isFeatureAllowed(key: FeatureFlagKey): boolean {
     betaAccess: state.betaAccess,
     role: getAuthRole(),
     adminAccess: state.adminAccess,
-    isDev: !isUserMode && import.meta.env.DEV
+    isDev: !isUserMode && runtimeEnv.isDev
   });
   return access[key];
 }

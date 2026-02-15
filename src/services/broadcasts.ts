@@ -1,5 +1,6 @@
 import type { BroadcastAudience } from "../utils/broadcastAudience";
 import { getBroadcastAudienceFromId } from "../utils/broadcastAudience";
+import { getWindowOrNull } from "./clientRuntime";
 
 export interface PublicBroadcast {
   id: string;
@@ -42,9 +43,10 @@ export function doesBroadcastMatchAudience(
 }
 
 export function isAppInstalledMode(): boolean {
-  if (typeof window === "undefined") return false;
-  const standaloneMatch = window.matchMedia?.("(display-mode: standalone)")?.matches ?? false;
-  const iosStandalone = Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone);
+  const windowRef = getWindowOrNull();
+  if (!windowRef) return false;
+  const standaloneMatch = windowRef.matchMedia?.("(display-mode: standalone)")?.matches ?? false;
+  const iosStandalone = Boolean((windowRef.navigator as Navigator & { standalone?: boolean }).standalone);
   return standaloneMatch || iosStandalone;
 }
 

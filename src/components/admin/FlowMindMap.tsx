@@ -6,6 +6,8 @@ import {
   Undo2, Redo2, Copy, Search, Download, Upload, ArrowRightLeft,
   CheckCircle2, XCircle, Grid3X3, Lock, Unlock
 } from "lucide-react";
+import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "../../services/browserStorage";
+import { downloadBlobFile } from "../../services/clientDom";
 
 /* ═══════════════════════════════════════════════════
    Types
@@ -310,7 +312,7 @@ function computeTreeLayout(
    ═══════════════════════════════════════════════════ */
 function loadCustom(): { nodes: FlowNode[]; links: Array<[string, string]> } {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = getFromLocalStorage(STORAGE_KEY);
     if (!raw) return { nodes: [], links: [] };
     const parsed = JSON.parse(raw) as { nodes?: unknown; links?: unknown };
     const rawNodes = Array.isArray(parsed.nodes) ? parsed.nodes : [];
@@ -352,11 +354,11 @@ function loadCustom(): { nodes: FlowNode[]; links: Array<[string, string]> } {
   } catch { return { nodes: [], links: [] }; }
 }
 function saveCustom(nodes: FlowNode[], links: Array<[string, string]>) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ nodes, links })); } catch { /* */ }
+  try { setInLocalStorage(STORAGE_KEY, JSON.stringify({ nodes, links })); } catch { /* */ }
 }
 function loadPositions(): Record<string, Position> | null {
   try {
-    const raw = localStorage.getItem(POS_STORAGE_KEY);
+    const raw = getFromLocalStorage(POS_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     if (!parsed || typeof parsed !== "object") return null;
@@ -370,12 +372,12 @@ function loadPositions(): Record<string, Position> | null {
   } catch { return null; }
 }
 function savePositions(pos: Record<string, Position>) {
-  try { localStorage.setItem(POS_STORAGE_KEY, JSON.stringify(pos)); } catch { /* */ }
+  try { setInLocalStorage(POS_STORAGE_KEY, JSON.stringify(pos)); } catch { /* */ }
 }
 
 function loadDefaultPositions(): Record<string, Position> | null {
   try {
-    const raw = localStorage.getItem(DEFAULT_POS_STORAGE_KEY);
+    const raw = getFromLocalStorage(DEFAULT_POS_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     if (!parsed || typeof parsed !== "object") return null;
@@ -394,17 +396,17 @@ function loadDefaultPositions(): Record<string, Position> | null {
 function saveDefaultPositions(pos: Record<string, Position> | null) {
   try {
     if (!pos || Object.keys(pos).length === 0) {
-      localStorage.removeItem(DEFAULT_POS_STORAGE_KEY);
+      removeFromLocalStorage(DEFAULT_POS_STORAGE_KEY);
       return;
     }
-    localStorage.setItem(DEFAULT_POS_STORAGE_KEY, JSON.stringify(pos));
+    setInLocalStorage(DEFAULT_POS_STORAGE_KEY, JSON.stringify(pos));
   } catch {
     // ignore write errors
   }
 }
 function loadZoom(): { zoom: number; panX: number; panY: number } | null {
   try {
-    const raw = localStorage.getItem(ZOOM_STORAGE_KEY);
+    const raw = getFromLocalStorage(ZOOM_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as { zoom?: unknown; panX?: unknown; panY?: unknown };
     const rawZoom = typeof parsed.zoom === "number" && Number.isFinite(parsed.zoom) ? parsed.zoom : 0.85;
@@ -417,12 +419,12 @@ function loadZoom(): { zoom: number; panX: number; panY: number } | null {
   } catch { return null; }
 }
 function saveZoom(z: { zoom: number; panX: number; panY: number }) {
-  try { localStorage.setItem(ZOOM_STORAGE_KEY, JSON.stringify(z)); } catch { /* */ }
+  try { setInLocalStorage(ZOOM_STORAGE_KEY, JSON.stringify(z)); } catch { /* */ }
 }
 
 function loadOverrides(): Record<string, FlowNodeOverride> {
   try {
-    const raw = localStorage.getItem(OVERRIDES_STORAGE_KEY);
+    const raw = getFromLocalStorage(OVERRIDES_STORAGE_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     if (!parsed || typeof parsed !== "object") return {};
@@ -443,12 +445,12 @@ function loadOverrides(): Record<string, FlowNodeOverride> {
 }
 
 function saveOverrides(overrides: Record<string, FlowNodeOverride>) {
-  try { localStorage.setItem(OVERRIDES_STORAGE_KEY, JSON.stringify(overrides)); } catch { /* */ }
+  try { setInLocalStorage(OVERRIDES_STORAGE_KEY, JSON.stringify(overrides)); } catch { /* */ }
 }
 
 function loadHiddenBaseIds(allowedIds: Set<string>): Set<string> {
   try {
-    const raw = localStorage.getItem(HIDDEN_BASE_STORAGE_KEY);
+    const raw = getFromLocalStorage(HIDDEN_BASE_STORAGE_KEY);
     if (!raw) return new Set<string>();
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return new Set<string>();
@@ -467,10 +469,10 @@ function loadHiddenBaseIds(allowedIds: Set<string>): Set<string> {
 function saveHiddenBaseIds(hiddenIds: Set<string>) {
   try {
     if (hiddenIds.size === 0) {
-      localStorage.removeItem(HIDDEN_BASE_STORAGE_KEY);
+      removeFromLocalStorage(HIDDEN_BASE_STORAGE_KEY);
       return;
     }
-    localStorage.setItem(HIDDEN_BASE_STORAGE_KEY, JSON.stringify(Array.from(hiddenIds)));
+    setInLocalStorage(HIDDEN_BASE_STORAGE_KEY, JSON.stringify(Array.from(hiddenIds)));
   } catch {
     // ignore write errors
   }
@@ -478,7 +480,7 @@ function saveHiddenBaseIds(hiddenIds: Set<string>) {
 
 function loadLockedNodeIds(): Set<string> {
   try {
-    const raw = localStorage.getItem(LOCKED_NODE_STORAGE_KEY);
+    const raw = getFromLocalStorage(LOCKED_NODE_STORAGE_KEY);
     if (!raw) return new Set<string>();
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return new Set<string>();
@@ -496,10 +498,10 @@ function loadLockedNodeIds(): Set<string> {
 function saveLockedNodeIds(lockedIds: Set<string>) {
   try {
     if (lockedIds.size === 0) {
-      localStorage.removeItem(LOCKED_NODE_STORAGE_KEY);
+      removeFromLocalStorage(LOCKED_NODE_STORAGE_KEY);
       return;
     }
-    localStorage.setItem(LOCKED_NODE_STORAGE_KEY, JSON.stringify(Array.from(lockedIds)));
+    setInLocalStorage(LOCKED_NODE_STORAGE_KEY, JSON.stringify(Array.from(lockedIds)));
   } catch {
     // ignore write errors
   }
@@ -676,7 +678,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
       const maxCoord = Math.max(...vals.map(p => Math.max(p.x, p.y)), 0);
       if (vals.length > 0 && maxCoord < 500) {
         // Old format — discard and use fresh auto-layout
-        try { localStorage.removeItem(POS_STORAGE_KEY); } catch { /* */ }
+        try { removeFromLocalStorage(POS_STORAGE_KEY); } catch { /* */ }
         return autoLayout;
       }
       return mergePositionsWithLayout(stored, autoLayout);
@@ -793,10 +795,11 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
   const initialZoomState = useMemo(() => loadZoom(), []);
   const hadStoredZoomAtInit = useRef(Boolean(initialZoomState));
   const [zoom, setZoom] = useState(() => initialZoomState?.zoom ?? 0.85);
+  const safeZoom = Number.isFinite(zoom) ? zoom : 0.85;
   const [panX, setPanX] = useState(() => initialZoomState?.panX ?? -(CANVAS_SIZE / 2 - 400));
   const [panY, setPanY] = useState(() => initialZoomState?.panY ?? -(CANVAS_SIZE / 2 - 200));
 
-  useEffect(() => { saveZoom({ zoom, panX, panY }); }, [zoom, panX, panY]);
+  useEffect(() => { saveZoom({ zoom: safeZoom, panX, panY }); }, [safeZoom, panX, panY]);
 
   // Refs that always hold latest values — eliminates stale closures in callbacks
   const positionsRef = useRef(positions);
@@ -804,7 +807,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
   const linksRef = useRef(hierarchyLinks);
   linksRef.current = hierarchyLinks;
   const zoomRef = useRef(zoom);
-  zoomRef.current = zoom;
+  zoomRef.current = safeZoom;
 
   /* ── Interaction mode ── */
   type Tool = "select" | "pan";
@@ -892,11 +895,11 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
       const my = e.clientY - rect.top;
 
       // Canvas position under mouse before zoom
-      const worldX = (mx - panX) / zoom;
-      const worldY = (my - panY) / zoom;
+      const worldX = (mx - panX) / safeZoom;
+      const worldY = (my - panY) / safeZoom;
 
       const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-      const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom + delta));
+      const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, safeZoom + delta));
 
       // Adjust pan so the point under mouse stays fixed
       setPanX(mx - worldX * newZoom);
@@ -905,7 +908,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [zoom, panX, panY]);
+  }, [safeZoom, panX, panY]);
 
   /* ── Space key for temporary pan ── */
   const spaceHeld = useRef(false);
@@ -1132,12 +1135,12 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
     setContextMenu(null);
     setEditorState(null);
     try {
-      localStorage.removeItem(POS_STORAGE_KEY);
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(ZOOM_STORAGE_KEY);
-      localStorage.removeItem(OVERRIDES_STORAGE_KEY);
-      localStorage.removeItem(HIDDEN_BASE_STORAGE_KEY);
-      localStorage.removeItem(LOCKED_NODE_STORAGE_KEY);
+      removeFromLocalStorage(POS_STORAGE_KEY);
+      removeFromLocalStorage(STORAGE_KEY);
+      removeFromLocalStorage(ZOOM_STORAGE_KEY);
+      removeFromLocalStorage(OVERRIDES_STORAGE_KEY);
+      removeFromLocalStorage(HIDDEN_BASE_STORAGE_KEY);
+      removeFromLocalStorage(LOCKED_NODE_STORAGE_KEY);
     } catch { /* */ }
     // Recompute fresh layout from base nodes only
     const freshLayout = applyPresetToLayout(defaultPositions, computeTreeLayout(baseNodes, baseLinks));
@@ -1241,14 +1244,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
       }
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `flow-map-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadBlobFile(blob, `flow-map-${new Date().toISOString().slice(0, 10)}.json`);
     emitAction({
       action: "export_json",
       payload: { customCount: customNodes.length, hiddenBaseCount: hiddenBaseNodeIds.size }
@@ -1843,19 +1839,19 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
           <defs>
             <pattern
               id="miro-grid-small"
-              width={20 * zoom} height={20 * zoom}
+              width={20 * safeZoom} height={20 * safeZoom}
               patternUnits="userSpaceOnUse"
-              x={panX % (20 * zoom)} y={panY % (20 * zoom)}
+              x={panX % (20 * safeZoom)} y={panY % (20 * safeZoom)}
             >
-              <circle cx="1" cy="1" r={Math.max(0.4, 0.5 * zoom)} fill="#cbd5e1" opacity={zoom > 0.5 ? 0.4 : 0} />
+              <circle cx="1" cy="1" r={Math.max(0.4, 0.5 * safeZoom)} fill="#cbd5e1" opacity={safeZoom > 0.5 ? 0.4 : 0} />
             </pattern>
             <pattern
               id="miro-grid-large"
-              width={100 * zoom} height={100 * zoom}
+              width={100 * safeZoom} height={100 * safeZoom}
               patternUnits="userSpaceOnUse"
-              x={panX % (100 * zoom)} y={panY % (100 * zoom)}
+              x={panX % (100 * safeZoom)} y={panY % (100 * safeZoom)}
             >
-              <circle cx="1" cy="1" r={Math.max(0.8, 1.2 * zoom)} fill="#94a3b8" opacity="0.35" />
+              <circle cx="1" cy="1" r={Math.max(0.8, 1.2 * safeZoom)} fill="#94a3b8" opacity="0.35" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#miro-grid-small)" />
@@ -1869,7 +1865,7 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
             left: 0,
             top: 0,
             transformOrigin: "0 0",
-            transform: `translate(${panX}px, ${panY}px) scale(${zoom})`,
+            transform: `translate(${panX}px, ${panY}px) scale(${safeZoom})`,
             width: CANVAS_SIZE,
             height: CANVAS_SIZE
           }}

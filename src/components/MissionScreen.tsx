@@ -7,6 +7,7 @@ import type { FeelingAnswers } from "./FeelingCheck";
 import type { RealityAnswers } from "./RealityCheck";
 import { useAchievementState } from "../state/achievementState";
 import type { ResultScenarioKey } from "../data/resultScreenTemplates";
+import { getAudioContextConstructor } from "../services/clientDom";
 
 interface MissionScreenProps {
   nodeId: string;
@@ -107,10 +108,10 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
     lastCelebratedAtRef.current = progress.completedAt;
 
     setShowCelebration(true);
-    const timeoutId = window.setTimeout(() => setShowCelebration(false), 2200);
+    const timeoutId = setTimeout(() => setShowCelebration(false), 2200);
 
     try {
-      const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      const AudioContextCtor = getAudioContextConstructor();
       if (AudioContextCtor) {
         const context = new AudioContextCtor();
         const oscillator = context.createOscillator();
@@ -133,7 +134,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
       // تجاهل أي أخطاء في تشغيل الصوت
     }
 
-    return () => window.clearTimeout(timeoutId);
+    return () => clearTimeout(timeoutId);
   }, [missionCompleted, progress.completedAt]);
 
   if (!node || !node.analysis || !result) {

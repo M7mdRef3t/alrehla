@@ -1,6 +1,7 @@
 import type { MapNode } from "../modules/map/mapTypes";
 import { isSupabaseReady, supabase } from "./supabaseClient";
 import { getTrackingMode, getTrackingSessionId } from "./journeyTracking";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 const SUPABASE_MAPS_TABLE = "journey_maps";
 const SYNC_DEBOUNCE_MS = 1200;
@@ -35,7 +36,7 @@ async function flushMapSync(): Promise<void> {
     onConflict: "session_id"
   });
 
-  if (error && import.meta.env.DEV) {
+  if (error && runtimeEnv.isDev) {
     console.warn("mapSync: supabase upsert failed", error);
   }
 }

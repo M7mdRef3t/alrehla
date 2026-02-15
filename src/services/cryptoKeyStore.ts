@@ -1,3 +1,5 @@
+import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
+
 const DB_NAME = "dawayir-crypto";
 const STORE_NAME = "keys";
 const KEY_ID = "device-key";
@@ -53,7 +55,7 @@ async function storeKeyJwk(jwk: JsonWebKey): Promise<void> {
 
 async function loadLegacyKey(): Promise<CryptoKey | null> {
   if (typeof window === "undefined") return null;
-  const raw = window.localStorage.getItem(LEGACY_LOCAL_KEY);
+  const raw = getFromLocalStorage(LEGACY_LOCAL_KEY);
   if (!raw) return null;
   try {
     const jwk = JSON.parse(raw) as JsonWebKey;
@@ -73,7 +75,7 @@ async function loadLegacyKey(): Promise<CryptoKey | null> {
 async function storeLegacyKey(jwk: JsonWebKey): Promise<void> {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(LEGACY_LOCAL_KEY, JSON.stringify(jwk));
+    setInLocalStorage(LEGACY_LOCAL_KEY, JSON.stringify(jwk));
   } catch {
     // Ignore storage errors
   }
@@ -125,4 +127,3 @@ export async function getOrCreateDeviceKey(): Promise<CryptoKey | null> {
     return null;
   }
 }
-

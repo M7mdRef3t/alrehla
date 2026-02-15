@@ -1,4 +1,5 @@
 import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "../state/pulseState";
+import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
 
 export type PostAuthIntent =
   | {
@@ -54,27 +55,24 @@ function isValidPulse(pulse: unknown): pulse is {
 }
 
 export function setPostAuthIntent(intent: PostAuthIntent): void {
-  if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(intent));
+    setInLocalStorage(STORAGE_KEY, JSON.stringify(intent));
   } catch {
     // Ignore storage errors to avoid blocking auth.
   }
 }
 
 export function clearPostAuthIntent(): void {
-  if (typeof window === "undefined") return;
   try {
-    window.localStorage.removeItem(STORAGE_KEY);
+    removeFromLocalStorage(STORAGE_KEY);
   } catch {
     // Ignore.
   }
 }
 
 export function getPostAuthIntent(): PostAuthIntent | null {
-  if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = getFromLocalStorage(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== "object") return null;

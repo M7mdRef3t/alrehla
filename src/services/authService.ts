@@ -1,22 +1,23 @@
 import type { AuthOtpResponse, AuthResponse, OAuthResponse } from "@supabase/supabase-js";
 import { supabase } from "./supabaseClient";
+import { runtimeEnv } from "../config/runtimeEnv";
+import { getWindowOrNull } from "./clientRuntime";
 
 export type UserToneGender = "male" | "female" | "neutral";
 
 function getRedirectUrl(): string | undefined {
-  if (typeof window === "undefined") return undefined;
-  const origin = window.location.origin;
-  // لو التطبيق شغال على localhost (سواء dev أو production build محلي) → الـ redirect يبقى على نفس السيرفر المحلي
-  if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
-    return origin.endsWith("/") ? origin : `${origin}/`;
-  }
-  // على السيرفر الحقيقي: استخدم المتغير أو دومين الإنتاج
-  const configured =
-    (import.meta.env.VITE_AUTH_REDIRECT_URL as string | undefined) ||
-    (import.meta.env.VITE_PUBLIC_APP_URL as string | undefined) ||
-    "https://www.alrehla.app";
-  const base = configured.trim();
-  return base.endsWith("/") ? base : `${base}/`;
+  const windowRef = getWindowOrNull();
+  if (!windowRef) return undefined;
+  // IMPORTANT:
+  // In installed PWAs, forcing a fixed production domain (e.g. www) can
+  // complete OAuth in a different origin than the running app, so the app
+  // appears "logged out" after returning. Always use the current origin.
+  const origin = windowRef.location.origin.trim();
+  if (origin) return origin.endsWith("/") ? origin : `${origin}/`;
+
+  const configured = (runtimeEnv.authRedirectUrl || runtimeEnv.publicAppUrl || "").trim();
+  if (configured) return configured.endsWith("/") ? configured : `${configured}/`;
+  return undefined;
 }
 
 function buildSupabaseUnavailableError() {

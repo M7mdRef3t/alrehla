@@ -1,6 +1,7 @@
 import type { PulseEntry } from "../state/pulseState";
 import { isSupabaseReady, supabase } from "./supabaseClient";
 import { getTrackingMode, getTrackingSessionId } from "./journeyTracking";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 const SUPABASE_PULSE_TABLE = "daily_pulse_logs";
 
@@ -32,13 +33,13 @@ export async function pushPulseLog(entry: PulseEntry): Promise<void> {
   const msg = String(error.message ?? "");
   if (/column|energy_reasons|energy_confidence|schema cache|does not exist/i.test(msg)) {
     const { error: fallbackError } = await supabase.from(SUPABASE_PULSE_TABLE).insert(basePayload);
-    if (fallbackError && import.meta.env.DEV) {
+    if (fallbackError && runtimeEnv.isDev) {
       console.warn("pulseSync: supabase insert fallback failed", fallbackError);
     }
     return;
   }
 
-  if (error && import.meta.env.DEV) {
+  if (error && runtimeEnv.isDev) {
     console.warn("pulseSync: supabase insert failed", error);
   }
 }

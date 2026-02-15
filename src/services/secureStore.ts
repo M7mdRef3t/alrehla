@@ -1,5 +1,12 @@
 import { getOrCreateDeviceKey } from "./cryptoKeyStore";
 import { getRemoteValue, queueRemoteSet } from "./cloudStore";
+import {
+  getFromLocalStorage,
+  getLocalStorageKey,
+  getLocalStorageLength,
+  removeFromLocalStorage,
+  setInLocalStorage
+} from "./browserStorage";
 
 const ENCRYPTED_PREFIX = "v1:";
 
@@ -79,7 +86,7 @@ export async function getItem(key: string): Promise<string | null> {
   const remote = await getRemoteValue(key);
   if (remote != null) {
     if (!isSensitiveKey(key)) {
-      window.localStorage.setItem(key, remote);
+      setInLocalStorage(key, remote);
       return remote;
     }
 
@@ -96,14 +103,14 @@ export async function getItem(key: string): Promise<string | null> {
     if (plain) {
       try {
         const encrypted = await encryptString(plain);
-        window.localStorage.setItem(key, encrypted);
+        setInLocalStorage(key, encrypted);
       } catch {
-        window.localStorage.setItem(key, plain);
+        setInLocalStorage(key, plain);
       }
       return plain;
     }
   }
-  const raw = window.localStorage.getItem(key);
+  const raw = getFromLocalStorage(key);
   if (raw == null) return null;
   if (!isSensitiveKey(key)) return raw;
 
@@ -118,7 +125,7 @@ export async function getItem(key: string): Promise<string | null> {
   // Migrate plaintext to encrypted storage
   try {
     const encrypted = await encryptString(raw);
-    window.localStorage.setItem(key, encrypted);
+    setInLocalStorage(key, encrypted);
   } catch {
     // Ignore migration errors
   }
@@ -128,13 +135,13 @@ export async function getItem(key: string): Promise<string | null> {
 export async function setItem(key: string, value: string): Promise<void> {
   if (!isBrowser()) return;
   if (!isSensitiveKey(key)) {
-    window.localStorage.setItem(key, value);
+    setInLocalStorage(key, value);
     queueRemoteSet(key, value);
     return;
   }
   try {
     const encrypted = await encryptString(value);
-    window.localStorage.setItem(key, encrypted);
+    setInLocalStorage(key, encrypted);
     queueRemoteSet(key, value);
   } catch {
     // Ignore storage errors
@@ -163,13 +170,13 @@ export async function setJSON(key: string, value: unknown): Promise<void> {
 export function clearLocalData(): void {
   if (!isBrowser()) return;
   const keys: string[] = [];
-  for (let i = 0; i < window.localStorage.length; i += 1) {
-    const key = window.localStorage.key(i);
+  for (let i = 0; i < getLocalStorageLength(); i += 1) {
+    const key = getLocalStorageKey(i);
     if (key) keys.push(key);
   }
   keys.forEach((key) => {
     if (key.startsWith("dawayir-")) {
-      window.localStorage.removeItem(key);
+      removeFromLocalStorage(key);
     }
   });
 }

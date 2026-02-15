@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { LayoutTemplate, Info } from "lucide-react";
 import type { FeelingAnswers } from "../FeelingCheck";
@@ -81,6 +81,11 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     if (label.includes("خضراء")) return "المدار متوازن، والهدف دلوقتي الحفاظ على استقراره.";
     return "دي خلاصة واضحة لوضع المدار بناءً على إجاباتك.";
   }, [isEmotionalPrisoner, summaryOnly, ringInsight, result.state_label]);
+  const singularReferenceText = useMemo(() => {
+    if (personGender === "female") return "بتكلميها";
+    if (personGender === "male") return "بتكلمه";
+    return "بتكلمي الشخص ده";
+  }, [personGender]);
 
   const missionProgress = useMapState((s) =>
     addedNodeId ? s.nodes.find((node) => node.id === addedNodeId)?.missionProgress : undefined
@@ -91,8 +96,11 @@ export const ResultScreen: FC<ResultScreenProps> = ({
       : undefined
   );
   const startMission = useMapState((s) => s.startMission);
+  const shareCardRef = useRef<HTMLDivElement | null>(null);
   const [showRealityPopup, setShowRealityPopup] = useState(false);
   const [showDopaminePopup, setShowDopaminePopup] = useState(false);
+  const [shareStatus, setShareStatus] = useState<string | null>(null);
+  const [shareBusy, setShareBusy] = useState(false);
   const completedSteps = useMemo(() => {
     const checked = new Set(missionProgress?.checkedSteps ?? []);
     return result.steps.reduce((acc, _, index) => acc + (checked.has(index) ? 1 : 0), 0);
@@ -121,6 +129,63 @@ export const ResultScreen: FC<ResultScreenProps> = ({
       })),
     [result.obstacles]
   );
+  const shareText = useMemo(() => {
+    const lines = [
+      `نتيجتي مع ${displayName}: ${isEmotionalPrisoner ? result.state_label : result.title}`,
+      `الهدف: ${result.goal_label}`,
+      `الخطوة الحالية: ${result.mission_label} — ${result.mission_goal}`
+    ];
+    return lines.join("\n");
+  }, [displayName, isEmotionalPrisoner, result.goal_label, result.mission_goal, result.mission_label, result.state_label, result.title]);
+
+  const handleShareResult = async () => {
+    setShareStatus(null);
+    const nav = typeof navigator !== "undefined" ? navigator : null;
+    const shareData = {
+      title: `نتيجة ${displayName}`,
+      text: shareText,
+      url: typeof window !== "undefined" ? window.location.origin : undefined
+    };
+    try {
+      if (nav && typeof nav.share === "function") {
+        await nav.share(shareData);
+        setShareStatus("تمت المشاركة بنجاح.");
+        return;
+      }
+      if (nav?.clipboard?.writeText) {
+        await nav.clipboard.writeText(shareText);
+        setShareStatus("تم نسخ النتيجة. الصقها في أي تطبيق.");
+        return;
+      }
+      setShareStatus("المشاركة غير متاحة على جهازك الآن.");
+    } catch {
+      setShareStatus("تعذر تنفيذ المشاركة الآن. جرّب مرة أخرى.");
+    }
+  };
+
+  const handleDownloadShareImage = async () => {
+    if (!shareCardRef.current) return;
+    setShareBusy(true);
+    setShareStatus(null);
+    try {
+      const { default: html2canvas } = await import("html2canvas");
+      const canvas = await html2canvas(shareCardRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true
+      });
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `alrehla-result-${Date.now()}.png`;
+      link.click();
+      setShareStatus("تم تحميل صورة النتيجة.");
+    } catch {
+      setShareStatus("تعذر تحميل صورة النتيجة الآن.");
+    } finally {
+      setShareBusy(false);
+    }
+  };
 
   return (
     <motion.div
@@ -166,10 +231,10 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           </p>
         </motion.div>
 
-        <div className="p-6 card-unified bg-linear-to-b from-slate-50 to-white border border-slate-200 mb-6 text-center">
+        <div ref={shareCardRef} className="p-6 card-unified bg-linear-to-b from-slate-50 to-white border border-slate-200 mb-6 text-center">
           <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
             <span>
-              {isEmotionalPrisoner ? `الحالة: ${result.state_label}` : result.title}
+              {isEmotionalPrisoner ? `تشخيص المدار: ${result.state_label}` : result.title}
             </span>
             <span
               className="inline-flex items-center justify-center rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
@@ -181,30 +246,23 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           </h2>
           {isEmotionalPrisoner && (
             <p className="mb-2 text-sm text-slate-600 leading-relaxed text-center">
-              جسمك حر.. بس عقلك لسه هناك، أنت خرجت من المكان بس لسه محبوس في التفكير. بتصحى وتنام وأنت بتكلمهم في خيالك وبتدافع عن نفسك في محاكمات جوه دماغك.
+              جسمك حر.. بس عقلك لسه متعلق. أنت دلوقتي مش في نفس المكان، لكن التفكير لسه ماسكك. بتصحى وتنام وأنت {singularReferenceText} في خيالك وبتدافع عن نفسك في محاكمات جوه دماغك.
             </p>
           )}
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500 text-center">
             {isEmotionalPrisoner ? (
               <p className="w-full">
-                الأسلوب: <span className="font-semibold text-slate-700">مساحة الراحة</span>
+                التركيز الآن: <span className="font-semibold text-slate-700">{result.goal_label}</span>
               </p>
             ) : (
               <p>
                 الحالة: <span className="font-semibold text-slate-700">{result.state_label}</span>
               </p>
             )}
-            <p className="w-full">
-              الهدف: <span className="font-semibold text-slate-700">{result.goal_label}</span>
-            </p>
-            <p className="w-full">
-              الوعد: <span className="font-semibold text-slate-800">{result.promise_label}</span>
-            </p>
             <p className="w-full text-xs text-slate-500 leading-relaxed">
               {shortPromiseBody}
             </p>
             <div className="w-full mt-2 rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-xs text-slate-600">
-            <span className="font-semibold text-slate-700">الخطوة:</span>{" "}
               {result.mission_label} —{" "}
               <span className="font-semibold text-slate-700">{result.mission_goal}</span>
             </div>
@@ -394,6 +452,26 @@ export const ResultScreen: FC<ResultScreenProps> = ({
 
       {summaryOnly && onClose ? (
         <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => void handleShareResult()}
+              className="w-full rounded-full bg-indigo-600 text-white px-6 py-3 text-sm font-semibold hover:bg-indigo-700 active:scale-[0.98] transition-all duration-200"
+            >
+              مشاركة النتيجة
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleDownloadShareImage()}
+              disabled={shareBusy}
+              className="w-full rounded-full bg-slate-700 text-white px-6 py-3 text-sm font-semibold hover:bg-slate-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-60"
+            >
+              {shareBusy ? "جارٍ تجهيز الصورة..." : "تحميل صورة النتيجة"}
+            </button>
+          </div>
+          {shareStatus ? (
+            <p className="text-xs text-slate-600 text-center">{shareStatus}</p>
+          ) : null}
           {isEmergency && (
             <div className="rounded-xl border-2 border-rose-300 bg-rose-50/90 p-4 text-right mb-2">
               <p className="text-sm font-semibold text-rose-900 mb-2">سلامتك أولاً</p>
@@ -445,7 +523,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
             onClick={() => onClose(addedNodeId)}
             className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
           >
-            ورّيني مكانه على الخريطة
+            ضيف على الخريطة
           </button>
         </div>
       ) : null}

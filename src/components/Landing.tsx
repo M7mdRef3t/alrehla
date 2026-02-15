@@ -14,6 +14,8 @@ import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
 import { getGoalMeta } from "../data/goalMeta";
 import type { FeatureFlagKey } from "../config/features";
 import { EditableText } from "./EditableText";
+import { getWindowOrNull, getDocumentOrNull } from "../services/clientRuntime";
+import { getDocumentVisibilityState } from "../services/clientDom";
 
 /* ══════════════════════════════════════════
    LANDING — Dawayir
@@ -156,6 +158,12 @@ export const Landing: FC<LandingProps> = ({
   const didStartJourneyRef = useRef(false);
   const didTrackLandingClosedRef = useRef(false);
   const pwaInstall = usePWAInstall();
+  const [hasMounted, setHasMounted] = useState(false);
+  const canShowInstallButton = hasMounted && Boolean(pwaInstall?.canShowInstallButton);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     if (landingViewedAt.current == null) {
@@ -167,31 +175,54 @@ export const Landing: FC<LandingProps> = ({
   const handleStartJourney = () => {
     didStartJourneyRef.current = true;
     const timeToAction = landingViewedAt.current ? Date.now() - landingViewedAt.current : undefined;
-    recordFlowEvent("landing_clicked_start", { timeToAction });
+    try {
+      recordFlowEvent("landing_clicked_start", { timeToAction });
+    } catch {
+      // Never block the primary CTA on analytics/tracking failures.
+    }
     onStartJourney();
   };
 
+  const triggerPwaInstall = () => {
+    if (!pwaInstall || !canShowInstallButton) return;
+    try {
+      recordFlowEvent("install_clicked");
+    } catch {
+      // ignore tracking failures
+    }
+    if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
+    else pwaInstall.showInstallHint();
+  };
+
   useEffect(() => {
+    const windowRef = getWindowOrNull();
+    const documentRef = getDocumentOrNull();
+    if (!windowRef || !documentRef) return;
+
     const trackLandingClosedOnce = () => {
       if (didStartJourneyRef.current) return;
       if (didTrackLandingClosedRef.current) return;
       didTrackLandingClosedRef.current = true;
-      recordFlowEvent("landing_closed");
+      try {
+        recordFlowEvent("landing_closed");
+      } catch {
+        // ignore tracking failures
+      }
     };
 
     const onVisibility = () => {
-      if (document.visibilityState === "hidden") trackLandingClosedOnce();
+      if (getDocumentVisibilityState() === "hidden") trackLandingClosedOnce();
     };
 
     const onPageHide = () => {
       trackLandingClosedOnce();
     };
 
-    document.addEventListener("visibilitychange", onVisibility);
-    window.addEventListener("pagehide", onPageHide);
+    documentRef.addEventListener("visibilitychange", onVisibility);
+    windowRef.addEventListener("pagehide", onPageHide);
     return () => {
-      document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("pagehide", onPageHide);
+      documentRef.removeEventListener("visibilitychange", onVisibility);
+      windowRef.removeEventListener("pagehide", onPageHide);
     };
   }, []);
 
@@ -208,13 +239,9 @@ export const Landing: FC<LandingProps> = ({
 
   useEffect(() => {
     if (!ownerInstallRequestNonce) return;
-    if (pwaInstall?.canShowInstallButton) {
-      recordFlowEvent("install_clicked");
-      if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
-      else pwaInstall.showInstallHint();
-    }
+    triggerPwaInstall();
     onOwnerInstallRequestHandled?.();
-  }, [ownerInstallRequestNonce, pwaInstall, onOwnerInstallRequestHandled]);
+  }, [ownerInstallRequestNonce, onOwnerInstallRequestHandled, triggerPwaInstall]);
 
   const features = [
     { icon: Compass, title: "خريطة الوعي", desc: landingCopy.whatIsPoints[0], accent: "#2dd4bf" },
@@ -343,15 +370,11 @@ export const Landing: FC<LandingProps> = ({
             </p>
 
             {/* زر التثبيت — يظهر لجميع المستخدمين (وضع المستخدم) على موبايل/تابلت */}
-            {pwaInstall?.canShowInstallButton && (
+            {canShowInstallButton && (
               <>
                 <button
                   type="button"
-                  onClick={() => {
-                    recordFlowEvent("install_clicked");
-                    if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
-                    else pwaInstall.showInstallHint();
-                  }}
+                  onClick={triggerPwaInstall}
                   className="mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-medium border transition-colors"
                   style={{
                     borderColor: "rgba(59, 130, 246, 0.5)",

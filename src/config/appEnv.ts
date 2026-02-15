@@ -8,7 +8,7 @@
 
 export type AppEnv = "user" | "dev";
 
-const raw = import.meta.env.VITE_APP_ENV as string | undefined;
+const raw = runtimeEnv.appEnv;
 
 /** افتراضي: وضع المستخدم (العيلة فقط). وضع التطوير فقط لو VITE_APP_ENV=dev صراحة. */
 export const APP_ENV: AppEnv =
@@ -22,5 +22,6 @@ export const isDevMode = APP_ENV === "dev";
  * - default ON in user mode
  * - can be explicitly disabled with VITE_PHASE_ONE_USER_FLOW=false
  */
-const phaseOneRaw = import.meta.env.VITE_PHASE_ONE_USER_FLOW as string | undefined;
+const phaseOneRaw = runtimeEnv.phaseOneUserFlow;
 export const isPhaseOneUserFlow = isUserMode && phaseOneRaw !== "false";
+import { runtimeEnv } from "./runtimeEnv";

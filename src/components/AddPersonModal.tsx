@@ -1,4 +1,4 @@
-import type { FC } from "react";
+﻿import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
@@ -11,6 +11,7 @@ import { realityScoreToRing } from "../utils/realityScore";
 import type { QuickAnswer1, QuickAnswer2 } from "../utils/suggestInitialRing";
 import type { ContactLevel } from "../modules/pathEngine/pathTypes";
 import { recordJourneyEvent, recordFlowEvent } from "../services/journeyTracking";
+import { trackEvent, AnalyticsEvents } from "../services/analytics";
 import { useEmergencyState } from "../state/emergencyState";
 import { quick1Tier, quick2Tier } from "../utils/optionColors";
 import { SelectPersonStep } from "./AddPersonModal/SelectPersonStep";
@@ -58,12 +59,13 @@ function realityAnswersToContact(answers: RealityAnswers): ContactLevel {
 
 interface AddPersonModalProps {
   goalId: string;
+  canUseFamilyTree?: boolean;
   /** عند "تم" يُستدعى بدون معامل. عند "افتح [الاسم]" يُستدعى بمعرّف العقدة لفتح نافذة الشخص */
   onClose: (openNodeId?: string) => void;
   onOpenMission?: (nodeId: string) => void;
 }
 
-export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpenMission }) => {
+export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, canUseFamilyTree = false, onClose, onOpenMission }) => {
   const [step, setStep] = useState<AddPersonStep>("select");
   const [selectedTitle, setSelectedTitle] = useState<string>("");
   const [customTitleInput, setCustomTitleInput] = useState("");
@@ -76,13 +78,29 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
   const [quickAnswer1, setQuickAnswer1] = useState<QuickAnswer1 | null>("medium");
   const [quickAnswer2, setQuickAnswer2] = useState<QuickAnswer2 | null>("medium");
   const [linkToParentId, setLinkToParentId] = useState<string | null>(null);
+  const [linkRelationLabel, setLinkRelationLabel] = useState<string>("");
+  const [customRelationLabel, setCustomRelationLabel] = useState<string>("");
   const [lastRealityAnswers, setLastRealityAnswers] = useState<RealityAnswers | null>(null);
   const [isEmergency, setIsEmergency] = useState(false);
   const [showEncouragementHint, setShowEncouragementHint] = useState(false);
   const addNode = useMapState((s) => s.addNode);
   const nodes = useMapState((s) => s.nodes);
   const openEmergency = useEmergencyState((s) => s.open);
-  const familyNodes = goalId === "family" ? nodes.filter((n) => n.goalId === "family" || n.goalId == null) : [];
+  const canLinkInFamilyTree = goalId === "family" && canUseFamilyTree;
+  const familyNodes = canLinkInFamilyTree ? nodes.filter((n) => n.goalId === "family" || n.goalId == null) : [];
+  const linkedParentLabel = linkToParentId ? familyNodes.find((n) => n.id === linkToParentId)?.label ?? "" : "";
+  const resolvedHintRelation = (customRelationLabel.trim() || linkRelationLabel.trim() || selectedTitle).trim();
+  const contextualNameHint =
+    canLinkInFamilyTree && linkedParentLabel
+      ? `هيتسجل كـ "${resolvedHintRelation || "صلة"}" تحت "${linkedParentLabel}" في شجرة العيلة.`
+      : undefined;
+
+  useEffect(() => {
+    if (!selectedTitle) return;
+    if (!linkRelationLabel && !customRelationLabel.trim()) {
+      setLinkRelationLabel(selectedTitle);
+    }
+  }, [selectedTitle, linkRelationLabel, customRelationLabel]);
 
   const handleContinue = (event: React.FormEvent) => {
     event.preventDefault();
@@ -113,9 +131,10 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
     const ring = isEmergency ? "red" : realityScoreToRing(answers);
     setLastRealityAnswers(answers);
     const { finalLabel, score, healthAnswers } = pendingPlacement;
+    const resolvedRelationLabel = (customRelationLabel.trim() || linkRelationLabel.trim() || selectedTitle).trim();
     const treeRelation =
-      goalId === "family" && linkToParentId
-        ? { type: "family" as const, parentId: linkToParentId, relationLabel: selectedTitle }
+      canLinkInFamilyTree && linkToParentId
+        ? { type: "family" as const, parentId: linkToParentId, relationLabel: resolvedRelationLabel }
         : undefined;
     const detachmentMode = ring === "red" && isLowContact(answers);
     const contact = realityAnswersToContact(answers);
@@ -132,6 +151,13 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
       quickAnswer2 ?? undefined
     );
     recordJourneyEvent("node_added", { ring, detachmentMode: detachmentMode ?? false, isEmergency: isEmergency ?? false, personLabel: finalLabel, nodeId });
+    // Track person addition for conversion funnel
+    trackEvent(AnalyticsEvents.PERSON_ADDED, {
+      person_label: finalLabel,
+      ring: ring,
+      is_emergency: isEmergency ?? false,
+      goal_id: goalId
+    });
     setAddedNodeId(nodeId);
     setPendingPlacement(null);
     setStep("result");
@@ -200,6 +226,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
             showCustomTitleInput={showCustomTitleInput}
             customName={customName}
             encouragementHint={showEncouragementHint}
+            contextualHint={contextualNameHint}
             onTitleSelect={handleTitleSelect}
             onCustomTitleChange={(value) => {
               setCustomTitleInput(value);
@@ -209,7 +236,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
             onCancel={handleClose}
             onContinue={handleContinue}
             afterNameContent={
-              goalId === "family" && familyNodes.length > 0 ? (
+              canLinkInFamilyTree && familyNodes.length > 0 ? (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -233,6 +260,37 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, onClose, onOpe
                     ))}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">لو اخترت شخص، هيتربط تحته في شجرة العيلة</p>
+                  {linkToParentId && (
+                    <>
+                      <label htmlFor="link-relation-type" className="block text-sm font-medium text-gray-700 mt-3 mb-2">
+                        نوع الربط
+                      </label>
+                      <select
+                        id="link-relation-type"
+                        value={linkRelationLabel}
+                        onChange={(e) => setLinkRelationLabel(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      >
+                        <option value="">— اختر نوع الربط —</option>
+                        <option value="ابن">ابن</option>
+                        <option value="ابنة">ابنة</option>
+                        <option value="أخ">أخ</option>
+                        <option value="أخت">أخت</option>
+                        <option value="زوج">زوج</option>
+                        <option value="زوجة">زوجة</option>
+                        <option value="أب">أب</option>
+                        <option value="أم">أم</option>
+                        <option value="قريب">قريب</option>
+                        <option value="صلة أخرى">صلة أخرى</option>
+                      </select>
+                      <input
+                        value={customRelationLabel}
+                        onChange={(e) => setCustomRelationLabel(e.target.value)}
+                        placeholder="أو اكتب صلة مخصصة (اختياري)"
+                        className="w-full mt-2 border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                    </>
+                  )}
                 </motion.div>
               ) : null
             }

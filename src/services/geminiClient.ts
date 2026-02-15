@@ -1,4 +1,5 @@
 import type { Content, FunctionCall, Part, Tool } from "@google/generative-ai";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 /**
  * ترتيب الموديلات النصية — من الأفضل للاحتياط. مرجع كامل: docs/GEMINI_MODELS.md
@@ -49,7 +50,7 @@ class GeminiClient {
   private serverAvailable = true;
 
   private isEnabled(): boolean {
-    return import.meta.env.VITE_GEMINI_AI_ENABLED !== "false";
+    return runtimeEnv.geminiEnabled !== "false";
   }
 
   isAvailable(): boolean {
@@ -90,7 +91,7 @@ class GeminiClient {
       const data = (await res.json()) as { text?: string };
       return data.text ?? null;
     } catch (error) {
-      if (import.meta.env.DEV) console.error("Error generating content:", error);
+      if (runtimeEnv.isDev) console.error("Error generating content:", error);
       return null;
     }
   }
@@ -108,7 +109,7 @@ class GeminiClient {
       const jsonText = jsonMatch ? jsonMatch[1] : result;
       return JSON.parse(jsonText.trim());
     } catch (error) {
-      if (import.meta.env.DEV) console.error("Error parsing JSON response:", error);
+      if (runtimeEnv.isDev) console.error("Error parsing JSON response:", error);
       return null;
     }
   }
@@ -153,7 +154,7 @@ class GeminiClient {
         if (text) yield text;
       }
     } catch (error) {
-      if (import.meta.env.DEV) console.error("Error streaming content:", error);
+      if (runtimeEnv.isDev) console.error("Error streaming content:", error);
       yield "حدث خطأ في الاتصال";
     }
   }
@@ -197,8 +198,8 @@ class GeminiClient {
         this.markServerAvailable();
         response = (await res.json()) as ToolResponse;
       } catch (error) {
-        if (import.meta.env.DEV) console.error("Error in generateWithTools:", error);
-        if (import.meta.env.DEV && isRateLimitError(error)) {
+        if (runtimeEnv.isDev) console.error("Error in generateWithTools:", error);
+        if (runtimeEnv.isDev && isRateLimitError(error)) {
           console.warn("[Gemini] Rate limit in proxy.");
         }
         return null;

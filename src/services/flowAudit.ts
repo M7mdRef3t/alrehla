@@ -1,5 +1,6 @@
 import { getAuthRole, getAuthUserId } from "../state/authState";
 import { isSupabaseReady, supabase } from "./supabaseClient";
+import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 
 export interface FlowAuditLogEntry {
   id: string;
@@ -48,7 +49,7 @@ function toLogEntry(row: Record<string, unknown>, source: "local" | "remote"): F
 
 function loadLocalLogs(): FlowAuditLogEntry[] {
   try {
-    const raw = localStorage.getItem(LOCAL_AUDIT_KEY);
+    const raw = getFromLocalStorage(LOCAL_AUDIT_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
@@ -63,7 +64,7 @@ function loadLocalLogs(): FlowAuditLogEntry[] {
 
 function saveLocalLogs(logs: FlowAuditLogEntry[]) {
   try {
-    localStorage.setItem(LOCAL_AUDIT_KEY, JSON.stringify(logs.slice(0, MAX_LOCAL_LOGS)));
+    setInLocalStorage(LOCAL_AUDIT_KEY, JSON.stringify(logs.slice(0, MAX_LOCAL_LOGS)));
   } catch {
     // ignore persistence errors
   }

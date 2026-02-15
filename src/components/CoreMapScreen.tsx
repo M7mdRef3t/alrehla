@@ -22,6 +22,7 @@ import { getEffectiveFeatureAccess } from "../utils/featureFlags";
 import { getEffectiveRoleFromState, useAuthState } from "../state/authState";
 import type { FeatureFlagKey } from "../config/features";
 import { isUserMode } from "../config/appEnv";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 /* ════════════════════════════════════════════════
    🌌 CORE MAP SCREEN — Digital Sanctuary
@@ -101,7 +102,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     betaAccess,
     role,
     adminAccess,
-    isDev: !isUserMode && import.meta.env.DEV
+    isDev: !isUserMode && runtimeEnv.isDev
   });
   const canUseFamilyTree = featureAccess.family_tree;
   const canUseMirror = featureAccess.mirror_tool;
@@ -693,6 +694,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {showAddPerson && (
         <AddPersonModal
           goalId={goalId}
+          canUseFamilyTree={canUseFamilyTree}
           onClose={(openNodeId?: string) => {
             setShowAddPerson(false);
             onSelectNode(openNodeId ?? null);
