@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
+    serverComponentsExternalPackages: ["@sentry/node"],
     typedRoutes: false
   }
 };
