@@ -685,23 +685,24 @@
 
 /* Pulse modal spacing variant: roomier only on tall screens */
 @media (min-height: 880px) {
-  .pulse-check-shell {
-    max-height: min(92dvh, 820px) !important;
-  }
+.pulse-check-shell {
+  max-height: min(92dvh, 820px) !important;
+}
 
-  .pulse-check-header {
-    padding-top: 1rem !important;
-    padding-bottom: 1rem !important;
-  }
+.pulse-check-header {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
 
-  .pulse-check-content {
-    padding-bottom: 1rem !important;
-    row-gap: 0.95rem !important;
-  }
+.pulse-check-content {
+  padding-bottom: 1rem !important;
+  row-gap: 0.95rem !important;
+}
 
-  .pulse-check-section {
-    row-gap: 0.65rem !important;
-  }
+.pulse-check-section {
+  row-gap: 0.8rem !important;
+}
 
   .pulse-check-mood-grid {
     gap: 0.6rem !important;

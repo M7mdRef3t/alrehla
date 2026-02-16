@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "../state/pulseState";
 import { usePulseState } from "../state/pulseState";
-import { useAdminState, type PulseCopyOverrideValue } from "../state/adminState";
+import { useAdminState, isFeatureAllowed, type PulseCopyOverrideValue } from "../state/adminState";
 import { energyColorHex, energyPct } from "../utils/pulseUi";
 import { recordFlowEvent } from "../services/journeyTracking";
 import {
@@ -42,7 +42,6 @@ const MOODS: Array<{ id: PulseMood; label: string; emoji: string }> = [
   { id: "sad", label: "\u062d\u0632\u064a\u0646", emoji: "\uD83C\uDF27\uFE0F" },
   { id: "overwhelmed", label: "\u0625\u0631\u0647\u0627\u0642", emoji: "\uD83C\uDF2B\uFE0F" }
 ];
-const MOOD_PRESETS: PulseMood[] = ["calm", "hopeful", "anxious"];
 
 const FOCUS_OPTIONS: Array<{ id: PulseFocus; labelKey: "event" | "thought" | "body" | "none_new" | "none_returning" }> = [
   { id: "event", labelKey: "event" },
@@ -184,8 +183,6 @@ type PulseDraft = {
   notes: string;
   energyReasons: string[];
   energyConfidence: EnergyConfidence | null;
-  showEnergyDetails: boolean;
-  quickMode: boolean;
   step: 1 | 2 | 3 | 4;
 };
 
@@ -278,11 +275,6 @@ function getImmediateEnergyAction(energy: number | null): { cta: string; hint: s
 
 const ENERGY_ANCHORS = [0, 3, 6, 10] as const;
 const ENERGY_FEEDBACK_POINTS = new Set<number>(ENERGY_ANCHORS);
-const ENERGY_PRESETS: Array<{ value: number; label: string }> = [
-  { value: 2, label: "\u0645\u0646\u0647\u0643" },
-  { value: 6, label: "\u0645\u062a\u0648\u0627\u0632\u0646" },
-  { value: 9, label: "\u062c\u0627\u0647\u0632" }
-];
 const ENERGY_REASON_TAGS = [
   "\u0646\u0648\u0645",
   "\u0636\u063a\u0637",
@@ -333,6 +325,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const isStartRecovery = context === "start_recovery";
   const pulseLogs = usePulseState((s) => s.logs);
   const pulseCopyOverrides = useAdminState((s) => s.pulseCopyOverrides);
+  const pulseWeeklyRecommendationEnabled = isFeatureAllowed("pulse_weekly_recommendation");
+  const pulseImmediateActionEnabled = isFeatureAllowed("pulse_immediate_action");
   const allowSkip = true;
 
   const [energy, setEnergy] = useState<number | null>(null);
@@ -345,7 +339,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [energyConfidence, setEnergyConfidence] = useState<EnergyConfidence | null>(null);
   const [showRequiredHint, setShowRequiredHint] = useState(false);
   const [hasTrackedNotesUsage, setHasTrackedNotesUsage] = useState(false);
-  const [showEnergyDetails, setShowEnergyDetails] = useState(false);
   const [suggestionApplied, setSuggestionApplied] = useState(false);
   const [isSavingPulse, setIsSavingPulse] = useState(false);
   const [saveToastText, setSaveToastText] = useState("\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643");
@@ -358,7 +351,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [immediateActionApplied, setImmediateActionApplied] = useState(false);
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const [notesChars, setNotesChars] = useState(0);
-  const [quickMode, setQuickMode] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const notesRef = useRef<HTMLTextAreaElement | null>(null);
   const lastFeedbackAnchorRef = useRef<number | null>(null);
@@ -385,8 +377,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const pct = hasPickedEnergy && energy != null ? energyPct(energy, { min: 0, max: 10 }) : 0;
   const energyStateLabel = getEnergyStateLabel(energy);
   const energyQuickHint = getEnergyQuickHint(energy);
-  const selectedMood = mood ? MOODS.find((item) => item.id === mood) ?? null : null;
-  const moodStateLabel = getMoodStateLabel(mood);
   const moodQuickHint = getMoodQuickHint(mood);
   const selectedFocusLabel = focus
     ? (focus === "none"
@@ -431,25 +421,19 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       ? "\u0627\u0644\u0645\u0644\u0627\u062d\u0638\u0629 \u0627\u0644\u0630\u0643\u064a\u0629 \u0645\u062e\u0632\u0646\u0629 \u0641\u0639\u0644\u064b\u0627."
       : "\u0633\u064a\u062a\u0645 \u0625\u0636\u0627\u0641\u0629 \u0645\u0644\u0627\u062d\u0638\u0629 \u062c\u0627\u0647\u0632\u0629 \u0628\u062f\u0648\u0646 \u062a\u0643\u0631\u0627\u0631.";
   }, [energySuggestion, notes]);
-  const recentEnergySparkline = useMemo(() => {
-    const values = pulseLogs
-      .slice(0, 7)
-      .map((item) => Math.max(0, Math.min(10, item.energy)))
-      .reverse();
-    if (values.length < 2) return null;
-    const width = 120;
-    const height = 28;
-    const xStep = width / (values.length - 1);
-    const points = values.map((value, idx) => {
-      const x = idx * xStep;
-      const y = height - (value / 10) * height;
-      return `${x},${y}`;
-    });
-    return { points: points.join(" "), width, height };
+  const historicalEnergyAverage = useMemo(() => {
+    if (pulseLogs.length === 0) return null;
+    const sum = pulseLogs.reduce((acc, item) => acc + item.energy, 0);
+    const avg = Math.round((sum / pulseLogs.length) * 10) / 10;
+    return { avg, count: pulseLogs.length };
   }, [pulseLogs]);
-  const totalSteps = quickMode ? 1 : 4;
+  const totalSteps = 4;
   const isComplete = true;
-  const currentStepComplete = true;
+  const currentStepComplete =
+    step === 1 ? hasPickedEnergy :
+    step === 2 ? mood !== null :
+    step === 3 ? focus !== null :
+    true;
 
   const clearDraft = () => {
     if (typeof window === "undefined") return;
@@ -538,8 +522,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
             setNotes(typeof parsed.notes === "string" ? parsed.notes : "");
             setEnergyReasons(Array.isArray(parsed.energyReasons) ? parsed.energyReasons.filter((x) => typeof x === "string") : []);
             setEnergyConfidence(parsed.energyConfidence ?? null);
-            setShowEnergyDetails(Boolean(parsed.showEnergyDetails));
-            setQuickMode(Boolean(parsed.quickMode));
             setStep(parsed.step ?? 1);
             lastFeedbackAnchorRef.current = typeof parsed.energy === "number" ? parsed.energy : null;
             restored = true;
@@ -566,8 +548,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       setNotes("");
       setEnergyReasons([]);
       setEnergyConfidence(null);
-      setShowEnergyDetails(false);
-      setQuickMode(false);
       setStep(1);
     }
     setShowRequiredHint(false);
@@ -639,8 +619,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       notes,
       energyReasons,
       energyConfidence,
-      showEnergyDetails,
-      quickMode,
       step
     };
     try {
@@ -658,8 +636,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     notes,
     energyReasons,
     energyConfidence,
-    showEnergyDetails,
-    quickMode,
     step
   ]);
 
@@ -670,10 +646,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       restoreOverflow?.();
     };
   }, [isOpen]);
-
-  useEffect(() => {
-    setQuickMode(isLowEnergyNow);
-  }, [isLowEnergyNow]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -754,13 +726,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     if (step === 1 && needsEnergyConfirmation) {
       triggerEnergyConfirmPulse();
     }
-    if (quickMode && step === 1 && isMoodSelectionUnstable && !needsMoodConfirmation) {
-      setNeedsMoodConfirmation(true);
-      return;
-    }
-    if (quickMode && step === 1 && needsMoodConfirmation) {
-      setNeedsMoodConfirmation(false);
-    }
     if (step === 2 && isMoodSelectionUnstable && !needsMoodConfirmation) {
       setNeedsMoodConfirmation(true);
       return;
@@ -768,12 +733,12 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     if (step === 2 && needsMoodConfirmation) {
       setNeedsMoodConfirmation(false);
     }
-    setNeedsEnergyConfirmation(false);
-    setShowRequiredHint(false);
-    if (quickMode && step === 1) {
-      setStep(3);
+    if (!currentStepComplete && !showRequiredHint) {
+      setShowRequiredHint(true);
       return;
     }
+    setNeedsEnergyConfirmation(false);
+    setShowRequiredHint(false);
     setStep((prev) => (prev < 4 ? ((prev + 1) as 1 | 2 | 3 | 4) : prev));
   };
 
@@ -781,10 +746,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     setShowRequiredHint(false);
     setNeedsEnergyConfirmation(false);
     setNeedsMoodConfirmation(false);
-    if (quickMode && step === 3) {
-      setStep(1);
-      return;
-    }
     setStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3 | 4) : prev));
   };
 
@@ -844,13 +805,13 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       setIsMoodSelectionUnstable(unstableNow);
       if (unstableNow && !moodUnstableEventTrackedRef.current) {
         recordFlowEvent("pulse_mood_unstable", {
-          meta: { changes: recent.length, windowMs, step, quickMode }
+          meta: { changes: recent.length, windowMs, step }
         });
         moodUnstableEventTrackedRef.current = true;
       }
       if (lastTrackedMoodRef.current !== nextMood || now - moodChangeLastTrackedAtRef.current > 150) {
         recordFlowEvent("pulse_mood_changed", {
-          meta: { mood: nextMood, step, quickMode }
+          meta: { mood: nextMood, step }
         });
         lastTrackedMoodRef.current = nextMood;
         moodChangeLastTrackedAtRef.current = now;
@@ -872,7 +833,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const setFocusValue = (nextFocus: PulseFocus) => {
     if (focus !== nextFocus) {
       recordFlowEvent("pulse_focus_changed", {
-        meta: { focus: nextFocus, step, quickMode }
+        meta: { focus: nextFocus, step }
       });
     }
     setFocus(nextFocus);
@@ -939,13 +900,13 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       setIsEnergySelectionUnstable(unstableNow);
       if (unstableNow && !unstableEventTrackedRef.current) {
         recordFlowEvent("pulse_energy_unstable", {
-          meta: { changes: recent.length, windowMs, step, quickMode }
+          meta: { changes: recent.length, windowMs, step }
         });
         unstableEventTrackedRef.current = true;
       }
       if (lastTrackedEnergyRef.current !== next || now - energyChangeLastTrackedAtRef.current > 150) {
         recordFlowEvent("pulse_energy_changed", {
-          meta: { energy: next, step, quickMode }
+          meta: { energy: next, step }
         });
         lastTrackedEnergyRef.current = next;
         energyChangeLastTrackedAtRef.current = now;
@@ -996,9 +957,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     }, 100);
   }, [step]);
 
-  const stepLabel = quickMode
-    ? "\u0627\u0644\u0636\u0628\u0637 \u0627\u0644\u0633\u0631\u064a\u0639"
-    : step === 1
+  const stepLabel = step === 1
     ? "\u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629"
     : step === 2
       ? "\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a"
@@ -1012,17 +971,13 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       ? "\u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0643\u0627\u0646 \u0645\u062a\u0630\u0628\u0630\u0628\u064b\u0627. \u0627\u0636\u063a\u0637 \u00ab\u0627\u0644\u062a\u0627\u0644\u064a\u00bb \u0645\u0631\u0629 \u062b\u0627\u0646\u064a\u0629 \u0644\u0644\u062a\u0623\u0643\u064a\u062f."
     : showRequiredHint && !currentStepComplete
       ? (step === 1
-        ? (quickMode
-          ? "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0648\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0648\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0642\u0628\u0644 \u0627\u0644\u062d\u0641\u0638."
-          : "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629.")
+        ? "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629."
         : step === 2
           ? "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629."
           : "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u062d\u0627\u0644\u064a \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629.")
       : (!currentStepComplete
         ? (step === 1
-          ? (quickMode
-            ? "\u0627\u062e\u062a\u064e\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0648\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0648\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0623\u0648\u0644\u0627\u064b."
-            : "\u0627\u062e\u062a\u064e\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0623\u0648\u0644\u0627\u064b.")
+          ? "\u0627\u062e\u062a\u064e\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0623\u0648\u0644\u0627\u064b."
           : step === 2
             ? "\u0627\u062e\u062a\u064e\u0631 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0623\u0648\u0644\u0627\u064b."
             : "\u0627\u062e\u062a\u064e\u0631 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u062d\u0627\u0644\u064a \u0623\u0648\u0644\u0627\u064b.")
@@ -1062,7 +1017,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
           <motion.div
             data-testid="pulse-check-shell"
-            className={`pulse-check-shell relative z-10 w-[calc(100%-0.9rem)] max-w-md max-h-[min(98dvh,740px)] overflow-hidden flex flex-col ${quickMode ? "justify-start" : ""}`}
+            className="pulse-check-shell relative z-10 w-[calc(100%-0.9rem)] max-w-md max-h-[min(98dvh,740px)] overflow-hidden flex flex-col"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -1104,7 +1059,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   {"\u0636\u0628\u0637 \u0627\u0644\u0628\u0648\u0635\u0644\u0629"}
                 </h2>
                 <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                  {`\u062e\u0637\u0648\u0629 ${quickMode ? 1 : step} \u0645\u0646 ${totalSteps} \u2022 ${stepLabel}`}
+                  {`\u062e\u0637\u0648\u0629 ${step} \u0645\u0646 ${totalSteps} \u2022 ${stepLabel}`}
                 </p>
               </motion.div>
               {allowSkip && (
@@ -1112,7 +1067,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   type="button"
                   onClick={requestSkipClose}
                   className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer"
-                  style={{ color: "var(--text-muted)", background: "rgba(255, 255, 255, 0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
+                  style={{ color: "var(--text-muted)", background: "rgba(255, 255, 255, 0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
                   aria-label={"\u062a\u062e\u0637\u064a \u0627\u0644\u064a\u0648\u0645"}
                 >
                   {"\u062a\u062e\u0637\u064a \u0627\u0644\u064a\u0648\u0645"}
@@ -1145,46 +1100,40 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               </div>
             )}
 
-            <div className={`pulse-check-content ${quickMode ? "px-3.5 sm:px-5 pb-3.5 pt-1.5 overflow-visible" : "flex-1 min-h-0 overflow-hidden px-3.5 sm:px-5 pb-2 sm:pb-4"}`}>
+            <div className="pulse-check-content flex-1 min-h-0 overflow-hidden px-4 sm:px-5 pb-3 sm:pb-4 pt-1">
               {step === 1 && (
-                <motion.div className={`pulse-check-section mt-1 sm:mt-2 flex flex-col ${quickMode ? "gap-2.5 sm:gap-3" : "gap-0.5 sm:gap-1.5"}`} custom={1} variants={cosmicUp} initial="hidden" animate="visible">
-                  {quickMode && (
-                    <div className="rounded-xl px-2.5 py-2 flex flex-col gap-1" style={{ background: "rgba(45,212,191,0.1)", border: "1px solid rgba(45,212,191,0.3)" }}>
-                      <p className="text-[11px] font-semibold text-center" style={{ color: "var(--text-primary)" }}>
-                        {"تم تفعيل الوضع السريع تلقائيًا"}
-                      </p>
-                      <p className="text-[10px] text-center" style={{ color: "var(--text-muted)" }}>
-                        {"لأن طاقتك منخفضة الآن، بنختصر الخطوات لتكمل أسرع."}
-                      </p>
-                    </div>
-                  )}
-                  <label className={`text-sm font-semibold ${quickMode ? "mb-0.5" : ""}`} style={{ color: "var(--text-primary)" }}>
+                <motion.div className="pulse-check-section mt-1.5 sm:mt-2.5 flex flex-col gap-2 sm:gap-2.5" custom={1} variants={cosmicUp} initial="hidden" animate="visible">
+                  <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                     {"\u0645\u0624\u0634\u0631 \u0637\u0627\u0642\u062a\u0643"}
                   </label>
-                  <div className={`flex justify-center ${quickMode ? "py-1 sm:py-1.5" : "py-0.5 sm:py-3"}`}>
+                  <div className="flex justify-center py-0.5 sm:py-3">
                     <motion.div
                       data-testid="pulse-energy-orb"
-                      className={`pulse-check-energy-orb relative rounded-full flex items-center justify-center ${quickMode ? "w-24 h-24 sm:w-28 sm:h-28" : "w-30 h-30 sm:w-44 sm:h-44"}`}
+                      className="pulse-check-energy-orb relative rounded-full flex items-center justify-center w-30 h-30 sm:w-44 sm:h-44"
                       style={{
                         background: isEnergyDefault
-                          ? "radial-gradient(circle at 40% 35%, rgba(148,163,184,0.32), rgba(148,163,184,0.14) 64%, rgba(148,163,184,0.04) 86%)"
-                          : `radial-gradient(circle at 40% 35%, ${fillHex}40, ${fillHex}14 60%, transparent 85%)`,
+                          ? "radial-gradient(circle at 38% 30%, rgba(255,255,255,0.3), rgba(148,163,184,0.28) 30%, rgba(148,163,184,0.12) 62%, rgba(148,163,184,0.02) 88%)"
+                          : `radial-gradient(circle at 38% 30%, rgba(255,255,255,0.24), ${fillHex}66 28%, ${fillHex}1f 58%, transparent 88%)`,
                         boxShadow: isEnergyDefault
-                          ? "0 0 44px rgba(148,163,184,0.35), inset 0 0 48px rgba(148,163,184,0.16)"
-                          : `0 0 ${32 + energy! * 3}px ${fillHex}35, inset 0 0 40px ${fillHex}10`,
-                        border: isEnergyDefault ? "2px solid rgba(148,163,184,0.55)" : `2px solid ${fillHex}45`
+                          ? "0 0 30px rgba(148,163,184,0.28), 0 0 62px rgba(148,163,184,0.24), inset 0 0 54px rgba(148,163,184,0.2)"
+                          : `0 0 ${34 + energy! * 3.4}px ${fillHex}40, 0 0 ${54 + energy! * 4}px ${fillHex}20, inset 0 0 48px ${fillHex}26`,
+                        border: isEnergyDefault ? "2px solid rgba(148,163,184,0.58)" : `2px solid ${fillHex}70`
                       }}
-                      animate={quickMode
-                        ? undefined
-                        : {
-                            scale: [1, hasPickedEnergy && energy != null ? 1.08 : 1.05, 1],
-                            boxShadow: [
-                              isEnergyDefault ? "0 0 28px rgba(148,163,184,0.26)" : `0 0 ${26 + energy! * 2}px ${fillHex}25`,
-                              isEnergyDefault ? "0 0 46px rgba(148,163,184,0.42)" : `0 0 ${40 + energy! * 2}px ${fillHex}45`,
-                              isEnergyDefault ? "0 0 28px rgba(148,163,184,0.26)" : `0 0 ${26 + energy! * 2}px ${fillHex}25`
-                            ]
-                          }}
-                      transition={quickMode ? undefined : { duration: 2.3, repeat: Infinity, ease: "easeInOut" }}
+                      animate={{
+                        scale: [1, hasPickedEnergy && energy != null ? 1.085 : 1.045, 1],
+                        boxShadow: [
+                          isEnergyDefault
+                            ? "0 0 26px rgba(148,163,184,0.24), 0 0 48px rgba(148,163,184,0.16), inset 0 0 44px rgba(148,163,184,0.16)"
+                            : `0 0 ${26 + energy! * 2.2}px ${fillHex}32, 0 0 ${46 + energy! * 2.6}px ${fillHex}16, inset 0 0 42px ${fillHex}20`,
+                          isEnergyDefault
+                            ? "0 0 42px rgba(148,163,184,0.36), 0 0 72px rgba(148,163,184,0.26), inset 0 0 58px rgba(148,163,184,0.24)"
+                            : `0 0 ${42 + energy! * 2.6}px ${fillHex}52, 0 0 ${72 + energy! * 3.2}px ${fillHex}28, inset 0 0 62px ${fillHex}2e`,
+                          isEnergyDefault
+                            ? "0 0 26px rgba(148,163,184,0.24), 0 0 48px rgba(148,163,184,0.16), inset 0 0 44px rgba(148,163,184,0.16)"
+                            : `0 0 ${26 + energy! * 2.2}px ${fillHex}32, 0 0 ${46 + energy! * 2.6}px ${fillHex}16, inset 0 0 42px ${fillHex}20`
+                        ]
+                      }}
+                      transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
                     >
                       {energyConfirmPulseActive && (
                         <motion.span
@@ -1196,10 +1145,10 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                         />
                       )}
                       <div className="flex items-center gap-2">
-                        <span className={`${quickMode ? "text-2xl sm:text-3xl" : "text-3xl sm:text-5xl"} font-bold leading-none`} style={{ color: fillHex }}>
+                        <span className="text-3xl sm:text-5xl font-bold leading-none" style={{ color: fillHex }}>
                           {hasPickedEnergy && energy != null ? energy : "-"}
                         </span>
-                        {!quickMode && weeklyTrend && hasPickedEnergy && (
+                        {weeklyTrend && hasPickedEnergy && (
                           <span
                             className="rounded-full px-2 py-0.5 text-[10px] font-bold"
                             style={{
@@ -1229,18 +1178,13 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       </div>
                     </motion.div>
                   </div>
-                  <p className="text-center text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
+                  <p className="text-center text-base font-semibold" style={{ color: "var(--text-primary)" }}>
                     {energyStateLabel}
                   </p>
-                  {!quickMode && weeklyTrend && (
-                    <p className="text-center text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
-                      {`\u0627\u062a\u062c\u0627\u0647 7 \u0623\u064a\u0627\u0645: ${weeklyTrend.label} (${weeklyTrend.delta > 0 ? `+${weeklyTrend.delta}` : weeklyTrend.delta})`}
-                    </p>
-                  )}
-                  <p className="text-center text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
-                    {energyQuickHint}
+                  <p className="text-center text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+                    {energySupportLine}
                   </p>
-                  <div className={`relative w-full ${quickMode ? "py-1" : "py-1.5"}`}>
+                  <div className="relative w-full py-1.5">
                     <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 rounded-full" style={{ background: "rgba(255, 255, 255, 0.08)" }} />
                     <div
                       className="absolute right-0 top-1/2 -translate-y-1/2 h-2 rounded-full transition-all duration-300"
@@ -1280,22 +1224,26 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       {`\u0627\u0644\u0642\u064a\u0645\u0629: ${keyboardEnergyHint}/10`}
                     </p>
                   )}
-                  <div className="flex items-center justify-between px-0.5 -mt-1 text-[10px]" style={{ color: "var(--text-muted)" }}>
-                    {Array.from({ length: 11 }, (_, i) => i).map((n) => (
-                      <span key={n}>{n}</span>
-                    ))}
+                  <div className="flex items-center justify-between px-0.5 -mt-0.5 text-[10px]" style={{ color: "var(--text-muted)" }}>
+                    {Array.from({ length: 11 }, (_, i) => i).map((n) => {
+                      const isAnchor = n === 0 || n === 3 || n === 6 || n === 10;
+                      return (
+                        <span
+                          key={n}
+                          className={isAnchor ? "font-extrabold" : "font-medium"}
+                          style={isAnchor ? { color: "var(--text-primary)", letterSpacing: "0.01em" } : undefined}
+                        >
+                          {n}
+                        </span>
+                      );
+                    })}
                   </div>
-                  {isEnergySelectionUnstable && (
-                    <p className="text-center text-[11px] font-semibold" style={{ color: "rgba(251,191,36,0.95)" }}>
-                      {"\u0628\u062f\u0648 \u0625\u0646\u0643 \u0628\u062a\u062d\u0631\u0643 \u0643\u062a\u064a\u0631 \u0628\u064a\u0646 \u0627\u0644\u0642\u064a\u0645\u060c \u062c\u0631\u0628 \u062a\u062b\u0628\u062a \u062b\u0627\u0646\u064a\u0629 \u0639\u0644\u0649 \u0623\u0642\u0631\u0628 \u0642\u064a\u0645\u0629 \u0644\u0625\u062d\u0633\u0627\u0633\u0643."}
-                    </p>
-                  )}
                   {needsEnergyConfirmation && (
                     <p className="text-center text-[11px] font-semibold" style={{ color: "rgba(251,191,36,0.98)" }}>
                       {`\u0627\u0636\u063a\u0637 \u00ab\u0627\u0644\u062a\u0627\u0644\u064a\u00bb \u0645\u0631\u0629 \u0623\u062e\u0631\u0649 \u0644\u062a\u0623\u0643\u064a\u062f ${energy ?? 0}/10.`}
                     </p>
                   )}
-                  {!quickMode && shouldOfferWeeklyRecommendation && weeklyEnergyRecommendation && (
+                  {pulseWeeklyRecommendationEnabled && shouldOfferWeeklyRecommendation && weeklyEnergyRecommendation && (
                     <div className="flex flex-col items-center gap-1 py-0.5">
                       <button
                         type="button"
@@ -1307,14 +1255,14 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                           border: "1px solid rgba(59,130,246,0.4)"
                         }}
                       >
-                        {`\u0627\u0633\u062a\u062e\u062f\u0645 \u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639 ${weeklyEnergyRecommendation.value}/10`}
+                        {`\u0627\u0633\u062a\u062e\u062f\u0645 \u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639 ${weeklyEnergyRecommendation?.value ?? 0}/10`}
                       </button>
                       <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-                        {`\u0645\u0628\u0646\u064a \u0639\u0644\u0649 \u0622\u062e\u0631 ${weeklyEnergyRecommendation.samples} \u0642\u0631\u0627\u0621\u0627\u062a.`}
+                        {`\u0645\u0628\u0646\u064a \u0639\u0644\u0649 \u0622\u062e\u0631 ${weeklyEnergyRecommendation?.samples ?? 0} \u0642\u0631\u0627\u0621\u0627\u062a.`}
                       </p>
                     </div>
                   )}
-                  {!quickMode && energySuggestion && hasPickedEnergy && (
+                  {pulseImmediateActionEnabled && energySuggestion && hasPickedEnergy && (
                     <div className="flex flex-col items-center gap-1 py-0.5">
                       <button
                         type="button"
@@ -1326,7 +1274,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                           border: "1px solid rgba(15, 185, 177, 0.38)"
                         }}
                       >
-                        {immediateEnergyAction?.cta ?? energySuggestion.cta}
+                        {immediateEnergyAction?.cta ?? energySuggestion?.cta ?? ""}
                       </button>
                       <p className="text-[11px]" style={{ color: suggestionApplied ? "rgba(45,212,191,0.95)" : "var(--text-muted)" }}>
                         {suggestionApplied
@@ -1337,289 +1285,40 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       </p>
                     </div>
                   )}
-                  {!quickMode && energyUndoSnapshot && (
-                    <div className="flex items-center justify-center gap-2 py-0.5">
-                      <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-                        {energyUndoLabel ?? "\u0622\u062e\u0631 \u062a\u0639\u062f\u064a\u0644 \u0642\u0627\u0628\u0644 \u0644\u0644\u062a\u0631\u0627\u062c\u0639"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={restoreUndoSnapshot}
-                        className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-colors"
-                        style={{
-                          color: "var(--text-primary)",
-                          background: "rgba(148,163,184,0.15)",
-                          border: "1px solid rgba(148,163,184,0.35)"
-                        }}
-                      >
-                        {"\u062a\u0631\u0627\u062c\u0639"}
-                      </button>
+                  {typeof lastEnergyValue === "number" && (
+                    <div className="rounded-xl px-3 py-2 text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                      <p className="text-[11px] font-semibold" style={{ color: "var(--text-primary)" }}>
+                        {`\u0622\u062e\u0631 \u0642\u0631\u0627\u0621\u0629 \u0645\u0633\u062c\u0644\u0629: ${lastEnergyValue}/10`}
+                      </p>
+                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                        {"\u0644\u0644\u0645\u0642\u0627\u0631\u0646\u0629 \u0641\u0642\u0637 \u0645\u0639 \u0642\u0631\u0627\u0621\u0629 \u0627\u0644\u064a\u0648\u0645."}
+                      </p>
                     </div>
                   )}
-                  {!quickMode && <div className="flex items-center justify-center gap-1.5 py-0.5">
-                    {ENERGY_PRESETS.map((preset) => {
-                      const isSelected = hasPickedEnergy && energy === preset.value;
-                      return (
-                        <button
-                          key={preset.value}
-                          type="button"
-                          onClick={() => setEnergyValue(preset.value)}
-                          className="rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors"
-                          style={{
-                            color: isSelected ? "var(--text-primary)" : "var(--text-secondary)",
-                            background: isSelected ? "rgba(45, 212, 191, 0.18)" : "rgba(255,255,255,0.06)",
-                            border: `1px solid ${isSelected ? "rgba(45, 212, 191, 0.45)" : "rgba(255,255,255,0.12)"}`
-                          }}
-                        >
-                          {preset.label}
-                        </button>
-                      );
-                    })}
-                  </div>}
-                  {!quickMode && <div className="flex items-center justify-center gap-1.5 py-0.5">
-                    {typeof lastEnergyValue === "number" && (
-                      <span
-                        className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                        style={{
-                          color: "var(--text-secondary)",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.1)"
-                        }}
-                      >
-                        {`\u0622\u062e\u0631 \u0642\u064a\u0645\u0629: ${lastEnergyValue}/10`}
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEnergy(null);
-                        setPreviousEnergy(null);
-                        setHasPickedEnergy(false);
-                        setEnergyConfidence(null);
-                        setShowRequiredHint(false);
-                        setNeedsEnergyConfirmation(false);
-                        setEnergyReasons([]);
-                        setSuggestionApplied(false);
-                        setImmediateActionApplied(false);
-                        lastFeedbackAnchorRef.current = null;
-                        clearDraft();
-                        clearUndoState();
-                      }}
-                      className="rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors"
-                      style={{
-                        color: "var(--text-secondary)",
-                        background: "rgba(255,255,255,0.05)",
-                        border: "1px solid rgba(255,255,255,0.12)"
-                      }}
-                    >
-                      {"\u0627\u0628\u062f\u0623 \u0645\u0646 \u062c\u062f\u064a\u062f"}
-                    </button>
-                    {previousEnergy != null && energy != null && previousEnergy !== energy && (
-                      <button
-                        type="button"
-                        onClick={() => setEnergyValue(previousEnergy)}
-                        className="rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors"
-                        style={{
-                          color: "var(--text-secondary)",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.12)"
-                        }}
-                      >
-                        {"\u062a\u0631\u0627\u062c\u0639"}
-                      </button>
-                    )}
-                  </div>}
-                  {!quickMode && showEnergyDetails && <div className="flex flex-col gap-1">
-                    <p className="text-[11px] text-center font-semibold" style={{ color: "var(--text-muted)" }}>
-                      {"\u062b\u0642\u0629 \u0627\u0644\u0642\u064a\u0627\u0633"}
-                    </p>
-                    <div className="flex items-center justify-center gap-1.5">
-                      {([
-                        { id: "low", label: "\u0645\u0646\u062e\u0641\u0636\u0629" },
-                        { id: "medium", label: "\u0645\u062a\u0648\u0633\u0637\u0629" },
-                        { id: "high", label: "\u0639\u0627\u0644\u064a\u0629" }
-                      ] as const).map((item) => {
-                        const active = energyConfidence === item.id;
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => setEnergyConfidence(item.id)}
-                            className="rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors"
-                            style={{
-                              color: active ? "var(--text-primary)" : "var(--text-secondary)",
-                              background: active ? "rgba(45,212,191,0.18)" : "rgba(255,255,255,0.05)",
-                              border: active ? "1px solid rgba(45,212,191,0.4)" : "1px solid rgba(255,255,255,0.12)"
-                            }}
-                          >
-                            {item.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>}
-                  {!quickMode && showEnergyDetails && <div className="flex flex-col gap-1">
-                    <p className="text-[11px] text-center font-semibold" style={{ color: "var(--text-muted)" }}>
-                      {"\u0623\u0633\u0628\u0627\u0628 \u0627\u0644\u0637\u0627\u0642\u0629 (\u0627\u062e\u062a\u064a\u0627\u0631\u064a)"}
-                    </p>
-                    <div className="flex flex-wrap items-center justify-center gap-1.5">
-                      {ENERGY_REASON_TAGS.map((reason) => {
-                        const active = energyReasons.includes(reason);
-                        return (
-                          <button
-                            key={reason}
-                            type="button"
-                            onClick={() => toggleEnergyReason(reason)}
-                            className="rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors"
-                            style={{
-                              color: active ? "var(--text-primary)" : "var(--text-secondary)",
-                              background: active ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.06)",
-                              border: active ? "1px solid rgba(167,139,250,0.4)" : "1px solid rgba(255,255,255,0.12)"
-                            }}
-                          >
-                            {reason}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>}
-                  {quickMode && (
-                    <div className="pt-1.5">
-                      <label className="text-xs font-semibold mb-1.5 block text-center" style={{ color: "var(--text-primary)" }}>
-                        {"\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a"}
-                      </label>
-                      <div className={`pulse-check-mood-grid grid grid-cols-4 ${quickMode ? "gap-1.5" : "gap-2"}`}>
-                        {MOODS.map((item) => {
-                          const isSelected = mood === item.id;
-                          const mStyle = MOOD_COSMIC[item.id];
-                          return (
-                            <motion.button
-                              key={item.id}
-                              type="button"
-                              onClick={() => {
-                                setMoodValue(item.id);
-                              }}
-                              className={`inline-flex items-center justify-center gap-1 px-1.5 ${quickMode ? "py-1.5" : "py-2"} rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0`}
-                              style={{
-                                background: isSelected ? mStyle.bg : "rgba(255, 255, 255, 0.05)",
-                                border: `1px solid ${isSelected ? mStyle.border : "rgba(255, 255, 255, 0.08)"}`,
-                                color: isSelected ? mStyle.text : "var(--text-secondary)",
-                                boxShadow: isSelected ? mStyle.glow : "none"
-                              }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              <span>{item.emoji}</span>
-                              <span className="truncate">{item.label}</span>
-                            </motion.button>
-                          );
-                        })}
-                      </div>
-                      {!quickMode && isMoodSelectionUnstable && (
-                        <p className="mt-1 text-center text-[11px] font-semibold" style={{ color: "rgba(251,191,36,0.95)" }}>
-                          {"\u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631 \u0628\u064a\u0646 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0645\u062a\u0630\u0628\u0630\u0628\u060c \u062b\u0628\u0651\u062a \u0627\u0644\u062d\u0627\u0644\u0629 \u0627\u0644\u0623\u0642\u0631\u0628 \u0644\u0634\u0639\u0648\u0631\u0643."}
-                        </p>
-                      )}
-                      {!quickMode && shouldOfferWeeklyMoodRecommendation && weeklyMoodRecommendation && (
-                        <div className="mt-1 flex flex-col items-center gap-1 py-0.5">
-                          <button
-                            type="button"
-                            onClick={applyWeeklyMoodRecommendation}
-                            className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
-                            style={{
-                              color: "var(--text-primary)",
-                              background: "rgba(59,130,246,0.16)",
-                              border: "1px solid rgba(59,130,246,0.4)"
-                            }}
-                          >
-                            {`\u0627\u0633\u062a\u062e\u062f\u0645 \u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639: ${MOODS.find((m) => m.id === weeklyMoodRecommendation.mood)?.label ?? ""}`}
-                          </button>
-                        </div>
-                      )}
+                  {historicalEnergyAverage && historicalEnergyAverage.count >= 3 && (
+                    <div className="rounded-xl px-3 py-2 text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                      <p className="text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
+                        {"معدل طاقتك"}
+                      </p>
+                      <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
+                        {`${historicalEnergyAverage.avg}/10`}
+                      </p>
+                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                        {`محسوب من ${historicalEnergyAverage.count} تسجيل`}
+                      </p>
                     </div>
                   )}
-                  {!quickMode && <p className="text-center text-sm" style={{ color: "var(--text-muted)" }}>
-                    {showEnergyDetails ? energySupportLine : "\u062a\u0641\u0627\u0635\u064a\u0644 \u0645\u062e\u062a\u0635\u0631\u0629"}
-                  </p>}
-                  {!quickMode && <button
-                    type="button"
-                    onClick={() => setShowEnergyDetails((prev) => !prev)}
-                    className="text-xs font-semibold self-center"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    {showEnergyDetails ? "\u0625\u062e\u0641\u0627\u0621 \u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644" : "\u0634\u0631\u062d \u0623\u0643\u062b\u0631"}
-                  </button>}
-                  {!quickMode && showEnergyDetails && recentEnergySparkline && (
-                    <div className="pt-1.5 flex flex-col items-center gap-1">
-                      <span className="text-[10px] font-semibold" style={{ color: "var(--text-muted)" }}>
-                        {"\u0622\u062e\u0631 7 \u0642\u0631\u0627\u0621\u0627\u062a \u0637\u0627\u0642\u0629"}
-                      </span>
-                      <svg
-                        width={recentEnergySparkline.width}
-                        height={recentEnergySparkline.height}
-                        viewBox={`0 0 ${recentEnergySparkline.width} ${recentEnergySparkline.height}`}
-                        role="img"
-                        aria-label={"\u0631\u0633\u0645 \u0622\u062e\u0631 7 \u0642\u0631\u0627\u0621\u0627\u062a \u0644\u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629"}
-                      >
-                        <polyline
-                          fill="none"
-                          stroke={fillHex}
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          points={recentEnergySparkline.points}
-                          opacity={0.95}
-                        />
-                      </svg>
-                    </div>
-                  )}                </motion.div>
+                </motion.div>
               )}
 
-              {!quickMode && step === 2 && (
-                <motion.div className="pulse-check-section mt-1 flex flex-col gap-2" custom={2} variants={cosmicUp} initial="hidden" animate="visible">
+              {step === 2 && (
+                <motion.div className="pulse-check-section mt-1.5 flex flex-col gap-2.5" custom={2} variants={cosmicUp} initial="hidden" animate="visible">
                   <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
                     {"\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a"}
                   </label>
                   <p className="text-[11px] -mt-1 mb-0.5" style={{ color: "var(--text-muted)", minHeight: "1rem" }}>
                     {moodSubtitle}
                   </p>
-                  <div
-                    data-testid="pulse-mood-summary"
-                    className="rounded-xl px-3 py-2 text-center"
-                    style={{
-                      background: selectedMood ? MOOD_COSMIC[selectedMood.id].bg : "rgba(148,163,184,0.08)",
-                      border: `1px solid ${selectedMood ? MOOD_COSMIC[selectedMood.id].border : "rgba(148,163,184,0.22)"}`
-                    }}
-                  >
-                    <p className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
-                      {selectedMood ? `${selectedMood.emoji} ${selectedMood.label}` : "\u0627\u062e\u062a\u0631 \u062d\u0627\u0644\u0629 \u062a\u0634\u0628\u0647\u0643 \u0627\u0644\u0622\u0646"}
-                    </p>
-                    <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
-                      {moodStateLabel}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap justify-center gap-1.5">
-                    {MOOD_PRESETS.map((presetId) => {
-                      const preset = MOODS.find((item) => item.id === presetId);
-                      if (!preset) return null;
-                      const active = mood === preset.id;
-                      const style = MOOD_COSMIC[preset.id];
-                      return (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => setMoodValue(preset.id)}
-                          className="rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors"
-                          style={{
-                            color: active ? style.text : "var(--text-secondary)",
-                            background: active ? style.bg : "rgba(255,255,255,0.06)",
-                            border: `1px solid ${active ? style.border : "rgba(255,255,255,0.14)"}`
-                          }}
-                        >
-                          {`${preset.emoji} ${preset.label}`}
-                        </button>
-                      );
-                    })}
-                  </div>
                   <div className="pulse-check-mood-grid grid grid-cols-4 gap-2">
                     {MOODS.map((item) => {
                       const isSelected = mood === item.id;
@@ -1631,17 +1330,17 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                           onClick={() => {
                             setMoodValue(item.id);
                           }}
-                          className="inline-flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
+                          className="inline-flex min-h-[78px] flex-col items-center justify-center gap-1.5 px-1.5 py-2.5 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
                           style={{
-                            background: isSelected ? mStyle.bg : "rgba(255, 255, 255, 0.05)",
-                            border: `1px solid ${isSelected ? mStyle.border : "rgba(255, 255, 255, 0.08)"}`,
+                            background: isSelected ? mStyle.bg : "rgba(255, 255, 255, 0.04)",
+                            border: `1px solid ${isSelected ? mStyle.border : "rgba(255, 255, 255, 0.12)"}`,
                             color: isSelected ? mStyle.text : "var(--text-secondary)",
-                            boxShadow: isSelected ? mStyle.glow : "none"
+                            boxShadow: isSelected ? mStyle.glow : "0 4px 16px rgba(2,6,23,0.14)"
                           }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <span>{item.emoji}</span>
-                          <span className="truncate">{item.label}</span>
+                          <span className="text-base leading-none">{item.emoji}</span>
+                          <span className="leading-tight text-center">{item.label}</span>
                         </motion.button>
                       );
                     })}
@@ -1678,29 +1377,14 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 </motion.div>
               )}
 
-              {(step === 3 || (quickMode && step === 1)) && (
-                <motion.div className={`pulse-check-section ${quickMode ? "mt-0.5" : "mt-1"} flex flex-col gap-2`} custom={3} variants={cosmicUp} initial="hidden" animate="visible">
-                  <label className={`text-sm font-semibold ${quickMode ? "mb-1.5" : "mb-1"}`} style={{ color: "var(--text-primary)" }}>
+              {step === 3 && (
+                <motion.div className="pulse-check-section mt-1.5 flex flex-col gap-2.5" custom={3} variants={cosmicUp} initial="hidden" animate="visible">
+                  <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
                     {"\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u062d\u0627\u0644\u064a"}
                   </label>
-                  {!quickMode && <p className="text-[11px] -mt-1 mb-0.5" style={{ color: "var(--text-muted)", minHeight: "1rem" }}>
+                  <p className="text-[11px] -mt-1 mb-0.5" style={{ color: "var(--text-muted)", minHeight: "1rem" }}>
                     {focusSubtitle}
-                  </p>}
-                  {!quickMode && <div
-                    data-testid="pulse-focus-summary"
-                    className="rounded-xl px-3 py-2 text-center"
-                    style={{
-                      background: focus ? FOCUS_COSMIC[focus].bg : "rgba(148,163,184,0.08)",
-                      border: `1px solid ${focus ? FOCUS_COSMIC[focus].border : "rgba(148,163,184,0.22)"}`
-                    }}
-                  >
-                    <p className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
-                      {selectedFocusLabel ?? "\u062d\u062f\u062f \u0646\u0642\u0637\u0629 \u0628\u062f\u0627\u064a\u0629 \u0627\u0644\u062a\u0631\u0643\u064a\u0632"}
-                    </p>
-                    <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
-                      {focusStateLabel}
-                    </p>
-                  </div>}
+                  </p>
                   <div className="grid grid-cols-2 gap-2">
                     {FOCUS_OPTIONS.map((item) => {
                       const isSelected = focus === item.id;
@@ -1715,11 +1399,12 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                           onClick={() => {
                             setFocusValue(item.id);
                           }}
-                          className="px-2 py-2 rounded-lg text-xs font-semibold transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
+                          className="min-h-[74px] px-2 py-2.5 rounded-xl text-xs font-semibold transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
                           style={{
                             background: isSelected ? fStyle.bg : "rgba(255, 255, 255, 0.04)",
-                            border: `1px solid ${isSelected ? fStyle.border : "rgba(255, 255, 255, 0.06)"}`,
-                            color: isSelected ? fStyle.text : "var(--text-secondary)"
+                            border: `1px solid ${isSelected ? fStyle.border : "rgba(255, 255, 255, 0.12)"}`,
+                            color: isSelected ? fStyle.text : "var(--text-secondary)",
+                            boxShadow: isSelected ? "0 10px 24px rgba(15,23,42,0.22)" : "0 4px 14px rgba(2,6,23,0.14)"
                           }}
                           whileTap={{ scale: 0.96 }}
                         >
@@ -1728,34 +1413,18 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       );
                     })}
                   </div>
-                  {!quickMode && <p className="text-center text-[11px]" style={{ color: "var(--text-muted)" }}>
+                  <p className="text-center text-[11px]" style={{ color: "var(--text-muted)" }}>
                     {focusQuickHint}
-                  </p>}
+                  </p>
                 </motion.div>
               )}
 
-              {quickMode && step === 1 && (
-                <div className="pt-2.5">
-                  <motion.button
-                    data-testid="pulse-primary-action-quick"
-                    type="button"
-                    onClick={handleSubmit}
-                    aria-disabled={!isComplete}
-                    className={`w-full cta-primary py-2.5 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 ${isComplete ? "" : "opacity-80"}`}
-                    whileHover={{ scale: 1.01, y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {isSavingPulse ? "\u062a\u0645 \u0627\u0644\u062d\u0641\u0638" : "\u0627\u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643"}
-                  </motion.button>
-                </div>
-              )}
-
               {step === 4 && (
-                <motion.div className="pulse-check-section mt-1 flex flex-col gap-2" custom={4} variants={cosmicUp} initial="hidden" animate="visible">
+                <motion.div className="pulse-check-section mt-1.5 flex flex-col gap-2.5" custom={4} variants={cosmicUp} initial="hidden" animate="visible">
                   <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                    {"\u0644\u0648 \u062d\u0627\u0628\u0628 \u062a\u0634\u0631\u062d \u0623\u0643\u062a\u0631"} <span style={{ color: "var(--text-muted)" }}>{"(\u0627\u062e\u062a\u064a\u0627\u0631\u064a)"}</span>
+                    {"\u0644\u0648 \u062d\u0627\u0628\u0628 \u062a\u0634\u0631\u062d \u0623\u0643\u062a\u0631"}
                   </label>
-                  <div className="rounded-xl px-3 py-2 text-center" style={{ background: "rgba(148,163,184,0.08)", border: "1px solid rgba(148,163,184,0.2)" }}>
+                  <div className="rounded-xl px-3 py-2 text-center" style={{ background: "rgba(148,163,184,0.08)", border: "1px solid rgba(148,163,184,0.22)" }}>
                     <p className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
                       {notesChars > 0 ? "\u062a\u0645 \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u0628\u0646\u062c\u0627\u062d" : "\u0627\u0644\u0643\u062a\u0627\u0628\u0629 \u0647\u0646\u0627 \u062a\u0633\u0627\u0639\u062f\u0643 \u062a\u0634\u0648\u0641 \u0635\u0648\u0631\u0629 \u0623\u0648\u0636\u062d"}
                     </p>
@@ -1763,7 +1432,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       {notesChars > 0 ? `\u062a\u0645 \u0643\u062a\u0627\u0628\u0629 ${notesChars} \u062d\u0631\u0641.` : "\u062c\u0645\u0644\u0629 \u0648\u0627\u062d\u062f\u0629 \u0643\u0641\u0627\u064a\u0629 \u0644\u0628\u062f\u0627\u064a\u0629 \u062c\u064a\u062f\u0629."}
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {NOTES_QUICK_CHIPS.map((chip) => (
                       <button
                         key={chip}
@@ -1772,11 +1441,11 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                           recordFlowEvent("pulse_notes_quick_chip_applied", { meta: { chip } });
                           applyNotesQuickChip(chip);
                         }}
-                        className="rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors"
+                        className="rounded-xl px-2.5 py-1.5 text-[11px] font-semibold transition-colors"
                         style={{
                           color: "var(--text-secondary)",
-                          background: "rgba(255,255,255,0.06)",
-                          border: "1px solid rgba(255,255,255,0.14)"
+                          background: "rgba(255,255,255,0.05)",
+                          border: "1px solid rgba(255,255,255,0.12)"
                         }}
                       >
                         {chip}
@@ -1801,10 +1470,10 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       }
                     }}
                     placeholder={"\u0627\u0643\u062a\u0628 \u062c\u0645\u0644\u0629 \u0623\u0648 \u0645\u0648\u0642\u0641: \u0623\u0646\u0627 \u0645\u062e\u0646\u0648\u0642 \u0639\u0634\u0627\u0646 \u062d\u0635\u0644 \u0643\u0630\u0627..."}
-                    className="w-full rounded-lg px-2.5 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0 resize-y max-h-36 overflow-auto"
+                    className="w-full rounded-xl px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0 resize-y min-h-[108px] max-h-44 overflow-auto"
                     style={{
                       background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.08)",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
                       color: "var(--text-primary)",
                       letterSpacing: "0.02em"
                     }}
@@ -1813,7 +1482,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               )}
             </div>
 
-            {!quickMode && <div
+            <div
               data-testid="pulse-footer"
               className="px-4 sm:px-5 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
               style={{
@@ -1827,12 +1496,12 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               </p>
 
               <div className="flex items-center gap-2">
-                {step > 1 && !quickMode && (
+                {step > 1 && (
                   <button
                     type="button"
                     onClick={handlePreviousStep}
                     className="rounded-xl px-3 py-2 text-sm font-semibold"
-                    style={{ color: "var(--text-secondary)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                    style={{ color: "var(--text-secondary)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}
                   >
                     {"\u0631\u062c\u0648\u0639"}
                   </button>
@@ -1840,22 +1509,24 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 <motion.button
                   data-testid="pulse-primary-action"
                   type="button"
-                  onClick={quickMode ? handleSubmit : (step < 4 ? handleNextStep : handleSubmit)}
-                  aria-disabled={quickMode ? !isComplete : (step < 4 ? !currentStepComplete : !isComplete)}
-                  className={`w-full cta-primary py-2.5 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 ${(quickMode ? isComplete : (step < 4 ? currentStepComplete : isComplete)) ? "" : "opacity-80"}`}
+                  onClick={step < 4 ? handleNextStep : handleSubmit}
+                  aria-disabled={step < 4 ? !currentStepComplete : !isComplete}
+                  className={`w-full cta-primary py-2.5 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 ${(step < 4 ? currentStepComplete : isComplete) ? "" : "opacity-80"}`}
                   whileHover={{ scale: 1.01, y: -1 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {quickMode ? (isSavingPulse ? "\u062a\u0645 \u0627\u0644\u062d\u0641\u0638" : "\u0627\u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643") : (step < 4 ? "\u0627\u0644\u062a\u0627\u0644\u064a" : (isSavingPulse ? "\u062a\u0645 \u0627\u0644\u062d\u0641\u0638" : "\u0627\u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643"))}
+                  {step < 4 ? "\u0627\u0644\u062a\u0627\u0644\u064a" : (isSavingPulse ? "\u062a\u0645 \u0627\u0644\u062d\u0641\u0638" : "\u0627\u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643")}
                 </motion.button>
               </div>
-            </div>}
+            </div>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
   );
 };
+
+
 
 
 

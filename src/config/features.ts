@@ -10,7 +10,9 @@ export type FeatureFlagKey =
   | "generative_ui_mode"
   | "global_atlas"
   | "ai_field"
-  | "pulse_check";
+  | "pulse_check"
+  | "pulse_weekly_recommendation"
+  | "pulse_immediate_action";
 
 export interface FeatureFlagDefinition {
   key: FeatureFlagKey;
@@ -82,6 +84,18 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
     label: "بوابة النبض اللحظي",
     description: "شاشة ضبط البوصلة قبل الدخول",
     group: "AI"
+  },
+  {
+    key: "pulse_weekly_recommendation",
+    label: "اقتراح الطاقة الأسبوعي",
+    description: "عرض اقتراح مستوى الطاقة بناءً على متوسط الأسبوع",
+    group: "AI"
+  },
+  {
+    key: "pulse_immediate_action",
+    label: "الخطوة الفورية للطاقة",
+    description: "عرض خطوة عملية فورية بناءً على مستوى الطاقة الحالي",
+    group: "AI"
   }
 ];
 
@@ -95,5 +109,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, FeatureFlagMode> = {
   generative_ui_mode: "off",
   global_atlas: "off",
   ai_field: "on",
-  pulse_check: "on"
+  pulse_check: "on",
+  pulse_weekly_recommendation: "off",
+  pulse_immediate_action: "off"
 };
