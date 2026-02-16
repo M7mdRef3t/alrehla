@@ -6,7 +6,6 @@ import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { AnalyticsConsentBanner } from "../src/components/AnalyticsConsentBanner";
 import { initAnalytics } from "../src/services/analytics";
 import { initMonitoring } from "../src/services/monitoring";
-import { runtimeEnv } from "../src/config/runtimeEnv";
 
 const Analytics = lazy(() => import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })));
 const SpeedInsights = lazy(() => import("@vercel/speed-insights/react").then((m) => ({ default: m.SpeedInsights })));
@@ -19,12 +18,15 @@ export function ClientApp() {
     initAnalytics();
     initMonitoring();
 
-    if (runtimeEnv.isDev && typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+    // Unregister stale Vite-PWA service workers (sw.js) in ALL environments
+    if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
       void navigator.serviceWorker.getRegistrations().then((registrations) => {
         registrations.forEach((registration) => {
-          void registration.unregister();
+          if (registration.active?.scriptURL?.includes("sw.js")) {
+            void registration.unregister();
+          }
         });
-      });
+      }).catch(() => {});
     }
   }, []);
 

@@ -45,3 +45,7 @@ supabase/.temp/
 .vercel
 .next/
 tsconfig.tsbuildinfo
+# Next.js
+.next/
+.next_stale_*/
+.next_stale_*
