@@ -55,6 +55,7 @@ interface CoreMapScreenProps {
   pulseMode?: "low" | "angry" | "high" | "normal";
   pulseInsight?: { title: string; body: string } | null;
   onOpenCocoon?: () => void;
+  suppressLowPulseCocoon?: boolean;
   onOpenNoise?: () => void;
   onOpenChallenge?: () => void;
   challengeLabel?: string | null;
@@ -74,6 +75,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   pulseMode = "normal",
   pulseInsight,
   onOpenCocoon,
+  suppressLowPulseCocoon = false,
   onOpenNoise,
   onOpenChallenge,
   challengeLabel,
@@ -331,14 +333,20 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
             نفّذ خطوة صيانة واحدة وبس، من غير أي اشتباك.
           </p>
-          <button
-            type="button"
-            onClick={onOpenCocoon}
-            className="mt-3 w-full cta-muted py-2.5 text-sm font-semibold transition-all hover:bg-white/10"
-            style={{ borderColor: "rgba(148, 163, 184, 0.3)" }}
-          >
-            دقيقة شحن
-          </button>
+          {suppressLowPulseCocoon ? (
+            <p className="mt-3 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+              تم تنفيذ دقيقة الشحن. خُد دقيقة هدوء وكمل خطوة بسيطة على الخريطة.
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={onOpenCocoon}
+              className="mt-3 w-full cta-muted py-2.5 text-sm font-semibold transition-all hover:bg-white/10"
+              style={{ borderColor: "rgba(148, 163, 184, 0.3)" }}
+            >
+              دقيقة شحن
+            </button>
+          )}
         </motion.div>
       )}
 
@@ -486,6 +494,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           <EditableText id="map_add_person_label" defaultText={mapCopy.addPersonLabel} page="map" editOnClick={false} />
         </motion.button>
       </motion.div>
+        </>
+      )}
 
       {/* ── Pulse Insight ── */}
       {pulseInsight && (
@@ -686,8 +696,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             </p>
           )}
         </div>
-      )}
-        </>
       )}
 
       {/* ── Modals ── */}

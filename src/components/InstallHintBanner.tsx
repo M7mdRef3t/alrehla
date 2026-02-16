@@ -13,7 +13,8 @@ export const InstallHintBanner: FC = () => {
     dismissBanner,
     installEvent,
     triggerInstall,
-    isIPad
+    isIPad,
+    isInAppBrowser
   } = ctx;
 
   if (!showAndroidBanner && !showIOSBanner) return null;
@@ -54,6 +55,11 @@ export const InstallHintBanner: FC = () => {
                 <p className="mt-1 text-[11px] text-blue-700 dark:text-blue-300">
                   هذا ليس تنزيلًا من المتجر، هو اختصار يضيف التطبيق للشاشة الرئيسية.
                 </p>
+                {isInAppBrowser && (
+                  <p className="mt-2 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                    أنت داخل متصفح فيسبوك/إنستجرام. افتح الرابط في Chrome ثم اختر "إضافة إلى الشاشة الرئيسية".
+                  </p>
+                )}
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
                     <Zap className="h-3 w-3" />
@@ -125,6 +131,11 @@ export const InstallHintBanner: FC = () => {
                 <p className="mt-1 text-[11px] text-blue-700 dark:text-blue-300">
                   هذا ليس تنزيلًا من المتجر، هو اختصار يضيف التطبيق للشاشة الرئيسية.
                 </p>
+                {isInAppBrowser && (
+                  <p className="mt-2 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                    أنت داخل متصفح فيسبوك/إنستجرام. افتح الرابط في Safari ثم اختر "إضافة إلى الشاشة الرئيسية".
+                  </p>
+                )}
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
                     <Zap className="h-3 w-3" />

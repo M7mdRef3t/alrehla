@@ -21,9 +21,9 @@ interface PulseCheckModalProps {
   isOpen: boolean;
   context?: "regular" | "start_recovery";
   onSubmit: (payload: {
-    energy: number;
-    mood: PulseMood;
-    focus: PulseFocus;
+    energy: number | null;
+    mood: PulseMood | null;
+    focus: PulseFocus | null;
     auto?: boolean;
     notes?: string;
     energyReasons?: string[];
@@ -333,8 +333,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const isStartRecovery = context === "start_recovery";
   const pulseLogs = usePulseState((s) => s.logs);
   const pulseCopyOverrides = useAdminState((s) => s.pulseCopyOverrides);
-  const isFirstPulse = pulseLogs.length === 0;
-  const allowSkip = !isFirstPulse;
+  const allowSkip = true;
 
   const [energy, setEnergy] = useState<number | null>(null);
   const [previousEnergy, setPreviousEnergy] = useState<number | null>(null);
@@ -357,6 +356,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [energyUndoSnapshot, setEnergyUndoSnapshot] = useState<EnergyUndoSnapshot | null>(null);
   const [energyUndoLabel, setEnergyUndoLabel] = useState<string | null>(null);
   const [immediateActionApplied, setImmediateActionApplied] = useState(false);
+  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const [notesChars, setNotesChars] = useState(0);
   const [quickMode, setQuickMode] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -381,6 +381,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
   const fillHex = hasPickedEnergy && energy != null ? energyColorHex(energy) : "rgba(148, 163, 184, 0.85)";
   const isEnergyDefault = !hasPickedEnergy || energy == null;
+  const isLowEnergyNow = hasPickedEnergy && energy != null && energy <= 3;
   const pct = hasPickedEnergy && energy != null ? energyPct(energy, { min: 0, max: 10 }) : 0;
   const energyStateLabel = getEnergyStateLabel(energy);
   const energyQuickHint = getEnergyQuickHint(energy);
@@ -446,15 +447,9 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     });
     return { points: points.join(" "), width, height };
   }, [pulseLogs]);
-  const totalSteps = quickMode ? 3 : 4;
-  const isComplete = useMemo(() => hasPickedEnergy && Boolean(mood) && Boolean(focus), [hasPickedEnergy, mood, focus]);
-  const currentStepComplete = useMemo(() => {
-    if (step === 1) return quickMode ? (hasPickedEnergy && Boolean(mood)) : hasPickedEnergy;
-    if (quickMode && step === 2) return Boolean(focus);
-    if (step === 2) return Boolean(mood);
-    if (step === 3) return Boolean(focus);
-    return true;
-  }, [quickMode, step, hasPickedEnergy, mood, focus]);
+  const totalSteps = quickMode ? 1 : 4;
+  const isComplete = true;
+  const currentStepComplete = true;
 
   const clearDraft = () => {
     if (typeof window === "undefined") return;
@@ -676,17 +671,40 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    setQuickMode(isLowEnergyNow);
+  }, [isLowEnergyNow]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setShowSkipConfirm(false);
+  }, [isOpen]);
+
+  const requestSkipClose = () => {
+    if (!allowSkip) return;
+    setShowSkipConfirm(true);
+  };
+
+  const confirmSkipClose = () => {
+    if (!allowSkip) return;
+    setShowSkipConfirm(false);
+    onClose("close_button");
+  };
+
   const handleClose = (reason: "backdrop" | "close_button") => {
     if (!allowSkip) return;
+    if (showSkipConfirm) {
+      setShowSkipConfirm(false);
+      return;
+    }
     onClose(reason);
   };
 
   const handleSubmit = () => {
     if (isSavingPulse) return;
-    if (!isComplete || !mood || !focus) {
-      setShowRequiredHint(true);
-      return;
-    }
+    const finalEnergy = hasPickedEnergy ? energy : null;
+    const finalMood: PulseMood | null = mood ?? null;
+    const finalFocus: PulseFocus | null = focus ?? null;
     const reasonsLine = energyReasons.length > 0
       ? `\u0623\u0633\u0628\u0627\u0628 \u0627\u0644\u0637\u0627\u0642\u0629: ${energyReasons.join("\u060c ")}`
       : "";
@@ -709,13 +727,15 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     })();
     setIsSavingPulse(true);
     setSaveToastText(
-      `\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643 \u2022 ${getPostSaveAction(energy ?? 0)}${weeklyDiffLine ? ` \u2022 ${weeklyDiffLine}` : ""}`
+      finalEnergy == null
+        ? "\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643"
+        : `\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643 \u2022 ${getPostSaveAction(finalEnergy)}${weeklyDiffLine ? ` \u2022 ${weeklyDiffLine}` : ""}`
     );
     window.setTimeout(() => {
       onSubmit({
-        energy: energy!,
-        mood,
-        focus,
+        energy: finalEnergy,
+        mood: finalMood,
+        focus: finalFocus,
         notes: mergedNotes || undefined,
         energyReasons: energyReasons.length > 0 ? energyReasons : undefined,
         energyConfidence: energyConfidence ?? undefined
@@ -727,10 +747,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   };
 
   const handleNextStep = () => {
-    if (!currentStepComplete) {
-      setShowRequiredHint(true);
-      return;
-    }
     if (step === 1 && isEnergySelectionUnstable && !needsEnergyConfirmation) {
       setNeedsEnergyConfirmation(true);
       return;
@@ -956,7 +972,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     const closest = ENERGY_ANCHORS.reduce((acc, n) => {
       return Math.abs(n - energy) < Math.abs(acc - energy) ? n : acc;
     }, ENERGY_ANCHORS[0]);
-    if (Math.abs(closest - energy) <= 1) {
+    if (closest === energy) {
       setEnergyValue(closest, { skipHaptic: true });
     }
   };
@@ -980,7 +996,9 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     }, 100);
   }, [step]);
 
-  const stepLabel = step === 1
+  const stepLabel = quickMode
+    ? "\u0627\u0644\u0636\u0628\u0637 \u0627\u0644\u0633\u0631\u064a\u0639"
+    : step === 1
     ? "\u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629"
     : step === 2
       ? "\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a"
@@ -995,7 +1013,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     : showRequiredHint && !currentStepComplete
       ? (step === 1
         ? (quickMode
-          ? "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0648\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629."
+          ? "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0648\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0648\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0642\u0628\u0644 \u0627\u0644\u062d\u0641\u0638."
           : "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629.")
         : step === 2
           ? "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629."
@@ -1003,7 +1021,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       : (!currentStepComplete
         ? (step === 1
           ? (quickMode
-            ? "\u0627\u062e\u062a\u064e\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0648\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0623\u0648\u0644\u0627\u064b."
+            ? "\u0627\u062e\u062a\u064e\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0648\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0648\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0623\u0648\u0644\u0627\u064b."
             : "\u0627\u062e\u062a\u064e\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0623\u0648\u0644\u0627\u064b.")
           : step === 2
             ? "\u0627\u062e\u062a\u064e\u0631 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0623\u0648\u0644\u0627\u064b."
@@ -1044,7 +1062,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
           <motion.div
             data-testid="pulse-check-shell"
-            className="pulse-check-shell relative z-10 w-[calc(100%-0.9rem)] max-w-md max-h-[min(98dvh,740px)] overflow-hidden flex flex-col"
+            className={`pulse-check-shell relative z-10 w-[calc(100%-0.9rem)] max-w-md max-h-[min(98dvh,740px)] overflow-hidden flex flex-col ${quickMode ? "justify-start" : ""}`}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -1086,14 +1104,14 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   {"\u0636\u0628\u0637 \u0627\u0644\u0628\u0648\u0635\u0644\u0629"}
                 </h2>
                 <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                  {`\u062e\u0637\u0648\u0629 ${quickMode && step > 1 ? step - 1 : step} \u0645\u0646 ${totalSteps} \u2022 ${stepLabel}`}
+                  {`\u062e\u0637\u0648\u0629 ${quickMode ? 1 : step} \u0645\u0646 ${totalSteps} \u2022 ${stepLabel}`}
                 </p>
               </motion.div>
               {allowSkip && (
                 <button
                   type="button"
-                  onClick={() => handleClose("close_button")}
-                  className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors"
+                  onClick={requestSkipClose}
+                  className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer"
                   style={{ color: "var(--text-muted)", background: "rgba(255, 255, 255, 0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
                   aria-label={"\u062a\u062e\u0637\u064a \u0627\u0644\u064a\u0648\u0645"}
                 >
@@ -1101,31 +1119,52 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 </button>
               )}
             </div>
+            {showSkipConfirm && (
+              <div className="mx-3.5 sm:mx-4 -mt-1 mb-1 rounded-xl px-3 py-2" style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.35)" }}>
+                <p className="text-xs font-semibold text-center" style={{ color: "rgba(255,236,179,0.98)" }}>
+                  {"هل تريد تخطي ضبط البوصلة اليوم؟"}
+                </p>
+                <div className="mt-2 flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowSkipConfirm(false)}
+                    className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
+                    style={{ color: "var(--text-secondary)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)" }}
+                  >
+                    {"إلغاء"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmSkipClose}
+                    className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
+                    style={{ color: "var(--text-primary)", background: "rgba(248,113,113,0.18)", border: "1px solid rgba(248,113,113,0.42)" }}
+                  >
+                    {"نعم، تخطي"}
+                  </button>
+                </div>
+              </div>
+            )}
 
-            <div className="pulse-check-content flex-1 min-h-0 overflow-hidden px-3.5 sm:px-5 pb-2 sm:pb-4">
+            <div className={`pulse-check-content ${quickMode ? "px-3.5 sm:px-5 pb-3.5 pt-1.5 overflow-visible" : "flex-1 min-h-0 overflow-hidden px-3.5 sm:px-5 pb-2 sm:pb-4"}`}>
               {step === 1 && (
-                <motion.div className="pulse-check-section mt-1 sm:mt-2 flex flex-col gap-0.5 sm:gap-1.5" custom={1} variants={cosmicUp} initial="hidden" animate="visible">
-                  <div className="flex items-center justify-center pb-1">
-                    <button
-                      type="button"
-                      onClick={() => setQuickMode((prev) => !prev)}
-                      className="rounded-full px-3 py-1 text-[11px] font-semibold transition-colors"
-                      style={{
-                        color: quickMode ? "var(--text-primary)" : "var(--text-secondary)",
-                        background: quickMode ? "rgba(45,212,191,0.16)" : "rgba(255,255,255,0.05)",
-                        border: `1px solid ${quickMode ? "rgba(45,212,191,0.38)" : "rgba(255,255,255,0.12)"}`
-                      }}
-                    >
-                      {quickMode ? "\u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u0633\u0631\u064a\u0639 \u0645\u0641\u0639\u0644" : "\u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u0648\u0636\u0639 \u0627\u0644\u0633\u0631\u064a\u0639"}
-                    </button>
-                  </div>
-                  <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                    {"\u0645\u0624\u0634\u0631 \u0637\u0627\u0642\u062a\u0643"} <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
+                <motion.div className={`pulse-check-section mt-1 sm:mt-2 flex flex-col ${quickMode ? "gap-2.5 sm:gap-3" : "gap-0.5 sm:gap-1.5"}`} custom={1} variants={cosmicUp} initial="hidden" animate="visible">
+                  {quickMode && (
+                    <div className="rounded-xl px-2.5 py-2 flex flex-col gap-1" style={{ background: "rgba(45,212,191,0.1)", border: "1px solid rgba(45,212,191,0.3)" }}>
+                      <p className="text-[11px] font-semibold text-center" style={{ color: "var(--text-primary)" }}>
+                        {"تم تفعيل الوضع السريع تلقائيًا"}
+                      </p>
+                      <p className="text-[10px] text-center" style={{ color: "var(--text-muted)" }}>
+                        {"لأن طاقتك منخفضة الآن، بنختصر الخطوات لتكمل أسرع."}
+                      </p>
+                    </div>
+                  )}
+                  <label className={`text-sm font-semibold ${quickMode ? "mb-0.5" : ""}`} style={{ color: "var(--text-primary)" }}>
+                    {"\u0645\u0624\u0634\u0631 \u0637\u0627\u0642\u062a\u0643"}
                   </label>
-                  <div className="flex justify-center py-0.5 sm:py-3">
+                  <div className={`flex justify-center ${quickMode ? "py-1 sm:py-1.5" : "py-0.5 sm:py-3"}`}>
                     <motion.div
                       data-testid="pulse-energy-orb"
-                      className="pulse-check-energy-orb relative w-30 h-30 sm:w-44 sm:h-44 rounded-full flex items-center justify-center"
+                      className={`pulse-check-energy-orb relative rounded-full flex items-center justify-center ${quickMode ? "w-24 h-24 sm:w-28 sm:h-28" : "w-30 h-30 sm:w-44 sm:h-44"}`}
                       style={{
                         background: isEnergyDefault
                           ? "radial-gradient(circle at 40% 35%, rgba(148,163,184,0.32), rgba(148,163,184,0.14) 64%, rgba(148,163,184,0.04) 86%)"
@@ -1135,15 +1174,17 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                           : `0 0 ${32 + energy! * 3}px ${fillHex}35, inset 0 0 40px ${fillHex}10`,
                         border: isEnergyDefault ? "2px solid rgba(148,163,184,0.55)" : `2px solid ${fillHex}45`
                       }}
-                      animate={{
-                        scale: [1, hasPickedEnergy && energy != null ? 1.08 : 1.05, 1],
-                        boxShadow: [
-                          isEnergyDefault ? "0 0 28px rgba(148,163,184,0.26)" : `0 0 ${26 + energy! * 2}px ${fillHex}25`,
-                          isEnergyDefault ? "0 0 46px rgba(148,163,184,0.42)" : `0 0 ${40 + energy! * 2}px ${fillHex}45`,
-                          isEnergyDefault ? "0 0 28px rgba(148,163,184,0.26)" : `0 0 ${26 + energy! * 2}px ${fillHex}25`
-                        ]
-                      }}
-                      transition={{ duration: 2.3, repeat: Infinity, ease: "easeInOut" }}
+                      animate={quickMode
+                        ? undefined
+                        : {
+                            scale: [1, hasPickedEnergy && energy != null ? 1.08 : 1.05, 1],
+                            boxShadow: [
+                              isEnergyDefault ? "0 0 28px rgba(148,163,184,0.26)" : `0 0 ${26 + energy! * 2}px ${fillHex}25`,
+                              isEnergyDefault ? "0 0 46px rgba(148,163,184,0.42)" : `0 0 ${40 + energy! * 2}px ${fillHex}45`,
+                              isEnergyDefault ? "0 0 28px rgba(148,163,184,0.26)" : `0 0 ${26 + energy! * 2}px ${fillHex}25`
+                            ]
+                          }}
+                      transition={quickMode ? undefined : { duration: 2.3, repeat: Infinity, ease: "easeInOut" }}
                     >
                       {energyConfirmPulseActive && (
                         <motion.span
@@ -1155,10 +1196,10 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                         />
                       )}
                       <div className="flex items-center gap-2">
-                        <span className="text-3xl sm:text-5xl font-bold leading-none" style={{ color: fillHex }}>
+                        <span className={`${quickMode ? "text-2xl sm:text-3xl" : "text-3xl sm:text-5xl"} font-bold leading-none`} style={{ color: fillHex }}>
                           {hasPickedEnergy && energy != null ? energy : "-"}
                         </span>
-                        {weeklyTrend && hasPickedEnergy && (
+                        {!quickMode && weeklyTrend && hasPickedEnergy && (
                           <span
                             className="rounded-full px-2 py-0.5 text-[10px] font-bold"
                             style={{
@@ -1191,7 +1232,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   <p className="text-center text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
                     {energyStateLabel}
                   </p>
-                  {weeklyTrend && (
+                  {!quickMode && weeklyTrend && (
                     <p className="text-center text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
                       {`\u0627\u062a\u062c\u0627\u0647 7 \u0623\u064a\u0627\u0645: ${weeklyTrend.label} (${weeklyTrend.delta > 0 ? `+${weeklyTrend.delta}` : weeklyTrend.delta})`}
                     </p>
@@ -1199,7 +1240,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   <p className="text-center text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
                     {energyQuickHint}
                   </p>
-                  <div className="relative w-full py-1.5">
+                  <div className={`relative w-full ${quickMode ? "py-1" : "py-1.5"}`}>
                     <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 rounded-full" style={{ background: "rgba(255, 255, 255, 0.08)" }} />
                     <div
                       className="absolute right-0 top-1/2 -translate-y-1/2 h-2 rounded-full transition-all duration-300"
@@ -1239,17 +1280,10 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       {`\u0627\u0644\u0642\u064a\u0645\u0629: ${keyboardEnergyHint}/10`}
                     </p>
                   )}
-                  <div className="flex items-center justify-between px-0.5 -mt-1 text-[11px]" style={{ color: "var(--text-muted)" }}>
-                    <span>0</span>
-                    <span>5</span>
-                    <span>10</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs" style={{ color: "var(--text-muted)" }}>
-                    <span>{"\u0641\u0627\u0635\u0644 \u0634\u062d\u0646"}</span>
-                    <span className="font-semibold" style={{ color: fillHex }}>
-                      {hasPickedEnergy && energy != null ? `${energy}/10` : "-"}
-                    </span>
-                    <span>{"\u0641\u0627\u064a\u0642 \u0648\u0645\u0633\u062a\u0639\u062f"}</span>
+                  <div className="flex items-center justify-between px-0.5 -mt-1 text-[10px]" style={{ color: "var(--text-muted)" }}>
+                    {Array.from({ length: 11 }, (_, i) => i).map((n) => (
+                      <span key={n}>{n}</span>
+                    ))}
                   </div>
                   {isEnergySelectionUnstable && (
                     <p className="text-center text-[11px] font-semibold" style={{ color: "rgba(251,191,36,0.95)" }}>
@@ -1261,7 +1295,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       {`\u0627\u0636\u063a\u0637 \u00ab\u0627\u0644\u062a\u0627\u0644\u064a\u00bb \u0645\u0631\u0629 \u0623\u062e\u0631\u0649 \u0644\u062a\u0623\u0643\u064a\u062f ${energy ?? 0}/10.`}
                     </p>
                   )}
-                  {shouldOfferWeeklyRecommendation && weeklyEnergyRecommendation && (
+                  {!quickMode && shouldOfferWeeklyRecommendation && weeklyEnergyRecommendation && (
                     <div className="flex flex-col items-center gap-1 py-0.5">
                       <button
                         type="button"
@@ -1280,7 +1314,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       </p>
                     </div>
                   )}
-                  {energySuggestion && hasPickedEnergy && (
+                  {!quickMode && energySuggestion && hasPickedEnergy && (
                     <div className="flex flex-col items-center gap-1 py-0.5">
                       <button
                         type="button"
@@ -1303,7 +1337,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       </p>
                     </div>
                   )}
-                  {energyUndoSnapshot && (
+                  {!quickMode && energyUndoSnapshot && (
                     <div className="flex items-center justify-center gap-2 py-0.5">
                       <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
                         {energyUndoLabel ?? "\u0622\u062e\u0631 \u062a\u0639\u062f\u064a\u0644 \u0642\u0627\u0628\u0644 \u0644\u0644\u062a\u0631\u0627\u062c\u0639"}
@@ -1322,7 +1356,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       </button>
                     </div>
                   )}
-                  <div className="flex items-center justify-center gap-1.5 py-0.5">
+                  {!quickMode && <div className="flex items-center justify-center gap-1.5 py-0.5">
                     {ENERGY_PRESETS.map((preset) => {
                       const isSelected = hasPickedEnergy && energy === preset.value;
                       return (
@@ -1341,8 +1375,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                         </button>
                       );
                     })}
-                  </div>
-                  <div className="flex items-center justify-center gap-1.5 py-0.5">
+                  </div>}
+                  {!quickMode && <div className="flex items-center justify-center gap-1.5 py-0.5">
                     {typeof lastEnergyValue === "number" && (
                       <span
                         className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
@@ -1394,8 +1428,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                         {"\u062a\u0631\u0627\u062c\u0639"}
                       </button>
                     )}
-                  </div>
-                  {showEnergyDetails && <div className="flex flex-col gap-1">
+                  </div>}
+                  {!quickMode && showEnergyDetails && <div className="flex flex-col gap-1">
                     <p className="text-[11px] text-center font-semibold" style={{ color: "var(--text-muted)" }}>
                       {"\u062b\u0642\u0629 \u0627\u0644\u0642\u064a\u0627\u0633"}
                     </p>
@@ -1424,7 +1458,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       })}
                     </div>
                   </div>}
-                  {showEnergyDetails && <div className="flex flex-col gap-1">
+                  {!quickMode && showEnergyDetails && <div className="flex flex-col gap-1">
                     <p className="text-[11px] text-center font-semibold" style={{ color: "var(--text-muted)" }}>
                       {"\u0623\u0633\u0628\u0627\u0628 \u0627\u0644\u0637\u0627\u0642\u0629 (\u0627\u062e\u062a\u064a\u0627\u0631\u064a)"}
                     </p>
@@ -1450,11 +1484,11 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                     </div>
                   </div>}
                   {quickMode && (
-                    <div className="pt-1">
-                      <label className="text-xs font-semibold mb-1 block text-center" style={{ color: "var(--text-primary)" }}>
-                        {"\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a"} <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
+                    <div className="pt-1.5">
+                      <label className="text-xs font-semibold mb-1.5 block text-center" style={{ color: "var(--text-primary)" }}>
+                        {"\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a"}
                       </label>
-                      <div className="pulse-check-mood-grid grid grid-cols-4 gap-2">
+                      <div className={`pulse-check-mood-grid grid grid-cols-4 ${quickMode ? "gap-1.5" : "gap-2"}`}>
                         {MOODS.map((item) => {
                           const isSelected = mood === item.id;
                           const mStyle = MOOD_COSMIC[item.id];
@@ -1465,7 +1499,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                               onClick={() => {
                                 setMoodValue(item.id);
                               }}
-                              className="inline-flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
+                              className={`inline-flex items-center justify-center gap-1 px-1.5 ${quickMode ? "py-1.5" : "py-2"} rounded-xl text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0`}
                               style={{
                                 background: isSelected ? mStyle.bg : "rgba(255, 255, 255, 0.05)",
                                 border: `1px solid ${isSelected ? mStyle.border : "rgba(255, 255, 255, 0.08)"}`,
@@ -1480,12 +1514,12 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                           );
                         })}
                       </div>
-                      {isMoodSelectionUnstable && (
+                      {!quickMode && isMoodSelectionUnstable && (
                         <p className="mt-1 text-center text-[11px] font-semibold" style={{ color: "rgba(251,191,36,0.95)" }}>
                           {"\u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631 \u0628\u064a\u0646 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0645\u062a\u0630\u0628\u0630\u0628\u060c \u062b\u0628\u0651\u062a \u0627\u0644\u062d\u0627\u0644\u0629 \u0627\u0644\u0623\u0642\u0631\u0628 \u0644\u0634\u0639\u0648\u0631\u0643."}
                         </p>
                       )}
-                      {shouldOfferWeeklyMoodRecommendation && weeklyMoodRecommendation && (
+                      {!quickMode && shouldOfferWeeklyMoodRecommendation && weeklyMoodRecommendation && (
                         <div className="mt-1 flex flex-col items-center gap-1 py-0.5">
                           <button
                             type="button"
@@ -1503,17 +1537,18 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       )}
                     </div>
                   )}
-                  <p className="text-center text-sm" style={{ color: "var(--text-muted)" }}>
+                  {!quickMode && <p className="text-center text-sm" style={{ color: "var(--text-muted)" }}>
                     {showEnergyDetails ? energySupportLine : "\u062a\u0641\u0627\u0635\u064a\u0644 \u0645\u062e\u062a\u0635\u0631\u0629"}
-                  </p>
-                  <button
+                  </p>}
+                  {!quickMode && <button
                     type="button"
                     onClick={() => setShowEnergyDetails((prev) => !prev)}
                     className="text-xs font-semibold self-center"
                     style={{ color: "var(--text-secondary)" }}
                   >
                     {showEnergyDetails ? "\u0625\u062e\u0641\u0627\u0621 \u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644" : "\u0634\u0631\u062d \u0623\u0643\u062b\u0631"}
-                  </button>{showEnergyDetails && recentEnergySparkline && (
+                  </button>}
+                  {!quickMode && showEnergyDetails && recentEnergySparkline && (
                     <div className="pt-1.5 flex flex-col items-center gap-1">
                       <span className="text-[10px] font-semibold" style={{ color: "var(--text-muted)" }}>
                         {"\u0622\u062e\u0631 7 \u0642\u0631\u0627\u0621\u0627\u062a \u0637\u0627\u0642\u0629"}
@@ -1542,7 +1577,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               {!quickMode && step === 2 && (
                 <motion.div className="pulse-check-section mt-1 flex flex-col gap-2" custom={2} variants={cosmicUp} initial="hidden" animate="visible">
                   <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
-                    {"\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a"} <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
+                    {"\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a"}
                   </label>
                   <p className="text-[11px] -mt-1 mb-0.5" style={{ color: "var(--text-muted)", minHeight: "1rem" }}>
                     {moodSubtitle}
@@ -1643,15 +1678,15 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 </motion.div>
               )}
 
-              {step === 3 && (
-                <motion.div className="pulse-check-section mt-1 flex flex-col gap-2" custom={3} variants={cosmicUp} initial="hidden" animate="visible">
-                  <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
-                    {"\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u062d\u0627\u0644\u064a"} <span style={{ color: "rgba(248, 113, 113, 0.95)" }}>*</span>
+              {(step === 3 || (quickMode && step === 1)) && (
+                <motion.div className={`pulse-check-section ${quickMode ? "mt-0.5" : "mt-1"} flex flex-col gap-2`} custom={3} variants={cosmicUp} initial="hidden" animate="visible">
+                  <label className={`text-sm font-semibold ${quickMode ? "mb-1.5" : "mb-1"}`} style={{ color: "var(--text-primary)" }}>
+                    {"\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u062d\u0627\u0644\u064a"}
                   </label>
-                  <p className="text-[11px] -mt-1 mb-0.5" style={{ color: "var(--text-muted)", minHeight: "1rem" }}>
+                  {!quickMode && <p className="text-[11px] -mt-1 mb-0.5" style={{ color: "var(--text-muted)", minHeight: "1rem" }}>
                     {focusSubtitle}
-                  </p>
-                  <div
+                  </p>}
+                  {!quickMode && <div
                     data-testid="pulse-focus-summary"
                     className="rounded-xl px-3 py-2 text-center"
                     style={{
@@ -1665,7 +1700,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                     <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
                       {focusStateLabel}
                     </p>
-                  </div>
+                  </div>}
                   <div className="grid grid-cols-2 gap-2">
                     {FOCUS_OPTIONS.map((item) => {
                       const isSelected = focus === item.id;
@@ -1693,10 +1728,26 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       );
                     })}
                   </div>
-                  <p className="text-center text-[11px]" style={{ color: "var(--text-muted)" }}>
+                  {!quickMode && <p className="text-center text-[11px]" style={{ color: "var(--text-muted)" }}>
                     {focusQuickHint}
-                  </p>
+                  </p>}
                 </motion.div>
+              )}
+
+              {quickMode && step === 1 && (
+                <div className="pt-2.5">
+                  <motion.button
+                    data-testid="pulse-primary-action-quick"
+                    type="button"
+                    onClick={handleSubmit}
+                    aria-disabled={!isComplete}
+                    className={`w-full cta-primary py-2.5 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 ${isComplete ? "" : "opacity-80"}`}
+                    whileHover={{ scale: 1.01, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {isSavingPulse ? "\u062a\u0645 \u0627\u0644\u062d\u0641\u0638" : "\u0627\u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643"}
+                  </motion.button>
+                </div>
               )}
 
               {step === 4 && (
@@ -1762,7 +1813,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               )}
             </div>
 
-            <div
+            {!quickMode && <div
               data-testid="pulse-footer"
               className="px-4 sm:px-5 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
               style={{
@@ -1776,7 +1827,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               </p>
 
               <div className="flex items-center gap-2">
-                {step > 1 && (
+                {step > 1 && !quickMode && (
                   <button
                     type="button"
                     onClick={handlePreviousStep}
@@ -1789,16 +1840,16 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 <motion.button
                   data-testid="pulse-primary-action"
                   type="button"
-                  onClick={step < 4 ? handleNextStep : handleSubmit}
-                  aria-disabled={step < 4 ? !currentStepComplete : !isComplete}
-                  className={`w-full cta-primary py-2.5 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 ${(step < 4 ? currentStepComplete : isComplete) ? "" : "opacity-80"}`}
+                  onClick={quickMode ? handleSubmit : (step < 4 ? handleNextStep : handleSubmit)}
+                  aria-disabled={quickMode ? !isComplete : (step < 4 ? !currentStepComplete : !isComplete)}
+                  className={`w-full cta-primary py-2.5 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 ${(quickMode ? isComplete : (step < 4 ? currentStepComplete : isComplete)) ? "" : "opacity-80"}`}
                   whileHover={{ scale: 1.01, y: -1 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {step < 4 ? "\u0627\u0644\u062a\u0627\u0644\u064a" : (isSavingPulse ? "\u062a\u0645 \u0627\u0644\u062d\u0641\u0638" : "\u0627\u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643")}
+                  {quickMode ? (isSavingPulse ? "\u062a\u0645 \u0627\u0644\u062d\u0641\u0638" : "\u0627\u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643") : (step < 4 ? "\u0627\u0644\u062a\u0627\u0644\u064a" : (isSavingPulse ? "\u062a\u0645 \u0627\u0644\u062d\u0641\u0638" : "\u0627\u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643"))}
                 </motion.button>
               </div>
-            </div>
+            </div>}
           </motion.div>
         </motion.div>
       )}

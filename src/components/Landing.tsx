@@ -381,14 +381,11 @@ export const Landing: FC<LandingProps> = ({
                     color: "rgba(147, 197, 253, 0.95)",
                     background: "rgba(59, 130, 246, 0.12)"
                   }}
-                  aria-label="إضافة للشاشة الرئيسية"
+                  aria-label="تثبيت التطبيق"
                 >
                   <Smartphone className="w-4 h-4" />
-                  إضافة للشاشة الرئيسية
+                  تثبيت التطبيق
                 </button>
-                <p className="mt-2 text-[12px] text-center" style={{ color: "rgba(147, 197, 253, 0.9)" }}>
-                  بدون Google Play وبدون تنزيل APK
-                </p>
               </>
             )}
           </motion.div>

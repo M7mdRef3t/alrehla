@@ -61,9 +61,9 @@ import { runtimeEnv } from "./config/runtimeEnv";
 
 type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
 type PulseSubmitPayload = {
-  energy: number;
-  mood: PulseMood;
-  focus: PulseFocus;
+  energy: number | null;
+  mood: PulseMood | null;
+  focus: PulseFocus | null;
   auto?: boolean;
   notes?: string;
   energyReasons?: string[];
@@ -443,11 +443,16 @@ export default function App() {
   const [showCocoon, setShowCocoon] = useState(false);
   /** Ø¹Ù†Ø¯ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªÙ†ÙØ³: Ù„Ùˆ ÙÙØªØ­ Ù…Ù† Ù…Ø³Ø§Ø± Ø¯Ù‚ÙŠÙ‚Ø© Ø´Ø­Ù† Ù†Ø±Ø¬Ø¹ Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø®Ø±ÙŠØ·Ø© */
   const [returnToGoalOnBreathingClose, setReturnToGoalOnBreathingClose] = useState(false);
+  const breathingFromCocoonRef = useRef(false);
+  const [suppressLowPulseCocoonUntil, setSuppressLowPulseCocoonUntil] = useState(0);
   const [suppressCocoonReopen, setSuppressCocoonReopen] = useState(false);
   const cocoonSuppressTimerRef = useRef<number | null>(null);
+  const cocoonSuppressedUntilRef = useRef<number>(0);
+  const lastAutoCocoonOpenAtRef = useRef<number>(0);
   const [showNoiseSilencingPulse, setShowNoiseSilencingPulse] = useState(false);
   const [pendingCocoonAfterNoise, setPendingCocoonAfterNoise] = useState(false);
   const [postNoiseSessionMessage, setPostNoiseSessionMessage] = useState(false);
+  const [postBreathingMessage, setPostBreathingMessage] = useState(false);
   const [pulseDeltaToast, setPulseDeltaToast] = useState<PulseDeltaToast | null>(null);
   const [lastPulseInsights, setLastPulseInsights] = useState<MemoryMatch[]>([]);
   const [showConsciousnessArchive, setShowConsciousnessArchive] = useState(false);
@@ -558,12 +563,21 @@ export default function App() {
     skipNextCheck: skipNextPulseCheck
   } = usePulseCheckLogic(canUsePulseCheck, screen, shouldGateStartWithAuth);
 
-  const openCocoonModal = useCallback(() => {
-    if (suppressCocoonReopen) return;
+  const openCocoonModal = useCallback((source: "auto" | "manual" = "manual") => {
+    if (Date.now() < cocoonSuppressedUntilRef.current) return;
+    // Guard against re-opening cocoon while breathing is already active.
+    if (suppressCocoonReopen || showBreathing) return;
+    if (source === "auto") {
+      const now = Date.now();
+      // Deduplicate repeated auto-open calls from the same pulse flow.
+      if (now - lastAutoCocoonOpenAtRef.current < 30_000) return;
+      lastAutoCocoonOpenAtRef.current = now;
+    }
     setShowCocoon(true);
-  }, [suppressCocoonReopen]);
+  }, [showBreathing, suppressCocoonReopen]);
 
   const suppressCocoonFor = useCallback((ms = 2000) => {
+    cocoonSuppressedUntilRef.current = Date.now() + ms;
     setSuppressCocoonReopen(true);
     if (cocoonSuppressTimerRef.current != null) {
       clearTimeout(cocoonSuppressTimerRef.current);
@@ -572,6 +586,7 @@ export default function App() {
     if (!windowRef) return;
     cocoonSuppressTimerRef.current = windowRef.setTimeout(() => {
       setSuppressCocoonReopen(false);
+      cocoonSuppressedUntilRef.current = 0;
       cocoonSuppressTimerRef.current = null;
     }, ms);
   }, []);
@@ -581,6 +596,7 @@ export default function App() {
       if (cocoonSuppressTimerRef.current != null) {
         clearTimeout(cocoonSuppressTimerRef.current);
       }
+      cocoonSuppressedUntilRef.current = 0;
     };
   }, []);
 
@@ -1466,15 +1482,25 @@ export default function App() {
 
   const isDefaultPulseSubmit = (payload: PulseSubmitPayload) => {
     const notes = payload.notes?.trim() ?? "";
-    return payload.energy === 5 && payload.mood === "calm" && payload.focus === "none" && notes.length === 0;
+    return payload.energy == null && payload.mood == null && payload.focus == null && notes.length === 0;
   };
 
   const buildAutoPulsePayload = (): PulseSubmitPayload => ({
-    energy: 5,
-    mood: "calm",
-    focus: "none",
+    energy: null,
+    mood: null,
+    focus: null,
     auto: true
   });
+
+  const hasConcretePulseSelection = (payload: PulseSubmitPayload): payload is {
+    energy: number;
+    mood: PulseMood;
+    focus: PulseFocus;
+    auto?: boolean;
+    notes?: string;
+    energyReasons?: string[];
+    energyConfidence?: PulseEnergyConfidence;
+  } => payload.energy != null && payload.mood != null && payload.focus != null;
 
   useEffect(() => {
     const onPageHide = () => {
@@ -1493,57 +1519,90 @@ export default function App() {
     else recordFlowEvent("pulse_completed_with_choices");
     trackEvent(AnalyticsEvents.MICRO_COMPASS_COMPLETED, {
       gate: "pulse",
-      pulse_energy: payload.energy,
-      pulse_mood: payload.mood,
-      pulse_focus: payload.focus,
+      pulse_energy: payload.energy ?? "none",
+      pulse_mood: payload.mood ?? "none",
+      pulse_focus: payload.focus ?? "none",
       pulse_auto: payload.auto ?? false
     });
     closePulseCheck(true, "programmatic");
 
     if (shouldPromptAuthAfterPulse) {
-      const intent: PostAuthIntent = {
-        kind: "start_recovery",
-        pulse: payload,
-        createdAt: Date.now()
-      };
+      const intent: PostAuthIntent = hasConcretePulseSelection(payload)
+        ? {
+            kind: "start_recovery",
+            pulse: payload,
+            createdAt: Date.now()
+          }
+        : {
+            kind: "login",
+            createdAt: Date.now()
+          };
       setPostAuthIntentState(intent);
       setShowAuthModal(true);
       return;
     }
 
-    logPulse(payload);
+    if (hasConcretePulseSelection(payload)) {
+      logPulse(payload);
+    }
+
+    const isLow = payload.energy != null && payload.energy <= 3;
+    const isAngry = payload.mood === "angry";
+
+    if (isLow) {
+      if (themeBeforePulse == null) {
+        setThemeBeforePulse(theme);
+      }
+      setTheme("dark");
+      snoozeNotifications(240);
+    }
+
     openDawayirSetup();
+
+    if (isAngry) {
+      setShowNoiseSilencingPulse(true);
+      if (isLow) setPendingCocoonAfterNoise(true);
+      return;
+    }
+
+    if (isLow) {
+      openCocoonModal("auto");
+    }
   };
 
   const handlePulseSubmit = useCallback((payload: PulseSubmitPayload) => {
     recordFlowEvent("pulse_completed");
     if (isDefaultPulseSubmit(payload)) recordFlowEvent("pulse_completed_without_choices");
     else recordFlowEvent("pulse_completed_with_choices");
-    logPulse(payload);
-    showPulseDeltaFeedback(payload.energy);
+    if (hasConcretePulseSelection(payload)) {
+      logPulse(payload);
+      showPulseDeltaFeedback(payload.energy);
+    }
     closePulseCheck(true, "programmatic");
 
     // ØªÙˆØµÙŠÙ„ Ø§Ù„Ø¨ÙˆØµÙ„Ø© Ø¨Ù…Ø±Ø¢Ø© Ø§Ù„ÙˆØ¹ÙŠ (ØºÙŠØ± Ù…Ø¹Ø·Ù‘ÙÙ„ Ù„Ù„ØªØ¬Ø±Ø¨Ø©)
     const numericPart = `Ø·Ø§Ù‚Ø© ${payload.energy}/10ØŒ Ù…Ø²Ø§Ø¬ ${payload.mood}, ØªØ±ÙƒÙŠØ² ${payload.focus}`;
     const feelingText = payload.notes ? `${payload.notes.trim()}\n\n(${numericPart})` : numericPart;
-    const userId = authUser?.id ?? null;
-    void (async () => {
-      try {
-        await consciousnessService.saveMoment(userId, feelingText);
-        const matches = await consciousnessService.recallSimilarMoments(feelingText, {
-          threshold: 0.7,
-          limit: 3,
-          sources: ["pulse"]
-        });
-        if (matches && matches.length > 0) {
-          setLastPulseInsights(matches.slice(0, 3));
+    if (hasConcretePulseSelection(payload)) {
+      const userId = authUser?.id ?? null;
+      void (async () => {
+        try {
+          await consciousnessService.saveMoment(userId, feelingText);
+          const matches = await consciousnessService.recallSimilarMoments(feelingText, {
+            threshold: 0.7,
+            limit: 3,
+            sources: ["pulse"]
+          });
+          if (matches && matches.length > 0) {
+            setLastPulseInsights(matches.slice(0, 3));
+          }
+        } catch (err) {
+          console.error("Pulse consciousness wiring error:", err);
         }
-      } catch (err) {
-        console.error("Pulse consciousness wiring error:", err);
-      }
-    })();
+      })();
+    }
 
-    const isLow = payload.energy <= 3;
+    const isLow = payload.energy != null && payload.energy <= 3;
     const isAngry = payload.mood === "angry";
 
     if (isLow) {
@@ -1564,7 +1623,7 @@ export default function App() {
     }
 
     if (isLow) {
-      openCocoonModal();
+      openCocoonModal("auto");
     }
   }, [authUser, closePulseCheck, logPulse, openCocoonModal, setTheme, setThemeBeforePulse, showPulseDeltaFeedback, snoozeNotifications, theme, themeBeforePulse]);
 
@@ -1622,6 +1681,7 @@ export default function App() {
     if (lastPulse.energy >= 8) return "high";
     return "normal";
   }, [lastPulse]);
+  const isLowPulseCocoonSuppressed = Date.now() < suppressLowPulseCocoonUntil;
 
   const challengeTarget = useMemo(() => {
     const candidates = nodes
@@ -1912,6 +1972,32 @@ export default function App() {
             </div>
           </motion.div>
         )}
+        {postBreathingMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.35 }}
+            className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
+            role="status"
+            aria-live="polite"
+          >
+            <div
+              className="bento-block text-center py-4 px-6"
+              style={{
+                borderColor: "rgba(20, 184, 166, 0.3)",
+                background: "rgba(20, 184, 166, 0.08)"
+              }}
+            >
+              <p className="text-base font-medium" style={{ color: "var(--text-primary)" }}>
+                تم الشحن.. رجعت للخريطة
+              </p>
+              <p className="text-sm mt-1 opacity-90" style={{ color: "var(--text-secondary)" }}>
+                كمّل خطوة بسيطة وبس
+              </p>
+            </div>
+          </motion.div>
+        )}
         {postNoiseSessionMessage && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -2035,8 +2121,8 @@ export default function App() {
         </div>
       )}
       {/* Legacy pattern removed â€” nebula-bg handles the cosmic background */}
-      {isSupabaseReady && !isAdminRoute && !showAuthModal && !showPulseCheck && (
-        <div className="fixed z-80 top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4" dir="ltr">
+      {!isAdminRoute && !showAuthModal && !showPulseCheck && (
+        <div className="fixed z-[80] top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4" dir="ltr">
           <button
             type="button"
             onClick={() => {
@@ -2148,6 +2234,7 @@ export default function App() {
                 pulseMode={pulseMode}
                 pulseInsight={pulseInsight}
                 onOpenCocoon={openCocoonModal}
+                suppressLowPulseCocoon={isLowPulseCocoonSuppressed}
                 onOpenNoise={() => setShowNoiseSilencingPulse(true)}
                 canUseBasicDiagnosis={availableFeatures.basic_diagnosis}
                 onFeatureLocked={setLockedFeature}
@@ -2271,7 +2358,9 @@ export default function App() {
               if (reason === "close_button") {
                 const autoPayload = buildAutoPulsePayload();
                 if (pulseCheckContext === "start_recovery") {
-                  logPulse(autoPayload);
+                  if (hasConcretePulseSelection(autoPayload)) {
+                    logPulse(autoPayload);
+                  }
                   closePulseCheck(true, "programmatic");
                   openDawayirSetup();
                   return;
@@ -2288,18 +2377,31 @@ export default function App() {
           <CocoonModeModal
             isOpen={showCocoon}
             onStart={() => {
+              breathingFromCocoonRef.current = true;
               setShowCocoon(false);
+              setPendingCocoonAfterNoise(false);
+              suppressCocoonFor(90000);
               setReturnToGoalOnBreathingClose(true);
+              skipNextPulseCheck();
+              if (goalId === "unknown") {
+                openDefaultGoalMap();
+              } else {
+                setScreen("map");
+              }
               setShowBreathing(true);
             }}
             canSkip={canSkipCocoonBreathing}
             onSkip={() => {
+              breathingFromCocoonRef.current = false;
               setShowCocoon(false);
               setPendingCocoonAfterNoise(false);
               suppressCocoonFor(4000);
               goToGoals();
             }}
-            onClose={() => setShowCocoon(false)}
+            onClose={() => {
+              breathingFromCocoonRef.current = false;
+              setShowCocoon(false);
+            }}
           />
         )}
 
@@ -2310,14 +2412,14 @@ export default function App() {
               setShowNoiseSilencingPulse(false);
               if (pendingCocoonAfterNoise) {
                 setPendingCocoonAfterNoise(false);
-                openCocoonModal();
+                openCocoonModal("auto");
               }
             }}
             onSessionComplete={() => {
               setShowNoiseSilencingPulse(false);
               if (pendingCocoonAfterNoise) {
                 setPendingCocoonAfterNoise(false);
-                openCocoonModal();
+                openCocoonModal("auto");
               }
               setPostNoiseSessionMessage(true);
               setTimeout(() => setPostNoiseSessionMessage(false), 4500);
@@ -2336,13 +2438,29 @@ export default function App() {
         {showBreathing && (
           <BreathingOverlay
             onClose={() => {
+              const fromCocoon = breathingFromCocoonRef.current;
+              const lowPulseRecently = Boolean(
+                lastPulse &&
+                (Date.now() - (lastPulse.timestamp ?? 0) < 24 * 60 * 60 * 1000) &&
+                lastPulse.energy <= 3
+              );
+              const shouldForceMapAfterBreathing = fromCocoon || returnToGoalOnBreathingClose || lowPulseRecently;
+              breathingFromCocoonRef.current = false;
               setShowBreathing(false);
-              if (returnToGoalOnBreathingClose) {
+              setShowCocoon(false);
+              setPendingCocoonAfterNoise(false);
+              suppressCocoonFor(shouldForceMapAfterBreathing ? 90_000 : 8_000);
+              if (shouldForceMapAfterBreathing) {
+                setSuppressLowPulseCocoonUntil(Date.now() + 20 * 60 * 1000);
                 setReturnToGoalOnBreathingClose(false);
-                setShowCocoon(false);
-                setPendingCocoonAfterNoise(false);
-                suppressCocoonFor(4000);
-                setScreen("map");
+                skipNextPulseCheck();
+                if (goalId === "unknown") {
+                  openDefaultGoalMap();
+                } else {
+                  setScreen("map");
+                }
+                setPostBreathingMessage(true);
+                setTimeout(() => setPostBreathingMessage(false), 4000);
               }
             }}
           />
