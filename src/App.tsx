@@ -61,9 +61,9 @@ import { runtimeEnv } from "./config/runtimeEnv";
 
 type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
 type PulseSubmitPayload = {
-  energy: number;
-  mood: PulseMood;
-  focus: PulseFocus;
+  energy: number | null;
+  mood: PulseMood | null;
+  focus: PulseFocus | null;
   auto?: boolean;
   notes?: string;
   energyReasons?: string[];
@@ -1482,15 +1482,25 @@ export default function App() {
 
   const isDefaultPulseSubmit = (payload: PulseSubmitPayload) => {
     const notes = payload.notes?.trim() ?? "";
-    return payload.energy === 5 && payload.mood === "calm" && payload.focus === "none" && notes.length === 0;
+    return payload.energy == null && payload.mood == null && payload.focus == null && notes.length === 0;
   };
 
   const buildAutoPulsePayload = (): PulseSubmitPayload => ({
-    energy: 5,
-    mood: "calm",
-    focus: "none",
+    energy: null,
+    mood: null,
+    focus: null,
     auto: true
   });
+
+  const hasConcretePulseSelection = (payload: PulseSubmitPayload): payload is {
+    energy: number;
+    mood: PulseMood;
+    focus: PulseFocus;
+    auto?: boolean;
+    notes?: string;
+    energyReasons?: string[];
+    energyConfidence?: PulseEnergyConfidence;
+  } => payload.energy != null && payload.mood != null && payload.focus != null;
 
   useEffect(() => {
     const onPageHide = () => {
@@ -1509,27 +1519,34 @@ export default function App() {
     else recordFlowEvent("pulse_completed_with_choices");
     trackEvent(AnalyticsEvents.MICRO_COMPASS_COMPLETED, {
       gate: "pulse",
-      pulse_energy: payload.energy,
-      pulse_mood: payload.mood,
-      pulse_focus: payload.focus,
+      pulse_energy: payload.energy ?? "none",
+      pulse_mood: payload.mood ?? "none",
+      pulse_focus: payload.focus ?? "none",
       pulse_auto: payload.auto ?? false
     });
     closePulseCheck(true, "programmatic");
 
     if (shouldPromptAuthAfterPulse) {
-      const intent: PostAuthIntent = {
-        kind: "start_recovery",
-        pulse: payload,
-        createdAt: Date.now()
-      };
+      const intent: PostAuthIntent = hasConcretePulseSelection(payload)
+        ? {
+            kind: "start_recovery",
+            pulse: payload,
+            createdAt: Date.now()
+          }
+        : {
+            kind: "login",
+            createdAt: Date.now()
+          };
       setPostAuthIntentState(intent);
       setShowAuthModal(true);
       return;
     }
 
-    logPulse(payload);
+    if (hasConcretePulseSelection(payload)) {
+      logPulse(payload);
+    }
 
-    const isLow = payload.energy <= 3;
+    const isLow = payload.energy != null && payload.energy <= 3;
     const isAngry = payload.mood === "angry";
 
     if (isLow) {
@@ -1557,31 +1574,35 @@ export default function App() {
     recordFlowEvent("pulse_completed");
     if (isDefaultPulseSubmit(payload)) recordFlowEvent("pulse_completed_without_choices");
     else recordFlowEvent("pulse_completed_with_choices");
-    logPulse(payload);
-    showPulseDeltaFeedback(payload.energy);
+    if (hasConcretePulseSelection(payload)) {
+      logPulse(payload);
+      showPulseDeltaFeedback(payload.energy);
+    }
     closePulseCheck(true, "programmatic");
 
     // ØªÙˆØµÙŠÙ„ Ø§Ù„Ø¨ÙˆØµÙ„Ø© Ø¨Ù…Ø±Ø¢Ø© Ø§Ù„ÙˆØ¹ÙŠ (ØºÙŠØ± Ù…Ø¹Ø·Ù‘ÙÙ„ Ù„Ù„ØªØ¬Ø±Ø¨Ø©)
     const numericPart = `Ø·Ø§Ù‚Ø© ${payload.energy}/10ØŒ Ù…Ø²Ø§Ø¬ ${payload.mood}, ØªØ±ÙƒÙŠØ² ${payload.focus}`;
     const feelingText = payload.notes ? `${payload.notes.trim()}\n\n(${numericPart})` : numericPart;
-    const userId = authUser?.id ?? null;
-    void (async () => {
-      try {
-        await consciousnessService.saveMoment(userId, feelingText);
-        const matches = await consciousnessService.recallSimilarMoments(feelingText, {
-          threshold: 0.7,
-          limit: 3,
-          sources: ["pulse"]
-        });
-        if (matches && matches.length > 0) {
-          setLastPulseInsights(matches.slice(0, 3));
+    if (hasConcretePulseSelection(payload)) {
+      const userId = authUser?.id ?? null;
+      void (async () => {
+        try {
+          await consciousnessService.saveMoment(userId, feelingText);
+          const matches = await consciousnessService.recallSimilarMoments(feelingText, {
+            threshold: 0.7,
+            limit: 3,
+            sources: ["pulse"]
+          });
+          if (matches && matches.length > 0) {
+            setLastPulseInsights(matches.slice(0, 3));
+          }
+        } catch (err) {
+          console.error("Pulse consciousness wiring error:", err);
         }
-      } catch (err) {
-        console.error("Pulse consciousness wiring error:", err);
-      }
-    })();
+      })();
+    }
 
-    const isLow = payload.energy <= 3;
+    const isLow = payload.energy != null && payload.energy <= 3;
     const isAngry = payload.mood === "angry";
 
     if (isLow) {
@@ -2337,7 +2358,9 @@ export default function App() {
               if (reason === "close_button") {
                 const autoPayload = buildAutoPulsePayload();
                 if (pulseCheckContext === "start_recovery") {
-                  logPulse(autoPayload);
+                  if (hasConcretePulseSelection(autoPayload)) {
+                    logPulse(autoPayload);
+                  }
                   closePulseCheck(true, "programmatic");
                   openDawayirSetup();
                   return;
