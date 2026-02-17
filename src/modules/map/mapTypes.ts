@@ -157,4 +157,7 @@ export interface MapNode {
   missionProgress?: MissionProgress;
   /** في المنطقة الرمادية (تعافي) — الدائرة خارج الخريطة الملونة، لون باهت */
   isDetached?: boolean;
+  /** أرشفة الشخص بدل الحذف النهائي — بيختفي من الخريطة بس بيفضل محفوظ */
+  isNodeArchived?: boolean;
+  archivedAt?: number;
 }

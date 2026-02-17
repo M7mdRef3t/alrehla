@@ -1,4 +1,4 @@
-import { getAdminSupabase } from "./_shared.js";
+import { getAdminSupabase } from "./_shared";
 
 function verifyCron(req: any): boolean {
   const secret = process.env.CRON_SECRET;

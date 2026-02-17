@@ -7,7 +7,9 @@ import type { Ring, MapNode as MapNodeType } from "./mapTypes";
 import { useMapState } from "../../state/mapState";
 import { useMeState } from "../../state/meState";
 import { mapCopy } from "../../copy/map";
+import { hasSeenOnboarding } from "../../utils/mapOnboarding";
 import { getMissionProgressSummary } from "../../utils/missionProgress";
+import { JourneyToast } from "../../components/JourneyToast";
 
 /* ════════════════════════════════════════════════
    🌌 COSMIC MAP CANVAS — Digital Sanctuary
@@ -129,7 +131,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   const [showDelete, setShowDelete] = useState(false);
   const [pulseDone, setPulseDone] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
-  const deleteNode = useMapState((s) => s.deleteNode);
+  const archiveNode = useMapState((s) => s.archiveNode);
 
   useEffect(() => {
     if (isHighlighted) {
@@ -176,10 +178,10 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const ok = typeof window === "undefined" ? true : window.confirm(`هل تريد حذف "${node.label}" من الخريطة؟`);
+    const ok = typeof window === "undefined" ? true : window.confirm(`تأكيد: خرّج "${node.label}" من دوايرك؟\nهيتحفظ في "أشخاص مشيوا" — تقدر ترجعه لو احتجت.`);
     if (!ok) return;
-    deleteNode(node.id);
-  }, [deleteNode, node.id, node.label]);
+    archiveNode(node.id);
+  }, [archiveNode, node.id, node.label]);
 
   const blockDeletePointer = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -216,7 +218,8 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
       className="relative z-20"
       initial={justAdded ? { scale: 0, opacity: 0 } : false}
       animate={justAdded ? { scale: 1, opacity: 1 } : undefined}
-      transition={justAdded ? { type: "spring", stiffness: 280, damping: 22, mass: 0.6 } : undefined}
+      exit={{ scale: 0.6, opacity: 0, y: -12, filter: "blur(4px)" }}
+      transition={justAdded ? { type: "spring", stiffness: 160, damping: 28, mass: 0.8 } : { duration: 0.35, ease: "easeOut" }}
     >
       {/* Breathing aura ring — نبضة أقوى عند التحديد من السجل */}
       <motion.div
@@ -227,26 +230,45 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           boxShadow: `0 0 20px ${auraColor}`
         }}
         animate={isHighlighted && !pulseDone
-          ? { opacity: [0.6, 1, 0.6], scale: [1, 1.25, 1] }
-          : { opacity: [0.4, 0.8, 0.4], scale: [1, 1.08, 1] }
+          ? {
+            opacity: [0.6, 1, 0.6],
+            scale: [1, 1.25, 1],
+            x: [0, 2, -1, 1, 0],
+            y: [0, -1, 2, -2, 0]
+          }
+          : {
+            opacity: [0.4, 0.8, 0.4],
+            scale: [1, 1.08, 1],
+            x: [0, 1.5, -1, 1, 0],
+            y: [0, -1.2, 1.8, -0.8, 0]
+          }
         }
         transition={{
-          duration: isHighlighted && !pulseDone ? 1.2 : 3,
-          repeat: isHighlighted && !pulseDone ? 2 : Infinity,
-          ease: isHighlighted && !pulseDone ? "easeOut" : "easeInOut"
+          duration: isHighlighted && !pulseDone ? 1.2 : 6 + (nodeIndex % 3),
+          repeat: Infinity,
+          ease: isHighlighted && !pulseDone ? "easeOut" : "easeInOut",
+          delay: (nodeIndex % 5) * 0.4
         }}
       />
 
       {/* Main node body — Glass Orb */}
-      <div
+      <motion.div
         ref={setNodeRef}
-        className={`relative z-10 node-glass ${glowClass} select-none flex items-center gap-0.5 pr-1 ${
-          isDragging ? "opacity-90 scale-105" : ""
-        } ${
-          isDetached ? "saturate-50 opacity-60" : ""
-        } ${
-          hasMismatch ? "border-amber-500/50!" : ""
-        }`}
+        className={`relative z-10 node-glass ${glowClass} select-none flex items-center gap-0.5 pr-1 ${isDragging ? "opacity-90 scale-105" : ""
+          } ${isDetached ? "saturate-50 opacity-60" : ""
+          } ${hasMismatch ? "border-amber-500/50!" : ""
+          }`}
+        animate={!isDragging ? {
+          y: [0, -4, 2, -1, 0],
+          x: [0, 2, -3, 1, 0],
+          rotate: [0, 1, -1, 0.5, 0]
+        } : {}}
+        transition={{
+          duration: 9 + (nodeIndex % 4),
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: (nodeIndex % 7) * 0.6
+        }}
       >
         {/* Avatar — cosmic circle */}
         <span className="shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold"
@@ -282,7 +304,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           }
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          transition={{ type: "spring", stiffness: 200, damping: 30 }}
         >
           <span className="flex flex-col items-start">
             <span className="text-xs md:text-sm font-semibold">{node.label}</span>
@@ -316,7 +338,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         >
           <GripVertical className="w-4 h-4" strokeWidth={2} />
         </span>
-      </div>
+      </motion.div>
 
       {/* Mismatch warning */}
       {hasMismatch && (
@@ -349,10 +371,10 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
             onPointerDown={blockDeletePointer}
             className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center z-30"
             style={{
-              background: "linear-gradient(135deg, #f87171, #dc2626)",
-              boxShadow: "0 0 12px rgba(248, 113, 113, 0.3)"
+              background: "linear-gradient(135deg, #94a3b8, #64748b)",
+              boxShadow: "0 0 10px rgba(100, 116, 139, 0.25)"
             }}
-            title="احذف الشخص من الخريطة"
+            title="خرّجه من دوايرك دلوقتي"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
@@ -478,13 +500,43 @@ interface MapCanvasProps {
   highlightNodeId?: string | null;
 }
 
+
 export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenDetails = true, goalIdFilter, galaxyGoalIds, highlightNodeId }) => {
   const allNodes = useMapState((s) => s.nodes);
   const lastAddedNodeId = useMapState((s) => s.lastAddedNodeId);
   const nodes = useMemo(
-    () => filterNodesByContext(allNodes, goalIdFilter, galaxyGoalIds),
+    () => filterNodesByContext(allNodes, goalIdFilter, galaxyGoalIds).filter((n) => !n.isNodeArchived),
     [allNodes, goalIdFilter, galaxyGoalIds]
   );
+
+  const [showArchiveToast, setShowArchiveToast] = useState(false);
+  const [lastArchivedName, setLastArchivedName] = useState<string | undefined>(undefined);
+  const archivedCount = useMemo(() => allNodes.filter((n) => n.isNodeArchived).length, [allNodes]);
+  const prevArchivedCountRef = useRef(archivedCount);
+  useEffect(() => {
+    if (archivedCount > prevArchivedCountRef.current) {
+      // Find the node that was just archived (most recently archivedAt)
+      const justArchived = allNodes
+        .filter((n) => n.isNodeArchived && n.archivedAt)
+        .sort((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0))[0];
+      setLastArchivedName(justArchived?.label);
+      setShowArchiveToast(true);
+      const t = setTimeout(() => setShowArchiveToast(false), 4500);
+      prevArchivedCountRef.current = archivedCount;
+      return () => clearTimeout(t);
+    }
+    prevArchivedCountRef.current = archivedCount;
+  }, [archivedCount, allNodes]);
+
+  const [showDragHint, setShowDragHint] = useState(false);
+  useEffect(() => {
+    // Only show hint if no nodes yet, or specifically if onboarding not seen
+    if (!hasSeenOnboarding() || (nodes.length > 0 && nodes.length < 3)) {
+      const t = setTimeout(() => setShowDragHint(true), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [nodes.length]);
+
   const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
   const setDetached = useMapState((s) => s.setDetached);
   const battery = useMeState((s) => s.battery);
@@ -551,223 +603,363 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
     };
   }, [nodes]);
 
+  const nodePositions = useMemo(() => {
+    const posMap: Record<string, { x: number; y: number }> = {};
+    detachedNodes.forEach((node, idx) => {
+      posMap[node.id] = getGreyZonePosition(idx, detachedNodes.length);
+    });
+    Object.entries(nodesByRing).forEach(([ring, ringNodes]) => {
+      ringNodes.forEach((node, idx) => {
+        posMap[node.id] = getRingPosition(ring as Ring, idx, ringNodes.length);
+      });
+    });
+    return posMap;
+  }, [detachedNodes, nodesByRing]);
+
+  const connectionThreads = useMemo(() => {
+    const lines: Array<{ id: string; x1: number; y1: number; x2: number; y2: number; color: string }> = [];
+    const goalGroups: Record<string, typeof nodes> = {};
+
+    nodes.forEach((node) => {
+      // Only connect family, work, love groups for now to avoid clutter
+      const gid = node.goalId;
+      if (!gid || gid === "general") return;
+      if (!goalGroups[gid]) goalGroups[gid] = [];
+      goalGroups[gid].push(node);
+    });
+
+    Object.entries(goalGroups).forEach(([gid, group]) => {
+      if (group.length < 2) return;
+      const color =
+        gid === "family"
+          ? "rgba(45, 212, 191, 0.2)"
+          : gid === "work"
+            ? "rgba(167, 139, 250, 0.2)"
+            : gid === "love"
+              ? "rgba(251, 191, 36, 0.15)"
+              : "rgba(255, 255, 255, 0.1)";
+
+      for (let i = 0; i < group.length; i++) {
+        for (let j = i + 1; j < group.length; j++) {
+          const p1 = nodePositions[group[i].id];
+          const p2 = nodePositions[group[j].id];
+          if (p1 && p2) {
+            lines.push({
+              id: `${group[i].id}-${group[j].id}`,
+              x1: p1.x,
+              y1: p1.y,
+              x2: p2.x,
+              y2: p2.y,
+              color
+            });
+          }
+        }
+      }
+    });
+    return lines;
+  }, [nodes, nodePositions]);
+
+  const { viewBox } = useMemo(() => {
+    if (!highlightNodeId) return { viewBox: "0 0 100 100" };
+    const node = nodes.find((n) => n.id === highlightNodeId);
+    if (!node) return { viewBox: "0 0 100 100" };
+
+    const pos = nodePositions[node.id];
+    if (!pos) return { viewBox: "0 0 100 100" };
+
+    const zoomSize = 42;
+    const vx = Math.max(0, Math.min(100 - zoomSize, pos.x - zoomSize / 2));
+    const vy = Math.max(0, Math.min(100 - zoomSize, pos.y - zoomSize / 2));
+    return { viewBox: `${vx} ${vy} ${zoomSize} ${zoomSize}` };
+  }, [highlightNodeId, nodes, nodePositions]);
+
   return (
     <div className="w-full mx-auto mt-6 flex flex-col gap-3">
       <div
         className="relative w-full min-h-[280px] sm:min-h-[340px] md:min-h-[400px]"
         id="map-canvas"
       >
-      <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
-      <div className="absolute inset-0">
-        <svg
-          viewBox="0 0 100 100"
-          className="w-full h-full"
-        >
-          {/* SVG Gradients for cosmic orb */}
-          <defs>
-            <radialGradient id="meDrained" cx="50%" cy="40%" r="60%">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="100%" stopColor="#475569" />
-            </radialGradient>
-            <radialGradient id="meOkay" cx="50%" cy="40%" r="60%">
-              <stop offset="0%" stopColor="#2dd4bf" />
-              <stop offset="100%" stopColor="#0d9488" />
-            </radialGradient>
-            <radialGradient id="meCharged" cx="50%" cy="35%" r="65%">
-              <stop offset="0%" stopColor="#5eead4" />
-              <stop offset="50%" stopColor="#2dd4bf" />
-              <stop offset="100%" stopColor="#0f766e" />
-            </radialGradient>
-            {/* Cosmic glow filter */}
-            <filter id="cosmicGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
-          </defs>
-
-          {/* ── Orbital Rings (Breathing) ── */}
-          <OrbitalRing
-            ring="red"
-            label="دائرة الخطر والاستنزاف"
-            radius={40}
-            color={RING_COLORS.danger.stroke}
-            glowColor={RING_COLORS.danger.glow}
-            breatheDuration={5}
-          />
-          <OrbitalRing
-            ring="yellow"
-            label="دائرة القرب المشروط"
-            radius={29}
-            color={RING_COLORS.caution.stroke}
-            glowColor={RING_COLORS.caution.glow}
-            breatheDuration={4.5}
-          />
-          <OrbitalRing
-            ring="green"
-            label="دائرة القرب الصحي"
-            radius={18}
-            color={RING_COLORS.safe.stroke}
-            glowColor={RING_COLORS.safe.glow}
-            breatheDuration={4}
-          />
-
-          {/* ── Detachment Zone (Dashed Orbit) ── */}
-          <motion.circle
-            cx="50"
-            cy="50"
-            r={Number.isFinite(GREY_ZONE_STROKE_RADIUS) ? GREY_ZONE_STROKE_RADIUS : 0}
-            fill="none"
-            stroke="rgba(148, 163, 184, 0.25)"
-            strokeWidth={1}
-            strokeDasharray="2 2.5"
-            className="pointer-events-none"
-            animate={{ opacity: [0.2, 0.4, 0.2] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          />
-
-          {/* ── Center "Me" — Cosmic Orb ── */}
-          <g filter="url(#cosmicGlow)">
-            {/* Outer aura */}
-            <motion.circle
-              cx="50"
-              cy="50"
-              r={9}
-              fill="none"
-              stroke={battery === "drained" ? "rgba(148, 163, 184, 0.1)" : "rgba(45, 212, 191, 0.12)"}
-              strokeWidth="0.5"
-              animate={{
-                opacity: [0.3, 0.15, 0.3]
-              }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            />
-            {/* Main orb */}
-            <motion.circle
-              cx="50"
-              cy="50"
-              r={6}
-              fill={meStyle.fill}
-              animate={{
-                scale: meStyle.pulseScale,
-                opacity: battery === "drained" ? [0.6, 0.8, 0.6] : [0.85, 1, 0.85]
-              }}
-              transition={{
-                duration: battery === "charged" ? 2.5 : 3.5,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              style={{
-                filter: "none"
-              }}
-            />
-            {/* "أنت" label */}
-            <text
-              x="50"
-              y="50"
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="select-none pointer-events-none"
-              style={{
-                fontSize: "3px",
-                fontWeight: 700,
-                fill: "white",
-                letterSpacing: "0.08em"
-              }}
+        <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
+          <div className="absolute inset-0">
+            <motion.svg
+              viewBox={viewBox}
+              className="w-full h-full"
+              animate={{ viewBox }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             >
-              أنت
-            </text>
-          </g>
-        </svg>
+              {/* SVG Gradients for cosmic orb */}
+              <defs>
+                <radialGradient id="meDrained" cx="50%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#94a3b8" />
+                  <stop offset="100%" stopColor="#475569" />
+                </radialGradient>
+                <radialGradient id="meOkay" cx="50%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#2dd4bf" />
+                  <stop offset="100%" stopColor="#0d9488" />
+                </radialGradient>
+                <radialGradient id="meCharged" cx="50%" cy="35%" r="65%">
+                  <stop offset="0%" stopColor="#5eead4" />
+                  <stop offset="50%" stopColor="#2dd4bf" />
+                  <stop offset="100%" stopColor="#0f766e" />
+                </radialGradient>
+                {/* Cosmic glow filter */}
+                <filter id="cosmicGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
 
-        {/* ── Node Overlays ── */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="relative w-full h-full pointer-events-auto">
-            {ringNodes.map((node) => {
-              const nodesInSameRing = nodesByRing[node.ring];
-              const nodeIndex = nodesInSameRing.findIndex(n => n.id === node.id);
-              const totalInRing = nodesInSameRing.length;
-              return (
-                <MapNodeView
-                  key={node.id}
-                  node={node}
-                  nodeIndex={nodeIndex}
-                  totalInRing={totalInRing}
-                  onClick={onNodeClick}
-                  canOpenDetails={canOpenDetails}
-                  justDraggedId={justDraggedId}
-                  justAdded={lastAddedNodeId === node.id}
-                  isHighlighted={highlightNodeId === node.id}
+              {/* ── Connection Threads ── */}
+              {connectionThreads.map((line) => (
+                <motion.line
+                  key={line.id}
+                  x1={line.x1}
+                  y1={line.y1}
+                  x2={line.x2}
+                  y2={line.y2}
+                  stroke={line.color}
+                  strokeWidth={0.4}
+                  strokeDasharray="1 2"
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{ duration: 1.5, ease: "easeInOut" }}
                 />
-              );
-            })}
-            {detachedNodes.map((node, i) => (
-              <MapNodeView
-                key={node.id}
-                node={node}
-                nodeIndex={i}
-                totalInRing={detachedNodes.length}
-                position={getGreyZonePosition(i, detachedNodes.length)}
-                onClick={onNodeClick}
-                canOpenDetails={canOpenDetails}
-                justDraggedId={justDraggedId}
-                justAdded={lastAddedNodeId === node.id}
-                isHighlighted={highlightNodeId === node.id}
+              ))}
+
+              {/* ── Orbital Rings (Breathing) ── */}
+              <OrbitalRing
+                ring="red"
+                label="دائرة الخطر والاستنزاف"
+                radius={40}
+                color={RING_COLORS.danger.stroke}
+                glowColor={RING_COLORS.danger.glow}
+                breatheDuration={5}
               />
-            ))}
+              <OrbitalRing
+                ring="yellow"
+                label="دائرة القرب المشروط"
+                radius={29}
+                color={RING_COLORS.caution.stroke}
+                glowColor={RING_COLORS.caution.glow}
+                breatheDuration={4.5}
+              />
+              <OrbitalRing
+                ring="green"
+                label="دائرة القرب الصحي"
+                radius={18}
+                color={RING_COLORS.safe.stroke}
+                glowColor={RING_COLORS.safe.glow}
+                breatheDuration={4}
+              />
+
+              {/* ── Detachment Zone (Dashed Orbit) ── */}
+              <motion.circle
+                cx="50"
+                cy="50"
+                r={Number.isFinite(GREY_ZONE_STROKE_RADIUS) ? GREY_ZONE_STROKE_RADIUS : 0}
+                fill="none"
+                stroke="rgba(148, 163, 184, 0.25)"
+                strokeWidth={1}
+                strokeDasharray="2 2.5"
+                className="pointer-events-none"
+                animate={{ opacity: [0.2, 0.4, 0.2] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              />
+
+              {/* ── Center "Me" — Cosmic Orb ── */}
+              <g filter="url(#cosmicGlow)">
+                {/* Outer aura */}
+                <motion.circle
+                  cx="50"
+                  cy="50"
+                  r={9}
+                  fill="none"
+                  stroke={battery === "drained" ? "rgba(148, 163, 184, 0.1)" : "rgba(45, 212, 191, 0.12)"}
+                  strokeWidth="0.5"
+                  animate={{
+                    opacity: [0.3, 0.15, 0.3]
+                  }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                />
+                {/* Main orb */}
+                <motion.circle
+                  cx="50"
+                  cy="50"
+                  r={6}
+                  fill={meStyle.fill}
+                  animate={{
+                    scale: meStyle.pulseScale,
+                    opacity: battery === "drained" ? [0.6, 0.8, 0.6] : [0.85, 1, 0.85]
+                  }}
+                  transition={{
+                    duration: battery === "charged" ? 2.5 : 3.5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  style={{
+                    filter: "none"
+                  }}
+                />
+                {/* "أنت" label */}
+                <text
+                  x="50"
+                  y="50"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className="select-none pointer-events-none"
+                  style={{
+                    fontSize: "3px",
+                    fontWeight: 700,
+                    fill: "white",
+                    letterSpacing: "0.08em"
+                  }}
+                >
+                  أنت
+                </text>
+              </g>
+
+              {/* ── Drag Assist Hint ── */}
+              <AnimatePresence>
+                {showDragHint && (
+                  <motion.g
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="pointer-events-none"
+                  >
+                    {/* Ghost node */}
+                    <motion.circle
+                      r={2.5}
+                      fill="rgba(45, 212, 191, 0.4)"
+                      animate={{
+                        cx: [92, 68, 68, 92],
+                        cy: [50, 50, 50, 50],
+                        opacity: [0, 0.8, 0.8, 0],
+                        scale: [0.8, 1.1, 1.1, 0.8]
+                      }}
+                      transition={{
+                        duration: 4.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        times: [0, 0.4, 0.8, 1]
+                      }}
+                    />
+                    {/* Pulsing target */}
+                    <motion.circle
+                      cx={68}
+                      cy={50}
+                      r={4}
+                      fill="none"
+                      stroke="rgba(45, 212, 191, 0.4)"
+                      strokeWidth={0.5}
+                      animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.5, 0.2] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  </motion.g>
+                )}
+              </AnimatePresence>
+            </motion.svg>
+
+            {/* ── Node Overlays ── */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="relative w-full h-full pointer-events-auto">
+                <AnimatePresence>
+                  {ringNodes.map((node) => {
+                    const nodesInSameRing = nodesByRing[node.ring];
+                    const nodeIndex = nodesInSameRing.findIndex(n => n.id === node.id);
+                    const totalInRing = nodesInSameRing.length;
+                    return (
+                      <MapNodeView
+                        key={node.id}
+                        node={node}
+                        nodeIndex={nodeIndex}
+                        totalInRing={totalInRing}
+                        onClick={onNodeClick}
+                        canOpenDetails={canOpenDetails}
+                        justDraggedId={justDraggedId}
+                        justAdded={lastAddedNodeId === node.id}
+                        isHighlighted={highlightNodeId === node.id}
+                      />
+                    );
+                  })}
+                  {detachedNodes.map((node, i) => (
+                    <MapNodeView
+                      key={node.id}
+                      node={node}
+                      nodeIndex={i}
+                      totalInRing={detachedNodes.length}
+                      position={getGreyZonePosition(i, detachedNodes.length)}
+                      onClick={onNodeClick}
+                      canOpenDetails={canOpenDetails}
+                      justDraggedId={justDraggedId}
+                      justAdded={lastAddedNodeId === node.id}
+                      isHighlighted={highlightNodeId === node.id}
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* ── Droppable Zones ── */}
+            <DroppableRing id="grey" sizePct={92} zIndex={9} />
+            <DroppableRing id="red" sizePct={80} zIndex={10} />
+            <DroppableRing id="yellow" sizePct={58} zIndex={11} />
+            <DroppableRing id="green" sizePct={36} zIndex={12} />
+
+            {/* ── Me click zone ── */}
+            {onMeClick && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMeClick();
+                }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[20%] min-w-[56px] h-[20%] min-h-[56px] rounded-full z-30 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50 focus-visible:ring-offset-0"
+                title="بطاقتك — حالتك اليوم"
+                aria-label="افتح بطاقة أنا"
+              />
+            )}
           </div>
-        </div>
+        </DndContext>
 
-        {/* ── Droppable Zones ── */}
-        <DroppableRing id="grey" sizePct={92} zIndex={9} />
-        <DroppableRing id="red" sizePct={80} zIndex={10} />
-        <DroppableRing id="yellow" sizePct={58} zIndex={11} />
-        <DroppableRing id="green" sizePct={36} zIndex={12} />
-
-        {/* ── Me click zone ── */}
-        {onMeClick && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onMeClick();
-            }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[20%] min-w-[56px] h-[20%] min-h-[56px] rounded-full z-30 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50 focus-visible:ring-offset-0"
-            title="بطاقتك — حالتك اليوم"
-            aria-label="افتح بطاقة أنا"
-          />
+        {/* ── Pending Move Confirmation (Glass) ── */}
+        {pendingMove && (
+          <motion.div
+            className="relative z-50 glass-card flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 px-5 py-4 text-right"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <p className="text-sm font-semibold flex-1" style={{ color: "var(--text-primary)" }}>
+              نقل "{pendingMove.nodeLabel}" إلى {RING_LABELS[pendingMove.toRing]}؟
+            </p>
+            <div className="flex gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setPendingMove(null)}
+                className="cta-muted px-4 py-2 text-sm font-medium"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={confirmPlacement}
+                className="cta-primary px-4 py-2 text-sm font-semibold"
+              >
+                {mapCopy.confirmPlacement}
+              </button>
+            </div>
+          </motion.div>
         )}
       </div>
-      </DndContext>
 
-      {/* ── Pending Move Confirmation (Glass) ── */}
-      {pendingMove && (
-        <motion.div
-          className="relative z-50 glass-card flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 px-5 py-4 text-right"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
-        >
-          <p className="text-sm font-semibold flex-1" style={{ color: "var(--text-primary)" }}>
-            نقل "{pendingMove.nodeLabel}" إلى {RING_LABELS[pendingMove.toRing]}؟
-          </p>
-          <div className="flex gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => setPendingMove(null)}
-              className="cta-muted px-4 py-2 text-sm font-medium"
-            >
-              إلغاء
-            </button>
-            <button
-              type="button"
-              onClick={confirmPlacement}
-              className="cta-primary px-4 py-2 text-sm font-semibold"
-            >
-              {mapCopy.confirmPlacement}
-            </button>
-          </div>
-        </motion.div>
-      )}
-    </div>
+      {/* ── Archive Toast ── */}
+      <JourneyToast
+        variant="archive"
+        personName={lastArchivedName}
+        visible={showArchiveToast}
+        onClose={() => setShowArchiveToast(false)}
+      />
     </div>
   );
 };

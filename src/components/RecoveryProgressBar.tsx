@@ -123,10 +123,10 @@ export const RecoveryProgressBar: FC<RecoveryProgressBarProps> = ({ node }) => {
         })}
       </div>
 
-      {/* نسبة مئوية اختيارية */}
+      {/* نص تشجيعي بدل النسبة */}
       {completed > 0 && (
         <p className="text-[10px] text-slate-500 text-center mt-1">
-          رحلة الاستعادة: {completed}/{total} مراحل — {progressPct}%
+          الخريطة بتترسم — {completed} من {total} محطات
         </p>
       )}
     </div>

@@ -3,6 +3,7 @@ export const landingCopy = {
   titleLine1: "رحلتك تبدأ لما تعرف مكانك",
   titleLine2: "وأول محطة... علاقتك بنفسك",
   subtitle: "مساحة هادية تساعدك تفهم علاقاتك وتحط حدودك بوضوح",
+  slogan: "التعافي مش سحر — هو رحلة بتبدأها بخطواتك",
   /** محطة الانطلاق */
   commandCenterTitle: "محطة الانطلاق",
   commandCenterSubtitle: "مساحتك الخاصة. مفيش حد يدخل غير بإذنك.",
@@ -22,7 +23,7 @@ export const landingCopy = {
     chooseGoogle: "الدخول بجوجل",
     chooseMagicLink: "ابعت رابط سحري",
     orDivider: "أو",
-    sessionCheck: "بناخد نفس...",
+    sessionCheck: "بنجهز لك مساحتك الهادية...",
     startBlocked: "عرّفنا بنفسك الأول بجوجل أو الرابط السحري علشان نفتح الخريطة.",
     googleRedirecting: "تمام... بنوصلك دلوقتي.",
     googleFailed: "فيه حاجة وقفت في الطريق. جرب تاني أو استخدم الرابط السحري.",

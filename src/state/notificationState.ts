@@ -7,6 +7,8 @@ import {
   saveNotificationSettings,
   recordActivity,
   checkAndSendInactiveReminder,
+  checkAndSendWeeklyGratitude,
+  checkAndSendMapRevisit,
   type NotificationSettings
 } from "../services/notifications";
 
@@ -57,6 +59,8 @@ export const useNotificationState = create<NotificationState>((set, get) => ({
       set({ settings });
     });
     void checkAndSendInactiveReminder();
+    void checkAndSendWeeklyGratitude();
+    void checkAndSendMapRevisit();
     // تسجيل النشاط عند فتح التطبيق
     recordActivity();
   },

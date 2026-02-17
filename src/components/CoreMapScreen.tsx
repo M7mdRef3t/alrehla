@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapCanvas } from "../modules/map/MapCanvas";
 import { FamilyTreeView } from "./FamilyTreeView";
@@ -121,6 +121,17 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const dismissPlacementTooltip = useMapState((s) => s.dismissPlacementTooltip);
   const [showOnboarding, setShowOnboarding] = useState(() => nodes.length === 0 && !hasSeenOnboarding() && !journeyMode);
   const lastAddedNode = lastAddedNodeId ? nodes.find((node) => node.id === lastAddedNodeId) ?? null : null;
+
+  /* ── Dashboard Widget ── */
+  const [showDashboard, setShowDashboard] = useState(false);
+  const activeNodes = useMemo(() => nodes.filter((n) => !n.isNodeArchived), [nodes]);
+  const archivedNodes = useMemo(() => nodes.filter((n) => n.isNodeArchived), [nodes]);
+  const greenNodes = useMemo(() => activeNodes.filter((n) => n.ring === "green" && !n.isDetached), [activeNodes]);
+  const dailyQuestion = useMemo(() => {
+    const questions = mapCopy.dashboardDailyQuestions;
+    const dayIndex = new Date().getDay();
+    return questions[dayIndex % questions.length];
+  }, []);
 
   useEffect(() => {
     if (!showPlacementTooltip) return;
@@ -259,6 +270,97 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           <EditableText id={subtitleKey} defaultText={subtitle} page="map" multiline showEditIcon={false} />
         </p>
       </motion.header>
+
+      {/* ── Dashboard Widget ── */}
+      {!journeyMode && (
+        <motion.div variants={cosmicFade} className="w-full max-w-md mx-auto mb-4">
+          <button
+            type="button"
+            onClick={() => setShowDashboard((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm transition-all"
+            style={{
+              background: showDashboard ? "rgba(45,212,191,0.08)" : "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(45,212,191,0.15)",
+              color: "var(--text-secondary)"
+            }}
+          >
+            <span className="text-xs" style={{ color: "rgba(45,212,191,0.6)" }}>
+              {showDashboard ? "▲ أقفل لوحة التحكم" : "▼ لوحة التحكم"}
+            </span>
+            <span className="text-xs font-medium">
+              {mapCopy.dashboardMapSummary(activeNodes.length, greenNodes.length, archivedNodes.length)}
+            </span>
+          </button>
+
+          <AnimatePresence>
+            {showDashboard && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                className="overflow-hidden"
+              >
+                <div
+                  className="mt-2 rounded-xl p-4 space-y-4 text-right"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(15,23,42,0.6), rgba(15,23,42,0.4))",
+                    border: "1px solid rgba(45,212,191,0.12)",
+                    backdropFilter: "blur(12px)"
+                  }}
+                >
+                  {/* توازن الدواير — Mini Gauge */}
+                  {activeNodes.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-semibold mb-2" style={{ color: "var(--text-muted)" }}>
+                        توازن الدواير
+                      </p>
+                      <div className="flex gap-0.5 h-2 rounded-full overflow-hidden">
+                        {["green", "yellow", "red"].map((ring) => {
+                          const count = activeNodes.filter((n) => n.ring === ring).length;
+                          if (!count) return null;
+                          const colors = { green: "#34d399", yellow: "#fbbf24", red: "#f87171" };
+                          return (
+                            <div
+                              key={ring}
+                              className="transition-all duration-700"
+                              style={{
+                                width: `${(count / activeNodes.length) * 100}%`,
+                                background: colors[ring as keyof typeof colors]
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* سؤال اليوم */}
+                  <div
+                    className="rounded-lg p-3"
+                    style={{
+                      background: "rgba(45,212,191,0.06)",
+                      border: "1px solid rgba(45,212,191,0.12)"
+                    }}
+                  >
+                    <p className="text-[10px] font-semibold mb-1" style={{ color: "rgba(45,212,191,0.7)" }}>
+                      سؤال اليوم
+                    </p>
+                    <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>
+                      {dailyQuestion}
+                    </p>
+                  </div>
+
+                  {/* Slogan */}
+                  <p className="text-[11px] italic text-center" style={{ color: "rgba(45,212,191,0.45)" }}>
+                    {mapCopy.dashboardSlogan}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
 
       {/* ── Weekday Labels Modal ── */}
       {showWeekdayLabelsModal && (

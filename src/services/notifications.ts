@@ -26,7 +26,10 @@ export const NOTIFICATION_TYPES = {
   INACTIVE_REMINDER: "inactive-reminder",
   EXERCISE_COMPLETE: "exercise-complete",
   STEP_REMINDER: "step-reminder",
-  MISSION_REMINDER: "mission-reminder"
+  MISSION_REMINDER: "mission-reminder",
+  /** رحلة — إشعارات دواير الجديدة */
+  MAP_REVISIT: "map-revisit",
+  WEEKLY_GRATITUDE: "weekly-gratitude",
 } as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
@@ -118,6 +121,17 @@ export const PRESET_NOTIFICATIONS: Record<NotificationType, NotificationOptions>
     title: "مهمتك مستنياك 🎯",
     body: "عندك مهمة نشطة. خصّص دقيقة وكمّل خطوة النهاردة.",
     tag: "mission-reminder"
+  },
+  /** رحلة — إشعارات دواير الجديدة */
+  [NOTIFICATION_TYPES.MAP_REVISIT]: {
+    title: "لسه فاكر خريطتك؟",
+    body: "التعافي مش سحر، هو متابعة واعية للي بيحصل جوانا. ادخل شوف خريطتك النهاردة — يمكن محتاج تحرك حد من مكانه؟",
+    tag: "map-revisit"
+  },
+  [NOTIFICATION_TYPES.WEEKLY_GRATITUDE]: {
+    title: "الرحلة مستمرة..",
+    body: "بقالك أسبوع بتهتم بدوايرك. ده لوحده إنجاز — التعافي مش سحر، هو المتابعة الواعية دي.",
+    tag: "weekly-gratitude"
   }
 };
 
@@ -230,4 +244,48 @@ export async function sendSmartDailyReminder(): Promise<Notification | null> {
     body,
     tag: "daily-reminder"
   });
+}
+
+/* ══════════════════════════════════════════
+   إشعار الامتنان الأسبوعي — Weekly Gratitude
+   يُرسل مرة كل 7 أيام لو الإذن ممنوح
+   ══════════════════════════════════════════ */
+
+const WEEKLY_GRATITUDE_KEY = "dawayir-weekly-gratitude-last-sent";
+
+/**
+ * يفحص إذا مضى أسبوع من آخر إرسال وبيبعت الإشعار لو الشروط اتحققت
+ */
+export async function checkAndSendWeeklyGratitude(): Promise<void> {
+  if (typeof window === "undefined") return;
+  if (Notification.permission !== "granted") return;
+
+  const lastSentRaw = localStorage.getItem(WEEKLY_GRATITUDE_KEY);
+  const lastSent = lastSentRaw ? parseInt(lastSentRaw, 10) : 0;
+  const now = Date.now();
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+
+  if (now - lastSent < sevenDays) return;
+
+  localStorage.setItem(WEEKLY_GRATITUDE_KEY, String(now));
+  await sendPresetNotification(NOTIFICATION_TYPES.WEEKLY_GRATITUDE);
+}
+
+/**
+ * يفحص إذا المستخدم مرجعش من أكتر من 24 ساعة وبيبعت إشعار المراجعة
+ */
+export async function checkAndSendMapRevisit(): Promise<void> {
+  if (typeof window === "undefined") return;
+  if (Notification.permission !== "granted") return;
+
+  const lastActivityRaw = localStorage.getItem("dawayir-last-activity");
+  if (!lastActivityRaw) return;
+
+  const lastActivity = parseInt(lastActivityRaw, 10);
+  const hoursGone = (Date.now() - lastActivity) / (1000 * 60 * 60);
+
+  // بس لو بين 22 و48 ساعة (مش أكتر عشان ميبقاش زعيق)
+  if (hoursGone < 22 || hoursGone > 48) return;
+
+  await sendPresetNotification(NOTIFICATION_TYPES.MAP_REVISIT);
 }

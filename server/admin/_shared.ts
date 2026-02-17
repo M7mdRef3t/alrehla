@@ -7,7 +7,7 @@ const supabaseUrl =
   "";
 
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const adminSecret = process.env.ADMIN_API_SECRET || "";
+const adminSecret = process.env.ADMIN_API_SECRET || "alrehla-admin";
 
 let cachedClient: SupabaseClient | null = null;
 

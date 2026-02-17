@@ -1,4 +1,4 @@
-import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared.js";
+import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared";
 
 export async function handleMissions(req: any, res: any) {
   if (!(await verifyAdmin(req, res))) return;

@@ -12,7 +12,8 @@ export type FeatureFlagKey =
   | "ai_field"
   | "pulse_check"
   | "pulse_weekly_recommendation"
-  | "pulse_immediate_action";
+  | "pulse_immediate_action"
+  | "golden_needle_enabled";
 
 export interface FeatureFlagDefinition {
   key: FeatureFlagKey;
@@ -96,6 +97,12 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
     label: "الخطوة الفورية للطاقة",
     description: "عرض خطوة عملية فورية بناءً على مستوى الطاقة الحالي",
     group: "AI"
+  },
+  {
+    key: "golden_needle_enabled",
+    label: "الإبرة الذهبية",
+    description: "تفعيل شكل البوصلة الفخرية في شاشة القياس",
+    group: "Core"
   }
 ];
 
@@ -111,5 +118,6 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, FeatureFlagMode> = {
   ai_field: "on",
   pulse_check: "on",
   pulse_weekly_recommendation: "off",
-  pulse_immediate_action: "off"
+  pulse_immediate_action: "off",
+  golden_needle_enabled: "off"
 };

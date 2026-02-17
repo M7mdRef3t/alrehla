@@ -1,12 +1,13 @@
 /**
- * Direct environment access for Next.js
- * These values are inlined by Next.js at build time
+ * Direct environment access — works with both Vite and Next.js.
+ * Uses runtimeEnv as the single source of truth.
  */
 
-// Direct access to Next.js environment variables
+import { runtimeEnv } from "./config/runtimeEnv";
+
 export const env = {
-  SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+  SUPABASE_URL: runtimeEnv.supabaseUrl || '',
+  SUPABASE_ANON_KEY: runtimeEnv.supabaseAnonKey || '',
 } as const;
 
 export const supabaseConfig = {

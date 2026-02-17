@@ -6,6 +6,8 @@
  * - وضع الأونر: صلاحيات كاملة (يُحدد بدور المستخدم owner/superadmin)، نفس الكود.
  */
 
+import { runtimeEnv } from "./runtimeEnv";
+
 export type AppEnv = "user" | "dev";
 
 const raw = runtimeEnv.appEnv;
@@ -24,4 +26,3 @@ export const isDevMode = APP_ENV === "dev";
  */
 const phaseOneRaw = runtimeEnv.phaseOneUserFlow;
 export const isPhaseOneUserFlow = isUserMode && phaseOneRaw !== "false";
-import { runtimeEnv } from "./runtimeEnv";

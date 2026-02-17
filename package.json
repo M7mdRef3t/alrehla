@@ -7,8 +7,8 @@
     "node": "22.x"
   },
   "scripts": {
-    "dev": "next dev",
-    "dev:vite": "vite",
+    "dev": "vite",
+    "dev:next": "next dev",
     "push:dev": "git push origin develop",
     "release": "node scripts/release-to-main.mjs",
     "start": "next start",

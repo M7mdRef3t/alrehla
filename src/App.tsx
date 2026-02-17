@@ -35,6 +35,10 @@ import { initAppContentRealtime } from "./state/appContentState";
 import { PWAInstallProvider } from "./contexts/PWAInstallContext";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
 import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
+import { DashboardScreen } from "./components/DashboardScreen";
+import { OnboardingFlow, hasCompletedJourneyOnboarding } from "./components/OnboardingFlow";
+import { JourneyToast } from "./components/JourneyToast";
+import { FaqScreen } from "./components/FaqScreen";
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
 import { geminiClient } from "./services/geminiClient";
 import { isSupabaseReady } from "./services/supabaseClient";
@@ -183,7 +187,7 @@ const MissionScreen = lazy(() => import("./components/MissionScreen").then((m) =
 const JourneyToolsScreen = lazy(() => import("./components/JourneyToolsScreen").then((m) => ({ default: m.JourneyToolsScreen })));
 const AdminDashboard = lazy(() => import("./components/admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
 const AdminOverviewPanel = lazy(() =>
-  import("./components/admin/AdminDashboard").then((m) => ({ default: m.OverviewPanel }))
+  import("./components/admin/dashboard/Overview/OverviewPanel").then((m) => ({ default: m.OverviewPanel }))
 );
 const DataManagement = lazy(() => import("./components/DataManagement").then((m) => ({ default: m.DataManagement })));
 const NotificationSettings = lazy(() =>
@@ -335,9 +339,9 @@ function buildPulseDeltaToast(currentEnergy: number, yesterdayEnergy: number | n
 
 function buildStartRecoveryWelcome(firstName: string | null, toneGender: UserToneGender): string {
   const prefix = firstName ? `Ø£Ù‡Ù„Ø§Ù‹ ÙŠØ§ ${firstName}` : "Ø£Ù‡Ù„Ø§Ù‹";
-  if (toneGender === "female") return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†ØªÙ Ù…Ø³ØªØ¹Ø¯Ø© Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ`;
-  if (toneGender === "male") return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†Øª Ù…Ø³ØªØ¹Ø¯ Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ`;
-  return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†Øª Ù…Ø³ØªØ¹Ø¯ Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ`;
+  if (toneGender === "female") return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†ØªÙ Ù…Ø³ØªØ¹Ø¯Ø© Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ â Ø§ÙØªØ¹Ø§ÙÙ ÙØ´ Ø³Ø­Ø±Ø ÙÙ Ø±Ø­ÙØ© Ø¨ØªØ¨Ø¯Ø£ÙØ§ Ø¨Ø®Ø·ÙØ§ØªÙ.`;
+  if (toneGender === "male") return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†Øª Ù…Ø³ØªØ¹Ø¯ Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ â Ø§ÙØªØ¹Ø§ÙÙ ÙØ´ Ø³Ø­Ø±Ø ÙÙ Ø±Ø­ÙØ© Ø¨ØªØ¨Ø¯Ø£ÙØ§ Ø¨Ø®Ø·ÙØ§ØªÙ.`;
+  return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†Øª Ù…Ø³ØªØ¹Ø¯ Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ â Ø§ÙØªØ¹Ø§ÙÙ ÙØ´ Ø³Ø­Ø±Ø ÙÙ Ø±Ø­ÙØ© Ø¨ØªØ¨Ø¯Ø£ÙØ§ Ø¨Ø®Ø·ÙØ§ØªÙ.`;
 }
 
 function buildWelcomePrompt(firstName: string | null, toneGender: UserToneGender): string {
@@ -483,6 +487,9 @@ export default function App() {
   const [showClassicRecovery, setShowClassicRecovery] = useState(false);
   const [showManualPlacement, setShowManualPlacement] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => !hasCompletedJourneyOnboarding());
+  const [showWelcomeToast, setShowWelcomeToast] = useState(false);
+  const [showFaq, setShowFaq] = useState(false);
   const [ownerInstallRequestNonce, setOwnerInstallRequestNonce] = useState(0);
   const [showJourneyGuideChat, setShowJourneyGuideChat] = useState(false);
   const [welcome, setWelcome] = useState<{ message: string; source: WelcomeSource } | null>(null);
@@ -1529,14 +1536,14 @@ export default function App() {
     if (shouldPromptAuthAfterPulse) {
       const intent: PostAuthIntent = hasConcretePulseSelection(payload)
         ? {
-            kind: "start_recovery",
-            pulse: payload,
-            createdAt: Date.now()
-          }
+          kind: "start_recovery",
+          pulse: payload,
+          createdAt: Date.now()
+        }
         : {
-            kind: "login",
-            createdAt: Date.now()
-          };
+          kind: "login",
+          createdAt: Date.now()
+        };
       setPostAuthIntentState(intent);
       setShowAuthModal(true);
       return;
@@ -1818,10 +1825,10 @@ export default function App() {
         const reminderTarget = pickMissionReminderTarget(todayKey);
         const send = reminderTarget
           ? sendNotification({
-              title: "Ù…Ù‡Ù…ØªÙƒ Ù…Ø³ØªÙ†ÙŠØ§Ùƒ ðŸŽ¯",
-              body: `Ù…Ø¹ ${reminderTarget.node.label} â€” Ø®Ø·ÙˆØ© ${reminderTarget.next.stepIndex + 1}/${reminderTarget.next.total}: ${reminderTarget.next.step}`,
-              tag: "mission-reminder"
-            })
+            title: "Ù…Ù‡Ù…ØªÙƒ Ù…Ø³ØªÙ†ÙŠØ§Ùƒ ðŸŽ¯",
+            body: `Ù…Ø¹ ${reminderTarget.node.label} â€” Ø®Ø·ÙˆØ© ${reminderTarget.next.stepIndex + 1}/${reminderTarget.next.total}: ${reminderTarget.next.step}`,
+            tag: "mission-reminder"
+          })
           : sendPresetNotification(NOTIFICATION_TYPES.MISSION_REMINDER);
         void send.then(() => {
           setInLocalStorage(storageKey, todayKey);
@@ -1922,706 +1929,785 @@ export default function App() {
 
   return (
     <PWAInstallProvider>
-    <div className="min-h-screen flex transition-colors relative overflow-hidden isolate" dir="rtl"
-      style={{ background: "var(--space-void)" }}
-    >
-      {isFeaturePreviewSession && (
-        <button
-          type="button"
-          onClick={goBackToFeatureFlags}
-          className="fixed z-50 top-4 left-4 rounded-full border border-indigo-300 bg-white/95 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
-          title={previewedFeature ? `Ø§Ù„Ø±Ø¬ÙˆØ¹ Ù…Ù† Ù…Ø¹Ø§ÙŠÙ†Ø©: ${previewedFeature}` : "Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags"}
-        >
-          Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags
-        </button>
-      )}
-      {/* ðŸŒŒ Nebula Background â€” Deep Cosmic Blue Canvas */}
-      <div className="nebula-bg" aria-hidden="true" />
-      <AnimatePresence>
-        {activeBroadcast && (
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3 }}
-            className="fixed top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-50 max-w-lg"
-            role="status"
-            aria-live="polite"
+      <div className="min-h-screen flex transition-colors relative overflow-hidden isolate" dir="rtl"
+        style={{ background: "var(--space-void)" }}
+      >
+        {isFeaturePreviewSession && (
+          <button
+            type="button"
+            onClick={goBackToFeatureFlags}
+            className="fixed z-50 top-4 left-4 rounded-full border border-indigo-300 bg-white/95 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
+            title={previewedFeature ? `Ø§Ù„Ø±Ø¬ÙˆØ¹ Ù…Ù† Ù…Ø¹Ø§ÙŠÙ†Ø©: ${previewedFeature}` : "Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags"}
           >
-            <div className="glass-card px-4 py-3 border border-amber-300/40 bg-amber-50/10 backdrop-blur-xl">
-              <div className="flex items-start justify-between gap-3">
-                <div className="text-right">
-                  <p className="text-xs font-semibold mb-1" style={{ color: "var(--soft-gold, #fbbf24)" }}>
-                    Ø±Ø³Ø§Ù„Ø© Ù…Ù† Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø±Ø­Ù„Ø©
-                  </p>
-                  <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{activeBroadcast.title}</p>
-                  <p className="text-xs mt-1 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                    {activeBroadcast.body}
-                  </p>
+            Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags
+          </button>
+        )}
+        {/* ðŸŒŒ Nebula Background â€” Deep Cosmic Blue Canvas */}
+        <div className="nebula-bg" aria-hidden="true" />
+        <AnimatePresence>
+          {activeBroadcast && (
+            <motion.div
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3 }}
+              className="fixed top-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-50 max-w-lg"
+              role="status"
+              aria-live="polite"
+            >
+              <div className="glass-card px-4 py-3 border border-amber-300/40 bg-amber-50/10 backdrop-blur-xl">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="text-right">
+                    <p className="text-xs font-semibold mb-1" style={{ color: "var(--soft-gold, #fbbf24)" }}>
+                      Ø±Ø³Ø§Ù„Ø© Ù…Ù† Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø±Ø­Ù„Ø©
+                    </p>
+                    <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{activeBroadcast.title}</p>
+                    <p className="text-xs mt-1 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                      {activeBroadcast.body}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveBroadcast(null)}
+                    className="rounded-full px-2.5 py-1 text-xs font-semibold border border-white/15 hover:bg-white/5 transition-colors"
+                    style={{ color: "var(--text-primary)" }}
+                    aria-label="Ø¥Ø®ÙØ§Ø¡ Ø§Ù„Ø±Ø³Ø§Ù„Ø©"
+                  >
+                    Ø¥Ø®ÙØ§Ø¡
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveBroadcast(null)}
-                  className="rounded-full px-2.5 py-1 text-xs font-semibold border border-white/15 hover:bg-white/5 transition-colors"
-                  style={{ color: "var(--text-primary)" }}
-                  aria-label="Ø¥Ø®ÙØ§Ø¡ Ø§Ù„Ø±Ø³Ø§Ù„Ø©"
-                >
-                  Ø¥Ø®ÙØ§Ø¡
-                </button>
               </div>
-            </div>
-          </motion.div>
-        )}
-        {postBreathingMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.35 }}
-            className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
-            role="status"
-            aria-live="polite"
-          >
-            <div
-              className="bento-block text-center py-4 px-6"
-              style={{
-                borderColor: "rgba(20, 184, 166, 0.3)",
-                background: "rgba(20, 184, 166, 0.08)"
-              }}
+            </motion.div>
+          )}
+          {postBreathingMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.35 }}
+              className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
+              role="status"
+              aria-live="polite"
             >
-              <p className="text-base font-medium" style={{ color: "var(--text-primary)" }}>
-                تم الشحن.. رجعت للخريطة
-              </p>
-              <p className="text-sm mt-1 opacity-90" style={{ color: "var(--text-secondary)" }}>
-                كمّل خطوة بسيطة وبس
-              </p>
-            </div>
-          </motion.div>
-        )}
-        {postNoiseSessionMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.35 }}
-            className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
-            role="status"
-            aria-live="polite"
-          >
-            <div
-              className="bento-block text-center py-4 px-6"
-              style={{
-                borderColor: "rgba(34, 197, 94, 0.25)",
-                background: "rgba(34, 197, 94, 0.06)"
-              }}
-            >
-              <p className="text-base font-medium" style={{ color: "var(--text-primary)" }}>
-                Ø­Ù…Ø¯ Ù„Ù„Ù‡ Ø¹Ù„Ù‰ Ø§Ù„Ø³Ù„Ø§Ù…Ø© ðŸŒ¿
-              </p>
-              <p className="text-sm mt-1 opacity-90" style={{ color: "var(--text-secondary)" }}>
-                ÙŠÙˆÙ…Ùƒ Ø¨Ù‚Ù‰ Ø£Ø®Ù Ø¯Ù„ÙˆÙ‚ØªÙŠ
-              </p>
-            </div>
-          </motion.div>
-        )}
-        {pulseDeltaToast && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.3 }}
-            className="fixed left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
-            style={{ bottom: postNoiseSessionMessage ? "7.1rem" : (lastPulseInsights.length > 0 ? "8.8rem" : "1.5rem") }}
-            role="status"
-            aria-live="polite"
-          >
-            <div
-              className="bento-block text-center py-3.5 px-5"
-              style={{
-                borderColor:
-                  pulseDeltaToast.tone === "up"
-                    ? "rgba(45, 212, 191, 0.35)"
-                    : pulseDeltaToast.tone === "down"
-                      ? "rgba(248, 113, 113, 0.32)"
-                      : "rgba(148, 163, 184, 0.3)",
-                background:
-                  pulseDeltaToast.tone === "up"
-                    ? "rgba(45, 212, 191, 0.1)"
-                    : pulseDeltaToast.tone === "down"
-                      ? "rgba(248, 113, 113, 0.09)"
-                      : "rgba(148, 163, 184, 0.08)"
-              }}
-            >
-              <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                {pulseDeltaToast.title}
-              </p>
-              <p className="text-xs mt-1 opacity-90" style={{ color: "var(--text-secondary)" }}>
-                {pulseDeltaToast.body}
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {lastPulseInsights.length > 0 && (
-        <div className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-lg mx-auto">
-          <div className="bento-block" style={{ borderColor: "rgba(245, 166, 35, 0.25)", padding: "1.5rem" }}>
-            <div className="flex items-start gap-4 mb-4">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+                className="bento-block text-center py-4 px-6"
                 style={{
-                  background: "rgba(245, 166, 35, 0.12)",
-                  border: "1px solid rgba(245, 166, 35, 0.25)",
-                  color: "var(--warm-amber)"
+                  borderColor: "rgba(20, 184, 166, 0.3)",
+                  background: "rgba(20, 184, 166, 0.08)"
                 }}
               >
-                âœ¨
+                <p className="text-base font-medium" style={{ color: "var(--text-primary)" }}>
+                  تم الشحن.. رجعت للخريطة
+                </p>
+                <p className="text-sm mt-1 opacity-90" style={{ color: "var(--text-secondary)" }}>
+                  كمّل خطوة بسيطة وبس
+                </p>
               </div>
-              <div className="text-right flex-1 min-w-0">
-                <h3 className="text-sm font-bold mb-3" style={{ color: "var(--warm-amber)" }}>
-                  ÙˆÙ…Ø¶Ø© Ù…Ù† Ø§Ù„Ø°Ø§ÙƒØ±Ø©
-                </h3>
-                <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-                  {lastPulseInsights.map((insight) => (
-                    <div
-                      key={insight.id}
-                      className="min-w-[220px] max-w-[280px] rounded-xl px-4 py-3"
-                      style={{
-                        background: "rgba(245, 166, 35, 0.08)",
-                        border: "1px solid rgba(245, 166, 35, 0.15)"
-                      }}
-                    >
-                      <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                        Ø´Ø¹ÙˆØ±Ùƒ Ø¯Ù„ÙˆÙ‚ØªÙŠ Ø¨ÙŠØ´Ø¨Ù‡ Ù…ÙˆÙ‚Ù{" "}
-                        {insight.created_at && (
-                          <span className="font-bold" style={{ color: "var(--text-primary)" }}>
-                            Ø­ØµÙ„ ÙŠÙˆÙ…{" "}
-                            {new Date(insight.created_at).toLocaleDateString("ar-EG")}
+            </motion.div>
+          )}
+          {postNoiseSessionMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.35 }}
+              className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
+              role="status"
+              aria-live="polite"
+            >
+              <div
+                className="bento-block text-center py-4 px-6"
+                style={{
+                  borderColor: "rgba(34, 197, 94, 0.25)",
+                  background: "rgba(34, 197, 94, 0.06)"
+                }}
+              >
+                <p className="text-base font-medium" style={{ color: "var(--text-primary)" }}>
+                  Ø­Ù…Ø¯ Ù„Ù„Ù‡ Ø¹Ù„Ù‰ Ø§Ù„Ø³Ù„Ø§Ù…Ø© ðŸŒ¿
+                </p>
+                <p className="text-sm mt-1 opacity-90" style={{ color: "var(--text-secondary)" }}>
+                  ÙŠÙˆÙ…Ùƒ Ø¨Ù‚Ù‰ Ø£Ø®Ù Ø¯Ù„ÙˆÙ‚ØªÙŠ
+                </p>
+              </div>
+            </motion.div>
+          )}
+          {pulseDeltaToast && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.3 }}
+              className="fixed left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-md mx-auto"
+              style={{ bottom: postNoiseSessionMessage ? "7.1rem" : (lastPulseInsights.length > 0 ? "8.8rem" : "1.5rem") }}
+              role="status"
+              aria-live="polite"
+            >
+              <div
+                className="bento-block text-center py-3.5 px-5"
+                style={{
+                  borderColor:
+                    pulseDeltaToast.tone === "up"
+                      ? "rgba(45, 212, 191, 0.35)"
+                      : pulseDeltaToast.tone === "down"
+                        ? "rgba(248, 113, 113, 0.32)"
+                        : "rgba(148, 163, 184, 0.3)",
+                  background:
+                    pulseDeltaToast.tone === "up"
+                      ? "rgba(45, 212, 191, 0.1)"
+                      : pulseDeltaToast.tone === "down"
+                        ? "rgba(248, 113, 113, 0.09)"
+                        : "rgba(148, 163, 184, 0.08)"
+                }}
+              >
+                <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                  {pulseDeltaToast.title}
+                </p>
+                <p className="text-xs mt-1 opacity-90" style={{ color: "var(--text-secondary)" }}>
+                  {pulseDeltaToast.body}
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {lastPulseInsights.length > 0 && (
+          <div className="fixed bottom-6 left-6 right-6 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-40 max-w-lg mx-auto">
+            <div className="bento-block" style={{ borderColor: "rgba(245, 166, 35, 0.25)", padding: "1.5rem" }}>
+              <div className="flex items-start gap-4 mb-4">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+                  style={{
+                    background: "rgba(245, 166, 35, 0.12)",
+                    border: "1px solid rgba(245, 166, 35, 0.25)",
+                    color: "var(--warm-amber)"
+                  }}
+                >
+                  âœ¨
+                </div>
+                <div className="text-right flex-1 min-w-0">
+                  <h3 className="text-sm font-bold mb-3" style={{ color: "var(--warm-amber)" }}>
+                    ÙˆÙ…Ø¶Ø© Ù…Ù† Ø§Ù„Ø°Ø§ÙƒØ±Ø©
+                  </h3>
+                  <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                    {lastPulseInsights.map((insight) => (
+                      <div
+                        key={insight.id}
+                        className="min-w-[220px] max-w-[280px] rounded-xl px-4 py-3"
+                        style={{
+                          background: "rgba(245, 166, 35, 0.08)",
+                          border: "1px solid rgba(245, 166, 35, 0.15)"
+                        }}
+                      >
+                        <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                          Ø´Ø¹ÙˆØ±Ùƒ Ø¯Ù„ÙˆÙ‚ØªÙŠ Ø¨ÙŠØ´Ø¨Ù‡ Ù…ÙˆÙ‚Ù{" "}
+                          {insight.created_at && (
+                            <span className="font-bold" style={{ color: "var(--text-primary)" }}>
+                              Ø­ØµÙ„ ÙŠÙˆÙ…{" "}
+                              {new Date(insight.created_at).toLocaleDateString("ar-EG")}
+                            </span>
+                          )}
+                          {": "}
+                          <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                            {insight.content.slice(0, 90)}
+                            {insight.content.length > 90 ? "..." : ""}
                           </span>
-                        )}
-                        {": "}
-                        <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
-                          {insight.content.slice(0, 90)}
-                          {insight.content.length > 90 ? "..." : ""}
-                        </span>
-                      </p>
-                    </div>
-                  ))}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={() => setLastPulseInsights([])}
+                className="glass-button w-full text-xs font-bold"
+                style={{ color: "var(--warm-amber)" }}
+              >
+                ØªÙ… Â· Ø¥Ø®ÙØ§Ø¡ Ø§Ù„ÙˆÙ…Ø¶Ø©
+              </button>
             </div>
+          </div>
+        )}
+        {/* Legacy pattern removed â€” nebula-bg handles the cosmic background */}
+        {!isAdminRoute && !showAuthModal && !showPulseCheck && (
+          <div className="fixed z-[80] top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4" dir="ltr">
             <button
               type="button"
-              onClick={() => setLastPulseInsights([])}
-              className="glass-button w-full text-xs font-bold"
-              style={{ color: "var(--warm-amber)" }}
+              onClick={() => {
+                recordFlowEvent("profile_clicked");
+                if (authUser) {
+                  setShowDataManagement(true);
+                  return;
+                }
+                setPulseCheckContext("regular");
+                setShowPulseCheck(false);
+                setWelcome(null);
+                const intent: PostAuthIntent = { kind: "login", createdAt: Date.now() };
+                setPostAuthIntentState(intent);
+                setShowAuthModal(true);
+              }}
+              className="group w-11 h-11 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 cursor-pointer relative"
+              style={{ color: "var(--text-secondary)" }}
+              aria-label={authUser ? "حسابي" : "تسجيل الدخول"}
             >
-              ØªÙ… Â· Ø¥Ø®ÙØ§Ø¡ Ø§Ù„ÙˆÙ…Ø¶Ø©
+              <span className="relative inline-flex items-center justify-center">
+                <User className="w-5 h-5" />
+                {authUser && (
+                  <span
+                    className="absolute top-0 right-0 w-2 h-2 rounded-full"
+                    style={{ background: "var(--soft-teal)", boxShadow: "0 0 0 2px var(--space-void)" }}
+                    aria-hidden="true"
+                  />
+                )}
+              </span>
+              <span
+                className="pointer-events-none absolute top-full mt-1 right-0 max-w-48 rounded-2xl px-3 py-1 text-[11px] font-medium leading-snug opacity-0 translate-y-1 bg-slate-900/90 text-slate-50 border border-white/10 backdrop-blur-md group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 text-center"
+              >
+                {authUser ? "افتح حسابك" : "سجّل دخولك واحفظ رحلتك"}            </span>
             </button>
           </div>
-        </div>
-      )}
-      {/* Legacy pattern removed â€” nebula-bg handles the cosmic background */}
-      {!isAdminRoute && !showAuthModal && !showPulseCheck && (
-        <div className="fixed z-[80] top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4" dir="ltr">
+        )}
+        {whatsAppLink && !isAdminRoute && !showAuthModal && !showPulseCheck && (
           <button
             type="button"
             onClick={() => {
-              recordFlowEvent("profile_clicked");
-              if (authUser) {
-                setShowDataManagement(true);
-                return;
-              }
-              setPulseCheckContext("regular");
-              setShowPulseCheck(false);
-              setWelcome(null);
-              const intent: PostAuthIntent = { kind: "login", createdAt: Date.now() };
-              setPostAuthIntentState(intent);
-              setShowAuthModal(true);
+              trackEvent("whatsapp_contact_clicked", { placement: "app_floating" });
+              openInNewTab(whatsAppLink);
             }}
-            className="group w-11 h-11 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 cursor-pointer relative"
-            style={{ color: "var(--text-secondary)" }}
-            aria-label={authUser ? "حسابي" : "تسجيل الدخول"}
+            className="fixed z-40 right-4 md:right-6 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all"
+            title="ØªÙˆØ§ØµÙ„ ÙˆØ§ØªØ³Ø§Ø¨"
+            aria-label="ØªÙˆØ§ØµÙ„ ÙˆØ§ØªØ³Ø§Ø¨"
           >
-            <span className="relative inline-flex items-center justify-center">
-              <User className="w-5 h-5" />
-              {authUser && (
-                <span
-                  className="absolute top-0 right-0 w-2 h-2 rounded-full"
-                  style={{ background: "var(--soft-teal)", boxShadow: "0 0 0 2px var(--space-void)" }}
-                  aria-hidden="true"
+            <MessageCircle className="w-5 h-5 shrink-0" />
+          </button>
+        )}
+        <main
+          className={`flex-1 min-w-0 flex pb-14 md:pb-0 ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""}`}
+          aria-hidden={showPulseCheck}
+        >
+          {screen === "map" && (
+            <JourneyTimeline
+              isOpen={showJourneyTimeline}
+              onClose={() => setShowJourneyTimeline(false)}
+              onCardClick={(nodeId) => setSelectedNodeId(nodeId)}
+            />
+          )}
+          <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„</div>}>
+            <div key={screen} className={`flex-1 min-w-0 flex items-center justify-center transition-all duration-300 ease-in-out ${screen === "landing" ? "" : "app-panel-main"}`}>
+              {screen === "landing" && (
+                nodes.some(n => !n.isNodeArchived) ? (
+                  <DashboardScreen
+                    firstName={authFirstName}
+                    onNavigateToMap={() => setScreen("map")}
+                    onOpenAchievements={() => setShowAchievements(true)}
+                  />
+                ) : (
+                  <Landing
+                    onStartJourney={startRecovery}
+                    onOpenTools={openJourneyTools}
+                    showTopToolsButton={showTopToolsButton}
+                    showPostStartContent={!isLockedPhaseOne && isPrivilegedUser}
+                    showToolsSection={!isLockedPhaseOne}
+                    onFeatureLocked={setLockedFeature}
+                    availableFeatures={availableFeatures}
+                    ownerInstallRequestNonce={ownerInstallRequestNonce}
+                    onOwnerInstallRequestHandled={() => setOwnerInstallRequestNonce(0)}
+                  />
+                )
+              )}
+
+              {screen === "goal" && (
+                <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col px-3 sm:px-4">
+                  {welcome && (
+                    <OnboardingWelcomeBubble
+                      message={welcome.message}
+                      source={welcome.source}
+                      onClose={() => setWelcome(null)}
+                    />
+                  )}
+                  <GoalPicker
+                    onBack={() => setScreen("landing")}
+                    onContinue={(nextCategory, nextGoalId) => {
+                      setWelcome(null);
+                      setCategory(nextCategory);
+                      setGoalId(nextGoalId);
+                      useJourneyState.getState().setLastGoal(nextGoalId, nextCategory);
+                      skipNextPulseCheck();
+                      setScreen("map");
+                    }}
+                  />
+                </div>
+              )}
+
+              {screen === "map" && (
+                <CoreMapScreen
+                  category={category}
+                  goalId={goalId}
+                  selectedNodeId={selectedNodeId}
+                  onSelectNode={setSelectedNodeId}
+                  onOpenBreathing={() => setShowBreathing(true)}
+                  onOpenMission={openMissionScreen}
+                  pulseMode={pulseMode}
+                  pulseInsight={pulseInsight}
+                  onOpenCocoon={openCocoonModal}
+                  suppressLowPulseCocoon={isLowPulseCocoonSuppressed}
+                  onOpenNoise={() => setShowNoiseSilencingPulse(true)}
+                  canUseBasicDiagnosis={availableFeatures.basic_diagnosis}
+                  onFeatureLocked={setLockedFeature}
+                  onOpenChallenge={
+                    challengeTarget ? () => openMissionScreen(challengeTarget.nodeId) : undefined
+                  }
+                  challengeLabel={challengeLabel}
                 />
               )}
-            </span>
-            <span
-              className="pointer-events-none absolute top-full mt-1 right-0 max-w-48 rounded-2xl px-3 py-1 text-[11px] font-medium leading-snug opacity-0 translate-y-1 bg-slate-900/90 text-slate-50 border border-white/10 backdrop-blur-md group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 text-center"
-            >
-              {authUser ? "افتح حسابك" : "سجّل دخولك واحفظ رحلتك"}            </span>
-          </button>
-        </div>
-      )}
-      {whatsAppLink && !isAdminRoute && !showAuthModal && !showPulseCheck && (
-        <button
-          type="button"
-          onClick={() => {
-            trackEvent("whatsapp_contact_clicked", { placement: "app_floating" });
-            openInNewTab(whatsAppLink);
-          }}
-          className="fixed z-40 right-4 md:right-6 bottom-[calc(env(safe-area-inset-bottom)+1rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all"
-          title="ØªÙˆØ§ØµÙ„ ÙˆØ§ØªØ³Ø§Ø¨"
-          aria-label="ØªÙˆØ§ØµÙ„ ÙˆØ§ØªØ³Ø§Ø¨"
-        >
-          <MessageCircle className="w-5 h-5 shrink-0" />
-        </button>
-      )}
-      <main
-        className={`flex-1 min-w-0 flex ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""}`}
-        aria-hidden={showPulseCheck}
-      >
-        {screen === "map" && (
-          <JourneyTimeline
-            isOpen={showJourneyTimeline}
-            onClose={() => setShowJourneyTimeline(false)}
-            onCardClick={(nodeId) => setSelectedNodeId(nodeId)}
-          />
-        )}
-        <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„</div>}>
-          <div key={screen} className={`flex-1 min-w-0 flex items-center justify-center transition-all duration-300 ease-in-out ${screen === "landing" ? "" : "app-panel-main"}`}>
-            {screen === "landing" && (
-              <Landing
-                onStartJourney={startRecovery}
-                onOpenTools={openJourneyTools}
-                showTopToolsButton={showTopToolsButton}
-                showPostStartContent={!isLockedPhaseOne && isPrivilegedUser}
-                showToolsSection={!isLockedPhaseOne}
-                onFeatureLocked={setLockedFeature}
-                availableFeatures={availableFeatures}
-                ownerInstallRequestNonce={ownerInstallRequestNonce}
-                onOwnerInstallRequestHandled={() => setOwnerInstallRequestNonce(0)}
-              />
-            )}
 
-            {screen === "goal" && (
-              <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col px-3 sm:px-4">
-                {welcome && (
-                  <OnboardingWelcomeBubble
-                    message={welcome.message}
-                    source={welcome.source}
-                    onClose={() => setWelcome(null)}
-                  />
-                )}
-                <GoalPicker
-                  onBack={() => setScreen("landing")}
-                  onContinue={(nextCategory, nextGoalId) => {
-                    setWelcome(null);
-                    setCategory(nextCategory);
-                    setGoalId(nextGoalId);
-                    useJourneyState.getState().setLastGoal(nextGoalId, nextCategory);
-                    skipNextPulseCheck();
+              {screen === "tools" && (
+                <JourneyToolsScreen
+                  onBack={() => setScreen(toolsBackScreen)}
+                  onOpenDawayir={openDawayirTool}
+                  onOpenDawayirSetup={openDawayirSetup}
+                  onFeatureLocked={setLockedFeature}
+                  availableFeatures={availableFeatures}
+                  onOpenGoal={(goalId, category) => {
+                    setGoalId(goalId);
+                    setCategory(category as AdviceCategory);
                     setScreen("map");
                   }}
                 />
-              </div>
-            )}
+              )}
 
-            {screen === "map" && (
-              <CoreMapScreen
-                category={category}
-                goalId={goalId}
-                selectedNodeId={selectedNodeId}
-                onSelectNode={setSelectedNodeId}
-                onOpenBreathing={() => setShowBreathing(true)}
-                onOpenMission={openMissionScreen}
-                pulseMode={pulseMode}
-                pulseInsight={pulseInsight}
-                onOpenCocoon={openCocoonModal}
-                suppressLowPulseCocoon={isLowPulseCocoonSuppressed}
-                onOpenNoise={() => setShowNoiseSilencingPulse(true)}
-                canUseBasicDiagnosis={availableFeatures.basic_diagnosis}
-                onFeatureLocked={setLockedFeature}
-                onOpenChallenge={
-                  challengeTarget ? () => openMissionScreen(challengeTarget.nodeId) : undefined
-                }
-                challengeLabel={challengeLabel}
-              />
-            )}
-
-            {screen === "tools" && (
-              <JourneyToolsScreen
-                onBack={() => setScreen(toolsBackScreen)}
-                onOpenDawayir={openDawayirTool}
-                onOpenDawayirSetup={openDawayirSetup}
-                onFeatureLocked={setLockedFeature}
-                availableFeatures={availableFeatures}
-                onOpenGoal={(goalId, category) => {
-                  setGoalId(goalId);
-                  setCategory(category as AdviceCategory);
-                  setScreen("map");
-                }}
-              />
-            )}
-
-            {screen === "guided" && (
-              <GuidedJourneyFlow
-                onBackToLanding={() => setScreen("landing")}
-                onFinishJourney={() => setScreen("map")}
-              />
-            )}
-
-            {screen === "mission" && missionNodeId && (
-              <MissionScreen
-                nodeId={missionNodeId}
-                onBack={() => setScreen("map")}
-              />
-            )}
-            </div>
-        </Suspense>
-      </main>
-
-      <Suspense fallback={null}>
-        {showGym && (
-          <RelationshipGym
-            onClose={() => setShowGym(false)}
-            onStartJourney={() => {
-              setShowGym(false);
-              goToGoals();
-            }}
-          />
-        )}
-
-        {showBaseline && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-            <div className="relative bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-auto">
-              <button
-                type="button"
-                onClick={() => setShowBaseline(false)}
-                className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors z-10"
-                aria-label="Ø¥ØºÙ„Ø§Ù‚"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              <div className="p-6">
-                <h2 className="text-xl font-bold text-slate-900 mb-2 text-center">
-                  Ø§Ù„Ù‚ÙŠØ§Ø³ Ø§Ù„Ø£ÙˆÙ„ÙŠ
-                </h2>
-                <p className="text-sm text-slate-600 mb-6 text-center">
-                  Ø¥Ø¬Ø§Ø¨Ø§Øª Ø³Ø±ÙŠØ¹Ø© Ø¹Ø´Ø§Ù† Ù†Ø¹Ø±Ù Ù†Ù‚Ø·Ø© Ø§Ù„Ø¨Ø¯Ø§ÙŠØ©
-                </p>
-                <BaselineAssessment
-                  onComplete={() => setShowBaseline(false)}
+              {screen === "guided" && (
+                <GuidedJourneyFlow
+                  onBackToLanding={() => setScreen("landing")}
+                  onFinishJourney={() => setScreen("map")}
                 />
-              </div>
-              <div className="p-4 border-t border-slate-200">
+              )}
+
+              {screen === "mission" && missionNodeId && (
+                <MissionScreen
+                  nodeId={missionNodeId}
+                  onBack={() => setScreen("map")}
+                />
+              )}
+            </div>
+          </Suspense>
+        </main>
+
+        <Suspense fallback={null}>
+          {showGym && (
+            <RelationshipGym
+              onClose={() => setShowGym(false)}
+              onStartJourney={() => {
+                setShowGym(false);
+                goToGoals();
+              }}
+            />
+          )}
+
+          {showBaseline && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-space-void/60 backdrop-blur-md">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative glass-heavy max-w-lg w-full max-h-[90vh] overflow-auto border-teal-500/20"
+              >
                 <button
                   type="button"
                   onClick={() => setShowBaseline(false)}
-                  className="w-full py-2 text-sm text-slate-500 hover:text-slate-700"
+                  className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors z-20"
+                  aria-label="إغلاق"
                 >
-                  Ø¥ØºÙ„Ø§Ù‚
+                  <X className="w-5 h-5" />
                 </button>
-              </div>
+
+                <div className="p-6 md:p-8">
+                  <BaselineAssessment
+                    onComplete={() => setShowBaseline(false)}
+                  />
+                </div>
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
 
-        {showJourneyGuideChat && canShowAIChatbot && (
-          <AIChatbot
-            agentContext={agentContext}
-            agentActions={agentActions}
-            systemPromptOverride={agentSystemPrompt}
-            onOpenBreathing={() => setShowBreathing(true)}
-            onNavigateToMap={() => setScreen("map")}
-            showLauncher={false}
-            defaultOpen
-            onRequestClose={() => setShowJourneyGuideChat(false)}
+          {showJourneyGuideChat && canShowAIChatbot && (
+            <AIChatbot
+              agentContext={agentContext}
+              agentActions={agentActions}
+              systemPromptOverride={agentSystemPrompt}
+              onOpenBreathing={() => setShowBreathing(true)}
+              onNavigateToMap={() => setScreen("map")}
+              showLauncher={false}
+              defaultOpen
+              onRequestClose={() => setShowJourneyGuideChat(false)}
+            />
+          )}
+
+          {/* Ø²Ø± Ø¥Ø¶Ø§ÙÙŠ Ù„ÙØªØ­ Ø£Ø±Ø´ÙŠÙ Ø§Ù„ÙˆØ¹ÙŠ Ù…Ù† Ø´Ø§Ø´Ø© Ø§Ù„Ù‡Ø¨ÙˆØ· â€” ÙˆØ¶Ø¹ Ø§Ù„ØªØ·ÙˆÙŠØ± ÙÙ‚Ø· */}
+          <ConsciousnessArchiveModal
+            isOpen={showConsciousnessArchive}
+            onClose={() => setShowConsciousnessArchive(false)}
           />
-        )}
+          {lastNewAchievementId && <AchievementToast />}
 
-        {/* Ø²Ø± Ø¥Ø¶Ø§ÙÙŠ Ù„ÙØªØ­ Ø£Ø±Ø´ÙŠÙ Ø§Ù„ÙˆØ¹ÙŠ Ù…Ù† Ø´Ø§Ø´Ø© Ø§Ù„Ù‡Ø¨ÙˆØ· â€” ÙˆØ¶Ø¹ Ø§Ù„ØªØ·ÙˆÙŠØ± ÙÙ‚Ø· */}
-        <ConsciousnessArchiveModal
-          isOpen={showConsciousnessArchive}
-          onClose={() => setShowConsciousnessArchive(false)}
-        />
-        {lastNewAchievementId && <AchievementToast />}
-
-        {showPulseCheck && (
-          <PulseCheckModal
-            isOpen={showPulseCheck}
-            context={pulseCheckContext}
-            onSubmit={(payload) => {
-              if (pulseCheckContext === "start_recovery") {
-                handlePulseGateSubmit(payload);
-                return;
-              }
-              handlePulseSubmit(payload);
-            }}
-            onClose={(reason) => {
-              if (reason === "close_button") {
-                const autoPayload = buildAutoPulsePayload();
+          {showPulseCheck && (
+            <PulseCheckModal
+              isOpen={showPulseCheck}
+              context={pulseCheckContext}
+              onSubmit={(payload) => {
                 if (pulseCheckContext === "start_recovery") {
-                  if (hasConcretePulseSelection(autoPayload)) {
-                    logPulse(autoPayload);
-                  }
-                  closePulseCheck(true, "programmatic");
-                  openDawayirSetup();
+                  handlePulseGateSubmit(payload);
                   return;
                 }
-                closePulseCheck(false, "close_button");
-                return;
-              }
-              closePulseCheck(false, reason);
-            }}
-          />
-        )}
+                handlePulseSubmit(payload);
+              }}
+              onClose={(reason) => {
+                if (reason === "close_button") {
+                  const autoPayload = buildAutoPulsePayload();
+                  if (pulseCheckContext === "start_recovery") {
+                    if (hasConcretePulseSelection(autoPayload)) {
+                      logPulse(autoPayload);
+                    }
+                    closePulseCheck(true, "programmatic");
+                    openDawayirSetup();
+                    return;
+                  }
+                  closePulseCheck(false, "close_button");
+                  return;
+                }
+                closePulseCheck(false, reason);
+              }}
+            />
+          )}
 
-        {showCocoon && (
-          <CocoonModeModal
-            isOpen={showCocoon}
-            onStart={() => {
-              breathingFromCocoonRef.current = true;
-              setShowCocoon(false);
-              setPendingCocoonAfterNoise(false);
-              suppressCocoonFor(90000);
-              setReturnToGoalOnBreathingClose(true);
-              skipNextPulseCheck();
-              if (goalId === "unknown") {
-                openDefaultGoalMap();
-              } else {
-                setScreen("map");
-              }
-              setShowBreathing(true);
-            }}
-            canSkip={canSkipCocoonBreathing}
-            onSkip={() => {
-              breathingFromCocoonRef.current = false;
-              setShowCocoon(false);
-              setPendingCocoonAfterNoise(false);
-              suppressCocoonFor(4000);
-              goToGoals();
-            }}
-            onClose={() => {
-              breathingFromCocoonRef.current = false;
-              setShowCocoon(false);
-            }}
-          />
-        )}
-
-        {showNoiseSilencingPulse && (
-          <NoiseSilencingModal
-            isOpen={showNoiseSilencingPulse}
-            onClose={() => {
-              setShowNoiseSilencingPulse(false);
-              if (pendingCocoonAfterNoise) {
+          {showCocoon && (
+            <CocoonModeModal
+              isOpen={showCocoon}
+              onStart={() => {
+                breathingFromCocoonRef.current = true;
+                setShowCocoon(false);
                 setPendingCocoonAfterNoise(false);
-                openCocoonModal("auto");
-              }
-            }}
-            onSessionComplete={() => {
-              setShowNoiseSilencingPulse(false);
-              if (pendingCocoonAfterNoise) {
-                setPendingCocoonAfterNoise(false);
-                openCocoonModal("auto");
-              }
-              setPostNoiseSessionMessage(true);
-              setTimeout(() => setPostNoiseSessionMessage(false), 4500);
-            }}
-          />
-        )}
-
-        {lockedFeature != null && (
-          <FeatureLockedModal
-            isOpen={lockedFeature != null}
-            featureKey={lockedFeature}
-            onClose={() => setLockedFeature(null)}
-          />
-        )}
-
-        {showBreathing && (
-          <BreathingOverlay
-            onClose={() => {
-              const fromCocoon = breathingFromCocoonRef.current;
-              const lowPulseRecently = Boolean(
-                lastPulse &&
-                (Date.now() - (lastPulse.timestamp ?? 0) < 24 * 60 * 60 * 1000) &&
-                lastPulse.energy <= 3
-              );
-              const shouldForceMapAfterBreathing = fromCocoon || returnToGoalOnBreathingClose || lowPulseRecently;
-              breathingFromCocoonRef.current = false;
-              setShowBreathing(false);
-              setShowCocoon(false);
-              setPendingCocoonAfterNoise(false);
-              suppressCocoonFor(shouldForceMapAfterBreathing ? 90_000 : 8_000);
-              if (shouldForceMapAfterBreathing) {
-                setSuppressLowPulseCocoonUntil(Date.now() + 20 * 60 * 1000);
-                setReturnToGoalOnBreathingClose(false);
+                suppressCocoonFor(90000);
+                setReturnToGoalOnBreathingClose(true);
                 skipNextPulseCheck();
                 if (goalId === "unknown") {
                   openDefaultGoalMap();
                 } else {
                   setScreen("map");
                 }
-                setPostBreathingMessage(true);
-                setTimeout(() => setPostBreathingMessage(false), 4000);
-              }
-            }}
-          />
-        )}
-
-        {isEmergencyOpen && (
-          <EmergencyOverlay
-            onStartBreathing={() => {
-              useEmergencyState.getState().close();
-              setShowBreathing(true);
-            }}
-            onStartScenario={() => {
-              useEmergencyState.getState().close();
-              setShowGym(true);
-            }}
-          />
-        )}
-      </Suspense>
-
-      {postAuthIntent && (
-        <GoogleAuthModal
-          isOpen={showAuthModal}
-          intent={postAuthIntent}
-          onClose={() => setShowAuthModal(false)}
-          onNotNow={(pulseToSave) => {
-            setShowAuthModal(false);
-            setPostAuthIntentState(null);
-            clearPostAuthIntent();
-            setWelcome(null);
-            skipNextPulseCheck();
-            if (pulseToSave) logPulse(pulseToSave);
-            openDawayirSetup();
-          }}
-        />
-      )}
-
-      {showDataManagement && (
-        <Suspense fallback={null}>
-          <DataManagement isOpen={showDataManagement} onClose={() => setShowDataManagement(false)} accountOnly />
-        </Suspense>
-      )}
-      {showOwnerDataTools && (
-        <Suspense fallback={null}>
-          <DataManagement isOpen={showOwnerDataTools} onClose={() => setShowOwnerDataTools(false)} accountOnly={false} />
-        </Suspense>
-      )}
-      {showNotificationSettings && (
-        <Suspense fallback={null}>
-          <NotificationSettings isOpen={showNotificationSettings} onClose={() => setShowNotificationSettings(false)} />
-        </Suspense>
-      )}
-      {showTrackingDashboard && (
-        <Suspense fallback={null}>
-          <TrackingDashboard isOpen={showTrackingDashboard} onClose={() => setShowTrackingDashboard(false)} />
-        </Suspense>
-      )}
-      {showAtlasDashboard && (
-        <Suspense fallback={null}>
-          <AtlasDashboard isOpen={showAtlasDashboard} onClose={() => setShowAtlasDashboard(false)} />
-        </Suspense>
-      )}
-      {showShareStats && (
-        <Suspense fallback={null}>
-          <ShareStats isOpen={showShareStats} onClose={() => setShowShareStats(false)} />
-        </Suspense>
-      )}
-      {showLibrary && (
-        <Suspense fallback={null}>
-          <EducationalLibrary isOpen={showLibrary} onClose={() => setShowLibrary(false)} />
-        </Suspense>
-      )}
-      {showSymptomsOverview && (
-        <Suspense fallback={null}>
-          <SymptomsOverviewModal isOpen={showSymptomsOverview} onClose={() => setShowSymptomsOverview(false)} />
-        </Suspense>
-      )}
-      {showRecoveryPlan && (
-        <Suspense fallback={null}>
-          <RecoveryPlanModal isOpen={showRecoveryPlan} onClose={() => setShowRecoveryPlan(false)} />
-        </Suspense>
-      )}
-      {showThemeSettings && (
-        <Suspense fallback={null}>
-          <ThemeSettings isOpen={showThemeSettings} onClose={() => setShowThemeSettings(false)} />
-        </Suspense>
-      )}
-      {showAchievements && (
-        <Suspense fallback={null}>
-          <Achievements onClose={() => setShowAchievements(false)} />
-        </Suspense>
-      )}
-      {showAdvancedTools && (
-        <Suspense fallback={null}>
-          <AdvancedToolsModal isOpen={showAdvancedTools} onClose={() => setShowAdvancedTools(false)} />
-        </Suspense>
-      )}
-      {showClassicRecovery && (
-        <Suspense fallback={null}>
-          <ClassicRecoveryModal isOpen={showClassicRecovery} onClose={() => setShowClassicRecovery(false)} />
-        </Suspense>
-      )}
-      {showManualPlacement && (
-        <Suspense fallback={null}>
-          <ManualPlacementModal isOpen={showManualPlacement} onClose={() => setShowManualPlacement(false)} />
-        </Suspense>
-      )}
-      {showFeedback && (
-        <Suspense fallback={null}>
-          <FeedbackModal
-            isOpen={showFeedback}
-            onClose={() => setShowFeedback(false)}
-            onSubmit={async (payload) => {
-              recordFlowEvent("feedback_submitted", {
-                meta: {
-                  category: payload.category,
-                  rating: payload.rating,
-                  message: payload.message
-                }
-              });
-            }}
-          />
-        </Suspense>
-      )}
-      {consciousnessInsight && screen !== "landing" && (
-        <div className="fixed bottom-28 left-6 right-6 bento-block z-50 max-w-lg mx-auto"
-          style={{ borderColor: "rgba(45, 212, 191, 0.25)", padding: "1.5rem" }}
-        >
-          <div className="flex items-start gap-4 mb-4">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{
-                background: "rgba(45, 212, 191, 0.12)",
-                border: "1px solid rgba(45, 212, 191, 0.25)"
+                setShowBreathing(true);
               }}
-            >
-              <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "var(--soft-teal)" }} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold mb-3" style={{ color: "var(--soft-teal)" }}>
-                Ø¨ØµÙŠØ±Ø© Ø§Ù„ÙˆØ¹ÙŠ
-              </h3>
-              <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--text-secondary)" }}>
-                {consciousnessInsight.suggestedAction}
-              </p>
-              <div className="flex gap-2 flex-wrap">
-                <span className="px-3 py-1.5 text-xs font-bold rounded-full"
-                  style={{ background: "var(--soft-teal-dim)", color: "var(--soft-teal)" }}
-                >
-                  {consciousnessInsight.emotionalState}
-                </span>
-                <span className="px-3 py-1.5 text-xs font-bold rounded-full"
-                  style={{ background: "rgba(139, 92, 246, 0.12)", color: "rgba(167, 139, 250, 0.9)" }}
-                >
-                  Ù†Ù…Ø·: {consciousnessInsight.underlyingPattern}
-                </span>
+              canSkip={canSkipCocoonBreathing}
+              onSkip={() => {
+                breathingFromCocoonRef.current = false;
+                setShowCocoon(false);
+                setPendingCocoonAfterNoise(false);
+                suppressCocoonFor(4000);
+                goToGoals();
+              }}
+              onClose={() => {
+                breathingFromCocoonRef.current = false;
+                setShowCocoon(false);
+              }}
+            />
+          )}
+
+          {showNoiseSilencingPulse && (
+            <NoiseSilencingModal
+              isOpen={showNoiseSilencingPulse}
+              onClose={() => {
+                setShowNoiseSilencingPulse(false);
+                if (pendingCocoonAfterNoise) {
+                  setPendingCocoonAfterNoise(false);
+                  openCocoonModal("auto");
+                }
+              }}
+              onSessionComplete={() => {
+                setShowNoiseSilencingPulse(false);
+                if (pendingCocoonAfterNoise) {
+                  setPendingCocoonAfterNoise(false);
+                  openCocoonModal("auto");
+                }
+                setPostNoiseSessionMessage(true);
+                setTimeout(() => setPostNoiseSessionMessage(false), 4500);
+              }}
+            />
+          )}
+
+          {lockedFeature != null && (
+            <FeatureLockedModal
+              isOpen={lockedFeature != null}
+              featureKey={lockedFeature}
+              onClose={() => setLockedFeature(null)}
+            />
+          )}
+
+          {showBreathing && (
+            <BreathingOverlay
+              onClose={() => {
+                const fromCocoon = breathingFromCocoonRef.current;
+                const lowPulseRecently = Boolean(
+                  lastPulse &&
+                  (Date.now() - (lastPulse.timestamp ?? 0) < 24 * 60 * 60 * 1000) &&
+                  lastPulse.energy <= 3
+                );
+                const shouldForceMapAfterBreathing = fromCocoon || returnToGoalOnBreathingClose || lowPulseRecently;
+                breathingFromCocoonRef.current = false;
+                setShowBreathing(false);
+                setShowCocoon(false);
+                setPendingCocoonAfterNoise(false);
+                suppressCocoonFor(shouldForceMapAfterBreathing ? 90_000 : 8_000);
+                if (shouldForceMapAfterBreathing) {
+                  setSuppressLowPulseCocoonUntil(Date.now() + 20 * 60 * 1000);
+                  setReturnToGoalOnBreathingClose(false);
+                  skipNextPulseCheck();
+                  if (goalId === "unknown") {
+                    openDefaultGoalMap();
+                  } else {
+                    setScreen("map");
+                  }
+                  setPostBreathingMessage(true);
+                  setTimeout(() => setPostBreathingMessage(false), 4000);
+                }
+              }}
+            />
+          )}
+
+          {isEmergencyOpen && (
+            <EmergencyOverlay
+              onStartBreathing={() => {
+                useEmergencyState.getState().close();
+                setShowBreathing(true);
+              }}
+              onStartScenario={() => {
+                useEmergencyState.getState().close();
+                setShowGym(true);
+              }}
+            />
+          )}
+        </Suspense>
+
+        {postAuthIntent && (
+          <GoogleAuthModal
+            isOpen={showAuthModal}
+            intent={postAuthIntent}
+            onClose={() => setShowAuthModal(false)}
+            onNotNow={(pulseToSave) => {
+              setShowAuthModal(false);
+              setPostAuthIntentState(null);
+              clearPostAuthIntent();
+              setWelcome(null);
+              skipNextPulseCheck();
+              if (pulseToSave) logPulse(pulseToSave);
+              openDawayirSetup();
+            }}
+          />
+        )}
+
+        {showDataManagement && (
+          <Suspense fallback={null}>
+            <DataManagement isOpen={showDataManagement} onClose={() => setShowDataManagement(false)} accountOnly />
+          </Suspense>
+        )}
+        {showOwnerDataTools && (
+          <Suspense fallback={null}>
+            <DataManagement isOpen={showOwnerDataTools} onClose={() => setShowOwnerDataTools(false)} accountOnly={false} />
+          </Suspense>
+        )}
+        {showNotificationSettings && (
+          <Suspense fallback={null}>
+            <NotificationSettings isOpen={showNotificationSettings} onClose={() => setShowNotificationSettings(false)} />
+          </Suspense>
+        )}
+        {showTrackingDashboard && (
+          <Suspense fallback={null}>
+            <TrackingDashboard isOpen={showTrackingDashboard} onClose={() => setShowTrackingDashboard(false)} />
+          </Suspense>
+        )}
+        {showAtlasDashboard && (
+          <Suspense fallback={null}>
+            <AtlasDashboard isOpen={showAtlasDashboard} onClose={() => setShowAtlasDashboard(false)} />
+          </Suspense>
+        )}
+        {showShareStats && (
+          <Suspense fallback={null}>
+            <ShareStats isOpen={showShareStats} onClose={() => setShowShareStats(false)} />
+          </Suspense>
+        )}
+        {showLibrary && (
+          <Suspense fallback={null}>
+            <EducationalLibrary isOpen={showLibrary} onClose={() => setShowLibrary(false)} />
+          </Suspense>
+        )}
+        {showSymptomsOverview && (
+          <Suspense fallback={null}>
+            <SymptomsOverviewModal isOpen={showSymptomsOverview} onClose={() => setShowSymptomsOverview(false)} />
+          </Suspense>
+        )}
+        {showRecoveryPlan && (
+          <Suspense fallback={null}>
+            <RecoveryPlanModal isOpen={showRecoveryPlan} onClose={() => setShowRecoveryPlan(false)} />
+          </Suspense>
+        )}
+        {showThemeSettings && (
+          <Suspense fallback={null}>
+            <ThemeSettings isOpen={showThemeSettings} onClose={() => setShowThemeSettings(false)} />
+          </Suspense>
+        )}
+        {showAchievements && (
+          <Suspense fallback={null}>
+            <Achievements onClose={() => setShowAchievements(false)} />
+          </Suspense>
+        )}
+        {showAdvancedTools && (
+          <Suspense fallback={null}>
+            <AdvancedToolsModal isOpen={showAdvancedTools} onClose={() => setShowAdvancedTools(false)} />
+          </Suspense>
+        )}
+        {showClassicRecovery && (
+          <Suspense fallback={null}>
+            <ClassicRecoveryModal isOpen={showClassicRecovery} onClose={() => setShowClassicRecovery(false)} />
+          </Suspense>
+        )}
+        {showManualPlacement && (
+          <Suspense fallback={null}>
+            <ManualPlacementModal isOpen={showManualPlacement} onClose={() => setShowManualPlacement(false)} />
+          </Suspense>
+        )}
+        {showFeedback && (
+          <Suspense fallback={null}>
+            <FeedbackModal
+              isOpen={showFeedback}
+              onClose={() => setShowFeedback(false)}
+              onSubmit={async (payload) => {
+                recordFlowEvent("feedback_submitted", {
+                  meta: {
+                    category: payload.category,
+                    rating: payload.rating,
+                    message: payload.message
+                  }
+                });
+              }}
+            />
+          </Suspense>
+        )}
+        {consciousnessInsight && screen !== "landing" && (
+          <div className="fixed bottom-28 left-6 right-6 bento-block z-50 max-w-lg mx-auto"
+            style={{ borderColor: "rgba(45, 212, 191, 0.25)", padding: "1.5rem" }}
+          >
+            <div className="flex items-start gap-4 mb-4">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{
+                  background: "rgba(45, 212, 191, 0.12)",
+                  border: "1px solid rgba(45, 212, 191, 0.25)"
+                }}
+              >
+                <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "var(--soft-teal)" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-bold mb-3" style={{ color: "var(--soft-teal)" }}>
+                  Ø¨ØµÙŠØ±Ø© Ø§Ù„ÙˆØ¹ÙŠ
+                </h3>
+                <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--text-secondary)" }}>
+                  {consciousnessInsight.suggestedAction}
+                </p>
+                <div className="flex gap-2 flex-wrap">
+                  <span className="px-3 py-1.5 text-xs font-bold rounded-full"
+                    style={{ background: "var(--soft-teal-dim)", color: "var(--soft-teal)" }}
+                  >
+                    {consciousnessInsight.emotionalState}
+                  </span>
+                  <span className="px-3 py-1.5 text-xs font-bold rounded-full"
+                    style={{ background: "rgba(139, 92, 246, 0.12)", color: "rgba(167, 139, 250, 0.9)" }}
+                  >
+                    Ù†Ù…Ø·: {consciousnessInsight.underlyingPattern}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+        {showOnboarding && (
+          <OnboardingFlow onComplete={() => { setShowOnboarding(false); setShowWelcomeToast(true); setTimeout(() => setShowWelcomeToast(false), 6000); }} />
+        )}
+        {showFaq && <FaqScreen onClose={() => setShowFaq(false)} />}
+                <JourneyToast variant="onboarding_complete" visible={showWelcomeToast} onClose={() => setShowWelcomeToast(false)} />
+        {/* Mobile Bottom Navigation - hidden on md+ */}
+        {!isAdminRoute && !showPulseCheck && !showAuthModal && (
+          <nav
+            className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center"
+            style={{
+              background: "rgba(15,23,42,0.88)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              borderTop: "1px solid rgba(45,212,191,0.15)",
+              paddingBottom: "env(safe-area-inset-bottom)",
+              height: "calc(60px + env(safe-area-inset-bottom))"
+            }}
+            aria-label="Ø§ÙØªÙÙÙ Ø§ÙØ±Ø¦ÙØ³Ù"
+          >
+            <button type="button" onClick={() => setScreen("landing")}
+              className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
+              style={{ color: screen === "landing" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
+              aria-label="ÙØ³Ø§Ø±Ù">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+              <span className="text-[10px] font-semibold">ÙØ³Ø§Ø±Ù</span>
+            </button>
+            <button type="button" onClick={() => setScreen("map")}
+              className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
+              style={{ color: screen === "map" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
+              aria-label="Ø¯ÙØ§ÙØ±Ù">
+              <span className="relative inline-flex items-center justify-center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+                  style={{ filter: screen === "map" ? "drop-shadow(0 0 8px rgba(45,212,191,0.7))" : "none", transition: "filter 0.3s" }}>
+                  <circle cx="12" cy="12" r="10" />
+                  <circle cx="12" cy="12" r="5.5" />
+                  <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                </svg>
+                {screen !== "map" && nodes.some(n => !n.isNodeArchived) && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full animate-pulse"
+                    style={{ background: "var(--soft-teal)", boxShadow: "0 0 0 1.5px rgba(15,23,42,0.95)" }}
+                    aria-hidden="true" />
+                )}
+              </span>
+              <span className="text-[10px] font-semibold">Ø¯ÙØ§ÙØ±Ù</span>
+            </button>
+            <button type="button" onClick={() => setShowAchievements(true)}
+              className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
+              style={{ color: "rgba(148,163,184,0.55)" }}
+              aria-label="ÙØ­Ø·Ø§Øª">
+              <span className="relative inline-flex items-center justify-center">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 21v-4a7 7 0 0 1 14 0v4" />
+                  <path d="M5 3v4a7 7 0 0 0 14 0V3" />
+                  <line x1="5" y1="3" x2="19" y2="3" />
+                  <line x1="5" y1="21" x2="19" y2="21" />
+                </svg>
+                {nodes.filter(n => n.isNodeArchived).length > 0 && (
+                  <span className="absolute -top-1 -right-2 min-w-[15px] h-[15px] rounded-full text-[8px] font-bold flex items-center justify-center px-0.5"
+                    style={{ background: "rgba(45,212,191,0.9)", color: "#0f172a", lineHeight: "1" }}>
+                    {nodes.filter(n => n.isNodeArchived).length}
+                  </span>
+                )}
+              </span>
+              <span className="text-[10px] font-semibold">ÙØ­Ø·Ø§Øª</span>
+            </button>
+            <button type="button" onClick={() => setShowFaq(true)}
+              className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
+              style={{ color: "rgba(148,163,184,0.55)" }}
+              aria-label="ÙØ¹Ù">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
+              <span className="text-[10px] font-semibold">ÙØ¹Ù</span>
+            </button>
+          </nav>
+        )}
+
+      </div>
     </PWAInstallProvider>
   );
 }

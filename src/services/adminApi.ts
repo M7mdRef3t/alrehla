@@ -56,7 +56,7 @@ function getAdminCode(): string | null {
   return state.adminCode || runtimeEnv.adminCode || ADMIN_ACCESS_CODE || null;
 }
 
-async function callAdminApi<T>(path: string, options?: RequestInit): Promise<T | null> {
+export async function callAdminApi<T>(path: string, options?: RequestInit): Promise<T | null> {
   const code = getAdminCode();
   const authToken = getAuthToken();
   if (!code && !authToken) return null;

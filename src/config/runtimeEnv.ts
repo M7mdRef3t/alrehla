@@ -18,35 +18,20 @@ type RuntimeKey =
   | "VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE"
   | "VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE";
 
-// Client-side only: Use getConfig from Next.js
+/** Safe accessor for process.env that never throws in browser/Vite */
+function safeProcessEnv(): Record<string, unknown> {
+  try {
+    if (typeof process !== "undefined" && process.env) {
+      return process.env as Record<string, unknown>;
+    }
+  } catch {
+    // process is not defined in Vite browser context
+  }
+  return {};
+}
+
 function readEnv(key: RuntimeKey): string | undefined {
-  try {
-    // In client-side Next.js, import getConfig for publicRuntimeConfig
-    const { getConfig } = require('next/config');
-    const config = getConfig?.();
-    if (config?.publicRuntimeConfig) {
-      const nextKey = key.replace("VITE_", "NEXT_PUBLIC_");
-      const val = config.publicRuntimeConfig[nextKey];
-      if (typeof val === "string" && val.length > 0) return val.trim();
-    }
-  } catch (e) {
-    // Fall through if not in Next.js context
-  }
-
-  // Fallback: Direct environment variable access (build-time inlined by Next.js)
-  try {
-    // Next.js inlines NEXT_PUBLIC_* vars at build time
-    if (typeof global !== 'undefined' && (global as Record<string, unknown>).__NEXT_DATA__) {
-      // In server-side context during build
-      const nextKey = key.replace("VITE_", "NEXT_PUBLIC_");
-      const val = (process.env as Record<string, unknown>)?.[nextKey];
-      if (typeof val === "string" && val.length > 0) return val.trim();
-    }
-  } catch (e) {
-    // ignore
-  }
-
-  // Try Vite's import.meta.env (for Vite projects or SSR)
+  // 1. Try Vite's import.meta.env first (works in both dev and prod)
   try {
     const metaEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env;
     if (metaEnv && typeof metaEnv === "object") {
@@ -56,12 +41,36 @@ function readEnv(key: RuntimeKey): string | undefined {
   } catch {
     // ignore import.meta access errors
   }
-  
+
+  // 2. Try Next.js process.env (build-time inlined NEXT_PUBLIC_*)
+  const penv = safeProcessEnv();
+  const nextKey = key.replace("VITE_", "NEXT_PUBLIC_");
+  const nextVal = penv[nextKey];
+  if (typeof nextVal === "string" && nextVal.length > 0) return nextVal.trim();
+
+  // 3. Try direct key from process.env
+  const directVal = penv[key];
+  if (typeof directVal === "string" && directVal.length > 0) return directVal.trim();
+
+  // 4. Try Next.js publicRuntimeConfig (client-side)
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getConfig } = require("next/config");
+    const config = getConfig?.();
+    if (config?.publicRuntimeConfig) {
+      const val = config.publicRuntimeConfig[nextKey];
+      if (typeof val === "string" && val.length > 0) return val.trim();
+    }
+  } catch {
+    // Not in Next.js context
+  }
+
   return undefined;
 }
 
 const metaEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env ?? {};
-const processNodeEnv = process.env.NODE_ENV;
+const penv = safeProcessEnv();
+const processNodeEnv = typeof penv.NODE_ENV === "string" ? penv.NODE_ENV : undefined;
 const metaDev = Boolean(metaEnv.DEV);
 const metaProd = Boolean(metaEnv.PROD);
 
@@ -87,13 +96,3 @@ export const runtimeEnv = {
   sentryReplaysSessionSampleRate: readEnv("VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE"),
   sentryReplaysOnErrorSampleRate: readEnv("VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE")
 } as const;
-
-// Debug: Log all environment variable checks on client
-if (typeof window !== 'undefined') {
-  const allProcessEnv = Object.keys(process.env).filter(k => k.includes('SUPABASE') || k.includes('supabase'));
-  console.log('=== Debug runtimeEnv ===');
-  console.log('process.env keys (SUPABASE):', allProcessEnv.map(k => `${k}=${process.env[k]}`));
-  console.log('runtimeEnv.supabaseUrl:', runtimeEnv.supabaseUrl);
-  console.log('runtimeEnv.supabaseAnonKey:', runtimeEnv.supabaseAnonKey ? 'SET' : 'UNDEFINED');
-  console.log('=======================');
-}

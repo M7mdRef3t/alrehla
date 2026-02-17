@@ -334,6 +334,15 @@ export const Landing: FC<LandingProps> = ({
             />
           </motion.p>
 
+          {/* slogan — التعافي مش سحر */}
+          <motion.p
+            className="text-sm italic leading-relaxed max-w-[360px] mx-auto mb-8 -mt-4"
+            style={{ color: "rgba(45,212,191,0.65)" }}
+            variants={fadeUp}
+          >
+            {landingCopy.slogan}
+          </motion.p>
+
           {/* CTA — centered */}
           <motion.div className="flex flex-col items-center" variants={item}>
             <motion.button

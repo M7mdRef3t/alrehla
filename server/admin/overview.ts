@@ -1,5 +1,5 @@
-import { getAdminSupabase, parseJsonBody, recordAdminAudit, verifyAdmin, verifyAdminWithRoles } from "./_shared.js";
-import { captureServerError, initServerMonitoring } from "./monitoring.js";
+import { getAdminSupabase, parseJsonBody, recordAdminAudit, verifyAdmin, verifyAdminWithRoles } from "./_shared";
+import { captureServerError, initServerMonitoring } from "./monitoring";
 
 type UserStateImportRow = {
   device_token?: string;

@@ -1,4 +1,4 @@
-import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared.js";
+import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared";
 
 export async function handleBroadcasts(req: any, res: any) {
   if (!(await verifyAdmin(req, res))) return;

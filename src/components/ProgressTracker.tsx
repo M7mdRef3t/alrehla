@@ -24,7 +24,7 @@ export const ProgressTracker: FC<ProgressTrackerProps> = ({
   return (
     <div className="mt-6 p-5 bg-gradient-to-br from-teal-50 to-blue-50 rounded-xl border border-teal-200">
       <h3 className="text-lg font-bold text-slate-900 mb-4 text-center">
-        📊 تقدمك في مسار الحماية
+        رؤيتك بدأت توضح
       </h3>
 
       {/* Progress Bar */}
@@ -53,7 +53,7 @@ export const ProgressTracker: FC<ProgressTrackerProps> = ({
         <p className="text-2xl font-bold text-teal-700">
           {completedSteps} <span className="text-slate-400">/</span> {totalSteps}
         </p>
-        <p className="text-sm text-slate-600 mt-1">خطوة مكتملة</p>
+        <p className="text-sm text-slate-600 mt-1">خطوة في الرحلة</p>
       </div>
 
       {/* Milestones */}
@@ -91,12 +91,10 @@ export const ProgressTracker: FC<ProgressTrackerProps> = ({
                   <Check className="w-5 h-5 text-white" strokeWidth={3} />
                 ) : (
                   <span
-                    className={`text-sm font-bold ${
-                      isCurrent ? "text-white" : "text-gray-500"
+                    className={`w-2 h-2 rounded-full ${
+                      isCurrent ? "bg-white" : "bg-gray-400"
                     }`}
-                  >
-                    {milestone.percent}%
-                  </span>
+                  />
                 )}
               </div>
               <span
@@ -118,12 +116,12 @@ export const ProgressTracker: FC<ProgressTrackerProps> = ({
       {/* Encouragement Message */}
       <div className="mt-6 p-4 bg-white rounded-lg border border-teal-200">
         <p className="text-sm text-center text-slate-700 leading-relaxed">
-          {percentage === 0 && "🎯 ثبّت مكانك وابدأ أول خطوة."}
-          {percentage > 0 && percentage < 30 && "💪 بداية قوية. كمّل بنفس الإيقاع."}
-          {percentage >= 30 && percentage < 60 && "🌟 القراءة أوضح والاستقرار بيزيد."}
-          {percentage >= 60 && percentage < 90 && "🔥 ممتاز. باقي خطوة أو خطوتين على الاستقرار."}
-          {percentage >= 90 && percentage < 100 && "🎊 قربت توصل لاستقرار كامل."}
-          {percentage === 100 && "🎉 ممتاز! المدار مستقر تحت حمايتك."}
+          {percentage === 0 && "الرحلة بتبدأ بخطوة واحدة واعية. إنت هنا وده كفاية."}
+          {percentage > 0 && percentage < 30 && "الخريطة بدأت تترسم. كمّل بنفس الهدوء."}
+          {percentage >= 30 && percentage < 60 && "رؤيتك بدأت توضح — والوضوح هو نص الطريق."}
+          {percentage >= 60 && percentage < 90 && "إنت بتمشي. مش لازم تجري — الثبات أهم من السرعة."}
+          {percentage >= 90 && percentage < 100 && "قريب من الاستقرار. خد نفسك وكمّل."}
+          {percentage === 100 && "المدار اتثبت. إنت اللي رسمت الخريطة وإنت اللي مشيت."}
         </p>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { getAdminSupabase, verifyAdmin } from "./_shared.js";
+import { getAdminSupabase, verifyAdmin } from "./_shared";
 
 export async function handleJourneyMap(req: any, res: any) {
   if (!(await verifyAdmin(req, res))) return;

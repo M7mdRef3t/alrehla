@@ -40,6 +40,7 @@ import { HealthBar } from "./HealthBar";
 import { TodayTaskStrip } from "./TodayTaskStrip";
 import { RecoveryProgressBar } from "./RecoveryProgressBar";
 import { guardianCopy } from "../copy/guardianCopy";
+import { mapCopy } from "../copy/map";
 import { getMissionProgressSummary } from "../utils/missionProgress";
 import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
 import { getGoalMeta } from "../data/goalMeta";
@@ -186,6 +187,13 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const nodes = useMapState((s) => s.nodes);
   const archiveMission = useMapState((s) => s.archiveMission);
   const unarchiveMission = useMapState((s) => s.unarchiveMission);
+  const unarchiveNode = useMapState((s) => s.unarchiveNode);
+  const archivedNodes = useMemo(() =>
+    nodes
+      .filter((n) => n.isNodeArchived)
+      .sort((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0)),
+    [nodes]
+  );
   const activeMissions = useMemo(() => {
     return nodes
       .filter((node) => node.missionProgress?.startedAt && !node.missionProgress?.isCompleted)
@@ -476,6 +484,58 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               </div>
             </div>
           )}
+
+          {/* ── محطات عدت — Archived Nodes ── */}
+          {archivedNodes.length > 0 && (
+            <div className="w-full rounded-xl border border-slate-200/60 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/20 px-3 py-3 text-right">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">
+                  {mapCopy.archivedSubtitle}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    {mapCopy.archivedTitle}
+                  </span>
+                  <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">
+                    {archivedNodes.length}
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-2 max-h-40 overflow-auto pr-1">
+                {archivedNodes.map((node) => {
+                  const months = node.archivedAt
+                    ? Math.floor((Date.now() - (node.archivedAt ?? Date.now())) / (1000 * 60 * 60 * 24 * 30))
+                    : 0;
+                  return (
+                    <div
+                      key={node.id}
+                      className="w-full flex items-center justify-between gap-2 rounded-lg border border-slate-200/50 dark:border-slate-700/30 bg-white/50 dark:bg-slate-900/30 px-3 py-2 text-xs"
+                      style={{ filter: "grayscale(60%) opacity(0.8)", transition: "filter 0.4s ease" }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.filter = "grayscale(0%) opacity(1)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.filter = "grayscale(60%) opacity(0.8)"; }}
+                    >
+                      <div className="flex flex-col items-start text-right min-w-0">
+                        <span className="font-semibold truncate max-w-[8rem] text-slate-600 dark:text-slate-300">
+                          {node.label}
+                        </span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[8rem]">
+                          {mapCopy.archivedDuration(months)}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => unarchiveNode(node.id)}
+                        className="rounded-full border border-slate-300/60 dark:border-slate-600/40 px-2 py-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400 hover:border-teal-300 dark:hover:border-teal-600 transition-colors"
+                      >
+                        {mapCopy.archivedRestoreCta}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {isFirstTime && (
             <button
               type="button"
@@ -990,6 +1050,58 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     </div>
                   </div>
                 )}
+
+                {/* ── محطات عدت Mobile ── */}
+                {archivedNodes.length > 0 && (
+                  <div className="rounded-xl border border-slate-200/60 dark:border-slate-700/40 bg-slate-50/50 dark:bg-slate-900/20 p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                        {mapCopy.archivedSubtitle}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                          {mapCopy.archivedTitle}
+                        </span>
+                        <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">
+                          {archivedNodes.length}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-2 max-h-40 overflow-auto pr-1">
+                      {archivedNodes.map((node) => {
+                        const months = node.archivedAt
+                          ? Math.floor((Date.now() - (node.archivedAt ?? Date.now())) / (1000 * 60 * 60 * 24 * 30))
+                          : 0;
+                        return (
+                          <div
+                            key={node.id}
+                            className="w-full flex items-center justify-between gap-2 rounded-lg border border-slate-200/50 dark:border-slate-700/30 bg-white/50 dark:bg-slate-900/30 px-3 py-2 text-xs"
+                            style={{ filter: "grayscale(60%) opacity(0.8)", transition: "filter 0.4s ease" }}
+                            onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.filter = "grayscale(0%) opacity(1)"; }}
+                            onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.filter = "grayscale(60%) opacity(0.8)"; }}
+                          >
+                            <div className="flex flex-col items-start text-right min-w-0">
+                              <span className="font-semibold truncate max-w-[8rem] text-slate-600 dark:text-slate-300">
+                                {node.label}
+                              </span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[8rem]">
+                                {mapCopy.archivedDuration(months)}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => { unarchiveNode(node.id); handleClose(); }}
+                              className="rounded-full border border-slate-300/60 dark:border-slate-600/40 px-2 py-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400 hover:border-teal-300 dark:hover:border-teal-600 transition-colors"
+                            >
+                              {mapCopy.archivedRestoreCta}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {notificationsSupported && (
                   <button
                     type="button"

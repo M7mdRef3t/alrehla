@@ -220,6 +220,84 @@ function geminiDevProxy() {
   };
 }
 
+function adminDevProxy() {
+  return {
+    name: "admin-dev-proxy",
+    configureServer(server: import("vite").ViteDevServer) {
+      server.middlewares.use(async (req, res, next) => {
+        if (!req.url?.startsWith("/api/admin")) return next();
+
+        const url = new URL(req.url, `http://localhost`);
+        const query = Object.fromEntries(url.searchParams.entries());
+        const path = query.path || "overview";
+
+        // Read body for non-GET
+        let body: any = null;
+        if (req.method !== "GET" && req.method !== "HEAD") {
+          body = await readJsonBody(req);
+        }
+
+        // In dev mode, inject the admin secret so requests pass auth
+        const adminSecret = process.env.ADMIN_API_SECRET || "alrehla-admin";
+        const headers = { ...req.headers, "x-admin-code": adminSecret };
+
+        const mockReq: any = {
+          method: req.method,
+          url: req.url,
+          query,
+          headers,
+          body
+        };
+
+        let status = 200;
+        let jsonResponse: any = {};
+        const mockRes: any = {
+          status: (s: number) => { status = s; return mockRes; },
+          json: (data: any) => { jsonResponse = data; return mockRes; },
+          setHeader: () => mockRes,
+          end: () => mockRes
+        };
+
+        try {
+          // Dynamic import to keep server code out of client bundle
+          const { overviewRouter } = await import("./server/admin/overview");
+          const { handleConfig } = await import("./server/admin/config");
+          const { handleUsers } = await import("./server/admin/users");
+          const { handleContent } = await import("./server/admin/content");
+          const { handleRoles } = await import("./server/admin/roles");
+          const { handleMissions } = await import("./server/admin/missions");
+          const { handleBroadcasts } = await import("./server/admin/broadcasts");
+          const { handleAiLogs } = await import("./server/admin/ai-logs");
+          const { handleJourneyMap } = await import("./server/admin/journey-map");
+
+          const ROUTES: Record<string, any> = {
+            overview: overviewRouter,
+            config: handleConfig,
+            users: handleUsers,
+            content: handleContent,
+            roles: handleRoles,
+            missions: handleMissions,
+            broadcasts: handleBroadcasts,
+            "ai-logs": handleAiLogs,
+            "journey-map": handleJourneyMap
+          };
+
+          const handler = ROUTES[path] || overviewRouter;
+          await handler(mockReq, mockRes);
+        } catch (error: any) {
+          console.error(`[Admin Dev Proxy] ${path}:`, error?.message || error);
+          status = 500;
+          jsonResponse = { error: "Internal Server Error", message: error?.message ?? "unknown" };
+        }
+
+        res.statusCode = status;
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify(jsonResponse));
+      });
+    }
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const hasSupabaseEnv = Boolean(env.VITE_SUPABASE_URL && env.VITE_SUPABASE_ANON_KEY);
@@ -231,49 +309,57 @@ export default defineConfig(({ mode }) => {
     process.env.GEMINI_API_KEY = env.GEMINI_API_KEY;
   }
 
+  // Populate process.env for server-side code running in adminDevProxy
+  if (!process.env.SUPABASE_URL && env.SUPABASE_URL) process.env.SUPABASE_URL = env.SUPABASE_URL;
+  if (!process.env.VITE_SUPABASE_URL && env.VITE_SUPABASE_URL) process.env.VITE_SUPABASE_URL = env.VITE_SUPABASE_URL;
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY && env.SUPABASE_SERVICE_ROLE_KEY) process.env.SUPABASE_SERVICE_ROLE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!process.env.ADMIN_API_SECRET && env.ADMIN_API_SECRET) process.env.ADMIN_API_SECRET = env.ADMIN_API_SECRET;
+  if (!process.env.ADMIN_ALLOWED_ROLES && env.ADMIN_ALLOWED_ROLES) process.env.ADMIN_ALLOWED_ROLES = env.ADMIN_ALLOWED_ROLES;
+
   return {
-  plugins: [
-    react(),
-    geminiDevProxy(),
-    VitePWA({
-      registerType: "autoUpdate",
-      injectRegister: "auto",
-      includeAssets: ["icons/*.png", "icons/*.svg"],
-      manifest: false, // We use manifest.json in public
-      workbox: {
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
-        runtimeCaching: [
-          {
-            urlPattern: /\/api\/gemini\/.*/i,
-            handler: "NetworkOnly"
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts-cache",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] }
+    plugins: [
+      react(),
+      geminiDevProxy(),
+      adminDevProxy(),
+      VitePWA({
+        registerType: "autoUpdate",
+        injectRegister: "auto",
+        includeAssets: ["icons/*.png", "icons/*.svg"],
+        manifest: false,
+        workbox: {
+          cleanupOutdatedCaches: true,
+          clientsClaim: true,
+          skipWaiting: true,
+          globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+          runtimeCaching: [
+            {
+              urlPattern: /\/api\/gemini\/.*/i,
+              handler: "NetworkOnly"
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: "CacheFirst",
+              options: {
+                cacheName: "google-fonts-cache",
+                expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+                cacheableResponse: { statuses: [0, 200] }
+              }
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+              handler: "CacheFirst",
+              options: {
+                cacheName: "gstatic-fonts-cache",
+                expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+                cacheableResponse: { statuses: [0, 200] }
+              }
             }
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "gstatic-fonts-cache",
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] }
-            }
-          }
-        ]
-      },
-      devOptions: { enabled: false }
-    }),
-    ...(shouldUploadSourceMaps
-      ? [
+          ]
+        },
+        devOptions: { enabled: false }
+      }),
+      ...(shouldUploadSourceMaps
+        ? [
           sentryVitePlugin({
             authToken: sentryAuthToken,
             org: sentryOrg,
@@ -283,67 +369,65 @@ export default defineConfig(({ mode }) => {
             }
           })
         ]
-      : [])
-  ],
-  server: { port: 5000, host: "0.0.0.0", allowedHosts: true },
-  build: {
-    target: "esnext",
-    minify: "esbuild",
-    sourcemap: shouldUploadSourceMaps ? "hidden" : false,
-    chunkSizeWarningLimit: 600,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes("preload-helper")) return "vendor";
-          if (!id.includes("node_modules")) return undefined;
-          if (id.includes("@vercel/analytics") || id.includes("@vercel/speed-insights")) return "vercel";
-          if (hasSupabaseEnv && (id.includes("@supabase/") || id.includes("supabase-js"))) return "supabase";
-          if (
-            id.includes("/react/") ||
-            id.includes("/react-dom/") ||
-            id.includes("/scheduler/") ||
-            id.includes("/use-sync-external-store/")
-          ) return "react-core";
-          // Keep framer-motion runtime + its heavy shared deps isolated from app core.
-          if (id.includes("motion-dom") || id.includes("motion-utils") || id.includes("es-toolkit")) return "motion";
-          if (id.includes("core-js")) return "polyfills";
-          if (id.includes("framer-motion")) return "motion";
-          if (id.includes("@dnd-kit/core")) return "dnd";
-          if (id.includes("zustand")) return "state";
-          if (id.includes("recharts")) return "charts";
-          if (id.includes("lucide-react")) return "icons";
-          if (id.includes("dompurify")) return "ai-utils";
-          if (
-            id.includes("canvg") ||
-            id.includes("stackblur-canvas") ||
-            id.includes("svg-pathdata") ||
-            id.includes("rgbcolor") ||
-            id.includes("fflate")
-          ) return "pdf-utils";
-          if (id.includes("html2canvas")) return "html2canvas";
-          if (id.includes("jspdf")) return "jspdf";
-          if (id.includes("@google/generative-ai")) return "gemini";
-          return "vendor";
+        : [])
+    ],
+    server: { port: 5000, host: "0.0.0.0", allowedHosts: true },
+    build: {
+      target: "esnext",
+      minify: "esbuild",
+      sourcemap: shouldUploadSourceMaps ? "hidden" : false,
+      chunkSizeWarningLimit: 600,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes("preload-helper")) return "vendor";
+            if (!id.includes("node_modules")) return undefined;
+            if (id.includes("@vercel/analytics") || id.includes("@vercel/speed-insights")) return "vercel";
+            if (hasSupabaseEnv && (id.includes("@supabase/") || id.includes("supabase-js"))) return "supabase";
+            if (
+              id.includes("/react/") ||
+              id.includes("/react-dom/") ||
+              id.includes("/scheduler/") ||
+              id.includes("/use-sync-external-store/")
+            ) return "react-core";
+            if (id.includes("motion-dom") || id.includes("motion-utils") || id.includes("es-toolkit")) return "motion";
+            if (id.includes("core-js")) return "polyfills";
+            if (id.includes("framer-motion")) return "motion";
+            if (id.includes("@dnd-kit/core")) return "dnd";
+            if (id.includes("zustand")) return "state";
+            if (id.includes("recharts")) return "charts";
+            if (id.includes("lucide-react")) return "icons";
+            if (id.includes("dompurify")) return "ai-utils";
+            if (
+              id.includes("canvg") ||
+              id.includes("stackblur-canvas") ||
+              id.includes("svg-pathdata") ||
+              id.includes("rgbcolor") ||
+              id.includes("fflate")
+            ) return "pdf-utils";
+            if (id.includes("html2canvas")) return "html2canvas";
+            if (id.includes("jspdf")) return "jspdf";
+            if (id.includes("@google/generative-ai")) return "gemini";
+            return "vendor";
+          }
         }
       }
+    },
+    test: {
+      globals: true,
+      environment: "jsdom",
+      setupFiles: ["./src/test/setup.ts"],
+      include: ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+      coverage: {
+        provider: "v8",
+        reporter: ["text", "json", "html"],
+        exclude: [
+          "node_modules/",
+          "src/test/",
+          "**/*.d.ts",
+          "scripts/",
+        ]
+      }
     }
-  },
-  // Vitest configuration
-  test: {
-    globals: true,
-    environment: "jsdom",
-    setupFiles: ["./src/test/setup.ts"],
-    include: ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
-    coverage: {
-      provider: "v8",
-      reporter: ["text", "json", "html"],
-      exclude: [
-        "node_modules/",
-        "src/test/",
-        "**/*.d.ts",
-        "scripts/",
-      ]
-    }
-  }
   };
 });
