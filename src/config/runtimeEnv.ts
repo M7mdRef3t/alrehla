@@ -18,17 +18,46 @@ type RuntimeKey =
   | "VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE"
   | "VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE";
 
+// Client-side only: Use getConfig from Next.js
 function readEnv(key: RuntimeKey): string | undefined {
-  const processValue = process.env[key];
-  if (typeof processValue === "string" && processValue.length > 0) return processValue.trim();
+  try {
+    // In client-side Next.js, import getConfig for publicRuntimeConfig
+    const { getConfig } = require('next/config');
+    const config = getConfig?.();
+    if (config?.publicRuntimeConfig) {
+      const nextKey = key.replace("VITE_", "NEXT_PUBLIC_");
+      const val = config.publicRuntimeConfig[nextKey];
+      if (typeof val === "string" && val.length > 0) return val.trim();
+    }
+  } catch (e) {
+    // Fall through if not in Next.js context
+  }
 
-  const nextPublicKey = key.startsWith("VITE_") ? `NEXT_PUBLIC_${key.slice(5)}` : key;
-  const nextValue = process.env[nextPublicKey];
-  if (typeof nextValue === "string" && nextValue.length > 0) return nextValue.trim();
+  // Fallback: Direct environment variable access (build-time inlined by Next.js)
+  try {
+    // Next.js inlines NEXT_PUBLIC_* vars at build time
+    if (typeof global !== 'undefined' && (global as Record<string, unknown>).__NEXT_DATA__) {
+      // In server-side context during build
+      const nextKey = key.replace("VITE_", "NEXT_PUBLIC_");
+      const val = (process.env as Record<string, unknown>)?.[nextKey];
+      if (typeof val === "string" && val.length > 0) return val.trim();
+    }
+  } catch (e) {
+    // ignore
+  }
 
-  const metaEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env ?? {};
-  const metaValue = metaEnv[key];
-  return typeof metaValue === "string" && metaValue.length > 0 ? metaValue.trim() : undefined;
+  // Try Vite's import.meta.env (for Vite projects or SSR)
+  try {
+    const metaEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env;
+    if (metaEnv && typeof metaEnv === "object") {
+      const val = metaEnv[key];
+      if (typeof val === "string" && val.length > 0) return val.trim();
+    }
+  } catch {
+    // ignore import.meta access errors
+  }
+  
+  return undefined;
 }
 
 const metaEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env ?? {};
@@ -58,3 +87,13 @@ export const runtimeEnv = {
   sentryReplaysSessionSampleRate: readEnv("VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE"),
   sentryReplaysOnErrorSampleRate: readEnv("VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE")
 } as const;
+
+// Debug: Log all environment variable checks on client
+if (typeof window !== 'undefined') {
+  const allProcessEnv = Object.keys(process.env).filter(k => k.includes('SUPABASE') || k.includes('supabase'));
+  console.log('=== Debug runtimeEnv ===');
+  console.log('process.env keys (SUPABASE):', allProcessEnv.map(k => `${k}=${process.env[k]}`));
+  console.log('runtimeEnv.supabaseUrl:', runtimeEnv.supabaseUrl);
+  console.log('runtimeEnv.supabaseAnonKey:', runtimeEnv.supabaseAnonKey ? 'SET' : 'UNDEFINED');
+  console.log('=======================');
+}

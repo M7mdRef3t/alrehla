@@ -7,6 +7,7 @@ import { awardPointsForFlowStep, awardPointsForJourneyType } from "../state/achi
 import { isUserMode } from "../config/appEnv";
 import { runtimeEnv } from "../config/runtimeEnv";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "./browserStorage";
+import { getAuthUserId } from "../state/authState";
 
 const KEY_MODE = "dawayir-tracking-mode";
 const KEY_EVENTS = "dawayir-journey-events";
@@ -138,6 +139,16 @@ async function flushSupabaseSync(): Promise<void> {
   const { error } = await supabase.from(SUPABASE_EVENTS_TABLE).insert(rows);
   if (error && runtimeEnv.isDev) {
     console.warn("journeyTracking: supabase insert failed", error);
+  }
+
+  // Only sync session profiles for anonymous tracking.
+  // Authenticated users' profiles are auto-created by the handle_auth_profile() trigger.
+  const authenticatedUserId = getAuthUserId();
+  if (authenticatedUserId) {
+    if (runtimeEnv.isDev) {
+      console.log("journeyTracking: skipping profile sync (authenticated user)", { userId: authenticatedUserId });
+    }
+    return;
   }
 
   const sessionIds = Array.from(

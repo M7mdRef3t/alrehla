@@ -1,8 +1,8 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { supabaseConfig, isSupabaseConfigured } from "../env";
 
-const supabaseUrl = runtimeEnv.supabaseUrl;
-const supabaseAnonKey = runtimeEnv.supabaseAnonKey;
+const supabaseUrl = supabaseConfig.url;
+const supabaseAnonKey = supabaseConfig.anonKey;
 
 export const supabase: SupabaseClient | null =
   supabaseUrl && supabaseAnonKey
@@ -17,11 +17,9 @@ export const isSupabaseReady = Boolean(supabase);
 if (typeof window !== 'undefined' && !isSupabaseReady) {
   console.error('=== Supabase Debug ===');
   console.error('supabaseUrl:', supabaseUrl);
-  console.error('supabaseAnonKey:', supabaseAnonKey);
+  console.error('supabaseAnonKey:', supabaseAnonKey ? 'SET' : 'UNDEFINED');
+  console.error('isSupabaseConfigured:', isSupabaseConfigured);
   console.error('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-  console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-  console.error('VITE_SUPABASE_URL:', process.env.VITE_SUPABASE_URL);
-  console.error('VITE_SUPABASE_ANON_KEY:', process.env.VITE_SUPABASE_ANON_KEY);
-  console.error('runtimeEnv:', runtimeEnv);
+  console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'UNDEFINED');
   console.error('====================');
 }
