@@ -20,15 +20,15 @@ type RuntimeKey =
 
 function readEnv(key: RuntimeKey): string | undefined {
   const processValue = process.env[key];
-  if (typeof processValue === "string" && processValue.length > 0) return processValue;
+  if (typeof processValue === "string" && processValue.length > 0) return processValue.trim();
 
   const nextPublicKey = key.startsWith("VITE_") ? `NEXT_PUBLIC_${key.slice(5)}` : key;
   const nextValue = process.env[nextPublicKey];
-  if (typeof nextValue === "string" && nextValue.length > 0) return nextValue;
+  if (typeof nextValue === "string" && nextValue.length > 0) return nextValue.trim();
 
   const metaEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env ?? {};
   const metaValue = metaEnv[key];
-  return typeof metaValue === "string" && metaValue.length > 0 ? metaValue : undefined;
+  return typeof metaValue === "string" && metaValue.length > 0 ? metaValue.trim() : undefined;
 }
 
 const metaEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env ?? {};
