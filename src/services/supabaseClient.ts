@@ -16,13 +16,14 @@ export const isSupabaseReady = Boolean(supabase);
 // Debug logging for production
 if (typeof window !== 'undefined' && !isSupabaseReady) {
   console.error('Supabase not ready:', {
-    supabaseUrl: !!supabaseUrl,
-    supabaseAnonKey: !!supabaseAnonKey,
+    supabaseUrl,
+    supabaseAnonKey,
     envVars: {
-      NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      VITE_SUPABASE_URL: !!process.env.VITE_SUPABASE_URL,
-      VITE_SUPABASE_ANON_KEY: !!process.env.VITE_SUPABASE_ANON_KEY,
-    }
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL,
+      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY,
+    },
+    runtimeEnv
   });
 }
