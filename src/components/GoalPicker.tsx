@@ -171,10 +171,10 @@ export const GoalPicker: FC<GoalPickerProps> = ({
           </div>
           <div className="text-right">
             <h3 className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
-              خطوة 2 من 4
+              المرحلة 2 من 4
             </h3>
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              اختيار الهدف
+              تحديد المهمة
             </p>
           </div>
         </div>
@@ -228,7 +228,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
         className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5 items-stretch justify-items-stretch max-w-4xl mx-auto w-full flex-1 min-h-0 overflow-hidden mb-2 sm:mb-3"
         style={{ gridAutoRows: "minmax(0, 1fr)" }}
         role="group"
-        aria-label="اختر أكثر حاجة شاغلة بالك"
+        aria-label="حدد ملف المهمة القادمة"
       >
         {goalPickerCopy.options.map((option, i) => {
           const Icon = ICON_MAP[option.id];
@@ -254,13 +254,12 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                     : "rgba(15, 20, 50, 0.5)",
                   backdropFilter: "blur(16px)",
                   WebkitBackdropFilter: "blur(16px)",
-                  border: `1.5px solid ${
-                    !isEnabled
+                  border: `1.5px solid ${!isEnabled
                       ? "rgba(255, 255, 255, 0.04)"
                       : isSelected
                         ? "rgba(45, 212, 191, 0.35)"
                         : "rgba(255, 255, 255, 0.08)"
-                  }`,
+                    }`,
                   borderRadius: "1rem",
                   padding: "0.75rem 0.9rem",
                   boxShadow: isSelected

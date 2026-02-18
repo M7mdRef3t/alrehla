@@ -18,73 +18,70 @@ export const MapOnboardingOverlay: FC<MapOnboardingOverlayProps> = ({ onClose })
   };
 
   const steps = [
-    { id: 1, text: mapCopy.onboardingStep1 },
-    { id: 2, text: mapCopy.onboardingStep2 }
+    {
+      id: 1,
+      title: "أهلاً بك في غرفة العمليات",
+      text: "دي مش مجرد خريطة.. دي أرض المعركة الخاصة بيك. كل دايرة بتمثل 'جبهة' في حياتك محتاج تأمنها."
+    },
+    {
+      id: 2,
+      title: "توزيع القوات",
+      text: "الأخضر: مناطق آمنة (شحن طاقة).\nالأصفر: مناطق حذر (استنزاف محتمل).\nالأحمر: مناطق خطر (استنزاف عالي).\nالرمادي: أرشيف (معارك انتهت)."
+    }
   ];
 
   const current = steps.find((s) => s.id === step)!;
-  const isLast = step === 2;
+  const isLast = step === steps.length;
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/90 backdrop-blur-md px-4"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="onboarding-title"
     >
       <motion.div
-        className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 text-right"
-        initial={{ opacity: 0, scale: 0.96 }}
+        className="relative bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-8 text-right overflow-hidden shadow-2xl"
+        initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.25, ease: "easeOut" }}
-        onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="onboarding-title" className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-          {step === 1 ? (
-            <EditableText id="map_onboarding_title_1" defaultText="أهلاً بيك في خريطة مداراتك" page="map" showEditIcon={false} />
-          ) : (
-            <EditableText id="map_onboarding_title_2" defaultText="المدارات وإحساسك" page="map" showEditIcon={false} />
-          )}
-        </h2>
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={current.id}
-            className="text-slate-600 dark:text-slate-300 leading-relaxed mb-6"
-            initial={{ opacity: 0, x: 8 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -8 }}
-            transition={{ duration: 0.2 }}
-          >
-            <EditableText
-              id={current.id === 1 ? "map_onboarding_step_1" : "map_onboarding_step_2"}
-              defaultText={current.text}
-              page="map"
-              multiline
-              showEditIcon={false}
-            />
-          </motion.p>
-        </AnimatePresence>
-        <div className="flex gap-3 justify-end">
-          {!isLast ? (
-            <motion.button
-              type="button"
-              onClick={() => setStep(2)}
-              className="rounded-full bg-teal-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-              whileTap={{ scale: 0.98 }}
+        {/* Tactical Grid Background */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(20,184,166,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(20,184,166,0.03)_1px,transparent_1px)] bg-[size:20px_20px]" />
+
+        <div className="relative z-10">
+          <h2 className="text-2xl font-bold text-teal-400 mb-2 flex items-center gap-2">
+            <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
+            {current.title}
+          </h2>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={current.id}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="text-slate-300 text-lg leading-relaxed mb-8 whitespace-pre-line"
             >
-              <EditableText id="map_onboarding_next" defaultText="التالي" page="map" editOnClick={false} />
-            </motion.button>
-          ) : null}
-          {isLast ? (
-            <motion.button
-              type="button"
+              {current.text}
+            </motion.div>
+          </AnimatePresence>
+
+          <div className="flex gap-4 justify-end">
+            <button
               onClick={handleFinish}
-              className="rounded-full bg-teal-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-              whileTap={{ scale: 0.98 }}
+              className="px-6 py-2 text-slate-500 hover:text-slate-300 transition-colors"
             >
-              <EditableText id="map_onboarding_cta" defaultText={mapCopy.onboardingCta} page="map" editOnClick={false} />
+              تجاوز الشرح
+            </button>
+
+            <motion.button
+              onClick={isLast ? handleFinish : () => setStep(step + 1)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-8 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-teal-900/20 flex items-center gap-2"
+            >
+              {isLast ? "استلم القيادة" : "التالي"}
             </motion.button>
-          ) : null}
+          </div>
         </div>
       </motion.div>
     </div>

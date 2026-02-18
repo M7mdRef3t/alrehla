@@ -11,16 +11,23 @@ import { BreathingOverlay } from "./BreathingOverlay";
 import { MapOnboardingOverlay } from "./MapOnboardingOverlay";
 import { hasSeenOnboarding } from "../utils/mapOnboarding";
 import { Map, TreeDeciduous, X } from "lucide-react";
+import { DailyPulseWidget } from "./DailyPulseWidget";
+import { DailyJournalArchive } from "./DailyJournalArchive";
+import { ShadowPulseAlert } from "./ShadowPulseAlert";
+import { TEIWidget } from "./TEIWidget";
+import { RelationalFieldWidget } from "./RelationalFieldWidget";
 import { mapCopy } from "../copy/map";
 import { EditableText } from "./EditableText";
 import { useMapState } from "../state/mapState";
 import { usePulseState } from "../state/pulseState";
 import { PULSE_DAY_NAMES } from "../utils/pulseInsights";
+import { NextStepCard } from "./NextStepCard";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { useAdminState } from "../state/adminState";
 import { getEffectiveFeatureAccess } from "../utils/featureFlags";
 import { getEffectiveRoleFromState, useAuthState } from "../state/authState";
 import type { FeatureFlagKey } from "../config/features";
+import type { NextStepDecisionV1 } from "../modules/recommendation/types";
 import { isUserMode } from "../config/appEnv";
 import { runtimeEnv } from "../config/runtimeEnv";
 
@@ -61,6 +68,9 @@ interface CoreMapScreenProps {
   challengeLabel?: string | null;
   canUseBasicDiagnosis?: boolean;
   onFeatureLocked?: (feature: FeatureFlagKey) => void;
+  nextStepDecision?: NextStepDecisionV1 | null;
+  onTakeNextStep?: (decision: NextStepDecisionV1) => void;
+  onRefreshNextStep?: () => void;
 }
 
 export const CoreMapScreen: FC<CoreMapScreenProps> = ({
@@ -80,7 +90,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   onOpenChallenge,
   challengeLabel,
   canUseBasicDiagnosis = true,
-  onFeatureLocked
+  onFeatureLocked,
+  nextStepDecision = null,
+  onTakeNextStep,
+  onRefreshNextStep
 }) => {
   const [showAddPerson, setShowAddPerson] = useState(false);
   const [showMeCard, setShowMeCard] = useState(false);
@@ -124,14 +137,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   /* ── Dashboard Widget ── */
   const [showDashboard, setShowDashboard] = useState(false);
+  const [showJournalArchive, setShowJournalArchive] = useState(false);
   const activeNodes = useMemo(() => nodes.filter((n) => !n.isNodeArchived), [nodes]);
   const archivedNodes = useMemo(() => nodes.filter((n) => n.isNodeArchived), [nodes]);
   const greenNodes = useMemo(() => activeNodes.filter((n) => n.ring === "green" && !n.isDetached), [activeNodes]);
-  const dailyQuestion = useMemo(() => {
-    const questions = mapCopy.dashboardDailyQuestions;
-    const dayIndex = new Date().getDay();
-    return questions[dayIndex % questions.length];
-  }, []);
 
   useEffect(() => {
     if (!showPlacementTooltip) return;
@@ -271,23 +280,36 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         </p>
       </motion.header>
 
-      {/* ── Dashboard Widget ── */}
+      {/* ══════════════════════════════════════
+          الكتلة الأم — مؤشر الوضوح + سؤال اليوم
+          تظهر دائماً (60% من الاهتمام البصري)
+          ══════════════════════════════════════ */}
+      {!journeyMode && activeNodes.length > 0 && (
+        <motion.div variants={cosmicFade} className="w-full max-w-md mx-auto mb-3 space-y-3 primary-block">
+          <TEIWidget />
+          <DailyPulseWidget onOpenArchive={() => setShowJournalArchive(true)} />
+        </motion.div>
+      )}
+
+      {/* ══════════════════════════════════════
+          الكتلة الداعمة — تفاصيل قابلة للطي (30%)
+          ══════════════════════════════════════ */}
       {!journeyMode && (
         <motion.div variants={cosmicFade} className="w-full max-w-md mx-auto mb-4">
           <button
             type="button"
             onClick={() => setShowDashboard((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm transition-all"
+            className="w-full flex items-center justify-between px-4 py-2 rounded-xl text-sm transition-all"
             style={{
-              background: showDashboard ? "rgba(45,212,191,0.08)" : "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(45,212,191,0.15)",
-              color: "var(--text-secondary)"
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              color: "var(--text-muted)"
             }}
           >
-            <span className="text-xs" style={{ color: "rgba(45,212,191,0.6)" }}>
-              {showDashboard ? "▲ أقفل لوحة التحكم" : "▼ لوحة التحكم"}
+            <span className="text-[11px]" style={{ color: "rgba(148,163,184,0.45)" }}>
+              {showDashboard ? "▲ إخفاء التفاصيل" : "▼ تفاصيل الدواير"}
             </span>
-            <span className="text-xs font-medium">
+            <span className="text-[11px]">
               {mapCopy.dashboardMapSummary(activeNodes.length, greenNodes.length, archivedNodes.length)}
             </span>
           </button>
@@ -304,8 +326,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 <div
                   className="mt-2 rounded-xl p-4 space-y-4 text-right"
                   style={{
-                    background: "linear-gradient(135deg, rgba(15,23,42,0.6), rgba(15,23,42,0.4))",
-                    border: "1px solid rgba(45,212,191,0.12)",
+                    background: "rgba(15,23,42,0.5)",
+                    border: "1px solid rgba(255,255,255,0.06)",
                     backdropFilter: "blur(12px)"
                   }}
                 >
@@ -315,7 +337,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                       <p className="text-[10px] font-semibold mb-2" style={{ color: "var(--text-muted)" }}>
                         توازن الدواير
                       </p>
-                      <div className="flex gap-0.5 h-2 rounded-full overflow-hidden">
+                      <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden">
                         {["green", "yellow", "red"].map((ring) => {
                           const count = activeNodes.filter((n) => n.ring === ring).length;
                           if (!count) return null;
@@ -332,27 +354,25 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                           );
                         })}
                       </div>
+                      {/* أعداد تفصيلية */}
+                      <div className="flex justify-between mt-1.5">
+                        {["green", "yellow", "red"].map((ring) => {
+                          const count = activeNodes.filter((n) => n.ring === ring).length;
+                          if (!count) return null;
+                          const colors = { green: "#34d399", yellow: "#fbbf24", red: "#f87171" };
+                          const labels = { green: "آمن", yellow: "تعب", red: "ضاغط" };
+                          return (
+                            <span key={ring} className="text-[10px]" style={{ color: colors[ring as keyof typeof colors] }}>
+                              {count} {labels[ring as keyof typeof labels]}
+                            </span>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
 
-                  {/* سؤال اليوم */}
-                  <div
-                    className="rounded-lg p-3"
-                    style={{
-                      background: "rgba(45,212,191,0.06)",
-                      border: "1px solid rgba(45,212,191,0.12)"
-                    }}
-                  >
-                    <p className="text-[10px] font-semibold mb-1" style={{ color: "rgba(45,212,191,0.7)" }}>
-                      سؤال اليوم
-                    </p>
-                    <p className="text-sm leading-relaxed" style={{ color: "var(--text-primary)" }}>
-                      {dailyQuestion}
-                    </p>
-                  </div>
-
-                  {/* Slogan */}
-                  <p className="text-[11px] italic text-center" style={{ color: "rgba(45,212,191,0.45)" }}>
+                  {/* Slogan — كتلة التنفس (10%) */}
+                  <p className="text-[11px] italic text-center pt-1" style={{ color: "rgba(45,212,191,0.35)" }}>
                     {mapCopy.dashboardSlogan}
                   </p>
                 </div>
@@ -616,6 +636,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       )}
 
       {/* ── Map Canvas Views ── */}
+      {nextStepDecision && onTakeNextStep && onRefreshNextStep && (
+        <NextStepCard
+          decision={nextStepDecision}
+          onTakeAction={onTakeNextStep}
+          onRefresh={onRefreshNextStep}
+        />
+      )}
+
       <AnimatePresence mode="wait">
         {canUseGalaxyView && galaxyMode && galaxySubView === "forest" ? (
           <motion.div key="forest" initial={{ opacity: 0, y: 16, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -12, filter: "blur(4px)" }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
@@ -820,6 +848,17 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       )}
       {showBreathing && !onOpenBreathing && (
         <BreathingOverlay onClose={() => setShowBreathing(false)} />
+      )}
+
+      {/* ── أرشيف سؤال اليوم ── */}
+      <DailyJournalArchive
+        isOpen={showJournalArchive}
+        onClose={() => setShowJournalArchive(false)}
+      />
+
+      {/* ── نبضة الظل — Shadow Pulse Alert ── */}
+      {!journeyMode && (
+        <ShadowPulseAlert onSelectNode={handleNodeClick} />
       )}
     </motion.main>
   );

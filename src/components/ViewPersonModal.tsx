@@ -1,10 +1,12 @@
 import type { FC } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { ResultScreen } from "./AddPersonModal/ResultScreen";
 import type { QuickAnswer2 } from "../utils/suggestInitialRing";
+import { useShadowPulseState } from "../state/shadowPulseState";
 
 interface ViewPersonModalProps {
   nodeId: string;
@@ -20,6 +22,24 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   onOpenMission
 }) => {
   const node = useMapState((s) => s.nodes.find((n) => n.id === nodeId));
+  const recordOpen = useShadowPulseState((s) => s.recordOpen);
+  const recordClose = useShadowPulseState((s) => s.recordClose);
+  const openedAtRef = useRef<number | null>(null);
+  // تتبع هل المستخدم بدأ بالكتابة ثم مسح (cancelledEdit)
+  const [_hadInput, setHadInput] = useState(false);
+
+  // سجّل فتح النافذة
+  useEffect(() => {
+    recordOpen(nodeId);
+    openedAtRef.current = Date.now();
+    return () => {
+      // سجّل الإغلاق عند unmount
+      if (openedAtRef.current !== null) {
+        recordClose(nodeId, openedAtRef.current, false);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeId]);
 
   if (!node || !node.analysis) {
     return (

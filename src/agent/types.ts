@@ -1,13 +1,16 @@
 import type { Ring } from "../modules/map/mapTypes";
 import type { PulseEntry } from "../state/pulseState";
 import type { FeatureFlagKey } from "../config/features";
+import type { PersonaType } from "./personae";
 
 /** سياق القراءة فقط للـ Agent: عُقد الخريطة، الشاشة الحالية، الهدف. */
 export interface AgentContext {
+  /** الشخصية النشطة حالياً من السرب */
+  activePersona: PersonaType;
   /** ملخص العُقد: id, label, ring */
   nodesSummary: { id: string; label: string; ring: Ring }[];
   /** الشاشة الحالية */
-  screen: "landing" | "goal" | "map" | "guided" | "mission" | "tools";
+  screen: "landing" | "goal" | "map" | "guided" | "mission" | "tools" | "settings" | "enterprise" | "guilt-court" | "diplomacy" | "emergency";
   /** معرف العقدة المفتوحة (نافذة الشخص) إن وُجدت */
   selectedNodeId: string | null;
   /** هدف الرحلة الحالية */
@@ -18,6 +21,8 @@ export interface AgentContext {
   pulse?: PulseEntry | null;
   /** الميزات المسموحة للمستخدم الحالي */
   availableFeatures: Record<FeatureFlagKey, boolean>;
+  /** ذكريات مسترجعة (RAG) */
+  memories?: string[];
 }
 
 /** مسار للتنقل أو overlay */

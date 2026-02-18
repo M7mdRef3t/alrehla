@@ -474,7 +474,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                           {(authUser.email?.[0] || "U").toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-white">{authUser.displayName || "مستخدم جديد"}</p>
+                          <p className="text-sm font-bold text-white">{authDisplayName || "مستخدم جديد"}</p>
                           <p className="text-xs text-slate-500">{authUser.email}</p>
                         </div>
                       </div>

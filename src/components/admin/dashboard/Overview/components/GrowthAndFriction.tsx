@@ -55,10 +55,10 @@ export const GrowthAndFriction: FC<GrowthAndFrictionProps> = ({ growthData, fric
                     <div>
                         <div className="flex items-center gap-2 mb-1">
                             <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                            <span className="text-xs font-bold text-cyan-400">تحديث مباشر</span>
+                            <span className="text-xs font-bold text-cyan-400">تحليل الميدان (Live)</span>
                         </div>
-                        <h3 className="text-lg font-bold text-white">تطور المنصة</h3>
-                        <p className="text-xs text-slate-400">إجمالي التفاعل (بدايات رحلات + أشخاص مضافين)</p>
+                        <h3 className="text-lg font-bold text-white">رادار النمو (Growth Radar)</h3>
+                        <p className="text-xs text-slate-400">إجمالي توسع القادة (بدء المهام + رسم خريطة الجبهة)</p>
                     </div>
 
                     <div className="flex bg-slate-800/50 p-1 rounded-lg border border-white/5">
@@ -104,7 +104,7 @@ export const GrowthAndFriction: FC<GrowthAndFrictionProps> = ({ growthData, fric
                             <Area
                                 type="monotone"
                                 dataKey="paths"
-                                name="رحلات"
+                                name="قادة"
                                 stroke="#8b5cf6"
                                 strokeWidth={2}
                                 fillOpacity={1}
@@ -113,7 +113,7 @@ export const GrowthAndFriction: FC<GrowthAndFrictionProps> = ({ growthData, fric
                             <Area
                                 type="monotone"
                                 dataKey="nodes"
-                                name="إضافات"
+                                name="أهداف"
                                 stroke="#14b8a6"
                                 strokeWidth={2}
                                 fillOpacity={1}
@@ -128,12 +128,12 @@ export const GrowthAndFriction: FC<GrowthAndFrictionProps> = ({ growthData, fric
             <div className="admin-glass-card p-6 border-white/5 bg-slate-950/30 rounded-2xl backdrop-blur-sm flex flex-col">
                 <div className="mb-6">
                     <div className="flex items-center gap-2 mb-1">
-                        <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                        <span className="text-xs font-bold text-cyan-400">تحديث مباشر</span>
+                        <div className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
+                        <span className="text-xs font-bold text-rose-400">اعتراض الاشارة (Friction)</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <Lock className="w-5 h-5 text-slate-400" />
-                        <h3 className="text-lg font-bold text-white">مناطق الاحتكاك الأعلى</h3>
+                        <h3 className="text-lg font-bold text-white">ثغرات الانسحاب (Drop-off)</h3>
                     </div>
                 </div>
 

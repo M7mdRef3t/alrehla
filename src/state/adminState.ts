@@ -57,6 +57,7 @@ export interface PulseCopyOverrides {
 
 interface AdminState {
   adminAccess: boolean;
+  isContentEditingEnabled: boolean;
   adminCode: string | null;
   featureFlags: Record<FeatureFlagKey, FeatureFlagMode>;
   betaAccess: boolean;
@@ -68,6 +69,7 @@ interface AdminState {
   broadcasts: AdminBroadcast[];
   pulseCopyOverrides: PulseCopyOverrides;
   setAdminAccess: (value: boolean) => void;
+  toggleContentEditing: (value: boolean) => void;
   setAdminCode: (value: string | null) => void;
   setFeatureFlags: (flags: Record<FeatureFlagKey, FeatureFlagMode>) => void;
   updateFeatureFlag: (key: FeatureFlagKey, mode: FeatureFlagMode) => void;
@@ -107,6 +109,7 @@ export const useAdminState = create<AdminState>()(
   persist(
     (set) => ({
       adminAccess: false,
+      isContentEditingEnabled: false,
       adminCode: null,
       featureFlags: DEFAULT_FEATURE_FLAGS,
       betaAccess: false,
@@ -118,6 +121,7 @@ export const useAdminState = create<AdminState>()(
       broadcasts: [],
       pulseCopyOverrides: { energy: "auto", mood: "auto", focus: "auto" },
       setAdminAccess: (value) => set({ adminAccess: value }),
+      toggleContentEditing: (value) => set({ isContentEditingEnabled: value }),
       setAdminCode: (value) => set({ adminCode: value }),
       setFeatureFlags: (flags) =>
         set({

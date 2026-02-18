@@ -19,7 +19,11 @@ const NODE_LABELS = [
     "التواصل", "التعاطف", "الإدراك", "المصفوفة", "الجسر العصبي"
 ];
 
-export const ConsciousnessNetwork: FC = () => {
+interface ConsciousnessNetworkProps {
+    activeLayer?: "all" | "core" | "bridge";
+}
+
+export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetworkProps) {
     const [nodes, setNodes] = useState<Node[]>([]);
     const [hoveredNode, setHoveredNode] = useState<Node | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -128,8 +132,8 @@ export const ConsciousnessNetwork: FC = () => {
                     {/* Node Visual */}
                     <div
                         className={`relative rounded-full transition-transform duration-300 hover:scale-150 ${node.type === "core" ? "bg-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.6)]" :
-                                node.type === "bridge" ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" :
-                                    "bg-teal-500 shadow-[0_0_8px_rgba(45,212,191,0.4)]"
+                            node.type === "bridge" ? "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]" :
+                                "bg-teal-500 shadow-[0_0_8px_rgba(45,212,191,0.4)]"
                             }`}
                         style={{ width: node.radius * 2, height: node.radius * 2 }}
                     >

@@ -69,6 +69,31 @@
     --tracking-normal: 0;
     --tracking-wide: 0.01em;
     --tracking-wider: 0.02em;
+
+    /* ══ Organic Unity — نظام Radius موحّد ══
+       القاعدة: كل العناصر تتبع نفس منحنى الدائرة
+       --radius-pill  = عناصر مستديرة (أزرار، بادجات)
+       --radius-card  = الكروت والبلوكات الأساسية
+       --radius-modal = النوافذ والأوفرلاي الكبيرة
+       --radius-sm    = عناصر صغيرة (inputs، tags)   */
+    --radius-pill:  9999px;
+    --radius-card:  1.25rem;   /* 20px — الكتلة الأساسية */
+    --radius-modal: 1.5rem;    /* 24px — النوافذ الكبيرة */
+    --radius-sm:    0.75rem;   /* 12px — عناصر صغيرة   */
+
+    /* ══ Motion Timing — إيقاع الحركة ══ */
+    --ease-spring:  cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-smooth:  cubic-bezier(0.4, 0, 0.2, 1);
+    --duration-fast:   180ms;
+    --duration-base:   300ms;
+    --duration-slow:   500ms;
+
+    /* ══ Breathing Space — مساحة التنفس ══ */
+    --space-xs: 0.5rem;
+    --space-sm: 0.75rem;
+    --space-md: 1.25rem;
+    --space-lg: 2rem;
+    --space-xl: 3rem;
   }
 
   html {
@@ -191,21 +216,23 @@
    🔮 GLASSMORPHISM COMPONENTS — شفافية زجاجية قوية
    ════════════════════════════════════════════════ */
 
+/* ── الكتلة الأساسية — Glass ── */
 .glass {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
-  border-radius: 1.25rem;
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: var(--radius-card);
+  transition: all var(--duration-base) var(--ease-spring);
 }
 
+/* ── نافذة ثقيلة — Glass Heavy ── */
 .glass-heavy {
   background: rgba(10, 14, 35, 0.85);
   backdrop-filter: blur(var(--glass-blur-xl));
   -webkit-backdrop-filter: blur(var(--glass-blur-xl));
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 1.5rem;
+  border-radius: var(--radius-modal);
 }
 
 /* ── 🧱 Bento Card — الكتلة المعلوماتية الأساسية ── */
@@ -214,9 +241,9 @@
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1.25rem;
+  border-radius: var(--radius-card);
   padding: 1.5rem;
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: all var(--duration-base) var(--ease-spring);
 }
 
 .glass-card:hover {
@@ -231,12 +258,12 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   padding: 0.5rem 1rem;
   color: var(--text-primary);
   font-weight: 600;
   font-size: 0.875rem;
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: all var(--duration-base) var(--ease-spring);
 }
 
 .glass-button:hover {
@@ -250,39 +277,17 @@
   color: var(--soft-teal);
 }
 
-/* ── 🔥 CTA Primary — Warm Amber للأزرار الحيوية ── */
-.cta-primary {
-  background: linear-gradient(135deg, var(--warm-amber) 0%, #d97706 100%);
-  color: rgba(255, 255, 255, 0.98);
-  font-weight: 700;
-  border: none;
-  border-radius: 1rem;
-  padding: 1rem 2rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.cta-primary:hover {
-  background: linear-gradient(135deg, #fbbf24 0%, var(--warm-amber) 100%);
-  transform: translateY(-2px);
-}
-
-.cta-primary:active {
-  transform: translateY(0);
-}
-
 /* ── 🌿 CTA Success — Emerald Green للطمأنينة ── */
 .cta-success {
   background: linear-gradient(135deg, var(--soft-emerald) 0%, #059669 100%);
   color: rgba(255, 255, 255, 0.98);
   font-weight: 600;
   border: none;
-  border-radius: 1rem;
+  border-radius: var(--radius-pill);
   padding: 0.875rem 1.75rem;
   font-size: 0.9375rem;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: all var(--duration-base) var(--ease-spring);
 }
 
 .cta-success:hover {
@@ -313,9 +318,9 @@
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1.25rem;
+  border-radius: var(--radius-card);
   padding: 1.5rem;
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: all var(--duration-base) var(--ease-spring);
 }
 
 .bento-block:hover {
@@ -444,12 +449,14 @@
 
   /* كارت موحّد صغير — يستخدم للكروت العامة */
   .card-unified {
-    @apply rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md;
+    @apply bg-white/5 border border-white/10 backdrop-blur-md;
+    border-radius: var(--radius-card);
   }
 
   /* سطح موحّد للمودالات الكبيرة / النوافذ العائمة (Chat, Overlays) */
   .modal-surface {
-    @apply rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md;
+    @apply bg-white/5 border border-white/10 backdrop-blur-md;
+    border-radius: var(--radius-modal);
   }
 }
 
@@ -462,8 +469,8 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 9999px;
-  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: var(--radius-pill);
+  transition: all var(--duration-base) var(--ease-spring);
 }
 
 .node-glass:hover {
@@ -515,26 +522,29 @@
   background: linear-gradient(135deg, var(--soft-teal), #0d9488);
   color: white;
   border: none;
-  border-radius: 9999px;
-  transition: all 0.3s ease;
+  border-radius: var(--radius-pill);
+  transition: all var(--duration-base) var(--ease-spring);
 }
 
 .cta-primary:hover {
   transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(45, 212, 191, 0.3);
 }
 
 .cta-danger {
   background: linear-gradient(135deg, #f87171, #dc2626);
   color: white;
   border: none;
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
+  transition: all var(--duration-base) var(--ease-spring);
 }
 
 .cta-muted {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
+  transition: all var(--duration-base) var(--ease-smooth);
 }
 
 .cta-muted:hover {
@@ -550,10 +560,10 @@
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   padding: 0.375rem 0.875rem;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all var(--duration-fast) var(--ease-smooth);
 }
 
 .legend-pill:hover {
@@ -752,4 +762,93 @@
 .flow-miro-canvas {
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* ════════════════════════════════════════════════
+   🫀 ORGANIC UNITY — الوحدة العضوية
+   خيط خفي يربط كل عناصر المنصة
+   ════════════════════════════════════════════════ */
+
+/* ── الاستجابة الفورية — يطمن المستخدم إنه "مسموع" ── */
+.organic-tap {
+  transition:
+    transform var(--duration-fast) var(--ease-spring),
+    opacity var(--duration-fast) var(--ease-smooth);
+}
+.organic-tap:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
+/* ── نبضة الحياة — للعناصر التي تحمل بيانات حية ── */
+/* يستخدم --organic-pulse-color للسماح لكل ويدجت بلونه الخاص */
+@keyframes organicPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--organic-pulse-color, rgba(45,212,191,0)); }
+  50%       { box-shadow: 0 0 0 8px var(--organic-pulse-color, rgba(45,212,191,0.06)); }
+}
+.living-element {
+  --organic-pulse-color: rgba(45, 212, 191, 0.08); /* default teal */
+  animation: organicPulse 5s ease-in-out infinite;
+}
+
+/* ── التدفق التصاعدي — ظهور من الأسفل بشكل عضوي ── */
+@keyframes flowUp {
+  from { opacity: 0; transform: translateY(10px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0);    filter: blur(0);   }
+}
+.flow-appear {
+  animation: flowUp var(--duration-slow) var(--ease-spring) both;
+}
+
+/* ── الكتلة الأم — 60% بصري — تمييز واضح ── */
+.primary-block {
+  position: relative;
+}
+.primary-block::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--radius-card) + 1px);
+  background: linear-gradient(
+    135deg,
+    rgba(45, 212, 191, 0.08),
+    transparent 50%,
+    rgba(167, 139, 250, 0.04)
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ── الكتلة الداعمة — 30% بصري — أخف حضوراً ── */
+.support-block {
+  opacity: 0.85;
+  transition: opacity var(--duration-base) var(--ease-smooth);
+}
+.support-block:hover {
+  opacity: 1;
+}
+
+/* ── مساحة التنفس — 10% ── */
+.breath-space {
+  padding-top: var(--space-lg);
+  padding-bottom: var(--space-lg);
+}
+
+/* ── توحيد Input داخل المنصة ── */
+.organic-input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  transition:
+    border-color var(--duration-fast) var(--ease-smooth),
+    background var(--duration-fast) var(--ease-smooth);
+}
+.organic-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(45, 212, 191, 0.35);
+}
+.organic-input::placeholder {
+  color: rgba(148, 163, 184, 0.4);
 }

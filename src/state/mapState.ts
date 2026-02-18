@@ -15,6 +15,7 @@ import type {
 import { loadStoredState, saveStoredState } from "../services/localStore";
 import { resolvePathId } from "../modules/pathEngine/pathResolver";
 import type { ContactLevel } from "../modules/pathEngine/pathTypes";
+import { emitDawayirSignal } from "../modules/recommendation/recommendationBus";
 
 export interface RecoveryPlanOpenWith {
   focusTraumaInheritance?: boolean;
@@ -103,6 +104,13 @@ function deriveNextId(nodes: MapNode[]) {
   if (Number.isFinite(maxId)) nextId = maxId + 1;
 }
 
+function derivePathStageFromCompletion(completedStepsCount: number): "awareness" | "resistance" | "acceptance" | "integration" {
+  if (completedStepsCount >= 6) return "integration";
+  if (completedStepsCount >= 4) return "acceptance";
+  if (completedStepsCount >= 2) return "resistance";
+  return "awareness";
+}
+
 export const useMapState = create<MapState>((set, get) => ({
   nodes: [],
   showPlacementTooltip: false,
@@ -184,9 +192,20 @@ export const useMapState = create<MapState>((set, get) => ({
     const nextNodes = [...get().nodes, newNode];
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes, showPlacementTooltip: true, lastAddedNodeId: nodeId });
+    emitDawayirSignal({
+      type: "node_added",
+      nodeId,
+      payload: {
+        ring,
+        detachmentMode: detachmentMode === true,
+        isEmergency: isSOS === true,
+        pathStage: "awareness"
+      }
+    });
     return nodeId;
   },
   moveNodeToRing: (id, ring, realityAnswers) => {
+    const previous = get().nodes.find((node) => node.id === id);
     const isLowContact = (a: RealityAnswers) =>
       [a.q1, a.q2, a.q3].filter((q) => q === "rarely" || q === "never").length >= 2;
     const nextNodes = get().nodes.map((node) =>
@@ -202,13 +221,41 @@ export const useMapState = create<MapState>((set, get) => ({
     );
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+    const next = nextNodes.find((node) => node.id === id);
+    if (previous && next && previous.ring !== next.ring) {
+      emitDawayirSignal({
+        type: "ring_changed",
+        nodeId: id,
+        payload: {
+          fromRing: previous.ring,
+          toRing: next.ring
+        }
+      });
+    }
+    if (previous && next && Boolean(previous.detachmentMode) !== Boolean(next.detachmentMode)) {
+      emitDawayirSignal({
+        type: "detachment_toggled",
+        nodeId: id,
+        payload: {
+          value: Boolean(next.detachmentMode)
+        }
+      });
+    }
   },
   setDetached: (nodeId, value) => {
+    const previous = get().nodes.find((node) => node.id === nodeId);
     const nextNodes = get().nodes.map((node) =>
       node.id === nodeId ? { ...node, isDetached: value } : node
     );
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+    if (previous && Boolean(previous.isDetached) !== Boolean(value)) {
+      emitDawayirSignal({
+        type: "detachment_toggled",
+        nodeId,
+        payload: { value }
+      });
+    }
   },
   analyzeNode: (id, result) => {
     let recommendedRing: Ring;
@@ -293,24 +340,42 @@ export const useMapState = create<MapState>((set, get) => ({
     set({ nodes: nextNodes });
   },
   toggleStepCompletion: (nodeId, stepId) => {
-    const nextNodes = get().nodes.map((node) => {
+    const previousNodes = get().nodes;
+    const nextNodes = previousNodes.map((node) => {
       if (node.id !== nodeId) return node;
       
       const progress = node.recoveryProgress || { completedSteps: [], situationLogs: [] };
       const isCompleted = progress.completedSteps.includes(stepId);
+      const completedSteps = isCompleted
+        ? progress.completedSteps.filter(id => id !== stepId)
+        : [...progress.completedSteps, stepId];
+      const nextPathStage = derivePathStageFromCompletion(completedSteps.length);
       
       return {
         ...node,
         recoveryProgress: {
           ...progress,
-          completedSteps: isCompleted
-            ? progress.completedSteps.filter(id => id !== stepId)
-            : [...progress.completedSteps, stepId]
+          completedSteps,
+          pathStage: nextPathStage
         }
       };
     });
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+    const previousNode = previousNodes.find((node) => node.id === nodeId);
+    const updatedNode = nextNodes.find((node) => node.id === nodeId);
+    const previousStage = previousNode?.recoveryProgress?.pathStage ?? "awareness";
+    const nextStage = updatedNode?.recoveryProgress?.pathStage ?? "awareness";
+    if (previousNode && updatedNode && previousStage !== nextStage) {
+      emitDawayirSignal({
+        type: "path_stage_changed",
+        nodeId,
+        payload: {
+          fromStage: previousStage,
+          toStage: nextStage
+        }
+      });
+    }
   },
   addSituationLog: (nodeId, logData) => {
     const newLog: SituationLog = {
@@ -334,6 +399,13 @@ export const useMapState = create<MapState>((set, get) => ({
     });
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+    emitDawayirSignal({
+      type: "situation_logged",
+      nodeId,
+      payload: {
+        feeling: logData.feeling
+      }
+    });
   },
   deleteSituationLog: (nodeId, logId) => {
     const nextNodes = get().nodes.map((node) => {
@@ -430,6 +502,7 @@ export const useMapState = create<MapState>((set, get) => ({
     set({ nodes: nextNodes });
   },
   updateNodeSymptoms: (nodeId, symptomIds) => {
+    const previous = get().nodes.find((node) => node.id === nodeId)?.analysis?.selectedSymptoms ?? [];
     const nextNodes = get().nodes.map((node) =>
       node.id === nodeId && node.analysis
         ? {
@@ -443,6 +516,16 @@ export const useMapState = create<MapState>((set, get) => ({
     );
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+    const changed = previous.join("|") !== symptomIds.join("|");
+    if (changed) {
+      emitDawayirSignal({
+        type: "symptoms_updated",
+        nodeId,
+        payload: {
+          count: symptomIds.length
+        }
+      });
+    }
   },
   updateStepFeedback: (nodeId, stepId, value) => {
     const nextNodes = get().nodes.map((node) => {

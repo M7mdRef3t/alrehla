@@ -40,12 +40,12 @@ export const ConsciousnessArchivePanel: FC = () => {
             const demoData: MemoryMatch[] = Array.from({ length: 15 }).map((_, i) => ({
                 id: `mem_${i}`,
                 content: `تجربة وعي رقم ${i + 1}: ${[
-                        "شعور بالهدوء بعد التأمل.",
-                        "تساؤل حول معنى الرحلة.",
-                        "اتصال عميق مع الذات.",
-                        "لحظة إدراك مفاجئة.",
-                        "رغبة في التغيير."
-                    ][i % 5]
+                    "شعور بالهدوء بعد التأمل.",
+                    "تساؤل حول معنى الرحلة.",
+                    "اتصال عميق مع الذات.",
+                    "لحظة إدراك مفاجئة.",
+                    "رغبة في التغيير."
+                ][i % 5]
                     }`,
                 metadata: {
                     source: (["pulse", "chat", "note"][i % 3]) as any,
@@ -64,7 +64,7 @@ export const ConsciousnessArchivePanel: FC = () => {
     const filteredItems = useMemo(() => {
         return items.filter(item => {
             const matchesSearch = item.content.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesFilter = activeFilter === "all" || (item.metadata?.source || "pulse") === activeFilter;
+            const matchesFilter = activeFilter === "all" || (item.source || "pulse") === activeFilter;
             return matchesSearch && matchesFilter;
         });
     }, [items, searchQuery, activeFilter]);
@@ -72,9 +72,9 @@ export const ConsciousnessArchivePanel: FC = () => {
     // Stats
     const stats = useMemo(() => ({
         total: items.length,
-        pulseInfo: items.filter(i => (i.metadata?.source || "pulse") === "pulse").length,
-        chatInfo: items.filter(i => (i.metadata?.source) === "chat").length,
-        notes: items.filter(i => (i.metadata?.source) === "note").length,
+        pulseInfo: items.filter(i => (i.source || "pulse") === "pulse").length,
+        chatInfo: items.filter(i => (i.source) === "chat").length,
+        notes: items.filter(i => (i.source) === "note").length,
     }), [items]);
 
     return (
@@ -126,8 +126,8 @@ export const ConsciousnessArchivePanel: FC = () => {
                             key={filter.id}
                             onClick={() => setActiveFilter(filter.id as any)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeFilter === filter.id
-                                    ? "bg-purple-600 text-white shadow-lg shadow-purple-900/20"
-                                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                                ? "bg-purple-600 text-white shadow-lg shadow-purple-900/20"
+                                : "text-slate-400 hover:text-white hover:bg-slate-800"
                                 }`}
                         >
                             {filter.icon}
@@ -177,15 +177,15 @@ export const ConsciousnessArchivePanel: FC = () => {
 
                                 <div className="flex justify-between items-start mb-3">
                                     <div className="flex items-center gap-2">
-                                        <div className={`p-1.5 rounded-lg ${(item.metadata?.source || "pulse") === "chat" ? "bg-blue-500/10 text-blue-400" :
-                                                (item.metadata?.source || "pulse") === "pulse" ? "bg-emerald-500/10 text-emerald-400" :
-                                                    "bg-amber-500/10 text-amber-400"
+                                        <div className={`p-1.5 rounded-lg ${(item.source || "pulse") === "chat" ? "bg-blue-500/10 text-blue-400" :
+                                            (item.source || "pulse") === "pulse" ? "bg-emerald-500/10 text-emerald-400" :
+                                                "bg-amber-500/10 text-amber-400"
                                             }`}>
-                                            {(item.metadata?.source || "pulse") === "chat" ? <MessageCircle className="w-3.5 h-3.5" /> :
-                                                (item.metadata?.source || "pulse") === "pulse" ? <Compass className="w-3.5 h-3.5" /> : <Hash className="w-3.5 h-3.5" />}
+                                            {(item.source || "pulse") === "chat" ? <MessageCircle className="w-3.5 h-3.5" /> :
+                                                (item.source || "pulse") === "pulse" ? <Compass className="w-3.5 h-3.5" /> : <Hash className="w-3.5 h-3.5" />}
                                         </div>
                                         <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                                            {(item.metadata?.source || "pulse")}
+                                            {(item.source || "pulse")}
                                         </span>
                                     </div>
                                     <span className="text-[10px] font-mono text-slate-600 group-hover:text-purple-400 transition-colors flex items-center gap-1">
@@ -252,13 +252,14 @@ export const ConsciousnessArchivePanel: FC = () => {
                                     <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800">
                                         <h5 className="text-[10px] text-slate-500 uppercase mb-2">المصدر</h5>
                                         <div className="text-sm font-bold text-white capitalize flex items-center gap-2">
-                                            {selectedMemory.metadata?.source || "Unknown"}
+                                            {selectedMemory.source || "Unknown"}
                                         </div>
                                     </div>
                                     <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800">
                                         <h5 className="text-[10px] text-slate-500 uppercase mb-2">الحالة الشعورية (Mood)</h5>
                                         <div className="text-sm font-bold text-white capitalize">
-                                            {selectedMemory.metadata?.mood || "Neutral"}
+                                            {/* Mood logic removed as it's not in MemoryMatch */}
+                                            N/A
                                         </div>
                                     </div>
                                 </div>

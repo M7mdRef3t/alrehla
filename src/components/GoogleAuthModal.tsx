@@ -70,15 +70,22 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isAgeVerified, setIsAgeVerified] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
     setLoading(false);
     setMessage(null);
     setError(null);
+    setIsAgeVerified(false);
   }, [isOpen]);
 
   const handleGoogle = async () => {
+    if (!isAgeVerified) {
+      setError("يجب تأكيد أن عمرك +18 للمتابعة.");
+      return;
+    }
+
     if (!isSupabaseReady) {
       setError("تسجيل الدخول غير متاح حاليًا.");
       return;
@@ -91,11 +98,11 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
       source: intent.kind === "start_recovery" ? "micro_commitment" : "login_icon",
       ...(intent.kind === "start_recovery"
         ? {
-            pulse_energy: intent.pulse.energy,
-            pulse_mood: intent.pulse.mood,
-            pulse_focus: intent.pulse.focus,
-            pulse_auto: intent.pulse.auto ?? false
-          }
+          pulse_energy: intent.pulse.energy,
+          pulse_mood: intent.pulse.mood,
+          pulse_focus: intent.pulse.focus,
+          pulse_auto: intent.pulse.auto ?? false
+        }
         : {})
     });
     setPostAuthIntent(intent);
@@ -262,6 +269,22 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
                   </div>
                 </motion.div>
               )}
+
+              {/* Age Verification Checkbox */}
+              <div
+                onClick={() => setIsAgeVerified(!isAgeVerified)}
+                className="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-white/5 border border-transparent hover:border-white/10"
+              >
+                <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-all ${isAgeVerified
+                  ? "bg-teal-500 border-teal-500"
+                  : "border-slate-500 bg-slate-800/50"
+                  }`}>
+                  {isAgeVerified && <Sparkles className="w-3 h-3 text-white" />}
+                </div>
+                <p className="text-[13px] text-slate-300 leading-snug select-none">
+                  أقر بأن عمري <span className="text-teal-400 font-bold">18 عاماً أو أكثر</span>، وأنني مسؤول مسؤولية كاملة عن قراراتي داخل غرفة العمليات.
+                </p>
+              </div>
 
               {/* Google sign-in button */}
               <motion.button

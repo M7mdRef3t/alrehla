@@ -110,7 +110,7 @@ export function trackPageView(pageName: string): void {
       page_location: getHref()
     });
   }
-  
+
   // Dev logging
   if (runtimeEnv.isDev) {
     console.warn(`[Analytics] Page: ${pageName}`);
@@ -129,7 +129,7 @@ export function trackEvent(
   if (windowRef?.gtag) {
     windowRef.gtag("event", eventName, params);
   }
-  
+
   // Dev logging
   if (runtimeEnv.isDev) {
     console.warn(`[Analytics] Event: ${eventName}`, params);
@@ -140,7 +140,7 @@ export function trackEvent(
 export const AnalyticsEvents = {
   // Navigation
   PAGE_VIEW: "page_view",
-  
+
   // Journey events
   JOURNEY_STARTED: "journey_started",
   GOAL_SELECTED: "goal_selected",
@@ -151,18 +151,26 @@ export const AnalyticsEvents = {
   MICRO_COMPASS_OPENED: "micro_compass_opened",
   MICRO_COMPASS_COMPLETED: "micro_compass_completed",
   AUTH_GOOGLE_CLICKED: "auth_google_clicked",
-  
+
   // Feature usage
   BREATHING_USED: "breathing_exercise_used",
   EMERGENCY_USED: "emergency_button_used",
   LIBRARY_OPENED: "library_opened",
   EXPORT_DATA: "data_exported",
-  
+
+  // Tactical Features (Phase 2 & 3)
+  NOISE_SILENCING_OPENED: "noise_silencing_opened",
+  SHIELD_SELECTOR_OPENED: "shield_selector_opened",
+  RADAR_SHIELD_OPENED: "radar_shield_opened",
+  THOUGHT_SNIPER_OPENED: "thought_sniper_opened",
+  FASTING_CAPSULE_OPENED: "fasting_capsule_opened",
+  INNER_COURT_OPENED: "inner_court_opened",
+
   // Engagement
   TRAINING_COMPLETED: "training_completed",
   STEP_COMPLETED: "recovery_step_completed",
   AI_CHAT_USED: "ai_chat_used",
-  
+
   // Consent events
   CONSENT_GIVEN: "consent_given",
   CONSENT_DENIED: "consent_denied"
@@ -171,7 +179,7 @@ export const AnalyticsEvents = {
 // Analytics consent management
 export function setAnalyticsConsent(consent: boolean): void {
   setInLocalStorage("dawayir-analytics-consent", String(consent));
-  
+
   if (consent) {
     initAnalytics();
   }

@@ -277,8 +277,8 @@ export const ContentPanel: FC = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
                             className={`px-4 py-2 rounded-lg flex items-center gap-2 text-xs font-bold transition-all whitespace-nowrap ${activeTab === tab.id
-                                    ? "bg-teal-500 text-slate-950 shadow-lg"
-                                    : "text-slate-400 hover:text-teal-300"
+                                ? "bg-teal-500 text-slate-950 shadow-lg"
+                                : "text-slate-400 hover:text-teal-300"
                                 }`}
                         >
                             {tab.icon}
@@ -382,7 +382,7 @@ export const ContentPanel: FC = () => {
                                                     <span className="text-xs font-bold font-mono text-teal-400 select-all">{entry.key}</span>
                                                     {entry.page && <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">{entry.page}</span>}
                                                 </div>
-                                                <p className="text-[10px] text-slate-600 mt-0.5">Updated: {new Date(entry.updatedAt).toLocaleDateString()}</p>
+                                                <p className="text-[10px] text-slate-600 mt-0.5">Updated: {entry.updatedAt ? new Date(entry.updatedAt).toLocaleDateString() : "—"}</p>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 {isDirty && (
@@ -579,7 +579,7 @@ export const ContentPanel: FC = () => {
                                     <div className="flex-1">
                                         <h4 className="text-sm font-bold text-white">{b.title}</h4>
                                         <p className="text-xs text-slate-400">{b.body}</p>
-                                        <span className="text-[10px] text-slate-600 mt-1 block">{new Date(b.createdAt).toLocaleString()}</span>
+                                        <span className="text-[10px] text-slate-600 mt-1 block">{b.createdAt ? new Date(b.createdAt).toLocaleString() : "—"}</span>
                                     </div>
                                     <button onClick={() => { removeBroadcast(b.id); if (isSupabaseReady) deleteBroadcast(b.id); }} className="p-2 hover:bg-rose-500/10 rounded-lg text-rose-500 transition-colors">
                                         <Trash2 className="w-4 h-4" />

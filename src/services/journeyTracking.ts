@@ -278,7 +278,10 @@ export type FlowStep =
   | "feedback_opened"
   | "feedback_submitted"
   | "tools_opened"
-  | "utm_captured";
+  | "utm_captured"
+  | "next_step_rendered"
+  | "next_step_action_taken"
+  | "next_step_dismissed";
 
 export function recordFlowEvent(
   step: FlowStep,
@@ -607,4 +610,11 @@ export function clearAllJourneyEvents(): void {
 export function clearSessionId(): void {
   if (!isBrowser) return;
   removeFromLocalStorage(KEY_SESSION_ID);
+}
+
+export function getRecentJourneyEvents(limit = 500): JourneyEvent[] {
+  const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 5000) : 500;
+  return loadEvents()
+    .slice(-safeLimit)
+    .sort((a, b) => b.timestamp - a.timestamp);
 }

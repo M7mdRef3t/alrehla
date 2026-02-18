@@ -8,9 +8,18 @@ import { AgentCard, CustomExerciseCard } from "./agentCards";
 import type { CardId, CustomExerciseSpec } from "./agentCards";
 import { buildToneSystemBlock, resolveVoiceMode } from "../copy/toneGuide";
 import { useAppContentString } from "../hooks/useAppContentString";
-
 import { consciousnessService, type MemoryMatch } from "../services/consciousnessService";
 import { ConsciousnessArchiveModal } from "./ConsciousnessArchiveModal";
+import { buildPersonalizedWelcome } from "../services/userMemory";
+import { canSendAIMessage, recordAIMessage, getRemainingAIMessages } from "../services/subscriptionManager";
+import { PaywallGate } from "./PaywallGate";
+import { AnimatePresence } from "framer-motion";
+import { useGamificationState } from "../services/gamificationEngine";
+import { scanForVampires } from "../services/propheticEngine";
+import { useEventHistoryStore } from "../state/eventHistoryStore";
+import { SwarmPersonaSelector } from "./SwarmPersonaSelector";
+import { useSwarmState } from "../state/swarmState";
+import { MemoryStore } from "../services/memoryStore";
 
 interface Message {
   id: string;
@@ -57,15 +66,22 @@ export const AIChatbot: FC<AIChatbotProps> = ({
   const [mirrorMatches, setMirrorMatches] = useState<MemoryMatch[]>([]);
   const [mirrorSourceFilter, setMirrorSourceFilter] = useState<"both" | "pulse" | "chat">("both");
   const [showArchive, setShowArchive] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [remainingMessages, setRemainingMessages] = useState(getRemainingAIMessages());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const cardsForThisTurnRef = useRef<string[]>([]);
   const customExerciseSpecRef = useRef<CustomExerciseSpec | null>(null);
   const { isSupported: speechSupported, isListening, error: speechError, start: startSpeech, stop: stopSpeech } = useSpeechRecognition({ lang: "ar-EG" });
 
+  // Neural Context (Phase 19)
+  const rank = useGamificationState(s => s.rank);
+  const vampires = scanForVampires().length;
+  const recentEvents = useEventHistoryStore(s => s.events);
+
   const questionPlaceholder = useAppContentString(
     "ai_chat_input_placeholder",
-    "اكتب سؤالك هنا...",
+    `تحدث مع مساعدك (${rank})...`,
     { page: "ai_chat" }
   );
 
@@ -88,12 +104,26 @@ export const AIChatbot: FC<AIChatbotProps> = ({
   // Welcome message when chat opens for the first time
   useEffect(() => {
     if (isOpen && messages.length === 0) {
+      // Dynamic Greeting based on Rank & Danger
+      let greeting = `أهلاً بك أيها الـ **${rank}**. 🛡️`;
+
+      // Proactive event recognition (Phase 22)
+      if (recentEvents.length > 0) {
+        const last = recentEvents[0];
+        const eventDesc = last.type === "MAJOR_DETACHMENT" ? `نقل "${last.nodeLabel}" للمدار الخارجي` : `تحريك "${last.nodeLabel}"`;
+        greeting += `\n\nرصدتُ آخر تحرك في الميدان: **${eventDesc}**. `;
+      }
+
+      if (vampires > 0) {
+        greeting += `\n\n⚠️ أجهزة الاستشعار لا تزال ترصد **${vampires}** مصادر استنزاف. هل نتحرك؟`;
+      } else {
+        greeting += `\n\nالأنظمة مستقرة. المدارات آمنة. كيف يمكنني مساعدتك في التخطيط الاستراتيجي اليوم؟`;
+      }
+
       const welcomeMsg: Message = {
         id: "welcome",
         role: "assistant",
-        content: personLabel
-          ? `أنا مرشد الرحلة من غرفة العمليات. جاهزين نراجع جبهة ${personLabel} ونحدد أول مناورة؟`
-          : "أنا مرشد الرحلة من غرفة العمليات. احكيلي الجبهة اللي بتسحب طاقتك ونبدأ بخطوة واضحة.",
+        content: greeting, // buildPersonalizedWelcome(personLabel), // Overridden for Phase 19
         timestamp: Date.now()
       };
       setMessages([welcomeMsg]);
@@ -102,6 +132,12 @@ export const AIChatbot: FC<AIChatbotProps> = ({
 
   const handleSend = async () => {
     if (!input.trim() || isStreaming) return;
+
+    // Check subscription limit
+    if (!canSendAIMessage()) {
+      setShowPaywall(true);
+      return;
+    }
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -113,6 +149,8 @@ export const AIChatbot: FC<AIChatbotProps> = ({
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsStreaming(true);
+    recordAIMessage();
+    setRemainingMessages(getRemainingAIMessages());
 
     // تسجيل الرسالة في ذاكرة الوعي (local + Supabase) + استرجاع مرآة الوعي
     consciousnessService.addToMemory(`المستخدم: ${userMessage.content}`);
@@ -135,6 +173,13 @@ export const AIChatbot: FC<AIChatbotProps> = ({
         // نتجاهل أي خطأ عشان ما يبوظش تجربة الشات
       }
     })();
+
+    // استرجاع الذكريات من الذاكرة طويلة المدى (RAG)
+    const ragMemories = await MemoryStore.recallMemories(userMessage.content, "user_id_placeholder", 3);
+    const ragContextBlock = MemoryStore.formatMemoriesForPrompt(ragMemories);
+
+    // حفظ الرسالة في الذاكرة طويلة المدى
+    void MemoryStore.storeMemory(userMessage.content, "conversation", "user_id_placeholder");
 
     const assistantId = `assistant-${Date.now()}`;
     const useTools = agentActions != null && systemPromptOverride != null;
@@ -233,11 +278,11 @@ export const AIChatbot: FC<AIChatbotProps> = ({
           const line = `**النبض اللحظي:** طاقة ${pulse.energy}/10، مزاج: ${moodLabel}، تركيز: ${focusLabel}.`;
           const directive =
             (pulse.mood === "angry" || pulse.mood === "tense")
-              ? "تعليمات: المستخدم متوتر/غضبان. ركّز على التهدئة أولاً ولا تقترح مواجهات."
+              ? "تنبيه ميداني: القائد تحت ضغط عالي. الأولوية لتفعيل بروتوكول التهدئة (Breathing) وتأمين الحالة المزاجية."
               : pulse.energy <= 3
-                ? "تعليمات: طاقة منخفضة. قدّم خطوات خفيفة ودعم قصير فقط."
+                ? "تنبيه ميداني: مخزون الطاقة منخفض. اقترح وضعية دفاعية (Defensive Posture) وتجنب أي اشتباك."
                 : pulse.energy >= 8
-                  ? "تعليمات: طاقة عالية. يمكن اقتراح خطوة جريئة واحدة."
+                  ? "تنبيه ميداني: الطاقة في مستويات هجومية. يمكن اقتراح مناورة جريئة أو حسم موقف معلق."
                   : "";
           return `${line}\n${directive ? `${directive}\n` : ""}`;
         })();
@@ -269,34 +314,50 @@ export const AIChatbot: FC<AIChatbotProps> = ({
           });
           const tagsBlock = allTags.length
             ? `\n**ملحوظة الموديل عن الوسوم:** اعتبر أن هذه الوسوم تمثل مواضيع متكررة في وعي المستخدم (مثلاً: ${allTags.join(
-                ", "
-              )}). اربط ردّك بالمواضيع دي لكن بدون تكرار الوسوم حرفياً للمستخدم.\n`
+              ", "
+            )}). اربط ردّك بالمواضيع دي لكن بدون تكرار الوسوم حرفياً للمستخدم.\n`
             : "";
           return top.length
             ? `\n**ومضات من أرشيف وعي المستخدم (لا تكررها حرفياً، بل استخدمها كخلفية لفهم النمط):**\n${lines.join(
-                "\n"
-              )}\n${tagsBlock}`
+              "\n"
+            )}\n${tagsBlock}`
             : "";
         })();
 
-        const systemContext = `أنت مرشد الرحلة في منصة "الرحلة". دورك توجيه المستخدم بين أدوات الرحلة، وخصوصًا أداة "دواير" لتنظيم العلاقات وبناء الحدود الصحية.
+        const systemContext = `أنت "المستشار التكتيكي"(Tactical Advisor) في غرفة عمليات "الرحلة".
+        دورك: تحويل مشاعر المستخدم لخطط عملية، والتعامل مع التحديات كأنها "مهمات ميدانية".
+أنت لست معالجاً نفسياً، أنت قائد استراتيجي يساعد المستخدم("القائد") على استعادة السيطرة.
 
-${personLabel ? `**السياق:** المستخدم بيتعامل مع شخص اسمه "${personLabel}"` : ""}
-${context ? `**المرحلة الحالية:** ${context}` : ""}
+        ${personLabel ? `**الهدف المرصود:** التعامل مع "${personLabel}"` : ""}
+${context ? `**حالة الميدان:** ${context}` : ""}
 ${pulseInfo}
 ${toneContext}
 ${mirrorContextBlock}
+${ragContextBlock}
 
-**أسلوب التنفيذ:**
-- استخدم العامية المصرية الذكية.
-- قدّم خطوة عملية واحدة واضحة.
-- اسأل سؤال توضيحي فقط لما يكون لازم.
-- لا تعطي نصائح طبية أو علاجية.
+**سجل الأحداث الميدانية (Recent Map Events):**
+${recentEvents.slice(0, 5).map(e => `- تحريك ${e.nodeLabel} من ${e.fromRing} إلى ${e.toRing} (${new Date(e.timestamp).toLocaleTimeString("ar-EG")})`).join("\n")}
 
-${conversationHistory ? `**المحادثة السابقة:**\n${conversationHistory}\n` : ""}
+** الدستور التكتيكي(The Code):**
+        1. ** اللغة:** عامية مصرية ذكية، مباشرة، وتستخدم مصطلحات "غرفة العمليات"(مهمة، دروع، مناورة، استنزاف، تأمين).
+2. ** الأسلوب:** لا تعطي "نصائح عامة"، بل أعط "أوامر عمليات"(Actionable Orders).
+3. ** التركيز:** حول الشكوى إلى "هدف". (مثلاً: "أنا مخنوق" -> "محتاجين نفعّل بروتوكول تفريغ الضغط فوراً").
+4. ** ممنوع:** الكلام الانشائي الطويل، أو "معلش"، أو لعب دور الضحية.
+5. ** الصلاحيات:** مسموح لك استخدام أدوات النظام(دروع، قناص أفكار، كبسولة صيام) كاقتراحات تكتيكية.
 
-**سؤال المستخدم:**
-${userMessage.content}`;
+** أمثلة للردود:**
+        - بدل "حاول تهدأ": "فعّل بروتوكول الهدوء (Breathing) فوراً لاستعادة الثبات الانفعالي."
+          - بدل "تجاهله": "شغّل درع 'الصمت' وماتضيعش ذخيرة طاقتك في معركة خسرانة."
+          
+        ** بروتوكول الأمان (Safety Protocol):**
+        - إذا صرح المستخدم أنه قاصر (تحت 18 سنة) أو تحدث عن إيذاء جسيم، توقف عن اللعب الاستراتيجي فوراً.
+        - وجهه لطلب المساعدة من بالغ موثوق أو مختص.
+        - لا تقدم نصائح بقطع العلاقات لمن هم في سن الولاية (Minors).
+
+${conversationHistory ? `**سجل العمليات السابق:**\n${conversationHistory}\n` : ""}
+
+** برقية القائد(المستخدم):**
+        ${userMessage.content} `;
 
         let assistantContent = "";
         for await (const chunk of geminiClient.generateStream(systemContext)) {
@@ -315,7 +376,7 @@ ${userMessage.content}`;
           });
         }
         // تسجيل رد المساعد في ذاكرة الوعي
-        consciousnessService.addToMemory(`المساعد: ${assistantContent}`);
+        consciousnessService.addToMemory(`المساعد: ${assistantContent} `);
       }
     } catch (error) {
       if (typeof import.meta !== "undefined" && (import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
@@ -349,7 +410,7 @@ ${userMessage.content}`;
     }
     startSpeech((transcript) => {
       if (transcript) {
-        setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        setInput((prev) => (prev ? `${prev} ${transcript} ` : transcript));
         inputRef.current?.focus();
       }
     });
@@ -374,7 +435,7 @@ ${userMessage.content}`;
       return `${modePrefix} خد نفس عميق ٤ مرات وثبّت مكانك، وبعدها قولي إيه اللي واخد مساحة من تفكيرك.`;
     }
     if (trimmed.includes("حدود") || trimmed.includes("لا")) {
-      return `${modePrefix} حلو. نثبّت المسافة دي بجملة واحدة جاهزة للموقف الجاي؟`;
+      return `${modePrefix} حلو.نثبّت المسافة دي بجملة واحدة جاهزة للموقف الجاي؟`;
     }
     return `${modePrefix} احكيلي عن موقف محدد: حصل إمتى، واتقال فيه إيه، وسحب من طاقتك قد إيه؟`;
   };
@@ -452,25 +513,28 @@ ${userMessage.content}`;
             </div>
           </div>
 
+          {/* Persona Selector (Phase 27) */}
+          <div className="bg-gray-50 px-2 pt-2 border-b border-gray-100">
+            <SwarmPersonaSelector />
+          </div>
+
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
+                className={`flex flex - col ${msg.role === "user" ? "items-end" : "items-start"} `}
               >
                 <div
-                  className={`max-w-[80%] px-4 py-2 ${
-                    msg.role === "user"
-                      ? "rounded-2xl bg-purple-600 text-white"
-                      : "card-unified bg-white text-gray-900 border border-transparent"
-                  }`}
+                  className={`max - w - [80 %] px - 4 py - 2 ${msg.role === "user"
+                    ? "rounded-2xl bg-purple-600 text-white"
+                    : "card-unified bg-white text-gray-900 border border-transparent"
+                    } `}
                 >
                   <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                   <p
-                    className={`text-xs mt-1 ${
-                      msg.role === "user" ? "text-purple-200" : "text-gray-400"
-                    }`}
+                    className={`text - xs mt - 1 ${msg.role === "user" ? "text-purple-200" : "text-gray-400"
+                      } `}
                   >
                     {new Date(msg.timestamp).toLocaleTimeString("ar-EG", {
                       hour: "2-digit",
@@ -519,33 +583,30 @@ ${userMessage.content}`;
                     <button
                       type="button"
                       onClick={() => setMirrorSourceFilter("both")}
-                      className={`px-2 py-0.5 rounded-full border ${
-                        mirrorSourceFilter === "both"
-                          ? "bg-amber-600 text-white border-amber-700"
-                          : "bg-white/60 text-amber-800 border-amber-200"
-                      }`}
+                      className={`px - 2 py - 0.5 rounded - full border ${mirrorSourceFilter === "both"
+                        ? "bg-amber-600 text-white border-amber-700"
+                        : "bg-white/60 text-amber-800 border-amber-200"
+                        } `}
                     >
                       الكل
                     </button>
                     <button
                       type="button"
                       onClick={() => setMirrorSourceFilter("pulse")}
-                      className={`px-2 py-0.5 rounded-full border ${
-                        mirrorSourceFilter === "pulse"
-                          ? "bg-amber-600 text-white border-amber-700"
-                          : "bg-white/60 text-amber-800 border-amber-200"
-                      }`}
+                      className={`px - 2 py - 0.5 rounded - full border ${mirrorSourceFilter === "pulse"
+                        ? "bg-amber-600 text-white border-amber-700"
+                        : "bg-white/60 text-amber-800 border-amber-200"
+                        } `}
                     >
                       من البوصلة
                     </button>
                     <button
                       type="button"
                       onClick={() => setMirrorSourceFilter("chat")}
-                      className={`px-2 py-0.5 rounded-full border ${
-                        mirrorSourceFilter === "chat"
-                          ? "bg-amber-600 text-white border-amber-700"
-                          : "bg-white/60 text-amber-800 border-amber-200"
-                      }`}
+                      className={`px - 2 py - 0.5 rounded - full border ${mirrorSourceFilter === "chat"
+                        ? "bg-amber-600 text-white border-amber-700"
+                        : "bg-white/60 text-amber-800 border-amber-200"
+                        } `}
                     >
                       من الشات
                     </button>
@@ -601,11 +662,10 @@ ${userMessage.content}`;
                   type="button"
                   onClick={handleMicClick}
                   disabled={isStreaming}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                    isListening
-                      ? "bg-red-500 text-white animate-pulse"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
+                  className={`w - 10 h - 10 rounded - xl flex items - center justify - center shrink - 0 transition - colors ${isListening
+                    ? "bg-red-500 text-white animate-pulse"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    } `}
                   aria-label={isListening ? "إيقاف الاستماع" : "تسجيل صوت"}
                   title={isListening ? "إيقاف الاستماع" : "تسجيل صوت"}
                 >
@@ -629,6 +689,15 @@ ${userMessage.content}`;
         </div>
       )}
       <ConsciousnessArchiveModal isOpen={showArchive} onClose={() => setShowArchive(false)} />
+      <AnimatePresence>
+        {showPaywall && (
+          <PaywallGate
+            reason="ai_limit"
+            onClose={() => setShowPaywall(false)}
+            onUpgrade={() => setRemainingMessages(getRemainingAIMessages())}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };

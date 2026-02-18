@@ -6,6 +6,7 @@ import { LegalPage } from "./components/LegalPage";
 import { useNotificationState } from "./state/notificationState";
 import { useEmergencyState } from "./state/emergencyState";
 import { useMapState } from "./state/mapState";
+import { startBiometricStream, analyzeStressLevels } from "./services/biometricsBridge";
 import { useJourneyState } from "./state/journeyState";
 import { useAchievementState, getLibraryOpenedAt, getBreathingUsedAt } from "./state/achievementState";
 import { useThemeState } from "./state/themeState";
@@ -36,7 +37,7 @@ import { PWAInstallProvider } from "./contexts/PWAInstallContext";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
 import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
 import { DashboardScreen } from "./components/DashboardScreen";
-import { OnboardingFlow, hasCompletedJourneyOnboarding } from "./components/OnboardingFlow";
+import { OnboardingFlow, hasCompletedJourneyOnboarding, resetJourneyOnboarding } from "./components/OnboardingFlow";
 import { JourneyToast } from "./components/JourneyToast";
 import { FaqScreen } from "./components/FaqScreen";
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
@@ -61,9 +62,29 @@ import {
 import { getFromLocalStorage, setInLocalStorage } from "./services/browserStorage";
 import { openInNewTab } from "./services/clientDom";
 import { getDocumentOrNull, getWindowOrNull } from "./services/clientRuntime";
+import { SettingsScreen } from "./components/SettingsScreen";
+import { initLanguage } from "./services/i18n";
 import { runtimeEnv } from "./config/runtimeEnv";
+import { getNextNudge, dismissNudge } from "./services/nudgeEngine";
+import { detectContradictions, dismissMirrorInsight, type MirrorInsight } from "./services/mirrorLogic";
+import { calculateEntropy, type UserState } from "./services/predictiveEngine";
+import {
+  computeNextStepDecision,
+  reportDecisionOutcome,
+  subscribeToDawayirSignals,
+  type NextStepDecisionV1
+} from "./modules/recommendation";
+import { MirrorOverlay } from "./components/MirrorOverlay";
+import { StartupSequence } from "./components/StartupSequence";
+import { GraphEventToast } from "./components/GraphEventToast";
+import { useSwarmState } from "./state/swarmState";
+import { determineAutoPersona } from "./agent/swarmLogic";
+import { buildAgentSystemPrompt } from "./agent/prompt"; // Ensure this is imported
 
-type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
+// Initialize language on app start
+initLanguage();
+
+type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools" | "settings" | "enterprise" | "guilt-court" | "diplomacy";
 type PulseSubmitPayload = {
   energy: number | null;
   mood: PulseMood | null;
@@ -100,7 +121,9 @@ type OwnerActionKey =
   | "feedback_modal"
   | "install_app"
   | "noise_silencing"
-  | "breathing_session";
+  | "breathing_session"
+  | "ambient_reality"
+  | "wisdom_vault";
 
 function normalizePreviewFeature(value: string | null): FeatureFlagKey | null {
   if (!value) return null;
@@ -152,7 +175,9 @@ function normalizeOwnerAction(value: string | null): OwnerActionKey | null {
     key === "feedback_modal" ||
     key === "install_app" ||
     key === "noise_silencing" ||
-    key === "breathing_session"
+    key === "breathing_session" ||
+    key === "ambient_reality" ||
+    key === "wisdom_vault"
   ) {
     return key as OwnerActionKey;
   }
@@ -167,8 +192,8 @@ const RelationshipGym = lazy(() => import("./components/RelationshipGym").then((
 const BaselineAssessment = lazy(() => import("./components/BaselineAssessment").then((m) => ({ default: m.BaselineAssessment })));
 const PulseCheckModal = lazy(() => import("./components/PulseCheckModal").then((m) => ({ default: m.PulseCheckModal })));
 const CocoonModeModal = lazy(() => import("./components/CocoonModeModal").then((m) => ({ default: m.CocoonModeModal })));
-const NoiseSilencingModal = lazy(() =>
-  import("./components/NoiseSilencingModal").then((m) => ({ default: m.NoiseSilencingModal }))
+const MuteProtocol = lazy(() =>
+  import("./components/MuteProtocol").then((m) => ({ default: m.NoiseSilencingModal }))
 );
 const BreathingOverlay = lazy(() => import("./components/BreathingOverlay").then((m) => ({ default: m.BreathingOverlay })));
 const FeatureLockedModal = lazy(() =>
@@ -219,6 +244,13 @@ const ManualPlacementModal = lazy(() =>
   import("./components/ManualPlacementModal").then((m) => ({ default: m.ManualPlacementModal }))
 );
 const FeedbackModal = lazy(() => import("./components/FeedbackModal").then((m) => ({ default: m.FeedbackModal })));
+const EnterprisePortal = lazy(() => import("./components/enterprise/EnterprisePortal").then((m) => ({ default: m.EnterprisePortal })));
+const GuiltCourt = lazy(() => import("./components/GuiltCourt").then((m) => ({ default: m.GuiltCourt })));
+const DiplomaticCables = lazy(() => import("./components/DiplomaticCables").then((m) => ({ default: m.DiplomaticCables })));
+
+// Phase 30: Holographic Legacy
+const AmbientRealityMode = lazy(() => import("./components/AmbientRealityMode").then((m) => ({ default: m.AmbientRealityMode })));
+const TimeCapsuleVault = lazy(() => import("./components/TimeCapsuleVault").then((m) => ({ default: m.TimeCapsuleVault })));
 
 const preloadCoreMap = () => import("./components/CoreMapScreen");
 const preloadChatbot = () => import("./components/AIChatbot");
@@ -268,7 +300,7 @@ function getUserLastUiStateStorageKey(userId: string): string {
 }
 
 function normalizeRestorableScreen(value: string | null): Screen | null {
-  if (value === "landing" || value === "goal" || value === "map" || value === "guided" || value === "tools") {
+  if (value === "landing" || value === "goal" || value === "map" || value === "guided" || value === "tools" || value === "enterprise") {
     return value;
   }
   return null;
@@ -435,7 +467,18 @@ function saveOwnerMilestonesState(value: OwnerMilestonesState): void {
 import { JourneyTimeline } from "./components/JourneyTimeline";
 
 export default function App() {
+  // Phase 19: Startup Sequence — shows once per session
+  const [showStartup, setShowStartup] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const seen = sessionStorage.getItem("dawayir-startup-seen");
+    return !seen;
+  });
   const [screen, setScreen] = useState<Screen>("landing");
+
+  // Phase 27: Swarm State & Automatic Selection
+  const { activePersona, setActivePersona, manualOverride } = useSwarmState();
+
+
   const [category, setCategory] = useState<AdviceCategory>("general");
   const [goalId, setGoalId] = useState<string>("unknown");
   const [showGym, setShowGym] = useState(false);
@@ -474,6 +517,9 @@ export default function App() {
   const hasHydratedUiStateRef = useRef(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
   const [showOwnerDataTools, setShowOwnerDataTools] = useState(false);
+  // Phase 30: Holographic Legacy
+  const [showAmbientReality, setShowAmbientReality] = useState(false);
+  const [showTimeCapsuleVault, setShowTimeCapsuleVault] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showTrackingDashboard, setShowTrackingDashboard] = useState(false);
   const [showAtlasDashboard, setShowAtlasDashboard] = useState(false);
@@ -487,7 +533,12 @@ export default function App() {
   const [showClassicRecovery, setShowClassicRecovery] = useState(false);
   const [showManualPlacement, setShowManualPlacement] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(() => !hasCompletedJourneyOnboarding());
+  const [showOnboarding, setShowOnboarding] = useState(false); // Default to false to show Landing first
+  const [nextStepDecision, setNextStepDecision] = useState<NextStepDecisionV1 | null>(null);
+  const [nextStepRefreshTick, setNextStepRefreshTick] = useState(0);
+  const nextStepRequestSeqRef = useRef(0);
+  const nextStepLastRefreshRef = useRef(0);
+
   const [showWelcomeToast, setShowWelcomeToast] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
   const [ownerInstallRequestNonce, setOwnerInstallRequestNonce] = useState(0);
@@ -525,6 +576,15 @@ export default function App() {
   const snoozedUntil = usePulseState((s) => s.snoozedUntil);
   const logPulse = usePulseState((s) => s.logPulse);
   const snoozeNotifications = usePulseState((s) => s.snoozeNotifications);
+
+  // Nudge Engine Logic
+  const [activeNudge, setActiveNudge] = useState<any>(null);
+  const [showNudgeToast, setShowNudgeToast] = useState(false);
+
+  // Mirror Logic (Phase 12)
+  const [activeMirrorInsight, setActiveMirrorInsight] = useState<MirrorInsight | null>(null);
+  const [showMirrorOverlay, setShowMirrorOverlay] = useState(false);
+
   const featureFlags = useAdminState((s) => s.featureFlags);
   const betaAccess = useAdminState((s) => s.betaAccess);
   const adminPrompt = useAdminState((s) => s.systemPrompt);
@@ -727,6 +787,82 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // Check for nudges after 2 seconds
+    const timer = setTimeout(() => {
+      const nudge = getNextNudge();
+      if (nudge) {
+        setActiveNudge(nudge);
+        setShowNudgeToast(true);
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Check for Mirror Insights (Contradictions)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    // Check after 4 seconds to avoid conflict with Nudge
+    const timer = setTimeout(() => {
+      const insight = detectContradictions();
+      if (insight) {
+        setActiveMirrorInsight(insight);
+        setShowMirrorOverlay(true);
+      }
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [nodes, storedGoalId]); // Re-check when nodes or goal change
+
+  // Phase 24: Biometrics Bridge Integration
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const stopStream = startBiometricStream((pulse: any) => {
+      const result = analyzeStressLevels(pulse);
+      if (result.isCrisis && !showCocoon && !showBreathing) {
+        trackEvent("biometric_crisis_triggered", { hr: pulse.heartRate, reason: result.reason || "unknown" });
+        openCocoonModal("auto");
+      }
+    });
+
+    return () => stopStream();
+  }, [openCocoonModal, showCocoon, showBreathing]);
+
+  // Predictive Engine (Phase 13) - State Adaptation
+  const [userPsychState, setUserPsychState] = useState<UserState>("ORDER");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    // Recalculate entropy when key metrics change
+    const insight = calculateEntropy();
+    setUserPsychState(insight.state);
+
+    // Containment Mode Response: If Chaos is detected, suggest breathing
+    if (insight.state === "CHAOS" && !showBreathing && !showCocoon) {
+      // We can use the 'activeNudge' system to show a high-priority calming nudge
+      // blocking other nudges if chaos is high.
+      setActiveNudge({
+        id: 'chaos-containment-' + Date.now(),
+        type: 'streak_risk', // reusing type for priority
+        title: 'نظام الاحتواء 🛡️',
+        message: 'المؤشرات بتقول إن فيه "فوضى" عالية.. خد دقيقة تنفس.',
+        cta: 'افصل شوية',
+        priority: 1,
+        icon: '🍃'
+      });
+      setShowNudgeToast(true);
+    }
+  }, [nodes, lastPulse, goalId]);
+
+
+  const handleNudgeDismiss = () => {
+    if (activeNudge) {
+      dismissNudge(activeNudge.id);
+    }
+    setShowNudgeToast(false);
+  };
+
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
     if (authStatus !== "ready") return;
     const userId = authUser?.id ?? null;
@@ -870,7 +1006,11 @@ export default function App() {
       map: "Ø®Ø±ÙŠØ·Ø© Ø§Ù„Ø¹Ù„Ø§Ù‚Ø§Øª",
       guided: "Ø§Ù„Ø±Ø­Ù„Ø© Ø§Ù„Ù…ÙˆØ¬Ù‡Ø©",
       mission: "Ø´Ø§Ø´Ø© Ø§Ù„Ù…Ù‡Ù…Ø©",
-      tools: "Ø£Ø¯ÙˆØ§Øª Ø§Ù„Ø±Ø­Ù„Ø©"
+      tools: "أدوات الرحلة",
+      settings: "الإعدادات",
+      enterprise: "بوابة المؤسسات",
+      "guilt-court": "محكمة الشعور بالذنب",
+      diplomacy: "البرقيات الدبلوماسية"
     };
     trackPageView(pageNames[screen]);
   }, [screen]);
@@ -902,6 +1042,22 @@ export default function App() {
       tools: {
         title: "Journey Tools | Alrehla",
         description: "Access focused tools that help you regulate, reflect, and take practical action."
+      },
+      settings: {
+        title: "Settings | Alrehla",
+        description: "Manage your subscription, language, and B2B portal settings."
+      },
+      enterprise: {
+        title: "Enterprise Portal | Alrehla",
+        description: "B2B psychological safety and organizational analytics dashboard."
+      },
+      "guilt-court": {
+        title: "Guilt Court | Alrehla",
+        description: "Strategically dismantle irrational guilt through logical analysis."
+      },
+      diplomacy: {
+        title: "Diplomatic Cables | Alrehla",
+        description: "Smart message templates for strategic communication and boundary setting."
       }
     };
 
@@ -1124,6 +1280,23 @@ export default function App() {
   }, [canUseMap, openDefaultGoalMap, setLockedFeature, setScreen, skipNextPulseCheck]);
 
   const startRecovery = () => {
+    // Check if user needs onboarding first
+    if (!hasCompletedJourneyOnboarding()) {
+      trackEvent("onboarding_started", { source: "landing" });
+      setShowOnboarding(true);
+      return;
+    }
+
+    // Always open Pulse Check on start recovery, ignoring frequency limits for better UX flow
+    // User flow: Pulse Check -> Goal Picker -> Map
+    trackEvent(AnalyticsEvents.MICRO_COMPASS_OPENED, { source: "landing", gate: "pulse" });
+    setWelcome(null);
+    setPostAuthIntentState(null);
+    setShowAuthModal(false);
+    setPulseCheckContext("start_recovery");
+    setShowPulseCheck(true);
+    return;
+    /*
     if (canUsePulseCheck) {
       trackEvent(AnalyticsEvents.MICRO_COMPASS_OPENED, { source: "landing", gate: "pulse" });
       setWelcome(null);
@@ -1133,6 +1306,7 @@ export default function App() {
       setShowPulseCheck(true);
       return;
     }
+    */
     if (shouldGateStartWithAuth) {
       setWelcome(null);
       setPostAuthIntentState({ kind: "login", createdAt: Date.now() });
@@ -1140,6 +1314,13 @@ export default function App() {
       return;
     }
     goToGoals();
+  };
+
+  const restartJourney = () => {
+    // Reset the onboarding flag so the user can pick a new goal
+    resetJourneyOnboarding();
+    trackEvent("journey_restarted", { source: "landing" });
+    setShowOnboarding(true);
   };
 
   useEffect(() => {
@@ -1237,6 +1418,106 @@ export default function App() {
     }
     setScreen("goal");
   };
+
+  const handleRefreshNextStep = useCallback(() => {
+    if (nextStepDecision) {
+      void reportDecisionOutcome({
+        decisionId: nextStepDecision.decisionId,
+        acted: false
+      });
+    }
+    recordFlowEvent("next_step_dismissed", {
+      meta: { reason: "manual_refresh", surface: screen }
+    });
+    setNextStepRefreshTick((tick) => tick + 1);
+  }, [screen, nextStepDecision]);
+
+  const handleTakeNextStep = useCallback((decision: NextStepDecisionV1) => {
+    const nodeIdFromPayload =
+      typeof decision.action.actionPayload?.nodeId === "string"
+        ? decision.action.actionPayload.nodeId
+        : null;
+    const timeToActionSec = Math.max(0, Math.round((Date.now() - decision.createdAt) / 1000));
+
+    recordFlowEvent("next_step_action_taken", {
+      timeToAction: timeToActionSec,
+      meta: {
+        decisionId: decision.decisionId,
+        actionType: decision.action.actionType,
+        source: decision.source,
+        phase: decision.phase,
+        riskBand: decision.riskBand
+      }
+    });
+
+    void reportDecisionOutcome({
+      decisionId: decision.decisionId,
+      acted: true,
+      completed: undefined,
+      timeToActionSec
+    });
+
+    switch (decision.action.actionType) {
+      case "open_breathing":
+        setShowBreathing(true);
+        break;
+      case "open_map":
+        setScreen("map");
+        break;
+      case "open_tools":
+        openJourneyTools();
+        break;
+      case "open_mission":
+        if (nodeIdFromPayload) openMissionScreen(nodeIdFromPayload);
+        else if (selectedNodeId) openMissionScreen(selectedNodeId);
+        else setScreen("map");
+        break;
+      case "review_red_node":
+      case "log_situation":
+      case "set_soft_boundary":
+        setScreen("map");
+        if (nodeIdFromPayload) setSelectedNodeId(nodeIdFromPayload);
+        break;
+      case "journal_reflection":
+        setShowFeedback(true);
+        break;
+      default:
+        setScreen("map");
+        break;
+    }
+
+    setTimeout(() => setNextStepRefreshTick((tick) => tick + 1), 1200);
+  }, [openJourneyTools, openMissionScreen, selectedNodeId]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToDawayirSignals(() => {
+      setNextStepRefreshTick((tick) => tick + 1);
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    if (screen !== "map" && screen !== "tools") {
+      setNextStepDecision(null);
+      return;
+    }
+
+    const seq = ++nextStepRequestSeqRef.current;
+    const forceRefresh = nextStepRefreshTick !== nextStepLastRefreshRef.current;
+    nextStepLastRefreshRef.current = nextStepRefreshTick;
+    const surface = screen === "map" ? "map" : "tools";
+
+    void computeNextStepDecision({
+      goalId,
+      category,
+      availableFeatures,
+      surface,
+      forceRefresh
+    }).then((decision) => {
+      if (seq !== nextStepRequestSeqRef.current) return;
+      setNextStepDecision(decision);
+    });
+  }, [screen, goalId, category, nodes, lastPulse, availableFeatures, nextStepRefreshTick]);
 
   const goBackToFeatureFlags = useCallback(() => {
     const next = createCurrentUrl();
@@ -1430,6 +1711,12 @@ export default function App() {
         break;
       case "breathing_session":
         setShowBreathing(true);
+        break;
+      case "ambient_reality":
+        setShowAmbientReality(true);
+        break;
+      case "wisdom_vault":
+        setShowTimeCapsuleVault(true);
         break;
       default:
         break;
@@ -1638,14 +1925,24 @@ export default function App() {
     () => ({
       nodesSummary: nodes.map((n) => ({ id: n.id, label: n.label, ring: n.ring })),
       availableFeatures,
-      screen,
+      screen: screen as Exclude<Screen, "settings">,
       selectedNodeId,
       goalId,
       category,
-      pulse: lastPulse
+      pulse: lastPulse,
+      activePersona
     }),
-    [nodes, availableFeatures, screen, selectedNodeId, goalId, category, lastPulse]
+    [nodes, availableFeatures, screen, selectedNodeId, goalId, category, lastPulse, activePersona]
   );
+
+  // Phase 27: Automatic Persona Switching
+  useEffect(() => {
+    if (manualOverride) return;
+    const autoPersona = determineAutoPersona(agentContext);
+    if (activePersona !== autoPersona) {
+      setActivePersona(autoPersona);
+    }
+  }, [agentContext, manualOverride, activePersona, setActivePersona]);
 
   const agentSystemPrompt = useMemo<string | undefined>(() => {
     if (!agentModule) return undefined;
@@ -1858,28 +2155,6 @@ export default function App() {
   ]);
 
   const pathname = getPathname();
-  useEffect(() => {
-    const documentRef = getDocumentOrNull();
-    if (!documentRef) return;
-    const shouldLockScroll =
-      isUserMode &&
-      screen === "landing" &&
-      !isAdminRoute &&
-      !isAnalyticsRoute &&
-      pathname !== "/privacy" &&
-      pathname !== "/terms";
-    if (!shouldLockScroll) return;
-
-    const prevHtmlOverflow = documentRef.documentElement.style.overflow;
-    const prevBodyOverflow = documentRef.body.style.overflow;
-    documentRef.documentElement.style.overflow = "hidden";
-    documentRef.body.style.overflow = "hidden";
-
-    return () => {
-      documentRef.documentElement.style.overflow = prevHtmlOverflow;
-      documentRef.body.style.overflow = prevBodyOverflow;
-    };
-  }, [screen, isAdminRoute, isAnalyticsRoute, pathname]);
 
   if (pathname === "/privacy" || pathname === "/terms") {
     return (
@@ -1929,9 +2204,18 @@ export default function App() {
 
   return (
     <PWAInstallProvider>
-      <div className="min-h-screen flex transition-colors relative overflow-hidden isolate" dir="rtl"
+      <div className={`min-h-screen flex flex-col transition-colors relative isolate ${screen !== "landing" ? "overflow-hidden" : ""}`} dir="rtl"
         style={{ background: "var(--space-void)" }}
       >
+        {/* Phase 19: Startup Sequence — shows once per session */}
+        {showStartup && (
+          <StartupSequence
+            onComplete={() => {
+              sessionStorage.setItem("dawayir-startup-seen", "1");
+              setShowStartup(false);
+            }}
+          />
+        )}
         {isFeaturePreviewSession && (
           <button
             type="button"
@@ -2181,7 +2465,7 @@ export default function App() {
           </button>
         )}
         <main
-          className={`flex-1 min-w-0 flex pb-14 md:pb-0 ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""}`}
+          className={`flex-1 min-w-0 flex flex-col pb-14 md:pb-0 ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""} ${screen === "landing" ? "overflow-visible" : "overflow-hidden"}`}
           aria-hidden={showPulseCheck}
         >
           {screen === "map" && (
@@ -2192,27 +2476,19 @@ export default function App() {
             />
           )}
           <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„</div>}>
-            <div key={screen} className={`flex-1 min-w-0 flex items-center justify-center transition-all duration-300 ease-in-out ${screen === "landing" ? "" : "app-panel-main"}`}>
+            <div key={screen} className={`min-w-0 flex transition-all duration-300 ease-in-out ${screen === "landing" ? "flex-col" : "flex-1 items-center justify-center app-panel-main"}`}>
               {screen === "landing" && (
-                nodes.some(n => !n.isNodeArchived) ? (
-                  <DashboardScreen
-                    firstName={authFirstName}
-                    onNavigateToMap={() => setScreen("map")}
-                    onOpenAchievements={() => setShowAchievements(true)}
-                  />
-                ) : (
-                  <Landing
-                    onStartJourney={startRecovery}
-                    onOpenTools={openJourneyTools}
-                    showTopToolsButton={showTopToolsButton}
-                    showPostStartContent={!isLockedPhaseOne && isPrivilegedUser}
-                    showToolsSection={!isLockedPhaseOne}
-                    onFeatureLocked={setLockedFeature}
-                    availableFeatures={availableFeatures}
-                    ownerInstallRequestNonce={ownerInstallRequestNonce}
-                    onOwnerInstallRequestHandled={() => setOwnerInstallRequestNonce(0)}
-                  />
-                )
+                <Landing
+                  onStartJourney={startRecovery}
+                  onRestartJourney={restartJourney}
+                  onOpenTools={openJourneyTools}
+                  showTopToolsButton={showTopToolsButton}
+                  showToolsSection={true}
+                  onFeatureLocked={setLockedFeature}
+                  availableFeatures={availableFeatures}
+                  ownerInstallRequestNonce={ownerInstallRequestNonce}
+                  onOwnerInstallRequestHandled={() => setOwnerInstallRequestNonce(0)}
+                />
               )}
 
               {screen === "goal" && (
@@ -2257,6 +2533,9 @@ export default function App() {
                     challengeTarget ? () => openMissionScreen(challengeTarget.nodeId) : undefined
                   }
                   challengeLabel={challengeLabel}
+                  nextStepDecision={nextStepDecision}
+                  onTakeNextStep={handleTakeNextStep}
+                  onRefreshNextStep={handleRefreshNextStep}
                 />
               )}
 
@@ -2272,6 +2551,9 @@ export default function App() {
                     setCategory(category as AdviceCategory);
                     setScreen("map");
                   }}
+                  nextStepDecision={nextStepDecision}
+                  onTakeNextStep={handleTakeNextStep}
+                  onRefreshNextStep={handleRefreshNextStep}
                 />
               )}
 
@@ -2287,6 +2569,18 @@ export default function App() {
                   nodeId={missionNodeId}
                   onBack={() => setScreen("map")}
                 />
+              )}
+
+              {screen === "enterprise" && (
+                <EnterprisePortal />
+              )}
+
+              {screen === "guilt-court" && (
+                <GuiltCourt />
+              )}
+
+              {screen === "diplomacy" && (
+                <DiplomaticCables />
               )}
             </div>
           </Suspense>
@@ -2411,25 +2705,16 @@ export default function App() {
           )}
 
           {showNoiseSilencingPulse && (
-            <NoiseSilencingModal
-              isOpen={showNoiseSilencingPulse}
-              onClose={() => {
-                setShowNoiseSilencingPulse(false);
-                if (pendingCocoonAfterNoise) {
-                  setPendingCocoonAfterNoise(false);
-                  openCocoonModal("auto");
-                }
-              }}
-              onSessionComplete={() => {
-                setShowNoiseSilencingPulse(false);
-                if (pendingCocoonAfterNoise) {
-                  setPendingCocoonAfterNoise(false);
-                  openCocoonModal("auto");
-                }
-                setPostNoiseSessionMessage(true);
-                setTimeout(() => setPostNoiseSessionMessage(false), 4500);
-              }}
-            />
+            <Suspense fallback={null}>
+              <MuteProtocol
+                isOpen={showNoiseSilencingPulse}
+                onClose={() => setShowNoiseSilencingPulse(false)}
+                onSessionComplete={() => {
+                  setShowNoiseSilencingPulse(false);
+                  setTimeout(() => setPostNoiseSessionMessage(false), 4500);
+                }}
+              />
+            </Suspense>
           )}
 
           {lockedFeature != null && (
@@ -2589,6 +2874,19 @@ export default function App() {
             />
           </Suspense>
         )}
+
+        {/* Phase 30: Holographic Legacy Components */}
+        {showAmbientReality && (
+          <Suspense fallback={null}>
+            <AmbientRealityMode onClose={() => setShowAmbientReality(false)} />
+          </Suspense>
+        )}
+        {showTimeCapsuleVault && (
+          <Suspense fallback={null}>
+            <TimeCapsuleVault onClose={() => setShowTimeCapsuleVault(false)} />
+          </Suspense>
+        )}
+
         {consciousnessInsight && screen !== "landing" && (
           <div className="fixed bottom-28 left-6 right-6 bento-block z-50 max-w-lg mx-auto"
             style={{ borderColor: "rgba(45, 212, 191, 0.25)", padding: "1.5rem" }}
@@ -2630,7 +2928,31 @@ export default function App() {
           <OnboardingFlow onComplete={() => { setShowOnboarding(false); setShowWelcomeToast(true); setTimeout(() => setShowWelcomeToast(false), 6000); }} />
         )}
         {showFaq && <FaqScreen onClose={() => setShowFaq(false)} />}
-                <JourneyToast variant="onboarding_complete" visible={showWelcomeToast} onClose={() => setShowWelcomeToast(false)} />
+        <JourneyToast variant="onboarding_complete" visible={showWelcomeToast} onClose={() => setShowWelcomeToast(false)} />
+        <JourneyToast
+          variant="nudge"
+          visible={showNudgeToast}
+          nudgeData={activeNudge}
+          onClose={() => {
+            if (activeNudge?.title === 'نظام الاحتواء 🛡️') {
+              openCocoonModal("manual");
+            }
+            handleNudgeDismiss();
+          }}
+        />
+        <MirrorOverlay
+          insight={activeMirrorInsight}
+          onConfront={(insight) => {
+            // For now, just close and maybe log. Future: Open Journal.
+            dismissMirrorInsight(insight.id);
+            setShowMirrorOverlay(false);
+          }}
+          onDeny={(insight) => {
+            dismissMirrorInsight(insight.id);
+            setShowMirrorOverlay(false);
+          }}
+        />
+
         {/* Mobile Bottom Navigation - hidden on md+ */}
         {!isAdminRoute && !showPulseCheck && !showAuthModal && (
           <nav
@@ -2708,6 +3030,8 @@ export default function App() {
         )}
 
       </div>
+      {/* Phase 20: Automagic Loop Toast — Global Reactive Prescription */}
+      <GraphEventToast />
     </PWAInstallProvider>
   );
 }

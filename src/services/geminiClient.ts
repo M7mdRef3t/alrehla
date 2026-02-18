@@ -227,6 +227,31 @@ class GeminiClient {
 
     return "تم تجاوز حد جولات الأدوات. جرّب صياغة أوضح.";
   }
+
+  /**
+   * Generate text embedding
+   */
+  async embedText(text: string): Promise<number[] | null> {
+    if (!this.isEnabled()) return null;
+
+    try {
+      const res = await fetch("/api/gemini/embed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          model: "text-embedding-004"
+        })
+      });
+
+      if (!res.ok) return null;
+      const data = (await res.json()) as { embedding: number[] };
+      return data.embedding;
+    } catch (error) {
+      if (runtimeEnv.isDev) console.error("Error generating embedding:", error);
+      return null;
+    }
+  }
 }
 
 // Singleton instance

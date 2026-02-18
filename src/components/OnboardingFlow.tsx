@@ -1,8 +1,9 @@
 import type { FC } from "react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMapState } from "../state/mapState";
 import { setInLocalStorage } from "../services/browserStorage";
+import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
 
 /* ════════════════════════════════════════════════
    ONBOARDING FLOW — 3 خطوات للرحلة
@@ -13,6 +14,12 @@ const ONBOARDING_KEY = "dawayir-journey-onboarding-done";
 
 export function markJourneyOnboardingDone(): void {
   setInLocalStorage(ONBOARDING_KEY, "true");
+}
+
+export function resetJourneyOnboarding(): void {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(ONBOARDING_KEY);
+  }
 }
 
 export function hasCompletedJourneyOnboarding(): boolean {
@@ -31,16 +38,18 @@ const slideVariants = {
   exit: (dir: number) => ({ x: dir * 60, opacity: 0, filter: "blur(6px)" }),
 };
 
-const slideTransition = { duration: 0.42, ease: [0.22, 1, 0.36, 1] as [number,number,number,number] };
+const slideTransition = { duration: 0.42, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] };
 
 /* ── Ring colors ── */
 type Ring = "green" | "yellow" | "red";
 
 const RING_COLORS: Record<Ring, { bg: string; border: string; label: string; labelAr: string }> = {
-  green:  { bg: "rgba(52,211,153,0.15)",  border: "rgba(52,211,153,0.5)",  label: "green",  labelAr: "قريب" },
-  yellow: { bg: "rgba(251,191,36,0.15)",  border: "rgba(251,191,36,0.5)",  label: "yellow", labelAr: "متذبذب" },
-  red:    { bg: "rgba(248,113,113,0.15)", border: "rgba(248,113,113,0.5)", label: "red",    labelAr: "بعيد" },
+  green: { bg: "rgba(52,211,153,0.15)", border: "rgba(52,211,153,0.5)", label: "green", labelAr: "قريب" },
+  yellow: { bg: "rgba(251,191,36,0.15)", border: "rgba(251,191,36,0.5)", label: "yellow", labelAr: "متذبذب" },
+  red: { bg: "rgba(248,113,113,0.15)", border: "rgba(248,113,113,0.5)", label: "red", labelAr: "بعيد" },
 };
+
+
 
 /* ── Step 1: Inventory ── */
 const StepInventory: FC<{ onNext: (names: string[]) => void; onSkip: () => void }> = ({ onNext, onSkip }) => {
@@ -375,8 +384,8 @@ const StepInsight: FC<{ names: string[]; onComplete: () => void }> = ({ names, o
           {count === 1
             ? `حطيت ${names[0]} في مداره.`
             : count === 2
-            ? `حطيت ${names[0]} و${names[1]} في مداراتهم.`
-            : `حطيت ${names[0]}، ${names[1]}، و${names[2]} في مداراتهم.`}
+              ? `حطيت ${names[0]} و${names[1]} في مداراتهم.`
+              : `حطيت ${names[0]}، ${names[1]}، و${names[2]} في مداراتهم.`}
           {" "}مش لازم تكون مثالية، المهم إنها حقيقية.
         </p>
       </div>
@@ -419,7 +428,7 @@ const StepInsight: FC<{ names: string[]; onComplete: () => void }> = ({ names, o
    ════════════════════════════════════════════════ */
 export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
   const addNode = useMapState((s) => s.addNode);
-  const [step, setStep] = useState(0); // 0, 1, 2
+  const [step, setStep] = useState(0); // 0 (noise), 1 (inventory), 2 (placement), 3 (review)
   const [direction, setDirection] = useState(-1);
   const [collectedNames, setCollectedNames] = useState<string[]>([]);
 
@@ -435,6 +444,10 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
 
   const handleInventoryNext = useCallback((names: string[]) => {
     setCollectedNames(names);
+    goTo(2);
+  }, [goTo]);
+
+  const handleNoiseNext = useCallback(() => {
     goTo(1);
   }, [goTo]);
 
@@ -445,7 +458,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
         addNode(item.name.trim(), (item.ring ?? "yellow") as "green" | "yellow" | "red");
       }
     }
-    goTo(2);
+    goTo(3);
   }, [addNode, goTo]);
 
   const handleComplete = useCallback(() => {
@@ -454,7 +467,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
   }, [onComplete]);
 
   /* Progress dots */
-  const dots = [0, 1, 2];
+  const dots = [0, 1, 2, 3];
 
   return (
     <div
@@ -472,7 +485,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
       >
         {/* Progress dots */}
         <div className="flex justify-center gap-2 pt-5 pb-1">
-          {dots.map((d) => (
+          {dots.map((d: number) => (
             <motion.div
               key={d}
               className="rounded-full"
@@ -491,6 +504,19 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
           <AnimatePresence mode="wait" custom={direction}>
             {step === 0 && (
               <motion.div
+                key="stepN"
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={slideTransition}
+              >
+                <FirstSparkOnboarding onComplete={handleNoiseNext} />
+              </motion.div>
+            )}
+            {step === 1 && (
+              <motion.div
                 key="step0"
                 custom={direction}
                 variants={slideVariants}
@@ -502,7 +528,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
                 <StepInventory onNext={handleInventoryNext} onSkip={handleSkip} />
               </motion.div>
             )}
-            {step === 1 && (
+            {step === 2 && (
               <motion.div
                 key="step1"
                 custom={direction}
@@ -515,7 +541,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
                 <StepMapping names={collectedNames} onNext={handleMappingNext} onSkip={handleSkip} />
               </motion.div>
             )}
-            {step === 2 && (
+            {step === 3 && (
               <motion.div
                 key="step2"
                 custom={direction}

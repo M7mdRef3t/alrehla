@@ -10,11 +10,13 @@ export type JourneyToastVariant =
   | "onboarding_complete"   /* بعد إتمام الـ onboarding */
   | "archive"               /* بعد إرسال شخص لمحطات عدت */
   | "weekly_gratitude"      /* الإشعار الأسبوعي */
-  | "map_revisit";          /* ذكرى اليوم */
+  | "map_revisit"          /* ذكرى اليوم */
+  | "nudge";                /* تنبيه ذكي من المحرك */
 
 interface JourneyToastProps {
   variant: JourneyToastVariant;
   personName?: string;   /* لـ archive variant */
+  nudgeData?: { title: string; message: string; icon: string; cta?: string };
   visible: boolean;
   onClose?: () => void;
 }
@@ -64,15 +66,22 @@ const TOAST_CONTENT: Record<
     body: () =>
       "التعافي مش سحر، هو متابعة واعية للي بيحصل جوانا. يمكن محتاج تحرك حد من مكانه النهاردة؟",
   },
+  nudge: {
+    title: "",
+    body: () => "",
+  },
 };
 
 export const JourneyToast: FC<JourneyToastProps> = ({
   variant,
   personName,
+  nudgeData,
   visible,
   onClose,
 }) => {
-  const content = TOAST_CONTENT[variant];
+  const content = variant === "nudge" && nudgeData
+    ? { title: nudgeData.title, body: () => nudgeData.message, cta: nudgeData.cta }
+    : TOAST_CONTENT[variant];
 
   return (
     <AnimatePresence>
@@ -107,7 +116,11 @@ export const JourneyToast: FC<JourneyToastProps> = ({
                 color: "rgba(45,212,191,0.85)",
               }}
             >
-              <FeatherIcon />
+              {variant === "nudge" && nudgeData ? (
+                <span className="text-sm">{nudgeData.icon}</span>
+              ) : (
+                <FeatherIcon />
+              )}
             </div>
 
             {/* Text */}

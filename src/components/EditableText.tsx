@@ -4,6 +4,7 @@ import { Pencil, Check, X } from "lucide-react";
 import { getEffectiveRoleFromState, useAuthState } from "../state/authState";
 import { useAppContentState } from "../state/appContentState";
 import { isSupabaseReady } from "../services/supabaseClient";
+import { useAdminState } from "../state/adminState";
 
 type EditableTag = keyof JSX.IntrinsicElements;
 
@@ -48,7 +49,18 @@ export function EditableText({
 
   const authUser = useAuthState((s) => s.user);
   const effectiveRole = useAuthState(getEffectiveRoleFromState);
-  const canEdit = Boolean(authUser && isSupabaseReady && canEditAppContent(effectiveRole));
+  const isContentEditingEnabled = useAdminState((s) => s.isContentEditingEnabled);
+
+  // Can edit if:
+  // 1. User has correct role (owner/superadmin)
+  // 2. Global "Edit Mode" is toggled ON in admin dashboard
+  // 3. Supabase is ready
+  const canEdit = Boolean(
+    authUser &&
+    isSupabaseReady &&
+    canEditAppContent(effectiveRole) &&
+    isContentEditingEnabled
+  );
 
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(defaultText);
@@ -128,9 +140,8 @@ export function EditableText({
   };
 
   const Tag = as as ElementType;
-  const wrapperClassName = `relative inline-block align-middle ${canEdit && showEditIcon ? "group/edit" : ""} ${
-    className ?? ""
-  }`;
+  const wrapperClassName = `relative inline-block align-middle ${canEdit && showEditIcon ? "group/edit" : ""} ${className ?? ""
+    }`;
 
   return (
     <Tag className={wrapperClassName}>

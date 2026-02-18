@@ -95,7 +95,7 @@ export const UserStatePanel: FC = () => {
             total: users.length,
             active: users.filter(u => (u as any).status === 'active').length,
             newToday: users.filter(u => {
-                const date = new Date(u.createdAt || 0);
+                const date = new Date(u.updatedAt || 0);
                 const today = new Date();
                 return date.getDate() === today.getDate() && date.getMonth() === today.getMonth();
             }).length
@@ -272,7 +272,7 @@ export const UserStatePanel: FC = () => {
                                         <div className="grid grid-cols-3 gap-4">
                                             <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-800 text-center">
                                                 <p className="text-[10px] text-slate-500 uppercase mb-1">تاريخ الانضمام</p>
-                                                <p className="text-sm font-bold text-white">{new Date(selectedUser.createdAt || Date.now()).toLocaleDateString("ar-EG")}</p>
+                                                <p className="text-sm font-bold text-white">{new Date(selectedUser.updatedAt || Date.now()).toLocaleDateString("ar-EG")}</p>
                                             </div>
                                             <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-800 text-center">
                                                 <p className="text-[10px] text-slate-500 uppercase mb-1">الرحلات المكتملة</p>

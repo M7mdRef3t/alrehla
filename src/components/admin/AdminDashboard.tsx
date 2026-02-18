@@ -13,7 +13,8 @@ import {
   Sparkles,
   ShieldCheck,
   MessageSquare,
-  Workflow
+  Workflow,
+  Pencil
 } from "lucide-react";
 import { FEATURE_FLAGS } from "../../config/features";
 import { runtimeEnv } from "../../config/runtimeEnv";
@@ -45,14 +46,17 @@ const ContentPanel = lazy(() => import("./dashboard/Content/ContentPanel").then(
 const UsersPanel = lazy(() => import("./dashboard/Users/UsersPanel").then(m => ({ default: m.UsersPanel })));
 const UserStatePanel = lazy(() => import("./dashboard/Data/UserStatePanel").then(m => ({ default: m.UserStatePanel })));
 const ConsciousnessArchivePanel = lazy(() => import("./dashboard/Consciousness/ConsciousnessArchivePanel").then(m => ({ default: m.ConsciousnessArchivePanel })));
+const B2BAnalytics = lazy(() => import("./dashboard/B2BAnalytics").then(m => ({ default: m.B2BAnalytics })));
+const EntityDashboard = lazy(() => import("./dashboard/Entity/EntityDashboard").then(m => ({ default: m.EntityDashboard })));
 
-type AdminTab = "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map";
+type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
 );
 
 const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
+  { id: "entity", label: "الكيان (DNA)", icon: <Brain className="w-4 h-4 text-teal-400" /> },
   { id: "overview", label: "نبض الرحلة", icon: <Activity className="w-4 h-4" /> },
   { id: "flow-map", label: "خريطة التدفق", icon: <Compass className="w-4 h-4" /> },
   { id: "feedback", label: "التغذية الراجعة", icon: <MessageSquare className="w-4 h-4" /> },
@@ -62,7 +66,8 @@ const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
   { id: "users", label: "شؤون المسافرين", icon: <Users className="w-4 h-4" /> },
   { id: "user-state", label: "سحابة البيانات", icon: <Database className="w-4 h-4" /> },
   { id: "consciousness", label: "أرشيف الوعي", icon: <History className="w-4 h-4" /> },
-  { id: "consciousness-map", label: "خريطة الوعي", icon: <Workflow className="w-4 h-4" /> }
+  { id: "consciousness-map", label: "خريطة الوعي", icon: <Workflow className="w-4 h-4" /> },
+  { id: "b2b-analytics", label: "ذكاء المؤسسات", icon: <ShieldCheck className="w-4 h-4" /> }
 ];
 
 const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
@@ -70,7 +75,7 @@ const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-sta
 const getTabFromLocation = (): AdminTab => {
   const params = new URLSearchParams(getSearch());
   const tab = params.get("tab") as AdminTab | null;
-  return NAV_ITEMS.some((item) => item.id === tab) ? tab! : "overview";
+  return NAV_ITEMS.some((item) => item.id === tab) ? tab! : "entity"; // Default to Entity
 };
 
 const updateTabInUrl = (tab: AdminTab) => {
@@ -182,6 +187,8 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const adminAccess = useAdminState((s) => s.adminAccess);
   const setAdminAccess = useAdminState((s) => s.setAdminAccess);
   const setAdminCode = useAdminState((s) => s.setAdminCode);
+  const isContentEditingEnabled = useAdminState((s) => s.isContentEditingEnabled);
+  const toggleContentEditing = useAdminState((s) => s.toggleContentEditing);
   const setFeatureFlags = useAdminState((s) => s.setFeatureFlags);
   const setSystemPrompt = useAdminState((s) => s.setSystemPrompt);
   const setScoringWeights = useAdminState((s) => s.setScoringWeights);
@@ -228,7 +235,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     : NAV_ITEMS.filter((item) => !DEVELOPER_PLUS_TABS.includes(item.id));
 
   const effectiveTab: AdminTab =
-    !canSeeAdvancedTabs && DEVELOPER_PLUS_TABS.includes(tab) ? "overview" : tab;
+    !canSeeAdvancedTabs && DEVELOPER_PLUS_TABS.includes(tab) ? "entity" : tab;
 
   const handleTabChange = (next: AdminTab) => {
     setTab(next);
@@ -335,6 +342,18 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 </div>
               </div>
 
+
+              <button
+                onClick={() => toggleContentEditing(!isContentEditingEnabled)}
+                className={`p-3 rounded-2xl border transition-all active:scale-95 group shadow-lg ${isContentEditingEnabled
+                  ? "bg-teal-500/20 border-teal-500/50 text-teal-300"
+                  : "bg-white/5 border-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/10"
+                  }`}
+                title={isContentEditingEnabled ? "Disable Content Editing" : "Enable Content Editing"}
+              >
+                <Pencil className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
+              </button>
+
               <button
                 onClick={() => setShowAccount(true)}
                 className="p-3 rounded-2xl bg-white/5 border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all active:scale-95 group shadow-lg"
@@ -359,6 +378,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                   </div>
                 </div>
               }>
+                {effectiveTab === "entity" && <EntityDashboard />}
                 {effectiveTab === "overview" && <OverviewPanel />}
                 {effectiveTab === "flow-map" && <FlowMapPanel />}
                 {effectiveTab === "feedback" && <FeedbackPanel />}
@@ -369,6 +389,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "user-state" && <UserStatePanel />}
                 {effectiveTab === "consciousness" && <ConsciousnessArchivePanel />}
                 {effectiveTab === "consciousness-map" && <ConsciousnessMap />}
+                {effectiveTab === "b2b-analytics" && <B2BAnalytics />}
               </Suspense>
             </div>
           </div>

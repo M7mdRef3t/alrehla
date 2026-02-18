@@ -183,7 +183,7 @@ type PulseDraft = {
   notes: string;
   energyReasons: string[];
   energyConfidence: EnergyConfidence | null;
-  step: 1 | 2 | 3 | 4;
+  step: 1 | 2 | 3 | 4 | 5;
 };
 
 type EnergyUndoSnapshot = {
@@ -196,6 +196,59 @@ type EnergyUndoSnapshot = {
   immediateActionApplied: boolean;
   source: "weekly_recommendation" | "immediate_action";
 };
+
+
+type TacticalAdvice = {
+  title: string;
+  message: string;
+  action: string;
+  theme: "attack" | "defend" | "recover";
+  icon: string;
+};
+
+function generateTacticalAdvice(energy: number, mood: PulseMood | null): TacticalAdvice {
+  // 1. Recovery Protocols (Low Energy)
+  if (energy <= 3) {
+    return {
+      title: "PROTOCOL: DEEP RECOVERY",
+      message: "Your energy shields are critically low. Engaging in combat (work/social) now will cause long-term damage.",
+      action: "Initiate Sleep/Disconnect Protocol",
+      theme: "recover",
+      icon: "🛡️"
+    };
+  }
+
+  // 2. Defense Protocols (Medium Energy + Negative Mood)
+  if (energy <= 6 && (mood === "anxious" || mood === "overwhelmed" || mood === "tense" || mood === "angry")) {
+    return {
+      title: "PROTOCOL: FORTRESS",
+      message: "Energy moderate but stability compromised. High risk of emotional leakage.",
+      action: "Hold Position. Do NOT commit to new tasks.",
+      theme: "defend",
+      icon: "🏰"
+    };
+  }
+
+  // 3. Attack Protocols (High Energy)
+  if (energy >= 7) {
+    return {
+      title: "PROTOCOL: BLITZKRIEG",
+      message: "Systems optimal. Momentum is on your side. Hesitation is the only enemy now.",
+      action: "Execute Hardest Task Immediately",
+      theme: "attack",
+      icon: "⚔️"
+    };
+  }
+
+  // Default: Maintenance
+  return {
+    title: "PROTOCOL: MAINTENANCE",
+    message: "Systems stable. Maintain current trajectory.",
+    action: "Continue Routine Operations",
+    theme: "defend",
+    icon: "🔧"
+  };
+}
 
 type MoodWeeklyRecommendation = {
   mood: PulseMood;
@@ -353,7 +406,9 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const [notesChars, setNotesChars] = useState(0);
   const [isWarping, setIsWarping] = useState(false);
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [tacticalAdvice, setTacticalAdvice] = useState<TacticalAdvice | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const notesRef = useRef<HTMLTextAreaElement | null>(null);
   const lastFeedbackAnchorRef = useRef<number | null>(null);
   const lastHapticAtRef = useRef<number>(0);
@@ -510,7 +565,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     let restored = false;
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !isStartRecovery) { // Don't restore draft if starting fresh recovery
       try {
         const raw = getFromLocalStorage(PULSE_DRAFT_STORAGE_KEY);
         if (raw) {
@@ -534,7 +589,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       }
     }
     if (!restored) {
-      if (typeof lastEnergyValue === "number") {
+      if (typeof lastEnergyValue === "number" && !isStartRecovery) { // Only pre-fill energy if NOT starting a fresh recovery
         setEnergy(lastEnergyValue);
         setPreviousEnergy(lastEnergyValue);
         setHasPickedEnergy(true);
@@ -674,7 +729,26 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     onClose(reason);
   };
 
-  const handleSubmit = () => {
+  const handleTacticalAnalysis = async () => {
+    if (energy === null) return;
+    setIsAnalyzing(true);
+
+    // Simulate AI Processing
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const advice = generateTacticalAdvice(energy, mood);
+    setTacticalAdvice(advice);
+    setIsAnalyzing(false);
+
+    // Transition to step 5 (Tactical Advice)
+    setIsWarping(true);
+    window.setTimeout(() => {
+      setStep(5);
+      window.setTimeout(() => setIsWarping(false), 500);
+    }, 250);
+  };
+
+  const processFinalSubmit = () => {
     if (isSavingPulse) return;
     const finalEnergy = hasPickedEnergy ? energy : null;
     const finalMood: PulseMood | null = mood ?? null;
@@ -719,6 +793,17 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     }, 220);
   };
 
+  const handleSubmit = () => {
+    // Intercept submit to show Tactical Advice first if not shown
+    if (step < 5 && !tacticalAdvice) {
+      handleTacticalAnalysis();
+    } else {
+      processFinalSubmit();
+    }
+  };
+
+
+
   const handleNextStep = () => {
     if (step === 1 && isEnergySelectionUnstable && !needsEnergyConfirmation) {
       setNeedsEnergyConfirmation(true);
@@ -742,7 +827,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     setShowRequiredHint(false);
     setIsWarping(true);
     window.setTimeout(() => {
-      setStep((prev) => (prev < 4 ? ((prev + 1) as 1 | 2 | 3 | 4) : prev));
+      setStep((prev) => (prev < 5 ? ((prev + 1) as 1 | 2 | 3 | 4 | 5) : prev));
       window.setTimeout(() => {
         setIsWarping(false);
       }, 500);
@@ -753,7 +838,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     setShowRequiredHint(false);
     setNeedsEnergyConfirmation(false);
     setNeedsMoodConfirmation(false);
-    setStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3 | 4) : prev));
+    setStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3 | 4 | 5) : prev));
   };
 
   const toggleEnergyReason = (reason: string) => {
@@ -1118,152 +1203,103 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                     <motion.div
                       className="absolute inset-0 flex items-center justify-center pointer-events-none"
                       animate={{
-                        opacity: hasPickedEnergy && energy != null ? [0.3, 0.5, 0.3] : 0.2,
-                        scale: hasPickedEnergy && energy != null ? [1, 1.15, 1] : 1
+                        opacity: hasPickedEnergy && energy != null ? [0.4, 0.6, 0.4] : 0.3,
+                        scale: hasPickedEnergy && energy != null ? [1, 1.2, 1] : 1,
+                        rotate: [0, 5, -5, 0]
                       }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                     >
                       <div
-                        className="w-48 h-48 sm:w-64 sm:h-64 rounded-full blur-3xl"
+                        className="w-56 h-56 sm:w-72 sm:h-72 rounded-full blur-3xl opacity-80"
                         style={{
                           background: isEnergyDefault
-                            ? "radial-gradient(circle, rgba(148,163,184,0.15), transparent 70%)"
-                            : `radial-gradient(circle, ${fillHex}25, transparent 70%)`
+                            ? "conic-gradient(from 0deg, rgba(148,163,184,0.1), rgba(71,85,105,0.2), rgba(148,163,184,0.1))"
+                            : `radial-gradient(circle, ${fillHex}40, transparent 70%)`
                         }}
                       />
                     </motion.div>
                     <motion.div
                       data-testid="pulse-energy-orb"
-                      className="pulse-check-energy-orb relative rounded-full flex items-center justify-center w-36 h-36 sm:w-48 sm:h-48"
+                      className="pulse-check-energy-orb relative rounded-full flex items-center justify-center w-40 h-40 sm:w-56 sm:h-56"
                       style={{
                         background: isEnergyDefault
-                          ? "radial-gradient(circle at 38% 30%, rgba(255,255,255,0.3), rgba(148,163,184,0.28) 30%, rgba(148,163,184,0.12) 62%, rgba(148,163,184,0.02) 88%)"
-                          : `radial-gradient(circle at 38% 30%, rgba(255,255,255,0.24), ${fillHex}66 28%, ${fillHex}1f 58%, transparent 88%)`,
+                          ? "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), rgba(30,41,59,0.8))"
+                          : `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), ${fillHex} 40%, #0f172a 90%)`,
                         boxShadow: isEnergyDefault
-                          ? "0 0 30px rgba(148,163,184,0.28), 0 0 62px rgba(148,163,184,0.24), inset 0 0 54px rgba(148,163,184,0.2)"
-                          : `0 0 ${34 + energy! * 3.4}px ${fillHex}40, 0 0 ${54 + energy! * 4}px ${fillHex}20, inset 0 0 48px ${fillHex}26`,
-                        border: isEnergyDefault ? "2px solid rgba(148,163,184,0.58)" : `2px solid ${fillHex}70`
+                          ? "0 0 40px rgba(148,163,184,0.1), inset 0 0 20px rgba(255,255,255,0.05)"
+                          : `0 0 ${40 + energy! * 5}px ${fillHex}66, inset 0 0 40px ${fillHex}44`,
+                        border: isEnergyDefault ? "1px solid rgba(255,255,255,0.1)" : `1px solid ${fillHex}80`
                       }}
                       animate={{
-                        scale: [1, hasPickedEnergy && energy != null ? 1.085 : 1.045, 1],
-                        boxShadow: [
-                          isEnergyDefault
-                            ? "0 0 26px rgba(148,163,184,0.24), 0 0 48px rgba(148,163,184,0.16), inset 0 0 44px rgba(148,163,184,0.16)"
-                            : `0 0 ${26 + energy! * 2.2}px ${fillHex}32, 0 0 ${46 + energy! * 2.6}px ${fillHex}16, inset 0 0 42px ${fillHex}20`,
-                          isEnergyDefault
-                            ? "0 0 42px rgba(148,163,184,0.36), 0 0 72px rgba(148,163,184,0.26), inset 0 0 58px rgba(148,163,184,0.24)"
-                            : `0 0 ${42 + energy! * 2.6}px ${fillHex}52, 0 0 ${72 + energy! * 3.2}px ${fillHex}28, inset 0 0 62px ${fillHex}2e`,
-                          isEnergyDefault
-                            ? "0 0 26px rgba(148,163,184,0.24), 0 0 48px rgba(148,163,184,0.16), inset 0 0 44px rgba(148,163,184,0.16)"
-                            : `0 0 ${26 + energy! * 2.2}px ${fillHex}32, 0 0 ${46 + energy! * 2.6}px ${fillHex}16, inset 0 0 42px ${fillHex}20`
-                        ]
+                        y: [0, -10, 0],
+                        scale: [1, hasPickedEnergy && energy != null ? 1.05 : 1.02, 1],
                       }}
-                      transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+                      transition={{
+                        y: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+                        scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                      }}
                     >
                       {/* Inner Core Layers */}
                       {hasPickedEnergy && energy != null && energy > 0 && (
                         <>
-                          {/* Rotating Corona (for high energy) */}
-                          {energy >= 7 && (
+                          {/* Rotating Starburst (for high energy) */}
+                          {energy >= 6 && (
                             <motion.div
-                              className="absolute inset-0 rounded-full"
+                              className="absolute inset-2"
                               style={{
-                                background: `conic-gradient(from 0deg, transparent, ${fillHex}40, transparent, ${fillHex}40, transparent)`,
-                                filter: "blur(8px)"
+                                background: `conic-gradient(from 0deg, transparent, ${fillHex}66, transparent 20%)`,
+                                borderRadius: "50%",
+                                filter: "blur(12px)",
+                                mixBlendMode: "screen"
                               }}
                               animate={{ rotate: 360 }}
-                              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
                             />
                           )}
 
-                          {/* Particle Sparks (for very high energy) */}
-                          {energy >= 8 && (
-                            <>
-                              {[...Array(6)].map((_, i) => (
-                                <motion.div
-                                  key={i}
-                                  className="absolute w-1 h-1 rounded-full"
-                                  style={{
-                                    background: fillHex,
-                                    boxShadow: `0 0 4px ${fillHex}`,
-                                    top: "50%",
-                                    left: "50%"
-                                  }}
-                                  animate={{
-                                    x: [0, Math.cos((i * 60 * Math.PI) / 180) * 60],
-                                    y: [0, Math.sin((i * 60 * Math.PI) / 180) * 60],
-                                    opacity: [0.8, 0],
-                                    scale: [1, 0.3]
-                                  }}
-                                  transition={{
-                                    duration: 1.5,
-                                    repeat: Infinity,
-                                    delay: i * 0.25,
-                                    ease: "easeOut"
-                                  }}
-                                />
-                              ))}
-                            </>
-                          )}
-
-                          {/* Pulsing Inner Ring (for low energy - calm) */}
-                          {energy <= 3 && (
-                            <motion.div
-                              className="absolute inset-8 rounded-full border-2"
-                              style={{
-                                borderColor: `${fillHex}40`,
-                                filter: "blur(2px)"
-                              }}
-                              animate={{
-                                scale: [1, 1.1, 1],
-                                opacity: [0.3, 0.6, 0.3]
-                              }}
-                              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                            />
-                          )}
+                          {/* Pulsing Core */}
+                          <motion.div
+                            className="absolute inset-8 rounded-full"
+                            style={{
+                              background: `radial-gradient(circle, ${fillHex}, transparent)`,
+                              opacity: 0.6,
+                              filter: "blur(10px)"
+                            }}
+                            animate={{
+                              scale: [0.8, 1.1, 0.8],
+                              opacity: [0.4, 0.7, 0.4]
+                            }}
+                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                          />
                         </>
                       )}
 
-                      {energyConfirmPulseActive && (
-                        <motion.span
-                          className="absolute inset-0 rounded-full pointer-events-none"
-                          style={{ border: `2px solid ${fillHex}` }}
-                          initial={{ scale: 1, opacity: 0.9 }}
-                          animate={{ scale: 1.22, opacity: 0 }}
-                          transition={{ duration: 0.55, ease: "easeOut" }}
-                        />
-                      )}
                       {/* Energy Number Display */}
-                      <div className="flex items-center gap-2 relative z-10">
-                        <span className="text-4xl sm:text-6xl font-bold leading-none" style={{ color: fillHex, textShadow: `0 0 20px ${fillHex}60` }}>
+                      <div className="flex flex-col items-center justify-center relative z-10 select-none pointer-events-none">
+                        <span className="text-5xl sm:text-7xl font-bold leading-none tracking-tighter"
+                          style={{
+                            color: "#ffffff",
+                            textShadow: `0 0 20px ${fillHex}, 0 0 10px rgba(0,0,0,0.5)`
+                          }}>
                           {hasPickedEnergy && energy != null ? energy : "-"}
                         </span>
+                        <span className="text-[10px] items-center font-bold tracking-widest uppercase opacity-80 mt-1" style={{ color: "#ffffff" }}>
+                          الطاقة
+                        </span>
+
                         {weeklyTrend && hasPickedEnergy && (
-                          <span
-                            className="rounded-full px-2 py-0.5 text-[10px] font-bold"
+                          <motion.div
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="absolute -bottom-8 whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-sm"
                             style={{
-                              color:
-                                weeklyTrend.direction === "up"
-                                  ? "#2dd4bf"
-                                  : weeklyTrend.direction === "down"
-                                    ? "#f87171"
-                                    : "var(--text-secondary)",
-                              background:
-                                weeklyTrend.direction === "up"
-                                  ? "rgba(45,212,191,0.14)"
-                                  : weeklyTrend.direction === "down"
-                                    ? "rgba(248,113,113,0.14)"
-                                    : "rgba(148,163,184,0.14)",
-                              border:
-                                weeklyTrend.direction === "up"
-                                  ? "1px solid rgba(45,212,191,0.35)"
-                                  : weeklyTrend.direction === "down"
-                                    ? "1px solid rgba(248,113,113,0.35)"
-                                    : "1px solid rgba(148,163,184,0.28)"
+                              backgroundColor: "rgba(0,0,0,0.4)",
+                              border: `1px solid ${weeklyTrend.direction === "up" ? "#2dd4bf" : weeklyTrend.direction === "down" ? "#f87171" : "#94a3b8"}44`,
+                              color: weeklyTrend.direction === "up" ? "#2dd4bf" : weeklyTrend.direction === "down" ? "#f87171" : "#cbd5e1"
                             }}
                           >
-                            {weeklyTrend.direction === "up" ? "\u2197" : weeklyTrend.direction === "down" ? "\u2198" : "\u2192"} {weeklyTrend.label}
-                          </span>
+                            {weeklyTrend.direction === "up" ? "↑" : weeklyTrend.direction === "down" ? "↓" : "→"} {weeklyTrend.label}
+                          </motion.div>
                         )}
                       </div>
                     </motion.div>
@@ -1531,7 +1567,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   <p className="text-[11px] -mt-1 mb-0.5" style={{ color: "var(--text-muted)", minHeight: "1rem" }}>
                     {moodSubtitle}
                   </p>
-                  <div className="pulse-check-mood-grid grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="pulse-check-mood-grid grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 py-4">
                     {MOODS.map((item) => {
                       const isSelected = mood === item.id;
                       const mStyle = MOOD_COSMIC[item.id];
@@ -1542,41 +1578,55 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                           onClick={() => {
                             setMoodValue(item.id);
                           }}
-                          className="group relative inline-flex min-h-[100px] flex-col items-center justify-center gap-2 px-2 py-3 rounded-2xl text-xs font-semibold transition-all overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
-                          style={{
-                            background: isSelected ? "rgba(255, 255, 255, 0.03)" : "rgba(255, 255, 255, 0.02)",
-                            border: `1px solid ${isSelected ? mStyle.border : "rgba(255, 255, 255, 0.08)"}`,
-                            color: isSelected ? mStyle.text : "var(--text-secondary)",
-                            boxShadow: isSelected ? mStyle.glow : "none"
-                          }}
-                          whileTap={{ scale: 0.96 }}
-                          whileHover={{ scale: 1.02 }}
+                          className="group relative flex flex-col items-center justify-start gap-3 rounded-full outline-none"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
                         >
+                          {/* The Planet/Orb */}
                           <div
-                            className="absolute inset-0 transition-opacity duration-700 ease-out"
+                            className="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full transition-all duration-500"
                             style={{
-                              background: mStyle.nebula,
-                              opacity: isSelected ? 0.8 : 0.15,
-                              filter: isSelected ? "blur(4px)" : "blur(8px)"
+                              background: isSelected
+                                ? `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), ${mStyle.text} 60%, ${mStyle.text}44 100%)`
+                                : "rgba(255, 255, 255, 0.03)",
+                              border: `1px solid ${isSelected ? mStyle.text : "rgba(255,255,255,0.1)"}`,
+                              boxShadow: isSelected
+                                ? `0 0 20px ${mStyle.text}66, inset 0 0 15px ${mStyle.text}44`
+                                : "inset 0 0 10px rgba(255,255,255,0.02)"
                             }}
-                          />
-                          <motion.span
-                            className="relative z-10 text-3xl drop-shadow-md"
-                            animate={{ scale: isSelected ? 1.15 : 1 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 15 }}
                           >
-                            {item.emoji}
-                          </motion.span>
-                          <span className="relative z-10 leading-tight text-center drop-shadow-sm">{item.label}</span>
-                          {isSelected && (
-                            <motion.div
-                              layoutId="mood-selection-ring"
-                              className="absolute inset-0 rounded-2xl border-2"
-                              style={{ borderColor: mStyle.text }}
-                              initial={false}
-                              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                            />
-                          )}
+                            {/* Selected Pulse Ring */}
+                            {isSelected && (
+                              <motion.div
+                                className="absolute inset-[-4px] rounded-full border border-dashed"
+                                style={{ borderColor: mStyle.text }}
+                                animate={{ rotate: 360, scale: [1, 1.05, 1] }}
+                                transition={{ rotate: { duration: 10, ease: "linear", repeat: Infinity }, scale: { duration: 2, repeat: Infinity } }}
+                              />
+                            )}
+
+                            {/* Emoji */}
+                            <span className="text-3xl sm:text-4xl select-none filter drop-shadow-md z-10">
+                              {item.emoji}
+                            </span>
+
+                            {/* Nebula Background on Selection */}
+                            {isSelected && (
+                              <motion.div
+                                className="absolute inset-[-20px] -z-10 rounded-full opacity-40 blur-xl"
+                                style={{ background: mStyle.text }}
+                                layoutId="mood-nebula"
+                              />
+                            )}
+                          </div>
+
+                          {/* Label */}
+                          <span
+                            className={`text-xs font-medium transition-colors duration-300 ${isSelected ? "font-bold" : "text-slate-400 group-hover:text-slate-200"}`}
+                            style={{ color: isSelected ? mStyle.text : undefined }}
+                          >
+                            {item.label}
+                          </span>
                         </motion.button>
                       );
                     })}
@@ -1621,13 +1671,14 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   <p className="text-[11px] -mt-1 mb-0.5" style={{ color: "var(--text-muted)", minHeight: "1rem" }}>
                     {focusSubtitle}
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-3 py-2">
                     {FOCUS_OPTIONS.map((item) => {
                       const isSelected = focus === item.id;
                       const label = item.id === "none"
                         ? FOCUS_LABELS[isStartRecovery ? "none_new" : "none_returning"]
                         : FOCUS_LABELS[item.labelKey];
                       const fStyle = FOCUS_COSMIC[item.id];
+
                       return (
                         <motion.button
                           key={item.id}
@@ -1635,16 +1686,38 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                           onClick={() => {
                             setFocusValue(item.id);
                           }}
-                          className="min-h-[74px] px-2 py-2.5 rounded-xl text-xs font-semibold transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0"
+                          className="relative overflow-hidden min-h-[85px] px-3 py-3 rounded-2xl text-xs font-semibold transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 flex flex-col items-center justify-center gap-2"
                           style={{
-                            background: isSelected ? fStyle.bg : "rgba(255, 255, 255, 0.04)",
-                            border: `1px solid ${isSelected ? fStyle.border : "rgba(255, 255, 255, 0.12)"}`,
-                            color: isSelected ? fStyle.text : "var(--text-secondary)",
-                            boxShadow: isSelected ? "0 10px 24px rgba(15,23,42,0.22)" : "0 4px 14px rgba(2,6,23,0.14)"
+                            background: isSelected
+                              ? `linear-gradient(135deg, ${fStyle.bg}, rgba(255,255,255,0.05))`
+                              : "rgba(255, 255, 255, 0.03)",
+                            border: `1px solid ${isSelected ? fStyle.border : "rgba(255, 255, 255, 0.08)"}`,
+                            color: isSelected ? "#ffffff" : "var(--text-secondary)",
+                            boxShadow: isSelected
+                              ? `0 8px 32px rgba(0,0,0,0.3), inset 0 0 0 1px ${fStyle.border}`
+                              : "0 2px 10px rgba(0,0,0,0.1)",
+                            backdropFilter: "blur(12px)"
                           }}
-                          whileTap={{ scale: 0.96 }}
+                          whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.06)" }}
+                          whileTap={{ scale: 0.98 }}
                         >
-                          {label}
+                          {/* Selection Indicator Spark */}
+                          {isSelected && (
+                            <motion.div
+                              layoutId="focus-spark"
+                              className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor]"
+                              style={{ backgroundColor: fStyle.text }}
+                            />
+                          )}
+
+                          {/* Subtle background gradient splash */}
+                          {isSelected && (
+                            <div
+                              className="absolute inset-0 opacity-20 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"
+                            />
+                          )}
+
+                          <span className="relative z-10 leading-snug">{label}</span>
                         </motion.button>
                       );
                     })}
@@ -1716,6 +1789,62 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   />
                 </motion.div>
               )}
+
+              {/* Step 5: Tactical Advice */}
+              {step === 5 && tacticalAdvice && (
+                <motion.div
+                  className="pulse-check-section mt-1.5 flex flex-col items-center justify-center text-center gap-4 h-full"
+                  custom={5}
+                  variants={cosmicUp}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mb-2 relative overflow-hidden"
+                    style={{
+                      background: tacticalAdvice.theme === 'attack' ? 'rgba(16, 185, 129, 0.2)' : tacticalAdvice.theme === 'defend' ? 'rgba(251, 191, 36, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                      border: `1px solid ${tacticalAdvice.theme === 'attack' ? 'rgba(16, 185, 129, 0.5)' : tacticalAdvice.theme === 'defend' ? 'rgba(251, 191, 36, 0.5)' : 'rgba(59, 130, 246, 0.5)'}`
+                    }}
+                  >
+                    {tacticalAdvice.icon}
+                    <div className="absolute inset-0 animate-pulse opacity-50 mix-blend-overlay" style={{ background: 'white' }} />
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-bold tracking-widest uppercase mb-1"
+                      style={{
+                        color: tacticalAdvice.theme === 'attack' ? '#34d399' : tacticalAdvice.theme === 'defend' ? '#fbbf24' : '#60a5fa'
+                      }}
+                    >
+                      {tacticalAdvice.title}
+                    </h3>
+                    <p className="text-sm font-medium text-slate-300 max-w-[280px] mx-auto leading-relaxed">
+                      {tacticalAdvice.message}
+                    </p>
+                  </div>
+
+                  <div className="w-full max-w-[300px] p-4 rounded-xl border border-dashed border-slate-600/50 bg-slate-900/30 backdrop-blur-sm mt-2">
+                    <p className="text-xs text-slate-400 uppercase tracking-wider mb-2 font-bold">Recommended Action</p>
+                    <p className="text-base text-white font-bold">{tacticalAdvice.action}</p>
+                  </div>
+
+                </motion.div>
+              )}
+
+              {/* Analyze Loading State */}
+              <AnimatePresence>
+                {isAnalyzing && (
+                  <motion.div
+                    className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-md"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <div className="w-16 h-16 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin mb-4" />
+                    <p className="text-teal-400 font-mono text-sm animate-pulse">ANALYZING BIOMETRICS...</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
             </div>
 
             <div
@@ -1751,7 +1880,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   whileHover={{ scale: 1.01, y: -1 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {step < 4 ? "\u0627\u0644\u062a\u0627\u0644\u064a" : (isSavingPulse ? "\u062a\u0645 \u0627\u0644\u062d\u0641\u0638" : "\u0627\u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643")}
+                  {step < 4 ? "\u0627\u0644\u062a\u0627\u0644\u064a" : step === 5 ? "EXECUTE PROTOCOL" : (isSavingPulse ? "\u062a\u0645 \u0627\u0644\u062d\u0641\u0638" : "\u0627\u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643")}
                 </motion.button>
               </div>
             </div>

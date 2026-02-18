@@ -1,0 +1,377 @@
+import type { FC } from "react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Users, UserPlus, Copy, Check, Shield, ChevronRight, Briefcase } from "lucide-react";
+import {
+    registerAsCoach,
+    addClient,
+    getClients,
+    isCoach,
+    getMyShareCode,
+    getShareWithCoachText,
+    B2B_ROLE_LABELS,
+    B2B_FEATURES,
+    type B2BRole,
+} from "../services/b2bService";
+
+/* ══════════════════════════════════════════
+   B2B PORTAL — بوابة الكوتشات والمعالجين
+   ══════════════════════════════════════════ */
+
+type B2BView = "landing" | "coach_register" | "coach_dashboard" | "client_share";
+
+export const B2BPortal: FC = () => {
+    const [view, setView] = useState<B2BView>(
+        isCoach() ? "coach_dashboard" : "landing"
+    );
+    const [copied, setCopied] = useState(false);
+    const [clientCode, setClientCode] = useState("");
+    const [clientAlias, setClientAlias] = useState("");
+    const [addSuccess, setAddSuccess] = useState(false);
+
+    // Coach registration form
+    const [coachName, setCoachName] = useState("");
+    const [coachRole, setCoachRole] = useState<B2BRole>("coach");
+    const [coachSpec, setCoachSpec] = useState("");
+
+    const shareCode = getMyShareCode();
+    const clients = getClients();
+
+    const handleCopyShareCode = async () => {
+        try {
+            await navigator.clipboard.writeText(getShareWithCoachText());
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch { /* noop */ }
+    };
+
+    const handleRegisterCoach = () => {
+        if (!coachName.trim()) return;
+        registerAsCoach(coachName, coachRole, coachSpec);
+        setView("coach_dashboard");
+    };
+
+    const handleAddClient = () => {
+        if (!clientCode.trim() || !clientAlias.trim()) return;
+        const success = addClient(clientCode.trim(), clientAlias.trim());
+        if (success) {
+            setAddSuccess(true);
+            setClientCode("");
+            setClientAlias("");
+            setTimeout(() => setAddSuccess(false), 2000);
+        }
+    };
+
+    return (
+        <div className="w-full max-w-md mx-auto" dir="rtl">
+            <AnimatePresence mode="wait">
+
+                {/* Landing */}
+                {view === "landing" && (
+                    <motion.div
+                        key="landing"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -12 }}
+                    >
+                        {/* Header */}
+                        <div className="text-center mb-6">
+                            <div className="w-14 h-14 rounded-2xl bg-indigo-600/20 flex items-center justify-center mx-auto mb-3">
+                                <Briefcase className="w-7 h-7 text-indigo-400" />
+                            </div>
+                            <h1 className="text-xl font-black text-white">بوابة المحترفين</h1>
+                            <p className="text-sm text-slate-400 mt-1">للكوتشات والمعالجين النفسيين</p>
+                        </div>
+
+                        {/* Features */}
+                        <div className="rounded-2xl p-4 mb-4"
+                            style={{
+                                background: "rgba(99,102,241,0.08)",
+                                border: "1px solid rgba(99,102,241,0.2)",
+                            }}>
+                            <p className="text-xs font-bold text-indigo-400 mb-3 uppercase tracking-wider">ما تحصل عليه</p>
+                            <div className="space-y-2">
+                                {B2B_FEATURES.map((f) => (
+                                    <div key={f} className="flex items-center gap-2">
+                                        <Shield className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                                        <span className="text-sm text-slate-300">{f}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* CTAs */}
+                        <div className="space-y-3">
+                            <motion.button
+                                onClick={() => setView("coach_register")}
+                                className="w-full py-3.5 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
+                                style={{ background: "linear-gradient(135deg, #4f46e5, #7c3aed)" }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                <Briefcase className="w-4 h-4" />
+                                أنا كوتش / معالج — سجّل
+                            </motion.button>
+
+                            <motion.button
+                                onClick={() => setView("client_share")}
+                                className="w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2"
+                                style={{
+                                    background: "rgba(255,255,255,0.04)",
+                                    border: "1px solid rgba(255,255,255,0.1)",
+                                    color: "#94a3b8",
+                                }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                <Users className="w-4 h-4" />
+                                أنا عميل — شارك كودي مع كوتشي
+                            </motion.button>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Coach Registration */}
+                {view === "coach_register" && (
+                    <motion.div
+                        key="register"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        <button
+                            onClick={() => setView("landing")}
+                            className="flex items-center gap-1.5 text-slate-400 text-sm mb-4 hover:text-white transition-colors"
+                        >
+                            ← رجوع
+                        </button>
+                        <h2 className="text-lg font-bold text-white mb-4">تسجيل كمحترف</h2>
+
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-xs text-slate-400 mb-1.5 block">اسمك</label>
+                                <input
+                                    value={coachName}
+                                    onChange={(e) => setCoachName(e.target.value)}
+                                    placeholder="د. أحمد محمد"
+                                    className="w-full rounded-xl p-3 text-sm text-white outline-none"
+                                    style={{
+                                        background: "rgba(255,255,255,0.05)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-slate-400 mb-1.5 block">دورك</label>
+                                <div className="flex gap-2">
+                                    {(Object.keys(B2B_ROLE_LABELS) as B2BRole[]).map((role) => (
+                                        <button
+                                            key={role}
+                                            onClick={() => setCoachRole(role)}
+                                            className="flex-1 py-2 rounded-xl text-xs font-bold transition-all"
+                                            style={{
+                                                background: coachRole === role ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)",
+                                                border: `1px solid ${coachRole === role ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.08)"}`,
+                                                color: coachRole === role ? "#818cf8" : "#64748b",
+                                            }}
+                                        >
+                                            {B2B_ROLE_LABELS[role]}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-slate-400 mb-1.5 block">تخصصك (اختياري)</label>
+                                <input
+                                    value={coachSpec}
+                                    onChange={(e) => setCoachSpec(e.target.value)}
+                                    placeholder="علاقات، قلق، تطوير ذات..."
+                                    className="w-full rounded-xl p-3 text-sm text-white outline-none"
+                                    style={{
+                                        background: "rgba(255,255,255,0.05)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                    }}
+                                />
+                            </div>
+
+                            <motion.button
+                                onClick={handleRegisterCoach}
+                                disabled={!coachName.trim()}
+                                className="w-full py-3.5 rounded-2xl font-bold text-white mt-2"
+                                style={{
+                                    background: coachName.trim()
+                                        ? "linear-gradient(135deg, #4f46e5, #7c3aed)"
+                                        : "rgba(99,102,241,0.2)",
+                                }}
+                                whileHover={coachName.trim() ? { scale: 1.02 } : {}}
+                                whileTap={coachName.trim() ? { scale: 0.98 } : {}}
+                            >
+                                تسجيل وفتح لوحة التحكم
+                            </motion.button>
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Coach Dashboard */}
+                {view === "coach_dashboard" && (
+                    <motion.div
+                        key="dashboard"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -12 }}
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-bold text-white">لوحة تحكم الكوتش</h2>
+                            <div className="px-2.5 py-1 rounded-full text-xs font-bold"
+                                style={{ background: "rgba(99,102,241,0.2)", color: "#818cf8" }}>
+                                {clients.length} عميل
+                            </div>
+                        </div>
+
+                        {/* Add client */}
+                        <div className="rounded-2xl p-4 mb-4"
+                            style={{
+                                background: "rgba(255,255,255,0.03)",
+                                border: "1px solid rgba(255,255,255,0.08)",
+                            }}>
+                            <p className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1.5">
+                                <UserPlus className="w-3.5 h-3.5" />
+                                إضافة عميل جديد
+                            </p>
+                            <div className="space-y-2">
+                                <input
+                                    value={clientCode}
+                                    onChange={(e) => setClientCode(e.target.value)}
+                                    placeholder="كود العميل (B2B-XXXXXX)"
+                                    className="w-full rounded-xl p-2.5 text-sm text-white outline-none font-mono"
+                                    style={{
+                                        background: "rgba(255,255,255,0.05)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                    }}
+                                />
+                                <input
+                                    value={clientAlias}
+                                    onChange={(e) => setClientAlias(e.target.value)}
+                                    placeholder="اسم مستعار (للخصوصية)"
+                                    className="w-full rounded-xl p-2.5 text-sm text-white outline-none"
+                                    style={{
+                                        background: "rgba(255,255,255,0.05)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                    }}
+                                />
+                                <motion.button
+                                    onClick={handleAddClient}
+                                    disabled={!clientCode.trim() || !clientAlias.trim()}
+                                    className="w-full py-2.5 rounded-xl font-bold text-sm"
+                                    style={{
+                                        background: addSuccess
+                                            ? "rgba(52,211,153,0.2)"
+                                            : "rgba(99,102,241,0.2)",
+                                        border: `1px solid ${addSuccess ? "rgba(52,211,153,0.4)" : "rgba(99,102,241,0.3)"}`,
+                                        color: addSuccess ? "#34d399" : "#818cf8",
+                                    }}
+                                    whileTap={{ scale: 0.97 }}
+                                >
+                                    {addSuccess ? "✓ تم الإضافة!" : "إضافة عميل"}
+                                </motion.button>
+                            </div>
+                        </div>
+
+                        {/* Clients list */}
+                        {clients.length > 0 ? (
+                            <div className="space-y-2">
+                                <p className="text-xs font-bold text-slate-500 mb-2">عملاؤك</p>
+                                {clients.map((c) => (
+                                    <div key={c.clientCode}
+                                        className="flex items-center justify-between p-3 rounded-xl"
+                                        style={{
+                                            background: "rgba(255,255,255,0.03)",
+                                            border: "1px solid rgba(255,255,255,0.06)",
+                                        }}>
+                                        <div>
+                                            <p className="text-sm font-bold text-white">{c.clientAlias}</p>
+                                            <p className="text-xs text-slate-500 font-mono">{c.clientCode}</p>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="w-2 h-2 rounded-full bg-green-500" />
+                                            <span className="text-xs text-slate-400">نشط</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 text-slate-600">
+                                <Users className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                                <p className="text-sm">لا يوجد عملاء بعد</p>
+                                <p className="text-xs mt-1">اطلب من عملائك مشاركة كودهم معك</p>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+
+                {/* Client Share Code */}
+                {view === "client_share" && (
+                    <motion.div
+                        key="client"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        <button
+                            onClick={() => setView("landing")}
+                            className="flex items-center gap-1.5 text-slate-400 text-sm mb-4 hover:text-white transition-colors"
+                        >
+                            ← رجوع
+                        </button>
+
+                        <h2 className="text-lg font-bold text-white mb-2">كودك للمتابعة</h2>
+                        <p className="text-sm text-slate-400 mb-4">
+                            شارك هذا الكود مع كوتشك أو معالجك. يتيح له متابعة تقدمك العام فقط — بدون تفاصيل شخصية.
+                        </p>
+
+                        {/* Code display */}
+                        <div className="p-5 rounded-2xl mb-4 text-center"
+                            style={{
+                                background: "rgba(99,102,241,0.1)",
+                                border: "1px solid rgba(99,102,241,0.25)",
+                            }}>
+                            <p className="text-xs text-indigo-400 mb-2 font-bold">كودك الشخصي</p>
+                            <p className="text-3xl font-black text-white tracking-widest font-mono">{shareCode}</p>
+                        </div>
+
+                        {/* Privacy note */}
+                        <div className="flex items-start gap-2.5 p-3 rounded-xl mb-4"
+                            style={{
+                                background: "rgba(52,211,153,0.08)",
+                                border: "1px solid rgba(52,211,153,0.2)",
+                            }}>
+                            <Shield className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                            <p className="text-xs text-emerald-300">
+                                الكوتش يرى فقط: عدد الأيام النشطة، مستوى التقدم العام، وعدد الحدود المُضافة.
+                                لا يرى الأسماء أو التفاصيل الشخصية.
+                            </p>
+                        </div>
+
+                        <motion.button
+                            onClick={handleCopyShareCode}
+                            className="w-full py-3.5 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
+                            style={{
+                                background: copied
+                                    ? "linear-gradient(135deg, #059669, #047857)"
+                                    : "linear-gradient(135deg, #4f46e5, #7c3aed)",
+                            }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                        >
+                            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                            {copied ? "تم النسخ!" : "نسخ الكود ورسالة المشاركة"}
+                        </motion.button>
+                    </motion.div>
+                )}
+
+            </AnimatePresence>
+        </div>
+    );
+};

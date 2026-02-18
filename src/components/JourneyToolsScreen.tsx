@@ -9,6 +9,8 @@ import { useAchievementState } from "../state/achievementState";
 import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
 import { getGoalMeta, getGoalOrderIndex } from "../data/goalMeta";
 import type { FeatureFlagKey } from "../config/features";
+import { NextStepCard } from "./NextStepCard";
+import type { NextStepDecisionV1 } from "../modules/recommendation/types";
 
 interface JourneyToolsScreenProps {
   onBack: () => void;
@@ -17,6 +19,9 @@ interface JourneyToolsScreenProps {
   onOpenGoal?: (goalId: string, category: string) => void;
   onFeatureLocked?: (feature: FeatureFlagKey) => void;
   availableFeatures?: Partial<Record<FeatureFlagKey, boolean>>;
+  nextStepDecision?: NextStepDecisionV1 | null;
+  onTakeNextStep?: (decision: NextStepDecisionV1) => void;
+  onRefreshNextStep?: () => void;
 }
 
 export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
@@ -25,7 +30,10 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
   onOpenDawayirSetup,
   onOpenGoal,
   onFeatureLocked,
-  availableFeatures
+  availableFeatures,
+  nextStepDecision = null,
+  onTakeNextStep,
+  onRefreshNextStep
 }) => {
   const containerVariants = {
     hidden: { opacity: 0, y: 12 },
@@ -183,6 +191,14 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
           </motion.button>
         ))}
       </motion.section>
+
+      {nextStepDecision && onTakeNextStep && onRefreshNextStep && (
+        <NextStepCard
+          decision={nextStepDecision}
+          onTakeAction={onTakeNextStep}
+          onRefresh={onRefreshNextStep}
+        />
+      )}
 
       {savedGoals.length > 0 && (
         <section className="mt-6 text-right">

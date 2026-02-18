@@ -4,15 +4,25 @@ import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motio
 import { useMapState } from "../state/mapState";
 import { mapCopy } from "../copy/map";
 import { landingCopy } from "../copy/landing";
+import { WarRoomWidget } from "./CommandCenter/WarRoomWidget";
+import { MedalsBoard } from "./Armory/MedalsBoard";
+import { EmergencySOS } from "./CommandCenter/EmergencySOS";
+import { Medal } from "../types/tactical";
+import { StreakWidget } from "./StreakWidget";
+import { QuickPathModal } from "./QuickPathModal";
+import { ShareableMapCard } from "./ShareableMapCard";
+import { recordDailyVisit } from "../services/streakSystem";
+import { Zap, Share2, Settings } from "lucide-react";
 
 /* ════════════════════════════════════════════════
-   DASHBOARD SCREEN — المساحة الخاصة
+   DASHBOARD SCREEN — غرفة العمليات
    ════════════════════════════════════════════════ */
 
 interface DashboardScreenProps {
   firstName: string | null;
   onNavigateToMap: () => void;
   onOpenAchievements: () => void;
+  onNavigateToSettings?: () => void;
 }
 
 /* ── Mini node for the live map card ── */
@@ -44,13 +54,7 @@ const FloatingNode: FC<{
   const py = useSpring(useMotionValue(node.y), { stiffness: 60, damping: 20 });
 
   useEffect(() => {
-    const unsub1 = mouseX.get !== undefined
-      ? (() => {
-          // We'll animate via RAF
-          return () => {};
-        })()
-      : () => {};
-    return unsub1;
+    // Animation logic
   }, [mouseX, mouseY, depth, px, py, node.x, node.y]);
 
   const size = node.ring === "green" ? 9 : node.ring === "yellow" ? 8 : 7;
@@ -111,6 +115,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
   firstName,
   onNavigateToMap,
   onOpenAchievements,
+  onNavigateToSettings,
 }) => {
   const nodes = useMapState((s) => s.nodes);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -118,10 +123,28 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
   const mouseYRaw = useMotionValue(0);
 
   const activeNodes = useMemo(() => nodes.filter((n) => !n.isNodeArchived), [nodes]);
-  const archivedNodes = useMemo(() => nodes.filter((n) => n.isNodeArchived), [nodes]);
   const greenCount = activeNodes.filter((n) => n.ring === "green").length;
   const yellowCount = activeNodes.filter((n) => n.ring === "yellow").length;
   const redCount = activeNodes.filter((n) => n.ring === "red").length;
+
+  // Mock medals for now - fetch from API later
+  const [earnedMedals, setEarnedMedals] = useState<Medal[]>([
+    {
+      id: "1",
+      type: "First Strike",
+      earned_at: new Date().toISOString(),
+      description: "Launch mission complete"
+    }
+  ]);
+
+  // Wave 1: Modal state
+  const [showQuickPath, setShowQuickPath] = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
+
+  // Wave 1: Record daily visit for streak
+  useEffect(() => {
+    recordDailyVisit();
+  }, []);
 
   /* Spread nodes across a virtual 100×100 grid */
   const miniNodes: MiniNode[] = useMemo(() => {
@@ -149,32 +172,15 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
     mouseYRaw.set((e.clientY - cy) / rect.height);
   };
 
-  /* Daily question */
-  const [dailyQ] = useState(() => {
-    const qs = mapCopy.dashboardDailyQuestions;
-    return qs[new Date().getDay() % qs.length];
-  });
-
-  /* Summary sentence */
-  const summaryText = useMemo(() => {
-    const supporters = greenCount;
-    const needsWork = yellowCount + redCount;
-    const parts: string[] = [];
-    if (supporters > 0) parts.push(`${supporters} ${supporters === 1 ? "شخص بيسندك" : "أشخاص بيسندوك"}`);
-    if (needsWork > 0) parts.push(`${needsWork} ${needsWork === 1 ? "محطة محتاجة مجهود" : "محطات محتاجة مجهود"}`);
-    if (parts.length === 0) return "دوايرك في انتظارك.";
-    return `دوايرك فيها ${parts.join("، ")}.`;
-  }, [greenCount, yellowCount, redCount]);
-
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
     const timeGreet = hour < 12 ? "صباح النور" : hour < 17 ? "مرحباً" : "مساء الخير";
-    return firstName ? `${timeGreet} يا ${firstName}` : timeGreet;
+    return firstName ? `${timeGreet} يا قائد ${firstName}` : `${timeGreet} يا قائد`;
   }, [firstName]);
 
   return (
     <motion.div
-      className="w-full min-h-[100dvh] flex flex-col px-4 py-6 gap-5 overflow-y-auto"
+      className="w-full min-h-[100dvh] flex flex-col px-4 py-6 gap-6 overflow-y-auto pb-24"
       style={{ maxWidth: 480, margin: "0 auto" }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -189,51 +195,112 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
         transition={{ delay: 0.1, duration: 0.5 }}
       >
         <div>
-          <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
-            {new Date().toLocaleDateString("ar-EG", { weekday: "long", month: "long", day: "numeric" })}
+          <p className="text-xs font-medium text-teal-500/80 uppercase tracking-widest">
+            غرفة العمليات المركزية
           </p>
-          <h1 className="text-lg font-bold leading-snug" style={{ color: "var(--text-primary)" }}>
-            {greeting}، إنت النهاردة في محطة هادية..
+          <h1 className="text-xl font-bold leading-snug text-white mt-1">
+            {greeting}
           </h1>
-          <p className="text-sm" style={{ color: "rgba(45,212,191,0.75)" }}>خذ نَفَس.</p>
+          <p className="text-sm text-slate-400">حالة النظام: مستقر 🟢</p>
         </div>
-        {/* Avatar circle */}
-        <div
-          className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-base font-bold"
-          style={{
-            background: "linear-gradient(135deg, rgba(45,212,191,0.2), rgba(139,92,246,0.2))",
-            border: "1.5px solid rgba(45,212,191,0.35)",
-            color: "var(--soft-teal)",
-          }}
-        >
-          {firstName?.[0]?.toUpperCase() ?? "؟"}
+        <div className="flex items-center gap-2">
+          {/* Streak compact badge */}
+          <StreakWidget compact />
+          {/* Settings gear */}
+          {onNavigateToSettings && (
+            <motion.button
+              onClick={onNavigateToSettings}
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                color: "#64748b",
+              }}
+              whileHover={{ color: "#94a3b8", borderColor: "rgba(255,255,255,0.15)" }}
+              whileTap={{ scale: 0.93 }}
+              aria-label="الإعدادات"
+            >
+              <Settings className="w-4 h-4" />
+            </motion.button>
+          )}
+          {/* Avatar circle */}
+          <div
+            onClick={onOpenAchievements}
+            className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 cursor-pointer overflow-hidden border-2 border-teal-500/30 hover:border-teal-500 transition-colors"
+          >
+            {firstName ? (
+              <div className="text-lg font-bold text-teal-500">
+                {firstName[0].toUpperCase()}
+              </div>
+            ) : (
+              <div className="w-full h-full bg-slate-800" />
+            )}
+          </div>
         </div>
       </motion.div>
 
-      {/* ── Live Map Card ── */}
+      {/* ── Wave 1: Quick Action Buttons ── */}
+      <motion.div
+        className="flex gap-3"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.4 }}
+      >
+        <motion.button
+          onClick={() => setShowQuickPath(true)}
+          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm"
+          style={{
+            background: "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(79,70,229,0.1))",
+            border: "1px solid rgba(124,58,237,0.35)",
+            color: "#a78bfa",
+          }}
+          whileHover={{ scale: 1.02, borderColor: "rgba(124,58,237,0.6)" }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <Zap className="w-4 h-4" />
+          جملة خروج فورية
+        </motion.button>
+        <motion.button
+          onClick={() => setShowShareCard(true)}
+          className="flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-bold text-sm"
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            color: "#94a3b8",
+          }}
+          whileHover={{ scale: 1.02, borderColor: "rgba(255,255,255,0.2)" }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <Share2 className="w-4 h-4" />
+        </motion.button>
+      </motion.div>
+
+      {/* ── Wave 1: Streak Widget ── */}
+      <StreakWidget />
+
+      {/* ── Live Map Card (Radar) ── */}
       <motion.div
         ref={cardRef}
-        className="relative rounded-2xl overflow-hidden cursor-pointer"
-        style={{
-          background: "linear-gradient(145deg, rgba(15,23,42,0.9), rgba(20,30,55,0.95))",
-          border: "1px solid rgba(45,212,191,0.2)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05)",
-          minHeight: 200,
-        }}
+        className="relative rounded-3xl overflow-hidden cursor-pointer group"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.55 }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => { mouseXRaw.set(0); mouseYRaw.set(0); }}
         onClick={onNavigateToMap}
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.98 }}
       >
+        {/* Background & Grid */}
+        <div className="absolute inset-0 bg-slate-900" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(45,212,191,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,0.05)_1px,transparent_1px)] bg-[size:20px_20px]" />
+
+        {/* Radar Scan Effect */}
+        <div className="absolute inset-0 rounded-full border border-teal-500/10 animate-[ping_4s_linear_infinite]" />
+
         {/* Mini-map area */}
-        <div className="relative w-full" style={{ height: 180 }}>
+        <div className="relative w-full" style={{ height: 220 }}>
           {/* Center "me" dot */}
           <div
-            className="absolute"
+            className="absolute z-10"
             style={{ left: "50%", top: "42%", transform: "translate(-50%,-50%)" }}
           >
             <motion.div
@@ -248,22 +315,6 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
             />
           </div>
 
-          {/* Concentric rings (decorative) */}
-          {[40, 70, 100].map((r, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full"
-              style={{
-                width: r * 2,
-                height: r * 2,
-                left: "50%",
-                top: "42%",
-                transform: "translate(-50%, -50%)",
-                border: `1px solid rgba(45,212,191,${0.08 - i * 0.02})`,
-              }}
-            />
-          ))}
-
           {/* Floating nodes */}
           {miniNodes.map((node, i) => (
             <FloatingNode
@@ -276,178 +327,58 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
           ))}
 
           {activeNodes.length === 0 && (
-            <div
-              className="absolute inset-0 flex items-center justify-center"
-              style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}
-            >
-              ابدأ بأول شخص في دوايرك
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+              <p className="text-teal-500 font-bold mb-2">الرادار فاضي!</p>
+              <p className="text-slate-500 text-xs">ابدأ استطلاع محيطك وضيف أول دايرة.</p>
             </div>
           )}
         </div>
 
         {/* Card footer */}
-        <div
-          className="px-4 pb-4 pt-3 flex items-end justify-between"
-          style={{ borderTop: "1px solid rgba(45,212,191,0.1)" }}
-        >
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent p-5 pt-12 flex items-end justify-between">
           <div>
-            <p className="text-xs font-medium mb-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>
-              {mapCopy.title}
+            <p className="text-xs font-mono text-teal-400/70 mb-1">
+              إحصائيات الميدان
             </p>
-            <p className="text-sm font-semibold leading-snug" style={{ color: "rgba(255,255,255,0.85)" }}>
-              {summaryText}
-            </p>
+            <div className="flex gap-3 text-xs font-bold text-white">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> {greenCount} آمن</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> {redCount} خطر</span>
+            </div>
           </div>
 
           {/* Launch button */}
           <motion.div
-            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold shrink-0"
-            style={{
-              background: "rgba(45,212,191,0.15)",
-              border: "1px solid rgba(45,212,191,0.35)",
-              color: "var(--soft-teal)",
-            }}
-            whileHover={{ background: "rgba(45,212,191,0.25)" }}
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold bg-teal-500/10 border border-teal-500/30 text-teal-300 group-hover:bg-teal-500/20 transition-all"
+            whileHover={{ scale: 1.05 }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-            أنطلق للدواير
+            فتح الخريطة الاستراتيجية
           </motion.div>
         </div>
       </motion.div>
 
-      {/* ── Stats row ── */}
-      {activeNodes.length > 0 && (
-        <motion.div
-          className="flex gap-3"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35, duration: 0.4 }}
-        >
-          {[
-            { count: greenCount, label: "قريب", color: "#34d399", bg: "rgba(52,211,153,0.1)" },
-            { count: yellowCount, label: "متذبذب", color: "#fbbf24", bg: "rgba(251,191,36,0.1)" },
-            { count: redCount, label: "بعيد", color: "#f87171", bg: "rgba(248,113,113,0.1)" },
-          ].map(({ count, label, color, bg }) => (
-            <div
-              key={label}
-              className="flex-1 rounded-xl p-3 text-center"
-              style={{ background: bg, border: `1px solid ${color}30` }}
-            >
-              <p className="text-xl font-bold" style={{ color }}>{count}</p>
-              <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>{label}</p>
-            </div>
-          ))}
-        </motion.div>
-      )}
+      {/* ── War Room Widget (Daily Intel) ── */}
+      <WarRoomWidget />
 
-      {/* ── Archived timeline — "مساحة حررتها مؤخراً" ── */}
+      {/* ── Medals Board ── */}
+      <MedalsBoard earnedMedals={earnedMedals} />
+
+      {/* ── Emergency SOS ── */}
+      <div className="py-4 flex justify-center">
+        <EmergencySOS />
+      </div>
+
+      {/* ── Wave 1: Modals ── */}
       <AnimatePresence>
-        {archivedNodes.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <div
-              className="rounded-2xl p-4"
-              style={{
-                background: "rgba(248,250,252,0.04)",
-                border: "1px solid rgba(148,163,184,0.12)",
-              }}
-            >
-              <p className="text-xs font-semibold mb-3" style={{ color: "var(--text-muted)" }}>
-                مساحة حررتها مؤخراً
-              </p>
-              <div className="flex gap-3">
-                {archivedNodes.slice(0, 3).map((n, i) => (
-                  <motion.div
-                    key={n.id}
-                    className="flex flex-col items-center gap-1"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.1 }}
-                  >
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold"
-                      style={{
-                        background: "rgba(148,163,184,0.1)",
-                        border: "1px solid rgba(148,163,184,0.2)",
-                        color: "rgba(148,163,184,0.6)",
-                        filter: "grayscale(80%)",
-                      }}
-                    >
-                      {n.label[0]}
-                    </div>
-                    <span className="text-[9px] font-medium" style={{ color: "rgba(148,163,184,0.5)" }}>
-                      {n.label}
-                    </span>
-                  </motion.div>
-                ))}
-                {archivedNodes.length > 3 && (
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                    style={{ color: "rgba(148,163,184,0.4)", border: "1px dashed rgba(148,163,184,0.2)" }}
-                  >
-                    +{archivedNodes.length - 3}
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
+        {showQuickPath && (
+          <QuickPathModal onClose={() => setShowQuickPath(false)} />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showShareCard && (
+          <ShareableMapCard onClose={() => setShowShareCard(false)} />
         )}
       </AnimatePresence>
 
-      {/* ── Daily question card ── */}
-      <motion.div
-        className="rounded-2xl p-4"
-        style={{
-          background: "linear-gradient(135deg, rgba(45,212,191,0.05), rgba(139,92,246,0.05))",
-          border: "1px solid rgba(45,212,191,0.15)",
-        }}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.45, duration: 0.45 }}
-      >
-        <p className="text-[10px] font-semibold mb-2" style={{ color: "rgba(45,212,191,0.6)" }}>
-          سؤال اليوم
-        </p>
-        <p className="text-sm font-medium leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          {dailyQ}
-        </p>
-      </motion.div>
-
-      {/* ── Journey CTA ── */}
-      <motion.button
-        type="button"
-        onClick={onOpenAchievements}
-        className="w-full rounded-2xl py-3 text-sm font-semibold text-center"
-        style={{
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          color: "var(--text-muted)",
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.55 }}
-        whileHover={{ background: "rgba(255,255,255,0.07)" }}
-        whileTap={{ scale: 0.98 }}
-      >
-        شوف ملخص رحلتك
-      </motion.button>
-
-      {/* ── Footer slogan ── */}
-      <motion.p
-        className="text-center text-xs italic leading-relaxed pb-4"
-        style={{ color: "rgba(45,212,191,0.4)", fontFamily: "'Amiri', 'Scheherazade New', serif" }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.65 }}
-      >
-        {landingCopy.slogan}
-      </motion.p>
     </motion.div>
   );
 };

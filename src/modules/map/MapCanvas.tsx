@@ -10,6 +10,9 @@ import { mapCopy } from "../../copy/map";
 import { hasSeenOnboarding } from "../../utils/mapOnboarding";
 import { getMissionProgressSummary } from "../../utils/missionProgress";
 import { JourneyToast } from "../../components/JourneyToast";
+import { FutureSimulator } from "../../components/FutureSimulator";
+import { Telescope, Zap } from "lucide-react";
+import { analyzeMapInterference } from "../../services/socialSync";
 
 /* ════════════════════════════════════════════════
    🌌 COSMIC MAP CANVAS — Digital Sanctuary
@@ -156,7 +159,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     return () => media.removeListener(sync);
   }, []);
 
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: node.id });
+  const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({ id: node.id });
 
   const hasMismatch = node.analysis?.recommendedRing && node.ring !== node.analysis.recommendedRing;
   const ringPos = useMemo(
@@ -172,7 +175,11 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     position: "absolute",
     top: `${ringPos.y}%`,
     left: `${ringPos.x}%`,
-    transform: "translate(-50%, -50%)"
+    transform: transform
+      ? `translate3d(${transform.x}px, ${transform.y}px, 0) translate(-50%, -50%)`
+      : "translate(-50%, -50%)",
+    zIndex: isDragging ? 999 : 20,
+    touchAction: "none"
   };
 
   const handleDelete = useCallback((e: React.MouseEvent) => {
@@ -433,9 +440,9 @@ const DroppableRing: FC<{ id: Ring | "grey"; sizePct: number; zIndex: number }> 
         width: `${sizePct}%`,
         height: `${sizePct}%`,
         zIndex,
-        opacity: isOver ? 0.15 : 0,
+        opacity: isOver ? 0.35 : 0,
         backgroundColor: colorMap[id] ?? colorMap.grey,
-        boxShadow: isOver ? `0 0 40px ${colorMap[id]}40` : "none"
+        boxShadow: isOver ? `0 0 60px ${colorMap[id]}60` : "none"
       }}
       aria-hidden
     />
@@ -503,10 +510,15 @@ interface MapCanvasProps {
 
 export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenDetails = true, goalIdFilter, galaxyGoalIds, highlightNodeId }) => {
   const allNodes = useMapState((s) => s.nodes);
+  const [isSimulation, setIsSimulation] = useState(false);
+  const [simulatedNodes, setSimulatedNodes] = useState<MapNodeType[]>([]);
+
   const lastAddedNodeId = useMapState((s) => s.lastAddedNodeId);
+  const activeNodes = isSimulation ? simulatedNodes : allNodes;
+
   const nodes = useMemo(
-    () => filterNodesByContext(allNodes, goalIdFilter, galaxyGoalIds).filter((n) => !n.isNodeArchived),
-    [allNodes, goalIdFilter, galaxyGoalIds]
+    () => filterNodesByContext(activeNodes, goalIdFilter, galaxyGoalIds).filter((n) => !n.isNodeArchived),
+    [activeNodes, goalIdFilter, galaxyGoalIds]
   );
 
   const [showArchiveToast, setShowArchiveToast] = useState(false);
@@ -559,7 +571,11 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
       if (!node || typeof overId !== "string") return;
 
       if (overId === "grey") {
-        setDetached(activeId, true);
+        if (isSimulation) {
+          setSimulatedNodes(prev => prev.map(n => n.id === activeId ? { ...n, isDetached: true } : n));
+        } else {
+          setDetached(activeId, true);
+        }
         setJustDraggedId(node.id);
         if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current);
         dragTimeoutRef.current = setTimeout(() => setJustDraggedId(null), 400);
@@ -568,11 +584,15 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
 
       if (overId === "green" || overId === "yellow" || overId === "red") {
         const toRing = overId as Ring;
-        if (node.isDetached) {
-          setDetached(activeId, false);
-          moveNodeToRing(activeId, toRing);
-        } else if (node.ring !== toRing) {
-          moveNodeToRing(activeId, toRing);
+        if (isSimulation) {
+          setSimulatedNodes(prev => prev.map(n => n.id === activeId ? { ...n, ring: toRing, isDetached: false } : n));
+        } else {
+          if (node.isDetached) {
+            setDetached(activeId, false);
+            moveNodeToRing(activeId, toRing);
+          } else if (node.ring !== toRing) {
+            moveNodeToRing(activeId, toRing);
+          }
         }
         setJustDraggedId(node.id);
         if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current);
@@ -580,7 +600,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
         return;
       }
     },
-    [nodes, setDetached, moveNodeToRing]
+    [nodes, setDetached, moveNodeToRing, isSimulation]
   );
 
   const confirmPlacement = useCallback(() => {
@@ -659,6 +679,26 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
     return lines;
   }, [nodes, nodePositions]);
 
+  const interferenceLines = useMemo(() => {
+    const findings = analyzeMapInterference(nodes);
+    const lines: Array<{ id: string; x1: number; y1: number; x2: number; y2: number }> = [];
+
+    findings.forEach((f, idx) => {
+      const p1 = nodePositions[f.affectedNodes[0]];
+      const p2 = nodePositions[f.affectedNodes[1]];
+      if (p1 && p2) {
+        lines.push({
+          id: `interference-${idx}`,
+          x1: p1.x,
+          y1: p1.y,
+          x2: p2.x,
+          y2: p2.y
+        });
+      }
+    });
+    return lines;
+  }, [nodes, nodePositions]);
+
   const { viewBox } = useMemo(() => {
     if (!highlightNodeId) return { viewBox: "0 0 100 100" };
     const node = nodes.find((n) => n.id === highlightNodeId);
@@ -676,9 +716,24 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
   return (
     <div className="w-full mx-auto mt-6 flex flex-col gap-3">
       <div
-        className="relative w-full min-h-[280px] sm:min-h-[340px] md:min-h-[400px]"
+        className={`relative w-full min-h-[280px] sm:min-h-[340px] md:min-h-[400px] transition-all duration-700 ${isSimulation ? "scale-[0.85] saturate-[0.8] brightness-125" : ""}`}
         id="map-canvas"
       >
+        {/* Simulation Controls (Phase 22) */}
+        {!isSimulation ? (
+          <button
+            onClick={() => {
+              setSimulatedNodes([...allNodes]);
+              setIsSimulation(true);
+            }}
+            className="absolute top-2 left-2 z-[60] flex items-center gap-2 px-3 py-1.5 rounded-xl bg-teal-500/10 border border-teal-500/30 text-teal-200 text-xs font-bold backdrop-blur-md hover:bg-teal-500/20 transition-all shadow-lg"
+          >
+            <Telescope className="w-4 h-4" />
+            وضع المحاكاة (What-If)
+          </button>
+        ) : (
+          <FutureSimulator nodes={simulatedNodes} onExitSimulation={() => setIsSimulation(false)} />
+        )}
         <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
           <div className="absolute inset-0">
             <motion.svg
@@ -723,6 +778,29 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
                   initial={{ pathLength: 0, opacity: 0 }}
                   animate={{ pathLength: 1, opacity: 1 }}
                   transition={{ duration: 1.5, ease: "easeInOut" }}
+                />
+              ))}
+
+              {/* 🛰️ Sync Circles / Interference Waves */}
+              {interferenceLines.map((line) => (
+                <motion.line
+                  key={line.id}
+                  x1={line.x1}
+                  y1={line.y1}
+                  x2={line.x2}
+                  y2={line.y2}
+                  stroke="rgba(244, 63, 94, 0.6)"
+                  strokeWidth={0.8}
+                  initial={{ opacity: 0.3, strokeDasharray: "2 4" }}
+                  animate={{
+                    opacity: [0.3, 0.8, 0.3],
+                    strokeDashoffset: [0, -12]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }}
                 />
               ))}
 

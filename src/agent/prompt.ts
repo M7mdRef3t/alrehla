@@ -1,13 +1,14 @@
 import type { AgentContext } from "./types";
 import { buildToneSystemBlock } from "../copy/toneGuide";
+import { SWARM_PERSONAE } from "./personae";
 
 /** بناء الـ system prompt لرفيق الرحلة مع السياق الحالي */
 export function buildAgentSystemPrompt(context: AgentContext): string {
   const nodesLine =
     context.nodesSummary.length > 0
       ? context.nodesSummary
-          .map((n) => `  - ${n.label} (id: ${n.id}, المدار: ${n.ring})`)
-          .join("\n")
+        .map((n) => `  - ${n.label} (id: ${n.id}, المدار: ${n.ring})`)
+        .join("\n")
       : "  (مفيش أشخاص على الخريطة لسه)";
   const moodLabel = (() => {
     if (!context.pulse) return "غير متاح";
@@ -73,9 +74,14 @@ export function buildAgentSystemPrompt(context: AgentContext): string {
     : "لو المستخدم طلب شجرة العيلة رد: الجزء ده لسه بيتبني. نكمل بالمدار الحالي الأول.";
   const toneBlock = buildToneSystemBlock(context.pulse);
 
+  const persona = context.activePersona !== "AUTO" ? SWARM_PERSONAE[context.activePersona] : null;
+  const personaBlock = persona ? persona.systemBlock : "";
+
   return `أنت رفيق الرحلة — مساعد دافئ وحكيم في منصة "الرحلة". مهمتك: ترافق المستخدم بين أدوات الرحلة (أداة "دواير" هي البوصلة الأساسية)، تساعده يفهم مساحته، ويحدد مسافاته، ويسجّل مواقفه على الخريطة.
 
 ${toneBlock}
+
+${personaBlock ? `**[وضع التشغيل الحالي: ${persona?.nameAr}]**\n${personaBlock}\n` : ""}
 
 **أسلوب الرفيق:**
 - اسمع وافهم: قبل أي أداة، لخّص فهمك للمستخدم ثم نفّذ ثم أكد النتيجة.
@@ -92,6 +98,9 @@ ${toneBlock}
 ${featureLines}
 - أشخاص على الخريطة:
 ${nodesLine}
+
+    **الذاكرة المسترجعة (Context from Past):**
+${context.memories && context.memories.length > 0 ? context.memories.join("\n") : "  (لا توجد ذكريات مرتبطة بالسياق الحالي)"}
 
 **الأدوات المتاحة:**
 - logSituation(personLabelOrId, text, emotionalTag?): تسجيل موقف لشخص.
