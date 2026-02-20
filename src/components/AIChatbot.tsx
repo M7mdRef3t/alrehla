@@ -1,7 +1,13 @@
 import React, { type FC, useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Sparkles, Loader2, Mic, MicOff, History } from "lucide-react";
 import { geminiClient } from "../services/geminiClient";
-import { getAgentToolDeclarations, executeToolCall } from "../agent";
+import {
+  getAgentToolDeclarations,
+  executeToolCall,
+  evaluateCodingPromptConstraints,
+  buildPromptCoachingMessage,
+  buildCodingSystemConstraintBlock
+} from "../agent";
 import type { AgentContext, AgentActions } from "../agent";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import { AgentCard, CustomExerciseCard } from "./agentCards";
@@ -148,6 +154,20 @@ export const AIChatbot: FC<AIChatbotProps> = ({
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    const codingPromptCheck = evaluateCodingPromptConstraints(userMessage.content);
+    if (codingPromptCheck.isCodingRequest && !codingPromptCheck.isReady) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `assistant-${Date.now()}`,
+          role: "assistant",
+          content: buildPromptCoachingMessage(codingPromptCheck.missing),
+          timestamp: Date.now()
+        }
+      ]);
+      return;
+    }
+
     setIsStreaming(true);
     recordAIMessage();
     setRemainingMessages(getRemainingAIMessages());
@@ -228,7 +248,9 @@ export const AIChatbot: FC<AIChatbotProps> = ({
           {
             contents,
             tools: [getAgentToolDeclarations()],
-            systemInstruction: systemPromptOverride
+            systemInstruction: codingPromptCheck.isCodingRequest
+              ? `${systemPromptOverride}\n\n${buildCodingSystemConstraintBlock()}`
+              : systemPromptOverride
           },
           executeToolExecutor
         );

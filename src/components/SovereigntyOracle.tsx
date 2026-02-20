@@ -34,9 +34,32 @@ export const SovereigntyOracle: FC = () => {
             score,
             status: score > 80 ? "سيادة مطلقة" : score > 50 ? "تحت السيطرة" : "اختراق أمني",
             color: score > 80 ? "emerald" : score > 50 ? "amber" : "rose",
-            chaosScore: entropy.entropyScore
+            chaosScore: entropy.entropyScore,
+            level: Math.floor(xp / 100)
         };
     }, [nodes, xp]);
+
+    const suggestedActions = useMemo(() => {
+        if (metrics.score <= 50) {
+            return [
+                "اقفل أي مواجهة جديدة لمدة 24 ساعة واشتغل على التنفس أو التهدئة.",
+                "حرّك أعلى علاقة استنزاف للمدار الأحمر فورًا.",
+                "اختَر خطوة واحدة فقط النهارده ونفّذها بدون فتح ملفات جديدة."
+            ];
+        }
+        if (metrics.score <= 80) {
+            return [
+                "حدّد علاقة واحدة محورية وابدأ معاها تدخل تدريجي.",
+                "نفّذ دقيقة شحن واحدة قبل أي قرار مهم.",
+                "راجع حدودك في موقف واحد وفعّل جملة جاهزة لـ\"لا\"."
+            ];
+        }
+        return [
+            "ثبت مكاسبك: استمر على نفس نمط الحدود لمدة 3 أيام.",
+            "انقل علاقة واحدة من الأصفر للأخضر بخطوة تواصل واعية.",
+            "استثمر الطاقة في مهمة نمو جديدة بدل إطفاء حرائق."
+        ];
+    }, [metrics.score]);
 
     return (
         <motion.div
@@ -53,7 +76,7 @@ export const SovereigntyOracle: FC = () => {
                         <Shield className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-black text-white uppercase tracking-widest">Sovereignty Oracle</h3>
+                        <h3 className="text-sm font-black text-white tracking-widest">مؤشر السيادة</h3>
                         <p className={`text-[10px] font-bold text-${metrics.color}-400/80`}>{metrics.status}</p>
                     </div>
                 </div>
@@ -79,7 +102,7 @@ export const SovereigntyOracle: FC = () => {
                 <div className="p-3 bg-black/20 rounded-xl border border-white/5">
                     <div className="flex items-center gap-2 mb-1">
                         <Zap className="w-3 h-3 text-yellow-400" />
-                        <span className="text-[10px] text-slate-400">الفوضى (Entropy)</span>
+                        <span className="text-[10px] text-slate-400">مؤشر الفوضى</span>
                     </div>
                     <div className="text-sm font-bold text-slate-200">{metrics.chaosScore}%</div>
                 </div>
@@ -88,8 +111,17 @@ export const SovereigntyOracle: FC = () => {
                         <Info className="w-3 h-3 text-blue-400" />
                         <span className="text-[10px] text-slate-400">السيادة القتالية</span>
                     </div>
-                    <div className="text-sm font-bold text-slate-200">LVL {Math.floor(xp / 100)}</div>
+                    <div className="text-sm font-bold text-slate-200">المستوى {metrics.level}</div>
                 </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-black/20 rounded-xl border border-white/5">
+                <p className="text-[10px] font-bold text-slate-300 mb-2">إجراءات مقترحة حسب حالتك</p>
+                <ul className="space-y-1.5 text-[11px] text-slate-300 leading-relaxed">
+                    {suggestedActions.map((action, idx) => (
+                        <li key={idx}>• {action}</li>
+                    ))}
+                </ul>
             </div>
         </motion.div>
     );

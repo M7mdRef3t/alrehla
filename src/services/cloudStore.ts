@@ -1,6 +1,8 @@
 import { getAuthToken } from "../state/authState";
 import { runtimeEnv } from "../config/runtimeEnv";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
+import { CircuitBreaker } from "../architecture/circuitBreaker";
+import { fetchJsonWithResilience, sendJsonWithResilience } from "../architecture/resilientHttp";
 
 const DEVICE_TOKEN_KEY = "dawayir-device-token";
 const EXCLUDED_KEYS = new Set([
@@ -13,7 +15,20 @@ const EXCLUDED_KEYS = new Set([
 
 const API_BASE = runtimeEnv.adminApiBase;
 const USER_STATE_ENDPOINT = `${API_BASE}/api/user/state`;
-const REMOTE_SYNC_ENABLED = Boolean(API_BASE);
+
+function isCrossOriginDevEndpoint(): boolean {
+  if (typeof window === "undefined") return false;
+  if (!runtimeEnv.isDev || !API_BASE) return false;
+  try {
+    const apiOrigin = new URL(API_BASE, window.location.origin).origin;
+    return apiOrigin !== window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
+const REMOTE_SYNC_ENABLED = Boolean(API_BASE) && !isCrossOriginDevEndpoint();
+const cloudStoreBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
 
 let remoteCache: Record<string, string> | null = null;
 let remoteLoaded = false;
@@ -21,6 +36,7 @@ let remoteLoading: Promise<void> | null = null;
 let pendingUpdates: Record<string, string> = {};
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
 let lastIdentityKey: string | null = null;
+let syncFailureCount = 0;
 
 function isBrowser(): boolean {
   return typeof window !== "undefined";
@@ -78,14 +94,15 @@ async function loadRemoteState(): Promise<void> {
       return;
     }
     try {
-      const res = await fetch(USER_STATE_ENDPOINT, {
-        headers
-      });
-      if (!res.ok) {
+      const data = await fetchJsonWithResilience<{ data?: Record<string, string> }>(
+        USER_STATE_ENDPOINT,
+        { headers },
+        { retries: 1, breaker: cloudStoreBreaker }
+      );
+      if (!data) {
         remoteLoaded = true;
         return;
       }
-      const data = await res.json();
       remoteCache = typeof data?.data === "object" && data.data ? data.data : {};
       remoteLoaded = true;
     } catch {
@@ -109,11 +126,19 @@ export async function fetchRemoteState(): Promise<Record<string, string>> {
   return remoteCache ?? {};
 }
 
+function nextSyncDelayMs(): number {
+  const base = 800;
+  const cappedExp = Math.min(syncFailureCount, 6);
+  const backoff = base * (2 ** cappedExp);
+  const jitter = Math.floor(Math.random() * 250);
+  return Math.min(30_000, backoff + jitter);
+}
+
 function scheduleSync(): void {
   if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
     void flushUpdates();
-  }, 800);
+  }, nextSyncDelayMs());
 }
 
 export function queueRemoteSet(key: string, value: string): void {
@@ -133,19 +158,21 @@ async function flushUpdates(): Promise<void> {
   const headers = buildHeaders();
   if (!headers["x-device-token"] && !headers.Authorization) return;
   try {
-    const res = await fetch(USER_STATE_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...headers
-      },
-      body: JSON.stringify({ data: updates })
-    });
-    if (!res.ok) {
+    const ok = await sendJsonWithResilience(
+      USER_STATE_ENDPOINT,
+      { data: updates },
+      { headers },
+      { retries: 1, breaker: cloudStoreBreaker }
+    );
+    if (!ok) {
+      syncFailureCount += 1;
       pendingUpdates = { ...updates, ...pendingUpdates };
       scheduleSync();
+      return;
     }
+    syncFailureCount = 0;
   } catch {
+    syncFailureCount += 1;
     pendingUpdates = { ...updates, ...pendingUpdates };
     scheduleSync();
   }
@@ -155,17 +182,5 @@ export async function pushRemoteState(data: Record<string, string>): Promise<boo
   if (!REMOTE_SYNC_ENABLED) return false;
   const headers = buildHeaders();
   if (!headers["x-device-token"] && !headers.Authorization) return false;
-  try {
-    const res = await fetch(USER_STATE_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...headers
-      },
-      body: JSON.stringify({ data })
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
+  return sendJsonWithResilience(USER_STATE_ENDPOINT, { data }, { headers }, { retries: 1, breaker: cloudStoreBreaker });
 }

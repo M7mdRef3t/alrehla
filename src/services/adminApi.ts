@@ -1,7 +1,8 @@
 import { supabase, isSupabaseReady } from "./supabaseClient";
-import { useAdminState, ADMIN_ACCESS_CODE } from "../state/adminState";
 import { getAuthToken } from "../state/authState";
 import { runtimeEnv } from "../config/runtimeEnv";
+import { CircuitBreaker } from "../architecture/circuitBreaker";
+import { fetchJsonWithResilience, sendJsonWithResilience } from "../architecture/resilientHttp";
 import type { FeatureFlagKey, FeatureFlagMode } from "../config/features";
 import type {
   ScoringWeights,
@@ -27,6 +28,8 @@ type SystemSettingKey =
 const SETTINGS_TABLE = "system_settings";
 const ADMIN_API_BASE = runtimeEnv.adminApiBase;
 const ADMIN_API_PATH = `${ADMIN_API_BASE}/api/admin`;
+const adminApiBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
+const securityWebhookBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 60_000 });
 const HOBBY_REMAP_BASES = new Set([
   "daily-report",
   "weekly-report",
@@ -51,31 +54,36 @@ function buildAdminQuery(path: string): string {
   return `path=${encodeURIComponent(pathPart)}${queryPart ? `&${queryPart}` : ""}`;
 }
 
-function getAdminCode(): string | null {
-  const state = useAdminState.getState();
-  return state.adminCode || runtimeEnv.adminCode || ADMIN_ACCESS_CODE || null;
+function isCrossOriginDevAdminApi(): boolean {
+  if (typeof window === "undefined") return false;
+  if (!runtimeEnv.isDev || !ADMIN_API_BASE) return false;
+  try {
+    const apiOrigin = new URL(ADMIN_API_BASE, window.location.origin).origin;
+    return apiOrigin !== window.location.origin;
+  } catch {
+    return false;
+  }
 }
 
 export async function callAdminApi<T>(path: string, options?: RequestInit): Promise<T | null> {
-  const code = getAdminCode();
+  // In local dev, avoid calling a cross-origin admin API directly from browser
+  // to prevent CORS console noise and fallback to local sources gracefully.
+  if (isCrossOriginDevAdminApi()) return null;
   const authToken = getAuthToken();
-  if (!code && !authToken) return null;
+  if (!authToken) return null;
   const query = buildAdminQuery(path);
-  try {
-    const res = await fetch(`${ADMIN_API_PATH}?${query}`, {
+  return fetchJsonWithResilience<T>(
+    `${ADMIN_API_PATH}?${query}`,
+    {
       ...options,
       headers: {
         "Content-Type": "application/json",
-        ...(code ? { "x-admin-code": code } : {}),
         ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         ...(options?.headers ?? {})
       }
-    });
-    if (!res.ok) return null;
-    return (await res.json()) as T;
-  } catch {
-    return null;
-  }
+    },
+    { retries: 1, breaker: adminApiBreaker }
+  );
 }
 
 const toSettingMap = (rows: Array<{ key: string; value: unknown }>) => {
@@ -838,6 +846,35 @@ export interface SystemHealthReport {
     p95LatencyMs: number;
     lastErrorAt: string | null;
   };
+}
+
+export interface SecuritySignalsReport {
+  generatedAt: string;
+  status: "healthy" | "warning" | "critical";
+  config: {
+    adminSecretStrong: boolean;
+    serviceRoleConfigured: boolean;
+    secureTransportConfigured: boolean;
+  };
+  metrics: {
+    authFailed15m: number;
+    authRateLimited15m: number;
+    adminErrors15m: number;
+  };
+  incidents: Array<{
+    action: string;
+    createdAt: string;
+    payload: Record<string, unknown>;
+  }>;
+  warnings: string[];
+}
+
+export interface OwnerOpsReport {
+  generatedAt: string;
+  status: "healthy" | "warning" | "critical";
+  systemHealth: SystemHealthReport | null;
+  securitySignals: SecuritySignalsReport | null;
+  ownerAlerts: OwnerAlertsResponse | null;
 }
 
 export interface JourneyMapSnapshot {
@@ -1731,4 +1768,33 @@ export async function fetchExecutiveReport(): Promise<ExecutiveReport | null> {
 export async function fetchSystemHealth(): Promise<SystemHealthReport | null> {
   const apiData = await callAdminApi<SystemHealthReport>("overview?kind=system-health");
   return apiData ?? null;
+}
+
+export async function fetchSecuritySignals(): Promise<SecuritySignalsReport | null> {
+  const apiData = await callAdminApi<SecuritySignalsReport>("overview?kind=security-signals");
+  return apiData ?? null;
+}
+
+export async function fetchOwnerOpsReport(): Promise<OwnerOpsReport | null> {
+  const apiData = await callAdminApi<OwnerOpsReport>("overview?kind=owner-ops");
+  return apiData ?? null;
+}
+
+export async function sendOwnerSecurityWebhook(payload: {
+  generatedAt: string;
+  status: "healthy" | "warning" | "critical";
+  warnings: string[];
+  metrics: SecuritySignalsReport["metrics"];
+}): Promise<boolean> {
+  const url = runtimeEnv.ownerSecurityWebhookUrl;
+  if (!url) return false;
+  return sendJsonWithResilience(
+    url,
+    {
+      source: "dawayir-owner-security-sentinel",
+      ...payload
+    },
+    {},
+    { retries: 1, breaker: securityWebhookBreaker }
+  );
 }

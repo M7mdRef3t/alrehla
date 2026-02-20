@@ -111,10 +111,6 @@ export function trackPageView(pageName: string): void {
     });
   }
 
-  // Dev logging
-  if (runtimeEnv.isDev) {
-    console.warn(`[Analytics] Page: ${pageName}`);
-  }
 }
 
 // Track custom event
@@ -130,10 +126,6 @@ export function trackEvent(
     windowRef.gtag("event", eventName, params);
   }
 
-  // Dev logging
-  if (runtimeEnv.isDev) {
-    console.warn(`[Analytics] Event: ${eventName}`, params);
-  }
 }
 
 // Predefined events

@@ -16,7 +16,8 @@ type RuntimeKey =
   | "VITE_SENTRY_DSN"
   | "VITE_SENTRY_TRACES_SAMPLE_RATE"
   | "VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE"
-  | "VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE";
+  | "VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE"
+  | "VITE_OWNER_SECURITY_WEBHOOK_URL";
 
 /** Safe accessor for process.env that never throws in browser/Vite */
 function safeProcessEnv(): Record<string, unknown> {
@@ -94,5 +95,6 @@ export const runtimeEnv = {
   sentryDsn: readEnv("VITE_SENTRY_DSN"),
   sentryTracesSampleRate: readEnv("VITE_SENTRY_TRACES_SAMPLE_RATE"),
   sentryReplaysSessionSampleRate: readEnv("VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE"),
-  sentryReplaysOnErrorSampleRate: readEnv("VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE")
+  sentryReplaysOnErrorSampleRate: readEnv("VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE"),
+  ownerSecurityWebhookUrl: readEnv("VITE_OWNER_SECURITY_WEBHOOK_URL")
 } as const;

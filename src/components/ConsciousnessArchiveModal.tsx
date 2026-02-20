@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, Brain } from "lucide-react";
 import { consciousnessService, type MemoryMatch } from "../services/consciousnessService";
+import { LiveStatusBar } from "./shared/LiveStatusBar";
 
 interface ConsciousnessArchiveModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export const ConsciousnessArchiveModal: FC<ConsciousnessArchiveModalProps> = ({ 
   const [items, setItems] = useState<MemoryMatch[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const [sourceFilter, setSourceFilter] = useState<"all" | "pulse" | "chat" | "note">("all");
 
   useEffect(() => {
@@ -23,6 +25,7 @@ export const ConsciousnessArchiveModal: FC<ConsciousnessArchiveModalProps> = ({ 
       .fetchArchive({ limit: 200 })
       .then((data) => {
         setItems(data);
+        setLastUpdatedAt(Date.now());
       })
       .catch((err: unknown) => {
         console.error("ConsciousnessArchive error:", err);
@@ -124,6 +127,14 @@ export const ConsciousnessArchiveModal: FC<ConsciousnessArchiveModalProps> = ({ 
                 </button>
               </div>
             </div>
+            <div className="px-4 pt-2">
+              <LiveStatusBar
+                title="مصدر الأرشيف"
+                mode={error ? "fallback" : "live"}
+                isLoading={loading}
+                lastUpdatedAt={lastUpdatedAt}
+              />
+            </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-slate-50/60">
               {loading && (
@@ -204,4 +215,3 @@ export const ConsciousnessArchiveModal: FC<ConsciousnessArchiveModalProps> = ({ 
     </AnimatePresence>
   );
 };
-

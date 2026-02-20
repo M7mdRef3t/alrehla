@@ -6,6 +6,7 @@ import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { AnalyticsConsentBanner } from "../src/components/AnalyticsConsentBanner";
 import { initAnalytics } from "../src/services/analytics";
 import { initMonitoring } from "../src/services/monitoring";
+import { runtimeEnv } from "../src/config/runtimeEnv";
 
 const Analytics = lazy(() => import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })));
 const SpeedInsights = lazy(() => import("@vercel/speed-insights/react").then((m) => ({ default: m.SpeedInsights })));
@@ -36,10 +37,12 @@ export function ClientApp() {
     <ErrorBoundary>
       <App />
       <AnalyticsConsentBanner />
-      <Suspense fallback={null}>
-        <Analytics />
-        <SpeedInsights />
-      </Suspense>
+      {runtimeEnv.isProd && (
+        <Suspense fallback={null}>
+          <Analytics />
+          <SpeedInsights />
+        </Suspense>
+      )}
     </ErrorBoundary>
   );
 }

@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -30,6 +32,12 @@ jobs:
 
       - name: Arabic Encoding Guard
         run: npm run check:arabic-encoding
+
+      - name: Logic Flow Gate
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          LOGIC_FLOW_BASE_REF: ${{ github.base_ref }}
+        run: npm run logic-flow:gate
 
       - name: Unit Tests
         run: npm run test:run

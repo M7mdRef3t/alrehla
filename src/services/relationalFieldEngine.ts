@@ -13,9 +13,38 @@ const DAY_MS = 24 * HOUR_MS;
 const WINDOW_MS = 7 * DAY_MS;
 const BUCKET_MS = 6 * HOUR_MS;
 const BUCKET_COUNT = WINDOW_MS / BUCKET_MS; // 28 buckets
+const MAX_RELATIONAL_NODES = 320;
+const MAX_RELATIONAL_PULSES = 240;
+const MAX_RELATIONAL_SIGNALS = 600;
+const MAX_RELATIONAL_EVENTS = 900;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function byTimestampDesc<T extends { timestamp: number }>(a: T, b: T): number {
+  return b.timestamp - a.timestamp;
+}
+
+function takeNewest<T extends { timestamp: number }>(items: T[], limit: number): T[] {
+  if (items.length <= limit) return items;
+  return [...items].sort(byTimestampDesc).slice(0, limit);
+}
+
+function rankNodeForAnalysis(node: MapNode): number {
+  const ringWeight = node.ring === "red" ? 3 : node.ring === "yellow" ? 2 : 1;
+  const archivedPenalty = node.isNodeArchived ? -10 : 0;
+  const detachmentWeight = node.detachmentMode || node.isDetached ? 2 : 0;
+  const scoreWeight = (node.analysis?.score ?? 5) / 5;
+  const ruminationWeight = (node.recoveryProgress?.ruminationLogCount ?? 0) / 4;
+  return ringWeight + detachmentWeight + scoreWeight + ruminationWeight + archivedPenalty;
+}
+
+function takeMostRelevantNodes(nodes: MapNode[], limit: number): MapNode[] {
+  if (nodes.length <= limit) return nodes;
+  return [...nodes]
+    .sort((a, b) => rankNodeForAnalysis(b) - rankNodeForAnalysis(a))
+    .slice(0, limit);
 }
 
 function average(values: number[]): number {
@@ -604,10 +633,22 @@ function buildTwinDecision(input: {
 
 export function buildRelationalFieldSnapshot(input: BuildRelationalFieldInput): RelationalFieldSnapshot {
   const now = input.now ?? Date.now();
-  const nodes = input.nodes.filter((node) => !node.isNodeArchived);
-  const pulses = input.pulses.filter((entry) => now - entry.timestamp <= WINDOW_MS);
-  const signals = input.signals.filter((signal) => now - signal.timestamp <= WINDOW_MS);
-  const journeyEvents = input.journeyEvents.filter((event) => now - event.timestamp <= WINDOW_MS);
+  const nodes = takeMostRelevantNodes(
+    input.nodes.filter((node) => !node.isNodeArchived),
+    MAX_RELATIONAL_NODES
+  );
+  const pulses = takeNewest(
+    input.pulses.filter((entry) => now - entry.timestamp <= WINDOW_MS),
+    MAX_RELATIONAL_PULSES
+  );
+  const signals = takeNewest(
+    input.signals.filter((signal) => now - signal.timestamp <= WINDOW_MS),
+    MAX_RELATIONAL_SIGNALS
+  );
+  const journeyEvents = takeNewest(
+    input.journeyEvents.filter((event) => now - event.timestamp <= WINDOW_MS),
+    MAX_RELATIONAL_EVENTS
+  );
   const shadowScores = input.shadowScores ?? {};
 
   const series = buildStressSeries(signals, pulses, journeyEvents, now);

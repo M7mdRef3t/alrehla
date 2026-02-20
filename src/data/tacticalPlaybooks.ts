@@ -55,14 +55,14 @@ export const TACTICAL_PLAYBOOKS: Playbook[] = [
         steps: [
             {
                 id: "no_contact",
-                title: "قطع الإمداد (No Contact)",
-                description: "توقف عن إعطاء أي رد فعل (غضب أو حب). النرجسي يتغذى على الانفعالات.",
+                title: "قطع الإمداد",
+                description: "توقف عن إعطاء أي رد فعل (غضب أو حب). الشخص المتلاعب يتغذى على الانفعالات.",
                 isCritical: true
             },
             {
                 id: "rebuild_reality",
                 title: "إعادة بناء الواقع",
-                description: "ابحث عن شهود عيان أو سجلات لتتأكد من ذاكرتك ضد بروتوكول الـ 'Gaslighting'."
+                description: "ارجع لشهود أو سجلات مكتوبة لتتأكد من ذاكرتك ضد التشكيك المتعمد في إدراكك."
             }
         ]
     }

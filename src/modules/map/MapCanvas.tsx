@@ -116,6 +116,10 @@ const NODE_GLOW_CLASS: Record<Ring, string> = {
   green: "node-threat-safe"
 };
 
+const MAX_NODES_FOR_FULL_CONNECTIONS = 140;
+const MAX_NODES_FOR_INTERFERENCE_SCAN = 220;
+const MAX_NODES_FOR_FULL_MOTION = 120;
+
 /* ── Map Node View (Glass Orb) ── */
 
 interface NodeProps {
@@ -128,12 +132,13 @@ interface NodeProps {
   justDraggedId?: string | null;
   justAdded?: boolean;
   isHighlighted?: boolean;
+  isTouchDevice?: boolean;
+  reduceMotion?: boolean;
 }
 
-const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, canOpenDetails = true, justDraggedId, justAdded, isHighlighted }) => {
+const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, canOpenDetails = true, justDraggedId, justAdded, isHighlighted, isTouchDevice = false, reduceMotion = false }) => {
   const [showDelete, setShowDelete] = useState(false);
   const [pulseDone, setPulseDone] = useState(false);
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const archiveNode = useMapState((s) => s.archiveNode);
 
   useEffect(() => {
@@ -145,19 +150,6 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
       setPulseDone(false);
     }
   }, [isHighlighted]);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
-    const media = window.matchMedia("(hover: none)");
-    const sync = () => setIsTouchDevice(media.matches);
-    sync();
-    if (typeof media.addEventListener === "function") {
-      media.addEventListener("change", sync);
-      return () => media.removeEventListener("change", sync);
-    }
-    media.addListener(sync);
-    return () => media.removeListener(sync);
-  }, []);
 
   const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({ id: node.id });
 
@@ -236,7 +228,9 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           border: `1.5px solid ${auraBorderColor}`,
           boxShadow: `0 0 20px ${auraColor}`
         }}
-        animate={isHighlighted && !pulseDone
+        animate={reduceMotion
+          ? undefined
+          : isHighlighted && !pulseDone
           ? {
             opacity: [0.6, 1, 0.6],
             scale: [1, 1.25, 1],
@@ -250,7 +244,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
             y: [0, -1.2, 1.8, -0.8, 0]
           }
         }
-        transition={{
+        transition={reduceMotion ? undefined : {
           duration: isHighlighted && !pulseDone ? 1.2 : 6 + (nodeIndex % 3),
           repeat: Infinity,
           ease: isHighlighted && !pulseDone ? "easeOut" : "easeInOut",
@@ -265,12 +259,12 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           } ${isDetached ? "saturate-50 opacity-60" : ""
           } ${hasMismatch ? "border-amber-500/50!" : ""
           }`}
-        animate={!isDragging ? {
+        animate={!isDragging && !reduceMotion ? {
           y: [0, -4, 2, -1, 0],
           x: [0, 2, -3, 1, 0],
           rotate: [0, 1, -1, 0.5, 0]
         } : {}}
-        transition={{
+        transition={reduceMotion ? undefined : {
           duration: 9 + (nodeIndex % 4),
           repeat: Infinity,
           ease: "easeInOut",
@@ -309,8 +303,8 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
                 ? `اضغط لرؤية تفاصيل ${node.label}`
                 : "التفاصيل مقفولة حالياً"
           }
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
+          whileHover={reduceMotion ? undefined : { scale: 1.02 }}
+          whileTap={reduceMotion ? undefined : { scale: 0.97 }}
           transition={{ type: "spring", stiffness: 200, damping: 30 }}
         >
           <span className="flex flex-col items-start">
@@ -355,7 +349,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
             background: "linear-gradient(135deg, #fbbf24, #f59e0b)",
             boxShadow: "0 0 12px rgba(251, 191, 36, 0.4)"
           }}
-          animate={{
+          animate={reduceMotion ? undefined : {
             scale: [1, 1.15, 1],
             boxShadow: [
               "0 0 8px rgba(251, 191, 36, 0.3)",
@@ -363,7 +357,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
               "0 0 8px rgba(251, 191, 36, 0.3)"
             ]
           }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          transition={reduceMotion ? undefined : { duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
           <span className="text-white text-[10px] font-bold">!</span>
         </motion.div>
@@ -408,6 +402,8 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     prev.justDraggedId === next.justDraggedId &&
     prev.justAdded === next.justAdded &&
     prev.isHighlighted === next.isHighlighted &&
+    prev.isTouchDevice === next.isTouchDevice &&
+    prev.reduceMotion === next.reduceMotion &&
     (prev.position?.x ?? null) === (next.position?.x ?? null) &&
     (prev.position?.y ?? null) === (next.position?.y ?? null) &&
     prev.onClick === next.onClick
@@ -541,6 +537,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
   }, [archivedCount, allNodes]);
 
   const [showDragHint, setShowDragHint] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   useEffect(() => {
     // Only show hint if no nodes yet, or specifically if onboarding not seen
     if (!hasSeenOnboarding() || (nodes.length > 0 && nodes.length < 3)) {
@@ -548,6 +545,19 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
       return () => clearTimeout(t);
     }
   }, [nodes.length]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia("(hover: none)");
+    const sync = () => setIsTouchDevice(media.matches);
+    sync();
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", sync);
+      return () => media.removeEventListener("change", sync);
+    }
+    media.addListener(sync);
+    return () => media.removeListener(sync);
+  }, []);
 
   const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
   const setDetached = useMapState((s) => s.setDetached);
@@ -623,6 +633,10 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
     };
   }, [nodes]);
 
+  const shouldUseLightweightRendering = nodes.length > MAX_NODES_FOR_FULL_CONNECTIONS;
+  const shouldSkipInterferenceScan = nodes.length > MAX_NODES_FOR_INTERFERENCE_SCAN;
+  const shouldReduceMotion = nodes.length > MAX_NODES_FOR_FULL_MOTION;
+
   const nodePositions = useMemo(() => {
     const posMap: Record<string, { x: number; y: number }> = {};
     detachedNodes.forEach((node, idx) => {
@@ -637,6 +651,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
   }, [detachedNodes, nodesByRing]);
 
   const connectionThreads = useMemo(() => {
+    if (shouldUseLightweightRendering) return [];
     const lines: Array<{ id: string; x1: number; y1: number; x2: number; y2: number; color: string }> = [];
     const goalGroups: Record<string, typeof nodes> = {};
 
@@ -677,9 +692,10 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
       }
     });
     return lines;
-  }, [nodes, nodePositions]);
+  }, [nodes, nodePositions, shouldUseLightweightRendering]);
 
   const interferenceLines = useMemo(() => {
+    if (shouldSkipInterferenceScan) return [];
     const findings = analyzeMapInterference(nodes);
     const lines: Array<{ id: string; x1: number; y1: number; x2: number; y2: number }> = [];
 
@@ -697,7 +713,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
       }
     });
     return lines;
-  }, [nodes, nodePositions]);
+  }, [nodes, nodePositions, shouldSkipInterferenceScan]);
 
   const { viewBox } = useMemo(() => {
     if (!highlightNodeId) return { viewBox: "0 0 100 100" };
@@ -736,11 +752,16 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
         )}
         <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
           <div className="absolute inset-0">
+            {shouldUseLightweightRendering && (
+              <div className="absolute top-2 right-2 z-[70] rounded-xl bg-slate-900/80 border border-slate-700 px-2.5 py-1.5 text-[10px] text-slate-300">
+                تم تفعيل وضع الأداء العالي لعرض خفيف
+              </div>
+            )}
             <motion.svg
               viewBox={viewBox}
               className="w-full h-full"
-              animate={{ viewBox }}
-              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              animate={shouldReduceMotion ? undefined : { viewBox }}
+              transition={shouldReduceMotion ? undefined : { duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             >
               {/* SVG Gradients for cosmic orb */}
               <defs>
@@ -775,14 +796,14 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
                   stroke={line.color}
                   strokeWidth={0.4}
                   strokeDasharray="1 2"
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 1 }}
-                  transition={{ duration: 1.5, ease: "easeInOut" }}
+                  initial={shouldReduceMotion ? false : { pathLength: 0, opacity: 0 }}
+                  animate={shouldReduceMotion ? { opacity: 0.9 } : { pathLength: 1, opacity: 1 }}
+                  transition={shouldReduceMotion ? { duration: 0.2 } : { duration: 1.5, ease: "easeInOut" }}
                 />
               ))}
 
               {/* 🛰️ Sync Circles / Interference Waves */}
-              {interferenceLines.map((line) => (
+              {!shouldReduceMotion && interferenceLines.map((line) => (
                 <motion.line
                   key={line.id}
                   x1={line.x1}
@@ -805,30 +826,30 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
               ))}
 
               {/* ── Orbital Rings (Breathing) ── */}
-              <OrbitalRing
+              {!shouldReduceMotion && <OrbitalRing
                 ring="red"
                 label="دائرة الخطر والاستنزاف"
                 radius={40}
                 color={RING_COLORS.danger.stroke}
                 glowColor={RING_COLORS.danger.glow}
                 breatheDuration={5}
-              />
-              <OrbitalRing
+              />}
+              {!shouldReduceMotion && <OrbitalRing
                 ring="yellow"
                 label="دائرة القرب المشروط"
                 radius={29}
                 color={RING_COLORS.caution.stroke}
                 glowColor={RING_COLORS.caution.glow}
                 breatheDuration={4.5}
-              />
-              <OrbitalRing
+              />}
+              {!shouldReduceMotion && <OrbitalRing
                 ring="green"
                 label="دائرة القرب الصحي"
                 radius={18}
                 color={RING_COLORS.safe.stroke}
                 glowColor={RING_COLORS.safe.glow}
                 breatheDuration={4}
-              />
+              />}
 
               {/* ── Detachment Zone (Dashed Orbit) ── */}
               <motion.circle
@@ -840,8 +861,8 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
                 strokeWidth={1}
                 strokeDasharray="2 2.5"
                 className="pointer-events-none"
-                animate={{ opacity: [0.2, 0.4, 0.2] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                animate={shouldReduceMotion ? { opacity: 0.28 } : { opacity: [0.2, 0.4, 0.2] }}
+                transition={shouldReduceMotion ? { duration: 0.2 } : { duration: 6, repeat: Infinity, ease: "easeInOut" }}
               />
 
               {/* ── Center "Me" — Cosmic Orb ── */}
@@ -854,10 +875,10 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
                   fill="none"
                   stroke={battery === "drained" ? "rgba(148, 163, 184, 0.1)" : "rgba(45, 212, 191, 0.12)"}
                   strokeWidth="0.5"
-                  animate={{
+                  animate={shouldReduceMotion ? { opacity: 0.35 } : {
                     opacity: [0.3, 0.15, 0.3]
                   }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  transition={shouldReduceMotion ? { duration: 0.2 } : { duration: 4, repeat: Infinity, ease: "easeInOut" }}
                 />
                 {/* Main orb */}
                 <motion.circle
@@ -865,11 +886,11 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
                   cy="50"
                   r={6}
                   fill={meStyle.fill}
-                  animate={{
+                  animate={shouldReduceMotion ? undefined : {
                     scale: meStyle.pulseScale,
                     opacity: battery === "drained" ? [0.6, 0.8, 0.6] : [0.85, 1, 0.85]
                   }}
-                  transition={{
+                  transition={shouldReduceMotion ? undefined : {
                     duration: battery === "charged" ? 2.5 : 3.5,
                     repeat: Infinity,
                     ease: "easeInOut"
@@ -898,7 +919,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
 
               {/* ── Drag Assist Hint ── */}
               <AnimatePresence>
-                {showDragHint && (
+                {!shouldReduceMotion && showDragHint && (
                   <motion.g
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -957,6 +978,8 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
                         justDraggedId={justDraggedId}
                         justAdded={lastAddedNodeId === node.id}
                         isHighlighted={highlightNodeId === node.id}
+                        isTouchDevice={isTouchDevice}
+                        reduceMotion={shouldReduceMotion}
                       />
                     );
                   })}
@@ -972,6 +995,8 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
                       justDraggedId={justDraggedId}
                       justAdded={lastAddedNodeId === node.id}
                       isHighlighted={highlightNodeId === node.id}
+                      isTouchDevice={isTouchDevice}
+                      reduceMotion={shouldReduceMotion}
                     />
                   ))}
                 </AnimatePresence>

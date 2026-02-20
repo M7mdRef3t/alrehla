@@ -1049,6 +1049,138 @@ async function handleSystemHealth(client: any, res: any) {
   });
 }
 
+async function handleSecuritySignals(client: any, res: any) {
+  const now = Date.now();
+  const since15mIso = new Date(now - 15 * 60 * 1000).toISOString();
+  const since24hIso = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: recentAuditRows, error: auditError } = await client
+    .from("admin_audit_logs")
+    .select("action,payload,created_at")
+    .gte("created_at", since24hIso)
+    .order("created_at", { ascending: false })
+    .limit(1000);
+
+  if (auditError) {
+    res.status(200).json({
+      generatedAt: new Date().toISOString(),
+      status: "warning",
+      config: {
+        adminSecretStrong: (process.env.ADMIN_API_SECRET || "").trim().length >= 16,
+        serviceRoleConfigured: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+        secureTransportConfigured: String(process.env.PUBLIC_APP_URL || "").startsWith("https://")
+      },
+      metrics: {
+        authFailed15m: 0,
+        authRateLimited15m: 0,
+        adminErrors15m: 0
+      },
+      incidents: [],
+      warnings: ["تعذر قراءة سجل تدقيق الأمان."]
+    });
+    return;
+  }
+
+  const rows = (recentAuditRows ?? []) as Array<Record<string, unknown>>;
+  const rows15m = rows.filter((row) => {
+    const createdAt = new Date(String(row.created_at ?? "")).getTime();
+    return Number.isFinite(createdAt) && createdAt >= Date.now() - 15 * 60 * 1000;
+  });
+
+  const authFailed15m = rows15m.filter((row) => String(row.action ?? "") === "admin_auth_failed").length;
+  const authRateLimited15m = rows15m.filter((row) => String(row.action ?? "") === "admin_auth_rate_limited").length;
+  const adminErrors15m = rows15m.filter((row) => String(row.action ?? "") === "admin_api_error").length;
+
+  const adminSecretStrong = (process.env.ADMIN_API_SECRET || "").trim().length >= 16;
+  const serviceRoleConfigured = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const secureTransportConfigured = String(process.env.PUBLIC_APP_URL || "").startsWith("https://");
+
+  const warnings: string[] = [];
+  if (!adminSecretStrong) warnings.push("ADMIN_API_SECRET غير مضبوط أو ضعيف (أقل من 16 حرف).");
+  if (!serviceRoleConfigured) warnings.push("SUPABASE_SERVICE_ROLE_KEY غير مضبوط.");
+  if (!secureTransportConfigured) warnings.push("PUBLIC_APP_URL لا يبدأ بـ https.");
+  if (authFailed15m > 0) warnings.push(`محاولات دخول فاشلة خلال 15 دقيقة: ${authFailed15m}`);
+  if (authRateLimited15m > 0) warnings.push(`تم تفعيل حظر محاولات الدخول ${authRateLimited15m} مرة خلال 15 دقيقة.`);
+  if (adminErrors15m > 0) warnings.push(`أخطاء Admin API خلال 15 دقيقة: ${adminErrors15m}`);
+
+  const status =
+    !adminSecretStrong || !serviceRoleConfigured || authRateLimited15m > 0 || adminErrors15m >= 3
+      ? "critical"
+      : warnings.length > 0
+        ? "warning"
+        : "healthy";
+
+  const incidents = rows
+    .filter((row) => {
+      const action = String(row.action ?? "");
+      return action === "admin_auth_failed" || action === "admin_auth_rate_limited" || action === "admin_api_error";
+    })
+    .slice(0, 12)
+    .map((row) => ({
+      action: String(row.action ?? "unknown"),
+      createdAt: String(row.created_at ?? ""),
+      payload: (row.payload as Record<string, unknown> | null) ?? {}
+    }));
+
+  res.status(200).json({
+    generatedAt: new Date().toISOString(),
+    status,
+    config: {
+      adminSecretStrong,
+      serviceRoleConfigured,
+      secureTransportConfigured
+    },
+    metrics: {
+      authFailed15m,
+      authRateLimited15m,
+      adminErrors15m
+    },
+    incidents,
+    warnings
+  });
+}
+
+async function captureJson(handler: (res: any) => Promise<void> | void): Promise<{ status: number; body: any }> {
+  let statusCode = 200;
+  let body: any = null;
+  const mockRes: any = {
+    status: (code: number) => {
+      statusCode = code;
+      return mockRes;
+    },
+    json: (data: any) => {
+      body = data;
+      return mockRes;
+    }
+  };
+  await handler(mockRes);
+  return { status: statusCode, body };
+}
+
+async function handleOwnerOps(client: any, req: any, res: any) {
+  const [systemHealth, securitySignals, ownerAlerts] = await Promise.all([
+    captureJson((mockRes) => handleSystemHealth(client, mockRes)),
+    captureJson((mockRes) => handleSecuritySignals(client, mockRes)),
+    captureJson((mockRes) => handleOwnerAlerts(client, req, mockRes))
+  ]);
+
+  const status =
+    (securitySignals.body?.status === "critical" || systemHealth.body?.status === "degraded")
+      ? "critical"
+      : (securitySignals.body?.status === "warning" ||
+         ownerAlerts.body?.phaseOne?.fullyCompleted === false)
+        ? "warning"
+        : "healthy";
+
+  res.status(200).json({
+    generatedAt: new Date().toISOString(),
+    status,
+    systemHealth: systemHealth.body ?? null,
+    securitySignals: securitySignals.body ?? null,
+    ownerAlerts: ownerAlerts.body ?? null
+  });
+}
+
 async function handleDailyReport(client: any, req: any, res: any) {
   const dateParam = String(req.query?.date ?? "");
   const baseDate = dateParam ? new Date(`${dateParam}T00:00:00Z`) : new Date();
@@ -1293,37 +1425,41 @@ async function handleCronReport(req: any, res: any) {
     return;
   }
 
+  const client = getAdminSupabase();
+  if (!client) {
+    res.status(503).json({ error: "Supabase not configured" });
+    return;
+  }
+
   const period = String(req.query?.period ?? "daily");
-  const reportKind = period === "weekly" ? "weekly-report" : "daily-report";
-  const endpoint = `/api/admin/overview?kind=${reportKind}&store=1`;
-
-  const baseUrl = process.env.PUBLIC_APP_URL || process.env.VERCEL_URL || "";
-  const host = req.headers?.host;
-  const proto = req.headers?.["x-forwarded-proto"] || "https";
-  const derived = host ? `${proto}://${host}` : "";
-  const normalized = baseUrl
-    ? (baseUrl.startsWith("http") ? baseUrl : `https://${baseUrl}`)
-    : derived;
-
-  if (!normalized) {
-    res.status(500).json({ error: "PUBLIC_APP_URL not set" });
-    return;
-  }
-  if (!process.env.ADMIN_API_SECRET) {
-    res.status(500).json({ error: "ADMIN_API_SECRET not set" });
-    return;
-  }
-
-  const reportRes = await fetch(`${normalized}${endpoint}`, {
-    headers: {
-      "x-admin-code": process.env.ADMIN_API_SECRET
+  const reportReq = {
+    ...req,
+    query: {
+      ...(req.query ?? {}),
+      store: "1"
     }
-  });
-  if (!reportRes.ok) {
+  };
+  let report: any = null;
+  let reportStatus = 200;
+  const reportRes: any = {
+    status: (s: number) => {
+      reportStatus = s;
+      return reportRes;
+    },
+    json: (data: any) => {
+      report = data;
+      return reportRes;
+    }
+  };
+  if (period === "weekly") {
+    await handleWeeklyReport(client, reportReq, reportRes);
+  } else {
+    await handleDailyReport(client, reportReq, reportRes);
+  }
+  if (reportStatus !== 200 || !report) {
     res.status(500).json({ error: "Failed to generate report" });
     return;
   }
-  const report = await reportRes.json();
 
   const title = period === "weekly" ? "Weekly Report - Al-Rehla" : "Daily Report - Al-Rehla";
   const summary = period === "weekly"
@@ -1371,6 +1507,8 @@ export async function overviewRouter(req: any, res: any) {
       if (kind === "ops-insights") return handleOpsInsights(client, res);
       if (kind === "executive-report") return handleExecutiveReport(client, res);
       if (kind === "system-health") return handleSystemHealth(client, res);
+      if (kind === "security-signals") return handleSecuritySignals(client, res);
+      if (kind === "owner-ops") return handleOwnerOps(client, req, res);
       if (kind === "feedback") return handleFeedback(client, req, res);
       if (kind === "support-tickets") return handleSupportTicketsGet(client, req, res);
       if (kind === "owner-alerts") return handleOwnerAlerts(client, req, res);

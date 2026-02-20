@@ -8,6 +8,7 @@ import { handleMissions } from "../../../server/admin/missions";
 import { handleBroadcasts } from "../../../server/admin/broadcasts";
 import { handleAiLogs } from "../../../server/admin/ai-logs";
 import { handleJourneyMap } from "../../../server/admin/journey-map";
+import { recordAdminAudit, verifyAdmin } from "../../../server/admin/_shared";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,34 @@ const ROUTES: Record<string, any> = {
     "journey-map": handleJourneyMap
 };
 
+const AUTH_WINDOW_MS = 10 * 60 * 1000;
+const MAX_FAILED_ATTEMPTS_PER_WINDOW = 8;
+const failedAttemptsByIp = new Map<string, number[]>();
+
+function getClientIp(req: NextRequest): string {
+    const forwardedFor = req.headers.get("x-forwarded-for") || "";
+    const firstForwarded = forwardedFor.split(",")[0]?.trim();
+    if (firstForwarded) return firstForwarded;
+    const realIp = req.headers.get("x-real-ip") || "";
+    if (realIp.trim()) return realIp.trim();
+    return "unknown";
+}
+
+function compactAndCountAttempts(ip: string, now: number): number {
+    const existing = failedAttemptsByIp.get(ip) ?? [];
+    const compacted = existing.filter((ts) => now - ts <= AUTH_WINDOW_MS);
+    failedAttemptsByIp.set(ip, compacted);
+    return compacted.length;
+}
+
+function registerFailedAttempt(ip: string, now: number): number {
+    const existing = failedAttemptsByIp.get(ip) ?? [];
+    const compacted = existing.filter((ts) => now - ts <= AUTH_WINDOW_MS);
+    compacted.push(now);
+    failedAttemptsByIp.set(ip, compacted);
+    return compacted.length;
+}
+
 export async function GET(req: NextRequest) { return runHandler(req); }
 export async function POST(req: NextRequest) { return runHandler(req); }
 export async function PUT(req: NextRequest) { return runHandler(req); }
@@ -33,15 +62,13 @@ async function runHandler(req: NextRequest) {
     const url = new URL(req.url);
     const query = Object.fromEntries(url.searchParams.entries());
     const path = query.path || "overview";
+    const ip = getClientIp(req);
+    const now = Date.now();
 
-    // Debug logging for the bridge
-    const code = req.headers.get("x-admin-code") || req.headers.get("X-Admin-Code");
-    console.log(`[Admin Bridge] ${req.method} ${path}`, {
-        hasCode: !!code,
-        hasAuth: !!req.headers.get("authorization")
-    });
-
-    const handler = ROUTES[path] || overviewRouter;
+    const handler = ROUTES[path];
+    if (!handler) {
+        return NextResponse.json({ error: "Not Found" }, { status: 404 });
+    }
 
     // Mock request object
     const mockReq: any = {
@@ -70,6 +97,33 @@ async function runHandler(req: NextRequest) {
         setHeader: (k: string, v: string) => { return mockRes; },
         end: () => mockRes
     };
+
+    const recentFailures = compactAndCountAttempts(ip, now);
+    if (recentFailures >= MAX_FAILED_ATTEMPTS_PER_WINDOW) {
+        await recordAdminAudit(mockReq, "admin_auth_rate_limited", {
+            path,
+            ip,
+            attemptsInWindow: recentFailures,
+            windowMs: AUTH_WINDOW_MS
+        });
+        return NextResponse.json(
+            { error: "Too many failed attempts. Try again later." },
+            { status: 429, headers: { "Retry-After": "600" } }
+        );
+    }
+
+    // Defense-in-depth: enforce auth/role check at bridge level before routing.
+    if (!(await verifyAdmin(mockReq, mockRes))) {
+        const attempts = registerFailedAttempt(ip, now);
+        await recordAdminAudit(mockReq, "admin_auth_failed", {
+            path,
+            ip,
+            attemptsInWindow: attempts,
+            windowMs: AUTH_WINDOW_MS,
+            status
+        });
+        return NextResponse.json(jsonResponse || { error: "Unauthorized" }, { status: status || 401 });
+    }
 
     try {
         await handler(mockReq, mockRes);

@@ -8,3 +8,9 @@ export type { ToolName } from "./tools";
 export { createAgentActions, resolvePersonFromNodes } from "./runner";
 export type { RunnerDeps } from "./runner";
 export { buildAgentSystemPrompt } from "./prompt";
+export {
+  evaluateCodingPromptConstraints,
+  buildCodingPromptTemplate,
+  buildPromptCoachingMessage,
+  buildCodingSystemConstraintBlock
+} from "./promptConstraints";

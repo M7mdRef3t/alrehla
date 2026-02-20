@@ -185,5 +185,3 @@ export function getScoringWeights(): ScoringWeights {
 export function getScoringThresholds(): ScoringThresholds {
   return useAdminState.getState().scoringThresholds ?? DEFAULT_THRESHOLDS;
 }
-
-export const ADMIN_ACCESS_CODE = "alrehla-admin";

@@ -4,6 +4,11 @@
 - concept.md
 - user-journey.md
 - pitch.md
+- investor-readiness-pack.md
+- investor-kpi-framework.md
+- investor-weekly-memo-template.md
+- investor-weekly-memo-example.md
+- investor-data-room-checklist.md
 - roles.md
 - release-waves-playbook.md
 - platform-constitution-summary.md

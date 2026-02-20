@@ -62,3 +62,45 @@ export function getModel(
     generationConfig
   });
 }
+
+const WINDOW_MS = 60_000;
+const REQUESTS_PER_MINUTE = 80;
+const MAX_IN_FLIGHT = 8;
+const requestTimes: number[] = [];
+let inFlight = 0;
+
+function pruneRequestTimes(now = Date.now()): void {
+  const min = now - WINDOW_MS;
+  while (requestTimes.length > 0 && requestTimes[0] < min) requestTimes.shift();
+}
+
+export function canAcceptGeminiRequest(now = Date.now()): boolean {
+  pruneRequestTimes(now);
+  if (inFlight >= MAX_IN_FLIGHT) return false;
+  if (requestTimes.length >= REQUESTS_PER_MINUTE) return false;
+  return true;
+}
+
+export function markGeminiRequestStart(now = Date.now()): void {
+  pruneRequestTimes(now);
+  requestTimes.push(now);
+  inFlight += 1;
+}
+
+export function markGeminiRequestEnd(): void {
+  inFlight = Math.max(0, inFlight - 1);
+}
+
+export async function withTimeout<T>(task: Promise<T>, timeoutMs = 18_000): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  try {
+    return await Promise.race([
+      task,
+      new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error("gemini_timeout")), timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}

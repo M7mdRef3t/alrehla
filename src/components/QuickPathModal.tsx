@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Zap, Wind, ArrowLeft } from "lucide-react";
+import { LiveStatusBar } from "./shared/LiveStatusBar";
 import {
     generateQuickPath,
     SITUATION_LABELS,
@@ -31,20 +32,30 @@ export const QuickPathModal: FC<QuickPathModalProps> = ({ onClose }) => {
     const [context, setContext] = useState("");
     const [result, setResult] = useState<QuickPathResult | null>(null);
     const [loading, setLoading] = useState(false);
+    const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+    const [generateError, setGenerateError] = useState<string | null>(null);
     const [breatheActive, setBreatheActive] = useState(false);
 
     const handleSituationSelect = (s: QuickPathSituation) => {
         setSelected(s);
+        setGenerateError(null);
         setStep("context");
     };
 
     const handleGenerate = useCallback(async () => {
         if (!selected) return;
         setLoading(true);
-        const r = await generateQuickPath(selected, context || undefined);
-        setResult(r);
-        setStep("result");
-        setLoading(false);
+        setGenerateError(null);
+        try {
+            const r = await generateQuickPath(selected, context || undefined);
+            setResult(r);
+            setLastUpdatedAt(Date.now());
+            setStep("result");
+        } catch {
+            setGenerateError("حصلت مشكلة أثناء تجهيز المسار. جرّب مرة تانية.");
+        } finally {
+            setLoading(false);
+        }
     }, [selected, context]);
 
     const handleBack = () => {
@@ -110,6 +121,12 @@ export const QuickPathModal: FC<QuickPathModalProps> = ({ onClose }) => {
                 </div>
 
                 <div className="px-5 pb-8 overflow-y-auto" style={{ maxHeight: "75dvh" }}>
+                    <LiveStatusBar
+                        title="حالة توليد المسار"
+                        mode={result ? "live" : "fallback"}
+                        isLoading={loading}
+                        lastUpdatedAt={lastUpdatedAt}
+                    />
                     <AnimatePresence mode="wait">
 
                         {/* Step 1: Choose situation */}
@@ -202,6 +219,9 @@ export const QuickPathModal: FC<QuickPathModalProps> = ({ onClose }) => {
                                         </>
                                     )}
                                 </motion.button>
+                                {generateError && (
+                                    <p className="mt-3 text-xs text-rose-300 text-right">{generateError}</p>
+                                )}
                             </motion.div>
                         )}
 

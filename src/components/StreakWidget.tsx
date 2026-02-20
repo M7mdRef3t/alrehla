@@ -24,6 +24,23 @@ export const StreakWidget: FC<StreakWidgetProps> = ({ compact = false }) => {
     const message = getStreakMessage(streak.currentStreak);
 
     if (compact) {
+        if (streak.currentStreak <= 0) {
+            return (
+                <motion.div
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                    style={{
+                        background: "rgba(45,212,191,0.12)",
+                        border: "1px solid rgba(45,212,191,0.25)",
+                    }}
+                >
+                    <span className="text-sm">🌱</span>
+                    <span className="text-xs font-bold" style={{ color: "#5eead4" }}>
+                        ابدأ أول يوم
+                    </span>
+                </motion.div>
+            );
+        }
+
         return (
             <motion.div
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"

@@ -217,8 +217,35 @@ async function hydrateJourneyState() {
     journeyStartedAt: stored.journeyStartedAt ?? Date.now(),
     lastGoalById: stored.lastGoalById ?? {}
   };
-  useJourneyState.setState(next);
-  saveJourney(next);
+  const current = useJourneyState.getState();
+  const currentComparable: StoredJourney = {
+    currentStepId: current.currentStepId,
+    completedStepIds: current.completedStepIds,
+    baselineAnswers: current.baselineAnswers,
+    baselineScore: current.baselineScore,
+    baselineCompletedAt: current.baselineCompletedAt,
+    goalId: current.goalId,
+    category: current.category,
+    lastGoalById: current.lastGoalById ?? {},
+    postStepAnswers: current.postStepAnswers,
+    postStepScore: current.postStepScore,
+    journeyStartedAt: current.journeyStartedAt
+  };
+  const hasChanged = JSON.stringify(currentComparable) !== JSON.stringify(next);
+  if (hasChanged) {
+    useJourneyState.setState(next);
+  }
+  const storedComparable = {
+    ...defaultState,
+    ...stored,
+    currentStepId,
+    journeyStartedAt: stored.journeyStartedAt ?? next.journeyStartedAt,
+    lastGoalById: stored.lastGoalById ?? {}
+  };
+  const persistedOutdated = JSON.stringify(storedComparable) !== JSON.stringify(next);
+  if (persistedOutdated) {
+    saveJourney(next);
+  }
 }
 
 if (typeof window !== "undefined") {

@@ -32,8 +32,11 @@
     "report:production": "node scripts/production-insights.mjs",
     "backup:admin": "node scripts/backup-admin-export.mjs",
     "generate:sitemap": "node scripts/generate-sitemap.mjs",
+    "investor:memo": "node scripts/generate-investor-weekly-memo.mjs",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "stress:gate": "node scripts/staging-stress-gate.mjs",
+    "logic-flow:gate": "node scripts/check-logic-flow-gate.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",

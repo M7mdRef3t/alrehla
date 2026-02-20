@@ -10,10 +10,14 @@ import { generateCandidatesByPolicy } from "./policyEngine";
 import { buildWhyCard } from "./whyCard";
 import { getTrackingSessionId, recordFlowEvent } from "../../services/journeyTracking";
 import { getFromLocalStorage, setInLocalStorage } from "../../services/browserStorage";
+import { CircuitBreaker } from "../../architecture/circuitBreaker";
+import { fetchJsonWithResilience, sendJsonWithResilience } from "../../architecture/resilientHttp";
 
 const OUTCOME_QUEUE_KEY = "dawayir-next-step-outcome-queue-v1";
 const CACHE_KEY = "dawayir-next-step-decision-cache-v1";
 const CACHE_TTL_MS = 90_000;
+const nextStepApiBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
+const outcomeApiBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
 
 function isBrowser(): boolean {
   return typeof window !== "undefined";
@@ -59,19 +63,17 @@ function writeCache(surface: RecommendationSurfaceV1, decision: NextStepDecision
 
 async function rankWithCloud(request: RankerRequestV1): Promise<RankerResponseV1 | null> {
   if (!isBrowser()) return null;
-  try {
-    const res = await fetch("/api/recommendations/next-step", {
+  const parsed = await fetchJsonWithResilience<Partial<RankerResponseV1>>(
+    "/api/recommendations/next-step",
+    {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request)
-    });
-    if (!res.ok) return null;
-    const parsed = (await res.json()) as Partial<RankerResponseV1>;
-    if (!parsed?.action || !parsed.decisionId || !parsed.why) return null;
-    return parsed as RankerResponseV1;
-  } catch {
-    return null;
-  }
+    },
+    { retries: 1, breaker: nextStepApiBreaker }
+  );
+  if (!parsed?.action || !parsed.decisionId || !parsed.why) return null;
+  return parsed as RankerResponseV1;
 }
 
 export interface ComputeNextStepInput {
@@ -174,16 +176,13 @@ async function flushOutcomeQueue(): Promise<void> {
   const pending = [...queued];
   writeOutcomeQueue([]);
   for (const item of pending) {
-    try {
-      const res = await fetch("/api/recommendations/outcome", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(item)
-      });
-      if (!res.ok) {
-        writeOutcomeQueue([...readOutcomeQueue(), item]);
-      }
-    } catch {
+    const ok = await sendJsonWithResilience(
+      "/api/recommendations/outcome",
+      item,
+      {},
+      { retries: 1, breaker: outcomeApiBreaker }
+    );
+    if (!ok) {
       writeOutcomeQueue([...readOutcomeQueue(), item]);
     }
   }

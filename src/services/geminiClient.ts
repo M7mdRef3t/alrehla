@@ -1,5 +1,13 @@
 import type { Content, FunctionCall, Part, Tool } from "@google/generative-ai";
 import { runtimeEnv } from "../config/runtimeEnv";
+import { CircuitBreaker } from "../architecture/circuitBreaker";
+import { fetchJsonWithResilience } from "../architecture/resilientHttp";
+import {
+  hydrateAIGuardrailSnapshot,
+  recordAICostFromUsage,
+  recordAIFallback,
+  runWithAIGuardrails
+} from "./aiGuardrails";
 
 /**
  * ترتيب الموديلات النصية — من الأفضل للاحتياط. مرجع كامل: docs/GEMINI_MODELS.md
@@ -21,13 +29,6 @@ const GENERATION_CONFIG = {
   maxOutputTokens: 8192
 };
 
-function isRateLimitError(error: unknown): boolean {
-  const msg = error && typeof error === "object" && "message" in error
-    ? String((error as { message?: string }).message)
-    : "";
-  return msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED");
-}
-
 export interface GenerateWithToolsRequest {
   /** محادثة: مصفوفة محتوى (دور + أجزاء) */
   contents: Content[];
@@ -44,10 +45,35 @@ interface ToolResponse {
   text?: string;
   functionCalls?: FunctionCall[];
   modelContent?: Content;
+  usage?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    totalTokenCount?: number;
+  } | null;
+}
+
+interface GenerateResponse {
+  text?: string;
+  usage?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    totalTokenCount?: number;
+  } | null;
 }
 
 class GeminiClient {
   private serverAvailable = true;
+  private readonly generateBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
+  private readonly toolBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
+  private readonly embedBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
+  private readonly streamBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
+  private guardHydrated = false;
+
+  private ensureGuardHydrated(): void {
+    if (this.guardHydrated) return;
+    this.guardHydrated = true;
+    void hydrateAIGuardrailSnapshot();
+  }
 
   private isEnabled(): boolean {
     return runtimeEnv.geminiEnabled !== "false";
@@ -65,35 +91,57 @@ class GeminiClient {
     this.serverAvailable = true;
   }
 
+  private applyUsageCost(usage: GenerateResponse["usage"]): void {
+    if (!usage) return;
+    const inputTokens = Number(usage.promptTokenCount ?? 0);
+    const outputTokens = Number(usage.candidatesTokenCount ?? 0);
+    if (inputTokens <= 0 && outputTokens <= 0) return;
+    recordAICostFromUsage(inputTokens, outputTokens);
+  }
+
   /**
    * Generate content — عبر Proxy
    */
   async generate(prompt: string): Promise<string | null> {
     if (!this.isEnabled()) return null;
+    this.ensureGuardHydrated();
 
+    let data: GenerateResponse | null = null;
     try {
-      const res = await fetch("/api/gemini/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt,
-          generationConfig: GENERATION_CONFIG,
-          modelOrder: TEXT_MODEL_FALLBACK_ORDER
-        })
-      });
-
-      if (res.status === 503) {
-        this.markServerUnavailable();
-        return null;
-      }
-      if (!res.ok) return null;
-      this.markServerAvailable();
-      const data = (await res.json()) as { text?: string };
-      return data.text ?? null;
-    } catch (error) {
-      if (runtimeEnv.isDev) console.error("Error generating content:", error);
+      data = await runWithAIGuardrails(
+        "generate",
+        async (signal) => fetchJsonWithResilience<GenerateResponse>(
+          "/api/gemini/generate",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt,
+              generationConfig: GENERATION_CONFIG,
+              modelOrder: TEXT_MODEL_FALLBACK_ORDER
+            }),
+            signal
+          },
+          { retries: 1, breaker: this.generateBreaker }
+        ),
+        {
+          timeoutMs: 10_000,
+          inputChars: 0,
+          outputCharsEstimate: 0
+        }
+      );
+    } catch {
+      recordAIFallback();
       return null;
     }
+    if (!data) {
+      this.markServerUnavailable();
+      recordAIFallback();
+      return null;
+    }
+    this.markServerAvailable();
+    this.applyUsageCost(data.usage);
+    return data.text ?? null;
   }
 
   /**
@@ -108,8 +156,7 @@ class GeminiClient {
       const jsonMatch = result.match(/```json\n([\s\S]*?)\n```/) || result.match(/```\n([\s\S]*?)\n```/);
       const jsonText = jsonMatch ? jsonMatch[1] : result;
       return JSON.parse(jsonText.trim());
-    } catch (error) {
-      if (runtimeEnv.isDev) console.error("Error parsing JSON response:", error);
+    } catch {
       return null;
     }
   }
@@ -122,28 +169,48 @@ class GeminiClient {
       yield "AI غير متاح حاليا";
       return;
     }
+    this.ensureGuardHydrated();
 
     try {
-      const res = await fetch("/api/gemini/stream", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt,
-          generationConfig: GENERATION_CONFIG,
-          modelOrder: TEXT_MODEL_FALLBACK_ORDER
-        })
-      });
+      if (!this.streamBreaker.canRequest()) {
+        recordAIFallback();
+        yield "AI غير متاح حاليا";
+        return;
+      }
+      const res = await runWithAIGuardrails(
+        "stream",
+        async (signal) => fetch("/api/gemini/stream", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prompt,
+            generationConfig: GENERATION_CONFIG,
+            modelOrder: TEXT_MODEL_FALLBACK_ORDER
+          }),
+          signal
+        }),
+        {
+          timeoutMs: 20_000,
+          inputChars: prompt.length,
+          outputCharsEstimate: 800
+        }
+      );
 
       if (res.status === 503) {
+        this.streamBreaker.markFailure();
         this.markServerUnavailable();
+        recordAIFallback();
         yield "AI غير متاح حاليا";
         return;
       }
       if (!res.ok || !res.body) {
+        this.streamBreaker.markFailure();
+        recordAIFallback();
         yield "حدث خطأ في الاتصال";
         return;
       }
 
+      this.streamBreaker.markSuccess();
       this.markServerAvailable();
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -154,7 +221,8 @@ class GeminiClient {
         if (text) yield text;
       }
     } catch (error) {
-      if (runtimeEnv.isDev) console.error("Error streaming content:", error);
+      this.streamBreaker.markFailure();
+      recordAIFallback();
       yield "حدث خطأ في الاتصال";
     }
   }
@@ -167,6 +235,7 @@ class GeminiClient {
     executeTool: ToolExecutor
   ): Promise<string | null> {
     if (!this.isEnabled()) return null;
+    this.ensureGuardHydrated();
 
     const { contents, tools, systemInstruction } = request;
     const maxToolRounds = 8;
@@ -178,30 +247,40 @@ class GeminiClient {
       let response: ToolResponse | null = null;
 
       try {
-        const res = await fetch("/api/gemini/tool", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: currentContents,
-            tools,
-            systemInstruction,
-            generationConfig: GENERATION_CONFIG,
-            modelOrder: TEXT_MODEL_FALLBACK_ORDER
-          })
-        });
-
-        if (res.status === 503) {
+        const responsePayload = await runWithAIGuardrails(
+          "tool",
+          async (signal) => fetchJsonWithResilience<ToolResponse>(
+            "/api/gemini/tool",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: currentContents,
+                tools,
+                systemInstruction,
+                generationConfig: GENERATION_CONFIG,
+                modelOrder: TEXT_MODEL_FALLBACK_ORDER
+              }),
+              signal
+            },
+            { retries: 1, breaker: this.toolBreaker }
+          ),
+          {
+            timeoutMs: 12_000,
+            inputChars: 0,
+            outputCharsEstimate: 0
+          }
+        );
+        if (!responsePayload) {
           this.markServerUnavailable();
+          recordAIFallback();
           return null;
         }
-        if (!res.ok) return null;
         this.markServerAvailable();
-        response = (await res.json()) as ToolResponse;
-      } catch (error) {
-        if (runtimeEnv.isDev) console.error("Error in generateWithTools:", error);
-        if (runtimeEnv.isDev && isRateLimitError(error)) {
-          console.warn("[Gemini] Rate limit in proxy.");
-        }
+        response = responsePayload;
+        this.applyUsageCost(responsePayload.usage);
+      } catch {
+        recordAIFallback();
         return null;
       }
 
@@ -233,24 +312,40 @@ class GeminiClient {
    */
   async embedText(text: string): Promise<number[] | null> {
     if (!this.isEnabled()) return null;
+    this.ensureGuardHydrated();
 
+    let data: { embedding: number[] } | null = null;
     try {
-      const res = await fetch("/api/gemini/embed", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text,
-          model: "text-embedding-004"
-        })
-      });
-
-      if (!res.ok) return null;
-      const data = (await res.json()) as { embedding: number[] };
-      return data.embedding;
-    } catch (error) {
-      if (runtimeEnv.isDev) console.error("Error generating embedding:", error);
+      data = await runWithAIGuardrails(
+        "embed",
+        async (signal) => fetchJsonWithResilience<{ embedding: number[] }>(
+          "/api/gemini/embed",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text,
+              model: "text-embedding-004"
+            }),
+            signal
+          },
+          { retries: 1, breaker: this.embedBreaker }
+        ),
+        {
+          timeoutMs: 8_000,
+          inputChars: text.length,
+          outputCharsEstimate: 256
+        }
+      );
+    } catch {
+      recordAIFallback();
       return null;
     }
+    if (!data) {
+      recordAIFallback();
+      return null;
+    }
+    return data.embedding;
   }
 }
 

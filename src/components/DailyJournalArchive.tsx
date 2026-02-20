@@ -35,8 +35,15 @@ function getWeekFromQuestionId(id: number): number {
 }
 
 export const DailyJournalArchive: FC<DailyJournalArchiveProps> = ({ isOpen, onClose }) => {
-  const entries = useDailyJournalState((s) => s.getSortedEntries());
-  const totalAnswers = useDailyJournalState((s) => s.totalAnswers());
+  const rawEntries = useDailyJournalState((s) => s.entries);
+  const entries = useMemo(
+    () => [...rawEntries].sort((a, b) => b.savedAt - a.savedAt),
+    [rawEntries]
+  );
+  const totalAnswers = useMemo(
+    () => rawEntries.filter((e) => e.answer.length > 0).length,
+    [rawEntries]
+  );
 
   // إحصاء أكثر كلمة تكررت في الإجابات (كلمات 4 أحرف فأكثر)
   const topWord = useMemo(() => {

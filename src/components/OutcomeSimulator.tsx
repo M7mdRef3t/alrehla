@@ -1,10 +1,51 @@
-import { FC, useMemo } from "react";
+import { FC, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { simulateFutureSelf } from "../services/propheticEngine";
-import { TrendingUp, TrendingDown, AlertCircle, Clock } from "lucide-react";
+import { analyzeEnergyDrain, simulateFutureSelf, simulateHypotheticalState } from "../services/propheticEngine";
+import { Clock } from "lucide-react";
+import { useMapState } from "../state/mapState";
+
+function stateLabel(value: "Burnout" | "Stagnation" | "Thriving"): string {
+    if (value === "Burnout") return "إنهاك";
+    if (value === "Stagnation") return "ركود";
+    return "ازدهار";
+}
 
 export const OutcomeSimulator: FC = () => {
-    const prediction = useMemo(() => simulateFutureSelf(), []);
+    const nodes = useMapState((s) => s.nodes);
+    const prediction = useMemo(() => simulateFutureSelf(), [nodes]);
+    const [comparison, setComparison] = useState<null | {
+        projectedState: string;
+        projectedScore: number;
+        delta: number;
+        removedLabel: string;
+    }>(null);
+
+    const runComparison = () => {
+        if (nodes.length === 0) {
+            setComparison(null);
+            return;
+        }
+
+        const ranked = nodes
+            .map((node) => ({ node, drain: analyzeEnergyDrain(node) }))
+            .sort((a, b) => b.drain.drainScore - a.drain.drainScore);
+
+        const topThreat = ranked[0];
+        if (!topThreat) {
+            setComparison(null);
+            return;
+        }
+
+        const hypotheticalNodes = nodes.filter((n) => n.id !== topThreat.node.id);
+        const hypothetical = simulateHypotheticalState(hypotheticalNodes);
+
+        setComparison({
+            projectedState: stateLabel(hypothetical.predictedState),
+            projectedScore: hypothetical.healthScore,
+            delta: hypothetical.healthScore - prediction.healthScore,
+            removedLabel: topThreat.node.label || "العلاقة الأكثر استنزافًا"
+        });
+    };
 
     return (
         <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 max-w-lg mx-auto overflow-hidden relative">
@@ -13,7 +54,7 @@ export const OutcomeSimulator: FC = () => {
             <div className="flex items-center gap-2 mb-6">
                 <Clock className="w-5 h-5 text-indigo-400" />
                 <h3 className="text-lg font-bold text-white tracking-wide">
-                    Future Simulator <span className="text-xs opacity-50 font-mono ml-2 border border-white/20 px-1.5 py-0.5 rounded">BETA</span>
+                    محاكي المستقبل <span className="text-xs opacity-50 font-mono ml-2 border border-white/20 px-1.5 py-0.5 rounded">تجريبي</span>
                 </h3>
             </div>
 
@@ -37,23 +78,46 @@ export const OutcomeSimulator: FC = () => {
                 <h4 className={`text-xl font-bold mb-2 ${prediction.predictedState === "Burnout" ? "text-rose-400" :
                         prediction.predictedState === "Stagnation" ? "text-amber-400" : "text-emerald-400"
                     }`}>
-                    {prediction.predictedState.toUpperCase()}
+                    {stateLabel(prediction.predictedState)}
                 </h4>
-                <p className="text-sm text-slate-400 font-mono mb-4">Projected State • {prediction.timeline}</p>
+                <p className="text-sm text-slate-400 font-mono mb-4">الحالة المتوقعة • {prediction.timeline}</p>
 
-                <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-left">
+                <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-right">
                     <p className="text-sm text-slate-200 leading-relaxed">
-                        <span className="text-indigo-400 font-bold mr-2">AI PROPHECY:</span>
+                        <span className="text-indigo-400 font-bold ml-2">توقع التحليل:</span>
                         {prediction.description}
                     </p>
                 </div>
             </div>
 
             <div className="text-center">
-                <button className="text-xs text-slate-500 hover:text-white transition-colors underline decoration-slate-700">
-                    Run Comparison Analysis
+                <button
+                    type="button"
+                    onClick={runComparison}
+                    className="text-xs text-slate-500 hover:text-white transition-colors underline decoration-slate-700"
+                >
+                    تشغيل تحليل المقارنة
                 </button>
             </div>
+
+            {comparison && (
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4 rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-right"
+                >
+                    <p className="text-xs text-emerald-300 mb-2">سيناريو بعد تقليل تأثير: {comparison.removedLabel}</p>
+                    <p className="text-sm text-slate-100">
+                        الحالة المتوقعة: <span className="font-bold text-emerald-300">{comparison.projectedState}</span>
+                    </p>
+                    <p className="text-sm text-slate-100">
+                        الدرجة المتوقعة: <span className="font-bold text-emerald-300">{comparison.projectedScore}%</span>
+                    </p>
+                    <p className="text-sm text-slate-200">
+                        فرق التحسن: <span className="font-bold text-emerald-300">{comparison.delta > 0 ? `+${comparison.delta}` : comparison.delta}%</span>
+                    </p>
+                </motion.div>
+            )}
         </div>
     );
 };

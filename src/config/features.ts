@@ -13,7 +13,9 @@ export type FeatureFlagKey =
   | "pulse_check"
   | "pulse_weekly_recommendation"
   | "pulse_immediate_action"
-  | "golden_needle_enabled";
+  | "golden_needle_enabled"
+  | "language_switcher"
+  | "armory_section";
 
 export interface FeatureFlagDefinition {
   key: FeatureFlagKey;
@@ -69,8 +71,8 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
   },
   {
     key: "global_atlas",
-    label: "أطلس العلاقات",
-    description: "لوحة الإحصاءات المتقدمة وتحليل الأنماط",
+    label: "الواجهة الكونية",
+    description: "تشغيل/إيقاف العرض الكوني ومحاكي السيناريوهات داخل الصفحة الرئيسية",
     group: "Insights"
   },
   {
@@ -103,6 +105,18 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
     label: "الإبرة الذهبية",
     description: "تفعيل شكل البوصلة الفخرية في شاشة القياس",
     group: "Core"
+  },
+  {
+    key: "language_switcher",
+    label: "زر تبديل اللغة",
+    description: "إظهار/إخفاء زر تبديل اللغة في الصفحة الرئيسية",
+    group: "Core"
+  },
+  {
+    key: "armory_section",
+    label: "سيكشن الترسانة",
+    description: "إظهار/إخفاء سكشن الترسانة في الصفحة الرئيسية",
+    group: "Core"
   }
 ];
 
@@ -119,5 +133,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, FeatureFlagMode> = {
   pulse_check: "on",
   pulse_weekly_recommendation: "off",
   pulse_immediate_action: "off",
-  golden_needle_enabled: "off"
+  golden_needle_enabled: "off",
+  language_switcher: "off",
+  armory_section: "off"
 };

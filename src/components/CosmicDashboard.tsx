@@ -6,6 +6,12 @@ import { scanForVampires, identifyKeystones } from "../services/propheticEngine"
 import { AlertTriangle, Zap, Box, Activity, Radar, GitMerge, BrainCircuit } from "lucide-react";
 import { OutcomeSimulator } from "./OutcomeSimulator";
 
+function classifyLabel(classification: string): string {
+    if (classification === "Black Hole") return "ثقب أسود";
+    if (classification === "Star") return "نجم";
+    return "محايد";
+}
+
 export const CosmicDashboard: FC = () => {
     const nodes = useMapState((s) => s.nodes);
 
@@ -23,6 +29,55 @@ export const CosmicDashboard: FC = () => {
     const vampires = useMemo(() => scanForVampires(), [nodes]);
     const keystones = useMemo(() => identifyKeystones(), [nodes]);
     const [showSimulator, setShowSimulator] = useState(false);
+
+    const suggestedActions = useMemo(() => {
+        const actions: Array<{
+            id: string;
+            title: string;
+            description: string;
+            cta: string;
+            tone: "rose" | "amber" | "emerald";
+            onRun: () => void;
+        }> = [];
+
+        const topVampire = vampires[0];
+        if (topVampire) {
+            actions.push({
+                id: "top-vampire",
+                title: "احتواء أقوى مصدر استنزاف",
+                description: `انقل ${nodes.find((n) => n.id === topVampire.nodeId)?.label ?? "العلاقة الأعلى استنزافًا"} إلى المدار الأحمر لتقليل النزيف اليومي.`,
+                cta: "تحويل للمدار الأحمر",
+                tone: "rose",
+                onRun: () => moveNodeToRing(topVampire.nodeId, "red")
+            });
+        }
+
+        const topBlackHole = gravityData.find((g) => g.classification === "Black Hole");
+        if (topBlackHole) {
+            actions.push({
+                id: "black-hole-archive",
+                title: "إخراج الثقب الأسود من المشهد",
+                description: `أرشفة ${topBlackHole.label} لو العلاقة بتستنزفك بالكامل ومش قابلة للإصلاح الآن.`,
+                cta: "أرشفة العلاقة",
+                tone: "amber",
+                onRun: () => archiveNode(topBlackHole.nodeId)
+            });
+        }
+
+        const topKeystone = keystones[0];
+        if (topKeystone) {
+            actions.push({
+                id: "keystone-focus",
+                title: "ابدأ بالعلاقة المحورية",
+                description: `ركّز هذا الأسبوع على ${nodes.find((n) => n.id === topKeystone.nodeId)?.label ?? "العلاقة المحورية"} لأن تأثيرها ممتد على باقي الشبكة.`,
+                cta: "تمييز كأولوية",
+                tone: "emerald",
+                onRun: () => moveNodeToRing(topKeystone.nodeId, "yellow")
+            });
+        }
+
+        return actions.slice(0, 3);
+    }, [archiveNode, gravityData, keystones, moveNodeToRing, nodes, vampires]);
 
     if (nodes.length === 0) {
         return (
@@ -48,12 +103,12 @@ export const CosmicDashboard: FC = () => {
                         className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-full shadow-[0_0_20px_rgba(79,70,229,0.4)] transition-all transform hover:scale-105"
                     >
                         <BrainCircuit className="w-4 h-4" />
-                        <span>LAUNCH FUTURE SIMULATOR</span>
+                        <span>تشغيل محاكي السيناريوهات</span>
                     </button>
                 ) : (
                     <div className="w-full">
                         <div className="flex justify-end mb-2">
-                            <button onClick={() => setShowSimulator(false)} className="text-xs text-slate-400 hover:text-white">CLOSE SIMULATION</button>
+                            <button onClick={() => setShowSimulator(false)} className="text-xs text-slate-400 hover:text-white">إغلاق المحاكاة</button>
                         </div>
                         <OutcomeSimulator />
                     </div>
@@ -61,6 +116,32 @@ export const CosmicDashboard: FC = () => {
             </motion.div>
 
             {/* 1.a. Energy Drain Radar (Phase 18) */}
+            {suggestedActions.length > 0 && (
+                <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-5">
+                    <h3 className="text-sm font-bold text-slate-200 mb-4">إجراءات مقترحة الآن</h3>
+                    <div className="space-y-3">
+                        {suggestedActions.map((action) => (
+                            <div key={action.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
+                                <p className="text-sm font-bold text-white mb-1">{action.title}</p>
+                                <p className="text-xs text-slate-300 mb-3">{action.description}</p>
+                                <button
+                                    type="button"
+                                    onClick={action.onRun}
+                                    className={`text-xs font-bold rounded-lg px-3 py-1.5 border transition-colors ${action.tone === "rose"
+                                        ? "bg-rose-500/15 border-rose-500/40 text-rose-300 hover:bg-rose-500/25"
+                                        : action.tone === "amber"
+                                            ? "bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25"
+                                            : "bg-emerald-500/15 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25"
+                                        }`}
+                                >
+                                    {action.cta}
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {vampires.length > 0 && (
                 <div className="bg-rose-950/10 border border-rose-500/20 rounded-2xl p-5 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -69,7 +150,7 @@ export const CosmicDashboard: FC = () => {
 
                     <h3 className="text-sm font-bold text-rose-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <Radar className="w-4 h-4" />
-                        Energy Drain Radar Detected {vampires.length} Threats
+                        رادار الاستنزاف رصد {vampires.length} تهديدات
                     </h3>
 
                     <div className="grid gap-3">
@@ -78,8 +159,8 @@ export const CosmicDashboard: FC = () => {
                             return (
                                 <div key={v.nodeId} className="flex items-center justify-between bg-rose-900/10 p-3 rounded border border-rose-500/10">
                                     <div className="flex flex-col">
-                                        <span className="font-bold text-slate-200">{node?.label ?? "Unknown"}</span>
-                                        <span className="text-xs text-rose-300/60">{v.drainVelocity} Drain</span>
+                                        <span className="font-bold text-slate-200">{node?.label ?? "غير معروف"}</span>
+                                        <span className="text-xs text-rose-300/60">{v.drainVelocity} استنزاف</span>
                                     </div>
                                     <div className="text-rose-400 font-mono font-bold">{Math.round(v.drainScore)}/100</div>
                                 </div>
@@ -94,10 +175,10 @@ export const CosmicDashboard: FC = () => {
                 <div className="bg-emerald-900/10 border border-emerald-500/20 rounded-2xl p-5">
                     <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <GitMerge className="w-4 h-4" />
-                        Chain Reaction Keystones
+                        العلاقات المحورية ذات الأثر المتسلسل
                     </h3>
                     <p className="text-xs text-slate-400 mb-4">
-                        Fixing these "Keystone" relationships will likely trigger a positive domino effect on others.
+                        إصلاح العلاقات المحورية غالبًا يصنع تأثيرًا إيجابيًا ممتدًا على باقي العلاقات.
                     </p>
                     <div className="flex flex-wrap gap-2">
                         {keystones.slice(0, 3).map(k => {
@@ -105,7 +186,7 @@ export const CosmicDashboard: FC = () => {
                             return (
                                 <div key={k.nodeId} className="bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-full flex items-center gap-2">
                                     <span className="text-emerald-200 font-bold text-sm">{node?.label}</span>
-                                    <span className="bg-emerald-500/20 text-emerald-300 text-[10px] px-1.5 rounded">{k.impactFactor}x Impact</span>
+                                    <span className="bg-emerald-500/20 text-emerald-300 text-[10px] px-1.5 rounded">تأثير ×{k.impactFactor}</span>
                                 </div>
                             );
                         })}
@@ -122,14 +203,14 @@ export const CosmicDashboard: FC = () => {
                 >
                     <div className="flex items-center gap-2 mb-3">
                         <Activity className="w-5 h-5 text-purple-400" />
-                        <h3 className="text-lg font-bold text-slate-200">Echo Engine Insights</h3>
+                        <h3 className="text-lg font-bold text-slate-200">رؤى أنماط التكرار</h3>
                     </div>
                     <div className="space-y-3">
                         {echoes.map((echo, idx) => (
                             <div key={idx} className="flex gap-3 bg-black/20 p-3 rounded-lg border border-purple-500/10">
                                 <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                                 <div>
-                                    <div className="text-sm font-bold text-purple-200">{echo.type} <span className="text-xs opacity-60">({Math.round(echo.confidence * 100)}% Conf.)</span></div>
+                                    <div className="text-sm font-bold text-purple-200">{echo.type} <span className="text-xs opacity-60">(ثقة {Math.round(echo.confidence * 100)}%)</span></div>
                                     <p className="text-sm text-slate-300 leading-relaxed">{echo.description}</p>
                                 </div>
                             </div>
@@ -142,7 +223,7 @@ export const CosmicDashboard: FC = () => {
             <div>
                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                     <Zap className="w-4 h-4 text-yellow-500" />
-                    High Gravity Objects
+                    أعلى العلاقات تأثيرًا
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -158,7 +239,7 @@ export const CosmicDashboard: FC = () => {
                         >
                             <div className="absolute -right-4 -top-4 w-16 h-16 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-xl" />
 
-                            <div className="text-xs font-mono opacity-60 mb-1">RANK #{i + 1}</div>
+                            <div className="text-xs font-mono opacity-60 mb-1">الترتيب #{i + 1}</div>
                             <h4 className="text-lg font-bold text-white mb-2">{node.label}</h4>
 
                             <div className="flex items-center justify-between mb-3">
@@ -166,7 +247,7 @@ export const CosmicDashboard: FC = () => {
                                     node.classification === "Star" ? "bg-amber-500/20 border-amber-500/40 text-amber-300" :
                                         "bg-slate-500/20 border-slate-500/40 text-slate-300"
                                     }`}>
-                                    {node.classification}
+                                    {classifyLabel(node.classification)}
                                 </span>
                                 <span className="text-xl font-black opacity-30">{Math.round(node.mass)}g</span>
                             </div>
@@ -177,18 +258,18 @@ export const CosmicDashboard: FC = () => {
                                     <button
                                         onClick={() => moveNodeToRing(node.nodeId, "red")}
                                         className="flex-1 py-1.5 text-[10px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded border border-amber-500/20"
-                                        title="Shift Orbit to Red"
+                                        title="نقل للمدار الأحمر"
                                     >
-                                        DEFLECT
+                                        تحويل للمدار الأحمر
                                     </button>
                                 )}
                                 {node.classification === "Black Hole" && (
                                     <button
                                         onClick={() => archiveNode(node.nodeId)}
                                         className="flex-1 py-1.5 text-[10px] font-bold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded border border-rose-500/20"
-                                        title="Collapse (Archive)"
+                                        title="أرشفة العلاقة"
                                     >
-                                        COLLAPSE
+                                        أرشفة
                                     </button>
                                 )}
                             </div>

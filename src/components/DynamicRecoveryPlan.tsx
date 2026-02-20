@@ -15,6 +15,7 @@ import { symptomIdsToSymptomType } from "../modules/pathEngine/pathResolver";
 import { recordJourneyEvent } from "../services/journeyTracking";
 import type { PathId } from "../modules/pathEngine/pathTypes";
 import type { RecoveryPath } from "../modules/pathEngine/pathTypes";
+import { LiveStatusBar } from "./shared/LiveStatusBar";
 
 function isRecoveryPath(x: unknown): x is RecoveryPath {
   if (!x || typeof x !== "object") return false;
@@ -126,6 +127,12 @@ const PathProgressPanel: FC<{
       <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-3">
         <span>📊</span> لوحة المتابعة — أنت واقف فين؟
       </h3>
+      <LiveStatusBar
+        title="حالة بيانات المتابعة"
+        mode={lastPathGeneratedAt != null ? "live" : "fallback"}
+        isLoading={false}
+        lastUpdatedAt={lastPathGeneratedAt ?? null}
+      />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
         <div className="p-3 bg-white border border-teal-200 rounded-lg">
           <p className="text-xs text-slate-600 mb-0.5">قوة المدار</p>
@@ -175,7 +182,7 @@ const PathProgressPanel: FC<{
         </div>
       )}
       {lastPathGeneratedAt != null && (
-        <p className="text-xs text-slate-500 mb-3">آخر تحديث للمسار: {formatPathGeneratedAt(lastPathGeneratedAt)}</p>
+        <p className="text-xs text-slate-500 mb-3">تحديث وصفي: {formatPathGeneratedAt(lastPathGeneratedAt)}</p>
       )}
       <div className="flex items-center gap-1 flex-wrap">
         <span className="text-xs text-slate-500 ml-2">آخر {LAST_N_DAYS} يوم:</span>

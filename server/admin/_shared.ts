@@ -7,7 +7,6 @@ const supabaseUrl =
   "";
 
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const adminSecret = process.env.ADMIN_API_SECRET || "alrehla-admin";
 
 let cachedClient: SupabaseClient | null = null;
 
@@ -21,19 +20,9 @@ export function getAdminSupabase(): SupabaseClient | null {
   return cachedClient;
 }
 
-export function getAdminSecret(): string | null {
-  return adminSecret ? adminSecret : null;
-}
-
 function getAllowedRoles(): string[] {
   const raw = process.env.ADMIN_ALLOWED_ROLES || "admin,owner,superadmin,developer";
   return raw.split(",").map((r) => r.trim()).filter(Boolean);
-}
-
-export function getRequestAdminCode(req: any): string | null {
-  const headerCode = req.headers?.["x-admin-code"] || req.headers?.["X-Admin-Code"];
-  if (typeof headerCode === "string" && headerCode.trim()) return headerCode.trim();
-  return null;
 }
 
 function getBearerToken(req: any): string | null {
@@ -45,10 +34,6 @@ function getBearerToken(req: any): string | null {
 }
 
 export async function verifyAdmin(req: any, res: any): Promise<boolean> {
-  const secret = getAdminSecret();
-  const code = getRequestAdminCode(req);
-  if (secret && code && code === secret) return true;
-
   const client = getAdminSupabase();
   if (!client) {
     res.status(503).json({ error: "Admin API not configured" });
@@ -99,11 +84,6 @@ function getAllowedRolesSet(raw?: string): Set<string> {
 
 export async function verifyAdminWithRoles(req: any, res: any, allowedRoles: string[]): Promise<boolean> {
   if (!(await verifyAdmin(req, res))) return false;
-  const code = getRequestAdminCode(req);
-  const secret = getAdminSecret();
-  // Secret-based access remains privileged for automation.
-  if (secret && code && code === secret) return true;
-
   const client = getAdminSupabase();
   const bearer = getBearerToken(req);
   if (!client || !bearer) {
@@ -140,19 +120,15 @@ export async function recordAdminAudit(
   try {
     const client = getAdminSupabase();
     if (!client) return;
-    const code = getRequestAdminCode(req);
-    const secret = getAdminSecret();
     let actorId: string | null = null;
     let actorRole: string | null = null;
-    if (!(secret && code && code === secret)) {
-      const bearer = getBearerToken(req);
-      if (bearer) {
-        const { data } = await client.auth.getUser(bearer);
-        actorId = data?.user?.id ?? null;
-        if (actorId) {
-          const { data: profile } = await client.from("profiles").select("role").eq("id", actorId).maybeSingle();
-          actorRole = typeof profile?.role === "string" ? profile.role : null;
-        }
+    const bearer = getBearerToken(req);
+    if (bearer) {
+      const { data } = await client.auth.getUser(bearer);
+      actorId = data?.user?.id ?? null;
+      if (actorId) {
+        const { data: profile } = await client.from("profiles").select("role").eq("id", actorId).maybeSingle();
+        actorRole = typeof profile?.role === "string" ? profile.role : null;
       }
     }
     await client.from("admin_audit_logs").insert({

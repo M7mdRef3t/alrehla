@@ -80,11 +80,14 @@ import { GraphEventToast } from "./components/GraphEventToast";
 import { useSwarmState } from "./state/swarmState";
 import { determineAutoPersona } from "./agent/swarmLogic";
 import { buildAgentSystemPrompt } from "./agent/prompt"; // Ensure this is imported
+import { resolveNavigation, type AppScreen } from "./navigation/navigationMachine";
+import { normalizeOwnerAction, normalizePreviewFeature } from "./navigation/actionRoutingMachine";
+import { executeOwnerAction } from "./navigation/ownerActionExecutor";
 
 // Initialize language on app start
 initLanguage();
 
-type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools" | "settings" | "enterprise" | "guilt-court" | "diplomacy";
+type Screen = AppScreen;
 type PulseSubmitPayload = {
   energy: number | null;
   mood: PulseMood | null;
@@ -94,97 +97,7 @@ type PulseSubmitPayload = {
   energyReasons?: string[];
   energyConfidence?: PulseEnergyConfidence;
 };
-type OwnerActionKey =
-  | "admin_dashboard"
-  | "consciousness_archive"
-  | "journey_guide_chat"
-  | "journey_tools"
-  | "journey_timeline"
-  | "open_dawayir"
-  | "quick_experience"
-  | "start_journey"
-  | "guided_journey"
-  | "baseline_check"
-  | "notifications"
-  | "tracking_dashboard"
-  | "atlas_dashboard"
-  | "data_tools"
-  | "share_stats"
-  | "library"
-  | "symptoms"
-  | "recovery_plan"
-  | "theme_settings"
-  | "achievements"
-  | "advanced_tools"
-  | "classic_recovery"
-  | "manual_placement"
-  | "feedback_modal"
-  | "install_app"
-  | "noise_silencing"
-  | "breathing_session"
-  | "ambient_reality"
-  | "wisdom_vault";
-
-function normalizePreviewFeature(value: string | null): FeatureFlagKey | null {
-  if (!value) return null;
-  const key = value.trim().toLowerCase();
-  if (
-    key === "dawayir_map" ||
-    key === "journey_tools" ||
-    key === "basic_diagnosis" ||
-    key === "mirror_tool" ||
-    key === "family_tree" ||
-    key === "internal_boundaries" ||
-    key === "generative_ui_mode" ||
-    key === "global_atlas" ||
-    key === "ai_field" ||
-    key === "pulse_check"
-  ) {
-    return key as FeatureFlagKey;
-  }
-  return null;
-}
-
-function normalizeOwnerAction(value: string | null): OwnerActionKey | null {
-  if (!value) return null;
-  const key = value.trim().toLowerCase();
-  if (
-    key === "admin_dashboard" ||
-    key === "consciousness_archive" ||
-    key === "journey_guide_chat" ||
-    key === "journey_tools" ||
-    key === "journey_timeline" ||
-    key === "open_dawayir" ||
-    key === "quick_experience" ||
-    key === "start_journey" ||
-    key === "guided_journey" ||
-    key === "baseline_check" ||
-    key === "notifications" ||
-    key === "tracking_dashboard" ||
-    key === "atlas_dashboard" ||
-    key === "data_tools" ||
-    key === "share_stats" ||
-    key === "library" ||
-    key === "symptoms" ||
-    key === "recovery_plan" ||
-    key === "theme_settings" ||
-    key === "achievements" ||
-    key === "advanced_tools" ||
-    key === "classic_recovery" ||
-    key === "manual_placement" ||
-    key === "feedback_modal" ||
-    key === "install_app" ||
-    key === "noise_silencing" ||
-    key === "breathing_session" ||
-    key === "ambient_reality" ||
-    key === "wisdom_vault"
-  ) {
-    return key as OwnerActionKey;
-  }
-  return null;
-}
-
-/** Ù…Ø³Ø§ÙØ© Ù„Ù„Ù…ÙŠÙ†ÙŠÙˆ â€” ØªØ§Ø¨ ØµØºÙŠØ± Ø¸Ø§Ù‡Ø± (Ø§Ù„Ø´Ø±ÙŠØ· ÙŠØ¸Ù‡Ø± Ø¹Ù†Ø¯ Ø§Ù„ØªØ­Ø±ÙŠÙƒ) */
+/** مسافة للمينيو - تاب صغير ظاهر (الشريط يظهر عند التحريك) */
 
 const CoreMapScreen = lazy(() => import("./components/CoreMapScreen").then((m) => ({ default: m.CoreMapScreen })));
 const GoalPicker = lazy(() => import("./components/GoalPicker").then((m) => ({ default: m.GoalPicker })));
@@ -263,6 +176,7 @@ const OWNER_ALERTS_LAST_CHECK_KEY = "dawayir-owner-alerts-last-check";
 const OWNER_ALERTS_MILESTONES_KEY = "dawayir-owner-alerts-milestones";
 const LAST_UI_STATE_STORAGE_KEY_PREFIX = "dawayir-last-ui-state";
 const LAST_SCREEN_STORAGE_KEY_PREFIX = "dawayir-last-screen";
+const AUTO_COCOON_LAST_SHOWN_DATE_KEY = "dawayir-auto-cocoon-last-shown-date";
 
 type PersistedModalState = {
   showJourneyGuideChat: boolean;
@@ -297,6 +211,13 @@ function getUserLastScreenStorageKey(userId: string): string {
 
 function getUserLastUiStateStorageKey(userId: string): string {
   return `${LAST_UI_STATE_STORAGE_KEY_PREFIX}:${userId}`;
+}
+
+function getLocalDateKey(date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function normalizeRestorableScreen(value: string | null): Screen | null {
@@ -370,17 +291,17 @@ function buildPulseDeltaToast(currentEnergy: number, yesterdayEnergy: number | n
 }
 
 function buildStartRecoveryWelcome(firstName: string | null, toneGender: UserToneGender): string {
-  const prefix = firstName ? `Ø£Ù‡Ù„Ø§Ù‹ ÙŠØ§ ${firstName}` : "Ø£Ù‡Ù„Ø§Ù‹";
-  if (toneGender === "female") return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†ØªÙ Ù…Ø³ØªØ¹Ø¯Ø© Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ â Ø§ÙØªØ¹Ø§ÙÙ ÙØ´ Ø³Ø­Ø±Ø ÙÙ Ø±Ø­ÙØ© Ø¨ØªØ¨Ø¯Ø£ÙØ§ Ø¨Ø®Ø·ÙØ§ØªÙ.`;
-  if (toneGender === "male") return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†Øª Ù…Ø³ØªØ¹Ø¯ Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ â Ø§ÙØªØ¹Ø§ÙÙ ÙØ´ Ø³Ø­Ø±Ø ÙÙ Ø±Ø­ÙØ© Ø¨ØªØ¨Ø¯Ø£ÙØ§ Ø¨Ø®Ø·ÙØ§ØªÙ.`;
-  return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†Øª Ù…Ø³ØªØ¹Ø¯ Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ â Ø§ÙØªØ¹Ø§ÙÙ ÙØ´ Ø³Ø­Ø±Ø ÙÙ Ø±Ø­ÙØ© Ø¨ØªØ¨Ø¯Ø£ÙØ§ Ø¨Ø®Ø·ÙØ§ØªÙ.`;
+  const prefix = firstName ? `أهلاً يا ${firstName}` : "أهلاً";
+  if (toneGender === "female") return `${prefix}، هل أنتِ مستعدة لبدء الرحلة؟ التعافي مش سحر، هو رحلة بتبدأها بخطواتك.`;
+  if (toneGender === "male") return `${prefix}، هل أنت مستعد لبدء الرحلة؟ التعافي مش سحر، هو رحلة بتبدأها بخطواتك.`;
+  return `${prefix}، هل أنت مستعد لبدء الرحلة؟ التعافي مش سحر، هو رحلة بتبدأها بخطواتك.`;
 }
 
 function buildWelcomePrompt(firstName: string | null, toneGender: UserToneGender): string {
-  const toneLabel = toneGender === "female" ? "Ù…Ø¤Ù†Ø« Ø¯Ø§ÙØ¦" : toneGender === "male" ? "Ù…Ø°ÙƒØ± Ø¯Ø§ÙØ¦" : "Ù…Ø­Ø§ÙŠØ¯ ÙˆØ¯ÙˆØ¯";
-  const namePart = firstName ? ` Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø§Ø³Ù…Ù‡ "${firstName}"` : "";
-  const tonePart = toneGender === "neutral" ? "Ø¨Ø¯ÙˆÙ† ØªØ°ÙƒÙŠØ±/ØªØ£Ù†ÙŠØ« Ù…Ø¨Ø§Ø´Ø±" : `Ø¨ØµÙŠØºØ© Ù…Ø®Ø§Ø·Ø¨Ø© ${toneLabel}`;
-  return `Ø§ÙƒØªØ¨ ØªØ±Ø­ÙŠØ¨ Ù‚ØµÙŠØ± ÙˆØ¯ÙˆØ¯ Ø¨Ø§Ù„Ù„Ù‡Ø¬Ø© Ø§Ù„Ù…ØµØ±ÙŠØ©${namePart}. Ø¬Ù…Ù„Ø© ÙˆØ§Ø­Ø¯Ø© Ø¨Ø´ÙƒÙ„ Ø·Ø¨ÙŠØ¹ÙŠ (Ø¨Ø¯ÙˆÙ† Ø³Ø¤Ø§Ù„ Ù…Ù†ÙØµÙ„). Ø¨Ø¯ÙˆÙ† Ø¥ÙŠÙ…ÙˆØ¬ÙŠ. Ø¨Ø¯ÙˆÙ† Ø¹Ù„Ø§Ù…Ø§Øª Ø§Ù‚ØªØ¨Ø§Ø³. Ø£Ù‚Ù„ Ù…Ù† 15 ÙƒÙ„Ù…Ø©. ${tonePart}. Ù„Ø§ ØªÙƒØ±Ø± Ø§Ù„Ø§Ø³Ù… ÙƒØ«ÙŠØ±Ø§Ù‹.`;
+  const toneLabel = toneGender === "female" ? "مؤنث دافئ" : toneGender === "male" ? "مذكر دافئ" : "محايد ودود";
+  const namePart = firstName ? ` لمستخدم اسمه "${firstName}"` : "";
+  const tonePart = toneGender === "neutral" ? "بدون تذكير/تأنيث مباشر" : `بصيغة مخاطبة ${toneLabel}`;
+  return `اكتب ترحيب قصير وودود باللهجة المصرية${namePart}. جملة واحدة بشكل طبيعي (بدون سؤال منفصل). بدون إيموجي. بدون علامات اقتباس. أقل من 15 كلمة. ${tonePart}. لا تكرر الاسم كثيرًا.`;
 }
 
 function cleanSingleLine(text: string): string {
@@ -488,7 +409,7 @@ export default function App() {
   const [missionNodeId, setMissionNodeId] = useState<string | null>(null);
   const [toolsBackScreen, setToolsBackScreen] = useState<Screen>("landing");
   const [showCocoon, setShowCocoon] = useState(false);
-  /** Ø¹Ù†Ø¯ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªÙ†ÙØ³: Ù„Ùˆ ÙÙØªØ­ Ù…Ù† Ù…Ø³Ø§Ø± Ø¯Ù‚ÙŠÙ‚Ø© Ø´Ø­Ù† Ù†Ø±Ø¬Ø¹ Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø®Ø±ÙŠØ·Ø© */
+  /** عند إغلاق التنفس: لو فُتح من مسار دقيقة شحن نرجع لشاشة الخريطة */
   const [returnToGoalOnBreathingClose, setReturnToGoalOnBreathingClose] = useState(false);
   const breathingFromCocoonRef = useRef(false);
   const [suppressLowPulseCocoonUntil, setSuppressLowPulseCocoonUntil] = useState(0);
@@ -510,7 +431,7 @@ export default function App() {
   const [isAnalyticsRoute, setIsAnalyticsRoute] = useState(() => isAnalyticsPath());
   const [postAuthIntent, setPostAuthIntentState] = useState<PostAuthIntent | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  /** Ø±Ø¨Ø· Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„ØªØ§ØªØ´/Ø²Ø± Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø³Ø§Ø¨Ù‚Ø© Ø¨Ø¯Ù„ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ */
+  /** ربط الرجوع بالتاتش/زر الرجوع بالشاشة السابقة بدل إغلاق التطبيق */
   const fromPopStateRef = useRef(false);
   const hasHistorySyncedRef = useRef(false);
   const restoredLastScreenForUserRef = useRef<string | null>(null);
@@ -630,15 +551,36 @@ export default function App() {
     skipNextCheck: skipNextPulseCheck
   } = usePulseCheckLogic(canUsePulseCheck, screen, shouldGateStartWithAuth);
 
+  const navigateToScreen = useCallback((target: Screen): boolean => {
+    const result = resolveNavigation({
+      target,
+      canUseMap,
+      canUseJourneyTools,
+      isLockedPhaseOne
+    });
+
+    if (result.kind === "blocked") {
+      setLockedFeature(result.feature);
+      return false;
+    }
+
+    setScreen(result.screen);
+    return result.kind === "navigate";
+  }, [canUseJourneyTools, canUseMap, isLockedPhaseOne]);
+
   const openCocoonModal = useCallback((source: "auto" | "manual" = "manual") => {
     if (Date.now() < cocoonSuppressedUntilRef.current) return;
     // Guard against re-opening cocoon while breathing is already active.
     if (suppressCocoonReopen || showBreathing) return;
     if (source === "auto") {
+      const todayKey = getLocalDateKey();
+      const lastShown = getFromLocalStorage(AUTO_COCOON_LAST_SHOWN_DATE_KEY);
+      if (lastShown === todayKey) return;
       const now = Date.now();
       // Deduplicate repeated auto-open calls from the same pulse flow.
       if (now - lastAutoCocoonOpenAtRef.current < 30_000) return;
       lastAutoCocoonOpenAtRef.current = now;
+      setInLocalStorage(AUTO_COCOON_LAST_SHOWN_DATE_KEY, todayKey);
     }
     setShowCocoon(true);
   }, [showBreathing, suppressCocoonReopen]);
@@ -758,7 +700,7 @@ export default function App() {
     return subscribePopstate(handler);
   }, []);
 
-  /** Ø±Ø¨Ø· History API Ø¨Ø§Ù„Ø´Ø§Ø´Ø§Øª â€” Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„ØªØ§ØªØ´/Ø²Ø± Ø§Ù„Ø±Ø¬ÙˆØ¹ ÙŠØ±Ø¬Ø¹ Ù„Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø³Ø§Ø¨Ù‚Ø© Ø¨Ø¯Ù„ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ */
+  /** ربط History API بالشاشات - الرجوع بالتاتش/زر الرجوع يرجع للشاشة السابقة بدل إغلاق التطبيق */
   useEffect(() => {
     if (isAdminPath()) return;
     if (hasOAuthCallbackParams()) return;
@@ -780,11 +722,22 @@ export default function App() {
     if (isAdminPath()) return;
     const handler = (e: PopStateEvent) => {
       const next = (e.state as { screen?: Screen } | null)?.screen ?? "landing";
+      const result = resolveNavigation({
+        target: next,
+        canUseMap,
+        canUseJourneyTools,
+        isLockedPhaseOne
+      });
       fromPopStateRef.current = true;
-      setScreen(next);
+      if (result.kind === "blocked") {
+        setLockedFeature(result.feature);
+        setScreen("landing");
+        return;
+      }
+      setScreen(result.screen);
     };
     return subscribePopstate(handler);
-  }, []);
+  }, [canUseJourneyTools, canUseMap, isLockedPhaseOne]);
 
   useEffect(() => {
     // Check for nudges after 2 seconds
@@ -971,7 +924,7 @@ export default function App() {
         (window as Window & { __seedStressTest?: () => { nodeCount: number; eventCount: number } }).__seedStressTest =
           () => {
             const result = seedStressTestData();
-            console.warn("[Stress Test] ØªÙ…: ", result.nodeCount, "Ø¹ÙÙ‚Ø¯Ø©ØŒ", result.eventCount, "Ø­Ø¯Ø«. Ø¥Ø¹Ø§Ø¯Ø© ØªØ­Ù…ÙŠÙ„...");
+            console.warn("[Stress Test] تم:", result.nodeCount, "عُقدة،", result.eventCount, "حدث. إعادة تحميل...");
             setTimeout(() => reloadPage(), 500);
             return result;
           };
@@ -1001,11 +954,11 @@ export default function App() {
 
   useEffect(() => {
     const pageNames: Record<Screen, string> = {
-      landing: "Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©",
-      goal: "Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ù‡Ø¯Ù",
-      map: "Ø®Ø±ÙŠØ·Ø© Ø§Ù„Ø¹Ù„Ø§Ù‚Ø§Øª",
-      guided: "Ø§Ù„Ø±Ø­Ù„Ø© Ø§Ù„Ù…ÙˆØ¬Ù‡Ø©",
-      mission: "Ø´Ø§Ø´Ø© Ø§Ù„Ù…Ù‡Ù…Ø©",
+      landing: "الرئيسية",
+      goal: "اختيار الهدف",
+      map: "خريطة العلاقات",
+      guided: "الرحلة الموجهة",
+      mission: "شاشة المهمة",
       tools: "أدوات الرحلة",
       settings: "الإعدادات",
       enterprise: "بوابة المؤسسات",
@@ -1120,7 +1073,7 @@ export default function App() {
 
       for (const sessionId of alerts.newVisitors.sessionIds) {
         await sendOwnerNotification(
-          "Ø²Ø§Ø¦Ø± Ø¬Ø¯ÙŠØ¯ Ø¯Ø®Ù„ Ø§Ù„Ù…Ù†ØµØ©",
+          "زائر جديد دخل المنصة",
           `Session: ${sessionId.slice(0, 14)}â€¦`,
           `owner-visitor-${sessionId}`
         );
@@ -1128,7 +1081,7 @@ export default function App() {
 
       for (const sessionId of alerts.logins.sessionIds) {
         await sendOwnerNotification(
-          "Ø²Ø§Ø¦Ø± Ø£ÙƒÙ…Ù„ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„",
+          "زائر أكمل تسجيل الدخول",
           `Session: ${sessionId.slice(0, 14)}â€¦`,
           `owner-login-${sessionId}`
         );
@@ -1136,7 +1089,7 @@ export default function App() {
 
       for (const sessionId of alerts.installs.sessionIds) {
         await sendOwnerNotification(
-          "Ø²Ø§Ø¦Ø± Ø«Ø¨Øª Ø§Ù„ØªØ·Ø¨ÙŠÙ‚",
+          "زائر ثبّت التطبيق",
           `Session: ${sessionId.slice(0, 14)}â€¦`,
           `owner-install-${sessionId}`
         );
@@ -1152,29 +1105,29 @@ export default function App() {
 
       if (!prevMilestones.registeredReached && nextMilestones.registeredReached) {
         await sendOwnerNotification(
-          "ØªØ­Ù‚Ù‚ Ø§Ù„Ù‡Ø¯Ù: 10 ØªØ³Ø¬ÙŠÙ„Ø§Øª",
-          `ØªÙ… Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ ${alerts.phaseOne.registeredUsers} Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† Ù…Ø³Ø¬Ù„ÙŠÙ†.`,
+          "تحقق الهدف: 10 تسجيلات",
+          `تم الوصول إلى ${alerts.phaseOne.registeredUsers} مستخدمين مسجلين.`,
           "owner-goal-registered"
         );
       }
       if (!prevMilestones.installedReached && nextMilestones.installedReached) {
         await sendOwnerNotification(
-          "ØªØ­Ù‚Ù‚ Ø§Ù„Ù‡Ø¯Ù: 10 ØªØ«Ø¨ÙŠØªØ§Øª",
-          `ØªÙ… Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ ${alerts.phaseOne.installedUsers} Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† Ø«Ø¨ØªÙˆØ§ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚.`,
+          "تحقق الهدف: 10 تثبيتات",
+          `تم الوصول إلى ${alerts.phaseOne.installedUsers} مستخدمين ثبّتوا التطبيق.`,
           "owner-goal-installed"
         );
       }
       if (!prevMilestones.addedReached && nextMilestones.addedReached) {
         await sendOwnerNotification(
-          "ØªØ­Ù‚Ù‚ Ø§Ù„Ù‡Ø¯Ù: 10 Ø£Ø´Ø®Ø§Øµ Ù…Ø¶Ø§ÙÙŠÙ†",
-          `ØªÙ… Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ ${alerts.phaseOne.addedPeople} Ø£Ø´Ø®Ø§Øµ Ù…Ø¶Ø§ÙÙŠÙ† Ø¹Ù„Ù‰ Ø§Ù„Ø®Ø±Ø§Ø¦Ø·.`,
+          "تحقق الهدف: 10 أشخاص مضافين",
+          `تم الوصول إلى ${alerts.phaseOne.addedPeople} أشخاص مضافين على الخرائط.`,
           "owner-goal-added"
         );
       }
       if (!prevMilestones.fullyCompleted && nextMilestones.fullyCompleted) {
         await sendOwnerNotification(
-          "Ø§ÙƒØªÙ…Ù„ Ù‡Ø¯Ù Ø§Ù„Ù…Ø±Ø­Ù„Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰",
-          "10 ØªØ³Ø¬ÙŠÙ„Ø§Øª + 10 ØªØ«Ø¨ÙŠØªØ§Øª + 10 Ø£Ø´Ø®Ø§Øµ Ù…Ø¶Ø§ÙÙŠÙ† ØªØ­Ù‚Ù‚ÙˆØ§ Ø¨Ø§Ù„ÙƒØ§Ù…Ù„.",
+          "اكتمل هدف المرحلة الأولى",
+          "10 تسجيلات + 10 تثبيتات + 10 أشخاص مضافين تحققوا بالكامل.",
           "owner-goal-phase-one-complete"
         );
       }
@@ -1228,15 +1181,15 @@ export default function App() {
       setGoalId(defaultGoalId);
       setCategory(resolveAdviceCategory(defaultGoalId));
       setSelectedNodeId(null);
-      setScreen("map");
+      void navigateToScreen("map");
     } else {
-      setScreen("goal");
+      void navigateToScreen("goal");
     }
 
     let cancelled = false;
     void (async () => {
-      // ØªØ­Ù„ÙŠÙ„ Ø§Ù„ÙˆØ¹ÙŠ Ø§Ù„Ø£ÙˆÙ„ÙŠ Ø¹Ù†Ø¯ Ø§Ù„Ø¯Ø®ÙˆÙ„
-      const insight = await consciousnessService.analyzeConsciousness(`Ø¨Ø¯Ø£ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ${authFirstName || ""} Ø±Ø­Ù„Ø© Ø¬Ø¯ÙŠØ¯Ø©`);
+      // تحليل الوعي الأولي عند الدخول
+      const insight = await consciousnessService.analyzeConsciousness(`بدأ المستخدم ${authFirstName || ""} رحلة جديدة`);
       if (!cancelled) setConsciousnessInsight(insight);
 
       if (!geminiClient.isAvailable()) return;
@@ -1251,15 +1204,15 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [authStatus, authUser, authFirstName, authToneGender, logPulse, setPulseCheckContext, setShowPulseCheck]);
+  }, [authStatus, authUser, authFirstName, authToneGender, logPulse, navigateToScreen, setPulseCheckContext, setShowPulseCheck]);
 
   const openDefaultGoalMap = useCallback(() => {
     const defaultGoalId = "family";
     setGoalId(defaultGoalId);
     setCategory(resolveAdviceCategory(defaultGoalId));
     setSelectedNodeId(null);
-    setScreen("map");
-  }, [setCategory, setGoalId, setScreen, setSelectedNodeId]);
+    void navigateToScreen("map");
+  }, [navigateToScreen, setCategory, setGoalId, setSelectedNodeId]);
 
   const goToGoals = useCallback(() => {
     if (!canUseMap) {
@@ -1276,44 +1229,25 @@ export default function App() {
       openDefaultGoalMap();
       return;
     }
-    setScreen("goal");
-  }, [canUseMap, openDefaultGoalMap, setLockedFeature, setScreen, skipNextPulseCheck]);
+    navigateToScreen("goal");
+  }, [canUseMap, navigateToScreen, openDefaultGoalMap, setLockedFeature, skipNextPulseCheck]);
 
   const startRecovery = () => {
-    // Check if user needs onboarding first
+    // Step 1: one-time onboarding gate.
     if (!hasCompletedJourneyOnboarding()) {
       trackEvent("onboarding_started", { source: "landing" });
       setShowOnboarding(true);
       return;
     }
 
-    // Always open Pulse Check on start recovery, ignoring frequency limits for better UX flow
-    // User flow: Pulse Check -> Goal Picker -> Map
+    // Step 2: always open Pulse Check from landing.
+    // Next transition (Goal/Map) is handled by handlePulseGateSubmit -> openDawayirSetup.
     trackEvent(AnalyticsEvents.MICRO_COMPASS_OPENED, { source: "landing", gate: "pulse" });
     setWelcome(null);
     setPostAuthIntentState(null);
     setShowAuthModal(false);
     setPulseCheckContext("start_recovery");
     setShowPulseCheck(true);
-    return;
-    /*
-    if (canUsePulseCheck) {
-      trackEvent(AnalyticsEvents.MICRO_COMPASS_OPENED, { source: "landing", gate: "pulse" });
-      setWelcome(null);
-      setPostAuthIntentState(null);
-      setShowAuthModal(false);
-      setPulseCheckContext("start_recovery");
-      setShowPulseCheck(true);
-      return;
-    }
-    */
-    if (shouldGateStartWithAuth) {
-      setWelcome(null);
-      setPostAuthIntentState({ kind: "login", createdAt: Date.now() });
-      setShowAuthModal(true);
-      return;
-    }
-    goToGoals();
   };
 
   const restartJourney = () => {
@@ -1340,21 +1274,21 @@ export default function App() {
   useEffect(() => {
     if (canUseMap || isUserMode) return;
     if (screen === "goal" || screen === "map" || screen === "mission" || screen === "guided") {
-      setScreen("landing");
+      void navigateToScreen("landing");
     }
-  }, [canUseMap, isUserMode, screen]);
+  }, [canUseMap, isUserMode, navigateToScreen, screen]);
 
   useEffect(() => {
     if (canUseJourneyTools) return;
-    if (screen === "tools") setScreen("landing");
-  }, [canUseJourneyTools, screen]);
+    if (screen === "tools") void navigateToScreen("landing");
+  }, [canUseJourneyTools, navigateToScreen, screen]);
 
   useEffect(() => {
     if (!isLockedPhaseOne) return;
     if (screen === "guided" || screen === "mission" || screen === "tools") {
-      setScreen("map");
+      void navigateToScreen("map");
     }
-  }, [isLockedPhaseOne, screen]);
+  }, [isLockedPhaseOne, navigateToScreen, screen]);
 
   useEffect(() => {
     if (!isLockedPhaseOne) return;
@@ -1364,18 +1298,28 @@ export default function App() {
   const openMissionScreen = (nodeId: string) => {
     if (isLockedPhaseOne) return;
     setMissionNodeId(nodeId);
-    setScreen("mission");
+    void navigateToScreen("mission");
   };
   const openJourneyTools = useCallback(() => {
-    if (isLockedPhaseOne) return;
+    if (isLockedPhaseOne) {
+      setLockedFeature("journey_tools");
+      return;
+    }
     if (!canUseJourneyTools) {
       setLockedFeature("journey_tools");
       return;
     }
     recordFlowEvent("tools_opened");
     setToolsBackScreen(screen === "tools" ? "landing" : screen);
-    setScreen("tools");
-  }, [canUseJourneyTools, isLockedPhaseOne, screen, setLockedFeature, setScreen, setToolsBackScreen]);
+    void navigateToScreen("tools");
+  }, [
+    canUseJourneyTools,
+    isLockedPhaseOne,
+    navigateToScreen,
+    screen,
+    setLockedFeature,
+    setToolsBackScreen
+  ]);
   const openDawayirTool = useCallback(() => {
     if (!canUseMap) {
       setLockedFeature("dawayir_map");
@@ -1385,7 +1329,7 @@ export default function App() {
     if (lastGoalMeta) {
       setGoalId(lastGoalMeta.goalId);
       setCategory(lastGoalMeta.category as AdviceCategory);
-      setScreen("map");
+      void navigateToScreen("map");
       setSelectedNodeId(null);
       return;
     }
@@ -1393,15 +1337,15 @@ export default function App() {
       openDefaultGoalMap();
       return;
     }
-    setScreen("goal");
+    void navigateToScreen("goal");
   }, [
     canUseMap,
     lastGoalById,
     openDefaultGoalMap,
+    navigateToScreen,
     setCategory,
     setGoalId,
     setLockedFeature,
-    setScreen,
     setSelectedNodeId,
     storedCategory,
     storedGoalId
@@ -1416,7 +1360,7 @@ export default function App() {
       openDefaultGoalMap();
       return;
     }
-    setScreen("goal");
+    void navigateToScreen("goal");
   };
 
   const handleRefreshNextStep = useCallback(() => {
@@ -1462,7 +1406,7 @@ export default function App() {
         setShowBreathing(true);
         break;
       case "open_map":
-        setScreen("map");
+        void navigateToScreen("map");
         break;
       case "open_tools":
         openJourneyTools();
@@ -1470,24 +1414,24 @@ export default function App() {
       case "open_mission":
         if (nodeIdFromPayload) openMissionScreen(nodeIdFromPayload);
         else if (selectedNodeId) openMissionScreen(selectedNodeId);
-        else setScreen("map");
+        else void navigateToScreen("map");
         break;
       case "review_red_node":
       case "log_situation":
       case "set_soft_boundary":
-        setScreen("map");
+        void navigateToScreen("map");
         if (nodeIdFromPayload) setSelectedNodeId(nodeIdFromPayload);
         break;
       case "journal_reflection":
         setShowFeedback(true);
         break;
       default:
-        setScreen("map");
+        void navigateToScreen("map");
         break;
     }
 
     setTimeout(() => setNextStepRefreshTick((tick) => tick + 1), 1200);
-  }, [openJourneyTools, openMissionScreen, selectedNodeId]);
+  }, [navigateToScreen, openJourneyTools, openMissionScreen, selectedNodeId]);
 
   useEffect(() => {
     const unsubscribe = subscribeToDawayirSignals(() => {
@@ -1554,16 +1498,28 @@ export default function App() {
     }
 
     if (previewFeature === "pulse_check") {
-      setScreen("landing");
+      void navigateToScreen("landing");
       setPulseCheckContext("regular");
       setShowPulseCheck(true);
       clearPreviewParam();
       return;
     }
 
+    if (previewFeature === "language_switcher") {
+      void navigateToScreen("landing");
+      clearPreviewParam();
+      return;
+    }
+
+    if (previewFeature === "armory_section") {
+      void navigateToScreen("landing");
+      clearPreviewParam();
+      return;
+    }
+
     if (previewFeature === "ai_field") {
       skipNextPulseCheck();
-      setScreen("landing");
+      void navigateToScreen("landing");
       clearPreviewParam();
       return;
     }
@@ -1581,9 +1537,9 @@ export default function App() {
     }
 
     skipNextPulseCheck();
-    setScreen("map");
+    void navigateToScreen("map");
     clearPreviewParam();
-  }, [isAdminRoute, isOwnerWatcher, openJourneyTools, setPulseCheckContext, setShowPulseCheck, skipNextPulseCheck]);
+  }, [isAdminRoute, isOwnerWatcher, navigateToScreen, openJourneyTools, setPulseCheckContext, setShowPulseCheck, skipNextPulseCheck]);
 
   useEffect(() => {
     if (isAdminRoute) return;
@@ -1600,127 +1556,64 @@ export default function App() {
     };
 
     skipNextPulseCheck();
-
-    switch (ownerAction) {
-      case "admin_dashboard": {
-        const next = createCurrentUrl();
-        if (!next) return;
-        next.pathname = "/admin";
-        next.search = "";
-        next.searchParams.set("tab", "overview");
-        pushUrl(next);
-        break;
+    executeOwnerAction(ownerAction, {
+      flags: {
+        canShowAIChatbot,
+        notificationSupported,
+        hasGlobalAtlas: availableFeatures.global_atlas,
+        hasInternalBoundaries: availableFeatures.internal_boundaries
+      },
+      callbacks: {
+        openAdminDashboard: () => {
+          const next = createCurrentUrl();
+          if (!next) return;
+          next.pathname = "/admin";
+          next.search = "";
+          next.searchParams.set("tab", "overview");
+          pushUrl(next);
+        },
+        openConsciousnessArchive: () => setShowConsciousnessArchive(true),
+        openJourneyGuideChat: () => setShowJourneyGuideChat(true),
+        openJourneyTools,
+        openJourneyTimeline: () => {
+          void navigateToScreen("map");
+          setShowJourneyTimeline(true);
+        },
+        openDawayirTool,
+        openQuickExperience: () => setShowGym(true),
+        startJourney: goToGoals,
+        openGuidedJourney: () => {
+          void navigateToScreen("guided");
+        },
+        openBaselineCheck: () => setShowBaseline(true),
+        openNotifications: () => setShowNotificationSettings(true),
+        openTrackingDashboard: () => setShowTrackingDashboard(true),
+        openAtlasDashboard: () => setShowAtlasDashboard(true),
+        openDataTools: () => setShowOwnerDataTools(true),
+        openShareStats: () => setShowShareStats(true),
+        openLibrary: () => setShowLibrary(true),
+        openSymptoms: () => setShowSymptomsOverview(true),
+        openRecoveryPlan: () => setShowRecoveryPlan(true),
+        openThemeSettings: () => setShowThemeSettings(true),
+        openAchievements: () => setShowAchievements(true),
+        openAdvancedTools: () => setShowAdvancedTools(true),
+        openClassicRecovery: () => setShowClassicRecovery(true),
+        openManualPlacement: () => setShowManualPlacement(true),
+        openFeedbackModal: () => {
+          recordFlowEvent("feedback_opened");
+          setShowFeedback(true);
+        },
+        requestInstallApp: () => {
+          void navigateToScreen("landing");
+          setOwnerInstallRequestNonce((prev) => prev + 1);
+        },
+        openNoiseSilencing: () => setShowNoiseSilencingPulse(true),
+        openBreathingSession: () => setShowBreathing(true),
+        openAmbientReality: () => setShowAmbientReality(true),
+        openWisdomVault: () => setShowTimeCapsuleVault(true),
+        lockFeature: setLockedFeature
       }
-      case "consciousness_archive":
-        setShowConsciousnessArchive(true);
-        break;
-      case "journey_guide_chat":
-        if (!canShowAIChatbot) {
-          setLockedFeature("ai_field");
-        } else {
-          setShowJourneyGuideChat(true);
-        }
-        break;
-      case "journey_tools":
-        openJourneyTools();
-        break;
-      case "journey_timeline":
-        setScreen("map");
-        setShowJourneyTimeline(true);
-        break;
-      case "open_dawayir":
-        openDawayirTool();
-        break;
-      case "quick_experience":
-        setShowGym(true);
-        break;
-      case "start_journey":
-        goToGoals();
-        break;
-      case "guided_journey":
-        setScreen("guided");
-        break;
-      case "baseline_check":
-        setShowBaseline(true);
-        break;
-      case "notifications":
-        if (notificationSupported) setShowNotificationSettings(true);
-        break;
-      case "tracking_dashboard":
-        setShowTrackingDashboard(true);
-        break;
-      case "atlas_dashboard":
-        if (!availableFeatures.global_atlas) {
-          setLockedFeature("global_atlas");
-        } else {
-          setShowAtlasDashboard(true);
-        }
-        break;
-      case "data_tools":
-        setShowOwnerDataTools(true);
-        break;
-      case "share_stats":
-        setShowShareStats(true);
-        break;
-      case "library":
-        setShowLibrary(true);
-        break;
-      case "symptoms":
-        setShowSymptomsOverview(true);
-        break;
-      case "recovery_plan":
-        setShowRecoveryPlan(true);
-        break;
-      case "theme_settings":
-        setShowThemeSettings(true);
-        break;
-      case "achievements":
-        setShowAchievements(true);
-        break;
-      case "advanced_tools":
-        if (!availableFeatures.internal_boundaries) {
-          setLockedFeature("internal_boundaries");
-        } else {
-          setShowAdvancedTools(true);
-        }
-        break;
-      case "classic_recovery":
-        if (!availableFeatures.internal_boundaries) {
-          setLockedFeature("internal_boundaries");
-        } else {
-          setShowClassicRecovery(true);
-        }
-        break;
-      case "manual_placement":
-        if (!availableFeatures.internal_boundaries) {
-          setLockedFeature("internal_boundaries");
-        } else {
-          setShowManualPlacement(true);
-        }
-        break;
-      case "feedback_modal":
-        recordFlowEvent("feedback_opened");
-        setShowFeedback(true);
-        break;
-      case "install_app":
-        setScreen("landing");
-        setOwnerInstallRequestNonce((prev) => prev + 1);
-        break;
-      case "noise_silencing":
-        setShowNoiseSilencingPulse(true);
-        break;
-      case "breathing_session":
-        setShowBreathing(true);
-        break;
-      case "ambient_reality":
-        setShowAmbientReality(true);
-        break;
-      case "wisdom_vault":
-        setShowTimeCapsuleVault(true);
-        break;
-      default:
-        break;
-    }
+    });
 
     clearOwnerActionParam();
   }, [
@@ -1729,6 +1622,7 @@ export default function App() {
     canShowAIChatbot,
     goToGoals,
     isAdminRoute,
+    navigateToScreen,
     notificationSupported,
     openDawayirTool,
     openJourneyTools,
@@ -1874,8 +1768,8 @@ export default function App() {
     }
     closePulseCheck(true, "programmatic");
 
-    // ØªÙˆØµÙŠÙ„ Ø§Ù„Ø¨ÙˆØµÙ„Ø© Ø¨Ù…Ø±Ø¢Ø© Ø§Ù„ÙˆØ¹ÙŠ (ØºÙŠØ± Ù…Ø¹Ø·Ù‘ÙÙ„ Ù„Ù„ØªØ¬Ø±Ø¨Ø©)
-    const numericPart = `Ø·Ø§Ù‚Ø© ${payload.energy}/10ØŒ Ù…Ø²Ø§Ø¬ ${payload.mood}, ØªØ±ÙƒÙŠØ² ${payload.focus}`;
+    // توصيل البوصلة بمرآة الوعي (غير معطّل للتجربة)
+    const numericPart = `طاقة ${payload.energy}/10، مزاج ${payload.mood}، تركيز ${payload.focus}`;
     const feelingText = payload.notes ? `${payload.notes.trim()}\n\n(${numericPart})` : numericPart;
     if (hasConcretePulseSelection(payload)) {
       const userId = authUser?.id ?? null;
@@ -1958,17 +1852,17 @@ export default function App() {
         resolvePerson: (labelOrId) => agentModule.resolvePersonFromNodes(labelOrId, nodes),
         onNavigateBreathing: () => setShowBreathing(true),
         onNavigateGym: () => setShowGym(true),
-        onNavigateMap: () => setScreen("map"),
+        onNavigateMap: () => { void navigateToScreen("map"); },
         onNavigateBaseline: () => setShowBaseline(true),
         onNavigateEmergency: () => useEmergencyState.getState().open(),
         availableFeatures,
         onNavigatePerson: (nodeId) => {
-          setScreen("map");
+          void navigateToScreen("map");
           setSelectedNodeId(nodeId);
         }
       });
     },
-    [agentModule, nodes, availableFeatures]
+    [agentModule, nodes, availableFeatures, navigateToScreen]
   );
 
   const pulseInsight = useMemo(
@@ -1979,7 +1873,7 @@ export default function App() {
   const pulseMode = useMemo(() => {
     if (!lastPulse) return "normal";
     const ageMs = Date.now() - (lastPulse.timestamp ?? 0);
-    if (ageMs > 24 * 60 * 60 * 1000) return "normal"; // Ø¢Ø®Ø± Ù†Ø¨Ø¶ Ø®Ù„Ø§Ù„ Ù¢Ù¤ Ø³Ø§Ø¹Ø© ÙÙ‚Ø·
+    if (ageMs > 24 * 60 * 60 * 1000) return "normal"; // آخر نبض خلال 24 ساعة فقط
     if (lastPulse.mood === "angry") return "angry";
     if (lastPulse.energy <= 3) return "low";
     if (lastPulse.energy >= 8) return "high";
@@ -2015,7 +1909,7 @@ export default function App() {
   }, [nodes]);
 
   const challengeLabel = challengeTarget
-    ? `Ù…Ø¹ ${challengeTarget.label} â€” ${challengeTarget.missionLabel} (Ø®Ø·ÙˆØ© ${challengeTarget.stepIndex + 1}/${challengeTarget.total})`
+    ? `مع ${challengeTarget.label} — ${challengeTarget.missionLabel} (خطوة ${challengeTarget.stepIndex + 1}/${challengeTarget.total})`
     : null;
 
   const canSkipCocoonBreathing = useMemo(
@@ -2122,8 +2016,8 @@ export default function App() {
         const reminderTarget = pickMissionReminderTarget(todayKey);
         const send = reminderTarget
           ? sendNotification({
-            title: "Ù…Ù‡Ù…ØªÙƒ Ù…Ø³ØªÙ†ÙŠØ§Ùƒ ðŸŽ¯",
-            body: `Ù…Ø¹ ${reminderTarget.node.label} â€” Ø®Ø·ÙˆØ© ${reminderTarget.next.stepIndex + 1}/${reminderTarget.next.total}: ${reminderTarget.next.step}`,
+            title: "مهمتك مستنياك 🎯",
+            body: `مع ${reminderTarget.node.label} — خطوة ${reminderTarget.next.stepIndex + 1}/${reminderTarget.next.total}: ${reminderTarget.next.step}`,
             tag: "mission-reminder"
           })
           : sendPresetNotification(NOTIFICATION_TYPES.MISSION_REMINDER);
@@ -2174,9 +2068,9 @@ export default function App() {
             type="button"
             onClick={goBackToFeatureFlags}
             className="fixed z-50 top-4 left-4 rounded-full border border-indigo-300 bg-white/95 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
-            title={previewedFeature ? `Ø§Ù„Ø±Ø¬ÙˆØ¹ Ù…Ù† Ù…Ø¹Ø§ÙŠÙ†Ø©: ${previewedFeature}` : "Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags"}
+            title={previewedFeature ? `الرجوع من معاينة: ${previewedFeature}` : "الرجوع إلى Feature Flags"}
           >
-            Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags
+            الرجوع إلى Feature Flags
           </button>
         )}
         <div className="nebula-bg absolute inset-0 -z-10" aria-hidden="true" />
@@ -2221,12 +2115,12 @@ export default function App() {
             type="button"
             onClick={goBackToFeatureFlags}
             className="fixed z-50 top-4 left-4 rounded-full border border-indigo-300 bg-white/95 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
-            title={previewedFeature ? `Ø§Ù„Ø±Ø¬ÙˆØ¹ Ù…Ù† Ù…Ø¹Ø§ÙŠÙ†Ø©: ${previewedFeature}` : "Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags"}
+            title={previewedFeature ? `الرجوع من معاينة: ${previewedFeature}` : "الرجوع إلى Feature Flags"}
           >
-            Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags
+            الرجوع إلى Feature Flags
           </button>
         )}
-        {/* ðŸŒŒ Nebula Background â€” Deep Cosmic Blue Canvas */}
+        {/* Nebula Background - Deep Cosmic Blue Canvas */}
         <div className="nebula-bg" aria-hidden="true" />
         <AnimatePresence>
           {activeBroadcast && (
@@ -2243,7 +2137,7 @@ export default function App() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="text-right">
                     <p className="text-xs font-semibold mb-1" style={{ color: "var(--soft-gold, #fbbf24)" }}>
-                      Ø±Ø³Ø§Ù„Ø© Ù…Ù† Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø±Ø­Ù„Ø©
+                      رسالة من إدارة الرحلة
                     </p>
                     <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{activeBroadcast.title}</p>
                     <p className="text-xs mt-1 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
@@ -2255,9 +2149,9 @@ export default function App() {
                     onClick={() => setActiveBroadcast(null)}
                     className="rounded-full px-2.5 py-1 text-xs font-semibold border border-white/15 hover:bg-white/5 transition-colors"
                     style={{ color: "var(--text-primary)" }}
-                    aria-label="Ø¥Ø®ÙØ§Ø¡ Ø§Ù„Ø±Ø³Ø§Ù„Ø©"
+                    aria-label="إخفاء الرسالة"
                   >
-                    Ø¥Ø®ÙØ§Ø¡
+                    إخفاء
                   </button>
                 </div>
               </div>
@@ -2307,10 +2201,10 @@ export default function App() {
                 }}
               >
                 <p className="text-base font-medium" style={{ color: "var(--text-primary)" }}>
-                  Ø­Ù…Ø¯ Ù„Ù„Ù‡ Ø¹Ù„Ù‰ Ø§Ù„Ø³Ù„Ø§Ù…Ø© ðŸŒ¿
+                  حمد لله على السلامة 🌿
                 </p>
                 <p className="text-sm mt-1 opacity-90" style={{ color: "var(--text-secondary)" }}>
-                  ÙŠÙˆÙ…Ùƒ Ø¨Ù‚Ù‰ Ø£Ø®Ù Ø¯Ù„ÙˆÙ‚ØªÙŠ
+                  يومك بقى أخف دلوقتي
                 </p>
               </div>
             </motion.div>
@@ -2368,9 +2262,7 @@ export default function App() {
                   âœ¨
                 </div>
                 <div className="text-right flex-1 min-w-0">
-                  <h3 className="text-sm font-bold mb-3" style={{ color: "var(--warm-amber)" }}>
-                    ÙˆÙ…Ø¶Ø© Ù…Ù† Ø§Ù„Ø°Ø§ÙƒØ±Ø©
-                  </h3>
+                  <h3 className="text-sm font-bold mb-3" style={{ color: "var(--warm-amber)" }}>ومضة من الذاكرة</h3>
                   <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                     {lastPulseInsights.map((insight) => (
                       <div
@@ -2382,10 +2274,10 @@ export default function App() {
                         }}
                       >
                         <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                          Ø´Ø¹ÙˆØ±Ùƒ Ø¯Ù„ÙˆÙ‚ØªÙŠ Ø¨ÙŠØ´Ø¨Ù‡ Ù…ÙˆÙ‚Ù{" "}
+                          شعورك دلوقتي بيشبه موقف{" "}
                           {insight.created_at && (
                             <span className="font-bold" style={{ color: "var(--text-primary)" }}>
-                              Ø­ØµÙ„ ÙŠÙˆÙ…{" "}
+                              حصل يوم{" "}
                               {new Date(insight.created_at).toLocaleDateString("ar-EG")}
                             </span>
                           )}
@@ -2406,7 +2298,7 @@ export default function App() {
                 className="glass-button w-full text-xs font-bold"
                 style={{ color: "var(--warm-amber)" }}
               >
-                ØªÙ… Â· Ø¥Ø®ÙØ§Ø¡ Ø§Ù„ÙˆÙ…Ø¶Ø©
+                تم · إخفاء الومضة
               </button>
             </div>
           </div>
@@ -2458,8 +2350,8 @@ export default function App() {
               openInNewTab(whatsAppLink);
             }}
             className="fixed z-40 right-4 md:right-6 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all"
-            title="ØªÙˆØ§ØµÙ„ ÙˆØ§ØªØ³Ø§Ø¨"
-            aria-label="ØªÙˆØ§ØµÙ„ ÙˆØ§ØªØ³Ø§Ø¨"
+            title="تواصل واتساب"
+            aria-label="تواصل واتساب"
           >
             <MessageCircle className="w-5 h-5 shrink-0" />
           </button>
@@ -2475,7 +2367,7 @@ export default function App() {
               onCardClick={(nodeId) => setSelectedNodeId(nodeId)}
             />
           )}
-          <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„</div>}>
+          <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...جاري التحميل</div>}>
             <div key={screen} className={`min-w-0 flex transition-all duration-300 ease-in-out ${screen === "landing" ? "flex-col" : "flex-1 items-center justify-center app-panel-main"}`}>
               {screen === "landing" && (
                 <Landing
@@ -2483,7 +2375,7 @@ export default function App() {
                   onRestartJourney={restartJourney}
                   onOpenTools={openJourneyTools}
                   showTopToolsButton={showTopToolsButton}
-                  showToolsSection={true}
+                  showToolsSection={Boolean(availableFeatures.armory_section)}
                   onFeatureLocked={setLockedFeature}
                   availableFeatures={availableFeatures}
                   ownerInstallRequestNonce={ownerInstallRequestNonce}
@@ -2501,14 +2393,14 @@ export default function App() {
                     />
                   )}
                   <GoalPicker
-                    onBack={() => setScreen("landing")}
+                    onBack={() => { void navigateToScreen("landing"); }}
                     onContinue={(nextCategory, nextGoalId) => {
                       setWelcome(null);
                       setCategory(nextCategory);
                       setGoalId(nextGoalId);
                       useJourneyState.getState().setLastGoal(nextGoalId, nextCategory);
                       skipNextPulseCheck();
-                      setScreen("map");
+                      void navigateToScreen("map");
                     }}
                   />
                 </div>
@@ -2541,7 +2433,7 @@ export default function App() {
 
               {screen === "tools" && (
                 <JourneyToolsScreen
-                  onBack={() => setScreen(toolsBackScreen)}
+                  onBack={() => { void navigateToScreen(toolsBackScreen); }}
                   onOpenDawayir={openDawayirTool}
                   onOpenDawayirSetup={openDawayirSetup}
                   onFeatureLocked={setLockedFeature}
@@ -2549,7 +2441,7 @@ export default function App() {
                   onOpenGoal={(goalId, category) => {
                     setGoalId(goalId);
                     setCategory(category as AdviceCategory);
-                    setScreen("map");
+                    void navigateToScreen("map");
                   }}
                   nextStepDecision={nextStepDecision}
                   onTakeNextStep={handleTakeNextStep}
@@ -2559,15 +2451,15 @@ export default function App() {
 
               {screen === "guided" && (
                 <GuidedJourneyFlow
-                  onBackToLanding={() => setScreen("landing")}
-                  onFinishJourney={() => setScreen("map")}
+                  onBackToLanding={() => { void navigateToScreen("landing"); }}
+                  onFinishJourney={() => { void navigateToScreen("map"); }}
                 />
               )}
 
               {screen === "mission" && missionNodeId && (
                 <MissionScreen
                   nodeId={missionNodeId}
-                  onBack={() => setScreen("map")}
+                  onBack={() => { void navigateToScreen("map"); }}
                 />
               )}
 
@@ -2628,14 +2520,14 @@ export default function App() {
               agentActions={agentActions}
               systemPromptOverride={agentSystemPrompt}
               onOpenBreathing={() => setShowBreathing(true)}
-              onNavigateToMap={() => setScreen("map")}
+              onNavigateToMap={() => { void navigateToScreen("map"); }}
               showLauncher={false}
               defaultOpen
               onRequestClose={() => setShowJourneyGuideChat(false)}
             />
           )}
 
-          {/* Ø²Ø± Ø¥Ø¶Ø§ÙÙŠ Ù„ÙØªØ­ Ø£Ø±Ø´ÙŠÙ Ø§Ù„ÙˆØ¹ÙŠ Ù…Ù† Ø´Ø§Ø´Ø© Ø§Ù„Ù‡Ø¨ÙˆØ· â€” ÙˆØ¶Ø¹ Ø§Ù„ØªØ·ÙˆÙŠØ± ÙÙ‚Ø· */}
+          {/* زر إضافي لفتح أرشيف الوعي من شاشة الهبوط - وضع التطوير فقط */}
           <ConsciousnessArchiveModal
             isOpen={showConsciousnessArchive}
             onClose={() => setShowConsciousnessArchive(false)}
@@ -2685,7 +2577,7 @@ export default function App() {
                 if (goalId === "unknown") {
                   openDefaultGoalMap();
                 } else {
-                  setScreen("map");
+                  void navigateToScreen("map");
                 }
                 setShowBreathing(true);
               }}
@@ -2747,7 +2639,7 @@ export default function App() {
                   if (goalId === "unknown") {
                     openDefaultGoalMap();
                   } else {
-                    setScreen("map");
+                    void navigateToScreen("map");
                   }
                   setPostBreathingMessage(true);
                   setTimeout(() => setPostBreathingMessage(false), 4000);
@@ -2902,9 +2794,7 @@ export default function App() {
                 <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "var(--soft-teal)" }} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-bold mb-3" style={{ color: "var(--soft-teal)" }}>
-                  Ø¨ØµÙŠØ±Ø© Ø§Ù„ÙˆØ¹ÙŠ
-                </h3>
+                <h3 className="text-sm font-bold mb-3" style={{ color: "var(--soft-teal)" }}>بصيرة الوعي</h3>
                 <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--text-secondary)" }}>
                   {consciousnessInsight.suggestedAction}
                 </p>
@@ -2917,7 +2807,7 @@ export default function App() {
                   <span className="px-3 py-1.5 text-xs font-bold rounded-full"
                     style={{ background: "rgba(139, 92, 246, 0.12)", color: "rgba(167, 139, 250, 0.9)" }}
                   >
-                    Ù†Ù…Ø·: {consciousnessInsight.underlyingPattern}
+                    نمط: {consciousnessInsight.underlyingPattern}
                   </span>
                 </div>
               </div>
@@ -2965,22 +2855,22 @@ export default function App() {
               paddingBottom: "env(safe-area-inset-bottom)",
               height: "calc(60px + env(safe-area-inset-bottom))"
             }}
-            aria-label="Ø§ÙØªÙÙÙ Ø§ÙØ±Ø¦ÙØ³Ù"
+            aria-label="التنقل الرئيسي"
           >
-            <button type="button" onClick={() => setScreen("landing")}
+            <button type="button" onClick={() => { void navigateToScreen("landing"); }}
               className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
               style={{ color: screen === "landing" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
-              aria-label="ÙØ³Ø§Ø±Ù">
+              aria-label="مساري">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
-              <span className="text-[10px] font-semibold">ÙØ³Ø§Ø±Ù</span>
+              <span className="text-[10px] font-semibold">مساري</span>
             </button>
-            <button type="button" onClick={() => setScreen("map")}
+            <button type="button" onClick={() => { void navigateToScreen("map"); }}
               className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
               style={{ color: screen === "map" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
-              aria-label="Ø¯ÙØ§ÙØ±Ù">
+              aria-label="دوايري">
               <span className="relative inline-flex items-center justify-center">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
                   style={{ filter: screen === "map" ? "drop-shadow(0 0 8px rgba(45,212,191,0.7))" : "none", transition: "filter 0.3s" }}>
@@ -2994,12 +2884,12 @@ export default function App() {
                     aria-hidden="true" />
                 )}
               </span>
-              <span className="text-[10px] font-semibold">Ø¯ÙØ§ÙØ±Ù</span>
+              <span className="text-[10px] font-semibold">دوايري</span>
             </button>
             <button type="button" onClick={() => setShowAchievements(true)}
               className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
               style={{ color: "rgba(148,163,184,0.55)" }}
-              aria-label="ÙØ­Ø·Ø§Øª">
+              aria-label="محطات">
               <span className="relative inline-flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 21v-4a7 7 0 0 1 14 0v4" />
@@ -3014,17 +2904,17 @@ export default function App() {
                   </span>
                 )}
               </span>
-              <span className="text-[10px] font-semibold">ÙØ­Ø·Ø§Øª</span>
+              <span className="text-[10px] font-semibold">محطات</span>
             </button>
             <button type="button" onClick={() => setShowFaq(true)}
               className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
               style={{ color: "rgba(148,163,184,0.55)" }}
-              aria-label="ÙØ¹Ù">
+              aria-label="وعي">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
               </svg>
-              <span className="text-[10px] font-semibold">ÙØ¹Ù</span>
+              <span className="text-[10px] font-semibold">وعي</span>
             </button>
           </nav>
         )}

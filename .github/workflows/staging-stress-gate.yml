@@ -1,0 +1,82 @@
+name: Staging Stress Gate
+
+on:
+  pull_request:
+    branches: ["main", "develop"]
+
+jobs:
+  stress-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dawayir_staging
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d dawayir_staging"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Wait for Postgres
+        run: |
+          for i in {1..30}; do
+            (echo > /dev/tcp/127.0.0.1/5432) >/dev/null 2>&1 && break
+            echo "waiting for postgres..."
+            sleep 2
+          done
+
+      - name: Run Stress Gate (millions of records)
+        env:
+          STAGING_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dawayir_staging
+          STRESS_USERS_COUNT: "200000"
+          STRESS_EVENTS_COUNT: "2000000"
+          STRESS_EXPECT_MIN_ROWS: "500"
+          STRESS_MAX_AVG_MS: "220"
+          STRESS_MAX_P95_MS: "350"
+        run: npm run stress:gate
+
+  stress-gate-real-staging:
+    if: ${{ secrets.STAGING_DATABASE_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Run Stress Gate on real staging DB
+        env:
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STRESS_USERS_COUNT: "200000"
+          STRESS_EVENTS_COUNT: "2000000"
+          STRESS_EXPECT_MIN_ROWS: "500"
+          STRESS_MAX_AVG_MS: "260"
+          STRESS_MAX_P95_MS: "420"
+        run: npm run stress:gate

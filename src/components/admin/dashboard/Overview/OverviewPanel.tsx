@@ -14,6 +14,8 @@ import {
   fetchOpsInsights,
   fetchSystemHealth,
   fetchExecutiveReport, // New Import
+  fetchSecuritySignals,
+  fetchOwnerOpsReport,
   savePulseCopyOverrides
 } from "../../../../services/adminApi";
 import { isSupabaseReady } from "../../../../services/supabaseClient";
@@ -36,8 +38,16 @@ import { DeepAnalytics } from "./components/DeepAnalytics"; // New Import
 import { AwarenessAndScenarios } from "./components/AwarenessAndScenarios"; // New Import
 import { MarketingAndRetention } from "./components/MarketingAndRetention"; // New Import
 import { AdminTools } from "./components/AdminTools"; // New Import
+import { SecuritySentinel } from "./components/SecuritySentinel";
+import { LiveFreezeGuard } from "./components/LiveFreezeGuard";
+import { AIGuardrailCard } from "./components/AIGuardrailCard";
 import { ConsciousnessMap } from "../Consciousness/ConsciousnessMap";
-import { type OpsInsights as OpsInsightsType, type SystemHealthReport, type ExecutiveReport as ExecutiveReportType } from "../../../../services/adminApi";
+import {
+  type OpsInsights as OpsInsightsType,
+  type SystemHealthReport,
+  type ExecutiveReport as ExecutiveReportType,
+  type SecuritySignalsReport
+} from "../../../../services/adminApi";
 
 // --- Helper Components & Functions ---
 
@@ -70,6 +80,7 @@ export const OverviewPanel: FC = () => {
   const [opsInsights, setOpsInsights] = useState<OpsInsightsType | null>(null);
   const [systemHealth, setSystemHealth] = useState<SystemHealthReport | null>(null);
   const [executiveReport, setExecutiveReport] = useState<ExecutiveReportType | null>(null); // New State
+  const [securitySignals, setSecuritySignals] = useState<SecuritySignalsReport | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
 
   const [weeklyDecisionLogs, setWeeklyDecisionLogs] = useState<FlowAuditLogEntry[]>([]);
@@ -98,15 +109,26 @@ export const OverviewPanel: FC = () => {
       Promise.all([
         fetchOverviewStats(),
         fetchOpsInsights(),
-        fetchSystemHealth(),
-        fetchExecutiveReport() // New Fetch
+        fetchExecutiveReport(), // New Fetch
+        fetchOwnerOpsReport()
       ])
-        .then(([overviewData, opsData, healthData, execData]) => {
+        .then(async ([overviewData, opsData, execData, ownerOps]) => {
           if (!mounted) return;
+          let healthData = ownerOps?.systemHealth ?? null;
+          let securityData = ownerOps?.securitySignals ?? null;
+          if (!healthData || !securityData) {
+            const [legacyHealth, legacySecurity] = await Promise.all([
+              fetchSystemHealth(),
+              fetchSecuritySignals()
+            ]);
+            healthData = healthData ?? legacyHealth;
+            securityData = securityData ?? legacySecurity;
+          }
           setRemoteStats(overviewData ?? null);
           setOpsInsights(opsData ?? null);
           setSystemHealth(healthData ?? null);
           setExecutiveReport(execData ?? null);
+          setSecuritySignals(securityData ?? null);
           setInitialLoading(false);
         })
         .catch((err) => {
@@ -244,6 +266,12 @@ export const OverviewPanel: FC = () => {
         <StatCard title="متوسط الطاقة" value={formatNumber(avgMoodValue)} hint="تدفق المزاج" glowColor="indigo" />
         <StatCard title="عمليات الذكاء" value={formatNumber(aiTokensUsed)} hint="أحمال المهام العصبية" glowColor="indigo" />
       </div>
+
+      <LiveFreezeGuard />
+
+      <SecuritySentinel data={securitySignals} loading={initialLoading} />
+
+      <AIGuardrailCard />
 
       {/* Phase One Goal (New) */}
       <div className="admin-glass-card p-8 border-white/5 bg-slate-950/40 rounded-3xl backdrop-blur-sm relative overflow-hidden group">

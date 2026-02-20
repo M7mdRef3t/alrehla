@@ -3,13 +3,13 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { motion, useReducedMotion } from "framer-motion";
 import {
-  Star, ArrowLeft, Sparkles, Heart, Compass, Map, Orbit, Quote,
-  Zap, Users, TrendingUp, Smartphone, Radio, ShieldCheck, Target, Telescope, X,
+  Star, ArrowLeft, Smartphone, Target, Telescope, X,
   AlertTriangle, Trophy, BookOpen
 } from "lucide-react";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
 import { landingCopy } from "../copy/landing";
 import { soundManager } from "../services/soundManager";
+import { loadStreak } from "../services/streakSystem";
 import { useJourneyState } from "../state/journeyState";
 import { useMapState } from "../state/mapState";
 import { calculateEntropy, type UserState } from "../services/predictiveEngine";
@@ -34,7 +34,17 @@ import type { MirrorInsight } from "../services/mirrorLogic";
 import { AnimatePresence } from "framer-motion";
 import { VictoryReport } from "./VictoryReport";
 import { PlaybookViewer } from "./PlaybookViewer";
-import { getLanguage, setLanguage, LANGUAGE_OPTIONS, t } from "../services/i18n";
+import { getLanguage, setLanguage, LANGUAGE_OPTIONS } from "../services/i18n";
+import { scanForAchievements } from "../services/victoryEngine";
+import { useEventHistoryStore } from "../state/eventHistoryStore";
+import {
+  QuickPrioritySection,
+  FeatureShowcaseSection,
+  MetricsSection,
+  TestimonialsSection,
+  FinalReadinessSection
+} from "./landing/LandingSections";
+import { useLandingLiveData } from "../architecture/landingLiveData";
 
 /* ══════════════════════════════════════════
    LANDING — Dawayir
@@ -58,13 +68,6 @@ const ease = [0.25, 1, 0.5, 1] as [number, number, number, number];
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease } } };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.12 } } };
 const item = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } };
-
-/* ── reusable card style ── */
-const CARD = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: "1.25rem",
-} as const;
 
 /* ═══════════════════════════════════
    🌌 Floating Particles — خلفية متحركة
@@ -154,16 +157,17 @@ const OrbitalRings: FC = () => {
 export const Landing: FC<LandingProps> = ({
   onStartJourney,
   onRestartJourney,
-  onOpenTools: _onOpenTools,
-  showTopToolsButton: _showTopToolsButton = true,
-  showToolsSection: _showToolsSection = true,
-  onFeatureLocked: _onFeatureLocked,
-  availableFeatures: _availableFeatures,
+  onOpenTools,
+  showTopToolsButton = true,
+  showToolsSection = true,
+  onFeatureLocked,
+  availableFeatures,
   ownerInstallRequestNonce = 0,
   onOwnerInstallRequestHandled
 }) => {
   const nodesCount = useMapState((s) => s.nodes.length);
   const nodes = useMapState((s) => s.nodes); // needed for reactivity
+  const eventsCount = useEventHistoryStore((s) => s.events.length);
 
   // Silent Observer State
   const [psychState, setPsychState] = useState<UserState>("ORDER");
@@ -176,7 +180,11 @@ export const Landing: FC<LandingProps> = ({
   // Phase 23: Tactical HQ State
   const [showVictoryReport, setShowVictoryReport] = useState(false);
   const [showPlaybookViewer, setShowPlaybookViewer] = useState(false);
+  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const currentLang = getLanguage();
+  const currentLangIndex = Math.max(0, LANGUAGE_OPTIONS.findIndex((opt) => opt.code === currentLang));
+  const currentLangOption = LANGUAGE_OPTIONS[currentLangIndex] ?? LANGUAGE_OPTIONS[0];
+  const nextLangOption = LANGUAGE_OPTIONS[(currentLangIndex + 1) % LANGUAGE_OPTIONS.length] ?? LANGUAGE_OPTIONS[0];
 
   // Gamification State (Phase 15)
   const rank = useGamificationState((s) => s.rank);
@@ -206,6 +214,36 @@ export const Landing: FC<LandingProps> = ({
   const lastGoalRef = useRef<string | null>(lastGoalLabel ?? null);
   const reduceMotion = useReducedMotion();
   const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
+  const showLandingStreak = hasExistingJourney && loadStreak().currentStreak > 0;
+  const streakData = loadStreak();
+  const completedMissionsCount = useMemo(
+    () => nodes.filter((n) => Boolean(n.missionProgress?.isCompleted)).length,
+    [nodes]
+  );
+  const growthDecisionInsight = useMemo(() => {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const yellowNodes = nodes.filter((n) => n.ring === "yellow" && !n.isNodeArchived);
+    if (yellowNodes.length === 0) return null;
+
+    const enriched = yellowNodes.map((node) => {
+      const anchor = node.analysis?.timestamp ?? node.journeyStartDate ?? null;
+      const ageDays = anchor ? Math.max(0, Math.floor((now - anchor) / DAY_MS)) : 0;
+      return { node, ageDays };
+    });
+
+    const candidate = enriched.sort((a, b) => b.ageDays - a.ageDays)[0];
+    if (!candidate) return null;
+
+    return {
+      nodeId: candidate.node.id,
+      nodeLabel: candidate.node.label,
+      ageDays: candidate.ageDays
+    };
+  }, [nodes]);
+  const achievementsCount = useMemo(() => scanForAchievements().length, [eventsCount]);
+  const landingLiveData = useLandingLiveData(landingCopy.testimonials ?? []);
+  const hasVictoryAchievements = achievementsCount > 0;
   const landingViewedAt = useRef<number | null>(null);
   const didStartJourneyRef = useRef(false);
   const didTrackLandingClosedRef = useRef(false);
@@ -295,22 +333,18 @@ export const Landing: FC<LandingProps> = ({
     onOwnerInstallRequestHandled?.();
   }, [ownerInstallRequestNonce, onOwnerInstallRequestHandled, triggerPwaInstall]);
 
-  const features = [
-    { icon: Compass, title: "خريطة الوعي", desc: landingCopy.whatIsPoints[0], accent: "#2dd4bf" },
-    { icon: Orbit, title: "المدارات الذكية", desc: landingCopy.whatIsPoints[1], accent: "#fbbf24" },
-    { icon: Map, title: "خطة التحرك", desc: landingCopy.whatIsPoints[2], accent: "#34d399" },
-  ];
-
-  const stats = [
-    { icon: Users, val: "١٬٠٠٠+", label: "شخص بدأ رحلته", accent: "#2dd4bf" },
-    { icon: TrendingUp, val: "٩٣٪", label: "شافوا فرق حقيقي", accent: "#fbbf24" },
-    { icon: Zap, val: "٥ دقائق", label: "لبداية التغيير", accent: "#34d399" },
-  ];
-
   // View Mode: Standard vs Cosmic (Phase 17)
   const [viewMode, setViewMode] = useState<"standard" | "cosmic">("standard");
 
   const isCrisis = entropyScore >= 85;
+  const canUseCosmicView = Boolean(availableFeatures?.global_atlas);
+  const canUseLanguageSwitcher = Boolean(availableFeatures?.language_switcher);
+
+  useEffect(() => {
+    if (viewMode === "cosmic" && !canUseCosmicView) {
+      setViewMode("standard");
+    }
+  }, [canUseCosmicView, viewMode]);
 
   return (
     <div
@@ -324,23 +358,21 @@ export const Landing: FC<LandingProps> = ({
     >
 
       {/* ── 🌍 Language Toggle (Phase 23) ── */}
-      <div className="absolute top-6 right-6 z-[60] flex gap-2">
-        {LANGUAGE_OPTIONS.map(opt => (
+      {canUseLanguageSwitcher && (
+        <div className="absolute top-6 right-6 z-[60]">
           <button
-            key={opt.code}
+            type="button"
             onClick={() => {
-              setLanguage(opt.code);
+              setLanguage(nextLangOption.code);
               window.location.reload();
             }}
-            className={`px-3 py-1.5 rounded-xl border text-[10px] font-black transition-all ${currentLang === opt.code
-              ? "bg-white/10 border-white/20 text-white"
-              : "bg-black/20 border-white/5 text-slate-500 hover:text-slate-300"
-              }`}
+            className="px-3 py-1.5 rounded-xl border text-[10px] font-black transition-all bg-white/10 border-white/20 text-white hover:bg-white/15"
+            title={`تبديل اللغة إلى ${nextLangOption.label}`}
           >
-            {opt.flag} {opt.label}
+            {currentLangOption.flag} {currentLangOption.label}
           </button>
-        ))}
-      </div>
+        </div>
+      )}
 
       {/* ── 🌌 animated background ── */}
       <div className="fixed inset-0 pointer-events-none z-0" aria-hidden="true">
@@ -357,18 +389,20 @@ export const Landing: FC<LandingProps> = ({
       <div className="relative z-10 w-full max-w-[680px] mx-auto px-5 sm:px-6">
 
         {/* TELESCOPE TOGGLE (Phase 17) */}
-        <div className="absolute top-4 right-4 z-50">
-          <button
-            onClick={() => setViewMode(prev => prev === "standard" ? "cosmic" : "standard")}
-            className={`p-3 rounded-full border backdrop-blur-md transition-all duration-500 ${viewMode === "cosmic"
-              ? "bg-purple-500/20 border-purple-400 text-purple-300 rotate-180 shadow-[0_0_15px_rgba(168,85,247,0.3)]"
-              : "bg-slate-800/40 border-slate-700 text-slate-400 hover:text-white"
-              }`}
-            title="Switch View"
-          >
-            {viewMode === "cosmic" ? <X className="w-5 h-5" /> : <Telescope className="w-5 h-5" />}
-          </button>
-        </div>
+        {canUseCosmicView && (
+          <div className="absolute top-4 right-4 z-50">
+            <button
+              onClick={() => setViewMode(prev => prev === "standard" ? "cosmic" : "standard")}
+              className={`p-3 rounded-full border backdrop-blur-md transition-all duration-500 ${viewMode === "cosmic"
+                ? "bg-purple-500/20 border-purple-400 text-purple-300 rotate-180 shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+                : "bg-slate-800/40 border-slate-700 text-slate-400 hover:text-white"
+                }`}
+              title="تبديل العرض"
+            >
+              {viewMode === "cosmic" ? <X className="w-5 h-5" /> : <Telescope className="w-5 h-5" />}
+            </button>
+          </div>
+        )}
 
         {viewMode === "cosmic" ? (
           <motion.div
@@ -378,10 +412,10 @@ export const Landing: FC<LandingProps> = ({
           >
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-indigo-300">
-                Cosmic Interface
+                الواجهة الكونية
               </h2>
               <p className="text-sm text-purple-400/60 font-mono tracking-widest uppercase mt-1">
-                Physics Engine Online
+                محرك التحليل نشط
               </p>
             </div>
             <CosmicDashboard />
@@ -400,16 +434,16 @@ export const Landing: FC<LandingProps> = ({
               {/* pill badge — Tactical Status */}
               {/* pill badge — Tactical Status (Silent Observer) */}
               {/* Phase 25: Sovereign Identity Profile */}
-              <motion.div variants={fadeUp} className="w-full max-w-lg mx-auto mb-6 px-4">
+              <motion.div variants={fadeUp} className="order-6 w-full max-w-lg mx-auto mb-6 px-4">
                 <SovereigntyOracle />
               </motion.div>
 
-              <motion.div variants={fadeUp} className="w-full max-w-lg mx-auto mb-6 px-4">
+              <motion.div variants={fadeUp} className="order-7 w-full max-w-lg mx-auto mb-6 px-4">
                 <SovereignProfile />
               </motion.div>
 
               {/* Phase 21: Behavioral Mode Banner (Strategic Context) */}
-              <motion.div variants={fadeUp} className="w-full max-w-lg mx-auto mb-6 px-4">
+              <motion.div variants={fadeUp} className="order-8 w-full max-w-lg mx-auto mb-6 px-4">
                 <BehavioralModeBanner
                   mode={isCrisis ? "containment" : psychState === "CHAOS" ? "containment" : nodes.length > 5 ? "growth" : "flow"}
                   entropyScore={entropyScore}
@@ -419,7 +453,7 @@ export const Landing: FC<LandingProps> = ({
               {/* Phase 22: Crisis Alert / Suicide Mission */}
               {isCrisis && (
                 <motion.div
-                  className="mb-8 px-4 py-3 rounded-xl bg-rose-600/20 border border-rose-500/40 text-rose-200 text-sm font-bold flex items-center gap-3 animate-pulse"
+                  className="order-5 mb-8 px-4 py-3 rounded-xl bg-rose-600/20 border border-rose-500/40 text-rose-200 text-sm font-bold flex items-center gap-3 animate-pulse"
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                 >
@@ -430,11 +464,11 @@ export const Landing: FC<LandingProps> = ({
 
 
               {/* App Store Style Header */}
-              <motion.div variants={fadeUp} className="flex flex-col items-center mb-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-teal-500 to-slate-900 rounded-[1.2rem] shadow-2xl mb-4 flex items-center justify-center border border-white/10">
-                  <Target className="w-10 h-10 text-white" />
-                </div>
-                {hasExistingJourney && (
+              <motion.div variants={fadeUp} className="order-1 flex flex-col items-center mb-6">
+                <p className="text-xs sm:text-sm font-semibold text-teal-300 mb-2">
+                  {landingCopy.hook}
+                </p>
+                {showLandingStreak && (
                   <motion.div variants={item} className="mb-4 w-56">
                     <StreakWidget compact={true} />
                   </motion.div>
@@ -443,49 +477,55 @@ export const Landing: FC<LandingProps> = ({
                   className="text-[2rem] sm:text-[2.5rem] md:text-[3rem] font-bold leading-[1.1] mb-2 tracking-tight"
                   style={{ fontFamily: '"IBM Plex Sans Arabic", system-ui, sans-serif' }}
                 >
-                  غرفة عمليات الوعي
+                  {landingCopy.titleLine1}
+                  <br />
+                  {landingCopy.titleLine2}
                 </h1>
                 <p className="text-lg sm:text-xl font-medium text-slate-400">
-                  نظام التشغيل الجديد لعقلك
+                  {landingCopy.subtitle}
                 </p>
+                <p className="mt-2 text-sm text-slate-500">{landingCopy.slogan}</p>
               </motion.div>
 
               {/* Ratings & Badges */}
-              <motion.div variants={fadeUp} className="flex items-center gap-6 mb-10 text-xs sm:text-sm font-medium text-slate-400">
+              <motion.div variants={fadeUp} className="order-3 flex items-center gap-6 mb-10 text-xs sm:text-sm font-medium text-slate-400">
+                <div className="text-center">
+                  <p className="text-[10px] text-teal-300">بياناتك الحالية</p>
+                  <p className="text-[11px] text-slate-300">مؤشرات مباشرة من رحلتك</p>
+                </div>
                 <div className="flex flex-col items-center gap-0.5">
-                  <div className="flex items-center gap-1 text-slate-200">
-                    <span>4.9</span>
-                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                  </div>
-                  <span className="text-[10px]">1K+ Ratings</span>
+                  <span className="text-slate-200">{nodesCount}</span>
+                  <span className="text-[10px]">علاقة على الخريطة</span>
                 </div>
                 <div className="w-px h-8 bg-slate-700" />
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-slate-200">#1</span>
-                  <span className="text-[10px]">Productivity</span>
+                  <span className="text-slate-200">{completedMissionsCount}</span>
+                  <span className="text-[10px]">مهام مكتملة</span>
                 </div>
                 <div className="w-px h-8 bg-slate-700" />
                 <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-slate-200">4+</span>
-                  <span className="text-[10px]">Years</span>
+                  <span className="text-slate-200">{streakData.totalActiveDays}</span>
+                  <span className="text-[10px]">أيام نشاط</span>
                 </div>
               </motion.div>
 
               {/* 🎯 Tactical Headquarters (Phase 23) */}
               <motion.div
-                className="grid grid-cols-2 gap-4 w-full max-w-lg mx-auto mb-10"
+                className="order-9 grid grid-cols-2 gap-4 w-full max-w-lg mx-auto mb-10"
                 variants={item}
               >
-                <button
-                  onClick={() => setShowVictoryReport(true)}
-                  className="p-5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-right flex flex-col gap-2 hover:bg-indigo-500/20 transition-all group"
-                >
-                  <Trophy className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform" />
-                  <div>
-                    <h3 className="text-sm font-bold text-white">تحليل الانتصارات</h3>
-                    <p className="text-[10px] text-indigo-300/60 leading-tight">شاهد خريطة نموك وأوسمة الشرف</p>
-                  </div>
-                </button>
+                {hasVictoryAchievements && (
+                  <button
+                    onClick={() => setShowVictoryReport(true)}
+                    className="p-5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-right flex flex-col gap-2 hover:bg-indigo-500/20 transition-all group"
+                  >
+                    <Trophy className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform" />
+                    <div>
+                      <h3 className="text-sm font-bold text-white">تحليل الانتصارات</h3>
+                      <p className="text-[10px] text-indigo-300/60 leading-tight">شاهد خريطة نموك وأوسمة الشرف</p>
+                    </div>
+                  </button>
+                )}
                 <button
                   onClick={() => setShowPlaybookViewer(true)}
                   className="p-5 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-right flex flex-col gap-2 hover:bg-teal-500/20 transition-all group"
@@ -501,15 +541,21 @@ export const Landing: FC<LandingProps> = ({
               {/* ════════════════════════════════
               LEADERBOARD ADDITION (Phase 15)
              ════════════════════════════════ */}
-              <motion.div variants={item}>
-                <LeaderboardWidget currentXP={xp} currentRank={rank} />
+              <motion.div variants={item} className="order-10">
+                <LeaderboardWidget
+                  currentXP={xp}
+                  currentRank={rank}
+                  completedMissions={completedMissionsCount}
+                  streakDays={streakData.currentStreak}
+                  achievementsCount={achievementsCount}
+                />
               </motion.div>
 
               {/* ════════════════════════════════
               SIMULATION DEMO
               ════════════════════════════════ */}
               {/* CTA — centered (Primary Action) - Moved UP */}
-              <motion.div className="flex flex-col items-center mb-16" variants={item}>
+              <motion.div className="order-2 flex flex-col items-center mb-16" variants={item}>
                 <motion.button
                   type="button"
                   onClick={handleStartJourney}
@@ -545,32 +591,57 @@ export const Landing: FC<LandingProps> = ({
 
                 {/* ── زر ابدأ رحلة جديدة — يظهر فقط للمستخدم القديم ── */}
                 {hasExistingJourney && onRestartJourney && (
-                  <motion.button
+                  <div className="mt-4 flex flex-col items-center gap-2">
+                    <motion.button
+                      type="button"
+                      onClick={() => {
+                        soundManager.playClick();
+                        setShowRestartConfirm(true);
+                      }}
+                      onMouseEnter={() => soundManager.playHover()}
+                      className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-[13px] font-semibold transition-all"
+                      style={{
+                        background: "rgba(251, 191, 36, 0.08)",
+                        border: "1px solid rgba(251, 191, 36, 0.25)",
+                        color: "rgba(253, 230, 138, 0.9)"
+                      }}
+                      whileHover={{ scale: 1.03, backgroundColor: "rgba(251, 191, 36, 0.14)" }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      <Target className="w-3.5 h-3.5" />
+                      إعادة إعداد الرحلة
+                    </motion.button>
+                    <p className="text-[11px] text-amber-200/80">لا يحذف بياناتك الحالية</p>
+                  </div>
+                )}
+              </motion.div>
+
+              {showTopToolsButton && onOpenTools && (
+                <motion.div variants={item} className="order-4 mb-8">
+                  <button
                     type="button"
                     onClick={() => {
                       soundManager.playClick();
-                      onRestartJourney();
+                      onOpenTools();
                     }}
                     onMouseEnter={() => soundManager.playHover()}
-                    className="mt-4 inline-flex items-center gap-2 rounded-full px-5 py-2 text-[13px] font-semibold transition-all"
+                    className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-semibold transition-all"
                     style={{
-                      background: "rgba(251, 191, 36, 0.08)", // Amber for reset/config
-                      border: "1px solid rgba(251, 191, 36, 0.25)",
-                      color: "rgba(253, 230, 138, 0.9)"
+                      background: "rgba(15, 23, 42, 0.6)",
+                      border: "1px solid rgba(45, 212, 191, 0.35)",
+                      color: "rgba(153, 246, 228, 0.95)"
                     }}
-                    whileHover={{ scale: 1.03, backgroundColor: "rgba(251, 191, 36, 0.14)" }}
-                    whileTap={{ scale: 0.97 }}
                   >
-                    <Target className="w-3.5 h-3.5" />
-                    تهيئة جديدة للمهمة
-                  </motion.button>
-                )}
-              </motion.div>
+                    <Target className="w-4 h-4" />
+                    {landingCopy.toolsTitle}
+                  </button>
+                </motion.div>
+              )}
 
               {/* ════════════════════════════════
               ADAPTIVE MISSION CARD (Phase 14)
              ════════════════════════════════ */}
-              <motion.div variants={item} className="w-full max-w-sm mx-auto mb-10">
+              <motion.div variants={item} className="order-11 w-full max-w-sm mx-auto mb-10">
                 <div
                   className={`p-6 rounded-2xl border backdrop-blur-md text-right relative overflow-hidden group transition-all duration-500 hover:scale-[1.02]`}
                   style={{
@@ -593,25 +664,52 @@ export const Landing: FC<LandingProps> = ({
 
                   <h3 className={`text-lg font-bold mb-2 ${adaptiveContent.themeColor === "rose" ? "text-rose-300" : adaptiveContent.themeColor === "cyan" ? "text-cyan-300" : "text-emerald-300"
                     }`}>
-                    {adaptiveContent.missionTitle}
+                    {growthDecisionInsight ? "قرار نمو يحتاج حسم 🚀" : adaptiveContent.missionTitle}
                   </h3>
 
                   <p className="text-slate-200 text-sm leading-relaxed mb-4 font-medium opacity-90">
-                    {adaptiveContent.greeting} <br />
-                    <span className="opacity-70 font-normal">{adaptiveContent.missionDescription}</span>
+                    {growthDecisionInsight ? `حالة معلّقة: ${growthDecisionInsight.nodeLabel}` : adaptiveContent.greeting} <br />
+                    <span className="opacity-70 font-normal">
+                      {growthDecisionInsight
+                        ? growthDecisionInsight.ageDays > 0
+                          ? `بقالها ${growthDecisionInsight.ageDays} يوم في المدار الأصفر. القرار النهاردة هيحسم التردد.`
+                          : "مفتوحة النهاردة في المدار الأصفر. الحسم السريع أفضل من التأجيل."
+                        : adaptiveContent.missionDescription}
+                    </span>
                   </p>
 
-                  {adaptiveContent.script && (
+                  {(growthDecisionInsight || adaptiveContent.script) && (
                     <div className="bg-black/20 rounded-lg p-3 text-xs text-slate-400 border border-white/5">
                       <div className="flex gap-2 mb-1">
                         <span className="text-rose-400 font-bold">❌ لا تقل:</span>
-                        <span>{adaptiveContent.script.dontSay}</span>
+                        <span>{growthDecisionInsight ? "هأجل القرار يوم كمان" : adaptiveContent.script?.dontSay}</span>
                       </div>
                       <div className="flex gap-2">
                         <span className="text-emerald-400 font-bold">✅ قل:</span>
-                        <span>{adaptiveContent.script.doSay}</span>
+                        <span>{growthDecisionInsight ? "هفتح الخريطة دلوقتي وأثبت قرار واضح" : adaptiveContent.script?.doSay}</span>
                       </div>
                     </div>
+                  )}
+
+                  {growthDecisionInsight && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundManager.playClick();
+                        recordFlowEvent("next_step_action_taken", {
+                          meta: {
+                            action: "growth_card_execute_now",
+                            nodeId: growthDecisionInsight.nodeId,
+                            nodeLabel: growthDecisionInsight.nodeLabel,
+                            ageDays: growthDecisionInsight.ageDays
+                          }
+                        });
+                        handleStartJourney();
+                      }}
+                      className="mt-3 w-full rounded-xl bg-emerald-500 text-slate-950 py-2.5 text-xs font-black hover:bg-emerald-400 transition-colors"
+                    >
+                      افتح الخريطة وخد القرار الآن
+                    </button>
                   )}
                 </div>
               </motion.div>
@@ -704,242 +802,72 @@ export const Landing: FC<LandingProps> = ({
               </div>
             </motion.section>
 
-            {/* ════════════════════════════════
-            FEATURES — 3 cards
-           ════════════════════════════════ */}
-            {/* ════════════════════════════════
-            APP STORE SHOWCASE — Horizontal Scroll
-           ════════════════════════════════ */}
-            <motion.section
-              className="py-12 sm:py-16"
-              variants={stagger}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-60px" }}
-            >
-              <motion.div variants={item} className="flex items-center justify-between mb-6 px-2">
-                <h2 className="text-xl sm:text-2xl font-bold">
-                  Feature Highlights
-                </h2>
-                <span className="text-teal-400 text-sm font-medium">See All</span>
-              </motion.div>
-
-              {/* Horizontal Scroll Container */}
-              <div className="flex gap-4 overflow-x-auto pb-8 -mx-5 px-5 snap-x">
-                {/* Card 1: Radar System */}
-                <motion.div
-                  variants={item}
-                  className="snap-center shrink-0 w-[280px] sm:w-[320px] h-[400px] rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden"
-                  style={{ background: "linear-gradient(145deg, rgba(20, 184, 166, 0.1), rgba(15, 23, 42, 0.6))", border: "1px solid rgba(45,212,191,0.2)" }}
-                >
-                  <div className="absolute top-0 right-0 p-4 opacity-20">
-                    <Target className="w-24 h-24 text-teal-400" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold tracking-wider text-teal-400 uppercase mb-2 block">Detection</span>
-                    <h3 className="text-2xl font-bold text-white mb-2">Radar System</h3>
-                    <p className="text-sm text-slate-300">Map your relationships. Detect energy vampires instantly.</p>
-                  </div>
-                  <div className="w-full h-32 bg-teal-900/30 rounded-xl border border-teal-500/20 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full border border-teal-500/40 relative">
-                      <div className="absolute inset-0 border border-teal-500/20 rounded-full animate-ping" />
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-teal-400 rounded-full" />
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Card 2: Guilt Court */}
-                <motion.div
-                  variants={item}
-                  className="snap-center shrink-0 w-[280px] sm:w-[320px] h-[400px] rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden"
-                  style={{ background: "linear-gradient(145deg, rgba(245, 158, 11, 0.1), rgba(15, 23, 42, 0.6))", border: "1px solid rgba(251,191,36,0.2)" }}
-                >
-                  <div className="absolute top-0 right-0 p-4 opacity-20">
-                    <ShieldCheck className="w-24 h-24 text-amber-400" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold tracking-wider text-amber-400 uppercase mb-2 block">Defense</span>
-                    <h3 className="text-2xl font-bold text-white mb-2">Guilt Court</h3>
-                    <p className="text-sm text-slate-300">Overcome the guilt of saying 'No'. AI-powered defense logic.</p>
-                  </div>
-                  <div className="w-full h-32 bg-amber-900/20 rounded-xl border border-amber-500/20 flex items-center justify-center gap-4">
-                    <ShieldCheck className="w-12 h-12 text-amber-500" />
-                  </div>
-                </motion.div>
-
-                {/* Card 3: Tactical Playbooks */}
-                <motion.div
-                  variants={item}
-                  className="snap-center shrink-0 w-[280px] sm:w-[320px] h-[400px] rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden"
-                  style={{ background: "linear-gradient(145deg, rgba(239, 68, 68, 0.1), rgba(15, 23, 42, 0.6))", border: "1px solid rgba(248,113,113,0.2)" }}
-                >
-                  <div className="absolute top-0 right-0 p-4 opacity-20">
-                    <Zap className="w-24 h-24 text-rose-400" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold tracking-wider text-rose-400 uppercase mb-2 block">Action</span>
-                    <h3 className="text-2xl font-bold text-white mb-2">Tactical Playbooks</h3>
-                    <p className="text-sm text-slate-300">Step-by-step plans to neutralize toxic bosses and narcissists.</p>
-                  </div>
-                  <div className="w-full h-32 bg-rose-900/20 rounded-xl border border-rose-500/20 flex items-center justify-center">
-                    <div className="text-rose-400 font-mono text-xs p-2">
-                      [PROTOCOL: DETACH]<br />{">"} EXECUTE...
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-            </motion.section>
-
-            {/* ════════════════════════════════
-            STATS — Command Center Metrics
-           ════════════════════════════════ */}
-            <motion.section
-              className="py-10 sm:py-14"
-              variants={stagger}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-60px" }}
-            >
-              <div
-                className="rounded-2xl p-6 sm:p-8 grid grid-cols-3 divide-x divide-white/[0.06] bg-slate-900/50 backdrop-blur-md border border-slate-700/50"
-              >
-                {[
-                  { val: "10K+", label: "Active Units", icon: Users },
-                  { val: "85%", label: "Retention Rate", icon: TrendingUp },
-                  { val: "24/7", label: "Jarvis Intel", icon: Zap }
-                ].map((s, i) => (
-                  <motion.div key={i} className="flex flex-col items-center text-center px-2" variants={item}>
-                    <s.icon className="w-5 h-5 mb-2 text-slate-400" />
-                    <div className="text-xl sm:text-2xl font-bold mb-1 text-white">
-                      {s.val}
-                    </div>
-                    <p className="text-[11px] sm:text-[12px] uppercase tracking-wider font-semibold text-slate-500">
-                      {s.label}
-                    </p>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.section>
-
-            {/* ════════════════════════════════
-            TESTIMONIALS
-           ════════════════════════════════ */}
-            {landingCopy.testimonials?.length > 0 && (
+            <QuickPrioritySection stagger={stagger} item={item} />
+            <FeatureShowcaseSection
+              stagger={stagger}
+              item={item}
+              onExploreAll={() => {
+                soundManager.playClick();
+                if (onOpenTools) onOpenTools();
+                else handleStartJourney();
+              }}
+              onOpenRadar={() => {
+                soundManager.playClick();
+                recordFlowEvent("next_step_action_taken", { meta: { action: "feature_radar_opened" } });
+                handleStartJourney();
+              }}
+              onOpenCourt={() => {
+                soundManager.playClick();
+                recordFlowEvent("next_step_action_taken", { meta: { action: "feature_inner_court_opened" } });
+                handleStartJourney();
+              }}
+              onOpenPlaybooks={() => {
+                soundManager.playClick();
+                recordFlowEvent("next_step_action_taken", { meta: { action: "feature_playbooks_opened" } });
+                setShowPlaybookViewer(true);
+              }}
+            />
+            {showToolsSection && onOpenTools && (
               <motion.section
-                className="py-10 sm:py-14"
+                className="py-8 sm:py-12"
                 variants={stagger}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: "-60px" }}
               >
-                <motion.p
-                  className="text-[13px] font-semibold tracking-wide text-center mb-2"
-                  style={{ color: "rgba(148,163,184,0.5)", letterSpacing: "0.05em" }}
-                  variants={item}
-                >
-                  تجارب حقيقية
-                </motion.p>
-                <motion.h2
-                  className="text-xl sm:text-2xl font-bold text-center mb-8"
-                  variants={item}
-                >
-                  قالوا عن تجربتهم
-                </motion.h2>
-
-                <div className="space-y-4">
-                  {landingCopy.testimonials.map((t, i) => (
-                    <motion.div
-                      key={i}
-                      className="rounded-2xl p-5 sm:p-6"
-                      style={CARD}
-                      variants={item}
-                    >
-                      <Quote className="w-5 h-5 mb-3" style={{ color: i === 0 ? "rgba(45,212,191,0.35)" : "rgba(251,191,36,0.35)" }} />
-                      <p className="text-[14px] sm:text-[15px] leading-[1.8] mb-4" style={{ color: "rgba(203,213,225,0.85)" }}>
-                        "{t.quote}"
-                      </p>
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center"
-                          style={{
-                            background: i === 0 ? "rgba(45,212,191,0.12)" : "rgba(251,191,36,0.12)",
-                            border: `1px solid ${i === 0 ? "rgba(45,212,191,0.25)" : "rgba(251,191,36,0.25)"}`
-                          }}
-                        >
-                          <Heart className="w-3 h-3" style={{ color: i === 0 ? "#2dd4bf" : "#fbbf24" }} />
-                        </div>
-                        <span className="text-[13px] font-medium" style={{ color: "rgba(148,163,184,0.6)" }}>
-                          {t.author}
-                        </span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                <motion.div variants={item} className="rounded-2xl p-6 text-center bg-slate-900/45 border border-teal-500/20">
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-2">{landingCopy.toolsTitle}</h3>
+                  <p className="text-sm text-slate-300 mb-5">{landingCopy.toolsCtaHint}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundManager.playClick();
+                      onOpenTools();
+                    }}
+                    onMouseEnter={() => soundManager.playHover()}
+                    className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white"
+                    style={{ background: "linear-gradient(135deg, #14b8a6 0%, #2dd4bf 100%)" }}
+                  >
+                    <Target className="w-4 h-4" />
+                    {landingCopy.toolsCta}
+                  </button>
+                </motion.div>
               </motion.section>
             )}
-
-            {/* ════════════════════════════════
-            FINAL CTA
-           ════════════════════════════════ */}
-            <motion.section
-              className="py-16 sm:py-20 flex flex-col items-center text-center"
-              variants={stagger}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-60px" }}
-            >
-              <motion.h2
-                className="text-xl sm:text-2xl font-bold mb-3"
-                variants={item}
-              >
-                جاهز لاستلام القيادة؟
-              </motion.h2>
-              <motion.p
-                className="text-[14px] sm:text-[15px] mb-8 max-w-sm mx-auto"
-                style={{ color: "rgba(148,163,184,0.75)", lineHeight: 1.75 }}
-                variants={item}
-              >
-                الميدان في انتظار أوامرك... ابدأ المناورة الآن
-              </motion.p>
-
-              <motion.div className="flex flex-col items-center" variants={item}>
-                <motion.button
-                  type="button"
-                  onClick={() => {
-                    soundManager.playClick();
-                    handleStartJourney();
-                  }}
-                  onMouseEnter={() => soundManager.playHover()}
-                  className="group inline-flex items-center justify-center gap-2.5 rounded-full px-8 py-3.5 text-[15px] font-semibold"
-                  style={{
-                    background: "linear-gradient(135deg, #10b981 0%, #34d399 100%)",
-                    color: "#fff",
-                    boxShadow: "0 4px 24px rgba(16,185,129,0.3), 0 1px 3px rgba(0,0,0,0.2)"
-                  }}
-                  whileHover={{ y: -2, boxShadow: "0 8px 36px rgba(16,185,129,0.4), 0 2px 8px rgba(0,0,0,0.15)" }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  ابدأ الرحلة الآن
-                  <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-                </motion.button>
-              </motion.div>
-
-              {lastGoalLabel && (
-                <motion.div className="mt-6" variants={item}>
-                  <span
-                    className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[13px] font-medium ${badgePulse ? "animate-bounce" : ""}`}
-                    style={{
-                      background: "rgba(45,212,191,0.08)",
-                      border: "1px solid rgba(45,212,191,0.2)",
-                      color: "#2dd4bf"
-                    }}
-                  >
-                    {lastGoalMeta ? <lastGoalMeta.icon className="w-3.5 h-3.5" /> : <Star className="w-3.5 h-3.5" />}
-                    آخر هدف: {lastGoalLabel}
-                  </span>
-                </motion.div>
-              )}
-            </motion.section>
+            <MetricsSection stagger={stagger} item={item} metricsState={landingLiveData.metrics} />
+            <TestimonialsSection
+              stagger={stagger}
+              item={item}
+              testimonials={landingCopy.testimonials ?? []}
+              testimonialsState={landingLiveData.testimonials}
+            />
+            <FinalReadinessSection
+              stagger={stagger}
+              item={item}
+              lastGoalLabel={lastGoalLabel}
+              badgePulse={badgePulse}
+              LastGoalIcon={lastGoalMeta?.icon}
+            />
 
 
             {/* ════════════════════════════════
@@ -972,6 +900,52 @@ export const Landing: FC<LandingProps> = ({
 
         {/* Phase 21: Honesty Challenge Overlay */}
         <AnimatePresence>
+          {showRestartConfirm && onRestartJourney && (
+            <motion.div
+              className="fixed inset-0 z-[130] flex items-center justify-center px-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <button
+                type="button"
+                className="absolute inset-0 bg-slate-950/75 backdrop-blur-sm"
+                onClick={() => setShowRestartConfirm(false)}
+                aria-label="إغلاق تأكيد إعادة الإعداد"
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                className="relative w-full max-w-sm rounded-2xl border border-amber-400/25 bg-slate-900/95 p-5 text-right"
+              >
+                <h4 className="text-sm font-black text-amber-300 mb-2">تأكيد إعادة الإعداد</h4>
+                <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                  هتبدأ إعداد الرحلة من جديد (Onboarding)، لكن بياناتك الحالية هتفضل محفوظة.
+                </p>
+                <div className="flex items-center gap-2 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowRestartConfirm(false)}
+                    className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/5"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      soundManager.playClick();
+                      setShowRestartConfirm(false);
+                      onRestartJourney();
+                    }}
+                    className="rounded-lg border border-amber-400/40 bg-amber-500/20 px-3 py-1.5 text-xs font-black text-amber-200 hover:bg-amber-500/30"
+                  >
+                    نعم، ابدأ من جديد
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
           {honestyInsight && (
             <HonestyChallenge
               insight={honestyInsight}
@@ -991,7 +965,13 @@ export const Landing: FC<LandingProps> = ({
         {/* 🔮 Victory & Playbook Modals (Phase 23) */}
         <AnimatePresence>
           {showVictoryReport && (
-            <VictoryReport onClose={() => setShowVictoryReport(false)} />
+            <VictoryReport
+              onClose={() => setShowVictoryReport(false)}
+              onTakeTodayAction={() => {
+                setShowVictoryReport(false);
+                handleStartJourney();
+              }}
+            />
           )}
           {showPlaybookViewer && (
             <div className="fixed inset-0 z-[120] bg-slate-950/95 backdrop-blur-3xl overflow-y-auto pt-10">

@@ -7,7 +7,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Shield, Star, Zap, Award, Target } from "lucide-react";
-import { useGamificationState, type Rank, XP_TABLE } from "../services/gamificationEngine";
+import { useGamificationState, type Rank } from "../services/gamificationEngine";
 
 const RANK_DATA: Record<Rank, { label: string; icon: any; color: string; bg: string }> = {
     Scout: { label: "كشّاف", icon: Target, color: "text-slate-400", bg: "bg-slate-500/10" },
@@ -19,6 +19,8 @@ const RANK_DATA: Record<Rank, { label: string; icon: any; color: string; bg: str
 
 export const SovereignProfile: React.FC = () => {
     const { xp, rank, level } = useGamificationState();
+    if (xp <= 0) return null;
+
     const currentRank = RANK_DATA[rank];
     const Icon = currentRank.icon;
 

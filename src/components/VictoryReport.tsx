@@ -6,14 +6,15 @@
 
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Trophy, TrendingUp, Shield, Target, Zap, ChevronLeft } from "lucide-react";
+import { Trophy, TrendingUp, Shield, ChevronLeft } from "lucide-react";
 import { calculateVictoryMetrics, scanForAchievements } from "../services/victoryEngine";
 
 interface VictoryReportProps {
     onClose: () => void;
+    onTakeTodayAction?: () => void;
 }
 
-export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose }) => {
+export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose, onTakeTodayAction }) => {
     const metrics = useMemo(() => calculateVictoryMetrics(), []);
     const achievements = useMemo(() => scanForAchievements(), []);
 
@@ -33,7 +34,7 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose }) => {
                     </button>
                     <div className="flex flex-col items-end">
                         <h1 className="text-2xl font-black text-white tracking-tight">تقرير الانتصار التكتيكي</h1>
-                        <p className="text-xs text-teal-400 font-bold uppercase tracking-widest">Victory Intelligence Online</p>
+                        <p className="text-xs text-teal-400 font-bold tracking-widest">وحدة ذكاء الانتصار</p>
                     </div>
                 </header>
 
@@ -66,7 +67,7 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose }) => {
                     </svg>
                     <div className="absolute flex flex-col items-center">
                         <span className="text-4xl font-black text-white">{Math.round(metrics.harmonyScore)}%</span>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Harmony Score</span>
+                        <span className="text-[10px] font-bold text-slate-500 tracking-widest">مؤشر الانسجام</span>
                     </div>
                 </div>
 
@@ -80,7 +81,7 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose }) => {
                     />
                     <MetricCard
                         icon={<Shield className="w-5 h-5 text-rose-400" />}
-                        label="قوة الحسم (Detachment)"
+                        label="قوة الحسم"
                         value={Math.round(metrics.detachmentStrength) + "%"}
                         desc="القدرة على قطع الاستنزاف"
                     />
@@ -90,7 +91,7 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose }) => {
                 <div className="w-full space-y-6">
                     <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                         <Trophy className="w-4 h-4" />
-                        أوسمة الشرف (Medals of Honor)
+                        أوسمة الشرف
                     </h2>
 
                     <div className="space-y-4">
@@ -113,20 +114,33 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose }) => {
                                 </span>
                             </motion.div>
                         )) : (
-                            <div className="text-center py-8 text-slate-600 border border-dashed border-white/10 rounded-2xl">
-                                لا توجد أوسمة بعد. استمر في المناورة.
+                            <div className="py-6 px-4 text-slate-300 border border-dashed border-white/10 rounded-2xl">
+                                <p className="text-sm font-bold text-white mb-3 text-center">خطواتك الأولى لكسب أول وسام</p>
+                                <ul className="space-y-2 text-xs leading-relaxed">
+                                    <li>1. حرّك علاقة مستنزِفة من الأحمر إلى الأصفر أو الأخضر.</li>
+                                    <li>2. نفّذ مهمة واحدة كاملة وسجّل إنجازها.</li>
+                                    <li>3. راجع الخريطة بعد التنفيذ وثبّت خطوة متابعة لليوم التالي.</li>
+                                </ul>
                             </div>
                         )}
                     </div>
                 </div>
 
                 {/* Action Button */}
-                <button
-                    onClick={onClose}
-                    className="mt-auto w-full py-4 rounded-2xl bg-gradient-to-r from-teal-500 to-indigo-500 text-white font-bold text-sm shadow-xl active:scale-[0.98] transition-all"
-                >
-                    فهمت الرسالة. استمرار المهمة.
-                </button>
+                <div className="mt-auto w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                        onClick={onClose}
+                        className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-sm active:scale-[0.98] transition-all"
+                    >
+                        إغلاق التقرير
+                    </button>
+                    <button
+                        onClick={() => onTakeTodayAction?.()}
+                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-teal-500 to-indigo-500 text-white font-bold text-sm shadow-xl active:scale-[0.98] transition-all"
+                    >
+                        نفّذ خطوة اليوم
+                    </button>
+                </div>
             </div>
         </motion.div>
     );

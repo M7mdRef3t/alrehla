@@ -68,10 +68,12 @@ if (rootElement) {
     <ErrorBoundary>
       <App />
       <AnalyticsConsentBanner />
-      <Suspense fallback={null}>
-        <Analytics />
-        <SpeedInsights />
-      </Suspense>
+      {runtimeEnv.isProd && (
+        <Suspense fallback={null}>
+          <Analytics />
+          <SpeedInsights />
+        </Suspense>
+      )}
     </ErrorBoundary>
   );
 }

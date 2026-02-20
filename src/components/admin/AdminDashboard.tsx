@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { FEATURE_FLAGS } from "../../config/features";
 import { runtimeEnv } from "../../config/runtimeEnv";
-import { useAdminState, ADMIN_ACCESS_CODE } from "../../state/adminState";
+import { useAdminState } from "../../state/adminState";
 import { getEffectiveRoleFromState, useAuthState } from "../../state/authState";
 import { isPrivilegedRole } from "../../utils/featureFlags";
 import {
@@ -27,6 +27,7 @@ import {
   fetchMissions,
   fetchBroadcasts,
 } from "../../services/adminApi";
+import { LiveFreezePill } from "./LiveFreezePill";
 import { isSupabaseReady, supabase } from "../../services/supabaseClient";
 import {
   createCurrentUrl,
@@ -87,7 +88,6 @@ const updateTabInUrl = (tab: AdminTab) => {
 
 const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   const adminAccess = useAdminState((s) => s.adminAccess);
-  const adminCode = useAdminState((s) => s.adminCode);
   const setAdminAccess = useAdminState((s) => s.setAdminAccess);
   const setAdminCode = useAdminState((s) => s.setAdminCode);
   const authUser = useAuthState((s) => s.user);
@@ -95,13 +95,6 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   const authRole = useAuthState(getEffectiveRoleFromState);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (adminAccess && !adminCode) {
-      const fallback = runtimeEnv.adminCode || ADMIN_ACCESS_CODE;
-      if (fallback) setAdminCode(fallback);
-    }
-  }, [adminAccess, adminCode, setAdminCode]);
 
   useEffect(() => {
     let mounted = true;
@@ -145,7 +138,11 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   }, [adminAccess, authRole, authUser, roleOverride, setAdminAccess, setAdminCode]);
 
   const handleLogin = () => {
-    const expected = runtimeEnv.adminCode || ADMIN_ACCESS_CODE;
+    const expected = runtimeEnv.adminCode;
+    if (!expected) {
+      setError("الدخول بالكود غير متاح في هذه البيئة. استخدم حساب بصلاحية مناسبة.");
+      return;
+    }
     if (code.trim() === expected) {
       setAdminAccess(true);
       setAdminCode(code.trim());
@@ -332,6 +329,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
             </div>
 
             <div className="flex items-center gap-6">
+              <LiveFreezePill />
               <div className="hidden md:flex items-center gap-4 border-r border-white/10 pr-6 mr-6 h-10">
                 <div className="text-right">
                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Module Status</p>

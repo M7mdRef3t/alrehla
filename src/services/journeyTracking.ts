@@ -8,6 +8,8 @@ import { isUserMode } from "../config/appEnv";
 import { runtimeEnv } from "../config/runtimeEnv";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "./browserStorage";
 import { getAuthUserId } from "../state/authState";
+import { CircuitBreaker } from "../architecture/circuitBreaker";
+import { sendJsonWithResilience } from "../architecture/resilientHttp";
 
 const KEY_MODE = "dawayir-tracking-mode";
 const KEY_EVENTS = "dawayir-journey-events";
@@ -17,6 +19,7 @@ const KEY_UTM = "dawayir-utm-params";
 const MAX_EVENTS = 2000;
 const SUPABASE_EVENTS_TABLE = "journey_events";
 const SUPABASE_PROFILES_TABLE = "profiles";
+const trackingApiBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
 
 export type TrackingMode = "anonymous" | "identified";
 
@@ -136,18 +139,18 @@ async function flushSupabaseSync(): Promise<void> {
     created_at: new Date(event.timestamp).toISOString()
   }));
 
-  const { error } = await supabase.from(SUPABASE_EVENTS_TABLE).insert(rows);
-  if (error && runtimeEnv.isDev) {
-    console.warn("journeyTracking: supabase insert failed", error);
-  }
+  await supabase.from(SUPABASE_EVENTS_TABLE).insert(rows);
 
   // Only sync session profiles for anonymous tracking.
   // Authenticated users' profiles are auto-created by the handle_auth_profile() trigger.
   const authenticatedUserId = getAuthUserId();
   if (authenticatedUserId) {
-    if (runtimeEnv.isDev) {
-      console.log("journeyTracking: skipping profile sync (authenticated user)", { userId: authenticatedUserId });
-    }
+    return;
+  }
+
+  // In local development, skip profile upserts to avoid noisy RLS/401 warnings.
+  // Event inserts above remain active, so analytics behavior can still be tested.
+  if (runtimeEnv.isDev) {
     return;
   }
 
@@ -167,12 +170,9 @@ async function flushSupabaseSync(): Promise<void> {
     role: "session",
     last_seen: now
   }));
-  const { error: profileError } = await supabase.from(SUPABASE_PROFILES_TABLE).upsert(profileRows, {
+  await supabase.from(SUPABASE_PROFILES_TABLE).upsert(profileRows, {
     onConflict: "id"
   });
-  if (profileError && runtimeEnv.isDev) {
-    console.warn("journeyTracking: profile upsert failed", profileError);
-  }
 
   // Session → User stitching: ربط الجلسة بالمستخدم عند تسجيل الدخول
   for (const { event } of batch) {
@@ -183,7 +183,7 @@ async function flushSupabaseSync(): Promise<void> {
     const userId = typeof extra?.userId === "string" ? extra.userId : null;
     const email = typeof extra?.email === "string" ? extra.email : null;
     if (!userId) continue;
-    const { error: stitchError } = await supabase.from(SUPABASE_PROFILES_TABLE).upsert({
+    await supabase.from(SUPABASE_PROFILES_TABLE).upsert({
       id: event.sessionId,
       full_name: event.sessionId,
       role: "session",
@@ -191,9 +191,6 @@ async function flushSupabaseSync(): Promise<void> {
       email: email ?? undefined,
       last_seen: now
     }, { onConflict: "id" });
-    if (stitchError && runtimeEnv.isDev) {
-      console.warn("journeyTracking: session-user stitch failed", stitchError);
-    }
   }
 }
 
@@ -214,8 +211,8 @@ function saveEvents(events: JourneyEvent[]): void {
   const trimmed = events.slice(-MAX_EVENTS);
   try {
     setInLocalStorage(KEY_EVENTS, JSON.stringify(trimmed));
-  } catch (e) {
-    if (runtimeEnv.isDev) console.warn("journeyTracking: save failed", e);
+  } catch {
+    // Ignore storage quota issues and keep runtime stable.
   }
 }
 
@@ -278,6 +275,7 @@ export type FlowStep =
   | "feedback_opened"
   | "feedback_submitted"
   | "tools_opened"
+  | "playbook_executed"
   | "utm_captured"
   | "next_step_rendered"
   | "next_step_action_taken"
@@ -333,13 +331,12 @@ export function recordFlowEvent(
   queueSupabaseSync(getTrackingMode(), event);
   const apiUrl = getTrackingApiUrl();
   if (apiUrl) {
-    fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode: getTrackingMode(), event })
-    }).catch((err) => {
-      if (runtimeEnv.isDev) console.warn("journeyTracking: flow send failed", err);
-    });
+    void sendJsonWithResilience(
+      apiUrl,
+      { mode: getTrackingMode(), event },
+      {},
+      { retries: 1, breaker: trackingApiBreaker }
+    );
   }
 }
 
@@ -367,14 +364,12 @@ export function recordJourneyEvent(
 
   const apiUrl = getTrackingApiUrl();
   if (apiUrl) {
-    const body = { mode: getTrackingMode(), event };
-    fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    }).catch((err) => {
-      if (runtimeEnv.isDev) console.warn("journeyTracking: send to backend failed", err);
-    });
+    void sendJsonWithResilience(
+      apiUrl,
+      { mode: getTrackingMode(), event },
+      {},
+      { retries: 1, breaker: trackingApiBreaker }
+    );
   }
 }
 
