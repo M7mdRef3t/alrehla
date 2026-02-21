@@ -97,7 +97,7 @@ export const GrowthAndFriction: FC<GrowthAndFrictionProps> = ({ growthData, fric
                                 fontSize={10}
                                 tickLine={false}
                                 axisLine={false}
-                                tickFormatter={(value) => value.split('-').slice(1).join('-')} // Show MM-DD
+                                tickFormatter={(value: string) => value.split("-").slice(1).join("-")} // Show MM-DD
                             />
                             <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
                             <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#ffffff20' }} />

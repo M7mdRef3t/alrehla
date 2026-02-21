@@ -13,13 +13,8 @@ import {
  * ترتيب الموديلات النصية — من الأفضل للاحتياط. مرجع كامل: docs/GEMINI_MODELS.md
  */
 const TEXT_MODEL_FALLBACK_ORDER: string[] = [
-  "gemini-2.0-flash-lite",
-  "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
-  "gemini-2.5-flash",
-  "gemini-2.5-pro",
-  "gemini-3-flash-preview",
-  "gemini-3-pro-preview"
+  "gemini-1.5-flash",
+  "gemini-1.5-pro"
 ];
 
 const GENERATION_CONFIG = {

@@ -14,7 +14,11 @@ import { loadStreak } from "../services/streakSystem";
 import { loadUserMemory } from "../services/userMemory";
 import { getLanguage, t, LANGUAGE_OPTIONS, type Language } from "../services/i18n";
 import { getCulturalContext, saveCulturalContext, PROFILES, type CulturalContext } from "../services/culturalAdapter";
-import { Brain } from "lucide-react";
+import { Brain, ExternalLink } from "lucide-react";
+import { stripeService } from "../services/stripeIntegration";
+import { supabase } from "../services/supabaseClient";
+import { syncSubscription } from "../services/subscriptionManager";
+import { useEffect } from "react";
 
 /* ══════════════════════════════════════════
    SETTINGS SCREEN — شاشة الإعدادات
@@ -30,6 +34,10 @@ interface SettingsScreenProps {
 export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
     const [section, setSection] = useState<SettingsSection>("main");
     const [showPaywall, setShowPaywall] = useState(false);
+
+    useEffect(() => {
+        syncSubscription();
+    }, []);
 
     const tier = getCurrentTier();
     const streak = loadStreak();
@@ -266,15 +274,35 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                     whileTap={{ scale: 0.98 }}
                                 >
                                     <Zap className="w-4 h-4" />
-                                    ارقَ للقائد
+                                    ارقَ الآن
                                 </motion.button>
                             )}
 
                             {tier !== "free" && (
-                                <div className="text-center py-4">
-                                    <Star className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-                                    <p className="text-sm text-slate-300">أنت مشترك نشط 🎖️</p>
-                                    <p className="text-xs text-slate-500 mt-1">شكراً لدعمك للمنصة</p>
+                                <div className="space-y-4">
+                                    <div className="text-center py-4">
+                                        <Star className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+                                        <p className="text-sm text-slate-300">أنت مشترك نشط 🎖️</p>
+                                        <p className="text-xs text-slate-500 mt-1">شكراً لدعمك للمنصة</p>
+                                    </div>
+
+                                    <button
+                                        onClick={async () => {
+                                            if (!supabase) return;
+                                            const { data: { session } } = await supabase.auth.getSession();
+                                            if (!session?.user) return;
+
+                                            const data = await stripeService.createPortalSession({
+                                                userId: session.user.id,
+                                                returnUrl: window.location.href
+                                            });
+                                            if (data?.url) window.location.href = data.url;
+                                        }}
+                                        className="w-full py-3 rounded-xl border border-slate-700 text-slate-300 text-sm font-bold flex items-center justify-center gap-2 hover:bg-white/5 transition-colors"
+                                    >
+                                        <ExternalLink className="w-4 h-4" />
+                                        إدارة الاشتراك (الفواتير)
+                                    </button>
                                 </div>
                             )}
                         </motion.div>

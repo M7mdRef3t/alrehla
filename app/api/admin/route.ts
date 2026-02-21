@@ -37,6 +37,14 @@ function getClientIp(req: NextRequest): string {
     return "unknown";
 }
 
+function isCronSecretAuthorized(req: NextRequest, query: Record<string, string>): boolean {
+    const secret = process.env.CRON_SECRET;
+    if (!secret) return false;
+    const querySecret = query.secret;
+    const headerSecret = req.headers.get("x-cron-secret") || "";
+    return querySecret === secret || headerSecret === secret;
+}
+
 function compactAndCountAttempts(ip: string, now: number): number {
     const existing = failedAttemptsByIp.get(ip) ?? [];
     const compacted = existing.filter((ts) => now - ts <= AUTH_WINDOW_MS);
@@ -69,6 +77,8 @@ async function runHandler(req: NextRequest) {
     if (!handler) {
         return NextResponse.json({ error: "Not Found" }, { status: 404 });
     }
+    const isCronOverviewRequest = path === "overview" && query.kind === "cron-report";
+    const cronSecretAuthorized = isCronOverviewRequest && isCronSecretAuthorized(req, query);
 
     // Mock request object
     const mockReq: any = {
@@ -98,31 +108,33 @@ async function runHandler(req: NextRequest) {
         end: () => mockRes
     };
 
-    const recentFailures = compactAndCountAttempts(ip, now);
-    if (recentFailures >= MAX_FAILED_ATTEMPTS_PER_WINDOW) {
-        await recordAdminAudit(mockReq, "admin_auth_rate_limited", {
-            path,
-            ip,
-            attemptsInWindow: recentFailures,
-            windowMs: AUTH_WINDOW_MS
-        });
-        return NextResponse.json(
-            { error: "Too many failed attempts. Try again later." },
-            { status: 429, headers: { "Retry-After": "600" } }
-        );
-    }
+    if (!cronSecretAuthorized) {
+        const recentFailures = compactAndCountAttempts(ip, now);
+        if (recentFailures >= MAX_FAILED_ATTEMPTS_PER_WINDOW) {
+            await recordAdminAudit(mockReq, "admin_auth_rate_limited", {
+                path,
+                ip,
+                attemptsInWindow: recentFailures,
+                windowMs: AUTH_WINDOW_MS
+            });
+            return NextResponse.json(
+                { error: "Too many failed attempts. Try again later." },
+                { status: 429, headers: { "Retry-After": "600" } }
+            );
+        }
 
-    // Defense-in-depth: enforce auth/role check at bridge level before routing.
-    if (!(await verifyAdmin(mockReq, mockRes))) {
-        const attempts = registerFailedAttempt(ip, now);
-        await recordAdminAudit(mockReq, "admin_auth_failed", {
-            path,
-            ip,
-            attemptsInWindow: attempts,
-            windowMs: AUTH_WINDOW_MS,
-            status
-        });
-        return NextResponse.json(jsonResponse || { error: "Unauthorized" }, { status: status || 401 });
+        // Defense-in-depth: enforce auth/role check at bridge level before routing.
+        if (!(await verifyAdmin(mockReq, mockRes))) {
+            const attempts = registerFailedAttempt(ip, now);
+            await recordAdminAudit(mockReq, "admin_auth_failed", {
+                path,
+                ip,
+                attemptsInWindow: attempts,
+                windowMs: AUTH_WINDOW_MS,
+                status
+            });
+            return NextResponse.json(jsonResponse || { error: "Unauthorized" }, { status: status || 401 });
+        }
     }
 
     try {

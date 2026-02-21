@@ -1,0 +1,132 @@
+/**
+ * BREATHING LOGO — اللوجو يتنفس مع المستخدم
+ * =====================================================
+ * اللوجو ينبض بنفس رتم Shadow Pulse للمستخدم
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🫁 Breathing Animation
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* متغير ديناميكي: Shadow Pulse (0-100) */
+:root {
+  --shadow-pulse: 0; /* يُحدّث من consciousnessThemeEngine */
+  --breathing-duration: 4s; /* أبطأ في الهدوء، أسرع في الضغط */
+  --breathing-intensity: 0.05; /* كثافة النبض */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎯 تطبيق على اللوجو
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.breathing-logo,
+[data-breathing-logo] {
+  animation: breathe var(--breathing-duration) ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Keyframes */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(calc(1 + var(--breathing-intensity)));
+    opacity: calc(1 - var(--breathing-intensity));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎨 تأثير Shadow Pulse
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Crisis (Shadow Pulse > 60): تنفس بطيء جداً */
+[data-consciousness-state="crisis"] {
+  --breathing-duration: 6s;
+  --breathing-intensity: 0.03; /* نبضة خفيفة */
+}
+
+/* Struggling (Shadow Pulse 40-60): تنفس معتدل */
+[data-consciousness-state="struggling"] {
+  --breathing-duration: 5s;
+  --breathing-intensity: 0.04;
+}
+
+/* Stable (Shadow Pulse 20-40): تنفس طبيعي */
+[data-consciousness-state="stable"] {
+  --breathing-duration: 4s;
+  --breathing-intensity: 0.05;
+}
+
+/* Thriving (Shadow Pulse < 20): تنفس نشط */
+[data-consciousness-state="thriving"] {
+  --breathing-duration: 3s;
+  --breathing-intensity: 0.06;
+}
+
+/* Flow (Shadow Pulse < 10): نبض سريع (طاقة) */
+[data-consciousness-state="flow"] {
+  --breathing-duration: 2s;
+  --breathing-intensity: 0.08;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ⏸️ إيقاف التنفس (في حالة تثبيت Theme)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-breathing-disabled="true"] .breathing-logo,
+[data-breathing-disabled="true"] [data-breathing-logo] {
+  animation: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌓 Night Mode (تنفس أبطأ)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --breathing-duration: calc(var(--breathing-duration) * 1.2);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   📱 Reduced Motion (إمكانية الوصول)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .breathing-logo,
+  [data-breathing-logo] {
+    animation: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   💫 تأثيرات إضافية (Glow في Flow State)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-consciousness-state="flow"] .breathing-logo,
+[data-consciousness-state="flow"] [data-breathing-logo] {
+  filter: drop-shadow(0 0 8px var(--consciousness-primary));
+}
+
+[data-consciousness-state="thriving"] .breathing-logo,
+[data-consciousness-state="thriving"] [data-breathing-logo] {
+  filter: drop-shadow(0 0 4px var(--consciousness-primary));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🧘 Zen Mode (اللوجو يختفي تدريجياً)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-layout-mode="zen"] .breathing-logo,
+[data-layout-mode="zen"] [data-breathing-logo] {
+  opacity: 0.6;
+  transition: opacity 2s var(--ease-smooth);
+}
+
+[data-layout-mode="zen"]:hover .breathing-logo,
+[data-layout-mode="zen"]:hover [data-breathing-logo] {
+  opacity: 1;
+}

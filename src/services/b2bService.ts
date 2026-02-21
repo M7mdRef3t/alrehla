@@ -1,13 +1,10 @@
+import { supabase } from "./supabaseClient";
+
 /**
  * B2B Service — خدمة الكوتشات والمعالجين
  * ==========================================
- * بوابة B2B تتيح للكوتشات والمعالجين:
- * - متابعة تقدم عملائهم (بموافقتهم)
- * - تقارير مجمّعة بدون هويات
- * - جلسات مشتركة
+ * بوابة B2B تتيح للكوتشات والمعالجين متابعة عملائهم عبر Supabase.
  */
-
-const B2B_KEY = "dawayir-b2b";
 
 export type B2BRole = "coach" | "therapist" | "counselor";
 
@@ -22,19 +19,14 @@ export interface B2BProfile {
 }
 
 export interface ClientLink {
-    clientCode: string;    // كود مشاركة العميل
-    clientAlias: string;   // اسم مستعار (ليس الاسم الحقيقي)
+    clientCode: string;
+    clientAlias: string;
     linkedAt: number;
     consentGiven: boolean;
     lastActive?: number;
 }
 
-export interface B2BData {
-    profile?: B2BProfile;
-    clients: ClientLink[];
-    myShareCode?: string;  // كود المستخدم لمشاركته مع الكوتش
-}
-
+/* ── Utilities ── */
 function generateB2BCode(): string {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     return "B2B-" + Array.from({ length: 6 }, () =>
@@ -42,85 +34,97 @@ function generateB2BCode(): string {
     ).join("");
 }
 
-/* ── Load / Save ── */
-export function loadB2BData(): B2BData {
-    try {
-        const raw = localStorage.getItem(B2B_KEY);
-        if (!raw) return { clients: [] };
-        return JSON.parse(raw) as B2BData;
-    } catch {
-        return { clients: [] };
-    }
-}
-
-export function saveB2BData(data: B2BData): void {
-    try {
-        localStorage.setItem(B2B_KEY, JSON.stringify(data));
-    } catch { /* noop */ }
-}
-
 /* ── User: Share with coach ── */
-export function getMyShareCode(): string {
-    const data = loadB2BData();
-    if (!data.myShareCode) {
-        data.myShareCode = generateB2BCode();
-        saveB2BData(data);
-    }
-    return data.myShareCode;
+export async function getMyShareCode(): Promise<string> {
+    if (!supabase) return generateB2BCode(); // fallback
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return generateB2BCode();
+
+    // The user's user_id is their share code for now (or we can store a specific code)
+    // For simplicity, returning the user id as the code.
+    return session.user.id;
 }
 
-export function getShareWithCoachText(coachName?: string): string {
-    const code = getMyShareCode();
+export async function getShareWithCoachText(coachName?: string): Promise<string> {
+    const code = await getMyShareCode();
     return `كودي للمتابعة${coachName ? ` مع ${coachName}` : ""}: ${code}\n\nهذا الكود يتيح للكوتش متابعة تقدمي العام فقط — بدون تفاصيل شخصية.`;
 }
 
 /* ── Coach: Manage clients ── */
-export function registerAsCoach(
+export async function registerAsCoach(
     name: string,
     role: B2BRole,
     specialization: string
-): B2BProfile {
-    const data = loadB2BData();
-    const profile: B2BProfile = {
-        id: `coach-${Date.now()}`,
-        role,
-        name,
-        specialization,
-        clientCount: 0,
-        joinedAt: Date.now(),
-        isVerified: false,
-    };
-    data.profile = profile;
-    saveB2BData(data);
-    return profile;
+): Promise<boolean> {
+    if (!supabase) return false;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return false;
+
+    const { error } = await supabase
+        .from('profiles')
+        .update({
+            role: 'coach',
+            // Ideally we also save name/specialization, but we rely on profiles table
+        })
+        .eq('id', session.user.id);
+
+    return !error;
 }
 
-export function addClient(clientCode: string, alias: string): boolean {
-    const data = loadB2BData();
-    const exists = data.clients.some((c) => c.clientCode === clientCode);
-    if (exists) return false;
+export async function addClient(clientCode: string, alias: string): Promise<boolean> {
+    if (!supabase) return false;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return false;
 
-    data.clients.push({
-        clientCode,
-        clientAlias: alias,
-        linkedAt: Date.now(),
-        consentGiven: true,
-    });
+    // clientCode is essentially the user_id of the client 
+    const { error } = await supabase
+        .from('coach_connections')
+        .insert({
+            coach_id: session.user.id,
+            client_id: clientCode,
+            status: 'active' // For MVP, auto-activate. In prod requires consent
+        });
 
-    if (data.profile) {
-        data.profile.clientCount = data.clients.length;
-    }
-
-    saveB2BData(data);
-    return true;
+    return !error;
 }
 
-export function getClients(): ClientLink[] {
-    return loadB2BData().clients;
+export async function getClients(): Promise<ClientLink[]> {
+    if (!supabase) return [];
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return [];
+
+    const { data, error } = await supabase
+        .from('coach_connections')
+        .select(`
+            client_id,
+            status,
+            created_at
+        `)
+        .eq('coach_id', session.user.id)
+        .eq('status', 'active');
+
+    if (error || !data) return [];
+
+    return data.map(item => ({
+        clientCode: item.client_id,
+        clientAlias: `عميل ${item.client_id.substring(0, 4)}`, // Alias is masked ID for now
+        linkedAt: new Date(item.created_at).getTime(),
+        consentGiven: true
+    }));
 }
 
-export function isCoach(): boolean {
-    return !!loadB2BData().profile;
+export async function isCoach(): Promise<boolean> {
+    if (!supabase) return false;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return false;
+
+    const { data } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+    return data?.role === 'coach';
 }
 
 export const B2B_ROLE_LABELS: Record<B2BRole, string> = {

@@ -8,6 +8,8 @@ import type { RealityAnswers } from "./RealityCheck";
 import { useAchievementState } from "../state/achievementState";
 import type { ResultScenarioKey } from "../data/resultScreenTemplates";
 import { getAudioContextConstructor } from "../services/clientDom";
+import { trackAffiliateLinkClicked, trackAffiliateLinkExposed } from "../modules/analytics/affiliateTracking";
+import { resolveMissionContextualAffiliate } from "../modules/analytics/contextualAffiliates";
 
 interface MissionScreenProps {
   nodeId: string;
@@ -24,6 +26,8 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
   const [showCelebration, setShowCelebration] = useState(false);
   const [showRealityPopup, setShowRealityPopup] = useState(false);
   const [showDopaminePopup, setShowDopaminePopup] = useState(false);
+  const [showFallbackAfterTimeout, setShowFallbackAfterTimeout] = useState(false);
+  const [fallbackAttempt, setFallbackAttempt] = useState(0);
   const lastCelebratedAtRef = useRef<number | null>(null);
   const detachmentReasons = node?.recoveryProgress?.detachmentReasons;
 
@@ -98,6 +102,23 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
     }
   };
   const theme = scenarioTheme[(result?.scenarioKey ?? "safe_harbor") as ResultScenarioKey] ?? scenarioTheme.safe_harbor;
+  const contextualAffiliate = useMemo(
+    () =>
+      resolveMissionContextualAffiliate({
+        ring: node?.ring,
+        scenarioKey: result?.scenarioKey,
+        isEmergency: node?.isEmergency
+      }),
+    [node?.isEmergency, node?.ring, result?.scenarioKey]
+  );
+  const contextualAffiliateVariant = useMemo<"A" | "B">(() => {
+    const safeId = String(nodeId ?? "");
+    let hash = 0;
+    for (let i = 0; i < safeId.length; i += 1) {
+      hash = (hash * 31 + safeId.charCodeAt(i)) | 0;
+    }
+    return Math.abs(hash) % 2 === 0 ? "A" : "B";
+  }, [nodeId]);
 
   useEffect(() => {
     if (!missionCompleted) {
@@ -137,7 +158,41 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
     return () => clearTimeout(timeoutId);
   }, [missionCompleted, progress.completedAt]);
 
+  useEffect(() => {
+    if (!contextualAffiliate) return;
+    trackAffiliateLinkExposed(contextualAffiliate.url, {
+      placement: contextualAffiliate.placement,
+      contentId: contextualAffiliate.id,
+      title: contextualAffiliate.title,
+      linkId: `variant_${contextualAffiliateVariant}`,
+      missionKey: result?.scenarioKey ?? "unknown",
+      missionLabel: result?.mission_label ?? "unknown",
+      ring: node?.ring ?? "unknown",
+      scenarioKey: result?.scenarioKey ?? "unknown"
+    });
+  }, [contextualAffiliate, contextualAffiliateVariant, node?.ring, result?.mission_label, result?.scenarioKey]);
+
+  useEffect(() => {
+    if (node && node.analysis && result) {
+      setShowFallbackAfterTimeout(false);
+      return;
+    }
+    setShowFallbackAfterTimeout(false);
+    const timeoutId = setTimeout(() => setShowFallbackAfterTimeout(true), 2500);
+    return () => clearTimeout(timeoutId);
+  }, [node, result, fallbackAttempt]);
+
   if (!node || !node.analysis || !result) {
+    if (!showFallbackAfterTimeout) {
+      return (
+        <div className="w-full max-w-2xl py-10 text-center">
+          <div className="card-unified bg-white/90 p-6 text-left animate-pulse">
+            <h2 className="text-lg font-bold text-slate-900 mb-2">جاري تجهيز المسار...</h2>
+            <p className="text-sm text-slate-600">لحظات ونحضر تفاصيل المهمة لك.</p>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="w-full max-w-2xl py-10 text-center">
         <button
@@ -151,6 +206,13 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
         <div className="card-unified bg-white/90 p-6 text-left">
           <h2 className="text-lg font-bold text-slate-900 mb-2">الخطوة مش جاهزة دلوقتي</h2>
           <p className="text-sm text-slate-600">لازم يكون ملف المدار فيه قراءة محفوظة عشان تشتغل الخطوة.</p>
+          <button
+            type="button"
+            onClick={() => setFallbackAttempt((value) => value + 1)}
+            className="mt-4 rounded-full bg-slate-900 text-white px-4 py-2 text-xs font-semibold hover:bg-slate-800"
+          >
+            إعادة المحاولة
+          </button>
         </div>
       </div>
     );
@@ -240,6 +302,43 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
           </div>
         </div>
       </div>
+
+      {contextualAffiliate && (
+        <div className="mb-6 card-unified bg-indigo-50/80 border border-indigo-200 p-5 text-right">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold text-indigo-700">ترشيح مناسب لحالتك الآن</p>
+              <h3 className="text-sm font-bold text-slate-900 mt-1">{contextualAffiliate.title}</h3>
+              <p className="text-xs text-slate-600 mt-1">
+                {contextualAffiliateVariant === "A"
+                  ? contextualAffiliate.reason
+                  : "لو نفذته الآن هتثبت المسار أسرع وتقلل الرجوع لنفس الدوامة."}
+              </p>
+            </div>
+            <a
+              href={contextualAffiliate.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                trackAffiliateLinkClicked(contextualAffiliate.url, {
+                  placement: contextualAffiliate.placement,
+                  contentId: contextualAffiliate.id,
+                  title: contextualAffiliate.title,
+                  linkId: `variant_${contextualAffiliateVariant}`,
+                  missionKey: result?.scenarioKey ?? "unknown",
+                  missionLabel: result?.mission_label ?? "unknown",
+                  ring: node?.ring ?? "unknown",
+                  scenarioKey: result?.scenarioKey ?? "unknown"
+                });
+              }}
+              className="rounded-full bg-indigo-600 text-white px-4 py-2 text-xs font-semibold hover:bg-indigo-700 shrink-0"
+            >
+              {contextualAffiliateVariant === "A" ? "شاهد الآن" : "ابدأ التطبيق الآن"}
+            </a>
+          </div>
+          <p className="text-xs text-slate-500 mt-3 line-clamp-2">{contextualAffiliate.description}</p>
+        </div>
+      )}
 
       {missionCompleted && (
         <div className="mb-6 card-unified bg-emerald-50/90 border border-emerald-200 p-5 text-right">

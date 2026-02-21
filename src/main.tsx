@@ -7,7 +7,11 @@ import { initAnalytics } from "./services/analytics";
 import { initMonitoring } from "./services/monitoring";
 import { getDocumentOrNull, getWindowOrNull } from "./services/clientRuntime";
 import { runtimeEnv } from "./config/runtimeEnv";
+import { startWeeklyEgyptianAdABTesting } from "./ai/aiMarketingCopy";
+import { startDailyEmotionalCheck } from "./ai/emotionalPricingEngine";
 import "./styles.css";
+import "./styles/consciousness-theme.css";
+import "./styles/breathing-logo.css";
 import { registerSW } from "virtual:pwa-register";
 
 const Analytics = lazy(() => import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })));
@@ -44,6 +48,10 @@ void import("./services/journeyTracking").then(({ recordFlowEvent }) => {
 // Initialize analytics (only if consent given)
 initAnalytics();
 initMonitoring();
+if (typeof window !== "undefined") {
+  startWeeklyEgyptianAdABTesting();
+  startDailyEmotionalCheck();
+}
 
 if (runtimeEnv.isProd) {
   const updateSW = registerSW({

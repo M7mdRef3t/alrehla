@@ -58,14 +58,35 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
             </div>
 
             {/* KPI Row */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-3">
                 <KpiCard label="retention_7d" value={`${data.kpis.retention7d}%`} />
                 <KpiCard label="add_person_completion" value={`${data.kpis.addPersonCompletionRate}%`} />
                 <KpiCard label="maps_total" value={data.kpis.mapsTotal} />
                 <KpiCard label="nodes_added_24h" value={data.kpis.nodesAdded24h} />
                 <KpiCard label="path_started_24h" value={data.kpis.pathStarted24h} />
                 <KpiCard label="events_24h" value={data.kpis.events24h} />
+                <KpiCard label="avg_consciousness_level" value={`${data.consciousRevenue?.averageConsciousnessLevel ?? 0}%`} />
+                <KpiCard label="conscious_revenue_alignment" value={`${data.consciousRevenue?.alignmentScore ?? 0}%`} />
             </div>
+
+            {data.consciousRevenue && (
+                <div
+                    className={`p-3 rounded-xl border text-xs ${
+                        data.consciousRevenue.status === "strong"
+                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-100"
+                            : data.consciousRevenue.status === "watch"
+                                ? "bg-amber-500/10 border-amber-500/20 text-amber-100"
+                                : "bg-rose-500/10 border-rose-500/20 text-rose-100"
+                    }`}
+                    dir="rtl"
+                >
+                    <div className="flex justify-between items-center mb-1">
+                        <span className="font-bold tracking-wide">Conscious Revenue KPI</span>
+                        <span className="text-[10px] uppercase tracking-wider">{data.consciousRevenue.status}</span>
+                    </div>
+                    <p>{data.consciousRevenue.note}</p>
+                </div>
+            )}
 
             {/* Attribution Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

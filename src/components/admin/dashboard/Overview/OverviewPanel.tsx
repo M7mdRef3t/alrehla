@@ -14,6 +14,7 @@ import {
   fetchOpsInsights,
   fetchSystemHealth,
   fetchExecutiveReport, // New Import
+  fetchWeeklyReport,
   fetchSecuritySignals,
   fetchOwnerOpsReport,
   savePulseCopyOverrides
@@ -46,8 +47,11 @@ import {
   type OpsInsights as OpsInsightsType,
   type SystemHealthReport,
   type ExecutiveReport as ExecutiveReportType,
-  type SecuritySignalsReport
+  type SecuritySignalsReport,
+  type WeeklyReport
 } from "../../../../services/adminApi";
+import { RevenueEngineCard } from "./components/RevenueEngineCard";
+import { EmotionalPricingCard } from "./components/EmotionalPricingCard";
 
 // --- Helper Components & Functions ---
 
@@ -80,6 +84,8 @@ export const OverviewPanel: FC = () => {
   const [opsInsights, setOpsInsights] = useState<OpsInsightsType | null>(null);
   const [systemHealth, setSystemHealth] = useState<SystemHealthReport | null>(null);
   const [executiveReport, setExecutiveReport] = useState<ExecutiveReportType | null>(null); // New State
+  const [weeklyReport, setWeeklyReport] = useState<WeeklyReport | null>(null);
+  const [weeklyWindow, setWeeklyWindow] = useState<7 | 14 | 30>(7);
   const [securitySignals, setSecuritySignals] = useState<SecuritySignalsReport | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -103,6 +109,12 @@ export const OverviewPanel: FC = () => {
     return () => { mounted = false; };
   }, []);
 
+  const refreshRevenueReport = async (days: 7 | 14 | 30 = weeklyWindow) => {
+    const weeklyData = await fetchWeeklyReport(days);
+    setWeeklyReport(weeklyData ?? null);
+    if (weeklyWindow !== days) setWeeklyWindow(days);
+  };
+
   useEffect(() => {
     let mounted = true;
     const refresh = () => {
@@ -110,9 +122,10 @@ export const OverviewPanel: FC = () => {
         fetchOverviewStats(),
         fetchOpsInsights(),
         fetchExecutiveReport(), // New Fetch
+        fetchWeeklyReport(weeklyWindow),
         fetchOwnerOpsReport()
       ])
-        .then(async ([overviewData, opsData, execData, ownerOps]) => {
+        .then(async ([overviewData, opsData, execData, weeklyData, ownerOps]) => {
           if (!mounted) return;
           let healthData = ownerOps?.systemHealth ?? null;
           let securityData = ownerOps?.securitySignals ?? null;
@@ -128,6 +141,7 @@ export const OverviewPanel: FC = () => {
           setOpsInsights(opsData ?? null);
           setSystemHealth(healthData ?? null);
           setExecutiveReport(execData ?? null);
+          setWeeklyReport(weeklyData ?? null);
           setSecuritySignals(securityData ?? null);
           setInitialLoading(false);
         })
@@ -142,7 +156,7 @@ export const OverviewPanel: FC = () => {
       mounted = false;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [weeklyWindow]);
 
   const useRemoteAsSource = isSupabaseReady;
   const totalUsers = useRemoteAsSource ? (remoteStats?.totalUsers ?? 0) : sessions.length;
@@ -319,6 +333,18 @@ export const OverviewPanel: FC = () => {
         retentionCohorts={remoteStats?.retentionCohorts}
         loading={initialLoading}
       />
+
+      <RevenueEngineCard
+        data={weeklyReport}
+        loading={initialLoading}
+        windowDays={weeklyWindow}
+        onWindowChange={(days) => {
+          void refreshRevenueReport(days);
+        }}
+        onRefresh={refreshRevenueReport}
+      />
+
+      <EmotionalPricingCard loading={initialLoading} />
 
       {/* Admin Tools (New) */}
       <AdminTools loading={initialLoading} />

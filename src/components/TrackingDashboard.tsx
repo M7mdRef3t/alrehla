@@ -13,6 +13,7 @@ import {
 } from "../services/journeyTracking";
 import { isSupabaseReady } from "../services/supabaseClient";
 import { useAppContentString } from "../hooks/useAppContentString";
+import { isUserMode } from "../config/appEnv";
 
 interface TrackingDashboardProps {
   isOpen: boolean;
@@ -28,7 +29,7 @@ const PATH_NAMES: Record<string, string> = {
 };
 
 export const TrackingDashboard: FC<TrackingDashboardProps> = ({ isOpen, onClose }) => {
-  const [mode, setMode] = useState<Mode>(getTrackingMode());
+  const [mode, setMode] = useState<Mode>(() => (isUserMode ? "identified" : getTrackingMode()));
   const [confirmClear, setConfirmClear] = useState(false);
   const [apiUrlInput, setApiUrlInput] = useState(() => getTrackingApiUrl() ?? "");
   const [apiUrlSaved, setApiUrlSaved] = useState(false);
@@ -43,7 +44,16 @@ export const TrackingDashboard: FC<TrackingDashboardProps> = ({ isOpen, onClose 
     if (isOpen) setApiUrlInput(getTrackingApiUrl() ?? "");
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen || !isUserMode) return;
+    if (mode !== "identified") {
+      setTrackingMode("identified");
+      setMode("identified");
+    }
+  }, [isOpen, mode]);
+
   const handleModeChange = (v: Mode) => {
+    if (isUserMode && v !== "identified") return;
     setTrackingMode(v);
     setMode(v);
   };
@@ -115,34 +125,44 @@ export const TrackingDashboard: FC<TrackingDashboardProps> = ({ isOpen, onClose 
           {/* اختيار النظام */}
           <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
             <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">نظام التتبع</p>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => handleModeChange("anonymous")}
-                className={`flex-1 flex items-center gap-2 p-3 rounded-lg border-2 transition-all ${
-                  mode === "anonymous"
-                    ? "border-teal-500 bg-teal-50 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200"
-                    : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                }`}
-              >
-                <Shield className="w-5 h-5" />
-                <span>بدون هوية</span>
-                <span className="text-xs opacity-80">إحصائيات مجمّعة فقط</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleModeChange("identified")}
-                className={`flex-1 flex items-center gap-2 p-3 rounded-lg border-2 transition-all ${
-                  mode === "identified"
-                    ? "border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200"
-                    : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                }`}
-              >
+            {isUserMode ? (
+              <div className="rounded-lg border-2 border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200 p-3 flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                <span>مع هوية</span>
-                <span className="text-xs opacity-80">لمتابعة ومساعدة المستخدمين</span>
-              </button>
-            </div>
+                <div className="flex flex-col">
+                  <span className="font-medium">مع هوية</span>
+                  <span className="text-xs opacity-80">مفعّل إجباريًا في وضع المستخدم لضمان سلامة المزامنة.</span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleModeChange("anonymous")}
+                  className={`flex-1 flex items-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                    mode === "anonymous"
+                      ? "border-teal-500 bg-teal-50 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200"
+                      : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                  }`}
+                >
+                  <Shield className="w-5 h-5" />
+                  <span>بدون هوية</span>
+                  <span className="text-xs opacity-80">إحصائيات مجمّعة فقط</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleModeChange("identified")}
+                  className={`flex-1 flex items-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                    mode === "identified"
+                      ? "border-violet-500 bg-violet-50 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200"
+                      : "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                  }`}
+                >
+                  <Users className="w-5 h-5" />
+                  <span>مع هوية</span>
+                  <span className="text-xs opacity-80">لمتابعة ومساعدة المستخدمين</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* إحصائيات مجمّعة — تظهر دايماً */}

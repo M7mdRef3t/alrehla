@@ -339,9 +339,9 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         aria-label="القائمة الرئيسية"
       >
         {/* المحتوى — يظهر عند تحريك الماوس على التاب أو الشريط؛ wrapper يمنع ظهور أي جزء عند الإغلاق */}
-        <div className="h-full w-0 group-hover/sidebar:w-52 shrink-0 overflow-hidden transition-[width] duration-200 ease-out">
+        <div className="h-full w-0 group-hover/sidebar:w-56 shrink-0 overflow-hidden transition-[width] duration-200 ease-out">
           <aside
-            className="h-full w-52 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 flex flex-col gap-2 py-6 px-3 min-w-0 invisible group-hover/sidebar:visible"
+            className="h-full w-56 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 flex flex-col gap-3 py-6 px-4 min-w-0 invisible group-hover/sidebar:visible"
           >
             {viewingNode?.analysis && (
               <div className="shrink-0 space-y-1 mb-1">
@@ -923,7 +923,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       <button
         type="button"
         onClick={handleOpen}
-        className="fixed top-4 right-4 z-40 md:hidden w-12 h-12 flex items-center justify-center bg-teal-600 text-white rounded-full active:scale-95 transition-transform"
+        className="fixed top-[max(env(safe-area-inset-top),1rem)] right-4 z-40 md:hidden w-12 h-12 flex items-center justify-center bg-teal-600 text-white rounded-full active:scale-95 transition-transform"
         title="افتح محطة الانطلاق"
       >
         <PanelRightOpen className="w-6 h-6" />
@@ -948,7 +948,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-72 bg-white dark:bg-slate-800 z-50 md:hidden flex flex-col"
+              className="fixed top-0 right-0 h-full w-[min(86vw,24rem)] bg-white dark:bg-slate-800 z-50 md:hidden flex flex-col"
             >
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">

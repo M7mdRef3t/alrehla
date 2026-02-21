@@ -407,6 +407,7 @@ export default function App() {
   const [showBreathing, setShowBreathing] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [missionNodeId, setMissionNodeId] = useState<string | null>(null);
+  const phaseOneMissionBypassRef = useRef(false);
   const [toolsBackScreen, setToolsBackScreen] = useState<Screen>("landing");
   const [showCocoon, setShowCocoon] = useState(false);
   /** عند إغلاق التنفس: لو فُتح من مسار دقيقة شحن نرجع لشاشة الخريطة */
@@ -611,6 +612,50 @@ export default function App() {
 
   useEffect(() => {
     void initThemePalette();
+
+    // Phase 4: Start Autonomous Systems
+    if (typeof window !== "undefined") {
+      // 1. Self-Healing System
+      import("./ai/autoHealthCheck")
+        .then((mod) => {
+          mod.startAutoHealthCheck();
+          console.log("✅ Auto Health Check started");
+        })
+        .catch((err) => console.warn("⚠️ Health Check init failed:", err));
+
+      // 2. Revenue Automation
+      import("./ai/revenueAutomation")
+        .then((mod) => {
+          mod.startWeeklyRevenueAnalysis();
+          console.log("✅ Weekly Revenue Analysis started");
+        })
+        .catch((err) => console.warn("⚠️ Revenue automation init failed:", err));
+
+      // 3. Emotional Pricing Engine
+      import("./ai/emotionalPricingEngine")
+        .then((mod) => {
+          mod.startDailyEmotionalCheck();
+          console.log("✅ Emotional Pricing Engine started");
+        })
+        .catch((err) => console.warn("⚠️ Emotional Pricing init failed:", err));
+
+      // 4. Telegram Bot (الجهاز العصبي)
+      import("./services/telegramBot")
+        .then((mod) => {
+          mod.scheduleTelegramReports();
+          void mod.telegramBot.notifySystemStartup();
+          console.log("✅ Telegram Bot connected");
+        })
+        .catch((err) => console.warn("⚠️ Telegram Bot init failed:", err));
+
+      // 5. Consciousness Theme Engine (الواجهة الواعية)
+      import("./ai/consciousnessThemeEngine")
+        .then((mod) => {
+          mod.startConsciousnessTheme();
+          console.log("✅ Consciousness Theme Engine started");
+        })
+        .catch((err) => console.warn("⚠️ Consciousness Theme init failed:", err));
+    }
   }, []);
 
   useEffect(() => {
@@ -1285,6 +1330,10 @@ export default function App() {
 
   useEffect(() => {
     if (!isLockedPhaseOne) return;
+    if (screen === "mission" && phaseOneMissionBypassRef.current) {
+      phaseOneMissionBypassRef.current = false;
+      return;
+    }
     if (screen === "guided" || screen === "mission" || screen === "tools") {
       void navigateToScreen("map");
     }
@@ -1300,6 +1349,26 @@ export default function App() {
     setMissionNodeId(nodeId);
     void navigateToScreen("mission");
   };
+  const openMissionFromAddPerson = useCallback((nodeId: string) => {
+    const safeId = String(nodeId ?? "").trim();
+    if (!safeId) {
+      recordFlowEvent("add_person_start_path_blocked_missing_node", {
+        meta: { reason: "empty_node_id" }
+      });
+      return;
+    }
+    const nodeExists = useMapState.getState().nodes.some((node) => node.id === safeId);
+    if (!nodeExists) {
+      recordFlowEvent("add_person_start_path_blocked_missing_node", {
+        meta: { reason: "node_not_found", nodeId: safeId }
+      });
+      return;
+    }
+    setMissionNodeId(safeId);
+    setSelectedNodeId(safeId);
+    phaseOneMissionBypassRef.current = true;
+    setScreen("mission");
+  }, []);
   const openJourneyTools = useCallback(() => {
     if (isLockedPhaseOne) {
       setLockedFeature("journey_tools");
@@ -2414,6 +2483,7 @@ export default function App() {
                   onSelectNode={setSelectedNodeId}
                   onOpenBreathing={() => setShowBreathing(true)}
                   onOpenMission={openMissionScreen}
+                  onOpenMissionFromAddPerson={openMissionFromAddPerson}
                   pulseMode={pulseMode}
                   pulseInsight={pulseInsight}
                   onOpenCocoon={openCocoonModal}

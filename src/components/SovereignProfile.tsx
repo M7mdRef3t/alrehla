@@ -10,11 +10,14 @@ import { Shield, Star, Zap, Award, Target } from "lucide-react";
 import { useGamificationState, type Rank } from "../services/gamificationEngine";
 
 const RANK_DATA: Record<Rank, { label: string; icon: any; color: string; bg: string }> = {
-    Scout: { label: "كشّاف", icon: Target, color: "text-slate-400", bg: "bg-slate-500/10" },
-    Vanguard: { label: "طليعة", icon: Zap, color: "text-teal-400", bg: "bg-teal-500/10" },
-    Captain: { label: "نقيب", icon: Star, color: "text-indigo-400", bg: "bg-indigo-500/10" },
-    Commander: { label: "قائد (Commander)", icon: Shield, color: "text-amber-400", bg: "bg-amber-500/10" },
-    Warlord: { label: "سيد الحرب", icon: Award, color: "text-rose-500", bg: "bg-rose-500/10" }
+    "مستطلع جَدِيد": { label: "مستطلع جديد", icon: Target, color: "text-slate-400", bg: "bg-slate-500/10" },
+    "كشاف ميداني": { label: "كشاف ميداني", icon: Zap, color: "text-teal-400", bg: "bg-teal-500/10" },
+    "ملازم تعافي": { label: "ملازم تعافي", icon: Star, color: "text-indigo-400", bg: "bg-indigo-500/10" },
+    "نقيب حدود": { label: "نقيب حدود", icon: Shield, color: "text-amber-400", bg: "bg-amber-500/10" },
+    "رائد استقرار": { label: "رائد استقرار", icon: Shield, color: "text-cyan-400", bg: "bg-cyan-500/10" },
+    "عقيد حكمة": { label: "عقيد حكمة", icon: Award, color: "text-violet-400", bg: "bg-violet-500/10" },
+    "عميد سلام": { label: "عميد سلام", icon: Award, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+    "مارشال الدواير": { label: "مارشال الدواير", icon: Award, color: "text-rose-500", bg: "bg-rose-500/10" }
 };
 
 export const SovereignProfile: React.FC = () => {

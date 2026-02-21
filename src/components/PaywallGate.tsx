@@ -9,6 +9,9 @@ import {
     type SubscriptionTier,
 } from "../services/subscriptionManager";
 
+import { stripeService } from "../services/stripeIntegration";
+import { supabase } from "../services/supabaseClient";
+
 /* ══════════════════════════════════════════
    PAYWALL GATE — بوابة الاشتراك
    تظهر عند الوصول للحد المجاني
@@ -23,25 +26,25 @@ interface PaywallGateProps {
 const REASON_COPY: Record<PaywallGateProps["reason"], { title: string; desc: string }> = {
     ai_limit: {
         title: "وصلت لحد رسائل اليوم",
-        desc: "المستخدم المجاني يحصل على 5 رسائل يومياً مع جارفيس. ارقَ للقائد وتحدث بلا حدود.",
+        desc: "المستخدم المجاني يحصل على 5 رسائل يومياً مع نَواة. ارقَ للبريميوم وتحدث بلا حدود.",
     },
     map_limit: {
         title: "الخريطة وصلت للحد المجاني",
-        desc: "يمكنك إضافة 3 أشخاص في الخريطة المجانية. ارقَ للقائد وأضف من تشاء.",
+        desc: "يمكنك إضافة 3 أشخاص في الخريطة المجانية. ارقَ للبريميوم وأضف من تشاء.",
     },
     pdf: {
-        title: "تصدير PDF — ميزة القائد",
-        desc: "احفظ تقريرك الكامل كـ PDF. متاح لمستخدمي باقة القائد فأعلى.",
+        title: "تصدير PDF — ميزة البريميوم",
+        desc: "احفظ تقريرك الكامل كـ PDF. متاح لمستخدمي باقة البريميوم فأعلى.",
     },
     training: {
-        title: "التدريب التكتيكي — ميزة القائد",
-        desc: "محاكاة تفاعلية لتدريب مهارات الحدود. متاح لمستخدمي باقة القائد فأعلى.",
+        title: "التدريب التكتيكي — ميزة البريميوم",
+        desc: "محاكاة تفاعلية لتدريب مهارات الحدود. متاح لمستخدمي باقة البريميوم فأعلى.",
     },
 };
 
-const COMMANDER_FEATURES = [
+const PREMIUM_FEATURES = [
     "خريطة لا محدودة",
-    "جارفيس بلا حدود",
+    "نواة (AI) بلا حدود",
     "تدريب تكتيكي مخصص",
     "تقارير PDF",
     "أولوية الدعم",
@@ -50,12 +53,33 @@ const COMMANDER_FEATURES = [
 export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade }) => {
     const copy = REASON_COPY[reason];
 
-    const handleUpgrade = (tier: SubscriptionTier) => {
-        // TODO: Integrate Stripe payment flow
-        // For now: activate locally for demo (30 days)
-        activateSubscription(tier, 30);
-        onUpgrade?.(tier);
-        onClose();
+    const handleUpgrade = async (tier: 'premium' | 'coach') => {
+        try {
+            if (!supabase) return;
+            const { data: { session } } = await supabase.auth.getSession();
+            const user = session?.user;
+
+            if (!user) {
+                // If not logged in, we can't do checkout
+                await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: { redirectTo: window.location.origin + '/pricing' }
+                });
+                return;
+            }
+
+            const data = await stripeService.createCheckoutSession({
+                userId: user.id,
+                tier: tier
+            });
+
+            if (data?.url) {
+                window.location.href = data.url;
+            }
+        } catch (error) {
+            console.error("Upgrade error:", error);
+            alert("حدث خطأ في الانتقال للدفع.");
+        }
     };
 
     return (
@@ -85,11 +109,11 @@ export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade }
                     <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center mx-auto mb-3">
                         <Lock className="w-6 h-6 text-amber-400" />
                     </div>
-                    <h2 className="text-lg font-bold text-white">{copy.title}</h2>
-                    <p className="text-sm text-slate-400 mt-1 leading-relaxed">{copy.desc}</p>
+                    <h2 className="text-lg font-bold text-white leading-tight">{copy.title}</h2>
+                    <p className="text-sm text-slate-400 mt-1 leading-[1.8]">{copy.desc}</p>
                 </div>
 
-                {/* Commander card */}
+                {/* Premium card */}
                 <div className="mx-5 mb-4">
                     <div
                         className="rounded-2xl p-4"
@@ -101,15 +125,15 @@ export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade }
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                                 <Crown className="w-5 h-5 text-amber-400" />
-                                <span className="font-bold text-white">{TIER_LABELS.commander}</span>
+                                <span className="font-bold text-white">{TIER_LABELS.premium}</span>
                             </div>
                             <div className="text-right">
-                                <p className="text-lg font-black text-amber-400">{TIER_PRICES.commander}</p>
+                                <p className="text-lg font-black text-amber-400">{TIER_PRICES.premium}</p>
                             </div>
                         </div>
 
                         <div className="space-y-1.5 mb-4">
-                            {COMMANDER_FEATURES.map((f) => (
+                            {PREMIUM_FEATURES.map((f) => (
                                 <div key={f} className="flex items-center gap-2">
                                     <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                                     <span className="text-sm text-slate-300">{f}</span>
@@ -118,7 +142,7 @@ export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade }
                         </div>
 
                         <motion.button
-                            onClick={() => handleUpgrade("commander")}
+                            onClick={() => handleUpgrade("premium")}
                             className="w-full py-3.5 rounded-xl font-bold text-white flex items-center justify-center gap-2"
                             style={{
                                 background: "linear-gradient(135deg, #d97706, #b45309)",
@@ -127,7 +151,7 @@ export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade }
                             whileTap={{ scale: 0.98 }}
                         >
                             <Zap className="w-4 h-4" />
-                            ارقَ للقائد الآن
+                            ارقَ للبريميوم الآن
                         </motion.button>
                     </div>
                 </div>

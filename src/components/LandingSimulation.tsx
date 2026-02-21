@@ -10,9 +10,9 @@ export function LandingSimulation() {
 
     // Rings definition
     const rings = [
-        { id: "green", radius: 70, color: "#34d399", label: "قريب", labelAr: "دائرة القرب" },
-        { id: "yellow", radius: 110, color: "#fbbf24", label: "متذبذب", labelAr: "محتاج تفكير" },
-        { id: "red", radius: 150, color: "#f87171", label: "بعيد", labelAr: "حدود آمنة" },
+        { id: "green", radius: 70, color: "#34d399", label: "قريب", labelAr: "النطاق الآمن" },
+        { id: "yellow", radius: 110, color: "#fbbf24", label: "متذبذب", labelAr: "منطقة اضطراب" },
+        { id: "red", radius: 150, color: "#f87171", label: "بعيد", labelAr: "نطاق استنزاف" },
     ] as const;
 
     // Since draggable starts at (50%, 85%) relative to container 320x320
@@ -109,7 +109,7 @@ export function LandingSimulation() {
 
                 {/* Center Self */}
                 <div className="absolute w-12 h-12 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center z-10 shadow-2xl shadow-teal-900/30">
-                    <span className="text-[10px] text-slate-400 font-medium">أنا</span>
+                    <span className="text-[10px] text-slate-400 font-medium">المركز</span>
                 </div>
             </div>
 
@@ -138,7 +138,7 @@ export function LandingSimulation() {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
             >
-                <span className="text-xs font-bold">{placed ? "تمام" : "شخص"}</span>
+                <span className="text-xs font-bold">{placed ? "جاهز" : "هدف"}</span>
             </motion.div>
 
             {/* Simulation Hint */}
@@ -146,7 +146,7 @@ export function LandingSimulation() {
                 className={`absolute bottom-0 left-0 right-0 text-center pointer-events-none transition-opacity duration-500 ${hintVisible && !placed ? "opacity-100" : "opacity-0"}`}
             >
                 <p className="text-[11px] text-slate-400/80 animate-pulse bg-slate-900/50 inline-block px-3 py-1 rounded-full border border-white/5">
-                    جرب تسحب "شخص" وتحطه في مدار
+                    جرب رصد "هدف" وسحبه للمدار
                 </p>
             </div>
         </div>

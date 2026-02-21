@@ -85,37 +85,76 @@ const PRESCRIPTIONS: Record<GraphEventType, Prescription> = {
     },
 };
 
+import { analyzeEnergyDrain } from "./propheticEngine";
+
 // ─── Event Detection ──────────────────────────────────────────────
-export const detectGraphEvent = (
+export const detectGraphEvents = (
     oldNode: MapNode,
     newNode: MapNode
-): GraphEvent | null => {
-    if (oldNode.ring === newNode.ring) return null; // No change
+): GraphEvent[] => {
+    const events: GraphEvent[] = [];
 
-    const ringOrder: Record<Ring, number> = { green: 0, yellow: 1, red: 2 };
-    const movedOutward = ringOrder[newNode.ring] > ringOrder[oldNode.ring];
-    const movedInward = ringOrder[newNode.ring] < ringOrder[oldNode.ring];
+    // 1. Ring shifted events
+    if (oldNode.ring !== newNode.ring) {
+        const ringOrder: Record<Ring, number> = { green: 0, yellow: 1, red: 2 };
+        const movedOutward = ringOrder[newNode.ring] > ringOrder[oldNode.ring];
+        const movedInward = ringOrder[newNode.ring] < ringOrder[oldNode.ring];
 
-    let type: GraphEventType;
+        let type: GraphEventType;
 
-    if (movedOutward && oldNode.ring === "green") {
-        type = "MAJOR_DETACHMENT";
-    } else if (movedOutward) {
-        type = "ORBIT_SHIFT_OUTWARD";
-    } else if (movedInward && newNode.ring === "green") {
-        type = "RECONCILIATION";
-    } else {
-        type = "ORBIT_SHIFT_INWARD";
+        if (movedOutward && oldNode.ring === "green") {
+            type = "MAJOR_DETACHMENT";
+        } else if (movedOutward) {
+            type = "ORBIT_SHIFT_OUTWARD";
+        } else if (movedInward && newNode.ring === "green") {
+            type = "RECONCILIATION";
+        } else {
+            type = "ORBIT_SHIFT_INWARD";
+        }
+
+        events.push({
+            type,
+            nodeId: newNode.id,
+            nodeLabel: newNode.label,
+            fromRing: oldNode.ring,
+            toRing: newNode.ring,
+            timestamp: Date.now(),
+        });
     }
 
-    return {
-        type,
-        nodeId: newNode.id,
-        nodeLabel: newNode.label,
-        fromRing: oldNode.ring,
-        toRing: newNode.ring,
-        timestamp: Date.now(),
-    };
+    // 2. Vampire Detection (Energy Drain Radar)
+    const oldEnergy = analyzeEnergyDrain(oldNode);
+    const newEnergy = analyzeEnergyDrain(newNode);
+
+    if (newEnergy.isVampire && !oldEnergy.isVampire) {
+        events.push({
+            type: "VAMPIRE_DETECTED",
+            nodeId: newNode.id,
+            nodeLabel: newNode.label,
+            fromRing: oldNode.ring,
+            toRing: newNode.ring,
+            timestamp: Date.now(),
+        });
+    }
+
+    // 3. Keystone Resolved (Root or High Gravity node moving to Green)
+    if (oldNode.ring !== "green" && newNode.ring === "green") {
+        const isKeystone = newNode.treeRelation?.relationLabel
+            && ["father", "mother", "spouse"].includes(newNode.treeRelation.relationLabel);
+
+        if (isKeystone) {
+            events.push({
+                type: "KEYSTONE_RESOLVED",
+                nodeId: newNode.id,
+                nodeLabel: newNode.label,
+                fromRing: oldNode.ring,
+                toRing: newNode.ring,
+                timestamp: Date.now(),
+            });
+        }
+    }
+
+    return events;
 };
 
 // ─── Prescription Dispatcher ──────────────────────────────────────
@@ -135,13 +174,13 @@ export const runAutomagicLoop = (
         const oldNode = oldNodes.find((n) => n.id === newNode.id);
         if (!oldNode) return;
 
-        const event = detectGraphEvent(oldNode, newNode);
-        if (event) {
+        const nodeEvents = detectGraphEvents(oldNode, newNode);
+        nodeEvents.forEach(event => {
             events.push(event);
             prescriptions.push(getPrescription(event));
             // Log to history store for AI context
             useEventHistoryStore.getState().addEvent(event);
-        }
+        });
     });
 
     // Award XP for each event

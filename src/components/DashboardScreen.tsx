@@ -12,7 +12,15 @@ import { StreakWidget } from "./StreakWidget";
 import { QuickPathModal } from "./QuickPathModal";
 import { ShareableMapCard } from "./ShareableMapCard";
 import { recordDailyVisit } from "../services/streakSystem";
-import { Zap, Share2, Settings } from "lucide-react";
+import { Zap, Share2, Settings, X, Gift, Users } from "lucide-react";
+import SupportCirclesScreen from "../modules/community/SupportCirclesScreen";
+import { ReferralPanel } from "./ReferralPanel";
+import { LevelBanner } from "./Gamification/LevelBanner";
+import { DailyQuests } from "./Gamification/DailyQuests";
+import { useGamificationState } from "../services/gamificationEngine";
+import { AIOracleWidget } from "./CommandCenter/AIOracleWidget";
+import { AccessManager, SubscriptionInfo } from "../modules/billing/AccessManager";
+import { supabase } from "../services/supabaseClient";
 
 /* ════════════════════════════════════════════════
    DASHBOARD SCREEN — غرفة العمليات
@@ -127,24 +135,52 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
   const yellowCount = activeNodes.filter((n) => n.ring === "yellow").length;
   const redCount = activeNodes.filter((n) => n.ring === "red").length;
 
-  // Mock medals for now - fetch from API later
-  const [earnedMedals, setEarnedMedals] = useState<Medal[]>([
-    {
-      id: "1",
-      type: "First Strike",
-      earned_at: new Date().toISOString(),
-      description: "Launch mission complete"
-    }
-  ]);
+
 
   // Wave 1: Modal state
   const [showQuickPath, setShowQuickPath] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
+  const [showCommunity, setShowCommunity] = useState(false);
+  const [showReferral, setShowReferral] = useState(false);
+  const [subInfo, setSubInfo] = useState<SubscriptionInfo | null>(null);
+
+  useEffect(() => {
+    const client = supabase;
+    if (!client) return;
+
+    client.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        AccessManager.getSubscriptionStatus(session.user.id).then((info) => {
+          setSubInfo(info);
+          if (info.features.hasShadowMemory) {
+            void import("../services/shadowMemory").then(({ ShadowMemory }) => {
+              return ShadowMemory.recordSnapshot(session.user.id);
+            });
+          }
+        });
+      }
+    });
+
+    const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        AccessManager.getSubscriptionStatus(session.user.id).then(setSubInfo);
+      } else {
+        setSubInfo(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const { addXP } = useGamificationState();
 
   // Wave 1: Record daily visit for streak
   useEffect(() => {
-    recordDailyVisit();
-  }, []);
+    const res = recordDailyVisit();
+    if (res.currentStreak > 0) {
+      addXP(20, "تسجيل دخول يومي");
+    }
+  }, [addXP]);
 
   /* Spread nodes across a virtual 100×100 grid */
   const miniNodes: MiniNode[] = useMemo(() => {
@@ -239,39 +275,77 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
         </div>
       </motion.div>
 
+      {/* ── AI Oracle Insight ── */}
+      {subInfo?.features.hasAiOracle && <AIOracleWidget />}
+
+      {/* ── Level & Progress Banner ── */}
+      <LevelBanner />
+
       {/* ── Wave 1: Quick Action Buttons ── */}
       <motion.div
-        className="flex gap-3"
+        className="grid grid-cols-2 gap-3"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15, duration: 0.4 }}
       >
         <motion.button
           onClick={() => setShowQuickPath(true)}
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm"
-          style={{
-            background: "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(79,70,229,0.1))",
-            border: "1px solid rgba(124,58,237,0.35)",
-            color: "#a78bfa",
-          }}
-          whileHover={{ scale: 1.02, borderColor: "rgba(124,58,237,0.6)" }}
+          className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-indigo-500/50 transition-colors"
+          whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
         >
-          <Zap className="w-4 h-4" />
-          جملة خروج فورية
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center shrink-0">
+            <Zap className="w-5 h-5 text-indigo-400" />
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-white">جملة طوارئ</p>
+            <p className="text-[10px] text-slate-400 font-normal">خروج فوري</p>
+          </div>
         </motion.button>
+
+        <motion.button
+          onClick={() => setShowCommunity(true)}
+          className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-teal-500/50 transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5 text-teal-400" />
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-white">مجتمع الدعم</p>
+            <p className="text-[10px] text-slate-400 font-normal">دوائر مجهولة</p>
+          </div>
+        </motion.button>
+
+        <motion.button
+          onClick={() => setShowReferral(true)}
+          className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-amber-500/50 transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+        >
+          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+            <Gift className="w-5 h-5 text-amber-400" />
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-white">ادعُ قائداً</p>
+            <p className="text-[10px] text-slate-400 font-normal">احصل على بريميوم</p>
+          </div>
+        </motion.button>
+
         <motion.button
           onClick={() => setShowShareCard(true)}
-          className="flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-bold text-sm"
-          style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "#94a3b8",
-          }}
-          whileHover={{ scale: 1.02, borderColor: "rgba(255,255,255,0.2)" }}
+          className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-blue-500/50 transition-colors"
+          whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
         >
-          <Share2 className="w-4 h-4" />
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+            <Share2 className="w-5 h-5 text-blue-400" />
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-white">شارك الخريطة</p>
+            <p className="text-[10px] text-slate-400 font-normal">انتشار فيروسي</p>
+          </div>
         </motion.button>
       </motion.div>
 
@@ -359,8 +433,11 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
       {/* ── War Room Widget (Daily Intel) ── */}
       <WarRoomWidget />
 
+      {/* ── Daily Quests ── */}
+      <DailyQuests />
+
       {/* ── Medals Board ── */}
-      <MedalsBoard earnedMedals={earnedMedals} />
+      <MedalsBoard />
 
       {/* ── Emergency SOS ── */}
       <div className="py-4 flex justify-center">
@@ -376,6 +453,38 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
       <AnimatePresence>
         {showShareCard && (
           <ShareableMapCard onClose={() => setShowShareCard(false)} />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showCommunity && (
+          <motion.div
+            className="fixed inset-0 z-50 overflow-y-auto bg-slate-900"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+          >
+            <button
+              onClick={() => setShowCommunity(false)}
+              className="absolute top-6 left-6 z-50 p-2 rounded-full bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <SupportCirclesScreen />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showReferral && (
+          <motion.div
+            className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div className="w-full max-w-sm">
+              <ReferralPanel onClose={() => setShowReferral(false)} />
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 

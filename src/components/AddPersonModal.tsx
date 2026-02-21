@@ -1,5 +1,5 @@
 ﻿import type { FC } from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { addPersonCopy } from "../copy/addPerson";
@@ -20,6 +20,7 @@ import { ResultScreen } from "./AddPersonModal/ResultScreen";
 import type { PersonGender } from "../utils/resultScreenAI";
 import { FeelingStep } from "./AddPersonModal/FeelingStep";
 import { PositionStep } from "./AddPersonModal/PositionStep";
+import { isUserMode } from "../config/appEnv";
 
 type AddPersonStep =
   | "select"
@@ -63,9 +64,16 @@ interface AddPersonModalProps {
   /** عند "تم" يُستدعى بدون معامل. عند "افتح [الاسم]" يُستدعى بمعرّف العقدة لفتح نافذة الشخص */
   onClose: (openNodeId?: string) => void;
   onOpenMission?: (nodeId: string) => void;
+  onOpenMissionFromAddPerson?: (nodeId: string) => void;
 }
 
-export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, canUseFamilyTree = false, onClose, onOpenMission }) => {
+export const AddPersonModal: FC<AddPersonModalProps> = ({
+  goalId,
+  canUseFamilyTree = false,
+  onClose,
+  onOpenMission,
+  onOpenMissionFromAddPerson
+}) => {
   const [step, setStep] = useState<AddPersonStep>("select");
   const [selectedTitle, setSelectedTitle] = useState<string>("");
   const [customTitleInput, setCustomTitleInput] = useState("");
@@ -83,6 +91,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, canUseFamilyTr
   const [lastRealityAnswers, setLastRealityAnswers] = useState<RealityAnswers | null>(null);
   const [isEmergency, setIsEmergency] = useState(false);
   const [showEncouragementHint, setShowEncouragementHint] = useState(false);
+  const forcedCtaShownRef = useRef(false);
   const addNode = useMapState((s) => s.addNode);
   const nodes = useMapState((s) => s.nodes);
   const openEmergency = useEmergencyState((s) => s.open);
@@ -94,6 +103,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, canUseFamilyTr
     canLinkInFamilyTree && linkedParentLabel
       ? `هيتسجل كـ "${resolvedHintRelation || "صلة"}" تحت "${linkedParentLabel}" في شجرة العيلة.`
       : undefined;
+  const isForcedResultGate = isUserMode && step === "result";
 
   useEffect(() => {
     if (!selectedTitle) return;
@@ -168,6 +178,14 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, canUseFamilyTr
   }, []);
 
   useEffect(() => {
+    if (!isForcedResultGate || forcedCtaShownRef.current) return;
+    forcedCtaShownRef.current = true;
+    recordFlowEvent("add_person_cta_forced_shown", {
+      meta: { nodeId: addedNodeId ?? null }
+    });
+  }, [addedNodeId, isForcedResultGate]);
+
+  useEffect(() => {
     if (step !== "select") return;
     const t = setTimeout(() => setShowEncouragementHint(true), 15_000);
     return () => clearTimeout(t);
@@ -180,6 +198,16 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, canUseFamilyTr
       recordFlowEvent("add_person_dropped", { atStep: step });
     }
     onClose(openNodeId);
+  };
+
+  const handleCloseAttempt = (reason: "backdrop" | "close_button") => {
+    if (isForcedResultGate) {
+      recordFlowEvent("add_person_cta_forced_blocked_close", {
+        meta: { reason, step }
+      });
+      return;
+    }
+    handleClose();
   };
 
   const handleTitleSelect = (title: string) => {
@@ -196,7 +224,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, canUseFamilyTr
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
-      onClick={() => handleClose()}
+      onClick={() => handleCloseAttempt("backdrop")}
       aria-labelledby="add-person-title"
       role="dialog"
       aria-modal="true"
@@ -209,14 +237,16 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, canUseFamilyTr
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
       >
-        <button
-          type="button"
-          onClick={() => handleClose()}
-          className="absolute top-3 left-3 w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-slate-500 hover:text-slate-700 z-10 shrink-0"
-          aria-label="إغلاق"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {!isForcedResultGate && (
+          <button
+            type="button"
+            onClick={() => handleCloseAttempt("close_button")}
+            className="absolute top-3 left-3 w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-slate-500 hover:text-slate-700 z-10 shrink-0"
+            aria-label="إغلاق"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
         <div className="flex-auto min-h-0 overflow-hidden flex flex-col pt-1">
         {step === "select" ? (
           <SelectPersonStep
@@ -336,12 +366,13 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({ goalId, canUseFamilyTr
             summaryOnly
             addedNodeId={addedNodeId ?? undefined}
             onClose={handleClose}
-            onOpenMission={onOpenMission}
+            onOpenMission={onOpenMissionFromAddPerson ?? onOpenMission}
             onOpenEmergency={isEmergency ? openEmergency : undefined}
             realityAnswers={lastRealityAnswers ?? undefined}
             feelingAnswers={lastFeelingAnswers ?? undefined}
             isEmergency={isEmergency}
             safetyAnswer={quickAnswer2 ?? undefined}
+            forcedGate={isForcedResultGate}
           />
         ) : null}
         </div>

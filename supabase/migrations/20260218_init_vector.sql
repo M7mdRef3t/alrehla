@@ -2,7 +2,7 @@
 create extension if not exists vector;
 
 -- Create a table to store your documents
-create table memories (
+create table if not exists memories (
   id bigserial primary key,
   content text, -- The text content of the memory
   type text, -- 'conversation', 'journal', 'fact'

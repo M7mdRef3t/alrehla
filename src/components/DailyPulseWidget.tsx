@@ -3,6 +3,8 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Check, BookOpen } from "lucide-react";
 import { useDailyQuestion } from "../hooks/useDailyQuestion";
+import { useAIQuestionGenerator } from "../hooks/useAIQuestionGenerator";
+import { AIGenerationButton, AIGeneratedQuestionBadge } from "./AIGeneratedQuestionBadge";
 
 interface DailyPulseWidgetProps {
   onOpenArchive?: () => void;
@@ -18,12 +20,16 @@ const WEEK_COLORS: Record<number, { accent: string; bg: string; border: string; 
 
 export const DailyPulseWidget: FC<DailyPulseWidgetProps> = ({ onOpenArchive }) => {
   const { question, hasAnsweredToday, answer, saveAnswer, totalAnswers } = useDailyQuestion();
+  const { generatedQuestion, isGenerating, generateQuestion, isAIAvailable } = useAIQuestionGenerator();
   const [inputValue, setInputValue] = useState(answer || "");
   const [isSaved, setIsSaved] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [useAIQuestion, setUseAIQuestion] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const theme = WEEK_COLORS[question.week] ?? WEEK_COLORS[1];
+  // استخدم السؤال المُولّد لو موجود
+  const displayQuestion = useAIQuestion && generatedQuestion ? generatedQuestion : question;
+  const theme = WEEK_COLORS[displayQuestion.week] ?? WEEK_COLORS[1];
 
   const handleSave = () => {
     if (!inputValue.trim()) return;
@@ -35,6 +41,11 @@ export const DailyPulseWidget: FC<DailyPulseWidgetProps> = ({ onOpenArchive }) =
   const handleExpand = () => {
     setIsExpanded(true);
     setTimeout(() => textareaRef.current?.focus(), 100);
+  };
+
+  const handleGenerateAIQuestion = async () => {
+    await generateQuestion();
+    setUseAIQuestion(true);
   };
 
   return (
@@ -105,12 +116,43 @@ export const DailyPulseWidget: FC<DailyPulseWidgetProps> = ({ onOpenArchive }) =
       </div>
 
       {/* ── نص السؤال ── */}
-      <p
-        className="text-[15px] font-medium leading-[1.85] mb-4"
-        style={{ color: "rgba(226,232,240,0.9)" }}
-      >
-        {question.text}
-      </p>
+      <div className="mb-4">
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <p
+            className="text-[15px] font-medium leading-[1.85] flex-1"
+            style={{ color: "rgba(226,232,240,0.9)" }}
+          >
+            {displayQuestion.text}
+          </p>
+
+          {/* بادج AI-generated */}
+          {useAIQuestion && generatedQuestion && (
+            <AIGeneratedQuestionBadge isAIGenerated={true} compact />
+          )}
+        </div>
+
+        {/* زر توليد سؤال جديد */}
+        {isAIAvailable && !useAIQuestion && (
+          <div className="mt-2">
+            <AIGenerationButton
+              onClick={handleGenerateAIQuestion}
+              isGenerating={isGenerating}
+            />
+          </div>
+        )}
+
+        {/* زر العودة للسؤال الأصلي */}
+        {useAIQuestion && (
+          <button
+            type="button"
+            onClick={() => setUseAIQuestion(false)}
+            className="organic-tap text-[11px] font-medium mt-2"
+            style={{ color: "rgba(148,163,184,0.7)" }}
+          >
+            ← العودة للسؤال الأصلي
+          </button>
+        )}
+      </div>
 
       {/* ── منطقة الإجابة ── */}
       <AnimatePresence mode="wait">

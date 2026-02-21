@@ -30,6 +30,10 @@ import type { FeatureFlagKey } from "../config/features";
 import type { NextStepDecisionV1 } from "../modules/recommendation/types";
 import { isUserMode } from "../config/appEnv";
 import { runtimeEnv } from "../config/runtimeEnv";
+import { adaptiveLayoutEngine } from "../ai/adaptiveLayoutEngine";
+import { computeTEI } from "../utils/traumaEntropyIndex";
+import { useDailyQuestion } from "../hooks/useDailyQuestion";
+import { getShadowScore } from "../state/shadowPulseState";
 
 /* ════════════════════════════════════════════════
    🌌 CORE MAP SCREEN — Digital Sanctuary
@@ -56,6 +60,7 @@ interface CoreMapScreenProps {
   selectedNodeId: string | null;
   onSelectNode: (id: string | null) => void;
   onOpenMission?: (nodeId: string) => void;
+  onOpenMissionFromAddPerson?: (nodeId: string) => void;
   onOpenBreathing?: () => void;
   journeyMode?: boolean;
   onJourneyComplete?: () => void;
@@ -79,6 +84,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   selectedNodeId,
   onSelectNode,
   onOpenMission,
+  onOpenMissionFromAddPerson,
   onOpenBreathing,
   journeyMode = false,
   onJourneyComplete,
@@ -141,6 +147,36 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const activeNodes = useMemo(() => nodes.filter((n) => !n.isNodeArchived), [nodes]);
   const archivedNodes = useMemo(() => nodes.filter((n) => n.isNodeArchived), [nodes]);
   const greenNodes = useMemo(() => activeNodes.filter((n) => n.ring === "green" && !n.isDetached), [activeNodes]);
+
+  /* ── Adaptive Layout Engine ── */
+  const { hasAnsweredToday } = useDailyQuestion();
+  const tei = useMemo(() => computeTEI(nodes).score, [nodes]);
+  const shadowScore = useMemo(() => getShadowScore(), []);
+  const sessionDuration = useMemo(() => {
+    const sessionStart = parseInt(
+      sessionStorage.getItem("dawayir-session-start") || String(Date.now())
+    );
+    return Math.floor((Date.now() - sessionStart) / (60 * 1000));
+  }, []);
+
+  const adaptiveLayout = useMemo(
+    () =>
+      adaptiveLayoutEngine.calculateLayout({
+        nodes,
+        tei,
+        shadowScore,
+        pulseMode,
+        hasAnsweredToday,
+        sessionDuration,
+        journeyMode,
+      }),
+    [nodes, tei, shadowScore, pulseMode, hasAnsweredToday, sessionDuration, journeyMode]
+  );
+
+  const sectionOrder = useMemo(
+    () => adaptiveLayoutEngine.getSectionOrder(adaptiveLayout.sections),
+    [adaptiveLayout.sections]
+  );
 
   useEffect(() => {
     if (!showPlacementTooltip) return;
@@ -255,7 +291,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   return (
     <motion.main
-      className="w-full max-w-2xl text-center relative"
+      className="w-full text-center relative px-4 sm:px-6 flex flex-col"
+      style={{ maxWidth: "var(--phi-content-focus)" }}
       aria-labelledby="core-map-title"
       variants={staggerContainer}
       initial="hidden"
@@ -266,14 +303,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         <div className="flex flex-col items-center gap-2 mb-4">
           <h1
             id="core-map-title"
-            className="text-3xl md:text-4xl font-bold"
+            className="text-[clamp(1.95rem,4.2vw,3rem)] font-bold leading-[1.12]"
             style={{ color: "var(--text-primary)", letterSpacing: "var(--tracking-wider)" }}
           >
             <EditableText id={pageTitleKey} defaultText={pageTitle} page="map" />
           </h1>
         </div>
         <p
-          className="text-base md:text-lg leading-relaxed max-w-md mx-auto"
+          className="text-base md:text-lg leading-[1.72] max-w-[42ch] mx-auto"
           style={{ color: "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}
         >
           <EditableText id={subtitleKey} defaultText={subtitle} page="map" multiline showEditIcon={false} />
@@ -285,7 +322,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           تظهر دائماً (60% من الاهتمام البصري)
           ══════════════════════════════════════ */}
       {!journeyMode && activeNodes.length > 0 && (
-        <motion.div variants={cosmicFade} className="w-full max-w-md mx-auto mb-3 space-y-3 primary-block">
+        <motion.div
+          variants={cosmicFade}
+          className="w-full max-w-[38rem] mx-auto mb-3 space-y-3 primary-block"
+          style={{
+            order: Math.min(sectionOrder["tei-widget"], sectionOrder["daily-pulse"]),
+            transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+          }}
+        >
           <TEIWidget />
           <DailyPulseWidget onOpenArchive={() => setShowJournalArchive(true)} />
         </motion.div>
@@ -295,7 +339,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           الكتلة الداعمة — تفاصيل قابلة للطي (30%)
           ══════════════════════════════════════ */}
       {!journeyMode && (
-        <motion.div variants={cosmicFade} className="w-full max-w-md mx-auto mb-4">
+        <motion.div
+          variants={cosmicFade}
+          className="w-full max-w-[38rem] mx-auto mb-4"
+          style={{
+            order: sectionOrder["dashboard-details"],
+            transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+          }}
+        >
           <button
             type="button"
             onClick={() => setShowDashboard((v) => !v)}
@@ -446,8 +497,12 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/* ── Status Cards (Pulse Modes) ── */}
       {pulseMode === "low" && (
         <motion.div
-          className="mt-5 mx-auto max-w-md card-unified status-card-low px-4 py-4 text-right"
+          className="mt-5 mx-auto max-w-[38rem] card-unified status-card-low px-4 py-4 text-right"
           variants={cosmicFade}
+          style={{
+            order: sectionOrder["status-card"],
+            transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+          }}
         >
           <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
             الطاقة منخفضة.. أولويتنا وقف الضغط
@@ -476,8 +531,12 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         <>
       {pulseMode === "angry" && (
         <motion.div
-          className="mt-5 mx-auto max-w-md card-unified status-card-angry px-4 py-4 text-right"
+          className="mt-5 mx-auto max-w-[38rem] card-unified status-card-angry px-4 py-4 text-right"
           variants={cosmicFade}
+          style={{
+            order: sectionOrder["status-card"],
+            transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+          }}
         >
           <p className="text-sm font-semibold" style={{ color: "var(--ring-danger)" }}>
             الرادار بيقول ضجيج عالي.. ثبّت مكانك الأول
@@ -497,8 +556,12 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {pulseMode === "high" && (
         <motion.div
-          className="mt-5 mx-auto max-w-md card-unified status-card-high px-4 py-4 text-right"
+          className="mt-5 mx-auto max-w-[38rem] card-unified status-card-high px-4 py-4 text-right"
           variants={cosmicFade}
+          style={{
+            order: sectionOrder["status-card"],
+            transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+          }}
         >
           <p className="text-sm font-semibold" style={{ color: "var(--ring-safe)" }}>
             طاقتك جاهزة.. وقت حسم مدار
@@ -518,7 +581,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       )}
 
       {/* ── Controls Bar ── */}
-      <motion.div className="mt-8 flex items-center justify-center gap-3 flex-wrap" variants={cosmicFade}>
+      <motion.div
+        className="mt-8 flex items-center justify-center gap-3 flex-wrap"
+        variants={cosmicFade}
+        style={{
+          order: sectionOrder["controls-bar"],
+          transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+        }}
+      >
         <button
           type="button"
           hidden={!canUseGalaxyView}
@@ -621,7 +691,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {/* ── Pulse Insight ── */}
       {pulseInsight && (
-        <motion.div className="mt-4 mx-auto max-w-md card-unified status-card-insight px-4 py-4 text-right" variants={cosmicFade}>
+        <motion.div className="mt-4 mx-auto max-w-[38rem] card-unified status-card-insight px-4 py-4 text-right" variants={cosmicFade}>
           <p className="text-xs font-semibold" style={{ color: "rgba(167, 139, 250, 0.9)" }}>{pulseInsight.title}</p>
           <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(167, 139, 250, 0.6)" }}>{pulseInsight.body}</p>
           <button
@@ -646,11 +716,31 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       <AnimatePresence mode="wait">
         {canUseGalaxyView && galaxyMode && galaxySubView === "forest" ? (
-          <motion.div key="forest" initial={{ opacity: 0, y: 16, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -12, filter: "blur(4px)" }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
+          <motion.div
+            key="forest"
+            initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              order: sectionOrder["map-canvas"],
+              transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+            }}
+          >
             <ForestView onNodeClick={handleNodeClick} />
           </motion.div>
         ) : canUseGalaxyView && galaxyMode && galaxySubView === "map" ? (
-          <motion.div key="galaxy-map" initial={{ opacity: 0, y: 16, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -12, filter: "blur(4px)" }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
+          <motion.div
+            key="galaxy-map"
+            initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              order: sectionOrder["map-canvas"],
+              transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+            }}
+          >
             <MapCanvas
               onNodeClick={handleNodeClick}
               canOpenDetails={canUseBasicDiagnosis}
@@ -663,7 +753,17 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             />
           </motion.div>
         ) : !canUseFamilyTreeView || viewMode === "map" ? (
-          <motion.div key="single-map" initial={{ opacity: 0, y: 16, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -12, filter: "blur(4px)" }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
+          <motion.div
+            key="single-map"
+            initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              order: sectionOrder["map-canvas"],
+              transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+            }}
+          >
             <MapCanvas
               onNodeClick={handleNodeClick}
               canOpenDetails={canUseBasicDiagnosis}
@@ -676,7 +776,17 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             />
           </motion.div>
         ) : canUseFamilyTreeView && isFamily ? (
-          <motion.div key="family-tree" initial={{ opacity: 0, y: 16, filter: "blur(6px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} exit={{ opacity: 0, y: -12, filter: "blur(4px)" }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
+          <motion.div
+            key="family-tree"
+            initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              order: sectionOrder["map-canvas"],
+              transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+            }}
+          >
             <FamilyTreeView onNodeClick={handleNodeClick} />
           </motion.div>
         ) : null}
@@ -778,7 +888,15 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       )}
 
       {/* ── Ring Legend ── */}
-      <motion.div className="mt-6 flex flex-wrap justify-center gap-3 text-sm" aria-label="معاني دوائر المسافة" variants={cosmicFade}>
+      <motion.div
+        className="mt-6 flex flex-wrap justify-center gap-3 text-sm"
+        aria-label="معاني دوائر المسافة"
+        variants={cosmicFade}
+        style={{
+          order: sectionOrder["ring-legend"],
+          transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+        }}
+      >
         {(["green", "yellow", "red"] as const).map((key) => {
           const isActive = legendTooltip === key;
           const config = legendConfig[key];
@@ -838,6 +956,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             onSelectNode(openNodeId ?? null);
           }}
           onOpenMission={onOpenMission}
+          onOpenMissionFromAddPerson={onOpenMissionFromAddPerson}
         />
       )}
       {selectedNodeId && canUseBasicDiagnosis && (

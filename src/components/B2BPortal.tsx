@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, UserPlus, Copy, Check, Shield, ChevronRight, Briefcase } from "lucide-react";
 import {
@@ -21,9 +21,7 @@ import {
 type B2BView = "landing" | "coach_register" | "coach_dashboard" | "client_share";
 
 export const B2BPortal: FC = () => {
-    const [view, setView] = useState<B2BView>(
-        isCoach() ? "coach_dashboard" : "landing"
-    );
+    const [view, setView] = useState<B2BView>("landing");
     const [copied, setCopied] = useState(false);
     const [clientCode, setClientCode] = useState("");
     const [clientAlias, setClientAlias] = useState("");
@@ -34,30 +32,54 @@ export const B2BPortal: FC = () => {
     const [coachRole, setCoachRole] = useState<B2BRole>("coach");
     const [coachSpec, setCoachSpec] = useState("");
 
-    const shareCode = getMyShareCode();
-    const clients = getClients();
+    const [shareCode, setShareCode] = useState("");
+    const [clients, setClients] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+
+    useEffect(() => {
+        const init = async () => {
+            const coachStatus = await isCoach();
+            setView(coachStatus ? "coach_dashboard" : "landing");
+
+            const code = await getMyShareCode();
+            setShareCode(code);
+
+            if (coachStatus) {
+                const clientList = await getClients();
+                setClients(clientList);
+            }
+            setIsLoading(false);
+        };
+        init();
+    }, []);
 
     const handleCopyShareCode = async () => {
         try {
-            await navigator.clipboard.writeText(getShareWithCoachText());
+            const text = await getShareWithCoachText();
+            await navigator.clipboard.writeText(text);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch { /* noop */ }
     };
 
-    const handleRegisterCoach = () => {
+    const handleRegisterCoach = async () => {
         if (!coachName.trim()) return;
-        registerAsCoach(coachName, coachRole, coachSpec);
-        setView("coach_dashboard");
+        const success = await registerAsCoach(coachName, coachRole, coachSpec);
+        if (success) {
+            setView("coach_dashboard");
+        }
     };
 
-    const handleAddClient = () => {
+    const handleAddClient = async () => {
         if (!clientCode.trim() || !clientAlias.trim()) return;
-        const success = addClient(clientCode.trim(), clientAlias.trim());
+        const success = await addClient(clientCode.trim(), clientAlias.trim());
         if (success) {
             setAddSuccess(true);
             setClientCode("");
             setClientAlias("");
+            const updated = await getClients();
+            setClients(updated);
             setTimeout(() => setAddSuccess(false), 2000);
         }
     };

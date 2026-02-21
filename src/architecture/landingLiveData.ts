@@ -101,6 +101,7 @@ interface FacadeState {
 type FacadeAction =
   | { type: "loading"; key: ResourceKey }
   | { type: "metrics_loaded"; data: LiveMetrics; mode: "live" | "fallback" }
+  | { type: "metrics_fallback_keep_current" }
   | { type: "testimonials_loaded"; data: TestimonialItem[]; mode: "live" | "fallback" };
 
 const initialState: FacadeState = {
@@ -123,6 +124,16 @@ function reducer(state: FacadeState, action: FacadeAction): FacadeState {
         isLoading: false,
         lastUpdatedAt: Date.now(),
         mode: action.mode
+      }
+    };
+  }
+  if (action.type === "metrics_fallback_keep_current") {
+    return {
+      ...state,
+      metrics: {
+        ...state.metrics,
+        isLoading: false,
+        mode: "fallback"
       }
     };
   }
@@ -192,7 +203,7 @@ export function useLandingLiveData(fallbackTestimonials: TestimonialItem[]) {
       const data = await repository.fetchMetrics();
       if (!mounted) return;
       if (!data) {
-        dispatch({ type: "metrics_loaded", data: state.metrics.data, mode: "fallback" });
+        dispatch({ type: "metrics_fallback_keep_current" });
         return;
       }
       dispatch({ type: "metrics_loaded", data, mode: "live" });

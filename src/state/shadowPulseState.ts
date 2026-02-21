@@ -152,3 +152,17 @@ export const useShadowPulseState = create<ShadowPulseState>((set, get) => ({
       .sort((a, b) => b.score - a.score);
   },
 }));
+
+/**
+ * Helper function: احصل على أعلى Shadow Score من جميع الأشخاص
+ * استخدام: للـ Adaptive Layout Engine
+ */
+export function getShadowScore(): number {
+  const scores = useShadowPulseState.getState().scores;
+  const allScores = Object.values(scores);
+
+  if (allScores.length === 0) return 0;
+
+  // أعلى score من بين كل الأشخاص
+  return Math.max(...allScores.map((s) => s.score));
+}

@@ -1,46 +1,54 @@
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
 /**
  * Gamification Engine — محرك التلعيب 🎮
  * ==========================================
  * يحول السلوكيات الإيجابية (الصدق، الانضباط) إلى نقاط خبرة (XP) ورتب عسكرية.
  */
 
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-
-export type Rank = "Scout" | "Vanguard" | "Captain" | "Commander" | "Warlord";
+export type Rank =
+    | "مستطلع جَدِيد"      // Scout
+    | "كشاف ميداني"       // Vanguard
+    | "ملازم تعافي"       // Lieutenant
+    | "نقيب حدود"         // Captain
+    | "رائد استقرار"       // Major
+    | "عقيد حكمة"         // Colonel
+    | "عميد سلام"         // Brigadier
+    | "مارشال الدواير";     // Marshal
 
 export interface GamificationState {
     xp: number;
     level: number;
     rank: Rank;
-    badges: string[]; // badge IDs
-    actionsHistory: Record<string, number>; // actionId -> count
+    badges: string[];
     addXP: (amount: number, reason: string) => void;
-    unlockBadge: (badgeId: string) => void;
+    getLevelProgress: () => { progress: number; nextLevelXP: number; xpInCurrent: number };
 }
 
-export const XP_TABLE = {
-    LEVEL_1: 0,    // Scout
-    LEVEL_2: 100,  // Vanguard
-    LEVEL_3: 300,  // Captain
-    LEVEL_4: 600,  // Commander
-    LEVEL_5: 1000  // Warlord
-};
+const XP_PER_LEVEL = 200;
 
 export const XP_ACTIONS = {
-    MIRROR_CONFRONT: 50,  // أكبر مكافأة: الشجاعة في مواجهة الحقيقة
-    STREAK_MAINTAIN: 20,  // الانضباط اليومي
-    MAP_ORGANIZE: 10,     // الترتيب
-    REFLECTION_LOG: 15,   // الكتابة
-    ELITE_CHALLENGE_COMPLETE: 250 // عمل استراتيجي خارق
-};
+    MIRROR_CONFRONT: 50,
+    DAILY_VISIT: 20,
+    MAP_SHARED: 50,
+    WISDOM_SHARED: 40
+} as const;
 
-const getRank = (xp: number): Rank => {
-    if (xp >= XP_TABLE.LEVEL_5) return "Warlord";
-    if (xp >= XP_TABLE.LEVEL_4) return "Commander";
-    if (xp >= XP_TABLE.LEVEL_3) return "Captain";
-    if (xp >= XP_TABLE.LEVEL_2) return "Vanguard";
-    return "Scout";
+const RANKS: Rank[] = [
+    "مستطلع جَدِيد",
+    "كشاف ميداني",
+    "ملازم تعافي",
+    "نقيب حدود",
+    "رائد استقرار",
+    "عقيد حكمة",
+    "عميد سلام",
+    "مارشال الدواير"
+];
+
+const getRankByLevel = (level: number): Rank => {
+    const rankIndex = Math.min(Math.floor((level - 1) / 2), RANKS.length - 1);
+    return RANKS[rankIndex];
 };
 
 export const useGamificationState = create<GamificationState>()(
@@ -48,37 +56,82 @@ export const useGamificationState = create<GamificationState>()(
         (set, get) => ({
             xp: 0,
             level: 1,
-            rank: "Scout",
+            rank: "مستطلع جَدِيد",
             badges: [],
-            actionsHistory: {},
 
             addXP: (amount, reason) => {
                 set((state) => {
                     const newXP = state.xp + amount;
-                    const newRank = getRank(newXP);
-
-                    if (newRank !== state.rank) {
-                        // Level Up Event! (Could trigger sound/toast)
-                        console.log(`🎉 Promoted to ${newRank}!`);
-                    }
+                    const newLevel = Math.floor(newXP / XP_PER_LEVEL) + 1;
+                    const newRank = getRankByLevel(newLevel);
 
                     return {
                         xp: newXP,
-                        rank: newRank,
-                        level: Math.floor(newXP / 100) + 1
+                        level: newLevel,
+                        rank: newRank
                     };
                 });
             },
 
-            unlockBadge: (badgeId) => {
-                set((state) => {
-                    if (state.badges.includes(badgeId)) return state;
-                    return { badges: [...state.badges, badgeId] };
-                });
+            getLevelProgress: () => {
+                const { xp, level } = get();
+                const currentLevelStartXP = (level - 1) * XP_PER_LEVEL;
+                const nextLevelStartXP = level * XP_PER_LEVEL;
+                const xpInCurrent = xp - currentLevelStartXP;
+                const progress = (xpInCurrent / XP_PER_LEVEL) * 100;
+
+                return {
+                    progress: Math.min(99, Math.max(0, progress)),
+                    nextLevelXP: XP_PER_LEVEL - xpInCurrent,
+                    xpInCurrent
+                };
             }
         }),
         {
-            name: "dawayir-gamification-storage"
+            name: "dawayir-gamification-v2"
         }
     )
 );
+
+/**
+ * المهام اليومية (Daily Quests)
+ */
+export interface DailyQuest {
+    id: string;
+    title: string;
+    description: string;
+    xpReward: number;
+    isCompleted: boolean;
+    actionKey: string;
+}
+
+export function getDailyQuests(completedKeys: string[] = []): DailyQuest[] {
+    return [
+        {
+            id: "dq_checkin",
+            title: "تسجيل حضور",
+            description: "ادخل للمنصة وسجل دخولك اليومي",
+            xpReward: 20,
+            isCompleted: completedKeys.includes("dq_checkin"),
+            actionKey: "daily_visit"
+        },
+        {
+            id: "dq_map_share",
+            title: "قائد ملهم",
+            description: "شارك خريطتك اليوم لتوعية الآخرين",
+            xpReward: 50,
+            isCompleted: completedKeys.includes("dq_map_share"),
+            actionKey: "map_shared"
+        },
+        {
+            id: "dq_wisdom",
+            title: "نبع حكمة",
+            description: "شارك حكمة واحدة في مجتمع الدعم",
+            xpReward: 40,
+            isCompleted: completedKeys.includes("dq_wisdom"),
+            actionKey: "wisdom_shared"
+        }
+    ];
+}
+
+

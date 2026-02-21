@@ -47,20 +47,44 @@ export const ShareableMapCard: FC<ShareableMapCardProps> = ({ onClose }) => {
     /* ── Share via Web Share API ── */
     const handleShare = useCallback(async () => {
         setSharing(true);
-        const text = `🗺️ خريطتي في الرحلة\n\n✅ دائرة الأمان: ${greenCount} شخص\n⚠️ دائرة الحذر: ${yellowCount} شخص\n🚨 دائرة الخطر: ${redCount} شخص\n\nابدأ رحلتك: https://dawayir.app`;
-
         try {
-            if (navigator.share) {
-                await navigator.share({ title: "خريطتي في الرحلة", text });
-            } else {
-                await navigator.clipboard.writeText(text);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-            }
+            if (!cardRef.current) return;
+            const html2canvas = (await import("html2canvas")).default;
+            const canvas = await html2canvas(cardRef.current, {
+                backgroundColor: "#0f172a",
+                scale: 2,
+            });
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) throw new Error("Canvas to Blob failed");
+                const file = new File([blob], "dawayir-map.png", { type: "image/png" });
+                const text = `🗺️ خريطتي في الرحلة\n\n✅ دائرة الأمان: ${greenCount} شخص\n⚠️ دائرة الحذر: ${yellowCount} شخص\n🚨 دائرة الخطر: ${redCount} شخص\n\nابدأ رحلتك: https://dawayir.app`;
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: "خريطتي في الرحلة",
+                        text,
+                        files: [file],
+                    });
+                } else {
+                    // Fallback to clipboard or download
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.download = "dawayir-map.png";
+                    link.href = url;
+                    link.click();
+                    URL.revokeObjectURL(url);
+
+                    await navigator.clipboard.writeText(text);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                }
+            });
         } catch {
             // User cancelled or error
+        } finally {
+            setSharing(false);
         }
-        setSharing(false);
     }, [greenCount, yellowCount, redCount]);
 
     return (

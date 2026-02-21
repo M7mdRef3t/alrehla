@@ -49,8 +49,10 @@ const UserStatePanel = lazy(() => import("./dashboard/Data/UserStatePanel").then
 const ConsciousnessArchivePanel = lazy(() => import("./dashboard/Consciousness/ConsciousnessArchivePanel").then(m => ({ default: m.ConsciousnessArchivePanel })));
 const B2BAnalytics = lazy(() => import("./dashboard/B2BAnalytics").then(m => ({ default: m.B2BAnalytics })));
 const EntityDashboard = lazy(() => import("./dashboard/Entity/EntityDashboard").then(m => ({ default: m.EntityDashboard })));
+const AIDecisionLogPanel = lazy(() => import("./AIDecisionLog").then(m => ({ default: m.AIDecisionLog })));
+const HealthMonitorPanel = lazy(() => import("./HealthMonitorPanel").then(m => ({ default: m.HealthMonitorPanel })));
 
-type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics";
+type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
@@ -63,6 +65,8 @@ const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
   { id: "feedback", label: "التغذية الراجعة", icon: <MessageSquare className="w-4 h-4" /> },
   { id: "feature-flags", label: "التحكم في الزمن", icon: <Flag className="w-4 h-4" /> },
   { id: "ai-studio", label: "مختبر الذكاء", icon: <Brain className="w-4 h-4" /> },
+  { id: "ai-decisions", label: "قرارات الذكاء", icon: <Sparkles className="w-4 h-4 text-purple-400" /> },
+  { id: "health-monitor", label: "صحة النظام", icon: <Activity className="w-4 h-4 text-cyan-400" /> },
   { id: "content", label: "إدارة المحتوى", icon: <Database className="w-4 h-4" /> },
   { id: "users", label: "شؤون المسافرين", icon: <Users className="w-4 h-4" /> },
   { id: "user-state", label: "سحابة البيانات", icon: <Database className="w-4 h-4" /> },
@@ -382,6 +386,8 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "feedback" && <FeedbackPanel />}
                 {effectiveTab === "feature-flags" && <FeatureFlagsPanel />}
                 {effectiveTab === "ai-studio" && <AIStudioPanel />}
+                {effectiveTab === "ai-decisions" && <AIDecisionLogPanel maxDecisions={100} />}
+                {effectiveTab === "health-monitor" && <HealthMonitorPanel />}
                 {effectiveTab === "content" && <ContentPanel />}
                 {effectiveTab === "users" && <UsersPanel />}
                 {effectiveTab === "user-state" && <UserStatePanel />}

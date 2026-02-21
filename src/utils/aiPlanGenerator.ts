@@ -50,6 +50,7 @@ export async function generateAIPlan(
   const primaryPattern = patterns[0];
   const allSituations = situations.join('\n• ');
   const allPatterns = patterns.map(p => `- ${p.type} (${p.severity}): ${p.description}`).join('\n');
+  const allSymptoms = symptomExercises.map(s => `- ${s.title}: ${s.description}`).join('\n');
 
   const traumaInheritanceBlock = focusTraumaInheritance
     ? `
@@ -71,7 +72,10 @@ export async function generateAIPlan(
 **الأنماط المكتشفة:**
 ${allPatterns}
 
-**النمط الرئيسي:** ${primaryPattern.type} (${primaryPattern.severity})
+**الأعراض المكتشفة (حاسمة!):**
+${allSymptoms || '(لا توجد أعراض محددة)'}
+
+**النمط الرئيسي:** ${primaryPattern?.type || 'علاقة مستنزفة'} (${primaryPattern?.severity || '8'})
 
 **المواقف الحقيقية:**
 • ${allSituations}
@@ -81,66 +85,46 @@ ${analysisInsights.map((i, idx) => `${idx + 1}. ${i}`).join('\n')}
 ${traumaInheritanceBlock}
 
 **المهمة:**
-صمم خطة تعافي مخصصة لمدة 4 أسابيع، بناءً على:
-1. النمط الرئيسي والأنماط الفرعية
-2. المواقف الحقيقية اللي كتبها المستخدم
-3. جمل وعبارات من مواقفه الفعلية
+صمم خطة تعافي مخصصة لمدة 4 أسابيع.
+يجب أن تركز الخطة بشكل أساسي على **الأعراض المكتشفة** وتقدم تمارين عملية لها.
+1. استخدم النمط والمواقف الحقيقية كأمثلة.
+2. اجعل التمارين مشابهة لتمارين العلاج السلوكي المعرفي (CBT).
+3. استخدم لغة داعمة وقوية.
 
 **المطلوب (JSON فقط):**
 \`\`\`json
 {
   "totalWeeks": 4,
-  "primaryPattern": "${primaryPattern.type}",
+  "primaryPattern": "${primaryPattern?.type || 'emotional'}",
   "weeks": [
     {
       "week": 1,
-      "title": "عنوان الأسبوع (مثل: فهم السلاح)",
+      "title": "عنوان الأسبوع (مرتبط بمواجهة الأعراض)",
       "goal": "الهدف الأساسي للأسبوع",
-      "description": "وصف تفصيلي لما هنعمله",
+      "description": "وصف تفصيلي",
       "actions": [
         {
           "id": "w1-action-1",
           "type": "reflection",
-          "text": "خطوة محددة وقابلة للتنفيذ",
-          "helpText": "نصيحة إضافية (اختياري)",
+          "text": "خطوة محددة",
+          "helpText": "نصيحة",
           "requiresInput": false
-        },
-        {
-          "id": "w1-action-2",
-          "type": "writing",
-          "text": "اكتب 3 مواقف إضافية...",
-          "requiresInput": true,
-          "placeholder": "مثال: لما اتصل بيا الساعة 12..."
         }
       ],
-      "successCriteria": "إزاي أعرف إني نجحت؟",
-      "warningMessage": "تحذير مهم (اختياري)"
+      "successCriteria": "معيار النجاح"
     }
   ],
   "insights": [
-    "رؤية عميقة عن الخطة",
-    "نصيحة شاملة"
+    "بصيرة مخصصة"
   ]
 }
 \`\`\`
 
 **إرشادات مهمة:**
-1. **استخدم العامية المصرية** في كل حاجة
-2. **اقتبس من مواقفه الفعلية** في الأمثلة والجمل
-3. **كل أسبوع يبني على اللي قبله**:
-   - الأسبوع 1: فهم النمط
-   - الأسبوع 2: بناء الحماية
-   - الأسبوع 3: التطبيق الآمن
-   - الأسبوع 4: التوسع والتعميم
-4. **الخطوات تكون محددة وقابلة للتنفيذ**، مش نظرية
-5. **استخدم جمل من مواقفه** في الأمثلة
-6. **كل أسبوع 3-5 خطوات فقط**، متكترش
-7. **action types**:
-   - reflection: تأمل وفهم
-   - writing: كتابة وتوثيق
-   - practice: تدريب عملي
-   - observation: ملاحظة ورصد
-   - challenge: تحدي تدريجي`;
+1. **استخدم العامية المصرية**
+2. **اقتبس من مواقفه الفعلية**
+3. **ركز على الأعراض**: إذا كان هناك (تعب جسدي)، ضع تمارين لحماية الطاقة، وإذا كان (ذنب)، ضع تمارين للتحرر من الذنب.
+4. ** action types**: reflection, writing, practice, observation, challenge.`;
 
   try {
     const result = await geminiClient.generateJSON<AIPlanResponse>(prompt);

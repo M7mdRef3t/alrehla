@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { FileText, Save, RefreshCw, Sun, Moon, Sunset, Palette, Loader2 } from "lucide-react";
-import { callAdminApi, saveThemePalette, fetchThemePalette, type ThemePalette } from "../../../../../services/adminApi";
+import { runCronReport, saveThemePalette, fetchThemePalette, type ThemePalette } from "../../../../../services/adminApi";
 
 interface AdminToolsProps {
     loading: boolean;
@@ -44,7 +44,7 @@ export const AdminTools: FC<AdminToolsProps> = ({ loading }) => {
         else setGeneratingWeekly(true);
 
         try {
-            await callAdminApi(`overview?kind=cron-report&type=${type}`, { method: 'POST' });
+            await runCronReport(type);
         } catch (error) {
             console.error("Failed to generate report", error);
         } finally {

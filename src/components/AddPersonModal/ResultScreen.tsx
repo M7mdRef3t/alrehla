@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { LayoutTemplate, Info } from "lucide-react";
 import type { FeelingAnswers } from "../FeelingCheck";
@@ -10,7 +10,9 @@ import { buildResultTemplateFromAnswers } from "../../utils/resultScreenTemplate
 import { realityScoreToRing } from "../../utils/realityScore";
 import { useMapState } from "../../state/mapState";
 import { emergencyCopy } from "../../copy/emergency";
-import { recordFlowEvent } from "../../services/journeyTracking";
+import { recordFlowEvent, recordPathStartedOnce } from "../../services/journeyTracking";
+import { getMapSyncSnapshot, subscribeMapSyncStatus } from "../../services/mapSync";
+import { isUserMode } from "../../config/appEnv";
 
 interface ResultScreenProps {
   personLabel: string;
@@ -28,6 +30,7 @@ interface ResultScreenProps {
   feelingAnswers?: FeelingAnswers;
   isEmergency?: boolean;
   safetyAnswer?: QuickAnswer2;
+  forcedGate?: boolean;
 }
 
 
@@ -45,7 +48,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   realityAnswers,
   feelingAnswers,
   isEmergency,
-  safetyAnswer
+  safetyAnswer,
+  forcedGate = false
 }) => {
   const displayName = useMemo(() => {
     const name = personName?.trim();
@@ -101,6 +105,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   const [showDopaminePopup, setShowDopaminePopup] = useState(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [shareBusy, setShareBusy] = useState(false);
+  const [ctaStatus, setCtaStatus] = useState<string | null>(null);
+  const [mapSyncSnapshot, setMapSyncSnapshot] = useState(() => getMapSyncSnapshot());
   const completedSteps = useMemo(() => {
     const checked = new Set(missionProgress?.checkedSteps ?? []);
     return result.steps.reduce((acc, _, index) => acc + (checked.has(index) ? 1 : 0), 0);
@@ -137,6 +143,38 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     ];
     return lines.join("\n");
   }, [displayName, isEmotionalPrisoner, result.goal_label, result.mission_goal, result.mission_label, result.state_label, result.title]);
+
+  useEffect(() => {
+    return subscribeMapSyncStatus((snapshot) => {
+      setMapSyncSnapshot(snapshot);
+    });
+  }, []);
+
+  const shouldShowMapSyncBanner = mapSyncSnapshot.status === "retrying" || mapSyncSnapshot.status === "failed";
+  const mapSyncBannerText = mapSyncSnapshot.status === "retrying"
+    ? "عطل فني.. جاري إعادة الحفظ"
+    : "تعذر الحفظ السحابي مؤقتًا. هنحاول تلقائيًا عند فتح التطبيق.";
+  const isForcedCtaMode = isUserMode && forcedGate;
+
+  const startMissionAndTrack = (nodeId: string) => {
+    const node = useMapState.getState().nodes.find((item) => item.id === nodeId);
+    if (!node) return;
+
+    if (!node.missionProgress?.startedAt) {
+      startMission(nodeId);
+    }
+
+    const pathId =
+      node.recoveryProgress?.pathId ??
+      (node.ring === "red" ? "path_protection" : node.ring === "green" ? "path_deepening" : "path_negotiation");
+
+    recordPathStartedOnce({
+      nodeId,
+      pathId,
+      zone: node.ring,
+      relationshipRole: personTitle?.trim() || undefined
+    });
+  };
 
   const handleShareResult = async () => {
     setShareStatus(null);
@@ -452,25 +490,33 @@ export const ResultScreen: FC<ResultScreenProps> = ({
 
       {summaryOnly && onClose ? (
         <div className="flex flex-col gap-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => void handleShareResult()}
-              className="w-full rounded-full bg-indigo-600 text-white px-6 py-3 text-sm font-semibold hover:bg-indigo-700 active:scale-[0.98] transition-all duration-200"
-            >
-              مشاركة النتيجة
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleDownloadShareImage()}
-              disabled={shareBusy}
-              className="w-full rounded-full bg-slate-700 text-white px-6 py-3 text-sm font-semibold hover:bg-slate-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-60"
-            >
-              {shareBusy ? "جارٍ تجهيز الصورة..." : "تحميل صورة النتيجة"}
-            </button>
-          </div>
+          {!isForcedCtaMode ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => void handleShareResult()}
+                className="w-full rounded-full bg-indigo-600 text-white px-6 py-3 text-sm font-semibold hover:bg-indigo-700 active:scale-[0.98] transition-all duration-200"
+              >
+                مشاركة النتيجة
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDownloadShareImage()}
+                disabled={shareBusy}
+                className="w-full rounded-full bg-slate-700 text-white px-6 py-3 text-sm font-semibold hover:bg-slate-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-60"
+              >
+                {shareBusy ? "جارٍ تجهيز الصورة..." : "تحميل صورة النتيجة"}
+              </button>
+            </div>
+          ) : null}
           {shareStatus ? (
             <p className="text-xs text-slate-600 text-center">{shareStatus}</p>
+          ) : null}
+          {ctaStatus ? (
+            <p className="text-xs text-amber-700 text-center">{ctaStatus}</p>
+          ) : null}
+          {shouldShowMapSyncBanner ? (
+            <p className="text-xs text-amber-700 text-center">{mapSyncBannerText}</p>
           ) : null}
           {isEmergency && (
             <div className="rounded-xl border-2 border-rose-300 bg-rose-50/90 p-4 text-right mb-2">
@@ -506,25 +552,35 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           )}
           <button
             type="button"
-            disabled={!addedNodeId}
             onClick={() => {
-              if (!addedNodeId) return;
+              if (!addedNodeId) {
+                recordFlowEvent("add_person_start_path_blocked_missing_node", {
+                  meta: { reason: "missing_added_node_id" }
+                });
+                setCtaStatus("جاري تحضير البيانات...");
+                return;
+              }
+              setCtaStatus(null);
               recordFlowEvent("add_person_start_path_clicked", { meta: { nodeId: addedNodeId } });
-              if (!isMissionStarted) startMission(addedNodeId);
+              startMissionAndTrack(addedNodeId);
               onOpenMission?.(addedNodeId);
               onClose();
             }}
-            className="w-full rounded-full bg-slate-900 text-white px-8 py-4 text-base font-semibold hover:bg-slate-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full rounded-full bg-slate-900 text-white px-8 py-4 text-base font-semibold hover:bg-slate-800 active:scale-[0.98] transition-all duration-200"
           >
             ابدأ المسار الآن
           </button>
-          <button
-            type="button"
-            onClick={() => onClose(addedNodeId)}
-            className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
-          >
-            ضيف على الخريطة
-          </button>
+          {isForcedCtaMode ? (
+            <p className="text-xs text-slate-500 text-center">الخطوة التالية المطلوبة: ابدأ المسار الآن.</p>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onClose(addedNodeId)}
+              className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
+            >
+              ضيف على الخريطة
+            </button>
+          )}
         </div>
       ) : null}
     </motion.div>

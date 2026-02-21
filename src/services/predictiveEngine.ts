@@ -98,3 +98,40 @@ export function shouldActivateGrowthMode(): boolean {
     const insight = calculateEntropy();
     return insight.state === "ORDER" || insight.state === "FLOW";
 }
+
+/**
+ * AI Agent 2.0 - التحليل التنبؤي والرسائل الحية
+ * يقوم بتوليد رسالة تفاعلية مخصصة بناءً على حالة المستخدم الحالية.
+ */
+import { geminiClient } from "./geminiClient";
+
+export async function generatePredictiveInsight(): Promise<string> {
+    const insight = calculateEntropy();
+
+    // Fallback message if AI is not enabled or fails
+    const fallbackMessage = insight.state === "CHAOS"
+        ? "يبدو أن الخريطة مزدحمة. تذكر استخدام جمل الطوارئ إذا شعرت بالضغط."
+        : "مداراتك مستقرة اليوم. استمر في التركيز على دائرتك الأساسية.";
+
+    const prompt = `
+    أنت المعالج الذكي (AI Oracle) في تطبيق "دواير" لتقويم العلاقات.
+    البيانات الحالية للمستخدم:
+    - مستوى الإنتروبيا (الفوضى النفسية): ${insight.entropyScore} من 100.
+    - الحالة العامة: ${insight.state} (CHAOS = فوضى، ORDER = نظام، FLOW = تدفق).
+    - العامل الرئيسي المؤثر: ${insight.primaryFactor} (pulse_instability = نبض غير مستقر، map_clutter = خريطة مزدحمة).
+
+    قم بكتابة رسالة (insight) قصيرة ومباشرة (جملة أو جملتين فقط) للمستخدم باللغة العربية.
+    إذا كانت الحالة CHAOS، قدم نصيحة تكتيكية للانسحاب أو التهدئة.
+    إذا كانت الحالة ORDER أو FLOW، شجعه على النمو.
+    لا تستخدم تنسيقات معقدة، فقط نص مباشر وداعم بطابع عسكري/تكتيكي ذكي.
+    `;
+
+    try {
+        const response = await geminiClient.generate(prompt);
+        return response ? response.trim() : fallbackMessage;
+    } catch (e) {
+        console.error("AI Insight Generation Failed:", e);
+        return fallbackMessage;
+    }
+}
+

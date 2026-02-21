@@ -1,3 +1,6 @@
+import { supabase } from "./supabaseClient";
+import { hasRecordedOfferConversion, recordEmotionalPricingEvent } from "./emotionalPricingAnalytics";
+
 /**
  * Subscription Manager — مدير الاشتراكات
  * =========================================
@@ -7,7 +10,7 @@
 
 const SUB_KEY = "dawayir-subscription";
 
-export type SubscriptionTier = "free" | "commander" | "general";
+export type SubscriptionTier = "free" | "premium" | "coach";
 
 export interface SubscriptionData {
     tier: SubscriptionTier;
@@ -18,6 +21,17 @@ export interface SubscriptionData {
     lastResetDate: string; // YYYY-MM-DD
     /** عدد الأشخاص في الخريطة (للـ free limit) */
     mapNodeCount?: number;
+}
+
+export interface EmotionalOffer {
+    id: string;
+    createdAt: number;
+    type: "free_month" | "premium_discount";
+    title: string;
+    message: string;
+    discountPercent?: number;
+    expiresAt: number;
+    consumed: boolean;
 }
 
 export interface TierLimits {
@@ -38,7 +52,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
         canShareMap: true,
         canAccessB2B: false,
     },
-    commander: {
+    premium: {
         maxMapNodes: -1,
         dailyAIMessages: -1,
         canExportPDF: true,
@@ -46,7 +60,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
         canShareMap: true,
         canAccessB2B: false,
     },
-    general: {
+    coach: {
         maxMapNodes: -1,
         dailyAIMessages: -1,
         canExportPDF: true,
@@ -58,14 +72,14 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
 
 export const TIER_LABELS: Record<SubscriptionTier, string> = {
     free: "مجاني",
-    commander: "قائد 🎖️",
-    general: "جنرال 👑",
+    premium: "بريميوم 🎖️",
+    coach: "كوتش (PRO) 👑",
 };
 
 export const TIER_PRICES: Record<SubscriptionTier, string> = {
     free: "$0",
-    commander: "$7/شهر",
-    general: "$25/شهر",
+    premium: "$9/شهر",
+    coach: "$49/شهر",
 };
 
 function getTodayStr(): string {
@@ -77,6 +91,8 @@ const DEFAULT_SUB: SubscriptionData = {
     dailyAIMessages: 0,
     lastResetDate: getTodayStr(),
 };
+
+const EMOTIONAL_OFFER_KEY = "dawayir-emotional-offer";
 
 /* ── Load / Save ── */
 export function loadSubscription(): SubscriptionData {
@@ -156,4 +172,112 @@ export function activateSubscription(tier: SubscriptionTier, durationDays: numbe
     sub.tier = tier;
     sub.expiresAt = Date.now() + durationDays * 24 * 60 * 60 * 1000;
     saveSubscription(sub);
+}
+
+export function grantEmotionalFreeMonth(): void {
+    const sub = loadSubscription();
+    sub.tier = "premium";
+    const base = sub.expiresAt && sub.expiresAt > Date.now() ? sub.expiresAt : Date.now();
+    sub.expiresAt = base + 30 * 24 * 60 * 60 * 1000;
+    saveSubscription(sub);
+
+    saveEmotionalOffer({
+        id: `offer-${Date.now()}`,
+        createdAt: Date.now(),
+        type: "free_month",
+        title: "هدية من الرحلة",
+        message: "إحنا شايفين مجهودك. اتفعل لك شهر بريميوم مجاني دعمًا ليك.",
+        expiresAt: Date.now() + 14 * 24 * 60 * 60 * 1000,
+        consumed: false,
+    });
+}
+
+export function saveEmotionalOffer(offer: EmotionalOffer): void {
+    try {
+        localStorage.setItem(EMOTIONAL_OFFER_KEY, JSON.stringify(offer));
+    } catch {
+        // noop
+    }
+}
+
+export function getEmotionalOffer(): EmotionalOffer | null {
+    try {
+        const raw = localStorage.getItem(EMOTIONAL_OFFER_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as EmotionalOffer;
+        if (parsed.expiresAt < Date.now()) {
+            clearEmotionalOffer();
+            return null;
+        }
+        return parsed;
+    } catch {
+        return null;
+    }
+}
+
+export function consumeEmotionalOffer(): void {
+    const offer = getEmotionalOffer();
+    if (!offer) return;
+    offer.consumed = true;
+    saveEmotionalOffer(offer);
+}
+
+export function clearEmotionalOffer(): void {
+    try {
+        localStorage.removeItem(EMOTIONAL_OFFER_KEY);
+    } catch {
+        // noop
+    }
+}
+
+/** 
+ * مزامنة حالة الاشتراك مع السيرفر (Supabase)
+ */
+export async function syncSubscription(): Promise<void> {
+    if (!supabase) return;
+
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
+
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('role, subscription_status, current_period_end')
+            .eq('id', session.user.id)
+            .single();
+
+        if (error || !profile) return;
+
+        const sub = loadSubscription();
+
+        // Map backend role/status to frontend tier
+        let newTier: SubscriptionTier = 'free';
+        if (profile.role === 'coach') {
+            newTier = 'coach';
+        } else if (profile.subscription_status === 'active' || profile.subscription_status === 'trialing') {
+            newTier = 'premium';
+        }
+
+        const previousTier = sub.tier;
+        sub.tier = newTier;
+        if (profile.current_period_end) {
+            sub.expiresAt = new Date(profile.current_period_end).getTime();
+        }
+
+        saveSubscription(sub);
+        if (previousTier !== "premium" && newTier === "premium") {
+            const emotionalOffer = getEmotionalOffer();
+            if (
+                emotionalOffer?.type === "premium_discount" &&
+                !hasRecordedOfferConversion(emotionalOffer.id)
+            ) {
+                recordEmotionalPricingEvent("offer_converted_to_premium", {
+                    offerId: emotionalOffer.id
+                });
+            }
+        }
+        console.log("🔄 Subscription synced with server:", newTier);
+    } catch (err) {
+        console.error("Failed to sync subscription:", err);
+    }
 }

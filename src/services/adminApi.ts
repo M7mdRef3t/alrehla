@@ -828,6 +828,13 @@ export interface ExecutiveReport {
     alerts: string[];
   };
   recommendedActions: string[];
+  consciousRevenue?: {
+    averageConsciousnessLevel: number;
+    revenueSignal: number;
+    alignmentScore: number;
+    status: "strong" | "watch" | "critical";
+    note: string;
+  };
 }
 
 export interface SystemHealthReport {
@@ -976,6 +983,7 @@ export async function fetchDailyReport(date?: string): Promise<DailyReport | nul
 }
 
 export interface WeeklyReport {
+  windowDays?: 7 | 14 | 30;
   from: string;
   to: string;
   totalEvents: number;
@@ -983,10 +991,67 @@ export interface WeeklyReport {
   typeCounts: Record<string, number>;
   dailySeries: Array<{ date: string; count: number }>;
   topSessions: Array<{ sessionId: string; total: number }>;
+  affiliate?: {
+    linkExposed: number;
+    linkClicked: number;
+    ctr: number;
+    topDomains: Array<{
+      domain: string;
+      exposed: number;
+      clicked: number;
+      ctr: number;
+    }>;
+    variants?: Array<{
+      variant: string;
+      exposed: number;
+      clicked: number;
+      ctr: number;
+    }>;
+    topMissions?: Array<{
+      missionKey: string;
+      missionLabel: string;
+      ring: string;
+      exposed: number;
+      clicked: number;
+      ctr: number;
+    }>;
+  };
+  gate7?: {
+    windowHours: number;
+    pathStarted48h: number;
+    trafficEvents48h?: number;
+    trafficSessions48h?: number;
+    trafficBaselineMet?: boolean;
+    minEvents48h?: number;
+    minSessions48h?: number;
+    status: "ok" | "critical";
+    code: string;
+  };
+  consciousRevenue?: {
+    averageConsciousnessLevel: number;
+    revenueSignal: number;
+    alignmentScore: number;
+    status: "strong" | "watch" | "critical";
+    note: string;
+  };
 }
 
-export async function fetchWeeklyReport(): Promise<WeeklyReport | null> {
-  const apiData = await callAdminApi<WeeklyReport>("weekly-report");
+export async function fetchWeeklyReport(days: 7 | 14 | 30 = 7): Promise<WeeklyReport | null> {
+  const apiData = await callAdminApi<WeeklyReport>(`weekly-report?days=${days}`);
+  return apiData ?? null;
+}
+
+export interface CronReportResponse {
+  ok: boolean;
+  period: "daily" | "weekly";
+  generatedAt?: string;
+  reportGeneratedAt?: string | null;
+}
+
+export async function runCronReport(period: "daily" | "weekly"): Promise<CronReportResponse | null> {
+  const apiData = await callAdminApi<CronReportResponse>(`overview?kind=cron-report&type=${period}`, {
+    method: "POST"
+  });
   return apiData ?? null;
 }
 

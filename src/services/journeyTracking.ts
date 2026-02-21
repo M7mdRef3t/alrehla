@@ -33,7 +33,7 @@ export type JourneyEventType =
   | "flow_event";
 
 export interface JourneyEventPayload {
-  path_started: { pathId: string; zone: string; symptomType?: string; relationshipRole?: string };
+  path_started: { pathId: string; zone: string; symptomType?: string; relationshipRole?: string; nodeId?: string };
   task_started: { pathId: string; taskId: string; taskLabel?: string; personLabel?: string; nodeId?: string };
   task_completed: { pathId: string; taskId: string; date: string; moodScore?: number; taskLabel?: string; personLabel?: string; nodeId?: string };
   path_regenerated: { pathId: string; reason?: string };
@@ -83,24 +83,66 @@ function getOrCreateSessionId(): string {
   return id;
 }
 
-export function getTrackingSessionId(): string | null {
+function migrateAnonymousEventsToSession(sessionId: string): void {
+  const events = loadEvents();
+  if (events.length === 0) return;
+  let changed = false;
+  const migrated = events.map((event) => {
+    if (event.sessionId) return event;
+    changed = true;
+    return {
+      ...event,
+      sessionId
+    };
+  });
+  if (changed) saveEvents(migrated);
+}
+
+export function ensureIdentifiedTrackingSession(): string | null {
+  if (!isBrowser) return null;
+
+  if (isUserMode) {
+    const sessionId = getOrCreateSessionId();
+    if (!sessionId) return null;
+
+    if (getFromLocalStorage(KEY_MODE) !== "identified") {
+      setInLocalStorage(KEY_MODE, "identified");
+    }
+    migrateAnonymousEventsToSession(sessionId);
+    return sessionId;
+  }
+
   if (getTrackingMode() !== "identified") return null;
-  const id = getOrCreateSessionId();
-  return id || null;
+  const sessionId = getOrCreateSessionId();
+  return sessionId || null;
+}
+
+export function getTrackingSessionId(): string | null {
+  if (isUserMode) return ensureIdentifiedTrackingSession();
+  if (getTrackingMode() !== "identified") return null;
+  const sessionId = getOrCreateSessionId();
+  return sessionId || null;
 }
 
 export function getTrackingMode(): TrackingMode {
   if (!isBrowser) return "anonymous";
-  const v = getFromLocalStorage(KEY_MODE);
-  if (!v && isUserMode) {
-    setInLocalStorage(KEY_MODE, "identified");
+  if (isUserMode) {
+    if (getFromLocalStorage(KEY_MODE) !== "identified") {
+      setInLocalStorage(KEY_MODE, "identified");
+    }
     return "identified";
   }
+  const v = getFromLocalStorage(KEY_MODE);
   return v === "identified" ? "identified" : "anonymous";
 }
 
 export function setTrackingMode(mode: TrackingMode): void {
   if (!isBrowser) return;
+  if (isUserMode) {
+    setInLocalStorage(KEY_MODE, "identified");
+    ensureIdentifiedTrackingSession();
+    return;
+  }
   setInLocalStorage(KEY_MODE, mode);
 }
 
@@ -271,11 +313,16 @@ export type FlowStep =
   | "add_person_opened"
   | "add_person_done_show_on_map"
   | "add_person_start_path_clicked"
+  | "add_person_start_path_blocked_missing_node"
+  | "add_person_cta_forced_shown"
+  | "add_person_cta_forced_blocked_close"
   | "add_person_dropped"
   | "feedback_opened"
   | "feedback_submitted"
   | "tools_opened"
   | "playbook_executed"
+  | "affiliate_link_exposed"
+  | "affiliate_link_clicked"
   | "utm_captured"
   | "next_step_rendered"
   | "next_step_action_taken"
@@ -371,6 +418,26 @@ export function recordJourneyEvent(
       { retries: 1, breaker: trackingApiBreaker }
     );
   }
+}
+
+export function hasPathStartedForNode(nodeId: string): boolean {
+  const safeNodeId = nodeId.trim();
+  if (!safeNodeId) return false;
+  const events = loadEvents();
+  return events.some((event) => {
+    if (event.type !== "path_started") return false;
+    const payload = event.payload as JourneyEventPayload["path_started"];
+    return payload.nodeId === safeNodeId;
+  });
+}
+
+export function recordPathStartedOnce(payload: JourneyEventPayload["path_started"]): boolean {
+  const safeNodeId = typeof payload.nodeId === "string" ? payload.nodeId.trim() : "";
+  if (safeNodeId && hasPathStartedForNode(safeNodeId)) {
+    return false;
+  }
+  recordJourneyEvent("path_started", payload);
+  return true;
 }
 
 /** إحصائيات مجمّعة — بدون هوية (للاستخدام في "أطلس العلاقات" أو لوحة عامة) */

@@ -32,10 +32,84 @@ function toDateOnly(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+type ConsciousRevenueSnapshot = {
+  averageConsciousnessLevel: number;
+  revenueSignal: number;
+  alignmentScore: number;
+  status: "strong" | "watch" | "critical";
+  note: string;
+};
+
+function clampPercent(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function computeConsciousRevenueSnapshot(input: {
+  typeCounts: Record<string, number>;
+  uniqueSessions: number;
+  affiliateCtr: number;
+  gate7Status: "ok" | "critical";
+}): ConsciousRevenueSnapshot {
+  const pathStarts = Number(input.typeCounts.path_started ?? 0);
+  const taskCompleted = Number(input.typeCounts.task_completed ?? 0);
+  const moodLogged = Number(input.typeCounts.mood_logged ?? 0);
+  const sessions = Math.max(1, Number(input.uniqueSessions ?? 0));
+
+  const taskPerSession = taskCompleted / sessions;
+  const moodPerSession = moodLogged / sessions;
+  const completionVsStarts = pathStarts > 0 ? taskCompleted / pathStarts : 0;
+  const gatePenalty = input.gate7Status === "critical" ? 18 : 0;
+
+  const averageConsciousnessLevel = clampPercent(
+    taskPerSession * 32 + moodPerSession * 18 + completionVsStarts * 50 - gatePenalty
+  );
+  const revenueSignal = clampPercent(input.affiliateCtr * 8 + (input.gate7Status === "ok" ? 24 : 0));
+  const alignmentScore = clampPercent(averageConsciousnessLevel * 0.7 + revenueSignal * 0.3);
+  const status: ConsciousRevenueSnapshot["status"] =
+    alignmentScore >= 70 ? "strong" : alignmentScore >= 45 ? "watch" : "critical";
+
+  const note =
+    status === "strong"
+      ? "الوعي يتحول تلقائيا إلى عائد. استمر على نفس مسار الرحلة."
+      : status === "watch"
+        ? "العائد موجود لكن وعي الرحلة متوسط. زد خطوات الإكمال قبل أي دفع إعلاني."
+        : "العائد غير مستقر لأن وعي الرحلة منخفض. أوقف التوسع التسويقي واصلح مسار الرحلة أولا.";
+
+  return {
+    averageConsciousnessLevel,
+    revenueSignal,
+    alignmentScore,
+    status,
+    note
+  };
+}
+
 function safeLimit(raw: unknown, fallback: number, max = 5000): number {
   const value = Number(raw);
   if (Number.isNaN(value) || value <= 0) return fallback;
   return Math.min(value, max);
+}
+
+function normalizeReportPeriod(raw: unknown): "daily" | "weekly" | null {
+  const value = String(raw ?? "").trim().toLowerCase();
+  if (value === "daily" || value === "day") return "daily";
+  if (value === "weekly" || value === "week") return "weekly";
+  return null;
+}
+
+function getPositiveEnvInt(name: string, fallback: number): number {
+  const raw = String(process.env[name] ?? "").trim();
+  if (!raw) return fallback;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value <= 0) return fallback;
+  return Math.floor(value);
+}
+
+function normalizeWeeklyWindowDays(raw: unknown): 7 | 14 | 30 {
+  const value = Number(raw);
+  if (value === 14) return 14;
+  if (value === 30) return 30;
+  return 7;
 }
 
 function verifyCron(req: any): boolean {
@@ -915,9 +989,11 @@ async function handleOpsInsights(client: any, res: any) {
 async function handleExecutiveReport(client: any, res: any) {
   const now = new Date();
   const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const since7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const since30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const gate7Start = new Date(now.getTime() - 48 * 60 * 60 * 1000).getTime();
 
-  const [{ data: flowRows }, { count: events24h }, { count: pathStarted24h }, { count: nodesAdded24h }, { count: mapsTotal }] =
+  const [{ data: flowRows }, { data: weeklyRows }, { count: events24h }, { count: pathStarted24h }, { count: nodesAdded24h }, { count: mapsTotal }] =
     await Promise.all([
       client
         .from("journey_events")
@@ -926,6 +1002,12 @@ async function handleExecutiveReport(client: any, res: any) {
         .gte("created_at", since30d)
         .order("created_at", { ascending: false })
         .limit(20000),
+      client
+        .from("journey_events")
+        .select("session_id,type,payload,created_at")
+        .gte("created_at", since7d)
+        .lt("created_at", now.toISOString())
+        .limit(5000),
       client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", since24h),
       client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "path_started").gte("created_at", since24h),
       client.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "node_added").gte("created_at", since24h),
@@ -983,6 +1065,40 @@ async function handleExecutiveReport(client: any, res: any) {
   }
   const retention7d = eligible7d > 0 ? Math.round((retained7d / eligible7d) * 100) : 0;
   const addPersonCompletionRate = addPersonOpened > 0 ? Math.round((addPersonDone / addPersonOpened) * 100) : 0;
+  const weeklyTypeCounts: Record<string, number> = {};
+  const weeklySessions = new Set<string>();
+  let weeklyAffiliateExposed = 0;
+  let weeklyAffiliateClicked = 0;
+  let weeklyPathStarted48h = 0;
+
+  for (const row of (weeklyRows ?? []) as Array<Record<string, unknown>>) {
+    const type = String(row.type ?? "");
+    weeklyTypeCounts[type] = (weeklyTypeCounts[type] ?? 0) + 1;
+
+    const sid = String(row.session_id ?? "").trim();
+    if (sid) weeklySessions.add(sid);
+
+    const createdAtMs = new Date(String(row.created_at ?? "")).getTime();
+    if (type === "path_started" && !Number.isNaN(createdAtMs) && createdAtMs >= gate7Start) {
+      weeklyPathStarted48h += 1;
+    }
+
+    if (type !== "flow_event") continue;
+    const payload = row.payload as Record<string, unknown> | null;
+    const step = String(payload?.step ?? "");
+    if (step === "affiliate_link_exposed") weeklyAffiliateExposed += 1;
+    if (step === "affiliate_link_clicked") weeklyAffiliateClicked += 1;
+  }
+
+  const weeklyAffiliateCtr =
+    weeklyAffiliateExposed > 0 ? Math.round((weeklyAffiliateClicked / weeklyAffiliateExposed) * 10000) / 100 : 0;
+  const weeklyGate7Status = weeklyPathStarted48h > 0 ? "ok" : "critical";
+  const consciousRevenue = computeConsciousRevenueSnapshot({
+    typeCounts: weeklyTypeCounts,
+    uniqueSessions: weeklySessions.size,
+    affiliateCtr: weeklyAffiliateCtr,
+    gate7Status: weeklyGate7Status
+  });
 
   const operationalAlerts: string[] = [];
   if ((events24h ?? 0) === 0) operationalAlerts.push("انقطاع كامل: لا توجد أحداث خلال 24 ساعة.");
@@ -1016,7 +1132,8 @@ async function handleExecutiveReport(client: any, res: any) {
       status: operationalAlerts.length > 0 ? "warning" : "healthy",
       alerts: operationalAlerts
     },
-    recommendedActions
+    recommendedActions,
+    consciousRevenue
   });
 }
 
@@ -1242,9 +1359,14 @@ async function handleDailyReport(client: any, req: any, res: any) {
 }
 
 async function handleWeeklyReport(client: any, req: any, res: any) {
+  const windowDays = normalizeWeeklyWindowDays(req.query?.days);
   const now = new Date();
   const end = new Date(now);
-  const start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const start = new Date(now.getTime() - windowDays * 24 * 60 * 60 * 1000);
+  const gate7Hours = 48;
+  const gate7Start = new Date(now.getTime() - gate7Hours * 60 * 60 * 1000);
+  const gate7MinEvents48h = getPositiveEnvInt("GATE7_MIN_EVENTS_48H", 20);
+  const gate7MinSessions48h = getPositiveEnvInt("GATE7_MIN_SESSIONS_48H", 8);
 
   const { data: events, error } = await client
     .from("journey_events")
@@ -1260,8 +1382,16 @@ async function handleWeeklyReport(client: any, req: any, res: any) {
 
   const byDay = new Map<string, number>();
   const bySession = new Map<string, number>();
+  const affiliateByDomain = new Map<string, { exposed: number; clicked: number }>();
+  const affiliateByVariant = new Map<string, { exposed: number; clicked: number }>();
+  const affiliateByMission = new Map<string, { exposed: number; clicked: number; missionLabel: string; ring: string }>();
   const typeCounts: Record<string, number> = {};
   let totalEvents = 0;
+  let affiliateLinkExposed = 0;
+  let affiliateLinkClicked = 0;
+  let pathStarted48h = 0;
+  let totalEvents48h = 0;
+  const sessions48h = new Set<string>();
 
   for (const row of (events ?? []) as Array<Record<string, unknown>>) {
     const createdAt = new Date(String(row.created_at ?? now));
@@ -1272,6 +1402,55 @@ async function handleWeeklyReport(client: any, req: any, res: any) {
     const type = String(row.type ?? "");
     typeCounts[type] = (typeCounts[type] ?? 0) + 1;
     totalEvents += 1;
+
+    if (createdAt >= gate7Start) {
+      totalEvents48h += 1;
+      sessions48h.add(sessionId);
+    }
+
+    if (type === "path_started" && createdAt >= gate7Start) {
+      pathStarted48h += 1;
+    }
+
+    if (type !== "flow_event") continue;
+    const payload = row.payload as Record<string, unknown> | null;
+    const step = String(payload?.step ?? "");
+    if (step !== "affiliate_link_exposed" && step !== "affiliate_link_clicked") continue;
+
+    const extra = payload?.extra as Record<string, unknown> | null | undefined;
+    const domain = String(extra?.domain ?? "").trim().toLowerCase();
+    const linkId = String(extra?.linkId ?? "").trim().toLowerCase();
+    const missionKey = String(extra?.missionKey ?? "").trim().toLowerCase();
+    const missionLabel = String(extra?.missionLabel ?? "").trim();
+    const ring = String(extra?.ring ?? "").trim().toLowerCase();
+    if (step === "affiliate_link_exposed") affiliateLinkExposed += 1;
+    if (step === "affiliate_link_clicked") affiliateLinkClicked += 1;
+
+    if (linkId.startsWith("variant_")) {
+      const variantBucket = affiliateByVariant.get(linkId) ?? { exposed: 0, clicked: 0 };
+      if (step === "affiliate_link_exposed") variantBucket.exposed += 1;
+      if (step === "affiliate_link_clicked") variantBucket.clicked += 1;
+      affiliateByVariant.set(linkId, variantBucket);
+    }
+
+    if (missionKey) {
+      const missionBucket = affiliateByMission.get(missionKey) ?? {
+        exposed: 0,
+        clicked: 0,
+        missionLabel: missionLabel || missionKey,
+        ring: ring || "unknown"
+      };
+      if (step === "affiliate_link_exposed") missionBucket.exposed += 1;
+      if (step === "affiliate_link_clicked") missionBucket.clicked += 1;
+      affiliateByMission.set(missionKey, missionBucket);
+    }
+
+    if (!domain) continue;
+
+    const bucket = affiliateByDomain.get(domain) ?? { exposed: 0, clicked: 0 };
+    if (step === "affiliate_link_exposed") bucket.exposed += 1;
+    if (step === "affiliate_link_clicked") bucket.clicked += 1;
+    affiliateByDomain.set(domain, bucket);
   }
 
   const topSessions = Array.from(bySession.entries())
@@ -1283,14 +1462,81 @@ async function handleWeeklyReport(client: any, req: any, res: any) {
     .map(([date, count]) => ({ date, count }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
+  const affiliateCtr =
+    affiliateLinkExposed > 0 ? Math.round((affiliateLinkClicked / affiliateLinkExposed) * 10000) / 100 : 0;
+  const topAffiliateDomains = Array.from(affiliateByDomain.entries())
+    .map(([domain, counts]) => ({
+      domain,
+      exposed: counts.exposed,
+      clicked: counts.clicked,
+      ctr: counts.exposed > 0 ? Math.round((counts.clicked / counts.exposed) * 10000) / 100 : 0
+    }))
+    .sort((a, b) => b.clicked - a.clicked)
+    .slice(0, 10);
+  const variantBreakdown = Array.from(affiliateByVariant.entries())
+    .map(([variant, counts]) => ({
+      variant,
+      exposed: counts.exposed,
+      clicked: counts.clicked,
+      ctr: counts.exposed > 0 ? Math.round((counts.clicked / counts.exposed) * 10000) / 100 : 0
+    }))
+    .sort((a, b) => b.clicked - a.clicked);
+  const missionBreakdown = Array.from(affiliateByMission.entries())
+    .map(([missionKey, counts]) => ({
+      missionKey,
+      missionLabel: counts.missionLabel,
+      ring: counts.ring,
+      exposed: counts.exposed,
+      clicked: counts.clicked,
+      ctr: counts.exposed > 0 ? Math.round((counts.clicked / counts.exposed) * 10000) / 100 : 0
+    }))
+    .sort((a, b) => (b.ctr - a.ctr) || (b.clicked - a.clicked))
+    .slice(0, 3);
+  const gate7TrafficBaselineMet =
+    totalEvents48h >= gate7MinEvents48h || sessions48h.size >= gate7MinSessions48h;
+  const gate7Status = pathStarted48h > 0 || !gate7TrafficBaselineMet ? "ok" : "critical";
+  const gate7Code =
+    pathStarted48h > 0
+      ? "ok"
+      : gate7TrafficBaselineMet
+      ? "gate7_path_started_zero"
+      : "gate7_insufficient_traffic";
+  const consciousRevenue = computeConsciousRevenueSnapshot({
+    typeCounts,
+    uniqueSessions: bySession.size,
+    affiliateCtr,
+    gate7Status
+  });
+
   const report = {
+    windowDays,
     from: toDateOnly(start),
     to: toDateOnly(end),
     totalEvents,
     uniqueSessions: bySession.size,
     typeCounts,
     dailySeries,
-    topSessions
+    topSessions,
+    affiliate: {
+      linkExposed: affiliateLinkExposed,
+      linkClicked: affiliateLinkClicked,
+      ctr: affiliateCtr,
+      topDomains: topAffiliateDomains,
+      variants: variantBreakdown,
+      topMissions: missionBreakdown
+    },
+    gate7: {
+      windowHours: gate7Hours,
+      pathStarted48h,
+      trafficEvents48h: totalEvents48h,
+      trafficSessions48h: sessions48h.size,
+      trafficBaselineMet: gate7TrafficBaselineMet,
+      minEvents48h: gate7MinEvents48h,
+      minSessions48h: gate7MinSessions48h,
+      status: gate7Status,
+      code: gate7Code
+    },
+    consciousRevenue
   };
 
   if (String(req.query?.store ?? "") === "1") {
@@ -1419,9 +1665,16 @@ async function handleUserStateImport(client: any, req: any, res: any) {
   res.status(200).json({ ok: true, count: payload.length });
 }
 
+async function verifyCronOrOwner(req: any, res: any): Promise<boolean> {
+  if (verifyCron(req)) return true;
+  return verifyAdminWithRoles(req, res, ["owner", "superadmin"]);
+}
+
 async function handleCronReport(req: any, res: any) {
-  if (!verifyCron(req)) {
-    res.status(401).json({ error: "Unauthorized" });
+  if (!(await verifyCronOrOwner(req, res))) {
+    if (!res.headersSent) {
+      res.status(401).json({ error: "Unauthorized" });
+    }
     return;
   }
 
@@ -1431,11 +1684,21 @@ async function handleCronReport(req: any, res: any) {
     return;
   }
 
-  const period = String(req.query?.period ?? "daily");
+  const method = String(req.method ?? "GET").toUpperCase();
+  const body = method === "POST" ? await parseJsonBody(req) : {};
+  const period = normalizeReportPeriod(
+    req.query?.period ?? req.query?.type ?? body?.period ?? body?.type ?? "daily"
+  );
+  if (!period) {
+    res.status(400).json({ error: "INVALID_REPORT_PERIOD" });
+    return;
+  }
+
   const reportReq = {
     ...req,
     query: {
       ...(req.query ?? {}),
+      period,
       store: "1"
     }
   };
@@ -1461,15 +1724,40 @@ async function handleCronReport(req: any, res: any) {
     return;
   }
 
-  const title = period === "weekly" ? "Weekly Report - Al-Rehla" : "Daily Report - Al-Rehla";
+  const gate7Critical = period === "weekly" && String(report?.gate7?.status ?? "").toLowerCase() === "critical";
+  const title = gate7Critical
+    ? "CRITICAL Weekly Report - Al-Rehla"
+    : period === "weekly"
+      ? "Weekly Report - Al-Rehla"
+      : "Daily Report - Al-Rehla";
+  const gate7Summary =
+    period === "weekly"
+      ? `\nGate-7: ${String(report?.gate7?.status ?? "unknown").toUpperCase()} ` +
+        `(path_started_48h=${Number(report?.gate7?.pathStarted48h ?? 0)}, window_h=${Number(report?.gate7?.windowHours ?? 48)})` +
+        ` | traffic_48h(events=${Number(report?.gate7?.trafficEvents48h ?? 0)}, sessions=${Number(report?.gate7?.trafficSessions48h ?? 0)})` +
+        ` | baseline(events>=${Number(report?.gate7?.minEvents48h ?? 20)} OR sessions>=${Number(report?.gate7?.minSessions48h ?? 8)})` +
+        ` | code=${String(report?.gate7?.code ?? "unknown")}`
+      : "";
+  const affiliateSummary =
+    period === "weekly"
+      ? `\nAffiliate exposed: ${Number(report?.affiliate?.linkExposed ?? 0)} | clicked: ${Number(report?.affiliate?.linkClicked ?? 0)} | ctr: ${Number(report?.affiliate?.ctr ?? 0)}%`
+      : "";
   const summary = period === "weekly"
-    ? `From ${report.from} to ${report.to}\nTotal events: ${report.totalEvents}\nUnique sessions: ${report.uniqueSessions}`
+    ? `From ${report.from} to ${report.to}\nTotal events: ${report.totalEvents}\nUnique sessions: ${report.uniqueSessions}${affiliateSummary}${gate7Summary}\nConscious alignment: ${Number(report?.consciousRevenue?.alignmentScore ?? 0)}% (${String(report?.consciousRevenue?.status ?? "unknown").toUpperCase()})`
     : `Date: ${report.date}\nTotal events: ${report.totalEvents}\nUnique sessions: ${report.uniqueSessions}`;
 
   await sendSlack(`${title}\n${summary}`);
   await sendResend(title, `<pre style="font-family: monospace">${summary}</pre>`);
 
-  res.status(200).json({ ok: true, period });
+  res.status(200).json({
+    ok: true,
+    period,
+    generatedAt: new Date().toISOString(),
+    reportGeneratedAt:
+      period === "weekly"
+        ? report?.to ?? null
+        : report?.date ?? null
+  });
 }
 
 export async function overviewRouter(req: any, res: any) {
@@ -1481,7 +1769,7 @@ export async function overviewRouter(req: any, res: any) {
 
   try {
     if (kind === "cron-report") {
-      if (method !== "GET") {
+      if (method !== "GET" && method !== "POST") {
         res.status(405).json({ error: "Method not allowed" });
         return;
       }

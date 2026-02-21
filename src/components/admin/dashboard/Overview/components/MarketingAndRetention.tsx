@@ -1,6 +1,7 @@
-import type { FC } from "react";
+import { useMemo, type FC } from "react";
 import { Users, BarChart, Target } from "lucide-react";
 import type { OverviewStats, RetentionCohortRow, UtmBreakdownEntry } from "../../../../../services/adminApi";
+import { decideVisualGeneLayout } from "../../../../../services/visualGenes";
 
 interface MarketingAndRetentionProps {
     utmBreakdown: { sources: UtmBreakdownEntry[]; mediums: UtmBreakdownEntry[]; campaigns: UtmBreakdownEntry[] } | null | undefined;
@@ -30,6 +31,14 @@ export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreak
 
     const sources = utmBreakdown?.sources || [];
     const cohorts = retentionCohorts || [];
+    const sourcesGene = useMemo(
+        () => decideVisualGeneLayout({ featureKey: "marketing_sources", itemCount: sources.length, fieldCount: 3 }),
+        [sources.length]
+    );
+    const cohortsGene = useMemo(
+        () => decideVisualGeneLayout({ featureKey: "retention_cohorts", itemCount: cohorts.length, fieldCount: 6 }),
+        [cohorts.length]
+    );
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mb-6" dir="rtl">
@@ -46,12 +55,12 @@ export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreak
                     </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className={sourcesGene.container === "grid" ? "grid grid-cols-1 md:grid-cols-2 gap-3" : "space-y-3"}>
                     {sources.length === 0 ? (
                         <div className="text-slate-500 text-sm text-center py-6">لا توجد بيانات للمصادر</div>
                     ) : (
                         sources.map((src, idx) => (
-                            <div key={idx} className="flex justify-between items-center py-2 px-3 rounded-lg bg-slate-800/20 border border-white/5">
+                            <div key={idx} className={`flex justify-between items-center px-3 rounded-lg bg-slate-800/20 border border-white/5 ${sourcesGene.detail === "compact" ? "py-1.5" : "py-2"}`}>
                                 <div className="flex-1">
                                     <span className="text-sm font-bold text-slate-300 block">{src.key || "Direct"}</span>
                                     <div className="w-full bg-slate-800 mt-1 rounded-full overflow-hidden h-1">
@@ -80,7 +89,7 @@ export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreak
                 <div className="overflow-x-auto">
                     {cohorts.length === 0 ? (
                         <div className="text-slate-500 text-sm text-center py-6">لا توجد بيانات للاحتفاظ</div>
-                    ) : (
+                    ) : cohortsGene.grouping === "table" ? (
                         <table className="w-full text-right text-[10px] font-mono border-collapse" dir="ltr">
                             <thead>
                                 <tr className="bg-slate-800/50 text-slate-300 border-b border-white/10">
@@ -105,6 +114,23 @@ export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreak
                                 ))}
                             </tbody>
                         </table>
+                    ) : (
+                        <div className="space-y-2" dir="ltr">
+                            {cohorts.map((row) => (
+                                <div key={row.cohortDate} className="rounded-lg border border-white/5 bg-slate-900/40 px-3 py-2">
+                                    <div className="mb-1 flex items-center justify-between">
+                                        <span className="text-xs font-bold text-slate-200">{row.cohortDate}</span>
+                                        <span className="text-[10px] text-slate-400">Users: {row.cohortSize}</span>
+                                    </div>
+                                    <div className="grid grid-cols-4 gap-2 text-[10px]">
+                                        <span className={getColor(row.d1Pct)}>D1 {fmtPct(row.d1Pct)}</span>
+                                        <span className={getColor(row.d3Pct)}>D3 {fmtPct(row.d3Pct)}</span>
+                                        <span className={getColor(row.d7Pct)}>D7 {fmtPct(row.d7Pct)}</span>
+                                        <span className={getColor(row.d30Pct)}>D30 {fmtPct(row.d30Pct)}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     )}
                 </div>
             </div>
