@@ -32,7 +32,8 @@ export const XP_ACTIONS = {
     MIRROR_CONFRONT: 50,
     DAILY_VISIT: 20,
     MAP_SHARED: 50,
-    WISDOM_SHARED: 40
+    WISDOM_SHARED: 40,
+    PULSE_COMPLETED: 30
 } as const;
 
 const RANKS: Rank[] = [
@@ -65,10 +66,23 @@ export const useGamificationState = create<GamificationState>()(
                     const newLevel = Math.floor(newXP / XP_PER_LEVEL) + 1;
                     const newRank = getRankByLevel(newLevel);
 
+                    // Check for automatic badges
+                    const newBadges = [...state.badges];
+                    if (reason === "mirror_confront" && !newBadges.includes("درع الحقيقة")) {
+                        newBadges.push("درع الحقيقة");
+                    }
+                    if (reason === "map_shared" && !newBadges.includes("القناص")) {
+                        newBadges.push("القناص");
+                    }
+                    if (reason === "pulse_completed" && !newBadges.includes("الكاتم")) {
+                        newBadges.push("الكاتم");
+                    }
+
                     return {
                         xp: newXP,
                         level: newLevel,
-                        rank: newRank
+                        rank: newRank,
+                        badges: newBadges
                     };
                 });
             },

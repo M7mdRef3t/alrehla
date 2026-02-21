@@ -21,7 +21,7 @@ module.exports = {
           200: "#fde68a",
           300: "#fcd34d",
           400: "#fbbf24",
-          500: "#f5a623",        // اللون الأساسي
+          500: "#FFB000",        // Alert Amber (Payload 01)
           600: "#d97706",
           700: "#b45309",
           800: "#92400e",
@@ -55,9 +55,9 @@ module.exports = {
         },
         // 🔴 Ring / Orbit Zone Colors
         ring: {
-          safe: "#2dd4bf",
-          caution: "#fbbf24",
-          danger: "#f87171",
+          safe: "#2dd4bf",      // Teal
+          caution: "#FFB000",   // Alert Amber
+          danger: "#FF3333",    // Critical Red
           detached: "#94a3b8"
         }
       },

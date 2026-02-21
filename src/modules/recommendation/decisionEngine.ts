@@ -1,6 +1,7 @@
 import type {
   DecisionOutcomeV1,
   NextStepDecisionV1,
+  RecentTelemetrySignalV1,
   RecommendationSurfaceV1,
   RankerRequestV1,
   RankerResponseV1
@@ -76,12 +77,28 @@ async function rankWithCloud(request: RankerRequestV1): Promise<RankerResponseV1
   return parsed as RankerResponseV1;
 }
 
+async function rankWithCloudV2(request: RankerRequestV1): Promise<RankerResponseV1 | null> {
+  if (!isBrowser()) return null;
+  const parsed = await fetchJsonWithResilience<Partial<RankerResponseV1>>(
+    "/api/routing/next-step-v2",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request)
+    },
+    { retries: 1, breaker: nextStepApiBreaker }
+  );
+  if (!parsed?.action || !parsed.decisionId || !parsed.why) return null;
+  return parsed as RankerResponseV1;
+}
+
 export interface ComputeNextStepInput {
   goalId: string;
   category: string;
   availableFeatures: Record<string, boolean>;
   surface: RecommendationSurfaceV1;
   forceRefresh?: boolean;
+  recentTelemetry?: RecentTelemetrySignalV1[];
 }
 
 export async function computeNextStepDecision(input: ComputeNextStepInput): Promise<NextStepDecisionV1 | null> {
@@ -107,10 +124,12 @@ export async function computeNextStepDecision(input: ComputeNextStepInput): Prom
     features,
     candidates: policy.candidates,
     availableFeatures: input.availableFeatures,
-    surface: input.surface
+    surface: input.surface,
+    recentTelemetry: Array.isArray(input.recentTelemetry) ? input.recentTelemetry.slice(-3) : []
   };
 
-  const ranked = await rankWithCloud(request);
+  const useDynamicRoutingV2 = Boolean(input.availableFeatures?.dynamic_routing_v2);
+  const ranked = useDynamicRoutingV2 ? await rankWithCloudV2(request) : await rankWithCloud(request);
   const now = Date.now();
 
   const decision: NextStepDecisionV1 =
@@ -176,8 +195,10 @@ async function flushOutcomeQueue(): Promise<void> {
   const pending = [...queued];
   writeOutcomeQueue([]);
   for (const item of pending) {
+    const isV2Decision = String(item.decisionId).startsWith("decision_v2_");
+    const endpoint = isV2Decision ? "/api/routing/outcome-v2" : "/api/recommendations/outcome";
     const ok = await sendJsonWithResilience(
-      "/api/recommendations/outcome",
+      endpoint,
       item,
       {},
       { retries: 1, breaker: outcomeApiBreaker }

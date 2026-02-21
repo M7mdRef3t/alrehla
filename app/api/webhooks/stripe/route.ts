@@ -2,14 +2,26 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
 
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2025-02-24.acacia',
-});
+function getStripeClient() {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) return null;
+    return new Stripe(secretKey, {
+        apiVersion: '2025-02-24.acacia',
+    });
+}
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(req: Request) {
+    const stripe = getStripeClient();
+    if (!stripe) {
+        return NextResponse.json({ error: 'Stripe is not configured.' }, { status: 503 });
+    }
+
+    if (!webhookSecret) {
+        return NextResponse.json({ error: 'Stripe webhook secret is not configured.' }, { status: 503 });
+    }
+
     const supabaseAdmin = getSupabaseAdminClient();
     if (!supabaseAdmin) {
         return NextResponse.json({ error: 'Supabase admin is not configured.' }, { status: 503 });

@@ -13,6 +13,8 @@ export type FeatureFlagKey =
   | "pulse_check"
   | "pulse_weekly_recommendation"
   | "pulse_immediate_action"
+  | "dynamic_routing_v2"
+  | "dynamic_routing_owner_observability"
   | "golden_needle_enabled"
   | "language_switcher"
   | "armory_section";
@@ -101,6 +103,19 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
     group: "AI"
   },
   {
+    key: "dynamic_routing_v2",
+    label: "Dynamic Routing V2",
+    description: "محرك توجيه ديناميكي مع precompute + swarm ranking",
+    group: "AI",
+    supportsBeta: true
+  },
+  {
+    key: "dynamic_routing_owner_observability",
+    label: "Routing Owner Observability",
+    description: "إظهار مقاييس الاستكشاف/الاستغلال ومخرجات المحرك للأونر",
+    group: "Insights"
+  },
+  {
     key: "golden_needle_enabled",
     label: "الإبرة الذهبية",
     description: "تفعيل شكل البوصلة الفخرية في شاشة القياس",
@@ -133,6 +148,8 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, FeatureFlagMode> = {
   pulse_check: "on",
   pulse_weekly_recommendation: "off",
   pulse_immediate_action: "off",
+  dynamic_routing_v2: "off",
+  dynamic_routing_owner_observability: "off",
   golden_needle_enabled: "off",
   language_switcher: "off",
   armory_section: "off"

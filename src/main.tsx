@@ -7,6 +7,7 @@ import { initAnalytics } from "./services/analytics";
 import { initMonitoring } from "./services/monitoring";
 import { getDocumentOrNull, getWindowOrNull } from "./services/clientRuntime";
 import { runtimeEnv } from "./config/runtimeEnv";
+import { isDevMode } from "./config/appEnv";
 import { startWeeklyEgyptianAdABTesting } from "./ai/aiMarketingCopy";
 import { startDailyEmotionalCheck } from "./ai/emotionalPricingEngine";
 import "./styles.css";
@@ -49,8 +50,11 @@ void import("./services/journeyTracking").then(({ recordFlowEvent }) => {
 initAnalytics();
 initMonitoring();
 if (typeof window !== "undefined") {
-  startWeeklyEgyptianAdABTesting();
-  startDailyEmotionalCheck();
+  // Keep startup deterministic for end users: no autonomous AI jobs on landing boot.
+  if (isDevMode) {
+    startWeeklyEgyptianAdABTesting();
+    startDailyEmotionalCheck();
+  }
 }
 
 if (runtimeEnv.isProd) {

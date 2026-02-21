@@ -74,7 +74,7 @@ export interface NextStepWhyCardV1 {
   reasons: WhyReasonV1[];
 }
 
-export type DecisionSourceV1 = "cloud_ranker" | "local_policy" | "template_fallback";
+export type DecisionSourceV1 = "cloud_ranker" | "cloud_ranker_v2" | "local_policy" | "template_fallback";
 export type RecommendationSurfaceV1 = "map" | "tools";
 
 export interface NextStepDecisionV1 {
@@ -95,8 +95,21 @@ export interface DecisionOutcomeV1 {
   acted: boolean;
   completed?: boolean;
   pulseDelta?: number;
+  completionLatencySec?: number;
   timeToActionSec?: number;
+  hesitationSec?: number;
+  idleTimeSec?: number;
+  rawElapsedSec?: number;
+  interactionCount?: number;
   reportedAt?: number;
+}
+
+export interface RecentTelemetrySignalV1 {
+  hesitationSec: number;
+  activeElapsedSec: number;
+  idleElapsedSec?: number;
+  interactionCount?: number;
+  recordedAt?: number;
 }
 
 export interface RankerRequestV1 {
@@ -106,6 +119,7 @@ export interface RankerRequestV1 {
   candidates: NextStepCandidateV1[];
   availableFeatures: Record<string, boolean>;
   surface: RecommendationSurfaceV1;
+  recentTelemetry?: RecentTelemetrySignalV1[];
 }
 
 export interface RankerResponseV1 {

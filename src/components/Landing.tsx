@@ -18,6 +18,7 @@ import { useGamificationState } from "../services/gamificationEngine";
 import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
 import { getGoalMeta } from "../data/goalMeta";
 import type { FeatureFlagKey } from "../config/features";
+import { isUserMode } from "../config/appEnv";
 import { EditableText } from "./EditableText";
 import { getWindowOrNull, getDocumentOrNull } from "../services/clientRuntime";
 import { getDocumentVisibilityState } from "../services/clientDom";
@@ -358,6 +359,8 @@ export const Landing: FC<LandingProps> = ({
   const isCrisis = entropyScore >= 85;
   const canUseCosmicView = Boolean(availableFeatures?.global_atlas);
   const canUseLanguageSwitcher = Boolean(availableFeatures?.language_switcher);
+  const shouldShowTopToolsButton = showTopToolsButton && !isUserMode;
+  const shouldShowToolsSection = showToolsSection && !isUserMode;
 
   useEffect(() => {
     if (viewMode === "cosmic" && !canUseCosmicView) {
@@ -795,7 +798,7 @@ export const Landing: FC<LandingProps> = ({
                 )}
               </motion.div>
 
-              {showTopToolsButton && onOpenTools && (
+              {shouldShowTopToolsButton && onOpenTools && (
                 <motion.div variants={item(reduceMotion)} className="order-4 mb-8">
                   <button
                     type="button"
@@ -1008,7 +1011,7 @@ export const Landing: FC<LandingProps> = ({
                 setShowPlaybookViewer(true);
               }}
             />
-            {showToolsSection && onOpenTools && (
+            {shouldShowToolsSection && onOpenTools && (
               <motion.section
                 className="py-8 sm:py-12"
                 variants={stagger}
@@ -1035,7 +1038,7 @@ export const Landing: FC<LandingProps> = ({
                 </motion.div>
               </motion.section>
             )}
-            {!showToolsSection && (
+            {!shouldShowToolsSection && (
               <motion.section
                 className="py-6 sm:py-8"
                 variants={stagger}

@@ -13,11 +13,19 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* الألوان (تُحدّث ديناميكياً) */
-  --consciousness-primary: hsl(180, 70%, 50%);
-  --consciousness-background: hsl(180, 10%, 95%);
-  --consciousness-text: hsl(180, 20%, 20%);
-  --consciousness-accent: hsl(210, 70%, 60%);
+  /* الألوان (تُحدّث ديناميكياً) - Payload 01 Standard */
+  --consciousness-primary: #2dd4bf;
+  /* Teal */
+  --consciousness-background: #0a0e1f;
+  /* Deep Blue / Void */
+  --consciousness-text: #f0fdfa;
+  /* Light Teal Tint for Readability */
+  --consciousness-accent: #fbbf24;
+  /* Amber */
+  --consciousness-warning: #FFB000;
+  /* Alert Amber */
+  --consciousness-critical: #FF3333;
+  /* Critical Red */
 
   /* Layout */
   --consciousness-border-radius: 16px;
@@ -39,6 +47,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 [data-layout-mode="zen"] {
+
   /* إخفاء العناصر الثانوية */
   .secondary-feature,
   .sidebar-menu,
@@ -66,6 +75,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 [data-layout-mode="balanced"] {
+
   /* كل شيء ظاهر بشكل متوازن */
   .secondary-feature,
   .sidebar-menu {
@@ -80,6 +90,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 [data-layout-mode="information-dense"] {
+
   /* تقليل المسافات */
   .card,
   .section {
@@ -142,11 +153,9 @@
 }
 
 [data-consciousness-state="crisis"] body {
-  background: linear-gradient(
-    135deg,
-    var(--consciousness-background) 0%,
-    color-mix(in srgb, var(--consciousness-background) 95%, var(--consciousness-primary)) 100%
-  );
+  background: linear-gradient(135deg,
+      var(--consciousness-background) 0%,
+      color-mix(in srgb, var(--consciousness-background) 95%, var(--consciousness-primary)) 100%);
 }
 
 /* Struggling — ألوان معتدلة */
@@ -171,11 +180,9 @@
 }
 
 [data-consciousness-state="thriving"] body {
-  background: linear-gradient(
-    135deg,
-    var(--consciousness-background) 0%,
-    color-mix(in srgb, var(--consciousness-background) 85%, var(--consciousness-accent)) 100%
-  );
+  background: linear-gradient(135deg,
+      var(--consciousness-background) 0%,
+      color-mix(in srgb, var(--consciousness-background) 85%, var(--consciousness-accent)) 100%);
 }
 
 /* Flow — ألوان مشبعة + طاقة بصرية */
@@ -186,11 +193,9 @@
 }
 
 [data-consciousness-state="flow"] body {
-  background: radial-gradient(
-    circle at top right,
-    color-mix(in srgb, var(--consciousness-background) 80%, var(--consciousness-primary)) 0%,
-    var(--consciousness-background) 50%
-  );
+  background: radial-gradient(circle at top right,
+      color-mix(in srgb, var(--consciousness-background) 80%, var(--consciousness-primary)) 0%,
+      var(--consciousness-background) 50%);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -226,8 +231,7 @@ button:not(.unstyled) {
 
 /* الحدود */
 .bordered {
-  border: 1px solid var(--consciousness-primary);
-  border-opacity: var(--border-opacity, 0.3);
+  border: 1px solid color-mix(in srgb, var(--consciousness-primary), transparent 70%);
 }
 
 /* الظلال */
@@ -273,10 +277,12 @@ body {
 }
 
 @keyframes gentle-pulse {
+
   0%,
   100% {
     opacity: 0.95;
   }
+
   50% {
     opacity: 1;
   }
@@ -288,11 +294,13 @@ body {
 }
 
 @keyframes active-pulse {
+
   0%,
   100% {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.02);
     opacity: 0.95;
@@ -304,6 +312,7 @@ body {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
+
   /* في الموبايل: Zen Mode دائماً في Crisis */
   [data-consciousness-state="crisis"] .sidebar-menu {
     display: none;

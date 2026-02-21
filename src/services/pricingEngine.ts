@@ -1,123 +1,60 @@
 /**
- * Geographic Pricing Engine — محرك التسعير الجغرافي
+ * Pricing Engine — محرك التسعير العالمي (PPP Logic) 🌍
  * =====================================================
- * تسعير PPP (Purchasing Power Parity) لجعل المنصة
- * في متناول الجميع بغض النظر عن العملة.
+ * يقوم بتعديل الأسعار بناءً على القدرة الشرائية لكل منطقة (Purchasing Power Parity).
+ * يضمن تعظيم العائد في الأسواق القوية (الخليج/أوروبا) والانتشار في الأسواق المحلية.
  */
 
-export interface PricingRegion {
-    code: string;
+export interface PricingPlan {
+    id: string;
     name: string;
-    nameAr: string;
-    commanderPrice: string;
-    generalPrice: string;
+    price: number;
     currency: string;
-    flag: string;
+    displayPrice: string;
 }
 
-export const PRICING_REGIONS: PricingRegion[] = [
-    {
-        code: "EG",
-        name: "Egypt",
-        nameAr: "مصر",
-        commanderPrice: "150",
-        generalPrice: "500",
-        currency: "ج.م/شهر",
-        flag: "🇪🇬",
-    },
-    {
-        code: "SA",
-        name: "Saudi Arabia",
-        nameAr: "السعودية",
-        commanderPrice: "25",
-        generalPrice: "90",
-        currency: "ر.س/شهر",
-        flag: "🇸🇦",
-    },
-    {
-        code: "AE",
-        name: "UAE",
-        nameAr: "الإمارات",
-        commanderPrice: "25",
-        generalPrice: "90",
-        currency: "د.إ/شهر",
-        flag: "🇦🇪",
-    },
-    {
-        code: "KW",
-        name: "Kuwait",
-        nameAr: "الكويت",
-        commanderPrice: "2",
-        generalPrice: "7",
-        currency: "د.ك/شهر",
-        flag: "🇰🇼",
-    },
-    {
-        code: "US",
-        name: "United States",
-        nameAr: "أمريكا",
-        commanderPrice: "7",
-        generalPrice: "25",
-        currency: "$/month",
-        flag: "🇺🇸",
-    },
-    {
-        code: "GB",
-        name: "United Kingdom",
-        nameAr: "بريطانيا",
-        commanderPrice: "6",
-        generalPrice: "20",
-        currency: "£/month",
-        flag: "🇬🇧",
-    },
-    {
-        code: "OTHER",
-        name: "Other",
-        nameAr: "دول أخرى",
-        commanderPrice: "7",
-        generalPrice: "25",
-        currency: "$/month",
-        flag: "🌍",
-    },
-];
+const PRICING_CONFIG: Record<string, { multiplier: number; currency: string; symbol: string }> = {
+    'EG': { multiplier: 1, currency: 'EGP', symbol: 'ج.م' }, // الارتكاز (Base)
+    'SA': { multiplier: 3.5, currency: 'SAR', symbol: 'ر.س' },
+    'AE': { multiplier: 3.5, currency: 'AED', symbol: 'د.إ' },
+    'US': { multiplier: 5, currency: 'USD', symbol: '$' },
+    'GB': { multiplier: 5, currency: 'GBP', symbol: '£' },
+    'DEFAULT': { multiplier: 5, currency: 'USD', symbol: '$' }
+};
 
-const REGION_KEY = "dawayir-pricing-region";
+const BASE_PREMIUM_PRICE = 150; // سعر باقة "رحلتي + مسافتي" الأساسي بالجنيه المصري
 
-export function saveUserRegion(code: string): void {
-    try {
-        localStorage.setItem(REGION_KEY, code);
-    } catch { /* noop */ }
+export function getAdjustedPricing(countryCode: string | null): PricingPlan[] {
+    const config = PRICING_CONFIG[countryCode || 'DEFAULT'] || PRICING_CONFIG['DEFAULT'];
+
+    return [
+        {
+            id: 'basic',
+            name: 'رحلتي (أساسي)',
+            price: 0,
+            currency: config.currency,
+            displayPrice: 'مجاناً'
+        },
+        {
+            id: 'premium',
+            name: 'رحلتي + مسافتي (قائد)',
+            price: Math.round(BASE_PREMIUM_PRICE * config.multiplier),
+            currency: config.currency,
+            displayPrice: `${Math.round(BASE_PREMIUM_PRICE * config.multiplier)} ${config.symbol} / شهر`
+        }
+    ];
 }
 
-export function getUserRegion(): string {
-    try {
-        return localStorage.getItem(REGION_KEY) ?? "OTHER";
-    } catch {
-        return "OTHER";
-    }
-}
+/**
+ * محرك التحقق من الصلاحيات بناءً على الباقة
+ */
+export const TIER_PERMISSIONS = {
+    basic: ['compass', 'breathing', 'basic_insights'],
+    premium: ['compass', 'breathing', 'basic_insights', 'drag_drop_map', 'detachment_protocols', 'sos_button', 'victory_reports'],
+    enterprise: ['*'] // كل شيء + لوحة تحكم الشركات
+};
 
-export function getPricingForRegion(code?: string): PricingRegion {
-    const regionCode = code ?? getUserRegion();
-    return (
-        PRICING_REGIONS.find((r) => r.code === regionCode) ??
-        PRICING_REGIONS.find((r) => r.code === "OTHER")!
-    );
-}
-
-/** محاولة تحديد المنطقة تلقائياً من المتصفح */
-export async function detectUserRegion(): Promise<string> {
-    try {
-        // Use timezone as a proxy for region
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (tz.includes("Cairo") || tz.includes("Africa/Cairo")) return "EG";
-        if (tz.includes("Riyadh") || tz.includes("Asia/Riyadh")) return "SA";
-        if (tz.includes("Dubai") || tz.includes("Asia/Dubai")) return "AE";
-        if (tz.includes("Kuwait") || tz.includes("Asia/Kuwait")) return "KW";
-        if (tz.includes("America")) return "US";
-        if (tz.includes("London") || tz.includes("Europe/London")) return "GB";
-        return "OTHER";
-    } catch {
-        return "OTHER";
-    }
+export function hasPermission(tier: 'basic' | 'premium' | 'enterprise', permission: string): boolean {
+    if (tier === 'enterprise') return true;
+    return TIER_PERMISSIONS[tier].includes(permission);
 }

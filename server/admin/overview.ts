@@ -259,7 +259,13 @@ async function handleOverview(client: any, res: any) {
     { count: addedPeopleCount },
     { count: journeyMapsTotal },
     { count: pathStarted24h },
-    { data: installedSessionsRows }
+    { data: installedSessionsRows },
+    { data: routingDecisionsV2 },
+    { data: routingOutcomesV2 },
+    { data: topSwarmEdgesRaw },
+    { data: routingCacheRows },
+    { data: routingOutcomeEvents },
+    { data: routingInterventionEvents }
   ] = await Promise.all([
     client.from("profiles").select("id", { count: "exact", head: true }),
     client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", fiveMinAgo),
@@ -281,6 +287,38 @@ async function handleOverview(client: any, res: any) {
       .eq("type", "flow_event")
       .contains("payload", { step: "install_clicked" })
       .not("session_id", "is", null)
+      .limit(5000),
+    client
+      .from("routing_decisions_v2")
+      .select("id,is_exploration,source,segment_key,context,chosen_step,created_at")
+      .gte("created_at", thirtyDaysAgo)
+      .limit(5000),
+    client
+      .from("routing_outcomes_v2")
+      .select("id,decision_id,acted,completed,reported_at")
+      .gte("reported_at", thirtyDaysAgo)
+      .limit(5000),
+    client
+      .from("swarm_edge_stats")
+      .select("edge_id,segment_key,trials,successes,avg_completion,decay_factor,last_updated")
+      .order("last_updated", { ascending: false })
+      .limit(50),
+    client
+      .from("routing_candidate_cache")
+      .select("segment_key")
+      .gt("expires_at", now.toISOString())
+      .limit(10000),
+    client
+      .from("routing_events")
+      .select("payload,created_at")
+      .eq("event_type", "outcome_reported")
+      .gte("created_at", thirtyDaysAgo)
+      .limit(5000),
+    client
+      .from("routing_events")
+      .select("payload,created_at")
+      .eq("event_type", "intervention_triggered")
+      .gte("created_at", thirtyDaysAgo)
       .limit(5000)
   ]);
   const installedUsers = new Set(
@@ -323,6 +361,231 @@ async function handleOverview(client: any, res: any) {
     lowestDayName: lowestDay >= 0 ? DAY_NAMES[lowestDay] : null
   };
 
+  const decisionsV2 = (routingDecisionsV2 ?? []) as Array<Record<string, unknown>>;
+  const outcomesV2 = (routingOutcomesV2 ?? []) as Array<Record<string, unknown>>;
+  const topSwarmEdges = (topSwarmEdgesRaw ?? []) as Array<Record<string, unknown>>;
+  const explorationCount = decisionsV2.filter((d) => Boolean(d.is_exploration)).length;
+  const exploitationCount = Math.max(0, decisionsV2.length - explorationCount);
+  const explorationRate =
+    decisionsV2.length > 0 ? Math.round((explorationCount / decisionsV2.length) * 10000) / 100 : null;
+  const completionRate =
+    outcomesV2.length > 0
+      ? Math.round(
+          (outcomesV2.filter((o) => Boolean(o.completed)).length / outcomesV2.length) * 10000
+        ) / 100
+      : null;
+  const completionRateActedOnly =
+    outcomesV2.length > 0
+      ? (() => {
+          const acted = outcomesV2.filter((o) => Boolean(o.acted));
+          if (acted.length === 0) return null;
+          return Math.round((acted.filter((o) => Boolean(o.completed)).length / acted.length) * 10000) / 100;
+        })()
+      : null;
+  let noiseSampleCount = 0;
+  let rawElapsedSum = 0;
+  let activeElapsedSum = 0;
+  let idleElapsedSum = 0;
+  let hesitationSum = 0;
+  for (const row of (routingOutcomeEvents ?? []) as Array<Record<string, unknown>>) {
+    const payload = (row.payload ?? null) as Record<string, unknown> | null;
+    const telemetry = (payload?.telemetry ?? null) as Record<string, unknown> | null;
+    if (!telemetry) continue;
+    const raw = Number(telemetry.rawElapsedSec);
+    const active = Number(telemetry.completionLatencySec);
+    if (!Number.isFinite(raw) || !Number.isFinite(active)) continue;
+    noiseSampleCount += 1;
+    rawElapsedSum += raw;
+    activeElapsedSum += active;
+    const idle = Number(telemetry.idleTimeSec);
+    if (Number.isFinite(idle)) idleElapsedSum += idle;
+    const hesitation = Number(telemetry.hesitationSec);
+    if (Number.isFinite(hesitation)) hesitationSum += hesitation;
+  }
+  const avgRawElapsedSec = noiseSampleCount > 0 ? Math.round((rawElapsedSum / noiseSampleCount) * 100) / 100 : null;
+  const avgActiveElapsedSec =
+    noiseSampleCount > 0 ? Math.round((activeElapsedSum / noiseSampleCount) * 100) / 100 : null;
+  const avgIdleElapsedSec = noiseSampleCount > 0 ? Math.round((idleElapsedSum / noiseSampleCount) * 100) / 100 : null;
+  const avgHesitationSec = noiseSampleCount > 0 ? Math.round((hesitationSum / noiseSampleCount) * 100) / 100 : null;
+  const noiseFilteredPct =
+    noiseSampleCount > 0 && rawElapsedSum > 0
+      ? Math.round((((rawElapsedSum - activeElapsedSum) / rawElapsedSum) * 100) * 100) / 100
+      : null;
+  const outcomesByDecisionId = new Map<string, Record<string, unknown>>();
+  for (const outcome of outcomesV2) {
+    outcomesByDecisionId.set(String(outcome.decision_id ?? ""), outcome);
+  }
+  const fallbackSources = new Set(["template_fallback", "local_policy"]);
+  const v2Source = "cloud_ranker_v2";
+  const fallbackDecisions = decisionsV2.filter((d) => fallbackSources.has(String(d.source ?? ""))).length;
+  const v2Decisions = decisionsV2.filter((d) => String(d.source ?? "") === v2Source).length;
+  const fallbackRatePct =
+    decisionsV2.length > 0 ? Math.round((fallbackDecisions / decisionsV2.length) * 10000) / 100 : null;
+
+  const explorationDecisionsRows = decisionsV2.filter((d) => Boolean(d.is_exploration));
+  const exploitationDecisionsRows = decisionsV2.filter((d) => !Boolean(d.is_exploration));
+  const completionRateForDecisionRows = (rows: Array<Record<string, unknown>>): number | null => {
+    if (rows.length === 0) return null;
+    let completed = 0;
+    for (const row of rows) {
+      const outcome = outcomesByDecisionId.get(String(row.id ?? ""));
+      if (outcome && Boolean(outcome.completed)) completed += 1;
+    }
+    return Math.round((completed / rows.length) * 10000) / 100;
+  };
+
+  const decisionsBySegment = new Map<string, number>();
+  for (const row of decisionsV2) {
+    const segmentKey = String(row.segment_key ?? "default");
+    decisionsBySegment.set(segmentKey, (decisionsBySegment.get(segmentKey) ?? 0) + 1);
+  }
+  const cacheBySegment = new Map<string, number>();
+  for (const row of (routingCacheRows ?? []) as Array<Record<string, unknown>>) {
+    const segmentKey = String(row.segment_key ?? "default");
+    cacheBySegment.set(segmentKey, (cacheBySegment.get(segmentKey) ?? 0) + 1);
+  }
+  const allSegmentKeys = new Set<string>([...decisionsBySegment.keys(), ...cacheBySegment.keys()]);
+  const segmentCoverage = Array.from(allSegmentKeys)
+    .map((segmentKey) => ({
+      segmentKey,
+      decisions24h: decisionsBySegment.get(segmentKey) ?? 0,
+      activeCachedCandidates: cacheBySegment.get(segmentKey) ?? 0
+    }))
+    .sort((a, b) => b.decisions24h - a.decisions24h || a.activeCachedCandidates - b.activeCachedCandidates)
+    .slice(0, 20);
+  const interventionBySegment = new Map<string, number>();
+  for (const row of (routingInterventionEvents ?? []) as Array<Record<string, unknown>>) {
+    const payload = (row.payload ?? null) as Record<string, unknown> | null;
+    const segmentKey = String(payload?.segmentKey ?? "unknown");
+    interventionBySegment.set(segmentKey, (interventionBySegment.get(segmentKey) ?? 0) + 1);
+  }
+  const totalInterventions = Array.from(interventionBySegment.values()).reduce((sum, value) => sum + value, 0);
+  const interventionRatePct =
+    decisionsV2.length > 0 ? Math.round((totalInterventions / decisionsV2.length) * 10000) / 100 : null;
+  const interventionSegmentKeys = new Set<string>([...allSegmentKeys, ...interventionBySegment.keys()]);
+  const interventionBySegmentRows = Array.from(interventionSegmentKeys)
+    .map((segmentKey) => {
+      const interventions = interventionBySegment.get(segmentKey) ?? 0;
+      const decisions = decisionsBySegment.get(segmentKey) ?? 0;
+      return {
+        segmentKey,
+        interventions,
+        decisions,
+        interventionRatePct: decisions > 0 ? Math.round((interventions / decisions) * 10000) / 100 : null
+      };
+    })
+    .sort((a, b) => b.interventions - a.interventions || b.decisions - a.decisions)
+    .slice(0, 20);
+
+  const contentIds = new Set<string>();
+  for (const row of decisionsV2) {
+    const chosenStep = (row.chosen_step ?? null) as Record<string, unknown> | null;
+    const actionPayload = (chosenStep?.actionPayload ?? null) as Record<string, unknown> | null;
+    const contentId = String(actionPayload?.contentId ?? "").trim();
+    if (contentId) contentIds.add(contentId);
+  }
+  const contentMetaById = new Map<string, { cognitiveLoadRequired: number | null; estimatedMinutes: number | null }>();
+  if (contentIds.size > 0) {
+    const { data: contentMetaRows } = await client
+      .from("content_items")
+      .select("id,cognitive_load_required,estimated_minutes")
+      .in("id", Array.from(contentIds));
+    for (const row of (contentMetaRows ?? []) as Array<Record<string, unknown>>) {
+      contentMetaById.set(String(row.id ?? ""), {
+        cognitiveLoadRequired: row.cognitive_load_required == null ? null : Number(row.cognitive_load_required),
+        estimatedMinutes: row.estimated_minutes == null ? null : Number(row.estimated_minutes)
+      });
+    }
+  }
+  type CapacityBand = "unknown" | "low_capacity" | "mid_capacity" | "high_capacity";
+  type LoadBand = "unknown_load" | "low_load" | "mid_load" | "high_load";
+  const capacityBandOf = (value: number | null): CapacityBand => {
+    if (value == null || Number.isNaN(value)) return "unknown";
+    if (value < 0.35) return "low_capacity";
+    if (value < 0.65) return "mid_capacity";
+    return "high_capacity";
+  };
+  const loadBandOf = (value: number | null): LoadBand => {
+    if (value == null || Number.isNaN(value)) return "unknown_load";
+    if (value <= 2) return "low_load";
+    if (value === 3) return "mid_load";
+    return "high_load";
+  };
+  const capacityStats = new Map<CapacityBand, { decisions: number; loadSum: number; loadCount: number; minutesSum: number; minutesCount: number }>();
+  const completionMatrix = new Map<string, { capacityBand: CapacityBand; selectedLoadBand: LoadBand; decisions: number; completedCount: number }>();
+  for (const decision of decisionsV2) {
+    const context = (decision.context ?? null) as Record<string, unknown> | null;
+    const cognitiveCapacityRaw = context?.cognitiveCapacity;
+    const cognitiveCapacity =
+      typeof cognitiveCapacityRaw === "number"
+        ? cognitiveCapacityRaw
+        : cognitiveCapacityRaw == null
+          ? null
+          : Number(cognitiveCapacityRaw);
+    const capacityBand = capacityBandOf(cognitiveCapacity);
+    const chosenStep = (decision.chosen_step ?? null) as Record<string, unknown> | null;
+    const actionPayload = (chosenStep?.actionPayload ?? null) as Record<string, unknown> | null;
+    const contentId = String(actionPayload?.contentId ?? "");
+    const meta = contentMetaById.get(contentId) ?? { cognitiveLoadRequired: null, estimatedMinutes: null };
+    const aggregate = capacityStats.get(capacityBand) ?? {
+      decisions: 0,
+      loadSum: 0,
+      loadCount: 0,
+      minutesSum: 0,
+      minutesCount: 0
+    };
+    aggregate.decisions += 1;
+    if (meta.cognitiveLoadRequired != null) {
+      aggregate.loadSum += meta.cognitiveLoadRequired;
+      aggregate.loadCount += 1;
+    }
+    if (meta.estimatedMinutes != null) {
+      aggregate.minutesSum += meta.estimatedMinutes;
+      aggregate.minutesCount += 1;
+    }
+    capacityStats.set(capacityBand, aggregate);
+
+    const selectedLoadBand = loadBandOf(meta.cognitiveLoadRequired);
+    const matrixKey = `${capacityBand}::${selectedLoadBand}`;
+    const matrixRow = completionMatrix.get(matrixKey) ?? {
+      capacityBand,
+      selectedLoadBand,
+      decisions: 0,
+      completedCount: 0
+    };
+    matrixRow.decisions += 1;
+    const outcome = outcomesByDecisionId.get(String(decision.id ?? ""));
+    if (outcome && Boolean(outcome.completed)) matrixRow.completedCount += 1;
+    completionMatrix.set(matrixKey, matrixRow);
+  }
+  const capacityOrder: CapacityBand[] = ["unknown", "low_capacity", "mid_capacity", "high_capacity"];
+  const loadOrder: LoadBand[] = ["unknown_load", "low_load", "mid_load", "high_load"];
+  const byCapacityBand = capacityOrder
+    .map((capacityBand) => {
+      const item = capacityStats.get(capacityBand);
+      if (!item) return null;
+      return {
+        capacityBand,
+        decisions: item.decisions,
+        avgSelectedCognitiveLoad: item.loadCount > 0 ? Math.round((item.loadSum / item.loadCount) * 100) / 100 : null,
+        avgSelectedMinutes: item.minutesCount > 0 ? Math.round((item.minutesSum / item.minutesCount) * 100) / 100 : null
+      };
+    })
+    .filter(Boolean);
+  const completionMatrixRows = Array.from(completionMatrix.values())
+    .sort(
+      (a, b) =>
+        capacityOrder.indexOf(a.capacityBand) - capacityOrder.indexOf(b.capacityBand) ||
+        loadOrder.indexOf(a.selectedLoadBand) - loadOrder.indexOf(b.selectedLoadBand)
+    )
+    .map((item) => ({
+      capacityBand: item.capacityBand,
+      selectedLoadBand: item.selectedLoadBand,
+      decisions: item.decisions,
+      completedCount: item.completedCount,
+      completionRatePct: item.decisions > 0 ? Math.round((item.completedCount / item.decisions) * 10000) / 100 : null
+    }));
+
   if (!events) {
     const awarenessGap = maps?.length ? computeAwarenessGap(maps as Array<{ session_id: string; nodes: unknown }>) : null;
     const topScenarios = maps?.length ? computeTopScenarios(maps as Array<{ session_id: string; nodes: unknown }>) : [];
@@ -355,6 +618,57 @@ async function handleOverview(client: any, res: any) {
         journeyMapsTotal: journeyMapsTotal ?? 0,
         addPersonOpened: 0,
         addPersonDoneShowOnMap: 0
+      },
+      routingV2: {
+        decisions: decisionsV2.length,
+        outcomes: outcomesV2.length,
+        explorationCount,
+        exploitationCount,
+        explorationRate,
+        completionRate,
+        completionRateActedOnly,
+        topSwarmEdges: topSwarmEdges.slice(0, 10).map((row) => ({
+          edgeId: String(row.edge_id ?? ""),
+          segmentKey: String(row.segment_key ?? ""),
+          trials: Number(row.trials ?? 0),
+          successes: Number(row.successes ?? 0),
+          avgCompletion: Number(row.avg_completion ?? 0),
+          decayFactor: Number(row.decay_factor ?? 1)
+        }))
+      },
+      routingTelemetry: {
+        cacheHealth: {
+          totalDecisions: decisionsV2.length,
+          v2Decisions,
+          fallbackDecisions,
+          fallbackRatePct
+        },
+        explorationHealth: {
+          explorationDecisions: explorationDecisionsRows.length,
+          exploitationDecisions: exploitationDecisionsRows.length,
+          explorationSharePct:
+            decisionsV2.length > 0 ? Math.round((explorationDecisionsRows.length / decisionsV2.length) * 10000) / 100 : null,
+          explorationCompletionRatePct: completionRateForDecisionRows(explorationDecisionsRows),
+          exploitationCompletionRatePct: completionRateForDecisionRows(exploitationDecisionsRows)
+        },
+        cognitiveEffectiveness: {
+          byCapacityBand,
+          completionMatrix: completionMatrixRows
+        },
+        segmentCoverage,
+        latencyQuality: {
+          sampleCount: noiseSampleCount,
+          avgRawElapsedSec,
+          avgActiveElapsedSec,
+          avgIdleElapsedSec,
+          avgHesitationSec,
+          noiseFilteredPct
+        },
+        interventionHealth: {
+          totalInterventions,
+          interventionRatePct,
+          bySegment: interventionBySegmentRows
+        }
       }
     });
     return;
@@ -503,6 +817,57 @@ async function handleOverview(client: any, res: any) {
       journeyMapsTotal: journeyMapsTotal ?? 0,
       addPersonOpened,
       addPersonDoneShowOnMap
+    },
+    routingV2: {
+      decisions: decisionsV2.length,
+      outcomes: outcomesV2.length,
+      explorationCount,
+      exploitationCount,
+      explorationRate,
+      completionRate,
+      completionRateActedOnly,
+      topSwarmEdges: topSwarmEdges.slice(0, 10).map((row) => ({
+        edgeId: String(row.edge_id ?? ""),
+        segmentKey: String(row.segment_key ?? ""),
+        trials: Number(row.trials ?? 0),
+        successes: Number(row.successes ?? 0),
+        avgCompletion: Number(row.avg_completion ?? 0),
+        decayFactor: Number(row.decay_factor ?? 1)
+      }))
+    },
+    routingTelemetry: {
+      cacheHealth: {
+        totalDecisions: decisionsV2.length,
+        v2Decisions,
+        fallbackDecisions,
+        fallbackRatePct
+      },
+      explorationHealth: {
+        explorationDecisions: explorationDecisionsRows.length,
+        exploitationDecisions: exploitationDecisionsRows.length,
+        explorationSharePct:
+          decisionsV2.length > 0 ? Math.round((explorationDecisionsRows.length / decisionsV2.length) * 10000) / 100 : null,
+        explorationCompletionRatePct: completionRateForDecisionRows(explorationDecisionsRows),
+        exploitationCompletionRatePct: completionRateForDecisionRows(exploitationDecisionsRows)
+      },
+      cognitiveEffectiveness: {
+        byCapacityBand,
+        completionMatrix: completionMatrixRows
+      },
+      segmentCoverage,
+      latencyQuality: {
+        sampleCount: noiseSampleCount,
+        avgRawElapsedSec,
+        avgActiveElapsedSec,
+        avgIdleElapsedSec,
+        avgHesitationSec,
+        noiseFilteredPct
+      },
+      interventionHealth: {
+        totalInterventions,
+        interventionRatePct,
+        bySegment: interventionBySegmentRows
+      }
     }
   });
 }

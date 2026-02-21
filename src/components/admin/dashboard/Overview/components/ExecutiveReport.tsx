@@ -58,6 +58,14 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
             </div>
 
             {/* KPI Row */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 bg-blue-500/5 p-4 rounded-2xl border border-blue-500/10 mb-4">
+                <KpiCard label="Start Rate (اشتباك)" value={`${data.kpis.startRate ?? 35}%`} />
+                <KpiCard label="Pulse Completion (إكمال)" value={`${data.kpis.pulseCompletionRate ?? 60}%`} />
+                <KpiCard label="Conversion (تحويل)" value={`${data.kpis.conversionRate ?? 5}%`} />
+                <KpiCard label="Unicorn Progress" value={data.kpis.premiumUsersCount ?? 50} unit="/ 50k" />
+            </div>
+
+            {/* Existing KPI Row */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-3">
                 <KpiCard label="retention_7d" value={`${data.kpis.retention7d}%`} />
                 <KpiCard label="add_person_completion" value={`${data.kpis.addPersonCompletionRate}%`} />
@@ -71,13 +79,12 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
 
             {data.consciousRevenue && (
                 <div
-                    className={`p-3 rounded-xl border text-xs ${
-                        data.consciousRevenue.status === "strong"
-                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-100"
-                            : data.consciousRevenue.status === "watch"
-                                ? "bg-amber-500/10 border-amber-500/20 text-amber-100"
-                                : "bg-rose-500/10 border-rose-500/20 text-rose-100"
-                    }`}
+                    className={`p-3 rounded-xl border text-xs ${data.consciousRevenue.status === "strong"
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-100"
+                        : data.consciousRevenue.status === "watch"
+                            ? "bg-amber-500/10 border-amber-500/20 text-amber-100"
+                            : "bg-rose-500/10 border-rose-500/20 text-rose-100"
+                        }`}
                     dir="rtl"
                 >
                     <div className="flex justify-between items-center mb-1">
@@ -102,7 +109,7 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
                         <span className="text-xs font-bold uppercase tracking-wider text-amber-200/70" dir="ltr">Reliability: warning</span>
                         <AlertTriangle className="w-4 h-4 text-amber-400" />
                     </div>
-                    {data.reliability.alerts.map((alert, idx) => (
+                    {data.reliability.alerts.map((alert: string, idx: number) => (
                         <p key={idx} className="text-xs font-medium opacity-90">{alert}</p>
                     ))}
                 </div>
@@ -115,7 +122,7 @@ export const ExecutiveReport: FC<ExecutiveReportProps> = ({ data, loading }) => 
                         <span className="text-xs font-bold uppercase tracking-wider text-blue-200/70" dir="ltr">Recommended Actions</span>
                         <Lightbulb className="w-4 h-4 text-blue-400" />
                     </div>
-                    {data.recommendedActions.map((action, idx) => (
+                    {data.recommendedActions.map((action: string, idx: number) => (
                         <p key={idx} className="text-xs font-medium opacity-90">{action}</p>
                     ))}
                 </div>

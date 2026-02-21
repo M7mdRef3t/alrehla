@@ -10,7 +10,7 @@ import { hasRecordedOfferConversion, recordEmotionalPricingEvent } from "./emoti
 
 const SUB_KEY = "dawayir-subscription";
 
-export type SubscriptionTier = "free" | "premium" | "coach";
+export type SubscriptionTier = "basic" | "premium" | "enterprise";
 
 export interface SubscriptionData {
     tier: SubscriptionTier;
@@ -44,7 +44,7 @@ export interface TierLimits {
 }
 
 export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
-    free: {
+    basic: {
         maxMapNodes: 3,
         dailyAIMessages: 5,
         canExportPDF: false,
@@ -60,7 +60,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
         canShareMap: true,
         canAccessB2B: false,
     },
-    coach: {
+    enterprise: {
         maxMapNodes: -1,
         dailyAIMessages: -1,
         canExportPDF: true,
@@ -71,15 +71,15 @@ export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
 };
 
 export const TIER_LABELS: Record<SubscriptionTier, string> = {
-    free: "مجاني",
-    premium: "بريميوم 🎖️",
-    coach: "كوتش (PRO) 👑",
+    basic: "رحلتي (أساسي)",
+    premium: "رحلتي + مسافتي (قائد) 🎖️",
+    enterprise: "باقة الشركات (PRO) 👑",
 };
 
 export const TIER_PRICES: Record<SubscriptionTier, string> = {
-    free: "$0",
+    basic: "$0",
     premium: "$9/شهر",
-    coach: "$49/شهر",
+    enterprise: "$49/شهر",
 };
 
 function getTodayStr(): string {
@@ -87,7 +87,7 @@ function getTodayStr(): string {
 }
 
 const DEFAULT_SUB: SubscriptionData = {
-    tier: "free",
+    tier: "basic",
     dailyAIMessages: 0,
     lastResetDate: getTodayStr(),
 };
@@ -110,7 +110,7 @@ export function loadSubscription(): SubscriptionData {
 
         // Check expiry
         if (data.expiresAt && Date.now() > data.expiresAt) {
-            data.tier = "free";
+            data.tier = "basic";
             delete data.expiresAt;
             saveSubscription(data);
         }
@@ -163,7 +163,7 @@ export function canAddMapNode(currentCount: number): boolean {
 }
 
 export function isPaidUser(): boolean {
-    return getCurrentTier() !== "free";
+    return getCurrentTier() !== "basic";
 }
 
 /** تفعيل اشتراك (للاختبار — سيُستبدل بـ Stripe webhook) */
@@ -251,9 +251,9 @@ export async function syncSubscription(): Promise<void> {
         const sub = loadSubscription();
 
         // Map backend role/status to frontend tier
-        let newTier: SubscriptionTier = 'free';
-        if (profile.role === 'coach') {
-            newTier = 'coach';
+        let newTier: SubscriptionTier = 'basic';
+        if (profile.role === 'enterprise_admin') {
+            newTier = 'enterprise';
         } else if (profile.subscription_status === 'active' || profile.subscription_status === 'trialing') {
             newTier = 'premium';
         }

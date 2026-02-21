@@ -326,7 +326,8 @@ export type FlowStep =
   | "utm_captured"
   | "next_step_rendered"
   | "next_step_action_taken"
-  | "next_step_dismissed";
+  | "next_step_dismissed"
+  | "routing_intervention_triggered";
 
 export function recordFlowEvent(
   step: FlowStep,

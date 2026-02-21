@@ -7,7 +7,8 @@ export interface DesignToggles {
 }
 
 export const designToggles: DesignToggles = {
-  enableLiveLandingSections: true,
+  // User mode favors stability/consistency over experimental live sections.
+  enableLiveLandingSections: runtimeEnv.isDev,
   enableCircuitBreakerForLiveData: true,
   enableAppEventBus: runtimeEnv.isDev
 };

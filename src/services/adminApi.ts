@@ -691,6 +691,76 @@ export interface OverviewStats {
     addPersonOpened: number;
     addPersonDoneShowOnMap: number;
   } | null;
+  routingV2?: {
+    decisions: number;
+    outcomes: number;
+    explorationCount: number;
+    exploitationCount: number;
+    explorationRate: number | null;
+    completionRate: number | null;
+    completionRateActedOnly: number | null;
+    topSwarmEdges: Array<{
+      edgeId: string;
+      segmentKey: string;
+      trials: number;
+      successes: number;
+      avgCompletion: number;
+      decayFactor: number;
+    }>;
+  } | null;
+  routingTelemetry?: {
+    cacheHealth: {
+      totalDecisions: number;
+      v2Decisions: number;
+      fallbackDecisions: number;
+      fallbackRatePct: number | null;
+    };
+    explorationHealth: {
+      explorationDecisions: number;
+      exploitationDecisions: number;
+      explorationSharePct: number | null;
+      explorationCompletionRatePct: number | null;
+      exploitationCompletionRatePct: number | null;
+    };
+    cognitiveEffectiveness: {
+      byCapacityBand: Array<{
+        capacityBand: "unknown" | "low_capacity" | "mid_capacity" | "high_capacity";
+        decisions: number;
+        avgSelectedCognitiveLoad: number | null;
+        avgSelectedMinutes: number | null;
+      }>;
+      completionMatrix: Array<{
+        capacityBand: "unknown" | "low_capacity" | "mid_capacity" | "high_capacity";
+        selectedLoadBand: "unknown_load" | "low_load" | "mid_load" | "high_load";
+        decisions: number;
+        completedCount: number;
+        completionRatePct: number | null;
+      }>;
+    };
+    segmentCoverage: Array<{
+      segmentKey: string;
+      decisions24h: number;
+      activeCachedCandidates: number;
+    }>;
+    latencyQuality: {
+      sampleCount: number;
+      avgRawElapsedSec: number | null;
+      avgActiveElapsedSec: number | null;
+      avgIdleElapsedSec: number | null;
+      avgHesitationSec: number | null;
+      noiseFilteredPct: number | null;
+    };
+    interventionHealth: {
+      totalInterventions: number;
+      interventionRatePct: number | null;
+      bySegment: Array<{
+        segmentKey: string;
+        interventions: number;
+        decisions: number;
+        interventionRatePct: number | null;
+      }>;
+    };
+  } | null;
   avgDwellByStep?: Record<string, number> | null;
   retentionCohorts?: RetentionCohortRow[] | null;
   utmBreakdown?: {
@@ -804,9 +874,7 @@ export interface OpsInsights {
     metric: number;
     threshold: number;
   }>;
-  warnings: string[];
 }
-
 export interface ExecutiveReport {
   generatedAt: string;
   kpis: {
@@ -816,6 +884,10 @@ export interface ExecutiveReport {
     mapsTotal: number;
     addPersonCompletionRate: number;
     retention7d: number;
+    startRate?: number;
+    pulseCompletionRate?: number;
+    conversionRate?: number;
+    premiumUsersCount?: number;
   };
   attribution: {
     topSources: Array<{ key: string; count: number }>;

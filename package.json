@@ -29,6 +29,12 @@
     "test:coverage": "vitest run --coverage",
     "generate-icons": "node scripts/generate-icons.js",
     "supabase:apply-setup": "node scripts/apply-supabase-setup.mjs",
+    "routing:seed-graph": "node scripts/seed-graph-from-legacy.mjs",
+    "routing:seed-events": "node scripts/seed-graph-from-events.mjs",
+    "routing:seed-synthetic": "node scripts/generate-synthetic-swarm.mjs",
+    "routing:precompute": "node scripts/precompute-routing-cache.mjs",
+    "routing:load-test": "node scripts/routing-load-test.mjs",
+    "routing:load-gate": "node scripts/routing-load-gate.mjs",
     "report:production": "node scripts/production-insights.mjs",
     "backup:admin": "node scripts/backup-admin-export.mjs",
     "generate:sitemap": "node scripts/generate-sitemap.mjs",
@@ -57,7 +63,7 @@
     "react-dom": "^18.3.0",
     "reactflow": "^11.11.4",
     "recharts": "^3.7.0",
-    "stripe": "^17.5.0",
+    "stripe": "^17.7.0",
     "zustand": "^5.0.0"
   },
   "devDependencies": {

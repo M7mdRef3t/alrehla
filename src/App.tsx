@@ -14,7 +14,7 @@ import { initThemePalette } from "./services/themePalette";
 import { usePulseState } from "./state/pulseState";
 import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "./state/pulseState";
 import { trackPageView, trackEvent, AnalyticsEvents } from "./services/analytics";
-import { recordFlowEvent } from "./services/journeyTracking";
+import { getTrackingSessionId, recordFlowEvent } from "./services/journeyTracking";
 import { sendNotification, sendPresetNotification, NOTIFICATION_TYPES } from "./services/notifications";
 import {
   fetchPublicBroadcasts,
@@ -39,12 +39,14 @@ import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/Onboar
 import { DashboardScreen } from "./components/DashboardScreen";
 import { OnboardingFlow, hasCompletedJourneyOnboarding, resetJourneyOnboarding } from "./components/OnboardingFlow";
 import { JourneyToast } from "./components/JourneyToast";
+import { ActiveInterventionPrompt } from "./components/ActiveInterventionPrompt";
 import { FaqScreen } from "./components/FaqScreen";
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
 import { geminiClient } from "./services/geminiClient";
 import { isSupabaseReady } from "./services/supabaseClient";
 import { fetchAdminConfig, fetchOwnerAlerts } from "./services/adminApi";
 import { usePulseCheckLogic } from "./hooks/usePulseCheckLogic";
+import { useIdleAwareTelemetry, type IdleAwareTelemetrySnapshot } from "./hooks/useIdleAwareTelemetry";
 import { isPhaseOneUserFlow, isUserMode } from "./config/appEnv";
 import {
   createCurrentUrl,
@@ -72,7 +74,8 @@ import {
   computeNextStepDecision,
   reportDecisionOutcome,
   subscribeToDawayirSignals,
-  type NextStepDecisionV1
+  type NextStepDecisionV1,
+  type RecentTelemetrySignalV1
 } from "./modules/recommendation";
 import { MirrorOverlay } from "./components/MirrorOverlay";
 import { StartupSequence } from "./components/StartupSequence";
@@ -97,6 +100,22 @@ type PulseSubmitPayload = {
   energyReasons?: string[];
   energyConfidence?: PulseEnergyConfidence;
 };
+
+type ActiveInterventionState = {
+  decisionId: string;
+  hesitationSec: number;
+  cognitiveLoadRequired: number;
+};
+
+function inferCognitiveLoadFromDecision(decision: NextStepDecisionV1): number {
+  const payload = decision.action.actionPayload ?? {};
+  const fromPayload = Number((payload as Record<string, unknown>).cognitiveLoadRequired);
+  if (Number.isFinite(fromPayload)) return Math.max(1, Math.min(5, Math.round(fromPayload)));
+  if (decision.action.actionType === "open_mission") return 4;
+  if (decision.action.actionType === "journal_reflection") return 3;
+  if (decision.action.actionType === "open_breathing") return 1;
+  return 3;
+}
 /** مسافة للمينيو - تاب صغير ظاهر (الشريط يظهر عند التحريك) */
 
 const CoreMapScreen = lazy(() => import("./components/CoreMapScreen").then((m) => ({ default: m.CoreMapScreen })));
@@ -455,11 +474,14 @@ export default function App() {
   const [showClassicRecovery, setShowClassicRecovery] = useState(false);
   const [showManualPlacement, setShowManualPlacement] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [activeIntervention, setActiveIntervention] = useState<ActiveInterventionState | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false); // Default to false to show Landing first
   const [nextStepDecision, setNextStepDecision] = useState<NextStepDecisionV1 | null>(null);
   const [nextStepRefreshTick, setNextStepRefreshTick] = useState(0);
   const nextStepRequestSeqRef = useRef(0);
   const nextStepLastRefreshRef = useRef(0);
+  const nextStepTelemetry = useIdleAwareTelemetry();
+  const recentRoutingTelemetryRef = useRef<RecentTelemetrySignalV1[]>([]);
 
   const [showWelcomeToast, setShowWelcomeToast] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
@@ -1433,24 +1455,29 @@ export default function App() {
   };
 
   const handleRefreshNextStep = useCallback(() => {
+    setActiveIntervention(null);
     if (nextStepDecision) {
       void reportDecisionOutcome({
         decisionId: nextStepDecision.decisionId,
         acted: false
       });
+      nextStepTelemetry.clearSession(nextStepDecision.decisionId);
     }
     recordFlowEvent("next_step_dismissed", {
       meta: { reason: "manual_refresh", surface: screen }
     });
     setNextStepRefreshTick((tick) => tick + 1);
-  }, [screen, nextStepDecision]);
+  }, [screen, nextStepDecision, nextStepTelemetry]);
 
   const handleTakeNextStep = useCallback((decision: NextStepDecisionV1) => {
+    setActiveIntervention(null);
     const nodeIdFromPayload =
       typeof decision.action.actionPayload?.nodeId === "string"
         ? decision.action.actionPayload.nodeId
         : null;
-    const timeToActionSec = Math.max(0, Math.round((Date.now() - decision.createdAt) / 1000));
+    const telemetry = nextStepTelemetry.capture(decision.decisionId);
+    const timeToActionSec =
+      telemetry?.activeElapsedSec ?? Math.max(0, Math.round((Date.now() - decision.createdAt) / 1000));
 
     recordFlowEvent("next_step_action_taken", {
       timeToAction: timeToActionSec,
@@ -1467,8 +1494,22 @@ export default function App() {
       decisionId: decision.decisionId,
       acted: true,
       completed: undefined,
-      timeToActionSec
+      completionLatencySec: timeToActionSec,
+      timeToActionSec,
+      hesitationSec: telemetry?.hesitationSec,
+      idleTimeSec: telemetry?.idleElapsedSec,
+      rawElapsedSec: telemetry?.rawElapsedSec,
+      interactionCount: telemetry?.interactionCount
     });
+    const recentPoint: RecentTelemetrySignalV1 = {
+      hesitationSec: telemetry?.hesitationSec ?? 0,
+      activeElapsedSec: timeToActionSec,
+      idleElapsedSec: telemetry?.idleElapsedSec ?? 0,
+      interactionCount: telemetry?.interactionCount ?? 0,
+      recordedAt: Date.now()
+    };
+    recentRoutingTelemetryRef.current = [...recentRoutingTelemetryRef.current, recentPoint].slice(-3);
+    nextStepTelemetry.clearSession(decision.decisionId);
 
     switch (decision.action.actionType) {
       case "open_breathing":
@@ -1500,7 +1541,36 @@ export default function App() {
     }
 
     setTimeout(() => setNextStepRefreshTick((tick) => tick + 1), 1200);
-  }, [navigateToScreen, openJourneyTools, openMissionScreen, selectedNodeId]);
+  }, [navigateToScreen, nextStepTelemetry, openJourneyTools, openMissionScreen, selectedNodeId]);
+
+  const handleActiveIntervention = useCallback((snapshot: IdleAwareTelemetrySnapshot, decision: NextStepDecisionV1) => {
+    const cognitiveLoadRequired = inferCognitiveLoadFromDecision(decision);
+    setActiveIntervention({
+      decisionId: snapshot.decisionId,
+      hesitationSec: snapshot.hesitationSec,
+      cognitiveLoadRequired
+    });
+    recordFlowEvent("routing_intervention_triggered", {
+      meta: {
+        decisionId: snapshot.decisionId,
+        hesitationSec: snapshot.hesitationSec,
+        cognitiveLoadRequired,
+        activeElapsedSec: snapshot.activeElapsedSec
+      }
+    });
+    void fetch("/api/routing/intervention-trigger", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        decisionId: snapshot.decisionId,
+        sessionId: getTrackingSessionId(),
+        hesitationSec: snapshot.hesitationSec,
+        cognitiveLoadRequired,
+        actionType: decision.action.actionType,
+        surface: screen
+      })
+    }).catch(() => undefined);
+  }, [screen]);
 
   useEffect(() => {
     const unsubscribe = subscribeToDawayirSignals(() => {
@@ -1511,6 +1581,7 @@ export default function App() {
 
   useEffect(() => {
     if (screen !== "map" && screen !== "tools") {
+      nextStepTelemetry.clearSession();
       setNextStepDecision(null);
       return;
     }
@@ -1525,12 +1596,20 @@ export default function App() {
       category,
       availableFeatures,
       surface,
-      forceRefresh
+      forceRefresh,
+      recentTelemetry: recentRoutingTelemetryRef.current
     }).then((decision) => {
       if (seq !== nextStepRequestSeqRef.current) return;
+      if (decision) {
+        nextStepTelemetry.startSession(decision.decisionId, decision.createdAt, {
+          cognitiveLoadRequired: inferCognitiveLoadFromDecision(decision),
+          hesitationThresholdSec: 120,
+          onIntervention: (snapshot) => handleActiveIntervention(snapshot, decision)
+        });
+      }
       setNextStepDecision(decision);
     });
-  }, [screen, goalId, category, nodes, lastPulse, availableFeatures, nextStepRefreshTick]);
+  }, [screen, goalId, category, nodes, lastPulse, availableFeatures, nextStepRefreshTick, nextStepTelemetry, handleActiveIntervention]);
 
   const goBackToFeatureFlags = useCallback(() => {
     const next = createCurrentUrl();
@@ -2251,6 +2330,17 @@ export default function App() {
                 </p>
               </div>
             </motion.div>
+          )}
+          {activeIntervention && (
+            <ActiveInterventionPrompt
+              hesitationSec={activeIntervention.hesitationSec}
+              cognitiveLoadRequired={activeIntervention.cognitiveLoadRequired}
+              onBreathing={() => {
+                setActiveIntervention(null);
+                setShowBreathing(true);
+              }}
+              onContinue={() => setActiveIntervention(null)}
+            />
           )}
           {postNoiseSessionMessage && (
             <motion.div
