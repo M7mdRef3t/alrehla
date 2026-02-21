@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AIOrchestrator } from '../../../src/services/aiOrchestrator';
-
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-);
+import { getSupabaseAdminClient } from '../_lib/supabaseAdmin';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(req: Request) {
     try {
+        const supabaseAdmin = getSupabaseAdminClient();
+        if (!supabaseAdmin) {
+            return NextResponse.json({ error: 'Supabase admin is not configured.' }, { status: 503 });
+        }
+
         const { userId } = await req.json();
 
         if (!userId) {

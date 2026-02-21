@@ -21,13 +21,34 @@ import { decisionEngine } from "../ai/decision-framework";
  */
 
 export const STRIPE_CONFIG = {
-  publishableKey: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "",
+  publishableKey: readPublicEnv("VITE_STRIPE_PUBLISHABLE_KEY"),
   // Price IDs من Stripe Dashboard
   priceIds: {
-    premium: import.meta.env.VITE_STRIPE_PRICE_PREMIUM || "price_xxx",
-    coach: import.meta.env.VITE_STRIPE_PRICE_COACH || "price_yyy",
+    premium: readPublicEnv("VITE_STRIPE_PRICE_PREMIUM") || "price_xxx",
+    coach: readPublicEnv("VITE_STRIPE_PRICE_COACH") || "price_yyy",
   },
 };
+
+function readPublicEnv(key: string): string {
+  try {
+    const metaEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env;
+    const value = metaEnv?.[key];
+    if (typeof value === "string" && value.length > 0) return value;
+  } catch {
+    // ignore import.meta access errors in non-Vite contexts
+  }
+
+  try {
+    const nextPublic = process.env[key.replace("VITE_", "NEXT_PUBLIC_")];
+    if (typeof nextPublic === "string" && nextPublic.length > 0) return nextPublic;
+    const direct = process.env[key];
+    if (typeof direct === "string" && direct.length > 0) return direct;
+  } catch {
+    // process may be unavailable in some browser contexts
+  }
+
+  return "";
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 📦 Subscription Types

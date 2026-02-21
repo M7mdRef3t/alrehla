@@ -13,9 +13,16 @@ import { createClient } from '@supabase/supabase-js';
 import { AIOrchestrator } from '../src/services/aiOrchestrator';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+function getSupabaseAdminClient() {
+    const supabaseUrl =
+        process.env.SUPABASE_URL ||
+        process.env.VITE_SUPABASE_URL ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        '';
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    if (!supabaseUrl || !supabaseKey) return null;
+    return createClient(supabaseUrl, supabaseKey);
+}
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -35,6 +42,11 @@ export async function constructShadowProfile(target: TargetNode) {
     console.log(`🌑 [Shadow Protocol] Initiating Ghost Profile for entity: ${target.label}`);
 
     try {
+        const supabase = getSupabaseAdminClient();
+        if (!supabase) {
+            throw new Error('Supabase admin is not configured.');
+        }
+
         // 1. Generate a secure, anonymous UUID for this ghost
         const shadowId = crypto.randomUUID();
 
