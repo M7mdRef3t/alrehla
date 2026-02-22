@@ -1,8 +1,8 @@
 import { FC } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Cpu, Zap, Shield, Waves, Check } from "lucide-react";
 import { useSwarmState } from "../state/swarmState";
-import { PersonaType, SWARM_PERSONAE } from "../agent/personae";
+import { SWARM_PERSONAE } from "../agent/personae";
 
 /**
  * Swarm Persona Selector — محول سرب الشخصيات 🤖
@@ -11,7 +11,7 @@ import { PersonaType, SWARM_PERSONAE } from "../agent/personae";
  */
 
 export const SwarmPersonaSelector: FC = () => {
-    const { activePersona, manualOverride, setActivePersona, resetToAuto } = useSwarmState();
+    const { activePersona, setActivePersona, resetToAuto } = useSwarmState();
 
     const options = [
         { id: "AUTO" as const, name: "تبديل تلقائي", icon: Cpu, color: "teal" },

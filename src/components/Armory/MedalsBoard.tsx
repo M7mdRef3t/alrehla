@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Award, Lock, CheckCircle2, Star } from 'lucide-react';
 import { ACHIEVEMENTS, Achievement } from '../../data/achievements';
@@ -68,8 +68,8 @@ export const MedalsBoard: React.FC = () => {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             className={`relative aspect-square rounded-2xl border-2 flex items-center justify-center overflow-hidden transition-all ${earned
-                                    ? "border-slate-700 bg-slate-800 shadow-lg"
-                                    : "border-slate-800/80 bg-slate-900/50 opacity-40 grayscale"
+                                ? "border-slate-700 bg-slate-800 shadow-lg"
+                                : "border-slate-800/80 bg-slate-900/50 opacity-40 grayscale"
                                 }`}
                         >
                             {earned ? (
@@ -110,8 +110,8 @@ export const MedalsBoard: React.FC = () => {
 
                         <div className="flex items-start gap-4 relative z-10">
                             <div className={`p-3.5 rounded-xl flex items-center justify-center shrink-0 border border-white/10 ${isEarned(selectedMedal.id)
-                                    ? `bg-gradient-to-br ${GRADIENTS[ACHIEVEMENTS.findIndex(a => a.id === selectedMedal.id) % GRADIENTS.length]} shadow-lg`
-                                    : 'bg-slate-700/50 grayscale'
+                                ? `bg-gradient-to-br ${GRADIENTS[ACHIEVEMENTS.findIndex(a => a.id === selectedMedal.id) % GRADIENTS.length]} shadow-lg`
+                                : 'bg-slate-700/50 grayscale'
                                 }`}>
                                 <span className="text-3xl leading-none">{selectedMedal.icon}</span>
                             </div>
@@ -129,7 +129,7 @@ export const MedalsBoard: React.FC = () => {
                                 </p>
 
                                 {isEarned(selectedMedal.id) ? (
-                                    <p className="text-xs font-medium text-amber-200/90 italic border-r-2 border-amber-500/50 pr-3 mt-3">
+                                    <p className="text-xs font-medium text-amber-200/90 border-r-2 border-amber-500/50 pr-3 mt-3">
                                         "{selectedMedal.hint}"
                                     </p>
                                 ) : (

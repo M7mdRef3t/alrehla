@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { AlertTriangle, TrendingUp, TrendingDown, Users, Monitor, Zap } from "lucide-react";
+import { AlertTriangle, Zap } from "lucide-react";
 import type { OpsInsights as OpsInsightsType } from "../../../../../services/adminApi";
 
 interface OpsInsightsProps {
@@ -133,14 +133,6 @@ export const OpsInsights: FC<OpsInsightsProps> = ({ data, loading }) => {
                 </div>
             </div>
 
-            {/* Warnings Footer */}
-            {data.warnings.length > 0 && (
-                <div className="mt-4 p-4 rounded-xl bg-rose-500/5 border border-rose-500/20 text-rose-300 text-xs font-mono leading-relaxed text-right" dir="rtl">
-                    {data.warnings.map((w, idx) => (
-                        <p key={idx}>{w}</p>
-                    ))}
-                </div>
-            )}
         </div>
     );
 };

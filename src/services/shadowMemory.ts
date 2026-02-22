@@ -29,7 +29,7 @@ export class ShadowMemory {
                 });
 
             if (error) throw error;
-            console.log("🌘 Shadow Snapshot recorded for user:", userId);
+            console.warn("🌘 Shadow Snapshot recorded for user:", userId);
 
             // Trigger Automated Dispatcher
             await DispatcherEngine.checkAndDispatch(userId, insight);
@@ -55,3 +55,4 @@ export class ShadowMemory {
         return data;
     }
 }
+

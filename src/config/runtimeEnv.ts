@@ -34,11 +34,8 @@ function safeProcessEnv(): Record<string, unknown> {
 function readEnv(key: RuntimeKey): string | undefined {
   // 1. Try Vite's import.meta.env first (works in both dev and prod)
   try {
-    const metaEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env;
-    if (metaEnv && typeof metaEnv === "object") {
-      const val = metaEnv[key];
-      if (typeof val === "string" && val.length > 0) return val.trim();
-    }
+    const val = import.meta.env[key];
+    if (typeof val === "string" && val.length > 0) return val.trim();
   } catch {
     // ignore import.meta access errors
   }
@@ -69,7 +66,7 @@ function readEnv(key: RuntimeKey): string | undefined {
   return undefined;
 }
 
-const metaEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env ?? {};
+const metaEnv = import.meta.env ?? {};
 const penv = safeProcessEnv();
 const processNodeEnv = typeof penv.NODE_ENV === "string" ? penv.NODE_ENV : undefined;
 const metaDev = Boolean(metaEnv.DEV);

@@ -108,7 +108,7 @@ export function measure(name: string, startMark: string): void {
  * Get Web Vitals metrics
  * @example
  * const vitals = getWebVitals();
- * console.log(vitals.lcp, vitals.fid, vitals.cls);
+ * console.warn(vitals.lcp, vitals.fid, vitals.cls);
  */
 export function getWebVitals(): {
   lcp: number | null;
@@ -258,3 +258,4 @@ export function cancelIdleCallback(id: number): void {
     clearTimeout(id);
   }
 }
+

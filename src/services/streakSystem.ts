@@ -33,12 +33,6 @@ function getYesterdayStr(): string {
     return d.toISOString().split("T")[0];
 }
 
-function daysBetween(a: string, b: string): number {
-    const da = new Date(a).getTime();
-    const db = new Date(b).getTime();
-    return Math.round(Math.abs(da - db) / (1000 * 60 * 60 * 24));
-}
-
 const DEFAULT_STREAK: StreakData = {
     currentStreak: 0,
     longestStreak: 0,

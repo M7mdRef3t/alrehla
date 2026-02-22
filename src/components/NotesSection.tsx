@@ -180,7 +180,7 @@ export const NotesSection: FC<NotesSectionProps> = ({
                   <AnimatePresence>
                     {expandedNoteId === note.id && (
                       <motion.p
-                        className="text-sm text-gray-600 leading-relaxed mt-2 italic"
+                        className="text-sm text-gray-600 leading-relaxed mt-2"
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}

@@ -142,7 +142,7 @@ export class ConsciousnessThemeEngine {
       root.setAttribute("data-animation-level", theme.animations);
       root.setAttribute("data-layout-mode", theme.layout);
 
-      console.log("🎨 Consciousness Theme applied:", theme.state);
+      console.warn("🎨 Consciousness Theme applied:", theme.state);
     });
 
     // إزالة transition بعد انتهاء التحول
@@ -407,7 +407,7 @@ export const consciousnessTheme = new ConsciousnessThemeEngine();
  * تشغيل المحرك تلقائياً مع Auto-Update
  */
 export function startConsciousnessTheme(): void {
-  console.log("🎨 Consciousness Theme Engine started");
+  console.warn("🎨 Consciousness Theme Engine started");
 
   // تحديث تلقائي كل 10 دقائق
   const UPDATE_INTERVAL = 10 * 60 * 1000; // 10 minutes
@@ -479,7 +479,7 @@ export function startConsciousnessTheme(): void {
     sessionStorage.setItem("dawayir-session-start", String(Date.now()));
   }
 
-  console.log("✅ Auto-update scheduled (every 10 minutes)");
+  console.warn("✅ Auto-update scheduled (every 10 minutes)");
 }
 
 /**
@@ -535,8 +535,9 @@ ${visualDescription}
       text,
       parseMode: "Markdown",
     });
-  } catch (error) {
+  } catch {
     // تجاهل الخطأ إذا كان Telegram غير مفعّل
-    console.log("ℹ️ Visual report not sent (Telegram not configured)");
+    console.warn("ℹ️ Visual report not sent (Telegram not configured)");
   }
 }
+

@@ -37,6 +37,8 @@ export interface PersonViewInsights {
   solutionSuggestions?: string;
   /** خطة: نقاط بارزة أو ملخص لخطة التعافي (مثلاً من AI) */
   planHighlights?: string[];
+  /** المخطط اللاشعوري المكتشف (من consciousnessService) */
+  underlyingPattern?: string;
 }
 
 export interface AnalysisResult {

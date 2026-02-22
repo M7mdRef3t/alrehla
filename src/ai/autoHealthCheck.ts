@@ -63,7 +63,7 @@ export class AutoHealthChecker {
       void this.runHealthCheck();
     }, this.CHECK_INTERVAL_MS);
 
-    console.log("✅ Auto Health Check started (runs every hour)");
+    console.warn("✅ Auto Health Check started (runs every hour)");
   }
 
   /**
@@ -73,7 +73,7 @@ export class AutoHealthChecker {
     if (this.intervalId !== null) {
       clearInterval(this.intervalId);
       this.intervalId = null;
-      console.log("⏸️ Auto Health Check stopped");
+      console.warn("⏸️ Auto Health Check stopped");
     }
   }
 
@@ -83,7 +83,7 @@ export class AutoHealthChecker {
    * ─────────────────────────────────────────────────────────────────
    */
   async runHealthCheck(): Promise<HealthCheckResult> {
-    console.log("🏥 Running health check...");
+    console.warn("🏥 Running health check...");
     this.lastCheckTime = Date.now();
 
     const issues: HealthIssue[] = [];
@@ -129,7 +129,7 @@ export class AutoHealthChecker {
       await this.notifyAdmin(result);
     }
 
-    console.log(`🏥 Health check complete: ${status.toUpperCase()} (${score}/100)`);
+    console.warn(`🏥 Health check complete: ${status.toUpperCase()} (${score}/100)`);
     return result;
   }
 
@@ -240,7 +240,7 @@ export class AutoHealthChecker {
           solution: "Consider moving old data to Supabase",
         });
       }
-    } catch (err) {
+    } catch {
       issues.push({
         id: "storage-access-error",
         severity: "critical",
@@ -322,7 +322,7 @@ export class AutoHealthChecker {
         const nodes = mapState?.nodes || [];
 
         // فحص: هل في nodes بدون ID؟
-        const nodesWithoutId = nodes.filter((n: any) => !n.id);
+        const nodesWithoutId = nodes.filter((n: { id?: string }) => !n.id);
         if (nodesWithoutId.length > 0) {
           issues.push({
             id: "state-nodes-without-id",
@@ -335,7 +335,7 @@ export class AutoHealthChecker {
         }
 
         // فحص: هل في duplicate IDs؟
-        const ids = nodes.map((n: any) => n.id);
+        const ids = nodes.map((n: { id?: string }) => n.id);
         const duplicates = ids.filter(
           (id: string, i: number) => ids.indexOf(id) !== i
         );
@@ -388,7 +388,7 @@ export class AutoHealthChecker {
           issue.autoFixed = true;
           issue.fixAttempted = true;
           fixed.push(issue);
-          console.log(`✅ Auto-fixed: ${issue.description}`);
+          console.warn(`✅ Auto-fixed: ${issue.description}`);
 
           // سجّل القرار
           await decisionEngine.execute({
@@ -435,7 +435,7 @@ export class AutoHealthChecker {
           if (mapStateRaw) {
             const mapState = JSON.parse(mapStateRaw);
             const nodes = mapState.nodes || [];
-            nodes.forEach((n: any, i: number) => {
+            nodes.forEach((n: { id?: string }, i: number) => {
               if (!n.id) n.id = `node-${Date.now()}-${i}`;
             });
             localStorage.setItem("dawayir-map-state", JSON.stringify(mapState));
@@ -603,3 +603,4 @@ export function startAutoHealthCheck(): void {
 export function stopAutoHealthCheck(): void {
   autoHealthChecker.stop();
 }
+

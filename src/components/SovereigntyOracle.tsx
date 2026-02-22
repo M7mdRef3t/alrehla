@@ -22,7 +22,6 @@ export const SovereigntyOracle: FC = () => {
 
         // حساب الميزان (Green vs Red/Yellow)
         const greenCount = nodes.filter(n => n.ring === "green").length;
-        const chaosCount = nodes.filter(n => n.ring === "red" || n.ring === "yellow").length;
 
         const balanceFactor = nodes.length === 0 ? 1 : greenCount / nodes.length;
         const entropyFactor = Math.max(0, 1 - entropy.entropyScore / 100);

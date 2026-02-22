@@ -8,7 +8,6 @@
 import { useMapState } from "../state/mapState";
 import { useJourneyState } from "../state/journeyState";
 import { usePulseState } from "../state/pulseState";
-import type { MapNode, Ring } from "../modules/map/mapTypes";
 
 export interface MirrorInsight {
     id: string;

@@ -4,7 +4,6 @@ import {
   Activity,
   Sparkles
 } from "lucide-react";
-import { useAdminState } from "../../../../state/adminState";
 import {
   getAggregateStats,
   getSessionsWithProgress
@@ -16,8 +15,7 @@ import {
   fetchExecutiveReport, // New Import
   fetchWeeklyReport,
   fetchSecuritySignals,
-  fetchOwnerOpsReport,
-  savePulseCopyOverrides
+  fetchOwnerOpsReport
 } from "../../../../services/adminApi";
 import { isSupabaseReady } from "../../../../services/supabaseClient";
 import {
@@ -25,7 +23,6 @@ import {
   saveFlowAuditLog,
   type FlowAuditLogEntry
 } from "../../../../services/flowAudit";
-import { motion } from "framer-motion";
 import { SuccessIndexCard } from "./components/SuccessIndexCard";
 import { PulseStabilityCard } from "./components/PulseStabilityCard";
 import { OpsInsights } from "./components/OpsInsights";
@@ -44,14 +41,17 @@ import { LiveFreezeGuard } from "./components/LiveFreezeGuard";
 import { AIGuardrailCard } from "./components/AIGuardrailCard";
 import { ConsciousnessMap } from "../Consciousness/ConsciousnessMap";
 import {
-  type OpsInsights as OpsInsightsType,
-  type SystemHealthReport,
-  type ExecutiveReport as ExecutiveReportType,
-  type SecuritySignalsReport,
   type WeeklyReport
 } from "../../../../services/adminApi";
+import type {
+  OpsInsights as OpsInsightsType,
+  SystemHealthReport,
+  ExecutiveReport as ExecutiveReportType,
+  SecuritySignalsReport
+} from "../../../../types/admin.types";
 import { RevenueEngineCard } from "./components/RevenueEngineCard";
 import { EmotionalPricingCard } from "./components/EmotionalPricingCard";
+import { RevenueCardBoundary } from "./components/RevenueCardBoundary";
 
 // --- Helper Components & Functions ---
 
@@ -77,9 +77,8 @@ const formatNumber = (value: number | null, fallback = "â€”") =>
 export const OverviewPanel: FC = () => {
   const stats = getAggregateStats();
   const sessions = getSessionsWithProgress();
-  const pulseCopyOverrides = useAdminState((s) => s.pulseCopyOverrides);
-  const setPulseCopyOverrides = useAdminState((s) => s.setPulseCopyOverrides);
-
+  // TODO: replace with a strict remote overview type after stabilizing the server payload contract.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [remoteStats, setRemoteStats] = useState<any>(null);
   const [opsInsights, setOpsInsights] = useState<OpsInsightsType | null>(null);
   const [systemHealth, setSystemHealth] = useState<SystemHealthReport | null>(null);
@@ -417,7 +416,13 @@ export const OverviewPanel: FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {(routingTelemetry.cognitiveEffectiveness?.completionMatrix ?? []).slice(0, 12).map((row: any) => (
+                  {(routingTelemetry.cognitiveEffectiveness?.completionMatrix ?? []).slice(0, 12).map((row: {
+                    capacityBand?: string;
+                    selectedLoadBand?: string;
+                    decisions?: number;
+                    completedCount?: number;
+                    completionRatePct?: number;
+                  }) => (
                     <tr key={`${row.capacityBand}-${row.selectedLoadBand}`} className="border-t border-white/5">
                       <td className="py-2 px-2">{row.capacityBand}</td>
                       <td className="py-2 px-2">{row.selectedLoadBand}</td>
@@ -443,7 +448,12 @@ export const OverviewPanel: FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {(routingTelemetry.interventionHealth?.bySegment ?? []).slice(0, 10).map((row: any) => (
+                  {(routingTelemetry.interventionHealth?.bySegment ?? []).slice(0, 10).map((row: {
+                    segmentKey?: string;
+                    interventions?: number;
+                    decisions?: number;
+                    interventionRatePct?: number;
+                  }) => (
                     <tr key={row.segmentKey} className="border-t border-white/5">
                       <td className="py-2 px-2">{row.segmentKey}</td>
                       <td className="py-2 px-2">{formatNumber(row.interventions ?? 0)}</td>
@@ -510,15 +520,17 @@ export const OverviewPanel: FC = () => {
         loading={initialLoading}
       />
 
-      <RevenueEngineCard
-        data={weeklyReport}
-        loading={initialLoading}
-        windowDays={weeklyWindow}
-        onWindowChange={(days) => {
-          void refreshRevenueReport(days);
-        }}
-        onRefresh={refreshRevenueReport}
-      />
+      <RevenueCardBoundary>
+        <RevenueEngineCard
+          data={weeklyReport}
+          loading={initialLoading}
+          windowDays={weeklyWindow}
+          onWindowChange={(days) => {
+            void refreshRevenueReport(days);
+          }}
+          onRefresh={refreshRevenueReport}
+        />
+      </RevenueCardBoundary>
 
       <EmotionalPricingCard loading={initialLoading} />
 
@@ -565,13 +577,20 @@ export const OverviewPanel: FC = () => {
         onCommitDecision={handleCommitDecision}
         decisionSaving={decisionSaving}
         decisionMessage={decisionMessage}
-        weeklyDecisionEntries={weeklyDecisionLogs.map(l => ({
+        weeklyDecisionEntries={weeklyDecisionLogs.map((l) => {
+          const payload = (l.payload ?? {}) as {
+            successIndex?: number;
+            successDecisionLabel?: string;
+            sampleSize?: number;
+          };
+          return ({
           id: l.id,
           createdAt: l.createdAt,
-          score: (l.payload as any)?.successIndex,
-          decisionLabel: (l.payload as any)?.successDecisionLabel || 'Ø³Ø¬Ù„ Ù‚Ø±Ø§Ø±',
-          sampleSize: (l.payload as any)?.sampleSize
-        }))}
+          score: payload.successIndex ?? null,
+          decisionLabel: payload.successDecisionLabel || "سجل قرار",
+          sampleSize: payload.sampleSize ?? null
+        });
+        })}
         weeklyDecisionLoading={weeklyDecisionLoading}
       />
 

@@ -1,15 +1,8 @@
 import type { FC } from "react";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Radar, X, AlertTriangle, ShieldCheck, Clock, Shield } from "lucide-react";
+import { Radar, X, Clock, Shield } from "lucide-react";
 import { useMapState } from "../state/mapState";
-
-// Mock data for contact duration if not in state yet
-// In a real app, this would be saved in the node data
-interface NodeRadarData {
-    nodeId: string;
-    contactHoursPerWeek: number;
-}
 
 interface RadarShieldProps {
     isOpen: boolean;
@@ -112,7 +105,7 @@ export const RadarShield: FC<RadarShieldProps> = ({ isOpen, onClose }) => {
                                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                     {nodes.map((node, i) => {
                                         const hours = getContactHours(node.id, node.ring);
-                                        const { color, bg, distance } = getDistanceAndColor(hours);
+                                        const { bg, distance } = getDistanceAndColor(hours);
                                         const pos = calculatePosition(i, nodes.length, distance);
 
                                         return (

@@ -202,9 +202,8 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
                 key={category}
                 type="button"
                 onClick={() => setActiveTab(category)}
-                className={`shrink-0 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
-                  isActive ? "bg-white text-purple-900 border border-purple-200" : "text-slate-600 hover:bg-white/60"
-                }`}
+                className={`shrink-0 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${isActive ? "bg-white text-purple-900 border border-purple-200" : "text-slate-600 hover:bg-white/60"
+                  }`}
               >
                 <span>{getCategoryEmoji(category)}</span>
                 <span>{getCategoryLabel(category)}</span>
@@ -231,7 +230,7 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
             {showRule ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronLeft className="w-4 h-4 shrink-0 rotate-180" />}
           </button>
           {showRule && (
-            <p className="px-3 pb-2 text-xs text-slate-600 italic border-t border-slate-100 pt-2" dir="rtl">
+            <p className="px-3 pb-2 text-xs text-slate-600 border-t border-slate-100 pt-2" dir="rtl">
               🛑 {CATEGORY_RULES[activeTab]}
             </p>
           )}
@@ -256,27 +255,24 @@ export const SymptomsChecklist: FC<SymptomsChecklistProps> = ({
                 type="button"
                 onClick={() => handleToggle(symptom.id)}
                 disabled={readOnly}
-                className={`w-full p-4 rounded-xl border-2 text-right transition-all duration-200 ${
-                  isSelectedSymptom
+                className={`w-full p-4 rounded-xl border-2 text-right transition-all duration-200 ${isSelectedSymptom
                     ? "bg-teal-50 border-teal-500"
                     : "bg-white border-gray-200 hover:border-teal-300 hover:bg-teal-50/50"
-                } ${readOnly ? "cursor-default" : "cursor-pointer active:scale-[0.99]"}`}
+                  } ${readOnly ? "cursor-default" : "cursor-pointer active:scale-[0.99]"}`}
                 whileTap={!readOnly ? { scale: 0.98 } : {}}
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`shrink-0 w-10 h-10 sm:w-6 sm:h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                      isSelectedSymptom ? "bg-teal-500 border-teal-500" : "bg-white border-gray-300"
-                    }`}
+                    className={`shrink-0 w-10 h-10 sm:w-6 sm:h-6 rounded-md border-2 flex items-center justify-center transition-all ${isSelectedSymptom ? "bg-teal-500 border-teal-500" : "bg-white border-gray-300"
+                      }`}
                   >
                     {isSelectedSymptom && (
                       <Check className="w-6 h-6 sm:w-4 sm:h-4 text-white" strokeWidth={3} />
                     )}
                   </div>
                   <span
-                    className={`text-sm flex-1 ${
-                      isSelectedSymptom ? "text-teal-900 font-medium" : "text-gray-700"
-                    }`}
+                    className={`text-sm flex-1 ${isSelectedSymptom ? "text-teal-900 font-medium" : "text-gray-700"
+                      }`}
                   >
                     {symptom.text}
                   </span>

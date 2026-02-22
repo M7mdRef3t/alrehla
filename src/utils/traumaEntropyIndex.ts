@@ -13,6 +13,12 @@ export interface TEIResult {
   message: string;
   /** مستوى الوضوح */
   clarityLevel: "chaotic" | "turbulent" | "settling" | "clear";
+  /** العوامل المؤثرة على النتيجة */
+  factors: {
+    ageWeight: number;
+    awarenessBonus: number;
+    detachmentBonus: number;
+  };
 }
 
 /** تاريخ الـ TEI — للمقارنة الشهرية */
@@ -91,6 +97,7 @@ export function computeTEI(nodes: MapNode[]): TEIResult {
       avgAgeDays: 0,
       message: "ابدأ برسم دوايرك لترى مؤشر وعيك",
       clarityLevel: "clear",
+      factors: { ageWeight: 0, awarenessBonus: 0, detachmentBonus: 0 }
     };
   }
 
@@ -129,8 +136,9 @@ export function computeTEI(nodes: MapNode[]): TEIResult {
 
   const message = getClarityMessage(score, disturbedCount, totalCount);
   const clarityLevel = getClarityLevel(score);
+  const factors = { ageWeight, awarenessBonus, detachmentBonus };
 
-  return { score, disturbedCount, totalCount, avgAgeDays, message, clarityLevel };
+  return { score, disturbedCount, totalCount, avgAgeDays, message, clarityLevel, factors };
 }
 
 /** احفظ snapshot للتاريخ */

@@ -1,7 +1,7 @@
 import { FC, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useMapState } from "../state/mapState";
-import { calculateGravityMass, detectEchoPatterns, type GravityNode } from "../services/physicsEngine";
+import { calculateGravityMass, detectEchoPatterns } from "../services/physicsEngine";
 import { scanForVampires, identifyKeystones } from "../services/propheticEngine";
 import { AlertTriangle, Zap, Box, Activity, Radar, GitMerge, BrainCircuit } from "lucide-react";
 import { OutcomeSimulator } from "./OutcomeSimulator";
@@ -20,14 +20,14 @@ export const CosmicDashboard: FC = () => {
             .sort((a, b) => b.mass - a.mass);
     }, [nodes]);
 
-    const echoes = useMemo(() => detectEchoPatterns(), [nodes]);
+    const echoes = detectEchoPatterns();
 
     const archiveNode = useMapState((s) => s.archiveNode);
     const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
 
     // Phase 18: Prophetic Engine hooks
-    const vampires = useMemo(() => scanForVampires(), [nodes]);
-    const keystones = useMemo(() => identifyKeystones(), [nodes]);
+    const vampires = scanForVampires();
+    const keystones = identifyKeystones();
     const [showSimulator, setShowSimulator] = useState(false);
 
     const suggestedActions = useMemo(() => {

@@ -1,4 +1,3 @@
-import { getFromLocalStorage } from "./browserStorage";
 import { PulseEntry } from "../state/pulseState";
 import { type MapNode } from "../modules/map/mapTypes";
 

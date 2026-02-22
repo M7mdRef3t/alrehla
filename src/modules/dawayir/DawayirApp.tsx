@@ -1,16 +1,24 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import ChatInterface from '../../components/Chat/ChatInterface';
 import CanvasComponent from '../../components/Canvas/CanvasComponent';
 import FacilitatorChat from '../../components/Chat/FacilitatorChat';
 import { useDawayirEngine, NodeData } from '../../hooks/useDawayirEngine';
-import { Sparkles, AlertCircle, Heart, ArrowLeft, Loader2, Save, Check, Share2, Activity, Zap, Shield, Clock, Terminal } from 'lucide-react';
+import { Sparkles, AlertCircle, Heart, ArrowLeft, Loader2, Save, Check, Share2, Activity, Zap, Shield, Clock, Terminal, Brain } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { AutomagicEventPopup } from '../../components/Map/AutomagicEventPopup';
 import { AccessManager, SubscriptionInfo } from '../billing/AccessManager';
+import { SymptomSimulation } from '../../components/Chat/SymptomSimulation';
+import { Typewriter } from '../../components/UI/Typewriter';
+import { useAIOrchestration } from '../../hooks/useAIOrchestration';
+import { useGestureSanctuary } from '../../hooks/useGestureSanctuary';
 
 export default function DawayirApp() {
+    useAIOrchestration();
+    const { isSanctuary, exitSanctuary, gestureHandlers } = useGestureSanctuary();
+
     const { data, isLoading, isSaving, error, analyzeAnswers, saveMap } = useDawayirEngine();
     const [showPaywall, setShowPaywall] = useState(false);
     const [user, setUser] = useState<any>(null);
@@ -24,6 +32,7 @@ export default function DawayirApp() {
     const [isOracleLoading, setIsOracleLoading] = useState(false);
     const [oraclePrediction, setOraclePrediction] = useState<any>(null); // To store burnout_probability etc.
     const [showOracleModal, setShowOracleModal] = useState(false);
+    const [showSimulation, setShowSimulation] = useState(false);
 
     // AI Facilitator State (Phase 3)
     const [focusedNode, setFocusedNode] = useState<NodeData | null>(null);
@@ -179,7 +188,42 @@ export default function DawayirApp() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col items-center justify-center font-sans overflow-hidden relative">
+        <div
+            className="min-h-screen bg-slate-950 text-slate-200 flex flex-col items-center justify-center font-sans overflow-hidden relative"
+            {...gestureHandlers}
+        >
+            {/* Sanctuary Overlay - Zero UI Dimming */}
+            <AnimatePresence>
+                {isSanctuary && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-[100] bg-slate-950/80 backdrop-blur-xl flex flex-col items-center justify-center transition-all cursor-pointer"
+                        onClick={exitSanctuary}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="text-center space-y-6 p-8"
+                        >
+                            <div className="w-20 h-20 rounded-full border border-teal-500/20 bg-teal-500/5 mx-auto flex items-center justify-center">
+                                <div className="w-3 h-3 rounded-full bg-teal-400 animate-pulse shadow-[0_0_15px_rgba(45,212,191,0.8)]" />
+                            </div>
+                            <div className="space-y-2">
+                                <h2 className="text-2xl font-black text-white uppercase tracking-widest font-mono">بيئة_السكون</h2>
+                                <p className="text-slate-400 text-sm font-medium">تم إيقاف التدخلات. خذ نفساً عميقاً... نحن نراقب صمتك.</p>
+                            </div>
+                            <button
+                                onClick={exitSanctuary}
+                                className="text-[10px] font-black text-teal-400/50 uppercase tracking-[0.3em] hover:text-teal-400 transition-all mt-10"
+                            >
+                                انقر للعودة إلى الرحلة
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Cosmic Background Elements */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
@@ -194,7 +238,7 @@ export default function DawayirApp() {
                     <div className="w-8 h-8 rounded-lg bg-teal-500/20 border border-teal-500/30 flex items-center justify-center">
                         <Activity className="w-4 h-4 text-teal-400" />
                     </div>
-                    <h1 className="text-xl font-black text-white tracking-widest font-mono uppercase">DAWAYIR_PROTO</h1>
+                    <h1 className="text-xl font-black text-white tracking-widest font-mono uppercase">بروتوكول_دواير</h1>
                 </div>
                 <div className="flex items-center gap-4">
                     {user ? (
@@ -204,7 +248,7 @@ export default function DawayirApp() {
                         </div>
                     ) : (
                         <button onClick={handleGoogleLogin} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2 backdrop-blur-sm">
-                            <span className="font-mono uppercase tracking-widest">AUTH_GATE</span> <ArrowLeft className="w-4 h-4" />
+                            <span className="font-mono uppercase tracking-widest">بوابة_الدخول</span> <ArrowLeft className="w-4 h-4" />
                         </button>
                     )}
                 </div>
@@ -237,7 +281,7 @@ export default function DawayirApp() {
                                     <>
                                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-teal-500/20 bg-teal-500/5 mb-6">
                                             <Zap className="w-3 h-3 text-teal-400" />
-                                            <span className="text-[10px] font-black text-teal-300 uppercase tracking-[0.2em] font-mono">RADAR_INITIATED</span>
+                                            <span className="text-[10px] font-black text-teal-300 uppercase tracking-[0.2em] font-mono">بدء_الرادار</span>
                                         </div>
                                         <h2 className="text-3xl sm:text-4xl font-black text-white mb-4 leading-tight">اكتشف ثغرات طاقتك في 60 ثانية</h2>
                                         <p className="text-slate-400 font-medium">لا تفكر كثيراً... اترك بروتوكولات الوعي تعمل.</p>
@@ -259,11 +303,51 @@ export default function DawayirApp() {
                 {data && (
                     <div className="w-full h-full flex flex-col relative animate-in slide-in-from-bottom-8 fade-in duration-700">
 
-                        <div className="absolute z-20 top-4 left-1/2 -translate-x-1/2 glass px-6 py-4 border-white/10 max-w-xl text-center shadow-2xl">
-                            <p className="text-white font-bold leading-relaxed flex items-center gap-3">
-                                <Zap className="w-5 h-5 text-teal-400 animate-pulse" />
-                                {data.insight_message}
-                            </p>
+                        <div className="absolute z-20 top-4 left-1/2 -translate-x-1/2 glass px-8 py-5 border-teal-500/20 max-w-2xl text-center shadow-2xl relative overflow-hidden group">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-teal-500/50" />
+                            <div className="absolute top-0 right-0 w-1 h-full bg-teal-500/50" />
+                            <div className="flex items-start gap-4 text-right" dir="rtl">
+                                <Activity className="w-5 h-5 text-teal-400 mt-1 shrink-0 animate-pulse" />
+                                <div className="space-y-1">
+                                    <span className="text-[10px] font-black text-teal-500/50 uppercase tracking-[0.3em] font-mono block mb-1">تم_استخراج_البصيرة_المعرفية</span>
+                                    <p className="text-white font-bold leading-relaxed text-sm">
+                                        <Typewriter text={data.insight_message} speed={40} />
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Tactical HUD Left */}
+                        <div className="absolute z-20 left-6 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4">
+                            <div className="glass p-4 border-white/5 space-y-4 w-48">
+                                <div className="space-y-1">
+                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest font-mono">عشوائية_الخريطة</span>
+                                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: "65%" }}
+                                            className="h-full bg-rose-500/50"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+                                        <span className="text-[9px] block text-slate-500 font-mono">نقاط_الرصد</span>
+                                        <span className="text-sm font-black text-white font-mono">{data.nodes.length}</span>
+                                    </div>
+                                    <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+                                        <span className="text-[9px] block text-slate-500 font-mono">الروابط_الحية</span>
+                                        <span className="text-sm font-black text-white font-mono">{data.edges.length}</span>
+                                    </div>
+                                </div>
+                                <div className="pt-2 border-t border-white/5">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[9px] text-slate-500 font-mono uppercase">حالة_النظام</span>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+                                    </div>
+                                    <span className="text-[10px] font-bold text-teal-400 font-mono">مراقبة_مستقرة</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="w-full h-[70vh] rounded-2xl overflow-hidden relative">
@@ -292,14 +376,26 @@ export default function DawayirApp() {
                             {/* Action Overlay */}
                             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col md:flex-row gap-4">
                                 {(!data.id) && (
-                                    <button
-                                        onClick={handleSave}
-                                        disabled={isSaving}
-                                        className="px-6 py-3 bg-teal-500 text-slate-950 rounded-xl shadow-lg shadow-teal-500/20 hover:bg-teal-400 transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest"
-                                    >
-                                        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                        {isSaving ? 'DATA_SYNCING...' : 'SECURE_MAP'}
-                                    </button>
+                                    <div className="flex flex-col md:flex-row gap-4">
+                                        <button
+                                            onClick={handleSave}
+                                            disabled={isSaving}
+                                            className="px-6 py-3 bg-teal-500 text-slate-950 rounded-xl shadow-lg shadow-teal-500/20 hover:bg-teal-400 transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest"
+                                        >
+                                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                            {isSaving ? 'جاري_مزامنة_البيانات...' : 'تأمين_الخريطة'}
+                                        </button>
+
+                                        {data?.detected_symptoms && data.detected_symptoms.length > 0 && (
+                                            <button
+                                                onClick={() => setShowSimulation(true)}
+                                                className="px-6 py-3 bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-xl shadow-lg hover:bg-indigo-500/20 transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest group"
+                                            >
+                                                <Brain className="w-4 h-4 group-hover:animate-pulse" />
+                                                بدء_التدريب_التكتيكي
+                                            </button>
+                                        )}
+                                    </div>
                                 )}
                                 {(data.id && hasActiveCoach) && (
                                     <button
@@ -311,7 +407,7 @@ export default function DawayirApp() {
                                                 : 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/20'}`}
                                     >
                                         {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : (isShared ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />)}
-                                        {isSharing ? 'UPLOADING...' : (isShared ? 'PROTO_SHARED' : 'SHARE_WITH_HQ')}
+                                        {isSharing ? 'جاري_الرفع...' : (isShared ? 'تم_المشاركة' : 'مشاركة_مع_القيادة')}
                                     </button>
                                 )}
                                 {/* Personal Oracle Control (Proactive AI) */}
@@ -321,7 +417,7 @@ export default function DawayirApp() {
                                         disabled={isOracleLoading}
                                         className="px-6 py-3 bg-white/5 border border-white/10 text-white rounded-xl shadow-md hover:bg-white/10 transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest"
                                     >
-                                        {isOracleLoading ? "DECODING..." : "ANALYZE_ENERGY"}
+                                        {isOracleLoading ? "جاري_فك_التشفير..." : "تحليل_الطاقة"}
                                         <Sparkles className="w-4 h-4 text-teal-400" />
                                     </button>
                                 )}
@@ -362,7 +458,7 @@ export default function DawayirApp() {
                                     <Check className="w-5 h-5" />
                                     سجل عبر Google مجاناً
                                 </button>
-                                <div className="text-[10px] text-slate-500 font-mono uppercase tracking-[0.2em]">ACCESS_PROTOCOL: $9/MONTH</div>
+                                <div className="text-[10px] text-slate-500 font-mono uppercase tracking-[0.2em]">بروتوكول_الوصول: ٩ دولار/شهرياً</div>
                             </div>
                         </div>
                     </div>
@@ -379,7 +475,7 @@ export default function DawayirApp() {
                             <div className="absolute inset-0 border-2 border-teal-500/20 rounded-full animate-spin duration-[3s]" />
                             <Sparkles className="w-12 h-12 text-teal-400 animate-pulse" />
                         </div>
-                        <h3 className="text-2xl font-black text-white mb-3 uppercase tracking-tight font-mono">DECODING_TRAJECTORY</h3>
+                        <h3 className="text-2xl font-black text-white mb-3 uppercase tracking-tight font-mono">جاري_فك_تشفير_المسار</h3>
                         <p className="text-slate-400 text-sm leading-relaxed font-medium">نقوم بمعالجة خرائط وعيك التاريخية واستخراج المؤشرات التنبؤية، لحظات من فضلك.</p>
                     </div>
                 </div>
@@ -394,19 +490,19 @@ export default function DawayirApp() {
                         {oraclePrediction.needsMoreData ? (
                             <div className="mb-8 flex flex-col items-center text-center">
                                 <div className="w-20 h-20 bg-white/5 border border-white/10 text-slate-400 rounded-2xl flex items-center justify-center mb-6"><Clock className="w-10 h-10" /></div>
-                                <h2 className="text-2xl font-black text-white mb-3 uppercase tracking-tight">DATA_INCOMPLETE</h2>
+                                <h2 className="text-2xl font-black text-white mb-3 uppercase tracking-tight">بيانات_غير_مكتملة</h2>
                                 <p className="text-slate-400 font-medium">{oraclePrediction.error}</p>
                             </div>
                         ) : oraclePrediction.burnout_probability > 60 ? (
                             <div className="mb-8 flex flex-col items-center text-center">
                                 <div className="w-20 h-20 bg-rose-500/10 border border-rose-500/30 text-rose-500 rounded-2xl flex items-center justify-center mb-6 animate-pulse"><AlertCircle className="w-10 h-10" /></div>
-                                <h2 className="text-2xl font-black text-rose-400 mb-3 uppercase tracking-tight">BURNOUT_PROBABILITY: {oraclePrediction.burnout_probability}%</h2>
+                                <h2 className="text-2xl font-black text-rose-400 mb-3 uppercase tracking-tight">احتمالية_الاحتراق: {oraclePrediction.burnout_probability}%</h2>
                                 <div className="p-5 bg-rose-500/5 rounded-2xl border border-rose-500/20 mb-6 text-right w-full">
                                     <p className="text-rose-200/80 text-sm leading-[1.8] font-bold">{oraclePrediction.trajectory_summary}</p>
                                 </div>
                                 <div className="w-full text-right p-6 glass border-white/5 shadow-inner">
                                     <h4 className="font-black text-teal-400 mb-3 flex items-center gap-2 text-xs uppercase tracking-widest font-mono">
-                                        <Terminal className="w-4 h-4" /> PREVENTATIVE_PROTOCOL:
+                                        <Terminal className="w-4 h-4" /> بروتوكول_وقائي:
                                     </h4>
                                     <p className="text-slate-200 text-sm leading-relaxed font-medium">{oraclePrediction.preventative_action}</p>
                                 </div>
@@ -414,19 +510,20 @@ export default function DawayirApp() {
                         ) : (
                             <div className="mb-8 flex flex-col items-center text-center">
                                 <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 rounded-2xl flex items-center justify-center mb-6"><Heart className="w-10 h-10" /></div>
-                                <h2 className="text-2xl font-black text-emerald-400 mb-3 uppercase tracking-tight">SYSTEM_STABLE: {oraclePrediction.burnout_probability}%</h2>
+                                <h2 className="text-2xl font-black text-emerald-400 mb-3 uppercase tracking-tight">النظام_مستقر: {oraclePrediction.burnout_probability}%</h2>
                                 <div className="p-5 bg-emerald-500/5 rounded-2xl border border-emerald-500/20 mb-6 text-right w-full">
                                     <p className="text-emerald-200/80 text-sm leading-[1.8] font-bold">{oraclePrediction.trajectory_summary}</p>
                                 </div>
                             </div>
-                        )}
+                        )
+                        }
 
                         <div className="flex gap-4">
                             <button
                                 onClick={() => setShowOracleModal(false)}
                                 className="flex-1 py-4 bg-white/5 border border-white/10 text-white rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:bg-white/10 transition-all font-mono"
                             >
-                                CLOSE_DAEMON
+                                اغلاق_النظام
                             </button>
                             {hasActiveCoach && oraclePrediction?.burnout_probability > 60 && (
                                 <button
@@ -435,14 +532,34 @@ export default function DawayirApp() {
                                     className="flex-1 py-4 bg-rose-500 text-slate-950 rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:bg-rose-400 transition-all flex items-center justify-center gap-2"
                                 >
                                     {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertCircle className="w-4 h-4" />}
-                                    NOTIFY_HQ
+                                    إخطار_المقر
                                 </button>
                             )}
                         </div>
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+
+            {/* Tactical Training Simulation Overlay */}
+            {
+                showSimulation && data?.detected_symptoms && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xl p-4 animate-in fade-in duration-300" dir="rtl">
+                        <div className="glass-heavy max-w-2xl w-full relative overflow-hidden border-indigo-500/20 shadow-2xl shadow-indigo-500/10">
+                            <SymptomSimulation
+                                detectedSymptoms={data.detected_symptoms}
+                                onClose={() => setShowSimulation(false)}
+                                onComplete={(score) => {
+                                    console.warn("Training complete with score:", score);
+                                    // Could update user stats or meta-data here
+                                }}
+                            />
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }
+
 

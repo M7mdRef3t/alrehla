@@ -215,7 +215,7 @@ class GeminiClient {
         const text = decoder.decode(value, { stream: true });
         if (text) yield text;
       }
-    } catch (error) {
+    } catch {
       this.streamBreaker.markFailure();
       recordAIFallback();
       yield "حدث خطأ في الاتصال";

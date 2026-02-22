@@ -6,7 +6,6 @@
 
 import { geminiClient } from "../services/geminiClient";
 import { decisionEngine } from "./decision-framework";
-import type { HealthIssue } from "./autoHealthCheck";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 📊 Error Analysis Result
@@ -58,7 +57,7 @@ export class AIErrorAnalyzer {
     const errorMessage = typeof error === "string" ? error : error.message;
     const errorStack = typeof error === "string" ? undefined : error.stack;
 
-    console.log("🔍 Analyzing error:", errorMessage);
+    console.warn("🔍 Analyzing error:", errorMessage);
 
     // بناء الـ prompt
     const prompt = this.buildAnalysisPrompt(errorMessage, errorStack);
@@ -207,7 +206,7 @@ ${stack ? `\n${stack}` : ""}
 
       if (success) {
         applied.push(fix.description);
-        console.log(`✅ Applied fix: ${fix.description}`);
+        console.warn(`✅ Applied fix: ${fix.description}`);
 
         await decisionEngine.execute({
           ...decision,
@@ -347,5 +346,6 @@ export function setupGlobalErrorHandler(): void {
     );
   });
 
-  console.log("✅ Global error handler installed");
+  console.warn("✅ Global error handler installed");
 }
+

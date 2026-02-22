@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { CheckCircle2, Circle, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { PhaseOneGoalProgress } from "../../../../../services/adminApi";
 
 interface PhaseOneGoalProps {

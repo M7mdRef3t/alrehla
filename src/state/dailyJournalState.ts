@@ -56,15 +56,18 @@ export const useDailyJournalState = create<DailyJournalState>((set, get) => ({
 
   hydrate: () => {
     const entries = loadEntries();
-    set({ entries });
+    // Ensure we always have an array
+    set({ entries: Array.isArray(entries) ? entries : [] });
   },
 
   saveAnswer: (questionId, questionText, answer) => {
     const today = getTodayDate();
     const existing = get().entries;
+    // Ensure existing is an array
+    const existingArray = Array.isArray(existing) ? existing : [];
 
     // لو أجاب على نفس السؤال النهارده، نحدّث الإجابة
-    const alreadyIdx = existing.findIndex((e) => e.date === today);
+    const alreadyIdx = existingArray.findIndex((e) => e.date === today);
     let updated: DailyJournalEntry[];
 
     const newEntry: DailyJournalEntry = {
@@ -78,12 +81,12 @@ export const useDailyJournalState = create<DailyJournalState>((set, get) => ({
 
     if (alreadyIdx !== -1) {
       updated = [
-        ...existing.slice(0, alreadyIdx),
+        ...existingArray.slice(0, alreadyIdx),
         newEntry,
-        ...existing.slice(alreadyIdx + 1),
+        ...existingArray.slice(alreadyIdx + 1),
       ];
     } else {
-      updated = [newEntry, ...existing];
+      updated = [newEntry, ...existingArray];
     }
 
     persistEntries(updated);
@@ -92,16 +95,27 @@ export const useDailyJournalState = create<DailyJournalState>((set, get) => ({
 
   hasAnsweredToday: () => {
     const today = getTodayDate();
-    return get().entries.some((e) => e.date === today && e.answer.length > 0);
+    const entries = get().entries;
+    // Safety check: ensure entries is an array
+    if (!Array.isArray(entries)) return false;
+    return entries.some((e) => e.date === today && e.answer.length > 0);
   },
 
   getEntryByDate: (date) => {
-    return get().entries.find((e) => e.date === date);
+    const entries = get().entries;
+    if (!Array.isArray(entries)) return undefined;
+    return entries.find((e) => e.date === date);
   },
 
   getSortedEntries: () => {
-    return [...get().entries].sort((a, b) => b.savedAt - a.savedAt);
+    const entries = get().entries;
+    if (!Array.isArray(entries)) return [];
+    return [...entries].sort((a, b) => b.savedAt - a.savedAt);
   },
 
-  totalAnswers: () => get().entries.filter((e) => e.answer.length > 0).length,
+  totalAnswers: () => {
+    const entries = get().entries;
+    if (!Array.isArray(entries)) return 0;
+    return entries.filter((e) => e.answer.length > 0).length;
+  },
 }));

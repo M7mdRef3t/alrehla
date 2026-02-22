@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Share2, Copy, Check, Gift, Users } from "lucide-react";
+import { Share2, Copy, Check, Gift } from "lucide-react";
 import {
     getMyReferralCode,
     getReferralShareText,
@@ -18,7 +18,7 @@ interface ReferralPanelProps {
     onClose?: () => void;
 }
 
-export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose }) => {
+export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => {
     const [copied, setCopied] = useState(false);
     const code = getMyReferralCode();
     const link = getMyReferralLink();

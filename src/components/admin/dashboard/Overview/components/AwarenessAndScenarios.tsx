@@ -1,6 +1,6 @@
 import type { FC } from "react";
-import { Layers, MapPin, Target } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, YAxis } from "recharts";
+import { Layers, Target } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import type { OverviewStats } from "../../../../../services/adminApi";
 
 interface AwarenessAndScenariosProps {

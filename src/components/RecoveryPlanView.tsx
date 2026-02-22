@@ -57,10 +57,10 @@ export const RecoveryPlanView: FC<RecoveryPlanViewProps> = ({
           <BookOpen className="w-5 h-5 text-blue-600" />
           خطوات الرحلة الأسبوعية
         </h3>
-        
+
         {plan.weeks.map((week) => {
           const weekSteps = week.steps;
-          const completedInWeek = weekSteps.filter(step => 
+          const completedInWeek = weekSteps.filter(step =>
             completedSteps.includes(step.id)
           ).length;
           const isExpanded = expandedWeek === week.week;
@@ -113,15 +113,14 @@ export const RecoveryPlanView: FC<RecoveryPlanViewProps> = ({
                 >
                   {weekSteps.map((step) => {
                     const isCompleted = completedSteps.includes(step.id);
-                    
+
                     return (
                       <label
                         key={step.id}
-                        className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all duration-150 ${
-                          isCompleted
+                        className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all duration-150 ${isCompleted
                             ? "bg-teal-50 border-2 border-teal-400"
                             : "bg-gray-50 border border-gray-200 hover:border-teal-300"
-                        }`}
+                          }`}
                       >
                         <input
                           type="checkbox"
@@ -130,11 +129,10 @@ export const RecoveryPlanView: FC<RecoveryPlanViewProps> = ({
                           className="w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 focus:ring-offset-0 cursor-pointer mt-0.5 flex-shrink-0"
                         />
                         <span
-                          className={`text-sm leading-relaxed ${
-                            isCompleted
+                          className={`text-sm leading-relaxed ${isCompleted
                               ? "text-teal-900 font-medium line-through"
                               : "text-slate-700"
-                          }`}
+                            }`}
                         >
                           {step.text}
                         </span>
@@ -195,7 +193,7 @@ export const RecoveryPlanView: FC<RecoveryPlanViewProps> = ({
                     </span>
                   </div>
                   {script.explanation && (
-                    <p className="text-xs text-gray-500 italic mt-2 pr-6">
+                    <p className="text-xs text-gray-500 mt-2 pr-6">
                       💡 {script.explanation}
                     </p>
                   )}

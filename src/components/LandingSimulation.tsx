@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { motion, useAnimation, PanInfo } from "framer-motion";
 
 export function LandingSimulation() {
@@ -20,7 +20,7 @@ export function LandingSimulation() {
     // Delta Y is 112px down.
     // We need to track actual position.
 
-    const handleDrag = (_: any, info: PanInfo) => {
+    const handleDrag = (_: unknown, info: PanInfo) => {
         if (hintVisible) setHintVisible(false);
 
         // Approximate distance from center
@@ -35,12 +35,12 @@ export function LandingSimulation() {
         else setActiveZone(null);
     };
 
-    const handleDragEnd = (_: any, info: PanInfo) => {
+    const handleDragEnd = (_: unknown, info: PanInfo) => {
         const currentX = info.offset.x;
         const currentY = 112 + info.offset.y;
         const dist = Math.sqrt(currentX * currentX + currentY * currentY);
 
-        let targetZone: any = null;
+        let targetZone: "green" | "yellow" | "red" | null = null;
         let targetRadius = 0;
 
         if (dist < 85) { targetZone = "green"; targetRadius = 60; }

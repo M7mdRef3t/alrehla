@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useMapState } from "../state/mapState";
@@ -25,8 +25,6 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   const recordOpen = useShadowPulseState((s) => s.recordOpen);
   const recordClose = useShadowPulseState((s) => s.recordClose);
   const openedAtRef = useRef<number | null>(null);
-  // تتبع هل المستخدم بدأ بالكتابة ثم مسح (cancelledEdit)
-  const [_hadInput, setHadInput] = useState(false);
 
   // سجّل فتح النافذة
   useEffect(() => {

@@ -1,9 +1,9 @@
 import type { FC } from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    Globe, Briefcase, Crown, Share2, Bell, Shield, ChevronRight,
-    Zap, Star, Gift, Info
+    Globe, Briefcase, Crown, ChevronRight,
+    Zap, Star, Gift
 } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { B2BPortal } from "./B2BPortal";
@@ -12,13 +12,12 @@ import { PaywallGate } from "./PaywallGate";
 import { getCurrentTier, TIER_LABELS, TIER_PRICES } from "../services/subscriptionManager";
 import { loadStreak } from "../services/streakSystem";
 import { loadUserMemory } from "../services/userMemory";
-import { getLanguage, t, LANGUAGE_OPTIONS, type Language } from "../services/i18n";
+import { getLanguage, LANGUAGE_OPTIONS } from "../services/i18n";
 import { getCulturalContext, saveCulturalContext, PROFILES, type CulturalContext } from "../services/culturalAdapter";
 import { Brain, ExternalLink } from "lucide-react";
 import { stripeService } from "../services/stripeIntegration";
 import { supabase } from "../services/supabaseClient";
 import { syncSubscription } from "../services/subscriptionManager";
-import { useEffect } from "react";
 
 /* ══════════════════════════════════════════
    SETTINGS SCREEN — شاشة الإعدادات
@@ -49,8 +48,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
             icon: Crown,
             label: "الاشتراك",
             value: TIER_LABELS[tier],
-            color: tier === "free" ? "#64748b" : "#d97706",
-            badge: tier === "free" ? "ارقَ" : undefined,
+            color: tier === "basic" ? "#64748b" : "#d97706",
+            badge: tier === "basic" ? "ارقَ" : undefined,
         },
         {
             id: "referral" as SettingsSection,
@@ -150,7 +149,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-xs text-slate-500">الباقة الحالية</p>
-                                        <p className="text-sm font-bold" style={{ color: tier === "free" ? "#64748b" : "#d97706" }}>
+                                        <p className="text-sm font-bold" style={{ color: tier === "basic" ? "#64748b" : "#d97706" }}>
                                             {TIER_LABELS[tier]}
                                         </p>
                                     </div>
@@ -265,7 +264,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                 </div>
                             </div>
 
-                            {tier === "free" && (
+                            {tier === "basic" && (
                                 <motion.button
                                     onClick={() => setShowPaywall(true)}
                                     className="w-full py-3.5 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
@@ -278,7 +277,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                 </motion.button>
                             )}
 
-                            {tier !== "free" && (
+                            {tier !== "basic" && (
                                 <div className="space-y-4">
                                     <div className="text-center py-4">
                                         <Star className="w-8 h-8 text-amber-400 mx-auto mb-2" />

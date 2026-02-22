@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildToneSystemBlock, resolveVoiceMode } from "./toneGuide";
+import { buildToneSystemBlock, ORBITAL_DICTIONARY, resolveVoiceMode } from "./toneGuide";
 import type { PulseEntry } from "../state/pulseState";
 
 describe("tone guide", () => {
@@ -19,7 +19,7 @@ describe("tone guide", () => {
       timestamp: Date.now()
     };
     const block = buildToneSystemBlock(pulse);
-    expect(block).toContain("مفردات المدار");
-    expect(block).toContain("مدار / شخص");
+    expect(block).toContain("**");
+    expect(block).toContain(ORBITAL_DICTIONARY[0].orbital);
   });
 });

@@ -83,7 +83,7 @@ export const AIOracleWidget: React.FC = () => {
                 <div className="flex-1 min-w-0 pt-0.5">
                     <div className="flex items-center justify-between mb-1">
                         <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                            تحليل أوراكل (AI Oracle)
+                            الأوراكل_الذكي
                             {stateType === "CHAOS" && (
                                 <span className="flex items-center gap-1 text-[9px] text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
                                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />

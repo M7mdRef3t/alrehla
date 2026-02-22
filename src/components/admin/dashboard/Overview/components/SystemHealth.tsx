@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { Activity, Server, AlertOctagon, CheckCircle2, Clock } from "lucide-react";
+import { Activity, AlertOctagon, CheckCircle2 } from "lucide-react";
 import type { SystemHealthReport } from "../../../../../services/adminApi";
 
 interface SystemHealthProps {
@@ -30,7 +30,6 @@ export const SystemHealth: FC<SystemHealthProps> = ({ data, loading }) => {
     if (!data) return null;
 
     const isHealthy = data.status === "healthy";
-    const statusColor = isHealthy ? "emerald" : "rose";
     const StatusIcon = isHealthy ? CheckCircle2 : AlertOctagon;
 
     return (

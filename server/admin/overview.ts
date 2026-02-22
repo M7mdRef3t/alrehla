@@ -1,5 +1,6 @@
 import { getAdminSupabase, parseJsonBody, recordAdminAudit, verifyAdmin, verifyAdminWithRoles } from "./_shared";
 import { captureServerError, initServerMonitoring } from "./monitoring";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type UserStateImportRow = {
   device_token?: string;
@@ -14,6 +15,20 @@ const overviewRuntimeStats = {
   errors: 0,
   lastErrorAt: 0,
   latencyMs: [] as number[]
+};
+
+type RequestLike = {
+  query?: Record<string, unknown>;
+  headers?: Record<string, unknown>;
+  method?: string;
+  url?: string;
+  body?: unknown;
+};
+
+type JsonResponder = {
+  status: (code: number) => JsonResponder;
+  json: (data: unknown) => JsonResponder;
+  headersSent?: boolean;
 };
 
 function pushLatencySample(ms: number): void {
@@ -112,7 +127,7 @@ function normalizeWeeklyWindowDays(raw: unknown): 7 | 14 | 30 {
   return 7;
 }
 
-function verifyCron(req: any): boolean {
+function verifyCron(req: RequestLike): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return true;
   const token = req.query?.secret || req.headers?.["x-cron-secret"];
@@ -241,7 +256,7 @@ function computeTopScenarios(maps: Array<{ session_id: string; nodes: unknown }>
     .slice(0, 5);
 }
 
-async function handleOverview(client: any, res: any) {
+async function handleOverview(client: SupabaseClient, res: JsonResponder) {
   const now = new Date();
   const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
@@ -423,7 +438,7 @@ async function handleOverview(client: any, res: any) {
     decisionsV2.length > 0 ? Math.round((fallbackDecisions / decisionsV2.length) * 10000) / 100 : null;
 
   const explorationDecisionsRows = decisionsV2.filter((d) => Boolean(d.is_exploration));
-  const exploitationDecisionsRows = decisionsV2.filter((d) => !Boolean(d.is_exploration));
+  const exploitationDecisionsRows = decisionsV2.filter((d) => !d.is_exploration);
   const completionRateForDecisionRows = (rows: Array<Record<string, unknown>>): number | null => {
     if (rows.length === 0) return null;
     let completed = 0;
@@ -872,7 +887,7 @@ async function handleOverview(client: any, res: any) {
   });
 }
 
-async function handleFeedback(client: any, req: any, res: any) {
+async function handleFeedback(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
   const limit = safeLimit(req.query?.limit, 100, 500);
   const search = String(req.query?.search ?? "").trim().toLowerCase();
 
@@ -925,7 +940,7 @@ async function handleFeedback(client: any, req: any, res: any) {
   });
 }
 
-async function handleSupportTicketsGet(client: any, req: any, res: any) {
+async function handleSupportTicketsGet(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
   const limit = safeLimit(req.query?.limit, 100, 500);
   const search = String(req.query?.search ?? "").trim().toLowerCase();
   const status = String(req.query?.status ?? "").trim().toLowerCase();
@@ -952,7 +967,7 @@ async function handleSupportTicketsGet(client: any, req: any, res: any) {
   res.status(200).json({ tickets: tickets.slice(0, limit) });
 }
 
-async function handleSupportTicketsPost(client: any, req: any, res: any) {
+async function handleSupportTicketsPost(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
   const body = await parseJsonBody(req);
   const action = String(body?.action ?? "create");
 
@@ -1022,7 +1037,7 @@ async function handleSupportTicketsPost(client: any, req: any, res: any) {
   res.status(400).json({ error: "Unsupported action" });
 }
 
-async function handleOwnerAlerts(client: any, req: any, res: any) {
+async function handleOwnerAlerts(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
   const now = new Date();
   const sinceRaw = String(req.query?.since ?? "").trim();
   const phaseTarget = safeLimit(req.query?.phaseTarget, 10, 100);
@@ -1159,7 +1174,7 @@ async function handleOwnerAlerts(client: any, req: any, res: any) {
   });
 }
 
-async function handleOpsInsights(client: any, res: any) {
+async function handleOpsInsights(client: SupabaseClient, res: JsonResponder) {
   const now = new Date();
   const since1d = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const prev1dStart = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
@@ -1351,7 +1366,7 @@ async function handleOpsInsights(client: any, res: any) {
   });
 }
 
-async function handleExecutiveReport(client: any, res: any) {
+async function handleExecutiveReport(client: SupabaseClient, res: JsonResponder) {
   const now = new Date();
   const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const since7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -1502,7 +1517,7 @@ async function handleExecutiveReport(client: any, res: any) {
   });
 }
 
-async function handleSystemHealth(client: any, res: any) {
+async function handleSystemHealth(client: SupabaseClient, res: JsonResponder) {
   const probeStart = Date.now();
   const { error } = await client.from("journey_events").select("id", { count: "exact", head: true }).limit(1);
   const probeMs = Date.now() - probeStart;
@@ -1531,9 +1546,8 @@ async function handleSystemHealth(client: any, res: any) {
   });
 }
 
-async function handleSecuritySignals(client: any, res: any) {
+async function handleSecuritySignals(client: SupabaseClient, res: JsonResponder) {
   const now = Date.now();
-  const since15mIso = new Date(now - 15 * 60 * 1000).toISOString();
   const since24hIso = new Date(now - 24 * 60 * 60 * 1000).toISOString();
 
   const { data: recentAuditRows, error: auditError } = await client
@@ -1622,15 +1636,15 @@ async function handleSecuritySignals(client: any, res: any) {
   });
 }
 
-async function captureJson(handler: (res: any) => Promise<void> | void): Promise<{ status: number; body: any }> {
+async function captureJson(handler: (res: JsonResponder) => Promise<void> | void): Promise<{ status: number; body: unknown }> {
   let statusCode = 200;
-  let body: any = null;
-  const mockRes: any = {
+  let body: unknown = null;
+  const mockRes: JsonResponder = {
     status: (code: number) => {
       statusCode = code;
       return mockRes;
     },
-    json: (data: any) => {
+    json: (data: unknown) => {
       body = data;
       return mockRes;
     }
@@ -1639,18 +1653,21 @@ async function captureJson(handler: (res: any) => Promise<void> | void): Promise
   return { status: statusCode, body };
 }
 
-async function handleOwnerOps(client: any, req: any, res: any) {
+async function handleOwnerOps(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
   const [systemHealth, securitySignals, ownerAlerts] = await Promise.all([
     captureJson((mockRes) => handleSystemHealth(client, mockRes)),
     captureJson((mockRes) => handleSecuritySignals(client, mockRes)),
     captureJson((mockRes) => handleOwnerAlerts(client, req, mockRes))
   ]);
+  const systemHealthBody = (systemHealth.body ?? {}) as { status?: string };
+  const securitySignalsBody = (securitySignals.body ?? {}) as { status?: string };
+  const ownerAlertsBody = (ownerAlerts.body ?? {}) as { phaseOne?: { fullyCompleted?: boolean } };
 
   const status =
-    (securitySignals.body?.status === "critical" || systemHealth.body?.status === "degraded")
+    (securitySignalsBody.status === "critical" || systemHealthBody.status === "degraded")
       ? "critical"
-      : (securitySignals.body?.status === "warning" ||
-         ownerAlerts.body?.phaseOne?.fullyCompleted === false)
+      : (securitySignalsBody.status === "warning" ||
+         ownerAlertsBody.phaseOne?.fullyCompleted === false)
         ? "warning"
         : "healthy";
 
@@ -1663,7 +1680,7 @@ async function handleOwnerOps(client: any, req: any, res: any) {
   });
 }
 
-async function handleDailyReport(client: any, req: any, res: any) {
+async function handleDailyReport(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
   const dateParam = String(req.query?.date ?? "");
   const baseDate = dateParam ? new Date(`${dateParam}T00:00:00Z`) : new Date();
   const start = new Date(baseDate);
@@ -1723,7 +1740,7 @@ async function handleDailyReport(client: any, req: any, res: any) {
   res.status(200).json(report);
 }
 
-async function handleWeeklyReport(client: any, req: any, res: any) {
+async function handleWeeklyReport(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
   const windowDays = normalizeWeeklyWindowDays(req.query?.days);
   const now = new Date();
   const end = new Date(now);
@@ -1914,7 +1931,7 @@ async function handleWeeklyReport(client: any, req: any, res: any) {
   res.status(200).json(report);
 }
 
-async function handleFullExport(client: any, req: any, res: any) {
+async function handleFullExport(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
   const limit = safeLimit(req.query?.limit, 2000, 10000);
   const [{ data: profiles }, { data: userStates }, { data: maps }, { data: events }, { data: pulseLogs }] =
     await Promise.all([
@@ -1935,7 +1952,7 @@ async function handleFullExport(client: any, req: any, res: any) {
   });
 }
 
-async function handleUserState(client: any, req: any, res: any) {
+async function handleUserState(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
   const deviceToken = String(req.query?.deviceToken ?? "");
   const ownerId = String(req.query?.ownerId ?? "");
   const limit = safeLimit(req.query?.limit, 50, 500);
@@ -1975,7 +1992,7 @@ async function handleUserState(client: any, req: any, res: any) {
   res.status(200).json({ rows: data });
 }
 
-async function handleUserStateExport(client: any, req: any, res: any) {
+async function handleUserStateExport(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
   const limit = safeLimit(req.query?.limit, 200, 2000);
   const { data, error } = await client
     .from("user_state")
@@ -1995,7 +2012,7 @@ async function handleUserStateExport(client: any, req: any, res: any) {
   });
 }
 
-async function handleUserStateImport(client: any, req: any, res: any) {
+async function handleUserStateImport(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
   const body = await parseJsonBody(req);
   const rows: UserStateImportRow[] = Array.isArray(body?.rows)
     ? (body.rows as UserStateImportRow[])
@@ -2030,12 +2047,12 @@ async function handleUserStateImport(client: any, req: any, res: any) {
   res.status(200).json({ ok: true, count: payload.length });
 }
 
-async function verifyCronOrOwner(req: any, res: any): Promise<boolean> {
+async function verifyCronOrOwner(req: RequestLike, res: JsonResponder): Promise<boolean> {
   if (verifyCron(req)) return true;
   return verifyAdminWithRoles(req, res, ["owner", "superadmin"]);
 }
 
-async function handleCronReport(req: any, res: any) {
+async function handleCronReport(req: RequestLike, res: JsonResponder) {
   if (!(await verifyCronOrOwner(req, res))) {
     if (!res.headersSent) {
       res.status(401).json({ error: "Unauthorized" });
@@ -2067,14 +2084,14 @@ async function handleCronReport(req: any, res: any) {
       store: "1"
     }
   };
-  let report: any = null;
+  let report: unknown = null;
   let reportStatus = 200;
-  const reportRes: any = {
+  const reportRes: JsonResponder = {
     status: (s: number) => {
       reportStatus = s;
       return reportRes;
     },
-    json: (data: any) => {
+    json: (data: unknown) => {
       report = data;
       return reportRes;
     }
@@ -2089,7 +2106,11 @@ async function handleCronReport(req: any, res: any) {
     return;
   }
 
-  const gate7Critical = period === "weekly" && String(report?.gate7?.status ?? "").toLowerCase() === "critical";
+  const reportObj = (report ?? {}) as Record<string, unknown>;
+  const reportGate7 = (reportObj.gate7 ?? {}) as Record<string, unknown>;
+  const reportAffiliate = (reportObj.affiliate ?? {}) as Record<string, unknown>;
+  const reportConsciousRevenue = (reportObj.consciousRevenue ?? {}) as Record<string, unknown>;
+  const gate7Critical = period === "weekly" && String(reportGate7.status ?? "").toLowerCase() === "critical";
   const title = gate7Critical
     ? "CRITICAL Weekly Report - Al-Rehla"
     : period === "weekly"
@@ -2097,19 +2118,19 @@ async function handleCronReport(req: any, res: any) {
       : "Daily Report - Al-Rehla";
   const gate7Summary =
     period === "weekly"
-      ? `\nGate-7: ${String(report?.gate7?.status ?? "unknown").toUpperCase()} ` +
-        `(path_started_48h=${Number(report?.gate7?.pathStarted48h ?? 0)}, window_h=${Number(report?.gate7?.windowHours ?? 48)})` +
-        ` | traffic_48h(events=${Number(report?.gate7?.trafficEvents48h ?? 0)}, sessions=${Number(report?.gate7?.trafficSessions48h ?? 0)})` +
-        ` | baseline(events>=${Number(report?.gate7?.minEvents48h ?? 20)} OR sessions>=${Number(report?.gate7?.minSessions48h ?? 8)})` +
-        ` | code=${String(report?.gate7?.code ?? "unknown")}`
+      ? `\nGate-7: ${String(reportGate7.status ?? "unknown").toUpperCase()} ` +
+        `(path_started_48h=${Number(reportGate7.pathStarted48h ?? 0)}, window_h=${Number(reportGate7.windowHours ?? 48)})` +
+        ` | traffic_48h(events=${Number(reportGate7.trafficEvents48h ?? 0)}, sessions=${Number(reportGate7.trafficSessions48h ?? 0)})` +
+        ` | baseline(events>=${Number(reportGate7.minEvents48h ?? 20)} OR sessions>=${Number(reportGate7.minSessions48h ?? 8)})` +
+        ` | code=${String(reportGate7.code ?? "unknown")}`
       : "";
   const affiliateSummary =
     period === "weekly"
-      ? `\nAffiliate exposed: ${Number(report?.affiliate?.linkExposed ?? 0)} | clicked: ${Number(report?.affiliate?.linkClicked ?? 0)} | ctr: ${Number(report?.affiliate?.ctr ?? 0)}%`
+      ? `\nAffiliate exposed: ${Number(reportAffiliate.linkExposed ?? 0)} | clicked: ${Number(reportAffiliate.linkClicked ?? 0)} | ctr: ${Number(reportAffiliate.ctr ?? 0)}%`
       : "";
   const summary = period === "weekly"
-    ? `From ${report.from} to ${report.to}\nTotal events: ${report.totalEvents}\nUnique sessions: ${report.uniqueSessions}${affiliateSummary}${gate7Summary}\nConscious alignment: ${Number(report?.consciousRevenue?.alignmentScore ?? 0)}% (${String(report?.consciousRevenue?.status ?? "unknown").toUpperCase()})`
-    : `Date: ${report.date}\nTotal events: ${report.totalEvents}\nUnique sessions: ${report.uniqueSessions}`;
+    ? `From ${String(reportObj.from ?? "")} to ${String(reportObj.to ?? "")}\nTotal events: ${Number(reportObj.totalEvents ?? 0)}\nUnique sessions: ${Number(reportObj.uniqueSessions ?? 0)}${affiliateSummary}${gate7Summary}\nConscious alignment: ${Number(reportConsciousRevenue.alignmentScore ?? 0)}% (${String(reportConsciousRevenue.status ?? "unknown").toUpperCase()})`
+    : `Date: ${String(reportObj.date ?? "")}\nTotal events: ${Number(reportObj.totalEvents ?? 0)}\nUnique sessions: ${Number(reportObj.uniqueSessions ?? 0)}`;
 
   await sendSlack(`${title}\n${summary}`);
   await sendResend(title, `<pre style="font-family: monospace">${summary}</pre>`);
@@ -2120,12 +2141,12 @@ async function handleCronReport(req: any, res: any) {
     generatedAt: new Date().toISOString(),
     reportGeneratedAt:
       period === "weekly"
-        ? report?.to ?? null
-        : report?.date ?? null
+        ? reportObj.to ?? null
+        : reportObj.date ?? null
   });
 }
 
-export async function overviewRouter(req: any, res: any) {
+export async function overviewRouter(req: RequestLike, res: JsonResponder) {
   initServerMonitoring();
   const reqStart = Date.now();
   overviewRuntimeStats.requests += 1;

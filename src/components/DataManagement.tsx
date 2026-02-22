@@ -11,7 +11,6 @@ import {
   FileJson,
   HardDrive,
   FileText,
-  Cloud,
   LogOut,
   User,
   Shield,
@@ -78,16 +77,12 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
     totalSizeKB: 0
   });
 
-  const authStatus = useAuthState((s) => s.status);
   const authUser = useAuthState((s) => s.user);
   const baseRole = useAuthState((s) => s.role);
-  const setRoleOverride = useAuthState((s) => s.setRoleOverride);
   const authRole = useAuthState(getEffectiveRoleFromState);
   const isPrivilegedUser = isPrivilegedRole(authRole);
   const showAdminTools = isPrivilegedUser && !accountOnly;
   const canViewAsUser = isPrivilegedRole(baseRole);
-  const isUserView = authRole === "user";
-  const privilegedRoleLabel = (baseRole || "owner").trim().toLowerCase();
 
   const authDisplayName = useAuthState((s) => s.displayName) ?? "";
   const authToneGender = useAuthState((s) => s.toneGender);
@@ -288,10 +283,6 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
     setAuthMessage(null);
     await signOut();
     setAuthLoading(false);
-  };
-
-  const handleBackToOwnerView = () => {
-    setRoleOverride(null);
   };
 
   const openRoleSwitchInAdmin = () => {
@@ -502,6 +493,8 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                           {displayNameSaving ? "جاري الحفظ..." : "حفظ التعديلات"}
                         </button>
                         {displayNameMessage && <p className="text-xs text-emerald-400">{displayNameMessage}</p>}
+                        {displayNameError && <p className="text-xs text-rose-400">{displayNameError}</p>}
+                        {authMessage && <p className="text-xs text-slate-400">{authMessage}</p>}
                       </div>
 
                       <div className="pt-2 border-t border-slate-800 space-y-2">
@@ -552,7 +545,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                 <p className="text-center text-sm text-slate-400">استيراد الملف سيقوم بمسح جميع البيانات الحالية واستبدالها بالنسخة الجديدة. هل أنت متأكد؟</p>
                 <div className="flex gap-3">
                   <button onClick={handleCancelImport} className="flex-1 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors text-xs font-bold">إلغاء</button>
-                  <button onClick={handleConfirmImport} className="flex-1 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-colors text-xs font-bold">نعم، استبدل البيانات</button>
+                  <button onClick={handleConfirmImport} disabled={isImporting} className="flex-1 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-colors text-xs font-bold disabled:opacity-50">{isImporting ? "???? ?????????..." : "???? ?????? ????????"}</button>
                 </div>
               </div>
             </div>
@@ -580,3 +573,4 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
     </AnimatePresence>
   );
 };
+

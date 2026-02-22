@@ -11,8 +11,9 @@ import { hasSeenOnboarding } from "../../utils/mapOnboarding";
 import { getMissionProgressSummary } from "../../utils/missionProgress";
 import { JourneyToast } from "../../components/JourneyToast";
 import { FutureSimulator } from "../../components/FutureSimulator";
-import { Telescope, Zap } from "lucide-react";
+import { Telescope } from "lucide-react";
 import { analyzeMapInterference } from "../../services/socialSync";
+import { AINode } from "./AINode";
 
 /* ════════════════════════════════════════════════
    🌌 COSMIC MAP CANVAS — Digital Sanctuary
@@ -231,18 +232,18 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         animate={reduceMotion
           ? undefined
           : isHighlighted && !pulseDone
-          ? {
-            opacity: [0.6, 1, 0.6],
-            scale: [1, 1.25, 1],
-            x: [0, 2, -1, 1, 0],
-            y: [0, -1, 2, -2, 0]
-          }
-          : {
-            opacity: [0.4, 0.8, 0.4],
-            scale: [1, 1.08, 1],
-            x: [0, 1.5, -1, 1, 0],
-            y: [0, -1.2, 1.8, -0.8, 0]
-          }
+            ? {
+              opacity: [0.6, 1, 0.6],
+              scale: [1, 1.25, 1],
+              x: [0, 2, -1, 1, 0],
+              y: [0, -1, 2, -2, 0]
+            }
+            : {
+              opacity: [0.4, 0.8, 0.4],
+              scale: [1, 1.08, 1],
+              x: [0, 1.5, -1, 1, 0],
+              y: [0, -1.2, 1.8, -0.8, 0]
+            }
         }
         transition={reduceMotion ? undefined : {
           duration: isHighlighted && !pulseDone ? 1.2 : 6 + (nodeIndex % 3),
@@ -501,10 +502,26 @@ interface MapCanvasProps {
   galaxyGoalIds?: string[];
   /** عند الضغط من السجل — العقدة تعمل نبضة بلون مدارها */
   highlightNodeId?: string | null;
+  /** حالة بؤرة الوعي */
+  aiState?: {
+    isConnected: boolean;
+    isListening: boolean;
+    isSpeaking?: boolean;
+    onToggle: () => void;
+    onNodeDrop: (nodeId: string) => void;
+  };
 }
 
 
-export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenDetails = true, goalIdFilter, galaxyGoalIds, highlightNodeId }) => {
+export const MapCanvas: FC<MapCanvasProps> = ({
+  onNodeClick,
+  onMeClick,
+  canOpenDetails = true,
+  goalIdFilter,
+  galaxyGoalIds,
+  highlightNodeId,
+  aiState
+}) => {
   const allNodes = useMapState((s) => s.nodes);
   const [isSimulation, setIsSimulation] = useState(false);
   const [simulatedNodes, setSimulatedNodes] = useState<MapNodeType[]>([]);
@@ -592,6 +609,11 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
         return;
       }
 
+      if (overId === "ai-node") {
+        aiState?.onNodeDrop(activeId);
+        return;
+      }
+
       if (overId === "green" || overId === "yellow" || overId === "red") {
         const toRing = overId as Ring;
         if (isSimulation) {
@@ -610,7 +632,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
         return;
       }
     },
-    [nodes, setDetached, moveNodeToRing, isSimulation]
+    [nodes, setDetached, moveNodeToRing, isSimulation, aiState]
   );
 
   const confirmPlacement = useCallback(() => {
@@ -1020,6 +1042,16 @@ export const MapCanvas: FC<MapCanvasProps> = ({ onNodeClick, onMeClick, canOpenD
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[20%] min-w-[56px] h-[20%] min-h-[56px] rounded-full z-30 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50 focus-visible:ring-offset-0"
                 title="بطاقتك — حالتك اليوم"
                 aria-label="افتح بطاقة أنا"
+              />
+            )}
+
+            {/* ── AINode (Organic Agent) ── */}
+            {aiState && (
+              <AINode
+                isConnected={aiState.isConnected}
+                isListening={aiState.isListening}
+                isSpeaking={aiState.isSpeaking}
+                onToggle={aiState.onToggle}
               />
             )}
           </div>

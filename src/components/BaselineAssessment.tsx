@@ -1,7 +1,7 @@
 import type { FC } from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Battery, Users, Target, CheckCircle2, Compass, Sparkles } from "lucide-react";
+import { Shield, Battery, Users, Target, Compass, Sparkles } from "lucide-react";
 import {
   BASELINE_QUESTIONS,
   computeBaselineScore,
@@ -114,9 +114,6 @@ export const BaselineAssessment: FC<BaselineAssessmentProps> = ({ onComplete }) 
       </motion.div>
     );
   }
-
-  // Calculate Progress Angle
-  const progress = ((currentIndex + 1) / BASELINE_QUESTIONS.length) * 360;
 
   return (
     <div className="w-full max-w-lg mx-auto text-center relative">

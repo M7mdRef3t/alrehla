@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { TrendingUp, AlertTriangle, Lightbulb, Users, ArrowUpRight } from "lucide-react";
+import { AlertTriangle, Lightbulb } from "lucide-react";
 import type { ExecutiveReport as ExecutiveReportType } from "../../../../../services/adminApi";
 
 interface ExecutiveReportProps {

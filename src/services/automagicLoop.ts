@@ -12,10 +12,7 @@
  *   → يرسل nudge: "الشجاعة مش سهلة.. بس انت اخترت صح."
  */
 
-import { useMapState } from "../state/mapState";
 import { type MapNode, type Ring } from "../modules/map/mapTypes";
-import { calculateGravityMass } from "./physicsEngine";
-import { scanForVampires } from "./propheticEngine";
 import { useGamificationState } from "./gamificationEngine";
 import { useEventHistoryStore } from "../state/eventHistoryStore";
 

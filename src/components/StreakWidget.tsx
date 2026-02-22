@@ -1,6 +1,5 @@
 import type { FC } from "react";
 import { motion } from "framer-motion";
-import { Flame } from "lucide-react";
 import {
     loadStreak,
     getStreakMessage,

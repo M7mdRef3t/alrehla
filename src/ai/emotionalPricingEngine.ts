@@ -243,7 +243,7 @@ export class EmotionalPricingEngine {
     const sorted = [...entries].sort((a, b) => b.savedAt - a.savedAt);
 
     let consecutive = 0;
-    let currentDate = new Date();
+    const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
 
     for (const entry of sorted) {
@@ -395,7 +395,7 @@ export class EmotionalPricingEngine {
         this.actionHistoryKey,
         JSON.stringify({ timestamp: Date.now(), action: state.recommendedAction })
       );
-      console.log(`🎁 Granting free month to ${state.userId}`);
+      console.warn(`🎁 Granting free month to ${state.userId}`);
       return {
         executed: true,
         message: "Free month granted as emotional support",
@@ -419,7 +419,7 @@ export class EmotionalPricingEngine {
         this.actionHistoryKey,
         JSON.stringify({ timestamp: Date.now(), action: state.recommendedAction })
       );
-      console.log(`⭐ Offering premium to ${state.userId}`);
+      console.warn(`⭐ Offering premium to ${state.userId}`);
       return {
         executed: true,
         message: "Premium offer presented with special discount",
@@ -435,7 +435,7 @@ export class EmotionalPricingEngine {
    * ─────────────────────────────────────────────────────────────────
    */
   async runDailyEmotionalCheck(): Promise<void> {
-    console.log("🧠 Running daily emotional pricing check...");
+    console.warn("🧠 Running daily emotional pricing check...");
 
     try {
       // TODO: جلب بيانات كل المستخدمين من Supabase
@@ -460,12 +460,12 @@ export class EmotionalPricingEngine {
         shadowPulseHistory,
       });
 
-      console.log("📊 User emotional state:", state);
+      console.warn("📊 User emotional state:", state);
 
       // تنفيذ الإجراء إذا لزم الأمر
       if (state.recommendedAction !== "no_action") {
         const result = await this.executeAction(state);
-        console.log("✅ Action result:", result);
+        console.warn("✅ Action result:", result);
       }
     } catch (error) {
       console.error("❌ Daily emotional check failed:", error);
@@ -491,5 +491,6 @@ export function startDailyEmotionalCheck(): void {
     void emotionalPricingEngine.runDailyEmotionalCheck();
   }, 24 * 60 * 60 * 1000);
 
-  console.log("✅ Daily emotional pricing check scheduled");
+  console.warn("✅ Daily emotional pricing check scheduled");
 }
+

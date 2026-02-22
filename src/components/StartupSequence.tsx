@@ -2,27 +2,32 @@ import { FC, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShieldCheck, Cpu, Zap, Radio, Globe } from "lucide-react";
 
+const STARTUP_STEPS = [
+    { text: "INITIALIZING COSMIC KERNEL...", icon: Globe, color: "text-blue-400" },
+    { text: "LOADING PHYSICS ENGINE...", icon: Zap, color: "text-yellow-400" },
+    { text: "CALIBRATING SENSORS...", icon: Radio, color: "text-purple-400" },
+    { text: "NEURAL LINK ESTABLISHED.", icon: Cpu, color: "text-emerald-400" },
+    { text: "SYSTEM ONLINE.", icon: ShieldCheck, color: "text-white" },
+] as const;
+
 export const StartupSequence: FC<{ onComplete: () => void }> = ({ onComplete }) => {
     const [step, setStep] = useState(0);
 
-    const steps = [
-        { text: "INITIALIZING COSMIC KERNEL...", icon: Globe, color: "text-blue-400" },
-        { text: "LOADING PHYSICS ENGINE...", icon: Zap, color: "text-yellow-400" },
-        { text: "CALIBRATING SENSORS...", icon: Radio, color: "text-purple-400" },
-        { text: "NEURAL LINK ESTABLISHED.", icon: Cpu, color: "text-emerald-400" },
-        { text: "SYSTEM ONLINE.", icon: ShieldCheck, color: "text-white" },
-    ];
-
     useEffect(() => {
+        const timeouts: Array<ReturnType<typeof setTimeout>> = [];
         let delay = 0;
-        steps.forEach((_, index) => {
+        STARTUP_STEPS.forEach((_, index) => {
             delay += (index === 0 ? 500 : 800);
-            setTimeout(() => setStep(index + 1), delay);
+            timeouts.push(setTimeout(() => setStep(index + 1), delay));
         });
 
         const totalTime = delay + 1000;
-        setTimeout(() => onComplete(), totalTime);
-    }, []);
+        timeouts.push(setTimeout(() => onComplete(), totalTime));
+
+        return () => {
+            timeouts.forEach((timeoutId) => clearTimeout(timeoutId));
+        };
+    }, [onComplete]);
 
     return (
         <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center font-mono overflow-hidden">
@@ -31,7 +36,7 @@ export const StartupSequence: FC<{ onComplete: () => void }> = ({ onComplete }) 
 
             <div className="z-10 w-full max-w-md px-6">
                 <AnimatePresence mode="popLayout">
-                    {steps.map((s, i) => (
+                    {STARTUP_STEPS.map((s, i) => (
                         i < step && (
                             <motion.div
                                 key={i}
@@ -46,7 +51,7 @@ export const StartupSequence: FC<{ onComplete: () => void }> = ({ onComplete }) 
                     ))}
                 </AnimatePresence>
 
-                {step === steps.length && (
+                {step === STARTUP_STEPS.length && (
                     <motion.div
                         initial={{ scale: 0, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}

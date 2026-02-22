@@ -1,6 +1,6 @@
 import { useMemo, type FC } from "react";
-import { Users, BarChart, Target } from "lucide-react";
-import type { OverviewStats, RetentionCohortRow, UtmBreakdownEntry } from "../../../../../services/adminApi";
+import { Users, Target } from "lucide-react";
+import type { RetentionCohortRow, UtmBreakdownEntry } from "../../../../../services/adminApi";
 import { decideVisualGeneLayout } from "../../../../../services/visualGenes";
 
 interface MarketingAndRetentionProps {
@@ -20,15 +20,6 @@ const getColor = (val?: number | null) => {
 };
 
 export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreakdown, retentionCohorts, loading }) => {
-    if (loading) {
-        return (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full opacity-50 pointer-events-none mb-6">
-                <div className="h-64 bg-slate-900/20 rounded-2xl animate-pulse" />
-                <div className="h-64 bg-slate-900/20 rounded-2xl animate-pulse" />
-            </div>
-        );
-    }
-
     const sources = utmBreakdown?.sources || [];
     const cohorts = retentionCohorts || [];
     const sourcesGene = useMemo(
@@ -39,6 +30,15 @@ export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreak
         () => decideVisualGeneLayout({ featureKey: "retention_cohorts", itemCount: cohorts.length, fieldCount: 6 }),
         [cohorts.length]
     );
+
+    if (loading) {
+        return (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full opacity-50 pointer-events-none mb-6">
+                <div className="h-64 bg-slate-900/20 rounded-2xl animate-pulse" />
+                <div className="h-64 bg-slate-900/20 rounded-2xl animate-pulse" />
+            </div>
+        );
+    }
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mb-6" dir="rtl">

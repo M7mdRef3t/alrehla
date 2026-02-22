@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getAnalyticsConsent, setAnalyticsConsent, trackEvent, AnalyticsEvents } from "../services/analytics";
+import { setAnalyticsConsent, trackEvent, AnalyticsEvents } from "../services/analytics";
 import { isUserMode } from "../config/appEnv";
 import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
 

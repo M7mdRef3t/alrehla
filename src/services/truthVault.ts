@@ -33,7 +33,7 @@ export class VaultService {
         records.push(newRecord);
         setInLocalStorage(VAULT_STORAGE_KEY, JSON.stringify(records));
 
-        console.log("🔒 Truth Locked in Vault:", newRecord.id);
+        console.warn("🔒 Truth Locked in Vault:", newRecord.id);
         return newRecord;
     }
 
@@ -62,3 +62,4 @@ export class VaultService {
         return true;
     }
 }
+

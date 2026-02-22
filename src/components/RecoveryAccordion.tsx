@@ -76,11 +76,10 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
                     return (
                       <label
                         key={step.id}
-                        className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-150 ${
-                          isCompleted
+                        className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all duration-150 ${isCompleted
                             ? "bg-purple-100 border-purple-400"
                             : "bg-white border-gray-200 hover:bg-purple-50"
-                        }`}
+                          }`}
                       >
                         <input
                           type="checkbox"
@@ -89,11 +88,10 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
                           className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer mt-0.5 flex-shrink-0"
                         />
                         <span
-                          className={`text-sm leading-relaxed ${
-                            isCompleted
+                          className={`text-sm leading-relaxed ${isCompleted
                               ? "text-purple-800 font-medium line-through"
                               : "text-slate-700"
-                          }`}
+                            }`}
                         >
                           {step.text}
                         </span>
@@ -140,7 +138,7 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
                     <p className="font-semibold text-green-800 mb-1">✅ قول:</p>
                     <p className="text-gray-700">{script.doSay}</p>
                   </div>
-                  <p className="text-xs text-gray-600 italic mt-2">
+                  <p className="text-xs text-gray-600 mt-2">
                     💡 {script.explanation}
                   </p>
                 </div>

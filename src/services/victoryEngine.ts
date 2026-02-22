@@ -5,7 +5,6 @@
  */
 
 import { useEventHistoryStore } from "../state/eventHistoryStore";
-import { type GraphEventType } from "./automagicLoop";
 
 export interface VictoryMetrics {
     growthVelocity: number;      // Higher means more positive shifts (inward/reconciliation)

@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { AlertTriangle, Lightbulb, Users, Activity, MousePointerClick } from "lucide-react";
+import { AlertTriangle, Lightbulb, Activity } from "lucide-react";
 import type { OverviewStats } from "../../../../../services/adminApi";
 
 interface ConversionDiagnosisProps {

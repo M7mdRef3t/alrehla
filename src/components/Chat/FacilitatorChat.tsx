@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, Sparkles, Loader2, Check, Terminal } from 'lucide-react';
@@ -6,13 +6,19 @@ import { NodeData } from '../../hooks/useDawayirEngine';
 
 interface FacilitatorChatProps {
     focusedNode: NodeData;
-    fullMap: any;
+    fullMap: unknown;
     onClose: () => void;
     onUpdateNode: (nodeId: string, updates: Partial<NodeData>) => void;
 }
+interface ProposedAction {
+    action?: string;
+    nodeId?: string;
+    updates?: Partial<NodeData>;
+}
+
 
 export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdateNode }: FacilitatorChatProps) {
-    const [messages, setMessages] = useState<{ role: 'user' | 'ai', content: string, proposedAction?: any, actionTaken?: boolean }[]>([]);
+    const [messages, setMessages] = useState<{ role: 'user' | 'ai', content: string, proposedAction?: ProposedAction, actionTaken?: boolean }[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -31,7 +37,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        messages: [{ role: 'user', content: 'مرحباً. أردت التحدث عن هذه الدائرة.' }],
+                        messages: [{ role: 'user', content: 'Ù…Ø±Ø­Ø¨Ø§Ù‹. Ø£Ø±Ø¯Øª Ø§Ù„ØªØ­Ø¯Ø« Ø¹Ù† Ù‡Ø°Ù‡ Ø§Ù„Ø¯Ø§Ø¦Ø±Ø©.' }],
                         fullMap,
                         focusedNode
                     })
@@ -40,7 +46,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                 setMessages([{ role: 'ai', content: data.reply, proposedAction: data.proposedAction }]);
             } catch (err) {
                 console.error("Initial greeting failed", err);
-                setMessages([{ role: 'ai', content: `أهلاً بك، لندردش حول مساحة "${focusedNode.label}" في حياتك.` }]);
+                setMessages([{ role: 'ai', content: `Ø£Ù‡Ù„Ø§Ù‹ Ø¨ÙƒØŒ Ù„Ù†Ø¯Ø±Ø¯Ø´ Ø­ÙˆÙ„ Ù…Ø³Ø§Ø­Ø© "${focusedNode.label}" ÙÙŠ Ø­ÙŠØ§ØªÙƒ.` }]);
             } finally {
                 setIsLoading(false);
             }
@@ -49,14 +55,14 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
         // Reset conversation when node changes
         setMessages([]);
         fetchInitialGreeting();
-    }, [focusedNode.id]); // Re-run if they click a DIFFERENT node
+    }, [focusedNode, fullMap]); // Re-run if they click a DIFFERENT node
 
-    const handleApproveAction = async (msgIndex: number, action: any) => {
+    const handleApproveAction = async (msgIndex: number, action: ProposedAction) => {
         // Mark as taken
         setMessages(prev => prev.map((m, i) => i === msgIndex ? { ...m, actionTaken: true } : m));
 
         // Execute the UI change
-        onUpdateNode(action.nodeId || focusedNode.id, action.updates);
+        onUpdateNode(action.nodeId || focusedNode.id, action.updates ?? {});
 
         // Tell the AI it was done
         setIsLoading(true);
@@ -71,8 +77,8 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                 })
             });
             const data = await res.json();
-            setMessages(prev => [...prev, { role: 'user', content: 'لقد قمت بتطبيق التعديل الداخلي. شكراً لك.' }, { role: 'ai', content: data.reply, proposedAction: data.proposedAction }]);
-        } catch (e) {
+            setMessages(prev => [...prev, { role: 'user', content: 'Ù„Ù‚Ø¯ Ù‚Ù…Øª Ø¨ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø¯Ø§Ø®Ù„ÙŠ. Ø´ÙƒØ±Ø§Ù‹ Ù„Ùƒ.' }, { role: 'ai', content: data.reply, proposedAction: data.proposedAction }]);
+        } catch {
             // Error silently, not critical
         } finally {
             setIsLoading(false);
@@ -84,7 +90,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
 
         const userMsg = input.trim();
         setInput('');
-        const newMessages = [...messages, { role: 'user' as 'user', content: userMsg }];
+        const newMessages = [...messages, { role: 'user' as const, content: userMsg }];
         setMessages(newMessages);
         setIsLoading(true);
 
@@ -100,8 +106,8 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
             });
             const data = await res.json();
             setMessages(prev => [...prev, { role: 'ai', content: data.reply, proposedAction: data.proposedAction }]);
-        } catch (err) {
-            setMessages(prev => [...prev, { role: 'ai', content: "عذراً، انقطع حبل أفكاري مؤقتاً." }]);
+        } catch {
+            setMessages(prev => [...prev, { role: 'ai', content: "Ø¹Ø°Ø±Ø§Ù‹ØŒ Ø§Ù†Ù‚Ø·Ø¹ Ø­Ø¨Ù„ Ø£ÙÙƒØ§Ø±ÙŠ Ù…Ø¤Ù‚ØªØ§Ù‹." }]);
         } finally {
             setIsLoading(false);
         }
@@ -126,9 +132,9 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         <Terminal className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="font-black text-white text-xs uppercase tracking-widest font-mono">SOVEREIGNTY_ORACLE</h3>
+                        <h3 className="font-black text-white text-xs uppercase tracking-widest font-mono">Ø£ÙˆØ±Ø§ÙƒÙ„_Ø§Ù„Ø³ÙŠØ§Ø¯Ø©</h3>
                         <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">SCANNING:</span>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Ø¬Ø§Ø±ÙŠ_Ø§Ù„ÙØ­Øµ:</span>
                             <span className={`text-[10px] px-2 py-0.5 rounded-md border ${getBgColor(focusedNode.color)} font-black font-mono uppercase tracking-tighter`}>
                                 {focusedNode.label}
                             </span>
@@ -143,7 +149,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
             {/* Chat Area */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-white/10">
                 {messages.length === 0 && !isLoading && (
-                    <div className="text-center text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] my-auto mt-20 font-mono">WAITING_FOR_INPUT...</div>
+                    <div className="text-center text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] my-auto mt-20 font-mono">ÙÙŠ_Ø§Ù†ØªØ¸Ø§Ø±_Ø§Ù„Ù…Ø¯Ø®Ù„Ø§Øª...</div>
                 )}
                 {messages.map((msg, i) => (
                     <div key={i} className={`flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -159,14 +165,14 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                             <div className="mr-2 mb-2 self-start">
                                 {!msg.actionTaken ? (
                                     <button
-                                        onClick={() => handleApproveAction(i, msg.proposedAction)}
+                                        onClick={() => handleApproveAction(i, msg.proposedAction!)}
                                         className="text-xs px-4 py-2 bg-teal-500 text-slate-950 hover:bg-teal-400 rounded-xl font-black transition flex items-center gap-2 shadow-lg shadow-teal-500/20 uppercase tracking-tighter"
                                     >
                                         <Sparkles className="w-3.5 h-3.5" />
-                                        تطبيق البروتوكول المقترح
+                                        ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ø¨Ø±ÙˆØªÙˆÙƒÙˆÙ„ Ø§Ù„Ù…Ù‚ØªØ±Ø­
                                     </button>
                                 ) : (
-                                    <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5 px-3 py-1.5 font-mono uppercase tracking-tighter"><Check className="w-3.5 h-3.5" /> PROTOCOL_APPLIED_SUCCESSFULLY</span>
+                                    <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5 px-3 py-1.5 font-mono uppercase tracking-tighter"><Check className="w-3.5 h-3.5" /> ØªÙ…_ØªØ·Ø¨ÙŠÙ‚_Ø§Ù„Ø¨Ø±ÙˆØªÙˆÙƒÙˆÙ„_Ø¨Ù†Ø¬Ø§Ø­</span>
                                 )}
                             </div>
                         )}
@@ -194,7 +200,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="ماذا تود أن تقول عن هذا الجزء المُستنزف؟..."
+                        placeholder="Ù…Ø§Ø°Ø§ ØªÙˆØ¯ Ø£Ù† ØªÙ‚ÙˆÙ„ Ø¹Ù† Ù‡Ø°Ø§ Ø§Ù„Ø¬Ø²Ø¡ Ø§Ù„Ù…ÙØ³ØªÙ†Ø²ÙØŸ..."
                         className="flex-1 bg-transparent px-4 py-3 text-sm outline-none text-white placeholder:text-slate-600"
                         disabled={isLoading}
                     />
@@ -210,3 +216,5 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
         </div>
     );
 }
+
+

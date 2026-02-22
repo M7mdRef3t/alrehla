@@ -148,7 +148,7 @@ export class AdaptiveLayoutEngine {
     sessionDuration: number;
     journeyMode?: boolean;
   }): LayoutSection[] {
-    const { mode, nodes, tei, shadowScore, pulseMode, hasAnsweredToday, sessionDuration, journeyMode } = params;
+    const { mode, pulseMode, hasAnsweredToday } = params;
 
     // ═══════════════════════════════════════════════════════════════
     // 🔴 Crisis Mode — الأولوية للتدخل الفوري
@@ -378,7 +378,7 @@ export class AdaptiveLayoutEngine {
     tei: number;
     shadowScore: number;
   }): LayoutSectionId {
-    const { mode, pulseMode, tei, shadowScore } = params;
+    const { mode, pulseMode, tei } = params;
 
     // في الأزمة: Status Card هو الأهم
     if (mode === "crisis" || pulseMode === "low" || pulseMode === "angry") {

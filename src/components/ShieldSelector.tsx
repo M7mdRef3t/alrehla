@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, X, ShieldAlert, ShieldCheck, ShieldBan, Zap } from "lucide-react";
+import { Shield, X, ShieldAlert, ShieldCheck, ShieldBan } from "lucide-react";
 import { soundManager } from "../services/soundManager";
 
 type ShieldLevel = "weak" | "medium" | "strong";

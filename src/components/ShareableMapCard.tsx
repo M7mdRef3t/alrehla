@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Share2, Download, Lock } from "lucide-react";
+import { Share2, Lock } from "lucide-react";
 import { useMapState } from "../state/mapState";
 
 /* ══════════════════════════════════════════
@@ -18,13 +18,6 @@ const RING_COLORS = {
     yellow: { bg: "rgba(251,191,36,0.9)", glow: "rgba(251,191,36,0.4)" },
     red: { bg: "rgba(248,113,113,0.9)", glow: "rgba(248,113,113,0.4)" },
     grey: { bg: "rgba(148,163,184,0.6)", glow: "rgba(148,163,184,0.2)" },
-};
-
-const RING_LABELS: Record<string, string> = {
-    green: "دائرة الأمان",
-    yellow: "دائرة الحذر",
-    red: "دائرة الخطر",
-    grey: "الأرشيف",
 };
 
 export const ShareableMapCard: FC<ShareableMapCardProps> = ({ onClose }) => {
@@ -211,3 +204,4 @@ export const ShareableMapCard: FC<ShareableMapCardProps> = ({ onClose }) => {
         </motion.div>
     );
 };
+

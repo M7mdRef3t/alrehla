@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Scale, Gavel, X, Shield, AlertTriangle, CheckCircle, BookOpen } from "lucide-react";
+import { Scale, Gavel, X, Shield, CheckCircle, BookOpen } from "lucide-react";
 
 interface InnerCourtProps {
     isOpen: boolean;
@@ -22,12 +22,6 @@ export const InnerCourt: FC<InnerCourtProps> = ({ isOpen, onClose }) => {
     const handleVerdict = (v: VerdictType) => {
         setVerdict(v);
         setStep("verdict");
-    };
-
-    const reset = () => {
-        setAccusation("");
-        setVerdict(null);
-        setStep("accusation");
     };
 
     return (

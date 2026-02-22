@@ -60,7 +60,7 @@ interface FeatureShowcaseSectionProps {
 export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
   stagger,
   item,
-  onExploreAll,
+  onExploreAll: _onExploreAll,
   onOpenRadar,
   onOpenCourt,
   onOpenPlaybooks
@@ -226,6 +226,7 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
 );
 
 export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsState: { data: LiveMetrics; isLoading: boolean; lastUpdatedAt: number | null; mode: "live" | "fallback" } }> = ({ stagger, item, metricsState }) => {
+  const isFallback = metricsState.mode === "fallback";
 
   const cards = useMemo(() => ([
     { val: metricsState.data.activeUnits30d.toLocaleString("ar-EG"), label: "وحدات ميدانية نشطة", icon: Users, color: "text-teal-400" },
@@ -248,6 +249,11 @@ export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsStat
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div>
             <LiveStatusBar title="مؤشرات النظام الحية" mode={metricsState.mode} isLoading={metricsState.isLoading} lastUpdatedAt={metricsState.lastUpdatedAt} />
+            {isFallback && (
+              <p className="mt-2 inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-bold text-amber-200">
+                عرض بقالب ثابت (Fallback) حتى عودة البيانات الحية
+              </p>
+            )}
             <h3 className="text-2xl sm:text-3xl font-black text-white mt-4 mb-4 leading-tight">مجتمع من القادة يستعيدون سيادتهم</h3>
             <p className="text-slate-400 text-sm leading-relaxed mb-8">نحن لا نبني مجرد تطبيق، بل غرفة عمليات عالمية لإدارة الوعي وحماية الطاقة النفسية.</p>
             <div className="flex flex-wrap gap-4">
@@ -288,6 +294,7 @@ export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsStat
 export const TestimonialsSection: FC<{ stagger: Variants; item: Variants; testimonials: TestimonialsItem[]; testimonialsState: { data: TestimonialItem[]; isLoading: boolean; lastUpdatedAt: number | null; mode: "live" | "fallback" } }> = ({ stagger, item, testimonials, testimonialsState }) => {
   const displayTestimonials = testimonialsState.data.length > 0 ? testimonialsState.data : testimonials;
   const isLive = testimonialsState.mode === "live";
+  const isFallback = testimonialsState.mode === "fallback";
   if (!displayTestimonials?.length) return null;
   return (
     <motion.section
@@ -312,6 +319,11 @@ export const TestimonialsSection: FC<{ stagger: Variants; item: Variants; testim
           isLoading={testimonialsState.isLoading}
           lastUpdatedAt={testimonialsState.lastUpdatedAt}
         />
+        {isFallback && (
+          <p className="mt-2 inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-bold text-amber-200">
+            المراجعات المعروضة من قالب ثابت (Fallback)
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -319,7 +331,7 @@ export const TestimonialsSection: FC<{ stagger: Variants; item: Variants; testim
           <motion.div key={i} className="rounded-3xl p-6 sm:p-8 flex flex-col justify-between" style={CARD} variants={item}>
             <div>
               <Quote className="w-8 h-8 mb-6 opacity-20 text-teal-400" />
-              <p className="text-[15px] sm:text-[16px] leading-[1.85] mb-8 text-slate-300 italic font-medium">
+              <p className="text-[15px] sm:text-[16px] leading-[1.85] mb-8 text-slate-300 font-medium">
                 "{t.quote}"
               </p>
             </div>

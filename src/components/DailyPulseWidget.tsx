@@ -12,10 +12,10 @@ interface DailyPulseWidgetProps {
 
 /* ── ثيم الأسابيع الأربعة ── */
 const WEEK_COLORS: Record<number, { accent: string; bg: string; border: string; label: string; dot: string }> = {
-  1: { accent: "#2dd4bf", bg: "rgba(45,212,191,0.06)",  border: "rgba(45,212,191,0.18)",  label: "الوعي بالذات",    dot: "#2dd4bf" },
-  2: { accent: "#a78bfa", bg: "rgba(167,139,250,0.06)", border: "rgba(167,139,250,0.18)", label: "دواير القرب",     dot: "#a78bfa" },
-  3: { accent: "#fbbf24", bg: "rgba(251,191,36,0.06)",  border: "rgba(251,191,36,0.18)",  label: "الحدود والتحرر",  dot: "#fbbf24" },
-  4: { accent: "#34d399", bg: "rgba(52,211,153,0.06)",  border: "rgba(52,211,153,0.18)",  label: "النظرة للمستقبل", dot: "#34d399" },
+  1: { accent: "#2dd4bf", bg: "rgba(45,212,191,0.06)", border: "rgba(45,212,191,0.18)", label: "الوعي بالذات", dot: "#2dd4bf" },
+  2: { accent: "#a78bfa", bg: "rgba(167,139,250,0.06)", border: "rgba(167,139,250,0.18)", label: "دواير القرب", dot: "#a78bfa" },
+  3: { accent: "#fbbf24", bg: "rgba(251,191,36,0.06)", border: "rgba(251,191,36,0.18)", label: "الحدود والتحرر", dot: "#fbbf24" },
+  4: { accent: "#34d399", bg: "rgba(52,211,153,0.06)", border: "rgba(52,211,153,0.18)", label: "النظرة للمستقبل", dot: "#34d399" },
 };
 
 export const DailyPulseWidget: FC<DailyPulseWidgetProps> = ({ onOpenArchive }) => {
@@ -166,7 +166,7 @@ export const DailyPulseWidget: FC<DailyPulseWidgetProps> = ({ onOpenArchive }) =
             className="flex items-start gap-2"
           >
             <div
-              className="flex-1 rounded-xl px-3 py-2 text-[13px] leading-relaxed italic"
+              className="flex-1 rounded-xl px-3 py-2 text-[13px] leading-relaxed"
               style={{
                 color: "rgba(203,213,225,0.75)",
                 background: "rgba(255,255,255,0.03)",

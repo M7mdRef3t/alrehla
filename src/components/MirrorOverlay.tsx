@@ -1,6 +1,6 @@
-import { FC, useState, useEffect } from "react";
+import { FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MirrorInsight, dismissMirrorInsight } from "../services/mirrorLogic";
+import { MirrorInsight } from "../services/mirrorLogic";
 
 interface MirrorOverlayProps {
     insight: MirrorInsight | null;
@@ -39,7 +39,7 @@ export const MirrorOverlay: FC<MirrorOverlayProps> = ({ insight, onConfront, onD
                         </p>
 
                         <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700 mb-8 backdrop-blur-sm">
-                            <p className="text-rose-400 font-medium text-xl italic font-serif">
+                            <p className="text-rose-400 font-medium text-xl font-serif">
                                 "{insight.question}"
                             </p>
                         </div>

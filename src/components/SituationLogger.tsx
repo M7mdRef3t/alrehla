@@ -259,7 +259,7 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
                 {log.lesson && (
                   <div className="pt-2 border-t border-purple-100">
                     <span className="font-semibold text-teal-600">✓ القاعدة:</span>{" "}
-                    <span className="text-slate-700 italic">{log.lesson}</span>
+                    <span className="text-slate-700">{log.lesson}</span>
                   </div>
                 )}
               </div>

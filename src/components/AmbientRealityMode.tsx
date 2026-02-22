@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Maximize2, Minimize2, Wind, Volume2, VolumeX } from "lucide-react";
+import { X, Maximize2, Minimize2, Volume2, VolumeX } from "lucide-react";
 import { useSwarmState } from "../state/swarmState";
 import { usePulseState } from "../state/pulseState";
 

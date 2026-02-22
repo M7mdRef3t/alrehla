@@ -105,30 +105,6 @@ function getEnergyQuickHint(energy: number | null): string {
   return "\u0637\u0627\u0642\u0629 \u0639\u0627\u0644\u064a\u0629";
 }
 
-function getMoodStateLabel(mood: PulseMood | null): string {
-  if (!mood) return "\u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631";
-  switch (mood) {
-    case "bright":
-      return "\u0645\u0632\u0627\u062c \u0645\u0636\u064a\u0621";
-    case "calm":
-      return "\u0647\u062f\u0648\u0621 \u0645\u0633\u062a\u0642\u0631";
-    case "tense":
-      return "\u062a\u0648\u062a\u0631 \u0642\u0627\u0628\u0644 \u0644\u0644\u062a\u0646\u0638\u064a\u0645";
-    case "hopeful":
-      return "\u062f\u0627\u0641\u0639 \u0625\u064a\u062c\u0627\u0628\u064a";
-    case "anxious":
-      return "\u0642\u0644\u0642 \u0645\u062d\u062a\u0627\u062c \u062a\u0647\u062f\u0626\u0629";
-    case "angry":
-      return "\u062d\u062f\u0629 \u0645\u0634\u0627\u0639\u0631";
-    case "sad":
-      return "\u0637\u0627\u0642\u0629 \u0645\u0646\u062e\u0641\u0636\u0629";
-    case "overwhelmed":
-      return "\u062a\u0634\u0628\u0639 \u0648\u0636\u063a\u0637 \u0639\u0627\u0644\u064a";
-    default:
-      return "\u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631";
-  }
-}
-
 function getMoodQuickHint(mood: PulseMood | null): string {
   if (!mood) return "\u0627\u062e\u062a\u0631 \u0648\u0635\u0641\u0627\u064b \u0642\u0631\u064a\u0628\u0627\u064b \u0645\u0646 \u062d\u0627\u0644\u062a\u0643";
   switch (mood) {
@@ -151,16 +127,6 @@ function getMoodQuickHint(mood: PulseMood | null): string {
     default:
       return "\u0627\u062e\u062a\u0631 \u0648\u0635\u0641\u0627\u064b \u0642\u0631\u064a\u0628\u0627\u064b \u0645\u0646 \u062d\u0627\u0644\u062a\u0643";
   }
-}
-
-function getFocusStateLabel(focus: PulseFocus | null, isStartRecovery: boolean): string {
-  if (!focus) return "\u0644\u0645 \u064a\u062a\u0645 \u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631";
-  if (focus === "event") return "\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0644\u0649 \u0645\u0648\u0642\u0641 \u0645\u062d\u062f\u062f";
-  if (focus === "thought") return "\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0644\u0649 \u0641\u0643\u0631\u0629 \u0645\u062a\u0643\u0631\u0631\u0629";
-  if (focus === "body") return "\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0639\u0644\u0649 \u0625\u0634\u0627\u0631\u0627\u062a \u0627\u0644\u062c\u0633\u062f";
-  return isStartRecovery
-    ? "\u0628\u062f\u0627\u064a\u0629 \u0645\u0631\u0646\u0629 \u0644\u0644\u0627\u0633\u062a\u0643\u0634\u0627\u0641"
-    : "\u0639\u0648\u062f\u0629 \u0644\u0644\u0625\u0643\u0645\u0627\u0644 \u0628\u062f\u0648\u0646 \u0645\u0634\u062a\u062a\u0627\u062a";
 }
 
 function getFocusQuickHint(focus: PulseFocus | null, isStartRecovery: boolean): string {
@@ -328,13 +294,6 @@ function getImmediateEnergyAction(energy: number | null): { cta: string; hint: s
 
 const ENERGY_ANCHORS = [0, 3, 6, 10] as const;
 const ENERGY_FEEDBACK_POINTS = new Set<number>(ENERGY_ANCHORS);
-const ENERGY_REASON_TAGS = [
-  "\u0646\u0648\u0645",
-  "\u0636\u063a\u0637",
-  "\u0623\u0643\u0644",
-  "\u0645\u062c\u0647\u0648\u062f",
-  "\u0645\u0632\u0627\u062c"
-] as const;
 const PULSE_DRAFT_STORAGE_KEY = "dawayir-pulse-check-draft-v1";
 const NOTES_QUICK_CHIPS = [
   "\u0641\u064a \u0645\u0648\u0642\u0641 \u0645\u0639\u064a\u0646 \u0645\u0636\u0627\u064a\u0642\u0646\u064a",
@@ -399,9 +358,9 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [keyboardEnergyHint, setKeyboardEnergyHint] = useState<number | null>(null);
   const [isEnergySelectionUnstable, setIsEnergySelectionUnstable] = useState(false);
   const [needsEnergyConfirmation, setNeedsEnergyConfirmation] = useState(false);
-  const [energyConfirmPulseActive, setEnergyConfirmPulseActive] = useState(false);
-  const [energyUndoSnapshot, setEnergyUndoSnapshot] = useState<EnergyUndoSnapshot | null>(null);
-  const [energyUndoLabel, setEnergyUndoLabel] = useState<string | null>(null);
+  const [, setEnergyConfirmPulseActive] = useState(false);
+  const [, setEnergyUndoSnapshot] = useState<EnergyUndoSnapshot | null>(null);
+  const [, setEnergyUndoLabel] = useState<string | null>(null);
   const [immediateActionApplied, setImmediateActionApplied] = useState(false);
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const [notesChars, setNotesChars] = useState(0);
@@ -430,17 +389,10 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
   const fillHex = hasPickedEnergy && energy != null ? energyColorHex(energy) : "rgba(148, 163, 184, 0.85)";
   const isEnergyDefault = !hasPickedEnergy || energy == null;
-  const isLowEnergyNow = hasPickedEnergy && energy != null && energy <= 3;
   const pct = hasPickedEnergy && energy != null ? energyPct(energy, { min: 0, max: 10 }) : 0;
   const energyStateLabel = getEnergyStateLabel(energy);
   const energyQuickHint = getEnergyQuickHint(energy);
   const moodQuickHint = getMoodQuickHint(mood);
-  const selectedFocusLabel = focus
-    ? (focus === "none"
-      ? FOCUS_LABELS[isStartRecovery ? "none_new" : "none_returning"]
-      : FOCUS_LABELS[focus])
-    : null;
-  const focusStateLabel = getFocusStateLabel(focus, isStartRecovery);
   const focusQuickHint = getFocusQuickHint(focus, isStartRecovery);
   const energyCopyVariant = useMemo(
     () => getEnergyCopyVariant(pulseCopyOverrides.energy),
@@ -534,22 +486,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     }, 3000);
   };
 
-  const restoreUndoSnapshot = () => {
-    if (!energyUndoSnapshot) return;
-    recordFlowEvent("pulse_energy_undo_applied", {
-      meta: { source: energyUndoSnapshot.source }
-    });
-    setEnergy(energyUndoSnapshot.energy);
-    setPreviousEnergy(energyUndoSnapshot.previousEnergy);
-    setHasPickedEnergy(energyUndoSnapshot.hasPickedEnergy);
-    setFocus(energyUndoSnapshot.focus);
-    setNotes(energyUndoSnapshot.notes);
-    setSuggestionApplied(energyUndoSnapshot.suggestionApplied);
-    setImmediateActionApplied(energyUndoSnapshot.immediateActionApplied);
-    setNeedsEnergyConfirmation(false);
-    clearUndoState();
-  };
-
   const triggerEnergyConfirmPulse = () => {
     setEnergyConfirmPulseActive(false);
     window.setTimeout(() => {
@@ -630,7 +566,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     unstableEventTrackedRef.current = false;
     moodUnstableEventTrackedRef.current = false;
     copyVariantTrackedRef.current = false;
-  }, [isOpen, lastEnergyValue]);
+  }, [isOpen, lastEnergyValue, isStartRecovery]);
 
   useEffect(() => {
     if (!isOpen || copyVariantTrackedRef.current) return;
@@ -839,12 +775,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     setNeedsEnergyConfirmation(false);
     setNeedsMoodConfirmation(false);
     setStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3 | 4 | 5) : prev));
-  };
-
-  const toggleEnergyReason = (reason: string) => {
-    setEnergyReasons((prev) => (
-      prev.includes(reason) ? prev.filter((item) => item !== reason) : [...prev, reason]
-    ));
   };
 
   const applyEnergySuggestion = () => {
@@ -1361,7 +1291,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
                           {/* Ticks */}
                           {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((tick) => {
-                            const angle = (tick / 10) * 180 - 180; // 0 -> -180 (left), 10 -> 0 (right) ?? No, arc is 180 deg.
                             // Let's recalculate: 0 should be at 180 deg (left), 10 at 0 deg (right), 5 at -90 (top).
                             // SVG coords: Top is negative Y.
                             // 0 -> Angle 180deg (left). 10 -> Angle 0deg (right).

@@ -182,7 +182,7 @@ export const DailyJournalArchive: FC<DailyJournalArchiveProps> = ({ isOpen, onCl
 
                       {/* الإجابة */}
                       <p
-                        className="text-[14px] font-medium leading-relaxed italic"
+                        className="text-[14px] font-medium leading-relaxed"
                         style={{ color: "rgba(226,232,240,0.85)" }}
                       >
                         "{entry.answer}"
@@ -201,7 +201,7 @@ export const DailyJournalArchive: FC<DailyJournalArchiveProps> = ({ isOpen, onCl
             className="px-5 py-4 text-center shrink-0"
             style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
           >
-            <p className="text-[12px] italic" style={{ color: "rgba(45,212,191,0.4)" }}>
+            <p className="text-[12px]" style={{ color: "rgba(45,212,191,0.4)" }}>
               الكلمات اللي كتبتها هي شاهد على طريق مشيته..
               <br />
               كل سطر هو خطوة أقرب لنفسك

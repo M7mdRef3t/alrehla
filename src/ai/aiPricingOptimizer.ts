@@ -83,7 +83,7 @@ export class AIPricingOptimizer {
    * ─────────────────────────────────────────────────────────────────
    */
   async analyzeMarket(): Promise<MarketAnalysis | null> {
-    console.log("🔍 Analyzing market and competitors...");
+    console.warn("🔍 Analyzing market and competitors...");
 
     // قائمة المنافسين في مجال الصحة النفسية الرقمية
     const competitors: CompetitorPricing[] = [
@@ -187,7 +187,7 @@ ${competitors.map((c) => `- **${c.name}** (${c.tier}): $${c.priceMonthly}/month 
       recommendedPosition: analysis.recommended_position,
     };
 
-    console.log("✅ Market analysis complete:", result);
+    console.warn("✅ Market analysis complete:", result);
     return result;
   }
 
@@ -200,7 +200,7 @@ ${competitors.map((c) => `- **${c.name}** (${c.tier}): $${c.priceMonthly}/month 
     currentMetrics: RevenueMetrics;
     marketAnalysis?: MarketAnalysis;
   }): Promise<PricingRecommendation | null> {
-    console.log("💡 Optimizing pricing with AI...");
+    console.warn("💡 Optimizing pricing with AI...");
 
     const { currentMetrics, marketAnalysis } = params;
 
@@ -243,7 +243,7 @@ ${competitors.map((c) => `- **${c.name}** (${c.tier}): $${c.priceMonthly}/month 
       requiresApproval: true,
     };
 
-    console.log("✅ Pricing optimization complete:", result);
+    console.warn("✅ Pricing optimization complete:", result);
 
     // سجّل القرار في الـ Decision Log
     await decisionEngine.execute({
@@ -333,7 +333,7 @@ ${marketSection}
     variantPrices: { b2c: number; b2b: number };
     durationDays: number;
   }): Promise<PricingExperiment | null> {
-    console.log("🧪 Creating pricing experiment...", params);
+    console.warn("🧪 Creating pricing experiment...", params);
 
     // التحقق من عدم وجود تجربة جارية
     if (this.currentExperiment?.status === "running") {
@@ -363,7 +363,7 @@ ${marketSection}
       JSON.stringify(experiment)
     );
 
-    console.log("✅ Pricing experiment started:", experiment.id);
+    console.warn("✅ Pricing experiment started:", experiment.id);
 
     // سجّل القرار
     await decisionEngine.execute({
@@ -385,7 +385,7 @@ ${marketSection}
   async analyzeExperimentResults(
     experimentId: string
   ): Promise<{ winner: "control" | "variant"; confidence: number } | null> {
-    console.log("📊 Analyzing experiment results...", experimentId);
+    console.warn("📊 Analyzing experiment results...", experimentId);
 
     const experiment = this.getExperiment(experimentId);
     if (!experiment || !experiment.results) {
@@ -411,7 +411,7 @@ ${marketSection}
 
     const winner = variant.revenue > control.revenue ? "variant" : "control";
 
-    console.log(
+    console.warn(
       `✅ Experiment analysis: Winner=${winner}, Confidence=${confidence.toFixed(1)}%`
     );
 
@@ -474,7 +474,7 @@ ${marketSection}
     metrics: RevenueMetrics | null;
     recommendation: PricingRecommendation | null;
   }> {
-    console.log("🚀 Running full pricing optimization cycle...");
+    console.warn("🚀 Running full pricing optimization cycle...");
 
     // 1. تحليل السوق
     const marketAnalysis = await this.analyzeMarket();
@@ -491,7 +491,7 @@ ${marketSection}
       });
     }
 
-    console.log("✅ Full optimization cycle complete");
+    console.warn("✅ Full optimization cycle complete");
 
     return { marketAnalysis, metrics, recommendation };
   }
@@ -517,5 +517,6 @@ export function startMonthlyPricingAnalysis(): void {
     void pricingOptimizer.runFullOptimizationCycle();
   }, ONE_MONTH_MS);
 
-  console.log("✅ Monthly pricing analysis scheduled");
+  console.warn("✅ Monthly pricing analysis scheduled");
 }
+

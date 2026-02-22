@@ -33,7 +33,6 @@ interface ShadowPulseAlertProps {
 }
 
 export const ShadowPulseAlert: FC<ShadowPulseAlertProps> = ({ onSelectNode }) => {
-  const scores = useShadowPulseState((s) => s.scores);
   const getHighShadowNodes = useShadowPulseState((s) => s.getHighShadowNodes);
   const hydrate = useShadowPulseState((s) => s.hydrate);
   const nodes = useMapState((s) => s.nodes);

@@ -8,6 +8,23 @@ import { supabase } from "./supabaseClient";
  */
 
 export type CircleTopic = 'family_boundaries' | 'guilt_recovery' | 'trauma_healing' | 'work_burnout';
+type CircleRow = {
+    id: string;
+    topic: CircleTopic;
+    title: string;
+    description: string;
+    max_members: number;
+    circle_members?: { count: number }[];
+};
+
+type SharedWisdomRow = {
+    id: string;
+    topic: string;
+    story: string;
+    strategy: string;
+    helpful_count: number;
+    created_at: string;
+};
 
 export interface SupportCircle {
     id: string;
@@ -43,7 +60,7 @@ export async function getActiveCircles(): Promise<SupportCircle[]> {
         return [];
     }
 
-    return data.map((item: any) => ({
+    return (data as CircleRow[]).map((item) => ({
         id: item.id,
         topic: item.topic,
         title: item.title,
@@ -84,7 +101,7 @@ export async function getSharedWisdom(topic?: CircleTopic): Promise<SharedWisdom
     const { data, error } = await query;
     if (error || !data) return [];
 
-    return data.map((item: any) => ({
+    return (data as SharedWisdomRow[]).map((item) => ({
         id: item.id,
         topic: item.topic,
         story: item.story,

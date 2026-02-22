@@ -154,7 +154,7 @@ export const SuccessIndexCard: FC<SuccessIndexCardProps> = ({
                                     <div className="mt-2 w-1.5 h-1.5 rounded-full bg-slate-600 flex-shrink-0" />
                                     <p className="text-sm text-slate-300 leading-relaxed tracking-wide">{item}</p>
                                 </div>
-                            )) : <p className="text-sm text-slate-500 italic">لا توصيات في الوقت الحالي.</p>}
+                            )) : <p className="text-sm text-slate-500">لا توصيات في الوقت الحالي.</p>}
                         </div>
                     </div>
 

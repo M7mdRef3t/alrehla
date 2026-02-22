@@ -1,9 +1,7 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { mapCopy } from "../copy/map";
 import { setOnboardingSeen } from "../utils/mapOnboarding";
-import { EditableText } from "./EditableText";
 
 interface MapOnboardingOverlayProps {
   onClose: () => void;

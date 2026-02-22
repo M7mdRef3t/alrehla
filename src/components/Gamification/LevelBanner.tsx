@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Star, ChevronRight, Zap } from 'lucide-react';
+import { Star, ChevronRight } from 'lucide-react';
 import { useGamificationState } from '../../services/gamificationEngine';
 
 /**

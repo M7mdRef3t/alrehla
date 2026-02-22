@@ -76,7 +76,7 @@ export class StripeService {
     userId: string;
     tier: 'premium' | 'coach';
   }): Promise<{ url: string } | null> {
-    console.log("💳 Creating Stripe checkout session...", params);
+    console.warn("💳 Creating Stripe checkout session...", params);
 
     try {
       const response = await fetch("/api/checkout", {
@@ -110,7 +110,7 @@ export class StripeService {
     subscriptionId: string;
     immediately?: boolean;
   }): Promise<{ success: boolean; message: string }> {
-    console.log("🛑 Canceling subscription...", params);
+    console.warn("🛑 Canceling subscription...", params);
 
     try {
       const response = await fetch("/api/checkout/cancel", { // Update path
@@ -128,7 +128,7 @@ export class StripeService {
 
       const data = (await response.json()) as { success: boolean; message: string };
 
-      console.log("✅ Subscription canceled:", data.message);
+      console.warn("✅ Subscription canceled:", data.message);
 
       // تسجيل القرار
       await decisionEngine.execute({
@@ -152,7 +152,7 @@ export class StripeService {
    * ─────────────────────────────────────────────────────────────────
    */
   async getSubscription(userId: string): Promise<StripeSubscription | null> {
-    console.log("📋 Fetching subscription for user:", userId);
+    console.warn("📋 Fetching subscription for user:", userId);
 
     try {
       const response = await fetch(`/api/user/subscription?userId=${userId}`, {
@@ -162,7 +162,7 @@ export class StripeService {
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.log("ℹ️ No active subscription found");
+          console.warn("ℹ️ No active subscription found");
           return null;
         }
         throw new Error(`HTTP ${response.status}`);
@@ -170,7 +170,7 @@ export class StripeService {
 
       const data = (await response.json()) as StripeSubscription;
 
-      console.log("✅ Subscription fetched:", data);
+      console.warn("✅ Subscription fetched:", data);
       return data;
     } catch (error) {
       console.error("❌ Failed to fetch subscription:", error);
@@ -187,7 +187,7 @@ export class StripeService {
     userId: string;
     returnUrl: string;
   }): Promise<{ url: string } | null> {
-    console.log("🔗 Creating customer portal session...");
+    console.warn("🔗 Creating customer portal session...");
 
     try {
       const response = await fetch("/api/checkout/portal", { // Update path
@@ -205,7 +205,7 @@ export class StripeService {
 
       const data = (await response.json()) as { url: string };
 
-      console.log("✅ Portal session created");
+      console.warn("✅ Portal session created");
       return data;
     } catch (error) {
       console.error("❌ Failed to create portal session:", error);
@@ -282,3 +282,4 @@ export function checkUsageLimit(
 
   return { allowed, limit, remaining };
 }
+

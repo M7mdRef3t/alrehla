@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crosshair, Target, X, Zap, Skull, BrainCircuit } from "lucide-react";
+import { Crosshair, Target, X, Zap, Skull } from "lucide-react";
 import { soundManager } from "../services/soundManager";
 
 interface Thought {

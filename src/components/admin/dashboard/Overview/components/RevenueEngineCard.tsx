@@ -1,8 +1,9 @@
 import type { FC } from "react";
 import { useState } from "react";
 import { AlertTriangle, RefreshCw, TrendingUp } from "lucide-react";
-import { runCronReport, type WeeklyReport } from "../../../../../services/adminApi";
+import { runCronReport } from "../../../../../services/adminApi";
 import { computeConsciousRevenueMetrics } from "../../../../../services/consciousRevenueLink";
+import type { WeeklyReport } from "../../../../../types/admin.types";
 
 interface RevenueEngineCardProps {
   data: WeeklyReport | null;

@@ -19,11 +19,11 @@ const TAG_CONFIG: Record<
   NonNullable<FaqItem["tag"]> | "all",
   { label: string; color: string; border: string; bg: string }
 > = {
-  all:        { label: "الكل",       color: "rgba(45,212,191,0.9)",    border: "rgba(45,212,191,0.35)",  bg: "rgba(45,212,191,0.1)"  },
-  howto:      { label: "إزاي تبدأ",  color: "rgba(139,92,246,0.9)",    border: "rgba(139,92,246,0.35)",  bg: "rgba(139,92,246,0.1)"  },
-  philosophy: { label: "فلسفة",     color: "rgba(251,191,36,0.9)",    border: "rgba(251,191,36,0.35)",  bg: "rgba(251,191,36,0.08)" },
-  therapy:    { label: "علاج؟",     color: "rgba(248,113,113,0.9)",   border: "rgba(248,113,113,0.35)", bg: "rgba(248,113,113,0.08)"},
-  privacy:    { label: "خصوصية",    color: "rgba(52,211,153,0.9)",    border: "rgba(52,211,153,0.35)",  bg: "rgba(52,211,153,0.08)" },
+  all: { label: "الكل", color: "rgba(45,212,191,0.9)", border: "rgba(45,212,191,0.35)", bg: "rgba(45,212,191,0.1)" },
+  howto: { label: "إزاي تبدأ", color: "rgba(139,92,246,0.9)", border: "rgba(139,92,246,0.35)", bg: "rgba(139,92,246,0.1)" },
+  philosophy: { label: "فلسفة", color: "rgba(251,191,36,0.9)", border: "rgba(251,191,36,0.35)", bg: "rgba(251,191,36,0.08)" },
+  therapy: { label: "علاج؟", color: "rgba(248,113,113,0.9)", border: "rgba(248,113,113,0.35)", bg: "rgba(248,113,113,0.08)" },
+  privacy: { label: "خصوصية", color: "rgba(52,211,153,0.9)", border: "rgba(52,211,153,0.35)", bg: "rgba(52,211,153,0.08)" },
 };
 
 /* ── Single accordion FAQ item ── */
@@ -231,7 +231,7 @@ export const FaqScreen: FC<FaqScreenProps> = ({ onClose }) => {
             {faqCopy.closingNote}
           </p>
           <p
-            className="text-[11px] italic"
+            className="text-[11px]"
             style={{
               color: "rgba(45,212,191,0.35)",
               fontFamily: "'Amiri', 'Scheherazade New', serif",

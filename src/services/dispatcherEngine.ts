@@ -47,7 +47,7 @@ export class DispatcherEngine {
                 });
 
             if (alertError) throw alertError;
-            console.log("🛰️ Automated alert dispatched to coach for user:", userId);
+            console.warn("🛰️ Automated alert dispatched to coach for user:", userId);
 
         } catch (e) {
             console.error("Dispatcher failed:", e);
@@ -89,3 +89,4 @@ export class DispatcherEngine {
             .eq('id', alertId);
     }
 }
+

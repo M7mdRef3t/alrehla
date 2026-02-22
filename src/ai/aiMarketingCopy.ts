@@ -5,7 +5,6 @@
  */
 
 import { geminiClient } from "../services/geminiClient";
-import { VOICE_GUIDELINES, THERAPEUTIC_PHILOSOPHY } from "./CORE_PRINCIPLES";
 import { decisionEngine } from "./decision-framework";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -285,7 +284,7 @@ export class AIMarketingCopywriter {
     context?: string; // سياق إضافي (مثلاً: "فيتشر جديدة: AI Insights")
     includeVariations?: boolean;
   }): Promise<MarketingCopy | null> {
-    console.log("✍️ Generating marketing copy...", params);
+    console.warn("✍️ Generating marketing copy...", params);
 
     const prompt = this.buildCopyPrompt(params);
 
@@ -314,7 +313,7 @@ export class AIMarketingCopywriter {
       voiceScore: result.voice_score,
     };
 
-    console.log("✅ Marketing copy generated:", copy);
+    console.warn("✅ Marketing copy generated:", copy);
 
     // سجّل القرار
     await decisionEngine.execute({
@@ -423,7 +422,7 @@ ${params.context ? `# السياق الإضافي\n${params.context}\n` : ""}
     goal: MarketingCampaign["goal"];
     durationDays: number;
   }): Promise<MarketingCampaign | null> {
-    console.log("🚀 Generating marketing campaign...", params);
+    console.warn("🚀 Generating marketing campaign...", params);
 
     // توليد 5 أنواع من النصوص للحملة
     const copyTypes: Array<{
@@ -484,7 +483,7 @@ ${params.context ? `# السياق الإضافي\n${params.context}\n` : ""}
       status: "draft",
     };
 
-    console.log("✅ Campaign generated:", campaign.id);
+    console.warn("✅ Campaign generated:", campaign.id);
 
     // حفظ في localStorage
     this.saveCampaign(campaign);
@@ -516,7 +515,7 @@ ${params.context ? `# السياق الإضافي\n${params.context}\n` : ""}
     description1: string;
     description2: string;
   } | null> {
-    console.log("📢 Generating Google Ad...", params);
+    console.warn("📢 Generating Google Ad...", params);
 
     const prompt = `
 أنت خبير في كتابة إعلانات Google Ads للصحة النفسية.
@@ -574,7 +573,7 @@ ${params.context ? `# السياق الإضافي\n${params.context}\n` : ""}
       console.warn("⚠️ Google Ad text exceeds character limits");
     }
 
-    console.log("✅ Google Ad generated:", ad);
+    console.warn("✅ Google Ad generated:", ad);
 
     return ad;
   }
@@ -593,7 +592,7 @@ ${params.context ? `# السياق الإضافي\n${params.context}\n` : ""}
     hashtags: string[];
     imagePrompt?: string; // وصف الصورة المقترحة
   } | null> {
-    console.log("📱 Generating social media post...", params);
+    console.warn("📱 Generating social media post...", params);
 
     const platformLimits = {
       twitter: 280,
@@ -639,7 +638,7 @@ ${params.context ? `# السياق الإضافي\n${params.context}\n` : ""}
       return null;
     }
 
-    console.log("✅ Social post generated:", post);
+    console.warn("✅ Social post generated:", post);
 
     return post;
   }
@@ -678,7 +677,7 @@ ${params.context ? `# السياق الإضافي\n${params.context}\n` : ""}
    * ─────────────────────────────────────────────────────────────────
    */
   async runWeeklySocialContent(): Promise<void> {
-    console.log("📆 Running weekly social content generation...");
+    console.warn("📆 Running weekly social content generation...");
 
     const topics = [
       "الحدود الصحية",
@@ -703,11 +702,11 @@ ${params.context ? `# السياق الإضافي\n${params.context}\n` : ""}
       });
 
       if (post) {
-        console.log(`✅ ${platform} post generated:`, post.text.substring(0, 100));
+        console.warn(`✅ ${platform} post generated:`, post.text.substring(0, 100));
       }
     }
 
-    console.log("✅ Weekly social content generation complete");
+    console.warn("✅ Weekly social content generation complete");
   }
 }
 
@@ -731,7 +730,7 @@ export function startWeeklySocialContentGeneration(): void {
     void marketingCopywriter.runWeeklySocialContent();
   }, ONE_WEEK_MS);
 
-  console.log("✅ Weekly social content generation scheduled");
+  console.warn("✅ Weekly social content generation scheduled");
 }
 
 export function startWeeklyEgyptianAdABTesting(): void {
@@ -742,5 +741,6 @@ export function startWeeklyEgyptianAdABTesting(): void {
     void marketingCopywriter.runWeeklyEgyptianAdABTest();
   }, ONE_WEEK_MS);
 
-  console.log("✅ Weekly Egyptian Ad A/B testing scheduled");
+  console.warn("✅ Weekly Egyptian Ad A/B testing scheduled");
 }
+

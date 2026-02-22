@@ -132,7 +132,7 @@ export { withRetry, withTimeout, getErrorMessage, AICache, GENERATION_TIMEOUT };
  * const result = await withRetry(
  *   () => fetch(url).then(r => r.json()),
  *   (attempt, error) => {
- *     console.log(`Retry attempt ${attempt}, error: ${error.message}`);
+ *     console.warn(`Retry attempt ${attempt}, error: ${error.message}`);
  *   }
  * );
  * 
@@ -141,3 +141,4 @@ export { withRetry, withTimeout, getErrorMessage, AICache, GENERATION_TIMEOUT };
  *   30000 // 30 seconds
  * );
  */
+

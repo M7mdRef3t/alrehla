@@ -1,7 +1,7 @@
 import type { FC } from "react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, Target, Zap, ArrowLeft, Activity } from "lucide-react";
+import { Zap, ArrowLeft } from "lucide-react";
 
 /* ════════════════════════════════════════════════
    FIRST SPARK — The Cinematic Launch
@@ -18,13 +18,14 @@ export const FirstSparkOnboarding: FC<FirstSparkProps> = ({ onComplete }) => {
     const [stage, setStage] = useState<0 | 1 | 2>(0);
 
     // Sound effect placeholders (could be integrated with soundManager later)
-    const playSound = (type: "swoosh" | "ping" | "click") => {
+    const playSound = (_type: "swoosh" | "ping" | "click") => {
         // soundManager.play(type);
     };
 
     const nextStage = () => {
         playSound("click");
-        if (stage < 2) setStage((prev) => (prev + 1) as any);
+        if (stage === 0) setStage(1);
+        else if (stage === 1) setStage(2);
         else onComplete();
     };
 

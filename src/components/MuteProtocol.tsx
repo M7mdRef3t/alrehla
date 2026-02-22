@@ -1,9 +1,8 @@
 import type { FC } from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mic, MicOff, Flame, VolumeX, Shield, Zap, RefreshCw } from "lucide-react";
+import { X, Mic, MicOff, Flame, VolumeX, Shield, Zap } from "lucide-react";
 import { useMapState } from "../state/mapState";
-import { BreathingOverlay } from "./BreathingOverlay";
 import { useContinuousSpeechRecognition } from "../hooks/useContinuousSpeechRecognition";
 
 type ProtocolStep = "analyze_source" | "intercept_signal" | "incinerate" | "mission_report";
@@ -20,16 +19,9 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
   const [targetNodeId, setTargetNodeId] = useState<string | null>(null);
   const [signalText, setSignalText] = useState("");
   const [energySaved, setEnergySaved] = useState(0);
-  const [burning, setBurning] = useState(false);
   const [burnProgress, setBurnProgress] = useState(0);
 
-  // Audio recording refs
-  const [recording, setRecording] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-
   const {
-    isSupported: sttSupported,
     isListening: sttListening,
     transcript: sttTranscript,
     start: sttStart,
@@ -41,11 +33,10 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
     if (!isOpen) {
       setStep("analyze_source");
       setTargetNodeId(null);
-      setSignalText("");
-      setEnergySaved(0);
-      setBurning(false);
-      setBurnProgress(0);
-      sttClear();
+    setSignalText("");
+    setEnergySaved(0);
+    setBurnProgress(0);
+    sttClear();
     }
   }, [isOpen, sttClear]);
 
@@ -59,14 +50,12 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
 
   const handleStartIncineration = () => {
     setStep("incinerate");
-    setBurning(true);
     let progress = 0;
     const interval = setInterval(() => {
       progress += 2;
       setBurnProgress(progress);
       if (progress >= 100) {
         clearInterval(interval);
-        setBurning(false);
         setEnergySaved(Math.floor(Math.random() * 15) + 15); // Random 15-30%
         setStep("mission_report");
       }

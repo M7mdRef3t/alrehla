@@ -90,7 +90,6 @@ export const useGamificationState = create<GamificationState>()(
             getLevelProgress: () => {
                 const { xp, level } = get();
                 const currentLevelStartXP = (level - 1) * XP_PER_LEVEL;
-                const nextLevelStartXP = level * XP_PER_LEVEL;
                 const xpInCurrent = xp - currentLevelStartXP;
                 const progress = (xpInCurrent / XP_PER_LEVEL) * 100;
 

@@ -11,14 +11,12 @@ export interface BiometricPulse {
     timestamp: number;
 }
 
-const BIOMETRIC_KEY = "dawayir-biometrics";
-
 /** 
  * يحاكي استقبال بيانات حقيقية. في المستقبل، سيتم استخدام Web Bluetooth API 
  * للربط مع الساعات الذكية.
  */
 export function startBiometricStream(callback: (data: BiometricPulse) => void) {
-    console.log("🩺 Biometrics Bridge: Stream Started.");
+    console.warn("🩺 Biometrics Bridge: Stream Started.");
 
     // محاكاة إرسال بيانات كل 5 ثواني
     const interval = setInterval(() => {
@@ -65,3 +63,4 @@ export function injectMockStressEvent() {
     };
     return stressPulse;
 }
+

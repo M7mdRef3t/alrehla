@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, Unlock, Plus, Calendar, Award, X } from "lucide-react";
 import { LegacyEngine, WisdomCapsule } from "../services/legacyEngine";
-import { useJourneyState } from "../state/journeyState";
 import { useMapState } from "../state/mapState";
 import { usePulseState } from "../state/pulseState";
 import { ChronicleGenerator } from "../services/chronicleGenerator";

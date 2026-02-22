@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, BookOpen, Cpu, Shield, Users, BarChart2, GitBranch, Edit3, Save, Sparkles } from "lucide-react";
-import { NervousSystem, EntityArtifact } from "../../../../services/nervousSystem";
+import { Activity, BookOpen, Cpu, Shield, Users, GitBranch, Edit3, Save, Sparkles } from "lucide-react";
+import { NervousSystem } from "../../../../services/nervousSystem";
 import { useVictoryEngine } from "../../../../services/victoryEngineStore";
-import { usePulseState } from "../../../../state/pulseState";
 import { AutoOptimizer } from "../../../../services/autoOptimizer";
 
 export function EntityDashboard() {
@@ -154,7 +153,15 @@ export function EntityDashboard() {
     );
 }
 
-function TabButton({ id, label, icon: Icon, active, onClick }: any) {
+interface TabButtonProps {
+    id: "soul" | "pulse" | "structure" | "experience";
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    active: "soul" | "pulse" | "structure" | "experience";
+    onClick: (id: "soul" | "pulse" | "structure" | "experience") => void;
+}
+
+function TabButton({ id, label, icon: Icon, active, onClick }: TabButtonProps) {
     const isActive = active === id;
     return (
         <button
@@ -168,10 +175,8 @@ function TabButton({ id, label, icon: Icon, active, onClick }: any) {
 }
 
 function PulseDashboard() {
-    const { totalXp, currentRank } = useVictoryEngine(); // Mock or real hook
+    const { totalXp } = useVictoryEngine(); // Mock or real hook
     // Assuming these exist, if not we'll mock for UI
-    const victories = 12;
-    const activeNodes = 45;
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -211,7 +216,7 @@ function PulseDashboard() {
 
 function StructureDashboard() {
     const taskArtifact = NervousSystem.getArtifact("task");
-    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [suggestions, setSuggestions] = useState<Array<{ id: string; description: string }>>([]);
 
     const handleRunOptimizer = () => {
         const results = AutoOptimizer.analyzeSystem();
@@ -242,7 +247,7 @@ function StructureDashboard() {
 
             {suggestions.length > 0 && (
                 <div className="mb-6 space-y-2">
-                    {suggestions.map(s => (
+                    {suggestions.map((s) => (
                         <div key={s.id} className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-lg flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <Sparkles className="w-4 h-4 text-indigo-400" />
@@ -281,13 +286,21 @@ function ExperienceDashboard() {
     )
 }
 
-function StatCard({ title, value, trend, subtitle, color }: any) {
+interface StatCardProps {
+    title: string;
+    value: string | number;
+    trend?: "up" | "down";
+    subtitle?: string;
+    color?: "emerald" | "teal" | "violet";
+}
+
+function StatCard({ title, value, trend, subtitle, color }: StatCardProps) {
     const colors: Record<string, string> = {
         emerald: "text-emerald-400",
         teal: "text-teal-400",
         violet: "text-violet-400"
     };
-    const activeColor = colors[color] || "text-slate-200";
+    const activeColor = color ? colors[color] : "text-slate-200";
 
     return (
         <div className="bg-slate-800/50 border border-slate-700/50 p-6 rounded-xl relative overflow-hidden group hover:border-slate-600 transition-all">

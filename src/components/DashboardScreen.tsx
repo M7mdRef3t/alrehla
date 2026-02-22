@@ -2,12 +2,9 @@ import type { FC } from "react";
 import { useMemo, useRef, useEffect, useState } from "react";
 import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
 import { useMapState } from "../state/mapState";
-import { mapCopy } from "../copy/map";
-import { landingCopy } from "../copy/landing";
 import { WarRoomWidget } from "./CommandCenter/WarRoomWidget";
 import { MedalsBoard } from "./Armory/MedalsBoard";
 import { EmergencySOS } from "./CommandCenter/EmergencySOS";
-import { Medal } from "../types/tactical";
 import { StreakWidget } from "./StreakWidget";
 import { QuickPathModal } from "./QuickPathModal";
 import { ShareableMapCard } from "./ShareableMapCard";
@@ -132,7 +129,6 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
 
   const activeNodes = useMemo(() => nodes.filter((n) => !n.isNodeArchived), [nodes]);
   const greenCount = activeNodes.filter((n) => n.ring === "green").length;
-  const yellowCount = activeNodes.filter((n) => n.ring === "yellow").length;
   const redCount = activeNodes.filter((n) => n.ring === "red").length;
 
 

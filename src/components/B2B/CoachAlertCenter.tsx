@@ -1,10 +1,17 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, X, AlertCircle, ShieldAlert, Trash2 } from 'lucide-react';
+import { Bell, AlertCircle, ShieldAlert, Trash2 } from 'lucide-react';
 import { DispatcherEngine } from '../../services/dispatcherEngine';
 
+interface CoachAlert {
+    id: string;
+    severity: "critical" | "warning" | "info";
+    message: string;
+    created_at: string;
+}
+
 interface CoachAlertCenterProps {
-    alerts: any[];
+    alerts: CoachAlert[];
     onRefresh: () => void;
 }
 

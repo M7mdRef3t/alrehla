@@ -14,9 +14,9 @@ import {
   ShieldCheck,
   MessageSquare,
   Workflow,
-  Pencil
+  Pencil,
+  Terminal
 } from "lucide-react";
-import { FEATURE_FLAGS } from "../../config/features";
 import { runtimeEnv } from "../../config/runtimeEnv";
 import { useAdminState } from "../../state/adminState";
 import { getEffectiveRoleFromState, useAuthState } from "../../state/authState";
@@ -51,8 +51,10 @@ const B2BAnalytics = lazy(() => import("./dashboard/B2BAnalytics").then(m => ({ 
 const EntityDashboard = lazy(() => import("./dashboard/Entity/EntityDashboard").then(m => ({ default: m.EntityDashboard })));
 const AIDecisionLogPanel = lazy(() => import("./AIDecisionLog").then(m => ({ default: m.AIDecisionLog })));
 const HealthMonitorPanel = lazy(() => import("./HealthMonitorPanel").then(m => ({ default: m.HealthMonitorPanel })));
+const AISimulatorPanel = lazy(() => import("./dashboard/Intelligence/AISimulatorPanel").then(m => ({ default: m.AISimulatorPanel })));
+const CreativeDashboard = lazy(() => import("./dashboard/Intelligence/CreativeDashboard").then(m => ({ default: m.CreativeDashboard })));
 
-type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics";
+type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
@@ -72,7 +74,9 @@ const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
   { id: "user-state", label: "سحابة البيانات", icon: <Database className="w-4 h-4" /> },
   { id: "consciousness", label: "أرشيف الوعي", icon: <History className="w-4 h-4" /> },
   { id: "consciousness-map", label: "خريطة الوعي", icon: <Workflow className="w-4 h-4" /> },
-  { id: "b2b-analytics", label: "ذكاء المؤسسات", icon: <ShieldCheck className="w-4 h-4" /> }
+  { id: "b2b-analytics", label: "ذكاء المؤسسات", icon: <ShieldCheck className="w-4 h-4" /> },
+  { id: "ai-simulator", label: "محاكي الأزمات", icon: <Terminal className="w-4 h-4 text-rose-400" /> },
+  { id: "ai-marketing", label: "فنان الوعي", icon: <Sparkles className="w-4 h-4 text-amber-400" /> }
 ];
 
 const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
@@ -80,7 +84,7 @@ const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-sta
 const getTabFromLocation = (): AdminTab => {
   const params = new URLSearchParams(getSearch());
   const tab = params.get("tab") as AdminTab | null;
-  return NAV_ITEMS.some((item) => item.id === tab) ? tab! : "entity"; // Default to Entity
+  return NAV_ITEMS.some((item) => item.id === tab) ? tab! : "entity";
 };
 
 const updateTabInUrl = (tab: AdminTab) => {
@@ -248,12 +252,6 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   return (
     <AdminGate>
       <div className="admin-cockpit min-h-screen bg-[#05060f] text-slate-200 flex relative isolate selection:bg-teal-500/30 font-sans">
-        {/* Background Atmosphere */}
-        <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-500/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-teal-500/5 rounded-full blur-[120px]" />
-        </div>
-
         <aside className="admin-sidebar sticky top-0 h-screen w-72 flex-shrink-0 border-r border-white/5 bg-slate-950/40 backdrop-blur-3xl flex flex-col z-20 overflow-hidden select-none">
           <div className="p-8 border-b border-white/5 relative group">
             <div className="flex items-center gap-3">
@@ -268,10 +266,8 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
           </div>
 
           <nav className="flex-1 overflow-y-auto p-4 py-8 space-y-2 custom-scrollbar">
-            <p className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Operations Interface</p>
             {visibleNavItems.map((item) => {
               const isActive = effectiveTab === item.id;
-
               return (
                 <button
                   key={item.id}
@@ -287,7 +283,6 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                     </div>
                     <span className={`text-[11px] font-bold uppercase tracking-wider transition-all ${isActive ? "translate-x-1" : "group-hover:translate-x-0.5"}`}>{item.label}</span>
                   </div>
-                  {isActive && <div className="w-1.5 h-1.5 rounded-full bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]" />}
                 </button>
               );
             })}
@@ -331,35 +326,20 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 </h2>
               </div>
             </div>
-
             <div className="flex items-center gap-6">
               <LiveFreezePill />
-              <div className="hidden md:flex items-center gap-4 border-r border-white/10 pr-6 mr-6 h-10">
-                <div className="text-right">
-                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Module Status</p>
-                  <div className="flex items-center gap-2 justify-end">
-                    <span className="text-[10px] font-black text-teal-400 uppercase tracking-widest">Active Link</span>
-                    <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse shadow-[0_0_8px_rgba(45,212,191,0.6)]" />
-                  </div>
-                </div>
-              </div>
-
-
               <button
                 onClick={() => toggleContentEditing(!isContentEditingEnabled)}
                 className={`p-3 rounded-2xl border transition-all active:scale-95 group shadow-lg ${isContentEditingEnabled
                   ? "bg-teal-500/20 border-teal-500/50 text-teal-300"
                   : "bg-white/5 border-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/10"
                   }`}
-                title={isContentEditingEnabled ? "Disable Content Editing" : "Enable Content Editing"}
               >
                 <Pencil className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
               </button>
-
               <button
                 onClick={() => setShowAccount(true)}
                 className="p-3 rounded-2xl bg-white/5 border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all active:scale-95 group shadow-lg"
-                title="System Configuration"
               >
                 <Database className="w-5 h-5 group-hover:rotate-12 transition-transform" />
               </button>
@@ -368,18 +348,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
           <div className="flex-1 overflow-y-auto p-10 custom-scrollbar relative bg-[#05060f]/20">
             <div className="max-w-7xl mx-auto pb-20">
-              <Suspense fallback={
-                <div className="flex flex-col items-center justify-center min-h-[500px] gap-8">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-full border-2 border-teal-500/10 border-t-teal-500 animate-spin" />
-                    <div className="absolute inset-0 w-16 h-16 rounded-full border border-indigo-500/5 animate-pulse scale-150" />
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <p className="text-[11px] font-black text-teal-400 uppercase tracking-[0.4em] animate-pulse">Initializing Interface</p>
-                    <p className="text-[9px] text-slate-600 font-mono italic">Syncing with nebula core v2.4.0...</p>
-                  </div>
-                </div>
-              }>
+              <Suspense fallback={<div>Loading...</div>}>
                 {effectiveTab === "entity" && <EntityDashboard />}
                 {effectiveTab === "overview" && <OverviewPanel />}
                 {effectiveTab === "flow-map" && <FlowMapPanel />}
@@ -394,6 +363,8 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "consciousness" && <ConsciousnessArchivePanel />}
                 {effectiveTab === "consciousness-map" && <ConsciousnessMap />}
                 {effectiveTab === "b2b-analytics" && <B2BAnalytics />}
+                {effectiveTab === "ai-simulator" && <AISimulatorPanel />}
+                {effectiveTab === "ai-marketing" && <CreativeDashboard />}
               </Suspense>
             </div>
           </div>
@@ -406,7 +377,3 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     </AdminGate>
   );
 };
-
-const Loader2: FC<{ className?: string }> = ({ className }) => (
-  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-);

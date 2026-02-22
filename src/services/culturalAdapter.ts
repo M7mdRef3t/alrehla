@@ -5,7 +5,7 @@
  * أنماط الحدود تختلف: عائلة عربية ≠ أوروبية.
  */
 
-import { getLanguage, type Language } from "./i18n";
+import { getLanguage } from "./i18n";
 
 export type CulturalContext = "arabic_family" | "western" | "gulf" | "universal";
 

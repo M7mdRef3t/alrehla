@@ -23,8 +23,8 @@ const DEFAULT_CONFIG: Required<SwipeConfig> = {
  * 
  * @example
  * const swipeHandlers = useSwipeGesture({
- *   onSwipeLeft: () => console.log('swiped left'),
- *   onSwipeRight: () => console.log('swiped right')
+ *   onSwipeLeft: () => console.warn('swiped left'),
+ *   onSwipeRight: () => console.warn('swiped right')
  * });
  * 
  * <motion.div
@@ -90,3 +90,4 @@ export function useVerticalSwipe(
 ) {
   return useSwipeGesture({ onSwipeUp, onSwipeDown }, config);
 }
+

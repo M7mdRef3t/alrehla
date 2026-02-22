@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapCanvas } from "../modules/map/MapCanvas";
 import { FamilyTreeView } from "./FamilyTreeView";
@@ -15,7 +15,14 @@ import { DailyPulseWidget } from "./DailyPulseWidget";
 import { DailyJournalArchive } from "./DailyJournalArchive";
 import { ShadowPulseAlert } from "./ShadowPulseAlert";
 import { TEIWidget } from "./TEIWidget";
-import { RelationalFieldWidget } from "./RelationalFieldWidget";
+import { FloatingActionMenu } from "./FloatingActionMenu";
+import { InsightsSidebar } from "./InsightsSidebar";
+import { TabNavigation } from "./TabNavigation";
+import { LayoutModeSwitcher } from "./LayoutModeSwitcher";
+import { useGeminiLive } from "../hooks/useGeminiLive";
+import { useGraphSync } from "../hooks/useGraphSync";
+import { useAdaptiveLayout } from "../hooks/useAdaptiveLayout";
+import { useLayoutState } from "../state/layoutState";
 import { mapCopy } from "../copy/map";
 import { EditableText } from "./EditableText";
 import { useMapState } from "../state/mapState";
@@ -101,7 +108,47 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   onTakeNextStep,
   onRefreshNextStep
 }) => {
+  useGraphSync(); // تفعيل المزامنة التلقائية للجراف
+  useAdaptiveLayout(); // تفعيل النظام التكيفي للتخطيط
+
+  const mode = useLayoutState((s) => s.mode);
+  const activeTab = useLayoutState((s) => s.activeTab);
+
   const [showAddPerson, setShowAddPerson] = useState(false);
+
+  // ─── Gemini Live Integration (bureau of consciousness) ───
+  const {
+    isConnected,
+    isListening,
+    isSpeaking,
+    connect,
+    disconnect,
+    startListening,
+    sendContext
+  } = useGeminiLive({
+    apiKey: import.meta.env.VITE_GEMINI_API_KEY || "",
+    autoSendContext: true
+  });
+
+  const nodes = useMapState((s) => s.nodes); // Moved up for handleNodeDropOnAI
+
+  const handleNodeDropOnAI = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return;
+
+    if (!isConnected) connect();
+
+    // Start listening immediately on drop
+    void startListening();
+
+    // Contextual nudge
+    sendContext(`المستخدم اختار يركز دلوقتي على "${node.label}" (دائرة ${node.ring}). لاحظ حركته وابدأ معاه حوار سقراطي عن طبيعة العلاقة دي دلوقتي.`);
+  }, [nodes, isConnected, connect, startListening, sendContext]);
+
+  const toggleAI = useCallback(() => {
+    if (isConnected) disconnect();
+    else connect();
+  }, [isConnected, connect, disconnect]);
   const [showMeCard, setShowMeCard] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
   const [showWeekdayLabelsModal, setShowWeekdayLabelsModal] = useState(false);
@@ -112,7 +159,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [galaxyMode, setGalaxyMode] = useState(false);
   const [galaxySubView, setGalaxySubView] = useState<"map" | "forest">("map");
   const [selectedContexts, setSelectedContexts] = useState<string[]>(["family", "work", "love", "general"]);
-  const nodes = useMapState((s) => s.nodes);
   const isFamily = goalId === "family";
   const featureFlags = useAdminState((s) => s.featureFlags);
   const betaAccess = useAdminState((s) => s.betaAccess);
@@ -423,7 +469,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   )}
 
                   {/* Slogan — كتلة التنفس (10%) */}
-                  <p className="text-[11px] italic text-center pt-1" style={{ color: "rgba(45,212,191,0.35)" }}>
+                  <p className="text-[11px] text-center pt-1" style={{ color: "rgba(45,212,191,0.35)" }}>
                     {mapCopy.dashboardSlogan}
                   </p>
                 </div>
@@ -529,163 +575,162 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {pulseMode === "low" ? null : (
         <>
-      {pulseMode === "angry" && (
-        <motion.div
-          className="mt-5 mx-auto max-w-[38rem] card-unified status-card-angry px-4 py-4 text-right"
-          variants={cosmicFade}
-          style={{
-            order: sectionOrder["status-card"],
-            transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-          }}
-        >
-          <p className="text-sm font-semibold" style={{ color: "var(--ring-danger)" }}>
-            الرادار بيقول ضجيج عالي.. ثبّت مكانك الأول
-          </p>
-          <p className="text-xs mt-1" style={{ color: "rgba(248, 113, 113, 0.7)" }}>
-            قبل أي قرار، افصل الشوشرة وارجع للتحكم.
-          </p>
-          <button
-            type="button"
-            onClick={onOpenNoise}
-            className="mt-3 w-full cta-danger py-2.5 text-sm font-semibold"
-          >
-            إسكات الضجيج
-          </button>
-        </motion.div>
-      )}
-
-      {pulseMode === "high" && (
-        <motion.div
-          className="mt-5 mx-auto max-w-[38rem] card-unified status-card-high px-4 py-4 text-right"
-          variants={cosmicFade}
-          style={{
-            order: sectionOrder["status-card"],
-            transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-          }}
-        >
-          <p className="text-sm font-semibold" style={{ color: "var(--ring-safe)" }}>
-            طاقتك جاهزة.. وقت حسم مدار
-          </p>
-          <p className="text-xs mt-1" style={{ color: "rgba(45, 212, 191, 0.7)" }}>
-            {challengeLabel ?? "جاهز لمناورة النهاردة؟"}
-          </p>
-          <button
-            type="button"
-            onClick={onOpenChallenge}
-            className="mt-3 w-full cta-primary py-2.5 text-sm font-semibold disabled:opacity-40"
-            disabled={!onOpenChallenge}
-          >
-            مناورة اليوم
-          </button>
-        </motion.div>
-      )}
-
-      {/* ── Controls Bar ── */}
-      <motion.div
-        className="mt-8 flex items-center justify-center gap-3 flex-wrap"
-        variants={cosmicFade}
-        style={{
-          order: sectionOrder["controls-bar"],
-          transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-        }}
-      >
-        <button
-          type="button"
-          hidden={!canUseGalaxyView}
-          aria-hidden={!canUseGalaxyView}
-          onClick={() => setGalaxyMode((v) => !v)}
-          className={`glass-button px-4 py-2.5 text-sm font-semibold ${
-            galaxyMode ? "glass-button-active" : ""
-          }`}
-          title={galaxyMode ? "رجوع لسياق واحد" : "عرض كل المدارات"}
-        >
-          {galaxyMode ? (
-            <EditableText id="map_view_single_cta" defaultText={mapCopy.viewSingleCta} page="map" editOnClick={false} />
-          ) : (
-            <EditableText id="map_view_all_cta" defaultText={mapCopy.viewAllCta} page="map" editOnClick={false} />
-          )}
-        </button>
-        {canUseGalaxyView && galaxyMode && (
-          <div className="flex rounded-full p-1" style={{ background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
-            <button
-              type="button"
-              onClick={() => setGalaxySubView("map")}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${galaxySubView === "map" ? "cta-primary" : ""}`}
-              style={galaxySubView !== "map" ? { color: "var(--text-secondary)" } : {}}
-            >
-              <EditableText id="map_galaxy_title" defaultText={mapCopy.galaxyTitle} page="map" editOnClick={false} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setGalaxySubView("forest")}
-              className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${galaxySubView === "forest" ? "cta-primary" : ""}`}
-              style={galaxySubView !== "forest" ? { color: "var(--text-secondary)" } : {}}
-            >
-              <EditableText id="map_forest_title" defaultText={mapCopy.forestTitle} page="map" editOnClick={false} />
-            </button>
-          </div>
-        )}
-        {canUseGalaxyView && galaxyMode && galaxySubView === "map" && (
-          <div className="flex flex-wrap justify-center gap-2">
-            {(["family", "work", "love", "general"] as const).map((ctx) => {
-              const label = ctx === "family" ? mapCopy.contextFamily : ctx === "work" ? mapCopy.contextWork : ctx === "love" ? mapCopy.contextLove : mapCopy.contextGeneral;
-              const labelKey = ctx === "family" ? "map_context_family" : ctx === "work" ? "map_context_work" : ctx === "love" ? "map_context_love" : "map_context_general";
-              const on = selectedContexts.includes(ctx);
-              return (
-                <button
-                  key={ctx}
-                  type="button"
-                  onClick={() => toggleContext(ctx)}
-                  className={`glass-button px-3 py-1.5 text-xs font-semibold ${on ? "glass-button-active" : ""}`}
-                >
-                  <EditableText id={labelKey} defaultText={label} page="map" editOnClick={false} />
-                </button>
-              );
-            })}
-          </div>
-        )}
-        {!galaxyMode && isFamily && canUseFamilyTreeView && (
-          <div className="flex rounded-full p-1" style={{ background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
-            <button
-              type="button"
-              onClick={() => setViewMode("map")}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${viewMode === "map" ? "cta-primary" : ""}`}
-              style={viewMode !== "map" ? { color: "var(--text-secondary)" } : {}}
-              title="عرض الخريطة"
-            >
-              <Map className="w-4 h-4" />
-              <EditableText id="map_view_mode_map" defaultText="الخريطة" page="map" editOnClick={false} />
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (!canUseFamilyTree) { onFeatureLocked?.("family_tree"); return; }
-                setViewMode("tree");
+          {pulseMode === "angry" && (
+            <motion.div
+              className="mt-5 mx-auto max-w-[38rem] card-unified status-card-angry px-4 py-4 text-right"
+              variants={cosmicFade}
+              style={{
+                order: sectionOrder["status-card"],
+                transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
               }}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${viewMode === "tree" ? "cta-primary" : ""}`}
-              style={viewMode !== "tree" ? { color: canUseFamilyTree ? "var(--text-secondary)" : "var(--text-muted)" } : {}}
-              title="شجرة العيلة"
             >
-              <TreeDeciduous className="w-4 h-4" />
-              {canUseFamilyTree
-                ? <EditableText id="map_view_mode_tree" defaultText="شجرة العيلة" page="map" editOnClick={false} />
-                : <EditableText id="map_view_mode_tree_locked" defaultText="شجرة العيلة 🔒" page="map" editOnClick={false} />
-              }
+              <p className="text-sm font-semibold" style={{ color: "var(--ring-danger)" }}>
+                الرادار بيقول ضجيج عالي.. ثبّت مكانك الأول
+              </p>
+              <p className="text-xs mt-1" style={{ color: "rgba(248, 113, 113, 0.7)" }}>
+                قبل أي قرار، افصل الشوشرة وارجع للتحكم.
+              </p>
+              <button
+                type="button"
+                onClick={onOpenNoise}
+                className="mt-3 w-full cta-danger py-2.5 text-sm font-semibold"
+              >
+                إسكات الضجيج
+              </button>
+            </motion.div>
+          )}
+
+          {pulseMode === "high" && (
+            <motion.div
+              className="mt-5 mx-auto max-w-[38rem] card-unified status-card-high px-4 py-4 text-right"
+              variants={cosmicFade}
+              style={{
+                order: sectionOrder["status-card"],
+                transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+              }}
+            >
+              <p className="text-sm font-semibold" style={{ color: "var(--ring-safe)" }}>
+                طاقتك جاهزة.. وقت حسم مدار
+              </p>
+              <p className="text-xs mt-1" style={{ color: "rgba(45, 212, 191, 0.7)" }}>
+                {challengeLabel ?? "جاهز لمناورة النهاردة؟"}
+              </p>
+              <button
+                type="button"
+                onClick={onOpenChallenge}
+                className="mt-3 w-full cta-primary py-2.5 text-sm font-semibold disabled:opacity-40"
+                disabled={!onOpenChallenge}
+              >
+                مناورة اليوم
+              </button>
+            </motion.div>
+          )}
+
+          {/* ── Controls Bar ── */}
+          <motion.div
+            className="mt-8 flex items-center justify-center gap-3 flex-wrap"
+            variants={cosmicFade}
+            style={{
+              order: sectionOrder["controls-bar"],
+              transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+            }}
+          >
+            <button
+              type="button"
+              hidden={!canUseGalaxyView}
+              aria-hidden={!canUseGalaxyView}
+              onClick={() => setGalaxyMode((v) => !v)}
+              className={`glass-button px-4 py-2.5 text-sm font-semibold ${galaxyMode ? "glass-button-active" : ""
+                }`}
+              title={galaxyMode ? "رجوع لسياق واحد" : "عرض كل المدارات"}
+            >
+              {galaxyMode ? (
+                <EditableText id="map_view_single_cta" defaultText={mapCopy.viewSingleCta} page="map" editOnClick={false} />
+              ) : (
+                <EditableText id="map_view_all_cta" defaultText={mapCopy.viewAllCta} page="map" editOnClick={false} />
+              )}
             </button>
-          </div>
-        )}
-        <motion.button
-          type="button"
-          className="cta-primary px-6 py-3 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0"
-          onClick={() => { onSelectNode(null); setShowAddPerson(true); }}
-          title={mapCopy.addPersonTitle}
-          whileHover={{ scale: 1.04, y: -1 }}
-          whileTap={{ scale: 0.97 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-        >
-          <EditableText id="map_add_person_label" defaultText={mapCopy.addPersonLabel} page="map" editOnClick={false} />
-        </motion.button>
-      </motion.div>
+            {canUseGalaxyView && galaxyMode && (
+              <div className="flex rounded-full p-1" style={{ background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                <button
+                  type="button"
+                  onClick={() => setGalaxySubView("map")}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${galaxySubView === "map" ? "cta-primary" : ""}`}
+                  style={galaxySubView !== "map" ? { color: "var(--text-secondary)" } : {}}
+                >
+                  <EditableText id="map_galaxy_title" defaultText={mapCopy.galaxyTitle} page="map" editOnClick={false} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGalaxySubView("forest")}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${galaxySubView === "forest" ? "cta-primary" : ""}`}
+                  style={galaxySubView !== "forest" ? { color: "var(--text-secondary)" } : {}}
+                >
+                  <EditableText id="map_forest_title" defaultText={mapCopy.forestTitle} page="map" editOnClick={false} />
+                </button>
+              </div>
+            )}
+            {canUseGalaxyView && galaxyMode && galaxySubView === "map" && (
+              <div className="flex flex-wrap justify-center gap-2">
+                {(["family", "work", "love", "general"] as const).map((ctx) => {
+                  const label = ctx === "family" ? mapCopy.contextFamily : ctx === "work" ? mapCopy.contextWork : ctx === "love" ? mapCopy.contextLove : mapCopy.contextGeneral;
+                  const labelKey = ctx === "family" ? "map_context_family" : ctx === "work" ? "map_context_work" : ctx === "love" ? "map_context_love" : "map_context_general";
+                  const on = selectedContexts.includes(ctx);
+                  return (
+                    <button
+                      key={ctx}
+                      type="button"
+                      onClick={() => toggleContext(ctx)}
+                      className={`glass-button px-3 py-1.5 text-xs font-semibold ${on ? "glass-button-active" : ""}`}
+                    >
+                      <EditableText id={labelKey} defaultText={label} page="map" editOnClick={false} />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {!galaxyMode && isFamily && canUseFamilyTreeView && (
+              <div className="flex rounded-full p-1" style={{ background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("map")}
+                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${viewMode === "map" ? "cta-primary" : ""}`}
+                  style={viewMode !== "map" ? { color: "var(--text-secondary)" } : {}}
+                  title="عرض الخريطة"
+                >
+                  <Map className="w-4 h-4" />
+                  <EditableText id="map_view_mode_map" defaultText="الخريطة" page="map" editOnClick={false} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!canUseFamilyTree) { onFeatureLocked?.("family_tree"); return; }
+                    setViewMode("tree");
+                  }}
+                  className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${viewMode === "tree" ? "cta-primary" : ""}`}
+                  style={viewMode !== "tree" ? { color: canUseFamilyTree ? "var(--text-secondary)" : "var(--text-muted)" } : {}}
+                  title="شجرة العيلة"
+                >
+                  <TreeDeciduous className="w-4 h-4" />
+                  {canUseFamilyTree
+                    ? <EditableText id="map_view_mode_tree" defaultText="شجرة العيلة" page="map" editOnClick={false} />
+                    : <EditableText id="map_view_mode_tree_locked" defaultText="شجرة العيلة 🔒" page="map" editOnClick={false} />
+                  }
+                </button>
+              </div>
+            )}
+            <motion.button
+              type="button"
+              className="cta-primary px-6 py-3 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0"
+              onClick={() => { onSelectNode(null); setShowAddPerson(true); }}
+              title={mapCopy.addPersonTitle}
+              whileHover={{ scale: 1.04, y: -1 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <EditableText id="map_add_person_label" defaultText={mapCopy.addPersonLabel} page="map" editOnClick={false} />
+            </motion.button>
+          </motion.div>
         </>
       )}
 
@@ -750,6 +795,13 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               }}
               galaxyGoalIds={selectedContexts.length > 0 ? selectedContexts : ["family", "work", "love", "general"]}
               highlightNodeId={selectedNodeId}
+              aiState={{
+                isConnected,
+                isListening,
+                isSpeaking,
+                onToggle: toggleAI,
+                onNodeDrop: handleNodeDropOnAI
+              }}
             />
           </motion.div>
         ) : !canUseFamilyTreeView || viewMode === "map" ? (
@@ -773,6 +825,13 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               }}
               goalIdFilter={goalId}
               highlightNodeId={selectedNodeId}
+              aiState={{
+                isConnected,
+                isListening,
+                isSpeaking,
+                onToggle: toggleAI,
+                onNodeDrop: handleNodeDropOnAI
+              }}
             />
           </motion.div>
         ) : canUseFamilyTreeView && isFamily ? (
@@ -979,6 +1038,40 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {!journeyMode && (
         <ShadowPulseAlert onSelectNode={handleNodeClick} />
       )}
+
+      {/* ── Floating Action Menu — القائمة العائمة ── */}
+      {!journeyMode && mode === "focus" && (
+        <FloatingActionMenu
+          onAddPerson={() => {
+            onSelectNode(null);
+            setShowAddPerson(true);
+          }}
+          onOpenInsights={() => setShowDashboard((v) => !v)}
+          onOpenSettings={() => {
+            console.log("Settings clicked");
+          }}
+          onToggleAI={toggleAI}
+          isAIConnected={isConnected}
+          showAIOption={true}
+        />
+      )}
+
+      {/* ── Insights Sidebar — الشريط الجانبي للإحصائيات ── */}
+      {!journeyMode && (mode === "insights" || mode === "adaptive") && (
+        <InsightsSidebar onOpenArchive={() => setShowJournalArchive(true)} />
+      )}
+
+      {/* ── Tab Navigation — التبويبات ── */}
+      {!journeyMode && activeTab === "conversation" && (
+        <TabNavigation />
+      )}
+
+      {/* ── Layout Mode Switcher — مبدل الأوضاع ── */}
+      {!journeyMode && (
+        <LayoutModeSwitcher />
+      )}
     </motion.main>
   );
 };
+
+

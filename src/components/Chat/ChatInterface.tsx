@@ -41,12 +41,19 @@ export default function ChatInterface({ onAnalyze, isLoading }: ChatInterfacePro
 
     if (isLoading) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 space-y-6">
-                <div className="relative">
-                    <div className="absolute inset-0 bg-teal-500/20 blur-xl rounded-full animate-pulse" />
-                    <Loader2 className="w-10 h-10 text-teal-400 animate-spin relative z-10" />
+            <div className="flex flex-col items-center justify-center p-12 space-y-8">
+                <div className="relative w-24 h-24">
+                    <div className="absolute inset-0 bg-teal-500/20 blur-2xl rounded-full animate-pulse" />
+                    <div className="absolute inset-0 border-t-2 border-teal-500 rounded-full animate-spin" />
+                    <div className="absolute inset-4 border-b-2 border-indigo-500 rounded-full animate-spin-reverse" style={{ animationDuration: '3s' }} />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Loader2 className="w-8 h-8 text-teal-400 animate-pulse" />
+                    </div>
                 </div>
-                <p className="text-slate-400 text-sm font-bold tracking-tight animate-pulse uppercase font-mono">DECODING_COGNITIVE_NODES...</p>
+                <div className="text-center space-y-2">
+                    <p className="text-teal-400 text-xs font-black tracking-[0.3em] animate-pulse uppercase font-mono">جاري_المسح_العصبي</p>
+                    <p className="text-[10px] text-slate-600 font-mono uppercase mt-4">جاري_معايرة_الفيزياء_الداخلية...</p>
+                </div>
             </div>
         );
     }

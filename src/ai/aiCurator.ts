@@ -459,8 +459,9 @@ export async function exampleGenerateQuestion(nodes: MapNode[]): Promise<void> {
   const question = await aiCurator.generateDailyQuestion(context);
 
   if (question) {
-    console.log("✅ New question generated:", question.text);
+    console.warn("✅ New question generated:", question.text);
   } else {
-    console.log("❌ Question generation failed");
+    console.warn("❌ Question generation failed");
   }
 }
+

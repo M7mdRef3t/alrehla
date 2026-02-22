@@ -276,8 +276,9 @@ export async function syncSubscription(): Promise<void> {
                 });
             }
         }
-        console.log("🔄 Subscription synced with server:", newTier);
+        console.warn("🔄 Subscription synced with server:", newTier);
     } catch (err) {
         console.error("Failed to sync subscription:", err);
     }
 }
+

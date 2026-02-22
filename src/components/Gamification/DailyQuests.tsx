@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Circle, Zap, Sparkles, Trophy } from 'lucide-react';
+import { CheckCircle2, Zap, Sparkles, Trophy } from 'lucide-react';
 import { getDailyQuests, DailyQuest } from '../../services/gamificationEngine';
 
 /**
@@ -73,7 +73,7 @@ export const DailyQuests = () => {
                     <p className="text-[10px] text-indigo-300 font-medium tracking-wide">واحصل على صندوق عشوائي (قريباً)</p>
                 </div>
                 <div className="w-12 h-12 rounded-full border-2 border-indigo-500/30 flex items-center justify-center">
-                    <span className="text-sm font-black text-white italic">1/3</span>
+                    <span className="text-sm font-black text-white">1/3</span>
                 </div>
             </div>
         </div>

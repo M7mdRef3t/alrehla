@@ -2,10 +2,8 @@ import type { FC } from "react";
 import { motion } from "framer-motion";
 import { Crown, Zap, Lock, Check } from "lucide-react";
 import {
-    TIER_LIMITS,
     TIER_LABELS,
     TIER_PRICES,
-    activateSubscription,
     type SubscriptionTier,
 } from "../services/subscriptionManager";
 
@@ -50,7 +48,7 @@ const PREMIUM_FEATURES = [
     "أولوية الدعم",
 ];
 
-export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade }) => {
+export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade: _onUpgrade }) => {
     const copy = REASON_COPY[reason];
 
     const handleUpgrade = async (tier: 'premium' | 'coach') => {

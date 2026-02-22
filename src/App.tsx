@@ -6,7 +6,7 @@ import { LegalPage } from "./components/LegalPage";
 import { useNotificationState } from "./state/notificationState";
 import { useEmergencyState } from "./state/emergencyState";
 import { useMapState } from "./state/mapState";
-import { startBiometricStream, analyzeStressLevels } from "./services/biometricsBridge";
+import { startBiometricStream, analyzeStressLevels, type BiometricPulse } from "./services/biometricsBridge";
 import { useJourneyState } from "./state/journeyState";
 import { useAchievementState, getLibraryOpenedAt, getBreathingUsedAt } from "./state/achievementState";
 import { useThemeState } from "./state/themeState";
@@ -36,7 +36,6 @@ import { initAppContentRealtime } from "./state/appContentState";
 import { PWAInstallProvider } from "./contexts/PWAInstallContext";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
 import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
-import { DashboardScreen } from "./components/DashboardScreen";
 import { OnboardingFlow, hasCompletedJourneyOnboarding, resetJourneyOnboarding } from "./components/OnboardingFlow";
 import { JourneyToast } from "./components/JourneyToast";
 import { ActiveInterventionPrompt } from "./components/ActiveInterventionPrompt";
@@ -64,7 +63,6 @@ import {
 import { getFromLocalStorage, setInLocalStorage } from "./services/browserStorage";
 import { openInNewTab } from "./services/clientDom";
 import { getDocumentOrNull, getWindowOrNull } from "./services/clientRuntime";
-import { SettingsScreen } from "./components/SettingsScreen";
 import { initLanguage } from "./services/i18n";
 import { runtimeEnv } from "./config/runtimeEnv";
 import { getNextNudge, dismissNudge } from "./services/nudgeEngine";
@@ -82,7 +80,6 @@ import { StartupSequence } from "./components/StartupSequence";
 import { GraphEventToast } from "./components/GraphEventToast";
 import { useSwarmState } from "./state/swarmState";
 import { determineAutoPersona } from "./agent/swarmLogic";
-import { buildAgentSystemPrompt } from "./agent/prompt"; // Ensure this is imported
 import { resolveNavigation, type AppScreen } from "./navigation/navigationMachine";
 import { normalizeOwnerAction, normalizePreviewFeature } from "./navigation/actionRoutingMachine";
 import { executeOwnerAction } from "./navigation/ownerActionExecutor";
@@ -438,7 +435,7 @@ export default function App() {
   const cocoonSuppressedUntilRef = useRef<number>(0);
   const lastAutoCocoonOpenAtRef = useRef<number>(0);
   const [showNoiseSilencingPulse, setShowNoiseSilencingPulse] = useState(false);
-  const [pendingCocoonAfterNoise, setPendingCocoonAfterNoise] = useState(false);
+  const [, setPendingCocoonAfterNoise] = useState(false);
   const [postNoiseSessionMessage, setPostNoiseSessionMessage] = useState(false);
   const [postBreathingMessage, setPostBreathingMessage] = useState(false);
   const [pulseDeltaToast, setPulseDeltaToast] = useState<PulseDeltaToast | null>(null);
@@ -522,12 +519,12 @@ export default function App() {
   const snoozeNotifications = usePulseState((s) => s.snoozeNotifications);
 
   // Nudge Engine Logic
-  const [activeNudge, setActiveNudge] = useState<any>(null);
+  const [activeNudge, setActiveNudge] = useState<import("./services/nudgeEngine").Nudge | null>(null);
   const [showNudgeToast, setShowNudgeToast] = useState(false);
 
   // Mirror Logic (Phase 12)
   const [activeMirrorInsight, setActiveMirrorInsight] = useState<MirrorInsight | null>(null);
-  const [showMirrorOverlay, setShowMirrorOverlay] = useState(false);
+  const [, setShowMirrorOverlay] = useState(false);
 
   const featureFlags = useAdminState((s) => s.featureFlags);
   const betaAccess = useAdminState((s) => s.betaAccess);
@@ -641,7 +638,7 @@ export default function App() {
       import("./ai/autoHealthCheck")
         .then((mod) => {
           mod.startAutoHealthCheck();
-          console.log("✅ Auto Health Check started");
+          console.warn("✅ Auto Health Check started");
         })
         .catch((err) => console.warn("⚠️ Health Check init failed:", err));
 
@@ -649,7 +646,7 @@ export default function App() {
       import("./ai/revenueAutomation")
         .then((mod) => {
           mod.startWeeklyRevenueAnalysis();
-          console.log("✅ Weekly Revenue Analysis started");
+          console.warn("✅ Weekly Revenue Analysis started");
         })
         .catch((err) => console.warn("⚠️ Revenue automation init failed:", err));
 
@@ -657,7 +654,7 @@ export default function App() {
       import("./ai/emotionalPricingEngine")
         .then((mod) => {
           mod.startDailyEmotionalCheck();
-          console.log("✅ Emotional Pricing Engine started");
+          console.warn("✅ Emotional Pricing Engine started");
         })
         .catch((err) => console.warn("⚠️ Emotional Pricing init failed:", err));
 
@@ -666,7 +663,7 @@ export default function App() {
         .then((mod) => {
           mod.scheduleTelegramReports();
           void mod.telegramBot.notifySystemStartup();
-          console.log("✅ Telegram Bot connected");
+          console.warn("✅ Telegram Bot connected");
         })
         .catch((err) => console.warn("⚠️ Telegram Bot init failed:", err));
 
@@ -674,7 +671,7 @@ export default function App() {
       import("./ai/consciousnessThemeEngine")
         .then((mod) => {
           mod.startConsciousnessTheme();
-          console.log("✅ Consciousness Theme Engine started");
+          console.warn("✅ Consciousness Theme Engine started");
         })
         .catch((err) => console.warn("⚠️ Consciousness Theme init failed:", err));
     }
@@ -836,7 +833,7 @@ export default function App() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const stopStream = startBiometricStream((pulse: any) => {
+    const stopStream = startBiometricStream((pulse: BiometricPulse) => {
       const result = analyzeStressLevels(pulse);
       if (result.isCrisis && !showCocoon && !showBreathing) {
         trackEvent("biometric_crisis_triggered", { hr: pulse.heartRate, reason: result.reason || "unknown" });
@@ -848,7 +845,7 @@ export default function App() {
   }, [openCocoonModal, showCocoon, showBreathing]);
 
   // Predictive Engine (Phase 13) - State Adaptation
-  const [userPsychState, setUserPsychState] = useState<UserState>("ORDER");
+  const [, setUserPsychState] = useState<UserState>("ORDER");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -871,7 +868,7 @@ export default function App() {
       });
       setShowNudgeToast(true);
     }
-  }, [nodes, lastPulse, goalId]);
+  }, [nodes, lastPulse, goalId, showBreathing, showCocoon]);
 
 
   const handleNudgeDismiss = () => {
@@ -1343,7 +1340,7 @@ export default function App() {
     if (screen === "goal" || screen === "map" || screen === "mission" || screen === "guided") {
       void navigateToScreen("landing");
     }
-  }, [canUseMap, isUserMode, navigateToScreen, screen]);
+  }, [canUseMap, navigateToScreen, screen]);
 
   useEffect(() => {
     if (canUseJourneyTools) return;
@@ -1366,11 +1363,11 @@ export default function App() {
     if (goalId !== "family") setGoalId("family");
   }, [goalId, isLockedPhaseOne]);
 
-  const openMissionScreen = (nodeId: string) => {
+  const openMissionScreen = useCallback((nodeId: string) => {
     if (isLockedPhaseOne) return;
     setMissionNodeId(nodeId);
     void navigateToScreen("mission");
-  };
+  }, [isLockedPhaseOne, navigateToScreen]);
   const openMissionFromAddPerson = useCallback((nodeId: string) => {
     const safeId = String(nodeId ?? "").trim();
     if (!safeId) {
@@ -2982,7 +2979,7 @@ export default function App() {
         <JourneyToast
           variant="nudge"
           visible={showNudgeToast}
-          nudgeData={activeNudge}
+          nudgeData={activeNudge ?? undefined}
           onClose={() => {
             if (activeNudge?.title === 'نظام الاحتواء 🛡️') {
               openCocoonModal("manual");
@@ -3085,3 +3082,4 @@ export default function App() {
     </PWAInstallProvider>
   );
 }
+

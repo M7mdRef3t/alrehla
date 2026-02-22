@@ -4,10 +4,10 @@
  * يسمح للمستخدم برؤية "خيال" لمستقبله بناءً على التغييرات المقترحة.
  */
 
-import React, { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Telescope, Sparkles, TrendingDown, TrendingUp, AlertTriangle, Zap } from "lucide-react";
-import { simulateHypotheticalState, type FutureProjection } from "../services/propheticEngine";
+import React, { useMemo } from "react";
+import { motion } from "framer-motion";
+import { Telescope, Sparkles, TrendingDown, TrendingUp, AlertTriangle } from "lucide-react";
+import { simulateHypotheticalState } from "../services/propheticEngine";
 import type { MapNode } from "../modules/map/mapTypes";
 
 interface FutureSimulatorProps {
@@ -16,8 +16,6 @@ interface FutureSimulatorProps {
 }
 
 export const FutureSimulator: React.FC<FutureSimulatorProps> = ({ nodes, onExitSimulation }) => {
-    const [isGhostMode, setIsGhostMode] = useState(true);
-
     const projection = useMemo(() => simulateHypotheticalState(nodes), [nodes]);
 
     const getStatusColor = (state: string) => {

@@ -12,7 +12,7 @@ function stateLabel(value: "Burnout" | "Stagnation" | "Thriving"): string {
 
 export const OutcomeSimulator: FC = () => {
     const nodes = useMapState((s) => s.nodes);
-    const prediction = useMemo(() => simulateFutureSelf(), [nodes]);
+    const prediction = useMemo(() => simulateFutureSelf(), []);
     const [comparison, setComparison] = useState<null | {
         projectedState: string;
         projectedScore: number;

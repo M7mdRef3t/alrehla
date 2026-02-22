@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, UserPlus, Copy, Check, Shield, ChevronRight, Briefcase } from "lucide-react";
+import { Users, UserPlus, Copy, Check, Shield, Briefcase } from "lucide-react";
 import {
     registerAsCoach,
     addClient,
@@ -33,8 +33,7 @@ export const B2BPortal: FC = () => {
     const [coachSpec, setCoachSpec] = useState("");
 
     const [shareCode, setShareCode] = useState("");
-    const [clients, setClients] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [clients, setClients] = useState<Array<{ clientCode: string; clientAlias: string }>>([]);
 
 
     useEffect(() => {
@@ -49,7 +48,6 @@ export const B2BPortal: FC = () => {
                 const clientList = await getClients();
                 setClients(clientList);
             }
-            setIsLoading(false);
         };
         init();
     }, []);

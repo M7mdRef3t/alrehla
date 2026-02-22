@@ -166,7 +166,7 @@ export class RevenueAutomationEngine {
         lifetimeValue: ((40 * 4.99 + 10 * 49) / 50) * (1 / 0.05), // LTV = ARPU × (1/churn)
       };
 
-      console.log("📊 Revenue metrics analyzed:", mockData);
+      console.warn("📊 Revenue metrics analyzed:", mockData);
       return mockData;
     } catch (error) {
       console.error("❌ Failed to analyze metrics:", error);
@@ -182,7 +182,7 @@ export class RevenueAutomationEngine {
   async suggestPricingOptimization(
     currentMetrics: RevenueMetrics
   ): Promise<PricingRecommendation | null> {
-    console.log("💡 Requesting pricing optimization from AI...");
+    console.warn("💡 Requesting pricing optimization from AI...");
 
     const prompt = this.buildPricingPrompt(currentMetrics);
 
@@ -216,7 +216,7 @@ export class RevenueAutomationEngine {
       requiresApproval: true, // دايماً يحتاج موافقة
     };
 
-    console.log("✅ Pricing recommendation generated:", result);
+    console.warn("✅ Pricing recommendation generated:", result);
     return result;
   }
 
@@ -288,12 +288,12 @@ export class RevenueAutomationEngine {
     const evaluation = await decisionEngine.evaluate(decision);
 
     if (!evaluation.allowed) {
-      console.log("❌ Pricing change denied by decision engine");
+      console.warn("❌ Pricing change denied by decision engine");
       return { success: false, message: "Decision engine denied the change" };
     }
 
     if (evaluation.requiresApproval) {
-      console.log("⏳ Pricing change requires manual approval");
+      console.warn("⏳ Pricing change requires manual approval");
 
       await decisionEngine.execute({
         ...decision,
@@ -313,7 +313,7 @@ export class RevenueAutomationEngine {
       // TODO: Update database with new pricing
       // TODO: Notify existing users about grandfathering policy
 
-      console.log("✅ Pricing changed successfully:", recommendation.suggestedPrices);
+      console.warn("✅ Pricing changed successfully:", recommendation.suggestedPrices);
 
       await decisionEngine.execute({
         ...decision,
@@ -341,7 +341,7 @@ export class RevenueAutomationEngine {
     suggestedActions: string[];
     estimatedChurnReduction: number;
   } | null> {
-    console.log("🔍 Analyzing churn reasons...");
+    console.warn("🔍 Analyzing churn reasons...");
 
     const prompt = `
 أنت خبير في تحليل الـ Churn في SaaS.
@@ -387,7 +387,7 @@ export class RevenueAutomationEngine {
    * ─────────────────────────────────────────────────────────────────
    */
   async runWeeklyRevenueAnalysis(): Promise<void> {
-    console.log("📈 Running weekly revenue analysis...");
+    console.warn("📈 Running weekly revenue analysis...");
 
     try {
       // 1. تحليل الميتريكس
@@ -397,14 +397,14 @@ export class RevenueAutomationEngine {
       // 2. اقتراح تحسين التسعير
       const pricingRec = await this.suggestPricingOptimization(metrics);
       if (pricingRec) {
-        console.log("💡 Pricing recommendation:", pricingRec);
+        console.warn("💡 Pricing recommendation:", pricingRec);
         // سيظهر في الـ Admin Dashboard للموافقة
       }
 
       // 3. تحليل الـ Churn
       const churnAnalysis = await this.analyzeChurn(metrics);
       if (churnAnalysis) {
-        console.log("🔍 Churn analysis:", churnAnalysis);
+        console.warn("🔍 Churn analysis:", churnAnalysis);
       }
 
       // 4. حفظ التقرير في localStorage
@@ -415,7 +415,7 @@ export class RevenueAutomationEngine {
         churnAnalysis,
       });
 
-      console.log("✅ Weekly revenue analysis complete");
+      console.warn("✅ Weekly revenue analysis complete");
     } catch (error) {
       console.error("❌ Weekly revenue analysis failed:", error);
     }
@@ -491,5 +491,6 @@ export function startWeeklyRevenueAnalysis(): void {
     void revenueEngine.runWeeklyRevenueAnalysis();
   }, ONE_WEEK_MS);
 
-  console.log("✅ Weekly revenue analysis scheduled");
+  console.warn("✅ Weekly revenue analysis scheduled");
 }
+

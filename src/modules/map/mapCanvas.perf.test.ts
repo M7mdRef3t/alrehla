@@ -119,7 +119,7 @@ describe("MapCanvas performance baseline", () => {
       };
     });
 
-    console.table(runs);
+    console.warn("MapCanvas perf baseline", runs);
 
     // Guardrail sanity checks: main hot path should stay reasonably quick on dev machines.
     expect(runs[0].totalMs).toBeLessThan(25);

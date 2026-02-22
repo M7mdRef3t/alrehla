@@ -84,11 +84,10 @@ export const Achievements: FC<AchievementsProps> = ({ onClose }) => {
                 key={t.id}
                 type="button"
                 onClick={() => setTab(t.id)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold transition-colors border-b-2 ${
-                  active
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold transition-colors border-b-2 ${active
                     ? "border-teal-500 text-teal-600 dark:text-teal-400"
                     : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                }`}
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 {t.label}
@@ -122,11 +121,10 @@ export const Achievements: FC<AchievementsProps> = ({ onClose }) => {
                   return (
                     <motion.div
                       key={a.id}
-                      className={`rounded-xl border-2 p-4 text-right transition-colors ${
-                        unlocked
+                      className={`rounded-xl border-2 p-4 text-right transition-colors ${unlocked
                           ? "bg-amber-50/80 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
                           : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-600 opacity-75"
-                      }`}
+                        }`}
                       initial={false}
                       animate={{ opacity: unlocked ? 1 : 0.85 }}
                     >
@@ -163,7 +161,7 @@ export const Achievements: FC<AchievementsProps> = ({ onClose }) => {
                 className="p-4 space-y-4"
               >
                 {/* الجملة الفلسفية */}
-                <p className="text-xs italic text-center leading-relaxed"
+                <p className="text-xs text-center leading-relaxed"
                   style={{ color: "rgba(45,212,191,0.75)" }}>
                   التعافي مش سباق.. هو إنك النهاردة تكون عارف مكانك أحسن من امبارح.
                 </p>

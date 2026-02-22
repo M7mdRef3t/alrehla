@@ -5,7 +5,6 @@
  */
 
 import React, { useMemo } from "react";
-import { motion } from "framer-motion";
 import { Users, Activity, AlertCircle, TrendingDown, Lightbulb, Download } from "lucide-react";
 import { loadEnterpriseData, generateMockMetrics, ENTERPRISE_TYPE_LABELS } from "../../../services/enterpriseAnalytics";
 

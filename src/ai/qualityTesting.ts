@@ -317,11 +317,12 @@ export async function exampleBatchTest(): Promise<void> {
 
   const { results, summary } = await qualityTester.batchTest(generatedQuestions);
 
-  console.log("📊 نتيجة الاختبار:");
-  console.log(`- نجح: ${summary.passed}/${summary.totalTested}`);
-  console.log(`- المتوسط: ${summary.averageScore}/100`);
+  console.warn("📊 نتيجة الاختبار:");
+  console.warn(`- نجح: ${summary.passed}/${summary.totalTested}`);
+  console.warn(`- المتوسط: ${summary.averageScore}/100`);
 
   // طباعة التقرير الكامل
   const report = qualityTester.generateReport(results);
-  console.log(report);
+  console.warn(report);
 }
+

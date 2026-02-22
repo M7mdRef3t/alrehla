@@ -79,7 +79,7 @@ export const identifyKeystones = (): KeystoneNode[] => {
 
     nodes.forEach(node => {
         let impact = 0;
-        let reasons: string[] = [];
+        const reasons: string[] = [];
 
         // Check if Parent/Spouse (High structural impact)
         if (node.treeRelation?.relationLabel === "father" || node.treeRelation?.relationLabel === "mother" || node.treeRelation?.relationLabel === "spouse") {

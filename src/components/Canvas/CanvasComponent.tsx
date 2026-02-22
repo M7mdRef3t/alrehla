@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import ReactFlow, { Background, Controls, useNodesState, useEdgesState, Node, Edge, ConnectionLineType } from 'reactflow';
+import React, { useEffect, useState, useCallback } from 'react';
+import ReactFlow, { Background, BackgroundVariant, Controls, useNodesState, useEdgesState, Node, Edge, ConnectionLineType } from 'reactflow';
 import 'reactflow/dist/style.css';
 import CustomNode from './CustomNode';
 import { DawayirState } from '../../hooks/useDawayirEngine';
@@ -192,6 +192,10 @@ export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate }
 
     return (
         <div className="w-full h-full bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-white/5 relative group">
+            {/* Tactical Overlays */}
+            <div className="tactical-crt-overlay" />
+            <div className="radar-sweep" />
+
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -208,8 +212,8 @@ export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate }
                 minZoom={0.5}
                 maxZoom={1.5}
             >
-                <Background color="#1e293b" gap={30} size={1} />
-                <Controls showInteractive={false} className="glass border-white/10 shadow-xl" />
+                <Background color="#111827" gap={40} size={1} variant={BackgroundVariant.Dots} />
+                <Controls showInteractive={false} className="glass border-white/10 shadow-xl !bg-slate-900/50" />
             </ReactFlow>
         </div>
     );

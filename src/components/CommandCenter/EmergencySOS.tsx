@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertOctagon, Shield, Power } from 'lucide-react';
-import { soundManager } from '../../services/soundManager';
+import { Shield, Power } from 'lucide-react';
 
 export const EmergencySOS: React.FC = () => {
     const [isLockdown, setIsLockdown] = useState(false);
@@ -73,7 +72,7 @@ export const EmergencySOS: React.FC = () => {
                                     🌀 تمرين تنفس (3 دقائق)
                                 </button>
                                 <button className="w-full py-4 bg-slate-800/50 border border-slate-700 text-slate-300 rounded-xl hover:bg-slate-800 transition-all font-medium">
-                                    🔇 تشويش الإشارة (White Noise)
+                                    🔇 تشويش الإشارة
                                 </button>
 
                                 <button

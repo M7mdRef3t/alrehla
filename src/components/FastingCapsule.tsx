@@ -1,12 +1,16 @@
 import type { FC } from "react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Clock, Play, Pause, Square, Volume2, VolumeX, Shield, Timer } from "lucide-react";
+import { X, Play, Pause, Volume2, VolumeX, Shield } from "lucide-react";
 
 interface FastingCapsuleProps {
     isOpen: boolean;
     onClose: () => void;
 }
+
+type WebkitWindow = Window & {
+    webkitAudioContext?: typeof AudioContext;
+};
 
 export const FastingCapsule: FC<FastingCapsuleProps> = ({ isOpen, onClose }) => {
     const [duration, setDuration] = useState(10); // Minutes
@@ -50,7 +54,9 @@ export const FastingCapsule: FC<FastingCapsuleProps> = ({ isOpen, onClose }) => 
     const startNoise = () => {
         try {
             if (!audioContextRef.current) {
-                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+                const AudioCtor = window.AudioContext || (window as WebkitWindow).webkitAudioContext;
+                if (!AudioCtor) return;
+                audioContextRef.current = new AudioCtor();
             }
 
             const ctx = audioContextRef.current;
@@ -111,8 +117,6 @@ export const FastingCapsule: FC<FastingCapsuleProps> = ({ isOpen, onClose }) => 
         const secs = seconds % 60;
         return `${mins}:${secs.toString().padStart(2, "0")}`;
     };
-
-    const progress = ((duration * 60 - timeLeft) / (duration * 60)) * 100;
 
     return (
         <AnimatePresence>

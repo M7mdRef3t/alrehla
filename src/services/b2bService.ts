@@ -52,9 +52,9 @@ export async function getShareWithCoachText(coachName?: string): Promise<string>
 
 /* ── Coach: Manage clients ── */
 export async function registerAsCoach(
-    name: string,
-    role: B2BRole,
-    specialization: string
+    _name: string,
+    _role: B2BRole,
+    _specialization: string
 ): Promise<boolean> {
     if (!supabase) return false;
     const { data: { session } } = await supabase.auth.getSession();
@@ -71,7 +71,7 @@ export async function registerAsCoach(
     return !error;
 }
 
-export async function addClient(clientCode: string, alias: string): Promise<boolean> {
+export async function addClient(clientCode: string, _alias: string): Promise<boolean> {
     if (!supabase) return false;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return false;

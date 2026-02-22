@@ -10,6 +10,8 @@
 
 import type { MapNode } from "../modules/map/mapTypes";
 import type { DailyQuestion } from "../data/dailyQuestions";
+import { useEmergencyState } from "../state/emergencyState";
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🎯 تصنيف القرارات (Decision Categories)
@@ -224,8 +226,20 @@ export class DecisionEngine {
    * تنفيذ قرار (بعد الموافقة)
    */
   async execute(decision: AIDecision): Promise<void> {
-    // TODO: Integration with State Management
-    // بناءً على decision.type، نعمل التعديل المناسب في الـ state
+    console.warn(`[DecisionEngine] Executing: ${decision.type}`, decision.payload);
+
+    switch (decision.type) {
+      case "trigger_breathing_exercise":
+        try { useEmergencyState.getState().open(); } catch (e) { console.error(e); }
+        break;
+      case "send_notification":
+        try {
+          const p = decision.payload as { message?: string } | null;
+          console.warn("AI TACTICAL SIGNAL:", p?.message);
+          // TODO: Link with a proper Toast UI store
+        } catch (e) { console.error(e); }
+        break;
+    }
 
     this.logDecision({ ...decision, executedAt: Date.now(), outcome: "executed" });
   }
@@ -291,7 +305,7 @@ export class DecisionEngine {
    * تحقق من جودة المحتوى المُولّد
    */
   private async validateContentQuality(
-    decision: Omit<AIDecision, "timestamp">
+    _decision: Omit<AIDecision, "timestamp">
   ): Promise<{ passed: boolean; reason?: string }> {
     // TODO: استخدم isAlignedWithPrinciples() من CORE_PRINCIPLES.ts
 
@@ -375,13 +389,13 @@ export async function exampleGenerateQuestion(
   const result = await engine.evaluate(decision);
 
   if (result.allowed) {
-    console.log("✅ AI generated a new question autonomously");
+    console.warn("✅ AI generated a new question autonomously");
     await engine.execute({ ...decision, timestamp: Date.now() });
   } else if (result.requiresApproval) {
-    console.log("⏸️ Question requires approval from محمد");
+    console.warn("⏸️ Question requires approval from محمد");
     await engine.requestApproval({ ...decision, timestamp: Date.now() });
   } else {
-    console.log("❌ Decision forbidden:", result.reason);
+    console.warn("❌ Decision forbidden:", result.reason);
   }
 }
 
@@ -405,10 +419,10 @@ export async function exampleMoveNode(
   const result = await engine.evaluate(decision);
 
   if (result.requiresApproval) {
-    console.log("⏸️ AI suggests moving node, requires user approval");
+    console.warn("⏸️ AI suggests moving node, requires user approval");
     // هنا نبعت notification للمستخدم
   } else {
-    console.log("❌ Cannot move node automatically:", result.reason);
+    console.warn("❌ Cannot move node automatically:", result.reason);
   }
 }
 
@@ -427,7 +441,7 @@ export async function exampleDeleteNode(
 
   const result = await engine.evaluate(decision);
 
-  console.log("❌ FORBIDDEN:", result.reason);
+  console.warn("❌ FORBIDDEN:", result.reason);
   // النتيجة: "Decision type 'delete_node' is forbidden for AI agents"
 }
 
@@ -503,3 +517,4 @@ export function requiresApproval(type: DecisionType): boolean {
 export function isForbidden(type: DecisionType): boolean {
   return DECISION_RULES[type] === "FORBIDDEN";
 }
+

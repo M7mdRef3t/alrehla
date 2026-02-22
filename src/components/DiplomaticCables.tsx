@@ -5,10 +5,9 @@
  */
 
 import React, { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Send, Copy, Info, Search, Filter, CheckCircle2 } from "lucide-react";
-import { getCablesByCategory, generateCableContent, type CableCategory } from "../services/diplomacyService";
-import { useJourneyState } from "../state/journeyState"; // For person context if needed
+import { motion } from "framer-motion";
+import { Send, Copy, Info, Search, CheckCircle2 } from "lucide-react";
+import { getCablesByCategory, type CableCategory } from "../services/diplomacyService";
 import { trackEvent } from "../services/analytics";
 
 export const DiplomaticCables: React.FC = () => {
@@ -54,13 +53,13 @@ export const DiplomaticCables: React.FC = () => {
                     />
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-                    {["all", "boundary", "distancing", "clarity", "de-escalation"].map((cat) => (
+                    {categories.map((cat) => (
                         <button
                             key={cat}
-                            onClick={() => setSelectedCategory(cat as any)}
+                            onClick={() => setSelectedCategory(cat)}
                             className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${selectedCategory === cat
-                                    ? "bg-indigo-500 text-white"
-                                    : "bg-white/5 text-slate-400 border border-white/5 hover:border-white/20"
+                                ? "bg-indigo-500 text-white"
+                                : "bg-white/5 text-slate-400 border border-white/5 hover:border-white/20"
                                 }`}
                         >
                             {cat === "all" ? "الكل" : cat}
@@ -83,14 +82,14 @@ export const DiplomaticCables: React.FC = () => {
                             <div>
                                 <h3 className="text-lg font-bold text-white">{cable.title}</h3>
                                 <span className="text-[10px] uppercase font-black tracking-widest text-indigo-400/60">
-                                    Category: {cable.category}
+                                    التصنيف: {cable.category}
                                 </span>
                             </div>
                             <button
                                 onClick={() => handleCopy(cable.id, cable.template)}
                                 className={`p-2 rounded-lg transition-all ${copiedId === cable.id
-                                        ? "bg-emerald-500/20 text-emerald-400"
-                                        : "bg-white/5 text-slate-400 hover:text-white"
+                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    : "bg-white/5 text-slate-400 hover:text-white"
                                     }`}
                             >
                                 {copiedId === cable.id ? <CheckCircle2 className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
@@ -105,7 +104,7 @@ export const DiplomaticCables: React.FC = () => {
 
                         <div className="flex items-start gap-2 p-3 bg-indigo-500/5 rounded-lg border border-indigo-500/10">
                             <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                            <p className="text-[11px] text-indigo-300/70 italic leading-snug">
+                            <p className="text-[11px] text-indigo-300/70 leading-snug">
                                 نصيحة جارفيس: {cable.jarvisNote}
                             </p>
                         </div>
@@ -115,3 +114,4 @@ export const DiplomaticCables: React.FC = () => {
         </div>
     );
 };
+    const categories: Array<CableCategory | "all"> = ["all", "boundary", "distancing", "clarity", "de-escalation"];

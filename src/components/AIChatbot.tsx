@@ -16,7 +16,6 @@ import { buildToneSystemBlock, resolveVoiceMode } from "../copy/toneGuide";
 import { useAppContentString } from "../hooks/useAppContentString";
 import { consciousnessService, type MemoryMatch } from "../services/consciousnessService";
 import { ConsciousnessArchiveModal } from "./ConsciousnessArchiveModal";
-import { buildPersonalizedWelcome } from "../services/userMemory";
 import { canSendAIMessage, recordAIMessage, getRemainingAIMessages } from "../services/subscriptionManager";
 import { PaywallGate } from "./PaywallGate";
 import { AnimatePresence } from "framer-motion";
@@ -24,7 +23,6 @@ import { useGamificationState } from "../services/gamificationEngine";
 import { scanForVampires } from "../services/propheticEngine";
 import { useEventHistoryStore } from "../state/eventHistoryStore";
 import { SwarmPersonaSelector } from "./SwarmPersonaSelector";
-import { useSwarmState } from "../state/swarmState";
 import { MemoryStore } from "../services/memoryStore";
 
 interface Message {
@@ -73,7 +71,7 @@ export const AIChatbot: FC<AIChatbotProps> = ({
   const [mirrorSourceFilter, setMirrorSourceFilter] = useState<"both" | "pulse" | "chat">("both");
   const [showArchive, setShowArchive] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
-  const [remainingMessages, setRemainingMessages] = useState(getRemainingAIMessages());
+  const [, setRemainingMessages] = useState(getRemainingAIMessages());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const cardsForThisTurnRef = useRef<string[]>([]);
@@ -134,7 +132,7 @@ export const AIChatbot: FC<AIChatbotProps> = ({
       };
       setMessages([welcomeMsg]);
     }
-  }, [isOpen, messages.length, personLabel]);
+  }, [isOpen, messages.length, personLabel, rank, recentEvents, vampires]);
 
   const handleSend = async () => {
     if (!input.trim() || isStreaming) return;

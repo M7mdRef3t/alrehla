@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { Activity, Zap, MousePointerClick, Clock, ArrowRight, BarChart3, AlertTriangle } from "lucide-react";
+import { Activity, Zap, BarChart3 } from "lucide-react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import type { OverviewStats } from "../../../../../services/adminApi";
 

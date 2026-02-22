@@ -30,7 +30,7 @@ export class AutoOptimizer {
 
     static applySuggestion(suggestionId: string) {
         // Logic to auto-update the mission content or task.md
-        console.log(`Applying optimization: ${suggestionId}`);
+        console.warn(`Applying optimization: ${suggestionId}`);
 
         if (suggestionId === "opt_mission_3") {
             // Example: Update the task artifact to reflect this need
@@ -40,3 +40,4 @@ export class AutoOptimizer {
         }
     }
 }
+

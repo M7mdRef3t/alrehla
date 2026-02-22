@@ -12,7 +12,6 @@
 
 import type { HealthCheckResult, HealthIssue } from "../ai/autoHealthCheck";
 import type { RevenueMetrics, PricingRecommendation } from "../ai/revenueAutomation";
-import type { AIDecision } from "../ai/decision-framework";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🔑 Configuration
@@ -70,7 +69,7 @@ export class TelegramBotService {
    */
   async sendMessage(message: TelegramMessage): Promise<boolean> {
     if (!this.isEnabled) {
-      console.log("📱 [Telegram Bot Disabled] Would send:", message.text);
+      console.warn("📱 [Telegram Bot Disabled] Would send:", message.text);
       return false;
     }
 
@@ -92,7 +91,7 @@ export class TelegramBotService {
         throw new Error(`Telegram API error: ${response.status}`);
       }
 
-      console.log("✅ Telegram message sent:", message.type);
+      console.warn("✅ Telegram message sent:", message.type);
       return true;
     } catch (error) {
       console.error("❌ Failed to send Telegram message:", error);
@@ -408,7 +407,7 @@ export function scheduleTelegramReports(): void {
   scheduleDailyReport();
   scheduleWeeklyReport();
 
-  console.log("✅ Telegram reports scheduled");
+  console.warn("✅ Telegram reports scheduled");
 }
 
 async function sendDailyHealthReportNow(): Promise<void> {
@@ -440,3 +439,4 @@ async function sendWeeklyRevenueReportNow(): Promise<void> {
     console.error("❌ Failed to send weekly revenue report:", error);
   }
 }
+

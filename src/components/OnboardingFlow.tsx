@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMapState } from "../state/mapState";
 import { setInLocalStorage } from "../services/browserStorage";
@@ -12,6 +12,7 @@ import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
 
 const ONBOARDING_KEY = "dawayir-journey-onboarding-done";
 
+/* eslint-disable react-refresh/only-export-components */
 export function markJourneyOnboardingDone(): void {
   setInLocalStorage(ONBOARDING_KEY, "true");
 }
@@ -26,6 +27,7 @@ export function hasCompletedJourneyOnboarding(): boolean {
   if (typeof window === "undefined") return true;
   return localStorage.getItem(ONBOARDING_KEY) === "true";
 }
+/* eslint-enable react-refresh/only-export-components */
 
 interface OnboardingFlowProps {
   onComplete: () => void;
@@ -120,7 +122,6 @@ const StepInventory: FC<{ onNext: (names: string[]) => void; onSkip: () => void 
                   next?.focus();
                 }
               }}
-              // eslint-disable-next-line tailwindcss/no-custom-classname
               data-index={i}
             />
           </motion.div>
@@ -296,7 +297,7 @@ const StepMapping: FC<{
       <AnimatePresence>
         {firstPlaced && !allPlaced && (
           <motion.p
-            className="text-center text-xs italic"
+            className="text-center text-xs"
             style={{ color: "rgba(45,212,191,0.7)" }}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -397,7 +398,7 @@ const StepInsight: FC<{ names: string[]; onComplete: () => void }> = ({ names, o
           border: "1px solid rgba(45,212,191,0.2)",
         }}
       >
-        <p className="text-sm italic leading-relaxed" style={{ color: "rgba(45,212,191,0.85)" }}>
+        <p className="text-sm leading-relaxed" style={{ color: "rgba(45,212,191,0.85)" }}>
           "التعافي مش سحر، هو إنك بقيت شايف خريطتك بوضوح."
         </p>
       </div>
@@ -416,7 +417,7 @@ const StepInsight: FC<{ names: string[]; onComplete: () => void }> = ({ names, o
         أنطلق لرحلتك ←
       </motion.button>
 
-      <p className="text-[11px] italic" style={{ color: "rgba(148,163,184,0.5)" }}>
+      <p className="text-[11px]" style={{ color: "rgba(148,163,184,0.5)" }}>
         متقلقش، مفيش إجابة غلط.. دي خريطتك إنت.
       </p>
     </div>

@@ -27,7 +27,7 @@ if (typeof window !== 'undefined' && !isSupabaseReady) {
 }
 // Tactical Helpers
 
-import { CommanderStats, FieldAsset, TacticalJournalEntry, Rank } from "../types/tactical";
+import { CommanderStats, Rank } from "../types/tactical";
 
 export const fetchCommanderStats = async (userId: string): Promise<CommanderStats | null> => {
   if (!supabase) return null;

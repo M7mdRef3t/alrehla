@@ -1,7 +1,6 @@
-import type { FC } from "react";
+﻿import type { FC } from "react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
-    LayoutTemplate,
     FileText,
     ListTodo,
     Radio,
@@ -10,7 +9,6 @@ import {
     Trash2,
     Plus,
     RefreshCw,
-    Check,
     AlertTriangle,
     Database,
     Cpu,
@@ -30,7 +28,6 @@ import {
     type AdminContentEntry
 } from "../../../../services/adminApi";
 import { buildResultTemplateFromAnswers } from "../../../../utils/resultScreenTemplates";
-import { RESULT_SCREEN_RULES } from "../../../../data/resultScreenTemplates";
 import type { PersonGender } from "../../../../utils/resultScreenAI";
 import type { QuickAnswer2 } from "../../../../utils/suggestInitialRing";
 import type { BroadcastAudience } from "../../../../utils/broadcastAudience";
@@ -39,12 +36,6 @@ import { motion, AnimatePresence } from "framer-motion";
 // Types & Constants
 type ResultAnswerOption = "often" | "sometimes" | "rarely" | "never";
 const RESULT_ANSWER_OPTIONS: ResultAnswerOption[] = ["often", "sometimes", "rarely", "never"];
-const RESULT_ANSWER_LABELS: Record<ResultAnswerOption, string> = {
-    often: "غالباً",
-    sometimes: "أحياناً",
-    rarely: "نادراً",
-    never: "أبداً"
-};
 const SAFETY_OPTIONS: QuickAnswer2[] = ["high", "medium", "low", "zero"];
 
 // Tab Components could be extracted, but keeping inline for now for simplicity of the refactor
@@ -67,7 +58,7 @@ export const ContentPanel: FC = () => {
     const [contentLoading, setContentLoading] = useState(false);
     const [contentSearch, setContentSearch] = useState("");
     const [contentPageFilter, setContentPageFilter] = useState("");
-    const [contentStatus, setContentStatus] = useState("");
+    const [, setContentStatus] = useState("");
     const [savingContentKey, setSavingContentKey] = useState<string | null>(null);
     const [newContentKey, setNewContentKey] = useState("");
     const [newContentPage, setNewContentPage] = useState("");
@@ -75,11 +66,11 @@ export const ContentPanel: FC = () => {
 
     // Local State - Missions & Broadcasts
     const [missionTitle, setMissionTitle] = useState("");
-    const [missionTrack, setMissionTrack] = useState("مسار الجذور");
-    const [missionDifficulty, setMissionDifficulty] = useState<Parameters<typeof addMission>[0]["difficulty"]>("سهل");
+    const [missionTrack, setMissionTrack] = useState("Ù…Ø³Ø§Ø± Ø§Ù„Ø¬Ø°ÙˆØ±");
+    const [missionDifficulty] = useState<Parameters<typeof addMission>[0]["difficulty"]>("سهل");
     const [broadcastTitle, setBroadcastTitle] = useState("");
     const [broadcastBody, setBroadcastBody] = useState("");
-    const [broadcastAudience, setBroadcastAudience] = useState<BroadcastAudience>("all");
+    const [broadcastAudience] = useState<BroadcastAudience>("all");
 
     // Local State - Simulation
     const [resultPersonGender, setResultPersonGender] = useState<PersonGender>("unknown");
@@ -88,7 +79,7 @@ export const ContentPanel: FC = () => {
     const [feelingAnswers, setFeelingAnswers] = useState<{ q1: ResultAnswerOption; q2: ResultAnswerOption; q3: ResultAnswerOption }>({
         q1: "sometimes", q2: "sometimes", q3: "sometimes"
     });
-    const [realityAnswers, setRealityAnswers] = useState<{ q1: ResultAnswerOption; q2: ResultAnswerOption; q3: ResultAnswerOption }>({
+    const [realityAnswers] = useState<{ q1: ResultAnswerOption; q2: ResultAnswerOption; q3: ResultAnswerOption }>({
         q1: "sometimes", q2: "sometimes", q3: "sometimes"
     });
 
@@ -123,17 +114,6 @@ export const ContentPanel: FC = () => {
         personGender: resultPersonGender
     }), [symptomScore, feelingAnswers, realityAnswers, resultEmergency, resultSafety, resultPersonGender]);
 
-    const matchedRule = useMemo(() =>
-        RESULT_SCREEN_RULES.find((rule) => {
-            const when = rule.when;
-            if (when.emergency !== undefined && when.emergency !== resultEmergency) return false;
-            if (when.safetyHigh !== undefined && when.safetyHigh !== (resultSafety === "high")) return false;
-            // Simplified matching logic for brevity, main logic preserved in adminApi/templates
-            return true;
-        }) ?? null
-        , [contactLevel, resultEmergency, resultSafety, symptomLevel]);
-
-
     // Data Loading
     const loadContentEntries = useCallback(async () => {
         setContentLoading(true);
@@ -144,7 +124,7 @@ export const ContentPanel: FC = () => {
                 limit: 300
             });
             if (!data) {
-                setContentStatus("تعذر تحميل نصوص المنصة.");
+                setContentStatus("ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ù†ØµÙˆØµ Ø§Ù„Ù…Ù†ØµØ©.");
                 return;
             }
             setContentEntries(data);
@@ -211,7 +191,7 @@ export const ContentPanel: FC = () => {
     };
 
     const handleDeleteContent = async (key: string) => {
-        if (!confirm("هل أنت متأكد من حذف هذا النص؟")) return;
+        if (!confirm("Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ù†ØµØŸ")) return;
         setSavingContentKey(key);
         const ok = await deleteAppContentEntry(key);
         if (ok) {
@@ -261,21 +241,21 @@ export const ContentPanel: FC = () => {
                         <Database className="w-6 h-6 text-teal-400" />
                     </div>
                     <div>
-                        <h3 className="text-2xl font-black text-white tracking-tight">إدارة المحتوى</h3>
-                        <p className="text-[10px] text-slate-500 font-bold mt-1">CMS System v2.1 • {contentEntries.length} Records</p>
+                        <h3 className="text-2xl font-black text-white tracking-tight">Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø­ØªÙˆÙ‰</h3>
+                        <p className="text-[10px] text-slate-500 font-bold mt-1">CMS System v2.1 â€¢ {contentEntries.length} Records</p>
                     </div>
                 </div>
 
                 <div className="relative z-10 flex p-1 bg-slate-900/50 rounded-xl border border-white/5 overflow-x-auto">
-                    {[
-                        { id: "cms", label: "نصوص المنصة", icon: <FileText className="w-4 h-4" /> },
-                        { id: "simulation", label: "محاكاة النتائج", icon: <Cpu className="w-4 h-4" /> },
-                        { id: "missions", label: "المهمات", icon: <ListTodo className="w-4 h-4" /> },
-                        { id: "broadcasts", label: "البث المباشر", icon: <Radio className="w-4 h-4" /> }
-                    ].map(tab => (
+                    {([
+                        { id: "cms", label: "Ù†ØµÙˆØµ Ø§Ù„Ù…Ù†ØµØ©", icon: <FileText className="w-4 h-4" /> },
+                        { id: "simulation", label: "Ù…Ø­Ø§ÙƒØ§Ø© Ø§Ù„Ù†ØªØ§Ø¦Ø¬", icon: <Cpu className="w-4 h-4" /> },
+                        { id: "missions", label: "Ø§Ù„Ù…Ù‡Ù…Ø§Øª", icon: <ListTodo className="w-4 h-4" /> },
+                        { id: "broadcasts", label: "Ø§Ù„Ø¨Ø« Ø§Ù„Ù…Ø¨Ø§Ø´Ø±", icon: <Radio className="w-4 h-4" /> }
+                     ] as const).map((tab) => (
                         <button
                             key={tab.id}
-                            onClick={() => setActiveTab(tab.id as any)}
+                            onClick={() => setActiveTab(tab.id)}
                             className={`px-4 py-2 rounded-lg flex items-center gap-2 text-xs font-bold transition-all whitespace-nowrap ${activeTab === tab.id
                                 ? "bg-teal-500 text-slate-950 shadow-lg"
                                 : "text-slate-400 hover:text-teal-300"
@@ -304,7 +284,7 @@ export const ContentPanel: FC = () => {
                                     <input
                                         value={contentSearch}
                                         onChange={(e) => setContentSearch(e.target.value)}
-                                        placeholder="بحث في المفاتيح أو المحتوى..."
+                                        placeholder="Ø¨Ø­Ø« ÙÙŠ Ø§Ù„Ù…ÙØ§ØªÙŠØ­ Ø£Ùˆ Ø§Ù„Ù…Ø­ØªÙˆÙ‰..."
                                         className="w-full bg-slate-900 border border-slate-700 rounded-xl pr-10 pl-4 py-3 text-xs text-white focus:outline-none focus:border-teal-500 transition-colors"
                                     />
                                 </div>
@@ -313,7 +293,7 @@ export const ContentPanel: FC = () => {
                                     <input
                                         value={contentPageFilter}
                                         onChange={(e) => setContentPageFilter(e.target.value)}
-                                        placeholder="فلترة حسب الصفحة (Page ID)..."
+                                        placeholder="ÙÙ„ØªØ±Ø© Ø­Ø³Ø¨ Ø§Ù„ØµÙØ­Ø© (Page ID)..."
                                         className="w-full bg-slate-900 border border-slate-700 rounded-xl pr-10 pl-4 py-3 text-xs text-white focus:outline-none focus:border-teal-500 transition-colors"
                                     />
                                 </div>
@@ -331,7 +311,7 @@ export const ContentPanel: FC = () => {
                         <div className="admin-glass-card p-5 border-dashed border-slate-700 bg-slate-900/20">
                             <div className="flex items-center gap-2 mb-4 text-slate-400">
                                 <Plus className="w-4 h-4" />
-                                <span className="text-xs font-bold">إضافة نص جديد</span>
+                                <span className="text-xs font-bold">Ø¥Ø¶Ø§ÙØ© Ù†Øµ Ø¬Ø¯ÙŠØ¯</span>
                             </div>
                             <div className="grid md:grid-cols-4 gap-3 mb-3">
                                 <input
@@ -351,7 +331,7 @@ export const ContentPanel: FC = () => {
                                 <textarea
                                     value={newContentValue}
                                     onChange={(e) => setNewContentValue(e.target.value)}
-                                    placeholder="المحتوى النصي..."
+                                    placeholder="Ø§Ù„Ù…Ø­ØªÙˆÙ‰ Ø§Ù„Ù†ØµÙŠ..."
                                     rows={2}
                                     className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500 resize-none"
                                 />
@@ -361,14 +341,14 @@ export const ContentPanel: FC = () => {
                                     className="px-6 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs transition-colors flex flex-col items-center justify-center gap-1 min-w-[80px]"
                                 >
                                     {savingContentKey === "new" ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                    <span>حفظ</span>
+                                    <span>Ø­ÙØ¸</span>
                                 </button>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 gap-4">
                             {filteredContentEntries.length === 0 ? (
-                                <div className="text-center py-10 text-slate-500">لا توجد نتائج مطابقة</div>
+                                <div className="text-center py-10 text-slate-500">Ù„Ø§ ØªÙˆØ¬Ø¯ Ù†ØªØ§Ø¦Ø¬ Ù…Ø·Ø§Ø¨Ù‚Ø©</div>
                             ) : filteredContentEntries.map((entry) => {
                                 const draft = contentDrafts[entry.key] ?? { content: entry.content, page: entry.page ?? "" };
                                 const isDirty = draft.content !== entry.content || (draft.page !== (entry.page ?? ""));
@@ -382,7 +362,7 @@ export const ContentPanel: FC = () => {
                                                     <span className="text-xs font-bold font-mono text-teal-400 select-all">{entry.key}</span>
                                                     {entry.page && <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">{entry.page}</span>}
                                                 </div>
-                                                <p className="text-[10px] text-slate-600 mt-0.5">Updated: {entry.updatedAt ? new Date(entry.updatedAt).toLocaleDateString() : "—"}</p>
+                                                <p className="text-[10px] text-slate-600 mt-0.5">Updated: {entry.updatedAt ? new Date(entry.updatedAt).toLocaleDateString() : "â€”"}</p>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 {isDirty && (
@@ -390,7 +370,7 @@ export const ContentPanel: FC = () => {
                                                         onClick={() => handleSaveContent(entry.key)}
                                                         disabled={isSaving}
                                                         className="p-2 rounded-lg bg-amber-500 text-slate-950 hover:bg-amber-400 transition-colors"
-                                                        title="حفظ التغييرات"
+                                                        title="Ø­ÙØ¸ Ø§Ù„ØªØºÙŠÙŠØ±Ø§Øª"
                                                     >
                                                         {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                                     </button>
@@ -398,7 +378,7 @@ export const ContentPanel: FC = () => {
                                                 <button
                                                     onClick={() => handleDeleteContent(entry.key)}
                                                     className="p-2 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-400 transition-colors"
-                                                    title="حذف"
+                                                    title="Ø­Ø°Ù"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
@@ -426,34 +406,37 @@ export const ContentPanel: FC = () => {
                     >
                         <div className="lg:col-span-1 space-y-6">
                             <div className="admin-glass-card p-5">
-                                <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2"><Cpu className="w-4 h-4" /> مدخلات المحاكاة</h3>
+                                <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2"><Cpu className="w-4 h-4" /> Ù…Ø¯Ø®Ù„Ø§Øª Ø§Ù„Ù…Ø­Ø§ÙƒØ§Ø©</h3>
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="text-xs text-slate-400 mb-1.5 block">الجنس</label>
+                                        <label className="text-xs text-slate-400 mb-1.5 block">Ø§Ù„Ø¬Ù†Ø³</label>
                                         <div className="flex bg-slate-900 p-1 rounded-lg border border-slate-800">
-                                            {["unknown", "male", "female"].map(g => (
-                                                <button key={g} onClick={() => setResultPersonGender(g as any)} className={`flex-1 py-1.5 text-[10px] rounded-md transition-colors ${resultPersonGender === g ? "bg-indigo-500 text-white" : "text-slate-500"}`}>{g}</button>
+                                            {(["unknown", "male", "female"] as const).map(g => (
+                                                <button key={g} onClick={() => setResultPersonGender(g)} className={`flex-1 py-1.5 text-[10px] rounded-md transition-colors ${resultPersonGender === g ? "bg-indigo-500 text-white" : "text-slate-500"}`}>{g}</button>
                                             ))}
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 mb-1.5 block">السؤال الأمني</label>
-                                        <select value={resultSafety} onChange={(e) => setResultSafety(e.target.value as any)} className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white outline-none">
+                                        <label className="text-xs text-slate-400 mb-1.5 block">Ø§Ù„Ø³Ø¤Ø§Ù„ Ø§Ù„Ø£Ù…Ù†ÙŠ</label>
+                                        <select value={resultSafety} onChange={(e) => {
+                                            const value = e.target.value;
+                                            if ((SAFETY_OPTIONS as readonly string[]).includes(value)) setResultSafety(value as QuickAnswer2);
+                                        }} className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white outline-none">
                                             {SAFETY_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                                         </select>
                                     </div>
                                     <label className="flex items-center gap-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg cursor-pointer">
                                         <input type="checkbox" checked={resultEmergency} onChange={(e) => setResultEmergency(e.target.checked)} className="peer" />
-                                        <span className="text-xs font-bold text-rose-400">حالة طوارئ قصوى (Override)</span>
+                                        <span className="text-xs font-bold text-rose-400">Ø­Ø§Ù„Ø© Ø·ÙˆØ§Ø±Ø¦ Ù‚ØµÙˆÙ‰ (Override)</span>
                                     </label>
                                 </div>
                             </div>
 
                             <div className="admin-glass-card p-5">
-                                <h3 className="text-sm font-bold text-white mb-4">إجابات المشاعر</h3>
+                                <h3 className="text-sm font-bold text-white mb-4">Ø¥Ø¬Ø§Ø¨Ø§Øª Ø§Ù„Ù…Ø´Ø§Ø¹Ø±</h3>
                                 <div className="space-y-3">
-                                    {Object.keys(feelingAnswers).map((k) => (
+                                    {(Object.keys(feelingAnswers) as Array<keyof typeof feelingAnswers>).map((k) => (
                                         <div key={k} className="flex items-center justify-between">
                                             <span className="text-xs text-slate-400 uppercase">{k}</span>
                                             <div className="flex gap-1">
@@ -461,7 +444,7 @@ export const ContentPanel: FC = () => {
                                                     <button
                                                         key={opt}
                                                         onClick={() => setFeelingAnswers(p => ({ ...p, [k]: opt }))}
-                                                        className={`w-6 h-6 rounded flex items-center justify-center text-[10px] transition-colors ${(feelingAnswers as any)[k] === opt ? "bg-teal-500 text-slate-900 font-bold" : "bg-slate-800 text-slate-500"}`}
+                                                        className={`w-6 h-6 rounded flex items-center justify-center text-[10px] transition-colors ${feelingAnswers[k] === opt ? "bg-teal-500 text-slate-900 font-bold" : "bg-slate-800 text-slate-500"}`}
                                                         title={opt}
                                                     >
                                                         {opt[0].toUpperCase()}
@@ -476,7 +459,7 @@ export const ContentPanel: FC = () => {
 
                         <div className="lg:col-span-2 space-y-6">
                             <div className="admin-glass-card p-6 border-indigo-500/20 bg-indigo-500/5">
-                                <h3 className="text-sm font-bold text-indigo-300 mb-6">النتيجة المتوقعة (Preview)</h3>
+                                <h3 className="text-sm font-bold text-indigo-300 mb-6">Ø§Ù„Ù†ØªÙŠØ¬Ø© Ø§Ù„Ù…ØªÙˆÙ‚Ø¹Ø© (Preview)</h3>
 
                                 <div className="space-y-6">
                                     <div className="text-center">
@@ -516,20 +499,20 @@ export const ContentPanel: FC = () => {
                 {activeTab === "missions" && (
                     <motion.div key="missions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                         <div className="admin-glass-card p-5 border-l-4 border-l-purple-500">
-                            <h3 className="text-sm font-bold text-white mb-4">إضافة مهمة جديدة</h3>
+                            <h3 className="text-sm font-bold text-white mb-4">Ø¥Ø¶Ø§ÙØ© Ù…Ù‡Ù…Ø© Ø¬Ø¯ÙŠØ¯Ø©</h3>
                             <div className="flex gap-4 items-end">
                                 <div className="flex-1">
-                                    <label className="block text-xs text-slate-400 mb-1">عنوان المهمة</label>
+                                    <label className="block text-xs text-slate-400 mb-1">Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ù…Ù‡Ù…Ø©</label>
                                     <input value={missionTitle} onChange={e => setMissionTitle(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white" />
                                 </div>
                                 <div className="w-32">
-                                    <label className="block text-xs text-slate-400 mb-1">المسار</label>
+                                    <label className="block text-xs text-slate-400 mb-1">Ø§Ù„Ù…Ø³Ø§Ø±</label>
                                     <select value={missionTrack} onChange={e => setMissionTrack(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs text-white">
-                                        <option>مسار الجذور</option>
-                                        <option>مسار العلاقات</option>
+                                        <option>Ù…Ø³Ø§Ø± Ø§Ù„Ø¬Ø°ÙˆØ±</option>
+                                        <option>Ù…Ø³Ø§Ø± Ø§Ù„Ø¹Ù„Ø§Ù‚Ø§Øª</option>
                                     </select>
                                 </div>
-                                <button onClick={handleAddMission} className="px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-xs font-bold transition-colors">إضافة</button>
+                                <button onClick={handleAddMission} className="px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-xs font-bold transition-colors">Ø¥Ø¶Ø§ÙØ©</button>
                             </div>
                         </div>
 
@@ -556,15 +539,15 @@ export const ContentPanel: FC = () => {
                         <div className="admin-glass-card p-5 border-l-4 border-l-amber-500 bg-amber-500/5">
                             <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
                                 <Radio className="w-4 h-4 text-amber-500" />
-                                إرسال بث مباشر (Emergency Broadcast)
+                                Ø¥Ø±Ø³Ø§Ù„ Ø¨Ø« Ù…Ø¨Ø§Ø´Ø± (Emergency Broadcast)
                             </h3>
                             <div className="space-y-3">
-                                <input value={broadcastTitle} onChange={e => setBroadcastTitle(e.target.value)} placeholder="عنوان الرسالة" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white" />
-                                <textarea value={broadcastBody} onChange={e => setBroadcastBody(e.target.value)} placeholder="نص الرسالة..." rows={3} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white resize-none" />
+                                <input value={broadcastTitle} onChange={e => setBroadcastTitle(e.target.value)} placeholder="Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø±Ø³Ø§Ù„Ø©" className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white" />
+                                <textarea value={broadcastBody} onChange={e => setBroadcastBody(e.target.value)} placeholder="Ù†Øµ Ø§Ù„Ø±Ø³Ø§Ù„Ø©..." rows={3} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white resize-none" />
                                 <div className="flex justify-end">
                                     <button onClick={handleAddBroadcast} className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
                                         <Radio className="w-4 h-4" />
-                                        إرسال للجميع
+                                        Ø¥Ø±Ø³Ø§Ù„ Ù„Ù„Ø¬Ù…ÙŠØ¹
                                     </button>
                                 </div>
                             </div>
@@ -579,7 +562,7 @@ export const ContentPanel: FC = () => {
                                     <div className="flex-1">
                                         <h4 className="text-sm font-bold text-white">{b.title}</h4>
                                         <p className="text-xs text-slate-400">{b.body}</p>
-                                        <span className="text-[10px] text-slate-600 mt-1 block">{b.createdAt ? new Date(b.createdAt).toLocaleString() : "—"}</span>
+                                        <span className="text-[10px] text-slate-600 mt-1 block">{b.createdAt ? new Date(b.createdAt).toLocaleString() : "â€”"}</span>
                                     </div>
                                     <button onClick={() => { removeBroadcast(b.id); if (isSupabaseReady) deleteBroadcast(b.id); }} className="p-2 hover:bg-rose-500/10 rounded-lg text-rose-500 transition-colors">
                                         <Trash2 className="w-4 h-4" />
@@ -594,3 +577,8 @@ export const ContentPanel: FC = () => {
         </div>
     );
 };
+
+
+
+
+

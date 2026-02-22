@@ -6,7 +6,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gavel, ShieldCheck, Scale, AlertCircle, MessageCircle, ArrowRight } from "lucide-react";
+import { Gavel, ShieldCheck, Scale, AlertCircle, ArrowRight } from "lucide-react";
 import { soundManager } from "../services/soundManager";
 
 type TrialStage = "prosecution" | "defense" | "verdict";
@@ -29,7 +29,7 @@ export const GuiltCourt: React.FC = () => {
                 </div>
                 <div>
                     <h1 className="text-2xl font-black text-white">محكمة الشعور بالذنب</h1>
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest italic">Guilt Neutralizer Protocol</p>
+                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">بروتوكول تفكيك الذنب</p>
                 </div>
             </header>
 
@@ -59,7 +59,7 @@ export const GuiltCourt: React.FC = () => {
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </button>
                             </div>
-                            <p className="text-center text-slate-500 text-sm italic">
+                            <p className="text-center text-slate-500 text-sm">
                                 "نحن لا نتجاهل الصوت الداخلي، نحن نضعه تحت مجهر المنطق."
                             </p>
                         </motion.div>
@@ -76,8 +76,8 @@ export const GuiltCourt: React.FC = () => {
                             <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-3">
                                 <AlertCircle className="w-5 h-5 text-rose-400 mt-1" />
                                 <div>
-                                    <h3 className="font-bold text-rose-400 text-sm uppercase mb-1">صوت التهمة (The Internal Critic)</h3>
-                                    <p className="text-slate-300 italic">"{charge}"</p>
+                                    <h3 className="font-bold text-rose-400 text-sm uppercase mb-1">صوت الناقد الداخلي</h3>
+                                    <p className="text-slate-300">"{charge}"</p>
                                 </div>
                             </div>
 
