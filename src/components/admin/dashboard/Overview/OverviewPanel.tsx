@@ -39,6 +39,8 @@ import { AdminTools } from "./components/AdminTools"; // New Import
 import { SecuritySentinel } from "./components/SecuritySentinel";
 import { LiveFreezeGuard } from "./components/LiveFreezeGuard";
 import { AIGuardrailCard } from "./components/AIGuardrailCard";
+import { RecoveryWidget } from "./components/RecoveryWidget";
+import { SocialFirewall } from "./components/SocialFirewall";
 import { ConsciousnessMap } from "../Consciousness/ConsciousnessMap";
 import {
   type WeeklyReport
@@ -297,6 +299,12 @@ export const OverviewPanel: FC = () => {
         <StatCard title="Ù…ØªÙˆØ³Ø· Ø§Ù„Ø·Ø§Ù‚Ø©" value={formatNumber(avgMoodValue)} hint="ØªØ¯ÙÙ‚ Ø§Ù„Ù…Ø²Ø§Ø¬" glowColor="indigo" />
         <StatCard title="Ø¹Ù…Ù„ÙŠØ§Øª Ø§Ù„Ø°ÙƒØ§Ø¡" value={formatNumber(aiTokensUsed)} hint="Ø£Ø­Ù…Ø§Ù„ Ø§Ù„Ù…Ù‡Ø§Ù… Ø§Ù„Ø¹ØµØ¨ÙŠØ©" glowColor="indigo" />
       </div>
+
+      <RecoveryWidget />
+
+      {/* Social Topology Firewall (New) */}
+      <SocialFirewall loading={initialLoading} />
+
       {routingV2 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatCard
@@ -320,13 +328,12 @@ export const OverviewPanel: FC = () => {
       {routingTelemetry && (
         <>
           <div
-            className={`rounded-2xl border px-4 py-3 text-xs font-bold tracking-wide ${
-              latencyQualityStatus === "critical"
-                ? "border-rose-500/40 bg-rose-500/10 text-rose-300"
-                : latencyQualityStatus === "warning"
-                  ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
-                  : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-            }`}
+            className={`rounded-2xl border px-4 py-3 text-xs font-bold tracking-wide ${latencyQualityStatus === "critical"
+              ? "border-rose-500/40 bg-rose-500/10 text-rose-300"
+              : latencyQualityStatus === "warning"
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
+                : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+              }`}
           >
             {latencyQualityStatusLabel}
             {hasLowNoiseFilter ? " | noiseFilteredPct < 15%" : ""}
@@ -584,12 +591,12 @@ export const OverviewPanel: FC = () => {
             sampleSize?: number;
           };
           return ({
-          id: l.id,
-          createdAt: l.createdAt,
-          score: payload.successIndex ?? null,
-          decisionLabel: payload.successDecisionLabel || "سجل قرار",
-          sampleSize: payload.sampleSize ?? null
-        });
+            id: l.id,
+            createdAt: l.createdAt,
+            score: payload.successIndex ?? null,
+            decisionLabel: payload.successDecisionLabel || "سجل قرار",
+            sampleSize: payload.sampleSize ?? null
+          });
         })}
         weeklyDecisionLoading={weeklyDecisionLoading}
       />

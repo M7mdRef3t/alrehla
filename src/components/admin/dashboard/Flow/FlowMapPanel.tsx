@@ -1,7 +1,8 @@
 import type { FC } from "react";
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { Compass, Zap, Workflow, Loader2, GitGraph } from "lucide-react";
+import { Compass, Zap, Workflow, Loader2, GitGraph, AlertTriangle } from "lucide-react";
 import { fetchOverviewStats, type OverviewStats } from "../../../../services/adminApi";
+import { useFleetState } from "../../../../state/fleetState";
 import { FlowMindMap } from "../../FlowMindMap";
 import { VISITOR_FLOW_LINKS, buildFlowNodes } from "../../../../data/visitorFlowWorkflow";
 
@@ -24,6 +25,9 @@ export const FlowMapPanel: FC = () => {
     useEffect(() => {
         void loadData();
     }, [loadData]);
+
+    const { isSandboxEnforced, activeVesselId, vessels } = useFleetState();
+    const activeVessel = vessels.find(v => v.id === activeVesselId);
 
     const { nodes, links, flowMetrics } = useMemo(() => {
         if (!stats?.flowStats?.byStep) {
@@ -52,6 +56,28 @@ export const FlowMapPanel: FC = () => {
             flowMetrics: { totalVisits, conversionRate, dropOffRate, successCount }
         };
     }, [stats]);
+
+    if (isSandboxEnforced) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[500px] text-center p-8 space-y-6 bg-slate-950/20 rounded-3xl border border-white/5">
+                <div className="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/30 animate-pulse">
+                    <Compass className="w-10 h-10 text-indigo-500" />
+                </div>
+                <div className="space-y-2">
+                    <h2 className="text-2xl font-black text-indigo-400 uppercase tracking-tighter">PROTOCOL: SECURE BRIDGE ACTIVE</h2>
+                    <p className="text-slate-400 max-w-md mx-auto">
+                        البوصلة مقفولة حالياً على إحداثيات المشغل: <span className="text-white font-bold">{activeVessel?.title}</span>.
+                        تم حجب الخرائط العامة للحفاظ على مسار السفينة ومنع الانحراف الذهني.
+                    </p>
+                </div>
+                <div className="flex gap-4">
+                    <div className="px-4 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase">
+                        Zero Distraction Mode
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 text-slate-200" dir="rtl">

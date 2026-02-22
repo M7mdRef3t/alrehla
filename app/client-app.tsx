@@ -3,7 +3,6 @@
 import { useEffect, lazy, Suspense, useState } from "react";
 import App from "../src/App";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
-import { AnalyticsConsentBanner } from "../src/components/AnalyticsConsentBanner";
 import { initAnalytics } from "../src/services/analytics";
 import { initMonitoring } from "../src/services/monitoring";
 import { runtimeEnv } from "../src/config/runtimeEnv";
@@ -36,7 +35,6 @@ export function ClientApp() {
   return (
     <ErrorBoundary>
       <App />
-      <AnalyticsConsentBanner />
       {runtimeEnv.isProd && (
         <Suspense fallback={null}>
           <Analytics />

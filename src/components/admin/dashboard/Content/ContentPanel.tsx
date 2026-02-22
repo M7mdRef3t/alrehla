@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useAdminState, getScoringWeights, getScoringThresholds } from "../../../../state/adminState";
 import { useAppContentState } from "../../../../state/appContentState";
+import { useFleetState } from "../../../../state/fleetState";
 import { isSupabaseReady } from "../../../../services/supabaseClient";
 import {
     saveMission,
@@ -48,6 +49,9 @@ export const ContentPanel: FC = () => {
     const addBroadcast = useAdminState((s) => s.addBroadcast);
     const removeBroadcast = useAdminState((s) => s.removeBroadcast);
     const upsertContentInStore = useAppContentState((s) => s.upsert);
+    const { isSandboxEnforced, activeVesselId, vessels } = useFleetState();
+
+    const activeVessel = vessels.find(v => v.id === activeVesselId);
 
     // Local State - Tabs
     const [activeTab, setActiveTab] = useState<"cms" | "simulation" | "missions" | "broadcasts">("cms");
@@ -229,6 +233,29 @@ export const ContentPanel: FC = () => {
         setBroadcastTitle(""); setBroadcastBody("");
     };
 
+    if (isSandboxEnforced) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8 space-y-6">
+                <div className="w-20 h-20 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/30 animate-pulse">
+                    <AlertTriangle className="w-10 h-10 text-rose-500" />
+                </div>
+                <div className="space-y-2">
+                    <h2 className="text-2xl font-black text-rose-500 uppercase tracking-tighter">PROTOCOL: SANDBOX ACTIVE</h2>
+                    <p className="text-slate-400 max-w-md mx-auto">
+                        تم تفعيل وضع العزل لمشروع: <span className="text-white font-bold">{activeVessel?.title}</span>.
+                        تم حجب الوصول لبيانات الـ CMS الروتينية لمنع التشتت وضمان نزاهة البيانات.
+                    </p>
+                </div>
+                <button
+                    onClick={() => useFleetState.getState().toggleSandbox(false)}
+                    className="px-8 py-3 bg-white text-slate-950 font-black rounded-xl hover:bg-slate-200 transition-all uppercase text-xs"
+                >
+                    تعطيل العزل (Exit Sandbox)
+                </button>
+            </div>
+        );
+    }
+
 
     return (
         <div className="space-y-6 text-slate-200" dir="rtl">
@@ -252,7 +279,7 @@ export const ContentPanel: FC = () => {
                         { id: "simulation", label: "Ù…Ø­Ø§ÙƒØ§Ø© Ø§Ù„Ù†ØªØ§Ø¦Ø¬", icon: <Cpu className="w-4 h-4" /> },
                         { id: "missions", label: "Ø§Ù„Ù…Ù‡Ù…Ø§Øª", icon: <ListTodo className="w-4 h-4" /> },
                         { id: "broadcasts", label: "Ø§Ù„Ø¨Ø« Ø§Ù„Ù…Ø¨Ø§Ø´Ø±", icon: <Radio className="w-4 h-4" /> }
-                     ] as const).map((tab) => (
+                    ] as const).map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}

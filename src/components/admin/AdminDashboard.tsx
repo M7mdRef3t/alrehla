@@ -15,7 +15,10 @@ import {
   MessageSquare,
   Workflow,
   Pencil,
-  Terminal
+  Terminal,
+  Target,
+  Flame,
+  Rocket
 } from "lucide-react";
 import { runtimeEnv } from "../../config/runtimeEnv";
 import { useAdminState } from "../../state/adminState";
@@ -53,8 +56,12 @@ const AIDecisionLogPanel = lazy(() => import("./AIDecisionLog").then(m => ({ def
 const HealthMonitorPanel = lazy(() => import("./HealthMonitorPanel").then(m => ({ default: m.HealthMonitorPanel })));
 const AISimulatorPanel = lazy(() => import("./dashboard/Intelligence/AISimulatorPanel").then(m => ({ default: m.AISimulatorPanel })));
 const CreativeDashboard = lazy(() => import("./dashboard/Intelligence/CreativeDashboard").then(m => ({ default: m.CreativeDashboard })));
+const DreamsMatrixPanel = lazy(() => import("./dashboard/Intelligence/DreamsMatrixPanel").then(m => ({ default: m.DreamsMatrixPanel })));
+const TheCrucible = lazy(() => import("./dashboard/Intelligence/TheCrucible").then(m => ({ default: m.TheCrucible })));
+const ConsciousnessGraph = lazy(() => import("./dashboard/Intelligence/ConsciousnessGraph").then(m => ({ default: m.ConsciousnessGraph })));
+const FleetCommander = lazy(() => import("./dashboard/Fleet/FleetCommander").then(m => ({ default: m.FleetCommander })));
 
-type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing";
+type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
@@ -76,7 +83,11 @@ const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
   { id: "consciousness-map", label: "خريطة الوعي", icon: <Workflow className="w-4 h-4" /> },
   { id: "b2b-analytics", label: "ذكاء المؤسسات", icon: <ShieldCheck className="w-4 h-4" /> },
   { id: "ai-simulator", label: "محاكي الأزمات", icon: <Terminal className="w-4 h-4 text-rose-400" /> },
-  { id: "ai-marketing", label: "فنان الوعي", icon: <Sparkles className="w-4 h-4 text-amber-400" /> }
+  { id: "ai-marketing", label: "فنان الوعي", icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
+  { id: "crucible", label: "المِحك (Testing)", icon: <Flame className="w-4 h-4 text-rose-500" /> },
+  { id: "dreams-matrix", label: "مصفوفة الأحلام", icon: <Target className="w-4 h-4 text-teal-400" /> },
+  { id: "digital-twin", label: "التوأم الرقمي", icon: <User className="w-4 h-4 text-indigo-400" /> },
+  { id: "fleet", label: "الأسطول (Fleet)", icon: <Rocket className="w-4 h-4 text-indigo-500" /> }
 ];
 
 const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
@@ -365,6 +376,10 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "b2b-analytics" && <B2BAnalytics />}
                 {effectiveTab === "ai-simulator" && <AISimulatorPanel />}
                 {effectiveTab === "ai-marketing" && <CreativeDashboard />}
+                {effectiveTab === "crucible" && <TheCrucible />}
+                {effectiveTab === "dreams-matrix" && <DreamsMatrixPanel />}
+                {effectiveTab === "digital-twin" && <ConsciousnessGraph />}
+                {effectiveTab === "fleet" && <FleetCommander />}
               </Suspense>
             </div>
           </div>

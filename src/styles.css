@@ -105,17 +105,21 @@
     /* 12px — عناصر صغيرة   */
 
     /* ══ Motion Timing — إيقاع الحركة ══ */
-    --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
-    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-    --duration-fast: 180ms;
-    --duration-base: 300ms;
-    --duration-slow: 500ms;
+    --ease-spring: var(--ui-transition-timing);
+    --ease-smooth: var(--ui-transition-timing);
+    --duration-fast: calc(180ms * var(--ui-friction-multiplier));
+    --duration-base: calc(300ms * var(--ui-friction-multiplier));
+    --duration-slow: calc(500ms * var(--ui-friction-multiplier));
 
     /* ══ Breathing Space — مساحة التنفس ══ */
     --space-xs: calc(var(--phi-space-base) * var(--phi-inv) * var(--phi-inv));
     --space-sm: calc(var(--phi-space-base) * var(--phi-inv));
     --space-md: var(--phi-space-base);
     --space-lg: calc(var(--phi-space-base) * var(--phi));
+    /* ── Autonomous Intervention — UI Friction ── */
+    --ui-friction-multiplier: 1.0;
+    --ui-transition-timing: ease;
+
     --space-xl: calc(var(--phi-space-base) * var(--phi) * var(--phi));
   }
 

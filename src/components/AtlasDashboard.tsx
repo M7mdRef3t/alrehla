@@ -228,10 +228,10 @@ export const AtlasDashboard: FC<AtlasDashboardProps> = ({ isOpen, onClose }) => 
                     <XAxis dataKey="pathLabel" fontSize={11} tick={{ fontSize: 10 }} />
                     <YAxis fontSize={11} unit="%" domain={[0, 100]} />
                     <Tooltip
-                      formatter={(value: number | string, _name: string, props: { payload?: RecoveryLabBar }) => [`${props?.payload?.completionRate ?? Number(value ?? 0)}%`,
+                      formatter={(value, _name, props) => [`${props?.payload?.completionRate ?? Number(value ?? 0)}%`,
                         "معدل الإكمال"
                       ]}
-                      labelFormatter={(_label: string, payload?: Array<{ payload: RecoveryLabBar }>) =>
+                      labelFormatter={(_label, payload) =>
                         payload?.[0]?.payload?.pathLabel
                           ? `${payload[0].payload.pathLabel} — بدايات: ${payload[0].payload.starts}`
                           : ""
@@ -271,7 +271,7 @@ export const AtlasDashboard: FC<AtlasDashboardProps> = ({ isOpen, onClose }) => 
                     <XAxis dataKey="dateShort" fontSize={10} />
                     <YAxis fontSize={11} />
                     <Tooltip
-                      labelFormatter={(_label: string, payload?: Array<{ payload?: { date?: string } }>) => payload?.[0]?.payload?.date ?? ""}
+                      labelFormatter={(_label, payload) => payload?.[0]?.payload?.date ?? ""}
                     />
                     <Legend />
                     <Line

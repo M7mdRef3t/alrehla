@@ -1,6 +1,7 @@
 import type { FC } from "react";
-import { Activity, AlertOctagon, CheckCircle2 } from "lucide-react";
+import { Activity, AlertOctagon, CheckCircle2, User } from "lucide-react";
 import type { SystemHealthReport } from "../../../../../services/adminApi";
+import { useDigitalTwinState } from "../../../../../state/digitalTwinState";
 
 interface SystemHealthProps {
     data: SystemHealthReport | null;
@@ -18,6 +19,8 @@ const MetricBox: FC<{ label: string; value: string | number; unit?: string }> = 
 );
 
 export const SystemHealth: FC<SystemHealthProps> = ({ data, loading }) => {
+    const { graph } = useDigitalTwinState();
+
     if (loading) {
         return (
             <div className="animate-pulse space-y-4 w-full">
@@ -78,6 +81,14 @@ export const SystemHealth: FC<SystemHealthProps> = ({ data, loading }) => {
                 <MetricBox label="errors" value={data.api.errors} />
                 <MetricBox label="requests" value={data.api.requests} />
                 <MetricBox label="uptime" value={data.api.uptimeSec} unit="s" />
+                <div className="flex flex-col items-center justify-center p-3 rounded-xl border border-indigo-500/20 bg-indigo-500/5 backdrop-blur-sm">
+                    <span className="text-[10px] text-indigo-400 font-mono uppercase tracking-wider mb-1 flex items-center gap-1">
+                        <User className="w-2.5 h-2.5" /> Stability
+                    </span>
+                    <span className="text-lg font-bold text-white tabular-nums">
+                        {Math.round((graph.globalStability ?? 1) * 100)}%
+                    </span>
+                </div>
             </div>
         </div>
     );

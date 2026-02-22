@@ -1764,3 +1764,34 @@ export async function sendOwnerSecurityWebhook(payload: {
     { retries: 1, breaker: securityWebhookBreaker }
   );
 }
+
+export async function fetchDreams(): Promise<any[]> {
+  if (!isSupabaseReady || !supabase) return [];
+
+  const { data, error } = await supabase
+    .from('alrehla_dreams')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error || !data) return [];
+
+  // Map snake_case to camelCase if needed, though column names match partially
+  return data.map(d => ({
+    ...d,
+    alignmentScore: d.alignment_score // Normalize field name
+  }));
+}
+
+export async function saveDream(dream: any) {
+  if (!isSupabaseReady || !supabase) return false;
+
+  const { error } = await supabase
+    .from('alrehla_dreams')
+    .upsert({
+      ...dream,
+      alignment_score: dream.alignmentScore, // Normalize for DB
+      updated_at: new Date().toISOString()
+    });
+
+  return !error;
+}

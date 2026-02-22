@@ -38,6 +38,7 @@ import { GoogleAuthModal } from "./components/GoogleAuthModal";
 import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
 import { OnboardingFlow, hasCompletedJourneyOnboarding, resetJourneyOnboarding } from "./components/OnboardingFlow";
 import { JourneyToast } from "./components/JourneyToast";
+import { AnalyticsConsentBanner } from "./components/AnalyticsConsentBanner";
 import { ActiveInterventionPrompt } from "./components/ActiveInterventionPrompt";
 import { FaqScreen } from "./components/FaqScreen";
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
@@ -83,6 +84,9 @@ import { determineAutoPersona } from "./agent/swarmLogic";
 import { resolveNavigation, type AppScreen } from "./navigation/navigationMachine";
 import { normalizeOwnerAction, normalizePreviewFeature } from "./navigation/actionRoutingMachine";
 import { executeOwnerAction } from "./navigation/ownerActionExecutor";
+import { resolveLandingChromeVisibility } from "./app/orchestration/chromeVisibility";
+import { AUTO_COCOON_LAST_SHOWN_DATE_KEY, evaluateCocoonOpen } from "./app/orchestration/modalOrchestrator";
+import { startAutonomousStartupJobs } from "./app/orchestration/startupJobs";
 
 // Initialize language on app start
 initLanguage();
@@ -192,7 +196,6 @@ const OWNER_ALERTS_LAST_CHECK_KEY = "dawayir-owner-alerts-last-check";
 const OWNER_ALERTS_MILESTONES_KEY = "dawayir-owner-alerts-milestones";
 const LAST_UI_STATE_STORAGE_KEY_PREFIX = "dawayir-last-ui-state";
 const LAST_SCREEN_STORAGE_KEY_PREFIX = "dawayir-last-screen";
-const AUTO_COCOON_LAST_SHOWN_DATE_KEY = "dawayir-auto-cocoon-last-shown-date";
 
 type PersistedModalState = {
   showJourneyGuideChat: boolean;
@@ -224,16 +227,8 @@ type PulseDeltaToast = { title: string; body: string; tone: PulseDeltaToastTone 
 function getUserLastScreenStorageKey(userId: string): string {
   return `${LAST_SCREEN_STORAGE_KEY_PREFIX}:${userId}`;
 }
-
 function getUserLastUiStateStorageKey(userId: string): string {
   return `${LAST_UI_STATE_STORAGE_KEY_PREFIX}:${userId}`;
-}
-
-function getLocalDateKey(date = new Date()): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
 }
 
 function normalizeRestorableScreen(value: string | null): Screen | null {
@@ -411,6 +406,7 @@ export default function App() {
     return !seen;
   });
   const [screen, setScreen] = useState<Screen>("landing");
+  const isLandingScreen = screen === "landing";
 
   // Phase 27: Swarm State & Automatic Selection
   const { activePersona, setActivePersona, manualOverride } = useSwarmState();
@@ -544,7 +540,6 @@ export default function App() {
   const normalizedRole = typeof role === "string" ? role.trim().toLowerCase() : "";
   const isOwnerWatcher = normalizedRole === "owner" || normalizedRole === "superadmin" || adminAccess;
   const isLockedPhaseOne = isPhaseOneUserFlow && !isOwnerWatcher;
-  const showTopToolsButton = isPrivilegedUser && !isLockedPhaseOne;
   const availableFeatures = useMemo(
     () =>
       getEffectiveFeatureAccess({
@@ -570,6 +565,17 @@ export default function App() {
     setPulseCheckContext,
     skipNextCheck: skipNextPulseCheck
   } = usePulseCheckLogic(canUsePulseCheck, screen, shouldGateStartWithAuth);
+  const chromeVisibility = useMemo(
+    () =>
+      resolveLandingChromeVisibility({
+        isAdminRoute,
+        showAuthModal,
+        showPulseCheck,
+        isLandingScreen,
+        hasWhatsAppLink: Boolean(whatsAppLink)
+      }),
+    [isAdminRoute, isLandingScreen, showAuthModal, showPulseCheck, whatsAppLink]
+  );
 
   const navigateToScreen = useCallback((target: Screen): boolean => {
     const result = resolveNavigation({
@@ -589,21 +595,26 @@ export default function App() {
   }, [canUseJourneyTools, canUseMap, isLockedPhaseOne]);
 
   const openCocoonModal = useCallback((source: "auto" | "manual" = "manual") => {
-    if (Date.now() < cocoonSuppressedUntilRef.current) return;
-    // Guard against re-opening cocoon while breathing is already active.
-    if (suppressCocoonReopen || showBreathing) return;
-    if (source === "auto") {
-      const todayKey = getLocalDateKey();
-      const lastShown = getFromLocalStorage(AUTO_COCOON_LAST_SHOWN_DATE_KEY);
-      if (lastShown === todayKey) return;
-      const now = Date.now();
-      // Deduplicate repeated auto-open calls from the same pulse flow.
-      if (now - lastAutoCocoonOpenAtRef.current < 30_000) return;
-      lastAutoCocoonOpenAtRef.current = now;
-      setInLocalStorage(AUTO_COCOON_LAST_SHOWN_DATE_KEY, todayKey);
+    const now = Date.now();
+    const decision = evaluateCocoonOpen({
+      source,
+      isLandingScreen,
+      now,
+      suppressedUntil: cocoonSuppressedUntilRef.current,
+      suppressReopen: suppressCocoonReopen,
+      showBreathing,
+      lastAutoOpenAt: lastAutoCocoonOpenAtRef.current,
+      lastShownDate: getFromLocalStorage(AUTO_COCOON_LAST_SHOWN_DATE_KEY)
+    });
+    if (!decision.shouldOpen) return;
+    if (decision.nextLastAutoOpenAt != null) {
+      lastAutoCocoonOpenAtRef.current = decision.nextLastAutoOpenAt;
+    }
+    if (decision.nextLastShownDate != null) {
+      setInLocalStorage(AUTO_COCOON_LAST_SHOWN_DATE_KEY, decision.nextLastShownDate);
     }
     setShowCocoon(true);
-  }, [showBreathing, suppressCocoonReopen]);
+  }, [isLandingScreen, showBreathing, suppressCocoonReopen]);
 
   const suppressCocoonFor = useCallback((ms = 2000) => {
     cocoonSuppressedUntilRef.current = Date.now() + ms;
@@ -631,50 +642,7 @@ export default function App() {
 
   useEffect(() => {
     void initThemePalette();
-
-    // Phase 4: Start Autonomous Systems
-    if (typeof window !== "undefined") {
-      // 1. Self-Healing System
-      import("./ai/autoHealthCheck")
-        .then((mod) => {
-          mod.startAutoHealthCheck();
-          console.warn("✅ Auto Health Check started");
-        })
-        .catch((err) => console.warn("⚠️ Health Check init failed:", err));
-
-      // 2. Revenue Automation
-      import("./ai/revenueAutomation")
-        .then((mod) => {
-          mod.startWeeklyRevenueAnalysis();
-          console.warn("✅ Weekly Revenue Analysis started");
-        })
-        .catch((err) => console.warn("⚠️ Revenue automation init failed:", err));
-
-      // 3. Emotional Pricing Engine
-      import("./ai/emotionalPricingEngine")
-        .then((mod) => {
-          mod.startDailyEmotionalCheck();
-          console.warn("✅ Emotional Pricing Engine started");
-        })
-        .catch((err) => console.warn("⚠️ Emotional Pricing init failed:", err));
-
-      // 4. Telegram Bot (الجهاز العصبي)
-      import("./services/telegramBot")
-        .then((mod) => {
-          mod.scheduleTelegramReports();
-          void mod.telegramBot.notifySystemStartup();
-          console.warn("✅ Telegram Bot connected");
-        })
-        .catch((err) => console.warn("⚠️ Telegram Bot init failed:", err));
-
-      // 5. Consciousness Theme Engine (الواجهة الواعية)
-      import("./ai/consciousnessThemeEngine")
-        .then((mod) => {
-          mod.startConsciousnessTheme();
-          console.warn("✅ Consciousness Theme Engine started");
-        })
-        .catch((err) => console.warn("⚠️ Consciousness Theme init failed:", err));
-    }
+    startAutonomousStartupJobs({ enabled: !isUserMode });
   }, []);
 
   useEffect(() => {
@@ -2460,7 +2428,7 @@ export default function App() {
           </div>
         )}
         {/* Legacy pattern removed â€” nebula-bg handles the cosmic background */}
-        {!isAdminRoute && !showAuthModal && !showPulseCheck && (
+        {chromeVisibility.showFloatingProfile && (
           <div className="fixed z-[80] top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4" dir="ltr">
             <button
               type="button"
@@ -2498,7 +2466,7 @@ export default function App() {
             </button>
           </div>
         )}
-        {whatsAppLink && !isAdminRoute && !showAuthModal && !showPulseCheck && (
+        {chromeVisibility.showFloatingWhatsApp && whatsAppLink && (
           <button
             type="button"
             onClick={() => {
@@ -2513,7 +2481,7 @@ export default function App() {
           </button>
         )}
         <main
-          className={`flex-1 min-w-0 flex flex-col pb-14 md:pb-0 ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""} ${screen === "landing" ? "overflow-visible" : "overflow-hidden"}`}
+          className={`flex-1 min-w-0 flex flex-col pb-14 md:pb-0 ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""} ${isLandingScreen ? "overflow-visible" : "overflow-hidden"}`}
           aria-hidden={showPulseCheck}
         >
           {screen === "map" && (
@@ -2524,16 +2492,11 @@ export default function App() {
             />
           )}
           <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...جاري التحميل</div>}>
-            <div key={screen} className={`min-w-0 flex transition-all duration-300 ease-in-out ${screen === "landing" ? "flex-col" : "flex-1 items-center justify-center app-panel-main"}`}>
+            <div key={screen} className={`min-w-0 flex transition-all duration-300 ease-in-out ${isLandingScreen ? "flex-col" : "flex-1 items-center justify-center app-panel-main"}`}>
               {screen === "landing" && (
                 <Landing
                   onStartJourney={startRecovery}
                   onRestartJourney={restartJourney}
-                  onOpenTools={openJourneyTools}
-                  showTopToolsButton={showTopToolsButton}
-                  showToolsSection={Boolean(availableFeatures.armory_section)}
-                  onFeatureLocked={setLockedFeature}
-                  availableFeatures={availableFeatures}
                   ownerInstallRequestNonce={ownerInstallRequestNonce}
                   onOwnerInstallRequestHandled={() => setOwnerInstallRequestNonce(0)}
                 />
@@ -2978,7 +2941,7 @@ export default function App() {
         <JourneyToast variant="onboarding_complete" visible={showWelcomeToast} onClose={() => setShowWelcomeToast(false)} />
         <JourneyToast
           variant="nudge"
-          visible={showNudgeToast}
+          visible={showNudgeToast && chromeVisibility.showNudgeToast}
           nudgeData={activeNudge ?? undefined}
           onClose={() => {
             if (activeNudge?.title === 'نظام الاحتواء 🛡️') {
@@ -2987,6 +2950,7 @@ export default function App() {
             handleNudgeDismiss();
           }}
         />
+        <AnalyticsConsentBanner suppressed={!chromeVisibility.showConsentBanner} />
         <MirrorOverlay
           insight={activeMirrorInsight}
           onConfront={(insight) => {
@@ -3001,7 +2965,7 @@ export default function App() {
         />
 
         {/* Mobile Bottom Navigation - hidden on md+ */}
-        {!isAdminRoute && !showPulseCheck && !showAuthModal && (
+        {chromeVisibility.showMobileBottomNav && (
           <nav
             className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center"
             style={{
@@ -3016,7 +2980,7 @@ export default function App() {
           >
             <button type="button" onClick={() => { void navigateToScreen("landing"); }}
               className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
-              style={{ color: screen === "landing" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
+              style={{ color: screen !== "map" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
               aria-label="مساري">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -3082,4 +3046,5 @@ export default function App() {
     </PWAInstallProvider>
   );
 }
+
 

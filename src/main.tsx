@@ -1,12 +1,12 @@
 import { lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { AnalyticsConsentBanner } from "./components/AnalyticsConsentBanner";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { initAnalytics } from "./services/analytics";
 import { initMonitoring } from "./services/monitoring";
 import { getDocumentOrNull, getWindowOrNull } from "./services/clientRuntime";
 import { runtimeEnv } from "./config/runtimeEnv";
+import { MicroTelemetryEngine } from "./services/telemetry/MicroTelemetryEngine";
 import { isDevMode } from "./config/appEnv";
 import { startWeeklyEgyptianAdABTesting } from "./ai/aiMarketingCopy";
 import { startDailyEmotionalCheck } from "./ai/emotionalPricingEngine";
@@ -55,6 +55,9 @@ if (typeof window !== "undefined") {
     startWeeklyEgyptianAdABTesting();
     startDailyEmotionalCheck();
   }
+
+  // Start the Subconscious Mirror
+  MicroTelemetryEngine.init();
 }
 
 if (runtimeEnv.isProd) {
@@ -79,7 +82,6 @@ if (rootElement) {
   root.render(
     <ErrorBoundary>
       <App />
-      <AnalyticsConsentBanner />
       {runtimeEnv.isProd && (
         <Suspense fallback={null}>
           <Analytics />

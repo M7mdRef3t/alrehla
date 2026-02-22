@@ -5,6 +5,7 @@ import type { Variants } from "framer-motion";
 import { Quote, Heart, Users, TrendingUp, Zap, Target, ShieldCheck, ChevronLeft, Activity } from "lucide-react";
 import { LiveStatusBar } from "../shared/LiveStatusBar";
 import type { LiveMetrics, TestimonialItem } from "../../architecture/landingLiveData";
+import { isUserMode } from "../../config/appEnv";
 
 const CARD = {
   background: "rgba(255,255,255,0.04)",
@@ -227,6 +228,8 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
 
 export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsState: { data: LiveMetrics; isLoading: boolean; lastUpdatedAt: number | null; mode: "live" | "fallback" } }> = ({ stagger, item, metricsState }) => {
   const isFallback = metricsState.mode === "fallback";
+  const showModeBadge = !isUserMode;
+  const showFallbackHint = isFallback && !isUserMode;
 
   const cards = useMemo(() => ([
     { val: metricsState.data.activeUnits30d.toLocaleString("ar-EG"), label: "وحدات ميدانية نشطة", icon: Users, color: "text-teal-400" },
@@ -248,8 +251,14 @@ export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsStat
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div>
-            <LiveStatusBar title="مؤشرات النظام الحية" mode={metricsState.mode} isLoading={metricsState.isLoading} lastUpdatedAt={metricsState.lastUpdatedAt} />
-            {isFallback && (
+            <LiveStatusBar
+              title="مؤشرات النظام الحية"
+              mode={metricsState.mode}
+              isLoading={metricsState.isLoading}
+              lastUpdatedAt={metricsState.lastUpdatedAt}
+              showModeBadge={showModeBadge}
+            />
+            {showFallbackHint && (
               <p className="mt-2 inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-bold text-amber-200">
                 عرض بقالب ثابت (Fallback) حتى عودة البيانات الحية
               </p>
@@ -295,6 +304,8 @@ export const TestimonialsSection: FC<{ stagger: Variants; item: Variants; testim
   const displayTestimonials = testimonialsState.data.length > 0 ? testimonialsState.data : testimonials;
   const isLive = testimonialsState.mode === "live";
   const isFallback = testimonialsState.mode === "fallback";
+  const showModeBadge = !isUserMode;
+  const showFallbackHint = isFallback && !isUserMode;
   if (!displayTestimonials?.length) return null;
   return (
     <motion.section
@@ -318,8 +329,9 @@ export const TestimonialsSection: FC<{ stagger: Variants; item: Variants; testim
           mode={isLive ? "live" : "fallback"}
           isLoading={testimonialsState.isLoading}
           lastUpdatedAt={testimonialsState.lastUpdatedAt}
+          showModeBadge={showModeBadge}
         />
-        {isFallback && (
+        {showFallbackHint && (
           <p className="mt-2 inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-bold text-amber-200">
             المراجعات المعروضة من قالب ثابت (Fallback)
           </p>
