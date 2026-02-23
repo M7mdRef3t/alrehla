@@ -1,0 +1,213 @@
+- generic [ref=e3]:
+  - main:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button:
+              - img
+              - text: تثبيت التطبيق
+            - generic:
+              - generic:
+                - generic: استعداد للانطلاق
+            - heading [level=1]:
+              - generic: مهمتنا الأساسية
+              - text: تأمين حدودك واستعادة السيطرة
+            - paragraph: غرفة عمليات لإدارة حياتك، حماية طاقتك، وتطهير أراضيك من أي اختراق
+            - generic:
+              - button [active]:
+                - generic:
+                  - generic: ابدأ الرادار فورًا
+                  - generic:
+                    - img
+              - paragraph: نظام استعادة السيادة الرقمية
+          - generic:
+            - generic:
+              - heading [level=2]: جرب تثبيت حدودك الآن
+              - paragraph: اسحب شخصًا للمدار المناسب لك لتشوف أثر القرار قبل ما تبدأ.
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic: النطاق الآمن
+                    - generic:
+                      - generic: منطقة اضطراب
+                    - generic:
+                      - generic: نطاق استنزاف
+                    - generic:
+                      - generic: المركز
+                  - generic:
+                    - generic: هدف
+                  - generic:
+                    - paragraph: جرب رصد "هدف" وسحبه للمدار
+          - generic:
+            - generic:
+              - generic:
+                - img
+                - generic: خوارزمية التعافي
+              - heading [level=2]: رحلة الـ 4 خطوات لتأمين حدودك
+              - paragraph: من الرصد الأولي حتى التنفيذ الميداني.. رحلة متكاملة لاستعادة السيطرة.
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - img
+                  - generic:
+                    - generic:
+                      - generic: "1"
+                      - generic: الرصد الأول
+                    - heading [level=3]: نظام الرادار
+                    - paragraph: ارسم خريطة علاقاتك وحدد مصادر الاستنزاف بسرعة البرق.
+                  - button:
+                    - text: تفعيل الرادار الآن
+                    - img
+                - generic:
+                  - generic:
+                    - img
+                  - generic:
+                    - generic:
+                      - generic: "2"
+                      - generic: تحليل الثغرات
+                    - heading [level=3]: أوراكل السيادة
+                    - paragraph: حلل الروابط النفسية واكتشف لماذا يتم اختراق حدودك دائماً.
+                  - generic: سيتم التفعيل تلقائياً عند بناء الخريطة
+                - generic:
+                  - generic:
+                    - img
+                  - generic:
+                    - generic:
+                      - generic: "3"
+                      - generic: حسم القرار
+                    - heading [level=3]: محكمة الإحداثيات
+                    - paragraph: تخطى ذنب قول "لا" بمنطق دفاعي صلب ومقنع لذاتك أولاً.
+                  - generic:
+                    - img
+                  - button: محاكمة علاقة حالياً
+                - generic:
+                  - generic:
+                    - img
+                  - generic:
+                    - generic:
+                      - generic: "4"
+                      - generic: EXECUTION_CORE
+                    - heading [level=3]: كتيبات المناورة
+                    - paragraph: نصوص جاهزة وخطط تكتيكية للتعامل مع السيناريوهات المعقدة.
+                  - generic:
+                    - generic: "{ protocol: 'DETACHMENT' } [1] Analyze tone... [2] Execute bounceback..."
+                  - button: استعراض التكتيكات
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - generic:
+                      - paragraph: مؤشرات النظام الحية
+                    - paragraph: بانتظار أول تحديث
+                  - heading [level=3]: مجتمع من القادة يستعيدون سيادتهم
+                  - paragraph: نحن لا نبني مجرد تطبيق، بل غرفة عمليات عالمية لإدارة الوعي وحماية الطاقة النفسية.
+                  - generic:
+                    - generic:
+                      - generic:
+                        - img
+                      - generic:
+                        - img
+                      - generic:
+                        - img
+                      - generic:
+                        - img
+                      - generic:
+                        - img
+                      - generic: +15k
+                - generic:
+                  - generic:
+                    - generic:
+                      - img
+                    - generic:
+                      - generic: ٠
+                      - paragraph: وحدات ميدانية نشطة
+                  - generic:
+                    - generic:
+                      - img
+                    - generic:
+                      - generic: ٠%
+                      - paragraph: ثبات قتالي استراتيجي
+                  - generic:
+                    - generic:
+                      - img
+                    - generic:
+                      - generic: ٠
+                      - paragraph: نشاط الميدان (24 ساعة)
+          - generic:
+            - paragraph: سجلات انتصار القادة
+            - heading [level=2]: تقارير قادة الميدان
+            - generic:
+              - generic:
+                - generic:
+                  - paragraph: مصدر المراجعات
+                - paragraph: آخر تحديث ٠٢:٥٩ م
+            - generic:
+              - generic:
+                - generic:
+                  - img
+                  - paragraph: "\"الرادار كشف لي جبهات كانت تستنزفني بالكامل، قطعت الاتصال بتلك المحطات فوراً.\""
+                - generic:
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: م.أ (قائد ميداني)
+                    - text: قائد ميداني مفعّل
+              - generic:
+                - generic:
+                  - img
+                  - paragraph: "\"درع 'لا' حماني من اختراقات كثيرة، لأول مرة أشعر بأنني أمسك بزمام الأمور.\""
+                - generic:
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: س.م (قائد ميداني)
+                    - text: قائد ميداني مفعّل
+          - generic:
+            - generic:
+              - generic:
+                - img
+            - heading [level=2]: جاهز لتفعيل البروتوكول؟
+            - paragraph: الميدان ينتظر إشارتك... استعد لبناء أول قاعدة في خريطة وعيك الجديد.
+          - generic:
+            - button:
+              - text: ابدأ الرادار فورًا
+              - img
+          - generic:
+            - button: سياسة الخصوصية
+            - button: شروط الاستخدام
+  - generic [ref=e232]:
+    - status [ref=e233]
+    - generic [ref=e234]:
+      - generic [ref=e235]:
+        - heading "ضبط البوصلة" [level=2] [ref=e236]
+        - paragraph [ref=e237]: خطوة 1 من 4 • مؤشر الطاقة
+      - button "تخطي اليوم" [ref=e238] [cursor=pointer]
+    - generic [ref=e240]:
+      - generic [ref=e241]: مؤشر طاقتك
+      - generic [ref=e243]:
+        - generic:
+          - generic: "-"
+          - generic: الطاقة
+      - paragraph [ref=e244]: غير محددة
+      - paragraph [ref=e245]: حط درجة تقرب إحساسك الحقيقي دلوقتي.
+      - slider "مؤشر الطاقة" [ref=e248]: "0"
+      - paragraph [ref=e249]: استخدم أزرار الأسهم لتغيير القيمة، من صفر إلى عشرة.
+      - generic [ref=e250]:
+        - generic [ref=e251]: "0"
+        - generic [ref=e252]: "1"
+        - generic [ref=e253]: "2"
+        - generic [ref=e254]: "3"
+        - generic [ref=e255]: "4"
+        - generic [ref=e256]: "5"
+        - generic [ref=e257]: "6"
+        - generic [ref=e258]: "7"
+        - generic [ref=e259]: "8"
+        - generic [ref=e260]: "9"
+        - generic [ref=e261]: "10"
+    - generic [ref=e262]:
+      - paragraph [ref=e263]: اختَر مؤشر الطاقة أولاً.
+      - button "التالي" [disabled] [ref=e265]

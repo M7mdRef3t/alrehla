@@ -24,7 +24,6 @@ import { useLandingLiveData } from "../architecture/landingLiveData";
 
 interface LandingProps {
   onStartJourney: () => void;
-  onRestartJourney?: () => void;
   ownerInstallRequestNonce?: number;
   onOwnerInstallRequestHandled?: () => void;
 }
@@ -121,10 +120,30 @@ const OrbitalRings: FC = () => {
     </div>
   );
 };
+const RadarSweep: FC = () => {
+  const shouldReduceMotion = useReducedMotion();
+  if (shouldReduceMotion) return null;
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      <motion.div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+        style={{
+          width: "120vh",
+          height: "120vh",
+          background: "conic-gradient(from 0deg, rgba(45,212,191,0.15) 0deg, rgba(45,212,191,0) 60deg, transparent 360deg)",
+          borderRadius: "50%",
+          filter: "blur(40px)"
+        }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+      />
+    </div>
+  );
+};
 
 export const Landing: FC<LandingProps> = ({
   onStartJourney,
-  onRestartJourney,
   ownerInstallRequestNonce = 0,
   onOwnerInstallRequestHandled
 }) => {
@@ -140,7 +159,6 @@ export const Landing: FC<LandingProps> = ({
   const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
   const landingLiveData = useLandingLiveData(landingCopy.testimonials ?? []);
 
-  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [badgePulse, setBadgePulse] = useState(false);
   const lastGoalRef = useRef<string | null>(lastGoalLabel ?? null);
   const landingViewedAt = useRef<number | null>(null);
@@ -252,6 +270,7 @@ export const Landing: FC<LandingProps> = ({
         />
         {!reduceMotion && <FloatingParticles />}
         {!reduceMotion && <OrbitalRings />}
+        {!reduceMotion && <RadarSweep />}
       </div>
 
       <div className="relative z-10 w-full min-h-screen px-4 pt-8 sm:pt-10 pb-16 overflow-x-hidden">
@@ -291,17 +310,36 @@ export const Landing: FC<LandingProps> = ({
             variants={fadeUp(reduceMotion)}
             className="text-[clamp(2.2rem,6vw,4.2rem)] font-black leading-tight tracking-tight mb-5"
           >
-            <span className="block text-slate-100 mb-2">مهمتنا الأساسية</span>
-            <span className="bg-gradient-to-r from-teal-300 via-indigo-300 to-rose-400 text-transparent bg-clip-text">
-              {landingCopy.titleLine2}
+            <span className="block text-slate-100 mb-2">
+              <EditableText
+                id="landing_title_line1"
+                defaultText={landingCopy.titleLine1}
+                page="landing"
+                editOnClick={false}
+                showEditIcon={false}
+              />
             </span>
+            <EditableText
+              id="landing_title_line2"
+              defaultText={landingCopy.titleLine2}
+              page="landing"
+              editOnClick={false}
+              showEditIcon={false}
+              className="text-teal-300"
+            />
           </motion.h1>
 
           <motion.p
             variants={fadeUp(reduceMotion)}
             className="text-[clamp(1rem,2.1vw,1.35rem)] leading-[1.9] font-bold text-slate-300 max-w-[44ch] mb-9"
           >
-            {landingCopy.subtitle}
+            <EditableText
+              id="landing_subtitle"
+              defaultText={landingCopy.subtitle}
+              page="landing"
+              editOnClick={false}
+              showEditIcon={false}
+            />
           </motion.p>
 
           <motion.div variants={item(reduceMotion)} className="flex flex-col items-center">
@@ -323,7 +361,7 @@ export const Landing: FC<LandingProps> = ({
               <div className="relative flex items-center gap-4">
                 <EditableText
                   id="landing_cta_journey"
-                  defaultText="ابدأ الرادار فورًا"
+                  defaultText={landingCopy.ctaJourney}
                   page="landing"
                   editOnClick={false}
                   showEditIcon={false}
@@ -334,27 +372,29 @@ export const Landing: FC<LandingProps> = ({
               </div>
             </motion.button>
 
-            <p className="mt-4 text-[12px] font-bold tracking-wider text-teal-300/80 uppercase">
-              نظام استعادة السيادة الرقمية
-            </p>
-
-            {hasExistingJourney && onRestartJourney && (
-              <div className="mt-4 flex flex-col items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    soundManager.playClick();
-                    setShowRestartConfirm(true);
-                  }}
-                  onMouseEnter={() => soundManager.playHover()}
-                  className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-[13px] font-semibold opacity-70 hover:opacity-100 transition-all border border-amber-400/25 bg-amber-400/5 text-amber-200"
-                >
-                  <Target className="w-3.5 h-3.5" />
-                  إعادة تعيين المسار
-                </button>
-                <p className="text-[10px] text-amber-200/45">لا يحذف بياناتك الحالية</p>
-              </div>
-            )}
+            <motion.div
+              variants={fadeUp(reduceMotion)}
+              className="mt-6 flex flex-col items-center gap-1 text-center"
+            >
+              <p className="text-[13px] sm:text-[15px] font-bold text-teal-200/90 tracking-wide uppercase">
+                <EditableText
+                  id="landing_hook"
+                  defaultText={landingCopy.hook}
+                  page="landing"
+                  editOnClick={false}
+                  showEditIcon={false}
+                />
+              </p>
+              <p className="text-[11px] sm:text-[13px] font-medium text-slate-400/80">
+                <EditableText
+                  id="landing_slogan"
+                  defaultText={landingCopy.slogan}
+                  page="landing"
+                  editOnClick={false}
+                  showEditIcon={false}
+                />
+              </p>
+            </motion.div>
           </motion.div>
         </motion.section>
 
@@ -460,53 +500,7 @@ export const Landing: FC<LandingProps> = ({
           </button>
         </motion.footer>
       </div>
-
-      {showRestartConfirm && onRestartJourney && (
-        <motion.div
-          className="fixed inset-0 z-[130] flex items-center justify-center px-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <button
-            type="button"
-            className="absolute inset-0 bg-slate-950/75 backdrop-blur-sm"
-            onClick={() => setShowRestartConfirm(false)}
-            aria-label="إغلاق تأكيد إعادة الإعداد"
-          />
-          <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            className="relative w-full max-w-sm rounded-2xl border border-amber-400/25 bg-slate-900/95 p-5 text-right"
-          >
-            <h4 className="text-sm font-black text-amber-300 mb-2">تأكيد إعادة الإعداد</h4>
-            <p className="text-xs text-slate-300 leading-[1.8] mb-4">
-              هتبدأ إعداد الرحلة من جديد (Onboarding)، لكن بياناتك الحالية هتفضل محفوظة.
-            </p>
-            <div className="flex items-center gap-2 justify-end">
-              <button
-                type="button"
-                onClick={() => setShowRestartConfirm(false)}
-                className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-white/5"
-              >
-                إلغاء
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  soundManager.playClick();
-                  setShowRestartConfirm(false);
-                  onRestartJourney();
-                }}
-                className="rounded-lg border border-amber-400/40 bg-amber-500/20 px-3 py-1.5 text-xs font-black text-amber-200 hover:bg-amber-500/30"
-              >
-                نعم، ابدأ من جديد
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </div>
+    </div >
   );
 };
+

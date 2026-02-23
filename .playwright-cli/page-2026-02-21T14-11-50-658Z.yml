@@ -1,0 +1,264 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - button "تسجيل الدخول" [ref=e10] [cursor=pointer]:
+      - img [ref=e12]
+      - generic: سجّل دخولك واحفظ رحلتك
+    - button "تواصل واتساب" [ref=e15]:
+      - img [ref=e16]
+    - main [ref=e18]:
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e29]: استعداد للانطلاق
+            - 'heading "مركز القيادة — أونلاين مهمتك: تأمين حدودك واستعادة السيطرة" [level=1] [ref=e30]':
+              - text: مركز القيادة — أونلاين
+              - text: "مهمتك: تأمين حدودك واستعادة السيطرة"
+            - paragraph [ref=e31]: غرفة عمليات لإدارة حياتك، حماية طاقتك، وتطهير أراضيك من أي اختراق
+            - generic [ref=e32]:
+              - 'button "CODE: RED_ZONE أنا في استنزاف" [ref=e33]':
+                - img [ref=e34]
+                - generic [ref=e36]:
+                  - generic [ref=e37]: "CODE: RED_ZONE"
+                  - text: أنا في استنزاف
+              - 'button "CODE: GOLD_ORBIT أريد النمو" [ref=e38]':
+                - img [ref=e39]
+                - generic [ref=e41]:
+                  - generic [ref=e42]: "CODE: GOLD_ORBIT"
+                  - text: أريد النمو
+            - paragraph [ref=e43]: التعافي ليس سحراً — إنها معركة وعي وأنت قائدها
+          - generic [ref=e45]:
+            - heading "جرب تثبيت حدودك الآن" [level=3] [ref=e47]
+            - paragraph [ref=e48]: اسحب "شخص" وضعه في المدار المناسب لك لرؤية الأثر
+            - generic [ref=e50]:
+              - generic:
+                - generic:
+                  - generic: النطاق الآمن
+                - generic:
+                  - generic: منطقة اضطراب
+                - generic:
+                  - generic: نطاق استنزاف
+                - generic:
+                  - generic: المركز
+              - generic [ref=e52]: هدف
+              - generic:
+                - paragraph: جرب رصد "هدف" وسحبه للمدار
+          - generic [ref=e53]:
+            - generic [ref=e56]:
+              - generic [ref=e58]:
+                - generic [ref=e59]:
+                  - img [ref=e61]
+                  - generic [ref=e63]:
+                    - heading "مؤشر السيادة" [level=3] [ref=e64]
+                    - paragraph [ref=e65]: تحت السيطرة
+                - generic [ref=e66]:
+                  - generic [ref=e67]: 80%
+                  - paragraph [ref=e68]: معدل التناغم
+              - generic [ref=e71]:
+                - generic [ref=e72]:
+                  - generic [ref=e73]:
+                    - img [ref=e74]
+                    - generic [ref=e76]: مؤشر الفوضى
+                  - generic [ref=e77]: 0%
+                - generic [ref=e78]:
+                  - generic [ref=e79]:
+                    - img [ref=e80]
+                    - generic [ref=e82]: السيادة القتالية
+                  - generic [ref=e83]: المستوى 0
+              - generic [ref=e84]:
+                - paragraph [ref=e85]: إجراءات مقترحة حسب حالتك
+                - list [ref=e86]:
+                  - listitem [ref=e87]: • حدّد علاقة واحدة محورية وابدأ معاها تدخل تدريجي.
+                  - listitem [ref=e88]: • نفّذ دقيقة شحن واحدة قبل أي قرار مهم.
+                  - listitem [ref=e89]: • راجع حدودك في موقف واحد وفعّل جملة جاهزة لـ"لا".
+            - generic [ref=e90]:
+              - img [ref=e92]
+              - heading "بوصلة الوعي" [level=4] [ref=e95]
+              - paragraph [ref=e96]: بمجرد بدئك، سيتم تحليل نمط طاقتك هنا آلياً.
+            - generic [ref=e101]:
+              - img [ref=e103]
+              - generic [ref=e107]:
+                - generic [ref=e108]:
+                  - generic [ref=e109]: وضع التدفق
+                  - generic [ref=e110]: تدفق
+                  - generic [ref=e113]: نشط
+                - paragraph [ref=e114]: أنت في حالة تدفق كاملة. النظام في وضع المراقب الصامت.
+                - generic [ref=e115]:
+                  - img [ref=e116]
+                  - generic [ref=e118]: "الإجراء الآن: نفّذ المهمة الأهم قبل أي تنقل أو تشتيت."
+          - generic [ref=e119]:
+            - paragraph [ref=e120]: بياناتك الحالية
+            - paragraph [ref=e121]: مؤشرات مباشرة من رحلتك
+          - generic [ref=e122]:
+            - generic [ref=e123]: "0"
+            - generic [ref=e124]: علاقة على الخريطة
+          - generic [ref=e126]:
+            - generic [ref=e127]: "0"
+            - generic [ref=e128]: مهام مكتملة
+          - generic [ref=e130]:
+            - generic [ref=e131]: "0"
+            - generic [ref=e132]: أيام نشاط
+          - generic [ref=e133]:
+            - button "تفعيل الرادار والانطلاق" [ref=e134]:
+              - generic [ref=e136]:
+                - generic [ref=e137]: تفعيل الرادار والانطلاق
+                - img [ref=e139]
+            - paragraph [ref=e141]: نظام استعادة السيادة الرقمية
+          - generic [ref=e143]:
+            - generic [ref=e144]: 🚀
+            - heading "تحدي النمو 🚀" [level=3] [ref=e145]
+            - paragraph [ref=e146]:
+              - text: جاهز للمستوى اللي بعده؟
+              - text: فيه دايرة صفراء بقالها كتير ما اتراجعتش. خد قرار فيها النهاردة.
+            - generic [ref=e147]:
+              - generic [ref=e148]:
+                - generic [ref=e149]: "❌ لا تقل:"
+                - generic [ref=e150]: هستنى الظروف تتحسن
+              - generic [ref=e151]:
+                - generic [ref=e152]: "✅ قل:"
+                - generic [ref=e153]: هاخد القرار دلوقتي وأتحمل نتايجه
+        - generic [ref=e158]:
+          - generic [ref=e161]:
+            - heading "مركز البدء التكتيكي" [level=3] [ref=e162]:
+              - img [ref=e163]
+              - text: مركز البدء التكتيكي
+            - generic [ref=e165]: "STATUS: READY"
+          - generic [ref=e166]:
+            - generic [ref=e167]:
+              - generic [ref=e168]: "01"
+              - generic [ref=e169]: حدّد إحداثيات الهدف
+            - generic [ref=e170]:
+              - generic [ref=e171]: "02"
+              - generic [ref=e172]: نفّذ مناورة ميدانية
+            - generic [ref=e173]:
+              - generic [ref=e174]: "03"
+              - generic [ref=e175]: مراقبة الرادار الحي
+        - generic [ref=e176]:
+          - generic [ref=e177]:
+            - generic [ref=e178]:
+              - img [ref=e179]
+              - generic [ref=e181]: خوارزمية التعافي
+            - heading "رحلة الـ 4 خطوات لتأمين حدودك" [level=2] [ref=e182]
+            - paragraph [ref=e183]: من الرصد الأولي حتى التنفيذ الميداني.. رحلة متكاملة لاستعادة السيطرة.
+          - generic [ref=e186]:
+            - generic [ref=e187]:
+              - img [ref=e189]
+              - generic [ref=e193]:
+                - generic [ref=e194]:
+                  - generic [ref=e195]: "1"
+                  - generic [ref=e196]: الرصد الأول
+                - heading "نظام الرادار" [level=3] [ref=e197]
+                - paragraph [ref=e198]: ارسم خريطة علاقاتك وحدد مصادر الاستنزاف بسرعة البرق.
+              - button "تفعيل الرادار الآن" [ref=e203]:
+                - text: تفعيل الرادار الآن
+                - img [ref=e204]
+            - generic [ref=e206]:
+              - img [ref=e208]
+              - generic [ref=e211]:
+                - generic [ref=e212]:
+                  - generic [ref=e213]: "2"
+                  - generic [ref=e214]: تحليل الثغرات
+                - heading "أوراكل السيادة" [level=3] [ref=e215]
+                - paragraph [ref=e216]: حلل الروابط النفسية واكتشف لماذا يتم اختراق حدودك دائماً.
+              - generic [ref=e223]: سيتم التفعيل تلقائياً عند بناء الخريطة
+            - generic [ref=e224]:
+              - img [ref=e226]
+              - generic [ref=e229]:
+                - generic [ref=e230]:
+                  - generic [ref=e231]: "3"
+                  - generic [ref=e232]: حسم القرار
+                - heading "محكمة الإحداثيات" [level=3] [ref=e233]
+                - paragraph [ref=e234]: تخطى ذنب قول "لا" بمنطق دفاعي صلب ومقنع لذاتك أولاً.
+              - img [ref=e236]
+              - button "محاكمة علاقة حالياً" [ref=e239]
+            - generic [ref=e240]:
+              - img [ref=e242]
+              - generic [ref=e244]:
+                - generic [ref=e245]:
+                  - generic [ref=e246]: "4"
+                  - generic [ref=e247]: EXECUTION_CORE
+                - heading "كتيبات المناورة" [level=3] [ref=e248]
+                - paragraph [ref=e249]: نصوص جاهزة وخطط تكتيكية للتعامل مع السيناريوهات المعقدة.
+              - generic [ref=e251]: "{ protocol: 'DETACHMENT' } [1] Analyze tone... [2] Execute bounceback..."
+              - button "استعراض التكتيكات" [ref=e252]
+        - paragraph [ref=e255]: قسم الأدوات المتقدمة غير متاح في باقتك الحالية.
+        - generic [ref=e259]:
+          - generic [ref=e260]:
+            - generic [ref=e261]:
+              - generic [ref=e262]:
+                - paragraph [ref=e263]: مؤشرات النظام الحية
+                - generic [ref=e264]: محلي
+              - paragraph [ref=e266]: بانتظار أول تحديث
+            - heading "مجتمع من القادة يستعيدون سيادتهم" [level=3] [ref=e267]
+            - paragraph [ref=e268]: نحن لا نبني مجرد تطبيق، بل غرفة عمليات عالمية لإدارة الوعي وحماية الطاقة النفسية.
+            - generic [ref=e270]:
+              - img [ref=e272]
+              - img [ref=e278]
+              - img [ref=e284]
+              - img [ref=e290]
+              - img [ref=e296]
+              - generic [ref=e301]: +15k
+          - generic [ref=e302]:
+            - generic [ref=e303]:
+              - img [ref=e305]
+              - generic [ref=e310]:
+                - generic [ref=e311]: ٠
+                - paragraph [ref=e312]: وحدات ميدانية نشطة
+            - generic [ref=e313]:
+              - img [ref=e315]
+              - generic [ref=e318]:
+                - generic [ref=e319]: ٠%
+                - paragraph [ref=e320]: ثبات قتالي استراتيجي
+            - generic [ref=e321]:
+              - img [ref=e323]
+              - generic [ref=e325]:
+                - generic [ref=e326]: ٠
+                - paragraph [ref=e327]: نشاط الميدان (24 ساعة)
+        - generic [ref=e328]:
+          - paragraph [ref=e329]: سجلات انتصار القادة
+          - heading "تقارير قادة الميدان" [level=2] [ref=e330]
+          - generic [ref=e332]:
+            - generic [ref=e333]:
+              - paragraph [ref=e334]: مصدر المراجعات
+              - generic [ref=e335]: محلي
+            - paragraph [ref=e337]: آخر تحديث ٠٤:١١ م
+          - generic [ref=e338]:
+            - generic [ref=e339]:
+              - generic [ref=e340]:
+                - img [ref=e341]
+                - paragraph [ref=e344]: "\"الرادار كشف لي جبهات كانت تستنزفني بالكامل، قطعت الاتصال بتلك المحطات فوراً.\""
+              - generic [ref=e345]:
+                - img [ref=e347]
+                - generic [ref=e349]:
+                  - generic [ref=e350]: م.أ (قائد ميداني)
+                  - text: قائد ميداني مفعّل
+            - generic [ref=e351]:
+              - generic [ref=e352]:
+                - img [ref=e353]
+                - paragraph [ref=e356]: "\"درع 'لا' حماني من اختراقات كثيرة، لأول مرة أشعر بأنني أمسك بزمام الأمور.\""
+              - generic [ref=e357]:
+                - img [ref=e359]
+                - generic [ref=e361]:
+                  - generic [ref=e362]: س.م (قائد ميداني)
+                  - text: قائد ميداني مفعّل
+        - generic [ref=e363]:
+          - img [ref=e366]
+          - heading "جاهز لتفعيل البروتوكول؟" [level=2] [ref=e368]
+          - paragraph [ref=e369]: الميدان ينتظر إشارتك... استعد لبناء أول قاعدة في خريطة وعيك الجديد.
+        - generic [ref=e370]:
+          - button "سياسة الخصوصية" [ref=e371]
+          - button "شروط الاستخدام" [ref=e372]
+    - status [ref=e380]:
+      - generic [ref=e381]:
+        - generic [ref=e383]: 🌱
+        - generic [ref=e384]:
+          - paragraph [ref=e385]: خطوة واحدة بس 🌱
+          - paragraph [ref=e386]: ما محتاجش تعمل حاجة كبيرة. افتح التطبيق وخد نفس واحد.
+          - button "ابدأ ←" [ref=e387]
+        - button "إغلاق" [ref=e388]:
+          - img
+  - generic [ref=e374]:
+    - generic [ref=e375]: نستخدم أدوات قياس بسيطة لتحسين المنصة بدون جمع محتوىك الشخصي. هل توافق على التفعيل؟
+    - generic [ref=e376]:
+      - button "موافق الآن" [ref=e377]
+      - button "لا أوافق" [ref=e378]
+      - button "اسألني لاحقًا" [ref=e379]

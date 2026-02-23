@@ -1266,7 +1266,7 @@ export default function App() {
 
   const startRecovery = () => {
     // Step 1: one-time onboarding gate.
-    if (!hasCompletedJourneyOnboarding()) {
+    if (!hasCompletedJourneyOnboarding() || nodes.length === 0) {
       trackEvent("onboarding_started", { source: "landing" });
       setShowOnboarding(true);
       return;
@@ -1282,12 +1282,6 @@ export default function App() {
     setShowPulseCheck(true);
   };
 
-  const restartJourney = () => {
-    // Reset the onboarding flag so the user can pick a new goal
-    resetJourneyOnboarding();
-    trackEvent("journey_restarted", { source: "landing" });
-    setShowOnboarding(true);
-  };
 
   useEffect(() => {
     if (screen === "landing" && canShowAIChatbot) {
@@ -2496,7 +2490,6 @@ export default function App() {
               {screen === "landing" && (
                 <Landing
                   onStartJourney={startRecovery}
-                  onRestartJourney={restartJourney}
                   ownerInstallRequestNonce={ownerInstallRequestNonce}
                   onOwnerInstallRequestHandled={() => setOwnerInstallRequestNonce(0)}
                 />
@@ -2935,7 +2928,14 @@ export default function App() {
           </div>
         )}
         {showOnboarding && (
-          <OnboardingFlow onComplete={() => { setShowOnboarding(false); setShowWelcomeToast(true); setTimeout(() => setShowWelcomeToast(false), 6000); }} />
+          <OnboardingFlow
+            onComplete={() => {
+              setShowOnboarding(false);
+              setShowWelcomeToast(true);
+              setTimeout(() => setShowWelcomeToast(false), 6000);
+              startRecovery();
+            }}
+          />
         )}
         {showFaq && <FaqScreen onClose={() => setShowFaq(false)} />}
         <JourneyToast variant="onboarding_complete" visible={showWelcomeToast} onClose={() => setShowWelcomeToast(false)} />

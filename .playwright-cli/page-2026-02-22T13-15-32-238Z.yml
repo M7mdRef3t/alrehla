@@ -1,0 +1,146 @@
+- main [ref=e5]:
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - button "تثبيت التطبيق" [ref=e228]:
+        - img [ref=e229]
+        - text: تثبيت التطبيق
+      - generic [ref=e13]: استعداد للانطلاق
+      - heading "مهمتنا الأساسية تأمين حدودك واستعادة السيطرة" [level=1] [ref=e14]:
+        - generic [ref=e15]: مهمتنا الأساسية
+        - text: تأمين حدودك واستعادة السيطرة
+      - paragraph [ref=e16]: غرفة عمليات لإدارة حياتك، حماية طاقتك، وتطهير أراضيك من أي اختراق
+      - generic [ref=e17]:
+        - button "ابدأ الرادار فورًا" [ref=e18]:
+          - generic [ref=e19]:
+            - generic [ref=e20]: ابدأ الرادار فورًا
+            - img [ref=e22]
+        - paragraph [ref=e24]: نظام استعادة السيادة الرقمية
+    - generic [ref=e26]:
+      - heading "جرب تثبيت حدودك الآن" [level=2] [ref=e28]
+      - paragraph [ref=e29]: اسحب شخصًا للمدار المناسب لك لتشوف أثر القرار قبل ما تبدأ.
+      - generic [ref=e31]:
+        - generic:
+          - generic:
+            - generic: النطاق الآمن
+          - generic:
+            - generic: منطقة اضطراب
+          - generic:
+            - generic: نطاق استنزاف
+          - generic:
+            - generic: المركز
+        - generic [ref=e33]: هدف
+        - generic:
+          - paragraph: جرب رصد "هدف" وسحبه للمدار
+    - generic [ref=e34]:
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - img [ref=e37]
+          - generic [ref=e39]: خوارزمية التعافي
+        - heading "رحلة الـ 4 خطوات لتأمين حدودك" [level=2] [ref=e40]
+        - paragraph [ref=e41]: من الرصد الأولي حتى التنفيذ الميداني.. رحلة متكاملة لاستعادة السيطرة.
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - img [ref=e47]
+          - generic [ref=e51]:
+            - generic [ref=e52]:
+              - generic [ref=e53]: "1"
+              - generic [ref=e54]: الرصد الأول
+            - heading "نظام الرادار" [level=3] [ref=e55]
+            - paragraph [ref=e56]: ارسم خريطة علاقاتك وحدد مصادر الاستنزاف بسرعة البرق.
+          - button "تفعيل الرادار الآن" [ref=e61]:
+            - text: تفعيل الرادار الآن
+            - img [ref=e62]
+        - generic [ref=e64]:
+          - img [ref=e66]
+          - generic [ref=e69]:
+            - generic [ref=e70]:
+              - generic [ref=e71]: "2"
+              - generic [ref=e72]: تحليل الثغرات
+            - heading "أوراكل السيادة" [level=3] [ref=e73]
+            - paragraph [ref=e74]: حلل الروابط النفسية واكتشف لماذا يتم اختراق حدودك دائماً.
+          - generic [ref=e81]: سيتم التفعيل تلقائياً عند بناء الخريطة
+        - generic [ref=e82]:
+          - img [ref=e84]
+          - generic [ref=e87]:
+            - generic [ref=e88]:
+              - generic [ref=e89]: "3"
+              - generic [ref=e90]: حسم القرار
+            - heading "محكمة الإحداثيات" [level=3] [ref=e91]
+            - paragraph [ref=e92]: تخطى ذنب قول "لا" بمنطق دفاعي صلب ومقنع لذاتك أولاً.
+          - img [ref=e94]
+          - button "محاكمة علاقة حالياً" [ref=e97]
+        - generic [ref=e98]:
+          - img [ref=e100]
+          - generic [ref=e102]:
+            - generic [ref=e103]:
+              - generic [ref=e104]: "4"
+              - generic [ref=e105]: EXECUTION_CORE
+            - heading "كتيبات المناورة" [level=3] [ref=e106]
+            - paragraph [ref=e107]: نصوص جاهزة وخطط تكتيكية للتعامل مع السيناريوهات المعقدة.
+          - generic [ref=e109]: "{ protocol: 'DETACHMENT' } [1] Analyze tone... [2] Execute bounceback..."
+          - button "استعراض التكتيكات" [ref=e110]
+    - generic [ref=e114]:
+      - generic [ref=e115]:
+        - generic [ref=e116]:
+          - paragraph [ref=e118]: مؤشرات النظام الحية
+          - paragraph [ref=e119]: بانتظار أول تحديث
+        - heading "مجتمع من القادة يستعيدون سيادتهم" [level=3] [ref=e120]
+        - paragraph [ref=e121]: نحن لا نبني مجرد تطبيق، بل غرفة عمليات عالمية لإدارة الوعي وحماية الطاقة النفسية.
+        - generic [ref=e123]:
+          - img [ref=e125]
+          - img [ref=e131]
+          - img [ref=e137]
+          - img [ref=e143]
+          - img [ref=e149]
+          - generic [ref=e154]: +15k
+      - generic [ref=e155]:
+        - generic [ref=e156]:
+          - img [ref=e158]
+          - generic [ref=e163]:
+            - generic [ref=e164]: ٠
+            - paragraph [ref=e165]: وحدات ميدانية نشطة
+        - generic [ref=e166]:
+          - img [ref=e168]
+          - generic [ref=e171]:
+            - generic [ref=e172]: ٠%
+            - paragraph [ref=e173]: ثبات قتالي استراتيجي
+        - generic [ref=e174]:
+          - img [ref=e176]
+          - generic [ref=e178]:
+            - generic [ref=e179]: ٠
+            - paragraph [ref=e180]: نشاط الميدان (24 ساعة)
+    - generic [ref=e181]:
+      - paragraph [ref=e182]: سجلات انتصار القادة
+      - heading "تقارير قادة الميدان" [level=2] [ref=e183]
+      - generic [ref=e185]:
+        - paragraph [ref=e187]: مصدر المراجعات
+        - paragraph [ref=e188]: آخر تحديث ٠٣:١٤ م
+      - generic [ref=e189]:
+        - generic [ref=e190]:
+          - generic [ref=e191]:
+            - img [ref=e192]
+            - paragraph [ref=e195]: "\"الرادار كشف لي جبهات كانت تستنزفني بالكامل، قطعت الاتصال بتلك المحطات فوراً.\""
+          - generic [ref=e196]:
+            - img [ref=e198]
+            - generic [ref=e200]:
+              - generic [ref=e201]: م.أ (قائد ميداني)
+              - text: قائد ميداني مفعّل
+        - generic [ref=e202]:
+          - generic [ref=e203]:
+            - img [ref=e204]
+            - paragraph [ref=e207]: "\"درع 'لا' حماني من اختراقات كثيرة، لأول مرة أشعر بأنني أمسك بزمام الأمور.\""
+          - generic [ref=e208]:
+            - img [ref=e210]
+            - generic [ref=e212]:
+              - generic [ref=e213]: س.م (قائد ميداني)
+              - text: قائد ميداني مفعّل
+    - generic [ref=e214]:
+      - img [ref=e217]
+      - heading "جاهز لتفعيل البروتوكول؟" [level=2] [ref=e219]
+      - paragraph [ref=e220]: الميدان ينتظر إشارتك... استعد لبناء أول قاعدة في خريطة وعيك الجديد.
+    - button "ابدأ الرادار فورًا" [ref=e222]:
+      - text: ابدأ الرادار فورًا
+      - img [ref=e223]
+    - generic [ref=e225]:
+      - button "سياسة الخصوصية" [ref=e226]
+      - button "شروط الاستخدام" [ref=e227]

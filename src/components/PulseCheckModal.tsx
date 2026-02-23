@@ -44,18 +44,18 @@ const MOODS: Array<{ id: PulseMood; label: string; emoji: string }> = [
 ];
 
 const FOCUS_OPTIONS: Array<{ id: PulseFocus; labelKey: "event" | "thought" | "body" | "none_new" | "none_returning" }> = [
-  { id: "event", labelKey: "event" },
-  { id: "thought", labelKey: "thought" },
-  { id: "body", labelKey: "body" },
-  { id: "none", labelKey: "none_returning" }
+  { id: "event", labelKey: "event" },      // اشتباك ميداني
+  { id: "thought", labelKey: "thought" },  // تفكيك راداري
+  { id: "body", labelKey: "body" },        // صيانة الأنظمة
+  { id: "none", labelKey: "none_new" }     // استطلاع استراتيجي
 ];
 
 const FOCUS_LABELS: Record<string, string> = {
-  event: "\u0645\u0648\u0642\u0641 \u062d\u0635\u0644",
-  thought: "\u0641\u0643\u0631\u0629 \u0645\u0634 \u0628\u062a\u0631\u0648\u062d",
-  body: "\u062c\u0633\u062f\u064a \u062a\u0639\u0628\u0627\u0646",
-  none_returning: "\u0648\u0644\u0627 \u062d\u0627\u062c\u0629\u060c \u062c\u0627\u064a \u0623\u0643\u0645\u0644",
-  none_new: "\u0648\u0644\u0627 \u062d\u0627\u062c\u0629\u060c \u062c\u0627\u064a \u0623\u0643\u062a\u0634\u0641"
+  event: "اشتباك ميداني",
+  thought: "تفكيك راداري",
+  body: "صيانة الأنظمة",
+  none_returning: "تنفيذ الخطة",
+  none_new: "استطلاع استراتيجي"
 };
 
 const MOOD_COSMIC: Record<PulseMood, { bg: string; border: string; glow: string; text: string; nebula: string }> = {
@@ -130,16 +130,16 @@ function getMoodQuickHint(mood: PulseMood | null): string {
 }
 
 function getFocusQuickHint(focus: PulseFocus | null, isStartRecovery: boolean): string {
-  if (!focus) return "\u0627\u062e\u062a\u0631 \u0623\u064a\u0646 \u062a\u0631\u064a\u062f \u062a\u0648\u062c\u064a\u0647 \u0627\u0646\u062a\u0628\u0627\u0647\u0643 \u0627\u0644\u0622\u0646";
-  if (focus === "event") return "\u0627\u0628\u062f\u0623 \u0628\u0648\u0635\u0641 \u0645\u0648\u0642\u0641 \u0648\u0627\u062d\u062f \u0628\u0648\u0636\u0648\u062d.";
-  if (focus === "thought") return "\u062d\u062f\u062f \u0627\u0644\u0641\u0643\u0631\u0629 \u0648\u0627\u062e\u062a\u0628\u0631\u0647\u0627 \u0628\u0647\u062f\u0648\u0621.";
-  if (focus === "body") return "\u0644\u0627\u062d\u0638 \u0627\u0644\u0625\u062d\u0633\u0627\u0633 \u0627\u0644\u062c\u0633\u062f\u064a \u0642\u0628\u0644 \u0623\u064a \u062e\u0637\u0648\u0629.";
+  if (!focus) return "حدد نوع العملية التي تود تنفيذها الآن";
+  if (focus === "event") return "تحديد إحداثيات الاشتباك وتحليل الثغرات.";
+  if (focus === "thought") return "توجيه الرادار لتفكيك المنظومة الفكرية المعادية.";
+  if (focus === "body") return "إيقاف العمليات مؤقتًا لصيانة موارد النظام البدني.";
   return isStartRecovery
-    ? "\u062c\u064a\u062f\u060c \u0646\u0628\u062f\u0623 \u0628\u0627\u0633\u062a\u0643\u0634\u0627\u0641 \u0647\u0627\u062f\u0626."
-    : "\u0645\u0645\u062a\u0627\u0632\u060c \u0643\u0645\u0651\u0644 \u0645\u0646 \u062d\u064a\u062b \u062a\u0648\u0642\u0641\u062a.";
+    ? "تحميل خريطة الاستطلاع.. ابحث عن الحقيقة خلف الزيف."
+    : "تم استعادة بيانات الجلسة.. كمل تنفيذ المهمة.";
 }
 
-type EnergyConfidence = "low" | "medium" | "high";
+
 type PulseDraft = {
   energy: number | null;
   previousEnergy: number | null;
@@ -148,8 +148,8 @@ type PulseDraft = {
   focus: PulseFocus | null;
   notes: string;
   energyReasons: string[];
-  energyConfidence: EnergyConfidence | null;
-  step: 1 | 2 | 3 | 4 | 5;
+  energyConfidence: PulseEnergyConfidence | null;
+  step: 1 | 2;
 };
 
 type EnergyUndoSnapshot = {
@@ -172,47 +172,75 @@ type TacticalAdvice = {
   icon: string;
 };
 
-function generateTacticalAdvice(energy: number, mood: PulseMood | null): TacticalAdvice {
-  // 1. Recovery Protocols (Low Energy)
-  if (energy <= 3) {
+function generateTacticalAdvice(energy: number, mood: PulseMood | null, focus: PulseFocus | null): TacticalAdvice {
+  // 1. Maintenance Protocol (صيانة الأنظمة)
+  if (focus === "body") {
+    if (energy <= 4) {
+      return {
+        title: "PROTOCOL: SYSTEM REBOOT",
+        message: "حالة الجسد تستدعي الإيقاف الإجباري. الاستمرار في العمليات يؤدي لاستنزاف كلي.",
+        action: "ابدأ دقيقتين تنفس فورًا وافصل الرادار.",
+        theme: "recover",
+        icon: "🔋"
+      };
+    }
     return {
-      title: "PROTOCOL: DEEP RECOVERY",
-      message: "Your energy shields are critically low. Engaging in combat (work/social) now will cause long-term damage.",
-      action: "Initiate Sleep/Disconnect Protocol",
+      title: "PROTOCOL: MAINTENANCE",
+      message: "الأنظمة مستقرة ولكنها تحتاج لمعايرة بسيطة للحفاظ على الأداء العالي.",
+      action: "تمرين تمدد سريع أو شرب ماء.",
       theme: "recover",
-      icon: "🛡️"
+      icon: "🔧"
     };
   }
 
-  // 2. Defense Protocols (Medium Energy + Negative Mood)
-  if (energy <= 6 && (mood === "anxious" || mood === "overwhelmed" || mood === "tense" || mood === "angry")) {
+  // 2. Engagement Protocol (اشتباك ميداني)
+  if (focus === "event") {
+    if (energy <= 4) {
+      return {
+        title: "PROTOCOL: DEFENSIVE SHIELD",
+        message: "محاولة الاشتباك بطاقة منخفضة هي خطة فاشلة. انسحب لخط الدفاع الأول.",
+        action: "تجنب أي مواجهة وتوقف عن تحليل الموقف الآن.",
+        theme: "defend",
+        icon: "🛡️"
+      };
+    }
     return {
-      title: "PROTOCOL: FORTRESS",
-      message: "Energy moderate but stability compromised. High risk of emotional leakage.",
-      action: "Hold Position. Do NOT commit to new tasks.",
-      theme: "defend",
-      icon: "🏰"
-    };
-  }
-
-  // 3. Attack Protocols (High Energy)
-  if (energy >= 7) {
-    return {
-      title: "PROTOCOL: BLITZKRIEG",
-      message: "Systems optimal. Momentum is on your side. Hesitation is the only enemy now.",
-      action: "Execute Hardest Task Immediately",
+      title: "PROTOCOL: TACTICAL ENGAGEMENT",
+      message: "الهدف مرصود والطاقة كافية. استخدم 'المبادئ الأولى' لتفكيك الموقف.",
+      action: "ابدأ بتدوين الثغرات المنطقية في الموقف.",
       theme: "attack",
       icon: "⚔️"
     };
   }
 
-  // Default: Maintenance
+  // 3. Radar Deconstruction (تفكيك راداري)
+  if (focus === "thought") {
+    return {
+      title: "PROTOCOL: LOGICAL SCAN",
+      message: "رصد فكرة معادية تحاول اختراق الوعي. تشغيل معالج التفكيك.",
+      action: "اسأل نفسك: هل هذه الفكرة حقيقة أم وهم؟",
+      theme: "defend",
+      icon: "🧠"
+    };
+  }
+
+  // 4. Strategic Recon (استطلاع استراتيجي)
+  if (energy >= 7) {
+    return {
+      title: "PROTOCOL: BLITZKRIEG",
+      message: "جميع أنظمة الوعي في حالة استعداد قصوى. الوقت مثالي للهجوم.",
+      action: "نفذ أصعب مهمة في قائمتك الآن.",
+      theme: "attack",
+      icon: "⚡"
+    };
+  }
+
   return {
-    title: "PROTOCOL: MAINTENANCE",
-    message: "Systems stable. Maintain current trajectory.",
-    action: "Continue Routine Operations",
+    title: "PROTOCOL: STEADY PROGRESS",
+    message: "استقرار في الإشارات الحيوية. كمل تنفيذ الخطة الحالية بنفس الهدوء.",
+    action: "استمر في تنفيذ المهام الروتينية.",
     theme: "defend",
-    icon: "🔧"
+    icon: "📡"
   };
 }
 
@@ -261,9 +289,7 @@ function getMoodVariantSubtitle(variant: CopyVariant): string {
 }
 
 function getFocusVariantSubtitle(variant: CopyVariant): string {
-  return variant === "a"
-    ? "\u062d\u062f\u062f \u0627\u0643\u062a\u0631 \u062d\u0627\u062c\u0629 \u0648\u0627\u062e\u062f\u0629 \u0627\u0646\u062a\u0628\u0627\u0647\u0643 \u062f\u0644\u0648\u0642\u062a\u064a."
-    : "\u0633\u0645\u064a \u0645\u0635\u062f\u0631 \u0627\u0644\u062a\u0634\u062a\u064a\u062a \u0639\u0634\u0627\u0646 \u062a\u0628\u062f\u0623 \u0628\u0648\u0636\u0648\u062d.";
+  return "تحديد نوع العملية (نوع الاشتباك) التي تود تنفيذها الآن.";
 }
 
 function getPostSaveAction(energy: number): string {
@@ -349,7 +375,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [focus, setFocus] = useState<PulseFocus | null>(null);
   const [notes, setNotes] = useState("");
   const [energyReasons, setEnergyReasons] = useState<string[]>([]);
-  const [energyConfidence, setEnergyConfidence] = useState<EnergyConfidence | null>(null);
+  const [energyConfidence, setEnergyConfidence] = useState<PulseEnergyConfidence | null>(null);
   const [showRequiredHint, setShowRequiredHint] = useState(false);
   const [hasTrackedNotesUsage, setHasTrackedNotesUsage] = useState(false);
   const [suggestionApplied, setSuggestionApplied] = useState(false);
@@ -367,7 +393,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [isWarping, setIsWarping] = useState(false);
   const [tacticalAdvice, setTacticalAdvice] = useState<TacticalAdvice | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [step, setStep] = useState<1 | 2>(1);
   const notesRef = useRef<HTMLTextAreaElement | null>(null);
   const lastFeedbackAnchorRef = useRef<number | null>(null);
   const lastHapticAtRef = useRef<number>(0);
@@ -436,13 +462,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     const avg = Math.round((sum / pulseLogs.length) * 10) / 10;
     return { avg, count: pulseLogs.length };
   }, [pulseLogs]);
-  const totalSteps = 4;
-  const isComplete = true;
-  const currentStepComplete =
-    step === 1 ? hasPickedEnergy :
-      step === 2 ? mood !== null :
-        step === 3 ? focus !== null :
-          true;
+  const isComplete = hasPickedEnergy && mood !== null && focus !== null;
+  const currentStepComplete = isComplete;
 
   const clearDraft = () => {
     if (typeof window === "undefined") return;
@@ -515,7 +536,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
             setNotes(typeof parsed.notes === "string" ? parsed.notes : "");
             setEnergyReasons(Array.isArray(parsed.energyReasons) ? parsed.energyReasons.filter((x) => typeof x === "string") : []);
             setEnergyConfidence(parsed.energyConfidence ?? null);
-            setStep(parsed.step ?? 1);
+            setStep(parsed.step === 2 ? 2 : 1);
             lastFeedbackAnchorRef.current = typeof parsed.energy === "number" ? parsed.energy : null;
             restored = true;
           }
@@ -670,16 +691,15 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     setIsAnalyzing(true);
 
     // Simulate AI Processing
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 800));
 
-    const advice = generateTacticalAdvice(energy, mood);
+    const advice = generateTacticalAdvice(energy, mood, focus);
     setTacticalAdvice(advice);
     setIsAnalyzing(false);
 
-    // Transition to step 5 (Tactical Advice)
     setIsWarping(true);
     window.setTimeout(() => {
-      setStep(5);
+      setStep(2);
       window.setTimeout(() => setIsWarping(false), 500);
     }, 250);
   };
@@ -730,8 +750,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   };
 
   const handleSubmit = () => {
-    // Intercept submit to show Tactical Advice first if not shown
-    if (step < 5 && !tacticalAdvice) {
+    if (step === 1) {
       handleTacticalAnalysis();
     } else {
       processFinalSubmit();
@@ -741,40 +760,22 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
 
   const handleNextStep = () => {
-    if (step === 1 && isEnergySelectionUnstable && !needsEnergyConfirmation) {
-      setNeedsEnergyConfirmation(true);
-      return;
+    if (step === 1) {
+      if (!isComplete && !showRequiredHint) {
+        setShowRequiredHint(true);
+        return;
+      }
+      if (isComplete) {
+        handleTacticalAnalysis();
+      }
     }
-    if (step === 1 && needsEnergyConfirmation) {
-      triggerEnergyConfirmPulse();
-    }
-    if (step === 2 && isMoodSelectionUnstable && !needsMoodConfirmation) {
-      setNeedsMoodConfirmation(true);
-      return;
-    }
-    if (step === 2 && needsMoodConfirmation) {
-      setNeedsMoodConfirmation(false);
-    }
-    if (!currentStepComplete && !showRequiredHint) {
-      setShowRequiredHint(true);
-      return;
-    }
-    setNeedsEnergyConfirmation(false);
-    setShowRequiredHint(false);
-    setIsWarping(true);
-    window.setTimeout(() => {
-      setStep((prev) => (prev < 5 ? ((prev + 1) as 1 | 2 | 3 | 4 | 5) : prev));
-      window.setTimeout(() => {
-        setIsWarping(false);
-      }, 500);
-    }, 250);
   };
 
   const handlePreviousStep = () => {
     setShowRequiredHint(false);
     setNeedsEnergyConfirmation(false);
     setNeedsMoodConfirmation(false);
-    setStep((prev) => (prev > 1 ? ((prev - 1) as 1 | 2 | 3 | 4 | 5) : prev));
+    setStep(1);
   };
 
   const applyEnergySuggestion = () => {
@@ -973,44 +974,24 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   };
 
   useEffect(() => {
-    if (step !== 4) return;
-    window.setTimeout(() => {
+    if (step === 1) {
       notesRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 100);
+    }
   }, [step]);
 
   const stepLabel = step === 1
-    ? "\u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629"
-    : step === 2
-      ? "\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a"
-      : step === 3
-        ? "\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u062d\u0627\u0644\u064a"
-        : "\u0644\u0648 \u062d\u0627\u0628\u0628 \u062a\u0634\u0631\u062d \u0623\u0643\u062a\u0631";
+    ? "تقرير الحالة التكتيكية"
+    : "البروتوكول المقترح";
 
-  const footerHintText = needsEnergyConfirmation && step === 1
-    ? `\u0627\u062e\u062a\u064a\u0627\u0631\u0643 \u0643\u0627\u0646 \u0645\u062a\u0630\u0628\u0630\u0628\u064b\u0627. \u0627\u0636\u063a\u0637 \u00ab\u0627\u0644\u062a\u0627\u0644\u064a\u00bb \u0645\u0631\u0629 \u0623\u062e\u0631\u0649 \u0644\u062a\u0623\u0643\u064a\u062f \u0642\u064a\u0645\u0629 ${energy ?? 0}/10.`
-    : needsMoodConfirmation && step === 2
-      ? "\u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0643\u0627\u0646 \u0645\u062a\u0630\u0628\u0630\u0628\u064b\u0627. \u0627\u0636\u063a\u0637 \u00ab\u0627\u0644\u062a\u0627\u0644\u064a\u00bb \u0645\u0631\u0629 \u062b\u0627\u0646\u064a\u0629 \u0644\u0644\u062a\u0623\u0643\u064a\u062f."
-      : showRequiredHint && !currentStepComplete
-        ? (step === 1
-          ? "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629."
-          : step === 2
-            ? "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629."
-            : "\u0645\u0637\u0644\u0648\u0628 \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u062d\u0627\u0644\u064a \u0642\u0628\u0644 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u0629.")
-        : (!currentStepComplete
-          ? (step === 1
-            ? "\u0627\u062e\u062a\u064e\u0631 \u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629 \u0623\u0648\u0644\u0627\u064b."
-            : step === 2
-              ? "\u0627\u062e\u062a\u064e\u0631 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0623\u0648\u0644\u0627\u064b."
-              : "\u0627\u062e\u062a\u064e\u0631 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u062d\u0627\u0644\u064a \u0623\u0648\u0644\u0627\u064b.")
-          : "\u00A0");
-  const footerHintColor = needsEnergyConfirmation && step === 1
-    ? "rgba(251,191,36,0.96)"
-    : needsMoodConfirmation && step === 2
-      ? "rgba(251,191,36,0.96)"
-      : showRequiredHint && !currentStepComplete
-        ? "rgba(248, 113, 113, 0.95)"
-        : "var(--text-muted)";
+  const footerHintText = showRequiredHint && !currentStepComplete
+    ? "مطلوب إكمال بيانات المسح الحيوي (الطاقة والمزاج) ونوع العملية."
+    : "راجع إحداثيات حالتك قبل الضغط على تنفيذ.";
+
+  const footerHintColor = showRequiredHint && !currentStepComplete
+    ? "rgba(248, 113, 113, 0.95)"
+    : "var(--text-muted)";
+
+  const totalSteps = 2;
 
   return (
     <AnimatePresence>
@@ -1122,740 +1103,204 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               </div>
             )}
 
-            <div className="pulse-check-content flex-1 min-h-0 overflow-hidden px-4 sm:px-5 pb-3 sm:pb-4 pt-1">
+            <div className="pulse-check-content flex-1 overflow-y-auto px-4 sm:px-5 pb-3 sm:pb-4 pt-1 custom-scrollbar">
               {step === 1 && (
-                <motion.div className="pulse-check-section mt-1.5 sm:mt-2.5 flex flex-col gap-2 sm:gap-2.5" custom={1} variants={cosmicUp} initial="hidden" animate="visible">
-                  <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                    {"\u0645\u0624\u0634\u0631 \u0637\u0627\u0642\u062a\u0643"}
-                  </label>
-                  <div className="flex justify-center py-0.5 sm:py-3 relative">
-                    {/* Outer Glow / Nebula Effect */}
-                    <motion.div
-                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                      animate={{
-                        opacity: hasPickedEnergy && energy != null ? [0.4, 0.6, 0.4] : 0.3,
-                        scale: hasPickedEnergy && energy != null ? [1, 1.2, 1] : 1,
-                        rotate: [0, 5, -5, 0]
-                      }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                      <div
-                        className="w-56 h-56 sm:w-72 sm:h-72 rounded-full blur-3xl opacity-80"
-                        style={{
-                          background: isEnergyDefault
-                            ? "conic-gradient(from 0deg, rgba(148,163,184,0.1), rgba(71,85,105,0.2), rgba(148,163,184,0.1))"
-                            : `radial-gradient(circle, ${fillHex}40, transparent 70%)`
-                        }}
-                      />
-                    </motion.div>
-                    <motion.div
-                      data-testid="pulse-energy-orb"
-                      className="pulse-check-energy-orb relative rounded-full flex items-center justify-center w-40 h-40 sm:w-56 sm:h-56"
-                      style={{
-                        background: isEnergyDefault
-                          ? "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), rgba(30,41,59,0.8))"
-                          : `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), ${fillHex} 40%, #0f172a 90%)`,
-                        boxShadow: isEnergyDefault
-                          ? "0 0 40px rgba(148,163,184,0.1), inset 0 0 20px rgba(255,255,255,0.05)"
-                          : `0 0 ${40 + energy! * 5}px ${fillHex}66, inset 0 0 40px ${fillHex}44`,
-                        border: isEnergyDefault ? "1px solid rgba(255,255,255,0.1)" : `1px solid ${fillHex}80`
-                      }}
-                      animate={{
-                        y: [0, -10, 0],
-                        scale: [1, hasPickedEnergy && energy != null ? 1.05 : 1.02, 1],
-                      }}
-                      transition={{
-                        y: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-                        scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-                      }}
-                    >
-                      {/* Inner Core Layers */}
-                      {hasPickedEnergy && energy != null && energy > 0 && (
-                        <>
-                          {/* Rotating Starburst (for high energy) */}
-                          {energy >= 6 && (
-                            <motion.div
-                              className="absolute inset-2"
-                              style={{
-                                background: `conic-gradient(from 0deg, transparent, ${fillHex}66, transparent 20%)`,
-                                borderRadius: "50%",
-                                filter: "blur(12px)",
-                                mixBlendMode: "screen"
-                              }}
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                            />
-                          )}
+                <motion.div className="pulse-check-section flex flex-col gap-6 py-4" custom={1} variants={cosmicUp} initial="hidden" animate="visible">
 
-                          {/* Pulsing Core */}
-                          <motion.div
-                            className="absolute inset-8 rounded-full"
-                            style={{
-                              background: `radial-gradient(circle, ${fillHex}, transparent)`,
-                              opacity: 0.6,
-                              filter: "blur(10px)"
-                            }}
-                            animate={{
-                              scale: [0.8, 1.1, 0.8],
-                              opacity: [0.4, 0.7, 0.4]
-                            }}
-                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                          />
-                        </>
-                      )}
-
-                      {/* Energy Number Display */}
-                      <div className="flex flex-col items-center justify-center relative z-10 select-none pointer-events-none">
-                        <span className="text-5xl sm:text-7xl font-bold leading-none tracking-tighter"
-                          style={{
-                            color: "#ffffff",
-                            textShadow: `0 0 20px ${fillHex}, 0 0 10px rgba(0,0,0,0.5)`
-                          }}>
-                          {hasPickedEnergy && energy != null ? energy : "-"}
-                        </span>
-                        <span className="text-[10px] items-center font-bold tracking-widest uppercase opacity-80 mt-1" style={{ color: "#ffffff" }}>
-                          الطاقة
-                        </span>
-
-                        {weeklyTrend && hasPickedEnergy && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="absolute -bottom-8 whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-bold backdrop-blur-sm"
-                            style={{
-                              backgroundColor: "rgba(0,0,0,0.4)",
-                              border: `1px solid ${weeklyTrend.direction === "up" ? "#2dd4bf" : weeklyTrend.direction === "down" ? "#f87171" : "#94a3b8"}44`,
-                              color: weeklyTrend.direction === "up" ? "#2dd4bf" : weeklyTrend.direction === "down" ? "#f87171" : "#cbd5e1"
-                            }}
-                          >
-                            {weeklyTrend.direction === "up" ? "↑" : weeklyTrend.direction === "down" ? "↓" : "→"} {weeklyTrend.label}
-                          </motion.div>
-                        )}
-                      </div>
-                    </motion.div>
-                  </div>
-                  <p className="text-center text-base font-semibold" style={{ color: "var(--text-primary)" }}>
-                    {energyStateLabel}
-                  </p>
-                  <p className="text-center text-xs font-medium" style={{ color: "var(--text-muted)" }}>
-                    {energySupportLine}
-                  </p>
-                  {goldenNeedleEnabled ? (
-                    <div className="relative w-full py-6 flex flex-col items-center justify-center mb-6">
-                      <div className="relative w-64 h-32">
-                        {/* Golden Needle Compass Visual */}
-                        <svg viewBox="0 0 200 110" className="w-full h-full overflow-visible drop-shadow-2xl">
+                  {/* 1. Biometric Energy (Needle) */}
+                  <div className="flex flex-col gap-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                      مؤشر الأنظمة الحيوية
+                    </label>
+                    <div className="relative w-full flex flex-col items-center justify-center p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 shadow-inner">
+                      <div className="relative w-full max-w-[220px] h-32 scale-90 sm:scale-100">
+                        <svg viewBox="0 0 200 110" className="w-full h-full overflow-visible">
                           <defs>
-                            <linearGradient id="needleTrackGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.1" />
-                              <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.1" />
-                            </linearGradient>
-                            <linearGradient id="needleActiveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <linearGradient id="needleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                               <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
-                              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.8" />
-                              <stop offset="100%" stopColor="#fcd34d" stopOpacity="1" />
+                              <stop offset="100%" stopColor="#fbbf24" stopOpacity="1" />
                             </linearGradient>
-                            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                              <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                              <feMerge>
-                                <feMergeNode in="coloredBlur" />
-                                <feMergeNode in="SourceGraphic" />
-                              </feMerge>
-                            </filter>
                           </defs>
-
-                          {/* Background Track (Arc) */}
-                          <path
-                            d="M 10,100 A 90,90 0 0,1 190,100"
-                            fill="none"
-                            stroke="rgba(255,255,255,0.08)"
-                            strokeWidth="16"
-                            strokeLinecap="round"
+                          <path d="M 10,100 A 90,90 0 0,1 190,100" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="14" strokeLinecap="round" />
+                          <motion.path
+                            d="M 10,100 A 90,90 0 0,1 190,100" fill="none" stroke="url(#needleGrad)" strokeWidth="14" strokeLinecap="round"
+                            strokeDasharray="283"
+                            initial={{ strokeDashoffset: 283 }}
+                            animate={{ strokeDashoffset: 283 - (283 * ((energy ?? 0) / 10)) }}
+                            transition={{ type: "spring", stiffness: 40, damping: 12 }}
                           />
-
-                          {/* Active Track (Animated Arc) */}
-                          {hasPickedEnergy && (
-                            <motion.path
-                              d="M 10,100 A 90,90 0 0,1 190,100"
-                              fill="none"
-                              stroke="url(#needleActiveGradient)"
-                              strokeWidth="16"
-                              strokeLinecap="round"
-                              strokeDasharray="283"
-                              initial={{ strokeDashoffset: 283 }}
-                              animate={{ strokeDashoffset: 283 - (283 * ((energy ?? 0) / 10)) }}
-                              transition={{ type: "spring", stiffness: 50, damping: 15 }}
-                              style={{ filter: "url(#glow)" }}
-                            />
-                          )}
-
-                          {/* Ticks */}
-                          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((tick) => {
-                            // Let's recalculate: 0 should be at 180 deg (left), 10 at 0 deg (right), 5 at -90 (top).
-                            // SVG coords: Top is negative Y.
-                            // 0 -> Angle 180deg (left). 10 -> Angle 0deg (right).
-                            // Wait, Standard trig: 0 is right, 180 is left.
-                            // SVG path goes from 10,100 (left) to 190,100 (right).
-                            // So 0 energy is at 180 degrees, 10 energy is at 0 degrees.
-                            const rad = ((180 - (tick / 10) * 180) * Math.PI) / 180;
-                            const x1 = 100 + 78 * Math.cos(rad); // Inner radius
-                            const y1 = 100 - 78 * Math.sin(rad);
-                            const x2 = 100 + 96 * Math.cos(rad); // Outer radius
-                            const y2 = 100 - 96 * Math.sin(rad);
-                            const isAnchor = tick === 0 || tick === 3 || tick === 6 || tick === 10;
-                            return (
-                              <line
-                                key={tick}
-                                x1={x1}
-                                y1={y1}
-                                x2={x2}
-                                y2={y2}
-                                stroke={isAnchor ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.2)"}
-                                strokeWidth={isAnchor ? 2 : 1}
-                              />
-                            );
-                          })}
-
-                          {/* The Golden Needle */}
                           <motion.g
-                            initial={{ rotate: -180, originX: "100px", originY: "100px" }}
                             animate={{ rotate: -(180 - ((energy ?? 0) / 10) * 180), originX: "100px", originY: "100px" }}
-                            transition={{ type: "spring", stiffness: 90, damping: 14 }}
+                            transition={{ type: "spring", stiffness: 70, damping: 14 }}
                           >
-                            {/* Needle Body */}
-                            <path d="M 96,100 L 100,25 L 104,100 Z" fill="#fbbf24" filter="url(#glow)" />
-                            {/* Center Knob */}
-                            <circle cx="100" cy="100" r="8" fill="#d97706" stroke="#fbbf24" strokeWidth="2" />
+                            <path d="M 97,100 L 100,20 L 103,100 Z" fill="#fbbf24" />
+                            <circle cx="100" cy="100" r="5" fill="#d97706" />
                           </motion.g>
                         </svg>
-
-                        {/* Invisible Slider overlay for interaction */}
                         <input
-                          data-testid="pulse-energy-needle-input"
-                          type="range"
-                          min={0}
-                          max={10}
-                          step={1}
-                          value={energy ?? 0}
+                          type="range" min={0} max={10} step={1} value={energy ?? 0}
                           onChange={(e) => setEnergyValue(Number(e.target.value))}
                           onPointerUp={snapToAnchor}
-                          onPointerCancel={snapToAnchor}
-                          onKeyUp={handleEnergyKeyUp}
-                          onBlur={snapToAnchor}
-                          onMouseUp={snapToAnchor}
-                          onTouchEnd={snapToAnchor}
-                          className="absolute -top-4 -left-4 w-[115%] h-[120%] opacity-0 cursor-pointer z-20"
-                          aria-label="مؤشر البوصلة"
+                          className="absolute inset-0 opacity-0 cursor-pointer z-20"
                         />
                       </div>
-
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-center mt-2"
-                      >
-                        <p className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-200 to-amber-500 font-mono tracking-widest">
-                          {energy ?? 0}
-                        </p>
-                      </motion.div>
+                      <div className="text-center -mt-6">
+                        <p className="text-4xl font-black text-white font-mono tracking-tighter">{energy ?? 0}</p>
+                        <p className="text-[10px] font-bold text-amber-500/80 mt-1 uppercase tracking-widest">{energyStateLabel}</p>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="relative w-full py-1.5">
-                      <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 rounded-full" style={{ background: "rgba(255, 255, 255, 0.08)" }} />
-                      <div
-                        className="absolute right-0 top-1/2 -translate-y-1/2 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${fillHex}80, ${fillHex})`, boxShadow: `0 0 12px ${fillHex}40` }}
-                      />
-                      <input
-                        data-testid="pulse-energy-slider"
-                        type="range"
-                        min={0}
-                        max={10}
-                        step={1}
-                        value={energy ?? 0}
-                        aria-label={"\u0645\u0624\u0634\u0631 \u0627\u0644\u0637\u0627\u0642\u0629"}
-                        aria-valuemin={0}
-                        aria-valuemax={10}
-                        aria-valuenow={energy ?? 0}
-                        aria-valuetext={hasPickedEnergy && energy != null
-                          ? `\u0645\u0633\u062a\u0648\u0649 \u0627\u0644\u0637\u0627\u0642\u0629 ${energy} \u0645\u0646 10\u060c \u062d\u0627\u0644\u062a\u0643 ${energyStateLabel}\u060c ${energyQuickHint}.`
-                          : "\u0644\u0645 \u064a\u062a\u0645 \u0627\u062e\u062a\u064a\u0627\u0631 \u0645\u0633\u062a\u0648\u0649 \u0627\u0644\u0637\u0627\u0642\u0629 \u0628\u0639\u062f. \u0627\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u0623\u0633\u0647\u0645 \u0644\u0644\u062a\u0639\u062f\u064a\u0644 \u0645\u0646 \u0635\u0641\u0631 \u0625\u0644\u0649 \u0639\u0634\u0631\u0629."}
-                        aria-describedby="pulse-energy-help"
-                        onChange={(e) => setEnergyValue(Number(e.target.value))}
-                        onPointerUp={snapToAnchor}
-                        onPointerCancel={snapToAnchor}
-                        onKeyUp={handleEnergyKeyUp}
-                        onBlur={snapToAnchor}
-                        onMouseUp={snapToAnchor}
-                        onTouchEnd={snapToAnchor}
-                        className="pulse-range relative w-full"
-                        style={{ accentColor: fillHex, "--pulse-fill": fillHex } as CSSProperties}
-                      />
-                    </div>
-                  )}
-                  <p id="pulse-energy-help" className="sr-only">
-                    {"\u0627\u0633\u062a\u062e\u062f\u0645 \u0623\u0632\u0631\u0627\u0631 \u0627\u0644\u0623\u0633\u0647\u0645 \u0644\u062a\u063a\u064a\u064a\u0631 \u0627\u0644\u0642\u064a\u0645\u0629\u060c \u0645\u0646 \u0635\u0641\u0631 \u0625\u0644\u0649 \u0639\u0634\u0631\u0629."}
-                  </p>
-                  {keyboardEnergyHint != null && (
-                    <p className="text-center text-[11px] font-semibold" style={{ color: "var(--text-secondary)" }}>
-                      {`\u0627\u0644\u0642\u064a\u0645\u0629: ${keyboardEnergyHint}/10`}
-                    </p>
-                  )}
-                  <div className="flex items-center justify-between px-0.5 -mt-0.5 text-[10px]" style={{ color: "var(--text-muted)" }}>
-                    {Array.from({ length: 11 }, (_, i) => i).map((n) => {
-                      const isAnchor = n === 0 || n === 3 || n === 6 || n === 10;
-                      return (
-                        <span
-                          key={n}
-                          className={isAnchor ? "font-extrabold" : "font-medium"}
-                          style={isAnchor ? { color: "var(--text-primary)", letterSpacing: "0.01em" } : undefined}
-                        >
-                          {n}
-                        </span>
-                      );
-                    })}
                   </div>
-                  {needsEnergyConfirmation && (
-                    <p className="text-center text-[11px] font-semibold" style={{ color: "rgba(251,191,36,0.98)" }}>
-                      {`\u0627\u0636\u063a\u0637 \u00ab\u0627\u0644\u062a\u0627\u0644\u064a\u00bb \u0645\u0631\u0629 \u0623\u062e\u0631\u0649 \u0644\u062a\u0623\u0643\u064a\u062f ${energy ?? 0}/10.`}
-                    </p>
-                  )}
-                  {pulseWeeklyRecommendationEnabled && shouldOfferWeeklyRecommendation && weeklyEnergyRecommendation && (
-                    <div className="flex flex-col items-center gap-1 py-0.5">
-                      <button
-                        type="button"
-                        onClick={applyWeeklyRecommendation}
-                        className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
-                        style={{
-                          color: "var(--text-primary)",
-                          background: "rgba(59,130,246,0.16)",
-                          border: "1px solid rgba(59,130,246,0.4)"
-                        }}
-                      >
-                        {`\u0627\u0633\u062a\u062e\u062f\u0645 \u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639 ${weeklyEnergyRecommendation?.value ?? 0}/10`}
-                      </button>
-                      <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-                        {`\u0645\u0628\u0646\u064a \u0639\u0644\u0649 \u0622\u062e\u0631 ${weeklyEnergyRecommendation?.samples ?? 0} \u0642\u0631\u0627\u0621\u0627\u062a.`}
-                      </p>
-                    </div>
-                  )}
-                  {pulseImmediateActionEnabled && energySuggestion && hasPickedEnergy && (
-                    <div className="flex flex-col items-center gap-1 py-0.5">
-                      <button
-                        type="button"
-                        onClick={applyImmediateEnergyAction}
-                        className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
-                        style={{
-                          color: "var(--text-primary)",
-                          background: "rgba(15, 185, 177, 0.16)",
-                          border: "1px solid rgba(15, 185, 177, 0.38)"
-                        }}
-                      >
-                        {immediateEnergyAction?.cta ?? energySuggestion?.cta ?? ""}
-                      </button>
-                      <p className="text-[11px]" style={{ color: suggestionApplied ? "rgba(45,212,191,0.95)" : "var(--text-muted)" }}>
-                        {suggestionApplied
-                          ? "\u062a\u0645 \u062a\u062c\u0647\u064a\u0632 \u062e\u0637\u0648\u062a\u0643 \u0627\u0644\u062a\u0627\u0644\u064a\u0629."
-                          : immediateActionApplied
-                            ? "\u0645\u0645\u062a\u0627\u0632\u060c \u0627\u0644\u0622\u0646 \u0643\u0645\u0644 \u0628\u0627\u0644\u062e\u0637\u0648\u0629 \u0627\u0644\u062a\u0627\u0644\u064a\u0629."
-                            : (immediateEnergyAction?.hint ?? suggestionHelperText)}
-                      </p>
-                    </div>
-                  )}
-                  {typeof lastEnergyValue === "number" && (
-                    <div className="rounded-xl px-3 py-2 text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                      <p className="text-[11px] font-semibold" style={{ color: "var(--text-primary)" }}>
-                        {`\u0622\u062e\u0631 \u0642\u0631\u0627\u0621\u0629 \u0645\u0633\u062c\u0644\u0629: ${lastEnergyValue}/10`}
-                      </p>
-                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
-                        {"\u0644\u0644\u0645\u0642\u0627\u0631\u0646\u0629 \u0641\u0642\u0637 \u0645\u0639 \u0642\u0631\u0627\u0621\u0629 \u0627\u0644\u064a\u0648\u0645."}
-                      </p>
-                    </div>
-                  )}
-                  {historicalEnergyAverage && historicalEnergyAverage.count >= 3 && (
-                    <div className="rounded-xl px-3 py-2 text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                      <p className="text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
-                        {"معدل طاقتك"}
-                      </p>
-                      <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-                        {`${historicalEnergyAverage.avg}/10`}
-                      </p>
-                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
-                        {`محسوب من ${historicalEnergyAverage.count} تسجيل`}
-                      </p>
-                    </div>
-                  )}
-                </motion.div>
-              )}
 
-              {step === 2 && (
-                <motion.div className="pulse-check-section mt-1.5 flex flex-col gap-2.5" custom={2} variants={cosmicUp} initial="hidden" animate="visible">
-                  <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
-                    {"\u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a"}
-                  </label>
-                  <p className="text-[11px] -mt-1 mb-0.5" style={{ color: "var(--text-muted)", minHeight: "1rem" }}>
-                    {moodSubtitle}
-                  </p>
-                  <div className="pulse-check-mood-grid grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 py-4">
-                    {MOODS.map((item) => {
-                      const isSelected = mood === item.id;
-                      const mStyle = MOOD_COSMIC[item.id];
-                      return (
-                        <motion.button
-                          key={item.id}
-                          type="button"
-                          onClick={() => {
-                            setMoodValue(item.id);
-                          }}
-                          className="group relative flex flex-col items-center justify-start gap-3 rounded-full outline-none"
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          {/* The Planet/Orb */}
-                          <div
-                            className="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full transition-all duration-500"
+                  {/* 2. interior Weather (Mood) */}
+                  <div className="flex flex-col gap-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                      الطقس الشعوري
+                    </label>
+                    <div className="grid grid-cols-4 gap-2.5 p-3 rounded-3xl bg-white/[0.03] border border-white/5">
+                      {MOODS.map((m) => {
+                        const isSelected = mood === m.id;
+                        const mStyle = MOOD_COSMIC[m.id];
+                        return (
+                          <button
+                            key={m.id} type="button" onClick={() => setMoodValue(m.id)}
+                            className="flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all"
+                            style={{ background: isSelected ? `${mStyle.text}22` : 'transparent' }}
+                          >
+                            <span className="text-2xl" style={{ filter: isSelected ? 'none' : 'grayscale(1) opacity(0.3)' }}>{m.emoji}</span>
+                            <span className={`text-[8px] font-black whitespace-nowrap ${isSelected ? 'text-white' : 'text-slate-500'}`}>{m.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 3. Objective Selection (Focus) */}
+                  <div className="flex flex-col gap-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+                      توجيه البوصلة
+                    </label>
+                    <div className="grid grid-cols-2 gap-3 pb-2">
+                      {FOCUS_OPTIONS.map((f) => {
+                        const isSelected = focus === f.id;
+                        const label = f.id === "none" ? FOCUS_LABELS["none_new"] : FOCUS_LABELS[f.labelKey];
+                        const fStyle = FOCUS_COSMIC[f.id];
+                        return (
+                          <button
+                            key={f.id} type="button" onClick={() => setFocusValue(f.id)}
+                            className="relative flex flex-col items-center justify-center p-4 rounded-2xl border text-[10px] font-black transition-all"
                             style={{
-                              background: isSelected
-                                ? `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), ${mStyle.text} 60%, ${mStyle.text}44 100%)`
-                                : "rgba(255, 255, 255, 0.03)",
-                              border: `1px solid ${isSelected ? mStyle.text : "rgba(255,255,255,0.1)"}`,
-                              boxShadow: isSelected
-                                ? `0 0 20px ${mStyle.text}66, inset 0 0 15px ${mStyle.text}44`
-                                : "inset 0 0 10px rgba(255,255,255,0.02)"
+                              background: isSelected ? `${fStyle.bg}44` : 'rgba(255,255,255,0.02)',
+                              borderColor: isSelected ? fStyle.border : 'rgba(255,255,255,0.06)',
+                              color: isSelected ? 'white' : 'rgba(255,255,255,0.3)',
                             }}
                           >
-                            {/* Selected Pulse Ring */}
-                            {isSelected && (
-                              <motion.div
-                                className="absolute inset-[-4px] rounded-full border border-dashed"
-                                style={{ borderColor: mStyle.text }}
-                                animate={{ rotate: 360, scale: [1, 1.05, 1] }}
-                                transition={{ rotate: { duration: 10, ease: "linear", repeat: Infinity }, scale: { duration: 2, repeat: Infinity } }}
-                              />
-                            )}
-
-                            {/* Emoji */}
-                            <span className="text-3xl sm:text-4xl select-none filter drop-shadow-md z-10">
-                              {item.emoji}
-                            </span>
-
-                            {/* Nebula Background on Selection */}
-                            {isSelected && (
-                              <motion.div
-                                className="absolute inset-[-20px] -z-10 rounded-full opacity-40 blur-xl"
-                                style={{ background: mStyle.text }}
-                                layoutId="mood-nebula"
-                              />
-                            )}
-                          </div>
-
-                          {/* Label */}
-                          <span
-                            className={`text-xs font-medium transition-colors duration-300 ${isSelected ? "font-bold" : "text-slate-400 group-hover:text-slate-200"}`}
-                            style={{ color: isSelected ? mStyle.text : undefined }}
-                          >
-                            {item.label}
-                          </span>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-center text-[11px]" style={{ color: isMoodSelectionUnstable ? "rgba(251,191,36,0.95)" : "var(--text-muted)", minHeight: "1rem" }}>
-                    {isMoodSelectionUnstable
-                      ? "\u0627\u0644\u0627\u062e\u062a\u064a\u0627\u0631 \u0628\u064a\u0646 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a \u0645\u062a\u0630\u0628\u0630\u0628\u060c \u062b\u0628\u0651\u062a \u0627\u0644\u062d\u0627\u0644\u0629 \u0627\u0644\u0623\u0642\u0631\u0628 \u0644\u0634\u0639\u0648\u0631\u0643."
-                      : moodQuickHint}
-                  </p>
-                  {needsMoodConfirmation && (
-                    <p className="text-center text-[11px] font-semibold" style={{ color: "rgba(251,191,36,0.98)" }}>
-                      {"\u0627\u0636\u063a\u0637 \u00ab\u0627\u0644\u062a\u0627\u0644\u064a\u00bb \u0645\u0631\u0629 \u0623\u062e\u0631\u0649 \u0644\u062a\u0623\u0643\u064a\u062f \u0627\u062e\u062a\u064a\u0627\u0631 \u0627\u0644\u0637\u0642\u0633 \u0627\u0644\u062f\u0627\u062e\u0644\u064a."}
-                    </p>
-                  )}
-                  {shouldOfferWeeklyMoodRecommendation && weeklyMoodRecommendation && (
-                    <div className="flex flex-col items-center gap-1 py-0.5">
-                      <button
-                        type="button"
-                        onClick={applyWeeklyMoodRecommendation}
-                        className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
-                        style={{
-                          color: "var(--text-primary)",
-                          background: "rgba(59,130,246,0.16)",
-                          border: "1px solid rgba(59,130,246,0.4)"
-                        }}
-                      >
-                        {`\u0627\u0633\u062a\u062e\u062f\u0645 \u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639: ${MOODS.find((m) => m.id === weeklyMoodRecommendation.mood)?.label ?? ""}`}
-                      </button>
-                      <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-                        {`\u0645\u0628\u0646\u064a \u0639\u0644\u0649 ${weeklyMoodRecommendation.count} \u0642\u0631\u0627\u0621\u0629 \u0645\u0624\u062e\u0631\u0629.`}
-                      </p>
+                            {isSelected && <motion.div layoutId="f-dot" className="absolute top-2 right-2 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_white]" />}
+                            {label}
+                          </button>
+                        );
+                      })}
                     </div>
-                  )}
+                  </div>
+
+                  {/* 4. Notes */}
+                  <div className="flex flex-col gap-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">بيانات المسح الإضافية</label>
+                    <textarea
+                      ref={notesRef} value={notes} onChange={(e) => setNotes(e.target.value)}
+                      placeholder="اكتب ملاحظة مختصرة..."
+                      className="w-full h-24 p-4 rounded-2xl bg-white/[0.03] border border-white/5 text-sm text-white focus:outline-none focus:border-white/10 resize-none transition-all placeholder:text-white/10"
+                    />
+                  </div>
+
                 </motion.div>
               )}
 
-              {step === 3 && (
-                <motion.div className="pulse-check-section mt-1.5 flex flex-col gap-2.5" custom={3} variants={cosmicUp} initial="hidden" animate="visible">
-                  <label className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
-                    {"\u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0627\u0644\u062d\u0627\u0644\u064a"}
-                  </label>
-                  <p className="text-[11px] -mt-1 mb-0.5" style={{ color: "var(--text-muted)", minHeight: "1rem" }}>
-                    {focusSubtitle}
-                  </p>
-                  <div className="grid grid-cols-2 gap-3 py-2">
-                    {FOCUS_OPTIONS.map((item) => {
-                      const isSelected = focus === item.id;
-                      const label = item.id === "none"
-                        ? FOCUS_LABELS[isStartRecovery ? "none_new" : "none_returning"]
-                        : FOCUS_LABELS[item.labelKey];
-                      const fStyle = FOCUS_COSMIC[item.id];
-
-                      return (
-                        <motion.button
-                          key={item.id}
-                          type="button"
-                          onClick={() => {
-                            setFocusValue(item.id);
-                          }}
-                          className="relative overflow-hidden min-h-[85px] px-3 py-3 rounded-2xl text-xs font-semibold transition-all text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 flex flex-col items-center justify-center gap-2"
-                          style={{
-                            background: isSelected
-                              ? `linear-gradient(135deg, ${fStyle.bg}, rgba(255,255,255,0.05))`
-                              : "rgba(255, 255, 255, 0.03)",
-                            border: `1px solid ${isSelected ? fStyle.border : "rgba(255, 255, 255, 0.08)"}`,
-                            color: isSelected ? "#ffffff" : "var(--text-secondary)",
-                            boxShadow: isSelected
-                              ? `0 8px 32px rgba(0,0,0,0.3), inset 0 0 0 1px ${fStyle.border}`
-                              : "0 2px 10px rgba(0,0,0,0.1)",
-                            backdropFilter: "blur(12px)"
-                          }}
-                          whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.06)" }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          {/* Selection Indicator Spark */}
-                          {isSelected && (
-                            <motion.div
-                              layoutId="focus-spark"
-                              className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full shadow-[0_0_8px_currentColor]"
-                              style={{ backgroundColor: fStyle.text }}
-                            />
-                          )}
-
-                          {/* Subtle background gradient splash */}
-                          {isSelected && (
-                            <div
-                              className="absolute inset-0 opacity-20 bg-gradient-to-br from-white/10 to-transparent pointer-events-none"
-                            />
-                          )}
-
-                          <span className="relative z-10 leading-snug">{label}</span>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                  <p className="text-center text-[11px]" style={{ color: "var(--text-muted)" }}>
-                    {focusQuickHint}
-                  </p>
-                </motion.div>
-              )}
-
-              {step === 4 && (
-                <motion.div className="pulse-check-section mt-1.5 flex flex-col gap-2.5" custom={4} variants={cosmicUp} initial="hidden" animate="visible">
-                  <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                    {"\u0644\u0648 \u062d\u0627\u0628\u0628 \u062a\u0634\u0631\u062d \u0623\u0643\u062a\u0631"}
-                  </label>
-                  <div className="rounded-xl px-3 py-2 text-center" style={{ background: "rgba(148,163,184,0.08)", border: "1px solid rgba(148,163,184,0.22)" }}>
-                    <p className="text-xs font-semibold" style={{ color: "var(--text-primary)" }}>
-                      {notesChars > 0 ? "\u062a\u0645 \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u0628\u0646\u062c\u0627\u062d" : "\u0627\u0644\u0643\u062a\u0627\u0628\u0629 \u0647\u0646\u0627 \u062a\u0633\u0627\u0639\u062f\u0643 \u062a\u0634\u0648\u0641 \u0635\u0648\u0631\u0629 \u0623\u0648\u0636\u062d"}
-                    </p>
-                    <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
-                      {notesChars > 0 ? `\u062a\u0645 \u0643\u062a\u0627\u0628\u0629 ${notesChars} \u062d\u0631\u0641.` : "\u062c\u0645\u0644\u0629 \u0648\u0627\u062d\u062f\u0629 \u0643\u0641\u0627\u064a\u0629 \u0644\u0628\u062f\u0627\u064a\u0629 \u062c\u064a\u062f\u0629."}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {NOTES_QUICK_CHIPS.map((chip) => (
-                      <button
-                        key={chip}
-                        type="button"
-                        onClick={() => {
-                          recordFlowEvent("pulse_notes_quick_chip_applied", { meta: { chip } });
-                          applyNotesQuickChip(chip);
-                        }}
-                        className="rounded-xl px-2.5 py-1.5 text-[11px] font-semibold transition-colors"
-                        style={{
-                          color: "var(--text-secondary)",
-                          background: "rgba(255,255,255,0.05)",
-                          border: "1px solid rgba(255,255,255,0.12)"
-                        }}
-                      >
-                        {chip}
-                      </button>
-                    ))}
-                  </div>
-                  <textarea
-                    ref={notesRef}
-                    rows={4}
-                    value={notes}
-                    onFocus={(e) => {
-                      window.setTimeout(() => {
-                        e.currentTarget.scrollIntoView({ behavior: "smooth", block: "center" });
-                      }, 120);
-                    }}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setNotes(value);
-                      if (!hasTrackedNotesUsage && value.trim().length > 0) {
-                        recordFlowEvent("pulse_notes_used");
-                        setHasTrackedNotesUsage(true);
-                      }
-                    }}
-                    placeholder={"\u0627\u0643\u062a\u0628 \u062c\u0645\u0644\u0629 \u0623\u0648 \u0645\u0648\u0642\u0641: \u0623\u0646\u0627 \u0645\u062e\u0646\u0648\u0642 \u0639\u0634\u0627\u0646 \u062d\u0635\u0644 \u0643\u0630\u0627..."}
-                    className="w-full rounded-xl px-3 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0 resize-y min-h-[108px] max-h-44 overflow-auto"
+              {step === 2 && tacticalAdvice && (
+                <motion.div className="pulse-check-section flex flex-col items-center justify-center text-center gap-8 py-10" custom={2} variants={cosmicUp} initial="hidden" animate="visible">
+                  <div className="w-32 h-32 rounded-[2.5rem] flex items-center justify-center text-6xl relative"
                     style={{
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.12)",
-                      color: "var(--text-primary)",
-                      letterSpacing: "0.02em"
-                    }}
-                  />
-                </motion.div>
-              )}
-
-              {/* Step 5: Tactical Advice */}
-              {step === 5 && tacticalAdvice && (
-                <motion.div
-                  className="pulse-check-section mt-1.5 flex flex-col items-center justify-center text-center gap-4 h-full"
-                  custom={5}
-                  variants={cosmicUp}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mb-2 relative overflow-hidden"
-                    style={{
-                      background: tacticalAdvice.theme === 'attack' ? 'rgba(16, 185, 129, 0.2)' : tacticalAdvice.theme === 'defend' ? 'rgba(251, 191, 36, 0.2)' : 'rgba(59, 130, 246, 0.2)',
-                      border: `1px solid ${tacticalAdvice.theme === 'attack' ? 'rgba(16, 185, 129, 0.5)' : tacticalAdvice.theme === 'defend' ? 'rgba(251, 191, 36, 0.5)' : 'rgba(59, 130, 246, 0.5)'}`
+                      background: tacticalAdvice.theme === 'attack' ? 'rgba(52, 211, 153, 0.1)' : 'rgba(251, 191, 36, 0.1)',
+                      border: `2px solid ${tacticalAdvice.theme === 'attack' ? '#34d39966' : '#fbbf2466'}`
                     }}
                   >
                     {tacticalAdvice.icon}
-                    <div className="absolute inset-0 animate-pulse opacity-50 mix-blend-overlay" style={{ background: 'white' }} />
+                    <div className="absolute inset-0 animate-pulse opacity-20 bg-current rounded-[2.5rem]" />
                   </div>
-
-                  <div>
-                    <h3 className="text-xl font-bold tracking-widest uppercase mb-1"
-                      style={{
-                        color: tacticalAdvice.theme === 'attack' ? '#34d399' : tacticalAdvice.theme === 'defend' ? '#fbbf24' : '#60a5fa'
-                      }}
-                    >
-                      {tacticalAdvice.title}
-                    </h3>
-                    <p className="text-sm font-medium text-slate-300 max-w-[280px] mx-auto leading-relaxed">
+                  <div className="space-y-3">
+                    <h3 className="text-3xl font-black tracking-tighter text-white">{tacticalAdvice.title}</h3>
+                    <p className="text-slate-400 text-base max-w-[280px] leading-relaxed mx-auto font-medium">
                       {tacticalAdvice.message}
                     </p>
                   </div>
-
-                  <div className="w-full max-w-[300px] p-4 rounded-xl border border-dashed border-slate-600/50 bg-slate-900/30 backdrop-blur-sm mt-2">
-                    <p className="text-xs text-slate-400 uppercase tracking-wider mb-2 font-bold">Recommended Action</p>
-                    <p className="text-base text-white font-bold">{tacticalAdvice.action}</p>
+                  <div className="w-full p-6 rounded-[2rem] bg-white/[0.03] border border-dashed border-white/10 scale-105 shadow-2xl">
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 block mb-3">التوجيه السلوكي المباشر</span>
+                    <p className="text-xl font-black text-white leading-tight">{tacticalAdvice.action}</p>
                   </div>
-
                 </motion.div>
               )}
 
-              {/* Analyze Loading State */}
+              {/* Analysis Overlay */}
               <AnimatePresence>
                 {isAnalyzing && (
-                  <motion.div
-                    className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-md"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <div className="w-16 h-16 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin mb-4" />
-                    <p className="text-teal-400 font-mono text-sm animate-pulse">ANALYZING BIOMETRICS...</p>
+                  <motion.div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-2xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <div className="w-12 h-12 border-2 border-teal-500/20 border-t-teal-500 rounded-full animate-spin mb-6" />
+                    <p className="text-teal-400 font-mono text-[10px] tracking-[0.5em] animate-pulse">GENERATING TACTICAL PROTOCOL</p>
                   </motion.div>
                 )}
               </AnimatePresence>
-
             </div>
 
-            <div
-              data-testid="pulse-footer"
-              className="px-4 sm:px-5 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
-              style={{
-                background: "linear-gradient(180deg, rgba(15,20,50,0.12) 0%, rgba(15,20,50,0.92) 36%, rgba(15,20,50,0.98) 100%)",
-                borderTop: "1px solid rgba(255,255,255,0.08)",
-                backdropFilter: "blur(8px)"
-              }}
-            >
-              <p className="text-xs mb-2 text-center" style={{ color: footerHintColor, minHeight: "1rem" }}>
+            {/* Footer Area */}
+            <div className="p-5 border-t border-white/5 space-y-4">
+              <p className="text-center text-[10px] font-bold h-4" style={{ color: footerHintColor }}>
                 {footerHintText}
               </p>
-
-              <div className="flex items-center gap-2">
+              <div className="flex gap-3">
                 {step > 1 && (
                   <button
-                    type="button"
                     onClick={handlePreviousStep}
-                    className="rounded-xl px-3 py-2 text-sm font-semibold"
-                    style={{ color: "var(--text-secondary)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}
+                    className="flex-1 py-4 rounded-2xl bg-white/[0.03] text-white/40 font-black text-[10px] uppercase tracking-widest hover:text-white transition-all border border-white/5"
                   >
-                    {"\u0631\u062c\u0648\u0639"}
+                    رجوع
                   </button>
                 )}
                 <motion.button
-                  data-testid="pulse-primary-action"
-                  type="button"
-                  onClick={step < 4 ? handleNextStep : handleSubmit}
-                  aria-disabled={step < 4 ? !currentStepComplete : !isComplete}
-                  className={`w-full cta-primary py-2.5 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 ${(step < 4 ? currentStepComplete : isComplete) ? "" : "opacity-80"}`}
-                  whileHover={{ scale: 1.01, y: -1 }}
+                  onClick={step === 1 ? handleNextStep : handleSubmit}
+                  disabled={step === 1 && !isComplete}
+                  className={`flex-[2] py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${step === 1 && !isComplete ? 'bg-white/5 text-white/10' : 'bg-teal-500 text-teal-950 shadow-[0_0_20px_rgba(20,184,166,0.3)]'}`}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {step < 4 ? "\u0627\u0644\u062a\u0627\u0644\u064a" : step === 5 ? "EXECUTE PROTOCOL" : (isSavingPulse ? "\u062a\u0645 \u0627\u0644\u062d\u0641\u0638" : "\u0627\u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643")}
+                  {step === 1 ? "تحليل البيانات" : "اعتماد البروتوكول"}
                 </motion.button>
               </div>
             </div>
-            {/* Warp Speed Effect */}
+
+            {/* Warp Velocity Effect */}
             <AnimatePresence>
               {isWarping && (
                 <motion.div
                   key="warp-speed"
-                  className="absolute inset-0 z-50 pointer-events-none overflow-hidden rounded-[1.5rem]"
+                  className="absolute inset-0 z-50 pointer-events-none overflow-hidden rounded-[2rem]"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  style={{ background: "rgba(11, 15, 40, 0.4)", backdropFilter: "blur(2px)" }}
+                  style={{ background: "rgba(10, 15, 30, 0.4)", backdropFilter: "blur(2px)" }}
                 >
                   <div className="relative w-full h-full">
-                    {[...Array(12)].map((_, i) => (
+                    {[...Array(8)].map((_, i) => (
                       <motion.div
                         key={i}
-                        className="absolute bg-gradient-to-b from-transparent via-teal-200 to-transparent w-[1px]"
-                        style={{
-                          left: `${5 + (i * 8)}%`,
-                          height: "60px",
-                          top: "50%",
-                          filter: "blur(0.5px)"
-                        }}
+                        className="absolute bg-gradient-to-b from-transparent via-teal-400 to-transparent w-[1px]"
+                        style={{ left: `${12 + (i * 12)}%`, height: "100px", top: "50%" }}
                         initial={{ scaleY: 0, opacity: 0, y: -200 }}
-                        animate={{
-                          scaleY: [0, 20, 0],
-                          opacity: [0, 0.8, 0],
-                          y: ["-100%", "100%"]
-                        }}
-                        transition={{
-                          duration: 0.5,
-                          ease: "easeInOut",
-                          delay: i * 0.02
-                        }}
+                        animate={{ scaleY: [0, 15, 0], opacity: [0, 0.5, 0], y: ["-100%", "100%"] }}
+                        transition={{ duration: 0.4, ease: "easeInOut", delay: i * 0.03 }}
                       />
                     ))}
-                    <motion.div
-                      className="absolute inset-0 bg-white"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: [0, 0.1, 0] }}
-                      transition={{ duration: 0.3, times: [0, 0.5, 1] }}
-                      style={{ mixBlendMode: "overlay" }}
-                    />
                   </div>
                 </motion.div>
               )}

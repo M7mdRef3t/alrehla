@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMapState } from "../state/mapState";
 import { setInLocalStorage } from "../services/browserStorage";
 import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
+import type { AdviceCategory } from "../data/adviceScripts";
 
 /* ════════════════════════════════════════════════
    ONBOARDING FLOW — 3 خطوات للرحلة
@@ -54,14 +55,33 @@ const RING_COLORS: Record<Ring, { bg: string; border: string; label: string; lab
 
 
 /* ── Step 1: Inventory ── */
-const StepInventory: FC<{ onNext: (names: string[]) => void; onSkip: () => void }> = ({ onNext, onSkip }) => {
-  const [names, setNames] = useState(["", "", ""]);
+const StepInventory: FC<{
+  onNext: (items: { name: string; category: AdviceCategory }[]) => void;
+  onSkip: () => void;
+}> = ({ onNext, onSkip }) => {
+  const [items, setItems] = useState<{ name: string; category: AdviceCategory }[]>([
+    { name: "", category: "family" },
+    { name: "", category: "family" },
+    { name: "", category: "family" },
+  ]);
 
-  const update = (i: number, val: string) => {
-    setNames((prev) => { const n = [...prev]; n[i] = val; return n; });
+  const updateName = (i: number, val: string) => {
+    setItems((prev) => {
+      const n = [...prev];
+      n[i] = { ...n[i], name: val };
+      return n;
+    });
   };
 
-  const filled = names.filter((n) => n.trim().length > 0);
+  const updateCategory = (i: number, cat: AdviceCategory) => {
+    setItems((prev) => {
+      const n = [...prev];
+      n[i] = { ...n[i], category: cat };
+      return n;
+    });
+  };
+
+  const filled = items.filter((item) => item.name.trim().length > 0);
   const canContinue = filled.length >= 1;
 
   return (
@@ -95,42 +115,57 @@ const StepInventory: FC<{ onNext: (names: string[]) => void; onSkip: () => void 
         </p>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {names.map((name, i) => (
+      <div className="flex flex-col gap-4">
+        {items.map((item, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1, duration: 0.35 }}
+            className="flex flex-col gap-2 p-2 rounded-2xl"
+            style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}
           >
             <input
               type="text"
-              value={name}
-              onChange={(e) => update(i, e.target.value)}
+              value={item.name}
+              onChange={(e) => updateName(i, e.target.value)}
               placeholder={i === 0 ? "الاسم الأول.." : i === 1 ? "الاسم الثاني.." : "الاسم الثالث (اختياري).."}
-              className="w-full rounded-xl px-4 py-3 text-sm text-right outline-none transition-all"
+              className="w-full rounded-xl px-4 py-2 text-sm text-right outline-none transition-all"
               style={{
                 background: "rgba(255,255,255,0.04)",
-                border: `1.5px solid ${name.trim() ? "rgba(45,212,191,0.4)" : "rgba(255,255,255,0.1)"}`,
+                border: `1.5px solid ${item.name.trim() ? "rgba(45,212,191,0.4)" : "rgba(255,255,255,0.1)"}`,
                 color: "var(--text-primary)",
               }}
               maxLength={30}
               dir="rtl"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && i < 2) {
-                  const next = document.querySelectorAll<HTMLInputElement>(".onboarding-name-input")[i + 1];
-                  next?.focus();
-                }
-              }}
-              data-index={i}
             />
+            {item.name.trim() && (
+              <div className="flex gap-1 justify-end items-center">
+                <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>ده يقربلك إيه؟</span>
+                {(["family", "work", "general"] as AdviceCategory[]).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => updateCategory(i, cat)}
+                    className="px-3 py-1 rounded-full text-[10px] font-bold transition-all"
+                    style={{
+                      background: item.category === cat ? "rgba(45,212,191,0.2)" : "transparent",
+                      border: `1px solid ${item.category === cat ? "rgba(45,212,191,0.5)" : "rgba(255,255,255,0.1)"}`,
+                      color: item.category === cat ? "var(--soft-teal)" : "var(--text-muted)"
+                    }}
+                  >
+                    {cat === "family" ? "عيلة" : cat === "work" ? "شغل" : "تاني"}
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
         ))}
       </div>
 
       <motion.button
         type="button"
-        onClick={() => onNext(names.filter((n) => n.trim()))}
+        onClick={() => onNext(items.filter((item) => item.name.trim()))}
         disabled={!canContinue}
         className="w-full rounded-2xl py-3.5 text-sm font-bold transition-all"
         style={{
@@ -156,15 +191,15 @@ const StepInventory: FC<{ onNext: (names: string[]) => void; onSkip: () => void 
 };
 
 /* ── Step 2: Mapping (drag-drop simulation) ── */
-interface NameCard { name: string; ring: Ring | null; placed: boolean }
+interface NameCard { name: string; category: AdviceCategory; ring: Ring | null; placed: boolean }
 
 const StepMapping: FC<{
-  names: string[];
+  items: { name: string; category: AdviceCategory }[];
   onNext: (mapped: NameCard[]) => void;
   onSkip: () => void;
-}> = ({ names, onNext, onSkip }) => {
+}> = ({ items, onNext, onSkip }) => {
   const [cards, setCards] = useState<NameCard[]>(
-    names.map((name) => ({ name, ring: null, placed: false }))
+    items.map((item) => ({ ...item, ring: null, placed: false }))
   );
   const [dragging, setDragging] = useState<number | null>(null);
   const [firstPlaced, setFirstPlaced] = useState(false);
@@ -331,8 +366,9 @@ const StepMapping: FC<{
 };
 
 /* ── Step 3: Insight ── */
-const StepInsight: FC<{ names: string[]; onComplete: () => void }> = ({ names, onComplete }) => {
-  const count = names.length;
+const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onComplete: () => void }> = ({ items, onComplete }) => {
+  const count = items.length;
+  const names = items.map(i => i.name);
 
   return (
     <div className="flex flex-col gap-6 w-full items-center text-center">
@@ -431,7 +467,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
   const addNode = useMapState((s) => s.addNode);
   const [step, setStep] = useState(0); // 0 (noise), 1 (inventory), 2 (placement), 3 (review)
   const [direction, setDirection] = useState(-1);
-  const [collectedNames, setCollectedNames] = useState<string[]>([]);
+  const [collectedItems, setCollectedItems] = useState<{ name: string; category: AdviceCategory }[]>([]);
 
   const goTo = useCallback((next: number) => {
     setDirection(next > step ? -1 : 1);
@@ -443,8 +479,8 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
     onComplete();
   }, [onComplete]);
 
-  const handleInventoryNext = useCallback((names: string[]) => {
-    setCollectedNames(names);
+  const handleInventoryNext = useCallback((items: { name: string; category: AdviceCategory }[]) => {
+    setCollectedItems(items);
     goTo(2);
   }, [goTo]);
 
@@ -452,11 +488,16 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
     goTo(1);
   }, [goTo]);
 
-  const handleMappingNext = useCallback((mapped: { name: string; ring: Ring | null }[]) => {
+  const handleMappingNext = useCallback((mapped: NameCard[]) => {
     // Add nodes to mapState
     for (const item of mapped) {
       if (item.name.trim()) {
-        addNode(item.name.trim(), (item.ring ?? "yellow") as "green" | "yellow" | "red");
+        addNode(
+          item.name.trim(),
+          (item.ring ?? "yellow") as "green" | "yellow" | "red",
+          undefined,
+          item.category // goalId effectively
+        );
       }
     }
     goTo(3);
@@ -530,7 +571,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
             )}
             {step === 2 && (
               <motion.div
-                key="step1"
+                key="mapping"
                 custom={direction}
                 variants={slideVariants}
                 initial="enter"
@@ -538,12 +579,12 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
                 exit="exit"
                 transition={slideTransition}
               >
-                <StepMapping names={collectedNames} onNext={handleMappingNext} onSkip={handleSkip} />
+                <StepMapping items={collectedItems} onNext={handleMappingNext} onSkip={handleSkip} />
               </motion.div>
             )}
             {step === 3 && (
               <motion.div
-                key="step2"
+                key="insight"
                 custom={direction}
                 variants={slideVariants}
                 initial="enter"
@@ -551,7 +592,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
                 exit="exit"
                 transition={slideTransition}
               >
-                <StepInsight names={collectedNames} onComplete={handleComplete} />
+                <StepInsight items={collectedItems} onComplete={handleComplete} />
               </motion.div>
             )}
           </AnimatePresence>

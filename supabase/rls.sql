@@ -165,6 +165,10 @@ create policy journey_maps_update on journey_maps
   for update
   using (true)
   with check (true);
+drop policy if exists journey_maps_public_select on journey_maps;
+create policy journey_maps_public_select on journey_maps
+  for select
+  using (true);
 drop policy if exists journey_maps_service_select on journey_maps;
 create policy journey_maps_service_select on journey_maps
   for select
@@ -181,6 +185,10 @@ create policy profiles_session_update on profiles
   for update
   using (role = 'session')
   with check (role = 'session');
+drop policy if exists profiles_public_select on profiles;
+create policy profiles_public_select on profiles
+  for select
+  using (true);
 drop policy if exists profiles_service_select on profiles;
 create policy profiles_service_select on profiles
   for select
