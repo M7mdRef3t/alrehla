@@ -369,7 +369,14 @@ export default defineConfig(({ mode }) => {
         ]
         : [])
     ],
-    server: { port: 5000, host: "0.0.0.0", allowedHosts: true },
+    server: {
+      port: 5000,
+      host: "0.0.0.0",
+      allowedHosts: true,
+      watch: {
+        ignored: ["**/*.log"]
+      }
+    },
     build: {
       target: "esnext",
       minify: "esbuild",

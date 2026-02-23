@@ -520,7 +520,7 @@ export default function App() {
 
   // Mirror Logic (Phase 12)
   const [activeMirrorInsight, setActiveMirrorInsight] = useState<MirrorInsight | null>(null);
-  const [, setShowMirrorOverlay] = useState(false);
+  const [showMirrorOverlay, setShowMirrorOverlay] = useState(false);
 
   const featureFlags = useAdminState((s) => s.featureFlags);
   const betaAccess = useAdminState((s) => s.betaAccess);
@@ -2951,18 +2951,22 @@ export default function App() {
           }}
         />
         <AnalyticsConsentBanner suppressed={!chromeVisibility.showConsentBanner} />
-        <MirrorOverlay
-          insight={activeMirrorInsight}
-          onConfront={(insight) => {
-            // For now, just close and maybe log. Future: Open Journal.
-            dismissMirrorInsight(insight.id);
-            setShowMirrorOverlay(false);
-          }}
-          onDeny={(insight) => {
-            dismissMirrorInsight(insight.id);
-            setShowMirrorOverlay(false);
-          }}
-        />
+        {showMirrorOverlay && (
+          <MirrorOverlay
+            insight={activeMirrorInsight}
+            onConfront={(insight) => {
+              // For now, just close and maybe log. Future: Open Journal.
+              dismissMirrorInsight(insight.id);
+              setActiveMirrorInsight(null);
+              setShowMirrorOverlay(false);
+            }}
+            onDeny={(insight) => {
+              dismissMirrorInsight(insight.id);
+              setActiveMirrorInsight(null);
+              setShowMirrorOverlay(false);
+            }}
+          />
+        )}
 
         {/* Mobile Bottom Navigation - hidden on md+ */}
         {chromeVisibility.showMobileBottomNav && (

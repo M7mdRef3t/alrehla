@@ -477,11 +477,10 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
       dir="rtl"
     >
       <div
-        className="relative w-full max-w-sm mx-4 rounded-3xl overflow-hidden"
+        className="relative w-full max-w-sm mx-4 rounded-3xl flex flex-col max-h-[95vh] overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
         style={{
           background: "linear-gradient(160deg, rgba(15,23,42,0.98), rgba(12,18,38,0.98))",
           border: "1px solid rgba(45,212,191,0.15)",
-          boxShadow: "0 24px 64px rgba(0,0,0,0.5)",
         }}
       >
         {/* Progress dots */}
@@ -501,7 +500,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
 
         {/* Content area with slide animation */}
-        <div className="px-6 py-6 overflow-hidden">
+        <div className="px-6 py-6 overflow-y-auto custom-scrollbar">
           <AnimatePresence mode="wait" custom={direction}>
             {step === 0 && (
               <motion.div

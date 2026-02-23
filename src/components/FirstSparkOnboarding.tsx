@@ -30,7 +30,7 @@ export const FirstSparkOnboarding: FC<FirstSparkProps> = ({ onComplete }) => {
     };
 
     return (
-        <div className="relative w-full h-[420px] flex flex-col items-center justify-between py-6 overflow-hidden">
+        <div className="relative w-full min-h-[500px] flex flex-col items-center justify-between py-6">
             {/* Background Ambience */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-teal-500/5 blur-[100px] rounded-full mix-blend-screen" />
@@ -260,7 +260,7 @@ const StageValue: FC<{ onNext: () => void }> = ({ onNext }) => {
                         <Zap className="w-5 h-5 text-teal-400" />
                     </div>
                     <div className="text-right flex-1">
-                        <p className="text-[10px] text-teal-500 font-bold uppercase tracking-wider mb-0.5">NUDGE SYSTEM</p>
+                        <p className="text-[10px] text-teal-500 font-bold uppercase tracking-wider mb-0.5">نظام التوجيه</p>
                         <p className="text-xs text-slate-200 font-medium">تم رصد جبهة مستنزفة.. جاري تجهيز الدروع.</p>
                     </div>
                 </motion.div>
@@ -272,7 +272,7 @@ const StageValue: FC<{ onNext: () => void }> = ({ onNext }) => {
                     ذكاء تكتيكي.. مش نصايح
                 </h2>
                 <p className="text-sm text-slate-400 mb-6 leading-relaxed">
-                    مش بس هترسم.. Jarvis هيديك <span className="text-white font-bold">"خطة عمليات"</span> لكل جبهة عشان تحمي نفسك.
+                    مش بس هترسم.. جارفيس هيديك <span className="text-white font-bold">"خطة عمليات"</span> لكل جبهة عشان تحمي نفسك.
                 </p>
 
                 <motion.button
