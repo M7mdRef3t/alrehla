@@ -18,8 +18,8 @@ import type { RevenueMetrics, PricingRecommendation } from "../ai/revenueAutomat
 // ═══════════════════════════════════════════════════════════════════════════
 
 const TELEGRAM_CONFIG = {
-  botToken: import.meta.env.VITE_TELEGRAM_BOT_TOKEN || "",
-  chatId: import.meta.env.VITE_TELEGRAM_CHAT_ID || "", // محمد's chat ID
+  botToken: "",
+  chatId: "", // محمد's chat ID
   apiUrl: "https://api.telegram.org/bot",
 };
 
@@ -439,4 +439,5 @@ async function sendWeeklyRevenueReportNow(): Promise<void> {
     console.error("❌ Failed to send weekly revenue report:", error);
   }
 }
+
 

@@ -80,7 +80,6 @@ export const OverviewPanel: FC = () => {
   const stats = getAggregateStats();
   const sessions = getSessionsWithProgress();
   // TODO: replace with a strict remote overview type after stabilizing the server payload contract.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [remoteStats, setRemoteStats] = useState<any>(null);
   const [opsInsights, setOpsInsights] = useState<OpsInsightsType | null>(null);
   const [systemHealth, setSystemHealth] = useState<SystemHealthReport | null>(null);

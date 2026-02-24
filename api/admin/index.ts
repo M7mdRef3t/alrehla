@@ -11,6 +11,8 @@ import { handleMissions } from "../../server/admin/missions.js";
 import { handleBroadcasts } from "../../server/admin/broadcasts.js";
 import { handleAiLogs } from "../../server/admin/ai-logs.js";
 import { handleJourneyMap } from "../../server/admin/journey-map.js";
+import { handleSeoAudit } from "../../server/admin/seo-audit.js";
+import { handleSeoAutofix } from "../../server/admin/seo-autofix.js";
 
 const ROUTES: Record<string, (req: any, res: any) => Promise<void>> = {
   overview: overviewRouter,
@@ -21,7 +23,9 @@ const ROUTES: Record<string, (req: any, res: any) => Promise<void>> = {
   missions: handleMissions,
   broadcasts: handleBroadcasts,
   "ai-logs": handleAiLogs,
-  "journey-map": handleJourneyMap
+  "journey-map": handleJourneyMap,
+  "seo-audit": handleSeoAudit,
+  "seo-autofix": handleSeoAutofix
 };
 
 function getPathFromUrl(req: any): string {

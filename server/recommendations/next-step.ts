@@ -1,4 +1,4 @@
-import { getServiceSupabase, parseJsonBody } from "../user/_shared.js";
+import { getServiceSupabase, parseJsonBody } from "../../api/user/_shared.js";
 
 type Candidate = {
   id: string;
@@ -85,3 +85,4 @@ export default async function handler(req: any, res: any) {
 
   res.status(200).json(response);
 }
+

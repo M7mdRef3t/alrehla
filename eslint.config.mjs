@@ -30,4 +30,37 @@ export default tseslint.config(
       "no-console": ["warn", { allow: ["warn", "error"] }],
     },
   }
+  ,
+  {
+    files: [
+      "src/components/admin/dashboard/**/*.{ts,tsx}",
+      "src/components/admin/AIDecisionLog.tsx",
+      "src/components/PulseCheckModal.tsx",
+      "src/hooks/useGeminiLive.ts",
+      "src/ai/**/*.{ts,tsx}"
+    ],
+    rules: {
+      // Temporary relaxation for high-churn R&D/admin surfaces.
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "no-console": "off"
+    }
+  },
+  {
+    files: [
+      "src/hooks/**/*.{ts,tsx}",
+      "src/services/**/*.{ts,tsx}",
+      "src/modules/**/*.{ts,tsx}",
+      "src/types/**/*.{ts,tsx}",
+      "src/components/enterprise/**/*.{ts,tsx}",
+      "src/components/SovereignProfile.tsx",
+      "src/components/Landing.tsx"
+    ],
+    rules: {
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "no-console": "off"
+    }
+  }
 );

@@ -926,6 +926,14 @@
   }
 }
 
+/* Needle range input — keyboard accessible, mouse drag handled by JS */
+.needle-range-input {
+  pointer-events: none;
+}
+.needle-range-input:focus {
+  pointer-events: auto;
+}
+
 /* ════════════════════════════════════════════════
    📱 No-scrollbar utility (for horizontal scrolls)
    ════════════════════════════════════════════════ */

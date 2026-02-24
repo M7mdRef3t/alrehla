@@ -437,16 +437,69 @@ export const aiCurator = new AICurator();
  */
 export function buildUserContext(nodes: MapNode[]): UserContext {
   const activeNodes = nodes.filter((n) => !n.isNodeArchived);
+  const nodesWithAnalysis = activeNodes.filter((n) => n.analysis);
+  const earliestJourneyStart = activeNodes
+    .map((n) => n.journeyStartDate)
+    .filter((date): date is number => typeof date === "number" && Number.isFinite(date))
+    .sort((a, b) => a - b)[0];
+
+  const journeyDays = earliestJourneyStart
+    ? Math.max(1, Math.floor((Date.now() - earliestJourneyStart) / (24 * 60 * 60 * 1000)))
+    : 0;
+
+  const weightedTei = nodesWithAnalysis.reduce((sum, node) => {
+    const score = Math.max(0, Math.min(node.analysis?.score ?? 0, 6));
+    const normalized = (score / 6) * 100;
+    const ringWeight = node.ring === "red" ? 1.2 : node.ring === "yellow" ? 1 : 0.6;
+    return sum + normalized * ringWeight;
+  }, 0);
+  const teiScore = nodesWithAnalysis.length
+    ? Math.round(Math.max(0, Math.min(weightedTei / nodesWithAnalysis.length, 100)))
+    : 0;
+
+  const topShadowCandidate = nodesWithAnalysis
+    .filter((n) => n.ring !== "green")
+    .sort((a, b) => (b.analysis?.score ?? 0) - (a.analysis?.score ?? 0))[0];
+
+  const recentAnswers = activeNodes
+    .flatMap((node) => {
+      const noteEntries =
+        node.notes?.map((note, index) => ({
+          timestamp: note.timestamp ?? 0,
+          question: `ملاحظة ${index + 1} - ${node.label}`,
+          answer: note.text,
+        })) ?? [];
+
+      const answerEntries =
+        node.analysis?.answers
+          ? Object.entries(node.analysis.answers).map(([key, value]) => ({
+              timestamp: node.analysis?.timestamp ?? 0,
+              question: `${node.label} - ${key}`,
+              answer: String(value),
+            }))
+          : [];
+
+      return [...noteEntries, ...answerEntries];
+    })
+    .filter((entry) => entry.answer.trim().length > 0)
+    .sort((a, b) => b.timestamp - a.timestamp)
+    .slice(0, 3)
+    .map(({ question, answer }) => ({ question, answer }));
 
   return {
     totalNodes: activeNodes.length,
     redCircles: activeNodes.filter((n) => n.ring === "red").length,
     yellowCircles: activeNodes.filter((n) => n.ring === "yellow").length,
     greenCircles: activeNodes.filter((n) => n.ring === "green").length,
-    teiScore: 0, // TODO: احسب من traumaEntropyIndex.ts
-    recentAnswers: [], // TODO: اجلب من dailyJournalState
-    topShadowPerson: undefined, // TODO: اجلب من shadowPulseState
-    journeyDays: 0, // TODO: احسب من أول node.journeyStartDate
+    teiScore,
+    recentAnswers,
+    topShadowPerson: topShadowCandidate
+      ? {
+          label: topShadowCandidate.label,
+          score: Math.round(((topShadowCandidate.analysis?.score ?? 0) / 6) * 100),
+        }
+      : undefined,
+    journeyDays,
     hasCompletedTraining: activeNodes.some((n) => n.hasCompletedTraining),
   };
 }

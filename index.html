@@ -47,7 +47,59 @@
         "@type": "Organization",
         "name": "Alrehla",
         "url": "https://www.alrehla.app/",
-        "logo": "https://www.alrehla.app/icons/icon-512x512.png"
+        "logo": "https://www.alrehla.app/icons/icon-512x512.png",
+        "sameAs": [],
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "EG"
+        }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Alrehla - تطبيق السفر",
+        "operatingSystem": "iOS, Android",
+        "applicationCategory": "TravelApplication",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "inLanguage": "ar",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "كيف يساعدني Alrehla في التخطيط للسفر؟",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "يساعدك Alrehla على تنظيم خطوات الرحلة واختيار الأولويات المناسبة حسب احتياجك."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "هل استخدام Alrehla مجاني؟",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "نعم، يمكنك البدء مجانًا واستخدام الميزات الأساسية بدون تكلفة."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "هل التطبيق متاح على iOS وAndroid؟",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "يدعم Alrehla أنظمة iOS وAndroid لتجربة استخدام مرنة على الجوال."
+            }
+          }
+        ]
       }
     </script>
 
@@ -89,7 +141,25 @@
         } catch (_) {}
       })();
     </script>
-    <div id="root"></div>
+    <div id="root">
+      <main>
+        <h1>Alrehla - Relationship Clarity Platform</h1>
+        <p>
+          Alrehla helps you understand your relationships and boundaries with clarity through Dawayir.
+        </p>
+        <p>
+          ابدأ رحلتك لفهم العلاقات ووضع حدود صحية بخطوات عملية بسيطة.
+        </p>
+        <nav aria-label="Quick links">
+          <a href="/">Home</a>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+        </nav>
+      </main>
+    </div>
+    <noscript>
+      <p>JavaScript is disabled. You can still access key pages from the links above.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

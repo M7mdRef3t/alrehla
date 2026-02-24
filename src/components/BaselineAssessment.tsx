@@ -1,6 +1,7 @@
 import type { FC } from "react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
 import { Shield, Battery, Users, Target, Compass, Sparkles } from "lucide-react";
 import {
   BASELINE_QUESTIONS,
@@ -34,8 +35,47 @@ export const BaselineAssessment: FC<BaselineAssessmentProps> = ({ onComplete }) 
       ? typeof answers[question.id] === "number"
       : typeof answers[question.id] === "string");
 
-  // Compass Needle Jitter Logic
+  // Compass Needle Mouse Tracking Logic
   const needleRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mouseAngle, setMouseAngle] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+      
+      const rect = containerRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      const deltaX = e.clientX - centerX;
+      const deltaY = e.clientY - centerY;
+      
+      // Calculate angle in degrees
+      const angle = Math.atan2(deltaX, -deltaY) * (180 / Math.PI);
+      setMouseAngle(angle);
+    };
+
+    const handleMouseEnter = () => setIsHovering(true);
+    const handleMouseLeave = () => setIsHovering(false);
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener("mousemove", handleMouseMove);
+      container.addEventListener("mouseenter", handleMouseEnter);
+      container.addEventListener("mouseleave", handleMouseLeave);
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener("mousemove", handleMouseMove);
+        container.removeEventListener("mouseenter", handleMouseEnter);
+        container.removeEventListener("mouseleave", handleMouseLeave);
+      }
+    };
+  }, []);
+
 
   const handleNext = () => {
     if (isLast) {
@@ -119,7 +159,8 @@ export const BaselineAssessment: FC<BaselineAssessmentProps> = ({ onComplete }) 
     <div className="w-full max-w-lg mx-auto text-center relative">
 
       {/* 🧭 Soul Compass Header */}
-      <div className="relative w-full h-40 mb-8 flex items-center justify-center">
+      <div ref={containerRef} className="relative w-full h-40 mb-8 flex items-center justify-center cursor-crosshair">
+
         {/* Pulsing Aura */}
         <motion.div
           className="absolute w-48 h-48 rounded-full bg-teal-500/10 blur-3xl"
@@ -160,18 +201,22 @@ export const BaselineAssessment: FC<BaselineAssessmentProps> = ({ onComplete }) 
         {/* The Needle (GOLDEN & Larger) */}
         <motion.div
           ref={needleRef}
-          className="absolute w-1.5 h-20 bg-gradient-to-t from-amber-400 to-transparent origin-bottom rounded-full shadow-[0_0_15px_rgba(251,191,36,0.5)]"
+          className="absolute w-1.5 h-20 bg-gradient-to-t from-amber-400 to-transparent origin-bottom rounded-full shadow-[0_0_15px_rgba(251,191,36,0.5)] pointer-events-none"
           style={{ bottom: "50%" }}
           animate={{
-            rotate: canNext ? [0, -3, 3, 0] : [0, -60, 60, -30, 30, 0], // More dramatic seeking
+            rotate: isHovering ? mouseAngle : (canNext ? [0, -3, 3, 0] : [0, -60, 60, -30, 30, 0]),
           }}
           transition={{
-            repeat: Infinity,
+            repeat: isHovering ? 0 : Infinity,
             repeatType: "mirror",
-            duration: canNext ? 5 : 1.5, // Faster seeking
-            ease: "easeInOut"
+            duration: canNext ? 5 : 1.5,
+            ease: "easeInOut",
+            type: isHovering ? "spring" : "tween",
+            stiffness: isHovering ? 300 : undefined,
+            damping: isHovering ? 30 : undefined,
           }}
         >
+
           <div className="absolute -top-1 -left-2 w-5 h-5 rounded-full bg-amber-400/30 blur-sm" />
         </motion.div>
 

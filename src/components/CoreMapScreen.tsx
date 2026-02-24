@@ -126,7 +126,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     startListening,
     sendContext
   } = useGeminiLive({
-    apiKey: import.meta.env.VITE_GEMINI_API_KEY || "",
+    // Security: do not expose provider keys in client bundles.
+    apiKey: "",
     autoSendContext: true
   });
 
@@ -1047,9 +1048,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             setShowAddPerson(true);
           }}
           onOpenInsights={() => setShowDashboard((v) => !v)}
-          onOpenSettings={() => {
-            console.log("Settings clicked");
-          }}
+          onOpenSettings={() => undefined}
           onToggleAI={toggleAI}
           isAIConnected={isConnected}
           showAIOption={true}

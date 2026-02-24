@@ -60,8 +60,9 @@ const DreamsMatrixPanel = lazy(() => import("./dashboard/Intelligence/DreamsMatr
 const TheCrucible = lazy(() => import("./dashboard/Intelligence/TheCrucible").then(m => ({ default: m.TheCrucible })));
 const ConsciousnessGraph = lazy(() => import("./dashboard/Intelligence/ConsciousnessGraph").then(m => ({ default: m.ConsciousnessGraph })));
 const FleetCommander = lazy(() => import("./dashboard/Fleet/FleetCommander").then(m => ({ default: m.FleetCommander })));
+const SeoGeoAuditorPanel = lazy(() => import("./dashboard/SEO/SeoGeoAuditorPanel").then(m => ({ default: m.SeoGeoAuditorPanel })));
 
-type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet";
+type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
@@ -84,6 +85,7 @@ const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
   { id: "b2b-analytics", label: "ذكاء المؤسسات", icon: <ShieldCheck className="w-4 h-4" /> },
   { id: "ai-simulator", label: "محاكي الأزمات", icon: <Terminal className="w-4 h-4 text-rose-400" /> },
   { id: "ai-marketing", label: "فنان الوعي", icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
+  { id: "seo-geo", label: "SEO / GEO", icon: <Target className="w-4 h-4 text-emerald-400" /> },
   { id: "crucible", label: "المِحك (Testing)", icon: <Flame className="w-4 h-4 text-rose-500" /> },
   { id: "dreams-matrix", label: "مصفوفة الأحلام", icon: <Target className="w-4 h-4 text-teal-400" /> },
   { id: "digital-twin", label: "التوأم الرقمي", icon: <User className="w-4 h-4 text-indigo-400" /> },
@@ -376,6 +378,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "b2b-analytics" && <B2BAnalytics />}
                 {effectiveTab === "ai-simulator" && <AISimulatorPanel />}
                 {effectiveTab === "ai-marketing" && <CreativeDashboard />}
+                {effectiveTab === "seo-geo" && <SeoGeoAuditorPanel />}
                 {effectiveTab === "crucible" && <TheCrucible />}
                 {effectiveTab === "dreams-matrix" && <DreamsMatrixPanel />}
                 {effectiveTab === "digital-twin" && <ConsciousnessGraph />}
@@ -392,3 +395,4 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     </AdminGate>
   );
 };
+

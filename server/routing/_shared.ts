@@ -1,4 +1,4 @@
-import { getServiceSupabase, parseJsonBody } from "../user/_shared.js";
+import { getServiceSupabase, parseJsonBody } from "../../api/user/_shared.js";
 
 export type RoutingCandidateRow = {
   id: number;
@@ -34,3 +34,4 @@ export function nowIso(): string {
 }
 
 export { getServiceSupabase, parseJsonBody };
+

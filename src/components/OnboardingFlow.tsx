@@ -31,8 +31,9 @@ export function hasCompletedJourneyOnboarding(): boolean {
 /* eslint-enable react-refresh/only-export-components */
 
 interface OnboardingFlowProps {
-  onComplete: () => void;
+  onComplete: (skipped?: boolean) => void;
 }
+
 
 /* ── Slide transition ── */
 const slideVariants = {
@@ -366,12 +367,13 @@ const StepMapping: FC<{
 };
 
 /* ── Step 3: Insight ── */
-const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onComplete: () => void }> = ({ items, onComplete }) => {
+const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onComplete: () => void; onSkip: () => void }> = ({ items, onComplete, onSkip }) => {
   const count = items.length;
   const names = items.map(i => i.name);
 
   return (
     <div className="flex flex-col gap-6 w-full items-center text-center">
+
       {/* Animated map glow */}
       <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
         {[44, 68, 88].map((r, i) => (
@@ -453,12 +455,26 @@ const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onC
         أنطلق لرحلتك ←
       </motion.button>
 
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onSkip();
+        }}
+        className="text-center text-xs transition-colors hover:text-slate-300 cursor-pointer"
+        style={{ color: "var(--text-muted)" }}
+      >
+        تخطي
+      </button>
+
       <p className="text-[11px]" style={{ color: "rgba(148,163,184,0.5)" }}>
         متقلقش، مفيش إجابة غلط.. دي خريطتك إنت.
       </p>
+
     </div>
   );
 };
+
 
 /* ════════════════════════════════════════════════
    Main OnboardingFlow
@@ -476,8 +492,9 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
 
   const handleSkip = useCallback(() => {
     markJourneyOnboardingDone();
-    onComplete();
+    onComplete(true); // true indicates skipped
   }, [onComplete]);
+
 
   const handleInventoryNext = useCallback((items: { name: string; category: AdviceCategory }[]) => {
     setCollectedItems(items);
@@ -505,8 +522,9 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
 
   const handleComplete = useCallback(() => {
     markJourneyOnboardingDone();
-    onComplete();
+    onComplete(false); // false indicates completed normally
   }, [onComplete]);
+
 
   /* Progress dots */
   const dots = [0, 1, 2, 3];
@@ -556,6 +574,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
                 <FirstSparkOnboarding onComplete={handleNoiseNext} />
               </motion.div>
             )}
+
             {step === 1 && (
               <motion.div
                 key="step0"
@@ -592,9 +611,10 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
                 exit="exit"
                 transition={slideTransition}
               >
-                <StepInsight items={collectedItems} onComplete={handleComplete} />
+                <StepInsight items={collectedItems} onComplete={handleComplete} onSkip={handleComplete} />
               </motion.div>
             )}
+
           </AnimatePresence>
         </div>
       </div>

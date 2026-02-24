@@ -1,4 +1,4 @@
-import { getServiceSupabase, parseJsonBody } from "../user/_shared.js";
+import { getServiceSupabase, parseJsonBody } from "../../api/user/_shared.js";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
@@ -29,3 +29,4 @@ export default async function handler(req: any, res: any) {
 
   res.status(200).json({ ok: true });
 }
+

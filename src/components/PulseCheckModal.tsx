@@ -1,15 +1,12 @@
-import type { CSSProperties, FC, KeyboardEvent } from "react";
+import type { FC, KeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "../state/pulseState";
 import { usePulseState } from "../state/pulseState";
 import { useAdminState, isFeatureAllowed, type PulseCopyOverrideValue } from "../state/adminState";
-import { energyColorHex, energyPct } from "../utils/pulseUi";
 import { recordFlowEvent } from "../services/journeyTracking";
 import {
   getEnergySuggestion,
-  getEnergySupportLineByVariant,
-  getWeeklyEnergyTrend,
   getWeeklyEnergyRecommendation,
   type EnergyCopyVariant
 } from "../utils/pulseEnergy";
@@ -288,7 +285,7 @@ function getMoodVariantSubtitle(variant: CopyVariant): string {
     : "\u0645\u0632\u0627\u062c\u0643 \u0627\u0644\u062d\u0627\u0644\u064a \u0628\u064a\u0648\u0636\u062d \u0634\u0643\u0644 \u062e\u0637\u0648\u062a\u0643 \u0627\u0644\u062c\u0627\u064a\u0629.";
 }
 
-function getFocusVariantSubtitle(variant: CopyVariant): string {
+function getFocusVariantSubtitle(_variant: CopyVariant): string {
   return "تحديد نوع العملية (نوع الاشتباك) التي تود تنفيذها الآن.";
 }
 
@@ -363,9 +360,9 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const isStartRecovery = context === "start_recovery";
   const pulseLogs = usePulseState((s) => s.logs);
   const pulseCopyOverrides = useAdminState((s) => s.pulseCopyOverrides);
-  const pulseWeeklyRecommendationEnabled = isFeatureAllowed("pulse_weekly_recommendation");
-  const pulseImmediateActionEnabled = isFeatureAllowed("pulse_immediate_action");
-  const goldenNeedleEnabled = isFeatureAllowed("golden_needle_enabled");
+  isFeatureAllowed("pulse_weekly_recommendation");
+  isFeatureAllowed("pulse_immediate_action");
+  isFeatureAllowed("golden_needle_enabled");
   const allowSkip = true;
 
   const [energy, setEnergy] = useState<number | null>(null);
@@ -381,15 +378,15 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [suggestionApplied, setSuggestionApplied] = useState(false);
   const [isSavingPulse, setIsSavingPulse] = useState(false);
   const [saveToastText, setSaveToastText] = useState("\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643");
-  const [keyboardEnergyHint, setKeyboardEnergyHint] = useState<number | null>(null);
-  const [isEnergySelectionUnstable, setIsEnergySelectionUnstable] = useState(false);
+  const [, setKeyboardEnergyHint] = useState<number | null>(null);
+  const isEnergySelectionUnstableRef = useRef(false);
   const [needsEnergyConfirmation, setNeedsEnergyConfirmation] = useState(false);
   const [, setEnergyConfirmPulseActive] = useState(false);
   const [, setEnergyUndoSnapshot] = useState<EnergyUndoSnapshot | null>(null);
   const [, setEnergyUndoLabel] = useState<string | null>(null);
   const [immediateActionApplied, setImmediateActionApplied] = useState(false);
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
-  const [notesChars, setNotesChars] = useState(0);
+  const [, setNotesChars] = useState(0);
   const [isWarping, setIsWarping] = useState(false);
   const [tacticalAdvice, setTacticalAdvice] = useState<TacticalAdvice | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -404,8 +401,9 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const lastTrackedMoodRef = useRef<PulseMood | null>(null);
   const moodChangeLastTrackedAtRef = useRef<number>(0);
   const moodUnstableEventTrackedRef = useRef(false);
-  const [isMoodSelectionUnstable, setIsMoodSelectionUnstable] = useState(false);
-  const [needsMoodConfirmation, setNeedsMoodConfirmation] = useState(false);
+  const isMoodSelectionUnstableRef = useRef(false);
+  const [, setNeedsMoodConfirmation] = useState(false);
+  const isInitializedRef = useRef(false);
   const energyAdjustmentsRef = useRef<number[]>([]);
   const lastTrackedEnergyRef = useRef<number | null>(null);
   const energyChangeLastTrackedAtRef = useRef<number>(0);
@@ -413,13 +411,65 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const copyVariantTrackedRef = useRef(false);
   const lastEnergyValue = pulseLogs[0]?.energy ?? null;
 
-  const fillHex = hasPickedEnergy && energy != null ? energyColorHex(energy) : "rgba(148, 163, 184, 0.85)";
-  const isEnergyDefault = !hasPickedEnergy || energy == null;
-  const pct = hasPickedEnergy && energy != null ? energyPct(energy, { min: 0, max: 10 }) : 0;
+  const needleContainerRef = useRef<HTMLDivElement>(null);
+  const isNeedleDraggingRef = useRef(false);
+
+  useEffect(() => {
+    const getAngleEnergy = (e: MouseEvent): number | null => {
+      if (!needleContainerRef.current) return null;
+      const rect = needleContainerRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height * 0.83;
+      const deltaX = e.clientX - centerX;
+      const deltaY = e.clientY - centerY;
+      // 0=right(-90°) 10=left(+90°): angle from top, RTL
+      const angle = Math.atan2(-deltaX, -deltaY) * (180 / Math.PI);
+      const clampedAngle = Math.max(-90, Math.min(90, angle));
+      return (clampedAngle + 90) / 18;
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isNeedleDraggingRef.current) return;
+      const val = getAngleEnergy(e);
+      if (val !== null) setEnergyValue(val);
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (!isNeedleDraggingRef.current) return;
+      isNeedleDraggingRef.current = false;
+      const val = getAngleEnergy(e);
+      if (val !== null) setEnergyValue(Math.round(val), { skipHaptic: true });
+    };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      // Only activate on the needle container itself, not the range input
+      if (!needleContainerRef.current) return;
+      isNeedleDraggingRef.current = true;
+      e.preventDefault();
+      const val = getAngleEnergy(e as unknown as MouseEvent);
+      if (val !== null) setEnergyValue(val);
+    };
+
+    const el = needleContainerRef.current;
+    el?.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      el?.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
+
+
+
+
+
   const energyStateLabel = getEnergyStateLabel(energy);
-  const energyQuickHint = getEnergyQuickHint(energy);
-  const moodQuickHint = getMoodQuickHint(mood);
-  const focusQuickHint = getFocusQuickHint(focus, isStartRecovery);
+  getEnergyQuickHint(energy);
+  getMoodQuickHint(mood);
+  getFocusQuickHint(focus, isStartRecovery);
   const energyCopyVariant = useMemo(
     () => getEnergyCopyVariant(pulseCopyOverrides.energy),
     [pulseCopyOverrides.energy]
@@ -432,36 +482,21 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     () => getFocusCopyVariant(pulseCopyOverrides.focus),
     [pulseCopyOverrides.focus]
   );
-  const energySupportLine = getEnergySupportLineByVariant(energy, energyCopyVariant);
-  const moodSubtitle = getMoodVariantSubtitle(moodCopyVariant);
-  const focusSubtitle = getFocusVariantSubtitle(focusCopyVariant);
-  const weeklyTrend = useMemo(() => getWeeklyEnergyTrend(pulseLogs), [pulseLogs]);
+
+  getMoodVariantSubtitle(moodCopyVariant);
+  getFocusVariantSubtitle(focusCopyVariant);
+
   const weeklyEnergyRecommendation = useMemo(() => getWeeklyEnergyRecommendation(pulseLogs), [pulseLogs]);
   const weeklyMoodRecommendation = useMemo(
     () => getWeeklyMoodRecommendation(pulseLogs.map((item) => ({ mood: item.mood, timestamp: item.timestamp }))),
     [pulseLogs]
   );
-  const shouldOfferWeeklyMoodRecommendation = Boolean(
-    weeklyMoodRecommendation && (!mood || mood !== weeklyMoodRecommendation.mood)
-  );
-  const immediateEnergyAction = useMemo(() => getImmediateEnergyAction(energy), [energy]);
+  Boolean(weeklyMoodRecommendation && (!mood || mood !== weeklyMoodRecommendation.mood));
+  useMemo(() => getImmediateEnergyAction(energy), [energy]);
   const energySuggestion = useMemo(() => getEnergySuggestion(energy), [energy]);
-  const shouldOfferWeeklyRecommendation = Boolean(
-    weeklyEnergyRecommendation && (!hasPickedEnergy || energy == null || Math.abs(weeklyEnergyRecommendation.value - energy) >= 2)
-  );
-  const suggestionHelperText = useMemo(() => {
-    if (!energySuggestion) return "";
-    const hasSuggestedNote = notes.trim().includes(energySuggestion.note);
-    return hasSuggestedNote
-      ? "\u0627\u0644\u0645\u0644\u0627\u062d\u0638\u0629 \u0627\u0644\u0630\u0643\u064a\u0629 \u0645\u062e\u0632\u0646\u0629 \u0641\u0639\u0644\u064b\u0627."
-      : "\u0633\u064a\u062a\u0645 \u0625\u0636\u0627\u0641\u0629 \u0645\u0644\u0627\u062d\u0638\u0629 \u062c\u0627\u0647\u0632\u0629 \u0628\u062f\u0648\u0646 \u062a\u0643\u0631\u0627\u0631.";
-  }, [energySuggestion, notes]);
-  const historicalEnergyAverage = useMemo(() => {
-    if (pulseLogs.length === 0) return null;
-    const sum = pulseLogs.reduce((acc, item) => acc + item.energy, 0);
-    const avg = Math.round((sum / pulseLogs.length) * 10) / 10;
-    return { avg, count: pulseLogs.length };
-  }, [pulseLogs]);
+  Boolean(weeklyEnergyRecommendation && (!hasPickedEnergy || energy == null || Math.abs(weeklyEnergyRecommendation.value - energy) >= 2));
+  useMemo(() => { if (!energySuggestion) return ""; const hasSuggestedNote = notes.trim().includes(energySuggestion.note); return hasSuggestedNote ? "ready" : "pending"; }, [energySuggestion, notes]);
+  useMemo(() => { if (pulseLogs.length === 0) return null; const sum = pulseLogs.reduce((acc, item) => acc + item.energy, 0); const avg = Math.round((sum / pulseLogs.length) * 10) / 10; return { avg, count: pulseLogs.length }; }, [pulseLogs]);
   const isComplete = hasPickedEnergy && mood !== null && focus !== null;
   const currentStepComplete = isComplete;
 
@@ -520,7 +555,12 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   };
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      isInitializedRef.current = false;
+      return;
+    }
+    if (isInitializedRef.current) return;
+
     let restored = false;
     if (typeof window !== "undefined" && !isStartRecovery) { // Don't restore draft if starting fresh recovery
       try {
@@ -564,15 +604,24 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       setEnergyConfidence(null);
       setStep(1);
     }
+
+    setInLocalStorage(PULSE_DRAFT_STORAGE_KEY, JSON.stringify({
+      energy: restored ? energy : (typeof lastEnergyValue === "number" ? lastEnergyValue : null),
+      hasPickedEnergy: restored ? hasPickedEnergy : (typeof lastEnergyValue === "number"),
+      mood: restored ? mood : null,
+      focus: restored ? focus : null,
+      notes: restored ? notes : "",
+      step: restored ? step : 1
+    }));
+
     setShowRequiredHint(false);
     setHasTrackedNotesUsage(false);
     setSuggestionApplied(false);
     setIsSavingPulse(false);
     setSaveToastText("\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643");
     setKeyboardEnergyHint(null);
-    setIsEnergySelectionUnstable(false);
     setNeedsEnergyConfirmation(false);
-    setIsMoodSelectionUnstable(false);
+    isMoodSelectionUnstableRef.current = false;
     setNeedsMoodConfirmation(false);
     setEnergyConfirmPulseActive(false);
     setImmediateActionApplied(false);
@@ -587,6 +636,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     unstableEventTrackedRef.current = false;
     moodUnstableEventTrackedRef.current = false;
     copyVariantTrackedRef.current = false;
+
+    isInitializedRef.current = true;
   }, [isOpen, lastEnergyValue, isStartRecovery]);
 
   useEffect(() => {
@@ -795,7 +846,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     window.setTimeout(() => setSuggestionApplied(false), 1800);
   };
 
-  const applyWeeklyRecommendation = () => {
+  const _applyWeeklyRecommendation = () => {
     if (!weeklyEnergyRecommendation) return;
     rememberUndoSnapshot(
       "\u062a\u0645 \u062a\u0637\u0628\u064a\u0642 \u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639.",
@@ -808,7 +859,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     setNeedsEnergyConfirmation(false);
   };
 
-  const applyImmediateEnergyAction = () => {
+  const _applyImmediateEnergyAction = () => {
     rememberUndoSnapshot(
       "\u062a\u0645 \u062a\u0637\u0628\u064a\u0642 \u0627\u0644\u062e\u0637\u0648\u0629 \u0627\u0644\u0641\u0648\u0631\u064a\u0629.",
       "immediate_action"
@@ -825,7 +876,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       recent.push(now);
       moodAdjustmentsRef.current = recent;
       const unstableNow = recent.length >= 4;
-      setIsMoodSelectionUnstable(unstableNow);
+      isMoodSelectionUnstableRef.current = unstableNow;
       if (unstableNow && !moodUnstableEventTrackedRef.current) {
         recordFlowEvent("pulse_mood_unstable", {
           meta: { changes: recent.length, windowMs, step }
@@ -845,7 +896,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     if (showRequiredHint) setShowRequiredHint(false);
   };
 
-  const applyWeeklyMoodRecommendation = () => {
+  const _applyWeeklyMoodRecommendation = () => {
     if (!weeklyMoodRecommendation) return;
     setMoodValue(weeklyMoodRecommendation.mood);
     recordFlowEvent("pulse_mood_weekly_recommendation_applied", {
@@ -863,7 +914,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     if (showRequiredHint) setShowRequiredHint(false);
   };
 
-  const applyNotesQuickChip = (chip: string) => {
+  const _applyNotesQuickChip = (chip: string) => {
     setNotes((prev) => {
       const trimmed = prev.trim();
       if (trimmed.includes(chip)) return prev;
@@ -920,7 +971,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       recent.push(now);
       energyAdjustmentsRef.current = recent;
       const unstableNow = recent.length >= 5;
-      setIsEnergySelectionUnstable(unstableNow);
+      isEnergySelectionUnstableRef.current = unstableNow;
       if (unstableNow && !unstableEventTrackedRef.current) {
         recordFlowEvent("pulse_energy_unstable", {
           meta: { changes: recent.length, windowMs, step }
@@ -951,21 +1002,19 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     if (showRequiredHint) setShowRequiredHint(false);
   };
 
-  const snapToAnchor = () => {
+  const snapToInteger = () => {
     if (energy == null) return;
-    const closest = ENERGY_ANCHORS.reduce((acc, n) => {
-      return Math.abs(n - energy) < Math.abs(acc - energy) ? n : acc;
-    }, ENERGY_ANCHORS[0]);
-    if (closest === energy) {
-      setEnergyValue(closest, { skipHaptic: true });
+    const rounded = Math.round(energy);
+    if (rounded !== energy) {
+      setEnergyValue(rounded, { skipHaptic: true });
     }
   };
 
   const handleEnergyKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
-    snapToAnchor();
+    snapToInteger();
     const key = e?.key ?? "";
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(key)) return;
-    setKeyboardEnergyHint(energy ?? 0);
+    setKeyboardEnergyHint(energy == null ? 0 : Math.round(energy));
     if (keyboardHintTimerRef.current != null) window.clearTimeout(keyboardHintTimerRef.current);
     keyboardHintTimerRef.current = window.setTimeout(() => {
       setKeyboardEnergyHint(null);
@@ -1113,41 +1162,122 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                       مؤشر الأنظمة الحيوية
                     </label>
-                    <div className="relative w-full flex flex-col items-center justify-center p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 shadow-inner">
-                      <div className="relative w-full max-w-[220px] h-32 scale-90 sm:scale-100">
-                        <svg viewBox="0 0 200 110" className="w-full h-full overflow-visible">
+                    <div
+                      ref={needleContainerRef}
+                      className="relative w-full flex flex-col items-center justify-center p-8 rounded-[2.5rem] bg-slate-950/40 border border-white/5 shadow-2xl overflow-hidden group cursor-crosshair touch-none"
+                    >
+
+                      {/* Ambient background glow */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+
+                      <div className="relative w-full max-w-[240px] h-32 scale-90 sm:scale-105 transition-transform duration-500">
+                        <svg viewBox="0 0 200 120" className="w-full h-full overflow-visible">
                           <defs>
                             <linearGradient id="needleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                               <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
+                              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.8" />
                               <stop offset="100%" stopColor="#fbbf24" stopOpacity="1" />
                             </linearGradient>
+                            <radialGradient id="pivotGlow" cx="50%" cy="50%" r="50%">
+                              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+                              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+                            </radialGradient>
+                            <filter id="needleGlow" x="-20%" y="-20%" width="140%" height="140%">
+                              <feGaussianBlur stdDeviation="3" result="blur" />
+                              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
                           </defs>
-                          <path d="M 10,100 A 90,90 0 0,1 190,100" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="14" strokeLinecap="round" />
+
+                          {/* Dial Ticks */}
+                          {[...Array(11)].map((_, i) => {
+                            const angle = ((10 - i) * 18) - 180;
+                            const rad = (angle * Math.PI) / 180;
+                            const r1 = 82;
+                            const r2 = 90;
+                            const x1 = 100 + r1 * Math.cos(rad);
+                            const y1 = 100 + r1 * Math.sin(rad);
+                            const x2 = 100 + r2 * Math.cos(rad);
+                            const y2 = 100 + r2 * Math.sin(rad);
+                            return (
+                              <line
+                                key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+                                stroke={(energy ?? 0) >= i ? "rgba(251,191,36,0.6)" : "rgba(255,255,255,0.1)"}
+                                strokeWidth="2" strokeLinecap="round"
+                              />
+                            );
+                          })}
+
+                          {/* Background Arc */}
+                          <path d="M 10,100 A 90,90 0 0,1 190,100" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="12" strokeLinecap="round" />
+
+                          {/* Active Filled Arc */}
                           <motion.path
-                            d="M 10,100 A 90,90 0 0,1 190,100" fill="none" stroke="url(#needleGrad)" strokeWidth="14" strokeLinecap="round"
+                            d="M 190,100 A 90,90 0 0,0 10,100" fill="none" stroke="url(#needleGrad)" strokeWidth="12" strokeLinecap="round"
                             strokeDasharray="283"
                             initial={{ strokeDashoffset: 283 }}
-                            animate={{ strokeDashoffset: 283 - (283 * ((energy ?? 0) / 10)) }}
-                            transition={{ type: "spring", stiffness: 40, damping: 12 }}
+                            animate={{
+                              strokeDashoffset: 283 * (1 - ((energy ?? 0) / 10))
+                            }}
+                            transition={{
+                              type: "tween",
+                              ease: "linear",
+                              duration: 0.05
+                            }}
+                            style={{ filter: energy != null && energy > 7 ? 'drop-shadow(0 0 8px rgba(251,191,36,0.3))' : 'none' }}
                           />
+
+
+                          {/* Center Pivot Glow */}
+                          <circle cx="100" cy="100" r="16" fill="url(#pivotGlow)" />
+
+                          {/* The Needle - Balanced Group for Perfect Center Rotation */}
                           <motion.g
-                            animate={{ rotate: -(180 - ((energy ?? 0) / 10) * 180), originX: "100px", originY: "100px" }}
-                            transition={{ type: "spring", stiffness: 70, damping: 14 }}
+                            animate={{
+                              rotate: 90 - (energy ?? 0) * 18
+                            }}
+                            transition={{
+                              type: "tween",
+                              ease: "linear",
+                              duration: 0.05
+                            }}
                           >
-                            <path d="M 97,100 L 100,20 L 103,100 Z" fill="#fbbf24" />
-                            <circle cx="100" cy="100" r="5" fill="#d97706" />
+
+                            {/* 1. The Invisible Anchor: Forces the group's bounding box center to be exactly (100, 100) */}
+                            <circle cx="100" cy="100" r="90" fill="transparent" pointerEvents="none" />
+
+                            {/* 2. The Actual Needle */}
+                            <path
+                              d="M 98.5,100 L 100,10 L 101.5,100 Z"
+                              fill="#fbbf24"
+                              filter="url(#needleGlow)"
+                            />
                           </motion.g>
+
+                          {/* Fixed Pivot circles (No rotation for better stability) */}
+                          <circle cx="100" cy="100" r="6" fill="#0f172a" stroke="#fbbf24" strokeWidth="2" />
+                          <circle cx="100" cy="100" r="2" fill="#fbbf24" />
                         </svg>
+
                         <input
-                          type="range" min={0} max={10} step={1} value={energy ?? 0}
+                          type="range" min={0} max={10} step={1}
+                          value={Math.round(energy ?? 5)}
                           onChange={(e) => setEnergyValue(Number(e.target.value))}
-                          onPointerUp={snapToAnchor}
-                          className="absolute inset-0 opacity-0 cursor-pointer z-20"
+                          onKeyUp={handleEnergyKeyUp}
+                          className="needle-range-input absolute inset-0 w-full h-full opacity-0 z-10 appearance-none m-0 p-0"
+                          tabIndex={0}
+                          aria-label="مستوى الطاقة"
                         />
                       </div>
-                      <div className="text-center -mt-6">
-                        <p className="text-4xl font-black text-white font-mono tracking-tighter">{energy ?? 0}</p>
-                        <p className="text-[10px] font-bold text-amber-500/80 mt-1 uppercase tracking-widest">{energyStateLabel}</p>
+                      <div className="text-center -mt-4 relative z-10">
+                        <motion.p
+                          key={energy}
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="text-5xl font-black text-white font-mono tracking-tighter"
+                        >
+                          {energy !== null ? Math.round(energy) : 0}
+                        </motion.p>
+                        <p className="text-[10px] font-black text-amber-500 mt-1 uppercase tracking-[0.3em]">{energyStateLabel}</p>
                       </div>
                     </div>
                   </div>
@@ -1311,12 +1441,3 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     </AnimatePresence>
   );
 };
-
-
-
-
-
-
-
-
-

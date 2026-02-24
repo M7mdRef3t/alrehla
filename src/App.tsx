@@ -36,7 +36,7 @@ import { initAppContentRealtime } from "./state/appContentState";
 import { PWAInstallProvider } from "./contexts/PWAInstallContext";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
 import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
-import { OnboardingFlow, hasCompletedJourneyOnboarding, resetJourneyOnboarding } from "./components/OnboardingFlow";
+import { OnboardingFlow, hasCompletedJourneyOnboarding } from "./components/OnboardingFlow";
 import { JourneyToast } from "./components/JourneyToast";
 import { AnalyticsConsentBanner } from "./components/AnalyticsConsentBanner";
 import { ActiveInterventionPrompt } from "./components/ActiveInterventionPrompt";
@@ -2929,14 +2929,19 @@ export default function App() {
         )}
         {showOnboarding && (
           <OnboardingFlow
-            onComplete={() => {
+            onComplete={(skipped) => {
               setShowOnboarding(false);
-              setShowWelcomeToast(true);
-              setTimeout(() => setShowWelcomeToast(false), 6000);
-              startRecovery();
+              if (skipped) {
+                void navigateToScreen("map");
+              } else {
+                setShowWelcomeToast(true);
+                setTimeout(() => setShowWelcomeToast(false), 6000);
+                startRecovery();
+              }
             }}
           />
         )}
+
         {showFaq && <FaqScreen onClose={() => setShowFaq(false)} />}
         <JourneyToast variant="onboarding_complete" visible={showWelcomeToast} onClose={() => setShowWelcomeToast(false)} />
         <JourneyToast
@@ -3050,5 +3055,3 @@ export default function App() {
     </PWAInstallProvider>
   );
 }
-
-

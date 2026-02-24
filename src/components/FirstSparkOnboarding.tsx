@@ -1,7 +1,7 @@
-import type { FC } from "react";
+﻿import type { FC } from "react";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, ArrowLeft } from "lucide-react";
+import { Zap, ArrowRight } from "lucide-react";
 
 /* ════════════════════════════════════════════════
    FIRST SPARK — The Cinematic Launch
@@ -127,7 +127,7 @@ const StageChaos: FC<{ onNext: () => void }> = ({ onNext }) => {
 
                 <motion.button
                     onClick={onNext}
-                    className="bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold py-3 px-8 rounded-full shadow-[0_0_20px_rgba(45,212,191,0.3)] transition-all"
+                    className="bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold py-3 px-8 rounded-full shadow-[0_0_20px_rgba(45,212,191,0.3)]"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                 >
@@ -212,7 +212,7 @@ const StageOrder: FC<{ onNext: () => void }> = ({ onNext }) => {
 
                 <motion.button
                     onClick={onNext}
-                    className="bg-transparent border border-teal-500/50 text-teal-400 hover:bg-teal-500/10 font-bold py-3 px-8 rounded-full transition-all"
+                    className="bg-transparent border border-teal-500/50 text-teal-400 hover:bg-teal-500/10 font-bold py-3 px-8 rounded-full"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     initial={{ opacity: 0 }}
@@ -277,11 +277,11 @@ const StageValue: FC<{ onNext: () => void }> = ({ onNext }) => {
 
                 <motion.button
                     onClick={onNext}
-                    className="bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-900 font-bold py-3.5 px-8 rounded-full shadow-[0_0_25px_rgba(45,212,191,0.4)] transition-all flex items-center mx-auto gap-2"
+                    className="bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-900 font-bold py-3 px-8 rounded-full shadow-[0_0_25px_rgba(45,212,191,0.4)] flex items-center mx-auto gap-2"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                 >
-                    ابدأ رسم أول دايرة <ArrowLeft className="w-4 h-4" />
+                    ابدأ رسم أول دايرة <ArrowRight className="w-4 h-4" />
                 </motion.button>
             </div>
         </motion.div>

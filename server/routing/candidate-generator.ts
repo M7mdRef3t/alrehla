@@ -46,28 +46,35 @@ export async function loadPrecomputedCandidates(
     .in("id", contentIds);
 
   const byId = new Map<string, any>((contentRows ?? []).map((row: any) => [row.id, row]));
-  return rows
-    .map((row) => {
-      const content = byId.get(row.candidate_content_id);
-      if (!content) return null;
-      return {
-        id: `content_${row.candidate_content_id}`,
-        title: String(content.title ?? "خطوة مناسبة الآن"),
-        message: String(content?.metadata?.summary ?? "خطوة مناسبة لحالتك الحالية."),
-        cta: "ابدأ الآن",
-        actionType: "open_mission",
-        actionPayload: {
-          contentId: row.candidate_content_id,
-          edgeId: row.edge_id,
-          cacheId: row.id
-        },
-        tags: Array.isArray(content?.metadata?.tags) ? content.metadata.tags : [],
+  const candidates: CandidateV2[] = [];
+
+  for (const row of rows) {
+    const content = byId.get(row.candidate_content_id);
+    if (!content) continue;
+
+    const tags = Array.isArray(content?.metadata?.tags)
+      ? content.metadata.tags.filter((tag: unknown): tag is string => typeof tag === "string")
+      : [];
+
+    candidates.push({
+      id: `content_${row.candidate_content_id}`,
+      title: String(content.title ?? "???? ?????? ????"),
+      message: String(content?.metadata?.summary ?? "???? ?????? ?????? ???????."),
+      cta: "???? ????",
+      actionType: "open_mission",
+      actionPayload: {
         contentId: row.candidate_content_id,
-        edgeId: row.edge_id ?? undefined,
-        baseScore: Number(row.base_score ?? 0),
-        difficulty: Number(content.difficulty ?? 3),
-        cognitiveLoad: Number(content.cognitive_load_required ?? 3)
-      } satisfies CandidateV2;
-    })
-    .filter((item): item is CandidateV2 => Boolean(item));
+        edgeId: row.edge_id,
+        cacheId: row.id
+      },
+      tags,
+      contentId: row.candidate_content_id,
+      edgeId: row.edge_id ?? undefined,
+      baseScore: Number(row.base_score ?? 0),
+      difficulty: Number(content.difficulty ?? 3),
+      cognitiveLoad: Number(content.cognitive_load_required ?? 3)
+    });
+  }
+
+  return candidates;
 }

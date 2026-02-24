@@ -1,148 +1,58 @@
-import { Component, type ReactNode } from "react";
-import { clearLocalStorage } from "../services/browserStorage";
-import { reloadPage } from "../services/navigation";
-import { openMailto } from "../services/clientDom";
-import { getWindowOrNull } from "../services/clientRuntime";
-import { runtimeEnv } from "../config/runtimeEnv";
+/**
+ * ErrorBoundary Component
+ * مكون لالتقاط الأخطاء ومنع انهيار التطبيق
+ */
 
-declare global {
-  interface Window {
-    __errorReporter?: (payload: { error: string; stack?: string; timestamp: string }) => void;
-  }
-}
+import React, { Component, ErrorInfo, ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
 interface State {
   hasError: boolean;
-  error: Error | null;
+  error?: Error;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // تسجيل الخطأ
-    console.error("Error caught by ErrorBoundary:", error, errorInfo);
-    // يمكن إرسال الخطأ إلى Sentry أو خدمة مراقبة أخرى
-    const windowRef = getWindowOrNull();
-    if (windowRef?.__errorReporter) {
-      windowRef.__errorReporter({
-        error: error.toString(),
-        stack: errorInfo.componentStack ?? undefined,
-        timestamp: new Date().toISOString()
-      });
-    }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    this.props.onError?.(error, errorInfo);
   }
-
-  handleReset = () => {
-    this.setState({ hasError: false, error: null });
-    reloadPage();
-  };
-
-  handleClearData = () => {
-    if (
-      confirm(
-        "هل أنت متأكد؟ هيتم مسح كل البيانات المحفوظة والبدء من جديد."
-      )
-    ) {
-      clearLocalStorage();
-      reloadPage();
-    }
-  };
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
       return (
-        <div
-          className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50 flex items-center justify-center p-4"
-          dir="rtl"
-        >
-          <div className="bg-white rounded-3xl max-w-md w-full p-8 text-center">
-            {/* أيقونة الخطأ */}
-            <div className="mb-6">
-              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-                <svg
-                  className="w-10 h-10 text-red-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {/* العنوان */}
-            <h1 className="text-2xl font-bold text-slate-900 mb-3">
-              عذراً، حصل خطأ غير متوقع
-            </h1>
-
-            {/* الوصف */}
-            <p className="text-slate-600 mb-6 leading-relaxed">
-              حاول تحديث الصفحة أو امسح البيانات المؤقتة والبدء من جديد. 
-              إذا استمرت المشكلة، تواصل معنا.
+        <div className="min-h-[200px] flex items-center justify-center p-6">
+          <div className="text-center space-y-4">
+            <div className="text-6xl">⚠️</div>
+            <h3 className="text-lg font-bold text-red-400">
+              حدث خطأ غير متوقع
+            </h3>
+            <p className="text-sm text-slate-400 max-w-md">
+              عذراً، حدث خطأ في التطبيق. يرجى إعادة تحميل الصفحة.
             </p>
-
-            {/* تفاصيل الخطأ (للمطورين فقط في وضع التطوير) */}
-            {runtimeEnv.isDev && this.state.error && (
-              <div className="mb-6 p-4 bg-red-50 rounded-lg text-right">
-                <p className="text-xs text-red-800 font-mono break-all">
-                  {this.state.error.toString()}
-                </p>
-              </div>
-            )}
-
-            {/* الأزرار - الأولويات */}
-            <div className="flex flex-col gap-3 mb-4">
-              <button
-                onClick={this.handleReset}
-                className="w-full py-3 px-6 bg-gradient-to-l from-teal-600 to-teal-500 text-white font-semibold rounded-xl hover:from-teal-700 hover:to-teal-600 transition-all duration-200"
-              >
-                🔄 تحديث الصفحة
-              </button>
-
-              <button
-                onClick={this.handleClearData}
-                className="w-full py-3 px-6 bg-amber-50 text-amber-700 font-semibold rounded-xl border-2 border-amber-200 hover:border-amber-300 hover:bg-amber-100 transition-all duration-200"
-              >
-                🗑️ مسح البيانات والبدء من جديد
-              </button>
-            </div>
-
-            {/* خيارات إضافية */}
-            <div className="border-t border-slate-200 pt-4 mt-4">
-              <p className="text-xs text-slate-500 mb-3">خيارات أخرى:</p>
-              <div className="flex flex-col gap-2">
-                <a
-                  href="/"
-                  className="text-sm text-teal-600 hover:text-teal-700 font-semibold"
-                >
-                  ← العودة للصفحة الرئيسية
-                </a>
-                <button
-                  type="button"
-                  onClick={() => openMailto("support@alrehla.app")}
-                  className="text-sm text-slate-600 hover:text-slate-700 font-semibold"
-                >
-                  📧 التواصل مع الدعم
-                </button>
-              </div>
-            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
+            >
+              إعادة تحميل
+            </button>
           </div>
         </div>
       );
@@ -151,3 +61,46 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+
+// Specialized error boundaries for different sections
+export const MapErrorFallback = () => (
+  <div className="min-h-[400px] flex items-center justify-center p-6">
+    <div className="text-center space-y-4">
+      <div className="text-4xl">🗺️</div>
+      <h3 className="text-lg font-bold text-orange-400">
+        خطأ في تحميل الخريطة
+      </h3>
+      <p className="text-sm text-slate-400">
+        يرجى المحاولة مرة أخرى لاحقاً
+      </p>
+    </div>
+  </div>
+);
+
+export const ChatErrorFallback = () => (
+  <div className="min-h-[300px] flex items-center justify-center p-6">
+    <div className="text-center space-y-4">
+      <div className="text-4xl">💬</div>
+      <h3 className="text-lg font-bold text-blue-400">
+        خطأ في تحميل المحادثة
+      </h3>
+      <p className="text-sm text-slate-400">
+        يمكنك المتابعة بدون المحادثة الذكية
+      </p>
+    </div>
+  </div>
+);
+
+export const PulseErrorFallback = () => (
+  <div className="min-h-[200px] flex items-center justify-center p-6">
+    <div className="text-center space-y-4">
+      <div className="text-4xl">🧭</div>
+      <h3 className="text-lg font-bold text-amber-400">
+        خطأ في مؤشر البوصلة
+      </h3>
+      <p className="text-sm text-slate-400">
+        يمكنك المتابعة بدون قياس الطاقة
+      </p>
+    </div>
+  </div>
+);

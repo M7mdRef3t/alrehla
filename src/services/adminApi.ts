@@ -1782,6 +1782,77 @@ export async function fetchDreams(): Promise<any[]> {
   }));
 }
 
+export type SeoAuditSeverity = "critical" | "warning" | "passed";
+
+export interface SeoAuditFinding {
+  id: string;
+  title: string;
+  description: string;
+  severity: SeoAuditSeverity;
+  category: "technical" | "content" | "geo" | "links";
+}
+
+export interface SeoAuditReport {
+  scannedAt: string;
+  targetUrl: string;
+  finalUrl: string;
+  scores: {
+    overall: number;
+    seo: number;
+    geo: number;
+    health: number;
+  };
+  counters: {
+    critical: number;
+    warning: number;
+    passed: number;
+  };
+  summary: {
+    wordCount: number;
+    h1Count: number;
+    images: number;
+    imagesWithAlt: number;
+    internalLinks: number;
+    externalLinks: number;
+    schemaTypes: string[];
+  };
+  checks: {
+    title: { exists: boolean; length: number };
+    description: { exists: boolean; length: number };
+    viewport: boolean;
+    canonical: boolean;
+    robotsTxt: boolean;
+    sitemapXml: boolean;
+    schemaJsonLd: boolean;
+    faqSchema: boolean;
+    organizationSchema: boolean;
+    softwareApplicationSchema: boolean;
+  };
+  findings: SeoAuditFinding[];
+}
+
+export async function runSeoAudit(url?: string): Promise<SeoAuditReport | null> {
+  const apiRes = await callAdminApi<SeoAuditReport>("seo-audit", {
+    method: "POST",
+    body: JSON.stringify({ url })
+  });
+  return apiRes ?? null;
+}
+
+export interface SeoAutofixResult {
+  ok: boolean;
+  appliedCount: number;
+  fixes: Array<{ key: string; applied: boolean; message: string }>;
+}
+
+export async function applySeoAutofix(actions?: string[]): Promise<SeoAutofixResult | null> {
+  const apiRes = await callAdminApi<SeoAutofixResult>("seo-autofix", {
+    method: "POST",
+    body: JSON.stringify({ actions: actions ?? ["robots", "index", "sitemap"] })
+  });
+  return apiRes ?? null;
+}
+
 export async function saveDream(dream: any) {
   if (!isSupabaseReady || !supabase) return false;
 
