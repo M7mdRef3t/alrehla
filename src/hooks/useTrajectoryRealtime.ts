@@ -21,11 +21,12 @@ export const useTrajectoryRealtime = (userId?: string) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!userId || !supabase) return;
+        const client = supabase;
+        if (!userId || !client) return;
 
         // 1. Initial Fetch
         const fetchInitial = async () => {
-            const { data, error } = await supabase
+            const { data, error } = await client
                 .from('user_trajectories')
                 .select('*')
                 .eq('user_id', userId)
@@ -40,7 +41,7 @@ export const useTrajectoryRealtime = (userId?: string) => {
         fetchInitial();
 
         // 2. Realtime Subscription
-        const channel = supabase
+        const channel = client
             .channel('user_trajectories_changes')
             .on(
                 'postgres_changes',
@@ -67,9 +68,7 @@ export const useTrajectoryRealtime = (userId?: string) => {
             .subscribe();
 
         return () => {
-            if (supabase) {
-                supabase.removeChannel(channel);
-            }
+            client.removeChannel(channel);
         };
     }, [userId]);
 

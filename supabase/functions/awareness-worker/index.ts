@@ -88,6 +88,33 @@ Deno.serve(async (req) => {
             // 1.4 CALCULATE NEW DDA (Incorporating Alchemical Catalyst Penalty & Global Events)
             let nextDDA = prevDDA;
 
+            // 🔥 PHOENIX ENGINE: Adaptive DDA Recalibration
+            // Check if user has a Phoenix Score from a recent event and adjust baseline
+            const { data: phoenixCard } = await supabase
+                .from('pioneer_report_card')
+                .select('phoenix_score, is_insulated, is_aegis_prime')
+                .eq('user_id', record.user_id)
+                .single();
+
+            if (phoenixCard && phoenixCard.phoenix_score !== null) {
+                if (phoenixCard.phoenix_score > 0.8) {
+                    // Thrived under pressure: increase challenge
+                    nextDDA = Math.min(5, nextDDA + 1);
+                    console.log(`🔥 [Phoenix] User ${record.user_id} thrived (Score: ${phoenixCard.phoenix_score}). DDA +1.`);
+                } else if (phoenixCard.phoenix_score < 0.3 && !phoenixCard.is_insulated) {
+                    // Struggled significantly: reduce pressure to prevent spiral
+                    nextDDA = Math.max(1, nextDDA - 1);
+                    console.log(`🕊️ [Phoenix] User ${record.user_id} struggled (Score: ${phoenixCard.phoenix_score}). DDA -1.`);
+                }
+                // Log recalibration to telemetry
+                await supabase.from('system_telemetry_logs').insert({
+                    service_name: 'phoenix-engine',
+                    action: 'dda_recalibration',
+                    payload: { user_id: record.user_id, phoenix_score: phoenixCard.phoenix_score, adjusted_dda: nextDDA },
+                    status: 'success'
+                });
+            }
+
             // Check for Active Resonance Event (Global Override)
             const { data: activeEvent } = await supabase
                 .from('active_resonance_event')

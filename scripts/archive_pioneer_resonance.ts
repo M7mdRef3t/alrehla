@@ -11,7 +11,7 @@ async function archivePioneerResonance() {
     console.log("📦 [ResonanceArchive] Initializing T-Zero Data Capture...");
 
     // 1. Fetch current active resonance event
-    const { data: activeEvent } = await supabase
+    const { data: activeEvent, error: eventError } = await supabase
         .from('system_events')
         .select('*')
         .eq('event_type', 'high_pressure')
@@ -19,6 +19,10 @@ async function archivePioneerResonance() {
         .limit(1)
         .single();
 
+    if (eventError) {
+        console.error("❌ Error fetching event:", eventError);
+        return;
+    }
     if (!activeEvent) {
         console.error("❌ No high_pressure event found to archive.");
         return;

@@ -3,12 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, CheckCircle, AlertTriangle, Eye, TrendingUp, Users, ChevronRight, Gavel } from 'lucide-react';
 import { HiveEngine, ProvenPath, SwarmMetrics } from '../../services/hiveEngine';
 import { CollectiveRadar } from '../Trajectory/CollectiveRadar';
+import { FirstBloodOverlay } from './FirstBloodOverlay';
 
 export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleId }) => {
     const [pending, setPending] = useState<ProvenPath[]>([]);
     const [metrics, setMetrics] = useState<SwarmMetrics | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedPath, setSelectedPath] = useState<ProvenPath | null>(null);
+    const [showFirstBlood, setShowFirstBlood] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -18,6 +20,13 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
             ]);
             setPending(pData);
             setMetrics(mData);
+
+            // Check if this is the first session (Audit Count = 0)
+            const { data: rep } = await HiveEngine.getOracleReputation(oracleId);
+            if (!rep || (rep.audit_count === 0)) {
+                setShowFirstBlood(true);
+            }
+
             setLoading(false);
         };
         loadData();
@@ -40,6 +49,10 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
     };
 
     if (loading) return <div className="p-12 text-center text-cyan-400">Loading Governance Core...</div>;
+
+    if (showFirstBlood) {
+        return <FirstBloodOverlay oracleId={oracleId} onComplete={() => setShowFirstBlood(false)} />;
+    }
 
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-8 bg-slate-950 min-h-screen text-slate-100 font-sans">

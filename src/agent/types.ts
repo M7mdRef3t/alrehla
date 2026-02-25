@@ -10,7 +10,7 @@ export interface AgentContext {
   /** ملخص العُقد: id, label, ring */
   nodesSummary: { id: string; label: string; ring: Ring }[];
   /** الشاشة الحالية */
-  screen: "landing" | "goal" | "map" | "guided" | "mission" | "tools" | "settings" | "enterprise" | "guilt-court" | "diplomacy" | "emergency";
+  screen: "landing" | "goal" | "map" | "guided" | "mission" | "tools" | "settings" | "enterprise" | "guilt-court" | "diplomacy" | "emergency" | "oracle-dashboard";
   /** معرف العقدة المفتوحة (نافذة الشخص) إن وُجدت */
   selectedNodeId: string | null;
   /** هدف الرحلة الحالية */

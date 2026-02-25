@@ -111,6 +111,18 @@ export class HiveEngine {
     }
 
     /**
+     * Governance: Fetches Oracle reputation for a specific user.
+     */
+    static async getOracleReputation(userId: string): Promise<{ data: any; error: any }> {
+        if (!supabase) return { data: null, error: 'Supabase not initialized' };
+        return await supabase
+            .from('oracle_reputation')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+    }
+
+    /**
      * Governance: Approves a pending trajectory for the global Wisdom Vault.
      */
     static async approveTrajectory(id: string, oracleId: string): Promise<boolean> {

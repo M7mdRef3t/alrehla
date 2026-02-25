@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/services/supabaseClient'; // Adjust path
-import { DynamicContextRouter } from '@/services/dynamicContextRouter';
+import { supabase } from '../../../../services/supabaseClient';
+import { DynamicContextRouter } from '../../../../services/dynamicContextRouter';
 
 /**
  * /api/awareness-queue/worker — محرك المعالجة الخلفية ⚙️
@@ -11,6 +11,9 @@ import { DynamicContextRouter } from '@/services/dynamicContextRouter';
 
 export async function POST() {
     try {
+        if (!supabase) {
+            return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 });
+        }
         // 1. Fetch PENDING or FAILED (due for retry) events
         const { data: events, error: fetchError } = await supabase
             .from('awareness_events_queue')

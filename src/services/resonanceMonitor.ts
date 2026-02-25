@@ -100,4 +100,78 @@ Output strictly as JSON:
             console.log(`🌀 [ResonanceMonitor] Pre-Ionization Riddle sent to ${p.id}`);
         }
     }
+
+    /**
+     * 🔗 Synchronicity Pairing Dispatcher (Post-Event)
+     * Pairs pioneers with complementary weakness vectors for shared micro-missions.
+     * Uses Ephemeral Entanglement (TTL: 24h) to prevent codependency.
+     */
+    static async dispatchSynchronicityPairings() {
+        if (!supabase) return;
+
+        console.log("🔗 [ResonanceMonitor] Initiating Synchronicity Pairing...");
+
+        // 1. Expire any stale entanglements first
+        const { data: expired } = await supabase
+            .from('resonance_pairs')
+            .update({ status: 'expired' })
+            .eq('status', 'active')
+            .lt('expires_at', new Date().toISOString())
+            .select('id');
+
+        if (expired && expired.length > 0) {
+            console.log(`🕊️ [ResonanceMonitor] Expired ${expired.length} stale Resonance Pairs.`);
+        }
+
+        // 2. Fetch unpaired pioneers
+        const { data: pioneers } = await supabase
+            .from('profiles')
+            .select('id')
+            .not('id', 'in', `(SELECT user_a_id FROM resonance_pairs WHERE status = 'active' UNION SELECT user_b_id FROM resonance_pairs WHERE status = 'active')`);
+
+        if (!pioneers || pioneers.length < 2) {
+            console.log("⚠️ [ResonanceMonitor] Not enough unpaired pioneers for Synchronicity.");
+            return;
+        }
+
+        // 3. For each unpaired pioneer, find their complement
+        let pairsCreated = 0;
+        const paired = new Set<string>();
+
+        for (const pioneer of pioneers) {
+            if (paired.has(pioneer.id)) continue;
+
+            const { data: partner } = await supabase
+                .rpc('find_resonance_partner', { p_user_id: pioneer.id });
+
+            if (!partner || partner.length === 0) continue;
+
+            const match = partner[0];
+            if (paired.has(match.partner_id)) continue;
+
+            // 4. Create the Ephemeral Entanglement (TTL: 24h)
+            const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+            await supabase.from('resonance_pairs').insert({
+                user_a_id: pioneer.id,
+                user_b_id: match.partner_id,
+                complementary_axis: match.weakness_axis,
+                similarity_score: match.complementary_score,
+                expires_at: expiresAt,
+                mission_context: {
+                    axis: match.weakness_axis,
+                    type: 'synchronicity_mission'
+                }
+            });
+
+            paired.add(pioneer.id);
+            paired.add(match.partner_id);
+            pairsCreated++;
+
+            console.log(`✨ [ResonanceMonitor] Paired ${pioneer.id} ↔ ${match.partner_id} (Axis: ${match.weakness_axis})`);
+        }
+
+        console.log(`🔗 [ResonanceMonitor] Synchronicity complete: ${pairsCreated} pairs created.`);
+    }
 }
+

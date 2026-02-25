@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/services/supabaseClient'; // Adjust based on your actual path
+import { supabase } from '../../../services/supabaseClient';
 
 /**
  * /api/awareness-queue — بوابه استلام أحداث الوعي 📩
@@ -10,6 +10,9 @@ import { supabase } from '@/services/supabaseClient'; // Adjust based on your ac
 
 export async function POST(req: Request) {
     try {
+        if (!supabase) {
+            return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 });
+        }
         const payload = await req.json();
 
         // 1. Validation (Basic)

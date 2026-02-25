@@ -46,6 +46,7 @@ import { geminiClient } from "./services/geminiClient";
 import { isSupabaseReady } from "./services/supabaseClient";
 import { fetchAdminConfig, fetchOwnerAlerts } from "./services/adminApi";
 import { usePulseCheckLogic } from "./hooks/usePulseCheckLogic";
+import { AscensionRitual } from "./components/Oracle/AscensionRitual";
 import { useIdleAwareTelemetry, type IdleAwareTelemetrySnapshot } from "./hooks/useIdleAwareTelemetry";
 import { isPhaseOneUserFlow, isUserMode } from "./config/appEnv";
 import {
@@ -87,6 +88,8 @@ import { executeOwnerAction } from "./navigation/ownerActionExecutor";
 import { resolveLandingChromeVisibility } from "./app/orchestration/chromeVisibility";
 import { AUTO_COCOON_LAST_SHOWN_DATE_KEY, evaluateCocoonOpen } from "./app/orchestration/modalOrchestrator";
 import { startAutonomousStartupJobs } from "./app/orchestration/startupJobs";
+
+const OracleCouncilDashboard = lazy(() => import("./components/Oracle/OracleDashboard").then(m => ({ default: m.OracleCouncilDashboard })));
 
 // Initialize language on app start
 initLanguage();
@@ -232,7 +235,7 @@ function getUserLastUiStateStorageKey(userId: string): string {
 }
 
 function normalizeRestorableScreen(value: string | null): Screen | null {
-  if (value === "landing" || value === "goal" || value === "map" || value === "guided" || value === "tools" || value === "enterprise") {
+  if (value === "landing" || value === "goal" || value === "map" || value === "guided" || value === "tools" || value === "enterprise" || value === "oracle-dashboard") {
     return value;
   }
   return null;
@@ -995,7 +998,8 @@ export default function App() {
       settings: "الإعدادات",
       enterprise: "بوابة المؤسسات",
       "guilt-court": "محكمة الشعور بالذنب",
-      diplomacy: "البرقيات الدبلوماسية"
+      diplomacy: "البرقيات الدبلوماسية",
+      "oracle-dashboard": "مجلس الحكماء"
     };
     trackPageView(pageNames[screen]);
   }, [screen]);
@@ -1043,6 +1047,10 @@ export default function App() {
       diplomacy: {
         title: "Diplomatic Cables | Alrehla",
         description: "Smart message templates for strategic communication and boundary setting."
+      },
+      "oracle-dashboard": {
+        title: "Oracle Council | Alrehla",
+        description: "Oracle governance dashboard for trajectory review, calibration, and collective intelligence."
       }
     };
 
@@ -2587,6 +2595,10 @@ export default function App() {
               {screen === "diplomacy" && (
                 <DiplomaticCables />
               )}
+
+              {screen === "oracle-dashboard" && authUser?.id && (
+                <OracleCouncilDashboard oracleId={authUser.id} />
+              )}
             </div>
           </Suspense>
         </main>
@@ -3048,7 +3060,8 @@ export default function App() {
             </button>
           </nav>
         )}
-
+        {/* Phase 27: The Ascension Protocol - The Ritual */}
+        <AscensionRitual />
       </div>
       {/* Phase 20: Automagic Loop Toast — Global Reactive Prescription */}
       <GraphEventToast />

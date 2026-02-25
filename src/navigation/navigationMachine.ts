@@ -8,7 +8,8 @@ export type AppScreen =
   | "settings"
   | "enterprise"
   | "guilt-court"
-  | "diplomacy";
+  | "diplomacy"
+  | "oracle-dashboard";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 
@@ -39,6 +40,10 @@ export function resolveNavigation(input: NavigationInput): NavigationResult {
   }
 
   if (isLockedPhaseOne && (target === "guided" || target === "mission" || target === "tools")) {
+    return { kind: "redirect", screen: "map" };
+  }
+
+  if (target === "oracle-dashboard" && input.isLockedPhaseOne) {
     return { kind: "redirect", screen: "map" };
   }
 
