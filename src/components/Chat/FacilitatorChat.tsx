@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, Sparkles, Loader2, Check, Terminal } from 'lucide-react';
 import { NodeData } from '../../hooks/useDawayirEngine';
+import { supabase } from '../../services/supabaseClient';
 
 interface FacilitatorChatProps {
     focusedNode: NodeData;
@@ -33,20 +34,24 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
         const fetchInitialGreeting = async () => {
             setIsLoading(true);
             try {
+                const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
+                const userId = session?.user?.id;
+
                 const res = await fetch('/api/chat/agent', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        messages: [{ role: 'user', content: 'Ù…Ø±Ø­Ø¨Ø§Ù‹. Ø£Ø±Ø¯Øª Ø§Ù„ØªØ­Ø¯Ø« Ø¹Ù† Ù‡Ø°Ù‡ Ø§Ù„Ø¯Ø§Ø¦Ø±Ø©.' }],
+                        messages: [{ role: 'user', content: 'مرحباً. أردت التحدث عن هذه الدائرة.' }],
                         fullMap,
-                        focusedNode
+                        focusedNode,
+                        userId
                     })
                 });
                 const data = await res.json();
                 setMessages([{ role: 'ai', content: data.reply, proposedAction: data.proposedAction }]);
             } catch (err) {
                 console.error("Initial greeting failed", err);
-                setMessages([{ role: 'ai', content: `Ø£Ù‡Ù„Ø§Ù‹ Ø¨ÙƒØŒ Ù„Ù†Ø¯Ø±Ø¯Ø´ Ø­ÙˆÙ„ Ù…Ø³Ø§Ø­Ø© "${focusedNode.label}" ÙÙŠ Ø­ÙŠØ§ØªÙƒ.` }]);
+                setMessages([{ role: 'ai', content: `أهلاً بك، لندردش حول مساحة "${focusedNode.label}" في حياتك.` }]);
             } finally {
                 setIsLoading(false);
             }
@@ -67,17 +72,21 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
         // Tell the AI it was done
         setIsLoading(true);
         try {
+            const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
+            const userId = session?.user?.id;
+
             const res = await fetch('/api/chat/agent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     messages: [...messages, { role: 'user', content: '[System: The user has approved the physical change to the map. Acknowledge this briefly and playfully.]' }],
                     fullMap,
-                    focusedNode
+                    focusedNode,
+                    userId
                 })
             });
             const data = await res.json();
-            setMessages(prev => [...prev, { role: 'user', content: 'Ù„Ù‚Ø¯ Ù‚Ù…Øª Ø¨ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø¯Ø§Ø®Ù„ÙŠ. Ø´ÙƒØ±Ø§Ù‹ Ù„Ùƒ.' }, { role: 'ai', content: data.reply, proposedAction: data.proposedAction }]);
+            setMessages(prev => [...prev, { role: 'user', content: 'لقد قمت بتطبيق التعديل الداخلي. شكراً لك.' }, { role: 'ai', content: data.reply, proposedAction: data.proposedAction }]);
         } catch {
             // Error silently, not critical
         } finally {
@@ -95,19 +104,23 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
         setIsLoading(true);
 
         try {
+            const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
+            const userId = session?.user?.id;
+
             const res = await fetch('/api/chat/agent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     messages: newMessages,
                     fullMap,
-                    focusedNode
+                    focusedNode,
+                    userId
                 })
             });
             const data = await res.json();
             setMessages(prev => [...prev, { role: 'ai', content: data.reply, proposedAction: data.proposedAction }]);
         } catch {
-            setMessages(prev => [...prev, { role: 'ai', content: "Ø¹Ø°Ø±Ø§Ù‹ØŒ Ø§Ù†Ù‚Ø·Ø¹ Ø­Ø¨Ù„ Ø£ÙÙƒØ§Ø±ÙŠ Ù…Ø¤Ù‚ØªØ§Ù‹." }]);
+            setMessages(prev => [...prev, { role: 'ai', content: "عذراً، انقطع حبل أفكاري مؤقتاً." }]);
         } finally {
             setIsLoading(false);
         }
@@ -132,9 +145,9 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         <Terminal className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="font-black text-white text-xs uppercase tracking-widest font-mono">Ø£ÙˆØ±Ø§ÙƒÙ„_Ø§Ù„Ø³ÙŠØ§Ø¯Ø©</h3>
+                        <h3 className="font-black text-white text-xs uppercase tracking-widest font-mono">أوراكل_السيادة</h3>
                         <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Ø¬Ø§Ø±ÙŠ_Ø§Ù„ÙØ­Øµ:</span>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">جاري_الفحص:</span>
                             <span className={`text-[10px] px-2 py-0.5 rounded-md border ${getBgColor(focusedNode.color)} font-black font-mono uppercase tracking-tighter`}>
                                 {focusedNode.label}
                             </span>
@@ -149,7 +162,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
             {/* Chat Area */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-white/10">
                 {messages.length === 0 && !isLoading && (
-                    <div className="text-center text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] my-auto mt-20 font-mono">ÙÙŠ_Ø§Ù†ØªØ¸Ø§Ø±_Ø§Ù„Ù…Ø¯Ø®Ù„Ø§Øª...</div>
+                    <div className="text-center text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] my-auto mt-20 font-mono">في_انتظار_المدخلات...</div>
                 )}
                 {messages.map((msg, i) => (
                     <div key={i} className={`flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -169,10 +182,10 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                                         className="text-xs px-4 py-2 bg-teal-500 text-slate-950 hover:bg-teal-400 rounded-xl font-black transition flex items-center gap-2 shadow-lg shadow-teal-500/20 uppercase tracking-tighter"
                                     >
                                         <Sparkles className="w-3.5 h-3.5" />
-                                        ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ø¨Ø±ÙˆØªÙˆÙƒÙˆÙ„ Ø§Ù„Ù…Ù‚ØªØ±Ø­
+                                        تطبيق البروتوكول المقترح
                                     </button>
                                 ) : (
-                                    <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5 px-3 py-1.5 font-mono uppercase tracking-tighter"><Check className="w-3.5 h-3.5" /> ØªÙ…_ØªØ·Ø¨ÙŠÙ‚_Ø§Ù„Ø¨Ø±ÙˆØªÙˆÙƒÙˆÙ„_Ø¨Ù†Ø¬Ø§Ø­</span>
+                                    <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5 px-3 py-1.5 font-mono uppercase tracking-tighter"><Check className="w-3.5 h-3.5" /> تم_تطبيق_البروتوكول_بنجاح</span>
                                 )}
                             </div>
                         )}
@@ -200,7 +213,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ù…Ø§Ø°Ø§ ØªÙˆØ¯ Ø£Ù† ØªÙ‚ÙˆÙ„ Ø¹Ù† Ù‡Ø°Ø§ Ø§Ù„Ø¬Ø²Ø¡ Ø§Ù„Ù…ÙØ³ØªÙ†Ø²ÙØŸ..."
+                        placeholder="ماذا تود أن تقول عن هذا الجزء المستنزف؟..."
                         className="flex-1 bg-transparent px-4 py-3 text-sm outline-none text-white placeholder:text-slate-600"
                         disabled={isLoading}
                     />
@@ -216,5 +229,3 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
         </div>
     );
 }
-
-

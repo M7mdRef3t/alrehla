@@ -14,6 +14,8 @@ import { FutureSimulator } from "../../components/FutureSimulator";
 import { Telescope } from "lucide-react";
 import { analyzeMapInterference } from "../../services/socialSync";
 import { AINode } from "./AINode";
+import { useCognitiveDebounce } from "../../hooks/useCognitiveDebounce";
+import { useAuthState } from "../../state/authState";
 
 /* ════════════════════════════════════════════════
    🌌 COSMIC MAP CANVAS — Digital Sanctuary
@@ -581,6 +583,28 @@ export const MapCanvas: FC<MapCanvasProps> = ({
   const battery = useMeState((s) => s.battery);
   const meStyle = ME_CENTER_STYLES[battery] ?? ME_CENTER_STYLES.okay;
 
+  const { user } = useAuthState();
+  const [isCommitProcessing, setIsCommitProcessing] = useState(false);
+
+  // ─── Cognitive Debounce Integration ───
+  const { registerMutation } = useCognitiveDebounce(async (payload) => {
+    setIsCommitProcessing(true);
+    try {
+      const response = await fetch('/api/awareness-queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (response.status === 202) {
+        console.log("Cognitive commit accepted.");
+      }
+    } catch (err) {
+      console.error("Failed to dispatch cognitive commit:", err);
+    } finally {
+      setTimeout(() => setIsCommitProcessing(false), 2000);
+    }
+  });
+
   const [pendingMove, setPendingMove] = useState<{ nodeId: string; nodeLabel: string; fromRing: Ring; toRing: Ring } | null>(null);
   const [justDraggedId, setJustDraggedId] = useState<string | null>(null);
   const dragTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -602,6 +626,16 @@ export const MapCanvas: FC<MapCanvasProps> = ({
           setSimulatedNodes(prev => prev.map(n => n.id === activeId ? { ...n, isDetached: true } : n));
         } else {
           setDetached(activeId, true);
+          // ─── Cognitive Audit ───
+          if (user) {
+            registerMutation({
+              userId: user.id,
+              actionType: 'MAJOR_DETACHMENT',
+              targetId: activeId,
+              nodeLabel: node.label,
+              timestamp: Date.now()
+            });
+          }
         }
         setJustDraggedId(node.id);
         if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current);
@@ -619,11 +653,24 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         if (isSimulation) {
           setSimulatedNodes(prev => prev.map(n => n.id === activeId ? { ...n, ring: toRing, isDetached: false } : n));
         } else {
+          const fromRing = node.ring;
           if (node.isDetached) {
             setDetached(activeId, false);
             moveNodeToRing(activeId, toRing);
           } else if (node.ring !== toRing) {
             moveNodeToRing(activeId, toRing);
+          }
+          // ─── Cognitive Audit ───
+          if (user && (fromRing !== toRing || node.isDetached)) {
+            registerMutation({
+              userId: user.id,
+              actionType: 'CIRCLE_SHIFT',
+              targetId: activeId,
+              nodeLabel: node.label,
+              fromRing,
+              toRing,
+              timestamp: Date.now()
+            });
           }
         }
         setJustDraggedId(node.id);
@@ -757,6 +804,20 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         className={`relative w-full min-h-[280px] sm:min-h-[340px] md:min-h-[400px] transition-all duration-700 ${isSimulation ? "scale-[0.85] saturate-[0.8] brightness-125" : ""}`}
         id="map-canvas"
       >
+        {/* Visual Digest Feedback */}
+        <AnimatePresence>
+          {isCommitProcessing && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 rounded-full bg-slate-900/90 border border-teal-500/30 text-teal-200 text-xs font-medium backdrop-blur-md shadow-2xl flex items-center gap-2"
+            >
+              <div className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+              الرحلة تستوعب حركتك الآن...
+            </motion.div>
+          )}
+        </AnimatePresence>
         {/* Simulation Controls (Phase 22) */}
         {!isSimulation ? (
           <button

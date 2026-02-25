@@ -1,5 +1,4 @@
-import type { FC } from "react";
-import { useMemo, useRef, useEffect, useState } from "react";
+import React, { FC, useMemo, useRef, useEffect, useState } from "react";
 import { motion, useMotionValue, useSpring, AnimatePresence } from "framer-motion";
 import { useMapState } from "../state/mapState";
 import { WarRoomWidget } from "./CommandCenter/WarRoomWidget";
@@ -18,9 +17,10 @@ import { useGamificationState } from "../services/gamificationEngine";
 import { AIOracleWidget } from "./CommandCenter/AIOracleWidget";
 import { AccessManager, SubscriptionInfo } from "../modules/billing/AccessManager";
 import { supabase } from "../services/supabaseClient";
+import { TrajectoryDashboard } from "./Trajectory/TrajectoryDashboard";
+import { ResonanceAlert } from "./CommandCenter/ResonanceAlert";
 
-/* ════════════════════════════════════════════════
-   DASHBOARD SCREEN — غرفة العمليات
+/* ── DASHBOARD SCREEN — غرفة العمليات
    ════════════════════════════════════════════════ */
 
 interface DashboardScreenProps {
@@ -139,6 +139,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
   const [showCommunity, setShowCommunity] = useState(false);
   const [showReferral, setShowReferral] = useState(false);
   const [subInfo, setSubInfo] = useState<SubscriptionInfo | null>(null);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const client = supabase;
@@ -146,6 +147,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
 
     client.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
+        setUserId(session.user.id);
         AccessManager.getSubscriptionStatus(session.user.id).then((info) => {
           setSubInfo(info);
           if (info.features.hasShadowMemory) {
@@ -159,8 +161,10 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
 
     const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
+        setUserId(session.user.id);
         AccessManager.getSubscriptionStatus(session.user.id).then(setSubInfo);
       } else {
+        setUserId(undefined);
         setSubInfo(null);
       }
     });
@@ -219,6 +223,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
       transition={{ duration: 0.5 }}
       dir="rtl"
     >
+      <ResonanceAlert />
       {/* ── Greeting header ── */}
       <motion.div
         className="flex items-center justify-between pt-2"
@@ -425,6 +430,9 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
           </motion.div>
         </div>
       </motion.div>
+
+      {/* ── Trajectory Dashboard (The Guidance Layer) ── */}
+      <TrajectoryDashboard userId={userId} />
 
       {/* ── War Room Widget (Daily Intel) ── */}
       <WarRoomWidget />

@@ -24,6 +24,8 @@ import { scanForVampires } from "../services/propheticEngine";
 import { useEventHistoryStore } from "../state/eventHistoryStore";
 import { SwarmPersonaSelector } from "./SwarmPersonaSelector";
 import { MemoryStore } from "../services/memoryStore";
+import { semanticCompressor } from "../services/semanticCompressor";
+import { dynamicContextRouter } from "../services/dynamicContextRouter";
 
 interface Message {
   id: string;
@@ -152,6 +154,17 @@ export const AIChatbot: FC<AIChatbotProps> = ({
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+
+    // ─── Semantic Compression Layer (Phase 2) ───
+    if (semanticCompressor.shouldCompress(messages.length + 1)) {
+      void (async () => {
+        const shift = await semanticCompressor.compressMessages([...messages, userMessage]);
+        if (shift) {
+          await dynamicContextRouter.handleSemanticShift(shift);
+        }
+      })();
+    }
+
     const codingPromptCheck = evaluateCodingPromptConstraints(userMessage.content);
     if (codingPromptCheck.isCodingRequest && !codingPromptCheck.isReady) {
       setMessages((prev) => [
@@ -550,18 +563,17 @@ ${conversationHistory ? `**سجل العمليات السابق:**\n${conversati
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex flex - col ${msg.role === "user" ? "items-end" : "items-start"} `}
+                className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
               >
                 <div
-                  className={`max - w - [80 %] px - 4 py - 2 ${msg.role === "user"
+                  className={`max-w-[80%] px-4 py-2 ${msg.role === "user"
                     ? "rounded-2xl bg-purple-600 text-white"
                     : "card-unified bg-white text-gray-900 border border-transparent"
-                    } `}
+                    }`}
                 >
                   <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                   <p
-                    className={`text - xs mt - 1 ${msg.role === "user" ? "text-purple-200" : "text-gray-400"
-                      } `}
+                    className={`text-xs mt-1 ${msg.role === "user" ? "text-purple-200" : "text-gray-400"}`}
                   >
                     {new Date(msg.timestamp).toLocaleTimeString("ar-EG", {
                       hour: "2-digit",
@@ -610,30 +622,30 @@ ${conversationHistory ? `**سجل العمليات السابق:**\n${conversati
                     <button
                       type="button"
                       onClick={() => setMirrorSourceFilter("both")}
-                      className={`px - 2 py - 0.5 rounded - full border ${mirrorSourceFilter === "both"
+                      className={`px-2 py-0.5 rounded-full border ${mirrorSourceFilter === "both"
                         ? "bg-amber-600 text-white border-amber-700"
                         : "bg-white/60 text-amber-800 border-amber-200"
-                        } `}
+                        }`}
                     >
                       الكل
                     </button>
                     <button
                       type="button"
                       onClick={() => setMirrorSourceFilter("pulse")}
-                      className={`px - 2 py - 0.5 rounded - full border ${mirrorSourceFilter === "pulse"
+                      className={`px-2 py-0.5 rounded-full border ${mirrorSourceFilter === "pulse"
                         ? "bg-amber-600 text-white border-amber-700"
                         : "bg-white/60 text-amber-800 border-amber-200"
-                        } `}
+                        }`}
                     >
                       من البوصلة
                     </button>
                     <button
                       type="button"
                       onClick={() => setMirrorSourceFilter("chat")}
-                      className={`px - 2 py - 0.5 rounded - full border ${mirrorSourceFilter === "chat"
+                      className={`px-2 py-0.5 rounded-full border ${mirrorSourceFilter === "chat"
                         ? "bg-amber-600 text-white border-amber-700"
                         : "bg-white/60 text-amber-800 border-amber-200"
-                        } `}
+                        }`}
                     >
                       من الشات
                     </button>
@@ -689,10 +701,10 @@ ${conversationHistory ? `**سجل العمليات السابق:**\n${conversati
                   type="button"
                   onClick={handleMicClick}
                   disabled={isStreaming}
-                  className={`w - 10 h - 10 rounded - xl flex items - center justify - center shrink - 0 transition - colors ${isListening
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${isListening
                     ? "bg-red-500 text-white animate-pulse"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    } `}
+                    }`}
                   aria-label={isListening ? "إيقاف الاستماع" : "تسجيل صوت"}
                   title={isListening ? "إيقاف الاستماع" : "تسجيل صوت"}
                 >
