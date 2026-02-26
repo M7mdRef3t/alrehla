@@ -67,8 +67,8 @@ export const GOAL_META: Record<GoalId, GoalMeta> = {
     label: "خريطة نفسك",
     icon: UserCircle,
     badgeClasses:
-      "border-indigo-200 bg-indigo-100 text-indigo-800 dark:border-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200",
-    buttonClasses: "border-indigo-200 hover:border-indigo-300 hover:bg-indigo-50 text-indigo-700"
+      "border-indigo-200 bg-[var(--color-primary)]/15 text-indigo-800 dark:border-indigo-700 dark:bg-[var(--color-primary)]/40 dark:text-indigo-200",
+    buttonClasses: "border-indigo-200 hover:border-indigo-300 hover:bg-[var(--color-primary)]/10 text-indigo-700"
   },
   general: {
     id: "general",
@@ -99,3 +99,4 @@ export function getGoalOrderIndex(goalId?: string | null): number {
   const idx = GOAL_ORDER.indexOf(goalId as GoalId);
   return idx === -1 ? GOAL_ORDER.length : idx;
 }
+

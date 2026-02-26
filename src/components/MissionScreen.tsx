@@ -304,10 +304,10 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
       </div>
 
       {contextualAffiliate && (
-        <div className="mb-6 card-unified bg-indigo-50/80 border border-indigo-200 p-5 text-right">
+        <div className="mb-6 card-unified bg-[var(--color-primary)]/80 border border-[var(--color-primary)] p-5 text-right">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold text-indigo-700">ترشيح مناسب لحالتك الآن</p>
+              <p className="text-xs font-semibold text-[var(--color-primary)]">ترشيح مناسب لحالتك الآن</p>
               <h3 className="text-sm font-bold text-slate-900 mt-1">{contextualAffiliate.title}</h3>
               <p className="text-xs text-slate-600 mt-1">
                 {contextualAffiliateVariant === "A"
@@ -331,7 +331,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
                   scenarioKey: result?.scenarioKey ?? "unknown"
                 });
               }}
-              className="rounded-full bg-indigo-600 text-white px-4 py-2 text-xs font-semibold hover:bg-indigo-700 shrink-0"
+              className="rounded-full bg-[var(--color-primary)] text-white px-4 py-2 text-xs font-semibold hover:bg-[var(--color-primary)] shrink-0"
             >
               {contextualAffiliateVariant === "A" ? "شاهد الآن" : "ابدأ التطبيق الآن"}
             </a>
@@ -496,3 +496,6 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
     </div>
   );
 };
+
+
+

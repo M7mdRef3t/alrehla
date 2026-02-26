@@ -1039,6 +1039,10 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const footerHintColor = showRequiredHint && !currentStepComplete
     ? "rgba(248, 113, 113, 0.95)"
     : "var(--text-muted)";
+  const isPrimaryEnabled = step === 2 || isComplete;
+  const primaryCtaClassName = isPrimaryEnabled
+    ? "bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 text-slate-950 shadow-[0_0_28px_rgba(52,211,153,0.48)] hover:shadow-[0_0_38px_rgba(45,212,191,0.62)] border border-emerald-200/30"
+    : "bg-white/[0.03] text-white/[0.12] cursor-not-allowed opacity-45 border border-white/10";
 
   const totalSteps = 2;
 
@@ -1060,7 +1064,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               <motion.div
                 key={i}
                 className="absolute w-1 h-1 rounded-full"
-                style={{ background: "rgba(255, 255, 255, 0.3)", top: `${15 + i * 14}%`, left: `${10 + (i * 17) % 80}%` }}
+                style={{ background: "rgba(255, 255, 255, 0.3)", top: `${15 + i * 14}%`, left: `${10 + (i * 17) % 80}%`, willChange: "transform, opacity" }}
                 animate={{ opacity: [0.2, 0.6, 0.2], scale: [1, 1.5, 1] }}
                 transition={{ duration: 3 + i * 0.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 }}
               />
@@ -1285,7 +1289,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   {/* 2. interior Weather (Mood) */}
                   <div className="flex flex-col gap-3">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)]/30 animate-pulse" />
                       الطقس الشعوري
                     </label>
                     <div className="grid grid-cols-4 gap-2.5 p-3 rounded-3xl bg-white/[0.03] border border-white/5">
@@ -1388,6 +1392,9 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               <p className="text-center text-[10px] font-bold h-4" style={{ color: footerHintColor }}>
                 {footerHintText}
               </p>
+              <p className={`text-center text-[10px] font-black tracking-[0.14em] uppercase ${isPrimaryEnabled ? "text-emerald-300" : "text-rose-300/70"}`}>
+                {isPrimaryEnabled ? "جاهز للتحليل" : "أكمل الطاقة + المزاج + البوصلة"}
+              </p>
               <div className="flex gap-3">
                 {step > 1 && (
                   <button
@@ -1400,8 +1407,10 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 <motion.button
                   onClick={step === 1 ? handleNextStep : handleSubmit}
                   disabled={step === 1 && !isComplete}
-                  className={`flex-[2] py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${step === 1 && !isComplete ? 'bg-white/5 text-white/10' : 'bg-teal-500 text-teal-950 shadow-[0_0_20px_rgba(20,184,166,0.3)]'}`}
-                  whileTap={{ scale: 0.98 }}
+                  className={`flex-[2] py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${primaryCtaClassName}`}
+                  whileTap={!isPrimaryEnabled ? {} : { scale: 0.98 }}
+                  animate={!isPrimaryEnabled ? {} : { boxShadow: ["0 0 20px rgba(45,212,191,0.35)", "0 0 36px rgba(16,185,129,0.62)", "0 0 20px rgba(45,212,191,0.35)"] }}
+                  transition={!isPrimaryEnabled ? {} : { duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                 >
                   {step === 1 ? "تحليل البيانات" : "اعتماد البروتوكول"}
                 </motion.button>
@@ -1441,3 +1450,4 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     </AnimatePresence>
   );
 };
+

@@ -7,12 +7,12 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Shield, Star, Zap, Award, Target } from "lucide-react";
-import { useGamificationState, type Rank } from "../services/gamificationEngine";
+import { useGamificationState } from "../services/gamificationEngine";
 
-const RANK_DATA: Record<Rank, { label: string; icon: any; color: string; bg: string }> = {
+const RANK_DATA: Record<string, { label: string; icon: any; color: string; bg: string }> = {
     "مستطلع جَدِيد": { label: "مستطلع جديد", icon: Target, color: "text-slate-400", bg: "bg-slate-500/10" },
     "كشاف ميداني": { label: "كشاف ميداني", icon: Zap, color: "text-teal-400", bg: "bg-teal-500/10" },
-    "ملازم تعافي": { label: "ملازم تعافي", icon: Star, color: "text-indigo-400", bg: "bg-indigo-500/10" },
+    "ملازم تعافي": { label: "ملازم تعافي", icon: Star, color: "text-[var(--color-primary)]", bg: "bg-[var(--color-primary)]/10" },
     "نقيب حدود": { label: "نقيب حدود", icon: Shield, color: "text-amber-400", bg: "bg-amber-500/10" },
     "رائد استقرار": { label: "رائد استقرار", icon: Shield, color: "text-cyan-400", bg: "bg-cyan-500/10" },
     "عقيد حكمة": { label: "عقيد حكمة", icon: Award, color: "text-violet-400", bg: "bg-violet-500/10" },
@@ -20,11 +20,13 @@ const RANK_DATA: Record<Rank, { label: string; icon: any; color: string; bg: str
     "مارشال الدواير": { label: "مارشال الدواير", icon: Award, color: "text-rose-500", bg: "bg-rose-500/10" }
 };
 
+const DEFAULT_RANK = { label: " ", icon: Shield, color: "text-slate-400", bg: "bg-slate-500/10" };
+
 export const SovereignProfile: React.FC = () => {
     const { xp, rank, level } = useGamificationState();
     if (xp <= 0) return null;
 
-    const currentRank = RANK_DATA[rank];
+    const currentRank = RANK_DATA[rank] ?? DEFAULT_RANK;
     const Icon = currentRank.icon;
 
     // Calculate progress to next level
@@ -53,7 +55,7 @@ export const SovereignProfile: React.FC = () => {
 
                     <div className="flex items-end justify-between mb-1.5">
                         <h3 className="text-sm font-black text-white truncate">الملف السيادي</h3>
-                        <span className="text-xs font-bold text-indigo-400">{xp} XP</span>
+                        <span className="text-xs font-bold text-[var(--color-primary)]">{xp} XP</span>
                     </div>
 
                     {/* Progress Bar */}
@@ -61,7 +63,7 @@ export const SovereignProfile: React.FC = () => {
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${progress}%` }}
-                            className="h-full bg-gradient-to-r from-indigo-500 to-teal-400"
+                            className="h-full bg-gradient-to-r from-[var(--color-primary)] to-teal-400"
                         />
                     </div>
                 </div>
@@ -72,3 +74,5 @@ export const SovereignProfile: React.FC = () => {
         </motion.div>
     );
 };
+
+

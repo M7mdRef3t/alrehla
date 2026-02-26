@@ -34,7 +34,7 @@ export const DiplomaticCables: React.FC = () => {
         <div className="w-full max-w-2xl mx-auto p-6 space-y-8">
             <header>
                 <h1 className="text-2xl font-black text-white flex items-center gap-3">
-                    <Send className="w-6 h-6 text-indigo-400 rotate-[320deg]" />
+                    <Send className="w-6 h-6 text-[var(--color-primary)] rotate-[320deg]" />
                     البرقيات الدبلوماسية
                 </h1>
                 <p className="text-slate-500 text-sm mt-1">ترسانة الردود الاستراتيجية للتواصل بوضوح وحزم.</p>
@@ -47,7 +47,7 @@ export const DiplomaticCables: React.FC = () => {
                     <input
                         type="text"
                         placeholder="بحث في البرقيات..."
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-10 text-sm text-slate-200 focus:border-indigo-500 outline-none"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2 px-10 text-sm text-slate-200 focus:border-[var(--color-primary)] outline-none"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -58,7 +58,7 @@ export const DiplomaticCables: React.FC = () => {
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
                             className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${selectedCategory === cat
-                                ? "bg-indigo-500 text-white"
+                                ? "bg-[var(--color-primary)] text-white"
                                 : "bg-white/5 text-slate-400 border border-white/5 hover:border-white/20"
                                 }`}
                         >
@@ -81,7 +81,7 @@ export const DiplomaticCables: React.FC = () => {
                         <div className="flex justify-between items-start">
                             <div>
                                 <h3 className="text-lg font-bold text-white">{cable.title}</h3>
-                                <span className="text-[10px] uppercase font-black tracking-widest text-indigo-400/60">
+                                <span className="text-[10px] uppercase font-black tracking-widest text-[var(--color-primary)]">
                                     التصنيف: {cable.category}
                                 </span>
                             </div>
@@ -102,9 +102,9 @@ export const DiplomaticCables: React.FC = () => {
                             </p>
                         </div>
 
-                        <div className="flex items-start gap-2 p-3 bg-indigo-500/5 rounded-lg border border-indigo-500/10">
-                            <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                            <p className="text-[11px] text-indigo-300/70 leading-snug">
+                        <div className="flex items-start gap-2 p-3 bg-[var(--color-primary)]/5 rounded-lg border border-[var(--color-primary)]">
+                            <Info className="w-4 h-4 text-[var(--color-primary)] shrink-0 mt-0.5" />
+                            <p className="text-[11px] text-[var(--color-primary)] leading-snug">
                                 نصيحة جارفيس: {cable.jarvisNote}
                             </p>
                         </div>
@@ -115,3 +115,5 @@ export const DiplomaticCables: React.FC = () => {
     );
 };
     const categories: Array<CableCategory | "all"> = ["all", "boundary", "distancing", "clarity", "de-escalation"];
+
+

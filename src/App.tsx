@@ -35,6 +35,7 @@ import { consciousnessService, type ConsciousnessInsight, type MemoryMatch } fro
 import { initAppContentRealtime } from "./state/appContentState";
 import { PWAInstallProvider } from "./contexts/PWAInstallContext";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
+import { AwarenessSkeleton } from "./components/AwarenessSkeleton";
 import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
 import { OnboardingFlow, hasCompletedJourneyOnboarding } from "./components/OnboardingFlow";
 import { JourneyToast } from "./components/JourneyToast";
@@ -43,10 +44,11 @@ import { ActiveInterventionPrompt } from "./components/ActiveInterventionPrompt"
 import { FaqScreen } from "./components/FaqScreen";
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
 import { geminiClient } from "./services/geminiClient";
-import { isSupabaseReady } from "./services/supabaseClient";
+import { isSupabaseReady, supabase } from "./services/supabaseClient";
 import { fetchAdminConfig, fetchOwnerAlerts } from "./services/adminApi";
 import { usePulseCheckLogic } from "./hooks/usePulseCheckLogic";
 import { AscensionRitual } from "./components/Oracle/AscensionRitual";
+import { ErrorBoundary, MapErrorFallback } from "./components/ErrorBoundary";
 import { useIdleAwareTelemetry, type IdleAwareTelemetrySnapshot } from "./hooks/useIdleAwareTelemetry";
 import { isPhaseOneUserFlow, isUserMode } from "./config/appEnv";
 import {
@@ -146,6 +148,7 @@ const EmergencyOverlay = lazy(() => import("./components/EmergencyOverlay").then
 const GuidedJourneyFlow = lazy(() => import("./components/GuidedJourneyFlow").then((m) => ({ default: m.GuidedJourneyFlow })));
 const MissionScreen = lazy(() => import("./components/MissionScreen").then((m) => ({ default: m.MissionScreen })));
 const JourneyToolsScreen = lazy(() => import("./components/JourneyToolsScreen").then((m) => ({ default: m.JourneyToolsScreen })));
+const SettingsScreen = lazy(() => import("./components/SettingsScreen").then((m) => ({ default: m.SettingsScreen })));
 const AdminDashboard = lazy(() => import("./components/admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
 const AdminOverviewPanel = lazy(() =>
   import("./components/admin/dashboard/Overview/OverviewPanel").then((m) => ({ default: m.OverviewPanel }))
@@ -484,6 +487,7 @@ export default function App() {
   const [ownerInstallRequestNonce, setOwnerInstallRequestNonce] = useState(0);
   const [showJourneyGuideChat, setShowJourneyGuideChat] = useState(false);
   const [welcome, setWelcome] = useState<{ message: string; source: WelcomeSource } | null>(null);
+  const offlineInterventionHydratedForUserRef = useRef<string | null>(null);
   const [consciousnessInsight, setConsciousnessInsight] = useState<ConsciousnessInsight | null>(null);
   const [showJourneyTimeline, setShowJourneyTimeline] = useState(false);
   const [isFeaturePreviewSession, setIsFeaturePreviewSession] = useState(false);
@@ -596,6 +600,23 @@ export default function App() {
     setScreen(result.screen);
     return result.kind === "navigate";
   }, [canUseJourneyTools, canUseMap, isLockedPhaseOne]);
+  const screenFlowTrackInitializedRef = useRef(false);
+  useEffect(() => {
+    if (!screenFlowTrackInitializedRef.current) {
+      screenFlowTrackInitializedRef.current = true;
+      return;
+    }
+    if (screen === "goal") recordFlowEvent("screen_goal_viewed");
+    if (screen === "map") recordFlowEvent("screen_map_viewed");
+    if (screen === "guided") recordFlowEvent("screen_guided_viewed");
+    if (screen === "mission") recordFlowEvent("screen_mission_viewed");
+    if (screen === "tools") recordFlowEvent("screen_tools_viewed");
+    if (screen === "diplomacy") recordFlowEvent("screen_diplomacy_viewed");
+    if (screen === "guilt-court") recordFlowEvent("screen_guilt_court_viewed");
+    if (screen === "enterprise") recordFlowEvent("screen_enterprise_viewed");
+    if (screen === "settings") recordFlowEvent("screen_settings_viewed");
+    if (screen === "oracle-dashboard") recordFlowEvent("screen_oracle_dashboard_viewed");
+  }, [screen]);
 
   const openCocoonModal = useCallback((source: "auto" | "manual" = "manual") => {
     const now = Date.now();
@@ -1217,12 +1238,14 @@ export default function App() {
 
     setWelcome({ message: buildStartRecoveryWelcome(authFirstName, authToneGender), source: "template" });
     if (isPhaseOneUserFlow) {
+      recordFlowEvent("post_auth_intent_phase_one_map");
       const defaultGoalId = "family";
       setGoalId(defaultGoalId);
       setCategory(resolveAdviceCategory(defaultGoalId));
       setSelectedNodeId(null);
       void navigateToScreen("map");
     } else {
+      recordFlowEvent("post_auth_intent_goal_picker");
       void navigateToScreen("goal");
     }
 
@@ -1245,6 +1268,54 @@ export default function App() {
       cancelled = true;
     };
   }, [authStatus, authUser, authFirstName, authToneGender, logPulse, navigateToScreen, setPulseCheckContext, setShowPulseCheck]);
+
+  useEffect(() => {
+    if (!authUser) {
+      offlineInterventionHydratedForUserRef.current = null;
+      return;
+    }
+  }, [authUser]);
+
+  useEffect(() => {
+    if (authStatus !== "ready") return;
+    if (!authUser || !supabase) return;
+    if (offlineInterventionHydratedForUserRef.current === authUser.id) return;
+    offlineInterventionHydratedForUserRef.current = authUser.id;
+
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase
+        .from("pending_interventions")
+        .select("id, ai_message, trigger_reason, created_at")
+        .eq("user_id", authUser.id)
+        .eq("status", "unread")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error("[OfflineIntervention] fetch failed:", error.message);
+        return;
+      }
+      const intervention = data?.[0];
+      if (!intervention || cancelled) return;
+
+      const cleaned = cleanWelcomeMessage(intervention.ai_message);
+      if (cleaned) {
+        setWelcome({ message: cleaned, source: "offline_intervention" });
+      }
+
+      const { error: markError } = await supabase.rpc("mark_pending_interventions_read", {
+        p_user_id: authUser.id
+      });
+      if (markError) {
+        console.error("[OfflineIntervention] mark-read failed:", markError.message);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authStatus, authUser]);
 
   const openDefaultGoalMap = useCallback(() => {
     const defaultGoalId = "family";
@@ -1275,6 +1346,7 @@ export default function App() {
   const startRecovery = () => {
     // Step 1: one-time onboarding gate.
     if (!hasCompletedJourneyOnboarding() || nodes.length === 0) {
+      recordFlowEvent("onboarding_opened");
       trackEvent("onboarding_started", { source: "landing" });
       setShowOnboarding(true);
       return;
@@ -1830,6 +1902,11 @@ export default function App() {
     closePulseCheck(true, "programmatic");
 
     if (shouldPromptAuthAfterPulse) {
+      recordFlowEvent("auth_gate_opened", {
+        meta: {
+          mode: hasConcretePulseSelection(payload) ? "start_recovery" : "login"
+        }
+      });
       const intent: PostAuthIntent = hasConcretePulseSelection(payload)
         ? {
           kind: "start_recovery",
@@ -2182,7 +2259,12 @@ export default function App() {
           <button
             type="button"
             onClick={goBackToFeatureFlags}
-            className="fixed z-50 top-4 left-4 rounded-full border border-indigo-300 bg-white/95 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
+            className="fixed z-50 top-4 left-4 rounded-full border px-4 py-2 text-xs font-semibold transition-colors"
+            style={{
+              borderColor: "var(--soft-teal)",
+              background: "rgba(255, 255, 255, 0.95)",
+              color: "var(--space-deep)"
+            }}
             title={previewedFeature ? `الرجوع من معاينة: ${previewedFeature}` : "الرجوع إلى Feature Flags"}
           >
             الرجوع إلى Feature Flags
@@ -2229,7 +2311,12 @@ export default function App() {
           <button
             type="button"
             onClick={goBackToFeatureFlags}
-            className="fixed z-50 top-4 left-4 rounded-full border border-indigo-300 bg-white/95 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
+            className="fixed z-50 top-4 left-4 rounded-full border px-4 py-2 text-xs font-semibold transition-colors"
+            style={{
+              borderColor: "var(--soft-teal)",
+              background: "rgba(255, 255, 255, 0.95)",
+              color: "var(--space-deep)"
+            }}
             title={previewedFeature ? `الرجوع من معاينة: ${previewedFeature}` : "الرجوع إلى Feature Flags"}
           >
             الرجوع إلى Feature Flags
@@ -2443,6 +2530,7 @@ export default function App() {
                 setPulseCheckContext("regular");
                 setShowPulseCheck(false);
                 setWelcome(null);
+                recordFlowEvent("auth_gate_opened", { meta: { mode: "login_profile" } });
                 const intent: PostAuthIntent = { kind: "login", createdAt: Date.now() };
                 setPostAuthIntentState(intent);
                 setShowAuthModal(true);
@@ -2486,6 +2574,17 @@ export default function App() {
           className={`flex-1 min-w-0 flex flex-col pb-14 md:pb-0 ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""} ${isLandingScreen ? "overflow-visible" : "overflow-hidden"}`}
           aria-hidden={showPulseCheck}
         >
+          {welcome?.source === "offline_intervention" && (
+            <div className="fixed z-[75] top-[calc(env(safe-area-inset-top)+3.5rem)] left-1/2 -translate-x-1/2 w-[min(680px,calc(100%-1.25rem))] pointer-events-none">
+              <div className="pointer-events-auto">
+                <OnboardingWelcomeBubble
+                  message={welcome.message}
+                  source={welcome.source}
+                  onClose={() => setWelcome(null)}
+                />
+              </div>
+            </div>
+          )}
           {screen === "map" && (
             <JourneyTimeline
               isOpen={showJourneyTimeline}
@@ -2494,6 +2593,23 @@ export default function App() {
             />
           )}
           <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...جاري التحميل</div>}>
+            <ErrorBoundary
+              fallback={
+                <div className="min-h-[260px] w-full flex items-center justify-center p-6">
+                  <div className="text-center space-y-3">
+                    <h3 className="text-lg font-bold text-orange-400">حدث خطأ في مسار الرحلة</h3>
+                    <p className="text-sm text-slate-400">جلسة دواير معزولة. تقدر ترجع للخريطة فوراً بدون إعادة تحميل.</p>
+                    <button
+                      type="button"
+                      onClick={() => { void navigateToScreen("map"); }}
+                      className="px-4 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-500 transition-colors"
+                    >
+                      العودة لدواير
+                    </button>
+                  </div>
+                </div>
+              }
+            >
             <div key={screen} className={`min-w-0 flex transition-all duration-300 ease-in-out ${isLandingScreen ? "flex-col" : "flex-1 items-center justify-center app-panel-main"}`}>
               {screen === "landing" && (
                 <Landing
@@ -2505,7 +2621,7 @@ export default function App() {
 
               {screen === "goal" && (
                 <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col px-3 sm:px-4">
-                  {welcome && (
+                  {welcome && welcome.source !== "offline_intervention" && (
                     <OnboardingWelcomeBubble
                       message={welcome.message}
                       source={welcome.source}
@@ -2515,6 +2631,9 @@ export default function App() {
                   <GoalPicker
                     onBack={() => { void navigateToScreen("landing"); }}
                     onContinue={(nextCategory, nextGoalId) => {
+                      recordFlowEvent("goal_selected", {
+                        meta: { goalId: nextGoalId, category: nextCategory }
+                      });
                       setWelcome(null);
                       setCategory(nextCategory);
                       setGoalId(nextGoalId);
@@ -2527,6 +2646,7 @@ export default function App() {
               )}
 
               {screen === "map" && (
+                <ErrorBoundary fallback={<MapErrorFallback />}>
                 <CoreMapScreen
                   category={category}
                   goalId={goalId}
@@ -2550,6 +2670,7 @@ export default function App() {
                   onTakeNextStep={handleTakeNextStep}
                   onRefreshNextStep={handleRefreshNextStep}
                 />
+                </ErrorBoundary>
               )}
 
               {screen === "tools" && (
@@ -2567,6 +2688,18 @@ export default function App() {
                   nextStepDecision={nextStepDecision}
                   onTakeNextStep={handleTakeNextStep}
                   onRefreshNextStep={handleRefreshNextStep}
+                />
+              )}
+
+              {screen === "settings" && (
+                <SettingsScreen
+                  onClose={() => {
+                    if (canUseMap) {
+                      void navigateToScreen("map");
+                      return;
+                    }
+                    void navigateToScreen("landing");
+                  }}
                 />
               )}
 
@@ -2600,10 +2733,11 @@ export default function App() {
                 <OracleCouncilDashboard oracleId={authUser.id} />
               )}
             </div>
+            </ErrorBoundary>
           </Suspense>
         </main>
 
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           {showGym && (
             <RelationshipGym
               onClose={() => setShowGym(false)}
@@ -2722,7 +2856,7 @@ export default function App() {
           )}
 
           {showNoiseSilencingPulse && (
-            <Suspense fallback={null}>
+            <Suspense fallback={<AwarenessSkeleton />}>
               <MuteProtocol
                 isOpen={showNoiseSilencingPulse}
                 onClose={() => setShowNoiseSilencingPulse(false)}
@@ -2805,77 +2939,77 @@ export default function App() {
         )}
 
         {showDataManagement && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <DataManagement isOpen={showDataManagement} onClose={() => setShowDataManagement(false)} accountOnly />
           </Suspense>
         )}
         {showOwnerDataTools && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <DataManagement isOpen={showOwnerDataTools} onClose={() => setShowOwnerDataTools(false)} accountOnly={false} />
           </Suspense>
         )}
         {showNotificationSettings && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <NotificationSettings isOpen={showNotificationSettings} onClose={() => setShowNotificationSettings(false)} />
           </Suspense>
         )}
         {showTrackingDashboard && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <TrackingDashboard isOpen={showTrackingDashboard} onClose={() => setShowTrackingDashboard(false)} />
           </Suspense>
         )}
         {showAtlasDashboard && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <AtlasDashboard isOpen={showAtlasDashboard} onClose={() => setShowAtlasDashboard(false)} />
           </Suspense>
         )}
         {showShareStats && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <ShareStats isOpen={showShareStats} onClose={() => setShowShareStats(false)} />
           </Suspense>
         )}
         {showLibrary && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <EducationalLibrary isOpen={showLibrary} onClose={() => setShowLibrary(false)} />
           </Suspense>
         )}
         {showSymptomsOverview && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <SymptomsOverviewModal isOpen={showSymptomsOverview} onClose={() => setShowSymptomsOverview(false)} />
           </Suspense>
         )}
         {showRecoveryPlan && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <RecoveryPlanModal isOpen={showRecoveryPlan} onClose={() => setShowRecoveryPlan(false)} />
           </Suspense>
         )}
         {showThemeSettings && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <ThemeSettings isOpen={showThemeSettings} onClose={() => setShowThemeSettings(false)} />
           </Suspense>
         )}
         {showAchievements && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <Achievements onClose={() => setShowAchievements(false)} />
           </Suspense>
         )}
         {showAdvancedTools && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <AdvancedToolsModal isOpen={showAdvancedTools} onClose={() => setShowAdvancedTools(false)} />
           </Suspense>
         )}
         {showClassicRecovery && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <ClassicRecoveryModal isOpen={showClassicRecovery} onClose={() => setShowClassicRecovery(false)} />
           </Suspense>
         )}
         {showManualPlacement && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <ManualPlacementModal isOpen={showManualPlacement} onClose={() => setShowManualPlacement(false)} />
           </Suspense>
         )}
         {showFeedback && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <FeedbackModal
               isOpen={showFeedback}
               onClose={() => setShowFeedback(false)}
@@ -2894,12 +3028,12 @@ export default function App() {
 
         {/* Phase 30: Holographic Legacy Components */}
         {showAmbientReality && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <AmbientRealityMode onClose={() => setShowAmbientReality(false)} />
           </Suspense>
         )}
         {showTimeCapsuleVault && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<AwarenessSkeleton />}>
             <TimeCapsuleVault onClose={() => setShowTimeCapsuleVault(false)} />
           </Suspense>
         )}
@@ -3068,3 +3202,4 @@ export default function App() {
     </PWAInstallProvider>
   );
 }
+

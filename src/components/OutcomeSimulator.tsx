@@ -49,10 +49,10 @@ export const OutcomeSimulator: FC = () => {
 
     return (
         <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 max-w-lg mx-auto overflow-hidden relative">
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-[var(--color-primary)]/20 rounded-full blur-3xl pointer-events-none" />
 
             <div className="flex items-center gap-2 mb-6">
-                <Clock className="w-5 h-5 text-indigo-400" />
+                <Clock className="w-5 h-5 text-[var(--color-primary)]" />
                 <h3 className="text-lg font-bold text-white tracking-wide">
                     محاكي المستقبل <span className="text-xs opacity-50 font-mono ml-2 border border-white/20 px-1.5 py-0.5 rounded">تجريبي</span>
                 </h3>
@@ -84,7 +84,7 @@ export const OutcomeSimulator: FC = () => {
 
                 <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-right">
                     <p className="text-sm text-slate-200 leading-relaxed">
-                        <span className="text-indigo-400 font-bold ml-2">توقع التحليل:</span>
+                        <span className="text-[var(--color-primary)] font-bold ml-2">توقع التحليل:</span>
                         {prediction.description}
                     </p>
                 </div>
@@ -121,3 +121,5 @@ export const OutcomeSimulator: FC = () => {
         </div>
     );
 };
+
+

@@ -55,27 +55,29 @@ export const DailyQuests = () => {
                             </div>
                         </div>
 
-                        <div className="shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                            <span className="text-xs font-black text-indigo-400">+{quest.xpReward}</span>
-                            <Sparkles className="w-3 h-3 text-indigo-400 opacity-70" />
+                        <div className="shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--color-primary)]/10 border border-[var(--color-primary)]">
+                            <span className="text-xs font-black text-[var(--color-primary)]">+{quest.xpReward}</span>
+                            <Sparkles className="w-3 h-3 text-[var(--color-primary)] opacity-70" />
                         </div>
                     </motion.div>
                 ))}
             </div>
 
             {/* Completion Summary */}
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 flex items-center justify-between overflow-hidden relative">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-[var(--color-primary)] to-purple-500/10 border border-[var(--color-primary)] flex items-center justify-between overflow-hidden relative">
                 <div className="absolute -bottom-2 -right-2 opacity-5">
                     <Trophy className="w-16 h-16 text-white" />
                 </div>
                 <div>
                     <h3 className="text-sm font-bold text-white mb-0.5">أنجز كل المهمات</h3>
-                    <p className="text-[10px] text-indigo-300 font-medium tracking-wide">واحصل على صندوق عشوائي (قريباً)</p>
+                    <p className="text-[10px] text-[var(--color-primary)] font-medium tracking-wide">واحصل على صندوق عشوائي (قريباً)</p>
                 </div>
-                <div className="w-12 h-12 rounded-full border-2 border-indigo-500/30 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full border-2 border-[var(--color-primary)] flex items-center justify-center">
                     <span className="text-sm font-black text-white">1/3</span>
                 </div>
             </div>
         </div>
     );
 };
+
+

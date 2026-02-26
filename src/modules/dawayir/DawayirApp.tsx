@@ -229,7 +229,7 @@ export default function DawayirApp() {
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(20,184,166,0.05)_0%,transparent_70%)]" />
                 <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-teal-500/5 blur-[120px] rounded-full" />
-                <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-indigo-500/5 blur-[120px] rounded-full" />
+                <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-[var(--color-primary)]/5 blur-[120px] rounded-full" />
             </div>
 
             {/* Navbar Minimalist - Tactical Style */}
@@ -389,7 +389,7 @@ export default function DawayirApp() {
                                         {data?.detected_symptoms && data.detected_symptoms.length > 0 && (
                                             <button
                                                 onClick={() => setShowSimulation(true)}
-                                                className="px-6 py-3 bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 rounded-xl shadow-lg hover:bg-indigo-500/20 transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest group"
+                                                className="px-6 py-3 bg-[var(--color-primary)]/20 border border-[var(--color-primary)] text-[var(--color-primary)] rounded-xl shadow-lg hover:bg-[var(--color-primary)]/20 transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest group"
                                             >
                                                 <Brain className="w-4 h-4 group-hover:animate-pulse" />
                                                 بدء_التدريب_التكتيكي
@@ -404,7 +404,7 @@ export default function DawayirApp() {
                                         className={`px-6 py-3 border rounded-xl shadow-lg transition-all duration-300 font-black text-xs flex items-center justify-center gap-2 uppercase tracking-widest
                                             ${isShared
                                                 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 cursor-default'
-                                                : 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/20'}`}
+                                                : 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)] hover:bg-[var(--color-primary)]/20'}`}
                                     >
                                         {isSharing ? <Loader2 className="w-4 h-4 animate-spin" /> : (isShared ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />)}
                                         {isSharing ? 'جاري_الرفع...' : (isShared ? 'تم_المشاركة' : 'مشاركة_مع_القيادة')}
@@ -545,7 +545,7 @@ export default function DawayirApp() {
             {
                 showSimulation && data?.detected_symptoms && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xl p-4 animate-in fade-in duration-300" dir="rtl">
-                        <div className="glass-heavy max-w-2xl w-full relative overflow-hidden border-indigo-500/20 shadow-2xl shadow-indigo-500/10">
+                        <div className="glass-heavy max-w-2xl w-full relative overflow-hidden border-[var(--color-primary)] shadow-2xl shadow-[var(--color-primary-glow)]">
                             <SymptomSimulation
                                 detectedSymptoms={data.detected_symptoms}
                                 onClose={() => setShowSimulation(false)}
@@ -561,5 +561,8 @@ export default function DawayirApp() {
         </div >
     );
 }
+
+
+
 
 

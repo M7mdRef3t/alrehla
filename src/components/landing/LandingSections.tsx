@@ -36,7 +36,7 @@ export const QuickPrioritySection: FC<{ stagger: Variants; item: Variants }> = (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 relative z-10">
         {[
           { step: "01", text: "حدّد إحداثيات الهدف", color: "text-teal-400" },
-          { step: "02", text: "نفّذ مناورة ميدانية", color: "text-indigo-400" },
+          { step: "02", text: "نفّذ مناورة ميدانية", color: "text-[var(--color-primary)]" },
           { step: "03", text: "مراقبة الرادار الحي", color: "text-purple-400" }
         ].map((s) => (
           <div key={s.step} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 flex items-center gap-3 group/item hover:bg-white/10 transition-colors hover:border-teal-500/30">
@@ -74,9 +74,9 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
     viewport={{ once: true, margin: "-60px" }}
   >
     <motion.div variants={item} className="text-center mb-10 px-2 leading-tight">
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-500/20 bg-indigo-500/5 mb-3">
-        <Zap className="w-3 h-3 text-indigo-400" />
-        <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest">خوارزمية التعافي</span>
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[var(--color-primary)] bg-[var(--color-primary)]/5 mb-3">
+        <Zap className="w-3 h-3 text-[var(--color-primary)]" />
+        <span className="text-[10px] font-bold text-[var(--color-primary)] uppercase tracking-widest">خوارزمية التعافي</span>
       </div>
       <h2 className="text-2xl sm:text-3xl font-black text-white mb-3 leading-tight">رحلة الـ 4 خطوات لتأمين حدودك</h2>
       <p className="text-slate-400 text-sm max-w-[45ch] mx-auto leading-relaxed">من الرصد الأولي حتى التنفيذ الميداني.. رحلة متكاملة لاستعادة السيطرة.</p>
@@ -135,22 +135,22 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
           }}
         >
           <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <TrendingUp className="w-32 h-32 text-indigo-400" />
+            <TrendingUp className="w-32 h-32 text-[var(--color-primary)]" />
           </div>
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <span className="w-7 h-7 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 text-xs font-black border border-indigo-500/30">2</span>
-              <span className="text-[10px] font-bold tracking-widest text-indigo-400 uppercase">تحليل الثغرات</span>
+              <span className="w-7 h-7 rounded-lg bg-[var(--color-primary)]/20 flex items-center justify-center text-[var(--color-primary)] text-xs font-black border border-[var(--color-primary)]">2</span>
+              <span className="text-[10px] font-bold tracking-widest text-[var(--color-primary)] uppercase">تحليل الثغرات</span>
             </div>
             <h3 className="text-2xl font-black text-white mb-2 leading-tight">أوراكل السيادة</h3>
             <p className="text-sm text-slate-300 leading-[1.8]">حلل الروابط النفسية واكتشف لماذا يتم اختراق حدودك دائماً.</p>
           </div>
-          <div className="w-full h-32 bg-indigo-900/10 rounded-2xl border border-indigo-500/10 flex items-center justify-center gap-1">
+          <div className="w-full h-32 bg-[var(--color-primary)]/10 rounded-2xl border border-[var(--color-primary)] flex items-center justify-center gap-1">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="w-1.5 bg-indigo-500/40 rounded-full animate-pulse" style={{ height: `${20 + (i * 15)}%`, animationDelay: `${i * 0.1}s` }} />
+              <div key={i} className="w-1.5 bg-[var(--color-primary)]/40 rounded-full animate-pulse" style={{ height: `${20 + (i * 15)}%`, animationDelay: `${i * 0.1}s` }} />
             ))}
           </div>
-          <div className="text-[10px] text-center text-indigo-300/60 font-medium">سيتم التفعيل تلقائياً عند بناء الخريطة</div>
+          <div className="text-[10px] text-center text-[var(--color-primary)] font-medium">سيتم التفعيل تلقائياً عند بناء الخريطة</div>
         </motion.div>
 
         {/* Step 3: Action (Court) */}
@@ -202,7 +202,7 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
           <div>
             <div className="flex items-center gap-2 mb-4">
               <span className="w-7 h-7 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400 text-xs font-black border border-rose-500/30">4</span>
-              <span className="text-[10px] font-bold tracking-widest text-rose-400 uppercase font-mono tracking-tighter">EXECUTION_CORE</span>
+              <span className="text-[10px] font-bold tracking-widest text-rose-400 uppercase font-mono">EXECUTION_CORE</span>
             </div>
             <h3 className="text-2xl font-black text-white mb-2 leading-tight">كتيبات المناورة</h3>
             <p className="text-sm text-slate-300 leading-[1.8]">نصوص جاهزة وخطط تكتيكية للتعامل مع السيناريوهات المعقدة.</p>
@@ -233,7 +233,7 @@ export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsStat
 
   const cards = useMemo(() => ([
     { val: metricsState.data.activeUnits30d.toLocaleString("ar-EG"), label: "وحدات ميدانية نشطة", icon: Users, color: "text-teal-400" },
-    { val: `${metricsState.data.retentionRate30d.toLocaleString("ar-EG")}%`, label: "ثبات قتالي استراتيجي", icon: TrendingUp, color: "text-indigo-400" },
+    { val: `${metricsState.data.retentionRate30d.toLocaleString("ar-EG")}%`, label: "ثبات قتالي استراتيجي", icon: TrendingUp, color: "text-[var(--color-primary)]" },
     { val: metricsState.data.activity24h.toLocaleString("ar-EG"), label: "نشاط الميدان (24 ساعة)", icon: Zap, color: "text-rose-400" }
   ]), [metricsState.data]);
 
@@ -272,7 +272,7 @@ export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsStat
                     <Users className="w-5 h-5 text-slate-500" />
                   </div>
                 ))}
-                <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-teal-500 flex items-center justify-center text-[10px] font-black text-slate-950">+15k</div>
+                <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-teal-500 flex items-center justify-center text-[10px] font-black text-slate-950">١٠</div>
               </div>
             </div>
           </div>
@@ -288,7 +288,13 @@ export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsStat
                   <s.icon className={`w-6 h-6 ${s.color}`} />
                 </div>
                 <div>
-                  <div className={`text-2xl sm:text-3xl font-black text-white ${metricsState.isLoading ? "animate-pulse" : ""}`}>{s.val}</div>
+                  <div className={`text-2xl sm:text-3xl font-black text-white ${metricsState.isLoading ? "" : ""}`}>
+                    {metricsState.isLoading ? (
+                      <div className="h-8 w-20 bg-white/10 rounded-lg animate-pulse" />
+                    ) : (
+                      s.val
+                    )}
+                  </div>
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{s.label}</p>
                 </div>
               </motion.div>
@@ -355,7 +361,7 @@ export const TestimonialsSection: FC<{ stagger: Variants; item: Variants; testim
               </div>
               <div>
                 <span className="text-sm font-bold text-white block leading-none mb-1">{t.author}</span>
-                <span className="text-[10px] font-bold text-teal-400 uppercase tracking-widest">قائد ميداني مفعّل</span>
+                <span className="text-[10px] font-bold text-amber-400/70 uppercase tracking-widest">سيناريو تطويري</span>
               </div>
             </div>
           </motion.div>
@@ -379,7 +385,7 @@ export const FinalReadinessSection: FC<{ stagger: Variants; item: Variants; last
     whileInView="visible"
     viewport={{ once: true, margin: "-60px" }}
   >
-    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-teal-500 to-indigo-600 p-px mb-8">
+    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-teal-500 to-[var(--color-primary)] p-px mb-8">
       <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center">
         <Zap className="w-8 h-8 text-white animate-pulse" />
       </div>
@@ -413,3 +419,5 @@ export const FinalReadinessSection: FC<{ stagger: Variants; item: Variants; last
     )}
   </motion.section>
 );
+
+

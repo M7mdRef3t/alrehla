@@ -72,7 +72,7 @@ export const LanguageSwitcher: FC<LanguageSwitcherProps> = ({
                                 >
                                     <span>{opt.flag}</span>
                                     <span className="font-medium">{opt.label}</span>
-                                    {opt.code === current && <span className="mr-auto text-indigo-400">✓</span>}
+                                    {opt.code === current && <span className="mr-auto text-[var(--color-primary)]">✓</span>}
                                 </button>
                             ))}
                         </motion.div>
@@ -106,3 +106,4 @@ export const LanguageSwitcher: FC<LanguageSwitcherProps> = ({
         </div>
     );
 };
+

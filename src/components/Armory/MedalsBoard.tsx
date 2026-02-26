@@ -7,7 +7,7 @@ import { useAchievementState } from '../../state/achievementState';
 const GRADIENTS = [
     "from-amber-400 to-yellow-600",
     "from-blue-400 to-cyan-600",
-    "from-purple-400 to-indigo-600",
+    "from-purple-400 to-[var(--color-primary)]",
     "from-emerald-400 to-teal-600",
     "from-rose-400 to-red-600",
     "from-slate-300 to-slate-500",
@@ -146,3 +146,4 @@ export const MedalsBoard: React.FC = () => {
         </div>
     );
 };
+

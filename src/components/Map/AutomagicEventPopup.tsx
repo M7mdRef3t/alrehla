@@ -39,8 +39,8 @@ export const AutomagicEventPopup: React.FC = () => {
 
     // Determine icon and colors based on event type
     let Icon = Sparkles;
-    let colorTheme = "from-indigo-500/20 to-indigo-900/40 border-indigo-500/30 text-indigo-100";
-    let iconColor = "text-indigo-400 bg-indigo-500/20";
+    let colorTheme = "from-[var(--color-primary)] to-[var(--color-primary)] border-[var(--color-primary)] text-[var(--color-primary)]";
+    let iconColor = "text-[var(--color-primary)] bg-[var(--color-primary)]/20";
 
     switch (latestEvent.type) {
         case "VAMPIRE_DETECTED":
@@ -109,3 +109,5 @@ export const AutomagicEventPopup: React.FC = () => {
         </AnimatePresence>
     );
 };
+
+

@@ -136,7 +136,7 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose, onTakeTod
                     </button>
                     <button
                         onClick={() => onTakeTodayAction?.()}
-                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-teal-500 to-indigo-500 text-white font-bold text-sm shadow-xl active:scale-[0.98] transition-all"
+                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-teal-500 to-[var(--color-primary)] text-white font-bold text-sm shadow-xl active:scale-[0.98] transition-all"
                     >
                         نفّذ خطوة اليوم
                     </button>
@@ -158,3 +158,4 @@ const MetricCard: React.FC<{ icon: React.ReactNode; label: string; value: string
         </div>
     </div>
 );
+

@@ -20,9 +20,13 @@ const getRank = (score: number): SovereigntyRank => {
     return 'Aspirant';
 };
 
+import { SwarmStatusBadge } from '../CommandCenter/SwarmStatusBadge';
+
 export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId }) => {
     const { activeTrajectory, completedTrajectory, loading } = useTrajectoryRealtime(userId);
     const [swarmMetrics, setSwarmMetrics] = React.useState<SwarmMetrics | null>(null);
+
+    const externalTension = swarmMetrics?.metadata?.external_tension ?? 0.2;
 
     React.useEffect(() => {
         const fetchHive = async () => {
@@ -34,7 +38,11 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                     active_sovereigns: 124,
                     swarm_momentum: 1.45,
                     mean_vector: { rs: 0.4, av: 0.5, bi: 0.6, se: 0.3, cb: 0.7, timestamp: Date.now() },
-                    outlier_vector: { rs: 0.8, av: 0.9, bi: 0.95, se: 0.1, cb: 0.9, timestamp: Date.now() }
+                    outlier_vector: { rs: 0.8, av: 0.9, bi: 0.95, se: 0.1, cb: 0.9, timestamp: Date.now() },
+                    metadata: {
+                        external_tension: 0.62,
+                        last_signal_label: 'Rising Global Volatility'
+                    }
                 });
             }
         };
@@ -68,7 +76,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="relative p-12 overflow-hidden bg-gradient-to-br from-indigo-900/60 to-slate-950 rounded-[3rem] border border-indigo-500/30 text-center shadow-3xl backdrop-blur-3xl"
+                    className="relative p-12 overflow-hidden bg-gradient-to-br from-[var(--color-primary)] to-slate-950 rounded-[3rem] border border-[var(--color-primary)] text-center shadow-3xl backdrop-blur-3xl"
                 >
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
 
@@ -102,7 +110,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                                 <div className="flex flex-col items-end">
                                     <span className="text-2xl font-black text-white">{completedTrajectory.sovereignty_score || 0}</span>
                                     <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md border ${getRank(completedTrajectory.sovereignty_score || 0) === 'Oracle' ? 'bg-amber-400/10 border-amber-400 text-amber-400' :
-                                        getRank(completedTrajectory.sovereignty_score || 0) === 'Sovereign' ? 'bg-indigo-400/10 border-indigo-400 text-indigo-400' :
+                                        getRank(completedTrajectory.sovereignty_score || 0) === 'Sovereign' ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)] text-[var(--color-primary)]' :
                                             getRank(completedTrajectory.sovereignty_score || 0) === 'Initiate' ? 'bg-cyan-400/10 border-cyan-400 text-cyan-400' :
                                                 'bg-slate-400/10 border-slate-400 text-slate-400'
                                         }`}>
@@ -158,12 +166,22 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
         <div className="grid grid-cols-1 gap-8 p-6 lg:grid-cols-12">
             {/* --- Left Column: Context & Stats --- */}
             <div className="space-y-6 lg:col-span-4">
+                {/* Swarm Status Badge (Top of Left Column) */}
+                {swarmMetrics && (
+                    <SwarmStatusBadge
+                        tension={externalTension}
+                        momentum={swarmMetrics.swarm_momentum}
+                        label={swarmMetrics.metadata?.last_signal_label}
+                        isInsulated={activeTrajectory?.data?.is_insulated}
+                    />
+                )}
+
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     className={`relative p-6 rounded-3xl border shadow-2xl backdrop-blur-2xl transition-all duration-700 ${activeTrajectory?.data?.is_insulated
-                            ? 'bg-gradient-to-br from-amber-900/40 via-indigo-900/40 to-slate-900 border-amber-500/50 shadow-[0_0_50px_rgba(245,158,11,0.2)]'
-                            : 'bg-gradient-to-br from-indigo-900/40 to-slate-900 border-indigo-500/30'
+                        ? 'bg-gradient-to-br from-amber-900/40 via-[var(--color-primary)] to-slate-900 border-amber-500/50 shadow-[0_0_50px_rgba(245,158,11,0.2)]'
+                        : 'bg-gradient-to-br from-[var(--color-primary)] to-slate-900 border-[var(--color-primary)]'
                         }`}
                 >
                     {/* Aegis Aura Glow */}
@@ -178,8 +196,8 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                     <div className="relative z-10">
                         <div className="flex justify-between items-start mb-6">
                             <h2 className={`text-2xl font-black text-transparent bg-clip-text ${activeTrajectory?.data?.is_insulated
-                                    ? 'bg-gradient-to-r from-amber-400 to-amber-200'
-                                    : 'bg-gradient-to-r from-cyan-400 to-indigo-400'
+                                ? 'bg-gradient-to-r from-amber-400 to-amber-200'
+                                : 'bg-gradient-to-r from-cyan-400 to-[var(--color-primary)]'
                                 }`}>
                                 {activeTrajectory?.data?.is_insulated ? 'Insulated Path' : 'Current Path'}
                             </h2>
@@ -217,7 +235,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${cb * 100}%` }}
-                                className="h-full bg-gradient-to-r from-indigo-500 via-cyan-400 to-emerald-400"
+                                className="h-full bg-gradient-to-r from-[var(--color-primary)] via-cyan-400 to-emerald-400"
                                 transition={{ duration: 1.5, ease: "easeOut" }}
                             />
                         </div>
@@ -253,6 +271,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                     <CollectiveRadar
                         userVector={activeTrajectory.initial_vector}
                         swarmMetrics={swarmMetrics}
+                        externalTension={externalTension}
                     />
                 )}
             </div>
@@ -271,12 +290,12 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 }}
                                 whileHover={{ scale: 1.01, x: 5 }}
-                                className={`group relative overflow-hidden p-6 bg-slate-900/40 rounded-3xl border ${isCurrentDay ? 'border-indigo-500/50 ring-1 ring-indigo-500/20 shadow-indigo-500/10' : 'border-white/5'
+                                className={`group relative overflow-hidden p-6 bg-slate-900/40 rounded-3xl border ${isCurrentDay ? 'border-[var(--color-primary)] ring-1 ring-indigo-500/20 shadow-[var(--color-primary-glow)]' : 'border-white/5'
                                     } backdrop-blur-xl transition-all duration-300 shadow-2xl ${isCompleted ? 'opacity-50' : ''}`}
                             >
                                 {/* Decorative Background Glow for Active Mission */}
                                 {isCurrentDay && (
-                                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/20 blur-[80px] rounded-full" />
+                                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--color-primary)]/20 blur-[80px] rounded-full" />
                                 )}
 
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -286,7 +305,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-center space-x-2 mb-1">
-                                                <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Day Task</span>
+                                                <span className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-widest">Day Task</span>
                                                 {isCurrentDay && <span className="text-[10px] font-bold text-emerald-400 animate-pulse uppercase tracking-widest">● Active Now</span>}
                                                 {isCompleted && <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Verified</span>}
                                             </div>
@@ -302,7 +321,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                                             <span className="text-xs">{m.estimated_minutes}M</span>
                                         </div>
                                         {isCurrentDay ? (
-                                            <button className="flex items-center space-x-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-xs transition-all shadow-lg shadow-indigo-500/20 active:scale-95">
+                                            <button className="flex items-center space-x-2 px-5 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary)] text-white rounded-xl font-bold text-xs transition-all shadow-lg shadow-[var(--color-primary-glow)] active:scale-95">
                                                 <span>Execute</span>
                                                 <Zap className="w-3 h-3 fill-current" />
                                             </button>
@@ -325,10 +344,10 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                 {/* Behavioral Integrity Footer */}
                 <div className="mt-8 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="flex items-center space-x-4 text-slate-500">
-                        <Activity className="w-5 h-5 text-indigo-500" />
+                        <Activity className="w-5 h-5 text-[var(--color-primary)]" />
                         <span className="text-xs font-bold leading-none tracking-tight">Mission status depends on organic behavioral detection.</span>
                     </div>
-                    <div className="px-4 py-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">
+                    <div className="px-4 py-2 bg-[var(--color-primary)]/10 rounded-xl border border-[var(--color-primary)] text-[10px] font-black text-[var(--color-primary)] uppercase tracking-[0.2em]">
                         Behavioral Integrity (BI) Mode: Enabled
                     </div>
                 </div>
@@ -336,3 +355,6 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
         </div>
     );
 };
+
+
+

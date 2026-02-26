@@ -100,8 +100,8 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
             {/* Header */}
             <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-indigo-500/20 border border-indigo-500/30">
-                        <Terminal className="w-4 h-4 text-indigo-400" />
+                    <div className="p-2 rounded-lg bg-[var(--color-primary)]/20 border border-[var(--color-primary)]">
+                        <Terminal className="w-4 h-4 text-[var(--color-primary)]" />
                     </div>
                     <div>
                         <h2 className="text-sm font-black text-white tracking-widest font-mono uppercase">محاكاة_عصبية // v1.0</h2>
@@ -131,12 +131,12 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
                         className="space-y-6"
                     >
                         {/* Scenario Context */}
-                        <div className="p-4 rounded-xl bg-slate-900/50 border border-indigo-500/20 relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500/50" />
+                        <div className="p-4 rounded-xl bg-slate-900/50 border border-[var(--color-primary)] relative overflow-hidden group">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-[var(--color-primary)]/50" />
                             <div className="flex items-start gap-4">
-                                <Brain className="w-5 h-5 text-indigo-400 mt-1 shrink-0" />
+                                <Brain className="w-5 h-5 text-[var(--color-primary)] mt-1 shrink-0" />
                                 <div className="space-y-1">
-                                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter opacity-70">إدخال_السياق</span>
+                                    <span className="text-[10px] font-bold text-[var(--color-primary)] uppercase tracking-tighter opacity-70">إدخال_السياق</span>
                                     <p className="text-slate-300 text-sm leading-relaxed">{currentScenario.context}</p>
                                 </div>
                             </div>
@@ -169,8 +169,8 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
                                             icon = <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />;
                                         }
                                     } else if (isSelected) {
-                                        borderColor = "border-indigo-500/50";
-                                        bgColor = "bg-indigo-500/10";
+                                        borderColor = "border-[var(--color-primary)]";
+                                        bgColor = "bg-[var(--color-primary)]/10";
                                     }
 
                                     return (
@@ -178,12 +178,12 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
                                             key={option.id}
                                             onClick={() => handleOptionSelect(option.id)}
                                             disabled={showFeedback}
-                                            className={`w-full p-4 rounded-xl border ${borderColor} ${bgColor} text-right transition-all duration-300 flex items-center justify-between gap-4 group hover:border-indigo-500/30`}
+                                            className={`w-full p-4 rounded-xl border ${borderColor} ${bgColor} text-right transition-all duration-300 flex items-center justify-between gap-4 group hover:border-[var(--color-primary)]`}
                                         >
                                             <span className={`text-sm ${isSelected ? 'text-white font-bold' : 'text-slate-400'} group-hover:text-white transition-colors`}>
                                                 {option.text}
                                             </span>
-                                            {icon || <div className="w-4 h-4 rounded-full border border-white/20 shrink-0 group-hover:border-indigo-400/50" />}
+                                            {icon || <div className="w-4 h-4 rounded-full border border-white/20 shrink-0 group-hover:border-[var(--color-primary)]" />}
                                         </button>
                                     );
                                 })}
@@ -226,3 +226,5 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
         </div>
     );
 };
+
+

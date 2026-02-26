@@ -107,7 +107,7 @@ export const FirstBloodOverlay: React.FC<FirstBloodProps> = ({ oracleId, onCompl
                                 </div>
 
                                 <div className="p-6 bg-slate-950/60 rounded-3xl border border-white/5 space-y-3">
-                                    <span className="text-[10px] font-black text-indigo-400 uppercase">المهمة اللي كانت مطلوبة:</span>
+                                    <span className="text-[10px] font-black text-[var(--color-primary)] uppercase">المهمة اللي كانت مطلوبة:</span>
                                     <p className="text-sm text-slate-400">"{taskZero.mission_data.daily_missions[0].actionable_task}"</p>
                                 </div>
 
@@ -177,3 +177,4 @@ export const FirstBloodOverlay: React.FC<FirstBloodProps> = ({ oracleId, onCompl
         </div>
     );
 };
+

@@ -34,7 +34,7 @@ export const AINode: FC<AINodeProps> = ({
             <motion.button
                 onClick={onToggle}
                 className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all ${isConnected
-                    ? "bg-indigo-600/10 border-2 border-indigo-400/40"
+                    ? "bg-[var(--color-primary)]/10 border-2 border-[var(--color-primary)]"
                     : "bg-white/5 border border-white/10 hover:border-white/20"
                     }`}
                 style={{
@@ -54,7 +54,7 @@ export const AINode: FC<AINodeProps> = ({
                             {[...Array(3)].map((_, i) => (
                                 <motion.div
                                     key={`ripple-${i}`}
-                                    className="absolute inset-0 rounded-full border border-indigo-400/30"
+                                    className="absolute inset-0 rounded-full border border-[var(--color-primary)]"
                                     initial={{ scale: 1, opacity: 0.6 }}
                                     animate={{
                                         scale: [1, 2.5],
@@ -80,7 +80,7 @@ export const AINode: FC<AINodeProps> = ({
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1.3, opacity: 0.3 }}
                             exit={{ scale: 0.8, opacity: 0 }}
-                            className="absolute inset-0 rounded-full bg-indigo-400/20"
+                            className="absolute inset-0 rounded-full bg-[var(--color-primary)]/20"
                             transition={{ duration: 0.3 }}
                         />
                     )}
@@ -92,7 +92,7 @@ export const AINode: FC<AINodeProps> = ({
                         {[...Array(5)].map((_, i) => (
                             <motion.div
                                 key={i}
-                                className="w-1.5 bg-indigo-400 rounded-full shadow-[0_0_8px_rgba(129,140,248,0.8)]"
+                                className="w-1.5 bg-[var(--color-primary)]/30 rounded-full shadow-[0_0_8px_rgba(129,140,248,0.8)]"
                                 animate={{
                                     height: isSpeaking ? [12, 32, 12] : [6, 12, 6],
                                     opacity: isSpeaking ? [0.8, 1, 0.8] : [0.4, 0.6, 0.4]
@@ -111,16 +111,16 @@ export const AINode: FC<AINodeProps> = ({
                 {/* Icon */}
                 <div className={`relative z-10 ${isConnected ? "opacity-0" : "opacity-100"} transition-opacity duration-300`}>
                     {isConnected ? (
-                        isListening ? <Mic className="w-7 h-7 text-indigo-400" /> : <MicOff className="w-7 h-7 text-slate-500" />
+                        isListening ? <Mic className="w-7 h-7 text-[var(--color-primary)]" /> : <MicOff className="w-7 h-7 text-slate-500" />
                     ) : (
-                        <Sparkles className="w-7 h-7 text-indigo-400" />
+                        <Sparkles className="w-7 h-7 text-[var(--color-primary)]" />
                     )}
                 </div>
 
                 {/* Constant Synaptic Glow if connected */}
                 {isConnected && (
                     <motion.div
-                        className="absolute inset-0 rounded-full border-2 border-indigo-400/20"
+                        className="absolute inset-0 rounded-full border-2 border-[var(--color-primary)]"
                         animate={{
                             scale: isSpeaking ? [1, 1.15, 1] : [1, 1.05, 1],
                             opacity: isSpeaking ? [0.6, 0.3, 0.6] : [0.3, 0.1, 0.3]
@@ -134,10 +134,13 @@ export const AINode: FC<AINodeProps> = ({
                 )}
             </motion.button>
 
-            <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400/80">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary)]">
                 {isOver ? "اسحب هنا للبدء" : isConnected ? "مهندس الوعي" : "بؤرة الوعي"}
             </span>
         </div>
     );
 };
+
+
+
 

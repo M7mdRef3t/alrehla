@@ -360,7 +360,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
               {/* Header */}
               <div className={`flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/50`}>
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${showAdminTools ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" : "bg-teal-500/10 border-teal-500/20 text-teal-400"}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${showAdminTools ? "bg-[var(--color-primary)]/10 border-[var(--color-primary)] text-[var(--color-primary)]" : "bg-teal-500/10 border-teal-500/20 text-teal-400"}`}>
                     {showAdminTools ? <Database className="w-5 h-5" /> : <User className="w-5 h-5" />}
                   </div>
                   <h2 className="text-lg font-bold text-white">{showAdminTools ? "إدارة البيانات" : "الملف الشخصي"}</h2>
@@ -388,16 +388,16 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                         </div>
                         <div className="flex items-center justify-between p-2 bg-slate-950 rounded-lg border border-slate-800">
                           <span className="text-slate-500">الحجم</span>
-                          <span className="font-mono text-indigo-400">{stats.totalSizeKB} KB</span>
+                          <span className="font-mono text-[var(--color-primary)]">{stats.totalSizeKB} KB</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <p className="text-xs font-bold text-slate-500 pr-2">أدوات التصدير</p>
-                      <button onClick={handleExport} disabled={stats.nodesCount === 0} className="w-full group flex items-center gap-4 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800 transition-all text-right disabled:opacity-50">
-                        <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                          <FileJson className="w-5 h-5 text-indigo-400" />
+                      <button onClick={handleExport} disabled={stats.nodesCount === 0} className="w-full group flex items-center gap-4 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-[var(--color-primary)] hover:bg-slate-800 transition-all text-right disabled:opacity-50">
+                        <div className="w-10 h-10 rounded-lg bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                          <FileJson className="w-5 h-5 text-[var(--color-primary)]" />
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-bold text-slate-200">نسخة احتياطية (JSON)</p>
@@ -573,4 +573,6 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
     </AnimatePresence>
   );
 };
+
+
 

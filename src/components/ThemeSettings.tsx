@@ -43,7 +43,7 @@ export const ThemeSettings: FC<ThemeSettingsProps> = ({ isOpen, onClose }) => {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
                     <Sun className="w-5 h-5 text-amber-500 dark:hidden" />
-                    <Moon className="w-5 h-5 text-indigo-400 hidden dark:block" />
+                    <Moon className="w-5 h-5 text-[var(--color-primary)] hidden dark:block" />
                   </div>
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">المظهر</h2>
                 </div>
@@ -113,3 +113,4 @@ export const ThemeSettings: FC<ThemeSettingsProps> = ({ isOpen, onClose }) => {
     </AnimatePresence>
   );
 };
+

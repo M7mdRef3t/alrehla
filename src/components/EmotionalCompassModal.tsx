@@ -52,8 +52,8 @@ export const EmotionalCompassModal: FC<EmotionalCompassModalProps> = ({
             >
                 {/* Header */}
                 <div className="p-5 pb-4 text-center">
-                    <div className="w-10 h-10 rounded-2xl bg-indigo-600/20 flex items-center justify-center mx-auto mb-3">
-                        <Compass className="w-5 h-5 text-indigo-400" />
+                    <div className="w-10 h-10 rounded-2xl bg-[var(--color-primary)]/20 flex items-center justify-center mx-auto mb-3">
+                        <Compass className="w-5 h-5 text-[var(--color-primary)]" />
                     </div>
                     <h2 className="text-lg font-bold text-white">إيه إحساسك دلوقتي؟</h2>
                     <p className="text-sm text-slate-400 mt-1">
@@ -98,3 +98,5 @@ export const EmotionalCompassModal: FC<EmotionalCompassModalProps> = ({
         </motion.div>
     );
 };
+
+

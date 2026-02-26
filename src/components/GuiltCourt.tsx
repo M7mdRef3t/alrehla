@@ -24,8 +24,8 @@ export const GuiltCourt: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-950 text-slate-200 p-6 flex flex-col font-sans">
             <header className="flex items-center gap-4 mb-12">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
-                    <Gavel className="w-6 h-6 text-indigo-400" />
+                <div className="w-12 h-12 rounded-2xl bg-[var(--color-primary)]/10 flex items-center justify-center border border-[var(--color-primary)]">
+                    <Gavel className="w-6 h-6 text-[var(--color-primary)]" />
                 </div>
                 <div>
                     <h1 className="text-2xl font-black text-white">محكمة الشعور بالذنب</h1>
@@ -46,14 +46,14 @@ export const GuiltCourt: React.FC = () => {
                             <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md">
                                 <h2 className="text-xl font-bold text-white mb-4 text-right">ما هي "التهمة" التي يوجهها لك ضميرك؟</h2>
                                 <textarea
-                                    className="w-full h-32 bg-black/40 border border-white/5 rounded-2xl p-4 text-slate-200 focus:border-indigo-500 transition-all outline-none text-right text-lg"
+                                    className="w-full h-32 bg-black/40 border border-white/5 rounded-2xl p-4 text-slate-200 focus:border-[var(--color-primary)] transition-all outline-none text-right text-lg"
                                     placeholder="مثال: أشعر بالذنب لأني لم أرد على اتصال والدي المسيء..."
                                     value={charge}
                                     onChange={(e) => setCharge(e.target.value)}
                                 />
                                 <button
                                     onClick={startTrial}
-                                    className="w-full mt-6 py-4 bg-indigo-500 hover:bg-indigo-400 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-2 group"
+                                    className="w-full mt-6 py-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/30 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-2 group"
                                 >
                                     بدأ المحاكمة
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -88,7 +88,7 @@ export const GuiltCourt: React.FC = () => {
                                 <div className="flex justify-between gap-4">
                                     <button
                                         onClick={() => setStage("defense")}
-                                        className="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-bold text-indigo-400 transition-all"
+                                        className="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-bold text-[var(--color-primary)] transition-all"
                                     >
                                         استدعاء دفاع جارفيس
                                     </button>
@@ -137,8 +137,8 @@ export const GuiltCourt: React.FC = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             className="text-center space-y-10"
                         >
-                            <div className="w-24 h-24 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center mx-auto mb-8 animate-pulse">
-                                <Gavel className="w-12 h-12 text-indigo-400" />
+                            <div className="w-24 h-24 rounded-full bg-[var(--color-primary)]/20 border border-[var(--color-primary)] flex items-center justify-center mx-auto mb-8 animate-pulse">
+                                <Gavel className="w-12 h-12 text-[var(--color-primary)]" />
                             </div>
 
                             <h1 className="text-4xl font-black text-white tracking-tight">حكم المحكمة: براءة استراتيجية</h1>
@@ -169,3 +169,5 @@ const DefenseArgument = ({ title, text }: { title: string, text: string }) => (
         <p className="text-slate-300 leading-relaxed font-medium">{text}</p>
     </div>
 );
+
+

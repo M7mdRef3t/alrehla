@@ -54,6 +54,7 @@ import type { FeatureFlagKey } from "../config/features";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
 import { isUserMode } from "../config/appEnv";
 import { runtimeEnv } from "../config/runtimeEnv";
+import { AwarenessSkeleton } from "./AwarenessSkeleton";
 import { assignUrl, getHref, pushUrl } from "../services/navigation";
 import { openInNewTab } from "../services/clientDom";
 
@@ -663,7 +664,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 trackEvent(AnalyticsEvents.LIBRARY_OPENED);
                 setShowLibrary(true);
               }}
-              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-300 transition-all text-right shrink-0 whitespace-nowrap"
+              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-[var(--color-primary)] dark:hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 dark:hover:bg-[var(--color-primary)]/30 hover:text-[var(--color-primary)] dark:hover:text-[var(--color-primary)] transition-all text-right shrink-0 whitespace-nowrap"
               title="مكتبة المحتوى التعليمي"
             >
               <BookOpen className="w-5 h-5 shrink-0" />
@@ -1280,7 +1281,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     setShowLibrary(true);
                     handleClose();
                   }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-300 transition-all text-right"
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-[var(--color-primary)] dark:hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 dark:hover:bg-[var(--color-primary)]/30 hover:text-[var(--color-primary)] dark:hover:text-[var(--color-primary)] transition-all text-right"
                 >
                   <BookOpen className="w-6 h-6 shrink-0" />
                   <span>المكتبة</span>
@@ -1477,7 +1478,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
       {/* Notification Settings Modal */}
       {showNotificationSettings && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <NotificationSettings
             isOpen={showNotificationSettings}
             onClose={() => setShowNotificationSettings(false)}
@@ -1487,7 +1488,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
       {/* Data Management Modal */}
       {showDataManagement && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <DataManagement
             isOpen={showDataManagement}
             onClose={() => setShowDataManagement(false)}
@@ -1497,7 +1498,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
       {/* Share Stats Modal */}
       {showShareStats && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <ShareStats
             isOpen={showShareStats}
             onClose={() => setShowShareStats(false)}
@@ -1507,7 +1508,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
       {/* Educational Library Modal */}
       {showLibrary && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <EducationalLibrary
             isOpen={showLibrary}
             onClose={() => setShowLibrary(false)}
@@ -1522,7 +1523,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
       {/* Theme Settings Modal */}
       {showThemeSettings && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <ThemeSettings
             isOpen={showThemeSettings}
             onClose={() => setShowThemeSettings(false)}
@@ -1532,14 +1533,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
       {/* Achievements Modal */}
       {showAchievements && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <Achievements onClose={() => setShowAchievements(false)} />
         </Suspense>
       )}
 
       {/* Symptoms Overview Modal */}
       {showSymptomsOverview && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <SymptomsOverviewModal
             isOpen={showSymptomsOverview}
             onClose={() => setShowSymptomsOverview(false)}
@@ -1549,7 +1550,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
       {/* Recovery Plan Modal */}
       {showRecoveryPlan && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <RecoveryPlanModal
             isOpen={showRecoveryPlan}
             onClose={() => { setShowRecoveryPlan(false); setInitialRecoveryOptions(null); }}
@@ -1560,13 +1561,13 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       )}
 
       {showTrackingDashboard && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <TrackingDashboard isOpen={showTrackingDashboard} onClose={() => setShowTrackingDashboard(false)} />
         </Suspense>
       )}
 
       {showNoiseSilencing && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <MuteProtocol
             isOpen={showNoiseSilencing}
             onClose={() => setShowNoiseSilencing(false)}
@@ -1576,7 +1577,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       )}
 
       {showShieldSelector && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <ShieldSelector
             isOpen={showShieldSelector}
             onClose={() => setShowShieldSelector(false)}
@@ -1585,7 +1586,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       )}
 
       {showRadarShield && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <RadarShield
             isOpen={showRadarShield}
             onClose={() => setShowRadarShield(false)}
@@ -1594,7 +1595,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       )}
 
       {showThoughtSniper && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <ThoughtSniper
             isOpen={showThoughtSniper}
             onClose={() => setShowThoughtSniper(false)}
@@ -1603,7 +1604,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       )}
 
       {showFastingCapsule && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <FastingCapsule
             isOpen={showFastingCapsule}
             onClose={() => setShowFastingCapsule(false)}
@@ -1612,7 +1613,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       )}
 
       {showInnerCourt && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <InnerCourt
             isOpen={showInnerCourt}
             onClose={() => setShowInnerCourt(false)}
@@ -1621,7 +1622,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       )}
 
       {showAtlasDashboard && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <AtlasDashboard
             isOpen={showAtlasDashboard}
             onClose={() => setShowAtlasDashboard(false)}
@@ -1630,7 +1631,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       )}
 
       {showAdvancedTools && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <AdvancedToolsModal
             isOpen={showAdvancedTools}
             onClose={() => setShowAdvancedTools(false)}
@@ -1639,7 +1640,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       )}
 
       {showClassicRecovery && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <ClassicRecoveryModal
             isOpen={showClassicRecovery}
             onClose={() => setShowClassicRecovery(false)}
@@ -1648,7 +1649,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       )}
 
       {showManualPlacement && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <ManualPlacementModal
             isOpen={showManualPlacement}
             onClose={() => setShowManualPlacement(false)}
@@ -1657,7 +1658,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       )}
 
       {showFeedback && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <FeedbackModal
             isOpen={showFeedback}
             onClose={() => setShowFeedback(false)}
@@ -1676,3 +1677,6 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     </>
   );
 };
+
+
+

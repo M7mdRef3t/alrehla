@@ -260,7 +260,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                         <p className="text-xs text-slate-400">الباقة الحالية</p>
                                         <p className="text-lg font-black text-white mt-0.5">{TIER_LABELS[tier]}</p>
                                     </div>
-                                    <p className="text-2xl font-black text-indigo-400">{TIER_PRICES[tier]}</p>
+                                    <p className="text-2xl font-black text-[var(--color-primary)]">{TIER_PRICES[tier]}</p>
                                 </div>
                             </div>
 
@@ -365,3 +365,4 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
         </div>
     );
 };
+

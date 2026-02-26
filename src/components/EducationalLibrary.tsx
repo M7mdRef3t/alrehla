@@ -83,10 +83,10 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
             className="fixed inset-4 z-50 bg-white rounded-2xl overflow-hidden flex flex-col max-w-4xl mx-auto my-auto"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-linear-to-l from-indigo-50 to-white shrink-0">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-linear-to-l from-[var(--color-primary)] to-white shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-indigo-600" />
+                <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/15 flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-[var(--color-primary)]" />
                 </div>
                 <h2 className="text-lg font-bold text-slate-900">مكتبة المحتوى</h2>
               </div>
@@ -109,7 +109,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={searchPlaceholder}
-                  className="w-full pr-10 pl-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full pr-10 pl-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                 />
               </div>
 
@@ -119,7 +119,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                   type="button"
                   onClick={() => setSelectedCategory("all")}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${selectedCategory === "all"
-                      ? "bg-indigo-600 text-white"
+                      ? "bg-[var(--color-primary)] text-white"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     }`}
                 >
@@ -131,7 +131,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                     type="button"
                     onClick={() => setSelectedCategory(cat)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${selectedCategory === cat
-                        ? "bg-indigo-600 text-white"
+                        ? "bg-[var(--color-primary)] text-white"
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                       }`}
                   >
@@ -147,7 +147,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                 type="button"
                 onClick={() => setActiveTab("videos")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 font-semibold transition-all ${activeTab === "videos"
-                    ? "text-indigo-600 border-b-2 border-indigo-600"
+                    ? "text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]"
                     : "text-slate-500 hover:text-slate-700"
                   }`}
               >
@@ -158,7 +158,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                 type="button"
                 onClick={() => setActiveTab("stories")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 font-semibold transition-all ${activeTab === "stories"
-                    ? "text-indigo-600 border-b-2 border-indigo-600"
+                    ? "text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]"
                     : "text-slate-500 hover:text-slate-700"
                   }`}
               >
@@ -169,7 +169,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                 type="button"
                 onClick={() => setActiveTab("faqs")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 font-semibold transition-all ${activeTab === "faqs"
-                    ? "text-indigo-600 border-b-2 border-indigo-600"
+                    ? "text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]"
                     : "text-slate-500 hover:text-slate-700"
                   }`}
               >
@@ -265,13 +265,13 @@ const VideoCard: FC<{ video: VideoContent }> = ({ video }) => {
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-indigo-300 transition-all">
+    <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-[var(--color-primary)] transition-all">
       <div className="flex gap-3">
-        <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-linear-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+        <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-linear-to-br from-[var(--color-primary)] to-purple-100 flex items-center justify-center">
           {video.thumbnailUrl ? (
             <img src={video.thumbnailUrl} alt="" className="w-full h-full object-cover" />
           ) : (
-            <Video className="w-8 h-8 text-indigo-600" />
+            <Video className="w-8 h-8 text-[var(--color-primary)]" />
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -289,7 +289,7 @@ const VideoCard: FC<{ video: VideoContent }> = ({ video }) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={handleVideoLinkClick}
-                  className="text-indigo-600 hover:underline font-medium"
+                  className="text-[var(--color-primary)] hover:underline font-medium"
                 >
                   شاهد
                 </a>
@@ -308,7 +308,7 @@ const StoryCard: FC<{ story: SuccessStory }> = ({ story }) => {
   const isTargetStory = story.id === "story-1"; // The specific story for the integration
 
   return (
-    <div className={`bg-white border rounded-xl overflow-hidden transition-all ${isTargetStory && isExpanded ? 'border-indigo-400 shadow-md transform scale-[1.01]' : 'border-slate-200 hover:border-purple-300'}`}>
+    <div className={`bg-white border rounded-xl overflow-hidden transition-all ${isTargetStory && isExpanded ? 'border-[var(--color-primary)] shadow-md transform scale-[1.01]' : 'border-slate-200 hover:border-purple-300'}`}>
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -360,13 +360,13 @@ const StoryCard: FC<{ story: SuccessStory }> = ({ story }) => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="mt-6 pt-4 border-t border-slate-100 flex flex-col items-center text-center bg-indigo-50/50 p-4 rounded-xl"
+              className="mt-6 pt-4 border-t border-slate-100 flex flex-col items-center text-center bg-[var(--color-primary)]/50 p-4 rounded-xl"
             >
-              <h4 className="font-bold text-indigo-900 mb-2">هل تشعر باستنزاف مشابه؟</h4>
-              <p className="text-xs text-indigo-700 mb-4 max-w-sm">لا تترك الوعي نظرياً. استخدم "دواير" الآن لترسم خريطة علاقاتك وتكتشف أين يذهب مجهودك.</p>
+              <h4 className="font-bold text-[var(--color-primary)] mb-2">هل تشعر باستنزاف مشابه؟</h4>
+              <p className="text-xs text-[var(--color-primary)] mb-4 max-w-sm">لا تترك الوعي نظرياً. استخدم "دواير" الآن لترسم خريطة علاقاتك وتكتشف أين يذهب مجهودك.</p>
               <a
                 href="/dawayir?source=story-1"
-                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-lg font-medium shadow-md shadow-indigo-600/20 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all w-full sm:w-auto"
+                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[var(--color-primary)] text-white rounded-lg font-medium shadow-md shadow-[var(--color-primary-glow)] hover:bg-[var(--color-primary)] hover:-translate-y-0.5 transition-all w-full sm:w-auto"
               >
                 ارسم دوايرك الآن <ArrowLeft className="w-4 h-4" />
               </a>
@@ -441,3 +441,6 @@ const EmptyState: FC<{ message: string }> = ({ message }) => (
     <p className="text-xs text-slate-400 mt-1">جرب كلمات بحث أخرى</p>
   </div>
 );
+
+
+

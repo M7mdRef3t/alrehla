@@ -87,7 +87,7 @@ export default function CoachDashboard() {
     if (subInfo?.tier !== 'coach') {
         return (
             <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-6 text-center" dir="rtl">
-                <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mb-6 border border-indigo-100 shadow-sm">
+                <div className="w-20 h-20 bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-3xl flex items-center justify-center mb-6 border border-[var(--color-primary)] shadow-sm">
                     <ShieldAlert className="w-10 h-10" />
                 </div>
                 <h1 className="text-3xl font-black text-gray-900 mb-4">هذه المنطقة مخصصة للمعالجين المعتمدين</h1>
@@ -113,7 +113,7 @@ export default function CoachDashboard() {
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <div className="animate-spin w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full" />
+                <div className="animate-spin w-10 h-10 border-4 border-[var(--color-primary)] border-t-transparent rounded-full" />
             </div>
         );
     }
@@ -136,8 +136,8 @@ export default function CoachDashboard() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 max-w-md w-full text-center">
-                    <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <Activity className="w-8 h-8 text-indigo-600" />
+                    <div className="w-16 h-16 bg-[var(--color-primary)]/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <Activity className="w-8 h-8 text-[var(--color-primary)]" />
                     </div>
                     <h2 className="text-2xl font-black text-slate-900 mb-2">منصة المتخصصين</h2>
                     <p className="text-slate-500 mb-8 leading-relaxed">يرجى تسجيل الدخول بحساب الكوتش أو المعالج للوصول إلى لوحة المتابعة السريرية المتقدمة.</p>
@@ -162,18 +162,18 @@ export default function CoachDashboard() {
             <aside className="w-72 bg-white border-l border-slate-200 flex flex-col shrink-0 relative z-20 shadow-sm">
                 <div className="p-6 border-b border-slate-100">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-600/20">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-violet-600 text-white flex items-center justify-center font-bold shadow-md shadow-[var(--color-primary-glow)]">
                             <Brain className="w-5 h-5" />
                         </div>
                         <div>
-                            <h1 className="font-black text-slate-900 tracking-tight">Dawayir<span className="text-indigo-600">Pro</span></h1>
+                            <h1 className="font-black text-slate-900 tracking-tight">Dawayir<span className="text-[var(--color-primary)]">Pro</span></h1>
                             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Clinical Dashboard</p>
                         </div>
                     </div>
                 </div>
 
                 <nav className="flex-1 px-4 py-6 flex flex-col gap-2">
-                    <button className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-indigo-50 text-indigo-700 font-bold transition-colors">
+                    <button className="flex items-center gap-3 w-full p-3.5 rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-bold transition-colors">
                         <Users className="w-5 h-5" />
                         <span className="flex-1 text-right">المرضى / العملاء</span>
                     </button>
@@ -248,7 +248,7 @@ export default function CoachDashboard() {
                                         <div>
                                             <div className="flex items-center gap-3">
                                                 <h2 className="text-2xl font-black text-slate-900">{selectedClient.name}</h2>
-                                                <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-black tracking-widest uppercase rounded-full border border-indigo-100">
+                                                <span className="px-2.5 py-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-[10px] font-black tracking-widest uppercase rounded-full border border-[var(--color-primary)]">
                                                     ID: {selectedClient.id.substring(0, 6)}
                                                 </span>
                                             </div>
@@ -265,29 +265,29 @@ export default function CoachDashboard() {
                                 {/* AI Oracle Banner */}
                                 <div className={`w-full p-5 rounded-2xl border-2 flex items-start gap-5 ${selectedClient.burnoutProbability >= 75
                                     ? 'bg-rose-50 border-rose-100'
-                                    : 'bg-indigo-50 border-indigo-100'
+                                    : 'bg-[var(--color-primary)]/10 border-[var(--color-primary)]'
                                     }`}>
                                     <div className={`p-3 rounded-xl shrink-0 mt-0.5 shadow-sm ${selectedClient.burnoutProbability >= 75
                                         ? 'bg-rose-100 text-rose-600 border border-rose-200'
-                                        : 'bg-indigo-100 text-indigo-600 border border-indigo-200'
+                                        : 'bg-[var(--color-primary)]/15 text-[var(--color-primary)] border border-[var(--color-primary)]'
                                         }`}>
                                         {selectedClient.burnoutProbability >= 75 ? <ShieldAlert className="w-7 h-7" /> : <Sparkles className="w-7 h-7" />}
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-3">
-                                                <h4 className={`text-base font-black ${selectedClient.burnoutProbability >= 75 ? 'text-rose-900' : 'text-indigo-900'}`}>
+                                                <h4 className={`text-base font-black ${selectedClient.burnoutProbability >= 75 ? 'text-rose-900' : 'text-[var(--color-primary)]'}`}>
                                                     تحليل أوراكل (AI Triage)
                                                 </h4>
                                                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${selectedClient.burnoutProbability >= 75
                                                     ? 'bg-rose-200 text-rose-800 border-rose-300'
-                                                    : 'bg-indigo-200 text-indigo-800 border-indigo-300'
+                                                    : 'bg-[var(--color-primary)]/20 text-[var(--color-primary)] border-[var(--color-primary)]'
                                                     }`}>
                                                     احتمالية استنزاف: {selectedClient.burnoutProbability}%
                                                 </span>
                                             </div>
                                         </div>
-                                        <p className={`text-sm leading-relaxed font-medium ${selectedClient.burnoutProbability >= 75 ? 'text-rose-800' : 'text-indigo-800'}`}>
+                                        <p className={`text-sm leading-relaxed font-medium ${selectedClient.burnoutProbability >= 75 ? 'text-rose-800' : 'text-[var(--color-primary)]'}`}>
                                             {selectedClient.aiTip}
                                         </p>
 
@@ -299,7 +299,7 @@ export default function CoachDashboard() {
                                             )}
                                             <button
                                                 onClick={() => handleSelectClient(selectedClient)}
-                                                className={`px-4 py-2 bg-white text-xs font-bold rounded-lg shadow-sm border transition ${selectedClient.burnoutProbability >= 75 ? 'text-rose-700 border-rose-200 hover:bg-rose-50' : 'text-indigo-700 border-indigo-200 hover:bg-indigo-50'
+                                                className={`px-4 py-2 bg-white text-xs font-bold rounded-lg shadow-sm border transition ${selectedClient.burnoutProbability >= 75 ? 'text-rose-700 border-rose-200 hover:bg-rose-50' : 'text-[var(--color-primary)] border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10'
                                                     }`}>
                                                 تحديث سجل التقلبات
                                             </button>
@@ -344,7 +344,7 @@ export default function CoachDashboard() {
                                     <input
                                         type="text"
                                         placeholder="ابحث عن حالة بالاسم..."
-                                        className="pl-4 pr-10 py-3 block w-72 rounded-xl border-slate-200 bg-white font-medium focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                                        className="pl-4 pr-10 py-3 block w-72 rounded-xl border-slate-200 bg-white font-medium focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] shadow-sm"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                     />
@@ -387,7 +387,7 @@ export default function CoachDashboard() {
                             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
                                 <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                                     <h3 className="font-bold text-slate-900 text-lg">قائمة الحالات (حسب درجة المخاطرة)</h3>
-                                    <button className="text-sm text-indigo-600 font-bold hover:text-indigo-800 transition-colors flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-100">
+                                    <button className="text-sm text-[var(--color-primary)] font-bold hover:text-[var(--color-primary)] transition-colors flex items-center gap-2 bg-[var(--color-primary)]/10 px-4 py-2 rounded-lg border border-[var(--color-primary)]">
                                         + دعوة عميل جديد
                                     </button>
                                 </div>
@@ -406,7 +406,7 @@ export default function CoachDashboard() {
                                                 ? 'bg-rose-50 text-rose-600 border-rose-200'
                                                 : client.burnoutProbability <= 30
                                                     ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                                                    : 'bg-indigo-50 text-indigo-600 border-indigo-200'
+                                                    : 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)]'
                                                 }`}>
                                                 {client.name.charAt(0)}
                                             </div>
@@ -466,5 +466,7 @@ export default function CoachDashboard() {
         </div>
     );
 }
+
+
 
 

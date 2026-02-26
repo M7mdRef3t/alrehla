@@ -23,12 +23,12 @@ export const LevelBanner = () => {
             transition={{ duration: 0.5 }}
         >
             {/* Background elements */}
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl" />
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-[var(--color-primary)]/10 rounded-full blur-3xl" />
 
             <div className="relative flex items-center justify-between gap-4">
                 {/* Level Circle */}
                 <div className="relative shrink-0">
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex flex-col items-center justify-center shadow-lg shadow-indigo-500/20 border border-white/10">
+                    <div className="w-14 h-14 rounded-2xl bg-[var(--color-primary)] flex flex-col items-center justify-center shadow-lg shadow-[var(--color-primary-glow)] border border-white/10">
                         <span className="text-[10px] text-white/60 font-bold uppercase leading-tight">LVL</span>
                         <span className="text-xl font-black text-white leading-tight">{level}</span>
                     </div>
@@ -38,7 +38,7 @@ export const LevelBanner = () => {
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1.5">
                         <h3 className="text-sm font-bold text-white truncate pr-2">
-                            رتبة: <span className="text-indigo-400">{rank}</span>
+                            رتبة: <span className="text-[var(--color-primary)]">{rank}</span>
                         </h3>
                         <span className="text-[10px] font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">
                             {xp} XP
@@ -48,7 +48,7 @@ export const LevelBanner = () => {
                     {/* Progress Bar Container */}
                     <div className="w-full h-2 bg-slate-900/50 rounded-full border border-white/5 overflow-hidden">
                         <motion.div
-                            className="h-full bg-gradient-to-r from-indigo-600 via-purple-500 to-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                            className="h-full bg-gradient-to-r from-[var(--color-primary)] via-purple-500 to-[var(--color-primary)] shadow-[0_0_10px_rgba(99,102,241,0.5)]"
                             initial={{ width: 0 }}
                             animate={{ width: `${progress}%` }}
                             transition={{ duration: 1, ease: "easeOut" }}
@@ -57,7 +57,7 @@ export const LevelBanner = () => {
 
                     <div className="flex items-center justify-between mt-1.5">
                         <span className="text-[10px] text-slate-500 font-medium">
-                            باقي <span className="text-indigo-300">{nextLevelXP} XP</span> للترقية التالية
+                            باقي <span className="text-[var(--color-primary)]">{nextLevelXP} XP</span> للترقية التالية
                         </span>
                         <div className="flex -space-x-1">
                             {[1, 2, 3].map(i => (
@@ -76,3 +76,6 @@ export const LevelBanner = () => {
         </motion.div>
     );
 };
+
+
+

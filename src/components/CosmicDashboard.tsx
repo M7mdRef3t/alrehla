@@ -100,7 +100,7 @@ export const CosmicDashboard: FC = () => {
                 {!showSimulator ? (
                     <button
                         onClick={() => setShowSimulator(true)}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-full shadow-[0_0_20px_rgba(79,70,229,0.4)] transition-all transform hover:scale-105"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary)] text-white font-bold rounded-full shadow-[0_0_20px_rgba(79,70,229,0.4)] transition-all transform hover:scale-105"
                     >
                         <BrainCircuit className="w-4 h-4" />
                         <span>تشغيل محاكي السيناريوهات</span>
@@ -281,3 +281,4 @@ export const CosmicDashboard: FC = () => {
         </div>
     );
 };
+

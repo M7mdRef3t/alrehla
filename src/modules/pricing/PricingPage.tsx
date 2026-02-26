@@ -71,7 +71,7 @@ export default function PricingPage() {
                 </div>
             )}
             <div className="text-center max-w-2xl mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="inline-flex items-center justify-center gap-2 px-3 py-1.5 mb-6 bg-indigo-50 text-indigo-600 rounded-full text-sm font-semibold border border-indigo-100">
+                <div className="inline-flex items-center justify-center gap-2 px-3 py-1.5 mb-6 bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-full text-sm font-semibold border border-[var(--color-primary)]">
                     <Sparkles className="w-4 h-4" /> العودة للتوازن تبدأ بخطوة
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">استثمر في وعيك، ضاعف طاقتك</h1>
@@ -102,15 +102,15 @@ export default function PricingPage() {
 
                     <ul className="space-y-4 mb-10 flex-1 text-gray-700">
                         <li className="flex items-start gap-3">
-                            <Check className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+                            <Check className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" />
                             <span className="leading-relaxed"><strong>حفظ عدد لا محدود</strong> من خرائط دائرة التوازن</span>
                         </li>
                         <li className="flex items-start gap-3">
-                            <Check className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+                            <Check className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" />
                             <span className="leading-relaxed"><strong>المقارنة التاريخية:</strong> راقب كيف تتغير طاقتك بمرور الشهور</span>
                         </li>
                         <li className="flex items-start gap-3">
-                            <Check className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+                            <Check className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" />
                             <span className="leading-relaxed">تحليل الذكاء الاصطناعي المعمق لاستنزاف الطاقة</span>
                         </li>
                     </ul>
@@ -125,40 +125,40 @@ export default function PricingPage() {
                 </div>
 
                 {/* Plan B: Coach B2B */}
-                <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-indigo-900 rounded-3xl p-8 md:p-10 shadow-2xl flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-indigo-900/30 hover:-translate-y-1">
+                <div className="bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-primary)] to-[var(--color-primary)] rounded-3xl p-8 md:p-10 shadow-2xl flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-[var(--color-primary-glow)] hover:-translate-y-1">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
-                    <div className="absolute top-6 left-6 bg-indigo-500/30 border border-indigo-400/30 text-indigo-100 text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm">
+                    <div className="absolute top-6 left-6 bg-[var(--color-primary)]/30 border border-[var(--color-primary)] text-[var(--color-primary)] text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm">
                         للمعالجين والمدربين
                     </div>
 
                     <div className="mb-8 relative z-10">
-                        <div className="w-12 h-12 bg-indigo-500/20 text-indigo-200 rounded-2xl flex items-center justify-center mb-6 border border-indigo-400/20 backdrop-blur-sm">
+                        <div className="w-12 h-12 bg-[var(--color-primary)]/20 text-[var(--color-primary)] rounded-2xl flex items-center justify-center mb-6 border border-[var(--color-primary)] backdrop-blur-sm">
                             <Target className="w-6 h-6" />
                         </div>
                         <h2 className="text-2xl font-bold text-white mb-2 leading-tight">رخصة المدرب (Practice)</h2>
-                        <p className="text-indigo-200 text-sm h-10 leading-[1.8]">لوحة تحكم كاملة لإدارة عملائك ومتابعة تقدمهم ببيانات حقيقية.</p>
+                        <p className="text-[var(--color-primary)] text-sm h-10 leading-[1.8]">لوحة تحكم كاملة لإدارة عملائك ومتابعة تقدمهم ببيانات حقيقية.</p>
                     </div>
 
                     <div className="mb-8 p-6 bg-white/5 border border-white/10 rounded-2xl relative z-10">
                         <div className="flex items-end gap-1 mb-1">
                             <span className="text-4xl font-black text-white">$49</span>
-                            <span className="text-indigo-300 font-medium mb-1">/ شهرياً</span>
+                            <span className="text-[var(--color-primary)] font-medium mb-1">/ شهرياً</span>
                         </div>
-                        <div className="text-sm text-indigo-300">يشمل أول 10 مقاعد للعملاء</div>
+                        <div className="text-sm text-[var(--color-primary)]">يشمل أول 10 مقاعد للعملاء</div>
                     </div>
 
-                    <ul className="space-y-4 mb-10 flex-1 text-indigo-100 relative z-10">
+                    <ul className="space-y-4 mb-10 flex-1 text-[var(--color-primary)] relative z-10">
                         <li className="flex items-start gap-3">
-                            <div className="rounded-full bg-indigo-500/30 p-1 shrink-0 mt-0.5"><Check className="w-3 h-3 text-white" /></div>
+                            <div className="rounded-full bg-[var(--color-primary)]/30 p-1 shrink-0 mt-0.5"><Check className="w-3 h-3 text-white" /></div>
                             <span className="leading-relaxed"><strong>لوحة تحكم بانورامية:</strong> نظام فرز سريع (Triage) لحالات العملاء</span>
                         </li>
                         <li className="flex items-start gap-3">
-                            <div className="rounded-full bg-indigo-500/30 p-1 shrink-0 mt-0.5"><Check className="w-3 h-3 text-white" /></div>
+                            <div className="rounded-full bg-[var(--color-primary)]/30 p-1 shrink-0 mt-0.5"><Check className="w-3 h-3 text-white" /></div>
                             <span className="leading-relaxed">متابعة خرائط العملاء لحظياً (بموافقتهم)</span>
                         </li>
                         <li className="flex items-start gap-3">
-                            <div className="rounded-full bg-indigo-500/30 p-1 shrink-0 mt-0.5"><Check className="w-3 h-3 text-white" /></div>
+                            <div className="rounded-full bg-[var(--color-primary)]/30 p-1 shrink-0 mt-0.5"><Check className="w-3 h-3 text-white" /></div>
                             <span className="leading-relaxed"><strong>نظام المقاعد القابل للتوسع:</strong> أضف عملاء أكثر بسعر مخفض متى شئت</span>
                         </li>
                     </ul>
@@ -166,7 +166,7 @@ export default function PricingPage() {
                     <button
                         onClick={() => handleSubscribe('coach')}
                         disabled={isLoading === 'coach'}
-                        className="w-full py-4 bg-white text-indigo-900 rounded-xl font-bold text-lg hover:bg-indigo-50 transition-colors shadow-lg shadow-white/10 relative z-10 flex items-center justify-center"
+                        className="w-full py-4 bg-white text-[var(--color-primary)] rounded-xl font-bold text-lg hover:bg-[var(--color-primary)]/10 transition-colors shadow-lg shadow-white/10 relative z-10 flex items-center justify-center"
                     >
                         {isLoading === 'coach' ? 'جاري التحويل للبنك...' : 'ابدأ تشغيل عيادتك الرقمية'}
                     </button>
@@ -188,3 +188,5 @@ export default function PricingPage() {
 function Lock(props: React.SVGProps<SVGSVGElement>) {
     return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>;
 }
+
+

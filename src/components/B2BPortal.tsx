@@ -96,8 +96,8 @@ export const B2BPortal: FC = () => {
                     >
                         {/* Header */}
                         <div className="text-center mb-6">
-                            <div className="w-14 h-14 rounded-2xl bg-indigo-600/20 flex items-center justify-center mx-auto mb-3">
-                                <Briefcase className="w-7 h-7 text-indigo-400" />
+                            <div className="w-14 h-14 rounded-2xl bg-[var(--color-primary)]/20 flex items-center justify-center mx-auto mb-3">
+                                <Briefcase className="w-7 h-7 text-[var(--color-primary)]" />
                             </div>
                             <h1 className="text-xl font-black text-white">بوابة المحترفين</h1>
                             <p className="text-sm text-slate-400 mt-1">للكوتشات والمعالجين النفسيين</p>
@@ -109,11 +109,11 @@ export const B2BPortal: FC = () => {
                                 background: "rgba(99,102,241,0.08)",
                                 border: "1px solid rgba(99,102,241,0.2)",
                             }}>
-                            <p className="text-xs font-bold text-indigo-400 mb-3 uppercase tracking-wider">ما تحصل عليه</p>
+                            <p className="text-xs font-bold text-[var(--color-primary)] mb-3 uppercase tracking-wider">ما تحصل عليه</p>
                             <div className="space-y-2">
                                 {B2B_FEATURES.map((f) => (
                                     <div key={f} className="flex items-center gap-2">
-                                        <Shield className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                                        <Shield className="w-3.5 h-3.5 text-[var(--color-primary)] shrink-0" />
                                         <span className="text-sm text-slate-300">{f}</span>
                                     </div>
                                 ))}
@@ -357,7 +357,7 @@ export const B2BPortal: FC = () => {
                                 background: "rgba(99,102,241,0.1)",
                                 border: "1px solid rgba(99,102,241,0.25)",
                             }}>
-                            <p className="text-xs text-indigo-400 mb-2 font-bold">كودك الشخصي</p>
+                            <p className="text-xs text-[var(--color-primary)] mb-2 font-bold">كودك الشخصي</p>
                             <p className="text-3xl font-black text-white tracking-widest font-mono">{shareCode}</p>
                         </div>
 
@@ -395,3 +395,5 @@ export const B2BPortal: FC = () => {
         </div>
     );
 };
+
+

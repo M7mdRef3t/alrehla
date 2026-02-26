@@ -63,8 +63,8 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
             {/* Header */}
             <div className="p-5 pb-3">
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-2xl bg-indigo-600/20 flex items-center justify-center">
-                        <Gift className="w-5 h-5 text-indigo-400" />
+                    <div className="w-10 h-10 rounded-2xl bg-[var(--color-primary)]/20 flex items-center justify-center">
+                        <Gift className="w-5 h-5 text-[var(--color-primary)]" />
                     </div>
                     <div>
                         <h2 className="text-base font-bold text-white">ادعُ قائداً</h2>
@@ -76,7 +76,7 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
                 <div className="flex gap-3 mb-4">
                     <div className="flex-1 p-3 rounded-xl text-center"
                         style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}>
-                        <p className="text-2xl font-black text-indigo-400">{status.count}</p>
+                        <p className="text-2xl font-black text-[var(--color-primary)]">{status.count}</p>
                         <p className="text-xs text-slate-500">إحالة ناجحة</p>
                     </div>
                     <div className="flex-1 p-3 rounded-xl text-center"
@@ -133,8 +133,8 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
                         { step: "3", text: "تكسب أسبوع بريميوم مجاني" },
                     ].map(({ step, text }) => (
                         <div key={step} className="flex items-center gap-2.5">
-                            <div className="w-5 h-5 rounded-full bg-indigo-600/30 flex items-center justify-center shrink-0">
-                                <span className="text-[10px] font-bold text-indigo-400">{step}</span>
+                            <div className="w-5 h-5 rounded-full bg-[var(--color-primary)]/30 flex items-center justify-center shrink-0">
+                                <span className="text-[10px] font-bold text-[var(--color-primary)]">{step}</span>
                             </div>
                             <span className="text-xs text-slate-400">{text}</span>
                         </div>
@@ -144,3 +144,5 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
         </motion.div>
     );
 };
+
+

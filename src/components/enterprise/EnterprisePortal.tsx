@@ -50,7 +50,7 @@ export const EnterprisePortal: React.FC = () => {
                 className="bg-slate-900 border-r border-slate-800 flex flex-col relative z-20"
             >
                 <div className="p-6 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)] flex items-center justify-center shrink-0">
                         <Shield className="w-6 h-6 text-white" />
                     </div>
                     {sidebarOpen && <span className="font-black text-xl tracking-tighter text-white">DAWAYIR B2B</span>}
@@ -81,7 +81,7 @@ export const EnterprisePortal: React.FC = () => {
                         <h1 className="text-xl font-black text-white">{data.profile?.name}</h1>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg shadow-indigo-900/20">
+                        <button className="flex items-center gap-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary)] text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg shadow-[var(--color-primary-glow)]">
                             <Plus className="w-4 h-4" />
                             Add Members
                         </button>
@@ -166,7 +166,7 @@ export const EnterprisePortal: React.FC = () => {
                                     <input
                                         type="text"
                                         placeholder="Search members..."
-                                        className="bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors w-64"
+                                        className="bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-[var(--color-primary)] transition-colors w-64"
                                     />
                                 </div>
                                 <button className="p-2 border border-slate-800 rounded-lg hover:bg-slate-800 transition-colors">
@@ -208,7 +208,7 @@ export const EnterprisePortal: React.FC = () => {
 const NavItem: React.FC<{ icon: any; label: string; active?: boolean; collapsed?: boolean }> = ({
     icon: Icon, label, active, collapsed
 }) => (
-    <button className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${active ? 'bg-indigo-600/10 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+    <button className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${active ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
         <Icon className="w-5 h-5 shrink-0" />
         {!collapsed && <span className="text-sm font-bold">{label}</span>}
     </button>
@@ -230,7 +230,7 @@ const StatCard: React.FC<{ title: string; value: string; icon: any; trend?: stri
         </div>
         <h3 className="text-sm font-medium text-slate-400">{title}</h3>
         <p className={`text-2xl font-black mt-1 ${color}`}>{value}</p>
-        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-indigo-600/5 rounded-full blur-2xl group-hover:bg-indigo-600/10 transition-all" />
+        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-[var(--color-primary)]/5 rounded-full blur-2xl group-hover:bg-[var(--color-primary)]/10 transition-all" />
     </div>
 );
 
@@ -242,3 +242,5 @@ const AlertItem: React.FC<{ type: 'info' | 'warning' | 'success'; text: string }
         <p className="text-xs text-slate-400 leading-relaxed">{text}</p>
     </div>
 );
+
+

@@ -20,6 +20,7 @@ import {
     Eye
 } from "lucide-react";
 import { useAdminState } from "../../../../state/adminState";
+import { AwarenessSkeleton } from "../../../AwarenessSkeleton";
 import { useAuthState, getEffectiveRoleFromState } from "../../../../state/authState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "../../../../utils/featureFlags";
 import { runtimeEnv } from "../../../../config/runtimeEnv";
@@ -365,7 +366,7 @@ export const FeatureFlagsPanel: FC = () => {
                 )}
             </AnimatePresence>
 
-            <Suspense fallback={null}>
+            <Suspense fallback={<AwarenessSkeleton />}>
                 <DataManagementModal
                     isOpen={showDataTools}
                     onClose={() => setShowDataTools(false)}
@@ -374,3 +375,4 @@ export const FeatureFlagsPanel: FC = () => {
         </div>
     );
 };
+

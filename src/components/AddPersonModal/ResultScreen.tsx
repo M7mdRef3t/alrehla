@@ -495,7 +495,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               <button
                 type="button"
                 onClick={() => void handleShareResult()}
-                className="w-full rounded-full bg-indigo-600 text-white px-6 py-3 text-sm font-semibold hover:bg-indigo-700 active:scale-[0.98] transition-all duration-200"
+                className="w-full rounded-full bg-[var(--color-primary)] text-white px-6 py-3 text-sm font-semibold hover:bg-[var(--color-primary)] active:scale-[0.98] transition-all duration-200"
               >
                 مشاركة النتيجة
               </button>
@@ -586,3 +586,4 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     </motion.div>
   );
 };
+

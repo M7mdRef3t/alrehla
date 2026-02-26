@@ -29,7 +29,7 @@ export const GroupPulseRoom: React.FC = () => {
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-black text-white flex items-center gap-3">
-                        <Users className="w-8 h-8 text-indigo-400" />
+                        <Users className="w-8 h-8 text-[var(--color-primary)]" />
                         رادار نبض المجموعة
                     </h1>
                     <p className="text-slate-400 text-sm mt-1">تزامن حي لمزاج الفريق (بيانات مجمّعة مجهولة الهوية)</p>
@@ -46,7 +46,7 @@ export const GroupPulseRoom: React.FC = () => {
             <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="glass-card p-6 border-white/5 bg-slate-900/40">
                     <h3 className="text-sm font-bold text-slate-400 mb-6 flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                        <ShieldCheck className="w-4 h-4 text-[var(--color-primary)]" />
                         توزيع الوعي اللحظي
                     </h3>
 
@@ -70,8 +70,8 @@ export const GroupPulseRoom: React.FC = () => {
                 </div>
 
                 <div className="glass-card p-6 border-white/5 bg-slate-900/40 flex flex-col items-center justify-center text-center">
-                    <div className="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4 animate-pulse">
-                        <Zap className="w-10 h-10 text-indigo-400" />
+                    <div className="w-20 h-20 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center mb-4 animate-pulse">
+                        <Zap className="w-10 h-10 text-[var(--color-primary)]" />
                     </div>
                     <h3 className="font-bold text-white mb-2">توصية جارفيس للمجموعة</h3>
                     <p className="text-sm text-slate-400 leading-relaxed italic">
@@ -81,11 +81,13 @@ export const GroupPulseRoom: React.FC = () => {
             </section>
 
             {/* Safety Protocol Info */}
-            <footer className="p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10 text-center">
-                <p className="text-[10px] text-indigo-300/60 uppercase font-black tracking-widest">
+            <footer className="p-4 rounded-xl bg-[var(--color-primary)]/5 border border-[var(--color-primary)] text-center">
+                <p className="text-[10px] text-[var(--color-primary)] uppercase font-black tracking-widest">
                     Privacy Protocol: Data is end-to-end encrypted and aggregated. No individual identities are exposed.
                 </p>
             </footer>
         </div>
     );
 };
+
+

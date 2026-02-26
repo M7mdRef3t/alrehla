@@ -291,12 +291,12 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
       >
         <motion.button
           onClick={() => setShowQuickPath(true)}
-          className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-indigo-500/50 transition-colors"
+          className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-[var(--color-primary)] transition-colors"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
         >
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center shrink-0">
-            <Zap className="w-5 h-5 text-indigo-400" />
+          <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0">
+            <Zap className="w-5 h-5 text-[var(--color-primary)]" />
           </div>
           <div className="text-right">
             <p className="text-xs text-white">جملة طوارئ</p>
@@ -495,3 +495,5 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
     </motion.div>
   );
 };
+
+

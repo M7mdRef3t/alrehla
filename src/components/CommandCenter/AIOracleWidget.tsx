@@ -50,11 +50,11 @@ export const AIOracleWidget: React.FC = () => {
         }
         // ORDER (Neutral)
         return {
-            border: "border-indigo-500/30",
-            bg: "bg-indigo-950/20",
-            iconbg: "bg-indigo-500/20 text-indigo-400",
-            glow: "from-indigo-500/10 to-transparent",
-            text: "text-indigo-200"
+            border: "border-[var(--color-primary)]",
+            bg: "bg-[var(--color-primary)]/20",
+            iconbg: "bg-[var(--color-primary)]/20 text-[var(--color-primary)]",
+            glow: "from-[var(--color-primary)] to-transparent",
+            text: "text-[var(--color-primary)]"
         };
     };
 
@@ -109,3 +109,5 @@ export const AIOracleWidget: React.FC = () => {
         </motion.div>
     );
 };
+
+

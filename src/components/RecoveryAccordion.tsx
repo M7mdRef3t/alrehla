@@ -126,7 +126,7 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
             {scriptBank.map((script, index) => (
               <div
                 key={index}
-                className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg"
+                className="p-4 bg-gradient-to-br from-blue-50 to-[var(--color-primary)] border border-blue-200 rounded-lg"
               >
                 <h4 className="font-bold text-blue-900 mb-2">{script.situation}</h4>
                 <div className="space-y-3 text-sm">
@@ -202,3 +202,4 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
     </div>
   );
 };
+
