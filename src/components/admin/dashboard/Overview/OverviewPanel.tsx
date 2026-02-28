@@ -71,7 +71,7 @@ const StatCard: FC<{ title: string; value: string; hint?: string; glowColor?: st
   </div>
 );
 
-const formatNumber = (value: number | null, fallback = "â€”") =>
+const formatNumber = (value: number | null, fallback = "—") =>
   value == null || Number.isNaN(value) ? fallback : value.toLocaleString("ar-EG");
 
 // --- OverviewPanel Component ---
@@ -211,7 +211,7 @@ export const OverviewPanel: FC = () => {
   const successSampleSize = Math.max(landingViewedCount, startClickedCount, pulseCompletedCount);
   const hasReliableSample = successSampleSize >= 30;
   const successDecision = !hasReliableSample ? "insufficient" : successIndex >= 75 ? "scale" : successIndex >= 50 ? "optimize" : "pivot";
-  const successDecisionLabel = successDecision === "scale" ? "Ø§Ù„Ù…Ù‡Ù…Ø© ÙˆØ§Ø¶Ø­Ø©: Ù†Ø´Ø± Ø§Ù„ØªÙˆØ³Ø¹" : successDecision === "optimize" ? "ØªØ­Ø³ÙŠÙ† Ø§Ù„Ù…Ø³Ø§Ø±: Ù…Ø·Ù„ÙˆØ¨ ØªØ­Ø³ÙŠÙ†" : successDecision === "pivot" ? "ÙØ´Ù„ Ø§Ù„ÙØ±Ø¶ÙŠØ©: Ù…Ø­ÙˆØ±ÙŠ Ø­Ø±Ø¬" : "Ù‚ÙŠØ§Ø³ ØºÙŠØ± ÙƒØ§ÙÙ";
+  const successDecisionLabel = successDecision === "scale" ? "المهمة واضحة: نشر التوسع" : successDecision === "optimize" ? "تحسين المسار: مطلوب تحسين" : successDecision === "pivot" ? "فشل الفرضية: محوري حرج" : "قياس غير كافٍ";
   const successDecisionClass = successDecision === "scale" ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10" : successDecision === "optimize" ? "text-amber-400 border-amber-500/30 bg-amber-500/10" : successDecision === "pivot" ? "text-rose-400 border-rose-500/30 bg-rose-500/10" : "text-slate-500 border-white/5 bg-slate-900/50";
 
   const handleCommitDecision = async () => {
@@ -230,9 +230,9 @@ export const OverviewPanel: FC = () => {
         }
       });
       setWeeklyDecisionLogs((prev) => [entry, ...prev].slice(0, 20));
-      setDecisionMessage("ØªÙ… Ø­ÙØ¸ Ø§Ù„Ù‚Ø±Ø§Ø± Ø§Ù„Ø§Ø³ØªØ±Ø§ØªÙŠØ¬ÙŠ ÙÙŠ Ø§Ù„Ù†ÙˆØ§Ø© Ø§Ù„Ø¹ØµØ¨ÙŠØ©.");
+      setDecisionMessage("تم حفظ القرار الاستراتيجي في النواة العصبية.");
     } catch {
-      setDecisionMessage("ÙØ´Ù„ Ø§Ù„Ø­ÙØ¸.");
+      setDecisionMessage("فشل الحفظ.");
     } finally {
       setDecisionSaving(false);
     }
@@ -248,8 +248,8 @@ export const OverviewPanel: FC = () => {
           </div>
         </div>
         <div className="text-center space-y-3">
-          <p className="text-sm font-black text-slate-400 uppercase tracking-[0.3em]">Ø¬Ø§Ø±ÙŠ Ù…Ø²Ø§Ù…Ù†Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª</p>
-          <p className="text-xs text-slate-600 uppercase font-mono">Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª...</p>
+          <p className="text-sm font-black text-slate-400 uppercase tracking-[0.3em]">جاري مزامنة البيانات</p>
+          <p className="text-xs text-slate-600 uppercase font-mono">الاتصال بقاعدة البيانات...</p>
         </div>
       </div>
     );
@@ -265,27 +265,27 @@ export const OverviewPanel: FC = () => {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8 p-10">
           <div>
             <div className="flex items-center gap-4 mb-3">
-              <h2 className="text-4xl font-black text-white uppercase tracking-tight">Ù…Ø±ÙƒØ² Ø§Ù„Ù‚ÙŠØ§Ø¯Ø©</h2>
+              <h2 className="text-4xl font-black text-white uppercase tracking-tight">مركز القيادة</h2>
               <Sparkles className="w-7 h-7 text-amber-400 animate-pulse" />
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-500/10 border border-teal-500/30 backdrop-blur-sm">
                 <span className="w-2 h-2 rounded-full bg-teal-400 shadow-[0_0_10px_rgba(45,212,191,0.8)] animate-pulse" />
-                <span className="text-[10px] font-black text-teal-400 uppercase tracking-widest">Ù…ØªØµÙ„ Ù…Ø¨Ø§Ø´Ø±</span>
+                <span className="text-[10px] font-black text-teal-400 uppercase tracking-widest">متصل مباشر</span>
               </div>
-              <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">Ø¨Ø« Ù†Ø¨Ø¶ Ø§Ù„Ø±Ø­Ù„Ø©: Ù†Ø´Ø·</p>
+              <p className="text-xs text-slate-500 font-bold uppercase tracking-wide">بث نبض الرحلة: نشط</p>
             </div>
           </div>
 
           <div className="flex items-center gap-6 bg-slate-900/60 px-8 py-5 rounded-2xl border border-white/10 backdrop-blur-sm">
             <div className="text-right">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Ø­Ø§Ù„Ø© Ø§Ù„Ù†Ø¸Ø§Ù…</p>
-              <p className="text-base font-bold text-emerald-400 uppercase">ØªØ´ØºÙŠÙ„ÙŠ</p>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">حالة النظام</p>
+              <p className="text-base font-bold text-emerald-400 uppercase">تشغيلي</p>
             </div>
             <div className="w-px h-10 bg-white/10" />
             <div className="text-right">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Ø§Ù„Ø¥ØµØ¯Ø§Ø±</p>
-              <p className="text-base font-bold text-white uppercase">v2.1-Ù…Ø¯Ø§Ø±ÙŠ</p>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">الإصدار</p>
+              <p className="text-base font-bold text-white uppercase">v2.1-مداري</p>
             </div>
           </div>
         </div>
@@ -293,10 +293,10 @@ export const OverviewPanel: FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø³Ø§ÙØ±ÙŠÙ†" value={formatNumber(totalUsers)} hint={useRemoteAsSource ? "Ù…Ø²Ø§Ù…Ù†Ø© Ù…ÙˆØ«Ù‚Ø©" : "Ø¥Ø³Ù‚Ø§Ø· Ù…Ø­Ù„ÙŠ"} />
-        <StatCard title="Ù†Ø´Ø· Ø§Ù„Ø¢Ù†" value={formatNumber(activeNowValue)} hint="Ø­Ø¶ÙˆØ± Ù…Ø¯Ø§Ø±ÙŠ" />
-        <StatCard title="Ù…ØªÙˆØ³Ø· Ø§Ù„Ø·Ø§Ù‚Ø©" value={formatNumber(avgMoodValue)} hint="ØªØ¯ÙÙ‚ Ø§Ù„Ù…Ø²Ø§Ø¬" glowColor="indigo" />
-        <StatCard title="Ø¹Ù…Ù„ÙŠØ§Øª Ø§Ù„Ø°ÙƒØ§Ø¡" value={formatNumber(aiTokensUsed)} hint="Ø£Ø­Ù…Ø§Ù„ Ø§Ù„Ù…Ù‡Ø§Ù… Ø§Ù„Ø¹ØµØ¨ÙŠØ©" glowColor="indigo" />
+        <StatCard title="إجمالي المسافرين" value={formatNumber(totalUsers)} hint={useRemoteAsSource ? "مزامنة موثقة" : "إسقاط محلي"} />
+        <StatCard title="نشط الآن" value={formatNumber(activeNowValue)} hint="حضور مداري" />
+        <StatCard title="متوسط الطاقة" value={formatNumber(avgMoodValue)} hint="تدفق المزاج" glowColor="indigo" />
+        <StatCard title="عمليات الذكاء" value={formatNumber(aiTokensUsed)} hint="أحمال المهام العصبية" glowColor="indigo" />
       </div>
 
       <RecoveryWidget />
@@ -622,7 +622,7 @@ export const OverviewPanel: FC = () => {
 
       {/* Footer */}
       <div className="admin-glass-card p-8 border-white/5 bg-slate-950/20 text-center rounded-2xl">
-        <p className="text-xs font-black text-slate-500 uppercase tracking-[0.4em]">Ù†Ù‡Ø§ÙŠØ© Ø¨Ø« Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø¨Ø§Ø´Ø±</p>
+        <p className="text-xs font-black text-slate-500 uppercase tracking-[0.4em]">نهاية بث البيانات المباشر</p>
       </div>
     </div>
   );
