@@ -11,6 +11,10 @@ export interface ProvenPath {
 }
 
 export interface SwarmMetrics {
+    metadata?: {
+        external_tension: number;
+        last_signal_label: string;
+    };
     mean_vector: AwarenessVector;
     outlier_vector: AwarenessVector; // Top 10% performance
     active_sovereigns: number;
