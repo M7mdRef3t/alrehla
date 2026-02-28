@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 interface CollectiveRadarProps {
     userVector: AwarenessVector;
     swarmMetrics: SwarmMetrics;
+    externalTension?: any;
     title?: string;
 }
 
