@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, ShieldAlert, Cpu, Activity } from 'lucide-react';
+import { Zap,Cpu, Activity } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 
 interface ActiveEvent {

@@ -1,3 +1,4 @@
+export interface SwarmMetricsMetadata { external_tension?: number; last_signal_label?: string; }
 import { supabase } from './supabaseClient';
 import { AwarenessVector } from './trajectoryEngine';
 
@@ -15,6 +16,7 @@ export interface SwarmMetrics {
     outlier_vector: AwarenessVector; // Top 10% performance
     active_sovereigns: number;
     swarm_momentum: number;
+    metadata?: SwarmMetricsMetadata;
 }
 
 export class HiveEngine {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Battery, CheckCircle2, CircleDashed, Clock, Zap, Award, Sparkles, ChevronRight, Share2, ShieldAlert } from 'lucide-react';
+import { Activity, Battery, CheckCircle2, CircleDashed, Clock, Zap, Award, ChevronRight, ShieldAlert } from 'lucide-react';
 import { useTrajectoryRealtime } from '../../hooks/useTrajectoryRealtime';
 import { AwarenessHeatmap } from './AwarenessHeatmap';
 import { CollectiveRadar } from './CollectiveRadar';
@@ -271,7 +271,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                     <CollectiveRadar
                         userVector={activeTrajectory.initial_vector}
                         swarmMetrics={swarmMetrics}
-                        externalTension={externalTension}
+
                     />
                 )}
             </div>
@@ -279,7 +279,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
             {/* --- Right Column: Mission Cards --- */}
             <div className="space-y-4 lg:col-span-8">
                 <AnimatePresence mode="popLayout">
-                    {mission.daily_missions.map((m: any, idx: number) => {
+                    {mission.daily_missions.map((m: { day: number; actionable_task: string; context_blurb: string; emotional_barrier: string }, idx: number) => {
                         const isCurrentDay = m.day === (activeTrajectory?.data?.current_day || 1);
                         const isCompleted = m.day < (activeTrajectory?.data?.current_day || 1);
 

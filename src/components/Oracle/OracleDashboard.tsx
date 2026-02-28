@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, CheckCircle, AlertTriangle, Eye, TrendingUp, Users, ChevronRight, Gavel } from 'lucide-react';
+import { Shield, CheckCircle, AlertTriangle, Eye, ChevronRight, Gavel } from 'lucide-react';
 import { HiveEngine, ProvenPath, SwarmMetrics } from '../../services/hiveEngine';
 import { CollectiveRadar } from '../Trajectory/CollectiveRadar';
 import { FirstBloodOverlay } from './FirstBloodOverlay';
@@ -30,7 +30,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
             setLoading(false);
         };
         loadData();
-    }, []);
+    }, [oracleId]);
 
     const handleApprove = async (id: string) => {
         const success = await HiveEngine.approveTrajectory(id, oracleId);
@@ -151,7 +151,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
                                 <div className="space-y-4">
                                     <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5 pb-2">Mission Payload</h5>
                                     <div className="p-6 bg-slate-950/40 rounded-3xl border border-white/5 space-y-4 min-h-[200px] max-h-[300px] overflow-y-auto">
-                                        {selectedPath.mission_data?.daily_missions?.map((m: any) => (
+                                        {selectedPath.mission_data?.daily_missions?.map((m: { day: string | number; actionable_task: string }) => (
                                             <div key={m.day} className="p-4 bg-white/5 rounded-2xl">
                                                 <span className="text-[8px] font-black text-indigo-500 uppercase">Day {m.day}</span>
                                                 <p className="text-xs text-slate-300 mt-1">{m.actionable_task}</p>
