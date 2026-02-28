@@ -532,8 +532,30 @@ export class AutoHealthChecker {
   private async notifyAdmin(result: HealthCheckResult): Promise<void> {
     console.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
 
-    // TODO: إرسال notification فعلي (email, SMS, push, etc.)
-    // مؤقتاً: نحفظ في localStorage
+    // إرسال تنبيه فعلي عبر Telegram
+    try {
+      // Import dynamically to avoid potential circular dependencies
+      const { telegramBot } = await import("../services/telegramBot");
+
+      const criticalIssues = result.issues.filter(i => i.severity === "critical" || i.severity === "high");
+
+      if (criticalIssues.length > 0) {
+        // نجمع رسالة الخطأ من المشاكل
+        const message = criticalIssues.map(i => `- [${i.category}] ${i.description}`).join("\n");
+        const affectedFeatures = [...new Set(criticalIssues.map(i => i.category))];
+        const highestSeverity = criticalIssues.some(i => i.severity === "critical") ? "critical" : "high";
+
+        await telegramBot.alertCriticalError({
+          message: message || "تم اكتشاف مشكلة صحية في النظام",
+          severity: highestSeverity,
+          affectedFeatures: affectedFeatures.length > 0 ? affectedFeatures : ["system"]
+        });
+      }
+    } catch (telegramError) {
+      console.error("Failed to send Telegram notification:", telegramError);
+    }
+
+    // نحفظ في localStorage (Fallback/History)
 
     try {
       const alerts = JSON.parse(
