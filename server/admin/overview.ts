@@ -1,3 +1,4 @@
+import { sendEmail } from '../lib/email';
 import { getAdminSupabase, parseJsonBody, recordAdminAudit, verifyAdmin, verifyAdminWithRoles } from "./_shared";
 import { captureServerError, initServerMonitoring } from "./monitoring";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -144,24 +145,11 @@ async function sendSlack(message: string): Promise<void> {
   });
 }
 
+
 async function sendResend(subject: string, html: string): Promise<void> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const to = process.env.REPORT_EMAIL_TO;
-  const from = process.env.REPORT_EMAIL_FROM;
-  if (!apiKey || !to || !from) return;
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      from,
-      to,
-      subject,
-      html
-    })
-  });
+    const to = process.env.REPORT_EMAIL_TO;
+    if (!to) return;
+    await sendEmail(to, subject, html);
 }
 
 /** Default weights/thresholds — نفس منطق feelingScore (استنزاف = score > 2) */

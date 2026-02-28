@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
+import { sendEmail } from '@/server/lib/email';
 
 function getStripeClient() {
     const secretKey = process.env.STRIPE_SECRET_KEY;
@@ -93,10 +94,24 @@ export async function POST(req: Request) {
 
                 if (error) console.error("Error updating subscription status:", error);
 
-                // If past_due, we could trigger an email via Resend here.
+                // If past_due, trigger an email via Resend
                 if (subscription.status === 'past_due') {
                     console.log(`Subscription for customer ${subscription.customer} is past due! Grace period activated.`);
-                    // TODO: Trigger email
+                    const { data: user } = await supabaseAdmin
+                        .from('profiles')
+                        .select('email, full_name')
+                        .eq('stripe_customer_id', subscription.customer as string)
+                        .single();
+
+                    if (user?.email) {
+                        const subject = "Action Required: Your Subscription is Past Due";
+                        const html = `<p>Hi ${user.full_name || 'there'},</p>
+                        <p>We noticed that your recent payment could not be processed, and your subscription is now <strong>past due</strong>.</p>
+                        <p>Please update your payment method to ensure uninterrupted access to your premium features.</p>
+                        <br/>
+                        <p>Best,<br/>The Dawayir Team</p>`;
+                        await sendEmail(user.email, subject, html);
+                    }
                 }
                 break;
             }
