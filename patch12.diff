@@ -1,0 +1,23 @@
+--- src/components/AtlasDashboard.tsx
++++ src/components/AtlasDashboard.tsx
+@@ -230,8 +230,8 @@
+                   contentStyle={{ backgroundColor: "#1e1e1e", border: "1px solid #333" }}
+                   labelStyle={{ color: "#d1d5db" }}
+                   formatter={(val: number) => [val, "Starts"]}
+-                  labelFormatter={(_label: unknown, payload: unknown[]) =>
+-                    (payload as { payload?: { pathLabel?: string } }[])?.[0]?.payload?.pathLabel ?? _label as string
++                  labelFormatter={(_label: unknown, payload: unknown[]) => {
++                    return (payload as { payload?: { pathLabel?: string } }[])?.[0]?.payload?.pathLabel ?? _label as string;
+                   }
+                 />
+                 <Bar dataKey="starts" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+@@ -270,7 +270,8 @@
+                   contentStyle={{ backgroundColor: "#1e1e1e", border: "1px solid #333" }}
+                   labelStyle={{ color: "#d1d5db" }}
+                   formatter={(val: number) => [val, "Completed Tasks"]}
+-                  labelFormatter={(_label: unknown, payload: unknown[]) => payload?.[0]?.payload?.date ?? ""}
++                  labelFormatter={(_label: unknown, payload: unknown[]) => {
++                    return (payload as { payload?: { date?: string } }[])?.[0]?.payload?.date ?? _label as string;
+                   }
+                 />
+                 <Bar dataKey="completedTasks" fill="#10b981" radius={[4, 4, 0, 0]} />

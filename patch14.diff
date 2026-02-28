@@ -1,5 +1,5 @@
---- AtlasDashboard.tsx
-+++ AtlasDashboard.tsx
+--- src/components/AtlasDashboard.tsx
++++ src/components/AtlasDashboard.tsx
 @@ -230,8 +230,8 @@
                    contentStyle={{ backgroundColor: "#1e1e1e", border: "1px solid #333" }}
                    labelStyle={{ color: "#d1d5db" }}

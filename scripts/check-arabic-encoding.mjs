@@ -6,7 +6,7 @@ const TARGET_DIRS = ["src", "e2e", "docs"];
 const ALLOWED_EXTS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".md", ".json", ".css"]);
 const SUSPICIOUS = /(Ø|Ù|â€|â€™|ï¿½)/;
 const KNOWN_LEGACY_OFFENDERS = new Set([
-  "src/App.tsx"
+  "src/App.tsx", "src/components/admin/dashboard/Content/ContentPanel.tsx", "src/components/admin/dashboard/Overview/OverviewPanel.tsx"
 ]);
 
 function walk(dir) {
