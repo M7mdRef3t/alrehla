@@ -1,8 +1,8 @@
-import type { FC } from "react";
+﻿import type { FC } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bot, LayoutTemplate, X } from "lucide-react";
 
-export type WelcomeSource = "ai" | "template";
+export type WelcomeSource = "ai" | "template" | "offline_intervention";
 
 interface OnboardingWelcomeBubbleProps {
   message: string;
@@ -15,6 +15,9 @@ export const OnboardingWelcomeBubble: FC<OnboardingWelcomeBubbleProps> = ({
   source,
   onClose
 }) => {
+  const isAi = source === "ai";
+  const isOfflineIntervention = source === "offline_intervention";
+
   return (
     <AnimatePresence>
       <motion.div
@@ -43,7 +46,7 @@ export const OnboardingWelcomeBubble: FC<OnboardingWelcomeBubbleProps> = ({
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-xs font-extrabold" style={{ color: "var(--soft-teal)" }}>
-                    مرحباً بك
+                    {isOfflineIntervention ? "دواير كانت بتفكر فيك وإنت غايب..." : "مرحباً بك"}
                   </p>
                   <span
                     className="inline-flex items-center justify-center text-[10px] font-semibold rounded-full px-2 py-0.5"
@@ -52,10 +55,10 @@ export const OnboardingWelcomeBubble: FC<OnboardingWelcomeBubbleProps> = ({
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                       color: "var(--text-muted)"
                     }}
-                    title={source === "ai" ? "AI" : "نسخة ثابتة"}
-                    aria-label={source === "ai" ? "AI" : "نسخة ثابتة"}
+                    title={isAi ? "AI" : isOfflineIntervention ? "Intervention" : "نسخة ثابتة"}
+                    aria-label={isAi ? "AI" : isOfflineIntervention ? "Intervention" : "نسخة ثابتة"}
                   >
-                    {source === "ai" ? "AI" : <LayoutTemplate className="w-3 h-3" aria-hidden="true" />}
+                    {isAi ? "AI" : isOfflineIntervention ? "Oracle" : <LayoutTemplate className="w-3 h-3" aria-hidden="true" />}
                   </span>
                 </div>
                 <p

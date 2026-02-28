@@ -16,6 +16,8 @@ import { analyzeMapInterference } from "../../services/socialSync";
 import { AINode } from "./AINode";
 import { useCognitiveDebounce } from "../../hooks/useCognitiveDebounce";
 import { useAuthState } from "../../state/authState";
+import { useOptimisticPhoenixSync } from "../../hooks/useOptimisticPhoenixSync";
+import { useKineticSensors } from "../../hooks/useKineticSensors";
 
 /* ════════════════════════════════════════════════
    🌌 COSMIC MAP CANVAS — Digital Sanctuary
@@ -373,7 +375,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
             type="button"
             onClick={handleDelete}
             onPointerDown={blockDeletePointer}
-            className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center z-30"
+            className="absolute -top-3 -right-3 min-w-11 min-h-11 w-11 h-11 rounded-full flex items-center justify-center z-30"
             style={{
               background: "linear-gradient(135deg, #94a3b8, #64748b)",
               boxShadow: "0 0 10px rgba(100, 116, 139, 0.25)"
@@ -538,22 +540,33 @@ export const MapCanvas: FC<MapCanvasProps> = ({
 
   const [showArchiveToast, setShowArchiveToast] = useState(false);
   const [lastArchivedName, setLastArchivedName] = useState<string | undefined>(undefined);
-  const archivedCount = useMemo(() => allNodes.filter((n) => n.isNodeArchived).length, [allNodes]);
+  const { archivedCount, latestArchivedLabel } = useMemo(() => {
+    // Perf: single-pass aggregation avoids repeated filter + sort on every nodes update.
+    let count = 0;
+    let latestArchivedAt = -1;
+    let latestLabel: string | undefined;
+    for (const node of allNodes) {
+      if (!node.isNodeArchived) continue;
+      count += 1;
+      if (!node.archivedAt) continue;
+      if (node.archivedAt > latestArchivedAt) {
+        latestArchivedAt = node.archivedAt;
+        latestLabel = node.label;
+      }
+    }
+    return { archivedCount: count, latestArchivedLabel: latestLabel };
+  }, [allNodes]);
   const prevArchivedCountRef = useRef(archivedCount);
   useEffect(() => {
     if (archivedCount > prevArchivedCountRef.current) {
-      // Find the node that was just archived (most recently archivedAt)
-      const justArchived = allNodes
-        .filter((n) => n.isNodeArchived && n.archivedAt)
-        .sort((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0))[0];
-      setLastArchivedName(justArchived?.label);
+      setLastArchivedName(latestArchivedLabel);
       setShowArchiveToast(true);
       const t = setTimeout(() => setShowArchiveToast(false), 4500);
       prevArchivedCountRef.current = archivedCount;
       return () => clearTimeout(t);
     }
     prevArchivedCountRef.current = archivedCount;
-  }, [archivedCount, allNodes]);
+  }, [archivedCount, latestArchivedLabel]);
 
   const [showDragHint, setShowDragHint] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
@@ -585,6 +598,13 @@ export const MapCanvas: FC<MapCanvasProps> = ({
 
   const { user } = useAuthState();
   const [isCommitProcessing, setIsCommitProcessing] = useState(false);
+  const {
+    displayScore: optimisticPhoenixScore,
+    sourceScore: sourcePhoenixScore,
+    pendingOps: pendingPhoenixOps,
+    isSyncing: isPhoenixSyncing,
+    applyOptimistic: applyOptimisticPhoenix
+  } = useOptimisticPhoenixSync(user?.id);
 
   // ─── Cognitive Debounce Integration ───
   const { registerMutation } = useCognitiveDebounce(async (payload) => {
@@ -608,14 +628,16 @@ export const MapCanvas: FC<MapCanvasProps> = ({
   const [pendingMove, setPendingMove] = useState<{ nodeId: string; nodeLabel: string; fromRing: Ring; toRing: Ring } | null>(null);
   const [justDraggedId, setJustDraggedId] = useState<string | null>(null);
   const dragTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { onDragStart: onKineticDragStart, onDragMove: onKineticDragMove, onDragEnd: onKineticDragEnd } = useKineticSensors();
   useEffect(() => () => { if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current); }, []);
 
   const mouseSensor = useSensor(MouseSensor);
-  const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } });
+  const touchSensor = useSensor(TouchSensor, { activationConstraint: { distance: 5 } });
   const sensors = useSensors(mouseSensor, touchSensor);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
+      onKineticDragEnd(event);
       const activeId = String(event.active.id);
       const overId = event.over?.id;
       const node = nodes.find((n) => n.id === activeId);
@@ -628,6 +650,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
           setDetached(activeId, true);
           // ─── Cognitive Audit ───
           if (user) {
+            applyOptimisticPhoenix('MAJOR_DETACHMENT');
             registerMutation({
               userId: user.id,
               actionType: 'MAJOR_DETACHMENT',
@@ -662,6 +685,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
           }
           // ─── Cognitive Audit ───
           if (user && (fromRing !== toRing || node.isDetached)) {
+            applyOptimisticPhoenix('CIRCLE_SHIFT');
             registerMutation({
               userId: user.id,
               actionType: 'CIRCLE_SHIFT',
@@ -679,7 +703,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         return;
       }
     },
-    [nodes, setDetached, moveNodeToRing, isSimulation, aiState]
+    [nodes, setDetached, moveNodeToRing, isSimulation, aiState, onKineticDragEnd]
   );
 
   const confirmPlacement = useCallback(() => {
@@ -818,6 +842,30 @@ export const MapCanvas: FC<MapCanvasProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
+        {!isSimulation && (
+          <div className="absolute top-2 right-2 z-[90] rounded-xl bg-slate-900/80 border border-teal-500/30 px-3 py-2 text-[11px] text-right backdrop-blur-md">
+            <div className="font-bold text-teal-200 flex items-center gap-1 justify-end">
+              <span>Phoenix Score:</span>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={optimisticPhoenixScore.toFixed(3)}
+                  initial={{ y: 7, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -7, opacity: 0 }}
+                  transition={{ duration: 0.22, ease: "easeOut" }}
+                  className="inline-block min-w-[2.8rem] text-left"
+                >
+                  {optimisticPhoenixScore.toFixed(3)}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+            <div className="text-slate-300">
+              Source: {sourcePhoenixScore.toFixed(3)}
+              {pendingPhoenixOps > 0 ? ` | queued: ${pendingPhoenixOps}` : ""}
+              {isPhoenixSyncing ? " | syncing..." : ""}
+            </div>
+          </div>
+        )}
         {/* Simulation Controls (Phase 22) */}
         {!isSimulation ? (
           <button
@@ -833,7 +881,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         ) : (
           <FutureSimulator nodes={simulatedNodes} onExitSimulation={() => setIsSimulation(false)} />
         )}
-        <DndContext onDragEnd={handleDragEnd} sensors={sensors}>
+        <DndContext onDragStart={onKineticDragStart} onDragMove={onKineticDragMove} onDragEnd={handleDragEnd} sensors={sensors}>
           <div className="absolute inset-0">
             {shouldUseLightweightRendering && (
               <div className="absolute top-2 right-2 z-[70] rounded-xl bg-slate-900/80 border border-slate-700 px-2.5 py-1.5 text-[10px] text-slate-300">

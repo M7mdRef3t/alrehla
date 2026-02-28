@@ -40,7 +40,7 @@ export class ResonanceMonitor {
         const chatContext = lastChat?.map(c => `${c.role}: ${c.content}`).join('\n') || '';
 
         // 2. Analyze Sentiment (Oracle vs Shadow determination)
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const analysisPrompt = `
 Analyze the following user chat history and determine if they are in a state of:
 1. STABILITY/GROWTH: Confident, defensive, or exploring.

@@ -27,7 +27,7 @@ export async function POST(req: Request) {
                 user_id: payload.userId,
                 action_type: payload.actionType,
                 payload: payload,
-                status: 'PENDING'
+                status: 'pending'
             });
 
         if (error) throw error;

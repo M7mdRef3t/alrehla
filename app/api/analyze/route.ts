@@ -61,48 +61,42 @@ export async function POST(req: Request) {
     const { answers } = await req.json();
 
     if (!answers || !Array.isArray(answers) || answers.length === 0) {
-      return NextResponse.json({ error: 'لم يتم تقديم أي إجابات' }, { status: 400 });
+      return NextResponse.json({ error: "Missing answers payload" }, { status: 400 });
     }
 
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
     if (!GEMINI_API_KEY) {
-      // Return a simulated response if no API key is set
-      console.warn("GEMINI_API_KEY is not set. Using simulated response.");
-      return NextResponse.json({
-        nodes: [
-          { id: "user_core", label: "أنت (المركز)", size: "medium", color: "core", mass: 10 },
-          { id: "partner", label: "شريك العمل", size: "large", color: "danger", mass: 9 },
-          { id: "car", label: "أقساط السيارة", size: "medium", color: "danger", mass: 7 },
-          { id: "health", label: "الصحة البدنية", size: "small", color: "ignored", mass: 2 }
-        ],
-        edges: [
-          { source: "user_core", target: "partner", type: "draining", animated: true },
-          { source: "user_core", target: "car", type: "draining", animated: true },
-          { source: "user_core", target: "health", type: "ignored", animated: false },
-          { source: "partner", target: "health", type: "conflict", animated: true }
-        ],
-        insight_message: "أنت تضخ 90% من طاقتك في صراعك مع شريكك بينما صحتك تختنق. اقطع هذا الرابط لتسترد أنفاسك."
-      });
+      return NextResponse.json(
+        { error: "AI analysis unavailable", source: "not_configured", is_live: false },
+        { status: 503 }
+      );
     }
 
     // Get the dynamic model route from the Meta-Orchestrator
-    const modelId = await AIOrchestrator.getRouteForFeature('quick_analysis');
+    const modelId = await AIOrchestrator.getRouteForFeature("quick_analysis");
 
     // We assume the model routed here is compatible with Gemini SDK (since the project standardized on it).
     // In a fully agnostic setup, we'd have a wrapper supporting both SDKs.
     const model = genAI.getGenerativeModel({ model: modelId, generationConfig: { responseMimeType: "application/json" } });
 
-    const prompt = `${SYSTEM_PROMPT}\n\nإجابات المستخدم:\n1. ${answers[0]}\n2. ${answers[1]}\n3. ${answers[2]}`;
+    const prompt = `${SYSTEM_PROMPT}
+
+User answers:
+1. ${answers[0]}
+2. ${answers[1]}
+3. ${answers[2]}`;
 
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
 
     const data = JSON.parse(responseText);
 
-    return NextResponse.json(data);
+    return NextResponse.json({ ...data, source: "gemini", is_live: true });
   } catch (error: any) {
-    console.error('Analyze API Error:', error);
-    return NextResponse.json({ error: error.message || 'خطأ داخلي' }, { status: 500 });
+    console.error("Analyze API Error:", error);
+    return NextResponse.json(
+      { error: "Analysis generation failed", source: "generation_failed", is_live: false },
+      { status: 502 }
+    );
   }
 }

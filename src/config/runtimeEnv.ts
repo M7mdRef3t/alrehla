@@ -1,6 +1,7 @@
 type RuntimeKey =
   | "VITE_APP_ENV"
   | "VITE_PHASE_ONE_USER_FLOW"
+  | "VITE_PUBLIC_PAYMENTS_ENABLED"
   | "VITE_SUPABASE_URL"
   | "VITE_SUPABASE_ANON_KEY"
   | "VITE_WHATSAPP_CONTACT_NUMBER"
@@ -31,6 +32,53 @@ function safeProcessEnv(): Record<string, unknown> {
   return {};
 }
 
+function readNextPublicStatic(key: RuntimeKey): string | undefined {
+  switch (key) {
+    case "VITE_APP_ENV":
+      return process.env.NEXT_PUBLIC_APP_ENV?.trim();
+    case "VITE_PHASE_ONE_USER_FLOW":
+      return process.env.NEXT_PUBLIC_PHASE_ONE_USER_FLOW?.trim();
+    case "VITE_PUBLIC_PAYMENTS_ENABLED":
+      return process.env.NEXT_PUBLIC_PUBLIC_PAYMENTS_ENABLED?.trim();
+    case "VITE_SUPABASE_URL":
+      return process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+    case "VITE_SUPABASE_ANON_KEY":
+      return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+    case "VITE_WHATSAPP_CONTACT_NUMBER":
+      return process.env.NEXT_PUBLIC_WHATSAPP_CONTACT_NUMBER?.trim();
+    case "VITE_ADMIN_ALLOWED_ROLES":
+      return process.env.NEXT_PUBLIC_ADMIN_ALLOWED_ROLES?.trim();
+    case "VITE_ADMIN_CODE":
+      return process.env.NEXT_PUBLIC_ADMIN_CODE?.trim();
+    case "VITE_ADMIN_API_BASE":
+      return process.env.NEXT_PUBLIC_ADMIN_API_BASE?.trim();
+    case "VITE_GA_MEASUREMENT_ID":
+      return process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
+    case "VITE_CLARITY_PROJECT_ID":
+      return process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID?.trim();
+    case "VITE_CONTENTSQUARE_PROJECT_ID":
+      return process.env.NEXT_PUBLIC_CONTENTSQUARE_PROJECT_ID?.trim();
+    case "VITE_AUTH_REDIRECT_URL":
+      return process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL?.trim();
+    case "VITE_PUBLIC_APP_URL":
+      return process.env.NEXT_PUBLIC_PUBLIC_APP_URL?.trim();
+    case "VITE_GEMINI_AI_ENABLED":
+      return process.env.NEXT_PUBLIC_GEMINI_AI_ENABLED?.trim();
+    case "VITE_SENTRY_DSN":
+      return process.env.NEXT_PUBLIC_SENTRY_DSN?.trim();
+    case "VITE_SENTRY_TRACES_SAMPLE_RATE":
+      return process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE?.trim();
+    case "VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE":
+      return process.env.NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE?.trim();
+    case "VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE":
+      return process.env.NEXT_PUBLIC_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE?.trim();
+    case "VITE_OWNER_SECURITY_WEBHOOK_URL":
+      return process.env.NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL?.trim();
+    default:
+      return undefined;
+  }
+}
+
 function readEnv(key: RuntimeKey): string | undefined {
   // 1. Try Vite's import.meta.env first (works in both dev and prod)
   try {
@@ -40,17 +88,21 @@ function readEnv(key: RuntimeKey): string | undefined {
     // ignore import.meta access errors
   }
 
-  // 2. Try Next.js process.env (build-time inlined NEXT_PUBLIC_*)
+  // 2. Try explicit Next.js public env access so values are statically inlined in client bundles.
+  const staticNextVal = readNextPublicStatic(key);
+  if (typeof staticNextVal === "string" && staticNextVal.length > 0) return staticNextVal;
+
+  // 3. Try Next.js process.env (server/runtime fallback)
   const penv = safeProcessEnv();
   const nextKey = key.replace("VITE_", "NEXT_PUBLIC_");
   const nextVal = penv[nextKey];
   if (typeof nextVal === "string" && nextVal.length > 0) return nextVal.trim();
 
-  // 3. Try direct key from process.env
+  // 4. Try direct key from process.env
   const directVal = penv[key];
   if (typeof directVal === "string" && directVal.length > 0) return directVal.trim();
 
-  // 4. Try Next.js publicRuntimeConfig (client-side)
+  // 5. Try Next.js publicRuntimeConfig (client-side)
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getConfig } = require("next/config");
@@ -77,6 +129,7 @@ export const runtimeEnv = {
   isProd: processNodeEnv ? processNodeEnv === "production" : metaProd,
   appEnv: readEnv("VITE_APP_ENV"),
   phaseOneUserFlow: readEnv("VITE_PHASE_ONE_USER_FLOW"),
+  publicPaymentsEnabled: readEnv("VITE_PUBLIC_PAYMENTS_ENABLED"),
   supabaseUrl: readEnv("VITE_SUPABASE_URL"),
   supabaseAnonKey: readEnv("VITE_SUPABASE_ANON_KEY"),
   whatsappContactNumber: readEnv("VITE_WHATSAPP_CONTACT_NUMBER"),

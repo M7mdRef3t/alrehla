@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, CheckCircle, AlertTriangle, Eye, TrendingUp, Users, ChevronRight, Gavel } from 'lucide-react';
 import { HiveEngine, ProvenPath, SwarmMetrics } from '../../services/hiveEngine';
@@ -57,9 +57,9 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-8 bg-slate-950 min-h-screen text-slate-100 font-sans">
             {/* Header: Command Status */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 p-8 bg-indigo-900/20 rounded-[2.5rem] border border-indigo-500/30 backdrop-blur-3xl shadow-2xl">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 p-8 bg-[var(--color-primary)]/20 rounded-[2.5rem] border border-[var(--color-primary)] backdrop-blur-3xl shadow-2xl">
                 <div>
-                    <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-indigo-400 flex items-center">
+                    <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-[var(--color-primary)] flex items-center">
                         <Shield className="mr-4 w-10 h-10 text-cyan-400" />
                         Oracle Council Dashboard
                     </h1>
@@ -84,7 +84,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* Left Column: Pending Audit Queue */}
                 <div className="lg:col-span-5 space-y-4">
-                    <h3 className="flex items-center text-sm font-black text-indigo-400 uppercase tracking-[0.2em] mb-4">
+                    <h3 className="flex items-center text-sm font-black text-[var(--color-primary)] uppercase tracking-[0.2em] mb-4">
                         <Gavel className="mr-2 w-4 h-4" />
                         Audit Queue ({pending.length})
                     </h3>
@@ -98,7 +98,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
                                 exit={{ opacity: 0, scale: 0.95 }}
                                 onClick={() => setSelectedPath(path)}
                                 className={`p-6 cursor-pointer rounded-3xl border transition-all duration-300 ${selectedPath?.id === path.id
-                                    ? 'bg-indigo-600/20 border-indigo-400 shadow-indigo-500/20'
+                                    ? 'bg-[var(--color-primary)]/20 border-[var(--color-primary)] shadow-[var(--color-primary-glow)]'
                                     : 'bg-slate-900/40 border-white/5 hover:border-white/10'
                                     }`}
                             >
@@ -106,7 +106,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
                                     <h4 className="text-lg font-bold text-white">{path.title}</h4>
                                     <div className="flex flex-col items-end">
                                         <ChevronRight className={`w-5 h-5 transition-transform ${selectedPath?.id === path.id ? 'rotate-90' : ''}`} />
-                                        <span className="text-[8px] font-black text-indigo-400 mt-1">
+                                        <span className="text-[8px] font-black text-[var(--color-primary)] mt-1">
                                             {path.approved_by_ids?.length || 0}/2 Approvals
                                         </span>
                                     </div>
@@ -153,7 +153,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
                                     <div className="p-6 bg-slate-950/40 rounded-3xl border border-white/5 space-y-4 min-h-[200px] max-h-[300px] overflow-y-auto">
                                         {selectedPath.mission_data?.daily_missions?.map((m: any) => (
                                             <div key={m.day} className="p-4 bg-white/5 rounded-2xl">
-                                                <span className="text-[8px] font-black text-indigo-500 uppercase">Day {m.day}</span>
+                                                <span className="text-[8px] font-black text-[var(--color-primary)] uppercase">Day {m.day}</span>
                                                 <p className="text-xs text-slate-300 mt-1">{m.actionable_task}</p>
                                             </div>
                                         ))}
@@ -189,3 +189,6 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
         </div>
     );
 };
+
+
+

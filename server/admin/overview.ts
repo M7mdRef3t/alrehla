@@ -31,6 +31,9 @@ type JsonResponder = {
   headersSent?: boolean;
 };
 
+const PAYMENT_PROOF_BUCKET = "payment-proofs";
+const PAYMENT_PROOF_SIGNED_URL_TTL_SECONDS = 60 * 20;
+
 function pushLatencySample(ms: number): void {
   overviewRuntimeStats.latencyMs.push(ms);
   if (overviewRuntimeStats.latencyMs.length > 200) overviewRuntimeStats.latencyMs.shift();
@@ -132,6 +135,42 @@ function verifyCron(req: RequestLike): boolean {
   if (!secret) return true;
   const token = req.query?.secret || req.headers?.["x-cron-secret"];
   return token === secret;
+}
+
+function getTicketProofImage(row: Record<string, unknown>): Record<string, unknown> | null {
+  const metadata = row.metadata;
+  if (!metadata || typeof metadata !== "object") return null;
+  const proofImage = (metadata as Record<string, unknown>).proof_image;
+  if (!proofImage || typeof proofImage !== "object") return null;
+  return proofImage as Record<string, unknown>;
+}
+
+async function attachSupportTicketProofUrls(
+  client: SupabaseClient,
+  rows: Array<Record<string, unknown>>
+): Promise<Array<Record<string, unknown>>> {
+  return await Promise.all(
+    rows.map(async (row) => {
+      const proofImage = getTicketProofImage(row);
+      const storagePath = String(proofImage?.storage_path ?? "").trim();
+      if (!storagePath) return row;
+
+      const bucket = String(proofImage?.storage_bucket ?? PAYMENT_PROOF_BUCKET).trim() || PAYMENT_PROOF_BUCKET;
+      const { data, error } = await client.storage.from(bucket).createSignedUrl(storagePath, PAYMENT_PROOF_SIGNED_URL_TTL_SECONDS);
+      if (error || !data?.signedUrl) return row;
+
+      return {
+        ...row,
+        metadata: {
+          ...((row.metadata as Record<string, unknown>) ?? {}),
+          proof_image: {
+            ...proofImage,
+            signed_url: data.signedUrl
+          }
+        }
+      };
+    })
+  );
 }
 
 async function sendSlack(message: string): Promise<void> {
@@ -964,7 +1003,10 @@ async function handleSupportTicketsGet(client: SupabaseClient, req: RequestLike,
     return blob.includes(search);
   });
 
-  res.status(200).json({ tickets: tickets.slice(0, limit) });
+  const limitedTickets = tickets.slice(0, limit);
+  const hydratedTickets = await attachSupportTicketProofUrls(client, limitedTickets);
+
+  res.status(200).json({ tickets: hydratedTickets });
 }
 
 async function handleSupportTicketsPost(client: SupabaseClient, req: RequestLike, res: JsonResponder) {
@@ -1518,18 +1560,85 @@ async function handleExecutiveReport(client: SupabaseClient, res: JsonResponder)
 }
 
 async function handleSystemHealth(client: SupabaseClient, res: JsonResponder) {
+  const now = new Date();
+  const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const probeStart = Date.now();
-  const { error } = await client.from("journey_events").select("id", { count: "exact", head: true }).limit(1);
+  const [{ error }, { data: telemetryRows }, { count: api5xx24h }] = await Promise.all([
+    client.from("journey_events").select("id", { count: "exact", head: true }).limit(1),
+    client
+      .from("ai_telemetry")
+      .select("llm_latency_ms,total_tokens")
+      .gte("created_at", since24h)
+      .limit(10000),
+    client
+      .from("admin_audit_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("action", "admin_api_error")
+      .gte("created_at", since24h)
+  ]);
   const probeMs = Date.now() - probeStart;
   const uptimeSec = Math.max(0, Math.round((Date.now() - overviewRuntimeStats.startedAt) / 1000));
   const recent = overviewRuntimeStats.latencyMs;
   const errRate = overviewRuntimeStats.requests > 0
     ? Math.round((overviewRuntimeStats.errors / overviewRuntimeStats.requests) * 1000) / 10
     : 0;
+  const llmLatencies = (telemetryRows ?? [])
+    .map((row) => Number((row as Record<string, unknown>).llm_latency_ms))
+    .filter((value) => Number.isFinite(value) && value >= 0);
+  const llmLatencyP95Ms = percentile(llmLatencies, 95);
+  const tokenUsage24h = (telemetryRows ?? []).reduce((sum, row) => {
+    const tokens = Number((row as Record<string, unknown>).total_tokens);
+    return sum + (Number.isFinite(tokens) && tokens > 0 ? tokens : 0);
+  }, 0);
+  const api5xxCount24h = Number(api5xx24h ?? 0);
+
+  const operationsAlerts: Array<{
+    level: "warning" | "critical";
+    code: string;
+    message: string;
+    value: number;
+    threshold: number;
+  }> = [];
+
+  if (api5xxCount24h >= 10) {
+    operationsAlerts.push({
+      level: api5xxCount24h >= 20 ? "critical" : "warning",
+      code: "api_5xx_spike",
+      message: "ارتفاع أخطاء API خلال 24 ساعة.",
+      value: api5xxCount24h,
+      threshold: 10
+    });
+  }
+
+  if (llmLatencyP95Ms >= 2500) {
+    operationsAlerts.push({
+      level: llmLatencyP95Ms >= 4000 ? "critical" : "warning",
+      code: "llm_latency_p95_high",
+      message: "P95 لزمن استجابة النموذج أعلى من الحد المقبول.",
+      value: llmLatencyP95Ms,
+      threshold: 2500
+    });
+  }
+
+  if (tokenUsage24h >= 250000) {
+    operationsAlerts.push({
+      level: tokenUsage24h >= 500000 ? "critical" : "warning",
+      code: "token_usage_high",
+      message: "استهلاك التوكنز اليومي مرتفع ويحتاج ضبط.",
+      value: tokenUsage24h,
+      threshold: 250000
+    });
+  }
+
+  const status = error || operationsAlerts.some((item) => item.level === "critical")
+    ? "degraded"
+    : operationsAlerts.length > 0
+      ? "warning"
+      : "healthy";
 
   res.status(200).json({
-    generatedAt: new Date().toISOString(),
-    status: error ? "degraded" : "healthy",
+    generatedAt: now.toISOString(),
+    status,
     probe: {
       supabaseReachable: !error,
       supabaseProbeMs: probeMs
@@ -1542,7 +1651,13 @@ async function handleSystemHealth(client: SupabaseClient, res: JsonResponder) {
       p50LatencyMs: percentile(recent, 50),
       p95LatencyMs: percentile(recent, 95),
       lastErrorAt: overviewRuntimeStats.lastErrorAt ? new Date(overviewRuntimeStats.lastErrorAt).toISOString() : null
-    }
+    },
+    telemetry: {
+      api5xx24h: api5xxCount24h,
+      llmLatencyP95Ms,
+      tokenUsage24h
+    },
+    alerts: operationsAlerts
   });
 }
 
@@ -1767,6 +1882,8 @@ async function handleWeeklyReport(client: SupabaseClient, req: RequestLike, res:
   const affiliateByDomain = new Map<string, { exposed: number; clicked: number }>();
   const affiliateByVariant = new Map<string, { exposed: number; clicked: number }>();
   const affiliateByMission = new Map<string, { exposed: number; clicked: number; missionLabel: string; ring: string }>();
+  const flowStepCounts: Record<string, number> = {};
+  const funnelDaily = new Map<string, Record<string, number>>();
   const typeCounts: Record<string, number> = {};
   let totalEvents = 0;
   let affiliateLinkExposed = 0;
@@ -1774,6 +1891,20 @@ async function handleWeeklyReport(client: SupabaseClient, req: RequestLike, res:
   let pathStarted48h = 0;
   let totalEvents48h = 0;
   const sessions48h = new Set<string>();
+
+  for (let i = 0; i < windowDays; i += 1) {
+    const dayDate = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
+    const dayKey = toDateOnly(dayDate);
+    funnelDaily.set(dayKey, {
+      landing_viewed: 0,
+      landing_clicked_start: 0,
+      cta_free_clicked: 0,
+      cta_checkout_clicked: 0,
+      checkout_page_viewed: 0,
+      payment_success: 0,
+      payment_failed: 0
+    });
+  }
 
   for (const row of (events ?? []) as Array<Record<string, unknown>>) {
     const createdAt = new Date(String(row.created_at ?? now));
@@ -1797,6 +1928,13 @@ async function handleWeeklyReport(client: SupabaseClient, req: RequestLike, res:
     if (type !== "flow_event") continue;
     const payload = row.payload as Record<string, unknown> | null;
     const step = String(payload?.step ?? "");
+    if (step) {
+      flowStepCounts[step] = (flowStepCounts[step] ?? 0) + 1;
+      const dailyBucket = funnelDaily.get(day);
+      if (dailyBucket && Object.prototype.hasOwnProperty.call(dailyBucket, step)) {
+        dailyBucket[step] = (dailyBucket[step] ?? 0) + 1;
+      }
+    }
     if (step !== "affiliate_link_exposed" && step !== "affiliate_link_clicked") continue;
 
     const extra = payload?.extra as Record<string, unknown> | null | undefined;
@@ -1883,6 +2021,91 @@ async function handleWeeklyReport(client: SupabaseClient, req: RequestLike, res:
       : gate7TrafficBaselineMet
       ? "gate7_path_started_zero"
       : "gate7_insufficient_traffic";
+  const landingViewed = Number(flowStepCounts.landing_viewed ?? 0);
+  const ctaFreeClicked = Number(flowStepCounts.cta_free_clicked ?? 0) + Number(flowStepCounts.landing_clicked_start ?? 0);
+  const ctaCheckoutClicked = Number(flowStepCounts.cta_checkout_clicked ?? 0);
+  const checkoutPageViewed = Number(flowStepCounts.checkout_page_viewed ?? 0);
+  const paymentSuccess = Number(flowStepCounts.payment_success ?? 0);
+  const paymentFailed = Number(flowStepCounts.payment_failed ?? 0);
+  const toPct = (value: number, total: number): number => (total > 0 ? Math.round((value / total) * 10000) / 100 : 0);
+  const conversionFunnel = {
+    landingViewed,
+    ctaFreeClicked,
+    ctaCheckoutClicked,
+    checkoutPageViewed,
+    paymentSuccess,
+    paymentFailed,
+    freeCtaRatePct: toPct(ctaFreeClicked, landingViewed),
+    checkoutIntentRatePct: toPct(ctaCheckoutClicked, ctaFreeClicked),
+    checkoutViewRatePct: toPct(checkoutPageViewed, ctaCheckoutClicked),
+    paymentSuccessRatePct: toPct(paymentSuccess, checkoutPageViewed)
+  };
+  const funnelDailySeries = Array.from(funnelDaily.entries())
+    .map(([date, counts]) => {
+      const dailyFreeCta = Number(counts.cta_free_clicked ?? 0) + Number(counts.landing_clicked_start ?? 0);
+      const dailyCheckoutCta = Number(counts.cta_checkout_clicked ?? 0);
+      const dailyCheckoutViewed = Number(counts.checkout_page_viewed ?? 0);
+      const dailyPaymentSuccess = Number(counts.payment_success ?? 0);
+      return {
+        date,
+        landingViewed: Number(counts.landing_viewed ?? 0),
+        ctaFreeClicked: dailyFreeCta,
+        ctaCheckoutClicked: dailyCheckoutCta,
+        checkoutPageViewed: dailyCheckoutViewed,
+        paymentSuccess: dailyPaymentSuccess,
+        paymentFailed: Number(counts.payment_failed ?? 0),
+        paymentSuccessRatePct: toPct(dailyPaymentSuccess, dailyCheckoutViewed)
+      };
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const oneDecision = (() => {
+    if (landingViewed >= 25 && conversionFunnel.freeCtaRatePct < 18) {
+      return {
+        code: "hero_message_clarity",
+        title: "ارفع وضوح الرسالة فوق الطية",
+        action: "اختبر نسخة Subtitle أقصر وأكثر صراحة وراقب تحسن cta_free_clicked خلال 7 أيام.",
+        metric: `freeCtaRate=${conversionFunnel.freeCtaRatePct}%`
+      };
+    }
+    if (ctaFreeClicked >= 12 && conversionFunnel.checkoutIntentRatePct < 22) {
+      return {
+        code: "upgrade_value_framing",
+        title: "قوّ عرض الترقية قبل الدفع",
+        action: "اربط CTA المدفوع مباشرة بقيمة (100 طاقة/21 يوم) مع دليل اجتماعي أقوى.",
+        metric: `checkoutIntentRate=${conversionFunnel.checkoutIntentRatePct}%`
+      };
+    }
+    if (ctaCheckoutClicked >= 8 && conversionFunnel.checkoutViewRatePct < 70) {
+      return {
+        code: "checkout_entry_friction",
+        title: "قلّل احتكاك الانتقال لصفحة الدفع",
+        action: "راجع مسار الانتقال وروابط checkout في الموبايل وتأكد من فتح الصفحة فورًا.",
+        metric: `checkoutViewRate=${conversionFunnel.checkoutViewRatePct}%`
+      };
+    }
+    if (checkoutPageViewed >= 5 && conversionFunnel.paymentSuccessRatePct < 35) {
+      return {
+        code: "payment_completion_gap",
+        title: "أولوية الأسبوع: رفع إتمام الدفع",
+        action: "اجعل Instapay الخيار الافتراضي للمستخدم المحلي وقلّل خطوات تأكيد التحويل.",
+        metric: `paymentSuccessRate=${conversionFunnel.paymentSuccessRatePct}%`
+      };
+    }
+    if (paymentFailed >= 3 && paymentFailed > paymentSuccess) {
+      return {
+        code: "payment_failure_bias",
+        title: "انحياز فشل في الدفع",
+        action: "راقب أسباب payment_failed وأصلح أعلى سبب تكرارًا قبل أي تجربة تسويقية جديدة.",
+        metric: `paymentFailed=${paymentFailed}`
+      };
+    }
+    return {
+      code: "sustain_and_scale",
+      title: "التركيز الحالي صحيح",
+      action: "استمر على نفس الرسالة ووسّع التوزيع تدريجيًا مع مراقبة معدل إتمام الدفع يوميًا.",
+      metric: `paymentSuccessRate=${conversionFunnel.paymentSuccessRatePct}%`
+    };
+  })();
   const consciousRevenue = computeConsciousRevenueSnapshot({
     typeCounts,
     uniqueSessions: bySession.size,
@@ -1907,6 +2130,9 @@ async function handleWeeklyReport(client: SupabaseClient, req: RequestLike, res:
       variants: variantBreakdown,
       topMissions: missionBreakdown
     },
+    conversionFunnel,
+    funnelDailySeries,
+    oneDecision,
     gate7: {
       windowHours: gate7Hours,
       pathStarted48h,
@@ -2110,6 +2336,7 @@ async function handleCronReport(req: RequestLike, res: JsonResponder) {
   const reportGate7 = (reportObj.gate7 ?? {}) as Record<string, unknown>;
   const reportAffiliate = (reportObj.affiliate ?? {}) as Record<string, unknown>;
   const reportConsciousRevenue = (reportObj.consciousRevenue ?? {}) as Record<string, unknown>;
+  const reportDecision = (reportObj.oneDecision ?? {}) as Record<string, unknown>;
   const gate7Critical = period === "weekly" && String(reportGate7.status ?? "").toLowerCase() === "critical";
   const title = gate7Critical
     ? "CRITICAL Weekly Report - Al-Rehla"
@@ -2129,7 +2356,7 @@ async function handleCronReport(req: RequestLike, res: JsonResponder) {
       ? `\nAffiliate exposed: ${Number(reportAffiliate.linkExposed ?? 0)} | clicked: ${Number(reportAffiliate.linkClicked ?? 0)} | ctr: ${Number(reportAffiliate.ctr ?? 0)}%`
       : "";
   const summary = period === "weekly"
-    ? `From ${String(reportObj.from ?? "")} to ${String(reportObj.to ?? "")}\nTotal events: ${Number(reportObj.totalEvents ?? 0)}\nUnique sessions: ${Number(reportObj.uniqueSessions ?? 0)}${affiliateSummary}${gate7Summary}\nConscious alignment: ${Number(reportConsciousRevenue.alignmentScore ?? 0)}% (${String(reportConsciousRevenue.status ?? "unknown").toUpperCase()})`
+    ? `From ${String(reportObj.from ?? "")} to ${String(reportObj.to ?? "")}\nTotal events: ${Number(reportObj.totalEvents ?? 0)}\nUnique sessions: ${Number(reportObj.uniqueSessions ?? 0)}${affiliateSummary}${gate7Summary}\nConscious alignment: ${Number(reportConsciousRevenue.alignmentScore ?? 0)}% (${String(reportConsciousRevenue.status ?? "unknown").toUpperCase()})\nOne Decision: ${String(reportDecision.title ?? "n/a")} | ${String(reportDecision.metric ?? "n/a")}`
     : `Date: ${String(reportObj.date ?? "")}\nTotal events: ${Number(reportObj.totalEvents ?? 0)}\nUnique sessions: ${Number(reportObj.uniqueSessions ?? 0)}`;
 
   await sendSlack(`${title}\n${summary}`);

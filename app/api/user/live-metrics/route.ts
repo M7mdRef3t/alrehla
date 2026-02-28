@@ -31,7 +31,7 @@ export async function GET() {
   const client = getServiceClient();
   if (!client) {
     return NextResponse.json(
-      { activeUnits30d: 0, retentionRate30d: 0, activity24h: 0, source: "not_configured" },
+      { activeUnits30d: null, retentionRate30d: null, activity24h: null, source: "not_configured", is_live: false },
       { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   }
@@ -50,7 +50,7 @@ export async function GET() {
 
   if (error || !data) {
     return NextResponse.json(
-      { activeUnits30d: 0, retentionRate30d: 0, activity24h: 0, source: "query_failed" },
+      { activeUnits30d: null, retentionRate30d: null, activity24h: null, source: "query_failed", is_live: false },
       { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   }
@@ -78,7 +78,7 @@ export async function GET() {
     : 0;
 
   return NextResponse.json(
-    { activeUnits30d, retentionRate30d, activity24h, source: "supabase" },
+    { activeUnits30d, retentionRate30d, activity24h, source: "supabase", is_live: true },
     { status: 200, headers: { "Cache-Control": "no-store" } }
   );
 }

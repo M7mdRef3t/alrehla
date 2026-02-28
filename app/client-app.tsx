@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useEffect, lazy, Suspense, useState } from "react";
 import App from "../src/App";
+import { AwarenessSkeleton } from "../src/components/AwarenessSkeleton";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { initAnalytics } from "../src/services/analytics";
 import { initMonitoring } from "../src/services/monitoring";
@@ -36,7 +37,7 @@ export function ClientApp() {
     <ErrorBoundary>
       <App />
       {runtimeEnv.isProd && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<AwarenessSkeleton />}>
           <Analytics />
           <SpeedInsights />
         </Suspense>
@@ -44,3 +45,4 @@ export function ClientApp() {
     </ErrorBoundary>
   );
 }
+

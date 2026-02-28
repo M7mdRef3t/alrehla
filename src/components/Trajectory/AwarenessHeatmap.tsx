@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
     Radar, RadarChart, PolarGrid,
     PolarAngleAxis, ResponsiveContainer
@@ -26,7 +26,7 @@ export const AwarenessHeatmap: React.FC<AwarenessHeatmapProps> = ({ initial, cur
             className="relative p-6 overflow-hidden bg-slate-900/60 rounded-3xl border border-white/5 backdrop-blur-xl shadow-2xl"
         >
             <div className="absolute -top-12 -left-12 w-24 h-24 bg-cyan-500/10 blur-3xl rounded-full" />
-            <div className="absolute -bottom-12 -right-12 w-24 h-24 bg-indigo-500/10 blur-3xl rounded-full" />
+            <div className="absolute -bottom-12 -right-12 w-24 h-24 bg-[var(--color-primary)]/10 blur-3xl rounded-full" />
 
             <div className="flex justify-between items-center mb-4">
                 <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
@@ -34,7 +34,7 @@ export const AwarenessHeatmap: React.FC<AwarenessHeatmapProps> = ({ initial, cur
                 </h4>
                 <div className="flex space-x-4">
                     <div className="flex items-center space-x-1.5">
-                        <div className="w-2 h-2 rounded-full bg-indigo-500/50" />
+                        <div className="w-2 h-2 rounded-full bg-[var(--color-primary)]/50" />
                         <span className="text-[8px] font-bold text-slate-500 uppercase">Baseline</span>
                     </div>
                     <div className="flex items-center space-x-1.5">
@@ -86,3 +86,4 @@ export const AwarenessHeatmap: React.FC<AwarenessHeatmapProps> = ({ initial, cur
         </motion.div>
     );
 };
+

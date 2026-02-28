@@ -1,17 +1,23 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: Request) {
     const supabaseAdmin = getSupabaseAdminClient();
     if (!supabaseAdmin) {
-        return NextResponse.json({ error: 'Supabase admin is not configured.' }, { status: 503 });
+        return NextResponse.json(
+            { error: 'Subscription source unavailable', source: 'not_configured', is_live: false },
+            { status: 503, headers: { "Cache-Control": "no-store" } }
+        );
     }
 
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
 
     if (!userId) {
-        return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+        return NextResponse.json({ error: 'Missing userId' }, { status: 400, headers: { "Cache-Control": "no-store" } });
     }
 
     try {
@@ -22,7 +28,7 @@ export async function GET(req: Request) {
             .single();
 
         if (error) throw error;
-        if (!data) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        if (!data) return NextResponse.json({ error: 'User not found' }, { status: 404, headers: { "Cache-Control": "no-store" } });
 
         // Map internal data to the StripeSubscription interface expected by the frontend
         return NextResponse.json({
@@ -31,9 +37,14 @@ export async function GET(req: Request) {
             tier: data.role === 'coach' ? 'coach' : (data.subscription_status === 'active' ? 'premium' : 'free'),
             status: data.subscription_status,
             currentPeriodEnd: data.current_period_end,
-        });
+            source: 'supabase',
+            is_live: true
+        }, { status: 200, headers: { "Cache-Control": "no-store" } });
     } catch (err: any) {
         console.error('Error fetching subscription:', err);
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return NextResponse.json(
+            { error: 'Failed to fetch subscription', source: 'query_failed', is_live: false },
+            { status: 500, headers: { "Cache-Control": "no-store" } }
+        );
     }
 }

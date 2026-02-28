@@ -76,7 +76,7 @@ export async function GET(req: Request) {
   const client = getServiceClient();
   if (!client) {
     return NextResponse.json(
-      { leaderboard: [], source: "not_configured" },
+      { leaderboard: [], source: "not_configured", is_live: false },
       { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   }
@@ -97,7 +97,7 @@ export async function GET(req: Request) {
 
   if (error || !events) {
     return NextResponse.json(
-      { leaderboard: [], source: "query_failed" },
+      { leaderboard: [], source: "query_failed", is_live: false },
       { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   }
@@ -150,7 +150,13 @@ export async function GET(req: Request) {
     .slice(0, 20);
 
   return NextResponse.json(
-    { leaderboard, source: "supabase", window: `${windowDays}d`, scoring: "achievement_points_model" },
+    {
+      leaderboard,
+      source: "supabase",
+      is_live: true,
+      window: `${windowDays}d`,
+      scoring: "achievement_points_model"
+    },
     { status: 200, headers: { "Cache-Control": "no-store" } }
   );
 }

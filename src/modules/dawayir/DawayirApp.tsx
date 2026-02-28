@@ -14,6 +14,7 @@ import { SymptomSimulation } from '../../components/Chat/SymptomSimulation';
 import { Typewriter } from '../../components/UI/Typewriter';
 import { useAIOrchestration } from '../../hooks/useAIOrchestration';
 import { useGestureSanctuary } from '../../hooks/useGestureSanctuary';
+import { GenesisOnboarding } from '../../components/GenesisOnboarding';
 
 export default function DawayirApp() {
     useAIOrchestration();
@@ -27,6 +28,8 @@ export default function DawayirApp() {
     const [isSharing, setIsSharing] = useState(false);
     const [sourceStory, setSourceStory] = useState<string | null>(null);
     const [subInfo, setSubInfo] = useState<SubscriptionInfo | null>(null);
+    const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
+    const [awarenessTokens, setAwarenessTokens] = useState<number | null>(null);
 
     // Predictive AI State
     const [isOracleLoading, setIsOracleLoading] = useState(false);
@@ -57,25 +60,50 @@ export default function DawayirApp() {
             }
         }
         if (supabase) {
-            const loadAccess = async (userId: string) => {
-                const info = await AccessManager.getSubscriptionStatus(userId);
-                setSubInfo(info);
-                checkCoachConnection(userId);
+            const client = supabase;
+            const loadOnboardingState = async (userId: string) => {
+                const { data: profile, error } = await client
+                    .from('profiles')
+                    .select('is_onboarded, awareness_tokens')
+                    .eq('id', userId)
+                    .maybeSingle();
+
+                if (error) {
+                    setIsOnboarded(false);
+                    setAwarenessTokens(null);
+                    return;
+                }
+                setIsOnboarded(Boolean(profile?.is_onboarded));
+                setAwarenessTokens(typeof profile?.awareness_tokens === 'number' ? profile.awareness_tokens : null);
             };
 
-            supabase.auth.getSession().then(({ data: { session } }) => {
+            const loadAccess = async (userId: string) => {
+                const [info] = await Promise.all([
+                    AccessManager.getSubscriptionStatus(userId),
+                    loadOnboardingState(userId)
+                ]);
+                setSubInfo(info);
+                await checkCoachConnection(userId);
+            };
+
+            client.auth.getSession().then(({ data: { session } }) => {
                 setUser(session?.user || null);
                 if (session?.user) {
-                    loadAccess(session.user.id);
+                    void loadAccess(session.user.id);
+                } else {
+                    setIsOnboarded(null);
+                    setAwarenessTokens(null);
                 }
             });
 
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
                 setUser(session?.user || null);
                 if (session?.user) {
-                    loadAccess(session.user.id);
+                    void loadAccess(session.user.id);
                 } else {
                     setSubInfo(null);
+                    setIsOnboarded(null);
+                    setAwarenessTokens(null);
                 }
             });
 
@@ -186,10 +214,20 @@ export default function DawayirApp() {
         }
         await saveMap("خريطة التقييم الأولي");
     };
+    const shouldBlockForGenesis = Boolean(user && isOnboarded === false);
+    const isOnboardingStateLoading = Boolean(user && isOnboarded === null);
+    const tokenDisplay = typeof awarenessTokens === 'number' ? Math.max(awarenessTokens, 0) : null;
+    const tokenToneClass = tokenDisplay === null
+        ? 'bg-white/5 border-white/10 text-slate-300'
+        : tokenDisplay <= 20
+            ? 'bg-rose-500/15 border-rose-400/40 text-rose-200'
+            : tokenDisplay <= 40
+                ? 'bg-amber-500/15 border-amber-400/40 text-amber-200'
+                : 'bg-teal-500/15 border-teal-400/40 text-teal-200';
 
     return (
         <div
-            className="min-h-screen bg-slate-950 text-slate-200 flex flex-col items-center justify-center font-sans overflow-hidden relative"
+            className="h-screen w-full bg-slate-950 text-slate-200 font-sans overflow-hidden relative"
             {...gestureHandlers}
         >
             {/* Sanctuary Overlay - Zero UI Dimming */}
@@ -233,7 +271,7 @@ export default function DawayirApp() {
             </div>
 
             {/* Navbar Minimalist - Tactical Style */}
-            <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-center bg-transparent z-10 pointer-events-auto">
+            <div className="absolute top-0 left-0 w-full px-4 sm:px-6 pt-[max(env(safe-area-inset-top),0.75rem)] pb-3 flex justify-between items-center bg-slate-950/20 backdrop-blur-md border-b border-white/5 z-40 pointer-events-auto">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-teal-500/20 border border-teal-500/30 flex items-center justify-center">
                         <Activity className="w-4 h-4 text-teal-400" />
@@ -242,10 +280,15 @@ export default function DawayirApp() {
                 </div>
                 <div className="flex items-center gap-4">
                     {user ? (
-                        <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-                            <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
-                            <span className="text-xs font-bold text-slate-300 font-mono tracking-tighter uppercase">{user.email?.split('@')[0]}</span>
-                        </div>
+                        <>
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-md ${tokenToneClass}`}>
+                                <span className="text-xs font-black font-mono tracking-tight">{`${tokenDisplay ?? '--'}/100 طاقة`}</span>
+                            </div>
+                            <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+                                <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+                                <span className="text-xs font-bold text-slate-300 font-mono tracking-tighter uppercase">{user.email?.split('@')[0]}</span>
+                            </div>
+                        </>
                     ) : (
                         <button onClick={handleGoogleLogin} className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-slate-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2 backdrop-blur-sm">
                             <span className="font-mono uppercase tracking-widest">بوابة_الدخول</span> <ArrowLeft className="w-4 h-4" />
@@ -254,17 +297,31 @@ export default function DawayirApp() {
                 </div>
             </div>
 
-            <div className="w-full max-w-5xl px-4 flex flex-col items-center flex-grow justify-center relative mt-16 mb-8">
+            <div className="w-full h-screen overflow-hidden relative m-0 p-0">
+                {shouldBlockForGenesis && user?.id && (
+                    <GenesisOnboarding
+                        userId={user.id}
+                        onCompleted={() => {
+                            setIsOnboarded(true);
+                            console.info("[GenesisFlow] guard_released", { userId: user.id });
+                        }}
+                    />
+                )}
 
                 {/* Error Handling */}
-                {error && (
+                {!shouldBlockForGenesis && !isOnboardingStateLoading && error && (
                     <div className="mb-6 px-4 py-3 bg-red-50 text-red-600 rounded-lg shadow-sm border border-red-100 text-sm max-w-md text-center">
                         {error}
                     </div>
                 )}
+                {!shouldBlockForGenesis && isOnboardingStateLoading && (
+                    <div className="glass px-5 py-3 border-white/10">
+                        <span className="text-xs font-mono text-slate-400 uppercase tracking-widest">loading_profile_context...</span>
+                    </div>
+                )}
 
                 {/* Phase 1: The Chat Hook */}
-                {!data && (
+                {!shouldBlockForGenesis && !isOnboardingStateLoading && !data && (
                     <div className="w-full flex-grow flex items-center justify-center animate-in fade-in zoom-in duration-500 relative z-10">
                         <div className="w-full max-w-2xl">
                             <div className="text-center mb-10">
@@ -300,7 +357,7 @@ export default function DawayirApp() {
                 )}
 
                 {/* Phase 2: The Canvas (Aha Moment) */}
-                {data && (
+                {!shouldBlockForGenesis && !isOnboardingStateLoading && data && (
                     <div className="w-full h-full flex flex-col relative animate-in slide-in-from-bottom-8 fade-in duration-700">
 
                         <div className="absolute z-20 top-4 left-1/2 -translate-x-1/2 glass px-8 py-5 border-teal-500/20 max-w-2xl text-center shadow-2xl relative overflow-hidden group">
@@ -350,27 +407,32 @@ export default function DawayirApp() {
                             </div>
                         </div>
 
-                        <div className="w-full h-[70vh] rounded-2xl overflow-hidden relative">
+                        <div className="w-full h-full overflow-hidden relative">
                             <CanvasComponent
                                 data={data}
                                 onNodeClick={(node) => {
-                                    if (subInfo?.features.hasFacilitatorAssistance) {
-                                        setFocusedNode(node);
-                                    } else {
-                                        setShowPaywall(true);
-                                    }
+                                    setFocusedNode(node);
                                 }}
                                 pendingNodeUpdate={pendingNodeUpdate}
                             />
 
                             {/* Phase 3: The AI Facilitator (Glass-morphic Chat) */}
-                            {focusedNode && subInfo?.features.hasFacilitatorAssistance && (
-                                <FacilitatorChat
-                                    focusedNode={focusedNode}
-                                    fullMap={data}
-                                    onClose={() => setFocusedNode(null)}
-                                    onUpdateNode={handleUpdateNode}
-                                />
+                            {focusedNode && (
+                                <>
+                                    <button
+                                        type="button"
+                                        aria-label="إغلاق الشات والعودة للخريطة"
+                                        onClick={() => setFocusedNode(null)}
+                                        className="md:hidden absolute inset-0 z-30 bg-slate-950/35 backdrop-blur-[1px]"
+                                    />
+                                    <FacilitatorChat
+                                        focusedNode={focusedNode}
+                                        fullMap={data}
+                                        onClose={() => setFocusedNode(null)}
+                                        onUpdateNode={handleUpdateNode}
+                                        onTokenBalanceChange={setAwarenessTokens}
+                                    />
+                                </>
                             )}
 
                             {/* Action Overlay */}

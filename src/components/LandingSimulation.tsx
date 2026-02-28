@@ -50,6 +50,12 @@ export function LandingSimulation() {
         if (targetZone) {
             setPlaced(true);
             setActiveZone(targetZone);
+
+            // Haptic feedback for mobile devices
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                navigator.vibrate(targetZone === "red" ? [50, 30, 50] : targetZone === "yellow" ? [40] : [20]);
+            }
+
             // Snap to that radius at current angle
             const angle = Math.atan2(currentY, currentX);
             const snapX = Math.cos(angle) * targetRadius;

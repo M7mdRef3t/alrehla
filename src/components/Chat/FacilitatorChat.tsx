@@ -4,30 +4,90 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Send, Sparkles, Loader2, Check, Terminal } from 'lucide-react';
 import { NodeData } from '../../hooks/useDawayirEngine';
 import { supabase } from '../../services/supabaseClient';
+import { consumeKineticTelemetryOnce, peekLatestKineticTelemetry } from '../../services/kineticTelemetry';
+import { isPublicPaymentsEnabled } from '../../config/payments';
 
 interface FacilitatorChatProps {
     focusedNode: NodeData;
     fullMap: unknown;
     onClose: () => void;
     onUpdateNode: (nodeId: string, updates: Partial<NodeData>) => void;
+    onTokenBalanceChange?: (tokens: number | null) => void;
 }
 interface ProposedAction {
     action?: string;
     nodeId?: string;
     updates?: Partial<NodeData>;
 }
+type AgentResponse = {
+    reply?: string;
+    proposedAction?: ProposedAction | null;
+    llm_latency_ms?: number;
+    error?: string;
+    token_warning?: string | null;
+    tokens_remaining?: number | null;
+};
+
+const PERSONA_TECHNICAL_ERROR =
+    "الماكينة تواجه تشويشاً مؤقتاً في قراءة تردداتك.. طاقتك محفوظة، حاول إرسال فكرتك مجدداً.";
+const TECHNICAL_ERROR_PATTERN = /json|payload|config|token|schema|syntax|context|provider|timeout|rate\s*limit|invalid|request|admin api/i;
+
+function shieldTechnicalErrorMessage(rawError: unknown, fallback: string): string {
+    const text = typeof rawError === "string" ? rawError.trim() : "";
+    if (!text) return fallback;
+    if (TECHNICAL_ERROR_PATTERN.test(text)) return PERSONA_TECHNICAL_ERROR;
+    return text;
+}
+
+function formatAlgorithmicEmpathyCopy(latencyMs: number): string {
+    const seconds = (latencyMs / 1000).toFixed(2);
+    if (latencyMs < 1000) return "الماكينة استجابت فوراً.. نمطك واضح لنا.";
+    if (latencyMs <= 2500) return `دواير استغرقت ${seconds} ثانية لتحليل هذا التعقيد.`;
+    return `استهلكنا طاقة حسابية قصوى (${seconds} ثانية) لاستيعاب ثقل هذه الكلمات.. إنت مش لوحدك اللي بتعاني في الفهم.`;
+}
 
 
-export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdateNode }: FacilitatorChatProps) {
-    const [messages, setMessages] = useState<{ role: 'user' | 'ai', content: string, proposedAction?: ProposedAction, actionTaken?: boolean }[]>([]);
+export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdateNode, onTokenBalanceChange }: FacilitatorChatProps) {
+    const [messages, setMessages] = useState<{ role: 'user' | 'ai', content: string, proposedAction?: ProposedAction, actionTaken?: boolean, llmLatencyMs?: number | null }[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [showAlgorithmicVulnerability, setShowAlgorithmicVulnerability] = useState(false);
+    const [showUpsellOverlay, setShowUpsellOverlay] = useState(false);
+    const [keyboardInsetPx, setKeyboardInsetPx] = useState(0);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const shouldShowUpsell = (status: number, data: AgentResponse) =>
+        status === 403 || Number(data.tokens_remaining ?? -1) === 0;
+    const resolveKineticTelemetry = () => consumeKineticTelemetryOnce() ?? peekLatestKineticTelemetry();
+    const publishTokenBalance = (value: unknown) => {
+        if (!onTokenBalanceChange) return;
+        onTokenBalanceChange(typeof value === 'number' ? value : null);
+    };
 
     // Auto-scroll to bottom
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
+
+    useEffect(() => {
+        if (typeof window === "undefined" || !window.visualViewport) return;
+        const viewport = window.visualViewport;
+        const updateKeyboardInset = () => {
+            const nextInset = Math.max(0, Math.round(window.innerHeight - viewport.height - viewport.offsetTop));
+            setKeyboardInsetPx(nextInset);
+        };
+
+        updateKeyboardInset();
+        viewport.addEventListener("resize", updateKeyboardInset);
+        viewport.addEventListener("scroll", updateKeyboardInset);
+        window.addEventListener("orientationchange", updateKeyboardInset);
+
+        return () => {
+            viewport.removeEventListener("resize", updateKeyboardInset);
+            viewport.removeEventListener("scroll", updateKeyboardInset);
+            window.removeEventListener("orientationchange", updateKeyboardInset);
+        };
+    }, []);
 
     // Initial greeting from the AI based on the node
     useEffect(() => {
@@ -44,11 +104,35 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         messages: [{ role: 'user', content: 'مرحباً. أردت التحدث عن هذه الدائرة.' }],
                         fullMap,
                         focusedNode,
-                        userId
+                        userId,
+                        kineticTelemetry: resolveKineticTelemetry()
                     })
                 });
-                const data = await res.json();
-                setMessages([{ role: 'ai', content: data.reply, proposedAction: data.proposedAction }]);
+                const data = (await res.json()) as AgentResponse;
+                if (!res.ok) {
+                    if (shouldShowUpsell(res.status, data)) {
+                        setShowUpsellOverlay(true);
+                        publishTokenBalance(0);
+                        setMessages([{ role: 'ai', content: 'دواير قرأت خريطتك. فعّل طاقة الرحلة لبدء التحليل العميق.' }]);
+                    } else {
+                        publishTokenBalance(data.tokens_remaining);
+                        setMessages([{
+                            role: 'ai',
+                            content: shieldTechnicalErrorMessage(data.error, 'تعذر تشغيل مستشار السيادة الآن.')
+                        }]);
+                    }
+                    return;
+                }
+                setShowUpsellOverlay(false);
+                publishTokenBalance(data.tokens_remaining);
+                const reply = typeof data.reply === "string" ? data.reply : "أهلاً بك، لندردش حول هذه الدائرة.";
+                const optionalWarning = typeof data.token_warning === "string" ? data.token_warning : null;
+                setMessages([{
+                    role: 'ai',
+                    content: reply,
+                    proposedAction: data.proposedAction ?? undefined,
+                    llmLatencyMs: typeof data.llm_latency_ms === "number" ? data.llm_latency_ms : null
+                }, ...(optionalWarning ? [{ role: 'ai' as const, content: optionalWarning }] : [])]);
             } catch (err) {
                 console.error("Initial greeting failed", err);
                 setMessages([{ role: 'ai', content: `أهلاً بك، لندردش حول مساحة "${focusedNode.label}" في حياتك.` }]);
@@ -82,11 +166,38 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                     messages: [...messages, { role: 'user', content: '[System: The user has approved the physical change to the map. Acknowledge this briefly and playfully.]' }],
                     fullMap,
                     focusedNode,
-                    userId
+                    userId,
+                    kineticTelemetry: resolveKineticTelemetry()
                 })
             });
-            const data = await res.json();
-            setMessages(prev => [...prev, { role: 'user', content: 'لقد قمت بتطبيق التعديل الداخلي. شكراً لك.' }, { role: 'ai', content: data.reply, proposedAction: data.proposedAction }]);
+            const data = (await res.json()) as AgentResponse;
+            if (!res.ok) {
+                if (shouldShowUpsell(res.status, data)) {
+                    setShowUpsellOverlay(true);
+                    publishTokenBalance(0);
+                } else {
+                    publishTokenBalance(data.tokens_remaining);
+                    setMessages(prev => [...prev, {
+                        role: 'ai',
+                        content: shieldTechnicalErrorMessage(data.error, 'تعذر متابعة البروتوكول الآن.')
+                    }]);
+                }
+                return;
+            }
+            setShowUpsellOverlay(false);
+            publishTokenBalance(data.tokens_remaining);
+            const optionalWarning = typeof data.token_warning === "string" ? data.token_warning : null;
+            setMessages(prev => [
+                ...prev,
+                { role: 'user', content: 'لقد قمت بتطبيق التعديل الداخلي. شكراً لك.' },
+                {
+                    role: 'ai',
+                    content: typeof data.reply === "string" ? data.reply : "ممتاز، دعنا نكمل بخطوة مركزة.",
+                    proposedAction: data.proposedAction ?? undefined,
+                    llmLatencyMs: typeof data.llm_latency_ms === "number" ? data.llm_latency_ms : null
+                },
+                ...(optionalWarning ? [{ role: 'ai' as const, content: optionalWarning }] : [])
+            ]);
         } catch {
             // Error silently, not critical
         } finally {
@@ -114,11 +225,33 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                     messages: newMessages,
                     fullMap,
                     focusedNode,
-                    userId
+                    userId,
+                    kineticTelemetry: resolveKineticTelemetry()
                 })
             });
-            const data = await res.json();
-            setMessages(prev => [...prev, { role: 'ai', content: data.reply, proposedAction: data.proposedAction }]);
+            const data = (await res.json()) as AgentResponse;
+            if (!res.ok) {
+                if (shouldShowUpsell(res.status, data)) {
+                    setShowUpsellOverlay(true);
+                    publishTokenBalance(0);
+                } else {
+                    publishTokenBalance(data.tokens_remaining);
+                    setMessages(prev => [...prev, {
+                        role: 'ai',
+                        content: shieldTechnicalErrorMessage(data.error, "تعذر الرد الآن.")
+                    }]);
+                }
+                return;
+            }
+            setShowUpsellOverlay(false);
+            publishTokenBalance(data.tokens_remaining);
+            const optionalWarning = typeof data.token_warning === "string" ? data.token_warning : null;
+            setMessages(prev => [...prev, {
+                role: 'ai',
+                content: typeof data.reply === "string" ? data.reply : "تم استقبال رسالتك.",
+                proposedAction: data.proposedAction ?? undefined,
+                llmLatencyMs: typeof data.llm_latency_ms === "number" ? data.llm_latency_ms : null
+            }, ...(optionalWarning ? [{ role: 'ai' as const, content: optionalWarning }] : [])]);
         } catch {
             setMessages(prev => [...prev, { role: 'ai', content: "عذراً، انقطع حبل أفكاري مؤقتاً." }]);
         } finally {
@@ -126,20 +259,59 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
         }
     };
 
-    const getBgColor = (color: string) => {
+    useEffect(() => {
+        if (!showAlgorithmicVulnerability) return;
+        const latestAi = [...messages]
+            .reverse()
+            .find((m) => m.role === "ai" && typeof m.llmLatencyMs === "number");
+        if (!latestAi || typeof latestAi.llmLatencyMs !== "number") return;
+        console.log("[AlgorithmicVulnerability] Micro-copy:", formatAlgorithmicEmpathyCopy(latestAi.llmLatencyMs));
+    }, [messages, showAlgorithmicVulnerability]);
+
+    const getNodeBadgeStyle = (color: string): React.CSSProperties => {
         switch (color) {
-            case 'core': return 'bg-teal-500/10 text-teal-300 border-teal-500/20';
-            case 'danger': return 'bg-rose-500/10 text-rose-300 border-rose-500/20';
-            case 'neutral': return 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20';
-            case 'ignored': return 'bg-slate-800/40 text-slate-400 border-slate-700/50';
-            default: return 'bg-slate-800/40 text-slate-400 border-slate-700/50';
+            case 'core':
+                return {
+                    backgroundColor: 'var(--ring-safe-glow)',
+                    color: 'var(--ring-safe)',
+                    borderColor: 'var(--ring-safe)'
+                };
+            case 'danger':
+                return {
+                    backgroundColor: 'var(--ring-danger-glow)',
+                    color: 'var(--ring-danger)',
+                    borderColor: 'var(--ring-danger)'
+                };
+            case 'neutral':
+                return {
+                    backgroundColor: 'var(--color-primary-glow)',
+                    color: 'var(--color-primary)',
+                    borderColor: 'var(--color-primary)'
+                };
+            case 'ignored':
+            default:
+                return {
+                    backgroundColor: 'rgba(148, 163, 184, 0.14)',
+                    color: 'var(--text-muted)',
+                    borderColor: 'rgba(148, 163, 184, 0.3)'
+                };
         }
     };
 
     return (
-        <div className="absolute right-6 top-6 bottom-6 w-96 z-50 glass-heavy flex flex-col border-white/10 animate-in slide-in-from-right-8 duration-500 overflow-hidden" dir="rtl">
+        <div
+            className="fixed bottom-0 left-0 right-0 h-[60dvh] max-h-[calc(100dvh-env(safe-area-inset-top)-0.25rem)] w-full z-40 glass-heavy flex flex-col border-white/10 animate-in slide-in-from-bottom-8 duration-500 overflow-hidden rounded-t-2xl transition-[bottom] md:absolute md:right-6 md:top-24 md:bottom-auto md:left-auto md:w-96 md:h-auto md:max-h-[70vh] md:rounded-2xl md:slide-in-from-right-8 md:z-50"
+            style={keyboardInsetPx > 0 ? { bottom: `${keyboardInsetPx}px` } : undefined}
+            dir="rtl"
+        >
             {/* Header */}
             <div className={`px-6 py-5 flex justify-between items-center border-b border-white/5 bg-white/5 backdrop-blur-md`}>
+                <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label="إغلاق الشات والعودة للخريطة"
+                    className="md:hidden absolute top-2 left-1/2 -translate-x-1/2 w-14 h-2 rounded-full bg-white/20 hover:bg-white/35 transition-colors"
+                />
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 shadow-inner">
                         <Terminal className="w-5 h-5" />
@@ -148,19 +320,42 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         <h3 className="font-black text-white text-xs uppercase tracking-widest font-mono">أوراكل_السيادة</h3>
                         <div className="flex items-center gap-2 mt-1">
                             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">جاري_الفحص:</span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-md border ${getBgColor(focusedNode.color)} font-black font-mono uppercase tracking-tighter`}>
+                            <span
+                                className="text-[10px] px-2 py-0.5 rounded-md border font-black font-mono uppercase tracking-tighter"
+                                style={getNodeBadgeStyle(focusedNode.color)}
+                            >
                                 {focusedNode.label}
                             </span>
                         </div>
                     </div>
                 </div>
-                <button onClick={onClose} className="w-8 h-8 rounded-lg bg-white/5 text-slate-400 flex items-center justify-center hover:bg-white/10 hover:text-white transition-all">
-                    <X className="w-4 h-4" />
+                <label className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-tight mr-auto ml-2 cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={showAlgorithmicVulnerability}
+                        onChange={(e) => setShowAlgorithmicVulnerability(e.target.checked)}
+                        className="accent-teal-500"
+                        aria-label="الشفافية الخوارزمية"
+                    />
+                    الشفافية_الخوارزمية
+                </label>
+                <button
+                    onClick={onClose}
+                    className="w-11 h-11 rounded-xl bg-white/5 text-slate-400 flex items-center justify-center hover:bg-white/10 hover:text-white transition-all"
+                    aria-label="إغلاق"
+                >
+                    <X className="w-5 h-5" />
                 </button>
             </div>
 
             {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-white/10">
+            <div
+                className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-white/10 relative"
+                role="log"
+                aria-live="polite"
+                aria-relevant="additions text"
+                aria-label="سجل المحادثة مع دواير"
+            >
                 {messages.length === 0 && !isLoading && (
                     <div className="text-center text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] my-auto mt-20 font-mono">في_انتظار_المدخلات...</div>
                 )}
@@ -168,12 +363,24 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                     <div key={i} className={`flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                         <div className={`max-w-[85%] rounded-2xl px-5 py-3.5 text-sm leading-relaxed
                             ${msg.role === 'user'
-                                ? 'bg-indigo-600 text-white rounded-bl-sm font-medium shadow-lg shadow-indigo-600/10'
+                                ? 'text-white rounded-bl-sm font-medium'
                                 : 'glass text-slate-200 border-white/5 rounded-br-sm shadow-inner'
                             }`}
+                            style={msg.role === "user"
+                                ? {
+                                    background: "var(--color-primary-soft)",
+                                    boxShadow: "0 8px 22px var(--color-primary-glow)"
+                                }
+                                : undefined
+                            }
                         >
                             {msg.content}
                         </div>
+                        {msg.role === 'ai' && showAlgorithmicVulnerability && typeof msg.llmLatencyMs === 'number' && (
+                            <div className="max-w-[85%] text-[11px] text-slate-400 leading-relaxed px-1">
+                                {formatAlgorithmicEmpathyCopy(msg.llmLatencyMs)}
+                            </div>
+                        )}
                         {msg.role === 'ai' && msg.proposedAction && msg.proposedAction.action === 'UPDATE_NODE' && (
                             <div className="mr-2 mb-2 self-start">
                                 {!msg.actionTaken ? (
@@ -204,7 +411,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
             </div>
 
             {/* Input Area */}
-            <div className="p-4 bg-white/5 border-t border-white/5 backdrop-blur-md">
+            <div className="p-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] md:pb-4 bg-white/5 border-t border-white/5 backdrop-blur-md">
                 <form
                     onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                     className="flex items-center bg-white/5 rounded-2xl p-1.5 border border-white/10 group focus-within:border-teal-500/30 transition-all relative"
@@ -214,18 +421,53 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         placeholder="ماذا تود أن تقول عن هذا الجزء المستنزف؟..."
+                        aria-label="اكتب رسالتك إلى دواير"
                         className="flex-1 bg-transparent px-4 py-3 text-sm outline-none text-white placeholder:text-slate-600"
-                        disabled={isLoading}
+                        disabled={isLoading || showUpsellOverlay}
                     />
                     <button
                         type="submit"
-                        disabled={isLoading || !input.trim()}
+                        aria-label="إرسال الرسالة"
+                        title="إرسال الرسالة"
+                        disabled={isLoading || showUpsellOverlay || !input.trim()}
                         className="w-12 h-12 rounded-xl bg-teal-500 text-slate-950 flex items-center justify-center hover:bg-teal-400 disabled:opacity-20 disabled:grayscale transition-all shadow-lg shadow-teal-500/10 active:scale-95"
                     >
                         {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                     </button>
                 </form>
             </div>
+
+            {showUpsellOverlay && (
+                <div className="absolute inset-0 z-[60] bg-slate-950/92 backdrop-blur-md rounded-t-2xl md:rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                    <p className="text-[10px] uppercase tracking-[0.22em] text-teal-300 font-black mb-3 font-mono">premium_access_required</p>
+                    <h4 className="text-lg font-black text-white mb-3">دواير قرأت خريطتك.. والماكينة جاهزة</h4>
+                    <p className="text-sm text-slate-300 leading-relaxed max-w-xs">
+                        {isPublicPaymentsEnabled
+                            ? "فعّل طاقة الرحلة (100 نقطة وعي) عبر بوابة التفعيل اليدوي لبدء التحليل وتفكيك العقد خطوة بخطوة."
+                            : "بوابة الدفع قيد التجهيز حالياً. يمكنك متابعة بناء الخريطة اليدوية حتى فتح التفعيل."}
+                    </p>
+                    <div className="mt-5 flex flex-col sm:flex-row items-center gap-3">
+                        {isPublicPaymentsEnabled && (
+                            <button
+                                type="button"
+                                onClick={() => { window.location.href = "/checkout"; }}
+                                className="px-5 py-2.5 rounded-xl bg-teal-500 text-slate-950 font-black hover:bg-teal-400 transition-colors"
+                            >
+                                تفعيل طاقة الرحلة
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-5 py-2.5 rounded-xl border border-white/20 text-white font-bold hover:bg-white/10 transition-colors"
+                        >
+                            العودة للخريطة
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+
+

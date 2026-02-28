@@ -37,7 +37,7 @@ export async function GET() {
   const client = getServiceClient();
   if (!client) {
     return NextResponse.json(
-      { testimonials: [] },
+      { testimonials: [], source: "not_configured", is_live: false },
       { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   }
@@ -55,7 +55,7 @@ export async function GET() {
 
   if (error || !data) {
     return NextResponse.json(
-      { testimonials: [] },
+      { testimonials: [], source: "query_failed", is_live: false },
       { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   }
@@ -103,7 +103,7 @@ export async function GET() {
   }));
 
   return NextResponse.json(
-    { testimonials },
+    { testimonials, source: "supabase", is_live: true },
     { status: 200, headers: { "Cache-Control": "no-store" } }
   );
 }

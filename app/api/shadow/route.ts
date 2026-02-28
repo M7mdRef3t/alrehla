@@ -6,13 +6,13 @@ export async function POST(req: Request) {
         const { label, type, mass, ownerId, contactMethod, contactValue } = await req.json();
 
         if (!label || !ownerId) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+            return NextResponse.json({ error: 'Missing required fields', source: 'request', is_live: false }, { status: 400 });
         }
 
         // We only want to trigger the Shadow Protocol for "danger" or highly draining nodes
         // Or if the mass is high enough (e.g., >= 7)
         if (type !== 'danger' && mass < 7) {
-            return NextResponse.json({ message: 'Node skipped. Not a high-threat profile.' });
+            return NextResponse.json({ message: 'Node skipped. Not a high-threat profile.', source: 'rule_engine', is_live: true });
         }
 
         // Run the construction asynchronously so we don't block the user's UI
@@ -24,10 +24,10 @@ export async function POST(req: Request) {
             console.error('[Shadow API Background Error]', err);
         });
 
-        return NextResponse.json({ message: 'Shadow profile generation initiated.' });
+        return NextResponse.json({ message: 'Shadow profile generation initiated.', source: 'shadow_protocol', is_live: true });
 
     } catch (err: any) {
         console.error('Error in Shadow API:', err);
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return NextResponse.json({ error: 'Shadow generation failed', source: 'generation_failed', is_live: false }, { status: 502 });
     }
 }

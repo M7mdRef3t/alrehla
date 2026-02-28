@@ -21,13 +21,24 @@ export interface RoutingRule {
  * This class decides which model to use based on the real-time configuration in Supabase.
  */
 export class AIOrchestrator {
+    private static normalizeModelId(modelId: string): string {
+        switch (modelId) {
+            case 'gemini-1.5-pro':
+                return 'gemini-2.5-pro';
+            case 'gemini-1.5-flash':
+            case 'gemini-2.0-flash':
+                return 'gemini-2.5-flash';
+            default:
+                return modelId;
+        }
+    }
 
     /**
      * Resolves the best model to use for a specific feature.
      * Keeps the codebase decoupled from specific model names.
      */
     static async getRouteForFeature(featureName: string): Promise<string> {
-        if (!supabase) return 'gemini-1.5-pro'; // Fallback if DB is unreachable
+        if (!supabase) return 'gemini-2.5-pro'; // Fallback if DB is unreachable
 
         try {
             const { data, error } = await supabase
@@ -42,8 +53,8 @@ export class AIOrchestrator {
                 .single();
 
             if (error || !data) {
-                console.warn(`[AI Router] Rule not found for ${featureName}. Defaulting to gemini-1.5-pro`);
-                return 'gemini-1.5-pro';
+                console.warn(`[AI Router] Rule not found for ${featureName}. Defaulting to gemini-2.5-pro`);
+                return 'gemini-2.5-pro';
             }
 
             // Type assertion for Supabase relation result
@@ -51,15 +62,15 @@ export class AIOrchestrator {
 
             // Check if the primary model is marked as active and healthy
             if (primaryModel && primaryModel.is_active) {
-                return data.primary_model_id;
+                return AIOrchestrator.normalizeModelId(data.primary_model_id);
             } else {
                 console.warn(`[AI Router] Primary model ${data.primary_model_id} is inactive. Routing to fallback: ${data.fallback_model_id}`);
-                return data.fallback_model_id;
+                return AIOrchestrator.normalizeModelId(data.fallback_model_id);
             }
 
         } catch (e) {
             console.error('[AI Router] Resolution error:', e);
-            return 'gemini-1.5-pro';
+            return 'gemini-2.5-pro';
         }
     }
 
@@ -67,7 +78,7 @@ export class AIOrchestrator {
      * Optional: Helper to get the cheapest model available for a certain capability.
      */
     static async getCheapestModelByCapability(capability: string): Promise<string> {
-        if (!supabase) return 'gemini-1.5-flash';
+        if (!supabase) return 'gemini-2.5-flash';
 
         const { data, error } = await supabase
             .from('ai_models')
@@ -78,7 +89,7 @@ export class AIOrchestrator {
             .limit(1)
             .single();
 
-        if (error || !data) return 'gemini-1.5-flash';
-        return data.model_id;
+        if (error || !data) return 'gemini-2.5-flash';
+        return AIOrchestrator.normalizeModelId(data.model_id);
     }
 }

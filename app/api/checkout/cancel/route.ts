@@ -1,17 +1,9 @@
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
-
-function getStripeClient() {
-    const secretKey = process.env.STRIPE_SECRET_KEY;
-    if (!secretKey) return null;
-    return new Stripe(secretKey, {
-        apiVersion: '2025-02-24.acacia',
-    });
-}
+import { getStripeClient } from '../../_lib/stripeConfig';
 
 export async function POST(req: Request) {
     try {
-        const stripe = getStripeClient();
+        const { client: stripe } = getStripeClient();
         if (!stripe) {
             return NextResponse.json({ error: 'Stripe is not configured.' }, { status: 503 });
         }
@@ -32,8 +24,9 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({ success: true, message: 'Subscription cancellation scheduled' });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Error canceling subscription:', err);
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        const message = err instanceof Error ? err.message : 'cancel_subscription_failed';
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }

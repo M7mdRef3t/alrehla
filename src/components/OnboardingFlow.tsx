@@ -3,6 +3,7 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMapState } from "../state/mapState";
 import { setInLocalStorage } from "../services/browserStorage";
+import { recordFlowEvent } from "../services/journeyTracking";
 import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
 import type { AdviceCategory } from "../data/adviceScripts";
 
@@ -491,21 +492,30 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
   }, [step]);
 
   const handleSkip = useCallback(() => {
+    const stepId = step === 0 ? "noise" : step === 1 ? "inventory" : step === 2 ? "mapping" : "review";
+    recordFlowEvent("onboarding_skipped", { atStep: stepId });
     markJourneyOnboardingDone();
     onComplete(true); // true indicates skipped
-  }, [onComplete]);
+  }, [onComplete, step]);
 
 
   const handleInventoryNext = useCallback((items: { name: string; category: AdviceCategory }[]) => {
+    recordFlowEvent("onboarding_phase_inventory_completed", {
+      meta: { itemsCount: items.length }
+    });
     setCollectedItems(items);
     goTo(2);
   }, [goTo]);
 
   const handleNoiseNext = useCallback(() => {
+    recordFlowEvent("onboarding_phase_noise_completed");
     goTo(1);
   }, [goTo]);
 
   const handleMappingNext = useCallback((mapped: NameCard[]) => {
+    recordFlowEvent("onboarding_phase_mapping_completed", {
+      meta: { mappedCount: mapped.length }
+    });
     // Add nodes to mapState
     for (const item of mapped) {
       if (item.name.trim()) {
@@ -521,9 +531,12 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
   }, [addNode, goTo]);
 
   const handleComplete = useCallback(() => {
+    recordFlowEvent("onboarding_completed", {
+      meta: { itemsCount: collectedItems.length }
+    });
     markJourneyOnboardingDone();
     onComplete(false); // false indicates completed normally
-  }, [onComplete]);
+  }, [collectedItems.length, onComplete]);
 
 
   /* Progress dots */

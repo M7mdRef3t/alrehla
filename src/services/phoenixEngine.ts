@@ -163,26 +163,33 @@ export class PhoenixEngine {
             dominant_complementary_axis: `${p.complementary_axis}_COMPLEMENT`
         })) as ResonancePair[];
 
-        // 8. Update Ascension Metrics (The Ascension Protocol)
-        for (const card of typedCards) {
-            // Swarm Impact (SI): Calculated from partner's growth in ephemeral entanglement
+        // 8. Batch Update Ascension Metrics + DDA recalibration inside DB
+        const recalibrationPayload = typedCards.map((card) => {
             let swarmImpact = 0;
             const pair = entanglementLinks.find(p => p.user_a_id === card.user_id || p.user_b_id === card.user_id);
             if (pair) {
                 const partnerId = pair.user_a_id === card.user_id ? pair.user_b_id : pair.user_a_id;
                 const partnerCard = typedCards.find(c => c.user_id === partnerId);
                 if (partnerCard) {
-                    // SI = Partner's post-event growth (altruistic impact)
                     swarmImpact = partnerCard.post_event_growth;
                 }
             }
+            const recommendation = dda_recommendations.find((rec) => rec.user_id === card.user_id);
+            return {
+                user_id: card.user_id,
+                phoenix_score: card.phoenix_score,
+                swarm_impact: swarmImpact,
+                recommended_dda: recommendation?.recommended_dda ?? null,
+                reason: recommendation?.reason ?? null
+            };
+        });
 
-            await supabase.rpc('update_ascension_metrics', {
-                p_user_id: card.user_id,
-                p_event_id: card.event_id,
-                p_phoenix_score: card.phoenix_score,
-                p_swarm_impact: swarmImpact
-            });
+        const { error: batchError } = await supabase.rpc('apply_phoenix_recalibration_batch', {
+            p_event_id: event.event_id,
+            p_entries: recalibrationPayload
+        });
+        if (batchError) {
+            console.error("❌ [PhoenixEngine] Batch recalibration failed:", batchError);
         }
 
         return {

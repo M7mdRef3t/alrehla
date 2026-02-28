@@ -6,8 +6,8 @@
  * يدير الاتصال المباشر مع Gemini Multimodal Live API عبر WebSocket
  *
  * المرجع التقني:
- * - API Endpoint: wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent
- * - Model: gemini-2.0-flash-exp (أو الإصدار المدعوم للـ Live API)
+ * - API Endpoint: wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent
+ * - Model: gemini-2.5-flash-native-audio-latest (أو الإصدار المدعوم للـ Live API)
  * - Protocol: WebSocket (bidirectional streaming)
  */
 
@@ -134,7 +134,7 @@ export class GeminiLiveClient {
     apiKey: string,
     systemInstruction: string,
     handlers: GeminiLiveClientHandlers,
-    model = "gemini-2.0-flash-exp"
+    model = "gemini-2.5-flash-native-audio-latest"
   ) {
     this.apiKey = apiKey;
     this.model = model;
@@ -152,7 +152,7 @@ export class GeminiLiveClient {
     }
 
     // بناء URL مع API Key
-    const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${this.apiKey}`;
+    const url = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${this.apiKey}`;
 
     this.ws = new WebSocket(url);
 

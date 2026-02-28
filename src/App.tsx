@@ -153,6 +153,7 @@ const AdminDashboard = lazy(() => import("./components/admin/AdminDashboard").th
 const AdminOverviewPanel = lazy(() =>
   import("./components/admin/dashboard/Overview/OverviewPanel").then((m) => ({ default: m.OverviewPanel }))
 );
+const DawayirApp = lazy(() => import("./modules/dawayir/DawayirApp").then((m) => ({ default: m.default })));
 const DataManagement = lazy(() => import("./components/DataManagement").then((m) => ({ default: m.DataManagement })));
 const NotificationSettings = lazy(() =>
   import("./components/NotificationSettings").then((m) => ({ default: m.NotificationSettings }))
@@ -2241,10 +2242,19 @@ export default function App() {
   ]);
 
   const pathname = getPathname();
+  const isDawayirRoute = pathname === "/dawayir" || pathname === "/dawayir/";
 
   if (pathname === "/privacy" || pathname === "/terms") {
     return (
       <LegalPage type={pathname === "/privacy" ? "privacy" : "terms"} />
+    );
+  }
+
+  if (isDawayirRoute) {
+    return (
+      <Suspense fallback={<AwarenessSkeleton />}>
+        <DawayirApp />
+      </Suspense>
     );
   }
 

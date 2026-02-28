@@ -9,13 +9,24 @@ export async function POST(req: Request) {
     try {
         const supabaseAdmin = getSupabaseAdminClient();
         if (!supabaseAdmin) {
-            return NextResponse.json({ error: 'Supabase admin is not configured.' }, { status: 503 });
+            return NextResponse.json(
+                { error: 'Prediction source unavailable', source: 'not_configured', is_live: false },
+                { status: 503 }
+            );
         }
 
         const { userId } = await req.json();
 
         if (!userId) {
             return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+        }
+
+        const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+        if (!GEMINI_API_KEY) {
+            return NextResponse.json(
+                { error: 'AI prediction unavailable', source: 'not_configured', is_live: false },
+                { status: 503 }
+            );
         }
 
         // 1. Fetch Historical Maps
@@ -30,7 +41,9 @@ export async function POST(req: Request) {
         if (error || !maps || maps.length < 2) {
             return NextResponse.json({
                 error: 'Not enough historical data to generate a prediction. At least 2 maps are required.',
-                needsMoreData: true
+                needsMoreData: true,
+                source: 'supabase',
+                is_live: true
             }, { status: 200 });
         }
 
@@ -64,7 +77,9 @@ export async function POST(req: Request) {
         if (validTrendMaps.length < 2) {
             return NextResponse.json({
                 error: 'Maps are too close together in time. Keep mapping your energy every few days to build a trend.',
-                needsMoreData: true
+                needsMoreData: true,
+                source: 'supabase',
+                is_live: true
             }, { status: 200 });
         }
 
@@ -105,10 +120,13 @@ export async function POST(req: Request) {
 
         const prediction = JSON.parse(responseText);
 
-        return NextResponse.json(prediction);
+        return NextResponse.json({ ...prediction, source: 'gemini', is_live: true });
 
     } catch (err: any) {
         console.error('Error generating prediction:', err);
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return NextResponse.json(
+            { error: 'Prediction generation failed', source: 'generation_failed', is_live: false },
+            { status: 502 }
+        );
     }
 }

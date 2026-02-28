@@ -15,6 +15,12 @@ export interface SwarmMetrics {
     outlier_vector: AwarenessVector; // Top 10% performance
     active_sovereigns: number;
     swarm_momentum: number;
+    metadata?: {
+        external_tension?: number;
+        last_signal_source?: string;
+        last_signal_label?: string;
+    };
+    timestamp?: number;
 }
 
 export class HiveEngine {

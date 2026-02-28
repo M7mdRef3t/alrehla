@@ -7,8 +7,8 @@ import {
     type SubscriptionTier,
 } from "../services/subscriptionManager";
 
-import { stripeService } from "../services/stripeIntegration";
 import { supabase } from "../services/supabaseClient";
+import { isPublicPaymentsEnabled } from "../config/payments";
 
 /* ══════════════════════════════════════════
    PAYWALL GATE — بوابة الاشتراك
@@ -51,7 +51,12 @@ const PREMIUM_FEATURES = [
 export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade: _onUpgrade }) => {
     const copy = REASON_COPY[reason];
 
-    const handleUpgrade = async (tier: 'premium' | 'coach') => {
+    const handleUpgrade = async (_tier: 'premium' | 'coach') => {
+        if (!isPublicPaymentsEnabled) return;
+        if (typeof globalThis !== "undefined" && "location" in globalThis) {
+            globalThis.location.href = "/checkout";
+            return;
+        }
         try {
             if (!supabase) return;
             const { data: { session } } = await supabase.auth.getSession();
@@ -64,15 +69,6 @@ export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade: 
                     options: { redirectTo: window.location.origin + '/pricing' }
                 });
                 return;
-            }
-
-            const data = await stripeService.createCheckoutSession({
-                userId: user.id,
-                tier: tier
-            });
-
-            if (data?.url) {
-                window.location.href = data.url;
             }
         } catch (error) {
             console.error("Upgrade error:", error);
@@ -141,6 +137,7 @@ export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade: 
 
                         <motion.button
                             onClick={() => handleUpgrade("premium")}
+                            disabled={!isPublicPaymentsEnabled}
                             className="w-full py-3.5 rounded-xl font-bold text-white flex items-center justify-center gap-2"
                             style={{
                                 background: "linear-gradient(135deg, #d97706, #b45309)",
@@ -149,7 +146,7 @@ export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade: 
                             whileTap={{ scale: 0.98 }}
                         >
                             <Zap className="w-4 h-4" />
-                            ارقَ للبريميوم الآن
+                            {isPublicPaymentsEnabled ? "افتح بوابة التفعيل" : "التفعيل قريبًا"}
                         </motion.button>
                     </div>
                 </div>

@@ -88,6 +88,8 @@ export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate }
                 newNodes.forEach(n => forces[n.id] = { x: 0, y: 0 });
 
                 // Calculate Repulsion forces
+                const maxRepulsionDistance = 320;
+                const maxRepulsionDistanceSq = maxRepulsionDistance * maxRepulsionDistance;
                 for (let i = 0; i < newNodes.length; i++) {
                     for (let j = i + 1; j < newNodes.length; j++) {
                         const nodeA = newNodes[i];
@@ -100,6 +102,8 @@ export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate }
                         const dx = nodeB.position.x - nodeA.position.x;
                         const dy = nodeB.position.y - nodeA.position.y;
                         const distanceSq = dx * dx + dy * dy;
+                        // Spatial culling: skip expensive force math for very distant pairs.
+                        if (distanceSq > maxRepulsionDistanceSq) continue;
                         const distance = Math.sqrt(distanceSq) || 0.1;
 
                         const massA = nodeA.data.mass || 1;
@@ -191,7 +195,7 @@ export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate }
 
 
     return (
-        <div className="w-full h-full bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-white/5 relative group">
+        <div className="w-full h-full bg-slate-900 overflow-hidden relative group">
             {/* Tactical Overlays */}
             <div className="tactical-crt-overlay" />
             <div className="radar-sweep" />

@@ -162,7 +162,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
             </span>
           </p>
           {contextualHint ? (
-            <p className="text-xs text-indigo-700 mt-1 bg-indigo-50 rounded-lg px-2 py-1.5 border border-indigo-100">
+            <p className="text-xs text-[var(--color-primary)] mt-1 bg-[var(--color-primary)]/10 rounded-lg px-2 py-1.5 border border-[var(--color-primary)]">
               {contextualHint}
             </p>
           ) : null}
@@ -207,3 +207,5 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
     </form>
   );
 };
+
+

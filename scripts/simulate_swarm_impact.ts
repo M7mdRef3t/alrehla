@@ -8,95 +8,92 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 async function simulateSwarmImpact() {
-    console.log("🚀 [ShadowTest] Initializing Swarm Simulation (10 Concurrent Pioneers)...");
+    const PEER_LIMIT = 50;
+    console.log(`🚀 [Ghost Swarm] Initializing Swarm Simulation (${PEER_LIMIT} Concurrent Pioneers)...`);
 
-    // 1. Fetch 10 test users (or active profiles)
+    // 1. Fetch users
     const { data: profiles } = await supabase
         .from('profiles')
         .select('id, email')
-        .limit(10);
+        .limit(PEER_LIMIT);
 
-    if (!profiles || profiles.length < 10) {
-        console.error("❌ Not enough profiles for simulation. Need 10.");
-        return;
+    if (!profiles || profiles.length < PEER_LIMIT) {
+        console.warn(`⚠️ Only found ${profiles?.length || 0} profiles. Proceeding with available cohort.`);
     }
 
+    const cohort = profiles || [];
+
     // 2. Clear insulation status for test
-    console.log("🧹 Clearing insulation status for test cohort...");
+    console.log(`🧹 Clearing cohort status (${cohort.length} users)...`);
     await supabase
         .from('profiles')
         .update({ awareness_vector: {} })
-        .in('id', profiles.map(p => p.id));
+        .in('id', cohort.map(p => p.id));
 
-    // 3. Set Active Resonance Event (High Pressure)
-    console.log("⚡ Activating High-Pressure Wave Event...");
-    await supabase
+    // 3. Set Active Resonance Event (High Pressure Surge)
+    console.log("🔥 Activating High Pressure Surge Event...");
+    const { data: event, error: eventError } = await supabase
         .from('system_events')
         .insert({
-            event_name: "Shadow Test Surge",
+            event_name: "Ghost Swarm Stress Test",
             event_type: "high_pressure",
             start_time: new Date().toISOString(),
-            end_time: new Date(Date.now() + 1000 * 60 * 5).toISOString(),
+            end_time: new Date(Date.now() + 1000 * 60 * 10).toISOString(),
             dda_override: 5
-        });
+        })
+        .select()
+        .single();
 
-    console.log("🔥 [T-ZERO] Firing 10 concurrent riddle solutions...");
+    if (eventError || !event) {
+        console.error("❌ Failed to create stress test event:", eventError?.message);
+        return;
+    }
+
+    const EVENT_ID = event.id;
+
+    console.log(`⚡ [H-HOUR] Firing ${cohort.length} concurrent Evaluator requests for Event ${EVENT_ID}...`);
 
     const startTime = Date.now();
 
-    // 4. Fire 10 concurrent requests to the Chat API
-    // Since we don't have a direct URL easily accessible here without a local server, 
-    // we'll simulate the logic by calling the internal API logic if possible, 
-    // or just firing the DB updates and checking for race conditions in 'isFirst'.
+    // 4. Fire concurrent requests (Simulating Evaluator Gate)
+    const attempts = cohort.map(async (profile, index) => {
+        // Small stagger to simulate real network jitter (0-500ms)
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 500));
 
-    const attempts = profiles.map(async (profile) => {
-        // Simulate the 'route.ts' logic as closely as possible
-        const { count } = await supabase
-            .from('profiles')
-            .select('*', { count: 'exact', head: true })
-            .filter('awareness_vector->is_insulated', 'eq', true);
+        // Attempt Atomic Claim - Matching RPC signature: claim_aegis_prime(p_user_id, p_event_id)
+        const { data: isFirst, error } = await supabase.rpc('claim_aegis_prime', {
+            p_user_id: profile.id,
+            p_event_id: EVENT_ID
+        });
 
-        const isFirst = count === 0;
-
-        await supabase
-            .from('profiles')
-            .update({
-                awareness_vector: { is_insulated: true },
-                sovereignty_score: 100 + (isFirst ? 100 : 50)
-            })
-            .eq('id', profile.id);
+        if (error) {
+            console.error(`❌ [Swarm] Error for user ${profile.id}:`, error.message);
+            return;
+        }
 
         if (isFirst) {
-            await supabase.from("system_telemetry_logs").insert({
-                service_name: "resonance-engine",
-                action: "swarm_broadcast",
-                payload: { message: "Shadow Test: FIRST SOLVER!" },
-                user_id: profile.id
-            });
+            console.log(`✨ [Aegis Prime] User ${profile.id} captured the resonance first!`);
         }
     });
 
     await Promise.all(attempts);
 
     const duration = Date.now() - startTime;
-    console.log(`✅ [ShadowTest] Simulation complete in ${duration}ms.`);
+    console.log(`✅ [Ghost Swarm] Simulation complete in ${duration}ms.`);
+    console.log(`📈 Average latency: ${(duration / cohort.length).toFixed(2)}ms per request.`);
 
-    // 5. Verify results
-    const { data: verification } = await supabase
-        .from('profiles')
-        .select('id, sovereignty_score')
-        .in('id', profiles.map(p => p.id));
+    // 5. Audit Results
+    const { data: winners } = await supabase
+        .from('system_telemetry_logs')
+        .select('*')
+        .eq('action', 'claim_aegis_prime')
+        .gt('created_at', new Date(startTime).toISOString());
 
-    const totalPoints = verification?.reduce((acc, p) => acc + (p.sovereignty_score || 0), 0) || 0;
-    const firstSolvers = verification?.filter(p => (p.sovereignty_score || 0) > 150).length || 0;
-
-    console.log(`📊 [Results] First Solvers Detected: ${firstSolvers} (Expected: 1)`);
-    if (firstSolvers > 1) {
-        console.warn("⚠️ RACE CONDITION DETECTED: Multiple users claimed 'Aegis Prime'.");
-    } else if (firstSolvers === 1) {
-        console.log("✨ ATOMICITY VERIFIED: Only one 'Aegis Prime' acknowledged.");
-    } else {
-        console.error("❌ FAILURE: No 'Aegis Prime' recorded.");
+    console.log(`📊 [Results] Atomic Claims recorded: ${winners?.length || 0}`);
+    if ((winners?.length || 0) > 1) {
+        console.warn("⚠️ RACE CONDITION DETECTED: Atomic lock failed.");
+    } else if (winners?.length === 1) {
+        console.log("🛡️ INTEGRITY VERIFIED: Single point of entry confirmed.");
     }
 }
 

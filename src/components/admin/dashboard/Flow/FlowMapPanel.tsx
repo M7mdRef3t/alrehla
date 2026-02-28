@@ -9,6 +9,38 @@ import { VISITOR_FLOW_LINKS, buildFlowNodes } from "../../../../data/visitorFlow
 export const FlowMapPanel: FC = () => {
     const [stats, setStats] = useState<OverviewStats | null>(null);
     const [loading, setLoading] = useState(false);
+    const [pathScope, setPathScope] = useState<"core" | "extended">("core");
+
+    const coreNodeIds = useMemo(
+        () =>
+            new Set<string>([
+                "root",
+                "phase-pre-auth-v2",
+                "phase-auth-v2",
+                "phase-core-v2",
+                "root-action-start-v2",
+                "onboarding-opened-v2",
+                "onboarding-phase-noise-v2",
+                "onboarding-phase-inventory-v2",
+                "onboarding-phase-mapping-v2",
+                "onboarding-completed-v2",
+                "onboarding-skipped-v2",
+                "s2-3",
+                "s2-4",
+                "pulse-fail-close-to-landing-v2",
+                "pulse-fail-browser-close-v2",
+                "auth-gate-opened-v2",
+                "auth-success-v2",
+                "post-auth-phase-one-map-v2",
+                "post-auth-goal-picker-v2",
+                "goal-selected-v2",
+                "screen-map-viewed-v2",
+                "screen-mission-viewed-v2",
+                "screen-tools-viewed-v2",
+                "screen-oracle-viewed-v2"
+            ]),
+        []
+    );
 
     const loadData = useCallback(async () => {
         setLoading(true);
@@ -34,6 +66,7 @@ export const FlowMapPanel: FC = () => {
             return { nodes: [], links: [], flowMetrics: null };
         }
 
+        const byStep = stats.flowStats.byStep;
         const nodes = buildFlowNodes(stats.flowStats.byStep, {
             pulseAbandonedByReason: stats.flowStats.pulseAbandonedByReason
         });
@@ -49,13 +82,42 @@ export const FlowMapPanel: FC = () => {
 
         const conversionRate = totalVisits > 0 ? Math.round((successCount / totalVisits) * 100) : 0;
         const dropOffRate = 100 - conversionRate;
+        const onboardingOpened = byStep.onboarding_opened ?? 0;
+        const screenMapViewed = byStep.screen_map_viewed ?? 0;
+        const onboardingToMapRate = onboardingOpened > 0
+            ? Math.min(100, Math.round((screenMapViewed / onboardingOpened) * 100))
+            : null;
+        const authGateOpened = byStep.auth_gate_opened ?? 0;
+        const authLoginSuccess = byStep.auth_login_success ?? 0;
+        const authGateConversionRate = authGateOpened > 0
+            ? Math.min(100, Math.round((authLoginSuccess / authGateOpened) * 100))
+            : null;
+
+        const filteredNodeIds = pathScope === "core"
+            ? coreNodeIds
+            : new Set(nodes.map((n) => n.id).filter((id) => !coreNodeIds.has(id) || id === "root"));
+        const filteredNodes = nodes.filter((node) => filteredNodeIds.has(node.id));
+        const filteredLinks = VISITOR_FLOW_LINKS.filter(
+            ([childId, parentId]) => filteredNodeIds.has(childId) && filteredNodeIds.has(parentId)
+        );
 
         return {
-            nodes,
-            links: VISITOR_FLOW_LINKS,
-            flowMetrics: { totalVisits, conversionRate, dropOffRate, successCount }
+            nodes: filteredNodes,
+            links: filteredLinks,
+            flowMetrics: {
+                totalVisits,
+                conversionRate,
+                dropOffRate,
+                successCount,
+                onboardingOpened,
+                screenMapViewed,
+                onboardingToMapRate,
+                authGateOpened,
+                authLoginSuccess,
+                authGateConversionRate
+            }
         };
-    }, [stats]);
+    }, [coreNodeIds, pathScope, stats]);
 
     if (isSandboxEnforced) {
         return (
@@ -81,7 +143,7 @@ export const FlowMapPanel: FC = () => {
 
     return (
         <div className="space-y-6 text-slate-200" dir="rtl">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
                 <div className="admin-glass-card p-4 flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center">
                         <Compass className="w-5 h-5" />
@@ -118,9 +180,53 @@ export const FlowMapPanel: FC = () => {
                         <p className="text-xl font-black text-indigo-400">{flowMetrics?.successCount ?? 0}</p>
                     </div>
                 </div>
+                <div className="admin-glass-card p-4 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
+                        <Zap className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Onboarding → Map</p>
+                        <p className="text-xl font-black text-cyan-400">
+                            {flowMetrics?.onboardingToMapRate != null ? `${flowMetrics.onboardingToMapRate}%` : "—"}
+                        </p>
+                        <p className="text-[10px] text-slate-500">
+                            {flowMetrics?.screenMapViewed ?? 0} / {flowMetrics?.onboardingOpened ?? 0}
+                        </p>
+                    </div>
+                </div>
+                <div className="admin-glass-card p-4 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                        <AlertTriangle className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Auth Gate Conversion</p>
+                        <p className="text-xl font-black text-amber-400">
+                            {flowMetrics?.authGateConversionRate != null ? `${flowMetrics.authGateConversionRate}%` : "—"}
+                        </p>
+                        <p className="text-[10px] text-slate-500">
+                            {flowMetrics?.authLoginSuccess ?? 0} / {flowMetrics?.authGateOpened ?? 0}
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <div className="admin-glass-card p-0 h-[600px] relative overflow-hidden group">
+                <div className="absolute top-3 left-3 z-20 inline-flex rounded-xl border border-white/10 bg-slate-900/70 p-1 backdrop-blur-md">
+                    <button
+                        type="button"
+                        onClick={() => setPathScope("core")}
+                        className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-colors ${pathScope === "core" ? "bg-teal-500/20 text-teal-300" : "text-slate-400 hover:text-slate-200"}`}
+                    >
+                        Core only
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setPathScope("extended")}
+                        className={`px-3 py-1.5 text-[11px] font-bold rounded-lg transition-colors ${pathScope === "extended" ? "bg-amber-500/20 text-amber-300" : "text-slate-400 hover:text-slate-200"}`}
+                    >
+                        Extended paths
+                    </button>
+                </div>
                 {loading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50 z-10">
                         <Loader2 className="w-8 h-8 animate-spin text-teal-400" />

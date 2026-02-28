@@ -54,6 +54,9 @@
     --soft-teal: #2dd4bf;
     --soft-teal-dim: rgba(45, 212, 191, 0.12);
     --soft-teal-glow: rgba(45, 212, 191, 0.25);
+    --color-primary: #334155;
+    --color-primary-soft: rgba(51, 65, 85, 0.92);
+    --color-primary-glow: rgba(51, 65, 85, 0.28);
 
     /* ── 🔮 Glassmorphism — زجاج شفاف ثقيل ── */
     --glass-bg: rgba(12, 17, 40, 0.78);

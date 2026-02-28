@@ -160,6 +160,34 @@ export interface WeeklyReport {
       ctr: number;
     }>;
   };
+  conversionFunnel?: {
+    landingViewed: number;
+    ctaFreeClicked: number;
+    ctaCheckoutClicked: number;
+    checkoutPageViewed: number;
+    paymentSuccess: number;
+    paymentFailed: number;
+    freeCtaRatePct: number;
+    checkoutIntentRatePct: number;
+    checkoutViewRatePct: number;
+    paymentSuccessRatePct: number;
+  };
+  funnelDailySeries?: Array<{
+    date: string;
+    landingViewed: number;
+    ctaFreeClicked: number;
+    ctaCheckoutClicked: number;
+    checkoutPageViewed: number;
+    paymentSuccess: number;
+    paymentFailed: number;
+    paymentSuccessRatePct: number;
+  }>;
+  oneDecision?: {
+    code: string;
+    title: string;
+    action: string;
+    metric: string;
+  };
   gate7?: {
     windowHours: number;
     pathStarted48h: number;
@@ -186,4 +214,3 @@ export interface CronReportResponse {
   generatedAt?: string;
   reportGeneratedAt?: string | null;
 }
-

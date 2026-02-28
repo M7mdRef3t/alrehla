@@ -293,6 +293,128 @@ function adminDevProxy() {
   };
 }
 
+function publicLandingDevProxy() {
+  const FOUNDING_COHORT_CAPACITY = 50;
+  let getAdminClient:
+    | (() => import("@supabase/supabase-js").SupabaseClient | null)
+    | null = null;
+
+  const loadAdminClient = async () => {
+    if (!getAdminClient) {
+      const module = await import("./app/api/_lib/supabaseAdmin");
+      getAdminClient = module.getSupabaseAdminClient;
+    }
+    return getAdminClient;
+  };
+
+  const respondJson = (res: import("http").ServerResponse, status: number, payload: unknown) => {
+    res.statusCode = status;
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Cache-Control", "no-store");
+    res.end(JSON.stringify(payload));
+  };
+
+  return {
+    name: "public-landing-dev-proxy",
+    configureServer(server: import("vite").ViteDevServer) {
+      server.middlewares.use(async (req, res, next) => {
+        if (!req.url?.startsWith("/api/public/")) return next();
+
+        if (req.method !== "GET" && req.method !== "HEAD") {
+          respondJson(res, 405, { error: "Method not allowed" });
+          return;
+        }
+
+        const path = req.url.split("?")[0] ?? "";
+        if (path !== "/api/public/pulse" && path !== "/api/public/scarcity") return next();
+
+        try {
+          const adminClientFactory = await loadAdminClient();
+          const client = adminClientFactory();
+
+          if (path === "/api/public/pulse") {
+            if (!client) {
+              respondJson(res, 200, {
+                global_phoenix_avg: null,
+                generated_at: new Date().toISOString(),
+                source: "not_configured",
+                is_live: false
+              });
+              return;
+            }
+
+            const { data, error } = await client.rpc("get_public_awareness_pulse");
+            const payload = (data ?? null) as { global_phoenix_avg?: number | null; generated_at?: string | null } | null;
+            const avg = typeof payload?.global_phoenix_avg === "number" && Number.isFinite(payload.global_phoenix_avg)
+              ? payload.global_phoenix_avg
+              : null;
+
+            if (error || avg === null) {
+              respondJson(res, 200, {
+                global_phoenix_avg: null,
+                generated_at: new Date().toISOString(),
+                source: error ? "query_failed" : "no_data",
+                is_live: false
+              });
+              return;
+            }
+
+            respondJson(res, 200, {
+              global_phoenix_avg: avg,
+              generated_at: payload?.generated_at ?? new Date().toISOString(),
+              source: "supabase",
+              is_live: true
+            });
+            return;
+          }
+
+          if (!client) {
+            respondJson(res, 200, {
+              total_seats: FOUNDING_COHORT_CAPACITY,
+              seats_left: null,
+              source: "unavailable",
+              is_live: false
+            });
+            return;
+          }
+
+          const { count, error } = await client
+            .from("profiles")
+            .select("id", { count: "exact", head: true })
+            .gt("awareness_tokens", 0)
+            .gt("journey_expires_at", new Date().toISOString());
+
+          if (error) {
+            respondJson(res, 200, {
+              total_seats: FOUNDING_COHORT_CAPACITY,
+              seats_left: null,
+              source: "unavailable",
+              is_live: false
+            });
+            return;
+          }
+
+          const activePremium = Number(count ?? 0);
+          const seatsLeft = Math.max(FOUNDING_COHORT_CAPACITY - activePremium, 0);
+          respondJson(res, 200, {
+            total_seats: FOUNDING_COHORT_CAPACITY,
+            seats_left: seatsLeft,
+            source: "supabase",
+            is_live: true
+          });
+        } catch (error) {
+          respondJson(res, 200, {
+            source: "proxy_error",
+            is_live: false,
+            path,
+            error: String(error)
+          });
+        }
+      });
+    }
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const hasSupabaseEnv = Boolean(env.VITE_SUPABASE_URL && env.VITE_SUPABASE_ANON_KEY);
@@ -319,6 +441,7 @@ export default defineConfig(({ mode }) => {
       react(),
       geminiDevProxy(),
       adminDevProxy(),
+      publicLandingDevProxy(),
       VitePWA({
         registerType: "autoUpdate",
         injectRegister: "auto",

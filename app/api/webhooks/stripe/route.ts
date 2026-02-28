@@ -1,25 +1,50 @@
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
+import { getStripeClient, isValidWebhookSecret } from '../../_lib/stripeConfig';
 
-function getStripeClient() {
-    const secretKey = process.env.STRIPE_SECRET_KEY;
-    if (!secretKey) return null;
-    return new Stripe(secretKey, {
-        apiVersion: '2025-02-24.acacia',
+function extractUserIdFromSession(session: import("stripe").Stripe.Checkout.Session): string | null {
+    const metadataUserId = typeof session.metadata?.userId === 'string' ? session.metadata.userId.trim() : '';
+    const referenceUserId = typeof session.client_reference_id === 'string' ? session.client_reference_id.trim() : '';
+    return metadataUserId || referenceUserId || null;
+}
+
+function extractTrackingSessionId(session: import("stripe").Stripe.Checkout.Session, userId: string): string {
+    const trackingSessionId = typeof session.metadata?.trackingSessionId === 'string'
+        ? session.metadata.trackingSessionId.trim()
+        : '';
+    return trackingSessionId || userId;
+}
+
+async function appendFlowEvent(params: {
+    supabaseAdmin: ReturnType<typeof getSupabaseAdminClient>;
+    sessionId: string | null;
+    step: string;
+    extra?: Record<string, unknown>;
+}) {
+    if (!params.supabaseAdmin || !params.sessionId) return;
+    await params.supabaseAdmin.from('journey_events').insert({
+        session_id: params.sessionId,
+        mode: 'identified',
+        type: 'flow_event',
+        payload: {
+            step: params.step,
+            extra: params.extra ?? {}
+        }
     });
 }
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
 export async function POST(req: Request) {
-    const stripe = getStripeClient();
+    const { client: stripe, config: stripeConfig } = getStripeClient();
+    const webhookSecret = stripeConfig.webhookSecret;
     if (!stripe) {
         return NextResponse.json({ error: 'Stripe is not configured.' }, { status: 503 });
     }
 
-    if (!webhookSecret) {
-        return NextResponse.json({ error: 'Stripe webhook secret is not configured.' }, { status: 503 });
+    if (!webhookSecret || !isValidWebhookSecret(webhookSecret)) {
+        return NextResponse.json(
+            { error: 'Stripe webhook secret is invalid. Expected a whsec_ signing secret.' },
+            { status: 503 }
+        );
     }
 
     const supabaseAdmin = getSupabaseAdminClient();
@@ -30,23 +55,54 @@ export async function POST(req: Request) {
     const bodyText = await req.text();
     const sig = req.headers.get('stripe-signature') as string;
 
-    let event: Stripe.Event;
+    let event: import("stripe").Stripe.Event;
 
     try {
         event = stripe.webhooks.constructEvent(bodyText, sig, webhookSecret);
-    } catch (err: any) {
-        console.error(`Webhook Error: ${err.message}`);
-        return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Invalid webhook signature';
+        console.error(`Webhook Error: ${message}`);
+        return NextResponse.json({ error: `Webhook Error: ${message}` }, { status: 400 });
     }
 
-    // Handle the event
     try {
+        let maybeUserId: string | null = null;
+        let maybeCheckoutSessionId: string | null = null;
+
+        if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.expired') {
+            const session = event.data.object as import("stripe").Stripe.Checkout.Session;
+            maybeUserId = extractUserIdFromSession(session);
+            maybeCheckoutSessionId = typeof session.id === 'string' ? session.id : null;
+        }
+
+        const { data: isNewEvent } = await supabaseAdmin.rpc('register_payment_webhook_event', {
+            p_provider: 'stripe',
+            p_provider_event_id: event.id,
+            p_event_type: event.type,
+            p_user_id: maybeUserId,
+            p_checkout_session_id: maybeCheckoutSessionId,
+            p_metadata: { livemode: event.livemode }
+        });
+
+        if (isNewEvent === false) {
+            return NextResponse.json({ received: true, deduped: true });
+        }
+
         switch (event.type) {
             case 'checkout.session.completed': {
-                const session = event.data.object as Stripe.Checkout.Session;
-                const userId = session.metadata?.userId || session.client_reference_id;
+                const session = event.data.object as import("stripe").Stripe.Checkout.Session;
+                const userId = extractUserIdFromSession(session);
 
                 if (!userId) throw new Error("No userId found in session metadata");
+                const trackingSessionId = extractTrackingSessionId(session, userId);
+
+                await supabaseAdmin.rpc('activate_founding_cohort_seat', {
+                    p_user_id: userId,
+                    p_provider: 'stripe',
+                    p_payment_ref: session.id,
+                    p_token_amount: 100,
+                    p_journey_days: 21
+                });
 
                 // Retrieve the subscription to get the price ID
                 if (session.subscription) {
@@ -54,8 +110,7 @@ export async function POST(req: Request) {
                     const priceId = subscription.items.data[0].price.id;
 
                     // Determine new role based on Price ID
-                    const premiumPriceId = process.env.VITE_STRIPE_PRICE_PREMIUM;
-                    const coachPriceId = process.env.VITE_STRIPE_PRICE_COACH;
+                    const coachPriceId = stripeConfig.priceCoach;
 
                     const isCoachPlan = priceId === coachPriceId;
                     const newRole = isCoachPlan ? 'coach' : 'user';
@@ -75,13 +130,52 @@ export async function POST(req: Request) {
                         .eq('id', userId);
 
                     if (error) throw error;
-                    console.log(`User ${userId} upgraded successfully to ${isCoachPlan ? 'Coach' : 'Premium'}.`);
+                    console.warn(`User ${userId} upgraded successfully to ${isCoachPlan ? 'Coach' : 'Premium'}.`);
                 }
+
+                await appendFlowEvent({
+                    supabaseAdmin,
+                    sessionId: trackingSessionId,
+                    step: 'payment_success',
+                    extra: {
+                        source: 'stripe_webhook',
+                        provider: 'stripe',
+                        stripeMode: stripeConfig.mode,
+                        providerEventId: event.id,
+                        checkoutSessionId: session.id
+                    }
+                });
+                break;
+            }
+
+            case 'checkout.session.expired': {
+                const session = event.data.object as import("stripe").Stripe.Checkout.Session;
+                const userId = extractUserIdFromSession(session);
+                const trackingSessionId = userId ? extractTrackingSessionId(session, userId) : null;
+                if (userId) {
+                    await supabaseAdmin.rpc('release_founding_cohort_seat', {
+                        p_user_id: userId,
+                        p_reason: 'checkout_session_expired'
+                    });
+                }
+
+                await appendFlowEvent({
+                    supabaseAdmin,
+                    sessionId: trackingSessionId,
+                    step: 'payment_failed',
+                    extra: {
+                        source: 'stripe_webhook',
+                        provider: 'stripe',
+                        stripeMode: stripeConfig.mode,
+                        providerEventId: event.id,
+                        reason: 'checkout_session_expired'
+                    }
+                });
                 break;
             }
 
             case 'customer.subscription.updated': {
-                const subscription = event.data.object as Stripe.Subscription;
+                const subscription = event.data.object as import("stripe").Stripe.Subscription;
                 // Update status (e.g., active -> past_due)
                 const { error } = await supabaseAdmin
                     .from('profiles')
@@ -95,14 +189,14 @@ export async function POST(req: Request) {
 
                 // If past_due, we could trigger an email via Resend here.
                 if (subscription.status === 'past_due') {
-                    console.log(`Subscription for customer ${subscription.customer} is past due! Grace period activated.`);
+                    console.warn(`Subscription for customer ${subscription.customer} is past due! Grace period activated.`);
                     // TODO: Trigger email
                 }
                 break;
             }
 
             case 'customer.subscription.deleted': {
-                const subscription = event.data.object as Stripe.Subscription;
+                const subscription = event.data.object as import("stripe").Stripe.Subscription;
                 // Downgrade user
                 const { error } = await supabaseAdmin
                     .from('profiles')
@@ -116,12 +210,75 @@ export async function POST(req: Request) {
                 if (error) console.error("Error downgrading subscription:", error);
                 break;
             }
+
+            case 'invoice.payment_failed': {
+                const invoice = event.data.object as import("stripe").Stripe.Invoice;
+                const customerId = typeof invoice.customer === 'string' ? invoice.customer : null;
+                let userId: string | null = null;
+                if (customerId) {
+                    const { data: profile } = await supabaseAdmin
+                        .from('profiles')
+                        .select('id')
+                        .eq('stripe_customer_id', customerId)
+                        .maybeSingle();
+                    userId = typeof profile?.id === 'string' ? profile.id : null;
+                }
+
+                if (userId) {
+                    await supabaseAdmin.rpc('release_founding_cohort_seat', {
+                        p_user_id: userId,
+                        p_reason: 'invoice_payment_failed'
+                    });
+                }
+
+                await appendFlowEvent({
+                    supabaseAdmin,
+                    sessionId: userId,
+                    step: 'payment_failed',
+                    extra: {
+                        source: 'stripe_webhook',
+                        provider: 'stripe',
+                        stripeMode: stripeConfig.mode,
+                        providerEventId: event.id,
+                        reason: 'invoice_payment_failed'
+                    }
+                });
+                break;
+            }
+
+            case 'payment_intent.payment_failed': {
+                const paymentIntent = event.data.object as import("stripe").Stripe.PaymentIntent;
+                const userId =
+                    typeof paymentIntent.metadata?.userId === 'string' && paymentIntent.metadata.userId.trim()
+                        ? paymentIntent.metadata.userId.trim()
+                        : null;
+                if (userId) {
+                    await supabaseAdmin.rpc('release_founding_cohort_seat', {
+                        p_user_id: userId,
+                        p_reason: 'payment_intent_failed'
+                    });
+                }
+
+                await appendFlowEvent({
+                    supabaseAdmin,
+                    sessionId: userId,
+                    step: 'payment_failed',
+                    extra: {
+                        source: 'stripe_webhook',
+                        provider: 'stripe',
+                        stripeMode: stripeConfig.mode,
+                        providerEventId: event.id,
+                        reason: 'payment_intent_failed'
+                    }
+                });
+                break;
+            }
             default:
-                console.log(`Unhandled event type ${event.type}`);
+                console.warn(`Unhandled event type ${event.type}`);
         }
 
         return NextResponse.json({ received: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Webhook processing error:", error);
         return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
     }

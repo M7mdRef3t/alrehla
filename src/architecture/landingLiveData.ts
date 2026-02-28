@@ -53,6 +53,10 @@ class LandingApiAdapter {
       }))
       .filter((item) => item.quote.length > 0 && item.author.length > 0);
   }
+
+  static isLive(raw: unknown): boolean {
+    return Boolean((raw as { is_live?: unknown } | null | undefined)?.is_live === true);
+  }
 }
 
 class LandingRepository {
@@ -66,6 +70,7 @@ class LandingRepository {
       if (!res.ok) throw new Error(`http_${res.status}`);
       const data = await res.json();
       if (designToggles.enableCircuitBreakerForLiveData) this.metricsBreaker.markSuccess();
+      if (!LandingApiAdapter.isLive(data)) return null;
       return LandingApiAdapter.toMetrics(data);
     } catch (error) {
       if (designToggles.enableCircuitBreakerForLiveData) this.metricsBreaker.markFailure();
@@ -81,6 +86,7 @@ class LandingRepository {
       if (!res.ok) throw new Error(`http_${res.status}`);
       const data = await res.json();
       if (designToggles.enableCircuitBreakerForLiveData) this.testimonialsBreaker.markSuccess();
+      if (!LandingApiAdapter.isLive(data)) return null;
       return LandingApiAdapter.toTestimonials(data);
     } catch (error) {
       if (designToggles.enableCircuitBreakerForLiveData) this.testimonialsBreaker.markFailure();
@@ -179,10 +185,10 @@ function emitEvent(
   appEventBus.emit(key, payload as { key: "metrics" | "testimonials"; reason: string });
 }
 
-export function useLandingLiveData(fallbackTestimonials: TestimonialItem[]) {
+export function useLandingLiveData(_fallbackTestimonials: TestimonialItem[]) {
   const [state, dispatch] = useReducer(reducer, {
     ...initialState,
-    testimonials: { ...initialState.testimonials, data: fallbackTestimonials }
+    testimonials: { ...initialState.testimonials, data: [] }
   });
 
   useEffect(() => {
@@ -214,14 +220,14 @@ export function useLandingLiveData(fallbackTestimonials: TestimonialItem[]) {
       if (!silent) dispatch({ type: "loading", key: "testimonials" });
       emitEvent("live_data_fetch_started", { key: "testimonials" });
       if (!strategy.shouldUseLive()) {
-        dispatch({ type: "testimonials_loaded", data: fallbackTestimonials, mode: "fallback" });
+        dispatch({ type: "testimonials_loaded", data: [], mode: "fallback" });
         emitEvent("live_data_fetch_succeeded", { key: "testimonials", source: "fallback" });
         return;
       }
       const data = await repository.fetchTestimonials();
       if (!mounted) return;
       if (!data || data.length === 0) {
-        dispatch({ type: "testimonials_loaded", data: fallbackTestimonials, mode: "fallback" });
+        dispatch({ type: "testimonials_loaded", data: [], mode: "fallback" });
         return;
       }
       dispatch({ type: "testimonials_loaded", data, mode: "live" });
@@ -238,7 +244,7 @@ export function useLandingLiveData(fallbackTestimonials: TestimonialItem[]) {
       if (metricsTimer) clearInterval(metricsTimer);
       if (testimonialsTimer) clearInterval(testimonialsTimer);
     };
-  }, [fallbackTestimonials]);
+  }, []);
 
   return state;
 }

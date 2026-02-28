@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+﻿import React, { memo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { NodeData } from '../../hooks/useDawayirEngine';
 
@@ -12,13 +12,14 @@ const colorMap = {
     core: 'bg-teal-500/20 border-teal-400 text-teal-300 backdrop-blur-md',
     danger: 'bg-rose-500/20 border-rose-500 text-rose-300 animate-pulse-slow backdrop-blur-md shadow-[0_0_15px_rgba(244,63,94,0.2)]',
     ignored: 'bg-slate-800/40 border-slate-700 text-slate-500 opacity-40',
-    neutral: 'bg-indigo-500/10 border-indigo-400/30 text-indigo-300 backdrop-blur-md'
+    neutral: 'bg-[var(--color-primary)]/10 border-[var(--color-primary)] text-[var(--color-primary)] backdrop-blur-md'
 };
 
 const CustomNode = ({ data }: NodeProps<NodeData>) => {
     return (
         <div
             className={`rounded-full flex items-center justify-center text-center p-3 border transition-all duration-700 font-mono
+        custom-drag-handle
         ${sizeMap[data.size]} 
         ${colorMap[data.color]}
       `}
@@ -36,3 +37,5 @@ const CustomNode = ({ data }: NodeProps<NodeData>) => {
 };
 
 export default memo(CustomNode);
+
+

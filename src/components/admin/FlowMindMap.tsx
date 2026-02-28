@@ -183,6 +183,24 @@ function getDecisionOutcome(node: FlowNode): "success" | "failure" | "neutral" {
   return "neutral";
 }
 
+const PHASE_LANE_META: Record<string, { fill: string; border: string; text: string }> = {
+  "phase-pre-auth-v2": {
+    fill: "rgba(245, 158, 11, 0.08)",
+    border: "rgba(245, 158, 11, 0.38)",
+    text: "#b45309"
+  },
+  "phase-auth-v2": {
+    fill: "rgba(20, 184, 166, 0.07)",
+    border: "rgba(20, 184, 166, 0.34)",
+    text: "#0f766e"
+  },
+  "phase-core-v2": {
+    fill: "rgba(59, 130, 246, 0.07)",
+    border: "rgba(59, 130, 246, 0.32)",
+    text: "#1d4ed8"
+  }
+};
+
 function isValidAccent(value: unknown): value is NonNullable<FlowNode["accent"]> {
   return value === "teal" || value === "amber" || value === "rose" || value === "slate";
 }
@@ -1746,6 +1764,80 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
     return result;
   }, [renderedLinks, positions, autoLayout, nodeById]);
 
+  const phaseSwimlanes = useMemo(() => {
+    const phaseIds = Object.keys(PHASE_LANE_META);
+    const childrenByParent = new Map<string, string[]>();
+    for (const [childId, parentId] of renderedLinks) {
+      const arr = childrenByParent.get(parentId) ?? [];
+      arr.push(childId);
+      childrenByParent.set(parentId, arr);
+    }
+
+    const collectDescendants = (rootId: string): Set<string> => {
+      const visited = new Set<string>();
+      const queue = [...(childrenByParent.get(rootId) ?? [])];
+      while (queue.length > 0) {
+        const current = queue.shift();
+        if (!current || visited.has(current)) continue;
+        visited.add(current);
+        const next = childrenByParent.get(current) ?? [];
+        for (const childId of next) queue.push(childId);
+      }
+      return visited;
+    };
+
+    const lanes: Array<{
+      id: string;
+      title: string;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      fill: string;
+      border: string;
+      text: string;
+    }> = [];
+
+    for (const phaseId of phaseIds) {
+      if (!renderedNodeIds.has(phaseId)) continue;
+      const descendants = Array.from(collectDescendants(phaseId)).filter((id) => id !== phaseId);
+      const boundingNodeIds = descendants.length > 0 ? descendants : [phaseId];
+      const rects = boundingNodeIds
+        .map((id) => positions[id] ?? autoLayout[id])
+        .filter((pos): pos is Position => Boolean(pos))
+        .map((pos) => ({
+          minX: pos.x,
+          minY: pos.y,
+          maxX: pos.x + CARD_W,
+          maxY: pos.y + CARD_H
+        }));
+      if (rects.length === 0) continue;
+
+      const padX = 40;
+      const padY = 34;
+      const minX = Math.min(...rects.map((item) => item.minX)) - padX;
+      const minY = Math.min(...rects.map((item) => item.minY)) - padY;
+      const maxX = Math.max(...rects.map((item) => item.maxX)) + padX;
+      const maxY = Math.max(...rects.map((item) => item.maxY)) + padY;
+      const laneStyle = PHASE_LANE_META[phaseId];
+      const phaseNode = nodeById.get(phaseId);
+
+      lanes.push({
+        id: phaseId,
+        title: phaseNode?.title || "Phase",
+        x: minX,
+        y: minY,
+        w: Math.max(260, maxX - minX),
+        h: Math.max(150, maxY - minY),
+        fill: laneStyle.fill,
+        border: laneStyle.border,
+        text: laneStyle.text
+      });
+    }
+
+    return lanes.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+  }, [autoLayout, nodeById, positions, renderedLinks, renderedNodeIds]);
+
   /* ── Minimap ── */
   const minimap = useMemo(() => {
     const entries = Object.entries(visiblePositions);
@@ -1870,6 +1962,44 @@ export const FlowMindMap: FC<FlowMindMapProps> = ({
             height: CANVAS_SIZE
           }}
         >
+          {phaseSwimlanes.map((lane) => (
+            <div
+              key={lane.id}
+              style={{
+                position: "absolute",
+                left: lane.x,
+                top: lane.y,
+                width: lane.w,
+                height: lane.h,
+                borderRadius: 22,
+                border: `1.5px dashed ${lane.border}`,
+                background: lane.fill,
+                boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.18)",
+                pointerEvents: "none",
+                zIndex: 1
+              }}
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  right: 12,
+                  fontSize: 11,
+                  fontWeight: 900,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: lane.text,
+                  background: "rgba(255,255,255,0.72)",
+                  border: `1px solid ${lane.border}`,
+                  borderRadius: 999,
+                  padding: "4px 10px"
+                }}
+              >
+                {lane.title}
+              </span>
+            </div>
+          ))}
+
           {/* Connector SVG */}
           <svg
             style={{ position: "absolute", inset: 0, width: CANVAS_SIZE, height: CANVAS_SIZE, pointerEvents: "none" }}

@@ -8,6 +8,9 @@ import { handleMissions } from "../../../server/admin/missions";
 import { handleBroadcasts } from "../../../server/admin/broadcasts";
 import { handleAiLogs } from "../../../server/admin/ai-logs";
 import { handleJourneyMap } from "../../../server/admin/journey-map";
+import { handleRadar } from "../../../server/admin/radar";
+import { handleRadarContent } from "../../../server/admin/radar-content";
+import { handleRadarGrants } from "../../../server/admin/radar-grants";
 import { recordAdminAudit, verifyAdmin } from "../../../server/admin/_shared";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +24,10 @@ const ROUTES: Record<string, any> = {
     missions: handleMissions,
     broadcasts: handleBroadcasts,
     "ai-logs": handleAiLogs,
-    "journey-map": handleJourneyMap
+    "journey-map": handleJourneyMap,
+    radar: handleRadar,
+    "radar-content": handleRadarContent,
+    "radar-grants": handleRadarGrants
 };
 
 const AUTH_WINDOW_MS = 10 * 60 * 1000;

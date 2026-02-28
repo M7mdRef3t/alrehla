@@ -22,7 +22,10 @@ function getServiceClient() {
 export async function GET() {
   const client = getServiceClient();
   if (!client) {
-    return NextResponse.json({ broadcasts: [] }, { status: 200, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(
+      { broadcasts: [], source: "not_configured", is_live: false },
+      { status: 200, headers: { "Cache-Control": "no-store" } }
+    );
   }
 
   const { data, error } = await client
@@ -32,11 +35,14 @@ export async function GET() {
     .limit(30);
 
   if (error || !data) {
-    return NextResponse.json({ broadcasts: [] }, { status: 200, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(
+      { broadcasts: [], source: "query_failed", is_live: false },
+      { status: 200, headers: { "Cache-Control": "no-store" } }
+    );
   }
 
   return NextResponse.json(
-    { broadcasts: data },
+    { broadcasts: data, source: "supabase", is_live: true },
     { status: 200, headers: { "Cache-Control": "no-store" } }
   );
 }

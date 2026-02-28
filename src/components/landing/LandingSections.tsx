@@ -229,13 +229,13 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
 export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsState: { data: LiveMetrics; isLoading: boolean; lastUpdatedAt: number | null; mode: "live" | "fallback" } }> = ({ stagger, item, metricsState }) => {
   const isFallback = metricsState.mode === "fallback";
   const showModeBadge = !isUserMode;
-  const showFallbackHint = isFallback && !isUserMode;
+  const showFallbackHint = isFallback;
 
   const cards = useMemo(() => ([
-    { val: metricsState.data.activeUnits30d.toLocaleString("ar-EG"), label: "وحدات ميدانية نشطة", icon: Users, color: "text-teal-400" },
-    { val: `${metricsState.data.retentionRate30d.toLocaleString("ar-EG")}%`, label: "ثبات قتالي استراتيجي", icon: TrendingUp, color: "text-[var(--color-primary)]" },
-    { val: metricsState.data.activity24h.toLocaleString("ar-EG"), label: "نشاط الميدان (24 ساعة)", icon: Zap, color: "text-rose-400" }
-  ]), [metricsState.data]);
+    { val: isFallback ? "غير متاح" : metricsState.data.activeUnits30d.toLocaleString("ar-EG"), label: "وحدات ميدانية نشطة", icon: Users, color: "text-teal-400" },
+    { val: isFallback ? "غير متاح" : `${metricsState.data.retentionRate30d.toLocaleString("ar-EG")}%`, label: "ثبات قتالي استراتيجي", icon: TrendingUp, color: "text-[var(--color-primary)]" },
+    { val: isFallback ? "غير متاح" : metricsState.data.activity24h.toLocaleString("ar-EG"), label: "نشاط الميدان (24 ساعة)", icon: Zap, color: "text-rose-400" }
+  ]), [isFallback, metricsState.data]);
 
   return (
     <motion.section
@@ -260,7 +260,7 @@ export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsStat
             />
             {showFallbackHint && (
               <p className="mt-2 inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-bold text-amber-200">
-                عرض بقالب ثابت (Fallback) حتى عودة البيانات الحية
+                البيانات اللحظية غير متاحة حالياً
               </p>
             )}
             <h3 className="text-2xl sm:text-3xl font-black text-white mt-4 mb-4 leading-tight">مجتمع من القادة يستعيدون سيادتهم</h3>
@@ -306,13 +306,30 @@ export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsStat
   );
 };
 
-export const TestimonialsSection: FC<{ stagger: Variants; item: Variants; testimonials: TestimonialsItem[]; testimonialsState: { data: TestimonialItem[]; isLoading: boolean; lastUpdatedAt: number | null; mode: "live" | "fallback" } }> = ({ stagger, item, testimonials, testimonialsState }) => {
-  const displayTestimonials = testimonialsState.data.length > 0 ? testimonialsState.data : testimonials;
+export const TestimonialsSection: FC<{ stagger: Variants; item: Variants; testimonials: TestimonialsItem[]; testimonialsState: { data: TestimonialItem[]; isLoading: boolean; lastUpdatedAt: number | null; mode: "live" | "fallback" } }> = ({ stagger, item, testimonials: _testimonials, testimonialsState }) => {
+  const displayTestimonials = testimonialsState.data;
   const isLive = testimonialsState.mode === "live";
   const isFallback = testimonialsState.mode === "fallback";
   const showModeBadge = !isUserMode;
-  const showFallbackHint = isFallback && !isUserMode;
-  if (!displayTestimonials?.length) return null;
+  const showFallbackHint = isFallback;
+
+  if (!displayTestimonials?.length) {
+    return (
+      <motion.section className="phi-section" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
+        <motion.div variants={item} className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
+          <LiveStatusBar
+            title="مصدر المراجعات"
+            mode={isLive ? "live" : "fallback"}
+            isLoading={testimonialsState.isLoading}
+            lastUpdatedAt={testimonialsState.lastUpdatedAt}
+            showModeBadge={showModeBadge}
+          />
+          <p className="mt-3 text-sm text-slate-400">المراجعات اللحظية غير متاحة حالياً.</p>
+        </motion.div>
+      </motion.section>
+    );
+  }
+
   return (
     <motion.section
       className="phi-section"
@@ -339,7 +356,7 @@ export const TestimonialsSection: FC<{ stagger: Variants; item: Variants; testim
         />
         {showFallbackHint && (
           <p className="mt-2 inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-bold text-amber-200">
-            المراجعات المعروضة من قالب ثابت (Fallback)
+            المراجعات اللحظية غير متاحة حالياً
           </p>
         )}
       </div>
@@ -354,9 +371,7 @@ export const TestimonialsSection: FC<{ stagger: Variants; item: Variants; testim
               </p>
             </div>
             <div className="flex items-center gap-3 pt-6 border-t border-white/5">
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-800 border border-white/10"
-              >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-800 border border-white/10">
                 <Heart className="w-4 h-4 text-rose-500" />
               </div>
               <div>
@@ -419,5 +434,9 @@ export const FinalReadinessSection: FC<{ stagger: Variants; item: Variants; last
     )}
   </motion.section>
 );
+
+
+
+
 
 
