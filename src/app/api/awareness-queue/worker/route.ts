@@ -70,7 +70,7 @@ export async function POST() {
                         .from('awareness_events_queue')
                         .update({
                             status: 'DLQ',
-                            last_error: procError.message,
+                            last_error: procError instanceof Error ? procError.message : String(procError),
                             retry_count: nextRetryCount
                         })
                         .eq('id', event.id);
@@ -83,13 +83,13 @@ export async function POST() {
                         .from('awareness_events_queue')
                         .update({
                             status: 'FAILED',
-                            last_error: procError.message,
+                            last_error: procError instanceof Error ? procError.message : String(procError),
                             retry_count: nextRetryCount,
                             next_retry_at: nextRetryAt
                         })
                         .eq('id', event.id);
                 }
-                results.push({ id: event.id, status: 'failed', error: procError.message });
+                results.push({ id: event.id, status: 'failed', error: procError instanceof Error ? procError.message : String(procError) });
             }
         }
 
