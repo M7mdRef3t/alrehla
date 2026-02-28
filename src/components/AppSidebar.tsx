@@ -1,3 +1,4 @@
+import { AwarenessSkeleton } from '../components/AwarenessSkeleton';
 import type { FC } from "react";
 import { Suspense, lazy, useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -54,7 +55,6 @@ import type { FeatureFlagKey } from "../config/features";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
 import { isUserMode } from "../config/appEnv";
 import { runtimeEnv } from "../config/runtimeEnv";
-import { AwarenessSkeleton } from "./AwarenessSkeleton";
 import { assignUrl, getHref, pushUrl } from "../services/navigation";
 import { openInNewTab } from "../services/clientDom";
 

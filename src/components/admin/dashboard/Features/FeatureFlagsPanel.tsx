@@ -1,3 +1,4 @@
+import { AwarenessSkeleton } from '../../../../components/AwarenessSkeleton';
 import type { FC } from "react";
 import { useState, Suspense, lazy, useMemo } from "react";
 import {
@@ -20,7 +21,6 @@ import {
     Eye
 } from "lucide-react";
 import { useAdminState } from "../../../../state/adminState";
-import { AwarenessSkeleton } from "../../../AwarenessSkeleton";
 import { useAuthState, getEffectiveRoleFromState } from "../../../../state/authState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "../../../../utils/featureFlags";
 import { runtimeEnv } from "../../../../config/runtimeEnv";

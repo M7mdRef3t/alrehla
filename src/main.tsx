@@ -1,7 +1,8 @@
+import { AwarenessSkeleton } from './components/AwarenessSkeleton';
+
 import { lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { AwarenessSkeleton } from "./components/AwarenessSkeleton";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { initAnalytics } from "./services/analytics";
 import { initMonitoring } from "./services/monitoring";
