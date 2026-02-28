@@ -12,6 +12,41 @@ function getStripeClient() {
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+async function sendPastDueEmail(toEmail: string): Promise<void> {
+    const apiKey = process.env.RESEND_API_KEY;
+    const from = process.env.REPORT_EMAIL_FROM || "billing@alrehla.app";
+    if (!apiKey) {
+        console.warn("RESEND_API_KEY not configured. Skipping past_due email.");
+        return;
+    }
+    const subject = "Action Required: Subscription Payment Failed";
+    const html = `<p>Hello,</p><p>We were unable to process the payment for your subscription. Your subscription is now past due. Please update your payment method to continue accessing premium features.</p><p>Thank you,</p><p>The Team</p>`;
+
+    try {
+        const res = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${apiKey}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                from,
+                to: toEmail,
+                subject,
+                html
+            })
+        });
+        if (!res.ok) {
+            console.error("Failed to send past_due email:", await res.text());
+        } else {
+            console.log(`Successfully sent past_due email to ${toEmail}`);
+        }
+    } catch (error) {
+        console.error("Error sending past_due email:", error);
+    }
+}
+
+
 export async function POST(req: Request) {
     const stripe = getStripeClient();
     if (!stripe) {
@@ -93,10 +128,21 @@ export async function POST(req: Request) {
 
                 if (error) console.error("Error updating subscription status:", error);
 
-                // If past_due, we could trigger an email via Resend here.
+                // If past_due, trigger an email via Resend
                 if (subscription.status === 'past_due') {
                     console.log(`Subscription for customer ${subscription.customer} is past due! Grace period activated.`);
-                    // TODO: Trigger email
+
+                    const { data: profileData, error: profileError } = await supabaseAdmin
+                        .from('profiles')
+                        .select('email')
+                        .eq('stripe_customer_id', subscription.customer as string)
+                        .single();
+
+                    if (!profileError && profileData?.email) {
+                        await sendPastDueEmail(profileData.email);
+                    } else {
+                        console.error("Could not find email for customer", subscription.customer);
+                    }
                 }
                 break;
             }
