@@ -279,7 +279,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
             {/* --- Right Column: Mission Cards --- */}
             <div className="space-y-4 lg:col-span-8">
                 <AnimatePresence mode="popLayout">
-                    {mission.daily_missions.map((m: { day: number, focus: string, micro_action: string, reward_insight: string, _uid: string }, idx: number) => {
+                    {mission.daily_missions.map((m: any, idx: number) => {
                         const isCurrentDay = m.day === (activeTrajectory?.data?.current_day || 1);
                         const isCompleted = m.day < (activeTrajectory?.data?.current_day || 1);
 
