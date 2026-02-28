@@ -8,8 +8,8 @@ interface SwarmStatusBadgeProps {
 }
 
 export const SwarmStatusBadge: React.FC<SwarmStatusBadgeProps> = ({
-  tension = 0,
-  momentum = 0,
+  tension = 0, // eslint-disable-line @typescript-eslint/no-unused-vars
+  momentum = 0, // eslint-disable-line @typescript-eslint/no-unused-vars
   label = '',
   isInsulated = false
 }) => {
