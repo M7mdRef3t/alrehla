@@ -20,6 +20,28 @@ type RuntimeKey =
   | "VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE"
   | "VITE_OWNER_SECURITY_WEBHOOK_URL";
 
+type NextPublicKey =
+  | "NEXT_PUBLIC_APP_ENV"
+  | "NEXT_PUBLIC_PHASE_ONE_USER_FLOW"
+  | "NEXT_PUBLIC_PUBLIC_PAYMENTS_ENABLED"
+  | "NEXT_PUBLIC_SUPABASE_URL"
+  | "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+  | "NEXT_PUBLIC_WHATSAPP_CONTACT_NUMBER"
+  | "NEXT_PUBLIC_ADMIN_ALLOWED_ROLES"
+  | "NEXT_PUBLIC_ADMIN_CODE"
+  | "NEXT_PUBLIC_ADMIN_API_BASE"
+  | "NEXT_PUBLIC_GA_MEASUREMENT_ID"
+  | "NEXT_PUBLIC_CLARITY_PROJECT_ID"
+  | "NEXT_PUBLIC_CONTENTSQUARE_PROJECT_ID"
+  | "NEXT_PUBLIC_AUTH_REDIRECT_URL"
+  | "NEXT_PUBLIC_PUBLIC_APP_URL"
+  | "NEXT_PUBLIC_GEMINI_AI_ENABLED"
+  | "NEXT_PUBLIC_SENTRY_DSN"
+  | "NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE"
+  | "NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE"
+  | "NEXT_PUBLIC_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE"
+  | "NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL";
+
 /** Safe accessor for process.env that never throws in browser/Vite */
 function safeProcessEnv(): Record<string, unknown> {
   try {
@@ -32,51 +54,35 @@ function safeProcessEnv(): Record<string, unknown> {
   return {};
 }
 
-function readNextPublicStatic(key: RuntimeKey): string | undefined {
-  switch (key) {
-    case "VITE_APP_ENV":
-      return process.env.NEXT_PUBLIC_APP_ENV?.trim();
-    case "VITE_PHASE_ONE_USER_FLOW":
-      return process.env.NEXT_PUBLIC_PHASE_ONE_USER_FLOW?.trim();
-    case "VITE_PUBLIC_PAYMENTS_ENABLED":
-      return process.env.NEXT_PUBLIC_PUBLIC_PAYMENTS_ENABLED?.trim();
-    case "VITE_SUPABASE_URL":
-      return process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-    case "VITE_SUPABASE_ANON_KEY":
-      return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-    case "VITE_WHATSAPP_CONTACT_NUMBER":
-      return process.env.NEXT_PUBLIC_WHATSAPP_CONTACT_NUMBER?.trim();
-    case "VITE_ADMIN_ALLOWED_ROLES":
-      return process.env.NEXT_PUBLIC_ADMIN_ALLOWED_ROLES?.trim();
-    case "VITE_ADMIN_CODE":
-      return process.env.NEXT_PUBLIC_ADMIN_CODE?.trim();
-    case "VITE_ADMIN_API_BASE":
-      return process.env.NEXT_PUBLIC_ADMIN_API_BASE?.trim();
-    case "VITE_GA_MEASUREMENT_ID":
-      return process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
-    case "VITE_CLARITY_PROJECT_ID":
-      return process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID?.trim();
-    case "VITE_CONTENTSQUARE_PROJECT_ID":
-      return process.env.NEXT_PUBLIC_CONTENTSQUARE_PROJECT_ID?.trim();
-    case "VITE_AUTH_REDIRECT_URL":
-      return process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL?.trim();
-    case "VITE_PUBLIC_APP_URL":
-      return process.env.NEXT_PUBLIC_PUBLIC_APP_URL?.trim();
-    case "VITE_GEMINI_AI_ENABLED":
-      return process.env.NEXT_PUBLIC_GEMINI_AI_ENABLED?.trim();
-    case "VITE_SENTRY_DSN":
-      return process.env.NEXT_PUBLIC_SENTRY_DSN?.trim();
-    case "VITE_SENTRY_TRACES_SAMPLE_RATE":
-      return process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE?.trim();
-    case "VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE":
-      return process.env.NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE?.trim();
-    case "VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE":
-      return process.env.NEXT_PUBLIC_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE?.trim();
-    case "VITE_OWNER_SECURITY_WEBHOOK_URL":
-      return process.env.NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL?.trim();
-    default:
-      return undefined;
-  }
+function toNextPublicKey(key: RuntimeKey): NextPublicKey {
+  return key.replace("VITE_", "NEXT_PUBLIC_") as NextPublicKey;
+}
+
+function readNextPublicStatic(key: NextPublicKey): string | undefined {
+  const candidates: Record<NextPublicKey, string | undefined> = {
+    NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
+    NEXT_PUBLIC_PHASE_ONE_USER_FLOW: process.env.NEXT_PUBLIC_PHASE_ONE_USER_FLOW,
+    NEXT_PUBLIC_PUBLIC_PAYMENTS_ENABLED: process.env.NEXT_PUBLIC_PUBLIC_PAYMENTS_ENABLED,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_WHATSAPP_CONTACT_NUMBER: process.env.NEXT_PUBLIC_WHATSAPP_CONTACT_NUMBER,
+    NEXT_PUBLIC_ADMIN_ALLOWED_ROLES: process.env.NEXT_PUBLIC_ADMIN_ALLOWED_ROLES,
+    NEXT_PUBLIC_ADMIN_CODE: process.env.NEXT_PUBLIC_ADMIN_CODE,
+    NEXT_PUBLIC_ADMIN_API_BASE: process.env.NEXT_PUBLIC_ADMIN_API_BASE,
+    NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
+    NEXT_PUBLIC_CLARITY_PROJECT_ID: process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID,
+    NEXT_PUBLIC_CONTENTSQUARE_PROJECT_ID: process.env.NEXT_PUBLIC_CONTENTSQUARE_PROJECT_ID,
+    NEXT_PUBLIC_AUTH_REDIRECT_URL: process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL,
+    NEXT_PUBLIC_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_PUBLIC_APP_URL,
+    NEXT_PUBLIC_GEMINI_AI_ENABLED: process.env.NEXT_PUBLIC_GEMINI_AI_ENABLED,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE: process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE,
+    NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE: process.env.NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE,
+    NEXT_PUBLIC_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE: process.env.NEXT_PUBLIC_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE,
+    NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL: process.env.NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL
+  };
+  const value = candidates[key];
+  return typeof value === "string" && value.length > 0 ? value.trim() : undefined;
 }
 
 function readEnv(key: RuntimeKey): string | undefined {
@@ -88,21 +94,20 @@ function readEnv(key: RuntimeKey): string | undefined {
     // ignore import.meta access errors
   }
 
-  // 2. Try explicit Next.js public env access so values are statically inlined in client bundles.
-  const staticNextVal = readNextPublicStatic(key);
-  if (typeof staticNextVal === "string" && staticNextVal.length > 0) return staticNextVal;
+  // 2. Try Next.js public env/runtime fallback via the safe process accessor.
+  const nextKey = toNextPublicKey(key);
+  const staticNextVal = readNextPublicStatic(nextKey);
+  if (staticNextVal) return staticNextVal;
 
-  // 3. Try Next.js process.env (server/runtime fallback)
   const penv = safeProcessEnv();
-  const nextKey = key.replace("VITE_", "NEXT_PUBLIC_");
   const nextVal = penv[nextKey];
   if (typeof nextVal === "string" && nextVal.length > 0) return nextVal.trim();
 
-  // 4. Try direct key from process.env
+  // 3. Try direct key from process.env
   const directVal = penv[key];
   if (typeof directVal === "string" && directVal.length > 0) return directVal.trim();
 
-  // 5. Try Next.js publicRuntimeConfig (client-side)
+  // 4. Try Next.js publicRuntimeConfig (client-side)
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getConfig } = require("next/config");

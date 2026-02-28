@@ -415,6 +415,213 @@ function publicLandingDevProxy() {
   };
 }
 
+const ANALYZE_SYSTEM_PROMPT = `
+أنت "محرك الوعي" لأداة "دواير". حلل 3 إجابات قصيرة وأرجع JSON فقط بالشكل:
+{
+  "nodes": [{ "id": "user_core", "label": "أنت (المركز)", "size": "medium", "color": "core", "mass": 10 }],
+  "edges": [],
+  "insight_message": "جملة واحدة قوية",
+  "detected_symptoms": []
+}
+
+أضف 2-4 عقد من الإجابات، واجعل:
+- الاستنزاف العالي (8-10): size=large و color=danger
+- الشيء المتجاهَل: size=small و color=ignored
+- الباقي: size=medium و color=neutral
+- اربط user_core بكل عقدة. واجعل type=draining إذا كان الاستنزاف عاليًا، وإلا stable.
+- detected_symptoms من: guilt, not_enough, conditional, emotional_manipulation, exhausted, physical_tension, ruminating, avoidance, self_neglect, walking_eggshells, people_pleasing, lose_identity
+`;
+
+function buildAnalyzeFallback(answers: string[]) {
+  const firstAnswer = String(answers[0] ?? "").trim();
+  const stressScoreRaw = Number.parseInt(String(answers[1] ?? "").trim(), 10);
+  const stressScore = Number.isFinite(stressScoreRaw) ? Math.max(1, Math.min(10, stressScoreRaw)) : 6;
+  const ignoredAnswer = String(answers[2] ?? "").trim();
+  const primaryItems = firstAnswer
+    .split(/[،,\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+
+  const nodes = [
+    { id: "user_core", label: "أنت (المركز)", size: "medium", color: "core", mass: 10 },
+    ...primaryItems.map((item, index) => ({
+      id: `node_${index + 1}`,
+      label: item,
+      size: stressScore >= 8 ? "large" : "medium",
+      color: stressScore >= 8 ? "danger" : "neutral",
+      mass: Math.max(4, stressScore)
+    })),
+    ...(ignoredAnswer
+      ? [{
+        id: "ignored_node",
+        label: ignoredAnswer,
+        size: "small",
+        color: "ignored",
+        mass: 3
+      }]
+      : [])
+  ] as Array<{ id: string; label: string; size: "small" | "medium" | "large"; color: "core" | "danger" | "ignored" | "neutral"; mass: number }>;
+
+  const edges = nodes
+    .filter((node) => node.id !== "user_core")
+    .map((node) => ({
+      source: "user_core",
+      target: node.id,
+      type: node.color === "danger" ? "draining" : node.color === "ignored" ? "ignored" : "stable",
+      animated: node.color === "danger"
+    }));
+
+  const lower = `${firstAnswer} ${ignoredAnswer}`.toLowerCase();
+  const detected_symptoms = [
+    lower.includes("ذنب") ? "guilt" : null,
+    lower.includes("قلق") || lower.includes("توتر") ? "ruminating" : null,
+    lower.includes("حدود") || lower.includes("أتجاهل") || lower.includes("اتجاهل") ? "self_neglect" : null,
+    stressScore >= 8 ? "exhausted" : null
+  ].filter(Boolean);
+
+  return {
+    nodes,
+    edges,
+    insight_message: ignoredAnswer
+      ? `الاستنزاف لا يأتي فقط من ${primaryItems[0] || "الضغط"}، بل من تجاهلك المستمر لـ "${ignoredAnswer}".`
+      : `الضغط الحالي حول ${primaryItems[0] || "أكثر من جبهة"} يسحب طاقتك أسرع من قدرتك على الاستعادة.`,
+    detected_symptoms
+  };
+}
+
+function analyzeDevProxy(apiKey?: string) {
+  const client = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+
+  const respondJson = (res: import("http").ServerResponse, status: number, payload: unknown) => {
+    res.statusCode = status;
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Cache-Control", "no-store");
+    res.end(JSON.stringify(payload));
+  };
+
+  return {
+    name: "analyze-dev-proxy",
+    configureServer(server: import("vite").ViteDevServer) {
+      server.middlewares.use(async (req, res, next) => {
+        if ((req.url?.split("?")[0] ?? "") !== "/api/analyze") return next();
+        if (req.method !== "POST") return respondJson(res, 405, { error: "Method not allowed" });
+
+        const body = await readJsonBody(req);
+        if (body == null || !Array.isArray(body.answers) || body.answers.length === 0) {
+          return respondJson(res, 400, { error: "Missing answers payload" });
+        }
+
+        const answers = body.answers.map((value: unknown) => String(value ?? ""));
+        if (!client) {
+          return respondJson(res, 200, { ...buildAnalyzeFallback(answers), source: "fallback", is_live: false });
+        }
+
+        try {
+          const model = client.getGenerativeModel({
+            model: "gemini-1.5-flash",
+            generationConfig: { ...DEFAULT_GENERATION_CONFIG, responseMimeType: "application/json" }
+          });
+          const prompt = `${ANALYZE_SYSTEM_PROMPT}\n\nUser answers:\n1. ${answers[0]}\n2. ${answers[1]}\n3. ${answers[2] ?? ""}`;
+          const result = await model.generateContent(prompt);
+          const parsed = JSON.parse(result.response.text());
+          return respondJson(res, 200, { ...parsed, source: "gemini-dev-proxy", is_live: true });
+        } catch (error) {
+          return respondJson(res, 200, { ...buildAnalyzeFallback(answers), source: "fallback_after_error", is_live: false, error: String(error) });
+        }
+      });
+    }
+  };
+}
+
+function buildGuestChatFallback(body: any) {
+  const focusedNodeLabel = String(body?.focusedNode?.label ?? "هذه الدائرة").trim() || "هذه الدائرة";
+  const messages = Array.isArray(body?.messages) ? body.messages : [];
+  const latestMessage = String(messages[messages.length - 1]?.content ?? "").trim();
+  const normalized = latestMessage.toLowerCase();
+
+  if (!latestMessage || normalized.includes("مرحب") || normalized.includes("التحدث عن هذه الدائرة")) {
+    return {
+      reply: `أهلاً بك، لندردش حول "${focusedNodeLabel}". سجّل الدخول عندما تريد حفظ الجلسة واستهلاك التوكنات الفعلية. ما الحقيقة التي تتجنب قولها بوضوح هنا؟`,
+      proposedAction: null,
+      llm_latency_ms: 0,
+      tokens_remaining: null,
+      token_warning: null,
+      source: "dev_guest_fallback"
+    };
+  }
+
+  const shortPrompt = latestMessage.length > 120 ? `${latestMessage.slice(0, 120)}...` : latestMessage;
+  const probingReply = normalized.includes("حد")
+    ? `واضح أن "${focusedNodeLabel}" يرتبط بالحدود. قبل أي حل: ما الثمن الذي تدفعه كل مرة تؤجل فيها هذا الحد؟`
+    : normalized.includes("خائف") || normalized.includes("قلق") || normalized.includes("متوتر")
+      ? `الخوف حاضر في "${focusedNodeLabel}"، لكن سؤاله الأهم: ماذا يحمي لك هذا الخوف الآن، وماذا يمنعك منه؟`
+      : `سمعتك في "${focusedNodeLabel}": "${shortPrompt}". لا أريد شرحًا أطول، أريد تحديدًا أدق: ما السلوك الذي تكرره رغم أنك تعرف ثمنه؟`;
+
+  return {
+    reply: probingReply,
+    proposedAction: null,
+    llm_latency_ms: 0,
+    tokens_remaining: null,
+    token_warning: null,
+    source: "dev_guest_fallback"
+  };
+}
+
+function chatAgentDevProxy() {
+  const respondJson = (res: import("http").ServerResponse, status: number, payload: unknown) => {
+    res.statusCode = status;
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Cache-Control", "no-store");
+    res.end(JSON.stringify(payload));
+  };
+
+  return {
+    name: "chat-agent-dev-proxy",
+    configureServer(server: import("vite").ViteDevServer) {
+      server.middlewares.use(async (req, res, next) => {
+        if ((req.url?.split("?")[0] ?? "") !== "/api/chat/agent") return next();
+        if (req.method !== "POST") return respondJson(res, 405, { error: "Method not allowed" });
+
+        const body = await readJsonBody(req);
+        if (body == null) {
+          return respondJson(res, 400, { error: "Invalid JSON" });
+        }
+
+        try {
+          const { POST } = await import("./app/api/chat/agent/route");
+          const origin = `http://${req.headers.host || "localhost:5000"}`;
+          const request = new Request(`${origin}/api/chat/agent`, {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              ...(typeof req.headers.cookie === "string" ? { cookie: req.headers.cookie } : {})
+            },
+            body: JSON.stringify(body)
+          });
+
+          const response = await POST(request);
+          if (response.status === 401) {
+            return respondJson(res, 200, buildGuestChatFallback(body));
+          }
+          const text = await response.text();
+          res.statusCode = response.status;
+          response.headers.forEach((value, key) => {
+            res.setHeader(key, value);
+          });
+          res.end(text);
+        } catch (error) {
+          console.error("[Chat Agent Dev Proxy]", error);
+          respondJson(res, 500, {
+            error: "Failed to execute chat agent in Vite dev server",
+            detail: String(error)
+          });
+        }
+      });
+    }
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const hasSupabaseEnv = Boolean(env.VITE_SUPABASE_URL && env.VITE_SUPABASE_ANON_KEY);
@@ -440,6 +647,8 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       geminiDevProxy(),
+      analyzeDevProxy(env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY),
+      chatAgentDevProxy(),
       adminDevProxy(),
       publicLandingDevProxy(),
       VitePWA({

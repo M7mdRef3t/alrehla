@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import ReactFlow, { Background, BackgroundVariant, Controls, useNodesState, useEdgesState, Node, Edge, ConnectionLineType } from 'reactflow';
 import 'reactflow/dist/style.css';
 import CustomNode from './CustomNode';
 import { DawayirState } from '../../hooks/useDawayirEngine';
 
-const nodeTypes = { dawayirNode: CustomNode };
+const NODE_TYPES = Object.freeze({ dawayirNode: CustomNode });
+const EDGE_TYPES = Object.freeze({});
 
 interface NodeData {
     id: string;
@@ -24,6 +25,8 @@ export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate }
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [isPhysicsActive, setIsPhysicsActive] = useState(true);
+    const nodeTypes = useMemo(() => NODE_TYPES, []);
+    const edgeTypes = useMemo(() => EDGE_TYPES, []);
 
     // Initialize nodes and edges from AI data
     useEffect(() => {
@@ -208,6 +211,7 @@ export default function CanvasComponent({ data, onNodeClick, pendingNodeUpdate }
                 onNodeDragStart={onNodeDragStart}
                 onNodeDragStop={onNodeDragStop}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 onNodeClick={(event: React.MouseEvent, node: Node) => onNodeClick && onNodeClick(node.data as NodeData)}
                 connectionLineType={ConnectionLineType.SmoothStep}
                 fitView

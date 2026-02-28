@@ -6,6 +6,7 @@ import { NodeData } from '../../hooks/useDawayirEngine';
 import { supabase } from '../../services/supabaseClient';
 import { consumeKineticTelemetryOnce, peekLatestKineticTelemetry } from '../../services/kineticTelemetry';
 import { isPublicPaymentsEnabled } from '../../config/payments';
+import { VoiceInput } from '../VoiceInput';
 
 interface FacilitatorChatProps {
     focusedNode: NodeData;
@@ -28,6 +29,8 @@ type AgentResponse = {
     tokens_remaining?: number | null;
 };
 
+const GUEST_GATE_MESSAGE = "يجب تسجيل الدخول لبدء الرحلة.";
+
 const PERSONA_TECHNICAL_ERROR =
     "الماكينة تواجه تشويشاً مؤقتاً في قراءة تردداتك.. طاقتك محفوظة، حاول إرسال فكرتك مجدداً.";
 const TECHNICAL_ERROR_PATTERN = /json|payload|config|token|schema|syntax|context|provider|timeout|rate\s*limit|invalid|request|admin api/i;
@@ -44,6 +47,23 @@ function formatAlgorithmicEmpathyCopy(latencyMs: number): string {
     if (latencyMs < 1000) return "الماكينة استجابت فوراً.. نمطك واضح لنا.";
     if (latencyMs <= 2500) return `دواير استغرقت ${seconds} ثانية لتحليل هذا التعقيد.`;
     return `استهلكنا طاقة حسابية قصوى (${seconds} ثانية) لاستيعاب ثقل هذه الكلمات.. إنت مش لوحدك اللي بتعاني في الفهم.`;
+}
+
+function buildGuestReply(focusedNodeLabel: string, latestMessage?: string): string {
+    const normalized = String(latestMessage ?? "").trim();
+    if (!normalized || normalized.includes("أردت التحدث")) {
+        return `أهلاً بك، لندردش حول مساحة "${focusedNodeLabel}" في حياتك. سجّل الدخول عندما تريد حفظ الجلسة وبدء الرحلة الكاملة.`;
+    }
+
+    if (normalized.includes("حد")) {
+        return `واضح أن "${focusedNodeLabel}" يرتبط بالحدود. سجّل الدخول وأكمل: ما الثمن الذي تدفعه كل مرة تؤجل فيها هذا الحد؟`;
+    }
+
+    if (normalized.includes("خوف") || normalized.includes("قلق") || normalized.includes("توتر")) {
+        return `هناك خوف حاضر داخل "${focusedNodeLabel}". سجّل الدخول ثم واجهه مباشرة: ماذا يحمي لك هذا الخوف الآن؟`;
+    }
+
+    return `سمعتك في "${focusedNodeLabel}": "${normalized}". سجّل الدخول لنكمل التفكيك خطوة بخطوة بدل الاكتفاء بالملاحظة السريعة.`;
 }
 
 
@@ -96,6 +116,10 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
             try {
                 const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
                 const userId = session?.user?.id;
+                if (!userId) {
+                    setMessages([{ role: 'ai', content: buildGuestReply(focusedNode.label) }]);
+                    return;
+                }
 
                 const res = await fetch('/api/chat/agent', {
                     method: 'POST',
@@ -114,6 +138,8 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         setShowUpsellOverlay(true);
                         publishTokenBalance(0);
                         setMessages([{ role: 'ai', content: 'دواير قرأت خريطتك. فعّل طاقة الرحلة لبدء التحليل العميق.' }]);
+                    } else if (res.status === 401 || data.error === GUEST_GATE_MESSAGE) {
+                        setMessages([{ role: 'ai', content: buildGuestReply(focusedNode.label) }]);
                     } else {
                         publishTokenBalance(data.tokens_remaining);
                         setMessages([{
@@ -158,6 +184,13 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
         try {
             const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
             const userId = session?.user?.id;
+            if (!userId) {
+                setMessages(prev => [...prev, {
+                    role: 'ai',
+                    content: buildGuestReply(focusedNode.label, 'لقد قمت بتطبيق التعديل الداخلي.')
+                }]);
+                return;
+            }
 
             const res = await fetch('/api/chat/agent', {
                 method: 'POST',
@@ -175,6 +208,11 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                 if (shouldShowUpsell(res.status, data)) {
                     setShowUpsellOverlay(true);
                     publishTokenBalance(0);
+                } else if (res.status === 401 || data.error === GUEST_GATE_MESSAGE) {
+                    setMessages(prev => [...prev, {
+                        role: 'ai',
+                        content: buildGuestReply(focusedNode.label, 'لقد قمت بتطبيق التعديل الداخلي.')
+                    }]);
                 } else {
                     publishTokenBalance(data.tokens_remaining);
                     setMessages(prev => [...prev, {
@@ -217,6 +255,13 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
         try {
             const { data: { session } } = await supabase?.auth.getSession() ?? { data: { session: null } };
             const userId = session?.user?.id;
+            if (!userId) {
+                setMessages(prev => [...prev, {
+                    role: 'ai',
+                    content: buildGuestReply(focusedNode.label, userMsg)
+                }]);
+                return;
+            }
 
             const res = await fetch('/api/chat/agent', {
                 method: 'POST',
@@ -234,6 +279,11 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                 if (shouldShowUpsell(res.status, data)) {
                     setShowUpsellOverlay(true);
                     publishTokenBalance(0);
+                } else if (res.status === 401 || data.error === GUEST_GATE_MESSAGE) {
+                    setMessages(prev => [...prev, {
+                        role: 'ai',
+                        content: buildGuestReply(focusedNode.label, userMsg)
+                    }]);
                 } else {
                     publishTokenBalance(data.tokens_remaining);
                     setMessages(prev => [...prev, {
@@ -257,6 +307,12 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleVoiceTranscript = (text: string) => {
+        const next = text.trim();
+        if (!next) return;
+        setInput((prev) => (prev.trim().length > 0 ? `${prev.trim()} ${next}` : next));
     };
 
     useEffect(() => {
@@ -416,6 +472,13 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                     onSubmit={(e) => { e.preventDefault(); handleSend(); }}
                     className="flex items-center bg-white/5 rounded-2xl p-1.5 border border-white/10 group focus-within:border-teal-500/30 transition-all relative"
                 >
+                    <div className="pr-1">
+                        <VoiceInput
+                            onTranscript={handleVoiceTranscript}
+                            disabled={isLoading || showUpsellOverlay}
+                            language="ar-EG"
+                        />
+                    </div>
                     <input
                         type="text"
                         value={input}

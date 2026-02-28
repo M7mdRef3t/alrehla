@@ -1,6 +1,7 @@
 import { useDigitalTwinState } from '../../state/digitalTwinState';
 import { TelemetrySnapshot } from '../../types/digitalTwin';
 import { InterventionEngine } from './InterventionEngine';
+import { runtimeEnv } from '../../config/runtimeEnv';
 
 export class MicroTelemetryEngine {
     private static lastEventTime: number = 0;
@@ -18,7 +19,6 @@ export class MicroTelemetryEngine {
 
         setInterval(() => this.processHeartbeat(), 2000);
         this.isInitialized = true;
-        console.log('[MicroTelemetryEngine] Operational.');
     }
 
     private static trackInteraction(type: string) {

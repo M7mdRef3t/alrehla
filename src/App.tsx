@@ -493,6 +493,10 @@ export default function App() {
   const [showJourneyTimeline, setShowJourneyTimeline] = useState(false);
   const [isFeaturePreviewSession, setIsFeaturePreviewSession] = useState(false);
   const [previewedFeature, setPreviewedFeature] = useState<FeatureFlagKey | null>(null);
+  const [forcePulsePreviewOpen, setForcePulsePreviewOpen] = useState(() => {
+    const currentUrl = createCurrentUrl();
+    return normalizePreviewFeature(currentUrl?.searchParams.get("previewFeature") ?? null) === "pulse_check";
+  });
   const [activeBroadcast, setActiveBroadcast] = useState<PublicBroadcast | null>(null);
   const pulseDeltaTimerRef = useRef<number | null>(null);
   const whatsAppNumber = runtimeEnv.whatsappContactNumber || DEFAULT_WHATSAPP_CONTACT;
@@ -1660,6 +1664,7 @@ export default function App() {
     pushUrl(next);
     setIsFeaturePreviewSession(false);
     setPreviewedFeature(null);
+    setForcePulsePreviewOpen(false);
   }, []);
 
   useEffect(() => {
@@ -1686,10 +1691,16 @@ export default function App() {
     }
 
     if (previewFeature === "pulse_check") {
+      skipNextPulseCheck();
+      setForcePulsePreviewOpen(true);
       void navigateToScreen("landing");
-      setPulseCheckContext("regular");
-      setShowPulseCheck(true);
       clearPreviewParam();
+      const windowRef = getWindowOrNull();
+      if (!windowRef) return;
+      windowRef.setTimeout(() => {
+        setPulseCheckContext("regular");
+        setShowPulseCheck(true);
+      }, 0);
       return;
     }
 
@@ -2803,9 +2814,9 @@ export default function App() {
           />
           {lastNewAchievementId && <AchievementToast />}
 
-          {showPulseCheck && (
+          {(showPulseCheck || previewedFeature === "pulse_check" || forcePulsePreviewOpen) && (
             <PulseCheckModal
-              isOpen={showPulseCheck}
+              isOpen={showPulseCheck || previewedFeature === "pulse_check" || forcePulsePreviewOpen}
               context={pulseCheckContext}
               onSubmit={(payload) => {
                 if (pulseCheckContext === "start_recovery") {
@@ -2821,13 +2832,19 @@ export default function App() {
                     if (hasConcretePulseSelection(autoPayload)) {
                       logPulse(autoPayload);
                     }
+                    setPreviewedFeature((prev) => (prev === "pulse_check" ? null : prev));
+                    setForcePulsePreviewOpen(false);
                     closePulseCheck(true, "programmatic");
                     openDawayirSetup();
                     return;
                   }
+                  setPreviewedFeature((prev) => (prev === "pulse_check" ? null : prev));
+                  setForcePulsePreviewOpen(false);
                   closePulseCheck(false, "close_button");
                   return;
                 }
+                setPreviewedFeature((prev) => (prev === "pulse_check" ? null : prev));
+                setForcePulsePreviewOpen(false);
                 closePulseCheck(false, reason);
               }}
             />

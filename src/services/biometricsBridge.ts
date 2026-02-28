@@ -16,7 +16,6 @@ export interface BiometricPulse {
  * للربط مع الساعات الذكية.
  */
 export function startBiometricStream(callback: (data: BiometricPulse) => void) {
-    console.warn("🩺 Biometrics Bridge: Stream Started.");
 
     // محاكاة إرسال بيانات كل 5 ثواني
     const interval = setInterval(() => {

@@ -56,6 +56,64 @@ const SYSTEM_PROMPT = `
   "detected_symptoms": ["symptom_id_1", "symptom_id_2"]
 }`;
 
+function buildAnalyzeFallback(answers: string[]) {
+  const firstAnswer = String(answers[0] ?? "").trim();
+  const stressScoreRaw = Number.parseInt(String(answers[1] ?? "").trim(), 10);
+  const stressScore = Number.isFinite(stressScoreRaw) ? Math.max(1, Math.min(10, stressScoreRaw)) : 6;
+  const ignoredAnswer = String(answers[2] ?? "").trim();
+  const primaryItems = firstAnswer
+    .split(/[،,\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+
+  const nodes = [
+    { id: "user_core", label: "أنت (المركز)", size: "medium", color: "core", mass: 10 },
+    ...primaryItems.map((item, index) => ({
+      id: `node_${index + 1}`,
+      label: item,
+      size: stressScore >= 8 ? "large" : "medium",
+      color: stressScore >= 8 ? "danger" : "neutral",
+      mass: Math.max(4, stressScore)
+    })),
+    ...(ignoredAnswer
+      ? [{
+        id: "ignored_node",
+        label: ignoredAnswer,
+        size: "small",
+        color: "ignored",
+        mass: 3
+      }]
+      : [])
+  ];
+
+  const edges = nodes
+    .filter((node) => node.id !== "user_core")
+    .map((node) => ({
+      source: "user_core",
+      target: node.id,
+      type: node.color === "danger" ? "draining" : node.color === "ignored" ? "ignored" : "stable",
+      animated: node.color === "danger"
+    }));
+
+  const lower = `${firstAnswer} ${ignoredAnswer}`.toLowerCase();
+  const detectedSymptoms = [
+    lower.includes("ذنب") ? "guilt" : null,
+    lower.includes("قلق") || lower.includes("توتر") ? "ruminating" : null,
+    lower.includes("حدود") || lower.includes("أتجاهل") || lower.includes("اتجاهل") ? "self_neglect" : null,
+    stressScore >= 8 ? "exhausted" : null
+  ].filter(Boolean);
+
+  return {
+    nodes,
+    edges,
+    insight_message: ignoredAnswer
+      ? `الاستنزاف لا يأتي فقط من ${primaryItems[0] || "الضغط"}، بل من تجاهلك المستمر لـ "${ignoredAnswer}".`
+      : `الضغط الحالي حول ${primaryItems[0] || "أكثر من جبهة"} يسحب طاقتك أسرع من قدرتك على الاستعادة.`,
+    detected_symptoms: detectedSymptoms
+  };
+}
+
 export async function POST(req: Request) {
   try {
     const { answers } = await req.json();
@@ -66,10 +124,7 @@ export async function POST(req: Request) {
 
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_API_KEY) {
-      return NextResponse.json(
-        { error: "AI analysis unavailable", source: "not_configured", is_live: false },
-        { status: 503 }
-      );
+      return NextResponse.json({ ...buildAnalyzeFallback(answers), source: "fallback", is_live: false });
     }
 
     // Get the dynamic model route from the Meta-Orchestrator
@@ -94,6 +149,14 @@ User answers:
     return NextResponse.json({ ...data, source: "gemini", is_live: true });
   } catch (error: any) {
     console.error("Analyze API Error:", error);
+    try {
+      const { answers } = await req.clone().json();
+      if (Array.isArray(answers) && answers.length > 0) {
+        return NextResponse.json({ ...buildAnalyzeFallback(answers), source: "fallback_after_error", is_live: false });
+      }
+    } catch {
+      // fall through to hard failure when the request body cannot be recovered
+    }
     return NextResponse.json(
       { error: "Analysis generation failed", source: "generation_failed", is_live: false },
       { status: 502 }

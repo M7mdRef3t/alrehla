@@ -12,14 +12,15 @@
 
 import type { HealthCheckResult, HealthIssue } from "../ai/autoHealthCheck";
 import type { RevenueMetrics, PricingRecommendation } from "../ai/revenueAutomation";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🔑 Configuration
 // ═══════════════════════════════════════════════════════════════════════════
 
 const TELEGRAM_CONFIG = {
-  botToken: "",
-  chatId: "", // محمد's chat ID
+  botToken: String(import.meta.env.VITE_TELEGRAM_BOT_TOKEN ?? "").trim(),
+  chatId: String(import.meta.env.VITE_TELEGRAM_CHAT_ID ?? "").trim(), // محمد's chat ID
   apiUrl: "https://api.telegram.org/bot",
 };
 
@@ -53,7 +54,7 @@ export class TelegramBotService {
 
   constructor() {
     this.isEnabled = Boolean(TELEGRAM_CONFIG.botToken && TELEGRAM_CONFIG.chatId);
-    if (!this.isEnabled) {
+    if (!this.isEnabled && runtimeEnv.isDev) {
       console.warn("⚠️ Telegram Bot not configured. Set VITE_TELEGRAM_BOT_TOKEN and VITE_TELEGRAM_CHAT_ID in .env");
     }
   }
