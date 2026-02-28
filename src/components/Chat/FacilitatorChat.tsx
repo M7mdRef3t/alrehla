@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Send, Sparkles, Loader2, Check, Terminal } from 'lucide-react';
 import { NodeData } from '../../hooks/useDawayirEngine';
 import { supabase } from '../../services/supabaseClient';
@@ -59,10 +59,10 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
     const shouldShowUpsell = (status: number, data: AgentResponse) =>
         status === 403 || Number(data.tokens_remaining ?? -1) === 0;
     const resolveKineticTelemetry = () => consumeKineticTelemetryOnce() ?? peekLatestKineticTelemetry();
-    const publishTokenBalance = (value: unknown) => {
+    const publishTokenBalance = useCallback((value: unknown) => {
         if (!onTokenBalanceChange) return;
         onTokenBalanceChange(typeof value === 'number' ? value : null);
-    };
+    }, [onTokenBalanceChange]);
 
     // Auto-scroll to bottom
     useEffect(() => {
@@ -144,7 +144,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
         // Reset conversation when node changes
         setMessages([]);
         fetchInitialGreeting();
-    }, [focusedNode, fullMap]); // Re-run if they click a DIFFERENT node
+    }, [focusedNode, fullMap, publishTokenBalance]); // Re-run if they click a DIFFERENT node
 
     const handleApproveAction = async (msgIndex: number, action: ProposedAction) => {
         // Mark as taken
@@ -265,7 +265,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
             .reverse()
             .find((m) => m.role === "ai" && typeof m.llmLatencyMs === "number");
         if (!latestAi || typeof latestAi.llmLatencyMs !== "number") return;
-        console.log("[AlgorithmicVulnerability] Micro-copy:", formatAlgorithmicEmpathyCopy(latestAi.llmLatencyMs));
+        console.warn("[AlgorithmicVulnerability] Micro-copy:", formatAlgorithmicEmpathyCopy(latestAi.llmLatencyMs));
     }, [messages, showAlgorithmicVulnerability]);
 
     const getNodeBadgeStyle = (color: string): React.CSSProperties => {
