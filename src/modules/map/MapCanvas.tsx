@@ -679,7 +679,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         return;
       }
     },
-    [nodes, setDetached, moveNodeToRing, isSimulation, aiState, registerMutation, user]
+    [nodes, setDetached, moveNodeToRing, isSimulation, aiState]
   );
 
   const confirmPlacement = useCallback(() => {

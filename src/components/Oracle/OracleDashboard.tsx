@@ -30,7 +30,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
             setLoading(false);
         };
         loadData();
-    }, [oracleId]);
+    }, []);
 
     const handleApprove = async (id: string) => {
         const success = await HiveEngine.approveTrajectory(id, oracleId);

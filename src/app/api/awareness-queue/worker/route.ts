@@ -46,7 +46,7 @@ export async function POST() {
                     lastBI: 0.5, // Placeholder
                 };
 
-                await DynamicContextRouter.route(mockContext, {
+                const result = await DynamicContextRouter.route(mockContext, {
                     type: event.action_type,
                     payload: event.payload
                 });
