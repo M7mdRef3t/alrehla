@@ -1,3 +1,4 @@
+import { supabase, isSupabaseReady } from "./supabaseClient";
 /**
  * Referral Engine — محرك الإحالة
  * ==================================
@@ -77,7 +78,13 @@ export function applyReferralCode(code: string): boolean {
     data.referredBy = code;
     saveReferralData(data);
 
-    // TODO: Notify referrer via Supabase edge function
+    // Notify referrer via Supabase edge function
+    if (isSupabaseReady && supabase) {
+        supabase.functions.invoke('notify-referrer', {
+            body: { referrerCode: code, referredByCode: data.myCode }
+        }).catch(err => console.error('Failed to notify referrer:', err));
+    }
+
     return true;
 }
 
