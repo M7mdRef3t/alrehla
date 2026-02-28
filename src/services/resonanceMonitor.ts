@@ -126,7 +126,7 @@ Output strictly as JSON:
         // 2. Fetch unpaired pioneers
         const { data: pioneers } = await supabase
             .from('profiles')
-            .select('id')
+            .select('id, awareness_vector')
             .not('id', 'in', `(SELECT user_a_id FROM resonance_pairs WHERE status = 'active' UNION SELECT user_b_id FROM resonance_pairs WHERE status = 'active')`);
 
         if (!pioneers || pioneers.length < 2) {
@@ -137,38 +137,76 @@ Output strictly as JSON:
         // 3. For each unpaired pioneer, find their complement
         let pairsCreated = 0;
         const paired = new Set<string>();
+        const newPairs = [];
 
         for (const pioneer of pioneers) {
             if (paired.has(pioneer.id)) continue;
 
-            const { data: partner } = await supabase
-                .rpc('find_resonance_partner', { p_user_id: pioneer.id });
+            let bestPartnerId = null;
+            let bestScore = -1;
+            let bestAxis = '';
 
-            if (!partner || partner.length === 0) continue;
+            const p_se = pioneer.awareness_vector?.se ?? 0.5;
+            const p_av = pioneer.awareness_vector?.av ?? 0.5;
+            const p_bi = pioneer.awareness_vector?.bi ?? 0.5;
+            const p_rs = pioneer.awareness_vector?.rs ?? 0.5;
 
-            const match = partner[0];
-            if (paired.has(match.partner_id)) continue;
+            for (const candidate of pioneers) {
+                if (candidate.id === pioneer.id || paired.has(candidate.id)) continue;
+
+                const c_se = candidate.awareness_vector?.se ?? 0.5;
+                const c_av = candidate.awareness_vector?.av ?? 0.5;
+                const c_bi = candidate.awareness_vector?.bi ?? 0.5;
+                const c_rs = candidate.awareness_vector?.rs ?? 0.5;
+
+                const diff_se = Math.abs(p_se - c_se);
+                const diff_av = Math.abs(p_av - c_av);
+                const diff_bi = Math.abs(p_bi - c_bi);
+                const diff_rs = Math.abs(p_rs - c_rs);
+
+                const score = diff_se + diff_av + diff_bi + diff_rs;
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestPartnerId = candidate.id;
+
+                    const maxDiff = Math.max(diff_se, diff_av, diff_bi, diff_rs);
+                    if (maxDiff === diff_se) bestAxis = 'SE';
+                    else if (maxDiff === diff_av) bestAxis = 'AV';
+                    else if (maxDiff === diff_bi) bestAxis = 'BI';
+                    else bestAxis = 'RS';
+                }
+            }
+
+            if (!bestPartnerId) continue;
 
             // 4. Create the Ephemeral Entanglement (TTL: 24h)
             const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-            await supabase.from('resonance_pairs').insert({
+            newPairs.push({
                 user_a_id: pioneer.id,
-                user_b_id: match.partner_id,
-                complementary_axis: match.weakness_axis,
-                similarity_score: match.complementary_score,
+                user_b_id: bestPartnerId,
+                complementary_axis: bestAxis,
+                similarity_score: bestScore,
                 expires_at: expiresAt,
                 mission_context: {
-                    axis: match.weakness_axis,
+                    axis: bestAxis,
                     type: 'synchronicity_mission'
                 }
             });
 
             paired.add(pioneer.id);
-            paired.add(match.partner_id);
+            paired.add(bestPartnerId);
             pairsCreated++;
 
-            console.log(`✨ [ResonanceMonitor] Paired ${pioneer.id} ↔ ${match.partner_id} (Axis: ${match.weakness_axis})`);
+            console.log(`✨ [ResonanceMonitor] Paired ${pioneer.id} ↔ ${bestPartnerId} (Axis: ${bestAxis})`);
+        }
+
+        if (newPairs.length > 0) {
+            const { error } = await supabase.from('resonance_pairs').insert(newPairs);
+            if (error) {
+                console.error("⚠️ [ResonanceMonitor] Error bulk inserting pairs:", error);
+            }
         }
 
         console.log(`🔗 [ResonanceMonitor] Synchronicity complete: ${pairsCreated} pairs created.`);
