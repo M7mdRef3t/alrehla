@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Flame, Crown, Shield, TrendingUp, TrendingDown, Users, Zap, Clock } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
+import { Flame, Crown, Shield, TrendingUp, Users, Zap, Clock } from 'lucide-react';
+
 import { PhoenixEngine, PhoenixEventSummary, PioneerReportCard } from '../../services/phoenixEngine';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
 import { ResonancePair } from '../../services/phoenixEngine';
@@ -173,7 +173,7 @@ export const PhoenixReport: React.FC = () => {
 
                 {summary.entanglement_links.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                        {summary.entanglement_links.slice(0, 2).map((pair, idx) => (
+                        {summary.entanglement_links.slice(0, 2).map((pair) => (
                             <MagneticTether key={pair.id} pair={pair} />
                         ))}
                     </div>
