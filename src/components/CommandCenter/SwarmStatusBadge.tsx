@@ -6,7 +6,7 @@ export const SwarmStatusBadge: React.FC<{
     momentum: number;
     label?: string;
     isInsulated?: boolean;
-}> = ({ tension, momentum, label, isInsulated }) => {
+}> = ({ tension, _momentum, label, isInsulated }) => {
   let status: 'STABLE' | 'UNSTABLE' | 'CRITICAL' = 'STABLE';
   if (tension > 0.8) status = 'CRITICAL';
   else if (tension > 0.5) status = 'UNSTABLE';

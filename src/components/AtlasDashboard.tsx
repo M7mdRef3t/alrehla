@@ -230,7 +230,7 @@ export const AtlasDashboard: FC<AtlasDashboardProps> = ({ isOpen, onClose }) => 
                       formatter={(value: unknown, _name: unknown, props: { payload?: { completionRate?: number } } | undefined) => [`${props?.payload?.completionRate ?? (Array.isArray(value) ? Number(value[0] ?? 0) : Number(value ?? 0))}%`,
                         "معدل الإكمال"
                       ]}
-                      labelFormatter={(_label: any, payload: any) =>
+                      labelFormatter={(_label: any, payload: any) => // eslint-disable-line @typescript-eslint/no-explicit-any
                         payload?.[0]?.payload?.pathLabel
                           ? `${payload[0].payload.pathLabel} — بدايات: ${payload[0].payload.starts}`
                           : ""
@@ -270,7 +270,7 @@ export const AtlasDashboard: FC<AtlasDashboardProps> = ({ isOpen, onClose }) => 
                     <XAxis dataKey="dateShort" fontSize={10} />
                     <YAxis fontSize={11} />
                     <Tooltip
-                      labelFormatter={(_label: any, payload: any) => payload?.[0]?.payload?.date ?? ""}
+                      labelFormatter={(_label: any, payload: any) => payload?.[0]?.payload?.date ?? ""} // eslint-disable-line @typescript-eslint/no-explicit-any
                     />
                     <Legend />
                     <Line
