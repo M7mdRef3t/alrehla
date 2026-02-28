@@ -6,8 +6,8 @@ import {
 import { motion } from 'framer-motion';
 
 interface AwarenessHeatmapProps {
-    initial?: any;
-    current?: any;
+    initial?: Record<string, number>;
+    current?: Record<string, number>;
     title?: string;
 }
 
