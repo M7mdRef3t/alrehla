@@ -249,13 +249,8 @@ export class DecisionEngine {
    * طلب موافقة من المستخدم/الأدمن
    */
   async requestApproval(decision: AIDecision): Promise<boolean> {
-    await sendNotification({
-      title: "طلب موافقة من الذكاء الاصطناعي",
-      body: `الـ AI يقترح قرار: ${decision.type}. هل توافق؟`,
-      tag: "ai-approval",
-      // Include the payload for potential action handling by the notification click handler
-      data: { decision },
-    });
+    // TODO: Integration with Notification System
+    // نبعت notification للمستخدم: "الـ AI بيقترح كذا، موافق؟"
 
     this.logDecision({ ...decision, outcome: "pending_approval" });
 
@@ -523,4 +518,3 @@ export function requiresApproval(type: DecisionType): boolean {
 export function isForbidden(type: DecisionType): boolean {
   return DECISION_RULES[type] === "FORBIDDEN";
 }
-

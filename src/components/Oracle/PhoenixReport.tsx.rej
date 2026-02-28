@@ -1,0 +1,20 @@
+--- src/components/Oracle/PhoenixReport.tsx
++++ src/components/Oracle/PhoenixReport.tsx
+@@ -1,7 +1,6 @@
+ import React from 'react';
+ import { motion } from 'framer-motion';
+-import { TrendingDown, TrendingUp, AlertTriangle } from 'lucide-react';
+-import { supabase } from '../../services/supabaseClient';
++import { TrendingUp, AlertTriangle } from 'lucide-react';
+
+ export const PhoenixReport = () => {
+   return (
+@@ -173,7 +172,7 @@
+             <h4 className="text-sm font-semibold mb-3">Anomaly Signatures</h4>
+             <div className="space-y-2">
+               {['Cognitive Loop Detected', 'Sentiment Drop in Sector 4'].map(
+-                (anomaly, idx) => (
++                (anomaly) => (
+                   <div
+                     key={anomaly}
+                     className="bg-red-500/10 border border-red-500/20 rounded p-2 text-xs flex items-center justify-between"

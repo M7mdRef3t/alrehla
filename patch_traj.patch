@@ -1,0 +1,18 @@
+--- src/components/Trajectory/TrajectoryDashboard.tsx
++++ src/components/Trajectory/TrajectoryDashboard.tsx
+@@ -4,7 +4,6 @@
+ import { useTrajectoryRealtime } from '../../hooks/useTrajectoryRealtime';
+ import { HiveEngine, SwarmMetrics } from '../../services/hiveEngine';
+ import { AwarenessVector } from '../../services/trajectoryEngine';
+-import type { DailyMission } from '../../services/missionGenerator';
+
+ interface TrajectoryDashboardProps {
+     userId?: string;
+@@ -280,7 +279,7 @@
+             {/* --- Right Column: Mission Cards --- */}
+             <div className="space-y-4 lg:col-span-8">
+                 <AnimatePresence mode="popLayout">
+-                    {mission.daily_missions.map((m: DailyMission, idx: number) => {
++                    {mission.daily_missions.map((m: any, idx: number) => {
+                         const isCurrentDay = m.day === (activeTrajectory?.data?.current_day || 1);
+                         const isCompleted = m.day < (activeTrajectory?.data?.current_day || 1);

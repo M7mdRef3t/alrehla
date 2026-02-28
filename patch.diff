@@ -1,0 +1,17 @@
+--- src/ai/decision-framework.ts
++++ src/ai/decision-framework.ts
+@@ -248,8 +248,13 @@
+    * طلب موافقة من المستخدم/الأدمن
+    */
+   async requestApproval(decision: AIDecision): Promise<boolean> {
+-    // TODO: Integration with Notification System
+-    // نبعت notification للمستخدم: "الـ AI بيقترح كذا، موافق؟"
++    await sendNotification({
++      title: "طلب موافقة من الذكاء الاصطناعي",
++      body: `الـ AI يقترح قرار: ${decision.type}. هل توافق؟`,
++      tag: "ai-approval",
++      // Include the payload for potential action handling by the notification click handler
++      data: { decision },
++    });
+
+     this.logDecision({ ...decision, outcome: "pending_approval" });

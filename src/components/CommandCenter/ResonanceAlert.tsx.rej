@@ -1,0 +1,10 @@
+--- src/components/CommandCenter/ResonanceAlert.tsx
++++ src/components/CommandCenter/ResonanceAlert.tsx
+@@ -1,6 +1,6 @@
+ import React from 'react';
+ import { motion } from 'framer-motion';
+-import { ShieldAlert, Activity } from 'lucide-react';
++import { Activity } from 'lucide-react';
+
+ interface ResonanceAlertProps {
+   tension: number;

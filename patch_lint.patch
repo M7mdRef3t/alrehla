@@ -1,0 +1,122 @@
+--- src/components/CommandCenter/ResonanceAlert.tsx
++++ src/components/CommandCenter/ResonanceAlert.tsx
+@@ -1,6 +1,6 @@
+ import React from 'react';
+ import { motion } from 'framer-motion';
+-import { ShieldAlert, Activity } from 'lucide-react';
++import { Activity } from 'lucide-react';
+
+ interface ResonanceAlertProps {
+   tension: number;
+--- src/components/CommandCenter/SwarmStatusBadge.tsx
++++ src/components/CommandCenter/SwarmStatusBadge.tsx
+@@ -8,7 +8,7 @@
+   isInsulated?: boolean;
+ }
+
+-export const SwarmStatusBadge: React.FC<SwarmStatusBadgeProps> = ({ tension, momentum, label, isInsulated }) => {
++export const SwarmStatusBadge: React.FC<SwarmStatusBadgeProps> = ({ label }) => {
+   return (
+     <div className="flex items-center gap-2 px-3 py-1 bg-surface-base rounded-full text-xs font-mono">
+       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+--- src/components/Oracle/AscensionRitual.tsx
++++ src/components/Oracle/AscensionRitual.tsx
+@@ -1,6 +1,6 @@
+ import React from 'react';
+ import { motion } from 'framer-motion';
+-import { Zap, Activity } from 'lucide-react';
++import { Activity } from 'lucide-react';
+
+ export const AscensionRitual = () => {
+   return (
+--- src/components/Oracle/LiveTelemetry.tsx
++++ src/components/Oracle/LiveTelemetry.tsx
+@@ -1,5 +1,4 @@
+ import React from 'react';
+-import { motion } from 'framer-motion';
+ import { Activity, Shield, Cpu } from 'lucide-react';
+
+ export const LiveTelemetry = () => {
+--- src/components/Oracle/OracleDashboard.tsx
++++ src/components/Oracle/OracleDashboard.tsx
+@@ -1,6 +1,6 @@
+ import React, { useEffect, useState } from 'react';
+ import { motion } from 'framer-motion';
+-import { Activity, Database, Sparkles, TrendingUp, Shield, Users } from 'lucide-react';
++import { Activity, Database, Sparkles, Shield } from 'lucide-react';
+ import { LiveTelemetry } from './LiveTelemetry';
+ import { PhoenixReport } from './PhoenixReport';
+ import { AscensionRitual } from './AscensionRitual';
+@@ -30,7 +30,7 @@
+         metrics: { consciousnessSync: 89, neuralLoad: 42, structuralIntegrity: 98 }
+       });
+     }, 1500);
+-  }, []);
++  }, [oracleId]);
+
+   if (authStatus === 'authenticating') {
+     return (
+@@ -151,7 +151,7 @@
+             transition={{ duration: 0.5, delay: 0.1 }}
+           >
+             <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Sparkles className="text-brand-primary" /> Ascension Engine</h3>
+-            <AscensionRitual />
++            <AscensionRitual onComplete={(res: any) => console.log(res)} />
+           </motion.div>
+         </div>
+       </div>
+--- src/components/Oracle/PhoenixReport.tsx
++++ src/components/Oracle/PhoenixReport.tsx
+@@ -1,7 +1,6 @@
+ import React from 'react';
+ import { motion } from 'framer-motion';
+-import { TrendingDown, TrendingUp, AlertTriangle } from 'lucide-react';
+-import { supabase } from '../../services/supabaseClient';
++import { TrendingUp, AlertTriangle } from 'lucide-react';
+
+ export const PhoenixReport = () => {
+   return (
+@@ -173,7 +172,7 @@
+             <h4 className="text-sm font-semibold mb-3">Anomaly Signatures</h4>
+             <div className="space-y-2">
+               {['Cognitive Loop Detected', 'Sentiment Drop in Sector 4'].map(
+-                (anomaly, idx) => (
++                (anomaly) => (
+                   <div
+                     key={anomaly}
+                     className="bg-red-500/10 border border-red-500/20 rounded p-2 text-xs flex items-center justify-between"
+--- src/components/Trajectory/CollectiveRadar.tsx
++++ src/components/Trajectory/CollectiveRadar.tsx
+@@ -1,8 +1,7 @@
+ import React from 'react';
+-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend } from 'recharts';
++import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+ import type { SwarmMetrics } from '../../services/hiveEngine';
+ import type { AwarenessVector } from '../../modules/map/mapTypes';
+-import { motion } from 'framer-motion';
+
+ interface CollectiveRadarProps {
+   userVector: AwarenessVector;
+--- src/components/Trajectory/TrajectoryDashboard.tsx
++++ src/components/Trajectory/TrajectoryDashboard.tsx
+@@ -1,11 +1,10 @@
+ import React from 'react';
+ import { motion, AnimatePresence } from 'framer-motion';
+-import { Compass, Sparkles, AlertTriangle, CheckCircle2, Share2, Users } from 'lucide-react';
++import { Compass, AlertTriangle, CheckCircle2, Users } from 'lucide-react';
+ import { useTrajectoryRealtime } from '../../hooks/useTrajectoryRealtime';
+ import { HiveEngine, type SwarmMetrics } from '../../services/hiveEngine';
+ import type { TrajectoryPlan } from '../../services/trajectoryEngine';
+ import { CollectiveRadar } from './CollectiveRadar';
+-import type { AwarenessVector } from '../../modules/map/mapTypes';
+
+ type SovereigntyRank = 'Aspirant' | 'Initiate' | 'Sovereign' | 'Oracle';
+
+@@ -279,7 +278,7 @@
+             {/* --- Right Column: Mission Cards --- */}
+             <div className="space-y-4 lg:col-span-8">
+                 <AnimatePresence mode="popLayout">
+-                    {mission.daily_missions.map((m: any, idx: number) => {
++                    {mission.daily_missions.map((m: { day: number, focus: string, micro_action: string, reward_insight: string, _uid: string }, idx: number) => {
+                         const isCurrentDay = m.day === (activeTrajectory?.data?.current_day || 1);
+                         const isCompleted = m.day < (activeTrajectory?.data?.current_day || 1);

@@ -1,0 +1,8 @@
+--- src/components/Oracle/LiveTelemetry.tsx
++++ src/components/Oracle/LiveTelemetry.tsx
+@@ -1,5 +1,4 @@
+ import React from 'react';
+-import { motion } from 'framer-motion';
+ import { Activity, Shield, Cpu } from 'lucide-react';
+
+ export const LiveTelemetry = () => {

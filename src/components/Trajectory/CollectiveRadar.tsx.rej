@@ -1,0 +1,12 @@
+--- src/components/Trajectory/CollectiveRadar.tsx
++++ src/components/Trajectory/CollectiveRadar.tsx
+@@ -1,8 +1,7 @@
+ import React from 'react';
+-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend } from 'recharts';
++import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+ import type { SwarmMetrics } from '../../services/hiveEngine';
+ import type { AwarenessVector } from '../../modules/map/mapTypes';
+-import { motion } from 'framer-motion';
+
+ interface CollectiveRadarProps {
+   userVector: AwarenessVector;

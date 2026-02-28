@@ -1,0 +1,10 @@
+--- src/components/Oracle/AscensionRitual.tsx
++++ src/components/Oracle/AscensionRitual.tsx
+@@ -1,6 +1,6 @@
+ import React from 'react';
+ import { motion } from 'framer-motion';
+-import { Zap, Activity } from 'lucide-react';
++import { Activity } from 'lucide-react';
+
+ export const AscensionRitual = () => {
+   return (
