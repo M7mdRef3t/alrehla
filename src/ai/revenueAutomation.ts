@@ -7,6 +7,7 @@
 import { decisionEngine } from "./decision-framework";
 import { geminiClient } from "../services/geminiClient";
 import type { AIDecision } from "./decision-framework";
+import { stripeService } from "../services/stripeIntegration";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 💰 Revenue Models
@@ -309,7 +310,12 @@ export class RevenueAutomationEngine {
 
     // تطبيق التغيير
     try {
-      // TODO: Update Stripe prices via API
+      // تحديث أسعار Stripe عبر الـ API
+      const stripeUpdate = await stripeService.updatePricing(recommendation.suggestedPrices);
+      if (!stripeUpdate.success) {
+        throw new Error("Stripe pricing update failed: " + stripeUpdate.message);
+      }
+
       // TODO: Update database with new pricing
       // TODO: Notify existing users about grandfathering policy
 

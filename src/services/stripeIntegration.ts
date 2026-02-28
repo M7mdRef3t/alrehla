@@ -212,6 +212,33 @@ export class StripeService {
       return null;
     }
   }
+/**
+   * ─────────────────────────────────────────────────────────────────
+   * تحديث أسعار الاشتراكات
+   * ─────────────────────────────────────────────────────────────────
+   */
+  async updatePricing(prices: { premium: number; coach: number }): Promise<{ success: boolean; message: string }> {
+    console.warn("🔄 Updating Stripe prices...", prices);
+
+    try {
+      const response = await fetch("/api/stripe/update-pricing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(prices),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json() as { success: boolean; message: string };
+      console.warn("✅ Stripe prices updated successfully:", data);
+      return data;
+    } catch (error) {
+      console.error("❌ Failed to update Stripe prices:", error);
+      return { success: false, message: String(error) };
+    }
+  }
 }
 
 // 🧪 Singleton Instance

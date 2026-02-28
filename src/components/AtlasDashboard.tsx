@@ -230,9 +230,9 @@ export const AtlasDashboard: FC<AtlasDashboardProps> = ({ isOpen, onClose }) => 
                       formatter={(value: unknown, _name: unknown, props: { payload?: { completionRate?: number } } | undefined) => [`${props?.payload?.completionRate ?? (Array.isArray(value) ? Number(value[0] ?? 0) : Number(value ?? 0))}%`,
                         "معدل الإكمال"
                       ]}
-                      labelFormatter={(_label: unknown, payload: Array<{ payload?: { pathLabel?: string; starts?: number } }> | undefined) =>
+                      labelFormatter={(_label: unknown, payload: any) =>
                         payload?.[0]?.payload?.pathLabel
-                          ? `${payload[0].payload.pathLabel} — بدايات: ${payload[0].payload.starts}`
+                          ? `${payload?.[0]?.payload?.pathLabel} — بدايات: ${payload?.[0]?.payload?.starts}`
                           : ""
                       }
                     />
@@ -270,7 +270,7 @@ export const AtlasDashboard: FC<AtlasDashboardProps> = ({ isOpen, onClose }) => 
                     <XAxis dataKey="dateShort" fontSize={10} />
                     <YAxis fontSize={11} />
                     <Tooltip
-                      labelFormatter={(_label: unknown, payload: Array<{ payload?: { date?: string } }> | undefined) => payload?.[0]?.payload?.date ?? ""}
+                      labelFormatter={(_label: unknown, payload: any) => payload?.[0]?.payload?.date ?? ""}
                     />
                     <Legend />
                     <Line

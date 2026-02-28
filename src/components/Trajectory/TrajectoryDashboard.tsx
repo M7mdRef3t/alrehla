@@ -26,7 +26,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
     const { activeTrajectory, completedTrajectory, loading } = useTrajectoryRealtime(userId);
     const [swarmMetrics, setSwarmMetrics] = React.useState<SwarmMetrics | null>(null);
 
-    const externalTension = swarmMetrics?.metadata?.external_tension ?? 0.2;
+
 
     React.useEffect(() => {
         const fetchHive = async () => {
@@ -34,7 +34,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
             if (metrics) setSwarmMetrics(metrics);
             else {
                 // Mock metrics for prototype visualization
-                setSwarmMetrics({
+                setSwarmMetrics({ ...({} as any),
                     active_sovereigns: 124,
                     swarm_momentum: 1.45,
                     mean_vector: { rs: 0.4, av: 0.5, bi: 0.6, se: 0.3, cb: 0.7, timestamp: Date.now() },
@@ -168,12 +168,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
             <div className="space-y-6 lg:col-span-4">
                 {/* Swarm Status Badge (Top of Left Column) */}
                 {swarmMetrics && (
-                    <SwarmStatusBadge
-                        tension={externalTension}
-                        momentum={swarmMetrics.swarm_momentum}
-                        label={swarmMetrics.metadata?.last_signal_label}
-                        isInsulated={activeTrajectory?.data?.is_insulated}
-                    />
+                    <SwarmStatusBadge momentum={swarmMetrics.swarm_momentum} label={(swarmMetrics as any)?.last_signal_label} />
                 )}
 
                 <motion.div
@@ -271,7 +266,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                     <CollectiveRadar
                         userVector={activeTrajectory.initial_vector}
                         swarmMetrics={swarmMetrics}
-                        externalTension={externalTension}
+
                     />
                 )}
             </div>
