@@ -46,7 +46,7 @@ export async function POST() {
                     lastBI: 0.5, // Placeholder
                 };
 
-                const result = await DynamicContextRouter.route(mockContext, {
+                await DynamicContextRouter.route(mockContext, {
                     type: event.action_type,
                     payload: event.payload
                 });
@@ -59,7 +59,7 @@ export async function POST() {
 
                 results.push({ id: event.id, status: 'success' });
 
-            } catch (procError: any) {
+            } catch (procError: unknown) {
                 console.error(`Error processing event ${event.id}:`, procError);
 
                 // 5. Exponential Backoff Logic
@@ -70,7 +70,7 @@ export async function POST() {
                         .from('awareness_events_queue')
                         .update({
                             status: 'DLQ',
-                            last_error: procError.message,
+                            last_error: (procError as Error).message,
                             retry_count: nextRetryCount
                         })
                         .eq('id', event.id);
@@ -83,18 +83,18 @@ export async function POST() {
                         .from('awareness_events_queue')
                         .update({
                             status: 'FAILED',
-                            last_error: procError.message,
+                            last_error: (procError as Error).message,
                             retry_count: nextRetryCount,
                             next_retry_at: nextRetryAt
                         })
                         .eq('id', event.id);
                 }
-                results.push({ id: event.id, status: 'failed', error: procError.message });
+                results.push({ id: event.id, status: 'failed', error: (procError as Error).message });
             }
         }
 
         return NextResponse.json({ processed: results });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Worker General Error:', err);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }

@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const SwarmStatusBadge: React.FC<any> = ({ tension, momentum, label, isInsulated }) => {
+export const SwarmStatusBadge: React.FC<{ tension: number, momentum: number, label?: string, isInsulated?: boolean }> = ({ tension, momentum, label, isInsulated }) => {
     return (
         <div className="flex items-center gap-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg">
             <div>
