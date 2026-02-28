@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Flame, Crown, Shield, TrendingUp, TrendingDown, Users, Zap, Clock } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
+import { Flame, Crown, Shield, TrendingUp, Users, Zap, Clock } from 'lucide-react';
 import { PhoenixEngine, PhoenixEventSummary, PioneerReportCard } from '../../services/phoenixEngine';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
 import { ResonancePair } from '../../services/phoenixEngine';

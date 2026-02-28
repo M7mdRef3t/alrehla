@@ -1,14 +1,13 @@
 import React from 'react';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend } from 'recharts';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, } from 'recharts';
 import { AwarenessVector } from '../../services/trajectoryEngine';
 import { SwarmMetrics } from '../../services/hiveEngine';
-import { motion } from 'framer-motion';
 
 interface CollectiveRadarProps {
     userVector: AwarenessVector;
     swarmMetrics: SwarmMetrics;
     title?: string;
-    externalTension?: any;
+    externalTension?: unknown;
 }
 
 export const CollectiveRadar: React.FC<CollectiveRadarProps> = ({ userVector, swarmMetrics, title = "Collective Growth" }) => {

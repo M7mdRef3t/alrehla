@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, CheckCircle, AlertTriangle, Eye, TrendingUp, Users, ChevronRight, Gavel } from 'lucide-react';
+import { Shield, CheckCircle, AlertTriangle, Eye, ChevronRight, Gavel } from 'lucide-react';
 import { HiveEngine, ProvenPath, SwarmMetrics } from '../../services/hiveEngine';
 import { CollectiveRadar } from '../Trajectory/CollectiveRadar';
 import { FirstBloodOverlay } from './FirstBloodOverlay';
@@ -30,7 +30,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
             setLoading(false);
         };
         loadData();
-    }, []);
+    }, [oracleId]);
 
     const handleApprove = async (id: string) => {
         const success = await HiveEngine.approveTrajectory(id, oracleId);

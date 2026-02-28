@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Battery, CheckCircle2, CircleDashed, Clock, Zap, Award, Sparkles, ChevronRight, Share2, ShieldAlert } from 'lucide-react';
+import { Activity, Battery, CheckCircle2, CircleDashed, Clock, Zap, Award, ChevronRight, ShieldAlert } from 'lucide-react';
 import { useTrajectoryRealtime } from '../../hooks/useTrajectoryRealtime';
 import { AwarenessHeatmap } from './AwarenessHeatmap';
 import { CollectiveRadar } from './CollectiveRadar';
