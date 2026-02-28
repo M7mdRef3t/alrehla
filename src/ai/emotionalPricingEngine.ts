@@ -13,6 +13,7 @@
  * - نرسل فقط "Signal" (crisis/stable) بدون تفاصيل
  */
 
+import { getAuthUserId } from "../state/authState";
 import { telegramBot } from "../services/telegramBot";
 import { decisionEngine } from "./decision-framework";
 import type { MapNode } from "../modules/map/mapTypes";
@@ -453,7 +454,7 @@ export class EmotionalPricingEngine {
       ) as number[];
 
       const state = this.analyzeUserState({
-        userId: "current-user", // TODO: استخدام User ID الفعلي
+        userId: getAuthUserId() || "current-user",
         nodes,
         journalEntries,
         teiHistory,
