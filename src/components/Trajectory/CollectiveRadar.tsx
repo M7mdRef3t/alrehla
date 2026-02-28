@@ -8,6 +8,8 @@ interface CollectiveRadarProps {
     userVector: AwarenessVector;
     swarmMetrics: SwarmMetrics;
     title?: string;
+
+    externalTension?: number;
 }
 
 export const CollectiveRadar: React.FC<CollectiveRadarProps> = ({ userVector, swarmMetrics, title = "Collective Growth" }) => {
