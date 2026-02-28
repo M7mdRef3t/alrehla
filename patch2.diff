@@ -1,0 +1,11 @@
+--- src/components/OnboardingWelcomeBubble.tsx
++++ src/components/OnboardingWelcomeBubble.tsx
+@@ -8,7 +8,7 @@
+   UserCircle,
+ } from "lucide-react";
+
+-export type WelcomeSource = "ai" | "template";
++export type WelcomeSource = "ai" | "template" | "offline_intervention";
+
+ interface OnboardingWelcomeBubbleProps {
+   message: string;
