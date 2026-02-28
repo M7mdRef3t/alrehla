@@ -36,7 +36,7 @@ function isRetryableModelError(error: unknown): boolean {
   );
 }
 
-async function readJsonBody(req: import("http").IncomingMessage): Promise<any> {
+async function readJsonBody(req: import("http").IncomingMessage): Promise<unknown> {
   return new Promise((resolve) => {
     let data = "";
     req.on("data", (chunk) => {
@@ -215,6 +215,21 @@ function geminiDevProxy() {
   };
 }
 
+
+interface RequestLike {
+  query?: Record<string, unknown>;
+  headers?: Record<string, unknown>;
+  method?: string;
+  url?: string;
+  body?: unknown;
+}
+
+interface JsonResponder {
+  status: (code: number) => JsonResponder;
+  json: (data: unknown) => JsonResponder;
+  headersSent?: boolean;
+}
+
 function adminDevProxy() {
   return {
     name: "admin-dev-proxy",
@@ -227,7 +242,7 @@ function adminDevProxy() {
         const path = query.path || "overview";
 
         // Read body for non-GET
-        let body: any = null;
+        let body: unknown = null;
         if (req.method !== "GET" && req.method !== "HEAD") {
           body = await readJsonBody(req);
         }
@@ -236,7 +251,7 @@ function adminDevProxy() {
         const adminSecret = process.env.ADMIN_API_SECRET || "alrehla-admin";
         const headers = { ...req.headers, "x-admin-code": adminSecret };
 
-        const mockReq: any = {
+        const mockReq: RequestLike = {
           method: req.method,
           url: req.url,
           query,
@@ -245,10 +260,10 @@ function adminDevProxy() {
         };
 
         let status = 200;
-        let jsonResponse: any = {};
-        const mockRes: any = {
+        let jsonResponse: unknown = {};
+        const mockRes: JsonResponder = {
           status: (s: number) => { status = s; return mockRes; },
-          json: (data: any) => { jsonResponse = data; return mockRes; },
+          json: (data: unknown) => { jsonResponse = data; return mockRes; },
           setHeader: () => mockRes,
           end: () => mockRes
         };
@@ -265,7 +280,7 @@ function adminDevProxy() {
           const { handleAiLogs } = await import("./server/admin/ai-logs");
           const { handleJourneyMap } = await import("./server/admin/journey-map");
 
-          const ROUTES: Record<string, any> = {
+          const ROUTES: Record<string, (req: RequestLike, res: JsonResponder) => Promise<void>> = {
             overview: overviewRouter,
             config: handleConfig,
             users: handleUsers,
@@ -279,10 +294,11 @@ function adminDevProxy() {
 
           const handler = ROUTES[path] || overviewRouter;
           await handler(mockReq, mockRes);
-        } catch (error: any) {
-          console.error(`[Admin Dev Proxy] ${path}:`, error?.message || error);
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error(`[Admin Dev Proxy] ${path}:`, errorMessage);
           status = 500;
-          jsonResponse = { error: "Internal Server Error", message: error?.message ?? "unknown" };
+          jsonResponse = { error: "Internal Server Error", message: errorMessage };
         }
 
         res.statusCode = status;
@@ -313,7 +329,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     define: {
-      __DEFINES__: "({})",
+      __DEFINES__: "{}"
     },
     plugins: [
       react(),

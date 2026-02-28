@@ -5,6 +5,7 @@ import { SwarmMetrics } from '../../services/hiveEngine';
 import { motion } from 'framer-motion';
 
 interface CollectiveRadarProps {
+    externalTension?: number;
     userVector: AwarenessVector;
     swarmMetrics: SwarmMetrics;
     title?: string;
