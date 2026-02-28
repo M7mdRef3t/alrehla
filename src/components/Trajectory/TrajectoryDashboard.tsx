@@ -168,12 +168,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
             <div className="space-y-6 lg:col-span-4">
                 {/* Swarm Status Badge (Top of Left Column) */}
                 {swarmMetrics && (
-                    <SwarmStatusBadge
-                        tension
-                        momentum={swarmMetrics.swarm_momentum}
-                        label={(swarmMetrics as any)?.last_signal_label}
-                        isInsulated={activeTrajectory?.data?.is_insulated}
-                    />
+                    <SwarmStatusBadge momentum={swarmMetrics.swarm_momentum} label={(swarmMetrics as any)?.last_signal_label} />
                 )}
 
                 <motion.div
