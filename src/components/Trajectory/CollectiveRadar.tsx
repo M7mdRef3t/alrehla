@@ -5,13 +5,12 @@ import { SwarmMetrics } from '../../services/hiveEngine';
 import { motion } from 'framer-motion';
 
 interface CollectiveRadarProps {
-    externalTension?: number;
     userVector: AwarenessVector;
     swarmMetrics: SwarmMetrics;
     title?: string;
 }
 
-export const CollectiveRadar: React.FC<CollectiveRadarProps> = ({ userVector, swarmMetrics, externalTension, title = "Collective Growth" }) => {
+export const CollectiveRadar: React.FC<CollectiveRadarProps> = ({ userVector, swarmMetrics, title = "Collective Growth" }) => {
     const { mean_vector: mv, outlier_vector: ov } = swarmMetrics;
 
     const data = [

@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { queueRemoteSet, fetchRemoteState, getRemoteValue, pushRemoteState } from "./cloudStore";
-import { sendJsonWithResilience, fetchJsonWithResilience } from "../architecture/resilientHttp";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { queueRemoteSet } from "./cloudStore";
+import { sendJsonWithResilience } from "../architecture/resilientHttp";
 
 vi.mock("../config/runtimeEnv", () => ({
   runtimeEnv: {
@@ -31,7 +30,6 @@ describe("cloudStore - queueRemoteSet", () => {
     vi.useFakeTimers();
     vi.clearAllMocks();
 
-    // Set up a mock window so that isBrowser() returns true
     Object.defineProperty(globalThis, "window", {
       value: {
         location: { origin: "http://localhost:3000" },
@@ -51,7 +49,7 @@ describe("cloudStore - queueRemoteSet", () => {
         configurable: true
       });
     } else {
-      // @ts-ignore
+      // @ts-expect-error test cleanup
       delete globalThis.window;
     }
   });
@@ -61,7 +59,6 @@ describe("cloudStore - queueRemoteSet", () => {
 
     queueRemoteSet("dawayir-test-key", "test-value");
 
-    // Fast-forward time to trigger setTimeout
     await vi.runAllTimersAsync();
 
     expect(sendJsonWithResilience).toHaveBeenCalledTimes(1);
@@ -79,16 +76,12 @@ describe("cloudStore - queueRemoteSet", () => {
     queueRemoteSet("dawayir-key-1", "value-1");
     queueRemoteSet("dawayir-key-2", "value-2");
 
-    // Only part of the timeout passes
     await vi.advanceTimersByTimeAsync(100);
 
-    // Adding another one resets the timer
     queueRemoteSet("dawayir-key-3", "value-3");
 
-    // Now wait for the full timeout
     await vi.runAllTimersAsync();
 
-    // The flush should happen exactly once with all pending updates
     expect(sendJsonWithResilience).toHaveBeenCalledTimes(1);
     expect(sendJsonWithResilience).toHaveBeenCalledWith(
       "http://localhost:3000/api/user/state",
@@ -136,7 +129,6 @@ describe("cloudStore - disabled sync", () => {
   it("should ignore queueRemoteSet when runtimeEnv.adminApiBase is not provided", async () => {
     vi.resetModules();
 
-    // Override the runtimeEnv mock specifically for this test
     vi.doMock("../config/runtimeEnv", () => ({
       runtimeEnv: {
         adminApiBase: "",
