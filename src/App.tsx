@@ -1,3 +1,4 @@
+import { AwarenessSkeleton } from './components/AwarenessSkeleton';
 import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, User, MessageCircle } from "lucide-react";
@@ -35,7 +36,6 @@ import { consciousnessService, type ConsciousnessInsight, type MemoryMatch } fro
 import { initAppContentRealtime } from "./state/appContentState";
 import { PWAInstallProvider } from "./contexts/PWAInstallContext";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
-import { AwarenessSkeleton } from "./components/AwarenessSkeleton";
 import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
 import { OnboardingFlow, hasCompletedJourneyOnboarding } from "./components/OnboardingFlow";
 import { JourneyToast } from "./components/JourneyToast";

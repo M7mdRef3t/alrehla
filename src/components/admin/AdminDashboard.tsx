@@ -1,3 +1,4 @@
+import { AwarenessSkeleton } from '../../components/AwarenessSkeleton';
 import type { FC, ReactNode } from "react";
 import { useEffect, useState, lazy, Suspense } from "react";
 import {
@@ -21,7 +22,6 @@ import {
   Rocket
 } from "lucide-react";
 import { runtimeEnv } from "../../config/runtimeEnv";
-import { AwarenessSkeleton } from "../AwarenessSkeleton";
 import { useAdminState } from "../../state/adminState";
 import { getEffectiveRoleFromState, useAuthState } from "../../state/authState";
 import { isPrivilegedRole } from "../../utils/featureFlags";

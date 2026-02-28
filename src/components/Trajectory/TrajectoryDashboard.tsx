@@ -20,7 +20,6 @@ const getRank = (score: number): SovereigntyRank => {
     return 'Aspirant';
 };
 
-import { SwarmStatusBadge } from '../CommandCenter/SwarmStatusBadge';
 
 export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId }) => {
     const { activeTrajectory, completedTrajectory, loading } = useTrajectoryRealtime(userId);
@@ -167,14 +166,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
             {/* --- Left Column: Context & Stats --- */}
             <div className="space-y-6 lg:col-span-4">
                 {/* Swarm Status Badge (Top of Left Column) */}
-                {swarmMetrics && (
-                    <SwarmStatusBadge
-                        tension={externalTension}
-                        momentum={swarmMetrics.swarm_momentum}
-                        label={swarmMetrics.metadata?.last_signal_label}
-                        isInsulated={activeTrajectory?.data?.is_insulated}
-                    />
-                )}
+
 
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
@@ -271,7 +263,6 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                     <CollectiveRadar
                         userVector={activeTrajectory.initial_vector}
                         swarmMetrics={swarmMetrics}
-                        externalTension={externalTension}
                     />
                 )}
             </div>
