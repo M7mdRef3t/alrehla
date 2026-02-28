@@ -1,0 +1,50 @@
+--- src/components/Trajectory/TrajectoryDashboard.tsx
++++ src/components/Trajectory/TrajectoryDashboard.tsx
+@@ -20,7 +20,6 @@
+ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card";
+ import { Badge } from "../ui/badge";
+ import { Progress } from "../ui/progress";
+-import { SwarmStatusBadge } from "../CommandCenter/SwarmStatusBadge";
+ import { TrajectoryPathGraph } from "./TrajectoryPathGraph";
+ import { QuantumTunnelView } from "./QuantumTunnelView";
+ import { SimulationControlPanel } from "./SimulationControlPanel";
+@@ -26,8 +25,8 @@
+   const [swarmMetrics, setSwarmMetrics] = useState<SwarmMetrics | null>(null);
+   const [insights, setInsights] = useState<SwarmInsight[]>([]);
+   const [tension, setTension] = useState(0);
+-  const [externalTension, setExternalTension] = useState(0);
+-  const [systemPhase, setSystemPhase] = useState<"crystal" | "fluid" | "gas">(
++  const [, setExternalTension] = useState(0);
++  const [systemPhase, ] = useState<"crystal" | "fluid" | "gas">(
+     "fluid"
+   );
+
+@@ -38,10 +37,9 @@
+         return;
+       }
+
+-      // Safely check metadata via type assertion since SwarmMetrics doesn't officially define it yet
+-      const statusMeta = (latest.metadata as any)?.systemStatus;
++      const statusMeta = (latest as any).metadata?.systemStatus;
+       if (statusMeta) {
+         setTension(statusMeta.tension || 0);
+         setExternalTension(statusMeta.externalTension || 0);
+-        setSystemPhase(statusMeta.phase || "fluid");
+       }
+@@ -165,10 +163,9 @@
+     fetchMetrics();
+   }, [timeRange]);
+
+-  // Safely grab swarm intelligence score if it exists in metadata
+-  const swarmIntelligenceScore = (swarmMetrics?.metadata as any)?.hiveMindScore ?? 0;
++  const swarmIntelligenceScore = (swarmMetrics as any)?.metadata?.hiveMindScore ?? 0;
+
+   if (isLoading) {
+     return (
+@@ -263,7 +260,6 @@
+           <CollectiveRadar
+             userVector={null}
+             swarmMetrics={swarmMetrics!}
+-            externalTension={externalTension}
+           />
+         </TabsContent>

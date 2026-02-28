@@ -270,7 +270,7 @@ export const AtlasDashboard: FC<AtlasDashboardProps> = ({ isOpen, onClose }) => 
                     <XAxis dataKey="dateShort" fontSize={10} />
                     <YAxis fontSize={11} />
                     <Tooltip
-                      labelFormatter={(_label: unknown, payload: any) => (payload as readonly { payload?: { date?: string } }[])?.[0]?.payload?.date ?? ""}
+                      labelFormatter={(_label: unknown, payload: any) => payload?.[0]?.payload?.date ?? ""}
                     />
                     <Legend />
                     <Line
@@ -311,5 +311,3 @@ export const AtlasDashboard: FC<AtlasDashboardProps> = ({ isOpen, onClose }) => 
     </div>
   );
 };
-
-

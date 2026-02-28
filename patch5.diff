@@ -1,0 +1,34 @@
+--- src/components/Trajectory/TrajectoryDashboard.tsx
++++ src/components/Trajectory/TrajectoryDashboard.tsx
+@@ -20,13 +20,11 @@
+     return 'Aspirant';
+ };
+
+-import { SwarmStatusBadge } from '../CommandCenter/SwarmStatusBadge';
+-
+ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId }) => {
+     const { activeTrajectory, completedTrajectory, loading } = useTrajectoryRealtime(userId);
+     const [swarmMetrics, setSwarmMetrics] = React.useState<SwarmMetrics | null>(null);
+
+-    const externalTension = swarmMetrics?.metadata?.external_tension ?? 0.2;
++    const externalTension = (swarmMetrics as any)?.metadata?.external_tension ?? 0.2;
+
+     React.useEffect(() => {
+         const fetchHive = async () => {
+@@ -171,7 +169,7 @@
+                             </div>
+                             <div className="flex justify-between items-center bg-zinc-900/50 p-2 rounded-md">
+                                 <span className="text-zinc-500 text-xs uppercase font-bold tracking-wide">Swarm Pulse</span>
+-                                <span className="text-zinc-400 font-medium text-sm flex items-center gap-1"><Activity className="w-3 h-3 text-emerald-500" /> {swarmMetrics?.metadata?.last_signal_label ?? 'Calibrating'}</span>
++                                <span className="text-zinc-400 font-medium text-sm flex items-center gap-1"><Activity className="w-3 h-3 text-emerald-500" /> {(swarmMetrics as any)?.metadata?.last_signal_label ?? 'Calibrating'}</span>
+                             </div>
+                         </div>
+                     </motion.div>
+@@ -271,7 +269,6 @@
+                             <CollectiveRadar
+                                 userVector={activeTrajectory?.current_vector as any}
+                                 swarmMetrics={swarmMetrics}
+-                                externalTension={externalTension}
+                             />
+                         </div>
+                     </motion.div>

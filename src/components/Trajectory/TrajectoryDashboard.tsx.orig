@@ -33,7 +33,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
             if (metrics) setSwarmMetrics(metrics);
             else {
                 // Mock metrics for prototype visualization
-                setSwarmMetrics({
+                setSwarmMetrics({ as any
                     active_sovereigns: 124,
                     swarm_momentum: 1.45,
                     mean_vector: { rs: 0.4, av: 0.5, bi: 0.6, se: 0.3, cb: 0.7, timestamp: Date.now() },
@@ -42,7 +42,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                         external_tension: 0.62,
                         last_signal_label: 'Rising Global Volatility'
                     }
-                } as any);
+                });
             }
         };
         fetchHive();
@@ -353,6 +353,3 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
         </div>
     );
 };
-
-
-

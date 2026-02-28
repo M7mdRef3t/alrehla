@@ -1,0 +1,21 @@
+--- src/components/Trajectory/TrajectoryDashboard.tsx
++++ src/components/Trajectory/TrajectoryDashboard.tsx
+@@ -34,13 +34,13 @@
+             if (metrics) setSwarmMetrics(metrics);
+             else {
+                 // Mock metrics for prototype visualization
+-                setSwarmMetrics({ as any
++                setSwarmMetrics({
+                     active_sovereigns: 124,
+                     swarm_momentum: 1.45,
+                     mean_vector: { rs: 0.4, av: 0.5, bi: 0.6, se: 0.3, cb: 0.7, timestamp: Date.now() },
+                     outlier_vector: { rs: 0.8, av: 0.9, bi: 0.95, se: 0.1, cb: 0.9, timestamp: Date.now() },
+                     metadata: {
+                         external_tension: 0.62,
+                         last_signal_label: 'Rising Global Volatility'
+                     }
+-                });
++                } as any);
+             }
+         };
+         fetchHive();

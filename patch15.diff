@@ -1,0 +1,15 @@
+--- src/components/AtlasDashboard.tsx
++++ src/components/AtlasDashboard.tsx
+@@ -231,9 +231,10 @@
+                   labelStyle={{ color: "#d1d5db" }}
+                   formatter={(val: number) => [val, "Starts"]}
+                   labelFormatter={(_label: unknown, payload: readonly Record<string, unknown>[]) =>
+-                    payload?.[0]?.payload?.pathLabel
+-                      ? `${payload[0].payload.pathLabel} — بدايات: ${payload[0].payload.starts}`
+-                      : ""
++                    (payload as readonly { payload?: { pathLabel?: string, starts?: number } }[])?.[0]?.payload?.pathLabel
++                      ? `${(payload as readonly { payload?: { pathLabel?: string, starts?: number } }[])[0].payload.pathLabel} — بدايات: ${(payload as readonly { payload?: { pathLabel?: string, starts?: number } }[])[0].payload.starts}`
++                      : _label as string
+                   }
+                 />
+                 <Bar dataKey="starts" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
