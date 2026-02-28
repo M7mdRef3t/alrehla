@@ -1,12 +1,13 @@
 import React from 'react';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend } from 'recharts';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { AwarenessVector } from '../../services/trajectoryEngine';
 import { SwarmMetrics } from '../../services/hiveEngine';
-import { motion } from 'framer-motion';
+
 
 interface CollectiveRadarProps {
     userVector: AwarenessVector;
     swarmMetrics: SwarmMetrics;
+    externalTension?: number;
     title?: string;
 }
 
