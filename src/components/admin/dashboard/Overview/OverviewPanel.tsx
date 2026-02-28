@@ -10,6 +10,7 @@ import {
 } from "../../../../services/journeyTracking";
 import {
   fetchOverviewStats,
+  type OverviewStats,
   fetchOpsInsights,
   fetchSystemHealth,
   fetchExecutiveReport, // New Import
@@ -79,8 +80,7 @@ const formatNumber = (value: number | null, fallback = "—") =>
 export const OverviewPanel: FC = () => {
   const stats = getAggregateStats();
   const sessions = getSessionsWithProgress();
-  // TODO: replace with a strict remote overview type after stabilizing the server payload contract.
-  const [remoteStats, setRemoteStats] = useState<any>(null);
+  const [remoteStats, setRemoteStats] = useState<OverviewStats | null>(null);
   const [opsInsights, setOpsInsights] = useState<OpsInsightsType | null>(null);
   const [systemHealth, setSystemHealth] = useState<SystemHealthReport | null>(null);
   const [executiveReport, setExecutiveReport] = useState<ExecutiveReportType | null>(null); // New State
@@ -427,7 +427,7 @@ export const OverviewPanel: FC = () => {
                     selectedLoadBand?: string;
                     decisions?: number;
                     completedCount?: number;
-                    completionRatePct?: number;
+                    completionRatePct?: number | null;
                   }) => (
                     <tr key={`${row.capacityBand}-${row.selectedLoadBand}`} className="border-t border-white/5">
                       <td className="py-2 px-2">{row.capacityBand}</td>
@@ -458,7 +458,7 @@ export const OverviewPanel: FC = () => {
                     segmentKey?: string;
                     interventions?: number;
                     decisions?: number;
-                    interventionRatePct?: number;
+                    interventionRatePct?: number | null;
                   }) => (
                     <tr key={row.segmentKey} className="border-t border-white/5">
                       <td className="py-2 px-2">{row.segmentKey}</td>

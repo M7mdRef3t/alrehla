@@ -77,7 +77,7 @@ export function GenesisOnboarding({ userId, onCompleted }: GenesisOnboardingProp
 
     setDropped(true);
     setReaction(buildReactionText(snapshot.velocityPxPerSec, snapshot.hesitationMs));
-    console.info("[GenesisFlow] drop_captured", {
+    console.warn("[GenesisFlow] drop_captured", {
       userId,
       velocityPxPerSec: snapshot.velocityPxPerSec,
       hesitationMs: snapshot.hesitationMs,
@@ -111,7 +111,7 @@ export function GenesisOnboarding({ userId, onCompleted }: GenesisOnboardingProp
 
     localStorage.setItem("dawayir-journey-onboarding-done", "true");
     localStorage.setItem("dawayir-onboarding-map-seen", "true");
-    console.info("[GenesisFlow] onboarding_marked", { userId, awarenessTokens: 0 });
+    console.warn("[GenesisFlow] onboarding_marked", { userId, awarenessTokens: 0 });
     onCompleted();
   };
 

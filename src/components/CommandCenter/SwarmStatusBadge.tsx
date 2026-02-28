@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Activity, ShieldCheck, Zap, AlertTriangle } from 'lucide-react';
 
 interface SwarmStatusBadgeProps {
@@ -12,7 +12,7 @@ interface SwarmStatusBadgeProps {
 export const SwarmStatusBadge: React.FC<SwarmStatusBadgeProps> = ({
     tension,
     momentum,
-    label = "مجال مستقر",
+
     isInsulated = false
 }) => {
     const statusConfig = useMemo(() => {
