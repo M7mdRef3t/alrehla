@@ -4,7 +4,7 @@ import type { FeatureFlagKey } from "../config/features";
 
 export type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
 export type PulseCheckContext = "regular" | "start_recovery";
-export type WelcomeSource = "ai" | "template";
+export type WelcomeSource = "ai" | "template" | "offline_intervention";
 
 /**
  * Hook to manage screen navigation and related modal states
