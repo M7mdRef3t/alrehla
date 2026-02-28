@@ -26,6 +26,9 @@ export interface ErrorAnalysisResult {
   suggestedFixes: {
     description: string;
     code?: string;
+    file?: string;
+    functionName?: string;
+    replacementCode?: string;
     autoApplicable: boolean;
     estimatedImpact: "low" | "medium" | "high";
   }[];
@@ -71,6 +74,9 @@ export class AIErrorAnalyzer {
       suggestedFixes: Array<{
         description: string;
         code?: string;
+        file?: string;
+        functionName?: string;
+        replacementCode?: string;
         autoApplicable: boolean;
         estimatedImpact: "low" | "medium" | "high";
       }>;
@@ -131,6 +137,9 @@ ${stack ? `\n${stack}` : ""}
     {
       "description": "وصف الحل",
       "code": "الكود المقترح (لو applicable)",
+      "file": "مسار الملف (لو applicable)",
+      "functionName": "اسم الدالة (لو applicable)",
+      "replacementCode": "الكود البديل (لو applicable)",
       "autoApplicable": true/false,
       "estimatedImpact": "low|medium|high"
     }
@@ -223,24 +232,81 @@ ${stack ? `\n${stack}` : ""}
    * تطبيق fix واحد
    */
   private async applyFix(fix: ErrorAnalysisResult["suggestedFixes"][0]): Promise<boolean> {
-    // TODO: في المستقبل، ممكن نستخدم AST manipulation
-    // مؤقتاً: نحفظ الـ fix suggestion للمراجعة اليدوية
+
+    if (fix.file && fix.functionName && fix.replacementCode) {
+
+      try {
+
+        const response = await fetch("/api/admin/?path=ast-fix", {
+
+          method: "POST",
+
+          headers: { "Content-Type": "application/json" },
+
+          body: JSON.stringify({
+
+            file: fix.file,
+
+            functionName: fix.functionName,
+
+            replacementCode: fix.replacementCode,
+
+          }),
+
+        });
+
+        if (response.ok) {
+
+          return true;
+
+        } else {
+
+          console.error("❌ AST fix failed:", await response.text());
+
+        }
+
+      } catch (error) {
+
+        console.error("❌ Failed to contact AST fix API:", error);
+
+      }
+
+    }
+
+
+
+    // مؤقتاً: نحفظ الـ fix suggestion للمراجعة اليدوية (Fallback)
 
     try {
+
       const suggestions = JSON.parse(
+
         localStorage.getItem("dawayir-fix-suggestions") || "[]"
+
       ) as typeof fix[];
+
+
 
       suggestions.push(fix);
 
+
+
       localStorage.setItem(
+
         "dawayir-fix-suggestions",
+
         JSON.stringify(suggestions.slice(-20))
+
       );
 
+
+
       return true;
+
     } catch {
+
       return false;
+
     }
   }
 

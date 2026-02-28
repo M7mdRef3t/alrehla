@@ -264,6 +264,7 @@ function adminDevProxy() {
           const { handleBroadcasts } = await import("./server/admin/broadcasts");
           const { handleAiLogs } = await import("./server/admin/ai-logs");
           const { handleJourneyMap } = await import("./server/admin/journey-map");
+          const { handleAstFix } = await import("./server/admin/ast-fix");
 
           const ROUTES: Record<string, any> = {
             overview: overviewRouter,
@@ -275,6 +276,7 @@ function adminDevProxy() {
             broadcasts: handleBroadcasts,
             "ai-logs": handleAiLogs,
             "journey-map": handleJourneyMap
+          , "ast-fix": handleAstFix
           };
 
           const handler = ROUTES[path] || overviewRouter;
