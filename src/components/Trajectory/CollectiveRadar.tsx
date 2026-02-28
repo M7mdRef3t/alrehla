@@ -2,7 +2,7 @@ import React from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend } from 'recharts';
 import { AwarenessVector } from '../../services/trajectoryEngine';
 import { SwarmMetrics } from '../../services/hiveEngine';
-import { motion } from 'framer-motion';
+
 
 interface CollectiveRadarProps {
     externalTension?: number;
