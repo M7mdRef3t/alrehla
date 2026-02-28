@@ -6,6 +6,8 @@
 
 import { decisionEngine } from "./decision-framework";
 import { geminiClient } from "../services/geminiClient";
+import { saveBroadcast } from "../services/adminApi";
+import { withBroadcastAudienceId } from "../utils/broadcastAudience";
 import type { AIDecision } from "./decision-framework";
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -311,7 +313,15 @@ export class RevenueAutomationEngine {
     try {
       // TODO: Update Stripe prices via API
       // TODO: Update database with new pricing
-      // TODO: Notify existing users about grandfathering policy
+      // Notify existing users about grandfathering policy
+      const grandfatheringId = withBroadcastAudienceId(`grandfathering-${Date.now()}`, "users");
+      await saveBroadcast({
+        id: grandfatheringId,
+        title: "تحديث في سياسة التسعير",
+        body: "لقد قمنا بتحديث أسعار خطط الاشتراك. بصفتك مستخدماً حالياً، ستستمر في الاستفادة من السعر القديم الخاص بك (Grandfathering) طالما لم تقم بإلغاء اشتراكك.",
+        audience: "users",
+        createdAt: Date.now(),
+      });
 
       console.warn("✅ Pricing changed successfully:", recommendation.suggestedPrices);
 
