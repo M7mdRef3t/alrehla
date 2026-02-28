@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Battery, CheckCircle2, CircleDashed, Clock, Zap, Award, Sparkles, ChevronRight, Share2, ShieldAlert } from 'lucide-react';
 import { useTrajectoryRealtime } from '../../hooks/useTrajectoryRealtime';
+import { SwarmStatusBadge } from "../CommandCenter/SwarmStatusBadge";
 import { AwarenessHeatmap } from './AwarenessHeatmap';
 import { CollectiveRadar } from './CollectiveRadar';
 import { HiveEngine, SwarmMetrics } from '../../services/hiveEngine';
@@ -20,7 +21,7 @@ const getRank = (score: number): SovereigntyRank => {
     return 'Aspirant';
 };
 
-import { SwarmStatusBadge } from '../CommandCenter/SwarmStatusBadge';
+
 
 export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId }) => {
     const { activeTrajectory, completedTrajectory, loading } = useTrajectoryRealtime(userId);
@@ -271,7 +272,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                     <CollectiveRadar
                         userVector={activeTrajectory.initial_vector}
                         swarmMetrics={swarmMetrics}
-                        externalTension={externalTension}
+
                     />
                 )}
             </div>
