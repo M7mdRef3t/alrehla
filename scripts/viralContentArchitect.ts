@@ -8,13 +8,8 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { createClient } from '@supabase/supabase-js';
 import { AIOrchestrator } from '../src/services/aiOrchestrator';
 
-// Initialize Supabase Admin for Data-Driven Content Generation
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -42,8 +37,6 @@ export async function architectContent() {
     console.log("🧠 [Viral Architect] Waking up. Analyzing platform trends...");
 
     try {
-        // In the future: Fetch anonymized aggregated trends from 'dawayir_maps' to find the most common 'danger' nodes.
-        // const { data: trends } = await supabase.from('...').select('...');
 
         // 1. Get the best model for "Content Generation" from the AI Orchestrator
         // Fallback to gemini-1.5-flash since this is a fast, creative task
