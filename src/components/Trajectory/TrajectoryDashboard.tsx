@@ -1,3 +1,4 @@
+import { SwarmStatusBadge } from '../CommandCenter/SwarmStatusBadge';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Battery, CheckCircle2, CircleDashed, Clock, Zap, Award, Sparkles, ChevronRight, Share2, ShieldAlert } from 'lucide-react';
@@ -20,7 +21,7 @@ const getRank = (score: number): SovereigntyRank => {
     return 'Aspirant';
 };
 
-import { SwarmStatusBadge } from '../CommandCenter/SwarmStatusBadge';
+
 
 export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId }) => {
     const { activeTrajectory, completedTrajectory, loading } = useTrajectoryRealtime(userId);
@@ -167,14 +168,12 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
             {/* --- Left Column: Context & Stats --- */}
             <div className="space-y-6 lg:col-span-4">
                 {/* Swarm Status Badge (Top of Left Column) */}
-                {swarmMetrics && (
-                    <SwarmStatusBadge
+                <SwarmStatusBadge
                         tension={externalTension}
-                        momentum={swarmMetrics.swarm_momentum}
-                        label={swarmMetrics.metadata?.last_signal_label}
+                        momentum={swarmMetrics?.swarm_momentum ?? 0}
+                        label={swarmMetrics?.metadata?.last_signal_label}
                         isInsulated={activeTrajectory?.data?.is_insulated}
                     />
-                )}
 
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
