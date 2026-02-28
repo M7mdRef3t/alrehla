@@ -92,6 +92,8 @@ import { AUTO_COCOON_LAST_SHOWN_DATE_KEY, evaluateCocoonOpen } from "./app/orche
 import { startAutonomousStartupJobs } from "./app/orchestration/startupJobs";
 
 const OracleCouncilDashboard = lazy(() => import("./components/Oracle/OracleDashboard").then(m => ({ default: m.OracleCouncilDashboard })));
+import { GlobalToast } from "./components/GlobalToast";
+
 
 // Initialize language on app start
 initLanguage();
@@ -2631,129 +2633,129 @@ export default function App() {
                 </div>
               }
             >
-            <div key={screen} className={`min-w-0 flex transition-all duration-300 ease-in-out ${isLandingScreen ? "flex-col" : "flex-1 items-center justify-center app-panel-main"}`}>
-              {screen === "landing" && (
-                <Landing
-                  onStartJourney={startRecovery}
-                  ownerInstallRequestNonce={ownerInstallRequestNonce}
-                  onOwnerInstallRequestHandled={() => setOwnerInstallRequestNonce(0)}
-                />
-              )}
+              <div key={screen} className={`min-w-0 flex transition-all duration-300 ease-in-out ${isLandingScreen ? "flex-col" : "flex-1 items-center justify-center app-panel-main"}`}>
+                {screen === "landing" && (
+                  <Landing
+                    onStartJourney={startRecovery}
+                    ownerInstallRequestNonce={ownerInstallRequestNonce}
+                    onOwnerInstallRequestHandled={() => setOwnerInstallRequestNonce(0)}
+                  />
+                )}
 
-              {screen === "goal" && (
-                <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col px-3 sm:px-4">
-                  {welcome && welcome.source !== "offline_intervention" && (
-                    <OnboardingWelcomeBubble
-                      message={welcome.message}
-                      source={welcome.source}
-                      onClose={() => setWelcome(null)}
+                {screen === "goal" && (
+                  <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col px-3 sm:px-4">
+                    {welcome && welcome.source !== "offline_intervention" && (
+                      <OnboardingWelcomeBubble
+                        message={welcome.message}
+                        source={welcome.source}
+                        onClose={() => setWelcome(null)}
+                      />
+                    )}
+                    <GoalPicker
+                      onBack={() => { void navigateToScreen("landing"); }}
+                      onContinue={(nextCategory, nextGoalId) => {
+                        recordFlowEvent("goal_selected", {
+                          meta: { goalId: nextGoalId, category: nextCategory }
+                        });
+                        setWelcome(null);
+                        setCategory(nextCategory);
+                        setGoalId(nextGoalId);
+                        useJourneyState.getState().setLastGoal(nextGoalId, nextCategory);
+                        skipNextPulseCheck();
+                        void navigateToScreen("map");
+                      }}
                     />
-                  )}
-                  <GoalPicker
-                    onBack={() => { void navigateToScreen("landing"); }}
-                    onContinue={(nextCategory, nextGoalId) => {
-                      recordFlowEvent("goal_selected", {
-                        meta: { goalId: nextGoalId, category: nextCategory }
-                      });
-                      setWelcome(null);
-                      setCategory(nextCategory);
-                      setGoalId(nextGoalId);
-                      useJourneyState.getState().setLastGoal(nextGoalId, nextCategory);
-                      skipNextPulseCheck();
+                  </div>
+                )}
+
+                {screen === "map" && (
+                  <ErrorBoundary fallback={<MapErrorFallback />}>
+                    <CoreMapScreen
+                      category={category}
+                      goalId={goalId}
+                      selectedNodeId={selectedNodeId}
+                      onSelectNode={setSelectedNodeId}
+                      onOpenBreathing={() => setShowBreathing(true)}
+                      onOpenMission={openMissionScreen}
+                      onOpenMissionFromAddPerson={openMissionFromAddPerson}
+                      pulseMode={pulseMode}
+                      pulseInsight={pulseInsight}
+                      onOpenCocoon={openCocoonModal}
+                      suppressLowPulseCocoon={isLowPulseCocoonSuppressed}
+                      onOpenNoise={() => setShowNoiseSilencingPulse(true)}
+                      canUseBasicDiagnosis={availableFeatures.basic_diagnosis}
+                      onFeatureLocked={setLockedFeature}
+                      onOpenChallenge={
+                        challengeTarget ? () => openMissionScreen(challengeTarget.nodeId) : undefined
+                      }
+                      challengeLabel={challengeLabel}
+                      nextStepDecision={nextStepDecision}
+                      onTakeNextStep={handleTakeNextStep}
+                      onRefreshNextStep={handleRefreshNextStep}
+                    />
+                  </ErrorBoundary>
+                )}
+
+                {screen === "tools" && (
+                  <JourneyToolsScreen
+                    onBack={() => { void navigateToScreen(toolsBackScreen); }}
+                    onOpenDawayir={openDawayirTool}
+                    onOpenDawayirSetup={openDawayirSetup}
+                    onFeatureLocked={setLockedFeature}
+                    availableFeatures={availableFeatures}
+                    onOpenGoal={(goalId, category) => {
+                      setGoalId(goalId);
+                      setCategory(category as AdviceCategory);
                       void navigateToScreen("map");
                     }}
+                    nextStepDecision={nextStepDecision}
+                    onTakeNextStep={handleTakeNextStep}
+                    onRefreshNextStep={handleRefreshNextStep}
                   />
-                </div>
-              )}
+                )}
 
-              {screen === "map" && (
-                <ErrorBoundary fallback={<MapErrorFallback />}>
-                <CoreMapScreen
-                  category={category}
-                  goalId={goalId}
-                  selectedNodeId={selectedNodeId}
-                  onSelectNode={setSelectedNodeId}
-                  onOpenBreathing={() => setShowBreathing(true)}
-                  onOpenMission={openMissionScreen}
-                  onOpenMissionFromAddPerson={openMissionFromAddPerson}
-                  pulseMode={pulseMode}
-                  pulseInsight={pulseInsight}
-                  onOpenCocoon={openCocoonModal}
-                  suppressLowPulseCocoon={isLowPulseCocoonSuppressed}
-                  onOpenNoise={() => setShowNoiseSilencingPulse(true)}
-                  canUseBasicDiagnosis={availableFeatures.basic_diagnosis}
-                  onFeatureLocked={setLockedFeature}
-                  onOpenChallenge={
-                    challengeTarget ? () => openMissionScreen(challengeTarget.nodeId) : undefined
-                  }
-                  challengeLabel={challengeLabel}
-                  nextStepDecision={nextStepDecision}
-                  onTakeNextStep={handleTakeNextStep}
-                  onRefreshNextStep={handleRefreshNextStep}
-                />
-                </ErrorBoundary>
-              )}
+                {screen === "settings" && (
+                  <SettingsScreen
+                    onClose={() => {
+                      if (canUseMap) {
+                        void navigateToScreen("map");
+                        return;
+                      }
+                      void navigateToScreen("landing");
+                    }}
+                  />
+                )}
 
-              {screen === "tools" && (
-                <JourneyToolsScreen
-                  onBack={() => { void navigateToScreen(toolsBackScreen); }}
-                  onOpenDawayir={openDawayirTool}
-                  onOpenDawayirSetup={openDawayirSetup}
-                  onFeatureLocked={setLockedFeature}
-                  availableFeatures={availableFeatures}
-                  onOpenGoal={(goalId, category) => {
-                    setGoalId(goalId);
-                    setCategory(category as AdviceCategory);
-                    void navigateToScreen("map");
-                  }}
-                  nextStepDecision={nextStepDecision}
-                  onTakeNextStep={handleTakeNextStep}
-                  onRefreshNextStep={handleRefreshNextStep}
-                />
-              )}
+                {screen === "guided" && (
+                  <GuidedJourneyFlow
+                    onBackToLanding={() => { void navigateToScreen("landing"); }}
+                    onFinishJourney={() => { void navigateToScreen("map"); }}
+                  />
+                )}
 
-              {screen === "settings" && (
-                <SettingsScreen
-                  onClose={() => {
-                    if (canUseMap) {
-                      void navigateToScreen("map");
-                      return;
-                    }
-                    void navigateToScreen("landing");
-                  }}
-                />
-              )}
+                {screen === "mission" && missionNodeId && (
+                  <MissionScreen
+                    nodeId={missionNodeId}
+                    onBack={() => { void navigateToScreen("map"); }}
+                  />
+                )}
 
-              {screen === "guided" && (
-                <GuidedJourneyFlow
-                  onBackToLanding={() => { void navigateToScreen("landing"); }}
-                  onFinishJourney={() => { void navigateToScreen("map"); }}
-                />
-              )}
+                {screen === "enterprise" && (
+                  <EnterprisePortal />
+                )}
 
-              {screen === "mission" && missionNodeId && (
-                <MissionScreen
-                  nodeId={missionNodeId}
-                  onBack={() => { void navigateToScreen("map"); }}
-                />
-              )}
+                {screen === "guilt-court" && (
+                  <GuiltCourt />
+                )}
 
-              {screen === "enterprise" && (
-                <EnterprisePortal />
-              )}
+                {screen === "diplomacy" && (
+                  <DiplomaticCables />
+                )}
 
-              {screen === "guilt-court" && (
-                <GuiltCourt />
-              )}
-
-              {screen === "diplomacy" && (
-                <DiplomaticCables />
-              )}
-
-              {screen === "oracle-dashboard" && authUser?.id && (
-                <OracleCouncilDashboard oracleId={authUser.id} />
-              )}
-            </div>
+                {screen === "oracle-dashboard" && authUser?.id && (
+                  <OracleCouncilDashboard oracleId={authUser.id} />
+                )}
+              </div>
             </ErrorBoundary>
           </Suspense>
         </main>
@@ -3225,8 +3227,9 @@ export default function App() {
         <AscensionRitual />
       </div>
       {/* Phase 20: Automagic Loop Toast — Global Reactive Prescription */}
+      <GlobalToast />
       <GraphEventToast />
     </PWAInstallProvider>
+
   );
 }
-

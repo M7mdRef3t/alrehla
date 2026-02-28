@@ -11,6 +11,8 @@
 import type { MapNode } from "../modules/map/mapTypes";
 import type { DailyQuestion } from "../data/dailyQuestions";
 import { useEmergencyState } from "../state/emergencyState";
+import { useToastState } from "../state/toastState";
+
 
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -236,9 +238,12 @@ export class DecisionEngine {
         try {
           const p = decision.payload as { message?: string } | null;
           console.warn("AI TACTICAL SIGNAL:", p?.message);
-          // TODO: Link with a proper Toast UI store
+          if (p?.message) {
+            useToastState.getState().showToast(p.message, "info");
+          }
         } catch (e) { console.error(e); }
         break;
+
     }
 
     this.logDecision({ ...decision, executedAt: Date.now(), outcome: "executed" });
