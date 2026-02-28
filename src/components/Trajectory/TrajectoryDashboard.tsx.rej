@@ -1,0 +1,14 @@
+--- src/components/Trajectory/TrajectoryDashboard.tsx
++++ src/components/Trajectory/TrajectoryDashboard.tsx
+@@ -1,11 +1,10 @@
+ import React from 'react';
+ import { motion, AnimatePresence } from 'framer-motion';
+-import { Compass, Sparkles, AlertTriangle, CheckCircle2, Share2, Users } from 'lucide-react';
++import { Compass, AlertTriangle, CheckCircle2, Users } from 'lucide-react';
+ import { useTrajectoryRealtime } from '../../hooks/useTrajectoryRealtime';
+ import { HiveEngine, type SwarmMetrics } from '../../services/hiveEngine';
+ import type { TrajectoryPlan } from '../../services/trajectoryEngine';
+ import { CollectiveRadar } from './CollectiveRadar';
+-import type { AwarenessVector } from '../../modules/map/mapTypes';
+
+ type SovereigntyRank = 'Aspirant' | 'Initiate' | 'Sovereign' | 'Oracle';

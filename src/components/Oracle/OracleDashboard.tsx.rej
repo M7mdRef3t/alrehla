@@ -1,0 +1,28 @@
+--- src/components/Oracle/OracleDashboard.tsx
++++ src/components/Oracle/OracleDashboard.tsx
+@@ -1,6 +1,6 @@
+ import React, { useEffect, useState } from 'react';
+ import { motion } from 'framer-motion';
+-import { Activity, Database, Sparkles, TrendingUp, Shield, Users } from 'lucide-react';
++import { Activity, Database, Sparkles, Shield } from 'lucide-react';
+ import { LiveTelemetry } from './LiveTelemetry';
+ import { PhoenixReport } from './PhoenixReport';
+ import { AscensionRitual } from './AscensionRitual';
+@@ -30,7 +30,7 @@
+         metrics: { consciousnessSync: 89, neuralLoad: 42, structuralIntegrity: 98 }
+       });
+     }, 1500);
+-  }, []);
++  }, [oracleId]);
+
+   if (authStatus === 'authenticating') {
+     return (
+@@ -151,7 +151,7 @@
+             transition={{ duration: 0.5, delay: 0.1 }}
+           >
+             <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Sparkles className="text-brand-primary" /> Ascension Engine</h3>
+-            <AscensionRitual />
++            <AscensionRitual onComplete={(res: any) => console.log(res)} />
+           </motion.div>
+         </div>
+       </div>
