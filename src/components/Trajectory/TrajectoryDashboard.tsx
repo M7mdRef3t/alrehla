@@ -26,7 +26,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
     const { activeTrajectory, completedTrajectory, loading } = useTrajectoryRealtime(userId);
     const [swarmMetrics, setSwarmMetrics] = React.useState<SwarmMetrics | null>(null);
 
-    const externalTension = (swarmMetrics as any)?.metadata?.external_tension ?? 0.2;
+
 
     React.useEffect(() => {
         const fetchHive = async () => {
