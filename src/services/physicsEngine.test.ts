@@ -97,8 +97,8 @@ describe("calculateGravityMass", () => {
     const node = createNode("5", "green", {
       notes: undefined,
       recoveryProgress: {
-        completedSteps: []
-        // situationLogs omitted
+        completedSteps: [],
+        situationLogs: [] // Fixed typing error
       }
     });
     const result = calculateGravityMass(node);
