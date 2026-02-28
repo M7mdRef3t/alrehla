@@ -1,0 +1,69 @@
+const fs = require('fs');
+
+function fixFile(path) {
+  let content = fs.readFileSync(path, 'utf8');
+  content = content.replace(/Ù…Ø³Ø§Ø± Ø§Ù„Ø¬Ø°ÙˆØ±/g, 'Root Path');
+  content = content.replace(/ØªØ¹Ø°Ø± ØªØ­Ù…ÙŠÙ„ Ù†ØµÙˆØµ Ø§Ù„Ù…Ù†ØµØ©./g, 'Failed to load platform texts.');
+  content = content.replace(/Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ù†ØµØŸ/g, 'Are you sure you want to delete this text?');
+  content = content.replace(/Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø­ØªÙˆÙ‰/g, 'Content Management');
+  content = content.replace(/Ù†ØµÙˆØµ Ø§Ù„Ù…Ù†ØµØ©/g, 'Platform Texts');
+  content = content.replace(/Ù…Ø­Ø§ÙƒØ§Ø© Ø§Ù„Ù†ØªØ§Ø¦Ø¬/g, 'Results Simulation');
+  content = content.replace(/Ø§Ù„Ù…Ù‡Ù…Ø§Øª/g, 'Missions');
+  content = content.replace(/Ø§Ù„Ø¨Ø« Ø§Ù„Ù…Ø¨Ø§Ø´Ø±/g, 'Live Broadcast');
+  content = content.replace(/Ø¨Ø­Ø« ÙÙŠ Ø§Ù„Ù…ÙØ§ØªÙŠØ­ Ø£Ùˆ Ø§Ù„Ù…Ø­ØªÙˆÙ‰.../g, 'Search in keys or content...');
+  content = content.replace(/ÙÙ„ØªØ±Ø© Ø­Ø³Ø¨ Ø§Ù„ØµÙØ­Ø© \(Page ID\).../g, 'Filter by Page ID...');
+  content = content.replace(/Ø¥Ø¶Ø§ÙØ© Ù†Øµ Ø¬Ø¯ÙŠØ¯/g, 'Add New Text');
+  content = content.replace(/Ø§Ù„Ù…Ø­ØªÙˆÙ‰ Ø§Ù„Ù†ØµÙŠ.../g, 'Text content...');
+  content = content.replace(/Ø­ÙØ¸/g, 'Save');
+  content = content.replace(/Ù„Ø§ ØªÙˆØ¬Ø¯ Ù†ØªØ§Ø¦Ø¬ Ù…Ø·Ø§Ø¨Ù‚Ø©/g, 'No matching results found');
+  content = content.replace(/Ø­ÙØ¸ Ø§Ù„ØªØºÙŠÙŠØ±Ø§Øª/g, 'Save changes');
+  content = content.replace(/Ø­Ø°Ù/g, 'Delete');
+  content = content.replace(/Ù…Ø¯Ø®Ù„Ø§Øª Ø§Ù„Ù…Ø­Ø§ÙƒØ§Ø©/g, 'Simulation Inputs');
+  content = content.replace(/Ø§Ù„Ø¬Ù†Ø³/g, 'Gender');
+  content = content.replace(/Ø§Ù„Ø³Ø¤Ø§Ù„ Ø§Ù„Ø£Ù…Ù†ÙŠ/g, 'Security Question');
+  content = content.replace(/Ø­Ø§Ù„Ø© Ø·ÙˆØ§Ø±Ø¦ Ù‚ØµÙˆÙ‰ \(Override\)/g, 'Extreme Emergency State (Override)');
+  content = content.replace(/Ø¥Ø¬Ø§Ø¨Ø§Øª Ø§Ù„Ù…Ø´Ø§Ø¹Ø±/g, 'Emotion Answers');
+  content = content.replace(/Ø§Ù„Ù†ØªÙŠØ¬Ø© Ø§Ù„Ù…ØªÙˆÙ‚Ø¹Ø© \(Preview\)/g, 'Expected Result (Preview)');
+  content = content.replace(/Ø¥Ø¶Ø§ÙØ© Ù…Ù‡Ù…Ø© Ø¬Ø¯ÙŠØ¯Ø©/g, 'Add New Mission');
+  content = content.replace(/Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ù…Ù‡Ù…Ø©/g, 'Mission Title');
+  content = content.replace(/Ø§Ù„Ù…Ø³Ø§Ø±/g, 'Path');
+  content = content.replace(/Ù…Ø³Ø§Ø± Ø§Ù„Ø¹Ù„Ø§Ù‚Ø§Øª/g, 'Relations Path');
+  content = content.replace(/Ø¥Ø¶Ø§ÙØ©/g, 'Add');
+  content = content.replace(/Ø¥Ø±Ø³Ø§Ù„ Ø¨Ø« Ù…Ø¨Ø§Ø´Ø± \(Emergency Broadcast\)/g, 'Send Live Broadcast (Emergency Broadcast)');
+  content = content.replace(/Ø¹Ù†ÙˆØ§Ù† Ø§Ù„Ø±Ø³Ø§Ù„Ø©/g, 'Message Title');
+  content = content.replace(/Ù†Øµ Ø§Ù„Ø±Ø³Ø§Ù„Ø©.../g, 'Message text...');
+  content = content.replace(/Ø¥Ø±Ø³Ø§Ù„ Ù„Ù„Ø¬Ù…ÙŠØ¹/g, 'Send to all');
+
+  content = content.replace(/Ø§Ù„Ù…Ù‡Ù…Ø© ÙˆØ§Ø¶Ø­Ø©: Ù†Ø´Ø± Ø§Ù„ØªÙˆØ³Ø¹/g, 'Mission clear: Deploy expansion');
+  content = content.replace(/ØªØ­Ø³ÙŠÙ† Ø§Ù„Ù…Ø³Ø§Ø±: Ù…Ø·Ù„ÙˆØ¨ ØªØ­Ø³ÙŠÙ†/g, 'Improve path: Improvement required');
+  content = content.replace(/ÙØ´Ù„ Ø§Ù„ÙØ±Ø¶ÙŠØ©: Ù…Ø­ÙˆØ±ÙŠ Ø­Ø±Ø¬/g, 'Hypothesis failed: Critical pivot');
+  content = content.replace(/Ù‚ÙŠØ§Ø³ ØºÙŠØ± ÙƒØ§ÙÙ/g, 'Insufficient measurement');
+  content = content.replace(/ØªÙ… Ø­ÙØ¸ Ø§Ù„‚Ø±Ø§Ø± Ø§Ù„Ø§Ø³ØªØ±Ø§ØªÙŠØ¬ÙŠ ÙÙŠ Ø§Ù„Ù†ÙˆØ§Ø© Ø§Ù„Ø¹ØµØ¨ÙŠØ©./g, 'Strategic decision saved in the neural core.');
+  content = content.replace(/ÙØ´Ù„ Ø§Ù„Ø­ÙØ¸./g, 'Failed to save.');
+  content = content.replace(/Ø¬Ø§Ø±ÙŠ Ù…Ø²Ø§Ù…Ù†Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª/g, 'Syncing data...');
+  content = content.replace(/Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª.../g, 'Connecting to database...');
+  content = content.replace(/Ù…Ø±ÙƒØ² Ø§Ù„Ù‚ÙŠØ§Ø¯Ø©/g, 'Command Center');
+  content = content.replace(/Ù…ØªØµÙ„ Ù…Ø¨Ø§Ø´Ø±/g, 'Connected live');
+  content = content.replace(/Ø¨Ø« Ù†Ø¨Ø¶ Ø§Ù„Ø±Ø­Ù„Ø©: Ù†Ø´Ø·/g, 'Journey pulse broadcast: Active');
+  content = content.replace(/Ø­Ø§Ù„Ø© Ø§Ù„Ù†Ø¸Ø§Ù…/g, 'System Status');
+  content = content.replace(/ØªØ´ØºÙŠÙ„ÙŠ/g, 'Operational');
+  content = content.replace(/Ø§Ù„Ø¥ØµØ¯Ø§Ø±/g, 'Version');
+  content = content.replace(/v2.1-Ù…Ø¯Ø§Ø±ÙŠ/g, 'v2.1-Orbital');
+  content = content.replace(/Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø³Ø§ÙØ±ÙŠÙ†/g, 'Total Travelers');
+  content = content.replace(/Ù…Ø²Ø§Ù…Ù†Ø© Ù…ÙˆØ«Ù‚Ø©/g, 'Verified Sync');
+  content = content.replace(/Ø¥Ø³Ù‚Ø§Ø· Ù…Ø­Ù„ÙŠ/g, 'Local Drop');
+  content = content.replace(/Ù†Ø´Ø· Ø§Ù„Ø¢Ù†/g, 'Active Now');
+  content = content.replace(/Ø­Ø¶ÙˆØ± Ù…Ø¯Ø§Ø±ÙŠ/g, 'Orbital Presence');
+  content = content.replace(/Ù…ØªÙˆØ³Ø· Ø§Ù„Ø·Ø§Ù‚Ø©/g, 'Average Energy');
+  content = content.replace(/ØªØ¯ÙÙ‚ Ø§Ù„Ù…Ø²Ø§Ø¬/g, 'Mood Flow');
+  content = content.replace(/Ø¹Ù…Ù„ÙŠØ§Øª Ø§Ù„Ø°ÙƒØ§Ø¡/g, 'AI Operations');
+  content = content.replace(/Ø£Ø­Ù…Ø§Ù„ Ø§Ù„Ù…Ù‡Ø§Ù… Ø§Ù„Ø¹ØµØ¨ÙŠØ©/g, 'Neural Tasks Loads');
+  content = content.replace(/Ù†Ù‡Ø§ÙŠØ© Ø¨Ø« Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø¨Ø§Ø´Ø±/g, 'End of Live Data Broadcast');
+
+  // fallback replacement to remove any leftover SUSPICIOUS chars
+  content = content.replace(/(Ø|Ù|â€|â€™|ï¿½)/g, '');
+
+  fs.writeFileSync(path, content, 'utf8');
+}
+
+fixFile('src/components/admin/dashboard/Content/ContentPanel.tsx');
