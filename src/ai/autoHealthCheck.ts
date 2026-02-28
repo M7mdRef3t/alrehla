@@ -14,6 +14,8 @@
 
 import { decisionEngine } from "./decision-framework";
 import type { AIDecision } from "./decision-framework";
+import * as Sentry from "@sentry/react";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🏥 Health Check Result
@@ -139,10 +141,8 @@ export class AutoHealthChecker {
    * ─────────────────────────────────────────────────────────────────
    */
   private checkConsoleErrors(): HealthIssue[] {
-    // TODO: في production، نستخدم error tracking service (مثل Sentry)
-    // مؤقتاً: نفحص localStorage للـ errors المحفوظة
-
     const issues: HealthIssue[] = [];
+    const isSentryActive = runtimeEnv.isProd && !!runtimeEnv.sentryDsn;
 
     try {
       const errorLog = localStorage.getItem("dawayir-error-log");
@@ -158,13 +158,22 @@ export class AutoHealthChecker {
       const recentErrors = errors.filter((e) => e.timestamp > oneHourAgo);
 
       if (recentErrors.length > 0) {
+        if (isSentryActive) {
+          Sentry.captureMessage(`HealthCheck: Found ${recentErrors.length} recent console errors`, {
+            level: recentErrors.length > 5 ? "fatal" : "error",
+            extra: { recentErrors }
+          });
+        }
+
         issues.push({
           id: `console-errors-${Date.now()}`,
           severity: recentErrors.length > 5 ? "high" : "medium",
           category: "error",
           description: `${recentErrors.length} console errors في آخر ساعة`,
           autoFixable: false,
-          solution: "تحقق من الـ error log في الـ Admin Dashboard",
+          solution: isSentryActive
+            ? "راجع المشاكل في Sentry Dashboard"
+            : "تحقق من الـ error log في الـ Admin Dashboard",
         });
       }
     } catch {

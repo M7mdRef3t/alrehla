@@ -435,7 +435,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     define: {
-      __DEFINES__: "({})",
+      __DEFINES__: "{}",
     },
     plugins: [
       react(),
