@@ -7,6 +7,8 @@
    المنصة تشتغل بدون مفتاح بمنطق احتياطي.
    لو هتفعل لوحة التحكم والتتبع السحابي: ضيف `VITE_SUPABASE_URL` و `VITE_SUPABASE_ANON_KEY`.
    ولو هتفعل لوحة التحكم الآمنة عبر API: ضيف `SUPABASE_SERVICE_ROLE_KEY` و `ADMIN_API_SECRET`.
+   `VITE_APP_CONTENT_REALTIME` و `NEXT_PUBLIC_APP_CONTENT_REALTIME` غير مطلوبين للنشر:
+   في `dev` يكون Realtime الخاص بـ `app_content` مطفأ افتراضيًا لتقليل ضوضاء الـ console، وفي الإنتاج يعمل افتراضيًا. فعّله يدويًا فقط لو كنت تحتاج مزامنة لحظية أثناء التطوير.
 
 2. **البناء المحلي**
    ```bash
