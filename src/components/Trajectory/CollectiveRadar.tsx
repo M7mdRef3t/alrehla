@@ -11,7 +11,7 @@ interface CollectiveRadarProps {
     externalTension?: number;
 }
 
-export const CollectiveRadar: React.FC<CollectiveRadarProps> = ({ userVector, swarmMetrics, externalTension, title = "Collective Growth" }) => {
+export const CollectiveRadar: React.FC<CollectiveRadarProps> = ({ userVector, swarmMetrics, title = "Collective Growth" }) => {
     const { mean_vector: mv, outlier_vector: ov } = swarmMetrics;
 
     const data = [
