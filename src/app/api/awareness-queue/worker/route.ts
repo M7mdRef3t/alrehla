@@ -46,7 +46,7 @@ export async function POST() {
                     lastBI: 0.5, // Placeholder
                 };
 
-                const result = await DynamicContextRouter.route(mockContext, {
+                await DynamicContextRouter.route(mockContext, {
                     type: event.action_type,
                     payload: event.payload
                 });
@@ -94,7 +94,7 @@ export async function POST() {
         }
 
         return NextResponse.json({ processed: results });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Worker General Error:', err);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
