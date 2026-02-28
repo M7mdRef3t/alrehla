@@ -173,7 +173,7 @@ export const PhoenixReport: React.FC = () => {
 
                 {summary.entanglement_links.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                        {summary.entanglement_links.slice(0, 2).map((pair, idx) => (
+                        {summary.entanglement_links.slice(0, 2).map((pair_idx) => (
                             <MagneticTether key={pair.id} pair={pair} />
                         ))}
                     </div>

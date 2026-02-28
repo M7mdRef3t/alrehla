@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Shield, Flame, Zap, ArrowRight, CheckCircle } from 'lucide-react';
+import { Crown, Shield, Flame, ArrowRight, CheckCircle } from 'lucide-react';
 import { AscensionManager, AscensionProfile } from '../../services/ascensionManager';
 import { setInLocalStorage } from '../../services/browserStorage';
 
