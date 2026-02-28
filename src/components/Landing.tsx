@@ -81,106 +81,37 @@ const formatCountdown = (isoDate: string | null): string | null => {
 };
 
 const FloatingParticles: FC = () => {
-  const shouldReduceMotion = useReducedMotion();
-  const particles = useMemo(
-    () =>
-      Array.from({ length: 24 }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: Math.random() * 2 + 1,
-        duration: Math.random() * 22 + 18,
-        delay: Math.random() * 10,
-        opacity: Math.random() * 0.32 + 0.08,
-        color:
-          i % 3 === 0
-            ? "rgba(45,212,191,"
-            : i % 3 === 1
-              ? "rgba(167,139,250,"
-              : "rgba(125,211,252,"
-      })),
-    []
-  );
-
-  if (shouldReduceMotion) return null;
-
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((particle) => (
-        <motion.div
-          key={particle.id}
-          className="absolute rounded-full"
-          style={{
-            left: `${particle.x}%`,
-            top: `${particle.y}%`,
-            width: particle.size,
-            height: particle.size,
-            background: `${particle.color}${particle.opacity})`,
-            boxShadow: `0 0 ${particle.size * 3}px ${particle.color}${particle.opacity * 0.5})`,
-            willChange: "transform, opacity"
-          }}
-          animate={{
-            y: [0, -28, 8, -16, 0],
-            x: [0, 12, -8, 4, 0],
-            opacity: [particle.opacity, particle.opacity * 1.4, particle.opacity * 0.75, particle.opacity]
-          }}
-          transition={{
-            duration: particle.duration,
-            repeat: Infinity,
-            delay: particle.delay,
-            ease: "easeInOut"
-          }}
-        />
-      ))}
+    <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
+      <div className="absolute top-[20%] left-[30%] w-2 h-2 rounded-full bg-teal-300 shadow-[0_0_10px_rgba(45,212,191,0.6)] animate-pulse" style={{ animationDuration: "3s" }} />
+      <div className="absolute top-[60%] left-[80%] w-1.5 h-1.5 rounded-full bg-indigo-300 shadow-[0_0_8px_rgba(167,139,250,0.6)] animate-pulse" style={{ animationDuration: "4s" }} />
+      <div className="absolute top-[80%] left-[20%] w-2.5 h-2.5 rounded-full bg-sky-300 shadow-[0_0_12px_rgba(125,211,252,0.6)] animate-pulse" style={{ animationDuration: "5s" }} />
+      <div className="absolute top-[10%] left-[70%] w-1 h-1 rounded-full bg-teal-200 shadow-[0_0_6px_rgba(45,212,191,0.4)] animate-pulse" style={{ animationDuration: "2.5s" }} />
     </div>
   );
 };
 
 const OrbitalRings: FC = () => {
-  const shouldReduceMotion = useReducedMotion();
-  const rings = [
-    { size: 320, border: "rgba(45,212,191,0.08)", duration: 46 },
-    { size: 480, border: "rgba(167,139,250,0.07)", duration: 62 },
-    { size: 640, border: "rgba(125,211,252,0.06)", duration: 84 }
-  ];
-
   return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      {rings.map((ring, idx) => (
-        <motion.div
-          key={ring.size}
-          className="absolute rounded-full border border-dashed"
-          style={{
-            width: ring.size,
-            height: ring.size,
-            borderColor: ring.border
-          }}
-          animate={shouldReduceMotion ? {} : { rotate: idx % 2 === 0 ? 360 : -360 }}
-          transition={{ duration: ring.duration, repeat: Infinity, ease: "linear" }}
-        />
-      ))}
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-50">
+      <div className="absolute rounded-full border border-dashed border-teal-500/10 w-[320px] h-[320px] animate-[spin_40s_linear_infinite]" />
+      <div className="absolute rounded-full border border-dashed border-indigo-500/10 w-[480px] h-[480px] animate-[spin_60s_linear_infinite_reverse]" />
     </div>
   );
 };
-const RadarSweep: FC = () => {
-  const shouldReduceMotion = useReducedMotion();
-  if (shouldReduceMotion) return null;
 
+const RadarSweep: FC = () => {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-30">
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-[spin_12s_linear_infinite]"
         style={{
           width: "120vh",
           height: "120vh",
           background: "conic-gradient(from 0deg, rgba(45,212,191,0.15) 0deg, rgba(45,212,191,0) 60deg, transparent 360deg)",
           borderRadius: "50%",
-          filter: "blur(40px)",
-          willChange: "transform",
-          containIntrinsicSize: "120vh 120vh"
+          filter: "blur(40px)"
         }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
       />
     </div>
   );
@@ -207,9 +138,9 @@ export const Landing: FC<LandingProps> = ({
   const [publicPulseAvg, setPublicPulseAvg] = useState<number | null>(null);
   const [isPublicPulseLoading, setIsPublicPulseLoading] = useState(true);
   const [lastLiveUpdatedAt, setLastLiveUpdatedAt] = useState<number | null>(null);
-  const [heroVariant, setHeroVariant] = useState<"A" | "B">("A");
-  const [checkoutCtaVariant, setCheckoutCtaVariant] = useState<"A" | "B">("A");
-  const [subtitleVariant, setSubtitleVariant] = useState<"A" | "B">("A");
+  const heroVariant = useABTestingVariant(HERO_VARIANT_KEY, HERO_VARIANT_STARTED_AT_KEY);
+  const checkoutCtaVariant = useABTestingVariant(CHECKOUT_CTA_VARIANT_KEY, CHECKOUT_CTA_VARIANT_STARTED_AT_KEY);
+  const subtitleVariant = useABTestingVariant(SUBTITLE_VARIANT_KEY, SUBTITLE_VARIANT_STARTED_AT_KEY);
   const [showExtendedMobileContent, setShowExtendedMobileContent] = useState(false);
   const [showCheckoutHint, setShowCheckoutHint] = useState(false);
   const [showSimulationSection, setShowSimulationSection] = useState(false);
@@ -318,7 +249,7 @@ export const Landing: FC<LandingProps> = ({
         applyVariant(fallbackVariant);
       }
     } catch {
-      setHeroVariant("A");
+      // setHeroVariant fallback;
     }
   }, []);
 
@@ -348,7 +279,7 @@ export const Landing: FC<LandingProps> = ({
         setSubtitleVariant(fallback);
       }
     } catch {
-      setSubtitleVariant("A");
+      // setSubtitleVariant fallback;
     }
   }, []);
 
@@ -378,7 +309,7 @@ export const Landing: FC<LandingProps> = ({
         setCheckoutCtaVariant(fallback);
       }
     } catch {
-      setCheckoutCtaVariant("A");
+      // setCheckoutCtaVariant fallback;
     }
   }, []);
 

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { supabase, isSupabaseReady } from "../services/supabaseClient";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 type AppContentSource = "remote" | "fallback";
 
@@ -245,12 +246,23 @@ function scheduleContentFlush(): void {
 
 let realtimeStopper: (() => void) | null = null;
 
+function isAppContentRealtimeEnabled(): boolean {
+  const raw = runtimeEnv.appContentRealtime;
+  if (raw === "true") return true;
+  if (raw === "false") return false;
+  return runtimeEnv.isProd;
+}
+
 /**
  * Optional: keeps open sessions in sync when `app_content` changes.
  * Requires enabling Realtime on the `app_content` table in Supabase.
  */
 export function initAppContentRealtime(): () => void {
   if (realtimeStopper) return realtimeStopper;
+  if (!isAppContentRealtimeEnabled()) {
+    realtimeStopper = () => {};
+    return realtimeStopper;
+  }
   if (!isSupabaseReady || !supabase || typeof window === "undefined") {
     realtimeStopper = () => {};
     return realtimeStopper;

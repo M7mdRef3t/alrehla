@@ -60,10 +60,11 @@ const CreativeDashboard = lazy(() => import("./dashboard/Intelligence/CreativeDa
 const DreamsMatrixPanel = lazy(() => import("./dashboard/Intelligence/DreamsMatrixPanel").then(m => ({ default: m.DreamsMatrixPanel })));
 const TheCrucible = lazy(() => import("./dashboard/Intelligence/TheCrucible").then(m => ({ default: m.TheCrucible })));
 const ConsciousnessGraph = lazy(() => import("./dashboard/Intelligence/ConsciousnessGraph").then(m => ({ default: m.ConsciousnessGraph })));
+const RepoIntelPanel = lazy(() => import("./dashboard/Intelligence/RepoIntelPanel"));
 const FleetCommander = lazy(() => import("./dashboard/Fleet/FleetCommander").then(m => ({ default: m.FleetCommander })));
 const SeoGeoAuditorPanel = lazy(() => import("./dashboard/SEO/SeoGeoAuditorPanel").then(m => ({ default: m.SeoGeoAuditorPanel })));
 
-type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo";
+type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo" | "repo-intel";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
@@ -90,7 +91,8 @@ const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
   { id: "crucible", label: "المِحك (Testing)", icon: <Flame className="w-4 h-4 text-rose-500" /> },
   { id: "dreams-matrix", label: "مصفوفة الأحلام", icon: <Target className="w-4 h-4 text-teal-400" /> },
   { id: "digital-twin", label: "التوأم الرقمي", icon: <User className="w-4 h-4 text-indigo-400" /> },
-  { id: "fleet", label: "الأسطول (Fleet)", icon: <Rocket className="w-4 h-4 text-indigo-500" /> }
+  { id: "fleet", label: "الأسطول (Fleet)", icon: <Rocket className="w-4 h-4 text-indigo-500" /> },
+  { id: "repo-intel", label: "Repo Intel", icon: <Terminal className="w-4 h-4 text-teal-300" /> }
 ];
 
 const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
@@ -384,6 +386,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "dreams-matrix" && <DreamsMatrixPanel />}
                 {effectiveTab === "digital-twin" && <ConsciousnessGraph />}
                 {effectiveTab === "fleet" && <FleetCommander />}
+                {effectiveTab === "repo-intel" && <RepoIntelPanel />}
               </Suspense>
             </div>
           </div>

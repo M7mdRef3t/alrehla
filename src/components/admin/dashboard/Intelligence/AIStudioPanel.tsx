@@ -15,8 +15,13 @@ import {
     Cpu,
     Send,
     Eraser,
-    History
+    History,
+    Zap,
+    ExternalLink,
+    CheckCircle
 } from "lucide-react";
+import { julesService, JulesSession, JulesSource } from "../../../../services/julesService";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { useAdminState } from "../../../../state/adminState";
 import { isSupabaseReady } from "../../../../services/supabaseClient";
@@ -43,7 +48,23 @@ export const AIStudioPanel: FC = () => {
     const [playInput, setPlayInput] = useState("");
     const [playMessages, setPlayMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
     const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState<"editor" | "playground" | "logs">("editor");
+    const [activeTab, setActiveTab] = useState<"editor" | "playground" | "logs" | "jules">("editor");
+
+    // Jules Local State
+    const [julesSessions, setJulesSessions] = useState<JulesSession[]>([]);
+    const [julesSources, setJulesSources] = useState<JulesSource[]>([]);
+    const [julesLoading, setJulesLoading] = useState(false);
+
+    // Jules New Task State
+    const [showTaskCreator, setShowTaskCreator] = useState(false);
+    const [newTask, setNewTask] = useState({
+        title: "",
+        prompt: "",
+        source: "",
+        autoCreatePR: true
+    });
+    const [creatingTask, setCreatingTask] = useState(false);
+
 
     const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -56,7 +77,49 @@ export const AIStudioPanel: FC = () => {
         if (activeTab === "playground") {
             chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }
+        if (activeTab === "jules") {
+            loadJulesData();
+        }
     }, [playMessages, activeTab]);
+
+    const loadJulesData = async () => {
+        setJulesLoading(true);
+        const [sessions, sources] = await Promise.all([
+            julesService.listSessions(),
+            julesService.listSources()
+        ]);
+        setJulesSessions(sessions);
+        setJulesSources(sources);
+        setJulesLoading(false);
+    };
+
+    const handleApproveJulesPlan = async (sessionId: string) => {
+        const success = await julesService.approvePlan(sessionId);
+        if (success) {
+            loadJulesData();
+        }
+    };
+
+    const handleCreateJulesTask = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newTask.source || !newTask.prompt || !newTask.title) return;
+
+        setCreatingTask(true);
+        const session = await julesService.createSession({
+            title: newTask.title,
+            prompt: newTask.prompt,
+            source: newTask.source,
+            autoCreatePR: newTask.autoCreatePR
+        });
+
+        if (session) {
+            setNewTask({ title: "", prompt: "", source: "", autoCreatePR: true });
+            setShowTaskCreator(false);
+            loadJulesData();
+        }
+        setCreatingTask(false);
+    };
+
 
     // Handlers
     const handleSavePrompt = async () => {
@@ -134,14 +197,16 @@ export const AIStudioPanel: FC = () => {
                     {[
                         { id: "editor", label: "التوجيه", icon: <Terminal className="w-4 h-4" /> },
                         { id: "playground", label: "المحاكاة", icon: <MessageSquare className="w-4 h-4" /> },
+                        { id: "jules", label: "الأتمتة (Jules)", icon: <Zap className="w-4 h-4" /> },
                         { id: "logs", label: "السجلات", icon: <History className="w-4 h-4" /> }
                     ].map(tab => (
+
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
                             className={`px-4 py-2 rounded-lg flex items-center gap-2 text-xs font-bold transition-all ${activeTab === tab.id
-                                    ? "bg-indigo-500 text-white shadow-lg"
-                                    : "text-slate-400 hover:text-indigo-300"
+                                ? "bg-indigo-500 text-white shadow-lg"
+                                : "text-slate-400 hover:text-indigo-300"
                                 }`}
                         >
                             {tab.icon}
@@ -240,8 +305,8 @@ export const AIStudioPanel: FC = () => {
                                             className={`flex ${msg.role === "user" ? "justify-start" : "justify-end"}`}
                                         >
                                             <div className={`max-w-[80%] rounded-2xl p-4 text-sm leading-relaxed ${msg.role === "user"
-                                                    ? "bg-slate-800 text-slate-200 rounded-br-none"
-                                                    : "bg-teal-500/10 border border-teal-500/20 text-teal-100 rounded-bl-none"
+                                                ? "bg-slate-800 text-slate-200 rounded-br-none"
+                                                : "bg-teal-500/10 border border-teal-500/20 text-teal-100 rounded-bl-none"
                                                 }`}>
                                                 {msg.content}
                                             </div>
@@ -323,8 +388,8 @@ export const AIStudioPanel: FC = () => {
                                                                     if (isSupabaseReady) await rateAiLogRemote(log.id, rate);
                                                                 }}
                                                                 className={`p-1.5 rounded-lg transition-colors ${log.rating === rate
-                                                                        ? (rate === "up" ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400")
-                                                                        : "hover:bg-slate-800 text-slate-500"
+                                                                    ? (rate === "up" ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400")
+                                                                    : "hover:bg-slate-800 text-slate-500"
                                                                     }`}
                                                             >
                                                                 {rate === "up" ? <ThumbsUp className="w-3 h-3" /> : <ThumbsDown className="w-3 h-3" />}
@@ -349,6 +414,175 @@ export const AIStudioPanel: FC = () => {
                             </motion.div>
                         )}
 
+                        {/* Jules Mode */}
+                        {activeTab === "jules" && (
+                            <motion.div
+                                key="jules"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="space-y-6 text-right"
+                            >
+                                <div className="flex justify-between items-center bg-slate-950/30 p-4 rounded-xl border border-white/5">
+                                    <h3 className="font-bold text-white flex items-center gap-2">
+                                        <Zap className="w-5 h-5 text-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]" />
+                                        مركز عمليات Jules
+                                    </h3>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setShowTaskCreator(!showTaskCreator)}
+                                            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${showTaskCreator
+                                                    ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                                                    : "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20"
+                                                }`}
+                                        >
+                                            {showTaskCreator ? "إلغاء المأمورية" : "مأمورية جديدة"}
+                                            {!showTaskCreator && <Sparkles className="w-3 h-3" />}
+                                        </button>
+                                        <button
+                                            onClick={loadJulesData}
+                                            disabled={julesLoading}
+                                            className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-indigo-500/10 transition-colors disabled:opacity-50"
+                                        >
+                                            <RotateCcw className={`w-3 h-3 ${julesLoading ? "animate-spin" : ""}`} />
+                                            تحديث
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Task Creator Form */}
+                                <AnimatePresence>
+                                    {showTaskCreator && (
+                                        <motion.form
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: "auto", opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            onSubmit={handleCreateJulesTask}
+                                            className="admin-glass-card p-6 border-indigo-500/30 bg-indigo-500/5 space-y-4 overflow-hidden"
+                                        >
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block pr-1">المستودع (Source)</label>
+                                                    <select
+                                                        value={newTask.source}
+                                                        onChange={(e) => setNewTask({ ...newTask, source: e.target.value })}
+                                                        className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:border-indigo-500 outline-none"
+                                                        required
+                                                    >
+                                                        <option value="">اختار المستودع...</option>
+                                                        {julesSources.map(s => (
+                                                            <option key={s.name} value={s.name}>{s.id}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block pr-1">عنوان المهمة</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="مثلاً: إصلاح مشكلة الدفع..."
+                                                        value={newTask.title}
+                                                        onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                                                        className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:border-indigo-500 outline-none"
+                                                        required
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block pr-1">تعليمات المأمورية (Prompt)</label>
+                                                <textarea
+                                                    placeholder="اشرح لـ Jules هيعمل إيه بالظبط..."
+                                                    value={newTask.prompt}
+                                                    onChange={(e) => setNewTask({ ...newTask, prompt: e.target.value })}
+                                                    className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:border-indigo-500 outline-none h-24 resize-none"
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="flex items-center justify-between pt-2">
+                                                <label className="flex items-center gap-3 cursor-pointer group">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={newTask.autoCreatePR}
+                                                        onChange={(e) => setNewTask({ ...newTask, autoCreatePR: e.target.checked })}
+                                                        className="w-4 h-4 rounded border-white/10 bg-slate-950 text-indigo-500 focus:ring-indigo-500"
+                                                    />
+                                                    <span className="text-[10px] font-bold text-slate-400 group-hover:text-slate-200 transition-colors uppercase tracking-widest">إنشاء PR تلقائياً</span>
+                                                </label>
+                                                <button
+                                                    type="submit"
+                                                    disabled={creatingTask}
+                                                    className="px-8 py-2 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50"
+                                                >
+                                                    {creatingTask ? "جاري الإطلاق..." : "إطلاق المهمة (Launch)"}
+                                                </button>
+                                            </div>
+                                        </motion.form>
+                                    )}
+                                </AnimatePresence>
+
+                                {julesLoading && julesSessions.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-20 admin-glass-card space-y-4">
+                                        <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+                                        <p className="text-xs text-slate-500">جاري الاتصال بـ Jules API...</p>
+                                    </div>
+                                ) : julesSessions.length === 0 ? (
+                                    <div className="text-center py-12 text-slate-500 admin-glass-card">
+                                        لا توجد جلسات Jules نشطة حالياً.
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {julesSessions.map((session) => (
+                                            <div key={session.id} className="admin-glass-card p-6 group hover:border-indigo-500/30 transition-all">
+                                                <div className="flex justify-between items-start mb-4">
+                                                    <div>
+                                                        <h4 className="text-lg font-bold text-white mb-1">{session.title || "بدون عنوان"}</h4>
+                                                        <p className="text-xs text-slate-500 font-mono tracking-tight">{session.name}</p>
+                                                    </div>
+                                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${session.status === 'Needs Approval'
+                                                        ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                                                        : session.status === 'Completed'
+                                                            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-400/30"
+                                                            : "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+                                                        }`}>
+                                                        {session.status || 'Active'}
+                                                    </span>
+                                                </div>
+
+                                                <div className="bg-slate-950/50 p-4 rounded-xl border border-white/5 mb-4">
+                                                    <p className="text-xs text-slate-300 line-clamp-2 italic text-right" dir="rtl">"{session.prompt}"</p>
+                                                </div>
+
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <div className="flex items-center gap-4">
+                                                        {session.outputs?.map((output, idx) => output.pullRequest && (
+                                                            <a
+                                                                key={idx}
+                                                                href={output.pullRequest.url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center gap-2 text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors bg-indigo-500/10 px-3 py-1.5 rounded-lg border border-indigo-500/20"
+                                                            >
+                                                                <ExternalLink className="w-3 h-3" />
+                                                                View PR
+                                                            </a>
+                                                        ))}
+                                                    </div>
+
+                                                    {session.status === 'Needs Approval' && (
+                                                        <button
+                                                            onClick={() => handleApproveJulesPlan(session.id)}
+                                                            className="flex items-center gap-2 px-6 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase transition-all shadow-lg shadow-amber-500/20"
+                                                        >
+                                                            <CheckCircle className="w-4 h-4" />
+                                                            Approve Plan
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
                     </AnimatePresence>
                 </div>
 

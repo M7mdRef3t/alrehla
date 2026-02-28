@@ -1,5 +1,6 @@
 type RuntimeKey =
   | "VITE_APP_ENV"
+  | "VITE_APP_CONTENT_REALTIME"
   | "VITE_PHASE_ONE_USER_FLOW"
   | "VITE_PUBLIC_PAYMENTS_ENABLED"
   | "VITE_SUPABASE_URL"
@@ -22,6 +23,7 @@ type RuntimeKey =
 
 type NextPublicKey =
   | "NEXT_PUBLIC_APP_ENV"
+  | "NEXT_PUBLIC_APP_CONTENT_REALTIME"
   | "NEXT_PUBLIC_PHASE_ONE_USER_FLOW"
   | "NEXT_PUBLIC_PUBLIC_PAYMENTS_ENABLED"
   | "NEXT_PUBLIC_SUPABASE_URL"
@@ -61,6 +63,7 @@ function toNextPublicKey(key: RuntimeKey): NextPublicKey {
 function readNextPublicStatic(key: NextPublicKey): string | undefined {
   const candidates: Record<NextPublicKey, string | undefined> = {
     NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
+    NEXT_PUBLIC_APP_CONTENT_REALTIME: process.env.NEXT_PUBLIC_APP_CONTENT_REALTIME,
     NEXT_PUBLIC_PHASE_ONE_USER_FLOW: process.env.NEXT_PUBLIC_PHASE_ONE_USER_FLOW,
     NEXT_PUBLIC_PUBLIC_PAYMENTS_ENABLED: process.env.NEXT_PUBLIC_PUBLIC_PAYMENTS_ENABLED,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -133,6 +136,7 @@ export const runtimeEnv = {
   isDev: processNodeEnv ? processNodeEnv !== "production" : metaDev,
   isProd: processNodeEnv ? processNodeEnv === "production" : metaProd,
   appEnv: readEnv("VITE_APP_ENV"),
+  appContentRealtime: readEnv("VITE_APP_CONTENT_REALTIME"),
   phaseOneUserFlow: readEnv("VITE_PHASE_ONE_USER_FLOW"),
   publicPaymentsEnabled: readEnv("VITE_PUBLIC_PAYMENTS_ENABLED"),
   supabaseUrl: readEnv("VITE_SUPABASE_URL"),

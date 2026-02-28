@@ -4,6 +4,7 @@
 - concept.md
 - user-journey.md
 - pitch.md
+- repo-intel-agent-integration.md
 - investor-readiness-pack.md
 - investor-kpi-framework.md
 - investor-weekly-memo-template.md

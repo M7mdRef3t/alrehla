@@ -24,12 +24,23 @@ export const NULL_METRICS: LiveMetrics = Object.freeze({
 export const NULL_TESTIMONIALS: TestimonialItem[] = [];
 
 interface DataStrategy {
-  shouldUseLive(): boolean;
+  shouldUseLive(key: ResourceKey): boolean;
 }
 
 class RuntimeDataStrategy implements DataStrategy {
-  shouldUseLive(): boolean {
-    return Boolean(designToggles.enableLiveLandingSections && (runtimeEnv.isProd || runtimeEnv.isDev));
+  constructor(
+    private readonly options: {
+      enableLiveMetrics: boolean;
+      enableLiveTestimonials: boolean;
+    }
+  ) {}
+
+  shouldUseLive(key: ResourceKey): boolean {
+    if (!designToggles.enableLiveLandingSections || (!runtimeEnv.isProd && !runtimeEnv.isDev)) {
+      return false;
+    }
+    if (key === "metrics") return this.options.enableLiveMetrics;
+    return this.options.enableLiveTestimonials;
   }
 }
 
@@ -185,14 +196,17 @@ function emitEvent(
   appEventBus.emit(key, payload as { key: "metrics" | "testimonials"; reason: string });
 }
 
-export function useLandingLiveData(_fallbackTestimonials: TestimonialItem[]) {
+export function useLandingLiveData(
+  _fallbackTestimonials: TestimonialItem[],
+  options: { enableLiveMetrics: boolean; enableLiveTestimonials: boolean }
+) {
   const [state, dispatch] = useReducer(reducer, {
     ...initialState,
     testimonials: { ...initialState.testimonials, data: [] }
   });
 
   useEffect(() => {
-    const strategy = new RuntimeDataStrategy();
+    const strategy = new RuntimeDataStrategy(options);
     const repository = new LandingRepository();
     let mounted = true;
     let metricsTimer: ReturnType<typeof setInterval> | null = null;
@@ -201,7 +215,7 @@ export function useLandingLiveData(_fallbackTestimonials: TestimonialItem[]) {
     const loadMetrics = async (silent = false) => {
       if (!silent) dispatch({ type: "loading", key: "metrics" });
       emitEvent("live_data_fetch_started", { key: "metrics" });
-      if (!strategy.shouldUseLive()) {
+      if (!strategy.shouldUseLive("metrics")) {
         dispatch({ type: "metrics_loaded", data: NULL_METRICS, mode: "fallback" });
         emitEvent("live_data_fetch_succeeded", { key: "metrics", source: "fallback" });
         return;
@@ -219,7 +233,7 @@ export function useLandingLiveData(_fallbackTestimonials: TestimonialItem[]) {
     const loadTestimonials = async (silent = false) => {
       if (!silent) dispatch({ type: "loading", key: "testimonials" });
       emitEvent("live_data_fetch_started", { key: "testimonials" });
-      if (!strategy.shouldUseLive()) {
+      if (!strategy.shouldUseLive("testimonials")) {
         dispatch({ type: "testimonials_loaded", data: [], mode: "fallback" });
         emitEvent("live_data_fetch_succeeded", { key: "testimonials", source: "fallback" });
         return;
@@ -244,7 +258,7 @@ export function useLandingLiveData(_fallbackTestimonials: TestimonialItem[]) {
       if (metricsTimer) clearInterval(metricsTimer);
       if (testimonialsTimer) clearInterval(testimonialsTimer);
     };
-  }, []);
+  }, [options.enableLiveMetrics, options.enableLiveTestimonials]);
 
   return state;
 }

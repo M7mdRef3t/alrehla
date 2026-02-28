@@ -2,20 +2,69 @@ import type { FC } from "react";
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
-import { Quote, Heart, Users, TrendingUp, Zap, Target, ShieldCheck, ChevronLeft, Activity } from "lucide-react";
+import {
+  Quote,
+  Heart,
+  Users,
+  TrendingUp,
+  Zap,
+  Target,
+  ShieldCheck,
+  ChevronLeft,
+  Lock,
+  Clock3,
+  CreditCard,
+  CircleHelp
+} from "lucide-react";
 import { LiveStatusBar } from "../shared/LiveStatusBar";
 import type { LiveMetrics, TestimonialItem } from "../../architecture/landingLiveData";
 import { isUserMode } from "../../config/appEnv";
 
-const CARD = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: "1.25rem",
-} as const;
+const TRUST_ITEMS = [
+  {
+    title: "خصوصية كاملة",
+    body: "لن تُعرض قصتك علنًا، وتبدأ بدون كشف تفاصيلك الحساسة من أول دقيقة.",
+    icon: Lock
+  },
+  {
+    title: "بدون بطاقة",
+    body: "الدخول الأول مجاني بالكامل. لا يوجد طلب دفع قبل أن ترى إن كانت التجربة تناسبك.",
+    icon: CreditCard
+  },
+  {
+    title: "أقل من 3 دقائق",
+    body: "البدء مصمم ليعطيك أول قراءة واضحة بسرعة بدل جولة طويلة من الشرح.",
+    icon: Clock3
+  },
+  {
+    title: "لن يُطلب منك كل شيء",
+    body: "لن تحتاج إلى كتابة تاريخك كاملًا أو تبرير مشاعرك قبل أن تحصل على أول خطوة.",
+    icon: CircleHelp
+  }
+] as const;
 
-type TestimonialsItem = { quote: string; author: string };
+const PREVIEW_METRICS = [
+  { val: "3 دقائق", label: "حتى أول قراءة واضحة", icon: Clock3, color: "text-teal-400" },
+  { val: "بدون بطاقة", label: "لبداية التجربة", icon: CreditCard, color: "text-[var(--color-primary)]" },
+  { val: "خصوصية كاملة", label: "في أول جلسة", icon: ShieldCheck, color: "text-rose-400" }
+] as const;
 
-export const QuickPrioritySection: FC<{ stagger: Variants; item: Variants }> = ({ stagger, item }) => (
+const PREVIEW_TESTIMONIALS: TestimonialItem[] = [
+  {
+    quote: "دخلت وأنا مشتتة، وخلال دقائق فهمت أين يبدأ الاستنزاف وما هي أول خطوة عملية.",
+    author: "معاينة من تجربة مستخدمة جديدة"
+  },
+  {
+    quote: "أكثر شيء مهم كان أنني لم أُجبر على شرح كل شيء من البداية، ومع ذلك وصلت لخيط واضح.",
+    author: "معاينة من جلسة بداية"
+  },
+  {
+    quote: "الصفحة جعلت القرار سهلًا: أبدأ، أحدد وضعي، ثم آخذ خطوة أولى قابلة للتنفيذ فورًا.",
+    author: "معاينة من رحلة ضبط البوصلة"
+  }
+];
+
+export const StartJourneyStepsSection: FC<{ stagger: Variants; item: Variants }> = ({ stagger, item }) => (
   <motion.section
     className="phi-section"
     variants={stagger}
@@ -23,29 +72,85 @@ export const QuickPrioritySection: FC<{ stagger: Variants; item: Variants }> = (
     whileInView="visible"
     viewport={{ once: true, margin: "-60px" }}
   >
-    <motion.div variants={item} className="phi-card rounded-2xl border border-teal-500/20 bg-slate-900/45 overflow-hidden relative group">
-      <div className="absolute inset-0 bg-gradient-to-r from-teal-500/0 via-teal-500/[0.03] to-teal-500/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
-      <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2" />
-      <div className="flex items-center justify-between mb-3 relative z-10">
-        <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-          <Activity className="w-4 h-4 text-teal-400" />
-          مركز البدء التكتيكي
-        </h3>
-        <span className="text-[10px] text-teal-300 font-black tracking-widest uppercase font-mono">STATUS: READY</span>
+    <motion.div
+      variants={item}
+      className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8"
+    >
+      <div className="mb-6 text-center">
+        <p className="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-teal-300">كيف تبدأ</p>
+        <h2 className="text-2xl font-black text-white sm:text-3xl">ماذا يحدث بعد الضغط على ابدأ؟</h2>
+        <p className="mx-auto mt-3 max-w-[44ch] text-sm leading-7 text-slate-400">
+          ثلاث خطوات مباشرة تنقلك من التردد إلى أول رؤية واضحة لما يستنزفك الآن.
+        </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 relative z-10">
+      <div className="grid gap-4 md:grid-cols-3">
         {[
-          { step: "01", text: "حدّد إحداثيات الهدف", color: "text-teal-400" },
-          { step: "02", text: "نفّذ مناورة ميدانية", color: "text-[var(--color-primary)]" },
-          { step: "03", text: "مراقبة الرادار الحي", color: "text-purple-400" }
-        ].map((s) => (
-          <div key={s.step} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 flex items-center gap-3 group/item hover:bg-white/10 transition-colors hover:border-teal-500/30">
-            <span className={`text-xs font-black ${s.color} opacity-40 group-hover/item:opacity-100 transition-opacity font-mono`}>{s.step}</span>
-            <span className="text-xs font-semibold text-slate-200">{s.text}</span>
-          </div>
+          {
+            step: "1",
+            title: "تفتح بوابة ضبط البوصلة",
+            body: "تدخل من نقطة بداية قصيرة بدل فورم طويل أو تسجيل مرهق.",
+            icon: Target
+          },
+          {
+            step: "2",
+            title: "تحدد أين الضغط الحقيقي",
+            body: "تختار ما يستهلكك الآن لتبدأ الخريطة من واقعك الحالي لا من وصف عام.",
+            icon: TrendingUp
+          },
+          {
+            step: "3",
+            title: "تأخذ أول خطوة واضحة",
+            body: "تحصل على اتجاه أولي وخطوة يمكن تنفيذها فورًا بدل نصائح فضفاضة.",
+            icon: ChevronLeft
+          }
+        ].map(({ step, title, body, icon: Icon }) => (
+          <motion.div
+            key={step}
+            variants={item}
+            className="rounded-2xl border border-white/10 bg-slate-950/40 p-5"
+          >
+            <div className="mb-4 flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-500/15 text-sm font-black text-teal-300">
+                {step}
+              </span>
+              <Icon className="h-5 w-5 text-teal-300" />
+            </div>
+            <h3 className="mb-2 text-lg font-black text-white">{title}</h3>
+            <p className="text-sm leading-7 text-slate-400">{body}</p>
+          </motion.div>
         ))}
       </div>
     </motion.div>
+  </motion.section>
+);
+
+export const TrustSignalsSection: FC<{ stagger: Variants; item: Variants }> = ({ stagger, item }) => (
+  <motion.section
+    className="phi-section"
+    variants={stagger}
+    initial="hidden"
+    whileInView="visible"
+    viewport={{ once: true, margin: "-60px" }}
+  >
+    <motion.div variants={item} className="mb-6 text-center">
+      <p className="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-teal-300">عناصر الثقة</p>
+      <h2 className="text-2xl font-black text-white sm:text-3xl">كل ما تحتاج معرفته قبل البدء</h2>
+    </motion.div>
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {TRUST_ITEMS.map(({ title, body, icon: Icon }) => (
+        <motion.div
+          key={title}
+          variants={item}
+          className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
+        >
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-300">
+            <Icon className="h-5 w-5" />
+          </div>
+          <h3 className="mb-2 text-lg font-black text-white">{title}</h3>
+          <p className="text-sm leading-7 text-slate-400">{body}</p>
+        </motion.div>
+      ))}
+    </div>
   </motion.section>
 );
 
@@ -73,152 +178,148 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
     whileInView="visible"
     viewport={{ once: true, margin: "-60px" }}
   >
-    <motion.div variants={item} className="text-center mb-10 px-2 leading-tight">
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[var(--color-primary)] bg-[var(--color-primary)]/5 mb-3">
-        <Zap className="w-3 h-3 text-[var(--color-primary)]" />
-        <span className="text-[10px] font-bold text-[var(--color-primary)] uppercase tracking-widest">خوارزمية التعافي</span>
+    <motion.div variants={item} className="mb-10 px-2 text-center leading-tight">
+      <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--color-primary)] bg-[var(--color-primary)]/5 px-3 py-1">
+        <Zap className="h-3 w-3 text-[var(--color-primary)]" />
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-primary)]">رحلة التعافي</span>
       </div>
-      <h2 className="text-2xl sm:text-3xl font-black text-white mb-3 leading-tight">رحلة الـ 4 خطوات لتأمين حدودك</h2>
-      <p className="text-slate-400 text-sm max-w-[45ch] mx-auto leading-relaxed">من الرصد الأولي حتى التنفيذ الميداني.. رحلة متكاملة لاستعادة السيطرة.</p>
+      <h2 className="mb-3 text-2xl font-black leading-tight text-white sm:text-3xl">كيف تتحول البداية إلى خطوة عملية؟</h2>
+      <p className="mx-auto max-w-[45ch] text-sm leading-relaxed text-slate-400">
+        من قراءة الوضع الحالي إلى أول تصرف أوضح، بدون تعقيد ولا تحميلك كل الشرح دفعة واحدة.
+      </p>
     </motion.div>
 
     <div className="relative">
-      {/* Connection Line Desktop */}
-      <div className="hidden lg:block absolute top-[140px] left-0 right-0 h-px bg-gradient-to-r from-transparent via-teal-500/30 to-transparent z-0" />
-
-      <div className="flex gap-6 overflow-x-auto pb-8 -mx-5 px-5 snap-x no-scrollbar relative z-10">
-        {/* Step 1: Radar */}
+      <div className="pointer-events-none absolute left-0 right-0 top-[140px] z-0 hidden h-px bg-gradient-to-r from-transparent via-teal-500/30 to-transparent lg:block" />
+      <div className="relative z-10 -mx-5 flex snap-x gap-6 overflow-x-auto px-5 pb-8 no-scrollbar">
         <motion.div
           variants={item}
-          className="snap-center shrink-0 w-[286px] sm:w-[320px] min-h-[440px] rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden group transition-all duration-500"
+          className="group relative flex min-h-[440px] w-[286px] shrink-0 snap-center flex-col justify-between overflow-hidden rounded-3xl p-6 transition-all duration-500 sm:w-[320px]"
           style={{
             background: "rgba(15, 23, 42, 0.6)",
             border: "1px solid rgba(45,212,191,0.2)",
             boxShadow: "0 20px 40px -20px rgba(0,0,0,0.5)"
           }}
         >
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Target className="w-32 h-32 text-teal-400" />
+          <div className="absolute right-0 top-0 p-4 opacity-5 transition-opacity group-hover:opacity-10">
+            <Target className="h-32 w-32 text-teal-400" />
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-7 h-7 rounded-lg bg-teal-500/20 flex items-center justify-center text-teal-400 text-xs font-black border border-teal-500/30">1</span>
-              <span className="text-[10px] font-bold tracking-widest text-teal-400 uppercase">الرصد الأول</span>
+            <div className="mb-4 flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-teal-500/30 bg-teal-500/20 text-xs font-black text-teal-400">1</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-teal-400">بداية واضحة</span>
             </div>
-            <h3 className="text-2xl font-black text-white mb-2 leading-tight">نظام الرادار</h3>
-            <p className="text-sm text-slate-300 leading-[1.8]">ارسم خريطة علاقاتك وحدد مصادر الاستنزاف بسرعة البرق.</p>
+            <h3 className="mb-2 text-2xl font-black leading-tight text-white">رؤية ما يستهلكك الآن</h3>
+            <p className="text-sm leading-[1.8] text-slate-300">ترسم وضعك بسرعة وتعرف أين يبدأ الضغط الحقيقي بدل الدوران حول المشكلة.</p>
           </div>
-          <div className="w-full h-32 bg-teal-900/10 rounded-2xl border border-teal-500/10 flex items-center justify-center relative group-hover:border-teal-500/30 transition-colors">
-            <div className="w-16 h-16 rounded-full border border-teal-500/20 relative">
-              <div className="absolute inset-0 border border-teal-500/20 rounded-full animate-ping" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-teal-400 rounded-full" />
+          <div className="relative flex h-32 w-full items-center justify-center rounded-2xl border border-teal-500/10 bg-teal-900/10 transition-colors group-hover:border-teal-500/30">
+            <div className="relative h-16 w-16 rounded-full border border-teal-500/20">
+              <div className="absolute inset-0 animate-ping rounded-full border border-teal-500/20" />
+              <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-400" />
             </div>
           </div>
           <button
             type="button"
             onClick={onOpenRadar}
-            className="mt-3 w-full rounded-xl bg-teal-500 text-slate-950 py-3 text-xs font-black hover:bg-teal-400 transition-all active:scale-95 flex items-center justify-center gap-2"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-500 py-3 text-xs font-black text-slate-950 transition-all hover:bg-teal-400 active:scale-95"
           >
-            تفعيل الرادار الآن
-            <ChevronLeft className="w-4 h-4" />
+            ابدأ القراءة الآن
+            <ChevronLeft className="h-4 w-4" />
           </button>
         </motion.div>
 
-        {/* Step 2: Analysis (Oracle) */}
         <motion.div
           variants={item}
-          className="snap-center shrink-0 w-[286px] sm:w-[320px] min-h-[440px] rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden group transition-all duration-500"
+          className="group relative flex min-h-[440px] w-[286px] shrink-0 snap-center flex-col justify-between overflow-hidden rounded-3xl p-6 transition-all duration-500 sm:w-[320px]"
           style={{
             background: "rgba(15, 23, 42, 0.6)",
             border: "1px solid rgba(139, 92, 246, 0.2)",
             boxShadow: "0 20px 40px -20px rgba(0,0,0,0.5)"
           }}
         >
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <TrendingUp className="w-32 h-32 text-[var(--color-primary)]" />
+          <div className="absolute right-0 top-0 p-4 opacity-5 transition-opacity group-hover:opacity-10">
+            <TrendingUp className="h-32 w-32 text-[var(--color-primary)]" />
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-7 h-7 rounded-lg bg-[var(--color-primary)]/20 flex items-center justify-center text-[var(--color-primary)] text-xs font-black border border-[var(--color-primary)]">2</span>
-              <span className="text-[10px] font-bold tracking-widest text-[var(--color-primary)] uppercase">تحليل الثغرات</span>
+            <div className="mb-4 flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--color-primary)] bg-[var(--color-primary)]/20 text-xs font-black text-[var(--color-primary)]">2</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-primary)]">فهم النمط</span>
             </div>
-            <h3 className="text-2xl font-black text-white mb-2 leading-tight">أوراكل السيادة</h3>
-            <p className="text-sm text-slate-300 leading-[1.8]">حلل الروابط النفسية واكتشف لماذا يتم اختراق حدودك دائماً.</p>
+            <h3 className="mb-2 text-2xl font-black leading-tight text-white">لماذا يتكرر نفس الاستنزاف؟</h3>
+            <p className="text-sm leading-[1.8] text-slate-300">تبدأ الخريطة في كشف الروابط والأنماط التي تجعل نفس الضغط يعود كل مرة.</p>
           </div>
-          <div className="w-full h-32 bg-[var(--color-primary)]/10 rounded-2xl border border-[var(--color-primary)] flex items-center justify-center gap-1">
+          <div className="flex h-32 w-full items-center justify-center gap-1 rounded-2xl border border-[var(--color-primary)] bg-[var(--color-primary)]/10">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="w-1.5 bg-[var(--color-primary)]/40 rounded-full animate-pulse" style={{ height: `${20 + (i * 15)}%`, animationDelay: `${i * 0.1}s` }} />
+              <div key={i} className="w-1.5 rounded-full bg-[var(--color-primary)]/40 animate-pulse" style={{ height: `${20 + i * 15}%`, animationDelay: `${i * 0.1}s` }} />
             ))}
           </div>
-          <div className="text-[10px] text-center text-[var(--color-primary)] font-medium">سيتم التفعيل تلقائياً عند بناء الخريطة</div>
+          <div className="text-center text-[10px] font-medium text-[var(--color-primary)]">تتضح تلقائيًا مع بناء الخريطة</div>
         </motion.div>
 
-        {/* Step 3: Action (Court) */}
         <motion.div
           variants={item}
-          className="snap-center shrink-0 w-[286px] sm:w-[320px] min-h-[440px] rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden group transition-all duration-500"
+          className="group relative flex min-h-[440px] w-[286px] shrink-0 snap-center flex-col justify-between overflow-hidden rounded-3xl p-6 transition-all duration-500 sm:w-[320px]"
           style={{
             background: "rgba(15, 23, 42, 0.6)",
             border: "1px solid rgba(251, 191, 36, 0.2)",
             boxShadow: "0 20px 40px -20px rgba(0,0,0,0.5)"
           }}
         >
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <ShieldCheck className="w-32 h-32 text-amber-400" />
+          <div className="absolute right-0 top-0 p-4 opacity-5 transition-opacity group-hover:opacity-10">
+            <ShieldCheck className="h-32 w-32 text-amber-400" />
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-7 h-7 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 text-xs font-black border border-amber-500/30">3</span>
-              <span className="text-[10px] font-bold tracking-widest text-amber-400 uppercase">حسم القرار</span>
+            <div className="mb-4 flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/20 text-xs font-black text-amber-400">3</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">اتخاذ قرار</span>
             </div>
-            <h3 className="text-2xl font-black text-white mb-2 leading-tight">محكمة الإحداثيات</h3>
-            <p className="text-sm text-slate-300 leading-[1.8]">تخطى ذنب قول "لا" بمنطق دفاعي صلب ومقنع لذاتك أولاً.</p>
+            <h3 className="mb-2 text-2xl font-black leading-tight text-white">صياغة رد وحدّ أوضح</h3>
+            <p className="text-sm leading-[1.8] text-slate-300">تتحول الرؤية إلى قرار يمكن قوله أو تطبيقه بدل بقاء المشكلة داخل الرأس فقط.</p>
           </div>
-          <div className="w-full h-32 bg-amber-900/10 rounded-2xl border border-amber-500/10 flex items-center justify-center">
-            <ShieldCheck className="w-12 h-12 text-amber-500/40" />
+          <div className="flex h-32 w-full items-center justify-center rounded-2xl border border-amber-500/10 bg-amber-900/10">
+            <ShieldCheck className="h-12 w-12 text-amber-500/40" />
           </div>
           <button
             type="button"
             onClick={onOpenCourt}
-            className="mt-3 w-full rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 py-3 text-xs font-black hover:bg-amber-500/20 transition-all"
+            className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 py-3 text-xs font-black text-amber-300 transition-all hover:bg-amber-500/20"
           >
-            محاكمة علاقة حالياً
+            جرّب قرارًا أوضح
           </button>
         </motion.div>
 
-        {/* Step 4: Execution (Playbooks) */}
         <motion.div
           variants={item}
-          className="snap-center shrink-0 w-[286px] sm:w-[320px] min-h-[440px] rounded-3xl p-6 flex flex-col justify-between relative overflow-hidden group transition-all duration-500"
+          className="group relative flex min-h-[440px] w-[286px] shrink-0 snap-center flex-col justify-between overflow-hidden rounded-3xl p-6 transition-all duration-500 sm:w-[320px]"
           style={{
             background: "rgba(15, 23, 42, 0.6)",
             border: "1px solid rgba(244, 63, 94, 0.2)",
             boxShadow: "0 20px 40px -20px rgba(0,0,0,0.5)"
           }}
         >
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Zap className="w-32 h-32 text-rose-400" />
+          <div className="absolute right-0 top-0 p-4 opacity-5 transition-opacity group-hover:opacity-10">
+            <Zap className="h-32 w-32 text-rose-400" />
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-7 h-7 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400 text-xs font-black border border-rose-500/30">4</span>
-              <span className="text-[10px] font-bold tracking-widest text-rose-400 uppercase font-mono">EXECUTION_CORE</span>
+            <div className="mb-4 flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/20 text-xs font-black text-rose-400">4</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-rose-400">تنفيذ</span>
             </div>
-            <h3 className="text-2xl font-black text-white mb-2 leading-tight">كتيبات المناورة</h3>
-            <p className="text-sm text-slate-300 leading-[1.8]">نصوص جاهزة وخطط تكتيكية للتعامل مع السيناريوهات المعقدة.</p>
+            <h3 className="mb-2 text-2xl font-black leading-tight text-white">خطوة أولى قابلة للتنفيذ</h3>
+            <p className="text-sm leading-[1.8] text-slate-300">تنهي البداية وأنت معك شيء واضح تتحرك به، لا مجرد انطباع جميل عن الصفحة.</p>
           </div>
-          <div className="w-full h-32 bg-rose-900/10 rounded-2xl border border-rose-500/10 flex items-center justify-center font-mono text-[10px] text-rose-400/60 p-4 leading-relaxed overflow-hidden relative group-hover:border-rose-500/30 transition-colors">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-rose-500/[0.02] to-transparent animate-scan pointer-events-none" />
+          <div className="relative flex h-32 w-full items-center justify-center overflow-hidden rounded-2xl border border-rose-500/10 bg-rose-900/10 p-4 text-[10px] leading-relaxed text-rose-400/60 transition-colors group-hover:border-rose-500/30">
+            <div className="pointer-events-none absolute inset-0 animate-scan bg-gradient-to-b from-transparent via-rose-500/[0.02] to-transparent" />
             <pre className="whitespace-pre-wrap">
-              {"{ protocol: 'DETACHMENT' }\n[1] Analyze tone...\n[2] Execute bounceback..."}
+              {"{ next_step: 'clarify boundary' }\n[1] افهم الضغط...\n[2] تحرك بخطوة أولى..."}
             </pre>
           </div>
           <button
             type="button"
             onClick={onOpenPlaybooks}
-            className="mt-3 w-full rounded-xl bg-white/5 border border-white/10 text-slate-300 py-3 text-xs font-black hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+            className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-xs font-black text-slate-300 transition-all hover:bg-white/10"
           >
-            استعراض التكتيكات
+            استعرض أول خطوة
           </button>
         </motion.div>
       </div>
@@ -226,16 +327,40 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
   </motion.section>
 );
 
-export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsState: { data: LiveMetrics; isLoading: boolean; lastUpdatedAt: number | null; mode: "live" | "fallback" } }> = ({ stagger, item, metricsState }) => {
+export const MetricsSection: FC<{
+  stagger: Variants;
+  item: Variants;
+  metricsState: { data: LiveMetrics; isLoading: boolean; lastUpdatedAt: number | null; mode: "live" | "fallback" };
+  liveEnabled: boolean;
+}> = ({ stagger, item, metricsState, liveEnabled }) => {
   const isFallback = metricsState.mode === "fallback";
   const showModeBadge = !isUserMode;
-  const showFallbackHint = isFallback;
-
-  const cards = useMemo(() => ([
-    { val: isFallback ? "غير متاح" : metricsState.data.activeUnits30d.toLocaleString("ar-EG"), label: "وحدات ميدانية نشطة", icon: Users, color: "text-teal-400" },
-    { val: isFallback ? "غير متاح" : `${metricsState.data.retentionRate30d.toLocaleString("ar-EG")}%`, label: "ثبات قتالي استراتيجي", icon: TrendingUp, color: "text-[var(--color-primary)]" },
-    { val: isFallback ? "غير متاح" : metricsState.data.activity24h.toLocaleString("ar-EG"), label: "نشاط الميدان (24 ساعة)", icon: Zap, color: "text-rose-400" }
-  ]), [isFallback, metricsState.data]);
+  const cards = useMemo(
+    () =>
+      (liveEnabled && !isFallback
+        ? [
+            {
+              val: metricsState.data.activeUnits30d.toLocaleString("ar-EG"),
+              label: "جلسات بدأت خلال 30 يوم",
+              icon: Users,
+              color: "text-teal-400"
+            },
+            {
+              val: `${metricsState.data.retentionRate30d.toLocaleString("ar-EG")}%`,
+              label: "استمرار بعد البداية الأولى",
+              icon: TrendingUp,
+              color: "text-[var(--color-primary)]"
+            },
+            {
+              val: metricsState.data.activity24h.toLocaleString("ar-EG"),
+              label: "نشاط آخر 24 ساعة",
+              icon: Zap,
+              color: "text-rose-400"
+            }
+          ]
+        : PREVIEW_METRICS),
+    [isFallback, liveEnabled, metricsState.data]
+  );
 
   return (
     <motion.section
@@ -245,57 +370,56 @@ export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsStat
       whileInView="visible"
       viewport={{ once: true, margin: "-10%" }}
     >
-      <div className="rounded-[2.5rem] p-8 sm:p-12 overflow-hidden relative"
-        style={{ background: "rgba(15, 23, 42, 0.4)", border: "1px solid rgba(255,255,255,0.05)", backdropFilter: "blur(20px)" }}>
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-500/50 to-transparent opacity-30" />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <div
+        className="relative overflow-hidden rounded-[2.5rem] p-8 sm:p-12"
+        style={{ background: "rgba(15, 23, 42, 0.4)", border: "1px solid rgba(255,255,255,0.05)", backdropFilter: "blur(20px)" }}
+      >
+        <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-transparent via-teal-500/50 to-transparent opacity-30" />
+        <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
           <div>
             <LiveStatusBar
-              title="مؤشرات النظام الحية"
+              title={liveEnabled ? "مؤشرات البداية" : "معاينة البداية"}
               mode={metricsState.mode}
-              isLoading={metricsState.isLoading}
+              isLoading={metricsState.isLoading && liveEnabled}
               lastUpdatedAt={metricsState.lastUpdatedAt}
               showModeBadge={showModeBadge}
             />
-            {showFallbackHint && (
-              <p className="mt-2 inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-bold text-amber-200">
-                البيانات اللحظية غير متاحة حالياً
-              </p>
-            )}
-            <h3 className="text-2xl sm:text-3xl font-black text-white mt-4 mb-4 leading-tight">مجتمع من القادة يستعيدون سيادتهم</h3>
-            <p className="text-slate-400 text-sm leading-relaxed mb-8">نحن لا نبني مجرد تطبيق، بل غرفة عمليات عالمية لإدارة الوعي وحماية الطاقة النفسية.</p>
+            <p className="mt-3 inline-flex items-center rounded-full border border-teal-500/20 bg-teal-500/10 px-3 py-1 text-[10px] font-bold text-teal-100">
+              {liveEnabled ? "أرقام حيّة من المنصة" : "Preview ثابت لحظة الإقلاع الأولى"}
+            </p>
+            <h3 className="mt-4 mb-4 text-2xl font-black leading-tight text-white sm:text-3xl">الصفحة لا تبيع لك غموضًا، بل بداية واضحة</h3>
+            <p className="mb-8 text-sm leading-relaxed text-slate-400">
+              بدل كتل غير جاهزة أو إشارات ناقصة، تعرض الصفحة الآن ما يهم المستخدم فعلًا: سرعة البدء، الخصوصية، وما الذي سيكسبه من أول ضغط على زر البداية.
+            </p>
             <div className="flex flex-wrap gap-4">
               <div className="flex -space-x-3 rtl:space-x-reverse">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center overflow-hidden">
-                    <Users className="w-5 h-5 text-slate-500" />
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 border-slate-900 bg-slate-800">
+                    <Heart className="h-5 w-5 text-slate-500" />
                   </div>
                 ))}
-                <div className="w-10 h-10 rounded-full border-2 border-slate-900 bg-teal-500 flex items-center justify-center text-[10px] font-black text-slate-950">١٠</div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-slate-900 bg-teal-500 text-[10px] font-black text-slate-950">
+                  ثقة
+                </div>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            {(metricsState.isLoading ? cards.map((s) => ({ ...s, val: "..." })) : cards).map((s, i) => (
+            {(metricsState.isLoading && liveEnabled ? cards.map((s) => ({ ...s, val: "..." })) : cards).map((s, i) => (
               <motion.div
                 key={i}
-                className="flex items-center gap-6 p-6 rounded-2xl bg-white/5 border border-white/5 group hover:bg-white/10 transition-all hover:translate-x-[-8px] rtl:hover:translate-x-[8px]"
+                className="group flex items-center gap-6 rounded-2xl border border-white/5 bg-white/5 p-6 transition-all hover:translate-x-[-8px] hover:bg-white/10 rtl:hover:translate-x-[8px]"
                 variants={item}
               >
-                <div className={`w-14 h-14 rounded-2xl bg-slate-900/50 flex items-center justify-center border border-white/10 group-hover:border-${s.color.split('-')[1]}-500/30 transition-colors`}>
-                  <s.icon className={`w-6 h-6 ${s.color}`} />
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/50 transition-colors">
+                  <s.icon className={`h-6 w-6 ${s.color}`} />
                 </div>
                 <div>
-                  <div className={`text-2xl sm:text-3xl font-black text-white ${metricsState.isLoading ? "" : ""}`}>
-                    {metricsState.isLoading ? (
-                      <div className="h-8 w-20 bg-white/10 rounded-lg animate-pulse" />
-                    ) : (
-                      s.val
-                    )}
+                  <div className="text-2xl font-black text-white sm:text-3xl">
+                    {metricsState.isLoading && liveEnabled ? <div className="h-8 w-20 animate-pulse rounded-lg bg-white/10" /> : s.val}
                   </div>
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{s.label}</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-slate-500">{s.label}</p>
                 </div>
               </motion.div>
             ))}
@@ -306,29 +430,20 @@ export const MetricsSection: FC<{ stagger: Variants; item: Variants; metricsStat
   );
 };
 
-export const TestimonialsSection: FC<{ stagger: Variants; item: Variants; testimonials: TestimonialsItem[]; testimonialsState: { data: TestimonialItem[]; isLoading: boolean; lastUpdatedAt: number | null; mode: "live" | "fallback" } }> = ({ stagger, item, testimonials: _testimonials, testimonialsState }) => {
-  const displayTestimonials = testimonialsState.data;
-  const isLive = testimonialsState.mode === "live";
-  const isFallback = testimonialsState.mode === "fallback";
+export const TestimonialsSection: FC<{
+  stagger: Variants;
+  item: Variants;
+  testimonials: { quote: string; author: string }[];
+  testimonialsState: { data: TestimonialItem[]; isLoading: boolean; lastUpdatedAt: number | null; mode: "live" | "fallback" };
+  liveEnabled: boolean;
+}> = ({ stagger, item, testimonials, testimonialsState, liveEnabled }) => {
   const showModeBadge = !isUserMode;
-  const showFallbackHint = isFallback;
-
-  if (!displayTestimonials?.length) {
-    return (
-      <motion.section className="phi-section" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-60px" }}>
-        <motion.div variants={item} className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
-          <LiveStatusBar
-            title="مصدر المراجعات"
-            mode={isLive ? "live" : "fallback"}
-            isLoading={testimonialsState.isLoading}
-            lastUpdatedAt={testimonialsState.lastUpdatedAt}
-            showModeBadge={showModeBadge}
-          />
-          <p className="mt-3 text-sm text-slate-400">المراجعات اللحظية غير متاحة حالياً.</p>
-        </motion.div>
-      </motion.section>
-    );
-  }
+  const displayTestimonials =
+    liveEnabled && testimonialsState.mode === "live" && testimonialsState.data.length > 0
+      ? testimonialsState.data
+      : testimonials.length > 0
+        ? testimonials
+        : PREVIEW_TESTIMONIALS;
 
   return (
     <motion.section
@@ -339,104 +454,74 @@ export const TestimonialsSection: FC<{ stagger: Variants; item: Variants; testim
       viewport={{ once: true, margin: "-60px" }}
     >
       <motion.p
-        className="text-[13px] font-bold tracking-[0.2em] text-center mb-2 leading-relaxed uppercase text-teal-400"
+        className="mb-2 text-center text-[13px] font-bold uppercase tracking-[0.2em] leading-relaxed text-teal-400"
         variants={item}
       >
-        سجلات انتصار القادة
+        صوت المستخدم
       </motion.p>
-      <motion.h2 className="text-2xl sm:text-3xl font-black text-center mb-8 leading-tight text-white" variants={item}>تقارير قادة الميدان</motion.h2>
+      <motion.h2 className="mb-4 text-center text-2xl font-black leading-tight text-white sm:text-3xl" variants={item}>
+        ماذا يشعر المستخدم من أول تجربة؟
+      </motion.h2>
 
       <div className="mb-8">
         <LiveStatusBar
-          title="مصدر المراجعات"
-          mode={isLive ? "live" : "fallback"}
-          isLoading={testimonialsState.isLoading}
+          title={liveEnabled ? "مصدر الشهادات" : "معاينة التجربة"}
+          mode={testimonialsState.mode}
+          isLoading={testimonialsState.isLoading && liveEnabled}
           lastUpdatedAt={testimonialsState.lastUpdatedAt}
           showModeBadge={showModeBadge}
         />
-        {showFallbackHint && (
-          <p className="mt-2 inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-bold text-amber-200">
-            المراجعات اللحظية غير متاحة حالياً
-          </p>
-        )}
+        <p className="mt-2 inline-flex items-center rounded-full border border-teal-500/20 bg-teal-500/10 px-3 py-1 text-[10px] font-bold text-teal-100">
+          {liveEnabled ? "شهادات حيّة عند التفعيل" : "أمثلة ثابتة توضّح شكل النتيجة المتوقعة"}
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayTestimonials.map((t, i) => (
-          <motion.div key={i} className="rounded-3xl p-6 sm:p-8 flex flex-col justify-between" style={CARD} variants={item}>
-            <div>
-              <Quote className="w-8 h-8 mb-6 opacity-20 text-teal-400" />
-              <p className="text-[15px] sm:text-[16px] leading-[1.85] mb-8 text-slate-300 font-medium">
-                "{t.quote}"
-              </p>
-            </div>
-            <div className="flex items-center gap-3 pt-6 border-t border-white/5">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-800 border border-white/10">
-                <Heart className="w-4 h-4 text-rose-500" />
-              </div>
-              <div>
-                <span className="text-sm font-bold text-white block leading-none mb-1">{t.author}</span>
-                <span className="text-[10px] font-bold text-amber-400/70 uppercase tracking-widest">سيناريو تطويري</span>
-              </div>
-            </div>
-          </motion.div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        {displayTestimonials.map((testimonial, index) => (
+          <motion.article
+            key={`${testimonial.author}-${index}`}
+            variants={item}
+            className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+          >
+            <Quote className="mb-4 h-7 w-7 text-teal-300" />
+            <p className="mb-5 text-sm leading-7 text-slate-300">{testimonial.quote}</p>
+            <p className="text-xs font-black tracking-wide text-slate-400">{testimonial.author}</p>
+          </motion.article>
         ))}
       </div>
     </motion.section>
   );
 };
 
-export const FinalReadinessSection: FC<{ stagger: Variants; item: Variants; lastGoalLabel?: string | null; badgePulse?: boolean; LastGoalIcon?: FC<{ className?: string }> }> = ({
-  stagger,
-  item,
-  lastGoalLabel,
-  badgePulse,
-  LastGoalIcon,
-}) => (
+export const FinalReadinessSection: FC<{
+  stagger: Variants;
+  item: Variants;
+  lastGoalLabel?: string | null;
+  badgePulse?: boolean;
+  LastGoalIcon?: FC<{ className?: string }>;
+}> = ({ stagger, item, lastGoalLabel, badgePulse, LastGoalIcon }) => (
   <motion.section
-    className="phi-section flex flex-col items-center text-center"
+    className="phi-section"
     variants={stagger}
     initial="hidden"
     whileInView="visible"
     viewport={{ once: true, margin: "-60px" }}
   >
-    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-teal-500 to-[var(--color-primary)] p-px mb-8">
-      <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center">
-        <Zap className="w-8 h-8 text-white animate-pulse" />
-      </div>
-    </div>
-    <motion.h2 className="text-2xl sm:text-4xl font-black mb-4 leading-tight text-white" variants={item}>جاهز لتفعيل البروتوكول؟</motion.h2>
-    <motion.p
-      className="text-lg sm:text-xl mb-10 max-w-[35ch] mx-auto text-slate-400 font-medium"
-      style={{ lineHeight: 1.8 }}
+    <motion.div
       variants={item}
+      className="rounded-[2rem] border border-teal-500/20 bg-gradient-to-br from-teal-500/10 to-transparent p-8 text-center sm:p-10"
     >
-      الميدان ينتظر إشارتك... استعد لبناء أول قاعدة في خريطة وعيك الجديد.
-    </motion.p>
-
-    {lastGoalLabel && (
-      <motion.div className="mb-12" variants={item}>
-        <div
-          className={`inline-flex items-center gap-3 rounded-2xl px-6 py-4 border backdrop-blur-md ${badgePulse ? "animate-bounce" : ""}`}
-          style={{
-            background: "rgba(45,212,191,0.05)",
-            borderColor: "rgba(45,212,191,0.2)",
-            color: "#99f6e4"
-          }}
-        >
-          {LastGoalIcon ? <LastGoalIcon className="w-5 h-5 text-teal-400" /> : <Target className="w-5 h-5 text-teal-400" />}
-          <div className="text-right">
-            <span className="text-[10px] block opacity-50 font-bold uppercase tracking-widest">آخر إحداثيات مرصودة</span>
-            <span className="text-sm font-black tracking-tight">{lastGoalLabel}</span>
-          </div>
+      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.2em] text-teal-300">جاهزية البدء</p>
+      <h2 className="mb-3 text-2xl font-black text-white sm:text-3xl">واضح ماذا بعد. واضح لماذا تبدأ الآن.</h2>
+      <p className="mx-auto max-w-[44ch] text-sm leading-7 text-slate-300">
+        الصفحة أصبحت تشرح البداية بوضوح، وتترك الميزات التي لم يحن وقتها تحت تحكم الأونر بدل أن تضع المستخدم أمام رسائل نقص أو عدم جاهزية.
+      </p>
+      {lastGoalLabel && (
+        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-slate-200">
+          {LastGoalIcon ? <LastGoalIcon className={badgePulse ? "h-4 w-4 text-teal-300" : "h-4 w-4 text-slate-300"} /> : null}
+          <span>آخر نية محفوظة: {lastGoalLabel}</span>
         </div>
-      </motion.div>
-    )}
+      )}
+    </motion.div>
   </motion.section>
 );
-
-
-
-
-
-

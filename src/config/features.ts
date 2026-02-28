@@ -17,7 +17,9 @@ export type FeatureFlagKey =
   | "dynamic_routing_owner_observability"
   | "golden_needle_enabled"
   | "language_switcher"
-  | "armory_section";
+  | "armory_section"
+  | "landing_live_metrics"
+  | "landing_live_testimonials";
 
 export interface FeatureFlagDefinition {
   key: FeatureFlagKey;
@@ -132,6 +134,18 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
     label: "سيكشن الترسانة",
     description: "إظهار/إخفاء سكشن الترسانة في الصفحة الرئيسية",
     group: "Core"
+  },
+  {
+    key: "landing_live_metrics",
+    label: "المؤشرات الحية للصفحة الرئيسية",
+    description: "فتح الأرقام الحية في الهيرو وقسم المؤشرات عند جاهزيتها",
+    group: "Insights"
+  },
+  {
+    key: "landing_live_testimonials",
+    label: "الشهادات الحية للصفحة الرئيسية",
+    description: "فتح الشهادات الحية في الصفحة الرئيسية عند جاهزيتها",
+    group: "Insights"
   }
 ];
 
@@ -152,5 +166,7 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, FeatureFlagMode> = {
   dynamic_routing_owner_observability: "off",
   golden_needle_enabled: "off",
   language_switcher: "off",
-  armory_section: "off"
+  armory_section: "off",
+  landing_live_metrics: "off",
+  landing_live_testimonials: "off"
 };
