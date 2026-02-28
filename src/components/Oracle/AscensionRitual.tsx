@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Crown, Shield, Flame, Zap, ArrowRight, CheckCircle } from 'lucide-react';

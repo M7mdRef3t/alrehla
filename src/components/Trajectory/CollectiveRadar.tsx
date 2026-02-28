@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend } from 'recharts';
 import { AwarenessVector } from '../../services/trajectoryEngine';

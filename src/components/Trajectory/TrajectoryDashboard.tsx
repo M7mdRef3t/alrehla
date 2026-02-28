@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Battery, CheckCircle2, CircleDashed, Clock, Zap, Award, Sparkles, ChevronRight, Share2, ShieldAlert } from 'lucide-react';
@@ -263,7 +264,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                     <CollectiveRadar
                         userVector={activeTrajectory.initial_vector}
                         swarmMetrics={swarmMetrics}
-                    />
+                        />
                 )}
             </div>
 

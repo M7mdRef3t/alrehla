@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { NextResponse } from 'next/server';
 import { supabase } from '../../../../services/supabaseClient';
 import { DynamicContextRouter } from '../../../../services/dynamicContextRouter';

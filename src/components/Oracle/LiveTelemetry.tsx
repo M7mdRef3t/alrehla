@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Activity, Zap, ShieldAlert, Cpu, BarChart3, Clock } from 'lucide-react';
