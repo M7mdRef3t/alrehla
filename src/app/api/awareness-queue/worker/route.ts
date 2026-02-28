@@ -46,7 +46,7 @@ export async function POST() {
                     lastBI: 0.5, // Placeholder
                 };
 
-                const result = await DynamicContextRouter.route(mockContext, {
+                await DynamicContextRouter.route(mockContext, {
                     type: event.action_type,
                     payload: event.payload
                 });
@@ -59,7 +59,7 @@ export async function POST() {
 
                 results.push({ id: event.id, status: 'success' });
 
-            } catch (procError: any) {
+            } catch (procError: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) {
                 console.error(`Error processing event ${event.id}:`, procError);
 
                 // 5. Exponential Backoff Logic
@@ -94,7 +94,7 @@ export async function POST() {
         }
 
         return NextResponse.json({ processed: results });
-    } catch (err: any) {
+    } catch (err: any /* eslint-disable-line @typescript-eslint/no-explicit-any */) {
         console.error('Worker General Error:', err);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
