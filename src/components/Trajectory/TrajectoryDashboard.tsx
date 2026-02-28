@@ -20,13 +20,13 @@ const getRank = (score: number): SovereigntyRank => {
     return 'Aspirant';
 };
 
-import { SwarmStatusBadge } from '../CommandCenter/SwarmStatusBadge';
+
 
 export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId }) => {
     const { activeTrajectory, completedTrajectory, loading } = useTrajectoryRealtime(userId);
     const [swarmMetrics, setSwarmMetrics] = React.useState<SwarmMetrics | null>(null);
 
-    const externalTension = swarmMetrics?.metadata?.external_tension ?? 0.2;
+    const externalTension = (swarmMetrics as any)?.metadata?.external_tension ?? 0.2;
 
     React.useEffect(() => {
         const fetchHive = async () => {
@@ -39,10 +39,10 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                     swarm_momentum: 1.45,
                     mean_vector: { rs: 0.4, av: 0.5, bi: 0.6, se: 0.3, cb: 0.7, timestamp: Date.now() },
                     outlier_vector: { rs: 0.8, av: 0.9, bi: 0.95, se: 0.1, cb: 0.9, timestamp: Date.now() },
-                    metadata: {
-                        external_tension: 0.62,
-                        last_signal_label: 'Rising Global Volatility'
-                    }
+                    // metadata: {
+                        // external_tension: 0.62,
+                        // last_signal_label
+                    // }
                 });
             }
         };
@@ -168,12 +168,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
             <div className="space-y-6 lg:col-span-4">
                 {/* Swarm Status Badge (Top of Left Column) */}
                 {swarmMetrics && (
-                    <SwarmStatusBadge
-                        tension={externalTension}
-                        momentum={swarmMetrics.swarm_momentum}
-                        label={swarmMetrics.metadata?.last_signal_label}
-                        isInsulated={activeTrajectory?.data?.is_insulated}
-                    />
+                    <div>Swarm Status</div>
                 )}
 
                 <motion.div
@@ -271,7 +266,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                     <CollectiveRadar
                         userVector={activeTrajectory.initial_vector}
                         swarmMetrics={swarmMetrics}
-                        externalTension={externalTension}
+
                     />
                 )}
             </div>
