@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bot, LayoutTemplate, X } from "lucide-react";
 
-export type WelcomeSource = "ai" | "template";
+export type WelcomeSource = "offline_intervention" | "ai" | "template";
 
 interface OnboardingWelcomeBubbleProps {
   message: string;
