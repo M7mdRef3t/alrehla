@@ -7,6 +7,8 @@
 import { decisionEngine } from "./decision-framework";
 import { geminiClient } from "../services/geminiClient";
 import type { AIDecision } from "./decision-framework";
+import { supabase } from "../services/supabaseClient";
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 💰 Revenue Models
@@ -145,31 +147,89 @@ export class RevenueAutomationEngine {
     // في المستقبل: نجيب البيانات من Supabase
     // مؤقتاً: نحاكي البيانات
 
-    try {
-      // TODO: Replace with actual Supabase query
-      const mockData: RevenueMetrics = {
+    if (!supabase) {
+      console.warn("⚠️ Supabase client not available. Using fallback/mock data.");
+      return {
         timestamp: Date.now(),
         totalUsers: 150,
-        breakdown: {
-          free: 100,
-          premium: 40,
-          coach: 10,
-        },
-        mrr: 40 * 4.99 + 10 * 49, // $689.6
-        arr: (40 * 4.99 + 10 * 49) * 12, // $8,275.2
-        churnRate: 0.05, // 5%
-        conversionRate: {
-          freeToPremium: 0.15, // 15% من Free بيحولوا لـ Premium
-          premiumToCoach: 0.08, // 8% من B2C بيحولوا لـ B2B
-        },
+        breakdown: { free: 100, premium: 40, coach: 10 },
+        mrr: 40 * 4.99 + 10 * 49,
+        arr: (40 * 4.99 + 10 * 49) * 12,
+        churnRate: 0.05,
+        conversionRate: { freeToPremium: 0.15, premiumToCoach: 0.08 },
         avgRevenuePerUser: (40 * 4.99 + 10 * 49) / 150,
-        lifetimeValue: ((40 * 4.99 + 10 * 49) / 50) * (1 / 0.05), // LTV = ARPU × (1/churn)
+        lifetimeValue: ((40 * 4.99 + 10 * 49) / 50) * (1 / 0.05),
+      };
+    }
+
+    try {
+      // Execute required queries in parallel for efficiency
+      const [
+        { count: totalUsers },
+        { count: totalFreeUsers },
+        { count: totalPremiumUsers },
+        { count: totalCoachUsers },
+        { count: totalCanceledUsers }
+      ] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'user').in('subscription_status', ['none', 'null']),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'user').in('subscription_status', ['active', 'trialing']),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'coach'),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('subscription_status', 'canceled')
+      ]);
+
+      const users = totalUsers || 0;
+      const free = totalFreeUsers || 0;
+      const premium = totalPremiumUsers || 0;
+      const coach = totalCoachUsers || 0;
+      const canceled = totalCanceledUsers || 0;
+
+      // Extract pricing based on defined plans
+      const premiumPrice = PRICING_PLANS.premium.priceMonthly;
+      const coachPrice = PRICING_PLANS.coach.priceMonthly;
+
+      const mrr = premium * premiumPrice + coach * coachPrice;
+      const arr = mrr * 12;
+
+      const churnRate = users > 0 ? canceled / users : 0;
+
+      // Conversion rates - approximations based on current states
+      // Free to Premium = Active Premium / (Active Premium + Free)
+      const freeToPremium = (premium + free) > 0 ? premium / (premium + free) : 0;
+
+      // Premium to Coach = Active Coach / (Active Coach + Active Premium)
+      const premiumToCoach = (coach + premium) > 0 ? coach / (coach + premium) : 0;
+
+      const avgRevenuePerUser = users > 0 ? mrr / users : 0;
+
+      // LTV = ARPU / Churn Rate
+      // (Using 5% fallback churn if 0 to avoid Infinity)
+      const safeChurn = churnRate > 0 ? churnRate : 0.05;
+      const lifetimeValue = avgRevenuePerUser * (1 / safeChurn);
+
+      const metrics: RevenueMetrics = {
+        timestamp: Date.now(),
+        totalUsers: users,
+        breakdown: {
+          free,
+          premium,
+          coach,
+        },
+        mrr,
+        arr,
+        churnRate,
+        conversionRate: {
+          freeToPremium,
+          premiumToCoach,
+        },
+        avgRevenuePerUser,
+        lifetimeValue,
       };
 
-      console.warn("📊 Revenue metrics analyzed:", mockData);
-      return mockData;
+      console.warn("📊 Actual Revenue metrics analyzed:", metrics);
+      return metrics;
     } catch (error) {
-      console.error("❌ Failed to analyze metrics:", error);
+      console.error("❌ Failed to analyze metrics from Supabase:", error);
       return null;
     }
   }
