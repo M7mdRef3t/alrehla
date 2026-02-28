@@ -312,9 +312,7 @@ export default defineConfig(({ mode }) => {
   if (!process.env.ADMIN_ALLOWED_ROLES && env.ADMIN_ALLOWED_ROLES) process.env.ADMIN_ALLOWED_ROLES = env.ADMIN_ALLOWED_ROLES;
 
   return {
-    define: {
-      __DEFINES__: "({})",
-    },
+
     plugins: [
       react(),
       geminiDevProxy(),
