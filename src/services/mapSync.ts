@@ -1,101 +1,39 @@
+// mapSync.ts
 import type { MapNode } from "../modules/map/mapTypes";
 import { isSupabaseReady, supabase } from "./supabaseClient";
 import {
-  ensureIdentifiedTrackingSession,
-  getTrackingMode,
   getTrackingSessionId
 } from "./journeyTracking";
 import { runtimeEnv } from "../config/runtimeEnv";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "./browserStorage";
+import { useSyncState } from "../state/syncState";
 
 const SUPABASE_MAPS_TABLE = "journey_maps";
 const SYNC_DEBOUNCE_MS = 1200;
-const SYNC_MAX_ATTEMPTS = 4; // initial attempt + 3 retries
-const RETRY_BASE_DELAY_MS = 1200;
 const SYNC_BUFFER_KEY = "dawayir-map-sync-buffer";
+
+
+interface PendingSyncBuffer {
+  sessionId: string;
+  nodes: MapNode[];
+  updatedAt: string; // ISO
+  needsSync: boolean;
+  lastError?: string | null;
+}
 
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingBuffer: PendingSyncBuffer | null = null;
 let isFlushing = false;
 let isInitialized = false;
-let successResetTimer: ReturnType<typeof setTimeout> | null = null;
 
-export type MapSyncStatus = "idle" | "queued" | "retrying" | "succeeded" | "failed";
 
-export interface MapSyncSnapshot {
-  status: MapSyncStatus;
-  retryCount: number;
-  nextRetryInMs: number | null;
-  lastError: string | null;
-  updatedAt: number;
-}
-
-interface PendingSyncBuffer {
-  sessionId: string;
-  nodes: MapNode[];
-  updatedAt: string;
-  attempt: number;
-  needsSync: true;
-  lastError?: string | null;
-}
-
-let currentSnapshot: MapSyncSnapshot = {
-  status: "idle",
-  retryCount: 0,
-  nextRetryInMs: null,
-  lastError: null,
-  updatedAt: Date.now()
-};
-
-const listeners = new Set<(snapshot: MapSyncSnapshot) => void>();
-
-function notifySnapshot(): void {
-  listeners.forEach((listener) => listener(currentSnapshot));
-}
-
-function setSnapshot(
-  patch: Partial<MapSyncSnapshot> & Pick<MapSyncSnapshot, "status">
-): void {
-  currentSnapshot = {
-    ...currentSnapshot,
-    ...patch,
-    updatedAt: Date.now()
-  };
-  notifySnapshot();
-}
-
-export function getMapSyncSnapshot(): MapSyncSnapshot {
-  return currentSnapshot;
-}
-
-export function subscribeMapSyncStatus(
-  listener: (snapshot: MapSyncSnapshot) => void
-): () => void {
-  listeners.add(listener);
-  listener(currentSnapshot);
-  return () => {
-    listeners.delete(listener);
-  };
-}
 
 function loadPendingBuffer(): PendingSyncBuffer | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = getFromLocalStorage(SYNC_BUFFER_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as PendingSyncBuffer;
-    if (
-      !parsed ||
-      typeof parsed.sessionId !== "string" ||
-      !Array.isArray(parsed.nodes) ||
-      parsed.needsSync !== true
-    ) {
-      return null;
-    }
-    return {
-      ...parsed,
-      attempt: Number.isFinite(parsed.attempt) ? Number(parsed.attempt) : 0
-    };
+    return JSON.parse(raw);
   } catch {
     return null;
   }
@@ -117,195 +55,141 @@ function scheduleFlush(delayMs: number): void {
   }, Math.max(0, delayMs));
 }
 
-function resetToIdleLater(): void {
-  if (successResetTimer) clearTimeout(successResetTimer);
-  successResetTimer = setTimeout(() => {
-    setSnapshot({
-      status: "idle",
-      retryCount: 0,
-      nextRetryInMs: null,
-      lastError: null
-    });
-  }, 1200);
-}
-
-function getRetryDelayMs(attempt: number): number {
-  return RETRY_BASE_DELAY_MS * Math.pow(2, Math.max(0, attempt - 1));
-}
-
-function ensureSessionIdForSync(): string | null {
-  // In user mode we force identified silently.
-  const forcedSessionId = ensureIdentifiedTrackingSession();
-  if (forcedSessionId) return forcedSessionId;
-  if (getTrackingMode() !== "identified") return null;
-  return getTrackingSessionId();
-}
-
 export function queueMapSync(nodes: MapNode[]): void {
-  const sessionId = ensureSessionIdForSync();
+  const sessionId = getTrackingSessionId();
   if (!sessionId) return;
 
+  const now = new Date().toISOString();
   pendingBuffer = {
     sessionId,
     nodes,
-    updatedAt: new Date().toISOString(),
-    attempt: 0,
+    updatedAt: now,
     needsSync: true,
     lastError: null
   };
-  persistPendingBuffer(pendingBuffer);
 
-  setSnapshot({
-    status: "queued",
-    retryCount: 0,
-    nextRetryInMs: null,
-    lastError: null
-  });
+  // 1. Always persist locally (Local-First)
+  persistPendingBuffer(pendingBuffer);
+  useSyncState.getState().markLocalSaved(now);
+
+  // 2. Only attempt cloud sync if user is authenticated
+  void tryCloudSync();
+}
+
+async function tryCloudSync() {
+  if (!isSupabaseReady || !supabase) return;
+  if (!navigator.onLine) {
+    useSyncState.getState().setOffline(true);
+    return;
+  }
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    if (runtimeEnv.isDev) console.log("[MapSync] Anon user: Cloud sync skipped.");
+    return;
+  }
   scheduleFlush(SYNC_DEBOUNCE_MS);
 }
 
 async function flushMapSync(): Promise<void> {
-  if (isFlushing) return;
-  if (!pendingBuffer) pendingBuffer = loadPendingBuffer();
-  if (!pendingBuffer) return;
-
-  const sessionId = ensureSessionIdForSync();
-  if (!sessionId) {
-    setSnapshot({
-      status: "failed",
-      retryCount: pendingBuffer.attempt,
-      nextRetryInMs: null,
-      lastError: "missing_session_id"
-    });
-    return;
-  }
-
-  pendingBuffer = { ...pendingBuffer, sessionId };
-  persistPendingBuffer(pendingBuffer);
+  if (isFlushing || !pendingBuffer) return;
 
   if (!isSupabaseReady || !supabase) {
-    setSnapshot({
-      status: "failed",
-      retryCount: pendingBuffer.attempt,
-      nextRetryInMs: null,
-      lastError: "supabase_unavailable"
-    });
+    useSyncState.getState().setError("supabase_unavailable");
     return;
   }
 
-  isFlushing = true;
-  const attemptNumber = pendingBuffer.attempt + 1;
   const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return; // Guard against mid-sync sign out
+
+  isFlushing = true;
+  useSyncState.getState().setSyncing();
 
   const payload: any = {
     session_id: pendingBuffer.sessionId,
     nodes: pendingBuffer.nodes,
-    updated_at: pendingBuffer.updatedAt
+    updated_at: pendingBuffer.updatedAt,
+    user_id: user.id,
+    last_sync_at: new Date().toISOString(),
+    last_local_save_at: pendingBuffer.updatedAt
   };
 
-  if (user?.id) {
-    payload.user_id = user.id;
-  }
-
-  const { error } = await supabase.from(SUPABASE_MAPS_TABLE).upsert(payload, {
-    onConflict: "session_id"
-  });
-
-  if (!error) {
-    pendingBuffer = null;
-    persistPendingBuffer(null);
-    setSnapshot({
-      status: "succeeded",
-      retryCount: Math.max(0, attemptNumber - 1),
-      nextRetryInMs: null,
-      lastError: null
+  try {
+    const { error } = await supabase.from(SUPABASE_MAPS_TABLE).upsert(payload, {
+      onConflict: "session_id"
     });
-    resetToIdleLater();
-    isFlushing = false;
-    return;
-  }
 
-  const lastError = String(error.message ?? "map_sync_failed");
-  if (attemptNumber < SYNC_MAX_ATTEMPTS) {
-    const retryDelayMs = getRetryDelayMs(attemptNumber);
-    pendingBuffer = {
-      ...pendingBuffer,
-      attempt: attemptNumber,
-      lastError
-    };
-    persistPendingBuffer(pendingBuffer);
-    setSnapshot({
-      status: "retrying",
-      retryCount: attemptNumber,
-      nextRetryInMs: retryDelayMs,
-      lastError
-    });
-    scheduleFlush(retryDelayMs);
-  } else {
-    pendingBuffer = {
-      ...pendingBuffer,
-      attempt: attemptNumber,
-      lastError
-    };
-    persistPendingBuffer(pendingBuffer);
-    setSnapshot({
-      status: "failed",
-      retryCount: attemptNumber,
-      nextRetryInMs: null,
-      lastError
-    });
-    if (runtimeEnv.isDev) {
-      console.warn("mapSync: max retries reached", error);
+    if (!error) {
+      useSyncState.getState().setSynced(new Date().toISOString());
+      if (pendingBuffer) {
+        pendingBuffer.needsSync = false;
+        persistPendingBuffer(pendingBuffer);
+      }
+    } else {
+      const errorMsg = error.message || "sync_failed";
+      useSyncState.getState().setError(errorMsg);
+      if (runtimeEnv.isDev) console.error("[MapSync] Sync error:", error);
     }
+  } catch (err: any) {
+    // Check if it's a network/fetch error
+    if (err.message?.includes("fetch") || !navigator.onLine) {
+      useSyncState.getState().setOffline(true);
+    } else {
+      useSyncState.getState().setError(err.message || "network_error");
+    }
+  } finally {
+    isFlushing = false;
   }
+}
 
-  isFlushing = false;
+/**
+ * Handle Auth State Changes: Trigger sync when user logs in
+ */
+export async function syncLocalMapOnLogin(): Promise<void> {
+  if (!isSupabaseReady || !supabase) return;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const buffer = loadPendingBuffer();
+  if (buffer && buffer.needsSync) {
+    if (runtimeEnv.isDev) console.log("[MapSync] Syncing local map to cloud after login...");
+    pendingBuffer = buffer;
+    void flushMapSync();
+  }
 }
 
 function initializeMapSync(): void {
   if (typeof window === "undefined" || isInitialized) return;
   isInitialized = true;
 
-  pendingBuffer = loadPendingBuffer();
-  if (pendingBuffer) {
-    if (pendingBuffer.attempt >= SYNC_MAX_ATTEMPTS) {
-      pendingBuffer = { ...pendingBuffer, attempt: 0 };
-      persistPendingBuffer(pendingBuffer);
-    }
-    setSnapshot({
-      status: "queued",
-      retryCount: pendingBuffer.attempt,
-      nextRetryInMs: null,
-      lastError: pendingBuffer.lastError ?? null
-    });
-    scheduleFlush(400);
-  }
+  // Initial Sync Check
+  syncLocalMapOnLogin();
 
   window.addEventListener("online", () => {
-    pendingBuffer = loadPendingBuffer();
-    if (!pendingBuffer) return;
-    if (pendingBuffer.attempt >= SYNC_MAX_ATTEMPTS) {
-      pendingBuffer = { ...pendingBuffer, attempt: 0 };
-      persistPendingBuffer(pendingBuffer);
-    }
-    setSnapshot({
-      status: "retrying",
-      retryCount: pendingBuffer.attempt,
-      nextRetryInMs: 300,
-      lastError: pendingBuffer.lastError ?? null
-    });
-    scheduleFlush(300);
+    useSyncState.getState().setOffline(false);
+    void tryCloudSync();
+  });
+
+  window.addEventListener("offline", () => {
+    useSyncState.getState().setOffline(true);
   });
 
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState !== "visible") return;
-    pendingBuffer = loadPendingBuffer();
-    if (!pendingBuffer) return;
-    if (pendingBuffer.attempt >= SYNC_MAX_ATTEMPTS) {
-      pendingBuffer = { ...pendingBuffer, attempt: 0 };
-      persistPendingBuffer(pendingBuffer);
+    if (document.visibilityState === "visible") {
+      if (!navigator.onLine) {
+        useSyncState.getState().setOffline(true);
+      } else {
+        useSyncState.getState().setOffline(false);
+        void tryCloudSync();
+      }
     }
-    scheduleFlush(300);
+  });
+
+  // Listen for storage changes (multi-tab support)
+  window.addEventListener("storage", (e) => {
+    if (e.key === SYNC_BUFFER_KEY) {
+      pendingBuffer = loadPendingBuffer();
+      useSyncState.getState().markLocalSaved(new Date().toISOString());
+    }
   });
 }
 

@@ -11,7 +11,7 @@ import { realityScoreToRing } from "../../utils/realityScore";
 import { useMapState } from "../../state/mapState";
 import { emergencyCopy } from "../../copy/emergency";
 import { recordFlowEvent, recordPathStartedOnce } from "../../services/journeyTracking";
-import { getMapSyncSnapshot, subscribeMapSyncStatus } from "../../services/mapSync";
+import { useSyncState } from "../../state/syncState";
 import { isUserMode } from "../../config/appEnv";
 
 interface ResultScreenProps {
@@ -106,7 +106,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [shareBusy, setShareBusy] = useState(false);
   const [ctaStatus, setCtaStatus] = useState<string | null>(null);
-  const [mapSyncSnapshot, setMapSyncSnapshot] = useState(() => getMapSyncSnapshot());
+  const mapSyncStatus = useSyncState((s) => s.status);
   const completedSteps = useMemo(() => {
     const checked = new Set(missionProgress?.checkedSteps ?? []);
     return result.steps.reduce((acc, _, index) => acc + (checked.has(index) ? 1 : 0), 0);
@@ -144,14 +144,10 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     return lines.join("\n");
   }, [displayName, isEmotionalPrisoner, result.goal_label, result.mission_goal, result.mission_label, result.state_label, result.title]);
 
-  useEffect(() => {
-    return subscribeMapSyncStatus((snapshot) => {
-      setMapSyncSnapshot(snapshot);
-    });
-  }, []);
 
-  const shouldShowMapSyncBanner = mapSyncSnapshot.status === "retrying" || mapSyncSnapshot.status === "failed";
-  const mapSyncBannerText = mapSyncSnapshot.status === "retrying"
+
+  const shouldShowMapSyncBanner = mapSyncStatus === "error";
+  const mapSyncBannerText = mapSyncStatus === "error"
     ? "عطل فني.. جاري إعادة الحفظ"
     : "تعذر الحفظ السحابي مؤقتًا. هنحاول تلقائيًا عند فتح التطبيق.";
   const isForcedCtaMode = isUserMode && forcedGate;
@@ -235,13 +231,12 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     >
       <>
         <motion.div
-          className={`mb-5 card-unified border px-4 py-3 text-center ${
-            ring === "red"
+          className={`mb-5 card-unified border px-4 py-3 text-center ${ring === "red"
               ? "bg-rose-50/80 border-rose-200"
               : ring === "yellow"
                 ? "bg-amber-50/80 border-amber-200"
                 : "bg-teal-50/80 border-teal-100"
-          }`}
+            }`}
           animate={summaryOnly ? { scale: [1, 1.015, 1] } : {}}
           transition={{ duration: 1.5, repeat: summaryOnly ? Infinity : 0, repeatDelay: 2.5 }}
         >
@@ -251,9 +246,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           <h3 className="mt-1 text-xl font-extrabold leading-tight text-slate-900">
             علاقتك مع{" "}
             <span
-              className={`inline-flex items-center rounded-full px-3 py-1 font-bold text-white max-w-[72vw] truncate sm:max-w-full ${
-                ring === "red" ? "bg-rose-500" : ring === "yellow" ? "bg-amber-500" : "bg-teal-500"
-              }`}
+              className={`inline-flex items-center rounded-full px-3 py-1 font-bold text-white max-w-[72vw] truncate sm:max-w-full ${ring === "red" ? "bg-rose-500" : ring === "yellow" ? "bg-amber-500" : "bg-teal-500"
+                }`}
               title={displayName}
             >
               {displayName}
@@ -434,37 +428,37 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                         <>
                           {item.solution.includes("ملف القضية الحقيقي")
                             ? (() => {
-                                const [before, after] = item.solution.split("ملف القضية الحقيقي");
-                                return (
-                                  <>
-                                    {before}
-                                    <button
-                                      type="button"
-                                      onClick={() => setShowRealityPopup((v) => !v)}
-                                      className="text-rose-700 font-semibold underline hover:text-rose-800"
-                                    >
-                                      ملف القضية الحقيقي
-                                    </button>
-                                    {after}
-                                  </>
-                                );
-                              })()
+                              const [before, after] = item.solution.split("ملف القضية الحقيقي");
+                              return (
+                                <>
+                                  {before}
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowRealityPopup((v) => !v)}
+                                    className="text-rose-700 font-semibold underline hover:text-rose-800"
+                                  >
+                                    ملف القضية الحقيقي
+                                  </button>
+                                  {after}
+                                </>
+                              );
+                            })()
                             : (() => {
-                                const [before, after] = item.solution.split("قائمة الواقع");
-                                return (
-                                  <>
-                                    {before}
-                                    <button
-                                      type="button"
-                                      onClick={() => setShowRealityPopup((v) => !v)}
-                                      className="text-rose-700 font-semibold underline hover:text-rose-800"
-                                    >
-                                      قائمة الواقع
-                                    </button>
-                                    {after}
-                                  </>
-                                );
-                              })()}
+                              const [before, after] = item.solution.split("قائمة الواقع");
+                              return (
+                                <>
+                                  {before}
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowRealityPopup((v) => !v)}
+                                    className="text-rose-700 font-semibold underline hover:text-rose-800"
+                                  >
+                                    قائمة الواقع
+                                  </button>
+                                  {after}
+                                </>
+                              );
+                            })()}
                         </>
                       ) : (
                         item.solution

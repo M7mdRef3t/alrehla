@@ -1,263 +1,242 @@
 import type { FC } from "react";
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Check, BookOpen } from "lucide-react";
+import { Sparkles, Check, Zap, Smile, Frown, Meh, Heart, Star, AlertCircle, Quote, RefreshCw, BookOpen } from "lucide-react";
+import { useDailyPulse } from "../hooks/useDailyPulse";
 import { useDailyQuestion } from "../hooks/useDailyQuestion";
-import { useAIQuestionGenerator } from "../hooks/useAIQuestionGenerator";
-import { AIGenerationButton, AIGeneratedQuestionBadge } from "./AIGeneratedQuestionBadge";
+import { supabase } from "../services/supabaseClient";
 
-interface DailyPulseWidgetProps {
-  onOpenArchive?: () => void;
-}
+const MOODS = [
+  { val: 1, icon: Frown, color: '#f87171', label: 'متضايق' },
+  { val: 2, icon: Meh, color: '#fb923c', label: 'عادي' },
+  { val: 3, icon: Smile, color: '#facc15', label: 'رايق' },
+  { val: 4, icon: Heart, color: '#4ade80', label: 'مبسوط' },
+  { val: 5, icon: Star, color: '#2dd4bf', label: 'طاير' },
+];
 
-/* ── ثيم الأسابيع الأربعة ── */
-const WEEK_COLORS: Record<number, { accent: string; bg: string; border: string; label: string; dot: string }> = {
-  1: { accent: "#2dd4bf", bg: "rgba(45,212,191,0.06)", border: "rgba(45,212,191,0.18)", label: "الوعي بالذات", dot: "#2dd4bf" },
-  2: { accent: "#a78bfa", bg: "rgba(167,139,250,0.06)", border: "rgba(167,139,250,0.18)", label: "دواير القرب", dot: "#a78bfa" },
-  3: { accent: "#fbbf24", bg: "rgba(251,191,36,0.06)", border: "rgba(251,191,36,0.18)", label: "الحدود والتحرر", dot: "#fbbf24" },
-  4: { accent: "#34d399", bg: "rgba(52,211,153,0.06)", border: "rgba(52,211,153,0.18)", label: "النظرة للمستقبل", dot: "#34d399" },
-};
+const STRESS_TAGS = ["شغل", "أهل", "صحة", "فلوس", "علاقات", "نفسي"];
 
-export const DailyPulseWidget: FC<DailyPulseWidgetProps> = ({ onOpenArchive }) => {
-  const { question, hasAnsweredToday, answer, saveAnswer, totalAnswers } = useDailyQuestion();
-  const { generatedQuestion, isGenerating, generateQuestion, isAIAvailable } = useAIQuestionGenerator();
-  const [inputValue, setInputValue] = useState(answer || "");
+export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArchive }) => {
+  const { todayPulse, streak, loading, savePulse, hasAnsweredToday } = useDailyPulse();
+  const { question } = useDailyQuestion();
+
+  const [mood, setMood] = useState(3);
+  const [energy, setEnergy] = useState(3);
+  const [stressTag, setStressTag] = useState("نفسي");
+  const [note, setNote] = useState("");
   const [isSaved, setIsSaved] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [useAIQuestion, setUseAIQuestion] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // استخدم السؤال المُولّد لو موجود
-  const displayQuestion = useAIQuestion && generatedQuestion ? generatedQuestion : question;
-  const theme = WEEK_COLORS[displayQuestion.week] ?? WEEK_COLORS[1];
+  const [pulseInsight, setPulseInsight] = useState<any>(null);
+  const [loadingInsight, setLoadingInsight] = useState(false);
 
-  const handleSave = () => {
-    if (!inputValue.trim()) return;
-    saveAnswer(inputValue);
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2500);
+  useEffect(() => {
+    if (todayPulse) {
+      setMood(todayPulse.mood);
+      setEnergy(todayPulse.energy);
+      setStressTag(todayPulse.stress_tag);
+      setNote(todayPulse.note);
+      fetchPulseInsight();
+    }
+  }, [todayPulse]);
+
+  const fetchPulseInsight = async () => {
+    if (!hasAnsweredToday) return;
+    setLoadingInsight(true);
+    try {
+      const { data: { session } } = await supabase!.auth.getSession();
+      const res = await fetch('/api/insight', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
+        body: JSON.stringify({
+          mode: 'daily_pulse',
+          pulseData: { mood, energy, stress_tag: stressTag, note }
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPulseInsight(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingInsight(false);
+    }
   };
 
-  const handleExpand = () => {
-    setIsExpanded(true);
-    setTimeout(() => textareaRef.current?.focus(), 100);
-  };
-
-  const handleGenerateAIQuestion = async () => {
-    await generateQuestion();
-    setUseAIQuestion(true);
+  const handleSave = async () => {
+    try {
+      await savePulse({ mood, energy, stress_tag: stressTag, note, focus: 'general' });
+      setIsSaved(true);
+      await fetchPulseInsight();
+      setTimeout(() => setIsSaved(false), 3000);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
     <motion.div
-      className="rounded-[1.25rem] p-5 text-right w-full flow-appear"
-      style={{
-        background: theme.bg,
-        border: `1px solid ${theme.border}`,
-        animationDelay: "80ms",
-      }}
-      initial={{ opacity: 0, y: 12 }}
+      className="rounded-[1.5rem] p-6 text-right w-full relative overflow-hidden border border-white/10 backdrop-blur-md"
+      style={{ background: "rgba(15,23,42,0.3)" }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
     >
-      {/* ── رأس الويدجت ── */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="absolute -top-12 -left-12 w-24 h-24 bg-indigo-500/10 blur-[40px] pointer-events-none" />
 
-        {/* أرشيف الإجابات */}
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          {totalAnswers > 0 && onOpenArchive && (
+          <div className="px-2 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] font-bold flex items-center gap-1">
+            <Zap className="w-3 h-3 fill-orange-400" />
+            <span>{streak} يوم متتالي</span>
+          </div>
+          {onOpenArchive && (
             <button
-              type="button"
               onClick={onOpenArchive}
-              className="organic-tap flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium"
-              style={{
-                color: theme.accent,
-                background: `${theme.accent}12`,
-                border: `1px solid ${theme.accent}25`,
-                transition: "background var(--duration-fast) var(--ease-smooth)",
-              }}
+              className="p-1.5 rounded-full bg-white/5 border border-white/5 text-slate-400 hover:text-indigo-400 transition-colors"
+              title="سجل الخواطر"
             >
               <BookOpen className="w-3 h-3" />
-              <span>{totalAnswers} إجابة</span>
             </button>
           )}
         </div>
-
-        {/* بادج الأسبوع */}
-        <div
-          className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold"
-          style={{ color: theme.accent, background: `${theme.accent}12` }}
-        >
-          <Sparkles className="w-3 h-3" />
-          <span>سؤال المحطة</span>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-bold text-white">نبض اليوم</h3>
+          <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
         </div>
       </div>
 
-      {/* ── شريط تقدم الأسبوع (4 نقاط) ── */}
-      <div className="flex items-center gap-1.5 mb-3 justify-end">
-        {([1, 2, 3, 4] as const).map((w) => (
-          <span
-            key={w}
-            className="rounded-full transition-all duration-300"
-            style={{
-              width: w === question.week ? "16px" : "5px",
-              height: "5px",
-              background: w === question.week
-                ? WEEK_COLORS[w].dot
-                : w < question.week
-                  ? `${WEEK_COLORS[w].dot}50`
-                  : "rgba(255,255,255,0.08)",
-            }}
-          />
-        ))}
-        <span className="text-[10px] mr-1" style={{ color: "rgba(148,163,184,0.4)" }}>
-          {theme.label}
-        </span>
+      <div className="mb-6">
+        <p className="text-[11px] text-slate-400 mb-3 font-bold uppercase tracking-wider">الحالة المزاجية</p>
+        <div className="flex justify-between gap-2">
+          {MOODS.map((m) => {
+            const Icon = m.icon;
+            const isActive = mood === m.val;
+            return (
+              <button
+                key={m.val}
+                onClick={() => setMood(m.val)}
+                className={`flex-1 flex flex-col items-center gap-2 p-2 rounded-xl border transition-all ${isActive ? 'bg-white/10 border-indigo-500/50 scale-105' : 'bg-white/5 border-transparent opacity-40 grayscale'
+                  }`}
+              >
+                <Icon className="w-6 h-6" style={{ color: isActive ? m.color : '#94a3b8' }} />
+                <span className={`text-[9px] font-bold ${isActive ? 'text-white' : 'text-slate-500'}`}>{m.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* ── نص السؤال ── */}
-      <div className="mb-4">
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <p
-            className="text-[15px] font-medium leading-[1.85] flex-1"
-            style={{ color: "rgba(226,232,240,0.9)" }}
-          >
-            {displayQuestion.text}
-          </p>
-
-          {/* بادج AI-generated */}
-          {useAIQuestion && generatedQuestion && (
-            <AIGeneratedQuestionBadge isAIGenerated={true} compact />
-          )}
-        </div>
-
-        {/* زر توليد سؤال جديد */}
-        {isAIAvailable && !useAIQuestion && (
-          <div className="mt-2">
-            <AIGenerationButton
-              onClick={handleGenerateAIQuestion}
-              isGenerating={isGenerating}
-            />
+      <div className="mb-6">
+        <p className="text-[11px] text-slate-400 mb-3 font-bold uppercase tracking-wider">مستوى الطاقة</p>
+        <div className="flex items-center gap-3">
+          <Zap className={`w-4 h-4 ${energy > 3 ? 'text-yellow-400 fill-yellow-400' : 'text-slate-500'}`} />
+          <div className="flex-1 flex gap-1.5 h-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                onClick={() => setEnergy(i)}
+                className={`flex-1 rounded-full cursor-pointer transition-all ${energy >= i ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'bg-white/10'
+                  }`}
+              />
+            ))}
           </div>
-        )}
-
-        {/* زر العودة للسؤال الأصلي */}
-        {useAIQuestion && (
-          <button
-            type="button"
-            onClick={() => setUseAIQuestion(false)}
-            className="organic-tap text-[11px] font-medium mt-2"
-            style={{ color: "rgba(148,163,184,0.7)" }}
-          >
-            ← العودة للسؤال الأصلي
-          </button>
-        )}
+          <span className="text-[10px] font-bold text-slate-300 w-4">{energy}</span>
+        </div>
       </div>
 
-      {/* ── منطقة الإجابة ── */}
-      <AnimatePresence mode="wait">
-        {hasAnsweredToday && !isExpanded ? (
-          /* حالة: أجاب بالفعل */
-          <motion.div
-            key="answered"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            className="flex items-start gap-2"
-          >
-            <div
-              className="flex-1 rounded-xl px-3 py-2 text-[13px] leading-relaxed"
-              style={{
-                color: "rgba(203,213,225,0.75)",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
-            >
-              "{answer}"
-            </div>
+      <div className="mb-6">
+        <p className="text-[11px] text-slate-400 mb-3 font-bold uppercase tracking-wider">أكبر ضغط الآن</p>
+        <div className="flex flex-wrap gap-2 justify-end">
+          {STRESS_TAGS.map(tag => (
             <button
-              type="button"
-              onClick={handleExpand}
-              className="organic-tap shrink-0 mt-1 text-[11px] font-medium"
-              style={{ color: theme.accent }}
+              key={tag}
+              onClick={() => setStressTag(tag)}
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-medium border transition-all ${stressTag === tag ? 'bg-indigo-500/20 border-indigo-500 text-indigo-300' : 'bg-white/5 border-white/5 text-slate-400'
+                }`}
             >
-              تعديل
+              {tag}
             </button>
-          </motion.div>
-        ) : (
-          /* حالة: لم يجب أو يريد التعديل */
-          <motion.div
-            key="input"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-          >
-            <textarea
-              ref={textareaRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="أجب بكلمة أو خاطرة قصيرة..."
-              rows={2}
-              className="w-full resize-none organic-input rounded-xl px-3 py-2.5 text-[13px] leading-relaxed placeholder:text-slate-600"
-              style={{
-                borderColor: inputValue.trim() ? theme.border : undefined,
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSave();
-                }
-              }}
-            />
+          ))}
+        </div>
+      </div>
 
-            <AnimatePresence>
-              {inputValue.trim() && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="flex justify-start mt-2"
-                >
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    className="organic-tap flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold"
-                    style={{
-                      background: theme.accent,
-                      color: "#0f172a",
-                      transition: "opacity var(--duration-fast) var(--ease-smooth)",
-                    }}
-                  >
-                    {isSaved ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" />
-                        <span>اتحفظت في رحلتك</span>
-                      </>
-                    ) : (
-                      <span>حفظ في رحلتي</span>
-                    )}
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="mb-6 text-right">
+        <div className="flex items-center gap-2 justify-end mb-2">
+          <p className="text-[11px] text-indigo-400 font-bold">سؤال المحطة</p>
+          <Quote className="w-3 h-3 text-indigo-500/50" />
+        </div>
+        <p className="text-xs text-slate-200 leading-relaxed mb-3 pr-2 border-r-2 border-indigo-500/30">
+          {question.text}
+        </p>
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="اكتب خاطرة سريعة أو إجابة..."
+          className="w-full bg-white/5 border border-white/5 rounded-xl p-3 text-xs text-white placeholder:text-slate-600 focus:border-indigo-500/50 focus:outline-none transition-all"
+          rows={3}
+        />
+      </div>
 
-      {/* ── رسالة ما بعد الحفظ ── */}
+      <button
+        onClick={handleSave}
+        disabled={loading}
+        className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all active:scale-[0.98] ${isSaved ? 'bg-emerald-500 text-white' : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20'
+          }`}
+      >
+        {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : (isSaved ? <Check className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />)}
+        {hasAnsweredToday ? (isSaved ? 'تم التحديث' : 'تحديث نبض اليوم') : 'تسجيل النبض'}
+      </button>
+
+      {/* Auto Insight Display */}
       <AnimatePresence>
-        {isSaved && (
-          <motion.p
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="mt-3 text-[12px] text-center"
-            style={{ color: theme.accent }}
+        {(hasAnsweredToday || isSaved) && (pulseInsight || loadingInsight) && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+            className="mt-6 pt-6 border-t border-white/5"
           >
-            اتحفظت في ذكرياتك.. يومك هادي
-          </motion.p>
+            <div className="flex items-center gap-2 justify-end mb-3">
+              <p className="text-[10px] font-bold text-indigo-400">بصيرة المسار</p>
+              <Sparkles className="w-3 h-3 text-indigo-500" />
+            </div>
+            {loadingInsight ? (
+              <div className="flex items-center gap-2 justify-end py-2">
+                <p className="text-[10px] text-slate-500 animate-pulse">جاري استخراج حكمة اليوم...</p>
+                <RefreshCw className="w-3 h-3 text-slate-600 animate-spin" />
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10 text-right">
+                <p className="text-[11px] text-slate-200 leading-relaxed italic">
+                  "{pulseInsight.summary}"
+                </p>
+                {pulseInsight.recommendations && pulseInsight.recommendations[0] && (
+                  <div className="mt-3 flex items-center gap-2 justify-end">
+                    <span className="text-[10px] text-emerald-400 font-bold">{pulseInsight.recommendations[0]}</span>
+                    <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                  </div>
+                )}
+              </div>
+            )}
+          </motion.div>
         )}
       </AnimatePresence>
+
+      {isSaved && !pulseInsight && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+          className="absolute inset-x-6 top-1/2 -translate-y-1/2 flex items-center justify-center bg-indigo-600 shadow-2xl rounded-2xl p-6 z-20"
+        >
+          <div className="text-center">
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Check className="w-7 h-7 text-white" />
+            </div>
+            <h4 className="text-white font-bold mb-1">تمت المهمة</h4>
+            <p className="text-indigo-100 text-[10px]">وعيك هو استثمارك الأول. استمر.</p>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 };

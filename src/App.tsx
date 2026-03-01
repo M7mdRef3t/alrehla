@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, User, MessageCircle } from "lucide-react";
 import { Landing } from "./components/Landing";
 import { LegalPage } from "./components/LegalPage";
+import { SyncStatusUI } from "./components/SyncStatusUI";
 import { useNotificationState } from "./state/notificationState";
 import { useEmergencyState } from "./state/emergencyState";
 import { useMapState } from "./state/mapState";
@@ -15,6 +16,7 @@ import { usePulseState } from "./state/pulseState";
 import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "./state/pulseState";
 import { trackPageView, trackEvent, AnalyticsEvents } from "./services/analytics";
 import { getTrackingSessionId, recordFlowEvent } from "./services/journeyTracking";
+import { syncLocalMapOnLogin } from "./services/mapSync";
 import { sendNotification, sendPresetNotification, NOTIFICATION_TYPES } from "./services/notifications";
 import {
   fetchPublicBroadcasts,
@@ -1232,6 +1234,9 @@ export default function App() {
       setShowPulseCheck(false);
       setShowAuthModal(false);
       setPostAuthIntentState(null);
+
+      // Trigger Cloud Sync for previously local map
+      void syncLocalMapOnLogin();
       return;
     }
     if (intent.kind !== "start_recovery") return;
@@ -1255,6 +1260,9 @@ export default function App() {
       recordFlowEvent("post_auth_intent_goal_picker");
       void navigateToScreen("goal");
     }
+
+    // Trigger Cloud Sync for the new map
+    void syncLocalMapOnLogin();
 
     let cancelled = false;
     void (async () => {
@@ -2597,6 +2605,7 @@ export default function App() {
           className={`flex-1 min-w-0 flex flex-col pb-14 md:pb-0 ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""} ${isLandingScreen ? "overflow-visible" : "overflow-hidden"}`}
           aria-hidden={showPulseCheck}
         >
+          <SyncStatusUI />
           {welcome?.source === "offline_intervention" && (
             <div className="fixed z-[75] top-[calc(env(safe-area-inset-top)+3.5rem)] left-1/2 -translate-x-1/2 w-[min(680px,calc(100%-1.25rem))] pointer-events-none">
               <div className="pointer-events-auto">

@@ -17,6 +17,13 @@ import { ShadowPulseAlert } from "./ShadowPulseAlert";
 import { TEIWidget } from "./TEIWidget";
 import { FloatingActionMenu } from "./FloatingActionMenu";
 import { InsightsSidebar } from "./InsightsSidebar";
+import { MapInsightPanel } from "./MapInsightPanel";
+import { DeepPatternsPanel } from "./DeepPatternsPanel";
+import { WeeklyReportWidget } from "./WeeklyReportWidget";
+import { ConsciousnessThread } from "./ConsciousnessThread";
+import { InterventionPanel } from "./InterventionPanel";
+import { ShadowInsightPanel } from "./ShadowInsightPanel";
+import { VoicePresence } from "./VoicePresence";
 import { TabNavigation } from "./TabNavigation";
 import { LayoutModeSwitcher } from "./LayoutModeSwitcher";
 import { useGeminiLive } from "../hooks/useGeminiLive";
@@ -190,6 +197,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   /* ── Dashboard Widget ── */
   const [showDashboard, setShowDashboard] = useState(false);
+  const [voiceTrigger, setVoiceTrigger] = useState<{ event: any; context: any } | undefined>();
   const [showJournalArchive, setShowJournalArchive] = useState(false);
   const activeNodes = useMemo(() => nodes.filter((n) => !n.isNodeArchived), [nodes]);
   const archivedNodes = useMemo(() => nodes.filter((n) => n.isNodeArchived), [nodes]);
@@ -377,8 +385,15 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
           }}
         >
+          <InterventionPanel />
+          <ShadowInsightPanel onSurface={(context) => setVoiceTrigger({ event: 'shadow_insight', context })} />
+          <VoicePresence trigger={voiceTrigger} />
           <TEIWidget />
-          <DailyPulseWidget onOpenArchive={() => setShowJournalArchive(true)} />
+          <DailyPulseWidget />
+          <WeeklyReportWidget />
+          <MapInsightPanel />
+          <DeepPatternsPanel />
+          <ConsciousnessThread />
         </motion.div>
       )}
 
