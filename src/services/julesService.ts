@@ -1,8 +1,4 @@
-/**
- * JULES_SERVICE.ts — التكامل مع Jules REST API
- * =====================================================
- * يسمح بالتحكم في جلسات Jules برمجياً
- */
+import { runtimeEnv } from "../config/runtimeEnv";
 
 const JULES_API_BASE = "https://jules.googleapis.com/v1alpha";
 
@@ -49,8 +45,7 @@ export interface JulesActivity {
 
 class JulesService {
     private get apiKey(): string {
-        const metaEnv = (import.meta as any).env;
-        return metaEnv.VITE_JULES_API_KEY || "";
+        return runtimeEnv.julesApiKey || "";
     }
 
     private get headers() {

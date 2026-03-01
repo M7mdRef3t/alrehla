@@ -8,47 +8,17 @@ import { PRICING_PLANS, type SubscriptionTier, type SubscriptionPlan } from "../
 import { decisionEngine } from "../ai/decision-framework";
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 🔑 Stripe Configuration
-// ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * ملاحظة: هذا الكود يفترض أن Stripe SDK مثبّت:
- * npm install stripe @stripe/stripe-js
- *
- * وأن Environment Variables موجودة:
- * VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
- * STRIPE_SECRET_KEY=sk_test_... (backend only)
- */
+import { runtimeEnv } from "../config/runtimeEnv";
 
 export const STRIPE_CONFIG = {
-  publishableKey: readPublicEnv("VITE_STRIPE_PUBLISHABLE_KEY"),
+  publishableKey: runtimeEnv.stripePublishableKey,
   // Price IDs من Stripe Dashboard
   priceIds: {
-    premium: readPublicEnv("VITE_STRIPE_PRICE_PREMIUM") || "price_xxx",
-    coach: readPublicEnv("VITE_STRIPE_PRICE_COACH") || "price_yyy",
+    premium: runtimeEnv.stripePricePremium || "price_xxx",
+    coach: runtimeEnv.stripePriceCoach || "price_yyy",
   },
 };
 
-function readPublicEnv(key: string): string {
-  try {
-    const metaEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env;
-    const value = metaEnv?.[key];
-    if (typeof value === "string" && value.length > 0) return value;
-  } catch {
-    // ignore import.meta access errors in non-Vite contexts
-  }
-
-  try {
-    const nextPublic = process.env[key.replace("VITE_", "NEXT_PUBLIC_")];
-    if (typeof nextPublic === "string" && nextPublic.length > 0) return nextPublic;
-    const direct = process.env[key];
-    if (typeof direct === "string" && direct.length > 0) return direct;
-  } catch {
-    // process may be unavailable in some browser contexts
-  }
-
-  return "";
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 📦 Subscription Types

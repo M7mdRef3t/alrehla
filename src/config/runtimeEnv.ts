@@ -22,7 +22,11 @@ type RuntimeKey =
   | "VITE_OWNER_SECURITY_WEBHOOK_URL"
   | "VITE_TELEGRAM_BOT_TOKEN"
   | "VITE_TELEGRAM_CHAT_ID"
-  | "VITE_AFFILIATE_WHITELIST";
+  | "VITE_AFFILIATE_WHITELIST"
+  | "VITE_JULES_API_KEY"
+  | "VITE_STRIPE_PUBLISHABLE_KEY"
+  | "VITE_STRIPE_PRICE_PREMIUM"
+  | "VITE_STRIPE_PRICE_COACH";
 
 type NextPublicKey =
   | "NEXT_PUBLIC_APP_ENV"
@@ -48,7 +52,11 @@ type NextPublicKey =
   | "NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL"
   | "NEXT_PUBLIC_TELEGRAM_BOT_TOKEN"
   | "NEXT_PUBLIC_TELEGRAM_CHAT_ID"
-  | "NEXT_PUBLIC_AFFILIATE_WHITELIST";
+  | "NEXT_PUBLIC_AFFILIATE_WHITELIST"
+  | "NEXT_PUBLIC_JULES_API_KEY"
+  | "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"
+  | "NEXT_PUBLIC_STRIPE_PRICE_PREMIUM"
+  | "NEXT_PUBLIC_STRIPE_PRICE_COACH";
 
 /** Safe accessor for process.env that never throws in browser/Vite */
 function safeProcessEnv(): Record<string, unknown> {
@@ -91,16 +99,20 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
     NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL: process.env.NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL,
     NEXT_PUBLIC_TELEGRAM_BOT_TOKEN: process.env.NEXT_PUBLIC_TELEGRAM_BOT_TOKEN,
     NEXT_PUBLIC_TELEGRAM_CHAT_ID: process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID,
-    NEXT_PUBLIC_AFFILIATE_WHITELIST: process.env.NEXT_PUBLIC_AFFILIATE_WHITELIST
+    NEXT_PUBLIC_AFFILIATE_WHITELIST: process.env.NEXT_PUBLIC_AFFILIATE_WHITELIST,
+    NEXT_PUBLIC_JULES_API_KEY: process.env.NEXT_PUBLIC_JULES_API_KEY,
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_STRIPE_PRICE_PREMIUM: process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM,
+    NEXT_PUBLIC_STRIPE_PRICE_COACH: process.env.NEXT_PUBLIC_STRIPE_PRICE_COACH
   };
   const value = candidates[key];
   return typeof value === "string" && value.length > 0 ? value.trim() : undefined;
 }
 
 function readEnv(key: RuntimeKey): string | undefined {
-  // 1. Try Vite's import.meta.env first (works in both dev and prod)
+  // 1. Try Vite's import.meta.env first (for backward compatibility if needed)
   try {
-    // @ts-ignore - import.meta is allowed via vite/client types if present
+    // @ts-ignore
     const val = (import.meta as any).env?.[key];
     if (typeof val === "string" && val.length > 0) return val.trim();
   } catch {
@@ -152,5 +164,9 @@ export const runtimeEnv = {
   ownerSecurityWebhookUrl: readEnv("VITE_OWNER_SECURITY_WEBHOOK_URL"),
   telegramBotToken: readEnv("VITE_TELEGRAM_BOT_TOKEN"),
   telegramChatId: readEnv("VITE_TELEGRAM_CHAT_ID"),
-  affiliateWhitelist: readEnv("VITE_AFFILIATE_WHITELIST")
+  affiliateWhitelist: readEnv("VITE_AFFILIATE_WHITELIST"),
+  julesApiKey: readEnv("VITE_JULES_API_KEY"),
+  stripePublishableKey: readEnv("VITE_STRIPE_PUBLISHABLE_KEY"),
+  stripePricePremium: readEnv("VITE_STRIPE_PRICE_PREMIUM"),
+  stripePriceCoach: readEnv("VITE_STRIPE_PRICE_COACH")
 } as const;
