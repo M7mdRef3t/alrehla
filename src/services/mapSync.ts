@@ -195,11 +195,17 @@ async function flushMapSync(): Promise<void> {
 
   isFlushing = true;
   const attemptNumber = pendingBuffer.attempt + 1;
-  const payload = {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const payload: any = {
     session_id: pendingBuffer.sessionId,
     nodes: pendingBuffer.nodes,
     updated_at: pendingBuffer.updatedAt
   };
+
+  if (user?.id) {
+    payload.user_id = user.id;
+  }
 
   const { error } = await supabase.from(SUPABASE_MAPS_TABLE).upsert(payload, {
     onConflict: "session_id"

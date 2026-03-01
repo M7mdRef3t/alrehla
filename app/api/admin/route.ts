@@ -43,12 +43,11 @@ function getClientIp(req: NextRequest): string {
     return "unknown";
 }
 
-function isCronSecretAuthorized(req: NextRequest, query: Record<string, string>): boolean {
-    const secret = process.env.CRON_SECRET;
+function isCronSecretAuthorized(req: NextRequest): boolean {
+    const authHeader = req.headers.get("authorization") || "";
+    const secret = process.env.CRON_SECRET || process.env.ADMIN_API_SECRET;
     if (!secret) return false;
-    const querySecret = query.secret;
-    const headerSecret = req.headers.get("x-cron-secret") || "";
-    return querySecret === secret || headerSecret === secret;
+    return authHeader === `Bearer ${secret}`;
 }
 
 function compactAndCountAttempts(ip: string, now: number): number {
@@ -84,7 +83,7 @@ async function runHandler(req: NextRequest) {
         return NextResponse.json({ error: "Not Found" }, { status: 404 });
     }
     const isCronOverviewRequest = path === "overview" && query.kind === "cron-report";
-    const cronSecretAuthorized = isCronOverviewRequest && isCronSecretAuthorized(req, query);
+    const cronSecretAuthorized = isCronOverviewRequest && isCronSecretAuthorized(req);
 
     // Mock request object
     const mockReq: any = {
