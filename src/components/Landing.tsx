@@ -22,6 +22,8 @@ import {
 } from "./landing/LandingSections";
 import { useLandingLiveData } from "../architecture/landingLiveData";
 import { isPublicPaymentsEnabled } from "../config/payments";
+import { useABTestingVariant } from "../hooks/useABTestingVariant";
+import { designToggles } from "../config/designToggles";
 
 interface LandingProps {
   onStartJourney: () => void;
@@ -132,7 +134,10 @@ export const Landing: FC<LandingProps> = ({
   const lastGoalLabel = getGoalLabel(lastGoalRecord?.goalId);
   const lastGoalMeta = getGoalMeta(lastGoalRecord?.goalId);
   const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
-  const landingLiveData = useLandingLiveData(landingCopy.testimonials ?? []);
+  const landingLiveData = useLandingLiveData(landingCopy.testimonials ?? [], {
+    enableLiveMetrics: designToggles.enableLiveLandingSections,
+    enableLiveTestimonials: designToggles.enableLiveLandingSections
+  });
 
   const [badgePulse, setBadgePulse] = useState(false);
   const [publicPulseAvg, setPublicPulseAvg] = useState<number | null>(null);
@@ -216,101 +221,6 @@ export const Landing: FC<LandingProps> = ({
 
   useEffect(() => {
     setHasMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const windowRef = getWindowOrNull();
-    if (!windowRef) return;
-    try {
-      const applyVariant = (variant: "A" | "B") => {
-        setHeroVariant(variant);
-      };
-      const now = Date.now();
-      const storage = windowRef.localStorage;
-      const startedRaw = storage.getItem(HERO_VARIANT_STARTED_AT_KEY);
-      const variantRaw = storage.getItem(HERO_VARIANT_KEY);
-
-      const startedAt = startedRaw ? Number(startedRaw) : NaN;
-      const hasValidWindow = Number.isFinite(startedAt) && now - startedAt <= HERO_AB_WINDOW_MS;
-
-      if (!hasValidWindow) {
-        storage.setItem(HERO_VARIANT_STARTED_AT_KEY, String(now));
-        const nextVariant: "A" | "B" = Math.random() < 0.5 ? "A" : "B";
-        storage.setItem(HERO_VARIANT_KEY, nextVariant);
-        applyVariant(nextVariant);
-        return;
-      }
-
-      if (variantRaw === "A" || variantRaw === "B") {
-        applyVariant(variantRaw);
-      } else {
-        const fallbackVariant: "A" | "B" = Math.random() < 0.5 ? "A" : "B";
-        storage.setItem(HERO_VARIANT_KEY, fallbackVariant);
-        applyVariant(fallbackVariant);
-      }
-    } catch {
-      // setHeroVariant fallback;
-    }
-  }, []);
-
-  useEffect(() => {
-    const windowRef = getWindowOrNull();
-    if (!windowRef) return;
-    try {
-      const now = Date.now();
-      const storage = windowRef.localStorage;
-      const startedRaw = storage.getItem(SUBTITLE_VARIANT_STARTED_AT_KEY);
-      const variantRaw = storage.getItem(SUBTITLE_VARIANT_KEY);
-
-      const startedAt = startedRaw ? Number(startedRaw) : NaN;
-      const hasValidWindow = Number.isFinite(startedAt) && now - startedAt <= HERO_AB_WINDOW_MS;
-      if (!hasValidWindow) {
-        storage.setItem(SUBTITLE_VARIANT_STARTED_AT_KEY, String(now));
-        const nextVariant: "A" | "B" = Math.random() < 0.5 ? "A" : "B";
-        storage.setItem(SUBTITLE_VARIANT_KEY, nextVariant);
-        setSubtitleVariant(nextVariant);
-        return;
-      }
-      if (variantRaw === "A" || variantRaw === "B") {
-        setSubtitleVariant(variantRaw);
-      } else {
-        const fallback: "A" | "B" = Math.random() < 0.5 ? "A" : "B";
-        storage.setItem(SUBTITLE_VARIANT_KEY, fallback);
-        setSubtitleVariant(fallback);
-      }
-    } catch {
-      // setSubtitleVariant fallback;
-    }
-  }, []);
-
-  useEffect(() => {
-    const windowRef = getWindowOrNull();
-    if (!windowRef) return;
-    try {
-      const now = Date.now();
-      const storage = windowRef.localStorage;
-      const startedRaw = storage.getItem(CHECKOUT_CTA_VARIANT_STARTED_AT_KEY);
-      const variantRaw = storage.getItem(CHECKOUT_CTA_VARIANT_KEY);
-
-      const startedAt = startedRaw ? Number(startedRaw) : NaN;
-      const hasValidWindow = Number.isFinite(startedAt) && now - startedAt <= HERO_AB_WINDOW_MS;
-      if (!hasValidWindow) {
-        storage.setItem(CHECKOUT_CTA_VARIANT_STARTED_AT_KEY, String(now));
-        const nextVariant: "A" | "B" = Math.random() < 0.5 ? "A" : "B";
-        storage.setItem(CHECKOUT_CTA_VARIANT_KEY, nextVariant);
-        setCheckoutCtaVariant(nextVariant);
-        return;
-      }
-      if (variantRaw === "A" || variantRaw === "B") {
-        setCheckoutCtaVariant(variantRaw);
-      } else {
-        const fallback: "A" | "B" = Math.random() < 0.5 ? "A" : "B";
-        storage.setItem(CHECKOUT_CTA_VARIANT_KEY, fallback);
-        setCheckoutCtaVariant(fallback);
-      }
-    } catch {
-      // setCheckoutCtaVariant fallback;
-    }
   }, []);
 
   useEffect(() => {
@@ -613,38 +523,37 @@ export const Landing: FC<LandingProps> = ({
             {isPublicPaymentsEnabled && (
               <div className="mb-4 w-[min(22rem,92vw)] flex flex-col items-center justify-center">
                 {scarcityMeter && (
-                <motion.button
-                  type="button"
-                  variants={item(reduceMotion)}
-                  onClick={handleOpenCheckout}
-                  className="w-full text-right rounded-xl px-2 py-1.5 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40"
-                  aria-label="فتح صفحة الدفع ومتابعة حجز المقعد"
-                  title="متابعة حجز المقعد"
-                >
-                  <div className="text-[11px] font-black text-amber-100 mb-1.5">
-                    المقاعد المتبقية {scarcityMeter.seatsLeft}/{scarcityMeter.totalSeats}
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden border border-white/10">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${scarcityMeter.fillPercent}%`,
-                        backgroundColor: scarcityMeter.fillColor
-                      }}
-                    />
-                  </div>
-                  <p className="mt-1.5 text-[10px] text-slate-300/85 font-semibold">
-                    الفوج الحالي يغلق عند اكتمال المقاعد.
-                  </p>
-                  {scarcityCountdown && (
-                    <p className="mt-1 text-[10px] font-black text-amber-200/95">{scarcityCountdown}</p>
-                  )}
-                </motion.button>
+                  <motion.button
+                    type="button"
+                    variants={item(reduceMotion)}
+                    onClick={handleOpenCheckout}
+                    className="w-full text-right rounded-xl px-2 py-1.5 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40"
+                    aria-label="فتح صفحة الدفع ومتابعة حجز المقعد"
+                    title="متابعة حجز المقعد"
+                  >
+                    <div className="text-[11px] font-black text-amber-100 mb-1.5">
+                      المقاعد المتبقية {scarcityMeter.seatsLeft}/{scarcityMeter.totalSeats}
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden border border-white/10">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${scarcityMeter.fillPercent}%`,
+                          backgroundColor: scarcityMeter.fillColor
+                        }}
+                      />
+                    </div>
+                    <p className="mt-1.5 text-[10px] text-slate-300/85 font-semibold">
+                      الفوج الحالي يغلق عند اكتمال المقاعد.
+                    </p>
+                    {scarcityCountdown && (
+                      <p className="mt-1 text-[10px] font-black text-amber-200/95">{scarcityCountdown}</p>
+                    )}
+                  </motion.button>
                 )}
                 <p
-                  className={`mt-1 h-4 text-[10px] font-semibold transition-opacity ${
-                    showCheckoutHint ? "opacity-100 text-amber-200" : "opacity-0"
-                  }`}
+                  className={`mt-1 h-4 text-[10px] font-semibold transition-opacity ${showCheckoutHint ? "opacity-100 text-amber-200" : "opacity-0"
+                    }`}
                 >
                   سيتم فتح صفحة الحجز
                 </p>
@@ -744,89 +653,95 @@ export const Landing: FC<LandingProps> = ({
         </motion.section>
 
         <div className={showLongSections ? "block" : "hidden md:block"}>
-        {showSimulationSection && (
-        <motion.section
-          id="simulation-playground"
-          className="phi-section w-full max-w-5xl mx-auto"
-          variants={stagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
-        >
-          <motion.div
-            variants={fadeUp(reduceMotion)}
-            className="rounded-[2.5rem] bg-teal-500/[0.03] border border-teal-500/15 p-8 sm:p-10 text-center relative overflow-hidden"
+          {showSimulationSection && (
+            <motion.section
+              id="simulation-playground"
+              className="phi-section w-full max-w-5xl mx-auto"
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-80px" }}
+            >
+              <motion.div
+                variants={fadeUp(reduceMotion)}
+                className="rounded-[2.5rem] bg-teal-500/[0.03] border border-teal-500/15 p-8 sm:p-10 text-center relative overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-500/25 to-transparent" />
+                <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
+                  {hasExistingJourney ? "تحديث تمركزك الآن" : "جرب تثبيت حدودك الآن"}
+                </h2>
+                <p className="text-sm text-slate-400 mb-8">
+                  {hasExistingJourney
+                    ? "اسحب شخصًا وشوف بسرعة وضعه الحالي قبل قرارك التالي."
+                    : "اسحب شخصًا للمدار المناسب لك لتشوف أثر القرار قبل ما تبدأ."}
+                </p>
+                <div className="scale-75 sm:scale-90 origin-center">
+                  <LandingSimulation />
+                </div>
+              </motion.div>
+            </motion.section>
+          )}
+
+          <FeatureShowcaseSection
+            stagger={stagger}
+            item={item(reduceMotion)}
+            onOpenRadar={() => {
+              soundManager.playClick();
+              recordFlowEvent("feature_showcase_clicked", { meta: { feature: "radar" } });
+              handleStartJourney();
+            }}
+            onOpenCourt={() => {
+              soundManager.playClick();
+              recordFlowEvent("feature_showcase_clicked", { meta: { feature: "guilt_court" } });
+              handleStartJourney();
+            }}
+            onOpenPlaybooks={() => {
+              soundManager.playClick();
+              recordFlowEvent("feature_showcase_clicked", { meta: { feature: "playbooks" } });
+              handleStartJourney();
+            }}
+          />
+
+          <MetricsSection
+            stagger={stagger}
+            item={item(reduceMotion)}
+            metricsState={landingLiveData.metrics}
+            liveEnabled={designToggles.enableLiveLandingSections}
+          />
+
+          <TestimonialsSection
+            liveEnabled={designToggles.enableLiveLandingSections}
+            stagger={stagger}
+            item={item(reduceMotion)}
+            testimonials={landingCopy.testimonials ?? []}
+            testimonialsState={landingLiveData.testimonials}
+          />
+
+          <FinalReadinessSection
+            stagger={stagger}
+            item={item(reduceMotion)}
+            lastGoalLabel={lastGoalLabel}
+            badgePulse={badgePulse}
+            LastGoalIcon={lastGoalMeta?.icon}
+          />
+
+          <motion.section
+            className="phi-section flex flex-col items-center text-center"
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
           >
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-500/25 to-transparent" />
-            <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
-              {hasExistingJourney ? "تحديث تمركزك الآن" : "جرب تثبيت حدودك الآن"}
-            </h2>
-            <p className="text-sm text-slate-400 mb-8">
-              {hasExistingJourney
-                ? "اسحب شخصًا وشوف بسرعة وضعه الحالي قبل قرارك التالي."
-                : "اسحب شخصًا للمدار المناسب لك لتشوف أثر القرار قبل ما تبدأ."}
-            </p>
-            <div className="scale-75 sm:scale-90 origin-center">
-              <LandingSimulation />
-            </div>
-          </motion.div>
-        </motion.section>
-        )}
-
-        <FeatureShowcaseSection
-          stagger={stagger}
-          item={item(reduceMotion)}
-          onOpenRadar={() => {
-            soundManager.playClick();
-            recordFlowEvent("feature_showcase_clicked", { meta: { feature: "radar" } });
-            handleStartJourney();
-          }}
-          onOpenCourt={() => {
-            soundManager.playClick();
-            recordFlowEvent("feature_showcase_clicked", { meta: { feature: "guilt_court" } });
-            handleStartJourney();
-          }}
-          onOpenPlaybooks={() => {
-            soundManager.playClick();
-            recordFlowEvent("feature_showcase_clicked", { meta: { feature: "playbooks" } });
-            handleStartJourney();
-          }}
-        />
-
-        <MetricsSection stagger={stagger} item={item(reduceMotion)} metricsState={landingLiveData.metrics} />
-
-        <TestimonialsSection
-          stagger={stagger}
-          item={item(reduceMotion)}
-          testimonials={landingCopy.testimonials ?? []}
-          testimonialsState={landingLiveData.testimonials}
-        />
-
-        <FinalReadinessSection
-          stagger={stagger}
-          item={item(reduceMotion)}
-          lastGoalLabel={lastGoalLabel}
-          badgePulse={badgePulse}
-          LastGoalIcon={lastGoalMeta?.icon}
-        />
-
-        <motion.section
-          className="phi-section flex flex-col items-center text-center"
-          variants={stagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-        >
-          <motion.button
-            variants={item(reduceMotion)}
-            type="button"
-            onClick={handleStartJourney}
-            className="inline-flex items-center justify-center gap-3 rounded-full px-10 py-4 text-lg font-black text-white bg-teal-500 hover:bg-teal-400 transition-colors"
-          >
-            تفعيل الرادار
-            <ArrowLeft className="w-5 h-5" />
-          </motion.button>
-        </motion.section>
+            <motion.button
+              variants={item(reduceMotion)}
+              type="button"
+              onClick={handleStartJourney}
+              className="inline-flex items-center justify-center gap-3 rounded-full px-10 py-4 text-lg font-black text-white bg-teal-500 hover:bg-teal-400 transition-colors"
+            >
+              تفعيل الرادار
+              <ArrowLeft className="w-5 h-5" />
+            </motion.button>
+          </motion.section>
         </div>
 
         <motion.footer
@@ -889,7 +804,6 @@ export const Landing: FC<LandingProps> = ({
           </button>
         </div>
       )}
-    </div >
+    </div>
   );
 };
-
