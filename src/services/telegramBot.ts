@@ -14,19 +14,11 @@ import type { HealthCheckResult, HealthIssue } from "../ai/autoHealthCheck";
 import type { RevenueMetrics, PricingRecommendation } from "../ai/revenueAutomation";
 import { runtimeEnv } from "../config/runtimeEnv";
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 🔑 Configuration
-// ═══════════════════════════════════════════════════════════════════════════
-
 const TELEGRAM_CONFIG = {
-  botToken: String(import.meta.env.VITE_TELEGRAM_BOT_TOKEN ?? "").trim(),
-  chatId: String(import.meta.env.VITE_TELEGRAM_CHAT_ID ?? "").trim(), // محمد's chat ID
+  botToken: String(runtimeEnv.telegramBotToken ?? "").trim(),
+  chatId: String(runtimeEnv.telegramChatId ?? "").trim(), // محمد's chat ID
   apiUrl: "https://api.telegram.org/bot",
 };
-
-// ═══════════════════════════════════════════════════════════════════════════
-// 📊 Message Types
-// ═══════════════════════════════════════════════════════════════════════════
 
 export type TelegramMessageType =
   | "daily_health_report"

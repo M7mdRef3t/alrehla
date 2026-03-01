@@ -5,10 +5,8 @@ const nextConfig = {
     serverComponentsExternalPackages: ["@sentry/node"],
     typedRoutes: false
   },
-  publicRuntimeConfig: {
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  }
+  // We removed publicRuntimeConfig to prevent unintentional leaking of env vars.
+  // Use NEXT_PUBLIC_ prefixes for client-side variables.
 };
 
 export default nextConfig;

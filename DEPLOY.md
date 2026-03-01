@@ -1,77 +1,33 @@
-# نشر المنصة — الرحلة (أداة دواير)
+# 🚀 Al-Rehla Deployment Guide (Next.js Only)
 
-## قبل النشر
+This project has been unified to run exclusively on **Next.js 14**. The hybrid Vite-Next.js setup has been removed to ensure architectural consistency and performance.
 
-1. **المتغيرات (اختياري)**  
-   لو عايز تفعل الـ AI (Gemini): ضيف `GEMINI_API_KEY` في بيئة السيرفر (Vercel).  
-   المنصة تشتغل بدون مفتاح بمنطق احتياطي.
-   لو هتفعل لوحة التحكم والتتبع السحابي: ضيف `VITE_SUPABASE_URL` و `VITE_SUPABASE_ANON_KEY`.
-   ولو هتفعل لوحة التحكم الآمنة عبر API: ضيف `SUPABASE_SERVICE_ROLE_KEY` و `ADMIN_API_SECRET`.
-   `VITE_APP_CONTENT_REALTIME` و `NEXT_PUBLIC_APP_CONTENT_REALTIME` غير مطلوبين للنشر:
-   في `dev` يكون Realtime الخاص بـ `app_content` مطفأ افتراضيًا لتقليل ضوضاء الـ console، وفي الإنتاج يعمل افتراضيًا. فعّله يدويًا فقط لو كنت تحتاج مزامنة لحظية أثناء التطوير.
+## 🏗️ Production Build
+```bash
+npm run build
+```
 
-2. **البناء المحلي**
-   ```bash
-   npm ci
-   npm run build
-   npm run preview
-   ```
-   افتح `http://localhost:4173` وتأكد إن كل حاجة شغالة.
+## 🌐 Environment Variables (Vercel)
 
----
+### Client-Side (Public)
+* `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase API URL.
+* `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase public anonymous key.
+* `NEXT_PUBLIC_SENTRY_DSN`: (Optional) Sentry client DSN.
 
-## النشر على Vercel
+### Server-Side (Secrets)
+* `SUPABASE_SERVICE_ROLE_KEY`: **CRITICAL**. Never expose to client.
+* `GEMINI_API_KEY`: Google AI credentials.
+* `ADMIN_API_SECRET`: Secret for securing admin dashboard endpoints.
+* `CRON_SECRET`: Secret for verifying Vercel Cron requests.
 
-1. اربط الريبو من https://vercel.com  
-2. **Build Command:** `npm run build`  
-   **Output Directory:** `dist`  
-   **Install Command:** `npm ci`
-3. (اختياري) في **Environment Variables** ضيف `GEMINI_API_KEY`.
+## 🚀 Deployment (Vercel)
+The project is optimized for **Vercel**. All routing and API handlers are within the `app/` directory using Next.js App Router.
+
+1. Connect `M7mdRef3t/alrehla` to Vercel.
+2. Select **Next.js** framework.
+3. Configure the env vars listed above.
 4. Deploy.
-5. لو عايز التقارير التلقائية: أضف
-   - `ADMIN_API_SECRET`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `ADMIN_ALLOWED_ROLES` و `VITE_ADMIN_ALLOWED_ROLES`
-   - `CRON_SECRET`
-   - `PUBLIC_APP_URL`
-   - `SLACK_WEBHOOK_URL` (اختياري)
-   - `RESEND_API_KEY` + `REPORT_EMAIL_TO` + `REPORT_EMAIL_FROM` (اختياري)
-6. فعّل Vercel Cron على المسارات:
-   - لو استخدمت `vercel.json` المرفق: سيُفعل مسارات الكرون تلقائياً.
-   - لو ضبطت `CRON_SECRET` يجب تحديث المسارات إلى:
-     - `/api/admin/overview?kind=cron-report&period=daily&secret=YOUR_CRON_SECRET`
-     - `/api/admin/overview?kind=cron-report&period=weekly&secret=YOUR_CRON_SECRET`
 
 ---
-
-## النشر على Netlify
-
-> ملاحظة: الـ AI Proxy مبني على Vercel Functions.  
-لو هتنشر على Netlify بدون Functions بديلة، خصائص الـ AI لن تعمل.
-
-1. اربط الريبو من https://netlify.com  
-2. **Build command:** `npm run build`  
-   **Publish directory:** `dist`
-3. Deploy.
-
----
-
-## النشر كملف ثابت (أي استضافة)
-
-1. نفّذ:
-   ```bash
-   npm run build
-   ```
-2. ارفع محتويات مجلد `dist/` على السيرفر (GitHub Pages, S3, إلخ).
-3. لو الموقع تحت مسار فرعي (مثلاً `example.com/dawayir/`) غيّر في `vite.config.ts`:
-   ```ts
-   base: "/dawayir/"
-   ```
-   ثم أعد البناء.
-
----
-
-## ملاحظات
-
-- البيانات (الخريطة، الرحلة، القياس) محفوظة في **localStorage** محليًا داخل المتصفح فقط.
-- الـ AI اختياري؛ بدون مفتاح Gemini النظام يعمل بمنطق احتياطي.
+*Motto: Kill the Deceiver with Science.*
+ 🛡️ [ARCHITECTURE.md](./ARCHITECTURE.md) | 🧠 [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)

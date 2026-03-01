@@ -1,4 +1,5 @@
 import { recordFlowEvent } from "../../services/journeyTracking";
+import { runtimeEnv } from "../../config/runtimeEnv";
 
 const DEFAULT_AFFILIATE_DOMAINS = [
   "youtube.com",
@@ -32,7 +33,7 @@ export interface AffiliateTrackingContext {
 }
 
 function parseWhitelistFromEnv(): string[] {
-  const raw = String(import.meta.env.VITE_AFFILIATE_WHITELIST ?? "").trim();
+  const raw = String(runtimeEnv.affiliateWhitelist ?? "").trim();
   if (!raw) return DEFAULT_AFFILIATE_DOMAINS;
   const fromEnv = raw
     .split(",")

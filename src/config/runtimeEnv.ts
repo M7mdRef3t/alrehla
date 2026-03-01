@@ -19,7 +19,10 @@ type RuntimeKey =
   | "VITE_SENTRY_TRACES_SAMPLE_RATE"
   | "VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE"
   | "VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE"
-  | "VITE_OWNER_SECURITY_WEBHOOK_URL";
+  | "VITE_OWNER_SECURITY_WEBHOOK_URL"
+  | "VITE_TELEGRAM_BOT_TOKEN"
+  | "VITE_TELEGRAM_CHAT_ID"
+  | "VITE_AFFILIATE_WHITELIST";
 
 type NextPublicKey =
   | "NEXT_PUBLIC_APP_ENV"
@@ -42,7 +45,10 @@ type NextPublicKey =
   | "NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE"
   | "NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE"
   | "NEXT_PUBLIC_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE"
-  | "NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL";
+  | "NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL"
+  | "NEXT_PUBLIC_TELEGRAM_BOT_TOKEN"
+  | "NEXT_PUBLIC_TELEGRAM_CHAT_ID"
+  | "NEXT_PUBLIC_AFFILIATE_WHITELIST";
 
 /** Safe accessor for process.env that never throws in browser/Vite */
 function safeProcessEnv(): Record<string, unknown> {
@@ -82,7 +88,10 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
     NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE: process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE,
     NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE: process.env.NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE,
     NEXT_PUBLIC_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE: process.env.NEXT_PUBLIC_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE,
-    NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL: process.env.NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL
+    NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL: process.env.NEXT_PUBLIC_OWNER_SECURITY_WEBHOOK_URL,
+    NEXT_PUBLIC_TELEGRAM_BOT_TOKEN: process.env.NEXT_PUBLIC_TELEGRAM_BOT_TOKEN,
+    NEXT_PUBLIC_TELEGRAM_CHAT_ID: process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID,
+    NEXT_PUBLIC_AFFILIATE_WHITELIST: process.env.NEXT_PUBLIC_AFFILIATE_WHITELIST
   };
   const value = candidates[key];
   return typeof value === "string" && value.length > 0 ? value.trim() : undefined;
@@ -91,7 +100,8 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
 function readEnv(key: RuntimeKey): string | undefined {
   // 1. Try Vite's import.meta.env first (works in both dev and prod)
   try {
-    const val = import.meta.env[key];
+    // @ts-ignore - import.meta is allowed via vite/client types if present
+    const val = (import.meta as any).env?.[key];
     if (typeof val === "string" && val.length > 0) return val.trim();
   } catch {
     // ignore import.meta access errors
@@ -110,31 +120,15 @@ function readEnv(key: RuntimeKey): string | undefined {
   const directVal = penv[key];
   if (typeof directVal === "string" && directVal.length > 0) return directVal.trim();
 
-  // 4. Try Next.js publicRuntimeConfig (client-side)
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getConfig } = require("next/config");
-    const config = getConfig?.();
-    if (config?.publicRuntimeConfig) {
-      const val = config.publicRuntimeConfig[nextKey];
-      if (typeof val === "string" && val.length > 0) return val.trim();
-    }
-  } catch {
-    // Not in Next.js context
-  }
-
   return undefined;
 }
 
-const metaEnv = import.meta.env ?? {};
 const penv = safeProcessEnv();
 const processNodeEnv = typeof penv.NODE_ENV === "string" ? penv.NODE_ENV : undefined;
-const metaDev = Boolean(metaEnv.DEV);
-const metaProd = Boolean(metaEnv.PROD);
 
 export const runtimeEnv = {
-  isDev: processNodeEnv ? processNodeEnv !== "production" : metaDev,
-  isProd: processNodeEnv ? processNodeEnv === "production" : metaProd,
+  isDev: processNodeEnv !== "production",
+  isProd: processNodeEnv === "production",
   appEnv: readEnv("VITE_APP_ENV"),
   appContentRealtime: readEnv("VITE_APP_CONTENT_REALTIME"),
   phaseOneUserFlow: readEnv("VITE_PHASE_ONE_USER_FLOW"),
@@ -155,5 +149,8 @@ export const runtimeEnv = {
   sentryTracesSampleRate: readEnv("VITE_SENTRY_TRACES_SAMPLE_RATE"),
   sentryReplaysSessionSampleRate: readEnv("VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE"),
   sentryReplaysOnErrorSampleRate: readEnv("VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE"),
-  ownerSecurityWebhookUrl: readEnv("VITE_OWNER_SECURITY_WEBHOOK_URL")
+  ownerSecurityWebhookUrl: readEnv("VITE_OWNER_SECURITY_WEBHOOK_URL"),
+  telegramBotToken: readEnv("VITE_TELEGRAM_BOT_TOKEN"),
+  telegramChatId: readEnv("VITE_TELEGRAM_CHAT_ID"),
+  affiliateWhitelist: readEnv("VITE_AFFILIATE_WHITELIST")
 } as const;
