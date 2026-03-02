@@ -16,9 +16,10 @@ export interface LandingChromeVisibility {
 
 export function resolveLandingChromeVisibility(input: LandingChromeInput): LandingChromeVisibility {
   const showAppChrome = !input.isAdminRoute && !input.showAuthModal && !input.showPulseCheck && !input.isLandingScreen;
+  const showBasicChrome = !input.isAdminRoute && !input.showAuthModal && !input.showPulseCheck;
 
   return {
-    showFloatingProfile: showAppChrome,
+    showFloatingProfile: showBasicChrome,
     showFloatingWhatsApp: showAppChrome && input.hasWhatsAppLink,
     showMobileBottomNav: showAppChrome,
     showNudgeToast: !input.isLandingScreen,

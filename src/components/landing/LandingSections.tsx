@@ -14,7 +14,14 @@ import {
   Lock,
   Clock3,
   CreditCard,
-  CircleHelp
+  CircleHelp,
+  Activity,
+  Layers,
+  Brain,
+  Cpu,
+  Unplug,
+  Eye,
+  HardDrive
 } from "lucide-react";
 import { LiveStatusBar } from "../shared/LiveStatusBar";
 import type { LiveMetrics, TestimonialItem } from "../../architecture/landingLiveData";
@@ -55,14 +62,57 @@ const PREVIEW_TESTIMONIALS: TestimonialItem[] = [
     author: "معاينة من تجربة مستخدمة جديدة"
   },
   {
-    quote: "أكثر شيء مهم كان أنني لم أُجبر على شرح كل شيء من البداية، ومع ذلك وصلت لخيط واضح.",
-    author: "معاينة من جلسة بداية"
-  },
-  {
     quote: "الصفحة جعلت القرار سهلًا: أبدأ، أحدد وضعي، ثم آخذ خطوة أولى قابلة للتنفيذ فورًا.",
     author: "معاينة من رحلة ضبط البوصلة"
   }
 ];
+
+export const ProblemFirstSection: FC<{
+  stagger: Variants;
+  item: Variants;
+  data: { title: string; points: string[]; closing: string };
+  onShowExample: () => void;
+}> = ({ stagger, item, data, onShowExample }) => {
+  return (
+    <motion.section
+      className="phi-section"
+      variants={stagger}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-10%" }}
+    >
+      <div className="rounded-[2.5rem] border border-rose-500/20 bg-rose-500/5 p-8 md:p-12 text-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-500/30 to-transparent" />
+        <motion.h2 variants={item} className="text-2xl md:text-4xl font-black text-white mb-8 leading-tight">
+          {data.title}
+        </motion.h2>
+        <div className="grid gap-4 md:grid-cols-3 mb-10">
+          {data.points.map((point, i) => (
+            <motion.div
+              key={i}
+              variants={item}
+              className="group rounded-2xl border border-white/5 bg-white/5 p-6 flex items-center justify-center text-sm font-bold text-slate-200 transition-all hover:bg-white/10"
+            >
+              {point}
+            </motion.div>
+          ))}
+        </div>
+        <motion.p variants={item} className="text-lg md:text-xl font-black text-rose-300 mb-8 max-w-[40ch] mx-auto">
+          {data.closing}
+        </motion.p>
+        <div className="flex justify-center">
+          <motion.button
+            variants={item}
+            onClick={onShowExample}
+            className="inline-flex items-center gap-2 rounded-full border border-rose-400/30 bg-rose-500/10 px-6 py-3 text-sm font-black text-rose-200 hover:bg-rose-500/20 transition-all active:scale-95"
+          >
+            [ شوف مثال ]
+          </motion.button>
+        </div>
+      </div>
+    </motion.section>
+  );
+};
 
 export const StartJourneyStepsSection: FC<{ stagger: Variants; item: Variants }> = ({ stagger, item }) => (
   <motion.section
@@ -337,28 +387,28 @@ export const MetricsSection: FC<{
   const showModeBadge = !isUserMode;
   const cards = useMemo(
     () =>
-      (liveEnabled && !isFallback
-        ? [
-            {
-              val: metricsState.data.activeUnits30d.toLocaleString("ar-EG"),
-              label: "جلسات بدأت خلال 30 يوم",
-              icon: Users,
-              color: "text-teal-400"
-            },
-            {
-              val: `${metricsState.data.retentionRate30d.toLocaleString("ar-EG")}%`,
-              label: "استمرار بعد البداية الأولى",
-              icon: TrendingUp,
-              color: "text-[var(--color-primary)]"
-            },
-            {
-              val: metricsState.data.activity24h.toLocaleString("ar-EG"),
-              label: "نشاط آخر 24 ساعة",
-              icon: Zap,
-              color: "text-rose-400"
-            }
-          ]
-        : PREVIEW_METRICS),
+    (liveEnabled && !isFallback
+      ? [
+        {
+          val: metricsState.data.activeUnits30d.toLocaleString("ar-EG"),
+          label: "جلسات بدأت خلال 30 يوم",
+          icon: Users,
+          color: "text-teal-400"
+        },
+        {
+          val: `${metricsState.data.retentionRate30d.toLocaleString("ar-EG")}%`,
+          label: "استمرار بعد البداية الأولى",
+          icon: TrendingUp,
+          color: "text-[var(--color-primary)]"
+        },
+        {
+          val: metricsState.data.activity24h.toLocaleString("ar-EG"),
+          label: "نشاط آخر 24 ساعة",
+          icon: Zap,
+          color: "text-rose-400"
+        }
+      ]
+      : PREVIEW_METRICS),
     [isFallback, liveEnabled, metricsState.data]
   );
 
@@ -430,64 +480,44 @@ export const MetricsSection: FC<{
   );
 };
 
-export const TestimonialsSection: FC<{
+export const HowItWorksSection: FC<{
   stagger: Variants;
   item: Variants;
-  testimonials: { quote: string; author: string }[];
-  testimonialsState: { data: TestimonialItem[]; isLoading: boolean; lastUpdatedAt: number | null; mode: "live" | "fallback" };
-  liveEnabled: boolean;
-}> = ({ stagger, item, testimonials, testimonialsState, liveEnabled }) => {
-  const showModeBadge = !isUserMode;
-  const displayTestimonials =
-    liveEnabled && testimonialsState.mode === "live" && testimonialsState.data.length > 0
-      ? testimonialsState.data
-      : testimonials.length > 0
-        ? testimonials
-        : PREVIEW_TESTIMONIALS;
-
+  data: { title: string; subtitle: string; steps: { title: string; body: string }[] };
+}> = ({ stagger, item, data }) => {
+  const icons = [Activity, Layers, Brain];
   return (
     <motion.section
       className="phi-section"
       variants={stagger}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, margin: "-60px" }}
+      viewport={{ once: true, margin: "-10%" }}
     >
-      <motion.p
-        className="mb-2 text-center text-[13px] font-bold uppercase tracking-[0.2em] leading-relaxed text-teal-400"
-        variants={item}
-      >
-        صوت المستخدم
-      </motion.p>
-      <motion.h2 className="mb-4 text-center text-2xl font-black leading-tight text-white sm:text-3xl" variants={item}>
-        ماذا يشعر المستخدم من أول تجربة؟
-      </motion.h2>
-
-      <div className="mb-8">
-        <LiveStatusBar
-          title={liveEnabled ? "مصدر الشهادات" : "معاينة التجربة"}
-          mode={testimonialsState.mode}
-          isLoading={testimonialsState.isLoading && liveEnabled}
-          lastUpdatedAt={testimonialsState.lastUpdatedAt}
-          showModeBadge={showModeBadge}
-        />
-        <p className="mt-2 inline-flex items-center rounded-full border border-teal-500/20 bg-teal-500/10 px-3 py-1 text-[10px] font-bold text-teal-100">
-          {liveEnabled ? "شهادات حيّة عند التفعيل" : "أمثلة ثابتة توضّح شكل النتيجة المتوقعة"}
-        </p>
+      <div className="mb-10 text-center">
+        <h2 className="text-3xl font-black text-white mb-3">{data.title}</h2>
+        <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">{data.subtitle}</p>
       </div>
-
-      <div className="grid gap-4 lg:grid-cols-3">
-        {displayTestimonials.map((testimonial, index) => (
-          <motion.article
-            key={`${testimonial.author}-${index}`}
-            variants={item}
-            className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
-          >
-            <Quote className="mb-4 h-7 w-7 text-teal-300" />
-            <p className="mb-5 text-sm leading-7 text-slate-300">{testimonial.quote}</p>
-            <p className="text-xs font-black tracking-wide text-slate-400">{testimonial.author}</p>
-          </motion.article>
-        ))}
+      <div className="grid gap-6 md:grid-cols-3">
+        {data.steps.map((step, i) => {
+          const Icon = icons[i] || Brain;
+          return (
+            <motion.div
+              key={i}
+              variants={item}
+              className="group relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.03] p-8 transition-all hover:bg-white/[0.06]"
+            >
+              <div className="absolute -right-4 -top-4 opacity-[0.03] transition-opacity group-hover:opacity-[0.08]">
+                <Icon size={120} />
+              </div>
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-400">
+                <Icon size={28} />
+              </div>
+              <h3 className="mb-4 text-xl font-black text-white">{step.title}</h3>
+              <p className="text-sm leading-relaxed text-slate-400">{step.body}</p>
+            </motion.div>
+          );
+        })}
       </div>
     </motion.section>
   );
@@ -523,5 +553,106 @@ export const FinalReadinessSection: FC<{
         </div>
       )}
     </motion.div>
+  </motion.section>
+);
+
+export const SystemOverclockSection: FC<{
+  stagger: Variants;
+  item: Variants;
+}> = ({ stagger, item }) => (
+  <motion.section
+    className="phi-section"
+    variants={stagger}
+    initial="hidden"
+    whileInView="visible"
+    viewport={{ once: true, margin: "-10%" }}
+  >
+    <div className="mb-10 text-center">
+      <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 mb-4">
+        <Cpu className="h-4 w-4 text-amber-400 animate-pulse" />
+        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-300">
+          System Overclock: God Mode Active
+        </span>
+      </div>
+      <h2 className="text-3xl font-black text-white mb-3">غرفة التحكم (System Under-the-Hood)</h2>
+      <p className="text-sm text-slate-400 max-w-[50ch] mx-auto">
+        بما إنك System Architect، دي نظرة على المحركات الصامتة اللي بتشكل وعي "دواير" دلوقتي.
+      </p>
+    </div>
+
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {[
+        {
+          title: "محرك الأثر (Impact)",
+          desc: "شغال بيحلل الروابط بين الأفعال والمزاج في الخلفية.",
+          icon: Brain,
+          stat: "Active & Scoring",
+          color: "text-teal-400",
+          bg: "bg-teal-500/5",
+          border: "border-teal-500/20"
+        },
+        {
+          title: "مستوى الفوضى (Entropy)",
+          desc: "بيراقب تذبذب مشاعرك عشان يفعل 'وضع الاحتواء' لو زادت.",
+          icon: Activity,
+          stat: "Chaos Controlled",
+          color: "text-amber-400",
+          bg: "bg-amber-500/5",
+          border: "border-amber-500/20"
+        },
+        {
+          title: "نظام المرايا (Mirror)",
+          desc: "بروتوكول المواجهة بالواقع (كشف التناقضات الشعورية).",
+          icon: Eye,
+          stat: "Ready to Confront",
+          color: "text-rose-400",
+          bg: "bg-rose-500/5",
+          border: "border-rose-500/20"
+        },
+        {
+          title: "جسر الـ Biometrics",
+          desc: "تجهيز القنوات لاستقبال بيانات الساعات والحساسات الخارجية.",
+          icon: Unplug,
+          stat: "Phase 24 Online",
+          color: "text-blue-400",
+          bg: "bg-blue-500/5",
+          border: "border-blue-500/20"
+        }
+      ].map((sys, idx) => (
+        <motion.div
+          key={idx}
+          variants={item}
+          className={`relative overflow-hidden rounded-3xl border ${sys.border} ${sys.bg} p-6 transition-all hover:scale-[1.02]`}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <div className={`p-2 rounded-xl bg-white/5 ${sys.color}`}>
+              <sys.icon size={20} />
+            </div>
+            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${sys.border} ${sys.color}`}>
+              {sys.stat}
+            </span>
+          </div>
+          <h3 className="text-sm font-black text-white mb-2">{sys.title}</h3>
+          <p className="text-[11px] leading-relaxed text-slate-400">{sys.desc}</p>
+          <div className="absolute -right-6 -bottom-6 opacity-[0.03] rotate-12">
+            <sys.icon size={100} />
+          </div>
+        </motion.div>
+      ))}
+    </div>
+
+    <div className="mt-8 rounded-3xl border border-white/5 bg-white/[0.02] p-6">
+      <div className="flex items-center gap-4 mb-4">
+        <HardDrive className="h-4 w-4 text-slate-500" />
+        <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">البروتوكولات القادمة (Phase 30 Skeletons)</span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {["Ambient Reality", "Time Capsule Vault", "Holographic Feedback", "Global Atlas Simulation", "Collective Pulse Ranking"].map((p, i) => (
+          <span key={i} className="px-3 py-1.5 rounded-full bg-slate-900 border border-white/5 text-[10px] text-slate-400 font-bold italic">
+            {"//"} {p} {"->"} Hooked
+          </span>
+        ))}
+      </div>
+    </div>
   </motion.section>
 );

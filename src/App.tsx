@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, User, MessageCircle } from "lucide-react";
+import { X, User, MessageCircle, Cpu } from "lucide-react";
 import { Landing } from "./components/Landing";
 import { LegalPage } from "./components/LegalPage";
 import { SyncStatusUI } from "./components/SyncStatusUI";
@@ -95,6 +95,7 @@ import { startAutonomousStartupJobs } from "./app/orchestration/startupJobs";
 
 const OracleCouncilDashboard = lazy(() => import("./components/Oracle/OracleDashboard").then(m => ({ default: m.OracleCouncilDashboard })));
 import { GlobalToast } from "./components/GlobalToast";
+import { TheArmoryScreen } from "./components/TheArmoryScreen";
 
 
 // Initialize language on app start
@@ -465,6 +466,7 @@ export default function App() {
   // Phase 30: Holographic Legacy
   const [showAmbientReality, setShowAmbientReality] = useState(false);
   const [showTimeCapsuleVault, setShowTimeCapsuleVault] = useState(false);
+  const [showSystemOverclockPanel, setShowSystemOverclockPanel] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showTrackingDashboard, setShowTrackingDashboard] = useState(false);
   const [showAtlasDashboard, setShowAtlasDashboard] = useState(false);
@@ -1029,7 +1031,8 @@ export default function App() {
       enterprise: "بوابة المؤسسات",
       "guilt-court": "محكمة الشعور بالذنب",
       diplomacy: "البرقيات الدبلوماسية",
-      "oracle-dashboard": "مجلس الحكماء"
+      "oracle-dashboard": "مجلس الحكماء",
+      armory: "الترسانة (Armory)"
     };
     trackPageView(pageNames[screen]);
   }, [screen]);
@@ -1080,7 +1083,11 @@ export default function App() {
       },
       "oracle-dashboard": {
         title: "Oracle Council | Alrehla",
-        description: "Oracle governance dashboard for trajectory review, calibration, and collective intelligence."
+        description: "Review system anomalies and administrative configurations."
+      },
+      armory: {
+        title: "The Armory | Alrehla",
+        description: "Access advanced cognitive and psychological defense protocols."
       }
     };
 
@@ -2643,6 +2650,35 @@ export default function App() {
               }
             >
               <div key={screen} className={`min-w-0 flex transition-all duration-300 ease-in-out ${isLandingScreen ? "flex-col" : "flex-1 items-center justify-center app-panel-main"}`}>
+                {/* System Overclock FAB - Architect Mode */}
+                {!isUserMode && (
+                  <div className="fixed bottom-24 right-6 z-[60] flex flex-col items-end gap-3 pointer-events-auto">
+                    <AnimatePresence>
+                      {showSystemOverclockPanel && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8, x: 20 }}
+                          animate={{ opacity: 1, scale: 1, x: 0 }}
+                          exit={{ opacity: 0, scale: 0.8, x: 20 }}
+                          className="glass-heavy flex flex-col gap-2 p-3 border-amber-500/30 min-w-[140px]"
+                        >
+                          <button onClick={() => setShowConsciousnessArchive(true)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-teal-400 border border-teal-500/20 rounded-xl hover:bg-teal-500/10 text-right">Archive 📁</button>
+                          <button onClick={() => setShowAmbientReality(true)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-rose-400 border border-rose-500/20 rounded-xl hover:bg-rose-500/10 text-right">Ambient 🌌</button>
+                          <button onClick={() => setShowTimeCapsuleVault(true)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-amber-400 border border-amber-500/20 rounded-xl hover:bg-amber-500/10 text-right">Vault ⏳</button>
+                          <button onClick={() => void navigateToScreen("oracle-dashboard")} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-blue-400 border border-blue-500/20 rounded-xl hover:bg-blue-500/10 text-right">Oracle 🔮</button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setShowSystemOverclockPanel(!showSystemOverclockPanel)}
+                      className="w-12 h-12 rounded-full bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.4)] flex items-center justify-center text-slate-950 border-2 border-slate-900 z-[61]"
+                    >
+                      <Cpu size={20} className={showSystemOverclockPanel ? "animate-spin" : "animate-pulse"} />
+                    </motion.button>
+                  </div>
+                )}
+
                 {screen === "landing" && (
                   <Landing
                     onStartJourney={startRecovery}
@@ -2763,6 +2799,28 @@ export default function App() {
 
                 {screen === "oracle-dashboard" && authUser?.id && (
                   <OracleCouncilDashboard oracleId={authUser.id} />
+                )}
+
+                {screen === "armory" && (
+                  <TheArmoryScreen
+                    onBack={() => { void navigateToScreen("landing"); }}
+                    onOpenMuteProtocol={() => setShowNoiseSilencingPulse(true)}
+                    onOpenCocoon={() => openCocoonModal("manual")}
+                    onOpenMirror={() => {
+                      setActiveMirrorInsight({
+                        id: "manual-confront",
+                        type: "emotional_denial",
+                        title: "المواجهة الاختيارية 🪞",
+                        message: "أنت اخترت تفتح المراية دي دلوقتي. النظام بيقول لإنك مسؤول عن وعيك، دي فرصة للصدق.",
+                        question: "إيه أكتر حاجة بتهرب منها دلوقتي؟",
+                        severity: "firm"
+                      });
+                      setShowMirrorOverlay(true);
+                    }}
+                    onOpenGuiltCourt={() => { void navigateToScreen("guilt-court"); }}
+                    onOpenConsciousnessArchive={() => setShowConsciousnessArchive(true)}
+                    onOpenTimeCapsule={() => setShowTimeCapsuleVault(true)}
+                  />
                 )}
               </div>
             </ErrorBoundary>
@@ -3200,10 +3258,21 @@ export default function App() {
               </span>
               <span className="text-[10px] font-semibold">دوايري</span>
             </button>
+            <button type="button" onClick={() => { void navigateToScreen("armory"); }}
+              className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
+              style={{ color: screen === "armory" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
+              aria-label="حماية">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span className="text-[10px] font-semibold">الترسانة</span>
+            </button>
             <button type="button" onClick={() => setShowAchievements(true)}
               className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
               style={{ color: "rgba(148,163,184,0.55)" }}
-              aria-label="محطات">
+            >
               <span className="relative inline-flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 21v-4a7 7 0 0 1 14 0v4" />

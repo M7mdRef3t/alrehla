@@ -237,7 +237,7 @@ export const FaqScreen: FC<FaqScreenProps> = ({ onClose }) => {
               fontFamily: "'Amiri', 'Scheherazade New', serif",
             }}
           >
-            {landingCopy.slogan}
+            {landingCopy.hook}
           </p>
         </div>
       </motion.div>

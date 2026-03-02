@@ -64,6 +64,11 @@ export async function POST(req: Request) {
         const { processContextualInsights } = await import('../../../services/contextEngine');
         await processContextualInsights(user.id);
 
+        // --- STABILITY ENGINE ---
+        // Calculate volatility and psychological hotspots (Heatmap)
+        const { processStabilitySnapshot } = await import('../../../services/stabilityEngine');
+        await processStabilitySnapshot(user.id, 30);
+
         return NextResponse.json({ success: true, data });
 
     } catch (err: any) {

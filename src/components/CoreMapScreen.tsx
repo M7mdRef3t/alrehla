@@ -19,6 +19,9 @@ import { FloatingActionMenu } from "./FloatingActionMenu";
 import { InsightsSidebar } from "./InsightsSidebar";
 import { MapInsightPanel } from "./MapInsightPanel";
 import { DeepPatternsPanel } from "./DeepPatternsPanel";
+import { InfluenceNetwork } from "./InfluenceNetwork";
+import { StabilityHeatmap } from "./StabilityHeatmap";
+import { ShareDialog } from "./ShareDialog";
 import { WeeklyReportWidget } from "./WeeklyReportWidget";
 import { ConsciousnessThread } from "./ConsciousnessThread";
 import { InterventionPanel } from "./InterventionPanel";
@@ -54,12 +57,12 @@ import { getShadowScore } from "../state/shadowPulseState";
    ════════════════════════════════════════════════ */
 
 const cosmicFade = {
-  hidden: { opacity: 0, y: 16, filter: "blur(8px)" },
+  hidden: { opacity: 0, y: 10, filter: "blur(4px)" },
   visible: {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }
+    transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }
   }
 };
 
@@ -122,6 +125,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const activeTab = useLayoutState((s) => s.activeTab);
 
   const [showAddPerson, setShowAddPerson] = useState(false);
+  const [segmentedView, setSegmentedView] = useState<"network" | "stability" | "metrics">("network");
 
   // ─── Gemini Live Integration (bureau of consciousness) ───
   const {
@@ -377,25 +381,118 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           تظهر دائماً (60% من الاهتمام البصري)
           ══════════════════════════════════════ */}
       {!journeyMode && activeNodes.length > 0 && (
-        <motion.div
-          variants={cosmicFade}
-          className="w-full max-w-[38rem] mx-auto mb-3 space-y-3 primary-block"
-          style={{
-            order: Math.min(sectionOrder["tei-widget"], sectionOrder["daily-pulse"]),
-            transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-          }}
-        >
-          <InterventionPanel />
-          <ShadowInsightPanel onSurface={(context) => setVoiceTrigger({ event: 'shadow_insight', context })} />
-          <VoicePresence trigger={voiceTrigger} />
-          <TEIWidget />
-          <DailyPulseWidget />
-          <WeeklyReportWidget />
-          <MapInsightPanel />
-          <DeepPatternsPanel />
-          <ConsciousnessThread />
-        </motion.div>
+        <div className="fixed inset-x-0 top-0 z-30 pointer-events-none">
+          <div className="max-w-[42rem] mx-auto px-4 py-6 flex flex-col items-center">
+
+            {/* 1️⃣ HUD: OPERATIONAL (Sanctuary Mode) */}
+            {activeTab === "operational" && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{
+                  opacity: isSpeaking ? 0.6 : 1,
+                  scale: isSpeaking ? 0.98 : 1,
+                  y: 0
+                }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="w-full pointer-events-auto flex flex-col items-center gap-10 pt-10"
+              >
+                {/* 💊 Pulse Capsule: The Vital Sign HUD */}
+                <div className="w-full flex justify-center">
+                  <DailyPulseWidget />
+                </div>
+
+                {/* 🛡️ Priority Intervention (High Breathing Space) */}
+                <div className="w-full max-w-sm">
+                  <InterventionPanel />
+                </div>
+              </motion.div>
+            )}
+
+            {/* 2️⃣ HUD: ANALYTICAL (Observatory Mode) */}
+            {activeTab === "analytical" && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full pointer-events-auto space-y-4 pt-12"
+              >
+                {/* 🧭 Segmented Control: Choose your Lens */}
+                <div className="flex items-center justify-center gap-2 p-1 rounded-full bg-white/[0.03] border border-white/5 mx-auto w-fit mb-8">
+                  {[
+                    { id: "network", label: "الشبكة" },
+                    { id: "stability", label: "الاستقرار" },
+                    { id: "metrics", label: "المؤشرات" }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setSegmentedView(tab.id as any)}
+                      className={`px-6 py-2 rounded-full text-xs font-black transition-all ${segmentedView === tab.id
+                        ? "bg-amber-500 text-black shadow-lg shadow-amber-500/20"
+                        : "text-white/30 hover:text-white/60"
+                        }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="space-y-6 max-h-[70vh] overflow-y-auto no-scrollbar pb-32">
+                  {segmentedView === "metrics" && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                      <div className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 text-right font-black">
+                        <h3 className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-3">حمولة الوعي (Trauma Entropy)</h3>
+                        <TEIWidget />
+                      </div>
+                      <MapInsightPanel />
+                    </motion.div>
+                  )}
+
+                  {segmentedView === "network" && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                      <InfluenceNetwork />
+                    </motion.div>
+                  )}
+
+                  {segmentedView === "stability" && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                      <StabilityHeatmap />
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* 3️⃣ HUD: NARRATIVE (Chronicle Mode) */}
+            {activeTab === "narrative" && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full pointer-events-auto space-y-6 pt-12 max-h-[80vh] overflow-y-auto no-scrollbar pb-32"
+              >
+                <div className="border-r-2 border-indigo-500/30 pr-4">
+                  <h2 className="text-xl font-black text-white mb-1">الكرونيكل</h2>
+                  <p className="text-xs text-white/40">سجل تطور وعيك الزمني</p>
+                </div>
+
+                <WeeklyReportWidget />
+
+                {/* Shadow Insights as a "Special Event" in Narrative */}
+                <div className="px-2">
+                  <ShadowInsightPanel onSurface={(context) => setVoiceTrigger({ event: 'shadow_insight', context })} />
+                </div>
+
+                <ConsciousnessThread />
+
+                <div className="pt-4 flex justify-center">
+                  <ShareDialog />
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </div>
       )}
+
+      {/* Global Presence Overlay (The Witness) */}
+      <VoicePresence trigger={voiceTrigger} />
 
       {/* ══════════════════════════════════════
           الكتلة الداعمة — تفاصيل قابلة للطي (30%)
@@ -775,119 +872,120 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         />
       )}
 
-      <AnimatePresence mode="wait">
-        {canUseGalaxyView && galaxyMode && galaxySubView === "forest" ? (
-          <motion.div
-            key="forest"
-            initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              order: sectionOrder["map-canvas"],
-              transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-            }}
-          >
-            <ForestView onNodeClick={handleNodeClick} />
-          </motion.div>
-        ) : canUseGalaxyView && galaxyMode && galaxySubView === "map" ? (
-          <motion.div
-            key="galaxy-map"
-            initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              order: sectionOrder["map-canvas"],
-              transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-            }}
-          >
-            <MapCanvas
-              onNodeClick={handleNodeClick}
-              canOpenDetails={canUseBasicDiagnosis}
-              onMeClick={() => {
-                if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; }
-                setShowMeCard(true);
-              }}
-              galaxyGoalIds={selectedContexts.length > 0 ? selectedContexts : ["family", "work", "love", "general"]}
-              highlightNodeId={selectedNodeId}
-              aiState={{
-                isConnected,
-                isListening,
-                isSpeaking,
-                onToggle: toggleAI,
-                onNodeDrop: handleNodeDropOnAI
-              }}
-            />
-          </motion.div>
-        ) : !canUseFamilyTreeView || viewMode === "map" ? (
-          <motion.div
-            key="single-map"
-            initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              order: sectionOrder["map-canvas"],
-              transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-            }}
-          >
-            <MapCanvas
-              onNodeClick={handleNodeClick}
-              canOpenDetails={canUseBasicDiagnosis}
-              onMeClick={() => {
-                if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; }
-                setShowMeCard(true);
-              }}
-              goalIdFilter={goalId}
-              highlightNodeId={selectedNodeId}
-              aiState={{
-                isConnected,
-                isListening,
-                isSpeaking,
-                onToggle: toggleAI,
-                onNodeDrop: handleNodeDropOnAI
-              }}
-            />
-          </motion.div>
-        ) : canUseFamilyTreeView && isFamily ? (
-          <motion.div
-            key="family-tree"
-            initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              order: sectionOrder["map-canvas"],
-              transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-            }}
-          >
-            <FamilyTreeView onNodeClick={handleNodeClick} />
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      {/* ── Operational Visuals ── */}
+      {activeTab === "operational" && (
+        <>
+          <AnimatePresence mode="wait">
+            {canUseGalaxyView && galaxyMode && galaxySubView === "forest" ? (
+              <motion.div
+                key="forest"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.05 }}
+                style={{
+                  order: sectionOrder["map-canvas"],
+                  transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+                }}
+              >
+                <ForestView onNodeClick={handleNodeClick} />
+              </motion.div>
+            ) : canUseGalaxyView && galaxyMode && galaxySubView === "map" ? (
+              <motion.div
+                key="galaxy-map"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.05 }}
+                style={{
+                  order: sectionOrder["map-canvas"],
+                  transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+                }}
+              >
+                <MapCanvas
+                  onNodeClick={handleNodeClick}
+                  canOpenDetails={canUseBasicDiagnosis}
+                  onMeClick={() => {
+                    if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; }
+                    setShowMeCard(true);
+                  }}
+                  galaxyGoalIds={selectedContexts.length > 0 ? selectedContexts : ["family", "work", "love", "general"]}
+                  highlightNodeId={selectedNodeId}
+                  aiState={{
+                    isConnected,
+                    isListening,
+                    isSpeaking,
+                    onToggle: toggleAI,
+                    onNodeDrop: handleNodeDropOnAI
+                  }}
+                />
+              </motion.div>
+            ) : !canUseFamilyTreeView || viewMode === "map" ? (
+              <motion.div
+                key="single-map"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.05 }}
+                style={{
+                  order: sectionOrder["map-canvas"],
+                  transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+                }}
+              >
+                <MapCanvas
+                  onNodeClick={handleNodeClick}
+                  canOpenDetails={canUseBasicDiagnosis}
+                  onMeClick={() => {
+                    if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; }
+                    setShowMeCard(true);
+                  }}
+                  goalIdFilter={goalId}
+                  highlightNodeId={selectedNodeId}
+                  aiState={{
+                    isConnected,
+                    isListening,
+                    isSpeaking,
+                    onToggle: toggleAI,
+                    onNodeDrop: handleNodeDropOnAI
+                  }}
+                />
+              </motion.div>
+            ) : canUseFamilyTreeView && isFamily ? (
+              <motion.div
+                key="family-tree"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.05 }}
+                style={{
+                  order: sectionOrder["map-canvas"],
+                  transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
+                }}
+              >
+                <FamilyTreeView onNodeClick={handleNodeClick} />
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
 
-      {/* ── Empty state ── */}
-      {nodes.length === 0 && !showOnboarding && !journeyMode && (
-        <motion.div
-          className="mt-6 mx-auto max-w-sm p-4 card-unified text-center"
-          style={{ borderStyle: "dashed", borderColor: "rgba(255, 255, 255, 0.1)" }}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          role="status"
-          aria-live="polite"
-        >
-          <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>
-            <EditableText id="map_empty_title" defaultText={mapCopy.emptyMapTitle} page="map" />
-          </h3>
-          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-            <EditableText id="map_empty_hint" defaultText={mapCopy.emptyMapHint} page="map" multiline showEditIcon={false} />
-          </p>
-          <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
-            <EditableText id="map_empty_reassurance" defaultText={mapCopy.emptyMapReassurance} page="map" showEditIcon={false} />
-          </p>
-        </motion.div>
+          {/* ── Empty state ── */}
+          {nodes.length === 0 && !showOnboarding && !journeyMode && (
+            <motion.div
+              className="mt-6 mx-auto max-w-sm p-4 card-unified text-center"
+              style={{ borderStyle: "dashed", borderColor: "rgba(255, 255, 255, 0.1)" }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              role="status"
+              aria-live="polite"
+            >
+              <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>
+                <EditableText id="map_empty_title" defaultText={mapCopy.emptyMapTitle} page="map" />
+              </h3>
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                <EditableText id="map_empty_hint" defaultText={mapCopy.emptyMapHint} page="map" multiline showEditIcon={false} />
+              </p>
+              <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
+                <EditableText id="map_empty_reassurance" defaultText={mapCopy.emptyMapReassurance} page="map" showEditIcon={false} />
+              </p>
+            </motion.div>
+          )}
+        </>
       )}
 
       {showOnboarding && nodes.length === 0 && !journeyMode && (
@@ -1075,9 +1173,11 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         <InsightsSidebar onOpenArchive={() => setShowJournalArchive(true)} />
       )}
 
-      {/* ── Tab Navigation — التبويبات ── */}
-      {!journeyMode && activeTab === "conversation" && (
-        <TabNavigation />
+      {/* ── Tab Navigation — التبويبات (Global Dock) ── */}
+      {!journeyMode && (
+        <div className="fixed bottom-0 left-0 right-0 z-50">
+          <TabNavigation />
+        </div>
       )}
 
       {/* ── Layout Mode Switcher — مبدل الأوضاع ── */}

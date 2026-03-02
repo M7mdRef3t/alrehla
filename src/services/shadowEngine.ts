@@ -35,10 +35,11 @@ export async function processShadowSignals(userId: string) {
 
         // Fetch all active nodes
         const { data: nodes } = await supabaseAdmin
-            .from('map_nodes') // Assuming nodes are in this table
-            .select('label, id')
+            .from('map_nodes')
+            .select('label, id, ring')
             .eq('user_id', userId)
-            .eq('is_archived', false);
+            .eq('is_archived', false)
+            .not('ring', 'is', null); // Only check nodes that have been assigned a ring/place in life
 
         if (!nodes || nodes.length < 3) return; // Need a healthy map to detect shadows
 

@@ -2,34 +2,16 @@
  * ════════════════════════════════════════════════════════════════════════════
  * 🗂️ TAB NAVIGATION — نظام التبويبات
  * ════════════════════════════════════════════════════════════════════════════
- *
- * شريط تبويبات للتنقل السريع بين:
- * - الخريطة
- * - التحليل
- * - الحوار
  */
 
 import type { FC } from "react";
 import { motion } from "framer-motion";
-import { Map, BarChart3, MessageSquare } from "lucide-react";
+import { Map, Activity, BookOpen, Settings } from "lucide-react";
 import { useLayoutState, type ActiveTab } from "../state/layoutState";
 
-/**
- * ═══════════════════════════════════════════════════════════════════════════
- * TYPES
- * ═══════════════════════════════════════════════════════════════════════════
- */
-
 interface TabNavigationProps {
-  /** إخفاء التبويبات في حالات معينة */
   hidden?: boolean;
 }
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════
- * COMPONENT
- * ═══════════════════════════════════════════════════════════════════════════
- */
 
 export const TabNavigation: FC<TabNavigationProps> = ({ hidden = false }) => {
   const activeTab = useLayoutState((s) => s.activeTab);
@@ -37,41 +19,44 @@ export const TabNavigation: FC<TabNavigationProps> = ({ hidden = false }) => {
 
   if (hidden) return null;
 
-  // ─── Tab Items ────────────────────────────────────────────────────────────
   const tabs: Array<{
     id: ActiveTab;
     label: string;
     icon: typeof Map;
     color: string;
   }> = [
-    {
-      id: "map",
-      label: "الخريطة",
-      icon: Map,
-      color: "var(--ring-safe)"
-    },
-    {
-      id: "insights",
-      label: "التحليل",
-      icon: BarChart3,
-      color: "rgba(251, 191, 36, 0.9)"
-    },
-    {
-      id: "conversation",
-      label: "الحوار",
-      icon: MessageSquare,
-      color: "rgba(167, 139, 250, 0.9)"
-    }
-  ];
+      {
+        id: "operational",
+        label: "الخريطة",
+        icon: Map,
+        color: "var(--layer-operational)"
+      },
+      {
+        id: "analytical",
+        label: "التحليل",
+        icon: Activity,
+        color: "var(--layer-analytical)"
+      },
+      {
+        id: "narrative",
+        label: "رحلتي",
+        icon: BookOpen,
+        color: "var(--layer-narrative)"
+      },
+      {
+        id: "settings",
+        label: "الإعدادات",
+        icon: Settings,
+        color: "var(--layer-muted)"
+      }
+    ];
 
-  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-40 flex items-center justify-center py-3 px-4"
+      className="fixed bottom-0 left-0 right-0 z-[100] flex items-center justify-center py-6 px-4 pb-10 sm:pb-6"
       style={{
-        background: "rgba(15, 23, 42, 0.95)",
-        backdropFilter: "blur(16px)",
-        borderBottom: "1px solid rgba(255, 255, 255, 0.1)"
+        background: "linear-gradient(to top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0))",
+        backdropFilter: "blur(12px)",
       }}
     >
       <div
@@ -95,7 +80,6 @@ export const TabNavigation: FC<TabNavigationProps> = ({ hidden = false }) => {
                 color: isActive ? "white" : "var(--text-secondary)"
               }}
             >
-              {/* Active Background */}
               {isActive && (
                 <motion.div
                   className="absolute inset-0 rounded-full"
@@ -112,7 +96,6 @@ export const TabNavigation: FC<TabNavigationProps> = ({ hidden = false }) => {
                 />
               )}
 
-              {/* Icon & Label */}
               <span className="relative z-10 flex items-center gap-2">
                 <Icon className="w-4 h-4" />
                 <span className="hidden sm:inline">{tab.label}</span>

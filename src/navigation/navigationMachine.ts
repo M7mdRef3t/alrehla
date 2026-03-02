@@ -9,7 +9,8 @@ export type AppScreen =
   | "enterprise"
   | "guilt-court"
   | "diplomacy"
-  | "oracle-dashboard";
+  | "oracle-dashboard"
+  | "armory";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 

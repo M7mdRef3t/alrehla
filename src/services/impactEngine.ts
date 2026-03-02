@@ -26,7 +26,9 @@ export async function processActionImpacts(userId: string, currentMood: number, 
             const moodDelta = currentMood - (action.baseline_mood || 3);
             const energyDelta = currentEnergy - (action.baseline_energy || 3);
 
-            const impactScore = (moodDelta * 0.7) + (energyDelta * 0.3);
+            // Noise Guard: If delta is smaller than 0.2 (on 1-5 scale), consider it negligible to prevent junk data.
+            const meaningfulDeltas = Math.abs(moodDelta) >= 0.2 || Math.abs(energyDelta) >= 0.2;
+            const impactScore = meaningfulDeltas ? (moodDelta * 0.7) + (energyDelta * 0.3) : 0;
 
             await supabaseAdmin
                 .from('micro_actions')

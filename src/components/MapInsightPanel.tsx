@@ -234,7 +234,7 @@ export const MapInsightPanel: FC = () => {
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            {item.cache_hit && <CheckCircle2 className="w-3 h-3 text-emerald-500 opacity-60" title="تم استرجاعه من الذاكرة" />}
+                                                            {item.cache_hit && <span title="تم استرجاعه من الذاكرة"><CheckCircle2 className="w-3 h-3 text-emerald-500 opacity-60" /></span>}
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); if (item.id) togglePin(item.id, !!item.pinned); }}
                                                                 className={`p-1.5 rounded-full transition-colors ${item.pinned ? 'bg-indigo-500 text-white' : 'hover:bg-white/10 text-slate-500'}`}

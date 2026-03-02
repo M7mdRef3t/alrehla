@@ -36,6 +36,10 @@ interface RingProps {
 
 const OrbitalRing: FC<RingProps> = memo(({ label, radius, color, glowColor, breatheDuration }) => {
   const safeRadius = Number.isFinite(radius) ? radius : 0;
+  // Sanctuary Neutral: Overriding ring colors to be barely visible grey normally.
+  const neutralColor = "rgba(255, 255, 255, 0.05)";
+  const neutralGlow = "rgba(255, 255, 255, 0.01)";
+
   return (
     <g aria-label={label}>
       {/* Ambient glow layer */}
@@ -44,38 +48,34 @@ const OrbitalRing: FC<RingProps> = memo(({ label, radius, color, glowColor, brea
         cy="50"
         r={safeRadius}
         fill="none"
-        stroke={glowColor}
+        stroke={neutralGlow}
         strokeWidth={4}
-        opacity={0.15}
+        opacity={0.1}
         animate={{
-          strokeWidth: [3, 5, 3],
-          opacity: [0.1, 0.2, 0.1]
+          opacity: [0.05, 0.1, 0.05]
         }}
         transition={{
-          duration: breatheDuration,
+          duration: 12,
           repeat: Infinity,
           ease: "easeInOut"
         }}
       />
-      {/* Main breathing ring */}
+      {/* Main breathing ring (Neutral by default) */}
       <motion.circle
         cx="50"
         cy="50"
         r={safeRadius}
         fill="none"
-        stroke={color}
+        stroke={neutralColor}
         className="orbital-ring"
         animate={{
-          strokeWidth: [1.0, 1.6, 1.0],
-          opacity: [0.45, 0.8, 0.45]
+          strokeWidth: [0.5, 0.8, 0.5],
+          opacity: [0.2, 0.4, 0.2]
         }}
         transition={{
-          duration: breatheDuration,
+          duration: breatheDuration * 2,
           repeat: Infinity,
           ease: "easeInOut"
-        }}
-        style={{
-          filter: "none"
         }}
       />
     </g>
@@ -109,7 +109,7 @@ const getGreyZonePosition = (nodeIndex: number, totalInGrey: number): { x: numbe
 /* ── Node Colors (Cosmic) ── */
 
 const RING_COLORS = {
-  safe: { stroke: "#2dd4bf", glow: "rgba(45, 212, 191, 0.5)" },
+  safe: { stroke: "#FFFFFF", glow: "rgba(255, 255, 255, 0.1)" },
   caution: { stroke: "#fbbf24", glow: "rgba(251, 191, 36, 0.45)" },
   danger: { stroke: "#f87171", glow: "rgba(248, 113, 113, 0.5)" },
   detached: { stroke: "#94A3B8", glow: "rgba(148, 163, 184, 0.2)" }
@@ -198,21 +198,13 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   }, [node.id, justDraggedId, onClick]);
 
   /* ── Ring color for the breathing aura ── */
-  const auraColor = isDetached
-    ? "rgba(148, 163, 184, 0.15)"
-    : node.ring === "red"
-      ? "rgba(248, 113, 113, 0.25)"
-      : node.ring === "yellow"
-        ? "rgba(251, 191, 36, 0.2)"
-        : "rgba(45, 212, 191, 0.2)";
+  const auraColor = isHighlighted
+    ? (node.ring === "red" ? "rgba(248, 113, 113, 0.25)" : node.ring === "yellow" ? "rgba(251, 191, 36, 0.2)" : "rgba(45, 212, 191, 0.2)")
+    : "rgba(255, 255, 255, 0.02)";
 
-  const auraBorderColor = isDetached
-    ? "rgba(148, 163, 184, 0.25)"
-    : node.ring === "red"
-      ? "rgba(248, 113, 113, 0.4)"
-      : node.ring === "yellow"
-        ? "rgba(251, 191, 36, 0.35)"
-        : "rgba(45, 212, 191, 0.35)";
+  const auraBorderColor = isHighlighted
+    ? (node.ring === "red" ? "rgba(248, 113, 113, 0.4)" : node.ring === "yellow" ? "rgba(251, 191, 36, 0.35)" : "rgba(45, 212, 191, 0.35)")
+    : "rgba(255, 255, 255, 0.05)";
 
   return (
     <motion.div

@@ -17,8 +17,10 @@ import { LandingSimulation } from "./LandingSimulation";
 import {
   FeatureShowcaseSection,
   MetricsSection,
-  TestimonialsSection,
-  FinalReadinessSection
+  HowItWorksSection,
+  ProblemFirstSection,
+  FinalReadinessSection,
+  SystemOverclockSection
 } from "./landing/LandingSections";
 import { useLandingLiveData } from "../architecture/landingLiveData";
 import { isPublicPaymentsEnabled } from "../config/payments";
@@ -176,9 +178,10 @@ export const Landing: FC<LandingProps> = ({
   const showHeavyAmbientLayers = !reduceMotion && !useLiteVisuals;
   const checkoutCtaLabel = checkoutCtaVariant === "B" ? "فعّل رحلة 21 يوم" : "احجز مقعدك الآن";
   const showLongSections = showExtendedMobileContent;
-  const heroTitle = heroVariant === "B"
-    ? { line1: "تعافيك يبدأ من خريطتك", line2: "لا من الكلام" }
-    : { line1: "الرحلة واحدة..", line2: "والقصة قصتك" };
+  const heroTitle = {
+    line1: landingCopy.titleLine1,
+    line2: landingCopy.titleLine2
+  };
   const heroSubtitle =
     subtitleVariant === "B"
       ? "ضع مشكلتك على الخريطة كما هي. التشخيص الصادق أقصر طريق للتعافي الفعلي."
@@ -375,11 +378,9 @@ export const Landing: FC<LandingProps> = ({
       setIsPublicPulseLoading(true);
       try {
         const pulseResponse = await fetch("/api/public/pulse", { cache: "no-store" });
-        const scarcityResponse = isPublicPaymentsEnabled
-          ? await fetch("/api/public/scarcity", { cache: "no-store" })
-          : null;
+        const scarcityResponse = await fetch("/api/public/scarcity", { cache: "no-store" }).catch(() => null);
         const pulseData = (await pulseResponse.json()) as PublicPulsePayload;
-        const scarcityData = scarcityResponse
+        const scarcityData = scarcityResponse && scarcityResponse.ok
           ? ((await scarcityResponse.json()) as PublicScarcityPayload)
           : null;
         if (!mounted) return;
@@ -393,7 +394,6 @@ export const Landing: FC<LandingProps> = ({
           setPublicPulseAvg(null);
         }
         const hasLiveScarcity =
-          Boolean(isPublicPaymentsEnabled) &&
           scarcityData?.is_live === true &&
           typeof scarcityData?.seats_left === "number" &&
           Number.isFinite(scarcityData.seats_left);
@@ -520,37 +520,39 @@ export const Landing: FC<LandingProps> = ({
           </motion.ul>
 
           <motion.div variants={item(reduceMotion)} className="flex flex-col items-center">
-            {isPublicPaymentsEnabled && (
-              <div className="mb-4 w-[min(22rem,92vw)] flex flex-col items-center justify-center">
-                {scarcityMeter && (
-                  <motion.button
-                    type="button"
-                    variants={item(reduceMotion)}
-                    onClick={handleOpenCheckout}
-                    className="w-full text-right rounded-xl px-2 py-1.5 hover:bg-white/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40"
-                    aria-label="فتح صفحة الدفع ومتابعة حجز المقعد"
-                    title="متابعة حجز المقعد"
-                  >
-                    <div className="text-[11px] font-black text-amber-100 mb-1.5">
-                      المقاعد المتبقية {scarcityMeter.seatsLeft}/{scarcityMeter.totalSeats}
+            {scarcity.isLive && scarcityMeter && (
+              <div className="mb-6 w-[min(22rem,92vw)] flex flex-col items-center justify-center">
+                <motion.button
+                  type="button"
+                  variants={item(reduceMotion)}
+                  onClick={handleOpenCheckout}
+                  className="w-full text-right rounded-2xl px-4 py-3 bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40"
+                  aria-label="متابعة حجز المقعد"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-[12px] font-black text-amber-200 uppercase tracking-wider">
+                      تبقى {scarcityMeter.seatsLeft} مقعد فقط 🚨
                     </div>
-                    <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden border border-white/10">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                          width: `${scarcityMeter.fillPercent}%`,
-                          backgroundColor: scarcityMeter.fillColor
-                        }}
-                      />
+                    <div className="text-[10px] font-bold text-slate-400">
+                      {scarcityMeter.seatsLeft}/{scarcityMeter.totalSeats}
                     </div>
-                    <p className="mt-1.5 text-[10px] text-slate-300/85 font-semibold">
-                      الفوج الحالي يغلق عند اكتمال المقاعد.
-                    </p>
-                    {scarcityCountdown && (
-                      <p className="mt-1 text-[10px] font-black text-amber-200/95">{scarcityCountdown}</p>
-                    )}
-                  </motion.button>
-                )}
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden border border-white/5">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${scarcityMeter.fillPercent}%`,
+                        backgroundColor: scarcityMeter.fillColor
+                      }}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-[10px] text-slate-300/85 font-semibold">
+                    الفوج الحالي يغلق عند اكتمال المقاعد.
+                  </p>
+                  {scarcityCountdown && (
+                    <p className="mt-1 text-[10px] font-black text-amber-200/95">{scarcityCountdown}</p>
+                  )}
+                </motion.button>
                 <p
                   className={`mt-1 h-4 text-[10px] font-semibold transition-opacity ${showCheckoutHint ? "opacity-100 text-amber-200" : "opacity-0"
                     }`}
@@ -576,7 +578,7 @@ export const Landing: FC<LandingProps> = ({
               whileTap={{ scale: 0.96 }}
             >
               <div className="relative flex items-center gap-4">
-                <span>ابدأ مجانًا</span>
+                <span>{landingCopy.ctaJourney}</span>
                 <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform group-hover:-translate-x-1">
                   <ArrowLeft className="w-5 h-5" />
                 </span>
@@ -591,17 +593,28 @@ export const Landing: FC<LandingProps> = ({
                 {checkoutCtaLabel}
               </button>
             )}
-            <p className="mt-3 text-xs sm:text-sm font-semibold text-slate-300/80">ابدأ مجانًا — بدون بطاقة.</p>
-            {isPublicPaymentsEnabled && socialProofLine && (
-              <p className="mt-1 text-[11px] font-semibold text-slate-300/75">{socialProofLine}</p>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowSimulationSection((prev) => !prev)}
-              className="mt-3 text-xs font-semibold text-teal-200/85 hover:text-teal-100 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 rounded"
-            >
-              {showSimulationSection ? "إخفاء تجربة السحب" : "عرض تجربة السحب"}
-            </button>
+
+            <p className="mt-4 text-[13px] font-bold text-slate-300/90 tracking-wide bg-white/5 border border-white/5 px-4 py-1 rounded-full">
+              ابدأ مجانًا — بدون بطاقة.
+            </p>
+            <p className="mt-2 text-[10px] text-teal-400 font-black uppercase tracking-widest opacity-80">
+              بياناتك تظل ملكك بالكامل.
+            </p>
+
+            <div className="mt-8 flex flex-col items-center gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSimulationSection(true);
+                  const el = document.getElementById('simulation-playground');
+                  el?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="text-xs font-black text-teal-200/90 hover:text-teal-100 underline underline-offset-8 decoration-teal-500/30 transition-all hover:decoration-teal-500"
+              >
+                [ شوف مثال حيّ للقوة التحليلية ]
+              </button>
+            </div>
+
             <button
               type="button"
               onClick={() => setShowExtendedMobileContent((prev) => !prev)}
@@ -609,27 +622,13 @@ export const Landing: FC<LandingProps> = ({
             >
               {showExtendedMobileContent ? "إخفاء التفاصيل" : "اكتشف أكثر"}
             </button>
+
             <motion.div
               variants={fadeUp(reduceMotion)}
               className="mt-6 flex flex-col items-center gap-1 text-center"
             >
-              <p className="text-[13px] sm:text-[15px] font-bold text-teal-200/90 tracking-wide uppercase">
-                <EditableText
-                  id="landing_hook"
-                  defaultText={landingCopy.hook}
-                  page="landing"
-                  editOnClick={false}
-                  showEditIcon={false}
-                />
-              </p>
-              <p className="text-[11px] sm:text-[13px] font-medium text-slate-400/80">
-                <EditableText
-                  id="landing_slogan"
-                  defaultText={landingCopy.slogan}
-                  page="landing"
-                  editOnClick={false}
-                  showEditIcon={false}
-                />
+              <p className="text-[14px] sm:text-[16px] font-black text-teal-200/90 tracking-wide uppercase">
+                {landingCopy.hook}
               </p>
             </motion.div>
 
@@ -651,6 +650,13 @@ export const Landing: FC<LandingProps> = ({
             )}
           </motion.div>
         </motion.section>
+
+        <ProblemFirstSection
+          stagger={stagger}
+          item={item(reduceMotion)}
+          data={landingCopy.problemSection}
+          onShowExample={() => setShowSimulationSection(true)}
+        />
 
         <div className={showLongSections ? "block" : "hidden md:block"}>
           {showSimulationSection && (
@@ -709,12 +715,10 @@ export const Landing: FC<LandingProps> = ({
             liveEnabled={designToggles.enableLiveLandingSections}
           />
 
-          <TestimonialsSection
-            liveEnabled={designToggles.enableLiveLandingSections}
+          <HowItWorksSection
             stagger={stagger}
             item={item(reduceMotion)}
-            testimonials={landingCopy.testimonials ?? []}
-            testimonialsState={landingLiveData.testimonials}
+            data={landingCopy.howItWorks}
           />
 
           <FinalReadinessSection
@@ -723,6 +727,11 @@ export const Landing: FC<LandingProps> = ({
             lastGoalLabel={lastGoalLabel}
             badgePulse={badgePulse}
             LastGoalIcon={lastGoalMeta?.icon}
+          />
+
+          <SystemOverclockSection
+            stagger={stagger}
+            item={item(reduceMotion)}
           />
 
           <motion.section
@@ -738,7 +747,7 @@ export const Landing: FC<LandingProps> = ({
               onClick={handleStartJourney}
               className="inline-flex items-center justify-center gap-3 rounded-full px-10 py-4 text-lg font-black text-white bg-teal-500 hover:bg-teal-400 transition-colors"
             >
-              تفعيل الرادار
+              {landingCopy.ctaJourney}
               <ArrowLeft className="w-5 h-5" />
             </motion.button>
           </motion.section>
@@ -775,6 +784,17 @@ export const Landing: FC<LandingProps> = ({
               تواصل معنا
             </a>
           </div>
+          <div className="flex flex-col items-center gap-3 mb-6 bg-white/[0.02] border border-white/5 rounded-2xl p-4">
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">تعهد الأمان</p>
+            <div className="flex flex-col items-center gap-1.5">
+              {landingCopy.trustPoints.map((point, idx) => (
+                <p key={idx} className="text-[10px] text-slate-500 font-bold flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-teal-500/40" />
+                  {point}
+                </p>
+              ))}
+            </div>
+          </div>
           <span className="text-[10px] text-slate-600 font-mono tracking-widest">
             ALREHLA // ALPHA v0.1
           </span>
@@ -788,7 +808,7 @@ export const Landing: FC<LandingProps> = ({
             onClick={handleStartJourney}
             className="w-full rounded-xl bg-teal-500 py-3 text-sm font-black text-slate-950 hover:bg-teal-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300/60"
           >
-            ابدأ مجانًا
+            {landingCopy.ctaJourney}
           </button>
         </div>
       </div>

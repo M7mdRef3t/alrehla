@@ -34,9 +34,9 @@ export type LayoutMode =
 export type SidebarPosition = "right" | "left" | "hidden";
 
 /**
- * Tab الحالي (في Conversation Mode)
+ * Tab الحالي (Behavioral Layer)
  */
-export type ActiveTab = "map" | "insights" | "conversation";
+export type ActiveTab = "operational" | "analytical" | "narrative" | "settings";
 
 /**
  * حالة الـ FAB (Floating Action Button)
@@ -139,7 +139,7 @@ export const useLayoutState = create<LayoutState>()(
     (set, get) => ({
       // ─── Initial State ────────────────────────────────────────────────────
       mode: "adaptive",
-      activeTab: "map",
+      activeTab: "operational",
       sidebarPosition: "right",
       sidebarExpanded: false,
       fabState: {
@@ -155,32 +155,17 @@ export const useLayoutState = create<LayoutState>()(
         set({ mode });
 
         // لو اختار conversation mode → فتح tab الحوار
-        if (mode === "conversation") {
-          set({ activeTab: "conversation" });
-        }
-
-        // لو اختار insights mode → فتح الـ sidebar
-        if (mode === "insights") {
-          set({ sidebarExpanded: true });
-        }
-
-        // لو اختار focus mode → قفل الـ sidebar
         if (mode === "focus") {
-          set({ sidebarExpanded: false, activeTab: "map" });
+          set({ sidebarExpanded: false, activeTab: "operational" });
         }
       },
 
       setActiveTab: (tab) => {
         set({ activeTab: tab });
 
-        // لو فتح tab الحوار → تلقائياً conversation mode
-        if (tab === "conversation") {
-          set({ mode: "conversation" });
-        }
-
-        // لو فتح tab الإحصائيات → تلقائياً insights mode
-        if (tab === "insights") {
-          set({ mode: "insights", sidebarExpanded: true });
+        // لو فتح tab التحليل → فتح الـ sidebar لتجربة أغنى
+        if (tab === "analytical") {
+          set({ sidebarExpanded: true });
         }
       },
 
