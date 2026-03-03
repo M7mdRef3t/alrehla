@@ -52,6 +52,7 @@ function getFocusLabel(focus: PulseFocus, intent: PostAuthIntent): string {
 }
 
 function getAuthTitle(intent: PostAuthIntent): string {
+  if (intent.kind === "ai_focus") return "الذكاء محتاج سحابة يشوفك بوضوح";
   if (intent.kind !== "start_recovery") return "أهلاً بيك في الرحلة";
   const { mood, energy } = intent.pulse;
   const negativeMood = mood === "sad" || mood === "anxious" || mood === "angry" || mood === "tense" || mood === "overwhelmed";
@@ -78,7 +79,8 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
     setMessage(null);
     setError(null);
     setIsAgeVerified(false);
-  }, [isOpen]);
+    trackEvent(AnalyticsEvents.AUTH_MODAL_SHOWN, { trigger: intent.kind });
+  }, [isOpen, intent.kind]);
 
   const handleGoogle = async () => {
     if (!isAgeVerified) {
@@ -194,7 +196,9 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
                   <p className="text-[13px] leading-relaxed" style={{ color: "rgba(203, 213, 225, 0.8)" }}>
                     {intent.kind === "start_recovery"
                       ? "سجل دخول عشان نحفظها ونكمل رحلتك سوا"
-                      : "سجل دخول بحساب جوجل عشان نحفظ تقدمك"}
+                      : intent.kind === "ai_focus"
+                        ? "سجل دخول بحساب جوجل عشان تفعّل ذكاء المدار"
+                        : "سجل دخول بحساب جوجل عشان نحفظ تقدمك"}
                   </p>
                 </div>
                 <button

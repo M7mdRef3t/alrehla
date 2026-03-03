@@ -5,6 +5,11 @@ import { Sparkles, Check, Zap, Smile, Frown, Meh, Heart, Star, Quote, RefreshCw,
 import { useDailyPulse } from "../hooks/useDailyPulse";
 import { useDailyQuestion } from "../hooks/useDailyQuestion";
 import { supabase } from "../services/supabaseClient";
+import { GoogleAuthModal } from "./GoogleAuthModal";
+import { useAuthState } from "../state/authState";
+import { trackEvent, AnalyticsEvents } from "../services/analytics";
+import type { PostAuthIntent } from "../utils/postAuthIntent";
+import type { PulseMood } from "../state/pulseState";
 
 /**
  * 🎨 PULSE CAPSULE (Daily Vital Sign)
@@ -22,6 +27,14 @@ const MOODS = [
 
 const STRESS_TAGS = ["شغل", "أهل", "صحة", "فلوس", "علاقات", "نفسي"];
 
+const MOOD_MAPPING: Record<number, PulseMood> = {
+  1: 'sad',
+  2: 'tense',
+  3: 'calm',
+  4: 'bright',
+  5: 'bright'
+};
+
 export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArchive }) => {
   const { todayPulse, history, loading, savePulse, hasAnsweredToday } = useDailyPulse();
   const { question } = useDailyQuestion();
@@ -32,6 +45,27 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
   const [stressTag, setStressTag] = useState("نفسي");
   const [note, setNote] = useState("");
   const [isSaved, setIsSaved] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [hoverStartTime, setHoverStartTime] = useState<number | null>(null);
+  const user = useAuthState(s => s.user);
+
+  const handleHoverStart = () => {
+    if (!hasAnsweredToday) setHoverStartTime(Date.now());
+  };
+
+  const handleHoverEnd = () => {
+    if (hoverStartTime) {
+      const duration = (Date.now() - hoverStartTime) / 1000;
+      if (duration > 3) {
+        trackEvent(AnalyticsEvents.HESITATION, {
+          target: "pulse_capsule",
+          duration,
+          is_returning: history.length > 0
+        });
+      }
+      setHoverStartTime(null);
+    }
+  };
 
   // ─── Behavioral Logic: Meaning & Diff ──────────────────────────────────────
   const meaning = useMemo(() => {
@@ -72,6 +106,12 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
       const finalMood = quickMood || mood;
       await savePulse({ mood: finalMood, energy, stress_tag: stressTag, note, focus: 'general' });
       setIsSaved(true);
+
+      // 🚀 Auth Conversion Trigger (Pulse #2 for Guests)
+      if (!user && history.length >= 1) {
+        setTimeout(() => setIsAuthOpen(true), 1500);
+      }
+
       setTimeout(() => {
         setIsSaved(false);
         setIsExpanded(false);
@@ -89,6 +129,8 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
       <motion.button
         layout
         onClick={() => setIsExpanded(!isExpanded)}
+        onMouseEnter={handleHoverStart}
+        onMouseLeave={handleHoverEnd}
         className="flex items-center gap-3 h-12 px-6 rounded-full glass border border-white/5 shadow-none hover:bg-white/[0.04] transition-all relative z-50 overflow-hidden"
         style={{
           backdropFilter: "blur(12px)",
@@ -115,6 +157,26 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
           {meaning}
         </span>
 
+        {/* 🚀 Progress Illusion (Zeigarnik Effect) */}
+        {hasAnsweredToday && (
+          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 whitespace-nowrap opacity-60">
+            <div className="flex gap-0.5">
+              {[1, 2, 3].map(i => {
+                const step = history.length >= 7 ? 3 : history.length >= 3 ? 2 : 1;
+                return (
+                  <div
+                    key={i}
+                    className={`w-3 h-0.5 rounded-full transition-all ${i <= step ? 'bg-emerald-400' : 'bg-white/10'}`}
+                  />
+                );
+              })}
+            </div>
+            <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">
+              {history.length >= 7 ? '3/3' : history.length >= 3 ? '2/3' : '1/3'} خطوة في الرحلة
+            </span>
+          </div>
+        )}
+
         {/* Discovery Hint (Quiet Indicator for first steps) */}
         {!hasAnsweredToday && !isExpanded && (
           <motion.div
@@ -123,7 +185,7 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
             transition={{ repeat: Infinity, duration: 4 }}
             className="absolute -bottom-8 right-0 text-[8px] font-black text-[#8A8A8A] uppercase tracking-[0.3em] pointer-events-none"
           >
-            Start Journey Here
+            ابدأ من هنا
           </motion.div>
         )}
 
@@ -277,6 +339,21 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
           </motion.div>
         )}
       </AnimatePresence>
+
+      <GoogleAuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        intent={{
+          kind: "start_recovery",
+          pulse: {
+            energy: energy * 2, // Map 1-5 to 1-10
+            mood: MOOD_MAPPING[mood] || 'calm',
+            focus: 'none'
+          },
+          createdAt: Date.now()
+        }}
+        onNotNow={() => setIsAuthOpen(false)}
+      />
     </div>
   );
 };

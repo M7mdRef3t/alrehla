@@ -17,6 +17,7 @@ import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "./state/pulse
 import { trackPageView, trackEvent, AnalyticsEvents } from "./services/analytics";
 import { getTrackingSessionId, recordFlowEvent } from "./services/journeyTracking";
 import { syncLocalMapOnLogin } from "./services/mapSync";
+import { syncLocalPulsesOnLogin } from "./services/pulseSync";
 import { sendNotification, sendPresetNotification, NOTIFICATION_TYPES } from "./services/notifications";
 import {
   fetchPublicBroadcasts,
@@ -1242,8 +1243,9 @@ export default function App() {
       setShowAuthModal(false);
       setPostAuthIntentState(null);
 
-      // Trigger Cloud Sync for previously local map
+      // Trigger Cloud Sync for previously local map & pulses
       void syncLocalMapOnLogin();
+      void syncLocalPulsesOnLogin();
       return;
     }
     if (intent.kind !== "start_recovery") return;
@@ -1268,8 +1270,9 @@ export default function App() {
       void navigateToScreen("goal");
     }
 
-    // Trigger Cloud Sync for the new map
+    // Trigger Cloud Sync for the new map & pulses
     void syncLocalMapOnLogin();
+    void syncLocalPulsesOnLogin();
 
     let cancelled = false;
     void (async () => {
@@ -1366,22 +1369,8 @@ export default function App() {
   }, [canUseMap, navigateToScreen, openDefaultGoalMap, setLockedFeature, skipNextPulseCheck]);
 
   const startRecovery = () => {
-    // Step 1: one-time onboarding gate.
-    if (!hasCompletedJourneyOnboarding() || nodes.length === 0) {
-      recordFlowEvent("onboarding_opened");
-      trackEvent("onboarding_started", { source: "landing" });
-      setShowOnboarding(true);
-      return;
-    }
-
-    // Step 2: always open Pulse Check from landing.
-    // Next transition (Goal/Map) is handled by handlePulseGateSubmit -> openDawayirSetup.
-    trackEvent(AnalyticsEvents.MICRO_COMPASS_OPENED, { source: "landing", gate: "pulse" });
-    setWelcome(null);
-    setPostAuthIntentState(null);
-    setShowAuthModal(false);
-    setPulseCheckContext("start_recovery");
-    setShowPulseCheck(true);
+    trackEvent("journey_started_frictionless", { source: "landing" });
+    void navigateToScreen("map");
   };
 
 

@@ -13,6 +13,7 @@ import { runtimeEnv } from "../config/runtimeEnv";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 import { getHref } from "./navigation";
 import { getDocumentOrNull, getWindowOrNull, isClientRuntime } from "./clientRuntime";
+import { supabase, isSupabaseReady } from "./supabaseClient";
 
 // Check if analytics is enabled
 function isAnalyticsEnabled(): boolean {
@@ -119,19 +120,48 @@ export function trackEvent(
   params?: Record<string, string | number | boolean>
 ): void {
   if (!isClientRuntime()) return;
-  if (!isAnalyticsEnabled()) return;
 
-  const windowRef = getWindowOrNull();
-  if (windowRef?.gtag) {
-    windowRef.gtag("event", eventName, params);
+  // GA4/External tracking requires consent
+  if (isAnalyticsEnabled()) {
+    const windowRef = getWindowOrNull();
+    if (windowRef?.gtag) {
+      windowRef.gtag("event", eventName, params);
+    }
   }
 
+  // Internal tracking - Zero Friction (Non-blocking)
+  if (isSupabaseReady && supabase) {
+    const windowRef = getWindowOrNull();
+    const isMobile = windowRef ? windowRef.matchMedia("(max-width: 768px)").matches : false;
+    const deviceContext = {
+      device_type: isMobile ? 'mobile' : 'desktop',
+      screen_width: windowRef?.innerWidth,
+      platform: windowRef?.navigator?.platform
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase!.from('analytics_events').insert({
+        event_name: eventName,
+        user_id: session?.user?.id || null, // null means guest
+        params: { ...deviceContext, ...(params || {}) },
+        created_at: new Date().toISOString()
+      }).then(({ error }) => {
+        if (error && runtimeEnv.isDev) {
+          console.warn(`[Analytics] Internal track failed: ${eventName}`, error);
+        }
+      });
+    });
+  }
 }
 
 // Predefined events
 export const AnalyticsEvents = {
   // Navigation
   PAGE_VIEW: "page_view",
+  LANDING_VIEW: "landing_view",
+  CTA_CLICK: "cta_click",
+  SANCTUARY_LOADED: "sanctuary_loaded",
+  FIRST_PULSE_SUBMITTED: "first_pulse_submitted",
 
   // Journey events
   JOURNEY_STARTED: "journey_started",
@@ -143,12 +173,16 @@ export const AnalyticsEvents = {
   MICRO_COMPASS_OPENED: "micro_compass_opened",
   MICRO_COMPASS_COMPLETED: "micro_compass_completed",
   AUTH_GOOGLE_CLICKED: "auth_google_clicked",
+  AUTH_MODAL_SHOWN: "auth_modal_shown",
+  AUTH_COMPLETED: "auth_completed",
+  MERGE_SUCCESS: "merge_success",
 
   // Feature usage
   BREATHING_USED: "breathing_exercise_used",
   EMERGENCY_USED: "emergency_button_used",
   LIBRARY_OPENED: "library_opened",
   EXPORT_DATA: "data_exported",
+  AI_ATTEMPT_GUEST: "ai_attempt_guest",
 
   // Tactical Features (Phase 2 & 3)
   NOISE_SILENCING_OPENED: "noise_silencing_opened",
@@ -165,7 +199,11 @@ export const AnalyticsEvents = {
 
   // Consent events
   CONSENT_GIVEN: "consent_given",
-  CONSENT_DENIED: "consent_denied"
+  CONSENT_DENIED: "consent_denied",
+
+  // Behavioral signals
+  HESITATION: "hesitation",
+  HESITATION_HEARTBEAT: "hesitation_heartbeat"
 } as const;
 
 // Analytics consent management

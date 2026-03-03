@@ -15,12 +15,12 @@ export async function processContextualInsights(userId: string) {
             supabaseAdmin.from('micro_actions').select('executed_at, metadata, action_type').eq('user_id', userId).gte('executed_at', thirtyDaysAgo)
         ]);
 
-        if (!pulses || !actions || pulses.length < 7 || actions.length < 10) return;
+        if (!pulses || !actions || pulses.length < 3 || actions.length < 3) return;
 
         // 3. GENERATE INFLUENCE NETWORK (Always update on pulse for UI freshness)
         await generateInfluenceSnapshot(userId, pulses, actions);
 
-        // 4. THROTTELED: Contextual Insights (Deep Dive) - Max 1 every 14 days
+        // 4. THROTTELED: Contextual Insights (Deep Dive)
         const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
         const { count: recentInsights } = await supabaseAdmin
             .from('contextual_insights')
@@ -30,38 +30,49 @@ export async function processContextualInsights(userId: string) {
 
         if (recentInsights && recentInsights > 0) return;
 
-        // 5. Analyze Patterns: Circle Dominance
-        const lowMoodDays = pulses.filter(p => p.mood < 3).map(p => p.day.split('T')[0]);
-        const circleCountsOnLowMood = new Map<string, number>();
-        const totalCircleCounts = new Map<string, number>();
+        // FAST EARLY INSIGHT (Hook) if pulses are between 3 and 7
+        const isEarlyCohort = pulses.length <= 7;
+
+        // 5. Analyze Patterns: Circle/Person Dominance on Low Energy
+        const lowEnergyDays = pulses.filter(p => p.energy <= 4).map(p => p.day.split('T')[0]);
+        const personCountsOnLowEnergy = new Map<string, number>();
+        const totalPersonCounts = new Map<string, number>();
 
         for (const action of actions) {
-            const circle = action.metadata?.nodeLabel;
-            if (!circle) continue;
+            const person = action.metadata?.nodeLabel;
+            if (!person) continue;
+
             const date = action.executed_at.split('T')[0];
-            totalCircleCounts.set(circle, (totalCircleCounts.get(circle) || 0) + 1);
-            if (lowMoodDays.includes(date)) {
-                circleCountsOnLowMood.set(circle, (circleCountsOnLowMood.get(circle) || 0) + 1);
+            totalPersonCounts.set(person, (totalPersonCounts.get(person) || 0) + 1);
+
+            if (lowEnergyDays.includes(date)) {
+                personCountsOnLowEnergy.set(person, (personCountsOnLowEnergy.get(person) || 0) + 1);
             }
         }
 
-        for (const [circle, lowCount] of circleCountsOnLowMood.entries()) {
-            const total = totalCircleCounts.get(circle) || 1;
-            const ratioInLowMood = lowCount / total;
-            const globalLowMoodRatio = lowMoodDays.length / pulses.length;
-            const confidence = ratioInLowMood > (globalLowMoodRatio * 1.5) ? ratioInLowMood : 0;
+        for (const [person, lowCount] of personCountsOnLowEnergy.entries()) {
+            const total = totalPersonCounts.get(person) || 1;
+            const ratioInLowEnergy = lowCount / total;
 
-            if (confidence > 0.65) {
-                const title = `نمط متكرر: تضخم "${circle}" واستقرارك`;
-                const description = `كل مرة موودك بينزل تحت المستوى المتوازن، بنلاحظ إن نشاطك في دايرة "${circle}" بيزيد بنسبة ${Math.round(ratioInLowMood * 100)}%. ده بيشير لارتباط مباشر بين ضغط الدايرة دي وتراجع استقرارك النفسي.`;
+            // In early cohort, we relax the confidence threshold to ensure the hook is delivered
+            const confidenceThreshold = isEarlyCohort ? 0.4 : 0.65;
+            const minLowDays = isEarlyCohort ? 1 : 2;
+
+            if (ratioInLowEnergy >= confidenceThreshold && lowCount >= minLowDays) {
+                const title = `تحذير راداري: نزيف طاقة مرتبط بـ "${person}"`;
+                const dropPercentage = Math.round(ratioInLowEnergy * 100);
+
+                const description = isEarlyCohort
+                    ? `في الأيام التي تتقاطع فيها مع "${person}"، تنهار طاقتك بشكل ملحوظ (بنسبة ارتباط ${dropPercentage}%). راجع موقع هذا الشخص في دوائرك فوراً.`
+                    : `نمط صامت: كلما زاد تفاعلك مع "${person}"، نلاحظ تراجعاً حاداً في استقرارك الطاقي. هذه العلاقة تسحب من رصيدك الحيوي.`;
 
                 await supabaseAdmin.from('contextual_insights').insert({
                     user_id: userId,
-                    insight_type: 'circle_mood_correlation',
+                    insight_type: 'circle_energy_drain',
                     title,
                     description,
-                    confidence_score: confidence,
-                    metadata: { circle, ratioInLowMood, pulsesCount: pulses.length }
+                    confidence_score: ratioInLowEnergy,
+                    metadata: { person, ratioInLowEnergy, pulsesCount: pulses.length, hook: true }
                 });
                 break;
             }

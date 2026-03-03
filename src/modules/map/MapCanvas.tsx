@@ -18,6 +18,8 @@ import { useCognitiveDebounce } from "../../hooks/useCognitiveDebounce";
 import { useAuthState } from "../../state/authState";
 import { useOptimisticPhoenixSync } from "../../hooks/useOptimisticPhoenixSync";
 import { useKineticSensors } from "../../hooks/useKineticSensors";
+import { useDailyPulse } from "../../hooks/useDailyPulse";
+import { useDailyQuestion } from "../../hooks/useDailyQuestion";
 
 /* ════════════════════════════════════════════════
    🌌 COSMIC MAP CANVAS — Digital Sanctuary
@@ -583,6 +585,9 @@ export const MapCanvas: FC<MapCanvasProps> = ({
     return () => media.removeListener(sync);
   }, []);
 
+  const { hasAnsweredToday } = useDailyPulse();
+  const isRevealState = nodes.length === 0 && hasAnsweredToday;
+
   const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
   const setDetached = useMapState((s) => s.setDetached);
   const battery = useMeState((s) => s.battery);
@@ -820,17 +825,29 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         className={`relative w-full min-h-[280px] sm:min-h-[340px] md:min-h-[400px] transition-all duration-700 ${isSimulation ? "scale-[0.85] saturate-[0.8] brightness-125" : ""}`}
         id="map-canvas"
       >
+        {/* 🌟 Reveal State Banner */}
+        <AnimatePresence>
+          {isRevealState && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] px-6 py-2 rounded-2xl bg-teal-500/10 border border-teal-500/20 backdrop-blur-xl shadow-2xl"
+            >
+              <p className="text-xs font-bold text-teal-400 whitespace-nowrap">هنا مركزك.. ابدأ من هنا كل يوم.</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
         {/* Visual Digest Feedback */}
         <AnimatePresence>
-          {isCommitProcessing && (
+          {(isCommitProcessing || aiState?.isSpeaking) && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 rounded-full bg-slate-900/90 border border-teal-500/30 text-teal-200 text-xs font-medium backdrop-blur-md shadow-2xl flex items-center gap-2"
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 rounded-full bg-slate-900/90 border border-indigo-500/50 text-indigo-300 text-[11px] font-mono backdrop-blur-md shadow-[0_0_20px_rgba(99,102,241,0.2)] flex items-center gap-2"
             >
-              <div className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
-              الرحلة تستوعب حركتك الآن...
+              <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+              [System]: Autonomic UI Mutation.. Reshaping per emotional load.
             </motion.div>
           )}
         </AnimatePresence>
@@ -974,6 +991,23 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 breatheDuration={4}
               />}
 
+              {/* 🛰️ Halo around Center during Reveal State */}
+              <AnimatePresence>
+                {isRevealState && (
+                  <motion.circle
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: [1, 1.1, 1], opacity: [0.1, 0.2, 0.1] }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    cx="50"
+                    cy="50"
+                    r="15"
+                    fill="url(#centerHaloGradient)"
+                    className="pointer-events-none"
+                  />
+                )}
+              </AnimatePresence>
+
               {/* ── Detachment Zone (Dashed Orbit) ── */}
               <motion.circle
                 cx="50"
@@ -990,6 +1024,19 @@ export const MapCanvas: FC<MapCanvasProps> = ({
 
               {/* ── Center "Me" — Cosmic Orb ── */}
               <g filter="url(#cosmicGlow)">
+                {/* 🌈 Reveal Halo (The Light of Awareness) */}
+                {isRevealState && (
+                  <motion.circle
+                    cx="50%"
+                    cy="50%"
+                    r={14}
+                    fill="none"
+                    stroke="rgba(45, 212, 191, 0.15)"
+                    strokeWidth={0.5}
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                )}
                 {/* Outer aura */}
                 <motion.circle
                   cx="50"
@@ -1125,6 +1172,23 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 </AnimatePresence>
               </div>
             </div>
+
+            {/* ── Hint Banner for Reveal State ── */}
+            <AnimatePresence>
+              {isRevealState && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="absolute top-10 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+                >
+                  <div className="px-6 py-2.5 rounded-full glass-card border border-teal-500/30 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+                    <span className="text-xs font-bold text-teal-100/90 whitespace-nowrap">هنا مركزك.. ابدأ من هنا كل يوم</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* ── Droppable Zones ── */}
             <DroppableRing id="grey" sizePct={92} zIndex={9} />

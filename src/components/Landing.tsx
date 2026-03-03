@@ -22,6 +22,7 @@ import {
   FinalReadinessSection,
   SystemOverclockSection
 } from "./landing/LandingSections";
+import { trackEvent, AnalyticsEvents } from "../services/analytics";
 import { useLandingLiveData } from "../architecture/landingLiveData";
 import { isPublicPaymentsEnabled } from "../config/payments";
 import { useABTestingVariant } from "../hooks/useABTestingVariant";
@@ -240,6 +241,7 @@ export const Landing: FC<LandingProps> = ({
     if (landingViewedAt.current == null) {
       landingViewedAt.current = Date.now();
       recordFlowEvent("landing_viewed");
+      trackEvent(AnalyticsEvents.LANDING_VIEW);
     }
   }, []);
 
@@ -249,6 +251,7 @@ export const Landing: FC<LandingProps> = ({
     try {
       recordFlowEvent("cta_free_clicked", { timeToAction, meta: { heroVariant, subtitleVariant } });
       recordFlowEvent("landing_clicked_start", { timeToAction, meta: { heroVariant, subtitleVariant } });
+      trackEvent(AnalyticsEvents.CTA_CLICK, { timeToAction: timeToAction ?? 0 });
     } catch {
       // Never block the primary CTA on tracking failures.
     }

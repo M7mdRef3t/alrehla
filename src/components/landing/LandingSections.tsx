@@ -229,13 +229,13 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
     viewport={{ once: true, margin: "-60px" }}
   >
     <motion.div variants={item} className="mb-10 px-2 text-center leading-tight">
-      <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--color-primary)] bg-[var(--color-primary)]/5 px-3 py-1">
-        <Zap className="h-3 w-3 text-[var(--color-primary)]" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-primary)]">رحلة التعافي</span>
+      <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1">
+        <Target className="h-3 w-3 text-teal-400" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-teal-300">ترسانة الدفاع الميداني</span>
       </div>
-      <h2 className="mb-3 text-2xl font-black leading-tight text-white sm:text-3xl">كيف تتحول البداية إلى خطوة عملية؟</h2>
+      <h2 className="mb-3 text-2xl font-black leading-tight text-white sm:text-3xl">أدوات استعادة السيطرة (The Cybernetic Toolkit)</h2>
       <p className="mx-auto max-w-[45ch] text-sm leading-relaxed text-slate-400">
-        من قراءة الوضع الحالي إلى أول تصرف أوضح، بدون تعقيد ولا تحميلك كل الشرح دفعة واحدة.
+        أدوات مصممة لتقليل الاحتكاك مع المشاعر المربكة وتوجيهك لاتخاذ إجراء استراتيجي فوري.
       </p>
     </motion.div>
 
@@ -252,28 +252,28 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
           }}
         >
           <div className="absolute right-0 top-0 p-4 opacity-5 transition-opacity group-hover:opacity-10">
-            <Target className="h-32 w-32 text-teal-400" />
+            <Activity className="h-32 w-32 text-teal-400" />
           </div>
           <div>
             <div className="mb-4 flex items-center gap-2">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-teal-500/30 bg-teal-500/20 text-xs font-black text-teal-400">1</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-teal-400">بداية واضحة</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-teal-400">الرادار اليومي</span>
             </div>
-            <h3 className="mb-2 text-2xl font-black leading-tight text-white">رؤية ما يستهلكك الآن</h3>
-            <p className="text-sm leading-[1.8] text-slate-300">ترسم وضعك بسرعة وتعرف أين يبدأ الضغط الحقيقي بدل الدوران حول المشكلة.</p>
+            <h3 className="mb-2 text-2xl font-black leading-tight text-white">مسح استطلاعي (Pulse)</h3>
+            <p className="text-sm leading-[1.8] text-slate-300">سحب وإفلات في أقل من 5 ثوانٍ لقياس طاقتك وتفريغ فوضى اليوم في إحداثيات واضحة.</p>
           </div>
-          <div className="relative flex h-32 w-full items-center justify-center rounded-2xl border border-teal-500/10 bg-teal-900/10 transition-colors group-hover:border-teal-500/30">
-            <div className="relative h-16 w-16 rounded-full border border-teal-500/20">
-              <div className="absolute inset-0 animate-ping rounded-full border border-teal-500/20" />
-              <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-400" />
-            </div>
+          <div className="relative flex h-32 w-full items-center justify-center rounded-2xl border border-teal-500/10 bg-teal-900/10 transition-colors group-hover:border-teal-500/30 overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(45,212,191,0.2)_0%,transparent_70%)] opacity-50" />
+            <div className="w-16 h-16 rounded-full border border-teal-400/30 animate-ping absolute" />
+            <div className="w-24 h-24 rounded-full border border-teal-400/20 absolute" />
+            <Activity className="w-8 h-8 text-teal-300 z-10" />
           </div>
           <button
             type="button"
             onClick={onOpenRadar}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-500 py-3 text-xs font-black text-slate-950 transition-all hover:bg-teal-400 active:scale-95"
           >
-            ابدأ القراءة الآن
+            جرب عملية استطلاع الآن
             <ChevronLeft className="h-4 w-4" />
           </button>
         </motion.div>
@@ -288,22 +288,22 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
           }}
         >
           <div className="absolute right-0 top-0 p-4 opacity-5 transition-opacity group-hover:opacity-10">
-            <TrendingUp className="h-32 w-32 text-[var(--color-primary)]" />
+            <Users className="h-32 w-32 text-[var(--color-primary)]" />
           </div>
           <div>
             <div className="mb-4 flex items-center gap-2">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--color-primary)] bg-[var(--color-primary)]/20 text-xs font-black text-[var(--color-primary)]">2</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-primary)]">فهم النمط</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-primary)]">نظام الإحداثيات</span>
             </div>
-            <h3 className="mb-2 text-2xl font-black leading-tight text-white">لماذا يتكرر نفس الاستنزاف؟</h3>
-            <p className="text-sm leading-[1.8] text-slate-300">تبدأ الخريطة في كشف الروابط والأنماط التي تجعل نفس الضغط يعود كل مرة.</p>
+            <h3 className="mb-2 text-2xl font-black leading-tight text-white">خريطة التأثير الاجتماعي</h3>
+            <p className="text-sm leading-[1.8] text-slate-300">صنف الأشخاص في حياتك (مدار قريب، حدود، مناطق محظورة) لتكشف من يستنزف مواردك.</p>
           </div>
-          <div className="flex h-32 w-full items-center justify-center gap-1 rounded-2xl border border-[var(--color-primary)] bg-[var(--color-primary)]/10">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="w-1.5 rounded-full bg-[var(--color-primary)]/40 animate-pulse" style={{ height: `${20 + i * 15}%`, animationDelay: `${i * 0.1}s` }} />
-            ))}
+          <div className="flex h-32 w-full items-center justify-center gap-1 rounded-2xl border border-[var(--color-primary)] bg-[var(--color-primary)]/10 overflow-hidden relative">
+            <div className="absolute w-24 h-24 rounded-full border-2 border-dashed border-[var(--color-primary)]/40 animate-[spin_10s_linear_infinite]" />
+            <div className="absolute w-12 h-12 rounded-full border-2 border-[var(--color-primary)]/60 animate-[spin_15s_linear_infinite_reverse]" />
+            <Users className="w-6 h-6 text-[var(--color-primary)]" />
           </div>
-          <div className="text-center text-[10px] font-medium text-[var(--color-primary)]">تتضح تلقائيًا مع بناء الخريطة</div>
+          <div className="text-center text-[10px] font-medium text-[var(--color-primary)] border border-indigo-500/20 bg-indigo-500/10 py-2 rounded-xl mt-3">كشف أنماط السحب الطاقي تلقائياً</div>
         </motion.div>
 
         <motion.div
@@ -316,60 +316,26 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
           }}
         >
           <div className="absolute right-0 top-0 p-4 opacity-5 transition-opacity group-hover:opacity-10">
-            <ShieldCheck className="h-32 w-32 text-amber-400" />
+            <Zap className="h-32 w-32 text-amber-400" />
           </div>
           <div>
             <div className="mb-4 flex items-center gap-2">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/20 text-xs font-black text-amber-400">3</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">اتخاذ قرار</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">التوجيه المعكوس</span>
             </div>
-            <h3 className="mb-2 text-2xl font-black leading-tight text-white">صياغة رد وحدّ أوضح</h3>
-            <p className="text-sm leading-[1.8] text-slate-300">تتحول الرؤية إلى قرار يمكن قوله أو تطبيقه بدل بقاء المشكلة داخل الرأس فقط.</p>
+            <h3 className="mb-2 text-2xl font-black leading-tight text-white">برامج تكتيكية فورية (AI)</h3>
+            <p className="text-sm leading-[1.8] text-slate-300">الذكاء التكتيكي للمنصة يعطيك بروتوكول تحرك (هجوم/دفاع/صيانة) مجرد أن تسجل استنزافك. لا مجال للتنظير.</p>
           </div>
-          <div className="flex h-32 w-full items-center justify-center rounded-2xl border border-amber-500/10 bg-amber-900/10">
-            <ShieldCheck className="h-12 w-12 text-amber-500/40" />
+          <div className="flex h-32 w-full flex-col items-center justify-center rounded-2xl border border-amber-500/10 bg-amber-900/10">
+            <span className="text-[10px] font-black uppercase text-amber-400/80 tracking-[0.2em] mb-2 border border-amber-500/30 px-2 py-0.5 rounded">Tactical Override</span>
+            <p className="text-sm font-bold text-amber-300 max-w-[80%] text-center">"ضع حدوداً للمدار الثاني فوراً."</p>
           </div>
           <button
             type="button"
             onClick={onOpenCourt}
             className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 py-3 text-xs font-black text-amber-300 transition-all hover:bg-amber-500/20"
           >
-            جرّب قرارًا أوضح
-          </button>
-        </motion.div>
-
-        <motion.div
-          variants={item}
-          className="group relative flex min-h-[440px] w-[286px] shrink-0 snap-center flex-col justify-between overflow-hidden rounded-3xl p-6 transition-all duration-500 sm:w-[320px]"
-          style={{
-            background: "rgba(15, 23, 42, 0.6)",
-            border: "1px solid rgba(244, 63, 94, 0.2)",
-            boxShadow: "0 20px 40px -20px rgba(0,0,0,0.5)"
-          }}
-        >
-          <div className="absolute right-0 top-0 p-4 opacity-5 transition-opacity group-hover:opacity-10">
-            <Zap className="h-32 w-32 text-rose-400" />
-          </div>
-          <div>
-            <div className="mb-4 flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-rose-500/30 bg-rose-500/20 text-xs font-black text-rose-400">4</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-rose-400">تنفيذ</span>
-            </div>
-            <h3 className="mb-2 text-2xl font-black leading-tight text-white">خطوة أولى قابلة للتنفيذ</h3>
-            <p className="text-sm leading-[1.8] text-slate-300">تنهي البداية وأنت معك شيء واضح تتحرك به، لا مجرد انطباع جميل عن الصفحة.</p>
-          </div>
-          <div className="relative flex h-32 w-full items-center justify-center overflow-hidden rounded-2xl border border-rose-500/10 bg-rose-900/10 p-4 text-[10px] leading-relaxed text-rose-400/60 transition-colors group-hover:border-rose-500/30">
-            <div className="pointer-events-none absolute inset-0 animate-scan bg-gradient-to-b from-transparent via-rose-500/[0.02] to-transparent" />
-            <pre className="whitespace-pre-wrap">
-              {"{ next_step: 'clarify boundary' }\n[1] افهم الضغط...\n[2] تحرك بخطوة أولى..."}
-            </pre>
-          </div>
-          <button
-            type="button"
-            onClick={onOpenPlaybooks}
-            className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-xs font-black text-slate-300 transition-all hover:bg-white/10"
-          >
-            استعرض أول خطوة
+            تفعيل بروتوكول حماية
           </button>
         </motion.div>
       </div>
@@ -610,13 +576,13 @@ export const SystemOverclockSection: FC<{
           border: "border-rose-500/20"
         },
         {
-          title: "جسر الـ Biometrics",
-          desc: "تجهيز القنوات لاستقبال بيانات الساعات والحساسات الخارجية.",
-          icon: Unplug,
-          stat: "Phase 24 Online",
-          color: "text-blue-400",
-          bg: "bg-blue-500/5",
-          border: "border-blue-500/20"
+          title: "العلاج بالواجهة (UI as Therapy)",
+          desc: "الذكاء الاصطناعي لا يرد بنصوص، بل يعدل الواجهة (UI Mutation) لحظياً ليعيد توازنك البصري.",
+          icon: Layers,
+          stat: "Live Cognitive Canvas",
+          color: "text-indigo-400",
+          bg: "bg-indigo-500/5",
+          border: "border-indigo-500/20"
         }
       ].map((sys, idx) => (
         <motion.div

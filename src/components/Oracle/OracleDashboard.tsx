@@ -2,9 +2,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, CheckCircle, AlertTriangle, Eye, TrendingUp, Users, ChevronRight, Gavel, Zap, Activity, Settings, BarChart3, Globe, Database, UserPlus, Clock, Brain } from 'lucide-react';
 import { HiveEngine, ProvenPath, SwarmMetrics } from '../../services/hiveEngine';
-import { fetchUsers, AdminUserRow, fetchOverviewStats, OverviewStats } from '../../services/adminApi';
+import { fetchUsers, AdminUserRow, fetchOverviewStats, OverviewStats, fetchFunnelAnalytics, fetchLiveBehavioralEvents, fetchTimeToActionHistogram, FunnelStats, BehavioralEvent, HistogramPoint } from '../../services/adminApi';
 import { CollectiveRadar } from '../Trajectory/CollectiveRadar';
 import { FirstBloodOverlay } from './FirstBloodOverlay';
+import { BehavioralRadar } from './BehavioralRadar';
 
 export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleId }) => {
     const [pending, setPending] = useState<ProvenPath[]>([]);
@@ -14,7 +15,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
     const [loading, setLoading] = useState(true);
     const [selectedPath, setSelectedPath] = useState<ProvenPath | null>(null);
     const [showFirstBlood, setShowFirstBlood] = useState(false);
-    const [activeTab, setActiveTab] = useState<'audit' | 'sovereigns' | 'vitals'>('audit');
+    const [activeTab, setActiveTab] = useState<'audit' | 'sovereigns' | 'vitals' | 'radar'>('audit');
 
     useEffect(() => {
         const loadData = async () => {
@@ -115,6 +116,13 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
                 >
                     <BarChart3 className="w-4 h-4" />
                     System Vitals
+                </button>
+                <button
+                    onClick={() => setActiveTab('radar')}
+                    className={`px-8 py-3 rounded-2xl flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-all duration-500 ${activeTab === 'radar' ? 'bg-gradient-to-r from-orange-600 to-amber-700 text-white shadow-lg shadow-orange-500/20' : 'text-slate-500 hover:text-white'}`}
+                >
+                    <Zap className="w-4 h-4" />
+                    Behavioral Radar
                 </button>
             </div>
 
@@ -395,17 +403,23 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
                                         </div>
                                     ))}
                                 </div>
-                                <div className="pt-6 text-center">
-                                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-loose">
-                                        Architectural integrity verified.<br />
-                                        Entropy levels within nominal parameters.
-                                    </p>
-                                </div>
                             </div>
                         </div>
                     </motion.div>
                 )}
+
+                {activeTab === 'radar' && (
+                    <motion.div
+                        key="radar"
+                        initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.98, y: -10 }}
+                        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                    >
+                        <BehavioralRadar />
+                    </motion.div>
+                )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };

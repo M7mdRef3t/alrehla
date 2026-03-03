@@ -3,8 +3,9 @@ import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import { isPrivilegedRole } from "../utils/featureFlags";
 import { supabase } from "../services/supabaseClient";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
-import { createCurrentUrl, replaceUrl } from "../services/navigation";
+import { replaceUrl, createCurrentUrl } from "../services/navigation";
 import { runtimeEnv } from "../config/runtimeEnv";
+import { trackEvent, AnalyticsEvents } from "../services/analytics";
 
 export type UserToneGender = "male" | "female" | "neutral";
 
@@ -258,10 +259,14 @@ async function initSupabaseAuth(): Promise<void> {
     const session = data.session ?? null;
     useAuthState.getState().setSession(session);
     void syncAuthRole(session);
-    supabase.auth.onAuthStateChange((_event, nextSession) => {
+    supabase.auth.onAuthStateChange((event, nextSession) => {
       const currentSession = nextSession ?? null;
       useAuthState.getState().setSession(currentSession);
       void syncAuthRole(currentSession);
+
+      if (event === "SIGNED_IN") {
+        trackEvent(AnalyticsEvents.AUTH_COMPLETED);
+      }
     });
   } catch {
     useAuthState.getState().setSession(null);

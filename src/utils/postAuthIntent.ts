@@ -3,22 +3,26 @@ import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "
 
 export type PostAuthIntent =
   | {
-      kind: "start_recovery";
-      pulse: {
-        energy: number;
-        mood: PulseMood;
-        focus: PulseFocus;
-        auto?: boolean;
-        notes?: string;
-        energyReasons?: string[];
-        energyConfidence?: PulseEnergyConfidence;
-      };
-      createdAt: number;
-    }
-  | {
-      kind: "login";
-      createdAt: number;
+    kind: "start_recovery";
+    pulse: {
+      energy: number;
+      mood: PulseMood;
+      focus: PulseFocus;
+      auto?: boolean;
+      notes?: string;
+      energyReasons?: string[];
+      energyConfidence?: PulseEnergyConfidence;
     };
+    createdAt: number;
+  }
+  | {
+    kind: "login";
+    createdAt: number;
+  }
+  | {
+    kind: "ai_focus";
+    createdAt: number;
+  };
 
 const STORAGE_KEY = "dawayir-post-auth-intent";
 const MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes
@@ -83,6 +87,10 @@ export function getPostAuthIntent(): PostAuthIntent | null {
 
     if (obj.kind === "login") {
       return { kind: "login", createdAt: obj.createdAt };
+    }
+
+    if (obj.kind === "ai_focus") {
+      return { kind: "ai_focus", createdAt: obj.createdAt };
     }
 
     if (obj.kind === "start_recovery") {

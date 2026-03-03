@@ -16,17 +16,17 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { mood, energy, stress_tag, note, focus } = body;
+        const { mood, energy, stress_tag, note, focus, day } = body;
 
-        // Current date in YYYY-MM-DD
-        const today = new Date().toISOString().split('T')[0];
+        // Use provided day or current date in YYYY-MM-DD
+        const pulseDay = day || new Date().toISOString().split('T')[0];
 
         // Upsert pulse log
         const { data, error } = await supabase!
             .from('daily_pulse_logs')
             .upsert({
                 user_id: user.id,
-                day: today,
+                day: pulseDay,
                 mood: mood,
                 energy: energy,
                 stress_tag: stress_tag,

@@ -1,87 +1,65 @@
 import type { FC } from "react";
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { setOnboardingSeen } from "../utils/mapOnboarding";
+import { X, Radar, Activity, Brain } from "lucide-react";
 
 interface MapOnboardingOverlayProps {
   onClose: () => void;
 }
 
 export const MapOnboardingOverlay: FC<MapOnboardingOverlayProps> = ({ onClose }) => {
-  const [step, setStep] = useState(1);
-
   const handleFinish = () => {
     setOnboardingSeen();
     onClose();
   };
 
-  const steps = [
-    {
-      id: 1,
-      title: "أهلاً بك في غرفة العمليات",
-      text: "دي مش مجرد خريطة.. دي أرض المعركة الخاصة بيك. كل دايرة بتمثل 'جبهة' في حياتك محتاج تأمنها."
-    },
-    {
-      id: 2,
-      title: "توزيع القوات",
-      text: "الأخضر: مناطق آمنة (شحن طاقة).\nالأصفر: مناطق حذر (استنزاف محتمل).\nالأحمر: مناطق خطر (استنزاف عالي).\nالرمادي: أرشيف (معارك انتهت)."
-    }
-  ];
-
-  const current = steps.find((s) => s.id === step)!;
-  const isLast = step === steps.length;
-
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/90 backdrop-blur-md px-4"
+      className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-md px-4"
       role="dialog"
       aria-modal="true"
     >
       <motion.div
-        className="relative bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-8 text-right overflow-hidden shadow-2xl"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
+        className="relative glass-card border border-white/10 rounded-3xl max-w-sm w-full p-6 text-right overflow-hidden shadow-2xl"
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        style={{
+          background: "linear-gradient(180deg, rgba(15,23,42,0.95) 0%, rgba(10,10,26,0.98) 100%)",
+        }}
       >
-        {/* Tactical Grid Background */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(20,184,166,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(20,184,166,0.03)_1px,transparent_1px)] bg-[size:20px_20px]" />
+        <button
+          onClick={handleFinish}
+          className="absolute top-4 left-4 p-1.5 rounded-full text-slate-500 hover:text-white transition-colors hover:bg-white/5"
+        >
+          <X className="w-4 h-4" />
+        </button>
 
-        <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-teal-400 mb-2 flex items-center gap-2">
-            <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
-            {current.title}
-          </h2>
+        <h2 className="text-lg font-bold text-white mb-6 pr-2">بداية الإدراك</h2>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={current.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="text-slate-300 text-lg leading-relaxed mb-8 whitespace-pre-line"
-            >
-              {current.text}
-            </motion.div>
-          </AnimatePresence>
-
-          <div className="flex gap-4 justify-end">
-            <button
-              onClick={handleFinish}
-              className="px-6 py-2 text-slate-500 hover:text-slate-300 transition-colors"
-            >
-              تجاوز الشرح
-            </button>
-
-            <motion.button
-              onClick={isLast ? handleFinish : () => setStep(step + 1)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-8 py-3 bg-teal-600 hover:bg-teal-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-teal-900/20 flex items-center gap-2"
-            >
-              {isLast ? "استلم القيادة" : "التالي"}
-            </motion.button>
+        <div className="space-y-5 mb-8">
+          <div className="flex items-start gap-3">
+            <Activity className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-slate-300 leading-relaxed">سجّل نبضك بسرعة (بضغطة مسة) أو بعمق (بتفاصيل).</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <Radar className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-slate-300 leading-relaxed">النظام بيراقب في صمت لحد ما الداتا تكفي.</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <Brain className="w-5 h-5 text-teal-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-slate-300 leading-relaxed">الخريطة هتبقى أذكى مع الوقت ومع كل نبضة.</p>
           </div>
         </div>
+
+        <button
+          onClick={handleFinish}
+          className="w-full py-3.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] active:scale-[0.98]"
+        >
+          أكمل
+        </button>
       </motion.div>
     </div>
   );
 };
+
