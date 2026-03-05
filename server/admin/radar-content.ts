@@ -22,7 +22,7 @@ function normalizeIdeas(raw: string): string[] {
 
   return raw
     .split("\n")
-    .map((line) => line.replace(/^[\-\d\.\)\s]+/, "").trim())
+    .map((line) => line.replace(/^[-\d.)\s]+/, "").trim())
     .filter(Boolean)
     .slice(0, 3);
 }

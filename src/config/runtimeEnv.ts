@@ -112,8 +112,8 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
 function readEnv(key: RuntimeKey): string | undefined {
   // 1. Try Vite's import.meta.env first (for backward compatibility if needed)
   try {
-    // @ts-ignore
-    const val = (import.meta as any).env?.[key];
+    const viteMeta = import.meta as unknown as { env?: Record<string, unknown> };
+    const val = viteMeta.env?.[key];
     if (typeof val === "string" && val.length > 0) return val.trim();
   } catch {
     // ignore import.meta access errors

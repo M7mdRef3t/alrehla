@@ -15,7 +15,7 @@ function resolveGeminiApiKey(): string | null {
   if (!trimmed) return null;
   // Drop hidden/non-ASCII symbols that can break HTTP header encoding.
   const asciiOnly = [...trimmed].filter((char) => char.codePointAt(0)! <= 127).join("");
-  if (!/^AIza[0-9A-Za-z_\-]{20,}$/.test(asciiOnly)) return null;
+  if (!/^AIza[0-9A-Za-z_-]{20,}$/.test(asciiOnly)) return null;
   return asciiOnly;
 }
 
