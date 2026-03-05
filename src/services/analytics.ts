@@ -140,11 +140,11 @@ export function trackEvent(
     };
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      supabase!.from('analytics_events').insert({
-        event_name: eventName,
+      supabase!.from('routing_events').insert({
+        event_type: eventName,
         user_id: session?.user?.id || null, // null means guest
-        params: { ...deviceContext, ...(params || {}) },
-        created_at: new Date().toISOString()
+        payload: { ...deviceContext, ...(params || {}) },
+        occurred_at: new Date().toISOString()
       }).then(({ error }) => {
         if (error && runtimeEnv.isDev) {
           console.warn(`[Analytics] Internal track failed: ${eventName}`, error);

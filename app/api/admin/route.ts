@@ -11,6 +11,7 @@ import { handleJourneyMap } from "../../../server/admin/journey-map";
 import { handleRadar } from "../../../server/admin/radar";
 import { handleRadarContent } from "../../../server/admin/radar-content";
 import { handleRadarGrants } from "../../../server/admin/radar-grants";
+import { handleAlerts } from "../../../server/admin/alerts";
 import { recordAdminAudit, verifyAdmin } from "../../../server/admin/_shared";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,8 @@ const ROUTES: Record<string, any> = {
     "journey-map": handleJourneyMap,
     radar: handleRadar,
     "radar-content": handleRadarContent,
-    "radar-grants": handleRadarGrants
+    "radar-grants": handleRadarGrants,
+    alerts: handleAlerts
 };
 
 const AUTH_WINDOW_MS = 10 * 60 * 1000;
@@ -43,11 +45,13 @@ function getClientIp(req: NextRequest): string {
     return "unknown";
 }
 
-function isCronSecretAuthorized(req: NextRequest): boolean {
+function isSecretAuthorized(req: NextRequest): boolean {
     const authHeader = req.headers.get("authorization") || "";
-    const secret = process.env.CRON_SECRET || process.env.ADMIN_API_SECRET;
-    if (!secret) return false;
-    return authHeader === `Bearer ${secret}`;
+    const secrets = [process.env.CRON_SECRET, process.env.ADMIN_API_SECRET]
+        .filter((value): value is string => Boolean(value && value.trim()))
+        .map((value) => value.trim());
+    if (secrets.length === 0) return false;
+    return secrets.some((secret) => authHeader === `Bearer ${secret}`);
 }
 
 function compactAndCountAttempts(ip: string, now: number): number {
@@ -82,8 +86,7 @@ async function runHandler(req: NextRequest) {
     if (!handler) {
         return NextResponse.json({ error: "Not Found" }, { status: 404 });
     }
-    const isCronOverviewRequest = path === "overview" && query.kind === "cron-report";
-    const cronSecretAuthorized = isCronOverviewRequest && isCronSecretAuthorized(req);
+    const secretAuthorized = isSecretAuthorized(req);
 
     // Mock request object
     const mockReq: any = {
@@ -113,7 +116,7 @@ async function runHandler(req: NextRequest) {
         end: () => mockRes
     };
 
-    if (!cronSecretAuthorized) {
+    if (!secretAuthorized) {
         const recentFailures = compactAndCountAttempts(ip, now);
         if (recentFailures >= MAX_FAILED_ATTEMPTS_PER_WINDOW) {
             await recordAdminAudit(mockReq, "admin_auth_rate_limited", {

@@ -63,37 +63,91 @@ const ConsciousnessGraph = lazy(() => import("./dashboard/Intelligence/Conscious
 const RepoIntelPanel = lazy(() => import("./dashboard/Intelligence/RepoIntelPanel"));
 const FleetCommander = lazy(() => import("./dashboard/Fleet/FleetCommander").then(m => ({ default: m.FleetCommander })));
 const SeoGeoAuditorPanel = lazy(() => import("./dashboard/SEO/SeoGeoAuditorPanel").then(m => ({ default: m.SeoGeoAuditorPanel })));
+const AlertsPanel = lazy(() => import("./WarRoom/AlertsPanel"));
 
-type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo" | "repo-intel";
+type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo" | "repo-intel" | "war-room";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
 );
 
 const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
-  { id: "entity", label: "الكيان (DNA)", icon: <Brain className="w-4 h-4 text-teal-400" /> },
-  { id: "overview", label: "نبض الرحلة", icon: <Activity className="w-4 h-4" /> },
-  { id: "flow-map", label: "خريطة التدفق", icon: <Compass className="w-4 h-4" /> },
-  { id: "feedback", label: "التغذية الراجعة", icon: <MessageSquare className="w-4 h-4" /> },
-  { id: "feature-flags", label: "التحكم في الزمن", icon: <Flag className="w-4 h-4" /> },
-  { id: "ai-studio", label: "مختبر الذكاء", icon: <Brain className="w-4 h-4" /> },
-  { id: "ai-decisions", label: "قرارات الذكاء", icon: <Sparkles className="w-4 h-4 text-purple-400" /> },
-  { id: "health-monitor", label: "صحة النظام", icon: <Activity className="w-4 h-4 text-cyan-400" /> },
-  { id: "content", label: "إدارة المحتوى", icon: <Database className="w-4 h-4" /> },
-  { id: "users", label: "شؤون المسافرين", icon: <Users className="w-4 h-4" /> },
-  { id: "user-state", label: "سحابة البيانات", icon: <Database className="w-4 h-4" /> },
-  { id: "consciousness", label: "أرشيف الوعي", icon: <History className="w-4 h-4" /> },
-  { id: "consciousness-map", label: "خريطة الوعي", icon: <Workflow className="w-4 h-4" /> },
-  { id: "b2b-analytics", label: "ذكاء المؤسسات", icon: <ShieldCheck className="w-4 h-4" /> },
-  { id: "ai-simulator", label: "محاكي الأزمات", icon: <Terminal className="w-4 h-4 text-rose-400" /> },
-  { id: "ai-marketing", label: "فنان الوعي", icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
+  { id: "entity", label: "Ã˜Â§Ã™â€žÃ™Æ’Ã™Å Ã˜Â§Ã™â€  (DNA)", icon: <Brain className="w-4 h-4 text-teal-400" /> },
+  { id: "overview", label: "Ã™â€ Ã˜Â¨Ã˜Â¶ Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â­Ã™â€žÃ˜Â©", icon: <Activity className="w-4 h-4" /> },
+  { id: "war-room", label: "Ã˜ÂºÃ˜Â±Ã™ÂÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â¹Ã™â€¦Ã™â€žÃ™Å Ã˜Â§Ã˜Âª", icon: <ShieldCheck className="w-4 h-4 text-red-500" /> },
+  { id: "flow-map", label: "Ã˜Â®Ã˜Â±Ã™Å Ã˜Â·Ã˜Â© Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â¯Ã™ÂÃ™â€š", icon: <Compass className="w-4 h-4" /> },
+  { id: "feedback", label: "Ã˜Â§Ã™â€žÃ˜ÂªÃ˜ÂºÃ˜Â°Ã™Å Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â±Ã˜Â§Ã˜Â¬Ã˜Â¹Ã˜Â©", icon: <MessageSquare className="w-4 h-4" /> },
+  { id: "feature-flags", label: "Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â­Ã™Æ’Ã™â€¦ Ã™ÂÃ™Å  Ã˜Â§Ã™â€žÃ˜Â²Ã™â€¦Ã™â€ ", icon: <Flag className="w-4 h-4" /> },
+  { id: "ai-studio", label: "Ã™â€¦Ã˜Â®Ã˜ÂªÃ˜Â¨Ã˜Â± Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡", icon: <Brain className="w-4 h-4" /> },
+  { id: "ai-decisions", label: "Ã™â€šÃ˜Â±Ã˜Â§Ã˜Â±Ã˜Â§Ã˜Âª Ã˜Â§Ã™â€žÃ˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡", icon: <Sparkles className="w-4 h-4 text-purple-400" /> },
+  { id: "health-monitor", label: "Ã˜ÂµÃ˜Â­Ã˜Â© Ã˜Â§Ã™â€žÃ™â€ Ã˜Â¸Ã˜Â§Ã™â€¦", icon: <Activity className="w-4 h-4 text-cyan-400" /> },
+  { id: "content", label: "Ã˜Â¥Ã˜Â¯Ã˜Â§Ã˜Â±Ã˜Â© Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â­Ã˜ÂªÃ™Ë†Ã™â€°", icon: <Database className="w-4 h-4" /> },
+  { id: "users", label: "Ã˜Â´Ã˜Â¤Ã™Ë†Ã™â€  Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â³Ã˜Â§Ã™ÂÃ˜Â±Ã™Å Ã™â€ ", icon: <Users className="w-4 h-4" /> },
+  { id: "user-state", label: "Ã˜Â³Ã˜Â­Ã˜Â§Ã˜Â¨Ã˜Â© Ã˜Â§Ã™â€žÃ˜Â¨Ã™Å Ã˜Â§Ã™â€ Ã˜Â§Ã˜Âª", icon: <Database className="w-4 h-4" /> },
+  { id: "consciousness", label: "Ã˜Â£Ã˜Â±Ã˜Â´Ã™Å Ã™Â Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â¹Ã™Å ", icon: <History className="w-4 h-4" /> },
+  { id: "consciousness-map", label: "Ã˜Â®Ã˜Â±Ã™Å Ã˜Â·Ã˜Â© Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â¹Ã™Å ", icon: <Workflow className="w-4 h-4" /> },
+  { id: "b2b-analytics", label: "Ã˜Â°Ã™Æ’Ã˜Â§Ã˜Â¡ Ã˜Â§Ã™â€žÃ™â€¦Ã˜Â¤Ã˜Â³Ã˜Â³Ã˜Â§Ã˜Âª", icon: <ShieldCheck className="w-4 h-4" /> },
+  { id: "ai-simulator", label: "Ã™â€¦Ã˜Â­Ã˜Â§Ã™Æ’Ã™Å  Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â²Ã™â€¦Ã˜Â§Ã˜Âª", icon: <Terminal className="w-4 h-4 text-rose-400" /> },
+  { id: "ai-marketing", label: "Ã™ÂÃ™â€ Ã˜Â§Ã™â€  Ã˜Â§Ã™â€žÃ™Ë†Ã˜Â¹Ã™Å ", icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
   { id: "seo-geo", label: "SEO / GEO", icon: <Target className="w-4 h-4 text-emerald-400" /> },
-  { id: "crucible", label: "المِحك (Testing)", icon: <Flame className="w-4 h-4 text-rose-500" /> },
-  { id: "dreams-matrix", label: "مصفوفة الأحلام", icon: <Target className="w-4 h-4 text-teal-400" /> },
-  { id: "digital-twin", label: "التوأم الرقمي", icon: <User className="w-4 h-4 text-indigo-400" /> },
-  { id: "fleet", label: "الأسطول (Fleet)", icon: <Rocket className="w-4 h-4 text-indigo-500" /> },
+  { id: "crucible", label: "Ã˜Â§Ã™â€žÃ™â€¦Ã™ÂÃ˜Â­Ã™Æ’ (Testing)", icon: <Flame className="w-4 h-4 text-rose-500" /> },
+  { id: "dreams-matrix", label: "Ã™â€¦Ã˜ÂµÃ™ÂÃ™Ë†Ã™ÂÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â­Ã™â€žÃ˜Â§Ã™â€¦", icon: <Target className="w-4 h-4 text-teal-400" /> },
+  { id: "digital-twin", label: "Ã˜Â§Ã™â€žÃ˜ÂªÃ™Ë†Ã˜Â£Ã™â€¦ Ã˜Â§Ã™â€žÃ˜Â±Ã™â€šÃ™â€¦Ã™Å ", icon: <User className="w-4 h-4 text-indigo-400" /> },
+  { id: "fleet", label: "Ã˜Â§Ã™â€žÃ˜Â£Ã˜Â³Ã˜Â·Ã™Ë†Ã™â€ž (Fleet)", icon: <Rocket className="w-4 h-4 text-indigo-500" /> },
   { id: "repo-intel", label: "Repo Intel", icon: <Terminal className="w-4 h-4 text-teal-300" /> }
 ];
+
+const NAV_LABELS: Record<AdminTab, string> = {
+  entity: "الكيان (DNA)",
+  overview: "نبض الرحلة",
+  "war-room": "غرفة العمليات",
+  "flow-map": "خريطة التدفق",
+  feedback: "التغذية الراجعة",
+  "feature-flags": "التحكم في المزايا",
+  "ai-studio": "مختبر الذكاء",
+  "ai-decisions": "قرارات الذكاء",
+  "health-monitor": "صحة النظام",
+  content: "إدارة المحتوى",
+  users: "شؤون المستخدمين",
+  "user-state": "سحابة البيانات",
+  consciousness: "أرشيف الوعي",
+  "consciousness-map": "خريطة الوعي",
+  "b2b-analytics": "ذكاء المؤسسات",
+  "ai-simulator": "محاكي الأزمات",
+  "ai-marketing": "فنان الوعي",
+  "dreams-matrix": "مصفوفة الأحلام",
+  crucible: "المِحك (Testing)",
+  "digital-twin": "التوأم الرقمي",
+  fleet: "الأسطول (Fleet)",
+  "seo-geo": "SEO / GEO",
+  "repo-intel": "Repo Intel"
+};
+
+const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
+  entity: "Entity (DNA)",
+  overview: "Journey Overview",
+  "war-room": "War Room",
+  "flow-map": "Flow Map",
+  feedback: "Feedback",
+  "feature-flags": "Feature Flags",
+  "ai-studio": "AI Studio",
+  "ai-decisions": "AI Decisions",
+  "health-monitor": "Health Monitor",
+  content: "Content",
+  users: "Users",
+  "user-state": "User State",
+  consciousness: "Consciousness Archive",
+  "consciousness-map": "Consciousness Map",
+  "b2b-analytics": "B2B Analytics",
+  "ai-simulator": "AI Simulator",
+  "ai-marketing": "AI Marketing",
+  "dreams-matrix": "Dreams Matrix",
+  crucible: "Crucible (Testing)",
+  "digital-twin": "Digital Twin",
+  fleet: "Fleet",
+  "seo-geo": "SEO / GEO",
+  "repo-intel": "Repo Intel"
+};
 
 const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
 
@@ -119,6 +173,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   const authRole = useAuthState(getEffectiveRoleFromState);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -161,18 +216,34 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
     return () => { mounted = false; };
   }, [adminAccess, authRole, authUser, roleOverride, setAdminAccess, setAdminCode]);
 
-  const handleLogin = () => {
-    const expected = runtimeEnv.adminCode;
-    if (!expected) {
-      setError("الدخول بالكود غير متاح في هذه البيئة. استخدم حساب بصلاحية مناسبة.");
+  const handleLogin = async () => {
+    const normalizedCode = code.trim();
+    if (!normalizedCode) {
+      setError("أدخل كود المدير.");
       return;
     }
-    if (code.trim() === expected) {
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/admin?path=alerts", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${normalizedCode}`
+        }
+      });
+
+      if (!response.ok) {
+        setError("الكود غير صحيح.");
+        return;
+      }
+
       setAdminAccess(true);
-      setAdminCode(code.trim());
+      setAdminCode(normalizedCode);
       setError("");
-    } else {
-      setError("الكود غير صحيح.");
+    } catch {
+      setError("تعذر التحقق من الكود حاليًا.");
+      } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -185,17 +256,39 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
           <ShieldCheck className="w-6 h-6 text-teal-400" />
           <h1 className="text-xl font-bold">بوابة القمرة</h1>
         </div>
-        <div className="space-y-2">
+        <form
+          className="space-y-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleLogin();
+          }}
+        >
+          <input
+            type="text"
+            autoComplete="username"
+            value="admin"
+            readOnly
+            tabIndex={-1}
+            aria-hidden="true"
+            className="hidden"
+          />
           <input
             type="password"
+            autoComplete="new-password"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="كود المدير"
             className="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-200"
           />
           {error && <p className="text-xs text-rose-400">{error}</p>}
-        </div>
-        <button onClick={handleLogin} className="w-full rounded-xl bg-teal-600 hover:bg-teal-500 text-slate-950 font-bold py-2 transition-colors">دخول</button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 font-bold py-2 transition-colors"
+          >
+            {isSubmitting ? "جارٍ التحقق..." : "دخول"}
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -297,7 +390,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                     <div className={`p-2 rounded-xl transition-colors ${isActive ? "text-teal-400 bg-teal-400/10" : "text-slate-500 group-hover:text-slate-300"}`}>
                       {item.icon}
                     </div>
-                    <span className={`text-[11px] font-bold uppercase tracking-wider transition-all ${isActive ? "translate-x-1" : "group-hover:translate-x-0.5"}`}>{item.label}</span>
+                    <span className={`text-[11px] font-bold uppercase tracking-wider transition-all ${isActive ? "translate-x-1" : "group-hover:translate-x-0.5"}`}>{CLEAN_NAV_LABELS[item.id] ?? item.label}</span>
                   </div>
                 </button>
               );
@@ -338,7 +431,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                   <span>{activeTabItem?.id || "ROOT"}</span>
                 </div>
                 <h2 className="text-2xl font-black text-white tracking-tighter uppercase">
-                  {activeTabItem?.label}
+                  {activeTabItem ? (CLEAN_NAV_LABELS[activeTabItem.id] ?? activeTabItem.label) : ""}
                 </h2>
               </div>
             </div>
@@ -367,6 +460,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
               <Suspense fallback={<div>Loading...</div>}>
                 {effectiveTab === "entity" && <EntityDashboard />}
                 {effectiveTab === "overview" && <OverviewPanel />}
+                {effectiveTab === "war-room" && <AlertsPanel />}
                 {effectiveTab === "flow-map" && <FlowMapPanel />}
                 {effectiveTab === "feedback" && <FeedbackPanel />}
                 {effectiveTab === "feature-flags" && <FeatureFlagsPanel />}
@@ -399,5 +493,6 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     </AdminGate>
   );
 };
+
 
 

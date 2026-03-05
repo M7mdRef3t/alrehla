@@ -33,6 +33,14 @@ function getBearerToken(req: any): string | null {
   return null;
 }
 
+function isAdminSecretToken(token: string | null): boolean {
+  if (!token) return false;
+  const allowedSecrets = [process.env.CRON_SECRET, process.env.ADMIN_API_SECRET]
+    .filter((value): value is string => Boolean(value && value.trim()))
+    .map((value) => value.trim());
+  return allowedSecrets.includes(token);
+}
+
 export async function verifyAdmin(req: any, res: any): Promise<boolean> {
   const client = getAdminSupabase();
   if (!client) {
@@ -44,6 +52,10 @@ export async function verifyAdmin(req: any, res: any): Promise<boolean> {
   if (!bearer) {
     res.status(401).json({ error: "Unauthorized" });
     return false;
+  }
+
+  if (isAdminSecretToken(bearer)) {
+    return true;
   }
 
   const { data, error } = await client.auth.getUser(bearer);
@@ -90,6 +102,7 @@ export async function verifyAdminWithRoles(req: any, res: any, allowedRoles: str
     res.status(403).json({ error: "Forbidden" });
     return false;
   }
+  if (isAdminSecretToken(bearer)) return true;
   const { data, error } = await client.auth.getUser(bearer);
   if (error || !data?.user?.id) {
     res.status(403).json({ error: "Forbidden" });

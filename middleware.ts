@@ -34,10 +34,12 @@ export async function middleware(request: NextRequest) {
     // 1. Protect Admin / Cron Routes
     if (pathname.startsWith('/api/admin')) {
         const authHeader = request.headers.get('authorization') || '';
-        const cronSecret = process.env.CRON_SECRET || process.env.ADMIN_API_SECRET;
+        const allowedSecrets = [process.env.CRON_SECRET, process.env.ADMIN_API_SECRET]
+            .filter((value): value is string => Boolean(value && value.trim()))
+            .map((value) => value.trim());
 
         // Admin routes must have correct Bearer token
-        if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+        if (allowedSecrets.length > 0 && !allowedSecrets.some((secret) => authHeader === `Bearer ${secret}`)) {
             console.warn(`[Security Alert] Unauthorized Admin access attempt from IP: ${ip}`);
             return NextResponse.json({ error: 'Unauthorized Access' }, { status: 401 });
         }

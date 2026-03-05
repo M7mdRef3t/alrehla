@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { downloadBlobFile } from "../../../src/services/clientDom";
 import { supabase } from "../../../src/services/supabaseClient";
+import { useAdminState } from "../../../src/state/adminState";
 
 type RadarPulse = {
   global_phoenix_avg: number;
@@ -195,6 +196,7 @@ async function copyTextValue(value: string, onDone: (message: string) => void) {
 }
 
 export default function AdminRadarPage() {
+  const adminCode = useAdminState((s) => s.adminCode);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pulse, setPulse] = useState<RadarPulse | null>(null);
@@ -227,11 +229,7 @@ export default function AdminRadarPage() {
       try {
         if (isInitial) setLoading(true);
         setError(null);
-        const { data: sessionData } = await supabase?.auth.getSession() ?? { data: { session: null } };
-        const accessToken = sessionData?.session?.access_token;
-        if (!accessToken) {
-          throw new Error("Unauthorized");
-        }
+        const accessToken = await getAdminAccessToken();
 
         const [radarResponse, weeklyResponse, healthResponse, supportResponse] = await Promise.all([
           fetch("/api/admin?path=radar", {
@@ -427,9 +425,7 @@ export default function AdminRadarPage() {
     try {
       if (!pulse) return;
       setContentLoading(true);
-      const { data: sessionData } = await supabase?.auth.getSession() ?? { data: { session: null } };
-      const accessToken = sessionData?.session?.access_token;
-      if (!accessToken) throw new Error("Unauthorized");
+      const accessToken = await getAdminAccessToken();
 
       const response = await fetch("/api/admin?path=radar-content", {
         method: "POST",
@@ -466,8 +462,10 @@ export default function AdminRadarPage() {
   async function getAdminAccessToken(): Promise<string> {
     const { data: sessionData } = await supabase?.auth.getSession() ?? { data: { session: null } };
     const accessToken = sessionData?.session?.access_token;
-    if (!accessToken) throw new Error("Unauthorized");
-    return accessToken;
+    const fallbackToken = typeof adminCode === "string" ? adminCode.trim() : "";
+    const effectiveToken = accessToken || fallbackToken;
+    if (!effectiveToken) throw new Error("Unauthorized");
+    return effectiveToken;
   }
 
   async function requestPremiumGrant(userId: string, accessToken: string) {

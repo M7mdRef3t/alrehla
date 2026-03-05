@@ -765,6 +765,7 @@ export default function App() {
       setIsAdminRoute(isAdminPath());
       setIsAnalyticsRoute(isAnalyticsPath());
     };
+    handler();
     return subscribePopstate(handler);
   }, []);
 
@@ -2260,6 +2261,8 @@ export default function App() {
 
   const pathname = getPathname();
   const isDawayirRoute = pathname === "/dawayir" || pathname === "/dawayir/";
+  const isAdminPathname = pathname.startsWith("/admin");
+  const isAnalyticsPathname = pathname === "/analytics";
 
   if (pathname === "/privacy" || pathname === "/terms") {
     return (
@@ -2275,7 +2278,7 @@ export default function App() {
     );
   }
 
-  if (isAnalyticsRoute && isOwnerWatcher) {
+  if ((isAnalyticsRoute || isAnalyticsPathname) && isOwnerWatcher) {
     return (
       <div
         className="min-h-screen min-h-[100dvh] w-full overflow-auto isolate relative"
@@ -2307,7 +2310,7 @@ export default function App() {
     );
   }
 
-  if (isAdminRoute) {
+  if (isAdminRoute || isAdminPathname) {
     return (
       <Suspense fallback={<div className="min-h-screen" style={{ background: "var(--space-void)" }} />}>
         <AdminDashboard

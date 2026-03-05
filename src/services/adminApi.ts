@@ -1,5 +1,6 @@
 import { supabase, isSupabaseReady } from "./supabaseClient";
 import { getAuthToken } from "../state/authState";
+import { useAdminState } from "../state/adminState";
 import { runtimeEnv } from "../config/runtimeEnv";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { fetchJsonWithResilience, sendJsonWithResilience } from "../architecture/resilientHttp";
@@ -78,7 +79,9 @@ export async function callAdminApi<T>(path: string, options?: RequestInit): Prom
   // to prevent CORS console noise and fallback to local sources gracefully.
   if (isCrossOriginDevAdminApi()) return null;
   const authToken = getAuthToken();
-  if (!authToken) return null;
+  const adminCode = useAdminState.getState().adminCode;
+  const bearer = authToken ?? adminCode;
+  if (!bearer) return null;
   const query = buildAdminQuery(path);
   return fetchJsonWithResilience<T>(
     `${ADMIN_API_PATH}?${query}`,
@@ -86,12 +89,51 @@ export async function callAdminApi<T>(path: string, options?: RequestInit): Prom
       ...options,
       headers: {
         "Content-Type": "application/json",
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        Authorization: `Bearer ${bearer}`,
         ...(options?.headers ?? {})
       }
     },
     { retries: 1, breaker: adminApiBreaker }
   );
+}
+
+export interface AlertIncident {
+  id: string;
+  rule_key: string;
+  severity: "low" | "medium" | "high" | "critical";
+  segment: string;
+  status: "open" | "ack" | "resolved";
+  opened_at: string;
+  last_seen_at: string;
+  action_hint: string | null;
+  checklist: Array<{ step: number; title: string; details: string }> | null;
+  expected_impact: string | null;
+  evidence: unknown;
+}
+
+export async function fetchAlertIncidents(): Promise<AlertIncident[] | null> {
+  const apiData = await callAdminApi<{ incidents: AlertIncident[] }>("alerts");
+  return apiData?.incidents ?? null;
+}
+
+export async function updateAlertIncidentStatus(
+  id: string,
+  status: "ack" | "resolved",
+  reason?: string
+): Promise<boolean> {
+  const apiData = await callAdminApi<{ ok: boolean }>("alerts", {
+    method: "PATCH",
+    body: JSON.stringify({ id, status, reason: reason ?? null })
+  });
+  return Boolean(apiData?.ok);
+}
+
+export async function resetAlertIncidents(): Promise<boolean> {
+  const apiData = await callAdminApi<{ ok: boolean }>("alerts", {
+    method: "DELETE",
+    body: JSON.stringify({ reason: "Manual reset from War Room" })
+  });
+  return Boolean(apiData?.ok);
 }
 
 const toSettingMap = (rows: Array<{ key: string; value: unknown }>) => {

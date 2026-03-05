@@ -37,9 +37,14 @@ coverage/
 playwright-report/
 test-results/
 .playwright-cli/
+output/playwright/
+output/home-*.png
+output/home-*.txt
 
 # Temp files
 *.tmp
+.tmp_*.txt
+.codex-temp-package.ps1
 .cache/
 .claude/
 supabase/.temp/
