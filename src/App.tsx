@@ -520,6 +520,7 @@ export default function App() {
   const nodes = useMapState((s) => s.nodes);
   const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
   const storedGoalId = useJourneyState((s) => s.goalId);
+  const consumeLandingIntent = useJourneyState((s) => s.consumeLandingIntent);
   const storedCategory = useJourneyState((s) => s.category);
   const lastGoalById = useJourneyState((s) => s.lastGoalById);
   const checkAndUnlock = useAchievementState((s) => s.checkAndUnlock);
@@ -1471,6 +1472,18 @@ export default function App() {
   }, [canUseMap, navigateToScreen, openDefaultGoalMap, setLockedFeature, skipNextPulseCheck]);
 
   const startRecovery = () => {
+    const intent = consumeLandingIntent();
+    if (intent) {
+      const mappedGoalId =
+        intent === "boundaries"
+          ? "family"
+          : intent === "calm"
+            ? "self"
+            : "general";
+      setGoalId(mappedGoalId);
+      setCategory(resolveAdviceCategory(mappedGoalId));
+      trackEvent(AnalyticsEvents.CTA_CLICK, { source: "landing_intent", intent, mappedGoalId });
+    }
     trackEvent("journey_started_frictionless", { source: "landing" });
     void navigateToScreen("map");
   };

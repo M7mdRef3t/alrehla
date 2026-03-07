@@ -1,32 +1,33 @@
-﻿import type { FC } from "react";
+import type { FC } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Smartphone } from "lucide-react";
+import { ArrowLeft, Smartphone, Target } from "lucide-react";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
 import { landingCopy } from "../copy/landing";
 import { soundManager } from "../services/soundManager";
 import { useJourneyState } from "../state/journeyState";
+import { useMapState } from "../state/mapState";
 import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
 import { getGoalMeta } from "../data/goalMeta";
 import { EditableText } from "./EditableText";
 import { getDocumentOrNull, getWindowOrNull } from "../services/clientRuntime";
 import { getDocumentVisibilityState } from "../services/clientDom";
+import { LandingSimulation } from "./LandingSimulation";
 import {
+  FeatureShowcaseSection,
   MetricsSection,
   HowItWorksSection,
   ProblemFirstSection,
-  FinalReadinessSection
+  FinalReadinessSection,
+  SystemOverclockSection
 } from "./landing/LandingSections";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 import { useLandingLiveData } from "../architecture/landingLiveData";
 import { isPublicPaymentsEnabled } from "../config/payments";
 import { useABTestingVariant } from "../hooks/useABTestingVariant";
 import { designToggles } from "../config/designToggles";
-import { Badge, Button, Card, Input } from "./UI";
-import { captureMarketingLead } from "../services/marketingLeadService";
-import { landingHeroVariants } from "../data/marketingContent";
-import { getStoredUtmParams } from "../services/marketingAttribution";
+import { isUserMode } from "../config/appEnv";
 
 interface LandingProps {
   onStartJourney: () => void;
@@ -46,6 +47,7 @@ type PublicScarcityPayload = {
   closes_at?: string | null;
   is_live?: boolean;
 };
+type InlineIntent = "clarity" | "boundaries" | "calm";
 
 const ease = [0.25, 1, 0.5, 1] as [number, number, number, number];
 const fadeUp = (reduceMotion: boolean | null) => ({
@@ -64,15 +66,13 @@ const CHECKOUT_CTA_VARIANT_KEY = "landing.checkout_cta_variant";
 const CHECKOUT_CTA_VARIANT_STARTED_AT_KEY = "landing.checkout_cta_variant_started_at";
 const SUBTITLE_VARIANT_KEY = "landing.subtitle_variant";
 const SUBTITLE_VARIANT_STARTED_AT_KEY = "landing.subtitle_variant_started_at";
-const MARKETING_HERO_VARIANT_KEY = "landing.marketing_hero_variant";
-const MARKETING_HERO_VARIANT_STARTED_AT_KEY = "landing.marketing_hero_variant_started_at";
 
 const formatLiveAge = (updatedAt: number | null): string => {
-  if (!updatedAt) return "ØºØ± ØªØ§Ø­";
+  if (!updatedAt) return "غير متاح";
   const deltaMs = Math.max(0, Date.now() - updatedAt);
-  if (deltaMs < 60_000) return "Ø§Ø¢";
-  if (deltaMs < 3_600_000) return `Ø° ${Math.floor(deltaMs / 60_000)} Ø¯Ø©`;
-  return `Ø° ${Math.floor(deltaMs / 3_600_000)} Ø³Ø§Ø¹Ø©`;
+  if (deltaMs < 60_000) return "الآن";
+  if (deltaMs < 3_600_000) return `منذ ${Math.floor(deltaMs / 60_000)} دقيقة`;
+  return `منذ ${Math.floor(deltaMs / 3_600_000)} ساعة`;
 };
 
 const formatCountdown = (isoDate: string | null): string | null => {
@@ -80,11 +80,11 @@ const formatCountdown = (isoDate: string | null): string | null => {
   const endsAt = new Date(isoDate).getTime();
   if (!Number.isFinite(endsAt)) return null;
   const remainingMs = Math.max(0, endsAt - Date.now());
-  if (remainingMs === 0) return "Ø£ÙØº Ø¨Ø§Ø¨ Ø§ÙØ¬ Ø§Ø­Ø§.";
+  if (remainingMs === 0) return "أُغلق باب الفوج الحالي.";
   const hours = Math.ceil(remainingMs / (60 * 60 * 1000));
-  if (hours < 24) return `Øª Ø®Ø§ ${hours} Ø³Ø§Ø¹Ø©`;
+  if (hours < 24) return `ينتهي خلال ${hours} ساعة`;
   const days = Math.ceil(hours / 24);
-  return `Øª Ø®Ø§ ${days} `;
+  return `ينتهي خلال ${days} يوم`;
 };
 
 const FloatingParticles: FC = () => {
@@ -130,12 +130,16 @@ export const Landing: FC<LandingProps> = ({
   onOwnerInstallRequestHandled
 }) => {
   const reduceMotion = useReducedMotion();
+  const nodesCount = useMapState((s) => s.nodes.length);
+  const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
   const lastGoalId = useJourneyState((s) => s.goalId);
   const lastGoalCategory = useJourneyState((s) => s.category);
   const lastGoalById = useJourneyState((s) => s.lastGoalById);
+  const setLandingIntent = useJourneyState((s) => s.setLandingIntent);
   const lastGoalRecord = getLastGoalMeta(lastGoalById, lastGoalId, lastGoalCategory);
   const lastGoalLabel = getGoalLabel(lastGoalRecord?.goalId);
   const lastGoalMeta = getGoalMeta(lastGoalRecord?.goalId);
+  const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
   const landingLiveData = useLandingLiveData(landingCopy.testimonials ?? [], {
     enableLiveMetrics: designToggles.enableLiveLandingSections,
     enableLiveTestimonials: designToggles.enableLiveLandingSections
@@ -148,12 +152,10 @@ export const Landing: FC<LandingProps> = ({
   const heroVariant = useABTestingVariant(HERO_VARIANT_KEY, HERO_VARIANT_STARTED_AT_KEY);
   const checkoutCtaVariant = useABTestingVariant(CHECKOUT_CTA_VARIANT_KEY, CHECKOUT_CTA_VARIANT_STARTED_AT_KEY);
   const subtitleVariant = useABTestingVariant(SUBTITLE_VARIANT_KEY, SUBTITLE_VARIANT_STARTED_AT_KEY);
-  const marketingHeroVariant = useABTestingVariant(MARKETING_HERO_VARIANT_KEY, MARKETING_HERO_VARIANT_STARTED_AT_KEY);
+  const [showExtendedMobileContent, setShowExtendedMobileContent] = useState(false);
   const [showCheckoutHint, setShowCheckoutHint] = useState(false);
-  const [quickIntent, setQuickIntent] = useState("");
-  const [leadEmail, setLeadEmail] = useState("");
-  const [leadStatus, setLeadStatus] = useState<string | null>(null);
-  const [leadBusy, setLeadBusy] = useState(false);
+  const [showSimulationSection, setShowSimulationSection] = useState(false);
+  const [inlineIntent, setInlineIntent] = useState<InlineIntent>("clarity");
   const [scarcity, setScarcity] = useState<{
     isLive: boolean;
     seatsLeft: number | null;
@@ -179,18 +181,18 @@ export const Landing: FC<LandingProps> = ({
   const [useLiteVisuals, setUseLiteVisuals] = useState(false);
   const canShowInstallButton = hasMounted && Boolean(pwaInstall?.canShowInstallButton);
   const showHeavyAmbientLayers = !reduceMotion && !useLiteVisuals;
-  const checkoutCtaLabel = checkoutCtaVariant === "B" ? "ÙØ¹ Ø±Ø­Ø© 21 " : "Ø§Ø­Ø¬Ø² Ø¹Ø¯ Ø§Ø¢";
-  const marketingHero = landingHeroVariants[marketingHeroVariant];
+  const checkoutCtaLabel = checkoutCtaVariant === "B" ? "فعّل رحلة 21 يوم" : "احجز مقعدك الآن";
+  const showLongSections = showExtendedMobileContent;
   const heroTitle = {
-    line1: marketingHero.headlineLine1,
-    line2: marketingHero.headlineLine2
+    line1: landingCopy.titleLine1,
+    line2: landingCopy.titleLine2
   };
   const heroSubtitle =
     subtitleVariant === "B"
-      ? "Ø¶Ø¹ Ø´Øª Ø¹ Ø§Ø®Ø±Ø·Ø© Ø§ . Ø§ØªØ´Ø®Øµ Ø§ØµØ§Ø¯ Ø£ØµØ± Ø·Ø± ØªØ¹Ø§Ù Ø§ÙØ¹."
-      : marketingHero.subtitle;
+      ? "ضع مشكلتك على الخريطة كما هي. التشخيص الصادق أقصر طريق للتعافي الفعلي."
+      : landingCopy.subtitle;
   const heroValuePoints = useMemo(
-    () => ["Ø®Ø±Ø·Ø© Ø¹ Ø­Ø¸Ø©", "ØªØ­ Ø¹ Ø¨Ø§ Ø¶Ø¶Ø§Ø¡", "Ø®ØµØµØª Ø­ÙØ¸Ø© Ø¨Ø§Ø§"],
+    () => ["خريطة وعي لحظية", "تحليل عميق بلا ضوضاء", "خصوصيتك محفوظة بالكامل"],
     []
   );
   const scarcityMeter = useMemo(() => {
@@ -221,9 +223,28 @@ export const Landing: FC<LandingProps> = ({
   const scarcityCountdown = useMemo(() => formatCountdown(scarcity.closesAt), [scarcity.closesAt]);
   const socialProofLine = useMemo(() => {
     if (!scarcity.isLive || typeof scarcity.activePremium !== "number") return null;
-    if (typeof scarcity.totalSeats !== "number" || scarcity.totalSeats <= 0) return `ÙØ¹ Ø§Ø¢: ${scarcity.activePremium} Ø³ØªØ®Ø¯.`;
-    return `ÙØ¹ Ø§Ø¢: ${scarcity.activePremium}/${scarcity.totalSeats} Ø¹Ø¯.`;
+    if (typeof scarcity.totalSeats !== "number" || scarcity.totalSeats <= 0) return `مفعّل الآن: ${scarcity.activePremium} مستخدم.`;
+    return `مفعّل الآن: ${scarcity.activePremium}/${scarcity.totalSeats} مقعد.`;
   }, [scarcity]);
+  const inlineRecommendation = useMemo(() => {
+    const pulse = publicPulseAvg == null ? 55 : publicPulseAvg;
+    if (pulse < 45) {
+      if (inlineIntent === "boundaries") return "ابدأ الآن بخطوة حدود هادئة لمدة 60 ثانية.";
+      if (inlineIntent === "calm") return "ابدأ الآن بتنظيم الإيقاع: نفس عميق ثم خطوة واحدة واضحة.";
+      return "ابدأ الآن بخطوة وضوح قصيرة قبل أي قرار كبير.";
+    }
+    if (inlineIntent === "boundaries") return "ممتاز. ابدأ بخطوة حدود عملية وثبّتها اليوم.";
+    if (inlineIntent === "calm") return "ممتاز. ابدأ بخطوة توازن خفيفة ثم تابع المسار.";
+    return "ممتاز. ابدأ بخطوة وضوح مباشرة وحرّك أول قرار.";
+  }, [inlineIntent, publicPulseAvg]);
+  const ambientBackground = useMemo(() => {
+    const pulse = publicPulseAvg == null ? 55 : Math.max(0, Math.min(100, publicPulseAvg));
+    const intensity = pulse / 100;
+    const coolAlpha = (0.14 + intensity * 0.1).toFixed(3);
+    const warmAlpha = (0.04 + (1 - intensity) * 0.12).toFixed(3);
+    const midAlpha = (0.1 + intensity * 0.06).toFixed(3);
+    return `radial-gradient(ellipse at 25% 20%, rgba(45,212,191,${coolAlpha}) 0%, transparent 52%), radial-gradient(ellipse at 75% 75%, rgba(245,158,11,${warmAlpha}) 0%, transparent 58%), radial-gradient(ellipse at 45% 50%, rgba(125,211,252,${midAlpha}) 0%, transparent 65%), linear-gradient(120deg, #0f172a 0%, #11183a 42%, #06243b 100%)`;
+  }, [publicPulseAvg]);
 
   useEffect(() => {
     setHasMounted(true);
@@ -247,87 +268,19 @@ export const Landing: FC<LandingProps> = ({
     }
   }, []);
 
-  useEffect(() => {
-    recordFlowEvent("landing_ab_assigned", {
-      meta: {
-        heroVariant,
-        subtitleVariant,
-        marketingHeroVariant
-      }
-    });
-  }, [heroVariant, subtitleVariant, marketingHeroVariant]);
-
   const handleStartJourney = useCallback(() => {
     didStartJourneyRef.current = true;
     const timeToAction = landingViewedAt.current ? Date.now() - landingViewedAt.current : undefined;
     try {
-      recordFlowEvent("cta_free_clicked", { timeToAction, meta: { heroVariant, subtitleVariant } });
-      recordFlowEvent("landing_clicked_start", {
-        timeToAction,
-        meta: {
-          heroVariant,
-          subtitleVariant,
-          marketingHeroVariant,
-          quickIntentProvided: quickIntent.trim().length > 0,
-          quickIntentLength: quickIntent.trim().length
-        }
-      });
+      recordFlowEvent("cta_free_clicked", { timeToAction, meta: { heroVariant, subtitleVariant, inlineIntent } });
+      recordFlowEvent("landing_clicked_start", { timeToAction, meta: { heroVariant, subtitleVariant, inlineIntent } });
       trackEvent(AnalyticsEvents.CTA_CLICK, { timeToAction: timeToAction ?? 0 });
     } catch {
       // Never block the primary CTA on tracking failures.
     }
+    setLandingIntent(inlineIntent);
     onStartJourney();
-  }, [heroVariant, marketingHeroVariant, onStartJourney, quickIntent, subtitleVariant]);
-
-  const handleCaptureLead = useCallback(async () => {
-    const email = leadEmail.trim().toLowerCase();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setLeadStatus("Ø§ÙƒØªØ¨ Ø¨Ø±ÙŠØ¯ Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ ØµØ­ÙŠØ­.");
-      return;
-    }
-
-    setLeadBusy(true);
-    setLeadStatus(null);
-    const ok = await captureMarketingLead(email, quickIntent);
-    setLeadBusy(false);
-
-    if (!ok) {
-      setLeadStatus("ØªØ¹Ø°Ø± Ø­ÙØ¸ Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¢Ù†. Ø­Ø§ÙˆÙ„ Ù„Ø§Ø­Ù‚Ù‹Ø§.");
-      return;
-    }
-
-    trackEvent("lead_captured", { source: "landing" });
-    recordFlowEvent("cta_free_clicked", {
-      meta: {
-        leadCaptured: true,
-        emailDomain: email.split("@")[1] ?? null,
-        utm: getStoredUtmParams()
-      }
-    });
-    setLeadStatus("ØªÙ… Ø­ÙØ¸ Ø¨Ø±ÙŠØ¯Ùƒ. Ø³Ù†Ø±Ø³Ù„ Ù„Ùƒ Ø®Ø·Ø© Ø§Ù„Ø¨Ø¯Ø§ÙŠØ©.");
-    setLeadEmail("");
-  }, [leadEmail, quickIntent]);
-
-  const handleShareLanding = useCallback(async () => {
-    const shareText = "Ø£Ù†Øª Ù„Ø§ ØªØ­ØªØ§Ø¬ Ø¹Ù„Ø§Ø¬Ù‹Ø§. ØªØ­ØªØ§Ø¬ ÙˆØ¶ÙˆØ­Ù‹Ø§. Ø¬Ø±Ù‘Ø¨ Ø§Ù„Ø±Ø­Ù„Ø© Ø§Ù„Ø¢Ù†.";
-    const shareData = {
-      title: "Ø§Ù„Ø±Ø­Ù„Ø©",
-      text: shareText,
-      url: typeof window !== "undefined" ? window.location.href : undefined
-    };
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(`${shareText}\n${shareData.url ?? ""}`);
-      }
-      recordFlowEvent("feature_showcase_clicked", { meta: { feature: "landing_share" } });
-    } catch {
-      // Keep UX non-blocking.
-    }
-  }, []);
+  }, [heroVariant, inlineIntent, onStartJourney, setLandingIntent, subtitleVariant]);
 
   const triggerPwaInstall = useCallback(() => {
     if (!pwaInstall || !canShowInstallButton) return;
@@ -514,44 +467,35 @@ export const Landing: FC<LandingProps> = ({
   };
 
   return (
-    <main className="relative w-full min-h-screen" dir="rtl">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:right-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-slate-900 focus:px-4 focus:py-2 focus:text-sm focus:text-white focus:outline-none focus:ring-2 focus:ring-teal-300"
-      >
-        تخطَّ إلى المحتوى الرئيسي
-      </a>
+    <div className="relative w-full min-h-screen" dir="rtl">
       <div className="fixed inset-0 pointer-events-none z-0" aria-hidden="true">
         <div
           className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse at 25% 20%, rgba(167,139,250,0.14) 0%, transparent 52%), radial-gradient(ellipse at 75% 75%, rgba(45,212,191,0.12) 0%, transparent 58%), radial-gradient(ellipse at 45% 50%, rgba(125,211,252,0.1) 0%, transparent 65%), linear-gradient(120deg, #0f172a 0%, #11183a 42%, #06243b 100%)"
-          }}
+          style={{ background: ambientBackground }}
         />
         {showHeavyAmbientLayers && <FloatingParticles />}
         {!reduceMotion && <OrbitalRings />}
         {showHeavyAmbientLayers && <RadarSweep />}
       </div>
 
-      <div id="main-content" className="relative z-10 w-full min-h-screen px-4 pt-8 sm:pt-10 pb-28 md:pb-16 overflow-x-hidden">
+      <div className="relative z-10 w-full min-h-screen px-4 pt-8 sm:pt-10 pb-28 md:pb-16 overflow-x-hidden">
         <motion.section
-          className="min-h-[88vh] flex flex-col items-center justify-center text-center max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto"
+          className="min-h-[88vh] flex flex-col items-center justify-center text-center max-w-5xl mx-auto"
           variants={stagger}
           initial="hidden"
           animate="visible"
         >
-          <motion.div variants={fadeUp(reduceMotion)} className="hidden mb-5">
-            <Badge className="inline-flex items-center gap-2 px-5 py-2 border-teal-300/50 bg-teal-500/20 shadow-[0_0_20px_rgba(45,212,191,0.22)]">
+          <motion.div variants={fadeUp(reduceMotion)} className="mb-5">
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-teal-300/50 bg-teal-500/20 shadow-[0_0_20px_rgba(45,212,191,0.22)]">
               <span className="w-2.5 h-2.5 rounded-full bg-teal-300 animate-pulse" />
-              <span className="text-sm font-black tracking-[0.18em] uppercase text-teal-100">
-                Ø¬Ø§Ø² ØªÙØ¹
+              <span className="text-xs font-black tracking-[0.18em] uppercase text-teal-100">
+                جاهز للتفعيل
               </span>
-            </Badge>
+            </div>
           </motion.div>
 
-          <motion.div variants={item(reduceMotion)} className="hidden mb-4 min-h-[50px] flex flex-col items-center justify-center">
-            <div className="inline-flex h-[34px] items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 text-sm text-emerald-100">
+          <motion.div variants={item(reduceMotion)} className="mb-4 min-h-[50px] flex flex-col items-center justify-center">
+            <div className="inline-flex h-[34px] items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 text-xs text-emerald-200">
               <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
               {isPublicPulseLoading ? (
                 <span className="inline-flex h-[14px] w-[17rem] items-center gap-2">
@@ -560,11 +504,11 @@ export const Landing: FC<LandingProps> = ({
                 </span>
               ) : (
                 <span>
-                  ØªØ³Ø· Ø·Ø§Ø© Ø§ØªØ¹Ø§Ù Ø¨Ø§ØµØ© Ø§Ø¢: {publicPulseAvg == null ? "Ø§Ø¨Ø§Ø§Øª Ø§Ø­Ø¸Ø© ØºØ± ØªØ§Ø­Ø©" : `${publicPulseAvg.toFixed(1)}%`}.
+                  متوسط طاقة التعافي بالمنصة الآن: {publicPulseAvg == null ? "البيانات اللحظية غير متاحة" : `${publicPulseAvg.toFixed(1)}%`}.
                 </span>
               )}
             </div>
-            <p className="mt-2 text-sm text-slate-200">Ø¢Ø®Ø± ØªØ­Ø¯Ø«: {formatLiveAge(lastLiveUpdatedAt)}</p>
+            <p className="mt-2 text-[10px] text-slate-400/80">آخر تحديث: {formatLiveAge(lastLiveUpdatedAt)}</p>
           </motion.div>
 
           <motion.h1
@@ -572,7 +516,7 @@ export const Landing: FC<LandingProps> = ({
             className="text-[clamp(2.2rem,6vw,4.2rem)] font-black leading-tight tracking-tight mb-5"
           >
             <span className="block text-slate-100 mb-2">{heroTitle.line1}</span>
-            <span className="text-[var(--soft-teal)]">{heroTitle.line2}</span>
+            <span className="text-teal-300">{heroTitle.line2}</span>
           </motion.h1>
 
           <motion.p
@@ -588,49 +532,32 @@ export const Landing: FC<LandingProps> = ({
             />
           </motion.p>
 
-          <motion.div variants={item(reduceMotion)} className="mb-6 flex flex-col items-center gap-3">
-            <Button
-              onClick={handleStartJourney}
-              variant="primary"
-              size="lg"
-              className="group relative overflow-hidden px-10 sm:px-14 py-5 text-[18px] sm:text-[20px] font-black text-[var(--space-deep)] focus-visible:ring-amber-300/40"
-            >
-              <div className="relative flex items-center gap-4">
-                <span>{marketingHero.cta}</span>
-                <span className="w-8 h-8 rounded-full bg-black/10 flex items-center justify-center transition-transform group-hover:-translate-x-1">
-                  <ArrowLeft className="w-5 h-5" />
-                </span>
-              </div>
-            </Button>
-            <p className="text-sm font-semibold text-slate-200">Ø§Ø¨Ø¯Ø£ Ø§Ù„Ø¢Ù† Ø¨Ø¯ÙˆÙ† Ø¨Ø·Ø§Ù‚Ø©. Ø®ØµÙˆØµÙŠØªÙƒ Ù…Ø­ÙÙˆØ¸Ø© Ø¨Ø§Ù„ÙƒØ§Ù…Ù„.</p>
-          </motion.div>
-
-          <motion.ul variants={item(reduceMotion)} className="hidden mb-7 flex flex-wrap items-center justify-center gap-2.5">
+          <motion.ul variants={item(reduceMotion)} className="mb-7 flex flex-wrap items-center justify-center gap-2.5">
             {heroValuePoints.map((point) => (
               <li
                 key={point}
-                className="rounded-full border border-white/15 bg-slate-900/45 px-3 py-1 text-sm font-semibold text-slate-200/90"
+                className="rounded-full border border-white/15 bg-slate-900/45 px-3 py-1 text-[11px] font-semibold text-slate-200/90"
               >
                 {point}
               </li>
             ))}
           </motion.ul>
 
-          <motion.div variants={item(reduceMotion)} className="hidden flex flex-col items-center">
+          <motion.div variants={item(reduceMotion)} className="flex flex-col items-center">
             {scarcity.isLive && scarcityMeter && (
-              <Card className="mb-6 w-[min(22rem,92vw)] flex flex-col items-center justify-center rounded-2xl p-3 bg-white/[0.03] border-white/10">
+              <div className="mb-6 w-[min(22rem,92vw)] flex flex-col items-center justify-center">
                 <motion.button
                   type="button"
                   variants={item(reduceMotion)}
                   onClick={handleOpenCheckout}
-                  className="w-full text-right rounded-2xl px-4 py-3 bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/40"
-                  aria-label="ØªØ§Ø¨Ø¹Ø© Ø­Ø¬Ø² Ø§Ø¹Ø¯"
+                  className="w-full text-right rounded-2xl px-4 py-3 bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40"
+                  aria-label="متابعة حجز المقعد"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[12px] font-black text-amber-200 uppercase tracking-wider">
-                      ØªØ¨ {scarcityMeter.seatsLeft} Ø¹Ø¯ ÙØ·
+                      تبقى {scarcityMeter.seatsLeft} مقعد فقط 🚨
                     </div>
-                    <div className="text-sm font-bold text-slate-200">
+                    <div className="text-[10px] font-bold text-slate-400">
                       {scarcityMeter.seatsLeft}/{scarcityMeter.totalSeats}
                     </div>
                   </div>
@@ -643,121 +570,142 @@ export const Landing: FC<LandingProps> = ({
                       }}
                     />
                   </div>
-                  <p className="mt-1.5 text-sm text-slate-200 font-semibold">
-                    Ø§ÙØ¬ Ø§Ø­Ø§ Øº Ø¹Ø¯ Ø§ØªØ§ Ø§Ø§Ø¹Ø¯.
+                  <p className="mt-1.5 text-[10px] text-slate-300/85 font-semibold">
+                    الفوج الحالي يغلق عند اكتمال المقاعد.
                   </p>
                   {scarcityCountdown && (
-                    <p className="mt-1 text-sm font-black text-amber-100">{scarcityCountdown}</p>
+                    <p className="mt-1 text-[10px] font-black text-amber-200/95">{scarcityCountdown}</p>
                   )}
                 </motion.button>
                 <p
-                  className={`mt-1 h-4 text-sm font-semibold transition-opacity ${showCheckoutHint ? "opacity-100 text-amber-100" : "opacity-0"
+                  className={`mt-1 h-4 text-[10px] font-semibold transition-opacity ${showCheckoutHint ? "opacity-100 text-amber-200" : "opacity-0"
                     }`}
                 >
-                  Ø³Øª ÙØªØ­ ØµÙØ­Ø© Ø§Ø­Ø¬Ø²
+                  سيتم فتح صفحة الحجز
                 </p>
-              </Card>
-            )}
-            <Card className="mb-5 w-[min(38rem,92vw)] p-3 rounded-2xl border-white/10 bg-white/[0.03]">
-              <label htmlFor="intent-note" className="mb-2 block text-sm font-bold text-slate-300">
-                Ø¨Ø¬Ø© Ø§Ø­Ø¯Ø© (Ø§Ø®ØªØ§Ø±): Ø§ Ø£Ø«Ø± Ø´Ø¡ Ø³ØªØ²Ù Ø§Ø¢
-              </label>
-              <Input
-                id="intent-note"
-                value={quickIntent}
-                onChange={(event) => setQuickIntent(event.target.value)}
-                placeholder="Ø«Ø§: Ø³Ø¡ ØªØ§Ø² Ø§Ø¹Ø§Ø§Øª Ø§Ø§Ø±Ø§ Ø§."
-                maxLength={140}
-                className="text-sm"
-              />
-            </Card>
-            <Card className="mb-5 w-[min(38rem,92vw)] p-3 rounded-2xl border-white/10 bg-white/[0.03]">
-              <label htmlFor="lead-email-hero" className="mb-2 block text-sm font-bold text-slate-300">
-                Ø®Ù„ÙŠÙƒ Ø£ÙˆÙ„ Ù…Ù† ÙŠØ³ØªÙ„Ù… Ø®Ø§Ø±Ø·Ø© Ø§Ù„Ø¨Ø¯Ø§ÙŠØ©
-              </label>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Input
-                  id="lead-email-hero"
-                  type="email"
-                  value={leadEmail}
-                  onChange={(event) => setLeadEmail(event.target.value)}
-                  placeholder="name@email.com"
-                  className="text-sm"
-                />
-                <Button
-                  type="button"
-                  onClick={() => void handleCaptureLead()}
-                  disabled={leadBusy}
-                  data-testid="capture-lead-button-hero"
-                  variant="secondary"
-                  size="md"
-                  className="whitespace-nowrap border-teal-400/30 bg-teal-500/15 text-teal-100 hover:bg-teal-500/25"
-                >
-                  {leadBusy ? "Ø¬Ø§Ø±Ù Ø§Ù„Ø­ÙØ¸..." : "Ø§Ø­Ø¬Ø² Ù…ÙƒØ§Ù†Ùƒ"}
-                </Button>
               </div>
-              {leadStatus ? <p data-testid="lead-status-hero" className="mt-2 text-sm text-slate-200">{leadStatus}</p> : null}
-            </Card>
+            )}
 
-            <Button
+            <motion.button
+              type="button"
               onClick={handleStartJourney}
-              variant="primary"
-              size="lg"
-              className="group relative overflow-hidden px-10 sm:px-14 py-5 text-[18px] sm:text-[20px] font-black text-[var(--space-deep)] focus-visible:ring-amber-300/40"
+              className="group relative inline-flex items-center justify-center gap-3 rounded-full px-10 sm:px-14 py-5 text-[18px] sm:text-[20px] font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, #0ea5e9 0%, #2dd4bf 50%, #10b981 100%)",
+                backgroundSize: "200% auto",
+                color: "#fff",
+                boxShadow: "0 0 0 1px rgba(45,212,191,0.3), 0 12px 40px rgba(16,185,129,0.35), 0 2px 4px rgba(0,0,0,0.2)"
+              }}
+              animate={{ backgroundPosition: ["0% center", "100% center", "0% center"] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+              whileHover={{ y: -3, scale: 1.02 }}
+              whileTap={{ scale: 0.96 }}
             >
               <div className="relative flex items-center gap-4">
-                <span>{marketingHero.cta}</span>
-                <span className="w-8 h-8 rounded-full bg-black/10 flex items-center justify-center transition-transform group-hover:-translate-x-1">
+                <span>{landingCopy.ctaJourney}</span>
+                <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform group-hover:-translate-x-1">
                   <ArrowLeft className="w-5 h-5" />
                 </span>
               </div>
-            </Button>
+            </motion.button>
             {isPublicPaymentsEnabled && (
-              <Button
+              <button
+                type="button"
                 onClick={handleCheckoutCta}
-                variant="secondary"
-                size="md"
-                className="mt-3 border-amber-300/40 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20 focus-visible:ring-amber-300/50"
+                className="mt-3 inline-flex items-center justify-center gap-2 rounded-full border border-amber-300/40 bg-amber-500/10 px-7 py-3 text-sm font-black text-amber-100 hover:bg-amber-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/50"
               >
                 {checkoutCtaLabel}
-              </Button>
+              </button>
             )}
 
             <p className="mt-4 text-[13px] font-bold text-slate-300/90 tracking-wide bg-white/5 border border-white/5 px-4 py-1 rounded-full">
-              Ø§Ø¨Ø¯Ø£ Ø¬Ø§Ø§  Ø¨Ø¯ Ø¨Ø·Ø§Ø©.
+              ابدأ مجانًا — بدون بطاقة.
             </p>
-            <p className="mt-2 text-sm text-[var(--soft-teal)] font-black uppercase tracking-widest opacity-90">
-              Ø¨Ø§Ø§Øª ØªØ¸  Ø¨Ø§Ø§.
+            <p className="mt-2 text-[10px] text-teal-400 font-black uppercase tracking-widest opacity-80">
+              بياناتك تظل ملكك بالكامل.
             </p>
-            <Button
-              type="button"
-              onClick={() => void handleShareLanding()}
-              variant="ghost"
-              size="sm"
-              className="mt-3 text-sm font-semibold text-slate-200 hover:text-white"
-            >
-              شارك الصفحة مع شخص يحتاج وضوحًا
-            </Button>
+
+            <div className="landing-inline-compass mt-5 w-full max-w-xl rounded-2xl border border-teal-500/25 bg-teal-500/10 p-4 text-right">
+              <p className="text-[11px] font-black uppercase tracking-[0.15em] text-teal-300">AI Compass</p>
+              <p className="mt-2 text-sm font-semibold text-slate-200">
+                {publicPulseAvg != null && publicPulseAvg < 45
+                  ? "ابدأ بخطوة استعادة هادئة قبل أي قرار كبير."
+                  : "ابدأ بخطوة واحدة واضحة وثبّت الإيقاع اليومي."}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setInlineIntent("clarity")}
+                  className={`rounded-full border px-3 py-1 text-xs font-bold transition-colors ${
+                    inlineIntent === "clarity"
+                      ? "border-teal-300/70 bg-teal-400/20 text-teal-100"
+                      : "border-white/15 bg-white/5 text-slate-200"
+                  }`}
+                >
+                  وضوح
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInlineIntent("boundaries")}
+                  className={`rounded-full border px-3 py-1 text-xs font-bold transition-colors ${
+                    inlineIntent === "boundaries"
+                      ? "border-teal-300/70 bg-teal-400/20 text-teal-100"
+                      : "border-white/15 bg-white/5 text-slate-200"
+                  }`}
+                >
+                  حدود
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInlineIntent("calm")}
+                  className={`rounded-full border px-3 py-1 text-xs font-bold transition-colors ${
+                    inlineIntent === "calm"
+                      ? "border-teal-300/70 bg-teal-400/20 text-teal-100"
+                      : "border-white/15 bg-white/5 text-slate-200"
+                  }`}
+                >
+                  اتزان
+                </button>
+              </div>
+              <p className="mt-3 text-xs font-semibold text-slate-100">{inlineRecommendation}</p>
+              <button
+                type="button"
+                onClick={handleStartJourney}
+                className="mt-3 rounded-lg border border-teal-300/40 bg-teal-500/20 px-3 py-2 text-xs font-black text-teal-100 hover:bg-teal-500/30 transition-colors"
+              >
+                ابدأ بالمسار المقترح
+              </button>
+            </div>
 
             <div className="mt-8 flex flex-col items-center gap-4">
-              <Button
+              <button
                 type="button"
                 onClick={() => {
-                  handleStartJourney();
+                  setShowSimulationSection(true);
+                  const el = document.getElementById('simulation-playground');
+                  el?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                variant="ghost"
-                size="sm"
-                className="text-sm font-black text-[var(--soft-teal)] hover:text-[var(--soft-teal)]/80"
+                className="text-xs font-black text-teal-200/90 hover:text-teal-100 underline underline-offset-8 decoration-teal-500/30 transition-all hover:decoration-teal-500"
               >
-                ابدأ الآن
-              </Button>
+                [ شوف مثال حيّ للقوة التحليلية ]
+              </button>
             </div>
+
+            {!isUserMode && (
+              <button
+                type="button"
+                onClick={() => setShowExtendedMobileContent((prev) => !prev)}
+                className="mt-2 text-xs font-semibold text-slate-300/85 hover:text-slate-200 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 rounded md:hidden"
+              >
+                {showExtendedMobileContent ? "إخفاء التفاصيل" : "اكتشف أكثر"}
+              </button>
+            )}
 
             <motion.div
               variants={fadeUp(reduceMotion)}
               className="mt-6 flex flex-col items-center gap-1 text-center"
             >
-              <p className="text-[14px] sm:text-[16px] font-black text-[var(--soft-teal)]/90 tracking-wide uppercase">
+              <p className="text-[14px] sm:text-[16px] font-black text-teal-200/90 tracking-wide uppercase">
                 {landingCopy.hook}
               </p>
             </motion.div>
@@ -772,10 +720,10 @@ export const Landing: FC<LandingProps> = ({
                 }}
                 onMouseEnter={() => soundManager.playHover()}
                 className="mt-6 inline-flex items-center gap-2 rounded-xl border border-blue-400/35 bg-blue-500/10 px-5 py-2.5 text-sm font-semibold text-blue-200 hover:bg-blue-500/20 transition-colors"
-                aria-label="ØªØ«Ø¨Øª Ø§ØªØ·Ø¨"
+                aria-label="تثبيت التطبيق"
               >
                 <Smartphone className="w-4 h-4" />
-                ØªØ«Ø¨Øª Ø§ØªØ·Ø¨
+                تثبيت التطبيق
               </motion.button>
             )}
           </motion.div>
@@ -785,93 +733,64 @@ export const Landing: FC<LandingProps> = ({
           stagger={stagger}
           item={item(reduceMotion)}
           data={landingCopy.problemSection}
-          onShowExample={handleStartJourney}
+          onShowExample={() => setShowSimulationSection(true)}
         />
-
-        <motion.section
-          className="phi-section w-full max-w-3xl mx-auto"
-          variants={stagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-40px" }}
-        >
-          <motion.div variants={item(reduceMotion)} className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
-            <h3 className="text-xl font-black text-white mb-2">Ø®Ø·ÙˆØ© Ø§Ø®ØªÙŠØ§Ø±ÙŠØ© Ù‚Ø¨Ù„ Ø§Ù„Ø¨Ø¯Ø§ÙŠØ©</h3>
-            <p className="text-sm text-slate-300 mb-4">
-              Ø§ØªØ±Ùƒ Ø¨Ø±ÙŠØ¯Ùƒ Ù„Ù†Ø±Ø³Ù„ Ù„Ùƒ Ø®Ø·Ø© Ø¨Ø¯Ø§ÙŠØ© Ù…Ø®ØªØµØ±Ø© Ø®Ù„Ø§Ù„ 24 Ø³Ø§Ø¹Ø©.
-            </p>
-
-            <label htmlFor="lead-email" className="mb-2 block text-sm font-semibold text-slate-200">
-              Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ
-            </label>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Input
-                id="lead-email"
-                type="email"
-                value={leadEmail}
-                onChange={(event) => setLeadEmail(event.target.value)}
-                placeholder="name@email.com"
-                className="text-sm"
-              />
-              <Button
-                type="button"
-                onClick={() => void handleCaptureLead()}
-                disabled={leadBusy}
-                data-testid="capture-lead-button"
-                variant="secondary"
-                size="md"
-                className="whitespace-nowrap border-teal-400/30 bg-teal-500/15 text-teal-100 hover:bg-teal-500/25"
+        <div className={isUserMode ? "block" : showLongSections ? "block" : "hidden md:block"}>
+          {!isUserMode && showSimulationSection && (
+            <motion.section
+              id="simulation-playground"
+              className="phi-section w-full max-w-5xl mx-auto"
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-80px" }}
+            >
+              <motion.div
+                variants={fadeUp(reduceMotion)}
+                className="rounded-[2.5rem] bg-teal-500/[0.03] border border-teal-500/15 p-8 sm:p-10 text-center relative overflow-hidden"
               >
-                {leadBusy ? "Ø¬Ø§Ø±Ù Ø§Ù„Ø­ÙØ¸..." : "Ø§Ø­Ø¬Ø² Ù…ÙƒØ§Ù†Ùƒ"}
-              </Button>
-            </div>
-            {leadStatus ? (
-              <p data-testid="lead-status" className="mt-2 text-sm text-slate-200">
-                {leadStatus}
-              </p>
-            ) : null}
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-500/25 to-transparent" />
+                <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
+                  {hasExistingJourney ? "تحديث تمركزك الآن" : "جرب تثبيت حدودك الآن"}
+                </h2>
+                <p className="text-sm text-slate-400 mb-8">
+                  {hasExistingJourney
+                    ? "اسحب شخصًا وشوف بسرعة وضعه الحالي قبل قرارك التالي."
+                    : "اسحب شخصًا للمدار المناسب لك لتشوف أثر القرار قبل ما تبدأ."}
+                </p>
+                <div className="scale-75 sm:scale-90 origin-center">
+                  <LandingSimulation />
+                </div>
+              </motion.div>
+            </motion.section>
+          )}
 
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <Input
-                id="intent-note"
-                value={quickIntent}
-                onChange={(event) => setQuickIntent(event.target.value)}
-                placeholder="Ø§Ø®ØªÙŠØ§Ø±ÙŠ: Ù…Ø§ Ø£ÙƒØ«Ø± Ø´ÙŠØ¡ ÙŠØ³ØªÙ†Ø²ÙÙƒ Ø§Ù„Ø¢Ù†ØŸ"
-                maxLength={140}
-                className="text-sm sm:col-span-2"
-              />
-              {isPublicPaymentsEnabled && (
-                <Button
-                  onClick={handleCheckoutCta}
-                  variant="secondary"
-                  size="md"
-                  className="border-amber-300/40 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20 focus-visible:ring-amber-300/50"
-                >
-                  {checkoutCtaLabel}
-                </Button>
-              )}
-              <Button
-                type="button"
-                onClick={() => {
-                  handleStartJourney();
-                }}
-                variant="ghost"
-                size="md"
-                className="text-slate-200 hover:text-white"
-              >
-                Ø§Ø¨Ø¯Ø£ Ø§Ù„Ø¢Ù†
-              </Button>
-            </div>
-          </motion.div>
-        </motion.section>
+          <FeatureShowcaseSection
+            stagger={stagger}
+            item={item(reduceMotion)}
+            onOpenRadar={() => {
+              soundManager.playClick();
+              recordFlowEvent("feature_showcase_clicked", { meta: { feature: "radar" } });
+              handleStartJourney();
+            }}
+            onOpenCourt={() => {
+              soundManager.playClick();
+              recordFlowEvent("feature_showcase_clicked", { meta: { feature: "guilt_court" } });
+              handleStartJourney();
+            }}
+            onOpenPlaybooks={() => {
+              soundManager.playClick();
+              recordFlowEvent("feature_showcase_clicked", { meta: { feature: "playbooks" } });
+              handleStartJourney();
+            }}
+          />
 
-        <div>
-          <MetricsSection
+          {!isUserMode && <MetricsSection
             stagger={stagger}
             item={item(reduceMotion)}
             metricsState={landingLiveData.metrics}
             liveEnabled={designToggles.enableLiveLandingSections}
-          />
+          />}
 
           <HowItWorksSection
             stagger={stagger}
@@ -887,6 +806,11 @@ export const Landing: FC<LandingProps> = ({
             LastGoalIcon={lastGoalMeta?.icon}
           />
 
+          {!isUserMode && <SystemOverclockSection
+            stagger={stagger}
+            item={item(reduceMotion)}
+          />}
+
           <motion.section
             className="phi-section flex flex-col items-center text-center"
             variants={stagger}
@@ -894,18 +818,15 @@ export const Landing: FC<LandingProps> = ({
             whileInView="visible"
             viewport={{ once: true, margin: "-60px" }}
           >
-            <motion.div variants={item(reduceMotion)}>
-              <Button
-                type="button"
-                onClick={handleStartJourney}
-                variant="primary"
-                size="lg"
-                className="inline-flex items-center justify-center gap-3 px-10 py-4 text-lg font-black text-slate-950 hover:bg-amber-400 transition-colors"
-              >
-                {marketingHero.cta}
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-            </motion.div>
+            <motion.button
+              variants={item(reduceMotion)}
+              type="button"
+              onClick={handleStartJourney}
+              className="inline-flex items-center justify-center gap-3 rounded-full px-10 py-4 text-lg font-black text-white bg-teal-500 hover:bg-teal-400 transition-colors"
+            >
+              {landingCopy.ctaJourney}
+              <ArrowLeft className="w-5 h-5" />
+            </motion.button>
           </motion.section>
         </div>
 
@@ -917,45 +838,41 @@ export const Landing: FC<LandingProps> = ({
           viewport={{ once: true }}
         >
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <Button
+            <button
               type="button"
               onClick={() => openLegalPage("/privacy")}
-              variant="ghost"
-              size="sm"
-              className="text-slate-300 hover:text-[var(--soft-teal)]"
+              className="text-slate-400 hover:text-teal-400 transition-colors underline underline-offset-2"
             >
-              Ø³ÙŠØ§Ø³Ø© Ø§Ù„Ø®ØµÙˆØµÙŠØ©
-            </Button>
-            <Button
+              سياسة الخصوصية
+            </button>
+            <button
               type="button"
               onClick={() => openLegalPage("/terms")}
-              variant="ghost"
-              size="sm"
-              className="text-slate-300 hover:text-[var(--soft-teal)]"
+              className="text-slate-400 hover:text-teal-400 transition-colors underline underline-offset-2"
             >
-              Ø´Ø±ÙˆØ· Ø§Ù„Ø§Ø³ØªØ®Ø¯Ø§Ù…
-            </Button>
+              شروط الاستخدام
+            </button>
             <a
               href="https://wa.me/0201023050092"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-slate-300 hover:text-[var(--ds-color-brand-teal-400)] transition-colors underline underline-offset-2"
+              className="text-slate-400 hover:text-teal-400 transition-colors underline underline-offset-2"
             >
-              ØªÙˆØ§ØµÙ„ Ù…Ø¹Ù†Ø§
+              تواصل معنا
             </a>
           </div>
           <div className="flex flex-col items-center gap-3 mb-6 bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-            <p className="text-sm font-black text-slate-300 uppercase tracking-widest mb-1">ØªØ¹Ù‡Ø¯Ø§Øª Ø§Ù„Ø«Ù‚Ø©</p>
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">تعهد الأمان</p>
             <div className="flex flex-col items-center gap-1.5">
               {landingCopy.trustPoints.map((point, idx) => (
-                <p key={idx} className="text-sm text-slate-200 font-bold flex items-center gap-2">
+                <p key={idx} className="text-[10px] text-slate-500 font-bold flex items-center gap-2">
                   <span className="w-1 h-1 rounded-full bg-teal-500/40" />
                   {point}
                 </p>
               ))}
             </div>
           </div>
-          <span className="text-sm text-slate-400 font-mono tracking-widest">
+          <span className="text-[10px] text-slate-600 font-mono tracking-widest">
             ALREHLA // ALPHA v0.1
           </span>
         </motion.footer>
@@ -963,30 +880,27 @@ export const Landing: FC<LandingProps> = ({
 
       <div className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] md:hidden">
         <div className="mx-auto max-w-md rounded-2xl border border-teal-300/20 bg-slate-900/85 p-2.5 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
-          <Button
+          <button
+            type="button"
             onClick={handleStartJourney}
-            variant="primary"
-            size="lg"
-            className="w-full rounded-xl text-sm font-black text-slate-950 hover:bg-amber-400 focus-visible:ring-amber-300/60"
+            className="w-full rounded-xl bg-teal-500 py-3 text-sm font-black text-slate-950 hover:bg-teal-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300/60"
           >
-            {marketingHero.cta}
-          </Button>
+            {landingCopy.ctaJourney}
+          </button>
         </div>
       </div>
 
       {isPublicPaymentsEnabled && (
         <div className="fixed left-6 top-1/2 -translate-y-1/2 z-30 hidden md:flex">
-          <Button
+          <button
+            type="button"
             onClick={handleDesktopStickyCheckout}
-            variant="secondary"
-            size="md"
-            className="rounded-2xl border-amber-300/35 bg-slate-900/85 text-sm font-black text-amber-100 hover:bg-slate-900 shadow-[0_10px_26px_rgba(0,0,0,0.35)] focus-visible:ring-amber-300/50"
+            className="rounded-2xl border border-amber-300/35 bg-slate-900/85 px-4 py-3 text-sm font-black text-amber-100 hover:bg-slate-900 transition-colors shadow-[0_10px_26px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/50"
           >
             {checkoutCtaLabel}
-          </Button>
+          </button>
         </div>
       )}
-    </main>
+    </div>
   );
 };
-

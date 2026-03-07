@@ -9,6 +9,7 @@ export type JourneyStepId =
   | "map"
   | "measurement"
   | "celebration";
+export type LandingIntent = "clarity" | "boundaries" | "calm" | null;
 
 const JOURNEY_STEPS: JourneyStepId[] = [
   "baseline",
@@ -32,6 +33,7 @@ interface StoredJourney {
   postStepAnswers: PostStepAnswers | null;
   postStepScore: number | null;
   journeyStartedAt: number | null;
+  landingIntent?: LandingIntent;
 }
 
 async function loadJourney(): Promise<Partial<StoredJourney>> {
@@ -62,6 +64,8 @@ interface JourneyState extends StoredJourney {
   goNext: () => void;
   goBack: () => void;
   resetJourney: () => void;
+  setLandingIntent: (intent: Exclude<LandingIntent, null>) => void;
+  consumeLandingIntent: () => LandingIntent;
 }
 
 const defaultState: StoredJourney = {
@@ -75,7 +79,8 @@ const defaultState: StoredJourney = {
   lastGoalById: {},
   postStepAnswers: null,
   postStepScore: null,
-  journeyStartedAt: null
+  journeyStartedAt: null,
+  landingIntent: null
 };
 
 export const useJourneyState = create<JourneyState>((set, get) => ({
@@ -187,10 +192,28 @@ export const useJourneyState = create<JourneyState>((set, get) => ({
       category: null,
       postStepAnswers: null,
       postStepScore: null,
+      landingIntent: null,
       journeyStartedAt: s.journeyStartedAt ?? Date.now()
     };
     set(next);
     saveJourney(next);
+  },
+  setLandingIntent(intent) {
+    set((s) => {
+      const next: StoredJourney = { ...s, landingIntent: intent };
+      saveJourney(next);
+      return next;
+    });
+  },
+  consumeLandingIntent() {
+    const current = get().landingIntent ?? null;
+    if (!current) return null;
+    set((s) => {
+      const next: StoredJourney = { ...s, landingIntent: null };
+      saveJourney(next);
+      return next;
+    });
+    return current;
   }
 }));
 

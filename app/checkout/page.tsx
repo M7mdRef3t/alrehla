@@ -1,11 +1,10 @@
-﻿"use client";
+"use client";
 
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Building2, Copy, ExternalLink, Landmark, MessageCircle, Wallet } from "lucide-react";
 import { supabase } from "../../src/services/supabaseClient";
 import { recordFlowEvent } from "../../src/services/journeyTracking";
-import { Button } from "../../src/components/UI";
 
 type ScarcityResponse = {
   total_seats: number;
@@ -41,8 +40,8 @@ const LOCAL_PROOF_METHODS: Array<{ value: ManualProofMethod; label: string }> = 
   { value: "instapay", label: "InstaPay" },
   { value: "vodafone_cash", label: "Vodafone Cash" },
   { value: "etisalat_cash", label: "Etisalat Cash" },
-  { value: "bank_transfer", label: "ØªØ­ÙˆÙŠÙ„ Ø¨Ù†ÙƒÙŠ" },
-  { value: "fawry", label: "ÙÙˆØ±ÙŠ" }
+  { value: "bank_transfer", label: "تحويل بنكي" },
+  { value: "fawry", label: "فوري" }
 ];
 const INTERNATIONAL_PROOF_METHODS: Array<{ value: ManualProofMethod; label: string }> = [
   { value: "paypal", label: "PayPal" }
@@ -74,7 +73,7 @@ function normalizeWhatsappNumber(value: string): string {
 function buildWhatsappHref(args: { email: string; method: string; note?: string }): string {
   const safeEmail = args.email || "غير_مسجل";
   const message = [
-    "مرحبًا، أرغب في تفعيل رحلة 21 يومًا.",
+    "أهلاً، أرغب في تفعيل رحلة 21 يوم.",
     `وسيلة الدفع المختارة: ${args.method}.`,
     `البريد المسجل: ${safeEmail}.`,
     args.note ? `ملاحظة: ${args.note}.` : "",
@@ -88,13 +87,13 @@ function buildWhatsappHref(args: { email: string; method: string; note?: string 
 async function copyValue(value: string, onDone: (message: string) => void) {
   if (!value || typeof navigator === "undefined" || !navigator.clipboard?.writeText) return;
   await navigator.clipboard.writeText(value);
-  onDone("تم نسخ البيانات. بعد التحويل أرسل إثبات الدفع ليتم التفعيل بسرعة.");
+  onDone("تم نسخ البيانات. بعد التحويل أرسل إثبات الدفع لتفعيل الرحلة.");
 }
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error("ØªØ¹Ø°Ø± ØªØ¬Ù‡ÙŠØ² ØµÙˆØ±Ø© Ø§Ù„Ø¥Ø«Ø¨Ø§Øª."));
+    reader.onerror = () => reject(new Error("تعذر تجهيز صورة الإثبات."));
     reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
     reader.readAsDataURL(file);
   });
@@ -132,23 +131,21 @@ function MethodCard({
           <p className="mt-1 text-sm leading-relaxed text-slate-300">{subtitle}</p>
           {value && (
             <div className="mt-4 rounded-xl border border-white/10 bg-slate-950/50 p-3">
-              {valueLabel && <p className="mb-1 text-sm font-bold text-slate-300">{valueLabel}</p>}
+              {valueLabel && <p className="mb-1 text-[11px] font-bold text-slate-400">{valueLabel}</p>}
               <p className="font-mono text-sm text-teal-200 break-all">{value}</p>
-              {secondaryValue && <p className="mt-2 font-mono text-xs text-slate-300 break-all">{secondaryValue}</p>}
+              {secondaryValue && <p className="mt-2 font-mono text-xs text-slate-400 break-all">{secondaryValue}</p>}
             </div>
           )}
           <div className="mt-4 flex flex-wrap gap-2">
             {value && (
-              <Button
+              <button
                 type="button"
                 onClick={onAction}
-                variant="ghost"
-                size="sm"
-                className="inline-flex items-center gap-2 border-white/15 text-sm font-bold text-white hover:bg-white/10"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white hover:bg-white/10 transition-colors"
               >
                 <Copy className="h-4 w-4" />
-                Ù†Ø³Ø®
-              </Button>
+                نسخ
+              </button>
             )}
             <a
               href={href}
@@ -261,7 +258,7 @@ export default function CheckoutPage() {
   const hasBankDetails = Boolean(BANK_NAME || BANK_BENEFICIARY || BANK_ACCOUNT_NUMBER || BANK_IBAN);
   const bankValue = [BANK_NAME, BANK_BENEFICIARY].filter(Boolean).join(" - ");
   const bankSecondaryValue = [
-    BANK_ACCOUNT_NUMBER && `Ø±Ù‚Ù… Ø§Ù„Ø­Ø³Ø§Ø¨: ${BANK_ACCOUNT_NUMBER}`,
+    BANK_ACCOUNT_NUMBER && `Account: ${BANK_ACCOUNT_NUMBER}`,
     BANK_IBAN && `IBAN: ${BANK_IBAN}`,
     BANK_SWIFT && `SWIFT: ${BANK_SWIFT}`
   ]
@@ -273,22 +270,22 @@ export default function CheckoutPage() {
     : "\u0642\u064a\u0645\u0629 \u0627\u0644\u0631\u062d\u0644\u0629 \u062a\u0624\u0643\u062f \u0645\u0639\u0643 \u064a\u062f\u0648\u064a\u064b\u0627 \u0642\u0628\u0644 \u0627\u0644\u062a\u062d\u0648\u064a\u0644. \u0644\u0646 \u0646\u0639\u0631\u0636 \u0631\u0642\u0645\u064b\u0627 \u063a\u064a\u0631 \u0645\u0639\u062a\u0645\u062f.";
   const amountPlaceholder =
     mode === "local"
-      ? LOCAL_MONTHLY_PRICE_LABEL || "150 Ø¬Ù†ÙŠÙ‡"
-      : GLOBAL_MONTHLY_PRICE_LABEL || FOUNDING_COHORT_PRICE_LABEL || "9.99 Ø¯ÙˆÙ„Ø§Ø±";
+      ? LOCAL_MONTHLY_PRICE_LABEL || "150 EGP"
+      : GLOBAL_MONTHLY_PRICE_LABEL || FOUNDING_COHORT_PRICE_LABEL || "9.99 USD";
   const pricingRows = [
     {
-      title: "Ø§Ù„Ø¯ÙØ¹Ø© Ø§Ù„ØªØ£Ø³ÙŠØ³ÙŠØ©",
-      value: FOUNDING_COHORT_PRICE_LABEL || "12-15 Ø¯ÙˆÙ„Ø§Ø±",
-      note: "Ø±Ø­Ù„Ø© 21 ÙŠÙˆÙ… - 100 Ù†Ù‚Ø·Ø© ÙˆØ¹ÙŠ"
+      title: "Closed Beta",
+      value: FOUNDING_COHORT_PRICE_LABEL || "12-15 USD",
+      note: "21-day journey - 100 Awareness Tokens"
     },
     {
-      title: "Ø§Ù„Ø¨Ø§Ù‚Ø© Ø§Ù„Ù…Ù…ÙŠØ²Ø© - Ù…ØµØ±",
-      value: LOCAL_MONTHLY_PRICE_LABEL || "150 Ø¬Ù†ÙŠÙ‡ / Ø´Ù‡Ø±",
+      title: "Premium Egypt",
+      value: LOCAL_MONTHLY_PRICE_LABEL || "150 EGP / month",
       note: "\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u0625\u0637\u0644\u0627\u0642 \u0627\u0644\u0639\u0627\u0645 \u062f\u0627\u062e\u0644 \u0645\u0635\u0631"
     },
     {
-      title: "Ø§Ù„Ø¨Ø§Ù‚Ø© Ø§Ù„Ù…Ù…ÙŠØ²Ø© - Ø¯ÙˆÙ„ÙŠ",
-      value: GLOBAL_MONTHLY_PRICE_LABEL || "9.99 Ø¯ÙˆÙ„Ø§Ø± / Ø´Ù‡Ø±",
+      title: "Premium Global",
+      value: GLOBAL_MONTHLY_PRICE_LABEL || "9.99 USD / month",
       note: "\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u0625\u0637\u0644\u0627\u0642 \u0627\u0644\u0639\u0627\u0645 \u0644\u0644\u062f\u0641\u0639 \u0627\u0644\u062f\u0648\u0644\u064a"
     }
   ];
@@ -372,7 +369,7 @@ export default function CheckoutPage() {
       setPaymentNotice(data.message || "\u062a\u0645 \u0627\u0633\u062a\u0644\u0627\u0645 \u0625\u062b\u0628\u0627\u062a \u0627\u0644\u062f\u0641\u0639.");
       trackManualIntent(`${proofMethod}_proof_form`);
     } catch (error) {
-      setPaymentNotice(error instanceof Error ? error.message : "ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹.");
+      setPaymentNotice(error instanceof Error ? error.message : "تعذر إرسال إثبات الدفع.");
     } finally {
       setIsSubmittingProof(false);
     }
@@ -381,23 +378,17 @@ export default function CheckoutPage() {
   if (!CHECKOUT_PUBLIC_ENABLED) {
     return (
       <main className="min-h-screen bg-slate-950 px-4 py-8 text-white md:py-12">
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:right-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-slate-900 focus:px-4 focus:py-2 focus:text-sm focus:text-white focus:outline-none focus:ring-2 focus:ring-teal-300"
-        >
-          ØªØ®Ø·Ù‘ÙŽ Ø¥Ù„Ù‰ Ø§Ù„Ù…Ø­ØªÙˆÙ‰ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ
-        </a>
-        <div id="main-content" className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-white/5 p-6 text-center md:p-8">
-          <p className="mb-2 text-xs font-black uppercase tracking-[0.24em] text-amber-300">Ø§Ù„ØªÙØ¹ÙŠÙ„</p>
-          <h1 className="mb-3 text-2xl font-black md:text-3xl">Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„ØªÙØ¹ÙŠÙ„ ØºÙŠØ± Ù…ØªØ§Ø­Ø© Ø§Ù„Ø¢Ù†</h1>
+        <div className="mx-auto max-w-2xl rounded-3xl border border-white/10 bg-white/5 p-6 text-center md:p-8">
+          <p className="mb-2 text-xs font-black uppercase tracking-[0.24em] text-amber-300">Checkout</p>
+          <h1 className="mb-3 text-2xl font-black md:text-3xl">بوابة التفعيل غير متاحة الآن</h1>
           <p className="text-sm leading-relaxed text-slate-300 md:text-base">
-            Ø§Ù„ØªÙØ¹ÙŠÙ„ Ø§Ù„ÙŠØ¯ÙˆÙŠ ØºÙŠØ± Ù…Ù†Ø´ÙˆØ± Ø­Ø§Ù„ÙŠÙ‹Ø§. Ø¹Ù†Ø¯ ÙØªØ­Ù‡ Ø³ÙŠØ¸Ù‡Ø± Ù‡Ù†Ø§ Ù…Ø¨Ø§Ø´Ø±Ø© Ø¯ÙˆÙ† Ø£ÙŠ Ø¨ÙŠØ§Ù†Ø§Øª ÙˆÙ‡Ù…ÙŠØ©.
+            التفعيل اليدوي غير منشور حاليًا. عند فتحه سيظهر هنا مباشرة دون أي بيانات وهمية.
           </p>
           <a
             href="/"
             className="mt-6 inline-flex rounded-xl bg-teal-500 px-5 py-2.5 font-black text-slate-950 transition-colors hover:bg-teal-400"
           >
-            Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„Ù„Ù…Ù†ØµØ©
+            العودة للمنصة
           </a>
         </div>
       </main>
@@ -406,13 +397,7 @@ export default function CheckoutPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-white md:py-12">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:right-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-slate-900 focus:px-4 focus:py-2 focus:text-sm focus:text-white focus:outline-none focus:ring-2 focus:ring-teal-300"
-      >
-        ØªØ®Ø·Ù‘ÙŽ Ø¥Ù„Ù‰ Ø§Ù„Ù…Ø­ØªÙˆÙ‰ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ
-      </a>
-      <div id="main-content" className="mx-auto max-w-5xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6">
         {paymentNotice && (
           <div className="rounded-2xl border border-amber-300/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
             {paymentNotice}
@@ -420,10 +405,10 @@ export default function CheckoutPage() {
         )}
 
         <header className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8">
-          <p className="mb-2 text-xs font-black uppercase tracking-[0.24em] text-teal-300">Ø§Ù„Ø±Ø­Ù„Ø© Ø§Ù„ØªØ£Ø³ÙŠØ³ÙŠØ©</p>
-          <h1 className="mb-3 text-2xl font-black md:text-4xl">ØªÙØ¹ÙŠÙ„ Ø§Ù„Ø±Ø­Ù„Ø© Ø§Ù„ØªØ£Ø³ÙŠØ³ÙŠØ©</h1>
+          <p className="mb-2 text-xs font-black uppercase tracking-[0.24em] text-teal-300">Founding Cohort</p>
+          <h1 className="mb-3 text-2xl font-black md:text-4xl">تفعيل الرحلة التأسيسية</h1>
           <p className="max-w-3xl text-sm text-slate-300 md:text-base">
-            21 ÙŠÙˆÙ… ØªØ±ÙƒÙŠØ² Ø¹Ù…ÙŠÙ‚. 100 Ù†Ù‚Ø·Ø© ÙˆØ¹ÙŠ. Ø§Ù„Ø¯ÙØ¹ Ù‡Ù†Ø§ ÙŠØ¯ÙˆÙŠ ÙˆÙ…Ø¨Ø§Ø´Ø±. Ø¨Ø¹Ø¯ Ø§Ù„ØªØ­ÙˆÙŠÙ„ Ø£Ø±Ø³Ù„ Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹ØŒ ÙˆÙ†ÙØ¹Ù„ Ø§Ù„Ø±Ø­Ù„Ø© Ù„Ùƒ ÙŠØ¯ÙˆÙŠÙ‹Ø§.
+            21 يوم تركيز عميق. 100 نقطة وعي. الدفع هنا يدوي ومباشر. بعد التحويل أرسل إثبات الدفع، ونفعل الرحلة لك يدويًا.
           </p>
           <div className="mt-4 inline-flex rounded-2xl border border-teal-400/20 bg-teal-400/10 px-4 py-3 text-sm font-semibold text-teal-100">
             {priceLine}
@@ -432,9 +417,9 @@ export default function CheckoutPage() {
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             {pricingRows.map((row) => (
               <div key={row.title} className="rounded-2xl border border-white/10 bg-slate-950/35 px-4 py-4">
-                <p className="text-sm font-black uppercase tracking-[0.22em] text-slate-300">{row.title}</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-400">{row.title}</p>
                 <p className="mt-2 text-lg font-black text-white">{row.value}</p>
-                <p className="mt-1 text-xs leading-relaxed text-slate-300">{row.note}</p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">{row.note}</p>
               </div>
             ))}
           </div>
@@ -442,20 +427,36 @@ export default function CheckoutPage() {
           <div className="mt-6 rounded-2xl border border-amber-300/20 bg-amber-400/10 p-4">
             <p className="text-sm font-semibold text-amber-100">
               {typeof seatsLeft === "number"
-                ? `Ø§Ù„Ù…Ù‚Ø§Ø¹Ø¯ Ø§Ù„Ù…ØªØ¨Ù‚ÙŠØ© Ø§Ù„Ø¢Ù†: ${seatsLeft}`
-                : "Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ù‚Ø§Ø¹Ø¯ Ø§Ù„Ù„Ø­Ø¸ÙŠØ© ØºÙŠØ± Ù…ØªØ§Ø­Ø© Ø­Ø§Ù„ÙŠÙ‹Ø§."}
+                ? `المقاعد المتبقية الآن: ${seatsLeft}`
+                : "بيانات المقاعد اللحظية غير متاحة حاليًا."}
             </p>
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
               <div className="h-full bg-teal-400 transition-all duration-500" style={{ width: `${scarcityPct}%` }} />
             </div>
-            <p className="mt-2 text-xs text-slate-300">Ø§Ù„Ù…ØµØ¯Ø±: {source} â€¢ Ø§Ù„Ø³Ø¹Ø©: {totalSeats}</p>
+            <p className="mt-2 text-xs text-slate-400">المصدر: {source} • السعة: {totalSeats}</p>
           </div>
         </header>
 
         <section className="rounded-3xl border border-white/10 bg-black/30 p-4 md:p-6">
           <div className="mb-6 flex flex-wrap gap-2">
-            <Button type="button" onClick={() => setMode("local")} variant={mode === "local" ? "primary" : "ghost"} size="md" className={mode === "local" ? "text-slate-950" : "text-slate-300"}>دفع محلي داخل مصر</Button>
-            <Button type="button" onClick={() => setMode("international")} variant={mode === "international" ? "primary" : "ghost"} size="md" className={mode === "international" ? "text-slate-950" : "text-slate-300"}>دفع دولي</Button>
+            <button
+              type="button"
+              onClick={() => setMode("local")}
+              className={`rounded-xl px-4 py-2 text-sm font-bold transition-colors ${
+                mode === "local" ? "bg-teal-500 text-slate-950" : "bg-white/5 text-slate-300"
+              }`}
+            >
+              دفع محلي داخل مصر
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("international")}
+              className={`rounded-xl px-4 py-2 text-sm font-bold transition-colors ${
+                mode === "international" ? "bg-teal-500 text-slate-950" : "bg-white/5 text-slate-300"
+              }`}
+            >
+              دفع دولي
+            </button>
           </div>
 
           {mode === "local" && (
@@ -464,13 +465,13 @@ export default function CheckoutPage() {
                 title="InstaPay"
                 subtitle={
                   INSTAPAY_ALIAS || INSTAPAY_NUMBER
-                    ? "Ø­ÙˆÙ‘Ù„ Ù…Ø¨Ø§Ø´Ø±Ø© Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù„ÙŠØ§Ø³ Ø§Ù„ØªØ§Ù„ÙŠØŒ Ø«Ù… Ø£Ø±Ø³Ù„ Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹ Ù„ØªÙØ¹ÙŠÙ„ Ø§Ù„Ø±Ø­Ù„Ø©."
-                    : "Ø¨ÙŠØ§Ù†Ø§Øª InstaPay Ø§Ù„ÙØ¹Ù„ÙŠØ© ØªÙØ±Ø³Ù„ Ù„Ùƒ ÙŠØ¯ÙˆÙŠÙ‹Ø§ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨ Ù‚Ø¨Ù„ Ø§Ù„ØªØ­ÙˆÙŠÙ„."
+                    ? "حوّل مباشرة على الألياس التالي، ثم أرسل إثبات الدفع لتفعيل الرحلة."
+                    : "بيانات InstaPay الفعلية تُرسل لك يدويًا عبر واتساب قبل التحويل."
                 }
                 value={INSTAPAY_ALIAS || INSTAPAY_NUMBER || undefined}
-                valueLabel={INSTAPAY_ALIAS ? "Ø§Ù„Ù…Ø¹Ø±Ù‘Ù" : "Ø±Ù‚Ù… InstaPay"}
-                secondaryValue={INSTAPAY_ALIAS && INSTAPAY_NUMBER ? `Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ: ${INSTAPAY_NUMBER}` : undefined}
-                actionLabel={INSTAPAY_ALIAS || INSTAPAY_NUMBER ? "ÙˆØ§ØªØ³Ø§Ø¨ Ù„Ù„ØªØ£ÙƒÙŠØ¯" : "Ø§Ø·Ù„Ø¨ Ø¨ÙŠØ§Ù†Ø§Øª InstaPay"}
+                valueLabel={INSTAPAY_ALIAS ? "Alias" : "رقم InstaPay"}
+                secondaryValue={INSTAPAY_ALIAS && INSTAPAY_NUMBER ? `رقم الهاتف: ${INSTAPAY_NUMBER}` : undefined}
+                actionLabel={INSTAPAY_ALIAS || INSTAPAY_NUMBER ? "واتساب للتأكيد" : "اطلب بيانات InstaPay"}
                 href={buildWhatsappHref({ email, method: "InstaPay" })}
                 onAction={() => {
                   setProofMethod("instapay");
@@ -485,12 +486,12 @@ export default function CheckoutPage() {
                 title="Vodafone Cash"
                 subtitle={
                   VODAFONE_CASH_NUMBER
-                    ? "Ø­ÙˆÙ‘Ù„ Ø¹Ù„Ù‰ Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ØªØ§Ù„ÙŠ Ø«Ù… Ø£Ø±Ø³Ù„ Ù„Ù‚Ø·Ø© Ø£Ùˆ Ø±Ù‚Ù… Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ù„ÙŠØªÙ… Ø§Ù„ØªÙØ¹ÙŠÙ„."
-                    : "Ø³Ù†Ø±Ø³Ù„ Ù„Ùƒ Ø±Ù‚Ù… Vodafone Cash Ø§Ù„Ø­Ù‚ÙŠÙ‚ÙŠ ÙŠØ¯ÙˆÙŠÙ‹Ø§ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨."
+                    ? "حوّل على الرقم التالي ثم أرسل لقطة أو رقم العملية ليتم التفعيل."
+                    : "سنرسل لك رقم Vodafone Cash الحقيقي يدويًا عبر واتساب."
                 }
                 value={VODAFONE_CASH_NUMBER || undefined}
-                valueLabel="Ø±Ù‚Ù… Ø§Ù„Ù…Ø­ÙØ¸Ø©"
-                actionLabel={VODAFONE_CASH_NUMBER ? "ÙˆØ§ØªØ³Ø§Ø¨ Ù„Ù„ØªØ£ÙƒÙŠØ¯" : "Ø§Ø·Ù„Ø¨ Ø±Ù‚Ù… Vodafone Cash"}
+                valueLabel="رقم المحفظة"
+                actionLabel={VODAFONE_CASH_NUMBER ? "واتساب للتأكيد" : "اطلب رقم Vodafone Cash"}
                 href={buildWhatsappHref({ email, method: "Vodafone Cash" })}
                 onAction={() => {
                   setProofMethod("vodafone_cash");
@@ -504,12 +505,12 @@ export default function CheckoutPage() {
                 title="Etisalat Cash"
                 subtitle={
                   ETISALAT_CASH_NUMBER
-                    ? "Ø­ÙˆÙ‘Ù„ Ø¹Ù„Ù‰ Ø§Ù„Ø±Ù‚Ù… Ø§Ù„ØªØ§Ù„ÙŠ Ø«Ù… Ø£Ø±Ø³Ù„ Ù…Ø§ ÙŠØ«Ø¨Øª Ø§Ù„ØªØ­ÙˆÙŠÙ„ Ù„ØªØ£ÙƒÙŠØ¯ Ø§Ù„ØªÙØ¹ÙŠÙ„."
-                    : "Ø³Ù†Ø±Ø³Ù„ Ù„Ùƒ Ø±Ù‚Ù… Etisalat Cash Ø§Ù„Ø­Ù‚ÙŠÙ‚ÙŠ ÙŠØ¯ÙˆÙŠÙ‹Ø§ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨."
+                    ? "حوّل على الرقم التالي ثم أرسل ما يثبت التحويل لتأكيد التفعيل."
+                    : "سنرسل لك رقم Etisalat Cash الحقيقي يدويًا عبر واتساب."
                 }
                 value={ETISALAT_CASH_NUMBER || undefined}
-                valueLabel="Ø±Ù‚Ù… Ø§Ù„Ù…Ø­ÙØ¸Ø©"
-                actionLabel={ETISALAT_CASH_NUMBER ? "ÙˆØ§ØªØ³Ø§Ø¨ Ù„Ù„ØªØ£ÙƒÙŠØ¯" : "Ø§Ø·Ù„Ø¨ Ø±Ù‚Ù… Etisalat Cash"}
+                valueLabel="رقم المحفظة"
+                actionLabel={ETISALAT_CASH_NUMBER ? "واتساب للتأكيد" : "اطلب رقم Etisalat Cash"}
                 href={buildWhatsappHref({ email, method: "Etisalat Cash" })}
                 onAction={() => {
                   setProofMethod("etisalat_cash");
@@ -520,17 +521,17 @@ export default function CheckoutPage() {
               />
 
               <MethodCard
-                title="ØªØ­ÙˆÙŠÙ„ Ø¨Ù†ÙƒÙŠ"
+                title="تحويل بنكي"
                 subtitle={
                   hasBankDetails
-                    ? "Ø§Ø³ØªØ®Ø¯Ù… Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„ØªØ§Ù„ÙŠØ© Ø«Ù… Ø£Ø±Ø³Ù„ Ø¥Ø«Ø¨Ø§Øª Ø§Ù„ØªØ­ÙˆÙŠÙ„ Ø§Ù„Ø¨Ù†ÙƒÙŠ Ù„Ø¨Ø¯Ø¡ Ø§Ù„ØªÙØ¹ÙŠÙ„."
-                    : "Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„Ø¨Ù†ÙƒÙŠ ØªÙØ±Ø³Ù„ Ù„Ùƒ ÙŠØ¯ÙˆÙŠÙ‹Ø§ Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨ Ø¹Ù†Ø¯ Ø§Ø®ØªÙŠØ§Ø± Ù‡Ø°Ø§ Ø§Ù„Ù…Ø³Ø§Ø±."
+                    ? "استخدم بيانات الحساب التالية ثم أرسل إثبات التحويل البنكي لبدء التفعيل."
+                    : "بيانات الحساب البنكي تُرسل لك يدويًا عبر واتساب عند اختيار هذا المسار."
                 }
                 value={hasBankDetails ? bankValue : undefined}
-                valueLabel="Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø³ØªÙÙŠØ¯"
+                valueLabel="بيانات المستفيد"
                 secondaryValue={hasBankDetails ? bankSecondaryValue || undefined : undefined}
-                actionLabel={hasBankDetails ? "ÙˆØ§ØªØ³Ø§Ø¨ Ù„Ù„ØªØ£ÙƒÙŠØ¯" : "Ø§Ø·Ù„Ø¨ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„Ø¨Ù†ÙƒÙŠ"}
-                href={buildWhatsappHref({ email, method: "ØªØ­ÙˆÙŠÙ„ Ø¨Ù†ÙƒÙŠ" })}
+                actionLabel={hasBankDetails ? "واتساب للتأكيد" : "اطلب بيانات الحساب البنكي"}
+                href={buildWhatsappHref({ email, method: "تحويل بنكي" })}
                 onAction={() => {
                   setProofMethod("bank_transfer");
                   trackManualIntent("bank_transfer");
@@ -540,10 +541,10 @@ export default function CheckoutPage() {
               />
 
               <MethodCard
-                title="ÙÙˆØ±ÙŠ"
-                subtitle="ÙƒÙˆØ¯ ÙÙˆØ±ÙŠ Ù„Ø§ ÙŠØªÙ… ØªÙˆÙ„ÙŠØ¯Ù‡ Ø¢Ù„ÙŠÙ‹Ø§ Ø§Ù„Ø¢Ù†. Ø±Ø§Ø³Ù„Ù†Ø§ ÙˆØ³Ù†Ø±ØªØ¨ Ù…Ø¹Ùƒ Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„ØªÙØ¹ÙŠÙ„ Ø£Ùˆ Ø±Ù‚Ù… Ø§Ù„Ù…Ø±Ø¬Ø¹ ÙŠØ¯ÙˆÙŠÙ‹Ø§ Ø¥Ù† ÙƒØ§Ù† Ø§Ù„Ù…Ø³Ø§Ø± Ù…ØªØ§Ø­Ù‹Ø§."
-                actionLabel="ÙˆØ§ØªØ³Ø§Ø¨ Ù„Ù„ØªÙ†Ø³ÙŠÙ‚"
-                href={buildWhatsappHref({ email, method: "Fawry", note: "Ø£Ø­ØªØ§Ø¬ Ù…Ø³Ø§Ø± ÙÙˆØ±ÙŠ Ø¥Ù† ÙƒØ§Ù† Ù…ØªØ§Ø­Ù‹Ø§" })}
+                title="فوري"
+                subtitle="كود فوري لا يتم توليده آليًا الآن. راسلنا وسنرتب معك طريقة التفعيل أو رقم المرجع يدويًا إن كان المسار متاحًا."
+                actionLabel="واتساب للتنسيق"
+                href={buildWhatsappHref({ email, method: "Fawry", note: "أحتاج مسار فوري إن كان متاحًا" })}
                 onAction={() => {
                   setProofMethod("fawry");
                   trackManualIntent("fawry");
@@ -559,14 +560,14 @@ export default function CheckoutPage() {
                 title="PayPal"
                 subtitle={
                   PAYPAL_URL
-                    ? "Ø§Ù„Ø¯ÙØ¹ Ø§Ù„Ø¯ÙˆÙ„ÙŠ Ù…ØªØ§Ø­ Ø¹Ø¨Ø± Ø§Ù„Ø±Ø§Ø¨Ø· Ø§Ù„ØªØ§Ù„ÙŠ. Ø¨Ø¹Ø¯ Ø§Ù„Ø¥ØªÙ…Ø§Ù… Ø£Ø±Ø³Ù„ Ù„Ù†Ø§ Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹ Ù„ØªÙØ¹ÙŠÙ„ Ø§Ù„Ø±Ø­Ù„Ø©."
+                    ? "الدفع الدولي متاح عبر الرابط التالي. بعد الإتمام أرسل لنا إثبات الدفع لتفعيل الرحلة."
                     : PAYPAL_EMAIL
-                      ? "Ø§Ø³ØªØ®Ø¯Ù… Ø¨Ø±ÙŠØ¯ PayPal Ø§Ù„ØªØ§Ù„ÙŠØŒ Ø«Ù… Ø£Ø±Ø³Ù„ Ù„Ù†Ø§ Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹ Ø¨Ø¹Ø¯ Ø§Ù„ØªØ­ÙˆÙŠÙ„."
-                      : "Ø±Ø§Ø¨Ø· PayPal ØºÙŠØ± Ù…Ù†Ø´ÙˆØ± Ø¨Ø¹Ø¯. Ø±Ø§Ø³Ù„Ù†Ø§ Ù„Ù†Ø±Ø³Ù„ Ù„Ùƒ Ù…Ø³Ø§Ø± Ø§Ù„Ø¯ÙØ¹ Ø§Ù„Ø¯ÙˆÙ„ÙŠ Ø§Ù„Ù…ØªØ§Ø­."
+                      ? "استخدم بريد PayPal التالي، ثم أرسل لنا إثبات الدفع بعد التحويل."
+                      : "رابط PayPal غير منشور بعد. راسلنا لنرسل لك مسار الدفع الدولي المتاح."
                 }
                 value={PAYPAL_EMAIL || undefined}
-                valueLabel={PAYPAL_EMAIL ? "Ø¨Ø±ÙŠØ¯ PayPal" : undefined}
-                actionLabel={PAYPAL_URL ? "Ø§ÙØªØ­ PayPal" : "Ø§Ø·Ù„Ø¨ Ø±Ø§Ø¨Ø· PayPal"}
+                valueLabel={PAYPAL_EMAIL ? "PayPal Email" : undefined}
+                actionLabel={PAYPAL_URL ? "افتح PayPal" : "اطلب رابط PayPal"}
                 href={paypalHref}
                 onAction={() => {
                   setProofMethod("paypal");
@@ -581,7 +582,7 @@ export default function CheckoutPage() {
 
         <section className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
           <div className="mb-4">
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-teal-300">Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹</p>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-teal-300">Payment Proof</p>
             <h2 className="mt-2 text-xl font-black text-white">{"\u0623\u0631\u0633\u0644\u062a \u0627\u0644\u062a\u062d\u0648\u064a\u0644 \u0628\u0627\u0644\u0641\u0639\u0644\u061f \u0623\u0631\u0633\u0644 \u0627\u0644\u0645\u0631\u062c\u0639 \u0623\u0648 \u0627\u0644\u0644\u0642\u0637\u0629 \u0647\u0646\u0627"}</h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-300">
               {"\u0647\u0630\u0627 \u0627\u0644\u0645\u0633\u0627\u0631 \u064a\u0635\u0644 \u0645\u0628\u0627\u0634\u0631\u0629 \u0625\u0644\u0649 \u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u064a\u062f\u0648\u064a. \u0648\u0627\u062a\u0633\u0627\u0628 \u064a\u0638\u0644 \u0645\u062a\u0627\u062d\u064b\u0627\u060c \u0644\u0643\u0646\u0647 \u0644\u0645 \u064a\u0639\u062f \u0627\u0644\u0642\u0646\u0627\u0629 \u0627\u0644\u0648\u062d\u064a\u062f\u0629."}
@@ -625,7 +626,7 @@ export default function CheckoutPage() {
                 className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-teal-400/40"
                 placeholder="TX-874512"
               />
-              <span className="mt-2 block text-xs text-slate-300">{"\u0627\u062a\u0631\u0643\u0647 \u0641\u0627\u0631\u063a\u064b\u0627 \u0641\u0642\u0637 \u0625\u0630\u0627 \u0623\u0631\u0641\u0642\u062a \u0644\u0642\u0637\u0629 \u0625\u062b\u0628\u0627\u062a \u0648\u0627\u0636\u062d\u0629."}</span>
+              <span className="mt-2 block text-xs text-slate-400">{"\u0627\u062a\u0631\u0643\u0647 \u0641\u0627\u0631\u063a\u064b\u0627 \u0641\u0642\u0637 \u0625\u0630\u0627 \u0623\u0631\u0641\u0642\u062a \u0644\u0642\u0637\u0629 \u0625\u062b\u0628\u0627\u062a \u0648\u0627\u0636\u062d\u0629."}</span>
             </label>
 
             <label className="block">
@@ -647,15 +648,21 @@ export default function CheckoutPage() {
                 onChange={handleProofImageChange}
                 className="block w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-slate-300 file:mr-3 file:rounded-xl file:border-0 file:bg-teal-500 file:px-4 file:py-2 file:text-sm file:font-black file:text-slate-950"
               />
-              <span className="mt-2 block text-xs text-slate-300">{"ØµÙŠØºØ© PNG / JPG / WEBP ÙÙ‚Ø· Ø­ØªÙ‰ 900KB. ØªÙØ­ÙØ¸ Ù…Ø¹ ØªØ°ÙƒØ±Ø© Ø§Ù„ØªÙØ¹ÙŠÙ„ Ø§Ù„ÙŠØ¯ÙˆÙŠ."}</span>
+              <span className="mt-2 block text-xs text-slate-400">{"PNG / JPG / WEBP فقط حتى 900KB. تحفظ مع تذكرة التفعيل اليدوي."}</span>
               {proofImage && (
                 <div className="mt-3 rounded-2xl border border-white/10 bg-slate-950/50 p-3">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-bold text-white">{proofImage.name}</p>
-                      <p className="text-xs text-slate-300">{proofImage.type} - {Math.round(proofImage.bytes / 1024)}KB</p>
+                      <p className="text-xs text-slate-400">{proofImage.type} - {Math.round(proofImage.bytes / 1024)}KB</p>
                     </div>
-                    <Button type="button" onClick={() => setProofImage(null)} variant="ghost" size="sm" className="border-white/15 text-xs font-bold text-white hover:bg-white/10">إزالة الصورة</Button>
+                    <button
+                      type="button"
+                      onClick={() => setProofImage(null)}
+                      className="rounded-xl border border-white/15 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/10"
+                    >
+                      {"\u0625\u0632\u0627\u0644\u0629 \u0627\u0644\u0635\u0648\u0631\u0629"}
+                    </button>
                   </div>
                   <img
                     src={proofImage.dataUrl}
@@ -678,9 +685,15 @@ export default function CheckoutPage() {
             </label>
 
             <div className="md:col-span-2 flex flex-wrap items-center gap-3">
-              <Button type="submit" disabled={isSubmittingProof} variant="primary" size="md" className="inline-flex items-center text-sm font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-60">{isSubmittingProof ? "جارٍ إرسال الإثبات..." : "إرسال إثبات الدفع"}</Button>
+              <button
+                type="submit"
+                disabled={isSubmittingProof}
+                className="inline-flex items-center rounded-2xl bg-teal-500 px-5 py-3 text-sm font-black text-slate-950 transition hover:bg-teal-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSubmittingProof ? "جارٍ إرسال الإثبات..." : "إرسال إثبات الدفع"}
+              </button>
               <a
-                href={buildWhatsappHref({ email, method: "Ø¥Ø«Ø¨Ø§Øª Ø¯ÙØ¹", note: "Ø£Ø±ÙÙ‚ Ù„Ù‚Ø·Ø© Ø´Ø§Ø´Ø© Ø£Ùˆ Ù…Ø±Ø¬Ø¹ Ø§Ù„Ø¹Ù…Ù„ÙŠØ©" })}
+                href={buildWhatsappHref({ email, method: "إثبات دفع", note: "أرفق لقطة شاشة أو مرجع العملية" })}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center rounded-2xl border border-white/15 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10"
@@ -692,17 +705,15 @@ export default function CheckoutPage() {
         </section>
 
         <section className="rounded-3xl border border-white/10 bg-white/5 p-5 text-sm leading-relaxed text-slate-300">
-          <p className="font-black text-white">Ø®Ø·ÙˆØ§Øª Ø§Ù„ØªÙØ¹ÙŠÙ„</p>
+          <p className="font-black text-white">خطوات التفعيل</p>
           <ol className="mt-3 space-y-2">
-            <li>1. Ø§Ø®ØªØ± ÙˆØ³ÙŠÙ„Ø© Ø§Ù„Ø¯ÙØ¹ Ø§Ù„Ù…Ù†Ø§Ø³Ø¨Ø©.</li>
-            <li>2. Ø­ÙˆÙ‘Ù„ Ø§Ù„Ø±Ø³ÙˆÙ… Ø£Ùˆ Ø§Ø·Ù„Ø¨ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„ÙØ¹Ù„ÙŠØ© Ø¹Ø¨Ø± ÙˆØ§ØªØ³Ø§Ø¨.</li>
-            <li>3. Ø£Ø±Ø³Ù„ Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹ Ù…Ù† Ù†ÙØ³ Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ù…Ø³Ø¬Ù„: <span className="font-mono text-teal-200">{email || "ØºÙŠØ±_Ù…Ø³Ø¬Ù„"}</span>.</li>
-            <li>4. ÙŠØªÙ… Ø§Ù„ØªÙØ¹ÙŠÙ„ ÙŠØ¯ÙˆÙŠÙ‹Ø§ Ø¯Ø§Ø®Ù„ Ø§Ù„Ù…Ù†ØµØ© ÙˆÙ…Ù†Ø­Ùƒ 100 Ù†Ù‚Ø·Ø© ÙˆØ¹ÙŠ Ù„Ù…Ø¯Ø© 21 ÙŠÙˆÙ…Ù‹Ø§.</li>
+            <li>1. اختر وسيلة الدفع المناسبة.</li>
+            <li>2. حوّل الرسوم أو اطلب البيانات الفعلية عبر واتساب.</li>
+            <li>3. أرسل إثبات الدفع من نفس البريد المسجل: <span className="font-mono text-teal-200">{email || "غير_مسجل"}</span>.</li>
+            <li>4. يتم التفعيل يدويًا داخل المنصة ومنحك 100 نقطة وعي لمدة 21 يومًا.</li>
           </ol>
         </section>
       </div>
     </main>
   );
 }
-
-

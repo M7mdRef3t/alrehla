@@ -1162,6 +1162,17 @@
   animation: flicker 2s linear infinite;
 }
 
+.landing-inline-compass {
+  container-type: inline-size;
+}
+
+@container (max-width: 480px) {
+  .landing-inline-compass p:last-child {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+}
+
 @keyframes glitch {
   0% {
     transform: translate(0);
