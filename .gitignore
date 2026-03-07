@@ -60,3 +60,11 @@ tsconfig.typecheck.tsbuildinfo
 .vercel
 
 .env.vercel.production
+# Local/ephemeral artifacts
+.Jules/
+artifacts/
+vercel.marketing.env
+.npm-cache-temp/
+.tmp-lint.json
+.tmp-openapi.json
+nul
