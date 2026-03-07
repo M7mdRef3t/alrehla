@@ -16,7 +16,22 @@ import { recordAdminAudit, verifyAdmin } from "../../../server/admin/_shared";
 
 export const dynamic = "force-dynamic";
 
-const ROUTES: Record<string, any> = {
+type AdminHandler = (req: AdminRequest, res: AdminResponse) => Promise<unknown> | unknown;
+type AdminRequest = {
+    method: string;
+    url: string;
+    query: Record<string, string>;
+    headers: Record<string, string>;
+    body: unknown;
+};
+type AdminResponse = {
+    status: (code: number) => AdminResponse;
+    json: (data: unknown) => AdminResponse;
+    setHeader: (_key: string, _value: string) => AdminResponse;
+    end: () => AdminResponse;
+};
+
+const ROUTES: Record<string, AdminHandler> = {
     overview: overviewRouter,
     config: handleConfig,
     users: handleUsers,
@@ -89,7 +104,7 @@ async function runHandler(req: NextRequest) {
     const secretAuthorized = isSecretAuthorized(req);
 
     // Mock request object
-    const mockReq: any = {
+    const mockReq: AdminRequest = {
         method: req.method,
         url: req.url,
         query,
@@ -106,13 +121,13 @@ async function runHandler(req: NextRequest) {
     }
 
     let status = 200;
-    let jsonResponse: any = {};
+    let jsonResponse: unknown = {};
 
     // Mock response object
-    const mockRes: any = {
+    const mockRes: AdminResponse = {
         status: (s: number) => { status = s; return mockRes; },
-        json: (data: any) => { jsonResponse = data; return mockRes; },
-        setHeader: (k: string, v: string) => { return mockRes; },
+        json: (data: unknown) => { jsonResponse = data; return mockRes; },
+        setHeader: (_k: string, _v: string) => { return mockRes; },
         end: () => mockRes
     };
 
@@ -147,9 +162,10 @@ async function runHandler(req: NextRequest) {
 
     try {
         await handler(mockReq, mockRes);
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error(`[Admin Bridge Error] ${path}:`, err);
-        return NextResponse.json({ error: "Internal Server Error", message: err.message }, { status: 500 });
+        const message = err instanceof Error ? err.message : "unknown_error";
+        return NextResponse.json({ error: "Internal Server Error", message }, { status: 500 });
     }
 
     return NextResponse.json(jsonResponse, { status });

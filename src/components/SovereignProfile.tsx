@@ -1,7 +1,7 @@
 /**
- * Sovereign Profile — الهوية السيادية 🛡️
+ * Sovereign Profile  اة اسادة ️
  * ==========================================
- * تعرض رتبة المستخدم (Commander) وتقدمه في نقاط الخبرة (XP).
+ * تعرض رتبة استخد (Commander) تد ف اط اخبرة (XP).
  */
 
 import React from "react";
@@ -10,14 +10,14 @@ import { Shield, Star, Zap, Award, Target } from "lucide-react";
 import { useGamificationState } from "../services/gamificationEngine";
 
 const RANK_DATA: Record<string, { label: string; icon: any; color: string; bg: string }> = {
-    "مستطلع جَدِيد": { label: "مستطلع جديد", icon: Target, color: "text-slate-400", bg: "bg-slate-500/10" },
-    "كشاف ميداني": { label: "كشاف ميداني", icon: Zap, color: "text-teal-400", bg: "bg-teal-500/10" },
-    "ملازم تعافي": { label: "ملازم تعافي", icon: Star, color: "text-[var(--color-primary)]", bg: "bg-[var(--color-primary)]/10" },
-    "نقيب حدود": { label: "نقيب حدود", icon: Shield, color: "text-amber-400", bg: "bg-amber-500/10" },
-    "رائد استقرار": { label: "رائد استقرار", icon: Shield, color: "text-cyan-400", bg: "bg-cyan-500/10" },
-    "عقيد حكمة": { label: "عقيد حكمة", icon: Award, color: "text-violet-400", bg: "bg-violet-500/10" },
-    "عميد سلام": { label: "عميد سلام", icon: Award, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-    "مارشال الدواير": { label: "مارشال الدواير", icon: Award, color: "text-rose-500", bg: "bg-rose-500/10" }
+    "ستطع جدِد": { label: "ستطع جدد", icon: Target, color: "text-slate-400", bg: "bg-slate-500/10" },
+    "شاف دا": { label: "شاف دا", icon: Zap, color: "text-teal-400", bg: "bg-teal-500/10" },
+    "از تعاف": { label: "از تعاف", icon: Star, color: "text-[var(--soft-teal)]", bg: "bg-[var(--soft-teal)]/10" },
+    "ب حدد": { label: "ب حدد", icon: Shield, color: "text-amber-400", bg: "bg-amber-500/10" },
+    "رائد استرار": { label: "رائد استرار", icon: Shield, color: "text-cyan-400", bg: "bg-cyan-500/10" },
+    "عد حة": { label: "عد حة", icon: Award, color: "text-violet-400", bg: "bg-violet-500/10" },
+    "عد سا": { label: "عد سا", icon: Award, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+    "ارشا ادار": { label: "ارشا ادار", icon: Award, color: "text-rose-500", bg: "bg-rose-500/10" }
 };
 
 const DEFAULT_RANK = { label: " ", icon: Shield, color: "text-slate-400", bg: "bg-slate-500/10" };
@@ -54,8 +54,8 @@ export const SovereignProfile: React.FC = () => {
                     </div>
 
                     <div className="flex items-end justify-between mb-1.5">
-                        <h3 className="text-sm font-black text-white truncate">الملف السيادي</h3>
-                        <span className="text-xs font-bold text-[var(--color-primary)]">{xp} XP</span>
+                        <h3 className="text-sm font-black text-white truncate">اف اساد</h3>
+                        <span className="text-xs font-bold text-[var(--soft-teal)]">{xp} XP</span>
                     </div>
 
                     {/* Progress Bar */}
@@ -63,7 +63,7 @@ export const SovereignProfile: React.FC = () => {
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${progress}%` }}
-                            className="h-full bg-gradient-to-r from-[var(--color-primary)] to-teal-400"
+                            className="h-full bg-gradient-to-r from-[var(--soft-teal)] to-teal-400"
                         />
                     </div>
                 </div>
@@ -74,5 +74,6 @@ export const SovereignProfile: React.FC = () => {
         </motion.div>
     );
 };
+
 
 

@@ -1,6 +1,7 @@
 import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
-export async function handleBroadcasts(req: any, res: any) {
+export async function handleBroadcasts(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdmin(req, res))) return;
   const client = getAdminSupabase();
   if (!client) {
@@ -23,12 +24,13 @@ export async function handleBroadcasts(req: any, res: any) {
 
   if (req.method === "POST") {
     const body = await parseJsonBody(req);
-    const broadcast = body?.broadcast ?? body;
+    const bodyRecord = body as Record<string, unknown>;
+    const broadcast = ((bodyRecord?.broadcast as Record<string, unknown> | undefined) ?? bodyRecord) as Record<string, unknown>;
     const { error } = await client.from("admin_broadcasts").insert({
-      id: broadcast.id,
-      title: broadcast.title,
-      body: broadcast.body,
-      created_at: broadcast.created_at || broadcast.createdAt || new Date().toISOString()
+      id: broadcast["id"],
+      title: broadcast["title"],
+      body: broadcast["body"],
+      created_at: broadcast["created_at"] || broadcast["createdAt"] || new Date().toISOString()
     });
     if (error) {
       res.status(500).json({ error: "Failed to save broadcast" });
@@ -55,3 +57,7 @@ export async function handleBroadcasts(req: any, res: any) {
 
   res.status(405).json({ error: "Method not allowed" });
 }
+
+
+
+

@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true, action: data });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Micro Action Error:', err);
         return NextResponse.json({ error: 'Failed to record action' }, { status: 500 });
     }

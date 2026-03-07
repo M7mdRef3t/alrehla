@@ -109,15 +109,22 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
   return typeof value === "string" && value.length > 0 ? value.trim() : undefined;
 }
 
+function readViteEnvValue(key: RuntimeKey): string | undefined {
+  try {
+    // Keep access in property form for Next/Webpack compatibility.
+    const viteEnv = import.meta.env as Record<string, unknown> | undefined;
+    const value = viteEnv?.[key];
+    if (typeof value === "string" && value.length > 0) return value.trim();
+  } catch {
+    // ignore when import.meta.env is unavailable
+  }
+  return undefined;
+}
+
 function readEnv(key: RuntimeKey): string | undefined {
   // 1. Try Vite's import.meta.env first (for backward compatibility if needed)
-  try {
-    const viteMeta = import.meta as unknown as { env?: Record<string, unknown> };
-    const val = viteMeta.env?.[key];
-    if (typeof val === "string" && val.length > 0) return val.trim();
-  } catch {
-    // ignore import.meta access errors
-  }
+  const viteVal = readViteEnvValue(key);
+  if (viteVal) return viteVal;
 
   // 2. Try Next.js public env/runtime fallback via the safe process accessor.
   const nextKey = toNextPublicKey(key);

@@ -88,7 +88,7 @@ export const BehavioralRadar: React.FC = () => {
                         {['all', 'mobile', 'desktop'].map((s) => (
                             <button
                                 key={s}
-                                onClick={() => setSegment(s as any)}
+                                onClick={() => setSegment(s as 'all' | 'mobile' | 'desktop')}
                                 className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all ${segment === s ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
                             >
                                 {s}
@@ -157,7 +157,7 @@ export const BehavioralRadar: React.FC = () => {
                                             <span className="text-xl font-black text-white">{step.value}</span>
                                             {idx > 0 && (
                                                 <div className={`text-[10px] font-black ${isAlert ? 'text-rose-500' : 'text-emerald-400'}`}>
-                                                    {yieldRate}% Yield {isAlert ? '⚠️' : '✓'}
+                                                    {yieldRate}% Yield {isAlert ? '️' : ''}
                                                 </div>
                                             )}
                                         </div>
@@ -210,7 +210,7 @@ export const BehavioralRadar: React.FC = () => {
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-bold text-white uppercase tracking-tighter">{ev.event_name.replace(/_/g, ' ')}</p>
-                                            <p className="text-[9px] text-slate-500 uppercase">{ev.params?.device_type ?? 'web'} • {ev.user_id ? 'Auth' : 'Guest'}</p>
+                                            <p className="text-[9px] text-slate-500 uppercase">{ev.params?.device_type ?? 'web'}  {ev.user_id ? 'Auth' : 'Guest'}</p>
                                         </div>
                                     </div>
                                     <span className="text-[9px] font-mono text-slate-600 group-hover:text-slate-400 transition-colors">
@@ -228,7 +228,7 @@ export const BehavioralRadar: React.FC = () => {
                         </h4>
                         <div className="space-y-4">
                             {alerts.map((alert, i) => alert && (
-                                <div key={i} className="flex items-start gap-4 p-3 bg-rose-500/5 rounded-2xl border border-rose-500/10">
+                                <div key={`${alert.label}-${i}`} className="flex items-start gap-4 p-3 bg-rose-500/5 rounded-2xl border border-rose-500/10">
                                     <div className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${alert.severity === 'high' ? 'bg-rose-500' : 'bg-amber-500'}`} />
                                     <p className="text-xs text-slate-300 font-bold leading-relaxed">{alert.message}</p>
                                 </div>
@@ -249,7 +249,7 @@ export const BehavioralRadar: React.FC = () => {
                         </h3>
                     </div>
                     <div className="h-48 flex items-end justify-between gap-4 px-4">
-                        {histogram.map((point, idx) => {
+                        {histogram.map((point) => {
                             const maxVal = Math.max(...histogram.map(p => p.count), 1);
                             const height = (point.count / maxVal) * 100;
                             return (

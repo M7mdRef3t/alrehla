@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Globe } from "lucide-react";
 import { setLanguage, getLanguage, LANGUAGE_OPTIONS, type Language } from "../services/i18n";
 
-/* ══════════════════════════════════════════
-   LANGUAGE SWITCHER — محوّل اللغة
-   ══════════════════════════════════════════ */
+/* 
+   LANGUAGE SWITCHER  ح اغة
+    */
 
 interface LanguageSwitcherProps {
     onLanguageChange?: (lang: Language) => void;
@@ -72,7 +72,7 @@ export const LanguageSwitcher: FC<LanguageSwitcherProps> = ({
                                 >
                                     <span>{opt.flag}</span>
                                     <span className="font-medium">{opt.label}</span>
-                                    {opt.code === current && <span className="mr-auto text-[var(--color-primary)]">✓</span>}
+                                    {opt.code === current && <span className="mr-auto text-[var(--soft-teal)]"></span>}
                                 </button>
                             ))}
                         </motion.div>
@@ -106,4 +106,5 @@ export const LanguageSwitcher: FC<LanguageSwitcherProps> = ({
         </div>
     );
 };
+
 

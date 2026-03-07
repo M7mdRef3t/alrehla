@@ -15,7 +15,7 @@ export interface SyncState {
     setOffline: (isOffline: boolean) => void;
 }
 
-export const useSyncState = create<SyncState>((set, get) => ({
+export const useSyncState = create<SyncState>((set) => ({
     status: 'idle',
 
     markLocalSaved: (timestamp) => set((state) => {

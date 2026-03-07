@@ -29,7 +29,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json(active || []);
 
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
     }
 }
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
             .eq('id', id);
 
         return NextResponse.json({ success: !error });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
     }
 }

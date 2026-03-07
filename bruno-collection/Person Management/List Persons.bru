@@ -1,0 +1,15 @@
+meta {
+  name: List Persons
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/persons
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{supabaseAnonKey}}
+}

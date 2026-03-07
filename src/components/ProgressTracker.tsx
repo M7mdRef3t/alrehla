@@ -119,7 +119,7 @@ export const ProgressTracker: FC<ProgressTrackerProps> = ({
           {percentage === 0 && "الرحلة بتبدأ بخطوة واحدة واعية. إنت هنا وده كفاية."}
           {percentage > 0 && percentage < 30 && "الخريطة بدأت تترسم. كمّل بنفس الهدوء."}
           {percentage >= 30 && percentage < 60 && "رؤيتك بدأت توضح — والوضوح هو نص الطريق."}
-          {percentage >= 60 && percentage < 90 && "إنت بتمشي. مش لازم تجري — الثبات أهم من السرعة."}
+          {percentage >= 60 && percentage < 90 && "أنت ماشي بثبات. مش مطلوب تجري، الثبات أهم من السرعة."}
           {percentage >= 90 && percentage < 100 && "قريب من الاستقرار. خد نفسك وكمّل."}
           {percentage === 100 && "المدار اتثبت. إنت اللي رسمت الخريطة وإنت اللي مشيت."}
         </p>

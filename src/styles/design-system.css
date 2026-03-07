@@ -1,0 +1,141 @@
+:root {
+  --ds-theme-text-primary: var(--ds-color-text-primary);
+  --ds-theme-text-secondary: var(--ds-color-text-secondary);
+  --ds-theme-text-muted: var(--ds-color-text-muted);
+  --ds-theme-surface: color-mix(in srgb, var(--ds-color-space-mid) 72%, transparent);
+  --ds-theme-surface-hover: color-mix(in srgb, var(--ds-color-space-nebula) 78%, transparent);
+  --ds-color-primary: var(--ds-color-brand-teal-400);
+  --ds-color-primary-strong: var(--ds-color-brand-teal-500);
+  --ds-color-primary-soft: color-mix(in srgb, var(--soft-teal) 92%, transparent);
+  --ds-color-primary-glow: color-mix(in srgb, var(--soft-teal) 28%, transparent);
+  --ds-color-focus: color-mix(in srgb, var(--ds-color-brand-teal-400) 45%, transparent);
+}
+
+.dark {
+  --ds-theme-text-primary: #f8fafc;
+  --ds-theme-text-secondary: #cbd5e1;
+  --ds-theme-text-muted: rgba(148, 163, 184, 0.72);
+  --ds-theme-surface: color-mix(in srgb, var(--ds-color-space-deep) 82%, transparent);
+  --ds-theme-surface-hover: color-mix(in srgb, var(--ds-color-space-nebula) 85%, transparent);
+}
+
+.ds-card {
+  border-radius: var(--ds-radius-lg);
+  border: 1px solid var(--ds-color-border-default);
+  background: var(--ds-color-glass-default);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: var(--ds-shadow-base);
+  transition:
+    border-color var(--ds-motion-base) var(--ds-motion-ease),
+    transform var(--ds-motion-base) var(--ds-motion-ease),
+    background var(--ds-motion-base) var(--ds-motion-ease);
+}
+
+.ds-card:hover {
+  border-color: var(--ds-color-border-hover);
+  background: var(--ds-color-glass-hover);
+}
+
+.ds-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ds-radius-full);
+  padding: 0.25rem 0.625rem;
+  border: 1px solid color-mix(in srgb, var(--soft-teal) 45%, transparent);
+  background: color-mix(in srgb, var(--soft-teal) 16%, transparent);
+  color: var(--ds-theme-text-primary);
+  font-size: var(--ds-text-caption-size);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.ds-input {
+  width: 100%;
+  border-radius: var(--ds-radius-base);
+  border: 1px solid var(--ds-color-border-default);
+  background: var(--ds-theme-surface);
+  color: var(--ds-theme-text-primary);
+  padding: 0.75rem 0.875rem;
+  font-size: var(--ds-text-body-size);
+  line-height: 1.6;
+  transition:
+    border-color var(--ds-motion-fast) var(--ds-motion-ease),
+    box-shadow var(--ds-motion-fast) var(--ds-motion-ease),
+    background var(--ds-motion-fast) var(--ds-motion-ease);
+}
+
+.ds-input::placeholder {
+  color: var(--ds-theme-text-muted);
+}
+
+.ds-input:focus {
+  outline: none;
+  border-color: var(--soft-teal);
+  box-shadow: 0 0 0 3px var(--ds-color-focus);
+  background: var(--ds-theme-surface-hover);
+}
+
+.ds-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--ds-radius-full);
+  border: 1px solid transparent;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  transition:
+    transform var(--ds-motion-fast) var(--ds-motion-ease),
+    box-shadow var(--ds-motion-fast) var(--ds-motion-ease),
+    background var(--ds-motion-fast) var(--ds-motion-ease),
+    border-color var(--ds-motion-fast) var(--ds-motion-ease);
+}
+
+.ds-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ds-color-focus);
+}
+
+.ds-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ds-button[data-size="sm"] {
+  font-size: 0.8125rem;
+  padding: 0.5rem 0.9rem;
+}
+
+.ds-button[data-size="md"] {
+  font-size: 0.9375rem;
+  padding: 0.75rem 1.15rem;
+}
+
+.ds-button[data-size="lg"] {
+  font-size: 1rem;
+  padding: 0.95rem 1.45rem;
+}
+
+.ds-button[data-variant="primary"] {
+  color: var(--ds-color-space-deep);
+  background: linear-gradient(135deg, var(--ds-color-brand-amber-500), var(--ds-color-brand-amber-600));
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--ds-color-brand-amber-500) 34%, transparent);
+}
+
+.ds-button[data-variant="primary"]:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.ds-button[data-variant="secondary"] {
+  color: var(--ds-theme-text-primary);
+  border-color: color-mix(in srgb, var(--soft-teal) 45%, transparent);
+  background: color-mix(in srgb, var(--soft-teal) 14%, transparent);
+}
+
+.ds-button[data-variant="ghost"] {
+  color: var(--ds-theme-text-secondary);
+  border-color: var(--ds-color-border-default);
+  background: color-mix(in srgb, var(--ds-color-space-void) 35%, transparent);
+}

@@ -41,18 +41,18 @@ const MOODS: Array<{ id: PulseMood; label: string; emoji: string }> = [
 ];
 
 const FOCUS_OPTIONS: Array<{ id: PulseFocus; labelKey: "event" | "thought" | "body" | "none_new" | "none_returning" }> = [
-  { id: "event", labelKey: "event" },      // اشتباك ميداني
-  { id: "thought", labelKey: "thought" },  // تفكيك راداري
-  { id: "body", labelKey: "body" },        // صيانة الأنظمة
-  { id: "none", labelKey: "none_new" }     // استطلاع استراتيجي
+  { id: "event", labelKey: "event" },      // اشتبا دا
+  { id: "thought", labelKey: "thought" },  // تف رادار
+  { id: "body", labelKey: "body" },        // صاة اأظة
+  { id: "none", labelKey: "none_new" }     // استطاع استراتج
 ];
 
 const FOCUS_LABELS: Record<string, string> = {
-  event: "اشتباك ميداني",
-  thought: "تفكيك راداري",
-  body: "صيانة الأنظمة",
-  none_returning: "تنفيذ الخطة",
-  none_new: "استطلاع استراتيجي"
+  event: "اشتبا دا",
+  thought: "تف رادار",
+  body: "صاة اأظة",
+  none_returning: "تفذ اخطة",
+  none_new: "استطاع استراتج"
 };
 
 const MOOD_COSMIC: Record<PulseMood, { bg: string; border: string; glow: string; text: string; nebula: string }> = {
@@ -127,13 +127,13 @@ function getMoodQuickHint(mood: PulseMood | null): string {
 }
 
 function getFocusQuickHint(focus: PulseFocus | null, isStartRecovery: boolean): string {
-  if (!focus) return "حدد نوع العملية التي تود تنفيذها الآن";
-  if (focus === "event") return "تحديد إحداثيات الاشتباك وتحليل الثغرات.";
-  if (focus === "thought") return "توجيه الرادار لتفكيك المنظومة الفكرية المعادية.";
-  if (focus === "body") return "إيقاف العمليات مؤقتًا لصيانة موارد النظام البدني.";
+  if (!focus) return "حدد ع اعة ات تد تفذا اآ";
+  if (focus === "event") return "تحدد إحداثات ااشتبا تح اثغرات.";
+  if (focus === "thought") return "تج ارادار تف اظة افرة اعادة.";
+  if (focus === "body") return "إاف اعات ؤتا صاة ارد اظا ابد.";
   return isStartRecovery
-    ? "تحميل خريطة الاستطلاع.. ابحث عن الحقيقة خلف الزيف."
-    : "تم استعادة بيانات الجلسة.. كمل تنفيذ المهمة.";
+    ? "تح خرطة ااستطاع.. ابحث ع احة خف ازف."
+    : "ت استعادة باات اجسة..  تفذ اة.";
 }
 
 
@@ -170,74 +170,74 @@ type TacticalAdvice = {
 };
 
 function generateTacticalAdvice(energy: number, mood: PulseMood | null, focus: PulseFocus | null): TacticalAdvice {
-  // 1. Maintenance Protocol (صيانة الأنظمة)
+  // 1. Maintenance Protocol (صاة اأظة)
   if (focus === "body") {
     if (energy <= 4) {
       return {
         title: "PROTOCOL: SYSTEM REBOOT",
-        message: "حالة الجسد تستدعي الإيقاف الإجباري. الاستمرار في العمليات يؤدي لاستنزاف كلي.",
-        action: "ابدأ دقيقتين تنفس فورًا وافصل الرادار.",
+        message: "حاة اجسد تستدع اإاف اإجبار. ااسترار ف اعات ؤد استزاف .",
+        action: "ابدأ دت تفس فرا افص ارادار.",
         theme: "recover",
-        icon: "🔋"
+        icon: ""
       };
     }
     return {
       title: "PROTOCOL: MAINTENANCE",
-      message: "الأنظمة مستقرة ولكنها تحتاج لمعايرة بسيطة للحفاظ على الأداء العالي.",
-      action: "تمرين تمدد سريع أو شرب ماء.",
+      message: "اأظة سترة ا تحتاج عارة بسطة حفاظ ع اأداء اعا.",
+      action: "تر تدد سرع أ شرب اء.",
       theme: "recover",
-      icon: "🔧"
+      icon: ""
     };
   }
 
-  // 2. Engagement Protocol (اشتباك ميداني)
+  // 2. Engagement Protocol (اشتبا دا)
   if (focus === "event") {
     if (energy <= 4) {
       return {
         title: "PROTOCOL: DEFENSIVE SHIELD",
-        message: "محاولة الاشتباك بطاقة منخفضة هي خطة فاشلة. انسحب لخط الدفاع الأول.",
-        action: "تجنب أي مواجهة وتوقف عن تحليل الموقف الآن.",
+        message: "حاة ااشتبا بطاة خفضة  خطة فاشة. اسحب خط ادفاع اأ.",
+        action: "تجب أ اجة تف ع تح اف اآ.",
         theme: "defend",
-        icon: "🛡️"
+        icon: "️"
       };
     }
     return {
       title: "PROTOCOL: TACTICAL ENGAGEMENT",
-      message: "الهدف مرصود والطاقة كافية. استخدم 'المبادئ الأولى' لتفكيك الموقف.",
-      action: "ابدأ بتدوين الثغرات المنطقية في الموقف.",
+      message: "ادف رصد اطاة افة. استخد 'ابادئ اأ' تف اف.",
+      action: "ابدأ بتد اثغرات اطة ف اف.",
       theme: "attack",
-      icon: "⚔️"
+      icon: "️"
     };
   }
 
-  // 3. Radar Deconstruction (تفكيك راداري)
+  // 3. Radar Deconstruction (تف رادار)
   if (focus === "thought") {
     return {
       title: "PROTOCOL: LOGICAL SCAN",
-      message: "رصد فكرة معادية تحاول اختراق الوعي. تشغيل معالج التفكيك.",
-      action: "اسأل نفسك: هل هذه الفكرة حقيقة أم وهم؟",
+      message: "رصد فرة عادة تحا اخترا اع. تشغ عاج اتف.",
+      action: "اسأ فس:  ذ افرة حة أ ",
       theme: "defend",
-      icon: "🧠"
+      icon: ""
     };
   }
 
-  // 4. Strategic Recon (استطلاع استراتيجي)
+  // 4. Strategic Recon (استطاع استراتج)
   if (energy >= 7) {
     return {
       title: "PROTOCOL: BLITZKRIEG",
-      message: "جميع أنظمة الوعي في حالة استعداد قصوى. الوقت مثالي للهجوم.",
-      action: "نفذ أصعب مهمة في قائمتك الآن.",
+      message: "جع أظة اع ف حاة استعداد ص. ات ثا ج.",
+      action: "فذ أصعب ة ف ائت اآ.",
       theme: "attack",
-      icon: "⚡"
+      icon: ""
     };
   }
 
   return {
     title: "PROTOCOL: STEADY PROGRESS",
-    message: "استقرار في الإشارات الحيوية. كمل تنفيذ الخطة الحالية بنفس الهدوء.",
-    action: "استمر في تنفيذ المهام الروتينية.",
+    message: "استرار ف اإشارات احة.  تفذ اخطة احاة بفس ادء.",
+    action: "استر ف تفذ اا ارتة.",
     theme: "defend",
-    icon: "📡"
+    icon: ""
   };
 }
 
@@ -286,7 +286,7 @@ function getMoodVariantSubtitle(variant: CopyVariant): string {
 }
 
 function getFocusVariantSubtitle(_variant: CopyVariant): string {
-  return "تحديد نوع العملية (نوع الاشتباك) التي تود تنفيذها الآن.";
+  return "تحدد ع اعة (ع ااشتبا) ات تد تفذا اآ.";
 }
 
 function getPostSaveAction(energy: number): string {
@@ -1029,12 +1029,12 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   }, [step]);
 
   const stepLabel = step === 1
-    ? "تقرير الحالة التكتيكية"
-    : "البروتوكول المقترح";
+    ? "ترر احاة اتتة"
+    : "ابرت اترح";
 
   const footerHintText = showRequiredHint && !currentStepComplete
-    ? "مطلوب إكمال بيانات المسح الحيوي (الطاقة والمزاج) ونوع العملية."
-    : "راجع إحداثيات حالتك قبل الضغط على تنفيذ.";
+    ? "طب إا باات اسح اح (اطاة ازاج) ع اعة."
+    : "راجع إحداثات حات ب اضغط ع تفذ.";
 
   const footerHintColor = showRequiredHint && !currentStepComplete
     ? "rgba(248, 113, 113, 0.95)"
@@ -1133,7 +1133,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
             {showSkipConfirm && (
               <div className="mx-3.5 sm:mx-4 -mt-1 mb-1 rounded-xl px-3 py-2" style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.35)" }}>
                 <p className="text-xs font-semibold text-center" style={{ color: "rgba(255,236,179,0.98)" }}>
-                  {"هل تريد تخطي ضبط البوصلة اليوم؟"}
+                  {" ترد تخط ضبط ابصة ا"}
                 </p>
                 <div className="mt-2 flex items-center justify-center gap-2">
                   <button
@@ -1142,7 +1142,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                     className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
                     style={{ color: "var(--text-secondary)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)" }}
                   >
-                    {"إلغاء"}
+                    {"إغاء"}
                   </button>
                   <button
                     type="button"
@@ -1150,7 +1150,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                     className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
                     style={{ color: "var(--text-primary)", background: "rgba(248,113,113,0.18)", border: "1px solid rgba(248,113,113,0.42)" }}
                   >
-                    {"نعم، تخطي"}
+                    {"ع تخط"}
                   </button>
                 </div>
               </div>
@@ -1164,7 +1164,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   <div className="flex flex-col gap-3">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                      مؤشر الأنظمة الحيوية
+                      ؤشر اأظة احة
                     </label>
                     <div
                       ref={needleContainerRef}
@@ -1269,7 +1269,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                           onKeyUp={handleEnergyKeyUp}
                           className="needle-range-input absolute inset-0 w-full h-full opacity-0 z-10 appearance-none m-0 p-0"
                           tabIndex={0}
-                          aria-label="مستوى الطاقة"
+                          aria-label="ست اطاة"
                         />
                       </div>
                       <div className="text-center -mt-4 relative z-10">
@@ -1289,8 +1289,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   {/* 2. interior Weather (Mood) */}
                   <div className="flex flex-col gap-3">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)]/30 animate-pulse" />
-                      الطقس الشعوري
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--soft-teal)]/30 animate-pulse" />
+                      اطس اشعر
                     </label>
                     <div className="grid grid-cols-4 gap-2.5 p-3 rounded-3xl bg-white/[0.03] border border-white/5">
                       {MOODS.map((m) => {
@@ -1314,7 +1314,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   <div className="flex flex-col gap-3">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                      توجيه البوصلة
+                      تج ابصة
                     </label>
                     <div className="grid grid-cols-2 gap-3 pb-2">
                       {FOCUS_OPTIONS.map((f) => {
@@ -1341,10 +1341,10 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
                   {/* 4. Notes */}
                   <div className="flex flex-col gap-3">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">بيانات المسح الإضافية</label>
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">باات اسح اإضافة</label>
                     <textarea
                       ref={notesRef} value={notes} onChange={(e) => setNotes(e.target.value)}
-                      placeholder="اكتب ملاحظة مختصرة..."
+                      placeholder="اتب احظة ختصرة..."
                       className="w-full h-24 p-4 rounded-2xl bg-white/[0.03] border border-white/5 text-sm text-white focus:outline-none focus:border-white/10 resize-none transition-all placeholder:text-white/10"
                     />
                   </div>
@@ -1370,7 +1370,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                     </p>
                   </div>
                   <div className="w-full p-6 rounded-[2rem] bg-white/[0.03] border border-dashed border-white/10 scale-105 shadow-2xl">
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 block mb-3">التوجيه السلوكي المباشر</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 block mb-3">اتج اس اباشر</span>
                     <p className="text-xl font-black text-white leading-tight">{tacticalAdvice.action}</p>
                   </div>
                 </motion.div>
@@ -1393,7 +1393,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 {footerHintText}
               </p>
               <p className={`text-center text-[10px] font-black tracking-[0.14em] uppercase ${isPrimaryEnabled ? "text-emerald-300" : "text-rose-300/70"}`}>
-                {isPrimaryEnabled ? "جاهز للتحليل" : "أكمل الطاقة + المزاج + البوصلة"}
+                {isPrimaryEnabled ? "جاز تح" : "أ اطاة + ازاج + ابصة"}
               </p>
               <div className="flex gap-3">
                 {step > 1 && (
@@ -1401,7 +1401,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                     onClick={handlePreviousStep}
                     className="flex-1 py-4 rounded-2xl bg-white/[0.03] text-white/40 font-black text-[10px] uppercase tracking-widest hover:text-white transition-all border border-white/5"
                   >
-                    رجوع
+                    رجع
                   </button>
                 )}
                 <motion.button
@@ -1412,7 +1412,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   animate={!isPrimaryEnabled ? {} : { boxShadow: ["0 0 20px rgba(45,212,191,0.35)", "0 0 36px rgba(16,185,129,0.62)", "0 0 20px rgba(45,212,191,0.35)"] }}
                   transition={!isPrimaryEnabled ? {} : { duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  {step === 1 ? "تحليل البيانات" : "اعتماد البروتوكول"}
+                  {step === 1 ? "تح اباات" : "اعتاد ابرت"}
                 </motion.button>
               </div>
             </div>
@@ -1450,4 +1450,5 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     </AnimatePresence>
   );
 };
+
 

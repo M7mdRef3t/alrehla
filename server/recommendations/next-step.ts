@@ -10,11 +10,35 @@ type Candidate = {
   tags: string[];
 };
 
+type RecommendationFeatures = {
+  entropyScore?: unknown;
+  riskRatio?: unknown;
+  pulseInstability7d?: unknown;
+  sessionHesitation?: unknown;
+};
+
+type NextStepRequestBody = {
+  candidates?: unknown;
+  features?: RecommendationFeatures;
+  sessionId?: unknown;
+  phase?: unknown;
+};
+
+type ApiRequest = {
+  method?: string;
+  body?: NextStepRequestBody;
+};
+
+type ApiResponse = {
+  status: (code: number) => ApiResponse;
+  json: (body: unknown) => void;
+};
+
 function randomId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function rankCandidates(candidates: Candidate[], features: any): Candidate[] {
+function rankCandidates(candidates: Candidate[], features?: RecommendationFeatures): Candidate[] {
   const entropy = Number(features?.entropyScore ?? 0);
   const riskRatio = Number(features?.riskRatio ?? 0);
   const pulseInstability = Number(features?.pulseInstability7d ?? 0);
@@ -33,7 +57,7 @@ function rankCandidates(candidates: Candidate[], features: any): Candidate[] {
   });
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;

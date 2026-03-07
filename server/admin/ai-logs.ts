@@ -1,6 +1,7 @@
 import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
-export async function handleAiLogs(req: any, res: any) {
+export async function handleAiLogs(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdmin(req, res))) return;
   const client = getAdminSupabase();
   if (!client) {
@@ -24,11 +25,12 @@ export async function handleAiLogs(req: any, res: any) {
 
   if (req.method === "POST") {
     const body = await parseJsonBody(req);
-    if (body?.action === "rate" || (body?.id && body?.rating)) {
+    const bodyRecord = body as Record<string, unknown>;
+    if (bodyRecord?.action === "rate" || (bodyRecord?.id && bodyRecord?.rating)) {
       const { error } = await client
         .from("admin_ai_logs")
-        .update({ rating: body.rating })
-        .eq("id", body.id);
+        .update({ rating: bodyRecord.rating })
+        .eq("id", bodyRecord.id);
       if (error) {
         res.status(500).json({ error: "Failed to update rating" });
         return;
@@ -37,14 +39,14 @@ export async function handleAiLogs(req: any, res: any) {
       return;
     }
 
-    const entry = body?.entry ?? body;
+    const entry = ((bodyRecord?.entry as Record<string, unknown> | undefined) ?? bodyRecord) as Record<string, unknown>;
     const { error } = await client.from("admin_ai_logs").insert({
-      id: entry.id,
-      prompt: entry.prompt,
-      response: entry.response,
-      source: entry.source,
-      rating: entry.rating,
-      created_at: entry.created_at || entry.createdAt || new Date().toISOString()
+      id: entry["id"],
+      prompt: entry["prompt"],
+      response: entry["response"],
+      source: entry["source"],
+      rating: entry["rating"],
+      created_at: entry["created_at"] || entry["createdAt"] || new Date().toISOString()
     });
     if (error) {
       res.status(500).json({ error: "Failed to save AI log" });
@@ -56,3 +58,7 @@ export async function handleAiLogs(req: any, res: any) {
 
   res.status(405).json({ error: "Method not allowed" });
 }
+
+
+
+

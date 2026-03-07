@@ -1,4 +1,5 @@
 import { verifyAdmin } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
 type Severity = "critical" | "warning" | "passed";
 
@@ -239,7 +240,7 @@ function scoreFromFindings(findings: AuditFinding[]): AuditResponse["scores"] {
   return { overall, seo, geo, health };
 }
 
-export async function handleSeoAudit(req: any, res: any) {
+export async function handleSeoAudit(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdmin(req, res))) return;
   if (req.method !== "GET" && req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -346,3 +347,6 @@ export async function handleSeoAudit(req: any, res: any) {
 
   res.status(200).json(payload);
 }
+
+
+

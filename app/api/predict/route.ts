@@ -122,7 +122,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ ...prediction, source: 'gemini', is_live: true });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Error generating prediction:', err);
         return NextResponse.json(
             { error: 'Prediction generation failed', source: 'generation_failed', is_live: false },

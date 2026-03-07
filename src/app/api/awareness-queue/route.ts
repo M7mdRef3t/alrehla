@@ -41,7 +41,7 @@ export async function POST(req: Request) {
             status: 202,
             headers: { 'Content-Type': 'application/json' },
         });
-    } catch (err) {
+    } catch (err: unknown) {
         console.error('Queue Ingestion Error:', err);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }

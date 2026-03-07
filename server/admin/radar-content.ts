@@ -1,6 +1,7 @@
-﻿import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { AIOrchestrator } from "../../src/services/aiOrchestrator";
 import { parseJsonBody, verifyAdmin } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
 type RadarPulse = {
   global_phoenix_avg: number;
@@ -27,7 +28,7 @@ function normalizeIdeas(raw: string): string[] {
     .slice(0, 3);
 }
 
-export async function handleRadarContent(req: any, res: any) {
+export async function handleRadarContent(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdmin(req, res))) return;
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -105,9 +106,10 @@ Return JSON only in this exact shape:
       model: modelId,
       usedFallback: false
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "generation_failed";
     res.status(502).json({
-      error: error?.message || "generation_failed",
+      error: message,
       source: "generation_failed",
       is_live: false,
       model: "none",
@@ -115,4 +117,7 @@ Return JSON only in this exact shape:
     });
   }
 }
+
+
+
 

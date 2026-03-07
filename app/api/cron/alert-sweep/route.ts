@@ -7,11 +7,44 @@ export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
 const DEFAULT_SWEEP_RETENTION_DAYS = 30;
+type SweepDetails = {
+    evaluated_count?: number;
+    results?: unknown[];
+    duration_ms?: number;
+    error?: string;
+};
+type MetricPoint = { value: number; samples: number };
+type AlertRule = {
+    rule_key: string;
+    segment: string;
+    threshold: number;
+    min_samples: number;
+    metric_name: string;
+    window_minutes: number;
+};
+
+function createSweepClient(url: string, key: string) {
+    return createClient(url, key, { auth: { persistSession: false } });
+}
+
+type SweepClient = ReturnType<typeof createSweepClient>;
+
+function toErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error || 'unknown_error');
+}
+
+function normalizeMetric(input: unknown): MetricPoint {
+    if (!input || typeof input !== 'object') return { value: 0, samples: 0 };
+    const candidate = input as { value?: unknown; samples?: unknown };
+    return {
+        value: Number(candidate.value ?? 0),
+        samples: Number(candidate.samples ?? 0)
+    };
+}
 
 export async function GET(request: Request) {
     const startTime = Date.now();
-    let sweepStatus = 'ok';
-    let sweepDetails: any = {};
+    let sweepDetails: SweepDetails = {};
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -20,9 +53,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Missing credentials' }, { status: 500 });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-        auth: { persistSession: false },
-    });
+    const supabase = createSweepClient(supabaseUrl, supabaseKey);
 
     try {
         // 1. Authenticate
@@ -43,7 +74,7 @@ export async function GET(request: Request) {
         if (rules) {
             for (const rule of rules) {
                 try {
-                    const result = await evaluateRule(supabase, rule);
+                    const result = await evaluateRule(supabase, rule as AlertRule);
                     results.push(result);
                 } catch (err) {
                     results.push({ rule_key: rule.rule_key, status: 'error', error: String(err) });
@@ -65,9 +96,8 @@ export async function GET(request: Request) {
         await enforceSweepRetention(supabase);
 
         return NextResponse.json({ success: true, ...sweepDetails });
-    } catch (error: any) {
-        sweepStatus = 'error';
-        sweepDetails = { error: error.message, duration_ms: Date.now() - startTime };
+    } catch (error: unknown) {
+        sweepDetails = { error: toErrorMessage(error), duration_ms: Date.now() - startTime };
 
         // Log the failure run
         await supabase.from('alert_sweep_runs').insert({
@@ -80,7 +110,7 @@ export async function GET(request: Request) {
     }
 }
 
-async function enforceSweepRetention(supabase: any) {
+async function enforceSweepRetention(supabase: SweepClient) {
     const retentionDays = Number(process.env.ALERT_SWEEP_RETENTION_DAYS || DEFAULT_SWEEP_RETENTION_DAYS);
     const safeRetentionDays = Number.isFinite(retentionDays) && retentionDays > 0
         ? Math.floor(retentionDays)
@@ -94,11 +124,11 @@ async function enforceSweepRetention(supabase: any) {
     await supabase.from('alert_sweep_runs').delete().lt('ran_at', cutoff);
 }
 
-async function evaluateRule(supabase: any, rule: any) {
+async function evaluateRule(supabase: SweepClient, rule: AlertRule) {
     const isMock = process.env.ENGINE_MODE === 'mock';
     const fingerprint = `${rule.rule_key}:${rule.segment}`;
 
-    let currentMetric: any = { value: 0, samples: 0 };
+    let currentMetric: MetricPoint = { value: 0, samples: 0 };
 
     if (isMock) {
         // In MOCK mode, we simulate a trigger for a specific rule to test UI
@@ -125,7 +155,7 @@ async function evaluateRule(supabase: any, rule: any) {
             if (error.code === 'PGRST202') return { rule_key: rule.rule_key, status: 'skipped', reason: 'Missing metric function' };
             throw error;
         }
-        currentMetric = data;
+        currentMetric = normalizeMetric(data);
     }
 
     if (currentMetric.samples < rule.min_samples) {
@@ -212,7 +242,7 @@ function checkThreshold(value: number, threshold: number, key: string) {
 }
 
 async function logIncidentHistoryEntry(
-    supabase: any,
+    supabase: SweepClient,
     incidentId: string | undefined,
     fromStatus: string | null,
     toStatus: 'open' | 'ack' | 'resolved',

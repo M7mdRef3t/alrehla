@@ -1,0 +1,212 @@
+{
+  "version": "1.0.0",
+  "source": "design/tokens.json",
+  "text": [
+    {
+      "name": "Typography/display",
+      "fontFamily": "Almarai",
+      "fontSize": "clamp(2.5rem,5vw,4rem)",
+      "fontWeight": "800",
+      "lineHeight": "1.1",
+      "letterSpacing": "-0.04em",
+      "textCase": "ORIGINAL",
+      "direction": "RTL"
+    },
+    {
+      "name": "Typography/h1",
+      "fontFamily": "Almarai",
+      "fontSize": "2.25rem",
+      "fontWeight": "800",
+      "lineHeight": "1.2",
+      "letterSpacing": "-0.03em",
+      "textCase": "ORIGINAL",
+      "direction": "RTL"
+    },
+    {
+      "name": "Typography/h2",
+      "fontFamily": "Almarai",
+      "fontSize": "1.75rem",
+      "fontWeight": "800",
+      "lineHeight": "1.25",
+      "letterSpacing": "-0.02em",
+      "textCase": "ORIGINAL",
+      "direction": "RTL"
+    },
+    {
+      "name": "Typography/h3",
+      "fontFamily": "Almarai",
+      "fontSize": "1.375rem",
+      "fontWeight": "700",
+      "lineHeight": "1.3",
+      "letterSpacing": "0",
+      "textCase": "ORIGINAL",
+      "direction": "RTL"
+    },
+    {
+      "name": "Typography/h4",
+      "fontFamily": "Almarai",
+      "fontSize": "1.125rem",
+      "fontWeight": "700",
+      "lineHeight": "1.4",
+      "letterSpacing": "0",
+      "textCase": "ORIGINAL",
+      "direction": "RTL"
+    },
+    {
+      "name": "Typography/body-lg",
+      "fontFamily": "IBM Plex Sans Arabic",
+      "fontSize": "1rem",
+      "fontWeight": "400",
+      "lineHeight": "1.75",
+      "letterSpacing": "0.01em",
+      "textCase": "ORIGINAL",
+      "direction": "RTL"
+    },
+    {
+      "name": "Typography/body",
+      "fontFamily": "IBM Plex Sans Arabic",
+      "fontSize": "0.875rem",
+      "fontWeight": "400",
+      "lineHeight": "1.6",
+      "letterSpacing": "0.01em",
+      "textCase": "ORIGINAL",
+      "direction": "RTL"
+    },
+    {
+      "name": "Typography/caption",
+      "fontFamily": "IBM Plex Sans Arabic",
+      "fontSize": "0.75rem",
+      "fontWeight": "500",
+      "lineHeight": "1.5",
+      "letterSpacing": "0.02em",
+      "textCase": "ORIGINAL",
+      "direction": "RTL"
+    },
+    {
+      "name": "Typography/label",
+      "fontFamily": "IBM Plex Sans Arabic",
+      "fontSize": "0.65rem",
+      "fontWeight": "700",
+      "lineHeight": "",
+      "letterSpacing": "0.1em",
+      "textCase": "UPPER",
+      "direction": "RTL"
+    }
+  ],
+  "colors": [
+    {
+      "name": "Color/space/950",
+      "value": "#0f1629"
+    },
+    {
+      "name": "Color/space/void",
+      "value": "#0a0e1f"
+    },
+    {
+      "name": "Color/space/deep",
+      "value": "#131a35"
+    },
+    {
+      "name": "Color/space/mid",
+      "value": "#1a2242"
+    },
+    {
+      "name": "Color/space/nebula",
+      "value": "#212b4f"
+    },
+    {
+      "name": "Color/space/aurora",
+      "value": "#2a3560"
+    },
+    {
+      "name": "Color/brand/teal-400",
+      "value": "#2dd4bf"
+    },
+    {
+      "name": "Color/brand/teal-500",
+      "value": "#14b8a6"
+    },
+    {
+      "name": "Color/brand/teal-600",
+      "value": "#0d9488"
+    },
+    {
+      "name": "Color/brand/amber-500",
+      "value": "#f5a623"
+    },
+    {
+      "name": "Color/brand/amber-600",
+      "value": "#d97706"
+    },
+    {
+      "name": "Color/brand/amber-soft",
+      "value": "rgba(245,166,35,0.12)"
+    },
+    {
+      "name": "Color/brand/amber-glow",
+      "value": "rgba(245,166,35,0.25)"
+    },
+    {
+      "name": "Color/brand/emerald-500",
+      "value": "#10b981"
+    },
+    {
+      "name": "Color/brand/emerald-600",
+      "value": "#059669"
+    },
+    {
+      "name": "Color/brand/rose-400",
+      "value": "#f87171"
+    },
+    {
+      "name": "Color/brand/violet-400",
+      "value": "#a78bfa"
+    },
+    {
+      "name": "Color/brand/sky-400",
+      "value": "#38bdf8"
+    },
+    {
+      "name": "Color/text/primary",
+      "value": "#f1f5f9"
+    },
+    {
+      "name": "Color/text/secondary",
+      "value": "#94a3b8"
+    },
+    {
+      "name": "Color/text/muted",
+      "value": "rgba(148,163,184,0.5)"
+    },
+    {
+      "name": "Color/border/default",
+      "value": "rgba(255,255,255,0.07)"
+    },
+    {
+      "name": "Color/border/hover",
+      "value": "rgba(255,255,255,0.14)"
+    },
+    {
+      "name": "Color/glass/default",
+      "value": "rgba(15,23,42,0.6)"
+    },
+    {
+      "name": "Color/glass/hover",
+      "value": "rgba(15,23,42,0.8)"
+    }
+  ],
+  "effects": [
+    {
+      "name": "Shadow/sm",
+      "value": "0 2px 8px rgba(0,0,0,0.3)"
+    },
+    {
+      "name": "Shadow/base",
+      "value": "0 4px 24px rgba(0,0,0,0.4)"
+    },
+    {
+      "name": "Shadow/lg",
+      "value": "0 12px 48px rgba(0,0,0,0.5)"
+    }
+  ]
+}

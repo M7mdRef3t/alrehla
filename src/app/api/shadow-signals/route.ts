@@ -30,14 +30,14 @@ export async function GET(req: Request) {
         }
 
         return NextResponse.json(signal);
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Shadow fetch failed' }, { status: 500 });
     }
 }
 
 export async function POST(req: Request) {
     try {
-        const { id, action } = await req.json();
+        const { id } = await req.json();
         const authHeader = req.headers.get("Authorization");
         if (!authHeader?.startsWith("Bearer ")) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
             .eq('id', id);
 
         return NextResponse.json({ success: true });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Shadow update failed' }, { status: 500 });
     }
 }

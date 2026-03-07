@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, ShieldAlert, X, ChevronRight, Sparkles, ZapOff } from "lucide-react";
+import { AlertTriangle, ShieldAlert, X, ChevronRight } from "lucide-react";
 import { supabase } from "../services/supabaseClient";
 
 interface Intervention {
@@ -17,10 +17,8 @@ interface Intervention {
 
 export const InterventionPanel: FC = () => {
     const [items, setItems] = useState<Intervention[]>([]);
-    const [loading, setLoading] = useState(false);
 
     const fetchInterventions = async () => {
-        setLoading(true);
         try {
             const { data: { session } } = await supabase!.auth.getSession();
             const res = await fetch('/api/interventions', {
@@ -32,8 +30,6 @@ export const InterventionPanel: FC = () => {
             }
         } catch (err) {
             console.error(err);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -125,7 +121,7 @@ export const InterventionPanel: FC = () => {
                                 <span className={`text-[9px] font-black uppercase tracking-[0.2em]
                                     ${item.severity === 'high' ? 'text-rose-500/50' : 'text-amber-500/50'}
                                 `}>
-                                    ملاحظة مسار
+                                    احظة سار
                                 </span>
                             </div>
                             <p className="text-xs font-bold leading-relaxed pr-2 opacity-80">
@@ -155,7 +151,7 @@ export const InterventionPanel: FC = () => {
 
                             {!item.metadata?.suggestedActions && (
                                 <div className="flex items-center gap-2 justify-end pt-2">
-                                    <span className="text-[10px] opacity-60">اسحب للتفاصيل</span>
+                                    <span className="text-[10px] opacity-60">اسحب تفاص</span>
                                     <ChevronRight className="w-3 h-3 opacity-40" />
                                 </div>
                             )}

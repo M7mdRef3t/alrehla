@@ -98,7 +98,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
 
   const displayNamePlaceholder = useAppContentString(
     "account_display_name_placeholder",
-    "اكتب اسمك",
+    "اتب اس",
     { page: "account" }
   );
 
@@ -134,14 +134,14 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
       setExportSuccess(true);
       setTimeout(() => setExportSuccess(false), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "فشل التصدير");
+      setError(err instanceof Error ? err.message : "فش اتصدر");
       setTimeout(() => setError(null), 3000);
     }
   };
 
   const handleExportPDF = async () => {
     if (nodes.length === 0) {
-      setError("لا توجد بيانات لتصديرها");
+      setError("ا تجد باات تصدرا");
       setTimeout(() => setError(null), 3000);
       return;
     }
@@ -152,7 +152,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
       await exportMapToPDF(nodes);
       setTimeout(() => setPdfExporting(false), 1000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "فشل تصدير PDF");
+      setError(err instanceof Error ? err.message : "فش تصدر PDF");
       setTimeout(() => setError(null), 3000);
       setPdfExporting(false);
     }
@@ -160,7 +160,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
 
   const handleExportImage = async () => {
     if (nodes.length === 0) {
-      setError("لا توجد بيانات لتصديرها");
+      setError("ا تجد باات تصدرا");
       setTimeout(() => setError(null), 3000);
       return;
     }
@@ -171,7 +171,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
       await downloadMapImage();
       setTimeout(() => setImageExporting(false), 1000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "فشل تصدير الصورة");
+      setError(err instanceof Error ? err.message : "فش تصدر اصرة");
       setTimeout(() => setError(null), 3000);
       setImageExporting(false);
     }
@@ -197,7 +197,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
       setPendingFile(null);
       setTimeout(() => reloadPage(), 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "فشل الاستيراد");
+      setError(err instanceof Error ? err.message : "فش ااستراد");
       setShowConfirmImport(false);
       setPendingFile(null);
     } finally {
@@ -224,10 +224,10 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
       const remote = await fetchRemoteState();
       const backup = buildBackupFromKeyValues(remote);
       downloadBackupFile(backup, "journey-cloud-backup");
-      setCloudSuccess("تم تنزيل نسخة السحابة بنجاح");
+      setCloudSuccess("ت تز سخة اسحابة بجاح");
       setTimeout(() => setCloudSuccess(null), 3000);
     } catch {
-      setCloudError("تعذر تنزيل بيانات السحابة");
+      setCloudError("تعذر تز باات اسحابة");
     } finally {
       setCloudLoading(false);
     }
@@ -241,10 +241,10 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
       const payload = backupToKeyValues(backup);
       const ok = await pushRemoteState(payload);
       if (!ok) throw new Error("cloud");
-      setCloudSuccess("تم رفع بياناتك للسحابة");
+      setCloudSuccess("ت رفع باات سحابة");
       setTimeout(() => setCloudSuccess(null), 3000);
     } catch {
-      setCloudError("فشل رفع البيانات للسحابة");
+      setCloudError("فش رفع اباات سحابة");
     } finally {
       setCloudLoading(false);
     }
@@ -257,10 +257,10 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
       const remote = await fetchRemoteState();
       const backup = buildBackupFromKeyValues(remote);
       await restoreBackupData(backup);
-      setCloudSuccess("تم استعادة نسخة السحابة");
+      setCloudSuccess("ت استعادة سخة اسحابة");
       setTimeout(() => reloadPage(), 1200);
     } catch {
-      setCloudError("فشل استعادة بيانات السحابة");
+      setCloudError("فش استعادة باات اسحابة");
     } finally {
       setCloudLoading(false);
     }
@@ -271,9 +271,9 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
     setAuthMessage(null);
     const { error } = await signInWithGoogle();
     if (error) {
-      setAuthMessage("تعذّر فتح بوابة جوجل. راجع الإعدادات.");
+      setAuthMessage("تعذر فتح بابة جج. راجع اإعدادات.");
     } else {
-      setAuthMessage("تمام... بنحوّلك على بوابة جوجل.");
+      setAuthMessage("تا... بح ع بابة جج.");
     }
     setAuthLoading(false);
   };
@@ -304,7 +304,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
 
     const normalizedName = displayName.replace(/\s+/g, " ").trim();
     if (displayNameDirty && !normalizedName) {
-      setDisplayNameError("اكتب اسمك.");
+      setDisplayNameError("اتب اس.");
       setDisplayNameMessage(null);
       return;
     }
@@ -318,18 +318,18 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
         toneGender: toneGenderDirty ? toneGender : undefined
       });
       if (error) {
-        setDisplayNameError("حصلت مشكلة وإحنا بنحفظ بيانات الحساب.");
+        setDisplayNameError("حصت شة إحا بحفظ باات احساب.");
       } else {
         setDisplayNameDirty(false);
         setToneGenderDirty(false);
-        setDisplayNameMessage("تم حفظ بيانات الحساب.");
+        setDisplayNameMessage("ت حفظ باات احساب.");
         if (data?.user) {
           const currentSession = useAuthState.getState().session;
           if (currentSession) useAuthState.getState().setSession({ ...currentSession, user: data.user });
         }
       }
     } catch {
-      setDisplayNameError("حصلت مشكلة وإحنا بنحفظ بيانات الحساب.");
+      setDisplayNameError("حصت شة إحا بحفظ باات احساب.");
     } finally {
       setDisplayNameSaving(false);
     }
@@ -360,10 +360,10 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
               {/* Header */}
               <div className={`flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/50`}>
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${showAdminTools ? "bg-[var(--color-primary)]/10 border-[var(--color-primary)] text-[var(--color-primary)]" : "bg-teal-500/10 border-teal-500/20 text-teal-400"}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${showAdminTools ? "bg-[var(--soft-teal)]/10 border-[var(--soft-teal)] text-[var(--soft-teal)]" : "bg-teal-500/10 border-teal-500/20 text-teal-400"}`}>
                     {showAdminTools ? <Database className="w-5 h-5" /> : <User className="w-5 h-5" />}
                   </div>
-                  <h2 className="text-lg font-bold text-white">{showAdminTools ? "إدارة البيانات" : "الملف الشخصي"}</h2>
+                  <h2 className="text-lg font-bold text-white">{showAdminTools ? "إدارة اباات" : "اف اشخص"}</h2>
                 </div>
                 <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">
                   <X className="w-5 h-5" />
@@ -379,29 +379,29 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                     <div className="p-4 bg-slate-900/50 rounded-2xl border border-slate-800 space-y-3">
                       <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
                         <HardDrive className="w-3 h-3" />
-                        حالة التخزين
+                        حاة اتخز
                       </div>
                       <div className="grid grid-cols-2 gap-3 text-xs">
                         <div className="flex items-center justify-between p-2 bg-slate-950 rounded-lg border border-slate-800">
-                          <span className="text-slate-500">العناصر</span>
+                          <span className="text-slate-500">اعاصر</span>
                           <span className="font-mono text-teal-400">{stats.nodesCount}</span>
                         </div>
                         <div className="flex items-center justify-between p-2 bg-slate-950 rounded-lg border border-slate-800">
-                          <span className="text-slate-500">الحجم</span>
-                          <span className="font-mono text-[var(--color-primary)]">{stats.totalSizeKB} KB</span>
+                          <span className="text-slate-500">احج</span>
+                          <span className="font-mono text-[var(--soft-teal)]">{stats.totalSizeKB} KB</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <p className="text-xs font-bold text-slate-500 pr-2">أدوات التصدير</p>
-                      <button onClick={handleExport} disabled={stats.nodesCount === 0} className="w-full group flex items-center gap-4 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-[var(--color-primary)] hover:bg-slate-800 transition-all text-right disabled:opacity-50">
-                        <div className="w-10 h-10 rounded-lg bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                          <FileJson className="w-5 h-5 text-[var(--color-primary)]" />
+                      <p className="text-xs font-bold text-slate-500 pr-2">أدات اتصدر</p>
+                      <button onClick={handleExport} disabled={stats.nodesCount === 0} className="w-full group flex items-center gap-4 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-[var(--soft-teal)] hover:bg-slate-800 transition-all text-right disabled:opacity-50">
+                        <div className="w-10 h-10 rounded-lg bg-[var(--soft-teal)]/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                          <FileJson className="w-5 h-5 text-[var(--soft-teal)]" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-bold text-slate-200">نسخة احتياطية (JSON)</p>
-                          <p className="text-[10px] text-slate-500">تحميل البيانات الخام الكاملة</p>
+                          <p className="text-sm font-bold text-slate-200">سخة احتاطة (JSON)</p>
+                          <p className="text-[10px] text-slate-500">تح اباات اخا ااة</p>
                         </div>
                         {exportSuccess && <Check className="w-4 h-4 text-emerald-400" />}
                       </button>
@@ -409,21 +409,21 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                       <div className="grid grid-cols-2 gap-3">
                         <button onClick={handleExportPDF} disabled={stats.nodesCount === 0 || pdfExporting} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-rose-500/50 hover:bg-slate-800 transition-all disabled:opacity-50">
                           <FileText className="w-5 h-5 text-rose-400" />
-                          <span className="text-xs font-bold text-slate-300">تصدير PDF</span>
+                          <span className="text-xs font-bold text-slate-300">تصدر PDF</span>
                         </button>
                         <button onClick={handleExportImage} disabled={stats.nodesCount === 0 || imageExporting} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-purple-500/50 hover:bg-slate-800 transition-all disabled:opacity-50">
                           <Download className="w-5 h-5 text-purple-400" />
-                          <span className="text-xs font-bold text-slate-300">تصدير صورة</span>
+                          <span className="text-xs font-bold text-slate-300">تصدر صرة</span>
                         </button>
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <p className="text-xs font-bold text-slate-500 pr-2">السحابة والمزامنة</p>
+                      <p className="text-xs font-bold text-slate-500 pr-2">اسحابة ازاة</p>
                       <div className="p-1 rounded-xl bg-slate-900 border border-slate-800 grid grid-cols-3 gap-1">
                         <button onClick={handleCloudImport} disabled={cloudLoading} className="flex flex-col items-center justify-center gap-1 py-3 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50">
                           <Upload className="w-4 h-4 text-emerald-400" />
-                          <span className="text-[9px] font-bold text-slate-400">رفع للسحابة</span>
+                          <span className="text-[9px] font-bold text-slate-400">رفع سحابة</span>
                         </button>
                         <button onClick={handleCloudPull} disabled={cloudLoading} className="flex flex-col items-center justify-center gap-1 py-3 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50">
                           <Download className="w-4 h-4 text-sky-400" />
@@ -431,7 +431,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                         </button>
                         <button onClick={handleCloudExport} disabled={cloudLoading} className="flex flex-col items-center justify-center gap-1 py-3 rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-50">
                           <FileJson className="w-4 h-4 text-amber-400" />
-                          <span className="text-[9px] font-bold text-slate-400">تنزيل ملف</span>
+                          <span className="text-[9px] font-bold text-slate-400">تز ف</span>
                         </button>
                       </div>
                       {cloudSuccess && <p className="text-xs text-emerald-400 text-center">{cloudSuccess}</p>}
@@ -444,11 +444,11 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                         <label htmlFor="import-file" className="block w-full p-3 rounded-xl border border-dashed border-slate-700 bg-slate-900/50 hover:bg-slate-900 hover:border-amber-500/50 text-center cursor-pointer transition-all">
                           <span className="text-xs font-bold text-slate-400 flex items-center justify-center gap-2">
                             <Upload className="w-3 h-3" />
-                            استيراد نسخة احتياطية (JSON)
+                            استراد سخة احتاطة (JSON)
                           </span>
                         </label>
                       </div>
-                      {importSuccess && <p className="text-xs text-emerald-400 text-center">تم الاستيراد بنجاح!</p>}
+                      {importSuccess && <p className="text-xs text-emerald-400 text-center">ت ااستراد بجاح!</p>}
                       {error && <p className="text-xs text-rose-400 text-center">{error}</p>}
                     </div>
                   </>
@@ -456,7 +456,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
 
                 {/* Account Settings */}
                 <div className="space-y-4">
-                  {!showAdminTools && <p className="text-xs font-bold text-slate-500 pr-2">بيانات الحساب</p>}
+                  {!showAdminTools && <p className="text-xs font-bold text-slate-500 pr-2">باات احساب</p>}
 
                   {authUser ? (
                     <div className="p-4 bg-slate-900 rounded-2xl border border-slate-800 space-y-4">
@@ -465,18 +465,18 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                           {(authUser.email?.[0] || "U").toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-white">{authDisplayName || "مستخدم جديد"}</p>
+                          <p className="text-sm font-bold text-white">{authDisplayName || "ستخد جدد"}</p>
                           <p className="text-xs text-slate-500">{authUser.email}</p>
                         </div>
                       </div>
 
                       <div className="space-y-3">
                         <div>
-                          <label className="text-xs text-slate-400 mb-1 block">الاسم الظاهر</label>
+                          <label className="text-xs text-slate-400 mb-1 block">ااس اظار</label>
                           <input value={displayName} onChange={(e) => { setDisplayName(e.target.value); setDisplayNameDirty(true); }} placeholder={displayNamePlaceholder} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-teal-500 outline-none" />
                         </div>
                         <div>
-                          <label className="text-xs text-slate-400 mb-1 block">نبرة الخطاب</label>
+                          <label className="text-xs text-slate-400 mb-1 block">برة اخطاب</label>
                           <div className="grid grid-cols-3 gap-2">
                             {(["male", "female", "neutral"] as const).map(g => (
                               <button
@@ -484,13 +484,13 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                                 onClick={() => { setToneGender(g); setToneGenderDirty(g !== authToneGender); }}
                                 className={`py-1.5 rounded-lg text-[10px] font-bold transition-colors ${toneGender === g ? "bg-teal-600 text-white" : "bg-slate-950 text-slate-400 border border-slate-700 hover:border-teal-500"}`}
                               >
-                                {g === "male" ? "مذكر" : g === "female" ? "مؤنث" : "محايد"}
+                                {g === "male" ? "ذر" : g === "female" ? "ؤث" : "حاد"}
                               </button>
                             ))}
                           </div>
                         </div>
                         <button onClick={handleSaveAccountProfile} disabled={displayNameSaving || (!displayNameDirty && !toneGenderDirty)} className="w-full py-2 rounded-lg bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                          {displayNameSaving ? "جاري الحفظ..." : "حفظ التعديلات"}
+                          {displayNameSaving ? "جار احفظ..." : "حفظ اتعدات"}
                         </button>
                         {displayNameMessage && <p className="text-xs text-emerald-400">{displayNameMessage}</p>}
                         {displayNameError && <p className="text-xs text-rose-400">{displayNameError}</p>}
@@ -501,22 +501,22 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                         {canViewAsUser && accountOnly && (
                           <button onClick={openRoleSwitchInAdmin} className="w-full py-2 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs transition-colors flex items-center justify-center gap-2">
                             <Shield className="w-3 h-3" />
-                            لوحة التحكم
+                            حة اتح
                           </button>
                         )}
                         <button onClick={handleSignOut} disabled={authLoading} className="w-full py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold transition-colors flex items-center justify-center gap-2">
                           <LogOut className="w-3 h-3" />
-                          تسجيل خروج
+                          تسج خرج
                         </button>
                       </div>
                     </div>
                   ) : (
                     <div className="p-8 text-center bg-slate-900 rounded-2xl border border-slate-800 space-y-4">
                       <User className="w-12 h-12 text-slate-600 mx-auto" />
-                      <p className="text-sm text-slate-400">سجّل دخولك لحفظ بياناتك سحابياً ومتابعة رحلتك من أي جهاز.</p>
+                      <p className="text-sm text-slate-400">سج دخ حفظ باات سحابا تابعة رحت  أ جاز.</p>
                       <button onClick={handleGoogleLogin} disabled={authLoading} className="w-full py-2.5 rounded-xl bg-white text-slate-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors">
                         <GoogleMark className="w-4 h-4" />
-                        استمرار باستخدام Google
+                        استرار باستخدا Google
                       </button>
                     </div>
                   )}
@@ -526,7 +526,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                   <div className="pt-6 border-t border-slate-800">
                     <button onClick={() => setShowConfirmWipe(true)} className="w-full py-3 rounded-xl border border-rose-500/20 hover:bg-rose-500/10 text-rose-500 text-xs font-bold transition-colors flex items-center justify-center gap-2">
                       <Trash2 className="w-4 h-4" />
-                      تصفير النظام (مسح كل شيء)
+                      تصفر اظا (سح  شء)
                     </button>
                   </div>
                 )}
@@ -541,10 +541,10 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                 <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 mx-auto">
                   <Upload className="w-6 h-6" />
                 </div>
-                <h3 className="text-center text-lg font-bold text-white">تأكيد الاستيراد</h3>
-                <p className="text-center text-sm text-slate-400">استيراد الملف سيقوم بمسح جميع البيانات الحالية واستبدالها بالنسخة الجديدة. هل أنت متأكد؟</p>
+                <h3 className="text-center text-lg font-bold text-white">تأد ااستراد</h3>
+                <p className="text-center text-sm text-slate-400">استراد اف س بسح جع اباات احاة استبداا باسخة اجددة.  أت تأد</p>
                 <div className="flex gap-3">
-                  <button onClick={handleCancelImport} className="flex-1 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors text-xs font-bold">إلغاء</button>
+                  <button onClick={handleCancelImport} className="flex-1 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors text-xs font-bold">إغاء</button>
                   <button onClick={handleConfirmImport} disabled={isImporting} className="flex-1 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-colors text-xs font-bold disabled:opacity-50">{isImporting ? "???? ?????????..." : "???? ?????? ????????"}</button>
                 </div>
               </div>
@@ -558,11 +558,11 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                 <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 mx-auto">
                   <AlertTriangle className="w-6 h-6" />
                 </div>
-                <h3 className="text-center text-lg font-bold text-white">تصفير النظام بالكامل</h3>
-                <p className="text-center text-sm text-slate-400">تحذير: هذا الإجراء سيحذف كل شيء من ذاكرة المتصفح. لا يمكن التراجع عنه.</p>
+                <h3 className="text-center text-lg font-bold text-white">تصفر اظا باا</h3>
+                <p className="text-center text-sm text-slate-400">تحذر: ذا اإجراء سحذف  شء  ذارة اتصفح. ا  اتراجع ع.</p>
                 <div className="flex gap-3">
                   <button onClick={() => setShowConfirmWipe(false)} className="flex-1 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors text-xs font-bold">تراجع</button>
-                  <button onClick={handleConfirmWipe} className="flex-1 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-colors text-xs font-bold">مسح نهائي</button>
+                  <button onClick={handleConfirmWipe} className="flex-1 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-colors text-xs font-bold">سح ائ</button>
                 </div>
               </div>
             </div>
@@ -573,6 +573,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
     </AnimatePresence>
   );
 };
+
 
 
 

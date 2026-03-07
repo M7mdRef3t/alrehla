@@ -293,3 +293,45 @@ box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
 
 **آخر تحديث**: 2026-02-10
 **الحالة**: ✅ تم تطبيقه على Landing Page و App.tsx
+
+---
+
+## UI Primitives (v1.0)
+
+Single source of truth for shared UI components:
+
+- `src/components/UI/Button.tsx`
+- `src/components/UI/Input.tsx`
+- `src/components/UI/Badge.tsx`
+- `src/components/UI/Card.tsx`
+- `src/styles/design-system.css`
+- `src/services/designSystemTokens.ts`
+
+### Usage Rules
+
+- Use `Button` for all actionable CTAs instead of custom per-page button styles.
+- Use `Card` for glass blocks and grouped content containers.
+- Use `Badge` for status tags and short highlighted labels.
+- Use `Input` for text fields in user-facing flows.
+
+### Button Variants
+
+- `primary`: main action.
+- `secondary`: supporting action.
+- `ghost`: quiet utility action.
+
+### Sizes
+
+- `sm`, `md`, `lg`.
+
+### Example
+
+```tsx
+import { Button, Card, Badge, Input } from "./UI";
+
+<Card className="p-4">
+  <Badge>جاهز</Badge>
+  <Input placeholder="اكتب ملخصك" />
+  <Button variant="primary" size="md">ابدأ</Button>
+</Card>
+```

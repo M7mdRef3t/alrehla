@@ -1,10 +1,11 @@
 import { getAdminSupabase, verifyAdmin } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
 function toDateOnly(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-export async function handleWeeklyReportStandalone(req: any, res: any) {
+export async function handleWeeklyReportStandalone(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdmin(req, res))) return;
   if (req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
@@ -78,3 +79,6 @@ export async function handleWeeklyReportStandalone(req: any, res: any) {
 
   res.status(200).json(report);
 }
+
+
+

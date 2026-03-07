@@ -147,7 +147,7 @@ User answers:
     const data = JSON.parse(responseText);
 
     return NextResponse.json({ ...data, source: "gemini", is_live: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Analyze API Error:", error);
     try {
       const { answers } = await req.clone().json();

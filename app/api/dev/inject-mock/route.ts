@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
 
+function toErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error || 'unknown_error');
+}
+
 export async function POST(req: Request) {
     // SECURITY: Only allow this route in development mode
     if (process.env.NODE_ENV !== 'development') {
@@ -59,8 +63,8 @@ export async function POST(req: Request) {
             message: 'تم حقن 5 خرائط تاريخية بمسار "احتراق طاقي" بنجاح. المحرك التنبؤي جاهز للاختبار.'
         });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Mock injection error:', err);
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        return NextResponse.json({ error: toErrorMessage(err) }, { status: 500 });
     }
 }

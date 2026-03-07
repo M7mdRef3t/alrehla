@@ -46,15 +46,15 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
 
   return (
     <div className="mt-8 space-y-3">
-      {/* بروتوكول 30 يوم */}
+      {/* برت 30  */}
       <div className="border-2 border-purple-200 rounded-xl overflow-hidden bg-white">
         <button
           onClick={() => toggleSection("plan")}
           className="w-full p-4 flex items-center justify-between bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-colors duration-150"
         >
           <div className="flex items-center gap-2">
-            <span className="text-lg">📋</span>
-            <span className="font-bold text-purple-900">بروتوكول 30 يوم</span>
+            <span className="text-lg"></span>
+            <span className="font-bold text-purple-900">برت 30 </span>
           </div>
           {openSections.has("plan") ? (
             <ChevronUp className="w-5 h-5 text-purple-700" />
@@ -67,7 +67,7 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
             {plan.weeks.map((week) => (
               <div key={week.week} className="border-r-4 border-purple-300 pr-4">
                 <h4 className="font-bold text-purple-900 mb-1">
-                  الأسبوع {week.week}: {week.title}
+                  اأسبع {week.week}: {week.title}
                 </h4>
                 <p className="text-sm text-gray-600 mb-3">{week.description}</p>
                 <div className="space-y-2">
@@ -105,15 +105,15 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
         )}
       </div>
 
-      {/* بنك السكريبتات */}
+      {/* ب اسربتات */}
       <div className="border-2 border-blue-200 rounded-xl overflow-hidden bg-white">
         <button
           onClick={() => toggleSection("scripts")}
           className="w-full p-4 flex items-center justify-between bg-blue-50 hover:bg-blue-100 transition-colors duration-150"
         >
           <div className="flex items-center gap-2">
-            <span className="text-lg">💬</span>
-            <span className="font-bold text-blue-900">بنك السكريبتات الجاهزة</span>
+            <span className="text-lg"></span>
+            <span className="font-bold text-blue-900">ب اسربتات اجازة</span>
           </div>
           {openSections.has("scripts") ? (
             <ChevronUp className="w-5 h-5 text-blue-700" />
@@ -126,20 +126,20 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
             {scriptBank.map((script, index) => (
               <div
                 key={index}
-                className="p-4 bg-gradient-to-br from-blue-50 to-[var(--color-primary)] border border-blue-200 rounded-lg"
+                className="p-4 bg-gradient-to-br from-blue-50 to-[var(--soft-teal)] border border-blue-200 rounded-lg"
               >
                 <h4 className="font-bold text-blue-900 mb-2">{script.situation}</h4>
                 <div className="space-y-3 text-sm">
                   <div className="p-3 bg-red-50 border border-red-200 rounded">
-                    <p className="font-semibold text-red-800 mb-1">❌ متقولش:</p>
+                    <p className="font-semibold text-red-800 mb-1"> تش:</p>
                     <p className="text-gray-700">{script.dontSay}</p>
                   </div>
                   <div className="p-3 bg-green-50 border border-green-200 rounded">
-                    <p className="font-semibold text-green-800 mb-1">✅ قول:</p>
+                    <p className="font-semibold text-green-800 mb-1"> :</p>
                     <p className="text-gray-700">{script.doSay}</p>
                   </div>
                   <p className="text-xs text-gray-600 mt-2">
-                    💡 {script.explanation}
+                     {script.explanation}
                   </p>
                 </div>
               </div>
@@ -148,15 +148,15 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
         )}
       </div>
 
-      {/* سجل المواقف */}
+      {/* سج ااف */}
       <div className="border-2 border-amber-200 rounded-xl overflow-hidden bg-white">
         <button
           onClick={() => toggleSection("log")}
           className="w-full p-4 flex items-center justify-between bg-amber-50 hover:bg-amber-100 transition-colors duration-150"
         >
           <div className="flex items-center gap-2">
-            <span className="text-lg">📝</span>
-            <span className="font-bold text-amber-900">سجل الميدان</span>
+            <span className="text-lg"></span>
+            <span className="font-bold text-amber-900">سج ادا</span>
           </div>
           {openSections.has("log") ? (
             <ChevronUp className="w-5 h-5 text-amber-700" />
@@ -175,16 +175,16 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
         )}
       </div>
 
-      {/* التقدم */}
+      {/* اتد */}
       <div className="border-2 border-teal-200 rounded-xl overflow-hidden bg-white">
         <button
           onClick={() => toggleSection("progress")}
           className="w-full p-4 flex items-center justify-between bg-teal-50 hover:bg-teal-100 transition-colors duration-150"
         >
           <div className="flex items-center gap-2">
-            <span className="text-lg">📈</span>
+            <span className="text-lg"></span>
             <span className="font-bold text-teal-900">
-              تقدمك الميداني ({completedCount} من {totalSteps})
+              تد ادا ({completedCount}  {totalSteps})
             </span>
           </div>
           {openSections.has("progress") ? (
@@ -202,4 +202,5 @@ export const RecoveryAccordion: FC<RecoveryAccordionProps> = ({
     </div>
   );
 };
+
 

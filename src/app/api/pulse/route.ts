@@ -71,7 +71,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true, data });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Pulse API Error:', err);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
@@ -108,7 +108,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json(data);
 
-    } catch (err: any) {
+    } catch {
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

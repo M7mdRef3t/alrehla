@@ -1,5 +1,5 @@
-import { ClientApp } from "../client-app";
+import ClientAppEntry from "../client-app-entry";
 
 export default function AdminPage() {
-    return <ClientApp />;
+    return <ClientAppEntry />;
 }

@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSyncState } from "../state/syncState";
 import { Cloud, CloudOff, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
@@ -16,7 +16,7 @@ export const SyncStatusUI: FC = () => {
         const d = new Date(isoString);
         let hours = d.getHours();
         const minutes = d.getMinutes().toString().padStart(2, "0");
-        const ampm = hours >= 12 ? 'م' : 'ص';
+        const ampm = hours >= 12 ? '' : 'ص';
         hours = hours % 12;
         hours = hours ? hours : 12; // the hour '0' should be '12'
         return `${hours}:${minutes} ${ampm}`;
@@ -33,13 +33,13 @@ export const SyncStatusUI: FC = () => {
             case "offline":
                 return {
                     icon: <CloudOff className="w-4 h-4 text-slate-400" />,
-                    text: lastLocalSaveAt ? `Offline • Saved locally` : "Offline",
+                    text: lastLocalSaveAt ? `Offline  Saved locally` : "Offline",
                     color: "rgba(148,163,184,0.8)"
                 };
             case "local_saved":
                 return {
                     icon: <CheckCircle className="w-4 h-4 text-emerald-400/80" />,
-                    text: `Saved locally • ${formatTime(lastLocalSaveAt)}`,
+                    text: `Saved locally  ${formatTime(lastLocalSaveAt)}`,
                     color: "rgba(52,211,153,0.9)"
                 };
             case "syncing":
@@ -51,7 +51,7 @@ export const SyncStatusUI: FC = () => {
             case "synced":
                 return {
                     icon: <Cloud className="w-4 h-4 text-teal-400" />,
-                    text: `Synced • ${formatTime(lastSyncAt)}`,
+                    text: `Synced  ${formatTime(lastSyncAt)}`,
                     color: "rgba(45,212,191,0.9)"
                 };
             case "error":

@@ -1,8 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, CheckCircle, AlertTriangle, Eye, TrendingUp, Users, ChevronRight, Gavel, Zap, Activity, Settings, BarChart3, Globe, Database, UserPlus, Clock, Brain } from 'lucide-react';
+import { Shield, CheckCircle, AlertTriangle, Eye, TrendingUp, Users, ChevronRight, Gavel, Zap, Activity, BarChart3, Globe, Database, UserPlus, Clock, Brain } from 'lucide-react';
 import { HiveEngine, ProvenPath, SwarmMetrics } from '../../services/hiveEngine';
-import { fetchUsers, AdminUserRow, fetchOverviewStats, OverviewStats, fetchFunnelAnalytics, fetchLiveBehavioralEvents, fetchTimeToActionHistogram, FunnelStats, BehavioralEvent, HistogramPoint } from '../../services/adminApi';
+import { fetchUsers, AdminUserRow, fetchOverviewStats, OverviewStats } from '../../services/adminApi';
 import { CollectiveRadar } from '../Trajectory/CollectiveRadar';
 import { FirstBloodOverlay } from './FirstBloodOverlay';
 import { BehavioralRadar } from './BehavioralRadar';
@@ -70,9 +70,9 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-8 bg-slate-950 min-h-screen text-slate-100 font-sans">
             {/* Header: Command Status */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 p-8 bg-[var(--color-primary)]/20 rounded-[2.5rem] border border-[var(--color-primary)] backdrop-blur-3xl shadow-2xl">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 p-8 bg-[var(--soft-teal)]/20 rounded-[2.5rem] border border-[var(--soft-teal)] backdrop-blur-3xl shadow-2xl">
                 <div>
-                    <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-[var(--color-primary)] flex items-center">
+                    <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-[var(--soft-teal)] flex items-center">
                         <Shield className="mr-4 w-10 h-10 text-cyan-400" />
                         Oracle Council Dashboard
                     </h1>
@@ -207,7 +207,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
                                                 <Database className="w-3 h-3" /> Mission Payload
                                             </h5>
                                             <div className="p-6 bg-slate-950/40 rounded-[2.5rem] border border-white/5 space-y-4 max-h-[350px] overflow-y-auto custom-scrollbar">
-                                                {selectedPath.mission_data?.daily_missions?.map((m: any) => (
+                                                {selectedPath.mission_data?.daily_missions?.map((m: { day: number; actionable_task: string }) => (
                                                     <div key={m.day} className="p-5 bg-white/5 border border-white/5 rounded-3xl group/item hover:border-cyan-500/30 transition-all duration-300">
                                                         <div className="flex justify-between mb-2">
                                                             <span className="text-[9px] font-black text-cyan-400 uppercase tracking-widest">Day {m.day}</span>
@@ -300,7 +300,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
                                                 <span className="text-[8px] text-slate-500 uppercase font-black tracking-widest">Temporal</span>
                                                 <span className="text-[10px] font-bold text-slate-300 mt-1 flex items-center gap-1">
                                                     <Clock className="w-3 h-3" />
-                                                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString('ar-EG') : '—'}
+                                                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString('ar-EG') : ''}
                                                 </span>
                                             </div>
                                         </div>
@@ -330,7 +330,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
                                 {[
                                     { label: 'Total Sovereigns', value: stats.totalUsers?.toLocaleString() || '0', icon: Users, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
                                     { label: 'Neural Activity', value: stats.activeNow?.toLocaleString() || '0', icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-                                    { label: 'Avg Swarm Energy', value: stats.avgMood?.toFixed(1) || '—', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+                                    { label: 'Avg Swarm Energy', value: stats.avgMood?.toFixed(1) || '', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
                                     { label: 'AI Cognitive Load', value: (stats.aiTokensUsed || 0) > 1000 ? `${((stats.aiTokensUsed || 0) / 1000).toFixed(1)}k` : stats.aiTokensUsed || '0', icon: Brain, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
                                 ].map((item, i) => (
                                     <motion.div
@@ -365,7 +365,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
                                     </div>
                                 </div>
                                 <div className="h-64 flex items-end gap-3 px-4">
-                                    {(stats?.growthData || []).slice(-14).map((d, i) => (
+                                    {(stats?.growthData || []).slice(-14).map((d) => (
                                         <div key={d.date} className="flex-1 flex flex-col items-center gap-2 group/bar">
                                             <div className="relative w-full flex flex-col items-center gap-1 h-full justify-end">
                                                 <motion.div
@@ -423,3 +423,4 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
         </div >
     );
 };
+

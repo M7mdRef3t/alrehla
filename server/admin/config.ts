@@ -1,4 +1,5 @@
 import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
 const SETTINGS_TABLE = "system_settings";
 const ALLOWED_KEYS = new Set([
@@ -15,7 +16,7 @@ function toSettingMap(rows: Array<{ key: string; value: unknown }>) {
   return map;
 }
 
-export async function handleConfig(req: any, res: any) {
+export async function handleConfig(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdmin(req, res))) return;
   const client = getAdminSupabase();
   if (!client) {
@@ -63,3 +64,7 @@ export async function handleConfig(req: any, res: any) {
 
   res.status(405).json({ error: "Method not allowed" });
 }
+
+
+
+

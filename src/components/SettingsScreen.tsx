@@ -19,10 +19,10 @@ import { stripeService } from "../services/stripeIntegration";
 import { supabase } from "../services/supabaseClient";
 import { syncSubscription } from "../services/subscriptionManager";
 
-/* ══════════════════════════════════════════
-   SETTINGS SCREEN — شاشة الإعدادات
-   مركز التحكم الشخصي
-   ══════════════════════════════════════════ */
+/* 
+   SETTINGS SCREEN  شاشة اإعدادات
+   رز اتح اشخص
+    */
 
 type SettingsSection = "main" | "language" | "b2b" | "referral" | "subscription" | "culture";
 
@@ -46,37 +46,37 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
         {
             id: "subscription" as SettingsSection,
             icon: Crown,
-            label: "الاشتراك",
+            label: "ااشترا",
             value: TIER_LABELS[tier],
             color: tier === "basic" ? "#64748b" : "#d97706",
-            badge: tier === "basic" ? "ارقَ" : undefined,
+            badge: tier === "basic" ? "ار" : undefined,
         },
         {
             id: "referral" as SettingsSection,
             icon: Gift,
-            label: "ادعُ قائداً",
-            value: "أسبوع مجاني لكل إحالة",
+            label: "ادعُ ائدا",
+            value: "أسبع جا  إحاة",
             color: "#818cf8",
         },
         {
             id: "language" as SettingsSection,
             icon: Globe,
-            label: "اللغة",
-            value: LANGUAGE_OPTIONS.find(o => o.code === getLanguage())?.label ?? "العربية",
+            label: "اغة",
+            value: LANGUAGE_OPTIONS.find(o => o.code === getLanguage())?.label ?? "اعربة",
             color: "#34d399",
         },
         {
             id: "culture" as SettingsSection,
             icon: Brain,
-            label: "المكيّف الثقافي",
-            value: getCulturalContext() === "arabic_family" ? "عائلي عربي" : "دولي",
+            label: "اف اثاف",
+            value: getCulturalContext() === "arabic_family" ? "عائ عرب" : "د",
             color: "#fb7185",
         },
         {
             id: "b2b" as SettingsSection,
             icon: Briefcase,
-            label: "بوابة المحترفين",
-            value: "للكوتشات والمعالجين",
+            label: "بابة احترف",
+            value: "تشات اعاج",
             color: "#60a5fa",
         },
     ];
@@ -100,7 +100,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -8 }}
                         >
-                            ← رجوع
+                             رجع
                         </motion.button>
                     ) : (
                         <motion.h1
@@ -110,13 +110,13 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                         >
-                            الإعدادات
+                            اإعدادات
                         </motion.h1>
                     )}
                 </AnimatePresence>
                 {onClose && (
                     <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors text-sm">
-                        إغلاق
+                        إغا
                     </button>
                 )}
             </div>
@@ -141,14 +141,14 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-white font-bold">
-                                            {memory.preferredName ? `يا ${memory.preferredName}` : "يا قائد"}
+                                            {memory.preferredName ? `ا ${memory.preferredName}` : "ا ائد"}
                                         </p>
                                         <p className="text-xs text-slate-400 mt-0.5">
-                                            {memory.totalSessions} جلسة • {streak.currentStreak} يوم streak
+                                            {memory.totalSessions} جسة  {streak.currentStreak}  streak
                                         </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xs text-slate-500">الباقة الحالية</p>
+                                        <p className="text-xs text-slate-500">اباة احاة</p>
                                         <p className="text-sm font-bold" style={{ color: tier === "basic" ? "#64748b" : "#d97706" }}>
                                             {TIER_LABELS[tier]}
                                         </p>
@@ -191,8 +191,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
 
                             {/* App info */}
                             <div className="mt-6 text-center">
-                                <p className="text-xs text-slate-600">دواير v2.0 — عملية اليونيكورن 🦄</p>
-                                <p className="text-xs text-slate-700 mt-0.5">مبني بـ ❤️ للعالم العربي</p>
+                                <p className="text-xs text-slate-600">دار v2.0  عة ار </p>
+                                <p className="text-xs text-slate-700 mt-0.5">ب ب ❤️ عا اعرب</p>
                             </div>
                         </motion.div>
                     )}
@@ -206,8 +206,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                             exit={{ opacity: 0, x: -20 }}
                             className="mt-4"
                         >
-                            <h2 className="text-base font-bold text-white mb-1">اختر اللغة</h2>
-                            <p className="text-xs text-slate-500 mb-4">سيتم إعادة تحميل التطبيق لتطبيق التغيير</p>
+                            <h2 className="text-base font-bold text-white mb-1">اختر اغة</h2>
+                            <p className="text-xs text-slate-500 mb-4">ست إعادة تح اتطب تطب اتغر</p>
                             <LanguageSwitcher onLanguageChange={() => { }} />
                         </motion.div>
                     )}
@@ -247,7 +247,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                             exit={{ opacity: 0, x: -20 }}
                             className="mt-4"
                         >
-                            <h2 className="text-base font-bold text-white mb-4">باقتك الحالية</h2>
+                            <h2 className="text-base font-bold text-white mb-4">بات احاة</h2>
 
                             {/* Current tier */}
                             <div className="rounded-2xl p-4 mb-4"
@@ -257,10 +257,10 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                 }}>
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs text-slate-400">الباقة الحالية</p>
+                                        <p className="text-xs text-slate-400">اباة احاة</p>
                                         <p className="text-lg font-black text-white mt-0.5">{TIER_LABELS[tier]}</p>
                                     </div>
-                                    <p className="text-2xl font-black text-[var(--color-primary)]">{TIER_PRICES[tier]}</p>
+                                    <p className="text-2xl font-black text-[var(--soft-teal)]">{TIER_PRICES[tier]}</p>
                                 </div>
                             </div>
 
@@ -273,7 +273,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                     whileTap={{ scale: 0.98 }}
                                 >
                                     <Zap className="w-4 h-4" />
-                                    ارقَ الآن
+                                    ار اآ
                                 </motion.button>
                             )}
 
@@ -281,8 +281,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                 <div className="space-y-4">
                                     <div className="text-center py-4">
                                         <Star className="w-8 h-8 text-amber-400 mx-auto mb-2" />
-                                        <p className="text-sm text-slate-300">أنت مشترك نشط 🎖️</p>
-                                        <p className="text-xs text-slate-500 mt-1">شكراً لدعمك للمنصة</p>
+                                        <p className="text-sm text-slate-300">أت شتر شط ️</p>
+                                        <p className="text-xs text-slate-500 mt-1">شرا دع صة</p>
                                     </div>
 
                                     <button
@@ -300,7 +300,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                         className="w-full py-3 rounded-xl border border-slate-700 text-slate-300 text-sm font-bold flex items-center justify-center gap-2 hover:bg-white/5 transition-colors"
                                     >
                                         <ExternalLink className="w-4 h-4" />
-                                        إدارة الاشتراك (الفواتير)
+                                        إدارة ااشترا (افاتر)
                                     </button>
                                 </div>
                             )}
@@ -316,8 +316,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                             exit={{ opacity: 0, x: -20 }}
                             className="mt-4"
                         >
-                            <h2 className="text-base font-bold text-white mb-1">السياق الثقافي لجارفيس</h2>
-                            <p className="text-xs text-slate-500 mb-4">يؤثر هذا الخيار على نبرة المصطلحات واختيارات الذكاء الاصطناعي لتناسب بيئتك.</p>
+                            <h2 className="text-base font-bold text-white mb-1">اسا اثاف جارفس</h2>
+                            <p className="text-xs text-slate-500 mb-4">ؤثر ذا اخار ع برة اصطحات اختارات اذاء ااصطاع تاسب بئت.</p>
 
                             <div className="space-y-2">
                                 {(Object.keys(PROFILES) as CulturalContext[]).map((ctx) => (
@@ -335,9 +335,9 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                     >
                                         <div className="flex-1 text-right">
                                             <p className="text-sm font-bold text-white">
-                                                {ctx === "arabic_family" ? "العائلة العربية" :
-                                                    ctx === "gulf" ? "السياق الخليجي" :
-                                                        ctx === "western" ? "Western (Individualistic)" : "عالمي / Universal"}
+                                                {ctx === "arabic_family" ? "اعائة اعربة" :
+                                                    ctx === "gulf" ? "اسا اخج" :
+                                                        ctx === "western" ? "Western (Individualistic)" : "عا / Universal"}
                                             </p>
                                             <p className="text-xs text-slate-500 mt-0.5">{PROFILES[ctx].suggestedTone}</p>
                                         </div>
@@ -365,4 +365,5 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
         </div>
     );
 };
+
 

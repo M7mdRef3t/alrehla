@@ -1,0 +1,365 @@
+{
+  "version": "1.0.0",
+  "source": "design/tokens.json",
+  "collections": [
+    {
+      "name": "Color",
+      "mode": "Dark",
+      "variables": [
+        {
+          "name": "color/space/950",
+          "value": "#0f1629",
+          "type": "color"
+        },
+        {
+          "name": "color/space/void",
+          "value": "#0a0e1f",
+          "type": "color"
+        },
+        {
+          "name": "color/space/deep",
+          "value": "#131a35",
+          "type": "color"
+        },
+        {
+          "name": "color/space/mid",
+          "value": "#1a2242",
+          "type": "color"
+        },
+        {
+          "name": "color/space/nebula",
+          "value": "#212b4f",
+          "type": "color"
+        },
+        {
+          "name": "color/space/aurora",
+          "value": "#2a3560",
+          "type": "color"
+        },
+        {
+          "name": "color/brand/teal-400",
+          "value": "#2dd4bf",
+          "type": "color"
+        },
+        {
+          "name": "color/brand/teal-500",
+          "value": "#14b8a6",
+          "type": "color"
+        },
+        {
+          "name": "color/brand/teal-600",
+          "value": "#0d9488",
+          "type": "color"
+        },
+        {
+          "name": "color/brand/amber-500",
+          "value": "#f5a623",
+          "type": "color"
+        },
+        {
+          "name": "color/brand/amber-600",
+          "value": "#d97706",
+          "type": "color"
+        },
+        {
+          "name": "color/brand/amber-soft",
+          "value": "rgba(245,166,35,0.12)",
+          "type": "color"
+        },
+        {
+          "name": "color/brand/amber-glow",
+          "value": "rgba(245,166,35,0.25)",
+          "type": "color"
+        },
+        {
+          "name": "color/brand/emerald-500",
+          "value": "#10b981",
+          "type": "color"
+        },
+        {
+          "name": "color/brand/emerald-600",
+          "value": "#059669",
+          "type": "color"
+        },
+        {
+          "name": "color/brand/rose-400",
+          "value": "#f87171",
+          "type": "color"
+        },
+        {
+          "name": "color/brand/violet-400",
+          "value": "#a78bfa",
+          "type": "color"
+        },
+        {
+          "name": "color/brand/sky-400",
+          "value": "#38bdf8",
+          "type": "color"
+        },
+        {
+          "name": "color/text/primary",
+          "value": "#f1f5f9",
+          "type": "color"
+        },
+        {
+          "name": "color/text/secondary",
+          "value": "#94a3b8",
+          "type": "color"
+        },
+        {
+          "name": "color/text/muted",
+          "value": "rgba(148,163,184,0.5)",
+          "type": "color"
+        },
+        {
+          "name": "color/border/default",
+          "value": "rgba(255,255,255,0.07)",
+          "type": "color"
+        },
+        {
+          "name": "color/border/hover",
+          "value": "rgba(255,255,255,0.14)",
+          "type": "color"
+        },
+        {
+          "name": "color/glass/default",
+          "value": "rgba(15,23,42,0.6)",
+          "type": "color"
+        },
+        {
+          "name": "color/glass/hover",
+          "value": "rgba(15,23,42,0.8)",
+          "type": "color"
+        }
+      ]
+    },
+    {
+      "name": "Spacing",
+      "mode": "Base",
+      "variables": [
+        {
+          "name": "spacing/1",
+          "value": 8,
+          "type": "number"
+        },
+        {
+          "name": "spacing/2",
+          "value": 16,
+          "type": "number"
+        },
+        {
+          "name": "spacing/3",
+          "value": 24,
+          "type": "number"
+        },
+        {
+          "name": "spacing/4",
+          "value": 32,
+          "type": "number"
+        },
+        {
+          "name": "spacing/5",
+          "value": 40,
+          "type": "number"
+        },
+        {
+          "name": "spacing/6",
+          "value": 48,
+          "type": "number"
+        },
+        {
+          "name": "spacing/8",
+          "value": 64,
+          "type": "number"
+        },
+        {
+          "name": "spacing/10",
+          "value": 80,
+          "type": "number"
+        },
+        {
+          "name": "spacing/12",
+          "value": 96,
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "Radius",
+      "mode": "Base",
+      "variables": [
+        {
+          "name": "radius/sm",
+          "value": 8,
+          "type": "number"
+        },
+        {
+          "name": "radius/base",
+          "value": 12,
+          "type": "number"
+        },
+        {
+          "name": "radius/lg",
+          "value": 20,
+          "type": "number"
+        },
+        {
+          "name": "radius/xl",
+          "value": 28,
+          "type": "number"
+        },
+        {
+          "name": "radius/full",
+          "value": 9999,
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "Typography",
+      "mode": "Base",
+      "variables": [
+        {
+          "name": "font/family/display",
+          "value": "Almarai, system-ui, sans-serif",
+          "type": "string"
+        },
+        {
+          "name": "font/family/sans",
+          "value": "Almarai, IBM Plex Sans Arabic, system-ui, sans-serif",
+          "type": "string"
+        },
+        {
+          "name": "font/size/display",
+          "value": "clamp(2.5rem,5vw,4rem)",
+          "type": "string"
+        },
+        {
+          "name": "font/weight/display",
+          "value": "800",
+          "type": "string"
+        },
+        {
+          "name": "line-height/display",
+          "value": "1.1",
+          "type": "string"
+        },
+        {
+          "name": "font/size/h1",
+          "value": "2.25rem",
+          "type": "string"
+        },
+        {
+          "name": "font/weight/h1",
+          "value": "800",
+          "type": "string"
+        },
+        {
+          "name": "line-height/h1",
+          "value": "1.2",
+          "type": "string"
+        },
+        {
+          "name": "font/size/h2",
+          "value": "1.75rem",
+          "type": "string"
+        },
+        {
+          "name": "font/weight/h2",
+          "value": "800",
+          "type": "string"
+        },
+        {
+          "name": "line-height/h2",
+          "value": "1.25",
+          "type": "string"
+        },
+        {
+          "name": "font/size/h3",
+          "value": "1.375rem",
+          "type": "string"
+        },
+        {
+          "name": "font/weight/h3",
+          "value": "700",
+          "type": "string"
+        },
+        {
+          "name": "line-height/h3",
+          "value": "1.3",
+          "type": "string"
+        },
+        {
+          "name": "font/size/h4",
+          "value": "1.125rem",
+          "type": "string"
+        },
+        {
+          "name": "font/weight/h4",
+          "value": "700",
+          "type": "string"
+        },
+        {
+          "name": "line-height/h4",
+          "value": "1.4",
+          "type": "string"
+        },
+        {
+          "name": "font/size/body-lg",
+          "value": "1rem",
+          "type": "string"
+        },
+        {
+          "name": "font/weight/body-lg",
+          "value": "400",
+          "type": "string"
+        },
+        {
+          "name": "line-height/body-lg",
+          "value": "1.75",
+          "type": "string"
+        },
+        {
+          "name": "font/size/body",
+          "value": "0.875rem",
+          "type": "string"
+        },
+        {
+          "name": "font/weight/body",
+          "value": "400",
+          "type": "string"
+        },
+        {
+          "name": "line-height/body",
+          "value": "1.6",
+          "type": "string"
+        },
+        {
+          "name": "font/size/caption",
+          "value": "0.75rem",
+          "type": "string"
+        },
+        {
+          "name": "font/weight/caption",
+          "value": "500",
+          "type": "string"
+        },
+        {
+          "name": "line-height/caption",
+          "value": "1.5",
+          "type": "string"
+        },
+        {
+          "name": "font/size/label",
+          "value": "0.65rem",
+          "type": "string"
+        },
+        {
+          "name": "font/weight/label",
+          "value": "700",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}

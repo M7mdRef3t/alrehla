@@ -25,10 +25,10 @@ export const CoachAlertCenter: React.FC<CoachAlertCenterProps> = ({ alerts, onRe
         <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden max-h-[500px] flex flex-col w-96">
             <header className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                 <div className="flex items-center gap-2">
-                    <Bell className="w-5 h-5 text-[var(--color-primary)]" />
-                    <h3 className="font-black text-slate-900">رادار التنبيهات الآلي</h3>
+                    <Bell className="w-5 h-5 text-[var(--soft-teal)]" />
+                    <h3 className="font-black text-slate-900">رادار اتبات اآ</h3>
                 </div>
-                <span className="bg-rose-100 text-rose-700 text-[10px] font-black px-2 py-0.5 rounded-full">{alerts.length} تنبيه جديد</span>
+                <span className="bg-rose-100 text-rose-700 text-[10px] font-black px-2 py-0.5 rounded-full">{alerts.length} تب جدد</span>
             </header>
 
             <div className="flex-1 overflow-y-auto p-2 space-y-2">
@@ -36,7 +36,7 @@ export const CoachAlertCenter: React.FC<CoachAlertCenterProps> = ({ alerts, onRe
                     {alerts.length === 0 ? (
                         <div className="py-20 text-center text-slate-400">
                             <ShieldAlert className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                            <p className="text-sm font-bold">لا يوجد أزمات حالية 🟢</p>
+                            <p className="text-sm font-bold">ا جد أزات حاة </p>
                         </div>
                     ) : (
                         alerts.map((alert) => (
@@ -57,7 +57,7 @@ export const CoachAlertCenter: React.FC<CoachAlertCenterProps> = ({ alerts, onRe
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex justify-between items-start mb-1">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">تنبيه نظام</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">تب ظا</span>
                                         <span className="text-[10px] font-bold text-slate-400">{new Date(alert.created_at).toLocaleTimeString("ar-EG")}</span>
                                     </div>
                                     <p className="text-xs font-bold text-slate-800 leading-relaxed mb-3">
@@ -65,9 +65,9 @@ export const CoachAlertCenter: React.FC<CoachAlertCenterProps> = ({ alerts, onRe
                                     </p>
                                     <button
                                         onClick={() => handleMarkAsRead(alert.id)}
-                                        className="text-[10px] font-black text-[var(--color-primary)] hover:text-[var(--color-primary)] flex items-center gap-1 transition"
+                                        className="text-[10px] font-black text-[var(--soft-teal)] hover:text-[var(--soft-teal)] flex items-center gap-1 transition"
                                     >
-                                        <Trash2 className="w-3 h-3" /> تم التعامل مع الحالة
+                                        <Trash2 className="w-3 h-3" /> ت اتعا ع احاة
                                     </button>
                                 </div>
                             </motion.div>
@@ -78,4 +78,5 @@ export const CoachAlertCenter: React.FC<CoachAlertCenterProps> = ({ alerts, onRe
         </div>
     );
 };
+
 

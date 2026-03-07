@@ -711,6 +711,28 @@ export interface UtmBreakdownEntry {
   count: number;
 }
 
+export interface MarketingLeadTrendPoint {
+  date: string;
+  count: number;
+}
+
+export interface MarketingLeadsStats {
+  total: number;
+  last24h: number;
+  bySource: UtmBreakdownEntry[];
+  byCampaign: UtmBreakdownEntry[];
+  dailyTrend: MarketingLeadTrendPoint[];
+  conversion: {
+    leads: number;
+    startClicks: number;
+    pulseCompleted: number;
+    journeyMaps: number;
+    startClickRatePct: number | null;
+    pulseCompletedRatePct: number | null;
+    mapCreatedRatePct: number | null;
+  };
+}
+
 export interface OverviewStats {
   totalUsers: number | null;
   activeNow: number | null;
@@ -818,6 +840,7 @@ export interface OverviewStats {
     mediums: UtmBreakdownEntry[];
     campaigns: UtmBreakdownEntry[];
   } | null;
+  marketingLeads?: MarketingLeadsStats | null;
 }
 
 export interface AdminFeedbackEntry {
@@ -1296,9 +1319,14 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     const d = new Date(now.getTime() - (6 - i) * 24 * 60 * 60 * 1000);
     return isoDate(d);
   });
+  const last14Dates: string[] = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date(now.getTime() - (13 - i) * 24 * 60 * 60 * 1000);
+    return isoDate(d);
+  });
   const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
 
   const [
     { count: usersCount },
@@ -1308,7 +1336,10 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     { count: addedPeopleCount },
     { count: journeyMapsTotal },
     { count: pathStarted24h },
-    { data: installedSessionsRows }
+    { data: installedSessionsRows },
+    { count: marketingLeadsTotalCount },
+    { count: marketingLeadsLast24hCount },
+    { data: marketingLeadsRows }
   ] =
     await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -1329,13 +1360,43 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
         .eq("type", "flow_event")
         .contains("payload", { step: "install_clicked" })
         .not("session_id", "is", null)
-        .limit(5000)
+        .limit(5000),
+      supabase.from("marketing_leads").select("email", { count: "exact", head: true }),
+      supabase.from("marketing_leads").select("email", { count: "exact", head: true }).gte("created_at", twentyFourHoursAgo),
+      supabase
+        .from("marketing_leads")
+        .select("source,utm,created_at")
+        .gte("created_at", fourteenDaysAgo)
+        .order("created_at", { ascending: true })
+        .limit(10000)
     ]);
   const installedUsers = new Set(
     ((installedSessionsRows ?? []) as Array<{ session_id?: unknown }>)
       .map((row) => String(row.session_id ?? "").trim())
       .filter(Boolean)
   ).size;
+  const marketingBySource = new Map<string, number>();
+  const marketingByCampaign = new Map<string, number>();
+  const marketingByDate = new Map<string, number>();
+  for (const day of last14Dates) marketingByDate.set(day, 0);
+  for (const row of (marketingLeadsRows ?? []) as Array<Record<string, unknown>>) {
+    const source = String(row.source ?? "").trim() || "landing";
+    marketingBySource.set(source, (marketingBySource.get(source) ?? 0) + 1);
+    const utm = (row.utm as Record<string, unknown> | null) ?? null;
+    const campaign = String(utm?.utm_campaign ?? "").trim();
+    if (campaign) {
+      marketingByCampaign.set(campaign, (marketingByCampaign.get(campaign) ?? 0) + 1);
+    }
+    const day = String(row.created_at ?? "").slice(0, 10);
+    if (marketingByDate.has(day)) {
+      marketingByDate.set(day, (marketingByDate.get(day) ?? 0) + 1);
+    }
+  }
+  const toTopEntries = (map: Map<string, number>): UtmBreakdownEntry[] =>
+    Array.from(map.entries())
+      .map(([key, count]) => ({ key, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
 
   if (!events) {
     return {
@@ -1399,6 +1460,22 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
         journeyMapsTotal: journeyMapsTotal ?? 0,
         addPersonOpened: 0,
         addPersonDoneShowOnMap: 0
+      },
+      marketingLeads: {
+        total: marketingLeadsTotalCount ?? 0,
+        last24h: marketingLeadsLast24hCount ?? 0,
+        bySource: toTopEntries(marketingBySource),
+        byCampaign: toTopEntries(marketingByCampaign),
+        dailyTrend: last14Dates.map((date) => ({ date, count: marketingByDate.get(date) ?? 0 })),
+        conversion: {
+          leads: marketingLeadsTotalCount ?? 0,
+          startClicks: 0,
+          pulseCompleted: 0,
+          journeyMaps: journeyMapsTotal ?? 0,
+          startClickRatePct: null,
+          pulseCompletedRatePct: null,
+          mapCreatedRatePct: null
+        }
       }
     };
   }
@@ -1721,6 +1798,29 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     });
   });
   retentionCohorts.sort((a, b) => b.cohortDate.localeCompare(a.cohortDate));
+  const marketingLeadsTotal = marketingLeadsTotalCount ?? 0;
+  const startClicks = flowCounts["landing_clicked_start"] ?? 0;
+  const pulseCompleted = flowCounts["pulse_completed"] ?? 0;
+  const mapCreatedRatePct =
+    marketingLeadsTotal > 0 ? Math.round((((journeyMapsTotal ?? 0) / marketingLeadsTotal) * 100) * 100) / 100 : null;
+  const marketingLeads: MarketingLeadsStats = {
+    total: marketingLeadsTotal,
+    last24h: marketingLeadsLast24hCount ?? 0,
+    bySource: toTopEntries(marketingBySource),
+    byCampaign: toTopEntries(marketingByCampaign),
+    dailyTrend: last14Dates.map((date) => ({ date, count: marketingByDate.get(date) ?? 0 })),
+    conversion: {
+      leads: marketingLeadsTotal,
+      startClicks,
+      pulseCompleted,
+      journeyMaps: journeyMapsTotal ?? 0,
+      startClickRatePct:
+        marketingLeadsTotal > 0 ? Math.round(((startClicks / marketingLeadsTotal) * 100) * 100) / 100 : null,
+      pulseCompletedRatePct:
+        marketingLeadsTotal > 0 ? Math.round(((pulseCompleted / marketingLeadsTotal) * 100) * 100) / 100 : null,
+      mapCreatedRatePct
+    }
+  };
 
   return {
     totalUsers: usersCount ?? null,
@@ -1759,7 +1859,8 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     },
     avgDwellByStep: Object.keys(avgDwellByStep).length > 0 ? avgDwellByStep : null,
     retentionCohorts: retentionCohorts.length > 0 ? retentionCohorts.slice(0, 14) : null,
-    utmBreakdown
+    utmBreakdown,
+    marketingLeads
   };
 }
 

@@ -1,0 +1,27 @@
+meta {
+  name: Update Person Orbit
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/orbits/:personId
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{supabaseAnonKey}}
+}
+
+body:json {
+  {
+    "newOrbit": "caution",
+    "reason": "بدأ بالضغط علي بخصوص العمل"
+  }
+}
+
+vars:pre-request {
+  personId: 123-abc-456
+}

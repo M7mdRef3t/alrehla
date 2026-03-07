@@ -5,9 +5,9 @@ import { Clock } from "lucide-react";
 import { useMapState } from "../state/mapState";
 
 function stateLabel(value: "Burnout" | "Stagnation" | "Thriving"): string {
-    if (value === "Burnout") return "إنهاك";
-    if (value === "Stagnation") return "ركود";
-    return "ازدهار";
+    if (value === "Burnout") return "إا";
+    if (value === "Stagnation") return "رد";
+    return "ازدار";
 }
 
 export const OutcomeSimulator: FC = () => {
@@ -43,18 +43,18 @@ export const OutcomeSimulator: FC = () => {
             projectedState: stateLabel(hypothetical.predictedState),
             projectedScore: hypothetical.healthScore,
             delta: hypothetical.healthScore - prediction.healthScore,
-            removedLabel: topThreat.node.label || "العلاقة الأكثر استنزافًا"
+            removedLabel: topThreat.node.label || "اعاة اأثر استزافا"
         });
     };
 
     return (
         <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 max-w-lg mx-auto overflow-hidden relative">
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-[var(--color-primary)]/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-[var(--soft-teal)]/20 rounded-full blur-3xl pointer-events-none" />
 
             <div className="flex items-center gap-2 mb-6">
-                <Clock className="w-5 h-5 text-[var(--color-primary)]" />
+                <Clock className="w-5 h-5 text-[var(--soft-teal)]" />
                 <h3 className="text-lg font-bold text-white tracking-wide">
-                    محاكي المستقبل <span className="text-xs opacity-50 font-mono ml-2 border border-white/20 px-1.5 py-0.5 rounded">تجريبي</span>
+                    حا استب <span className="text-xs opacity-50 font-mono ml-2 border border-white/20 px-1.5 py-0.5 rounded">تجرب</span>
                 </h3>
             </div>
 
@@ -80,11 +80,11 @@ export const OutcomeSimulator: FC = () => {
                     }`}>
                     {stateLabel(prediction.predictedState)}
                 </h4>
-                <p className="text-sm text-slate-400 font-mono mb-4">الحالة المتوقعة • {prediction.timeline}</p>
+                <p className="text-sm text-slate-400 font-mono mb-4">احاة اتعة  {prediction.timeline}</p>
 
                 <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-right">
                     <p className="text-sm text-slate-200 leading-relaxed">
-                        <span className="text-[var(--color-primary)] font-bold ml-2">توقع التحليل:</span>
+                        <span className="text-[var(--soft-teal)] font-bold ml-2">تع اتح:</span>
                         {prediction.description}
                     </p>
                 </div>
@@ -96,7 +96,7 @@ export const OutcomeSimulator: FC = () => {
                     onClick={runComparison}
                     className="text-xs text-slate-500 hover:text-white transition-colors underline decoration-slate-700"
                 >
-                    تشغيل تحليل المقارنة
+                    تشغ تح اارة
                 </button>
             </div>
 
@@ -106,20 +106,21 @@ export const OutcomeSimulator: FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-4 rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-right"
                 >
-                    <p className="text-xs text-emerald-300 mb-2">سيناريو بعد تقليل تأثير: {comparison.removedLabel}</p>
+                    <p className="text-xs text-emerald-300 mb-2">سار بعد ت تأثر: {comparison.removedLabel}</p>
                     <p className="text-sm text-slate-100">
-                        الحالة المتوقعة: <span className="font-bold text-emerald-300">{comparison.projectedState}</span>
+                        احاة اتعة: <span className="font-bold text-emerald-300">{comparison.projectedState}</span>
                     </p>
                     <p className="text-sm text-slate-100">
-                        الدرجة المتوقعة: <span className="font-bold text-emerald-300">{comparison.projectedScore}%</span>
+                        ادرجة اتعة: <span className="font-bold text-emerald-300">{comparison.projectedScore}%</span>
                     </p>
                     <p className="text-sm text-slate-200">
-                        فرق التحسن: <span className="font-bold text-emerald-300">{comparison.delta > 0 ? `+${comparison.delta}` : comparison.delta}%</span>
+                        فر اتحس: <span className="font-bold text-emerald-300">{comparison.delta > 0 ? `+${comparison.delta}` : comparison.delta}%</span>
                     </p>
                 </motion.div>
             )}
         </div>
     );
 };
+
 
 

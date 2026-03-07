@@ -300,6 +300,11 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
   const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
   const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const last14Dates: string[] = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date(now.getTime() - (13 - i) * 24 * 60 * 60 * 1000);
+    return d.toISOString().slice(0, 10);
+  });
 
   const DAY_NAMES = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 
@@ -319,7 +324,10 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
     { data: topSwarmEdgesRaw },
     { data: routingCacheRows },
     { data: routingOutcomeEvents },
-    { data: routingInterventionEvents }
+    { data: routingInterventionEvents },
+    { count: marketingLeadsTotalCount },
+    { count: marketingLeadsLast24hCount },
+    { data: marketingLeadsRows }
   ] = await Promise.all([
     client.from("profiles").select("id", { count: "exact", head: true }),
     client.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", fiveMinAgo),
@@ -373,13 +381,43 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
       .select("payload,created_at")
       .eq("event_type", "intervention_triggered")
       .gte("created_at", thirtyDaysAgo)
-      .limit(5000)
+      .limit(5000),
+    client.from("marketing_leads").select("email", { count: "exact", head: true }),
+    client.from("marketing_leads").select("email", { count: "exact", head: true }).gte("created_at", twentyFourHoursAgo),
+    client
+      .from("marketing_leads")
+      .select("source,utm,created_at")
+      .gte("created_at", fourteenDaysAgo)
+      .order("created_at", { ascending: true })
+      .limit(10000)
   ]);
   const installedUsers = new Set(
     ((installedSessionsRows ?? []) as Array<{ session_id?: unknown }>)
       .map((row) => String(row.session_id ?? "").trim())
       .filter(Boolean)
   ).size;
+  const marketingBySource = new Map<string, number>();
+  const marketingByCampaign = new Map<string, number>();
+  const marketingByDate = new Map<string, number>();
+  for (const day of last14Dates) marketingByDate.set(day, 0);
+  for (const row of (marketingLeadsRows ?? []) as Array<Record<string, unknown>>) {
+    const source = String(row.source ?? "").trim() || "landing";
+    marketingBySource.set(source, (marketingBySource.get(source) ?? 0) + 1);
+    const utm = (row.utm as Record<string, unknown> | null) ?? null;
+    const campaign = String(utm?.utm_campaign ?? "").trim();
+    if (campaign) {
+      marketingByCampaign.set(campaign, (marketingByCampaign.get(campaign) ?? 0) + 1);
+    }
+    const day = String(row.created_at ?? "").slice(0, 10);
+    if (marketingByDate.has(day)) {
+      marketingByDate.set(day, (marketingByDate.get(day) ?? 0) + 1);
+    }
+  }
+  const toTopEntries = (map: Map<string, number>) =>
+    Array.from(map.entries())
+      .map(([key, count]) => ({ key, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
 
   const energyByDay = new Map<number, { total: number; count: number }>();
   for (const row of (pulseLogs ?? []) as Array<{ energy?: number; created_at?: string }>) {
@@ -673,6 +711,22 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
         addPersonOpened: 0,
         addPersonDoneShowOnMap: 0
       },
+      marketingLeads: {
+        total: marketingLeadsTotalCount ?? 0,
+        last24h: marketingLeadsLast24hCount ?? 0,
+        bySource: toTopEntries(marketingBySource),
+        byCampaign: toTopEntries(marketingByCampaign),
+        dailyTrend: last14Dates.map((date) => ({ date, count: marketingByDate.get(date) ?? 0 })),
+        conversion: {
+          leads: marketingLeadsTotalCount ?? 0,
+          startClicks: 0,
+          pulseCompleted: 0,
+          journeyMaps: journeyMapsTotal ?? 0,
+          startClickRatePct: null,
+          pulseCompletedRatePct: null,
+          mapCreatedRatePct: null
+        }
+      },
       routingV2: {
         decisions: decisionsV2.length,
         outcomes: outcomesV2.length,
@@ -839,6 +893,28 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
   const addPersonDoneShowOnMap = flowCounts["add_person_done_show_on_map"] ?? 0;
   const addPersonCompletionRate =
     addPersonOpened > 0 ? Math.round(((addPersonOpened - addPersonDropped) / addPersonOpened) * 100) : null;
+  const marketingLeadsTotal = marketingLeadsTotalCount ?? 0;
+  const startClicks = flowCounts["landing_clicked_start"] ?? 0;
+  const pulseCompleted = flowCounts["pulse_completed"] ?? 0;
+  const marketingLeads = {
+    total: marketingLeadsTotal,
+    last24h: marketingLeadsLast24hCount ?? 0,
+    bySource: toTopEntries(marketingBySource),
+    byCampaign: toTopEntries(marketingByCampaign),
+    dailyTrend: last14Dates.map((date) => ({ date, count: marketingByDate.get(date) ?? 0 })),
+    conversion: {
+      leads: marketingLeadsTotal,
+      startClicks,
+      pulseCompleted,
+      journeyMaps: journeyMapsTotal ?? 0,
+      startClickRatePct:
+        marketingLeadsTotal > 0 ? Math.round(((startClicks / marketingLeadsTotal) * 100) * 100) / 100 : null,
+      pulseCompletedRatePct:
+        marketingLeadsTotal > 0 ? Math.round(((pulseCompleted / marketingLeadsTotal) * 100) * 100) / 100 : null,
+      mapCreatedRatePct:
+        marketingLeadsTotal > 0 ? Math.round((((journeyMapsTotal ?? 0) / marketingLeadsTotal) * 100) * 100) / 100 : null
+    }
+  };
 
   const flowStats = {
     byStep: flowCounts,
@@ -872,6 +948,7 @@ async function handleOverview(client: SupabaseClient, res: JsonResponder) {
       addPersonOpened,
       addPersonDoneShowOnMap
     },
+    marketingLeads,
     routingV2: {
       decisions: decisionsV2.length,
       outcomes: outcomesV2.length,

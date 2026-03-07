@@ -1,6 +1,7 @@
 import { getAdminSupabase, verifyAdminWithRoles, parseJsonBody, recordAdminAudit } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
-export async function handleRoles(req: any, res: any) {
+export async function handleRoles(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdminWithRoles(req, res, ["owner", "superadmin"]))) return;
   const client = getAdminSupabase();
   if (!client) {
@@ -28,3 +29,6 @@ export async function handleRoles(req: any, res: any) {
 
   res.status(405).json({ error: "Method not allowed" });
 }
+
+
+

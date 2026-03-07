@@ -1,56 +1,49 @@
-@import "tailwindcss";
-
-/* ════════════════════════════════════════════════
-   🌌 الرحلة — THERAPEUTIC SPACESHIP DASHBOARD
-   ════════════════════════════════════════════════
+﻿
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸŒŒ Ø§Ù„Ø±Ø­Ù„Ø© â€” THERAPEUTIC SPACESHIP DASHBOARD
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
    Visual Design Philosophy:
-   - Deep Cosmic Blue (not black) للخلفية
-   - Warm Amber للأزرار الحيوية والحياة
-   - Emerald Green لرسائل الطمأنينة
+   - Deep Cosmic Blue (not black) Ù„Ù„Ø®Ù„ÙÙŠØ©
+   - Warm Amber Ù„Ù„Ø£Ø²Ø±Ø§Ø± Ø§Ù„Ø­ÙŠÙˆÙŠØ© ÙˆØ§Ù„Ø­ÙŠØ§Ø©
+   - Emerald Green Ù„Ø±Ø³Ø§Ø¦Ù„ Ø§Ù„Ø·Ù…Ø£Ù†ÙŠÙ†Ø©
    - Bento Grid Layout (no traditional lists)
-   - Glassmorphism Cards مع شفافية عالية
-   - مساحات تنفس واسعة (Breathing Space)
-   - تسلسل بصري واضح (Big, Bold, Bright)
+   - Glassmorphism Cards Ù…Ø¹ Ø´ÙØ§ÙÙŠØ© Ø¹Ø§Ù„ÙŠØ©
+   - Ù…Ø³Ø§Ø­Ø§Øª ØªÙ†ÙØ³ ÙˆØ§Ø³Ø¹Ø© (Breathing Space)
+   - ØªØ³Ù„Ø³Ù„ Ø¨ØµØ±ÙŠ ÙˆØ§Ø¶Ø­ (Big, Bold, Bright)
 
-   ════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 @layer base {
   :root {
-    /* ── Golden Ratio System (φ) ── */
+    /* â”€â”€ Golden Ratio System (Ï†) â”€â”€ */
     --phi: 1.618;
     --phi-inv: 0.618;
     --phi-content-max: min(98.7rem, 94vw);
-    /* 610 * φ */
+    /* 610 * Ï† */
     --phi-content-focus: min(61rem, 92vw);
     --phi-space-base: 1rem;
 
-    /* ── 🌌 Deep Cosmic Blue — Therapeutic Background ── */
+    /* â”€â”€ ðŸŒŒ Deep Cosmic Blue â€” Therapeutic Background â”€â”€ */
     --space-void: #0a0e1f;
-    /* أعمق من الأسود */
     --space-950: #0f1629;
-    /* slate-950 محسّن */
     --space-deep: #131a35;
-    /* أزرق كوني عميق */
     --space-mid: #1a2242;
-    /* أزرق متوسط */
     --space-nebula: #212b4f;
-    /* سديم */
     --space-aurora: #2a3560;
-    /* شفق */
 
-    /* ── 🔥 Warm Amber — Soul Color ── */
+    /* â”€â”€ ðŸ”¥ Warm Amber â€” Soul Color â”€â”€ */
     --warm-amber: #f5a623;
     --warm-amber-soft: rgba(245, 166, 35, 0.12);
     --warm-amber-glow: rgba(245, 166, 35, 0.25);
     --warm-amber-bright: rgba(245, 166, 35, 0.95);
 
-    /* ── 🌿 Emerald Green — Reassurance ── */
+    /* â”€â”€ ðŸŒ¿ Emerald Green â€” Reassurance â”€â”€ */
     --soft-emerald: #10b981;
     --soft-emerald-dim: rgba(16, 185, 129, 0.12);
     --soft-emerald-glow: rgba(16, 185, 129, 0.25);
 
-    /* ── 🌊 Soft Teal — Brand Primary ── */
+    /* â”€â”€ ðŸŒŠ Soft Teal â€” Brand Primary â”€â”€ */
     --soft-teal: #2dd4bf;
     --soft-teal-dim: rgba(45, 212, 191, 0.12);
     --soft-teal-glow: rgba(45, 212, 191, 0.25);
@@ -58,78 +51,67 @@
     --color-primary-soft: rgba(51, 65, 85, 0.92);
     --color-primary-glow: rgba(51, 65, 85, 0.28);
 
-    /* ── 🔮 Glassmorphism — زجاج شفاف ثقيل ── */
-    --glass-bg: rgba(12, 17, 40, 0.78);
-    /* أغمق وأوضح */
-    --glass-bg-hover: rgba(15, 22, 50, 0.88);
-    /* عند التحويم */
-    --glass-border: rgba(255, 255, 255, 0.1);
-    /* حدود مرئية */
-    --glass-border-hover: rgba(255, 255, 255, 0.18);
+    /* â”€â”€ ðŸ”® Glassmorphism â€” Ø²Ø¬Ø§Ø¬ Ø´ÙØ§Ù Ø«Ù‚ÙŠÙ„ â”€â”€ */
+    --glass-bg: rgba(15, 23, 42, 0.6);
+    --glass-bg-hover: rgba(15, 23, 42, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.07);
+    --glass-border-hover: rgba(255, 255, 255, 0.14);
     --glass-blur: 20px;
     --glass-blur-xl: 32px;
 
-    /* ── 🎨 COLOR GOVERNANCE — Behavioral Layers ── */
-    --layer-operational: #10b981;      /* Emerald: Action, Flow, Map */
-    --layer-analytical: #fbbf24;       /* Amber: Observation, Patterns, Drift */
-    --layer-narrative: #8b5cf6;        /* Violet: Story, Shadow, Legacy */
-    --layer-muted: rgba(148, 163, 184, 0.5); /* Muted: Secondary, Background Info */
+    /* â”€â”€ ðŸŽ¨ COLOR GOVERNANCE â€” Behavioral Layers â”€â”€ */
+    --layer-operational: #10b981;
+    --layer-analytical: #f5a623;
+    --layer-narrative: #8b5cf6;
+    --layer-muted: rgba(148, 163, 184, 0.5);
 
-    /* ── Ring Colors (Orbit Zones) ── */
-    --ring-safe: var(--layer-operational);
-    --ring-safe-glow: rgba(16, 185, 129, 0.2);
-    --ring-caution: var(--layer-analytical);
-    --ring-caution-glow: rgba(251, 191, 36, 0.2);
+    /* â”€â”€ Ring Colors (Orbit Zones) â”€â”€ */
+    --ring-safe: #2dd4bf;
+    --ring-safe-glow: rgba(45, 212, 191, 0.6);
+    --ring-caution: #f5a623;
+    --ring-caution-glow: rgba(245, 166, 35, 0.6);
     --ring-danger: #f87171;
-    --ring-danger-glow: rgba(248, 113, 113, 0.2);
-    --ring-detached: var(--layer-muted);
+    --ring-danger-glow: rgba(248, 113, 113, 0.5);
+    --ring-detached: #94a3b8;
 
-    /* ── ✍️ Typography — تسلسل بصري واضح ── */
-    --text-primary: #ffffff;
-    /* أبيض نقي للعناوين */
-    --text-secondary: rgba(203, 213, 225, 0.95);
-    /* slate-300 واضح */
-    --text-muted: rgba(148, 163, 184, 0.7);
-    /* slate-400 مقروء */
+    /* â”€â”€ âœï¸ Typography â€” ØªØ³Ù„Ø³Ù„ Ø¨ØµØ±ÙŠ ÙˆØ§Ø¶Ø­ â”€â”€ */
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: rgba(148, 163, 184, 0.5);
     --text-accent: var(--soft-teal);
+    --font-display: "Almarai", system-ui, sans-serif;
+    --font-sans: "Almarai", "IBM Plex Sans Arabic", system-ui, sans-serif;
 
-    /* ── Spacing & Rhythm ── */
+    /* â”€â”€ Spacing & Rhythm â”€â”€ */
     --tracking-tight: -0.02em;
     --tracking-normal: 0;
     --tracking-wide: 0.01em;
     --tracking-wider: 0.02em;
 
-    /* ══ Organic Unity — نظام Radius موحّد ══
-       القاعدة: كل العناصر تتبع نفس منحنى الدائرة
-       --radius-pill  = عناصر مستديرة (أزرار، بادجات)
-       --radius-card  = الكروت والبلوكات الأساسية
-       --radius-modal = النوافذ والأوفرلاي الكبيرة
-       --radius-sm    = عناصر صغيرة (inputs، tags)   */
+    /* â•â• Organic Unity â€” Ù†Ø¸Ø§Ù… Radius Ù…ÙˆØ­Ù‘Ø¯ â•â• */
     --radius-pill: 9999px;
     --radius-card: 1.25rem;
-    /* 20px — الكتلة الأساسية */
-    --radius-modal: 1.5rem;
-    /* 24px — النوافذ الكبيرة */
-    --radius-sm: 0.75rem;
-    /* 12px — عناصر صغيرة   */
+    --radius-modal: 1.75rem;
+    --radius-sm: 0.5rem;
+    --radius-base: 0.75rem;
 
-    /* ══ Motion Timing — إيقاع الحركة ══ */
-    --ease-spring: var(--ui-transition-timing);
-    --ease-smooth: var(--ui-transition-timing);
-    --duration-fast: calc(180ms * var(--ui-friction-multiplier));
-    --duration-base: calc(300ms * var(--ui-friction-multiplier));
-    --duration-slow: calc(500ms * var(--ui-friction-multiplier));
+    /* â•â• Motion Timing â€” Ø¥ÙŠÙ‚Ø§Ø¹ Ø§Ù„Ø­Ø±ÙƒØ© â•â• */
+    --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+    --duration-fast: 150ms;
+    --duration-base: 250ms;
+    --duration-slow: 400ms;
 
-    /* ══ Breathing Space — مساحة التنفس ══ */
-    --space-xs: calc(var(--phi-space-base) * var(--phi-inv) * var(--phi-inv));
-    --space-sm: calc(var(--phi-space-base) * var(--phi-inv));
-    --space-md: var(--phi-space-base);
-    --space-lg: calc(var(--phi-space-base) * var(--phi));
-    /* ── Autonomous Intervention — UI Friction ── */
+    /* â•â• Breathing Space â€” Ù…Ø³Ø§Ø­Ø© Ø§Ù„ØªÙ†ÙØ³ â•â• */
+    --space-xs: 8px;
+    --space-sm: 16px;
+    --space-md: 24px;
+    --space-lg: 32px;
+    --space-xl: 48px;
+
+    /* â”€â”€ Autonomous Intervention â€” UI Friction â”€â”€ */
     --ui-friction-multiplier: 1.0;
     --ui-transition-timing: ease;
-
-    --space-xl: calc(var(--phi-space-base) * var(--phi) * var(--phi));
   }
 
   html {
@@ -138,7 +120,7 @@
   }
 
   body {
-    font-family: "Almarai", system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
     background: linear-gradient(165deg,
         var(--space-void) 0%,
         var(--space-950) 30%,
@@ -153,7 +135,7 @@
     min-height: 100vh;
   }
 
-  /* ── 📐 Typography — خط واحد + تدرج واضح ── */
+  /* â”€â”€ ðŸ“ Typography â€” Ø®Ø· ÙˆØ§Ø­Ø¯ + ØªØ¯Ø±Ø¬ ÙˆØ§Ø¶Ø­ â”€â”€ */
   h1,
   h2,
   h3,
@@ -161,7 +143,7 @@
   h5,
   h6,
   .heading-font {
-    font-family: "Almarai", system-ui, sans-serif;
+    font-family: var(--font-display);
     letter-spacing: var(--tracking-tight);
     line-height: 1.3;
     color: var(--text-primary);
@@ -187,7 +169,7 @@
     font-weight: 600;
   }
 
-  /* ── Custom Scrollbar — شريط تمرير أنيق ── */
+  /* â”€â”€ Custom Scrollbar â€” Ø´Ø±ÙŠØ· ØªÙ…Ø±ÙŠØ± Ø£Ù†ÙŠÙ‚ â”€â”€ */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -206,7 +188,7 @@
     background: rgba(255, 255, 255, 0.2);
   }
 
-  /* ── Hide scrollbar for specific containers ── */
+  /* â”€â”€ Hide scrollbar for specific containers â”€â”€ */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -217,9 +199,9 @@
   }
 }
 
-/* ════════════════════════════════════════════════
-   🌌 NEBULA BACKGROUND — Animated Cosmic Canvas
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸŒŒ NEBULA BACKGROUND â€” Animated Cosmic Canvas
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .nebula-bg {
   position: fixed;
@@ -291,11 +273,11 @@
   }
 }
 
-/* ════════════════════════════════════════════════
-   🔮 GLASSMORPHISM COMPONENTS — شفافية زجاجية قوية
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸ”® GLASSMORPHISM COMPONENTS â€” Ø´ÙØ§ÙÙŠØ© Ø²Ø¬Ø§Ø¬ÙŠØ© Ù‚ÙˆÙŠØ©
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* ── الكتلة الأساسية — Glass ── */
+/* â”€â”€ Ø§Ù„ÙƒØªÙ„Ø© Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ© â€” Glass â”€â”€ */
 .glass {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
@@ -305,7 +287,7 @@
   transition: all var(--duration-base) var(--ease-spring);
 }
 
-/* ── نافذة ثقيلة — Glass Heavy ── */
+/* â”€â”€ Ù†Ø§ÙØ°Ø© Ø«Ù‚ÙŠÙ„Ø© â€” Glass Heavy â”€â”€ */
 .glass-heavy {
   background: rgba(10, 14, 35, 0.85);
   backdrop-filter: blur(var(--glass-blur-xl));
@@ -314,7 +296,7 @@
   border-radius: var(--radius-modal);
 }
 
-/* ── 🧱 Bento Card — الكتلة المعلوماتية الأساسية ── */
+/* â”€â”€ ðŸ§± Bento Card â€” Ø§Ù„ÙƒØªÙ„Ø© Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§ØªÙŠØ© Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ© â”€â”€ */
 .glass-card {
   background: rgba(12, 17, 40, 0.8);
   backdrop-filter: blur(24px);
@@ -331,7 +313,7 @@
   transform: translateY(-2px);
 }
 
-/* ── 🔘 Glass Button — زر شفاف ── */
+/* â”€â”€ ðŸ”˜ Glass Button â€” Ø²Ø± Ø´ÙØ§Ù â”€â”€ */
 .glass-button {
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
@@ -356,7 +338,7 @@
   color: var(--soft-teal);
 }
 
-/* ── 🌿 CTA Success — Emerald Green للطمأنينة ── */
+/* â”€â”€ ðŸŒ¿ CTA Success â€” Emerald Green Ù„Ù„Ø·Ù…Ø£Ù†ÙŠÙ†Ø© â”€â”€ */
 .cta-success {
   background: linear-gradient(135deg, var(--soft-emerald) 0%, #059669 100%);
   color: rgba(255, 255, 255, 0.98);
@@ -374,26 +356,26 @@
   transform: translateY(-2px);
 }
 
-/* ════════════════════════════════════════════════
-   🧱 BENTO GRID LAYOUT — كتل معلوماتية ذكية
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸ§± BENTO GRID LAYOUT â€” ÙƒØªÙ„ Ù…Ø¹Ù„ÙˆÙ…Ø§ØªÙŠØ© Ø°ÙƒÙŠØ©
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .bento-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
-  /* gap-6 — مساحة تنفس */
+  /* gap-6 â€” Ù…Ø³Ø§Ø­Ø© ØªÙ†ÙØ³ */
   width: 100%;
 }
 
 @media (min-width: 640px) {
   .bento-grid {
     gap: 2rem;
-    /* gap-8 على الشاشات الكبيرة */
+    /* gap-8 Ø¹Ù„Ù‰ Ø§Ù„Ø´Ø§Ø´Ø§Øª Ø§Ù„ÙƒØ¨ÙŠØ±Ø© */
   }
 }
 
-/* ── Bento Block — الكتلة الأساسية ── */
+/* â”€â”€ Bento Block â€” Ø§Ù„ÙƒØªÙ„Ø© Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ© â”€â”€ */
 .bento-block {
   background: rgba(12, 17, 40, 0.8);
   backdrop-filter: blur(24px);
@@ -410,7 +392,7 @@
   transform: translateY(-2px);
 }
 
-/* ── Bento Block sizes — أحجام مختلفة ── */
+/* â”€â”€ Bento Block sizes â€” Ø£Ø­Ø¬Ø§Ù… Ù…Ø®ØªÙ„ÙØ© â”€â”€ */
 .bento-sm {
   grid-column: span 1;
   min-height: 140px;
@@ -444,9 +426,9 @@
   }
 }
 
-/* ════════════════════════════════════════════════
-   🌀 BREATHING RINGS — Orbital System
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸŒ€ BREATHING RINGS â€” Orbital System
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .orbital-ring {
   fill: none;
@@ -528,9 +510,9 @@
   }
 }
 
-/* ════════════════════════════════════════════════
-   ✨ ME CENTER — Cosmic Orb
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   âœ¨ ME CENTER â€” Cosmic Orb
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .me-orb-pulse {
   animation: meOrbPulse 3s ease-in-out infinite;
@@ -550,19 +532,19 @@
   }
 }
 
-/* ════════════════════════════════════════════════
-   📐 LAYOUT SYSTEM — APP SHELL & CARDS
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸ“ LAYOUT SYSTEM â€” APP SHELL & CARDS
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 @layer components {
 
-  /* حاوية أساسية لكل الشاشات — 8pt grid + max-width */
+  /* Ø­Ø§ÙˆÙŠØ© Ø£Ø³Ø§Ø³ÙŠØ© Ù„ÙƒÙ„ Ø§Ù„Ø´Ø§Ø´Ø§Øª â€” 8pt grid + max-width */
   .app-shell-main {
     @apply w-full mx-auto px-4 md:px-8 py-6 md:py-8;
     max-width: var(--phi-content-max);
   }
 
-  /* لوحة رئيسية في المنتصف — للمحتوى الأساسي (Landing / Map / Mission..) */
+  /* Ù„ÙˆØ­Ø© Ø±Ø¦ÙŠØ³ÙŠØ© ÙÙŠ Ø§Ù„Ù…Ù†ØªØµÙ â€” Ù„Ù„Ù…Ø­ØªÙˆÙ‰ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ (Landing / Map / Mission..) */
   .app-panel-main {
     @apply w-full mx-auto rounded-3xl bg-slate-900/90 border border-slate-800 px-4 sm:px-8 py-6 sm:py-8;
     max-width: var(--phi-content-focus);
@@ -581,13 +563,13 @@
     row-gap: clamp(var(--space-sm), 1.6vw, var(--space-lg));
   }
 
-  /* كارت موحّد صغير — يستخدم للكروت العامة */
+  /* ÙƒØ§Ø±Øª Ù…ÙˆØ­Ù‘Ø¯ ØµØºÙŠØ± â€” ÙŠØ³ØªØ®Ø¯Ù… Ù„Ù„ÙƒØ±ÙˆØª Ø§Ù„Ø¹Ø§Ù…Ø© */
   .card-unified {
     @apply bg-white/5 border border-white/10 backdrop-blur-md;
     border-radius: var(--radius-card);
   }
 
-  /* سطح موحّد للمودالات الكبيرة / النوافذ العائمة (Chat, Overlays) */
+  /* Ø³Ø·Ø­ Ù…ÙˆØ­Ù‘Ø¯ Ù„Ù„Ù…ÙˆØ¯Ø§Ù„Ø§Øª Ø§Ù„ÙƒØ¨ÙŠØ±Ø© / Ø§Ù„Ù†ÙˆØ§ÙØ° Ø§Ù„Ø¹Ø§Ø¦Ù…Ø© (Chat, Overlays) */
   .modal-surface {
     @apply bg-white/5 border border-white/10 backdrop-blur-md;
     border-radius: var(--radius-modal);
@@ -636,9 +618,9 @@
   }
 }
 
-/* ════════════════════════════════════════════════
-   🪐 NODE (Person) — Glass Orbs
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸª NODE (Person) â€” Glass Orbs
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .node-glass {
   background: rgba(15, 20, 50, 0.7);
@@ -666,9 +648,9 @@
   border-color: rgba(248, 113, 113, 0.4);
 }
 
-/* ════════════════════════════════════════════════
-   🫧 STATUS CARDS — Mood-Responsive Glass
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸ«§ STATUS CARDS â€” Mood-Responsive Glass
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .status-card-low {
   background: rgba(100, 116, 139, 0.12);
@@ -690,9 +672,9 @@
   border: 1px solid rgba(139, 92, 246, 0.2);
 }
 
-/* ════════════════════════════════════════════════
-   🎯 CTA BUTTONS — Cosmic Gradients
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸŽ¯ CTA BUTTONS â€” Cosmic Gradients
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .cta-primary {
   background: linear-gradient(135deg, var(--soft-teal), #0d9488);
@@ -728,9 +710,9 @@
   color: var(--text-primary);
 }
 
-/* ════════════════════════════════════════════════
-   🏷️ LEGEND PILLS — Ring Identity
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸ·ï¸ LEGEND PILLS â€” Ring Identity
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .legend-pill {
   background: rgba(255, 255, 255, 0.05);
@@ -770,9 +752,9 @@
   background: rgba(248, 113, 113, 0.1);
 }
 
-/* ════════════════════════════════════════════════
-   🌀 MICRO-INTERACTIONS
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸŒ€ MICRO-INTERACTIONS
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @layer utilities {
   .tap-press {
     transition: transform 0.2s ease;
@@ -844,9 +826,9 @@
   }
 }
 
-/* ════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Pulse (Micro Compass) Range Styling
-   ════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .pulse-range {
   --pulse-fill: var(--soft-teal);
   -webkit-appearance: none;
@@ -935,17 +917,18 @@
   }
 }
 
-/* Needle range input — keyboard accessible, mouse drag handled by JS */
+/* Needle range input â€” keyboard accessible, mouse drag handled by JS */
 .needle-range-input {
   pointer-events: none;
 }
+
 .needle-range-input:focus {
   pointer-events: auto;
 }
 
-/* ════════════════════════════════════════════════
-   📱 No-scrollbar utility (for horizontal scrolls)
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸ“± No-scrollbar utility (for horizontal scrolls)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -955,9 +938,9 @@
   display: none;
 }
 
-/* ════════════════════════════════════════════════
-   🛸 قمرة القيادة — Admin Dashboard (وضع فاتح)
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸ›¸ Ù‚Ù…Ø±Ø© Ø§Ù„Ù‚ÙŠØ§Ø¯Ø© â€” Admin Dashboard (ÙˆØ¶Ø¹ ÙØ§ØªØ­)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .admin-cockpit {
   background: #e2e8f0;
   position: relative;
@@ -986,9 +969,9 @@
   border-right: 1px solid rgba(148, 163, 184, 0.2);
 }
 
-/* ════════════════════════════════════════════════
-   🧠 Flow Mind Map — Miro-style infinite canvas
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸ§  Flow Mind Map â€” Miro-style infinite canvas
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .flow-miro-root {
   position: relative;
   width: 100%;
@@ -999,12 +982,12 @@
   user-select: none;
 }
 
-/* ════════════════════════════════════════════════
-   🫀 ORGANIC UNITY — الوحدة العضوية
-   خيط خفي يربط كل عناصر المنصة
-   ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸ«€ ORGANIC UNITY â€” Ø§Ù„ÙˆØ­Ø¯Ø© Ø§Ù„Ø¹Ø¶ÙˆÙŠØ©
+   Ø®ÙŠØ· Ø®ÙÙŠ ÙŠØ±Ø¨Ø· ÙƒÙ„ Ø¹Ù†Ø§ØµØ± Ø§Ù„Ù…Ù†ØµØ©
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* ── الاستجابة الفورية — يطمن المستخدم إنه "مسموع" ── */
+/* â”€â”€ Ø§Ù„Ø§Ø³ØªØ¬Ø§Ø¨Ø© Ø§Ù„ÙÙˆØ±ÙŠØ© â€” ÙŠØ·Ù…Ù† Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø¥Ù†Ù‡ "Ù…Ø³Ù…ÙˆØ¹" â”€â”€ */
 .organic-tap {
   transition:
     transform var(--duration-fast) var(--ease-spring),
@@ -1016,8 +999,8 @@
   opacity: 0.85;
 }
 
-/* ── نبضة الحياة — للعناصر التي تحمل بيانات حية ── */
-/* يستخدم --organic-pulse-color للسماح لكل ويدجت بلونه الخاص */
+/* â”€â”€ Ù†Ø¨Ø¶Ø© Ø§Ù„Ø­ÙŠØ§Ø© â€” Ù„Ù„Ø¹Ù†Ø§ØµØ± Ø§Ù„ØªÙŠ ØªØ­Ù…Ù„ Ø¨ÙŠØ§Ù†Ø§Øª Ø­ÙŠØ© â”€â”€ */
+/* ÙŠØ³ØªØ®Ø¯Ù… --organic-pulse-color Ù„Ù„Ø³Ù…Ø§Ø­ Ù„ÙƒÙ„ ÙˆÙŠØ¯Ø¬Øª Ø¨Ù„ÙˆÙ†Ù‡ Ø§Ù„Ø®Ø§Øµ */
 @keyframes organicPulse {
 
   0%,
@@ -1036,7 +1019,7 @@
   animation: organicPulse 5s ease-in-out infinite;
 }
 
-/* ── التدفق التصاعدي — ظهور من الأسفل بشكل عضوي ── */
+/* â”€â”€ Ø§Ù„ØªØ¯ÙÙ‚ Ø§Ù„ØªØµØ§Ø¹Ø¯ÙŠ â€” Ø¸Ù‡ÙˆØ± Ù…Ù† Ø§Ù„Ø£Ø³ÙÙ„ Ø¨Ø´ÙƒÙ„ Ø¹Ø¶ÙˆÙŠ â”€â”€ */
 @keyframes flowUp {
   from {
     opacity: 0;
@@ -1055,7 +1038,7 @@
   animation: flowUp var(--duration-slow) var(--ease-spring) both;
 }
 
-/* ── الكتلة الأم — 60% بصري — تمييز واضح ── */
+/* â”€â”€ Ø§Ù„ÙƒØªÙ„Ø© Ø§Ù„Ø£Ù… â€” 60% Ø¨ØµØ±ÙŠ â€” ØªÙ…ÙŠÙŠØ² ÙˆØ§Ø¶Ø­ â”€â”€ */
 .primary-block {
   position: relative;
 }
@@ -1073,7 +1056,7 @@
   z-index: -1;
 }
 
-/* ── الكتلة الداعمة — 30% بصري — أخف حضوراً ── */
+/* â”€â”€ Ø§Ù„ÙƒØªÙ„Ø© Ø§Ù„Ø¯Ø§Ø¹Ù…Ø© â€” 30% Ø¨ØµØ±ÙŠ â€” Ø£Ø®Ù Ø­Ø¶ÙˆØ±Ø§Ù‹ â”€â”€ */
 .support-block {
   opacity: 0.85;
   transition: opacity var(--duration-base) var(--ease-smooth);
@@ -1083,13 +1066,13 @@
   opacity: 1;
 }
 
-/* ── مساحة التنفس — 10% ── */
+/* â”€â”€ Ù…Ø³Ø§Ø­Ø© Ø§Ù„ØªÙ†ÙØ³ â€” 10% â”€â”€ */
 .breath-space {
   padding-top: var(--space-lg);
   padding-bottom: var(--space-lg);
 }
 
-/* ── توحيد Input داخل المنصة ── */
+/* â”€â”€ ØªÙˆØ­ÙŠØ¯ Input Ø¯Ø§Ø®Ù„ Ø§Ù„Ù…Ù†ØµØ© â”€â”€ */
 .organic-input {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1110,9 +1093,9 @@
   color: rgba(148, 163, 184, 0.4);
 }
 
-/* ════════════════════════════════════════════════
-     📟 TACTICAL ANIMATIONS — Command Center FX
-     ════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     ðŸ“Ÿ TACTICAL ANIMATIONS â€” Command Center FX
+     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @keyframes scan {
   from {
     transform: translateY(-100%);

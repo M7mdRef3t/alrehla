@@ -39,7 +39,7 @@ export function useDailyPulse() {
 
                     // Simple streak calc
                     let s = 0;
-                    let current = new Date();
+                    const current = new Date();
                     for (let i = 0; i < data.length; i++) {
                         const pulseDate = new Date(data[i].day);
                         const diff = Math.floor((current.getTime() - pulseDate.getTime()) / (1000 * 3600 * 24));

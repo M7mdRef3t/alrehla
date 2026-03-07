@@ -1,173 +1,70 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
 
-export const dynamic = "force-dynamic";
-
-const DEFAULT_MODEL_ORDER = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
-
-function resolveGeminiApiKey(): string | null {
-  const raw =
-    process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_API_KEY ||
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
-    "";
-  const trimmed = String(raw).trim().replace(/^"|"$/g, "");
-  if (!trimmed) return null;
-  // Drop hidden/non-ASCII symbols that can break HTTP header encoding.
-  const asciiOnly = [...trimmed].filter((char) => char.codePointAt(0)! <= 127).join("");
-  if (!/^AIza[0-9A-Za-z_-]{20,}$/.test(asciiOnly)) return null;
-  return asciiOnly;
+function toErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error || 'unknown_error');
 }
 
-function getGeminiClient(): GoogleGenerativeAI | null {
-  const apiKey = resolveGeminiApiKey();
-  if (!apiKey) return null;
-  return new GoogleGenerativeAI(apiKey);
-}
+export async function POST(req: Request) {
+    // SECURITY: Only allow this route in development mode
+    if (process.env.NODE_ENV !== 'development') {
+        return NextResponse.json({ error: 'This route is strictly for local calibration.' }, { status: 403 });
+    }
 
-function modelCandidatesFromBody(body: any): string[] {
-  const requested = Array.isArray(body?.modelOrder)
-    ? body.modelOrder.filter((model: unknown) => typeof model === "string" && model.trim())
-    : [];
-  const seeded = typeof body?.model === "string" && body.model.trim() ? [body.model.trim(), ...requested] : requested;
-  return Array.from(new Set([...seeded, ...DEFAULT_MODEL_ORDER]));
-}
+    const supabaseAdmin = getSupabaseAdminClient();
+    if (!supabaseAdmin) {
+        return NextResponse.json({ error: 'Supabase admin is not configured.' }, { status: 503 });
+    }
 
-async function runGenerateWithFallback(
-  genAI: GoogleGenerativeAI,
-  prompt: string,
-  generationConfig: any,
-  models: string[]
-) {
-  let lastError: unknown = null;
-  for (const modelName of models) {
     try {
-      const model = genAI.getGenerativeModel({
-        model: modelName,
-        generationConfig
-      });
-      const result = await model.generateContent(prompt);
-      return result.response;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError ?? new Error("No model candidates available");
-}
+        const { userId } = await req.json();
 
-function latestUserText(contents: unknown): string {
-  if (!Array.isArray(contents)) return "";
-  for (let i = contents.length - 1; i >= 0; i -= 1) {
-    const entry = contents[i] as { role?: string; parts?: Array<{ text?: unknown }> };
-    if (entry?.role !== "user" || !Array.isArray(entry.parts)) continue;
-    const text = entry.parts
-      .map((part) => (typeof part?.text === "string" ? part.text : ""))
-      .filter(Boolean)
-      .join("\n");
-    if (text) return text;
-  }
-  return "";
-}
-
-export async function POST(req: NextRequest, ctx: { params: { action: string } }) {
-  const action = String(ctx.params.action || "");
-  const body = await req.json().catch(() => ({}));
-
-  const genAI = getGeminiClient();
-  if (!genAI) {
-    return NextResponse.json({ error: "Gemini API key is missing or invalid" }, { status: 503 });
-  }
-
-  try {
-    if (action === "generate") {
-      const prompt = typeof body?.prompt === "string" ? body.prompt : "";
-      if (!prompt.trim()) {
-        return NextResponse.json({ error: "Missing prompt" }, { status: 400 });
-      }
-      const response = await runGenerateWithFallback(
-        genAI,
-        prompt,
-        body?.generationConfig,
-        modelCandidatesFromBody(body)
-      );
-      return NextResponse.json({
-        text: response.text(),
-        usage: (response as any)?.usageMetadata ?? null
-      });
-    }
-
-    if (action === "stream") {
-      const prompt = typeof body?.prompt === "string" ? body.prompt : "";
-      if (!prompt.trim()) {
-        return NextResponse.json({ error: "Missing prompt" }, { status: 400 });
-      }
-      const response = await runGenerateWithFallback(
-        genAI,
-        prompt,
-        body?.generationConfig,
-        modelCandidatesFromBody(body)
-      );
-      const text = response.text();
-      return new NextResponse(text, {
-        status: 200,
-        headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }
-      });
-    }
-
-    if (action === "tool") {
-      const userText = latestUserText(body?.contents);
-      if (!userText.trim()) {
-        return NextResponse.json({ error: "Missing contents" }, { status: 400 });
-      }
-      const systemInstruction =
-        typeof body?.systemInstruction === "string" ? body.systemInstruction.trim() : "";
-      const prompt = systemInstruction ? `${systemInstruction}\n\n${userText}` : userText;
-      const response = await runGenerateWithFallback(
-        genAI,
-        prompt,
-        body?.generationConfig,
-        modelCandidatesFromBody(body)
-      );
-      const text = response.text();
-      return NextResponse.json({
-        functionCalls: [],
-        modelContent: { role: "model", parts: [{ text }] },
-        text,
-        usage: (response as any)?.usageMetadata ?? null
-      });
-    }
-
-    if (action === "embed") {
-      const text = typeof body?.text === "string" ? body.text : "";
-      if (!text.trim()) {
-        return NextResponse.json({ error: "Missing text" }, { status: 400 });
-      }
-      const requested = typeof body?.model === "string" && body.model.trim() ? body.model.trim() : null;
-      const embeddingModels = Array.from(new Set([requested, "gemini-embedding-001", "text-embedding-004"].filter(Boolean)));
-
-      let values: number[] | null = null;
-      for (const modelName of embeddingModels) {
-        try {
-          const model = genAI.getGenerativeModel({ model: modelName as string });
-          const embeddingResult = await (model as any).embedContent(text);
-          const candidate = embeddingResult?.embedding?.values;
-          if (Array.isArray(candidate) && candidate.length > 0) {
-            values = candidate;
-            break;
-          }
-        } catch {
-          // Try next embedding model candidate.
+        if (!userId) {
+            return NextResponse.json({ error: 'Missing userId for mock injection' }, { status: 400 });
         }
-      }
-      if (!values) {
-        return NextResponse.json({ error: "Embedding model unavailable" }, { status: 503 });
-      }
-      return NextResponse.json({ embedding: values });
-    }
-  } catch (error) {
-    console.error(`[Gemini API] ${action} failed`, error);
-    return NextResponse.json({ error: "Gemini request failed" }, { status: 502 });
-  }
 
-  return NextResponse.json({ error: "Unknown gemini action" }, { status: 404 });
+        // Generate 5 maps spread over the last 15 days to bypass the temporal gap filter
+        const mockMaps = [];
+        const baseDate = new Date();
+        baseDate.setDate(baseDate.getDate() - 15); // Start 15 days ago
+
+        for (let i = 0; i < 5; i++) {
+            const mapDate = new Date(baseDate);
+            mapDate.setDate(mapDate.getDate() + (i * 3)); // Space them by 3 days
+
+            // The Burnout Curve (Calibration Logic):
+            // "Work" (Danger) mass increases exponentially: 20 -> 40 -> 60 -> 80 -> 100
+            // "Self-Care" (Neutral) mass drops: 80 -> 60 -> 40 -> 20 -> 10
+
+            mockMaps.push({
+                user_id: userId,
+                title: `ØªØ³Ø¬ÙŠÙ„ Ù…Ø¹Ø§ÙŠØ±Ø© - ÙŠÙˆÙ… ${15 - (i * 3)}`,
+                created_at: mapDate.toISOString(),
+                insight_message: `Ù‡Ø°Ø§ ØªØ³Ø¬ÙŠÙ„ ÙˆÙ‡Ù…ÙŠ Ù„Ø§Ø®ØªØ¨Ø§Ø± Ù…Ø­Ø±Ùƒ Ø§Ù„ØªÙ†Ø¨Ø¤ Ù„Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ - Ø§Ù„Ù…Ø±Ø­Ù„Ø© ${i + 1}`,
+                shared_with_coach: true,
+                nodes: [
+                    { id: 'core', label: 'Ø£Ù†Ø§', color: 'core', size: 'medium', mass: 50 },
+                    { id: 'work', label: 'Ø§Ù„Ø¶ØºØ· Ø§Ù„ÙˆØ¸ÙŠÙÙŠ', color: 'danger', size: i >= 3 ? 'large' : 'medium', mass: 20 + (i * 20) },
+                    { id: 'care', label: 'Ø§Ù„Ø¹Ù†Ø§ÙŠØ© Ø¨Ø§Ù„Ø°Ø§Øª', color: 'neutral', size: i >= 3 ? 'small' : 'medium', mass: Math.max(10, 80 - (i * 15)) }
+                ],
+                edges: [
+                    { source: 'work', target: 'core', type: 'draining', animated: true },
+                    { source: 'care', target: 'core', type: 'stable', animated: false }
+                ]
+            });
+        }
+
+        const { error } = await supabaseAdmin.from('dawayir_maps').insert(mockMaps);
+
+        if (error) throw error;
+
+        return NextResponse.json({
+            success: true,
+            message: 'ØªÙ… Ø­Ù‚Ù† 5 Ø®Ø±Ø§Ø¦Ø· ØªØ§Ø±ÙŠØ®ÙŠØ© Ø¨Ù…Ø³Ø§Ø± "Ø§Ø­ØªØ±Ø§Ù‚ Ø·Ø§Ù‚ÙŠ" Ø¨Ù†Ø¬Ø§Ø­. Ø§Ù„Ù…Ø­Ø±Ùƒ Ø§Ù„ØªÙ†Ø¨Ø¤ÙŠ Ø¬Ø§Ù‡Ø² Ù„Ù„Ø§Ø®ØªØ¨Ø§Ø±.'
+        });
+
+    } catch (err: unknown) {
+        console.error('Mock injection error:', err);
+        return NextResponse.json({ error: toErrorMessage(err) }, { status: 500 });
+    }
 }

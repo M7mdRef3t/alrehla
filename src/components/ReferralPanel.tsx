@@ -9,10 +9,10 @@ import {
     getReferralRewardStatus,
 } from "../services/referralEngine";
 
-/* ══════════════════════════════════════════
-   REFERRAL PANEL — لوحة الإحالة
-   "ادعُ قائد → اكسب ميدالية + أسبوع بريميوم"
-   ══════════════════════════════════════════ */
+/* 
+   REFERRAL PANEL  حة اإحاة
+   "ادعُ ائد  اسب داة + أسبع بر"
+    */
 
 interface ReferralPanelProps {
     onClose?: () => void;
@@ -37,7 +37,7 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
         try {
             if (navigator.share) {
                 await navigator.share({
-                    title: "انضم لرحلتي في دواير",
+                    title: "اض رحت ف دار",
                     text: shareText,
                     url: link,
                 });
@@ -63,12 +63,12 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
             {/* Header */}
             <div className="p-5 pb-3">
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[var(--color-primary)]/20 flex items-center justify-center">
-                        <Gift className="w-5 h-5 text-[var(--color-primary)]" />
+                    <div className="w-10 h-10 rounded-2xl bg-[var(--soft-teal)]/20 flex items-center justify-center">
+                        <Gift className="w-5 h-5 text-[var(--soft-teal)]" />
                     </div>
                     <div>
-                        <h2 className="text-base font-bold text-white">ادعُ قائداً</h2>
-                        <p className="text-xs text-slate-400">أسبوع بريميوم مجاني لكل إحالة</p>
+                        <h2 className="text-base font-bold text-white">ادعُ ائدا</h2>
+                        <p className="text-xs text-slate-400">أسبع بر جا  إحاة</p>
                     </div>
                 </div>
 
@@ -76,20 +76,20 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
                 <div className="flex gap-3 mb-4">
                     <div className="flex-1 p-3 rounded-xl text-center"
                         style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}>
-                        <p className="text-2xl font-black text-[var(--color-primary)]">{status.count}</p>
-                        <p className="text-xs text-slate-500">إحالة ناجحة</p>
+                        <p className="text-2xl font-black text-[var(--soft-teal)]">{status.count}</p>
+                        <p className="text-xs text-slate-500">إحاة اجحة</p>
                     </div>
                     <div className="flex-1 p-3 rounded-xl text-center"
                         style={{ background: "rgba(217,119,6,0.1)", border: "1px solid rgba(217,119,6,0.2)" }}>
                         <p className="text-2xl font-black text-amber-400">{status.earnedWeeks}</p>
-                        <p className="text-xs text-slate-500">أسبوع مكتسب</p>
+                        <p className="text-xs text-slate-500">أسبع تسب</p>
                     </div>
                 </div>
 
                 {/* Referral code */}
                 <div className="p-4 rounded-2xl mb-3"
                     style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                    <p className="text-xs text-slate-500 mb-2">كودك الشخصي</p>
+                    <p className="text-xs text-slate-500 mb-2">د اشخص</p>
                     <div className="flex items-center justify-between">
                         <span className="text-2xl font-black text-white tracking-widest font-mono">{code}</span>
                         <motion.button
@@ -103,7 +103,7 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
                             whileTap={{ scale: 0.95 }}
                         >
                             {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                            {copied ? "تم!" : "نسخ"}
+                            {copied ? "ت!" : "سخ"}
                         </motion.button>
                     </div>
                 </div>
@@ -119,22 +119,22 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
                     whileTap={{ scale: 0.98 }}
                 >
                     <Share2 className="w-4 h-4" />
-                    شارك الدعوة
+                    شار ادعة
                 </motion.button>
             </div>
 
             {/* How it works */}
             <div className="px-5 pb-5">
-                <p className="text-xs text-slate-500 mb-2 font-bold">كيف يشتغل؟</p>
+                <p className="text-xs text-slate-500 mb-2 font-bold">ف شتغ</p>
                 <div className="space-y-2">
                     {[
-                        { step: "1", text: "شارك كودك مع صاحبك" },
-                        { step: "2", text: "يسجّل باستخدام كودك" },
-                        { step: "3", text: "تكسب أسبوع بريميوم مجاني" },
+                        { step: "1", text: "شار د ع صاحب" },
+                        { step: "2", text: "سج باستخدا د" },
+                        { step: "3", text: "تسب أسبع بر جا" },
                     ].map(({ step, text }) => (
                         <div key={step} className="flex items-center gap-2.5">
-                            <div className="w-5 h-5 rounded-full bg-[var(--color-primary)]/30 flex items-center justify-center shrink-0">
-                                <span className="text-[10px] font-bold text-[var(--color-primary)]">{step}</span>
+                            <div className="w-5 h-5 rounded-full bg-[var(--soft-teal)]/30 flex items-center justify-center shrink-0">
+                                <span className="text-[10px] font-bold text-[var(--soft-teal)]">{step}</span>
                             </div>
                             <span className="text-xs text-slate-400">{text}</span>
                         </div>
@@ -144,5 +144,6 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
         </motion.div>
     );
 };
+
 
 

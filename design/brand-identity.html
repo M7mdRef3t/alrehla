@@ -1,0 +1,1124 @@
+﻿
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>الرحلة — Brand Identity Book 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box }
+:root {
+    --void:#0a0e1f; --deep:#131a35; --mid:#1a2242; --nebula:#212b4f; --aurora:#2a3560;
+    --teal:#2dd4bf; --teal-d:#0d9488; --amber:#f5a623; --amber-d:#d97706;
+    --emerald:#10b981; --rose:#f87171; --violet:#a78bfa; --sky:#38bdf8;
+    --text:#f1f5f9; --muted:#94a3b8; --dim:rgba(148, 163, 184, .45);
+    --border:rgba(255, 255, 255, .07); --border2:rgba(255, 255, 255, .13);
+    --glass:rgba(15, 23, 42, .6);
+    --ease:cubic-bezier(.22, 1, .36, 1);
+    --font:'Almarai', 'IBM Plex Sans Arabic', system-ui;
+}
+html { scroll-behavior:smooth }
+body { background:var(--void); color:var(--text); font-family:var(--font); line-height:1.75; -webkit-font-smoothing:antialiased }
+
+/* NAV */
+.nav { position:fixed; top:0; right:0; width:240px; height:100vh; background:var(--deep); border-left:1px solid var(--border); overflow-y:auto; padding:20px; z-index:100 }
+.nav-logo { font-size:1.2rem; font-weight:800; background:linear-gradient(135deg, var(--teal), var(--amber)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:4px }
+.nav-sub { font-size:.65rem; color:var(--dim); letter-spacing:.1em; text-transform:uppercase; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border) }
+.nav h3 { font-size:.6rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); margin:16px 0 6px }
+.nav ul { list-style:none }
+.nav li a { display:block; padding:4px 10px; border-radius:6px; font-size:.75rem; color:var(--muted); text-decoration:none; transition:all .2s }
+.nav li a:hover { background:var(--border); color:var(--text) }
+
+/* MAIN */
+.main { margin-right:240px; max-width:960px }
+
+/* PAGE */
+.page { min-height:100vh; padding:80px 60px; border-bottom:1px solid var(--border); position:relative }
+.page-num { position:absolute; top:32px; left:60px; font-size:.65rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--dim) }
+.page-label { position:absolute; top:32px; right:60px; font-size:.65rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--dim) }
+
+/* COVER */
+.cover { display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; background:radial-gradient(ellipse at 70% 30%, rgba(45, 212, 191, .12) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(245, 166, 35, .08) 0%, transparent 50%), var(--void) }
+.cover-eyebrow { font-size:.7rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:var(--teal); margin-bottom:16px }
+.cover-title { font-size:clamp(3rem, 7vw, 5.5rem); font-weight:800; letter-spacing:-.04em; line-height:1; margin-bottom:8px; background:linear-gradient(135deg, var(--text) 40%, var(--teal)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text }
+.cover-sub { font-size:1.1rem; color:var(--muted); margin-bottom:40px; max-width:400px; line-height:1.6 }
+.cover-meta { font-size:.75rem; color:var(--dim); border-top:1px solid var(--border); padding-top:20px; display:flex; gap:40px; width:100% }
+.cover-circle { position:absolute; top:60px; left:60px; width:280px; height:280px; border-radius:50%; border:1px solid rgba(45, 212, 191, .15); display:flex; align-items:center; justify-content:center }
+.cover-circle::before { content:''; position:absolute; width:200px; height:200px; border-radius:50%; border:1px solid rgba(45, 212, 191, .1) }
+.cover-circle::after { content:''; position:absolute; width:120px; height:120px; border-radius:50%; border:1px solid rgba(45, 212, 191, .2) }
+.cover-dot { width:16px; height:16px; border-radius:50%; background:var(--teal); box-shadow:0 0 24px rgba(45, 212, 191, .6) }
+
+/* SECTION TITLES */
+.sec-title { font-size:2rem; font-weight:800; letter-spacing:-.03em; margin-bottom:8px }
+.sec-desc { color:var(--muted); margin-bottom:40px; max-width:560px; font-size:.9rem }
+.sec-eyebrow { font-size:.65rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:var(--teal); margin-bottom:12px }
+
+/* CARDS */
+.card { background:var(--glass); backdrop-filter:blur(20px); border:1px solid var(--border); border-radius:16px; padding:28px }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px }
+.gap-sm { gap:12px }
+
+/* ARCHETYPE */
+.arch-card { border-radius:16px; padding:28px; border:1px solid var(--border2); position:relative; overflow:hidden }
+.arch-icon { font-size:3rem; margin-bottom:12px }
+.arch-name { font-size:1.3rem; font-weight:800; margin-bottom:6px }
+.arch-desc { font-size:.83rem; color:var(--muted); line-height:1.65 }
+.arch-traits { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px }
+.trait { padding:3px 10px; border-radius:99px; font-size:.7rem; font-weight:700; border:1px solid }
+
+/* VOICE */
+.voice-row { display:grid; grid-template-columns:120px 1fr 1fr; gap:16px; padding:16px 0; border-bottom:1px solid var(--border); align-items:start }
+.voice-dim { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--dim) }
+.voice-col { font-size:.83rem; color:var(--muted); line-height:1.6 }
+.voice-col strong { display:block; color:var(--text); font-weight:700; margin-bottom:4px }
+
+/* MESSAGE ARCH */
+.msg-level { padding:20px; border-radius:12px; margin-bottom:12px; border:1px solid }
+.lvl-tag { font-size:.6rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin-bottom:6px }
+.lvl-text { font-size:1rem; font-weight:700; line-height:1.4 }
+.lvl-desc { font-size:.78rem; color:var(--muted); margin-top:6px }
+
+/* LOGO */
+.logo-svg-wrap { padding:40px; border-radius:16px; display:flex; align-items:center; justify-content:center; min-height:200px; border:1px solid var(--border) }
+.logo-dir-num { font-size:.65rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin-bottom:8px }
+.logo-dir-name { font-size:1rem; font-weight:800; margin-bottom:4px }
+.logo-dir-rationale { font-size:.78rem; color:var(--muted); line-height:1.55 }
+
+/* COLOR SWATCHES */
+.swatch-lg { height:120px; border-radius:12px 12px 0 0 }
+.swatch-info { padding:16px; background:var(--mid); border-radius:0 0 12px 12px; border:1px solid var(--border); border-top:none }
+.swatch-name { font-size:.85rem; font-weight:800; margin-bottom:4px }
+.swatch-vals { font-size:.68rem; font-family:monospace; color:var(--muted); line-height:1.7 }
+.swatch-role { font-size:.7rem; color:var(--dim); margin-top:6px; font-style:italic }
+
+.palette-row { display:flex; gap:4px; border-radius:12px; overflow:hidden; height:48px; margin-bottom:8px }
+.palette-chip { flex:1 }
+
+/* TYPOGRAPHY SPECIMEN */
+.type-specimen { padding:32px; border-radius:16px; background:var(--mid); border:1px solid var(--border); margin-bottom:16px }
+.spec-meta { font-size:.68rem; font-family:monospace; color:var(--dim); border-top:1px solid var(--border); padding-top:12px; margin-top:16px }
+
+/* IMAGE STYLE */
+.img-principle { padding:20px; border-radius:12px; border:1px solid var(--border) }
+.img-icon { font-size:2rem; margin-bottom:10px }
+.img-name { font-weight:800; margin-bottom:6px }
+.img-desc { font-size:.8rem; color:var(--muted); line-height:1.6 }
+
+/* MOCKUP */
+.mockup-phone { width:180px; height:360px; border-radius:28px; border:2px solid var(--border2); background:var(--deep); margin:0 auto; overflow:hidden; position:relative }
+.mockup-screen { padding:20px 14px; height:100% }
+.mockup-status { display:flex; justify-content:space-between; font-size:.55rem; color:var(--dim); margin-bottom:16px }
+
+/* APPLICATION CARDS */
+.app-card { border-radius:16px; overflow:hidden; border:1px solid var(--border) }
+.app-card-header { padding:20px; font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); background:var(--mid); border-bottom:1px solid var(--border) }
+.app-card-body { padding:24px }
+
+/* TABLE */
+.brand-table { width:100%; border-collapse:collapse; font-size:.8rem }
+.brand-table th { text-align:right; padding:10px 12px; font-size:.65rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); border-bottom:1px solid var(--border) }
+.brand-table td { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--muted) }
+.brand-table tr:last-child td { border:none }
+
+/* DIVIDER */
+.rule { height:1px; background:var(--border); margin:32px 0 }
+
+/* PILL */
+.pill { display:inline-flex; align-items:center; padding:3px 12px; border-radius:99px; font-size:.7rem; font-weight:700; border:1px solid }
+.pill-teal { color:var(--teal); border-color:rgba(45, 212, 191, .3); background:rgba(45, 212, 191, .08) }
+.pill-amber { color:var(--amber); border-color:rgba(245, 166, 35, .3); background:rgba(245, 166, 35, .08) }
+.pill-violet { color:var(--violet); border-color:rgba(167, 139, 250, .3); background:rgba(167, 139, 250, .08) }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width:5px }
+::-webkit-scrollbar-track { background:var(--deep) }
+::-webkit-scrollbar-thumb { background:var(--aurora); border-radius:3px }
+
+@media(max-width:900px) { .main { margin-right:0 }.nav{ position:static; width:100%; height:auto; border:none; border-bottom:1px solid var(--border) }.page { padding:48px 24px }.grid-2, .grid-3 { grid-template-columns:1fr }.cover-circle { display:none }.voice-row { grid-template-columns:1fr } }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+<div class="nav-logo">الرحلة</div>
+<div class="nav-sub">Brand Identity Book · 2026</div>
+<h3>الاستراتيجية</h3>
+<ul>
+<li><a href="#cover">الغلاف</a></li>
+<li><a href="#story">قصة العلامة</a></li>
+<li><a href="#archetype">النموذج الأصلي</a></li>
+<li><a href="#voice">مصفوفة الصوت</a></li>
+<li><a href="#messages">هيكل الرسائل</a></li>
+</ul>
+<h3>الهوية البصرية</h3>
+<ul>
+<li><a href="#logo">الشعار — 3 اتجاهات</a></li>
+<li><a href="#logo-usage">قواعد الشعار</a></li>
+<li><a href="#colors">نظام الألوان</a></li>
+<li><a href="#typography">الطباعة</a></li>
+<li><a href="#imagery">أسلوب الصور</a></li>
+</ul>
+<h3>التطبيقات</h3>
+<ul>
+<li><a href="#digital">رقمي</a></li>
+<li><a href="#print">مطبوع</a></li>
+<li><a href="#motion">حركة</a></li>
+<li><a href="#index">فهرس المحتوى</a></li>
+</ul>
+</nav>
+
+<main class="main">
+<!-- P1: COVER -->
+<section class="page cover" id="cover" style="min-height:100vh">
+<div class="cover-circle">
+<div class="cover-dot"></div>
+</div>
+<div class="page-num">01 / 20</div>
+<div style="position:relative;z-index:2">
+<div class="cover-eyebrow">Brand Identity Book</div>
+<div class="cover-title">الرحلة</div>
+<div class="cover-sub">هوية بصرية كاملة لمنصة هندسة الوعي والنمو الشخصي</div>
+<div class="cover-meta">
+<div><div style="font-weight:700;color:var(--text);margin-bottom:2px">الإصدار</div>v1.0.0 — 2026</div>
+<div><div style="font-weight:700;color:var(--text);margin-bottom:2px">المجال</div>Consciousness Architecture</div>
+<div><div style="font-weight:700;color:var(--text);margin-bottom:2px">المديرية الإبداعية</div>Pentagram-Standard</div>
+</div>
+</div>
+</section>
+
+<!-- P2: BRAND STORY -->
+<section class="page" id="story">
+<div class="page-num">02 / 20</div>
+<div class="page-label">Brand Strategy</div>
+<div class="sec-eyebrow">قصة العلامة — Brand Story</div>
+<div class="sec-title">من الكلام إلى المكان</div>
+<p class="sec-desc">كل إنسان يحمل داخله خريطة غير مرئية لعلاقاته — الرحلة تجعلها مرئية.</p>
+
+<div class="grid-2" style="margin-bottom:24px">
+<div class="card">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:12px">المشكلة — The Problem</div>
+<p style="font-size:.9rem;line-height:1.75;color:var(--muted)">الإنسان المعاصر يفهم نفسياً أكثر من أي وقت مضى — لكنه يطبّق أقل. تخمة المعلومات، ثقل التحليل، وإرهاق العلاقات يسرق منه الحضور ويشلّ قدرته على القرار.</p>
+</div>
+<div class="card">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:12px">الحل — The Solution</div>
+<p style="font-size:.9rem;line-height:1.75;color:var(--muted)">الرحلة لا تشرح ولا تشخّص — تُجسّد. تحوّل العلاقات من مفاهيم نظرية إلى نقاط على خريطة شخصية. "شوف نفسك" ليست استعارة، بل ميكانيزم.</p>
+</div>
+</div>
+
+<div class="card" style="background:linear-gradient(135deg,rgba(45,212,191,.06),rgba(245,166,35,.06));border-color:rgba(45,212,191,.2)">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:16px">الجوهر — Brand Essence</div>
+<div style="font-size:1.5rem;font-weight:800;letter-spacing:-.02em;line-height:1.3;margin-bottom:12px">"أنت المركز.<br>كل حد تضعه هو فعل وعي."</div>
+<p style="font-size:.85rem;color:var(--muted);max-width:500px;line-height:1.7">الرحلة ليست وجهة — هي طريقة رؤية. علامة تجارية تؤمن أن الوضوح البصري هو أقصر مسار بين الفهم والتغيير.</p>
+</div>
+
+<div class="rule"></div>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+<div>
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:8px">الرؤية — Vision</div>
+<p style="font-size:.82rem;color:var(--muted);line-height:1.65">عالم يستعيد فيه كل إنسان سيادته على مساحته الداخلية.</p>
+</div>
+<div>
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:8px">الرسالة — Mission</div>
+<p style="font-size:.82rem;color:var(--muted);line-height:1.65">تحويل الوعي النفسي من تحليل مُرهِق إلى أداة قرار فعّالة.</p>
+</div>
+<div>
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);margin-bottom:8px">القيم — Values</div>
+<p style="font-size:.82rem;color:var(--muted);line-height:1.65">الوضوح · الهدوء · السيادة الشخصية · اللا-حكم · الفعل</p>
+</div>
+</div>
+</section>
+
+<!-- P3: ARCHETYPE -->
+<section class="page" id="archetype">
+<div class="page-num">03 / 20</div>
+<div class="page-label">Brand Strategy</div>
+<div class="sec-eyebrow">النموذج الأصلي — Brand Archetype</div>
+<div class="sec-title">الحكيم + المصلح</div>
+<p class="sec-desc">الرحلة تجمع بين إنارة العقل (الحكيم) ودفع التغيير الفعلي (المصلح) — مزيج نادر في فضاء الصحة النفسية الرقمي.</p>
+
+<div class="grid-2" style="margin-bottom:24px">
+<div class="arch-card" style="background:linear-gradient(135deg,rgba(45,212,191,.08),rgba(45,212,191,.03))">
+<div class="arch-icon">🦉</div>
+<div class="arch-name">الحكيم — The Sage</div>
+<div class="arch-desc">يؤمن أن الفهم الحقيقي يحرر. لا يبسّط، لا يبالغ، لا يعد بالسحر. يمنح الأدوات ويثق بعقل المستخدم.</div>
+<div class="arch-traits">
+<span class="trait" style="color:var(--teal);border-color:rgba(45,212,191,.3);background:rgba(45,212,191,.08)">وضوح</span>
+<span class="trait" style="color:var(--teal);border-color:rgba(45,212,191,.3);background:rgba(45,212,191,.08)">أمانة</span>
+<span class="trait" style="color:var(--teal);border-color:rgba(45,212,191,.3);background:rgba(45,212,191,.08)">عمق</span>
+<span class="trait" style="color:var(--teal);border-color:rgba(45,212,191,.3);background:rgba(45,212,191,.08)">هدوء</span>
+</div>
+</div>
+<div class="arch-card" style="background:linear-gradient(135deg,rgba(245,166,35,.08),rgba(245,166,35,.03))">
+<div class="arch-icon">⚡</div>
+<div class="arch-name">المصلح — The Ruler</div>
+<div class="arch-desc">يحوّل الفهم إلى فعل. يعطي المستخدم أدوات عملية وبروتوكولات جاهزة. لا يتوقف عند التحليل — يدفع للقرار.</div>
+<div class="arch-traits">
+<span class="trait" style="color:var(--amber);border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.08)">فعل</span>
+<span class="trait" style="color:var(--amber);border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.08)">سيادة</span>
+<span class="trait" style="color:var(--amber);border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.08)">ثقة</span>
+<span class="trait" style="color:var(--amber);border-color:rgba(245,166,35,.3);background:rgba(245,166,35,.08)">حزم</span>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:20px">مقارنة تشخيصية — Archetype Matrix</div>
+<table class="brand-table">
+<thead><tr><th>البُعد</th><th>الحكيم (60 % )</th><th>المصلح (40 % )</th><th>ليس الرحلة</th></tr></thead>
+<tbody>
+<tr><td>الرسالة الجوهرية</td><td>افهم نفسك بعمق</td><td>غيّر الآن فعلياً</td><td>ستكون بخير قريباً</td></tr>
+<tr><td>ردّ الفعل على الأزمة</td><td>رؤية واضحة للواقع</td><td>بروتوكول فوري</td><td>واجه مشاعرك</td></tr>
+<tr><td>العلاقة بالمستخدم</td><td>يثق بعقله</td><td>يدعم قراره</td><td>يوجّهه من فوق</td></tr>
+<tr><td>نبرة الطوارئ</td><td>وضوح هادئ</td><td>أوامر قصيرة</td><td>تعاطف مطوّل</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- P4: VOICE -->
+<section class="page" id="voice">
+<div class="page-num">04 / 20</div>
+<div class="page-label">Brand Strategy</div>
+<div class="sec-eyebrow">مصفوفة الصوت — Voice & Tone Matrix</div>
+<div class="sec-title">الصوت ثابت، النبرة تتكيّف</div>
+<p class="sec-desc">الرحلة دائماً هادئة وواضحة ومباشرة — لكن مستوى الإلحاح يتغير حسب السياق.</p>
+
+<div class="card" style="margin-bottom:20px">
+<div class="voice-row" style="border-top:1px solid var(--border)">
+<div class="voice-dim">السياق</div>
+<div class="voice-dim">مثال ✅ نعم</div>
+<div class="voice-dim">مثال ❌ اجتنب</div>
+</div>
+<div class="voice-row">
+<div><div style="font-weight:800;font-size:.85rem;margin-bottom:2px">🌱 Onboarding</div><div class="voice-dim">هادئ · مرحّب · واضح</div></div>
+<div class="voice-col"><strong>خذ وقتك. مفيش إجابة غلط.</strong>"إيه أكتر حاجة مرهقاك دلوقتي؟"</div>
+<div class="voice-col"><strong style="color:var(--rose)">لا.</strong>"أهلاً وسهلاً! ابدأ رحلتك الشخصية نحو الصحة النفسية!"</div>
+</div>
+<div class="voice-row">
+<div><div style="font-weight:800;font-size:.85rem;margin-bottom:2px">💫 Daily check</div><div class="voice-dim">فضولي · بلا حكم</div></div>
+<div class="voice-col"><strong>جسمك عارف قبلك.</strong>"بعد التعامل مع ده… بتتقل؟"</div>
+<div class="voice-col"><strong style="color:var(--rose)">لا.</strong>"هل تشعر أن هذه العلاقة غير صحية وتؤثر سلباً على صحتك؟"</div>
+</div>
+<div class="voice-row">
+<div><div style="font-weight:800;font-size:.85rem;margin-bottom:2px">⚡ Insight</div><div class="voice-dim">ملاحظة · لا حكم</div></div>
+<div class="voice-col"><strong>ده توصيف… مش حكم.</strong>"في شخص قريب منك… بس جسمك مش مرتاح."</div>
+<div class="voice-col"><strong style="color:var(--rose)">لا.</strong>"يبدو أن هذه علاقة سامة ويجب عليك إنهاؤها."</div>
+</div>
+<div class="voice-row">
+<div><div style="font-weight:800;font-size:.85rem;margin-bottom:2px">🚨 Emergency</div><div class="voice-dim">حازم · فوري · قصير</div></div>
+<div class="voice-col"><strong>وقف. اخرج. ده مش دورك.</strong>"حركة جسدية → خروج هادي"</div>
+<div class="voice-col"><strong style="color:var(--rose)">لا.</strong>"نفهم أنك تمر بوقت صعب. حاول أن تتنفس وتسترخي وتتذكر أن هذا أيضاً سيمر."</div>
+</div>
+<div class="voice-row">
+<div><div style="font-weight:800;font-size:.85rem;margin-bottom:2px">🏆 Success</div><div class="voice-dim">احتفاء هادئ</div></div>
+<div class="voice-col"><strong>خطوة حقيقية.</strong>"18 يوم. مش رقم — نمط جديد."</div>
+<div class="voice-col"><strong style="color:var(--rose)">لا.</strong>"رائع جداً! أنت بطل! استمر في هذا الإنجاز المذهل! 🎉🎉🎉"</div>
+</div>
+</div>
+
+<div class="grid-3">
+<div style="padding:16px;border-radius:12px;border:1px solid var(--border)">
+<div style="font-weight:800;margin-bottom:8px;color:var(--teal)">الكلمات المحظورة</div>
+<div style="font-size:.78rem;color:var(--muted);line-height:2">لازم/المفروض<br>صح وغلط<br>سام / اضطراب<br>شفاء / استحقاق<br>طفولة / صدمة<br>يجب عليك</div>
+</div>
+<div style="padding:16px;border-radius:12px;border:1px solid var(--border)">
+<div style="font-weight:800;margin-bottom:8px;color:var(--amber)">الكلمات المفضّلة</div>
+<div style="font-size:.78rem;color:var(--muted);line-height:2">توصيف / مش حكم<br>جسمك عارف<br>مساحتك / حدّك<br>خيار / قرار<br>هادي / واضح<br>وقف / اخرج</div>
+</div>
+<div style="padding:16px;border-radius:12px;border:1px solid var(--border)">
+<div style="font-weight:800;margin-bottom:8px;color:var(--violet)">قواعد الجملة</div>
+<div style="font-size:.78rem;color:var(--muted);line-height:2">سطر أو سطرين فقط<br>لا نصايح مباشرة<br>لا شرح نظري<br>فعل الطوارئ = أوامر<br>اللغة العامية المصرية<br>بلا علامات تعجب زائدة</div>
+</div>
+</div>
+</section>
+
+<!-- P5: MESSAGES -->
+<section class="page" id="messages">
+<div class="page-num">05 / 20</div>
+<div class="page-label">Brand Strategy</div>
+<div class="sec-eyebrow">هيكل الرسائل — Message Architecture</div>
+<div class="sec-title">من الجوهر إلى السطح</div>
+<p class="sec-desc">ثلاثة مستويات من الرسائل — كل مستوى يندمج في التالي. الطبقة الأعمق تحرك الطبقات الأعلى.</p>
+
+<div class="msg-level" style="background:linear-gradient(135deg,rgba(45,212,191,.1),rgba(45,212,191,.04));border-color:rgba(45,212,191,.3)">
+<div class="lvl-tag" style="color:var(--teal)">المستوى 1 — الجوهر (Core Truth)</div>
+<div class="lvl-text">"أنت المركز. ليس الآخرون."</div>
+<div class="lvl-desc">رسالة لا تُقال مباشرة — لكنها خلف كل تصميم وكل تفاعل. التصرّف من هذا الجوهر يُشعل باقي الرسائل.</div>
+</div>
+
+<div class="msg-level" style="background:rgba(167,139,250,.06);border-color:rgba(167,139,250,.2)">
+<div class="lvl-tag" style="color:var(--violet)">المستوى 2 — وعد العلامة (Brand Promise)</div>
+<div class="lvl-text">"مش محتاج تفهم أكتر — محتاج تشوف نفسك."</div>
+<div class="lvl-desc">رسالة للجمهور المباشر. تُحدّد التمايز وتكسر توقع التحليل التقليدي. تُستخدم في Landing، Onboarding، وال pitch.</div>
+</div>
+
+<div class="msg-level" style="background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2)">
+<div class="lvl-tag" style="color:var(--amber)">المستوى 3 — رسائل المنتج (Product Messages)</div>
+<div class="lvl-text">"كل علاقة ليها مكان. شوف مين قريب فعلاً."</div>
+<div class="lvl-desc">رسائل محددة لكل ميزة — تُترجم الوعد الأكبر إلى أفعال صغيرة داخل التطبيق.</div>
+</div>
+
+<div class="msg-level" style="background:rgba(248,113,113,.06);border-color:rgba(248,113,113,.2)">
+<div class="lvl-tag" style="color:var(--rose)">المستوى 4 — رسائل الطوارئ (Crisis Messages)</div>
+<div class="lvl-text">"وقف. مش دورك دلوقتي. اخرج هادي."</div>
+<div class="lvl-desc">رسائل ذات نبرة مختلفة — قصيرة، حازمة، محبة. تُستخدم حصراً في بروتوكول الطوارئ. لا تشبه باقي النبرات.</div>
+</div>
+
+<div class="rule"></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+<div style="padding:16px;border-radius:12px;border:1px solid var(--border);text-align:center">
+<div style="font-size:1.8rem;font-weight:800;color:var(--teal);letter-spacing:-.03em">7</div>
+<div style="font-size:.72rem;color:var(--muted)">كلمات في الـ tagline الأساسي</div>
+</div>
+<div style="padding:16px;border-radius:12px;border:1px solid var(--border);text-align:center">
+<div style="font-size:1.8rem;font-weight:800;color:var(--amber);letter-spacing:-.03em">3</div>
+<div style="font-size:.72rem;color:var(--muted)">كلمات في رسالة الطوارئ كحد أقصى</div>
+</div>
+<div style="padding:16px;border-radius:12px;border:1px solid var(--border);text-align:center">
+<div style="font-size:1.8rem;font-weight:800;color:var(--violet);letter-spacing:-.03em">0</div>
+<div style="font-size:.72rem;color:var(--muted)">مرات استخدام كلمة "علاج" أو "تشخيص"</div>
+</div>
+</div>
+</section>
+
+<!-- P6: LOGO DIRECTIONS -->
+<section class="page" id="logo">
+<div class="page-num">06 / 20</div>
+<div class="page-label">Visual Identity</div>
+<div class="sec-eyebrow">الشعار — Logo System</div>
+<div class="sec-title">ثلاثة اتجاهات، روح واحدة</div>
+<p class="sec-desc">كل اتجاه يُجسّد قيمة مختلفة من قيم الرحلة — الاتجاه الأول هو الاختيار النهائي المقترح.</p>
+
+<!-- Direction 1 -->
+<div style="margin-bottom:32px">
+<div class="logo-dir-num">الاتجاه الأول — المُوصى به</div>
+<div class="logo-dir-name">دائرة المركز · Origin Circle</div>
+<div class="grid-2" style="margin-top:16px">
+<div class="logo-svg-wrap" style="background:var(--void)">
+<svg width="280" height="120" viewBox="0 0 280 120">
+<!-- Outer ring -->
+<circle cx="60" cy="60" r="50" fill="none" stroke="rgba(45,212,191,0.2)" stroke-width="1"/>
+<circle cx="60" cy="60" r="36" fill="none" stroke="rgba(45,212,191,0.35)" stroke-width="1"/>
+<circle cx="60" cy="60" r="22" fill="none" stroke="rgba(45,212,191,0.5)" stroke-width="1"/>
+<!-- Center dot -->
+<circle cx="60" cy="60" r="7" fill="#2dd4bf"/>
+<!-- Satellite dots -->
+<circle cx="60" cy="24" r="4" fill="rgba(45,212,191,0.5)"/>
+<circle cx="90" cy="78" r="3" fill="rgba(245,166,35,0.7)"/>
+<circle cx="30" cy="82" r="2.5" fill="rgba(167,139,250,0.6)"/>
+<!-- Wordmark -->
+<text x="130" y="50" font-family="Almarai,serif" font-size="28" font-weight="800" fill="#f1f5f9" text-anchor="start">الرحلة</text>
+<text x="130" y="74" font-family="Almarai,serif" font-size="11" font-weight="400" fill="#94a3b8" text-anchor="start" letter-spacing="3">ALREHLA</text>
+<line x1="130" y1="82" x2="270" y2="82" stroke="rgba(45,212,191,0.3)" stroke-width="0.5"/>
+<text x="130" y="94" font-family="Almarai,serif" font-size="8" font-weight="400" fill="rgba(148,163,184,0.5)" text-anchor="start" letter-spacing="2">CONSCIOUSNESS ARCHITECTURE</text>
+</svg>
+</div>
+<div>
+<div class="logo-dir-rationale">
+<p style="margin-bottom:12px"><strong style="color:var(--text)">المنطق الاستراتيجي:</strong> الدوائر المتمركزة تُجسّد الفكرة الجوهرية للمنصة — أنت المركز، والعلاقات مواقع حولك. كل دائرة تمثل منطقة قرب مختلفة.</p>
+<p style="margin-bottom:12px"><strong style="color:var(--text)">قراءة بصرية:</strong> النقطة الفيروزية في المركز تمثل الهوية الثابتة. النقاط الساتيلايت تمثل الآخرين في الحياة.</p>
+<p><strong style="color:var(--text)">الاستخدام:</strong> شعار رئيسي للتطبيق، الموقع، وكل المطبوعات. يعمل على الخلفيات الداكنة والفاتحة.</p>
+</div>
+<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+<span class="pill pill-teal">أفضل قابلية للتكيّف</span>
+<span class="pill pill-amber">يعكس الفكرة المحورية</span>
+</div>
+</div>
+</div>
+</div>
+
+<div class="rule"></div>
+
+<!-- Direction 2 -->
+<div style="margin-bottom:32px">
+<div class="logo-dir-num">الاتجاه الثاني</div>
+<div class="logo-dir-name">الموجة الكتابية · Calligraphic Wave</div>
+<div class="grid-2" style="margin-top:16px">
+<div class="logo-svg-wrap" style="background:var(--void)">
+<svg width="280" height="120" viewBox="0 0 280 120">
+<!-- Arabic letterform styled -->
+<text x="140" y="72" font-family="Almarai,serif" font-size="52" font-weight="800" fill="url(#grad1)" text-anchor="middle">الرحلة</text>
+<!-- Underline wave -->
+<path d="M 40 88 Q 80 96 140 88 Q 200 80 240 88" stroke="#2dd4bf" stroke-width="1.5" fill="none" opacity="0.6"/>
+<defs>
+<linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+<stop offset="0%" style="stop-color:#f1f5f9"/>
+<stop offset="100%" style="stop-color:#2dd4bf"/>
+</linearGradient>
+</defs>
+</svg>
+</div>
+<div>
+<div class="logo-dir-rationale">
+<p style="margin-bottom:12px"><strong style="color:var(--text)">المنطق الاستراتيجي:</strong> شعار نصي خالص يُبرز جمال الخط العربي. موجة التسطير تُرمز للرحلة كمسار — ليست خطاً مستقيماً بل منحنيات واعية.</p>
+<p style="margin-bottom:12px"><strong style="color:var(--text)">التدرّج اللوني:</strong> من الأبيض إلى الفيروزي — يُرمز للتحوّل من الوضع الراهن إلى حالة أكثر وضوحاً.</p>
+<p><strong style="color:var(--text)">الاستخدام:</strong> مثالي للـ editorial، ملصقات، storytelling. أقل مناسبة للأيقونات الصغيرة.</p>
+</div>
+</div>
+</div>
+</div>
+
+<div class="rule"></div>
+
+<!-- Direction 3 -->
+<div>
+<div class="logo-dir-num">الاتجاه الثالث</div>
+<div class="logo-dir-name">المسافة الهندسية · Geometric Distance</div>
+<div class="grid-2" style="margin-top:16px">
+<div class="logo-svg-wrap" style="background:var(--void)">
+<svg width="280" height="120" viewBox="0 0 280 120">
+<!-- Geometric mark: two concentric arcs with a line -->
+<arc/>
+<path d="M 40 60 A 20 20 0 0 1 80 60" stroke="#2dd4bf" stroke-width="2" fill="none"/>
+<path d="M 28 60 A 32 32 0 0 1 92 60" stroke="rgba(245,166,35,0.6)" stroke-width="1.5" fill="none"/>
+<path d="M 16 60 A 44 44 0 0 1 104 60" stroke="rgba(167,139,250,0.4)" stroke-width="1" fill="none"/>
+<line x1="60" y1="40" x2="60" y2="80" stroke="rgba(45,212,191,0.3)" stroke-width="0.5"/>
+<circle cx="60" cy="60" r="3" fill="#2dd4bf"/>
+<!-- Wordmark vertical layout -->
+<text x="130" y="48" font-family="Almarai,serif" font-size="22" font-weight="800" fill="#f1f5f9">الرحلة</text>
+<line x1="130" y1="56" x2="260" y2="56" stroke="rgba(45,212,191,0.2)" stroke-width="0.5"/>
+<text x="130" y="70" font-family="Almarai,serif" font-size="7.5" font-weight="400" fill="#94a3b8" letter-spacing="2.5">CONSCIOUSNESS ARCHITECTURE</text>
+</svg>
+</div>
+<div>
+<div class="logo-dir-rationale">
+<p style="margin-bottom:12px"><strong style="color:var(--text)">المنطق الاستراتيجي:</strong> الأقواس نصف الدائرية تُرمز للمسافات النفسية — قريب/مشروط/مُرهِق. ثلاثة ألوان تمثل المناطق الثلاث في أداة "دواير".</p>
+<p style="margin-bottom:12px"><strong style="color:var(--text)">الطابع:</strong> أكثر تقنياً وهندسياً — يناسب السياق الـ B2B مع المعالجين والكوتشز.</p>
+<p><strong style="color:var(--text)">الاستخدام:</strong> ممتاز كأيقونة تطبيق، favicon، ورموز API.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- P7: LOGO USAGE -->
+<section class="page" id="logo-usage">
+<div class="page-num">07 / 20</div>
+<div class="page-label">Visual Identity</div>
+<div class="sec-eyebrow">قواعد الشعار — Logo Standards</div>
+<div class="sec-title">ثوابت العلامة</div>
+
+<!-- Variations -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px">
+<div style="text-align:center">
+<div class="logo-svg-wrap" style="background:var(--void);min-height:100px;padding:20px">
+<svg width="90" height="90" viewBox="0 0 90 90">
+<circle cx="45" cy="45" r="38" fill="none" stroke="rgba(45,212,191,0.2)" stroke-width="1"/>
+<circle cx="45" cy="45" r="26" fill="none" stroke="rgba(45,212,191,0.35)" stroke-width="1"/>
+<circle cx="45" cy="45" r="14" fill="none" stroke="rgba(45,212,191,0.5)" stroke-width="1"/>
+<circle cx="45" cy="45" r="5" fill="#2dd4bf"/>
+</svg>
+</div>
+<div style="font-size:.68rem;color:var(--dim);margin-top:8px">رمز فقط — Icon</div>
+</div>
+<div style="text-align:center">
+<div class="logo-svg-wrap" style="background:var(--void);min-height:100px;padding:20px">
+<svg width="140" height="50" viewBox="0 0 140 50">
+<circle cx="25" cy="25" r="20" fill="none" stroke="rgba(45,212,191,0.2)" stroke-width="0.8"/>
+<circle cx="25" cy="25" r="13" fill="none" stroke="rgba(45,212,191,0.4)" stroke-width="0.8"/>
+<circle cx="25" cy="25" r="6" fill="none" stroke="rgba(45,212,191,0.6)" stroke-width="0.8"/>
+<circle cx="25" cy="25" r="3" fill="#2dd4bf"/>
+<text x="55" y="20" font-family="Almarai,serif" font-size="16" font-weight="800" fill="#f1f5f9">الرحلة</text>
+<text x="55" y="34" font-family="Almarai,serif" font-size="6" fill="#94a3b8" letter-spacing="2">ALREHLA</text>
+</svg>
+</div>
+<div style="font-size:.68rem;color:var(--dim);margin-top:8px">افقي — Horizontal</div>
+</div>
+<div style="text-align:center">
+<div class="logo-svg-wrap" style="background:white;min-height:100px;padding:20px">
+<svg width="90" height="90" viewBox="0 0 90 90">
+<circle cx="45" cy="45" r="38" fill="none" stroke="rgba(10,14,31,0.15)" stroke-width="1"/>
+<circle cx="45" cy="45" r="26" fill="none" stroke="rgba(10,14,31,0.25)" stroke-width="1"/>
+<circle cx="45" cy="45" r="14" fill="none" stroke="rgba(10,14,31,0.4)" stroke-width="1"/>
+<circle cx="45" cy="45" r="5" fill="#0d9488"/>
+</svg>
+</div>
+<div style="font-size:.68rem;color:var(--dim);margin-top:8px">خلفية فاتحة — Light</div>
+</div>
+<div style="text-align:center">
+<div class="logo-svg-wrap" style="background:var(--teal);min-height:100px;padding:20px">
+<svg width="90" height="90" viewBox="0 0 90 90">
+<circle cx="45" cy="45" r="38" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+<circle cx="45" cy="45" r="26" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1"/>
+<circle cx="45" cy="45" r="14" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1"/>
+<circle cx="45" cy="45" r="5" fill="white"/>
+</svg>
+</div>
+<div style="font-size:.68rem;color:var(--dim);margin-top:8px">أحادي اللون — Brand</div>
+</div>
+</div>
+
+<!-- Clearspace + Dont's -->
+  <div class="grid-2">
+    <div class="card">
+      <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--emerald);margin-bottom:16px">✓ قواعد المساحة والحجم</div>
+      <ul style="font-size:.8rem;color:var(--muted);line-height:2;list-style:none">
+        <li>◆ المسافة الآمنة = قطر النقطة المركزية × 3</li>
+        <li>◆ الحد الأدنى للحجم: 24px × 24px (رمز فقط)</li>
+        <li>◆ الحد الأدنى مع الكلمة: 80px عرض</li>
+        <li>◆ يُستخدم دائماً على خلفية صلبة أو شفافة معتمدة</li>
+        <li>◆ الأيقونة منفردة للفضاء الأقل من 40px</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--rose);margin-bottom:16px">✕ محظورات الشعار</div>
+      <ul style="font-size:.8rem;color:var(--muted);line-height:2;list-style:none">
+        <li>✕ لا تمديد أو ضغط للشعار</li>
+        <li>✕ لا ظل أو حدة خارجية</li>
+        <li>✕ لا تغيير ألوان خارج الدليل</li>
+        <li>✕ لا استخدام على خلفية معقدة/صور</li>
+        <li>✕ لا تدوير للشعار</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- P8: COLOR SYSTEM -->
+<section class="page" id="colors">
+  <div class="page-num">08 / 20</div>
+  <div class="page-label">Visual Identity</div>
+  <div class="sec-eyebrow">نظام الألوان — Color System</div>
+  <div class="sec-title">خمسة أسرار لونية</div>
+  <p class="sec-desc">الألوان ليست جمالية فقط — كل لون قرار استراتيجي متجذّر في تجربة المستخدم وعلم النفس اللوني.</p>
+
+  <!-- Primary Palette -->
+  <div style="font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:12px">الألوان الأساسية — Primary Palette</div>
+  <div class="grid-3" style="margin-bottom:32px">
+    <div>
+      <div class="swatch-lg" style="background:#0a0e1f"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Space Void</div>
+        <div class="swatch-vals">HEX #0a0e1f<br>RGB 10 · 14 · 31<br>CMYK 68 · 55 · 0 · 88<br>Pantone 2767 C</div>
+        <div class="swatch-role">الخلفية الجوهرية — ليست أسوداً، بل كون</div>
+      </div>
+    </div>
+    <div>
+      <div class="swatch-lg" style="background:#2dd4bf"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Clarity Teal</div>
+        <div class="swatch-vals">HEX #2dd4bf<br>RGB 45 · 212 · 191<br>CMYK 79 · 0 · 10 · 17<br>Pantone 3255 C</div>
+        <div class="swatch-role">لون العلامة — الوضوح والحضور</div>
+      </div>
+    </div>
+    <div>
+      <div class="swatch-lg" style="background:#f5a623"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Decision Amber</div>
+        <div class="swatch-vals">HEX #f5a623<br>RGB 245 · 166 · 35<br>CMYK 0 · 32 · 86 · 4<br>Pantone 1235 C</div>
+        <div class="swatch-role">لون القرار — CTA ، الطاقة، السيادة</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Semantic Palette -->
+  <div style="font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:12px">الألوان الدلالية — Semantic Palette</div>
+  <div class="grid-3" style="margin-bottom:32px">
+    <div>
+      <div class="swatch-lg" style="background:#10b981"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Safe Emerald</div>
+        <div class="swatch-vals">HEX #10b981<br>RGB 16 · 185 · 129<br>CMYK 91 · 0 · 30 · 27<br>Pantone 3395 C</div>
+        <div class="swatch-role">منطقة الأمان — نجاح، تعافٍ، حضور</div>
+      </div>
+    </div>
+    <div>
+      <div class="swatch-lg" style="background:#f87171"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Alert Rose</div>
+        <div class="swatch-vals">HEX #f87171<br>RGB 248 · 113 · 113<br>CMYK 0 · 54 · 54 · 3<br>Pantone 178 C</div>
+        <div class="swatch-role">منطقة الخطر — تنبيه، استنزاف، طوارئ</div>
+      </div>
+    </div>
+    <div>
+      <div class="swatch-lg" style="background:#a78bfa"></div>
+      <div class="swatch-info">
+        <div class="swatch-name">Depth Violet</div>
+        <div class="swatch-vals">HEX #a78bfa<br>RGB 167 · 139 · 250<br>CMYK 33 · 44 · 0 · 2<br>Pantone 2715 C</div>
+        <div class="swatch-role">التعمق الداخلي — بيانات، كود، insight</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Why each color - rationale -->
+  <div class="card">
+    <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:20px">المبرّر النفسي — Color Psychology Rationale</div>
+    <table class="brand-table">
+      <thead><tr><th>اللون</th><th>الاستجابة النفسية</th><th>الاستراتيجية</th></tr></thead>
+      <tbody>
+        <tr><td><span style="color:var(--teal)">■</span> Clarity Teal</td><td>هدوء، ثقة، شفافية — يُفكّك القلق</td><td>لون العلامة الأساسي لأنه لا يُضغط على المستخدم المُرهَق</td></tr>
+        <tr><td><span style="color:var(--amber)">■</span> Decision Amber</td><td>تنشيط، قرار، حضور — يُحفّز الفعل</td><td>حصراً للـ CTA — يجذب العين دون إرهاق بصري</td></tr>
+        <tr><td><span style="color:var(--void);background:var(--muted);padding:0 3px;border-radius:2px">■</span> Space Void</td><td>حماية، عمق، هدوء كوني — يُخفّف الضوضاء</td><td>الخلفية المحايدة التي تمنح "المساحة النفسية" البصرية</td></tr>
+        <tr><td><span style="color:var(--emerald)">■</span> Safe Emerald</td><td>أمان، طبيعة، راحة — يُطمئن الجهاز العصبي</td><td>ألوان منطقة الأمان في خريطة الدواير</td></tr>
+        <tr><td><span style="color:var(--rose)">■</span> Alert Rose</td><td>تنبيه لطيف — أقل حدة من الأحمر الصريح</td><td>تحذير دون إثارة استجابة قتال/فرار — مناسب للتعافي</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- P9: TYPOGRAPHY -->
+<section class="page" id="typography">
+<div class="page-num">09 / 20</div>
+<div class="page-label">Visual Identity</div>
+<div class="sec-eyebrow">الطباعة — Typography System</div>
+<div class="sec-title">الخط كصوت</div>
+<p class="sec-desc">خطان فقط — كل خط بدور محدد. الجمع بينهما يخلق تناغماً بين الهوية العربية والوضوح الرقمي.</p>
+
+<!-- Font showcase -->
+<div style="margin-bottom:24px">
+<div class="type-specimen" style="background:linear-gradient(135deg,rgba(45,212,191,.06),rgba(45,212,191,.02))">
+<div style="font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-bottom:12px">Display & Headlines — Almarai 800</div>
+<div style="font-size:clamp(2rem,5vw,3.5rem);font-weight:800;letter-spacing:-.04em;line-height:1.1;margin-bottom:8px">الرحلة هي أنت</div>
+<div style="font-size:1.4rem;font-weight:800;color:var(--muted);letter-spacing:-.02em">كل علاقة ليها مكان.</div>
+<div class="spec-meta">Almarai · Weight 800 · Arabic-first · Google Fonts<br>استخدام: كل العناوين الأولية والثانوية وشاشات الطوارئ</div>
+</div>
+
+<div class="type-specimen">
+<div style="font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--violet);margin-bottom:12px">Body & UI — IBM Plex Sans Arabic 400/500</div>
+<div style="font-size:1rem;font-weight:400;color:var(--muted);line-height:1.8;margin-bottom:8px">أداة دواير تحول العلاقات من مفاهيم نظرية إلى نقاط على خريطة بصرية شخصية. ليس تحليلاً — بل رؤية واضحة تدفع للقرار.</div>
+<div style="font-size:.85rem;font-weight:500;color:var(--muted)">بعد التعامل مع ده… بتتقل؟ <span style="color:var(--teal)">نعم</span> / <span style="color:var(--rose)">لأ</span></div>
+<div class="spec-meta">IBM Plex Sans Arabic · Weight 400/500 · Google Fonts<br>استخدام: نصوص التطبيق، الأسئلة، الـ captions، أزرار الـ UI</div>
+</div>
+</div>
+
+<!-- Scale -->
+<div class="card">
+<div style="font-size:.65rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:16px">المقياس الطباعي — Type Scale</div>
+<div style="border-top:1px solid var(--border)">
+<div style="display:grid;grid-template-columns:80px 1fr 80px 80px;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);font-size:.65rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.08em">
+<div>المستوى</div><div>عيّنة</div><div>الحجم</div><div>الوزن</div>
+</div>
+<div style="display:grid;grid-template-columns:80px 1fr 80px 80px;gap:12px;padding:14px 0;border-bottom:1px solid var(--border);align-items:center">
+<div style="font-size:.65rem;color:var(--dim)">Display</div>
+<div style="font-size:clamp(1.8rem,4vw,3rem);font-weight:800;letter-spacing:-.04em;line-height:1">الرحلة</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">clamp 3rem</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">800</div>
+</div>
+<div style="display:grid;grid-template-columns:80px 1fr 80px 80px;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);align-items:center">
+<div style="font-size:.65rem;color:var(--dim)">H1</div>
+<div style="font-size:2rem;font-weight:800;letter-spacing:-.03em">كل علاقة ليها مكان</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">2rem</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">800</div>
+</div>
+<div style="display:grid;grid-template-columns:80px 1fr 80px 80px;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);align-items:center">
+<div style="font-size:.65rem;color:var(--dim)">H2</div>
+<div style="font-size:1.5rem;font-weight:800;letter-spacing:-.02em">أنت المركز دائماً</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">1.5rem</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">800</div>
+</div>
+<div style="display:grid;grid-template-columns:80px 1fr 80px 80px;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);align-items:center">
+<div style="font-size:.65rem;color:var(--dim)">H3</div>
+<div style="font-size:1.2rem;font-weight:700">الدائرة الأولى — القرب الصحي</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">1.2rem</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">700</div>
+</div>
+<div style="display:grid;grid-template-columns:80px 1fr 80px 80px;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);align-items:center">
+<div style="font-size:.65rem;color:var(--dim)">Body LG</div>
+<div style="font-size:1rem;color:var(--muted)">تحول الوعي من تحليل مُرهِق إلى أداة قرار فعّالة.</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">1rem</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">400</div>
+</div>
+<div style="display:grid;grid-template-columns:80px 1fr 80px 80px;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);align-items:center">
+<div style="font-size:.65rem;color:var(--dim)">Body</div>
+<div style="font-size:.875rem;color:var(--muted)">بعد التعامل مع ده… بتتقل؟ ده توصيف مش حكم.</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">.875rem</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">400</div>
+</div>
+<div style="display:grid;grid-template-columns:80px 1fr 80px 80px;gap:12px;padding:12px 0;align-items:center">
+<div style="font-size:.65rem;color:var(--dim)">Emergency</div>
+<div style="font-size:1.4rem;font-weight:800;color:var(--amber)">وقف. اخرج. مش دورك.</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">1.4rem</div>
+<div style="font-size:.65rem;font-family:monospace;color:var(--dim)">800</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- P10: IMAGERY -->
+<section class="page" id="imagery">
+<div class="page-num">10 / 20</div>
+<div class="page-label">Visual Identity</div>
+<div class="sec-eyebrow">أسلوب الصور — Imagery Style</div>
+<div class="sec-title">الصورة كشعور، ليس توثيقاً</div>
+<p class="sec-desc">الرحلة تتجنب صور المخزون البلاستيكية — بدلاً منها: مجرّدات بصرية تُثير الإحساس بالمساحة والهدوء.</p>
+
+<div class="grid-3" style="margin-bottom:32px">
+<div class="img-principle">
+<div class="img-icon">🌊</div>
+<div class="img-name">المجرّد الهادئ</div>
+<div class="img-desc">أشكال دائرية، موجات، حركة بطيئة. ألوان معتمة محايدة مع لمسة لونية واحدة فقط. لا بشر مُعرَّفون.</div>
+</div>
+<div class="img-principle">
+<div class="img-icon">🌑</div>
+<div class="img-name">المساحة كمفهوم</div>
+<div class="img-desc">صور الكون، الأعماق، الأفق. تُعبّر عن "المساحة الداخلية" كمكان حقيقي يمكن رؤيته.</div>
+</div>
+<div class="img-principle">
+<div class="img-icon">🤲</div>
+<div class="img-name">الحضور الجسدي</div>
+<div class="img-desc">أيدٍ، أقدام، تفاصيل جسم — ليس وجوهاً. يُرمز للوعي الجسدي دون الكشف الزائد للهوية.</div>
+</div>
+<div class="img-principle">
+<div class="img-icon">📍</div>
+<div class="img-name">الخرائط المجرّدة</div>
+<div class="img-desc">نقاط وخطوط وشبكات — تُجسّد فكرة العلاقات كمواقع. بسيطة وتقنية دون أن تكون باردة.</div>
+</div>
+<div class="img-principle">
+<div class="img-icon">💧</div>
+<div class="img-name">الطبيعة الهادئة</div>
+<div class="img-desc">ماء راكد، ضباب، شجرة منفردة. تُعزّز إحساس الهدوء والعمق دون أن تهرب للكليشيهات.</div>
+</div>
+<div class="img-principle">
+<div class="img-icon">🎨</div>
+<div class="img-name">Data Poetry</div>
+<div class="img-desc">تصورات بيانية جميلة من داخل التطبيق — مثل خريطة الدواير الملوّنة كلوحة فنية.</div>
+</div>
+</div>
+
+<div class="grid-2">
+<div class="card">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--emerald);margin-bottom:12px">✓ يتناسب مع الرحلة</div>
+<ul style="font-size:.8rem;color:var(--muted);line-height:2;list-style:none">
+<li>◆ صور بزاوية رأسية (portrait) أو مربعة</li>
+<li>◆ فلتر لوني داكن بنسبة 20-40%</li>
+<li>◆ حبة حرفية (grain) خفيفة</li>
+<li>◆ مشهد واحد محوري لكل صورة</li>
+<li>◆ مساحة فارغة كافية للنص</li>
+</ul>
+</div>
+<div class="card">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--rose);margin-bottom:12px">✕ لا يتناسب مع الرحلة</div>
+<ul style="font-size:.8rem;color:var(--muted);line-height:2;list-style:none">
+<li>✕ صور تحفيزية مبتذلة (sunrise + quote)</li>
+<li>✕ وجوه مبتسمة بشكل مصطنع</li>
+<li>✕ ألوان فاتحة وردية "wellness"</li>
+<li>✕ أيقونات كارتونية أو illustrative ساذج</li>
+<li>✕ تعبيرات تجريدية جداً بلا معنى</li>
+</ul>
+</div>
+</div>
+</section>
+
+<!-- P11-14: APPLICATIONS -->
+<section class="page" id="digital">
+<div class="page-num">11 / 20</div>
+<div class="page-label">Brand Applications</div>
+<div class="sec-eyebrow">تطبيقات العلامة — Digital</div>
+<div class="sec-title">التطبيق الرقمي</div>
+
+<div class="grid-2" style="margin-bottom:24px">
+<!-- Phone mockup - App Icon -->
+<div class="card" style="text-align:center">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:16px">أيقونة التطبيق — App Icon</div>
+<div style="display:flex;gap:16px;justify-content:center;align-items:flex-end;flex-wrap:wrap">
+<div>
+<div style="width:80px;height:80px;border-radius:18px;background:var(--void);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;margin:0 auto 8px">
+<svg width="50" height="50" viewBox="0 0 50 50">
+<circle cx="25" cy="25" r="22" fill="none" stroke="rgba(45,212,191,0.2)" stroke-width="1"/>
+<circle cx="25" cy="25" r="15" fill="none" stroke="rgba(45,212,191,0.4)" stroke-width="1"/>
+<circle cx="25" cy="25" r="8" fill="none" stroke="rgba(45,212,191,0.6)" stroke-width="1"/>
+<circle cx="25" cy="25" r="3.5" fill="#2dd4bf"/>
+</svg>
+</div>
+<div style="font-size:.62rem;color:var(--dim)">80px × 80px</div>
+</div>
+<div>
+<div style="width:48px;height:48px;border-radius:11px;background:var(--void);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;margin:0 auto 8px">
+<svg width="30" height="30" viewBox="0 0 50 50">
+<circle cx="25" cy="25" r="22" fill="none" stroke="rgba(45,212,191,0.3)" stroke-width="1.5"/>
+<circle cx="25" cy="25" r="14" fill="none" stroke="rgba(45,212,191,0.5)" stroke-width="1.5"/>
+<circle cx="25" cy="25" r="4" fill="#2dd4bf"/>
+</svg>
+</div>
+<div style="font-size:.62rem;color:var(--dim)">48px</div>
+</div>
+<div>
+<div style="width:28px;height:28px;border-radius:7px;background:var(--void);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;margin:0 auto 8px">
+<svg width="18" height="18" viewBox="0 0 50 50">
+<circle cx="25" cy="25" r="20" fill="none" stroke="#2dd4bf" stroke-width="3"/>
+<circle cx="25" cy="25" r="8" fill="none" stroke="#2dd4bf" stroke-width="2" opacity=".6"/>
+<circle cx="25" cy="25" r="4" fill="#2dd4bf"/>
+</svg>
+</div>
+<div style="font-size:.62rem;color:var(--dim)">28px</div>
+</div>
+</div>
+</div>
+
+<!-- Phone screen mockup -->
+<div class="card" style="text-align:center">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:16px">شاشة الرئيسية — Home Screen</div>
+<div class="mockup-phone" style="margin:0 auto">
+<div class="mockup-screen">
+<div class="mockup-status"><span>09:41</span><span>●●●</span></div>
+<div style="font-size:.6rem;color:var(--teal);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">أهلاً أحمد 👋</div>
+<div style="font-size:.75rem;font-weight:800;margin-bottom:12px">أنت في منطقة الأمان</div>
+<!-- Mini orbit -->
+<div style="position:relative;width:100px;height:100px;margin:0 auto 12px">
+<svg width="100" height="100" viewBox="0 0 100 100">
+<circle cx="50" cy="50" r="44" fill="none" stroke="rgba(45,212,191,0.15)" stroke-width="1"/>
+<circle cx="50" cy="50" r="30" fill="none" stroke="rgba(245,166,35,0.2)" stroke-width="1"/>
+<circle cx="50" cy="50" r="16" fill="none" stroke="rgba(248,113,113,0.2)" stroke-width="1"/>
+<circle cx="50" cy="50" r="5" fill="#2dd4bf"/>
+<circle cx="50" cy="6" r="4" fill="rgba(45,212,191,0.7)"/>
+<circle cx="78" cy="64" r="3" fill="rgba(245,166,35,0.7)"/>
+<circle cx="22" cy="70" r="3" fill="rgba(167,139,250,0.7)"/>
+</svg>
+</div>
+<div style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3);border-radius:8px;padding:8px;text-align:center">
+<div style="font-size:.58rem;font-weight:800;color:var(--amber)">سجّل شعورك</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- More digital apps -->
+<div class="grid-3">
+<div class="app-card">
+<div class="app-card-header">بطاقة رقمية — Social Card</div>
+<div class="app-card-body" style="background:linear-gradient(135deg,var(--void),var(--deep));min-height:120px;display:flex;flex-direction:column;justify-content:flex-end;border-radius:0 0 12px 12px">
+<div style="font-size:.6rem;color:var(--teal);font-weight:700;letter-spacing:.1em;text-transform:uppercase">الرحلة</div>
+<div style="font-size:.85rem;font-weight:800;margin:4px 0">"مش محتاج تفهم أكتر."</div>
+<div style="font-size:.6rem;color:var(--dim)">alrehla.app</div>
+</div>
+</div>
+<div class="app-card">
+<div class="app-card-header">شاشة الطوارئ — Emergency</div>
+<div class="app-card-body" style="background:var(--void);min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border-radius:0 0 12px 12px">
+<div style="font-size:1.3rem;font-weight:800;color:var(--amber);line-height:1.3">وقف.<br>اخرج.<br>مش دورك.</div>
+</div>
+</div>
+<div class="app-card">
+<div class="app-card-header">Email Signature</div>
+<div class="app-card-body" style="min-height:120px">
+<div style="font-size:.78rem;font-weight:800;margin-bottom:4px">أحمد محمود</div>
+<div style="font-size:.68rem;color:var(--muted)">مستشار تعافي — الرحلة</div>
+<div style="height:1px;background:linear-gradient(90deg,var(--teal),transparent);margin:10px 0;width:80px"></div>
+<div style="font-size:.65rem;color:var(--dim)">الرحلة · alrehla.app<br>Consciousness Architecture</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- P12: PRINT APPLICATIONS -->
+<section class="page" id="print">
+<div class="page-num">12 / 20</div>
+<div class="page-label">Brand Applications</div>
+<div class="sec-eyebrow">التطبيقات المطبوعة — Print</div>
+<div class="sec-title">الهوية في العالم المادي</div>
+
+<div class="grid-2" style="margin-bottom:24px">
+<!-- Business Card -->
+<div>
+<div style="font-size:.68rem;color:var(--dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">بطاقة العمل — Business Card · 85mm × 55mm</div>
+<div style="position:relative;background:var(--void);border-radius:12px;padding:24px;border:1px solid var(--border2);min-height:140px;overflow:hidden">
+<div style="position:absolute;top:-20px;left:-20px;width:100px;height:100px;border-radius:50%;border:1px solid rgba(45,212,191,.1)"></div>
+<div style="position:absolute;top:-5px;left:-5px;width:60px;height:60px;border-radius:50%;border:1px solid rgba(45,212,191,.15)"></div>
+<div style="position:relative;z-index:1">
+<div style="width:28px;height:28px;margin-bottom:12px">
+<svg viewBox="0 0 50 50" width="28" height="28">
+<circle cx="25" cy="25" r="22" fill="none" stroke="rgba(45,212,191,0.3)" stroke-width="1.5"/>
+<circle cx="25" cy="25" r="14" fill="none" stroke="rgba(45,212,191,0.5)" stroke-width="1.5"/>
+<circle cx="25" cy="25" r="5" fill="#2dd4bf"/>
+</svg>
+</div>
+<div style="font-size:1rem;font-weight:800;margin-bottom:2px">أحمد محمود</div>
+<div style="font-size:.65rem;color:var(--teal)">مستشار هندسة الوعي</div>
+<div style="margin-top:16px;font-size:.6rem;color:var(--dim)">ahmed@alrehla.app · alrehla.app</div>
+</div>
+</div>
+<div style="background:var(--deep);border-radius:0 0 12px 12px;padding:12px 24px;border:1px solid var(--border2);border-top:none">
+<div style="font-size:.6rem;color:var(--dim);margin-bottom:4px">الجانب الخلفي</div>
+<div style="display:flex;gap:8px;align-items:center">
+<div style="flex:1;height:1px;background:linear-gradient(90deg,var(--teal),transparent)"></div>
+<div style="font-size:.7rem;color:var(--dim)">الرحلة</div>
+<div style="flex:1;height:1px;background:linear-gradient(270deg,var(--amber),transparent)"></div>
+</div>
+</div>
+</div>
+
+<!-- Poster -->
+<div>
+<div style="font-size:.68rem;color:var(--dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">ملصق تعريفي — Poster · A3</div>
+<div style="background:var(--void);border-radius:12px;padding:28px;border:1px solid var(--border2);min-height:200px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative">
+<div style="position:absolute;top:20px;left:20px;opacity:.15">
+<svg width="160" height="160" viewBox="0 0 160 160">
+<circle cx="80" cy="80" r="75" fill="none" stroke="#2dd4bf" stroke-width="1"/>
+<circle cx="80" cy="80" r="52" fill="none" stroke="#2dd4bf" stroke-width="1"/>
+<circle cx="80" cy="80" r="30" fill="none" stroke="#2dd4bf" stroke-width="1"/>
+</svg>
+</div>
+<div style="position:relative;z-index:1">
+<div style="font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--teal);margin-bottom:8px">الرحلة</div>
+<div style="font-size:1.6rem;font-weight:800;letter-spacing:-.03em;line-height:1.2">مش محتاج<br>تفهم أكتر…</div>
+</div>
+<div style="position:relative;z-index:1">
+<div style="font-size:1rem;font-weight:800;color:var(--amber)">محتاج تشوف نفسك.</div>
+<div style="font-size:.65rem;color:var(--dim);margin-top:8px">alrehla.app</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- P13: MOTION -->
+<section class="page" id="motion">
+<div class="page-num">13 / 20</div>
+<div class="page-label">Brand Applications</div>
+<div class="sec-eyebrow">الحركة والأنيميشن — Motion Language</div>
+<div class="sec-title">الحركة كنَفَس</div>
+<p class="sec-desc">كل حركة تُشعر بالهدوء والحضور — لا ومضات، لا سرعة زائدة، لا مفاجآت.</p>
+
+<div class="grid-3" style="margin-bottom:24px">
+<div class="card" style="text-align:center">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:12px">النبض الدائري</div>
+<div style="position:relative;width:80px;height:80px;margin:0 auto 12px">
+<svg width="80" height="80" viewBox="0 0 80 80" style="animation:pulse 3s ease-in-out infinite">
+<style>@keyframes pulse { 0 % , 100 % { opacity:.3 }50 % { opacity:1 } }</style>
+<circle cx="40" cy="40" r="35" fill="none" stroke="#2dd4bf" stroke-width="1"/>
+<circle cx="40" cy="40" r="24" fill="none" stroke="#2dd4bf" stroke-width="1" style="animation:pulse 3s ease-in-out infinite .5s"/>
+<circle cx="40" cy="40" r="12" fill="none" stroke="#2dd4bf" stroke-width="1" style="animation:pulse 3s ease-in-out infinite 1s"/>
+<circle cx="40" cy="40" r="4" fill="#2dd4bf"/>
+</svg>
+</div>
+<div style="font-size:.75rem;font-weight:700;margin-bottom:4px">Breathing Pulse</div>
+<div style="font-size:.7rem;color:var(--dim)">3s · ease-in-out<br>للـ idle state</div>
+</div>
+<div class="card" style="text-align:center">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:12px">ظهور النقطة</div>
+<div style="position:relative;width:80px;height:80px;margin:0 auto 12px;border:1px dashed var(--border2);border-radius:50%;display:flex;align-items:center;justify-content:center">
+<div style="width:12px;height:12px;border-radius:50%;background:var(--amber);box-shadow:0 0 16px rgba(245,166,35,.5);animation:appear 2s ease-in-out infinite"></div>
+<style>@keyframes appear { 0 % , 100 % { transform:scale(0); opacity:0 }50 % { transform:scale(1); opacity:1 } }</style>
+</div>
+<div style="font-size:.75rem;font-weight:700;margin-bottom:4px">Node Appear</div>
+<div style="font-size:.7rem;color:var(--dim)">0.4s · cubic-bezier<br>عند إضافة شخص</div>
+</div>
+<div class="card" style="text-align:center">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);margin-bottom:12px">الانتقال الناعم</div>
+<div style="background:linear-gradient(135deg,var(--teal),var(--violet));height:48px;border-radius:8px;margin-bottom:12px;animation:slideup 2s ease-in-out infinite"></div>
+<style>@keyframes slideup { 0 % , 100 % { transform:translateY(8px); opacity:.4 }50 % { transform:translateY(0); opacity:1 } }</style>
+<div style="font-size:.75rem;font-weight:700;margin-bottom:4px">Screen Transition</div>
+<div style="font-size:.7rem;color:var(--dim)">0.3s · ease-out<br>بين الشاشات</div>
+</div>
+</div>
+
+<div class="card">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:16px">مبادئ الحركة — Motion Principles</div>
+<div class="grid-3 gap-sm">
+<div style="padding:12px;border-radius:8px;background:var(--mid)"><div style="font-weight:700;margin-bottom:4px;font-size:.82rem">Breathing — لا Bouncing</div><div style="font-size:.72rem;color:var(--muted)">cubic-bezier(0.22, 1, 0.36, 1) — سلاسة عضوية لا ميكانيكية</div></div>
+<div style="padding:12px;border-radius:8px;background:var(--mid)"><div style="font-weight:700;margin-bottom:4px;font-size:.82rem">250ms حد أقصى للـ UI</div><div style="font-size:.72rem;color:var(--muted)">الانتقالات السريعة تُقلل الاحتكاك المعرفي للمستخدم المُرهَق</div></div>
+<div style="padding:12px;border-radius:8px;background:var(--mid)"><div style="font-weight:700;margin-bottom:4px;font-size:.82rem">لا flash ، لا strobe</div><div style="font-size:.72rem;color:var(--muted)">اعتبارات وصول لمرضى الصرع والحساسية البصرية</div></div>
+</div>
+</div>
+</section>
+
+<!-- P14-19: BRAND BOOK INDEX -->
+<section class="page" id="index">
+<div class="page-num">14–20 / 20</div>
+<div class="page-label">Brand Book</div>
+<div class="sec-eyebrow">فهرس كتاب الهوية — Brand Book Index</div>
+<div class="sec-title">الكتاب الكامل — 20 صفحة</div>
+<p class="sec-desc">هيكل كتاب الهوية البصرية الكامل لمنصة الرحلة — جاهز للطباعة والتسليم لفرق التصميم والتطوير.</p>
+
+<div class="grid-2" style="margin-bottom:24px">
+<div class="card">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:16px">الفصل الأول — الاستراتيجية (ص 1-5)</div>
+<table class="brand-table">
+<tr><td style="color:var(--dim)">01</td><td style="color:var(--text);font-weight:700">الغلاف والمقدمة</td></tr>
+<tr><td style="color:var(--dim)">02</td><td>قصة العلامة التجارية — من الكلام إلى المكان</td></tr>
+<tr><td style="color:var(--dim)">03</td><td>النموذج الأصلي — الحكيم + المصلح</td></tr>
+<tr><td style="color:var(--dim)">04</td><td>مصفوفة الصوت والنبرة</td></tr>
+<tr><td style="color:var(--dim)">05</td><td>هيكل الرسائل الأربعة المستويات</td></tr>
+</table>
+</div>
+<div class="card">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:16px">الفصل الثاني — الهوية البصرية (ص 6-10)</div>
+<table class="brand-table">
+<tr><td style="color:var(--dim)">06</td><td style="color:var(--text);font-weight:700">الشعار — 3 اتجاهات كاملة + مبرراتها</td></tr>
+<tr><td style="color:var(--dim)">07</td><td>قواعد الشعار، التنويعات، المحظورات</td></tr>
+<tr><td style="color:var(--dim)">08</td><td>نظام الألوان الكامل (Hex, Pantone, CMYK, RGB)</td></tr>
+<tr><td style="color:var(--dim)">09</td><td>الطباعة — المقياس والأوزان والاستخدام</td></tr>
+<tr><td style="color:var(--dim)">10</td><td>أسلوب الصور ومبادئ الـ photography</td></tr>
+</table>
+</div>
+<div class="card">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--violet);margin-bottom:16px">الفصل الثالث — التطبيقات (ص 11-16)</div>
+<table class="brand-table">
+<tr><td style="color:var(--dim)">11</td><td>التطبيق الرقمي — أيقونة، شاشات، UI Cards</td></tr>
+<tr><td style="color:var(--dim)">12</td><td>المطبوعات — بطاقة عمل، ملصق، Letterhead</td></tr>
+<tr><td style="color:var(--dim)">13</td><td>لغة الحركة والأنيميشن</td></tr>
+<tr><td style="color:var(--dim)">14</td><td>Social Media — قوالب وأنماط</td></tr>
+<tr><td style="color:var(--dim)">15</td><td>B2B Kit — للكوتشز والمعالجين</td></tr>
+<tr><td style="color:var(--dim)">16</td><td>Merchandise وال Brand Touchpoints</td></tr>
+</table>
+</div>
+<div class="card">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--emerald);margin-bottom:16px">الفصل الرابع — الضوابط (ص 17-20)</div>
+<table class="brand-table">
+<tr><td style="color:var(--dim)">17</td><td>السيناريوهات الشائعة — مثلة صح وغلط</td></tr>
+<tr><td style="color:var(--dim)">18</td><td>العمل مع المصممين — Creative Brief Template</td></tr>
+<tr><td style="color:var(--dim)">19</td><td>Evolution Policy — كيف تتطور الهوية</td></tr>
+<tr><td style="color:var(--dim)">20</td><td>الروابط، الملفات، نقاط التواصل</td></tr>
+</table>
+</div>
+</div>
+
+<!-- Brand evolution note -->
+<div class="card" style="background:linear-gradient(135deg,rgba(45,212,191,.06),rgba(167,139,250,.06));border-color:rgba(45,212,191,.2)">
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:12px">سياسة تطور الهوية — Brand Evolution Policy</div>
+<p style="font-size:.85rem;color:var(--muted);line-height:1.75;margin-bottom:16px">الهوية البصرية للرحلة تتطور معك — ليست جامدة. كل 18-24 شهرًا، يُجرى مراجعة (Brand Audit) للتحقق من الملاءمة مع نمو المنتج والجمهور.</p>
+<div class="grid-3">
+<div style="text-align:center;padding:12px;border-radius:8px;border:1px solid var(--border)">
+<div style="font-size:1.2rem;font-weight:800;color:var(--teal)">ثابت</div>
+<div style="font-size:.7rem;color:var(--muted)">الجوهر الاستراتيجي، الأصوات، النموذج الأصلي</div>
+</div>
+<div style="text-align:center;padding:12px;border-radius:8px;border:1px solid var(--border)">
+<div style="font-size:1.2rem;font-weight:800;color:var(--amber)">شبه ثابت</div>
+<div style="font-size:.7rem;color:var(--muted)">الشعار، الألوان الأساسية، الطباعة الجوهرية</div>
+</div>
+<div style="text-align:center;padding:12px;border-radius:8px;border:1px solid var(--border)">
+<div style="font-size:1.2rem;font-weight:800;color:var(--violet)">قابل للتطور</div>
+<div style="font-size:.7rem;color:var(--muted)">الإلهام البصري، التطبيقات، الألوان الثانوية</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- P20: CLOSING -->
+<section class="page cover" style="background:radial-gradient(ellipse at 30% 70%,rgba(45,212,191,.1) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(245,166,35,.07) 0%,transparent 50%),var(--void);min-height:100vh;justify-content:center;align-items:center;text-align:center;flex-direction:column">
+<div class="page-num">20 / 20</div>
+<div style="position:relative;z-index:2;max-width:600px;margin:0 auto">
+<div style="margin-bottom:32px">
+<svg width="80" height="80" viewBox="0 0 80 80" style="margin:0 auto 24px;display:block">
+<circle cx="40" cy="40" r="36" fill="none" stroke="rgba(45,212,191,0.2)" stroke-width="1"/>
+<circle cx="40" cy="40" r="25" fill="none" stroke="rgba(45,212,191,0.35)" stroke-width="1"/>
+<circle cx="40" cy="40" r="14" fill="none" stroke="rgba(45,212,191,0.55)" stroke-width="1"/>
+<circle cx="40" cy="40" r="5" fill="#2dd4bf" style="filter:drop-shadow(0 0 8px rgba(45,212,191,.6))"/>
+<circle cx="40" cy="4" r="3.5" fill="rgba(45,212,191,0.5)"/>
+<circle cx="68" cy="56" r="3" fill="rgba(245,166,35,0.6)"/>
+<circle cx="14" cy="60" r="2.5" fill="rgba(167,139,250,0.5)"/>
+</svg>
+</div>
+<div style="font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--teal);margin-bottom:16px">Brand Identity Book — الرحلة</div>
+<div style="font-size:clamp(1.8rem,5vw,3rem);font-weight:800;letter-spacing:-.04em;line-height:1.2;margin-bottom:16px;background:linear-gradient(135deg,var(--text),var(--teal));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">أنت المركز.<br>كل حد تضعه هو فعل وعي.</div>
+<p style="font-size:.9rem;color:var(--muted);line-height:1.75;margin-bottom:40px">هذا الكتاب ليس مجرد دليل تصميم — هو تجسيد للفلسفة نفسها التي تقوم عليها الرحلة. كل قرار بصري هنا مبني على استراتيجية، ومبرر بعلم، ومُختبر بتجربة مستخدم حقيقية.</p>
+<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+<span class="pill pill-teal">v1.0.0 · 2026</span>
+<span class="pill pill-amber">Pentagram-Standard</span>
+<span class="pill pill-violet">Arabic-First · RTL</span>
+</div>
+<div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--border);display:flex;gap:40px;justify-content:center">
+<div><div style="font-size:.7rem;font-weight:700;color:var(--text)">المشروع</div><div style="font-size:.7rem;color:var(--dim)">الرحلة · alrehla.app</div></div>
+<div><div style="font-size:.7rem;font-weight:700;color:var(--text)">الإصدار</div><div style="font-size:.7rem;color:var(--dim)">Brand Identity v1.0.0</div></div>
+<div><div style="font-size:.7rem;font-weight:700;color:var(--text)">التاريخ</div><div style="font-size:.7rem;color:var(--dim)">مارس 2026</div></div>
+</div>
+</div>
+</section>
+
+</main>
+</body>
+</html>

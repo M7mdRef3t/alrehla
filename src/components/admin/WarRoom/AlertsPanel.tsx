@@ -21,7 +21,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 // Types
 type Incident = AlertIncident & {
-    evidence: any;
+    evidence: {
+        value?: unknown;
+        threshold?: unknown;
+        samples?: unknown;
+    } | null;
 };
 
 function toFiniteNumber(value: unknown): number | null {

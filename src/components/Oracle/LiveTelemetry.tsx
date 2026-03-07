@@ -1,5 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 import { Activity, Zap, ShieldAlert, Cpu, BarChart3, Clock } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
@@ -101,14 +100,14 @@ export const LiveTelemetry: React.FC = () => {
                 <PulseCard
                     title="Broadcast Latency"
                     value={broadcastLatency ? `${Math.round(broadcastLatency)}ms` : 'N/A'}
-                    icon={<Zap className="w-5 h-5 text-[var(--color-primary)]" />}
+                    icon={<Zap className="w-5 h-5 text-[var(--soft-teal)]" />}
                     trend="Syncing"
                     status={broadcastLatency ? 'ACTIVE' : 'IDLE'}
                 />
                 <PulseCard
                     title="System Stress"
                     value={`${data.reduce((acc, d) => acc + d.total_calls, 0)} Req/Hr`}
-                    icon={<Cpu className="w-5 h-5 text-[var(--color-primary)]" />}
+                    icon={<Cpu className="w-5 h-5 text-[var(--soft-teal)]" />}
                     trend="+5%"
                     status="SCALING"
                 />
@@ -161,7 +160,7 @@ export const LiveTelemetry: React.FC = () => {
 
             {/* Bottom Log Feed (Simulated for brevity) */}
             <div className="p-6 bg-slate-950/80 rounded-3xl border border-white/5">
-                <h4 className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-[0.3em] mb-4">Latest Evaluation Events</h4>
+                <h4 className="text-[10px] font-black text-[var(--soft-teal)] uppercase tracking-[0.3em] mb-4">Latest Evaluation Events</h4>
                 <div className="space-y-3">
                     {[1, 2, 3].map(i => (
                         <div key={i} className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5">
@@ -195,4 +194,5 @@ const PulseCard: React.FC<{ title: string, value: string, icon: React.ReactNode,
         </div>
     </div>
 );
+
 

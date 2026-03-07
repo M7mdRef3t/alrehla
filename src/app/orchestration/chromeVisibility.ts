@@ -4,6 +4,7 @@ export interface LandingChromeInput {
   showPulseCheck: boolean;
   isLandingScreen: boolean;
   hasWhatsAppLink: boolean;
+  isSanctuaryActive: boolean;
 }
 
 export interface LandingChromeVisibility {
@@ -15,14 +16,23 @@ export interface LandingChromeVisibility {
 }
 
 export function resolveLandingChromeVisibility(input: LandingChromeInput): LandingChromeVisibility {
-  const showAppChrome = !input.isAdminRoute && !input.showAuthModal && !input.showPulseCheck && !input.isLandingScreen;
-  const showBasicChrome = !input.isAdminRoute && !input.showAuthModal && !input.showPulseCheck;
+  const showAppChrome =
+    !input.isAdminRoute &&
+    !input.showAuthModal &&
+    !input.showPulseCheck &&
+    !input.isLandingScreen &&
+    !input.isSanctuaryActive;
+  const showBasicChrome =
+    !input.isAdminRoute &&
+    !input.showAuthModal &&
+    !input.showPulseCheck &&
+    !input.isSanctuaryActive;
 
   return {
     showFloatingProfile: showBasicChrome,
     showFloatingWhatsApp: showAppChrome && input.hasWhatsAppLink,
     showMobileBottomNav: showAppChrome,
-    showNudgeToast: !input.isLandingScreen,
-    showConsentBanner: !(input.isLandingScreen || input.showPulseCheck || input.showAuthModal)
+    showNudgeToast: !input.isLandingScreen && !input.isSanctuaryActive,
+    showConsentBanner: !(input.isLandingScreen || input.showPulseCheck || input.showAuthModal || input.isSanctuaryActive)
   };
 }

@@ -1,5 +1,5 @@
-import type { FC } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import type { FC } from "react";
+import { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { LayoutTemplate, Info } from "lucide-react";
 import type { FeelingAnswers } from "../FeelingCheck";
@@ -232,10 +232,10 @@ export const ResultScreen: FC<ResultScreenProps> = ({
       <>
         <motion.div
           className={`mb-5 card-unified border px-4 py-3 text-center ${ring === "red"
-              ? "bg-rose-50/80 border-rose-200"
-              : ring === "yellow"
-                ? "bg-amber-50/80 border-amber-200"
-                : "bg-teal-50/80 border-teal-100"
+            ? "bg-rose-50/80 border-rose-200"
+            : ring === "yellow"
+              ? "bg-amber-50/80 border-amber-200"
+              : "bg-teal-50/80 border-teal-100"
             }`}
           animate={summaryOnly ? { scale: [1, 1.015, 1] } : {}}
           transition={{ duration: 1.5, repeat: summaryOnly ? Infinity : 0, repeatDelay: 2.5 }}
@@ -489,7 +489,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               <button
                 type="button"
                 onClick={() => void handleShareResult()}
-                className="w-full rounded-full bg-[var(--color-primary)] text-white px-6 py-3 text-sm font-semibold hover:bg-[var(--color-primary)] active:scale-[0.98] transition-all duration-200"
+                className="w-full rounded-full bg-[var(--soft-teal)] text-white px-6 py-3 text-sm font-semibold hover:bg-[var(--soft-teal)] active:scale-[0.98] transition-all duration-200"
               >
                 مشاركة النتيجة
               </button>
@@ -580,4 +580,3 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     </motion.div>
   );
 };
-

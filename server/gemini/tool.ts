@@ -19,7 +19,27 @@ import {
   validateCodingCommentContract
 } from "./_promptGuard.js";
 
-export default async function handler(req: any, res: any) {
+type ApiRequest = {
+  method?: string;
+  body?: {
+    contents?: unknown;
+    tools?: unknown;
+    systemInstruction?: unknown;
+    generationConfig?: unknown;
+    modelOrder?: unknown;
+  };
+};
+
+type ApiResponse = {
+  status: (code: number) => ApiResponse;
+  json: (body: unknown) => void;
+};
+
+type GeminiResponseWithUsage = {
+  usageMetadata?: unknown;
+};
+
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -69,7 +89,7 @@ export default async function handler(req: any, res: any) {
         const response = result.response;
         const functionCalls = response.functionCalls?.() ?? [];
         const modelContent = response.candidates?.[0]?.content ?? { role: "model", parts: [] };
-        const usage = (response as any)?.usageMetadata ?? null;
+        const usage = (response as GeminiResponseWithUsage)?.usageMetadata ?? null;
 
         if (functionCalls.length === 0) {
           const text = response.text();

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Send, Sparkles, Loader2, Check, Terminal } from 'lucide-react';
@@ -29,10 +29,10 @@ type AgentResponse = {
     tokens_remaining?: number | null;
 };
 
-const GUEST_GATE_MESSAGE = "يجب تسجيل الدخول لبدء الرحلة.";
+const GUEST_GATE_MESSAGE = "??? ????? ?????? ???? ??????.";
 
 const PERSONA_TECHNICAL_ERROR =
-    "الماكينة تواجه تشويشاً مؤقتاً في قراءة تردداتك.. طاقتك محفوظة، حاول إرسال فكرتك مجدداً.";
+    "???????? ????? ??????? ?????? ?? ????? ???????.. ????? ??????? ???? ????? ????? ??????.";
 const TECHNICAL_ERROR_PATTERN = /json|payload|config|token|schema|syntax|context|provider|timeout|rate\s*limit|invalid|request|admin api/i;
 
 function shieldTechnicalErrorMessage(rawError: unknown, fallback: string): string {
@@ -44,26 +44,26 @@ function shieldTechnicalErrorMessage(rawError: unknown, fallback: string): strin
 
 function formatAlgorithmicEmpathyCopy(latencyMs: number): string {
     const seconds = (latencyMs / 1000).toFixed(2);
-    if (latencyMs < 1000) return "الماكينة استجابت فوراً.. نمطك واضح لنا.";
-    if (latencyMs <= 2500) return `دواير استغرقت ${seconds} ثانية لتحليل هذا التعقيد.`;
-    return `استهلكنا طاقة حسابية قصوى (${seconds} ثانية) لاستيعاب ثقل هذه الكلمات.. إنت مش لوحدك اللي بتعاني في الفهم.`;
+    if (latencyMs < 1000) return "???????? ??????? ?????.. ???? ???? ???.";
+    if (latencyMs <= 2500) return `????? ??????? ${seconds} ????? ?????? ??? ???????.`;
+    return `???????? ???? ?????? ???? (${seconds} ?????) ???????? ??? ??? ???????.. ??? ?? ????? ???? ?????? ?? ?????.`;
 }
 
 function buildGuestReply(focusedNodeLabel: string, latestMessage?: string): string {
     const normalized = String(latestMessage ?? "").trim();
-    if (!normalized || normalized.includes("أردت التحدث")) {
-        return `أهلاً بك، لندردش حول مساحة "${focusedNodeLabel}" في حياتك. سجّل الدخول عندما تريد حفظ الجلسة وبدء الرحلة الكاملة.`;
+    if (!normalized || normalized.includes("???? ??????")) {
+        return `????? ??? ?????? ??? ????? "${focusedNodeLabel}" ?? ?????. ???? ?????? ????? ???? ??? ?????? ???? ?????? ???????.`;
     }
 
-    if (normalized.includes("حد")) {
-        return `واضح أن "${focusedNodeLabel}" يرتبط بالحدود. سجّل الدخول وأكمل: ما الثمن الذي تدفعه كل مرة تؤجل فيها هذا الحد؟`;
+    if (normalized.includes("??")) {
+        return `???? ?? "${focusedNodeLabel}" ????? ???????. ???? ?????? ?????: ?? ????? ???? ????? ?? ??? ???? ???? ??? ?????`;
     }
 
-    if (normalized.includes("خوف") || normalized.includes("قلق") || normalized.includes("توتر")) {
-        return `هناك خوف حاضر داخل "${focusedNodeLabel}". سجّل الدخول ثم واجهه مباشرة: ماذا يحمي لك هذا الخوف الآن؟`;
+    if (normalized.includes("???") || normalized.includes("???") || normalized.includes("????")) {
+        return `???? ??? ???? ???? "${focusedNodeLabel}". ???? ?????? ?? ????? ??????: ???? ???? ?? ??? ????? ?????`;
     }
 
-    return `سمعتك في "${focusedNodeLabel}": "${normalized}". سجّل الدخول لنكمل التفكيك خطوة بخطوة بدل الاكتفاء بالملاحظة السريعة.`;
+    return `????? ?? "${focusedNodeLabel}": "${normalized}". ???? ?????? ????? ??????? ???? ????? ??? ???????? ????????? ???????.`;
 }
 
 
@@ -125,7 +125,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        messages: [{ role: 'user', content: 'مرحباً. أردت التحدث عن هذه الدائرة.' }],
+                        messages: [{ role: 'user', content: '??????. ???? ?????? ?? ??? ???????.' }],
                         fullMap,
                         focusedNode,
                         userId,
@@ -137,21 +137,21 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                     if (shouldShowUpsell(res.status, data)) {
                         setShowUpsellOverlay(true);
                         publishTokenBalance(0);
-                        setMessages([{ role: 'ai', content: 'دواير قرأت خريطتك. فعّل طاقة الرحلة لبدء التحليل العميق.' }]);
+                        setMessages([{ role: 'ai', content: '????? ???? ??????. ???? ???? ?????? ???? ??????? ??????.' }]);
                     } else if (res.status === 401 || data.error === GUEST_GATE_MESSAGE) {
                         setMessages([{ role: 'ai', content: buildGuestReply(focusedNode.label) }]);
                     } else {
                         publishTokenBalance(data.tokens_remaining);
                         setMessages([{
                             role: 'ai',
-                            content: shieldTechnicalErrorMessage(data.error, 'تعذر تشغيل مستشار السيادة الآن.')
+                            content: shieldTechnicalErrorMessage(data.error, '???? ????? ?????? ??????? ????.')
                         }]);
                     }
                     return;
                 }
                 setShowUpsellOverlay(false);
                 publishTokenBalance(data.tokens_remaining);
-                const reply = typeof data.reply === "string" ? data.reply : "أهلاً بك، لندردش حول هذه الدائرة.";
+                const reply = typeof data.reply === "string" ? data.reply : "????? ??? ?????? ??? ??? ???????.";
                 const optionalWarning = typeof data.token_warning === "string" ? data.token_warning : null;
                 setMessages([{
                     role: 'ai',
@@ -161,7 +161,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                 }, ...(optionalWarning ? [{ role: 'ai' as const, content: optionalWarning }] : [])]);
             } catch (err) {
                 console.error("Initial greeting failed", err);
-                setMessages([{ role: 'ai', content: `أهلاً بك، لندردش حول مساحة "${focusedNode.label}" في حياتك.` }]);
+                setMessages([{ role: 'ai', content: `????? ??? ?????? ??? ????? "${focusedNode.label}" ?? ?????.` }]);
             } finally {
                 setIsLoading(false);
             }
@@ -187,7 +187,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
             if (!userId) {
                 setMessages(prev => [...prev, {
                     role: 'ai',
-                    content: buildGuestReply(focusedNode.label, 'لقد قمت بتطبيق التعديل الداخلي.')
+                    content: buildGuestReply(focusedNode.label, '??? ??? ?????? ??????? ???????.')
                 }]);
                 return;
             }
@@ -211,13 +211,13 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                 } else if (res.status === 401 || data.error === GUEST_GATE_MESSAGE) {
                     setMessages(prev => [...prev, {
                         role: 'ai',
-                        content: buildGuestReply(focusedNode.label, 'لقد قمت بتطبيق التعديل الداخلي.')
+                        content: buildGuestReply(focusedNode.label, '??? ??? ?????? ??????? ???????.')
                     }]);
                 } else {
                     publishTokenBalance(data.tokens_remaining);
                     setMessages(prev => [...prev, {
                         role: 'ai',
-                        content: shieldTechnicalErrorMessage(data.error, 'تعذر متابعة البروتوكول الآن.')
+                        content: shieldTechnicalErrorMessage(data.error, '???? ?????? ?????????? ????.')
                     }]);
                 }
                 return;
@@ -227,10 +227,10 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
             const optionalWarning = typeof data.token_warning === "string" ? data.token_warning : null;
             setMessages(prev => [
                 ...prev,
-                { role: 'user', content: 'لقد قمت بتطبيق التعديل الداخلي. شكراً لك.' },
+                { role: 'user', content: '??? ??? ?????? ??????? ???????. ????? ??.' },
                 {
                     role: 'ai',
-                    content: typeof data.reply === "string" ? data.reply : "ممتاز، دعنا نكمل بخطوة مركزة.",
+                    content: typeof data.reply === "string" ? data.reply : "?????? ???? ???? ????? ?????.",
                     proposedAction: data.proposedAction ?? undefined,
                     llmLatencyMs: typeof data.llm_latency_ms === "number" ? data.llm_latency_ms : null
                 },
@@ -288,7 +288,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                     publishTokenBalance(data.tokens_remaining);
                     setMessages(prev => [...prev, {
                         role: 'ai',
-                        content: shieldTechnicalErrorMessage(data.error, "تعذر الرد الآن.")
+                        content: shieldTechnicalErrorMessage(data.error, "???? ???? ????.")
                     }]);
                 }
                 return;
@@ -298,12 +298,12 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
             const optionalWarning = typeof data.token_warning === "string" ? data.token_warning : null;
             setMessages(prev => [...prev, {
                 role: 'ai',
-                content: typeof data.reply === "string" ? data.reply : "تم استقبال رسالتك.",
+                content: typeof data.reply === "string" ? data.reply : "?? ??????? ??????.",
                 proposedAction: data.proposedAction ?? undefined,
                 llmLatencyMs: typeof data.llm_latency_ms === "number" ? data.llm_latency_ms : null
             }, ...(optionalWarning ? [{ role: 'ai' as const, content: optionalWarning }] : [])]);
         } catch {
-            setMessages(prev => [...prev, { role: 'ai', content: "عذراً، انقطع حبل أفكاري مؤقتاً." }]);
+            setMessages(prev => [...prev, { role: 'ai', content: "?????? ????? ??? ?????? ??????." }]);
         } finally {
             setIsLoading(false);
         }
@@ -340,9 +340,9 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                 };
             case 'neutral':
                 return {
-                    backgroundColor: 'var(--color-primary-glow)',
-                    color: 'var(--color-primary)',
-                    borderColor: 'var(--color-primary)'
+                    backgroundColor: 'var(--soft-teal)',
+                    color: 'var(--soft-teal)',
+                    borderColor: 'var(--soft-teal)'
                 };
             case 'ignored':
             default:
@@ -365,7 +365,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                 <button
                     type="button"
                     onClick={onClose}
-                    aria-label="إغلاق الشات والعودة للخريطة"
+                    aria-label="????? ????? ??????? ???????"
                     className="md:hidden absolute top-2 left-1/2 -translate-x-1/2 w-14 h-2 rounded-full bg-white/20 hover:bg-white/35 transition-colors"
                 />
                 <div className="flex items-center gap-3">
@@ -373,9 +373,9 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         <Terminal className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="font-black text-white text-xs uppercase tracking-widest font-mono">أوراكل_السيادة</h3>
+                        <h3 className="font-black text-white text-xs uppercase tracking-widest font-mono">??????_???????</h3>
                         <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">جاري_الفحص:</span>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">????_?????:</span>
                             <span
                                 className="text-[10px] px-2 py-0.5 rounded-md border font-black font-mono uppercase tracking-tighter"
                                 style={getNodeBadgeStyle(focusedNode.color)}
@@ -391,14 +391,14 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         checked={showAlgorithmicVulnerability}
                         onChange={(e) => setShowAlgorithmicVulnerability(e.target.checked)}
                         className="accent-teal-500"
-                        aria-label="الشفافية الخوارزمية"
+                        aria-label="???????? ??????????"
                     />
-                    الشفافية_الخوارزمية
+                    ????????_??????????
                 </label>
                 <button
                     onClick={onClose}
                     className="w-11 h-11 rounded-xl bg-white/5 text-slate-400 flex items-center justify-center hover:bg-white/10 hover:text-white transition-all"
-                    aria-label="إغلاق"
+                    aria-label="?????"
                 >
                     <X className="w-5 h-5" />
                 </button>
@@ -410,10 +410,10 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                 role="log"
                 aria-live="polite"
                 aria-relevant="additions text"
-                aria-label="سجل المحادثة مع دواير"
+                aria-label="??? ???????? ?? ?????"
             >
                 {messages.length === 0 && !isLoading && (
-                    <div className="text-center text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] my-auto mt-20 font-mono">في_انتظار_المدخلات...</div>
+                    <div className="text-center text-slate-600 text-[10px] font-black uppercase tracking-[0.2em] my-auto mt-20 font-mono">??_??????_????????...</div>
                 )}
                 {messages.map((msg, i) => (
                     <div key={i} className={`flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -424,8 +424,8 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                             }`}
                             style={msg.role === "user"
                                 ? {
-                                    background: "var(--color-primary-soft)",
-                                    boxShadow: "0 8px 22px var(--color-primary-glow)"
+                                    background: "var(--ds-color-primary-soft)",
+                                    boxShadow: "0 8px 22px var(--soft-teal)"
                                 }
                                 : undefined
                             }
@@ -445,10 +445,10 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                                         className="text-xs px-4 py-2 bg-teal-500 text-slate-950 hover:bg-teal-400 rounded-xl font-black transition flex items-center gap-2 shadow-lg shadow-teal-500/20 uppercase tracking-tighter"
                                     >
                                         <Sparkles className="w-3.5 h-3.5" />
-                                        تطبيق البروتوكول المقترح
+                                        ????? ?????????? ???????
                                     </button>
                                 ) : (
-                                    <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5 px-3 py-1.5 font-mono uppercase tracking-tighter"><Check className="w-3.5 h-3.5" /> تم_تطبيق_البروتوكول_بنجاح</span>
+                                    <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5 px-3 py-1.5 font-mono uppercase tracking-tighter"><Check className="w-3.5 h-3.5" /> ??_?????_??????????_?????</span>
                                 )}
                             </div>
                         )}
@@ -483,15 +483,15 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="ماذا تود أن تقول عن هذا الجزء المستنزف؟..."
-                        aria-label="اكتب رسالتك إلى دواير"
+                        placeholder="???? ??? ?? ???? ?? ??? ????? ?????????..."
+                        aria-label="???? ?????? ??? ?????"
                         className="flex-1 bg-transparent px-4 py-3 text-sm outline-none text-white placeholder:text-slate-600"
                         disabled={isLoading || showUpsellOverlay}
                     />
                     <button
                         type="submit"
-                        aria-label="إرسال الرسالة"
-                        title="إرسال الرسالة"
+                        aria-label="????? ???????"
+                        title="????? ???????"
                         disabled={isLoading || showUpsellOverlay || !input.trim()}
                         className="w-12 h-12 rounded-xl bg-teal-500 text-slate-950 flex items-center justify-center hover:bg-teal-400 disabled:opacity-20 disabled:grayscale transition-all shadow-lg shadow-teal-500/10 active:scale-95"
                     >
@@ -503,11 +503,11 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
             {showUpsellOverlay && (
                 <div className="absolute inset-0 z-[60] bg-slate-950/92 backdrop-blur-md rounded-t-2xl md:rounded-2xl p-6 flex flex-col items-center justify-center text-center">
                     <p className="text-[10px] uppercase tracking-[0.22em] text-teal-300 font-black mb-3 font-mono">premium_access_required</p>
-                    <h4 className="text-lg font-black text-white mb-3">دواير قرأت خريطتك.. والماكينة جاهزة</h4>
+                    <h4 className="text-lg font-black text-white mb-3">????? ???? ??????.. ????????? ?????</h4>
                     <p className="text-sm text-slate-300 leading-relaxed max-w-xs">
                         {isPublicPaymentsEnabled
-                            ? "فعّل طاقة الرحلة (100 نقطة وعي) عبر بوابة التفعيل اليدوي لبدء التحليل وتفكيك العقد خطوة بخطوة."
-                            : "بوابة الدفع قيد التجهيز حالياً. يمكنك متابعة بناء الخريطة اليدوية حتى فتح التفعيل."}
+                            ? "???? ???? ?????? (100 ???? ???) ??? ????? ??????? ?????? ???? ??????? ?????? ????? ???? ?????."
+                            : "????? ????? ??? ??????? ??????. ????? ?????? ???? ??????? ??????? ??? ??? ???????."}
                     </p>
                     <div className="mt-5 flex flex-col sm:flex-row items-center gap-3">
                         {isPublicPaymentsEnabled && (
@@ -516,7 +516,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                                 onClick={() => { window.location.href = "/checkout"; }}
                                 className="px-5 py-2.5 rounded-xl bg-teal-500 text-slate-950 font-black hover:bg-teal-400 transition-colors"
                             >
-                                تفعيل طاقة الرحلة
+                                ????? ???? ??????
                             </button>
                         )}
                         <button
@@ -524,7 +524,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                             onClick={onClose}
                             className="px-5 py-2.5 rounded-xl border border-white/20 text-white font-bold hover:bg-white/10 transition-colors"
                         >
-                            العودة للخريطة
+                            ?????? ???????
                         </button>
                     </div>
                 </div>
@@ -532,5 +532,6 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
         </div>
     );
 }
+
 
 

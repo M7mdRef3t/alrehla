@@ -30,7 +30,7 @@ export async function processInterventions(userId: string) {
             .map(a => {
                 const stats = rankings[a.id];
                 let badge = '';
-                let priority = stats?.final_score ?? 0.5;
+                const priority = stats?.final_score ?? 0.5;
 
                 // Exploration Layer: Identify unique badges
                 if (stats) {

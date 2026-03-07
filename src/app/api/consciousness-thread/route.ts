@@ -57,17 +57,22 @@ export async function GET(req: Request) {
             .limit(10);
 
         // Merge and Tag
+        const getTimestamp = (item: Record<string, unknown>): number => {
+            const rawDate = typeof item.date === 'string' ? item.date : '';
+            return new Date(rawDate).getTime();
+        };
+
         const timeline = [
             ...(reports || []).map(r => ({ ...(r as object), type: 'report', priority: 4 })),
             ...(insights || []).map(i => ({ ...(i as object), type: 'insight', priority: 3 })),
             ...(actions || []).map(a => ({ ...(a as object), type: 'action', priority: 2 })),
             ...(pulses || []).map(p => ({ ...(p as object), type: 'pulse', priority: 1 })),
             ...(milestones || []).map(m => ({ ...(m as object), type: 'milestone', priority: 5 })),
-        ].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        ].sort((a, b) => getTimestamp(b as Record<string, unknown>) - getTimestamp(a as Record<string, unknown>));
 
         return NextResponse.json(timeline);
 
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Thread fetch failed' }, { status: 500 });
     }
 }

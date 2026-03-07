@@ -1,4 +1,4 @@
-import type { FC } from "react";
+﻿import type { FC } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Info } from "lucide-react";
 import { useMapState } from "../state/mapState";
@@ -205,7 +205,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
         </button>
         <div className="card-unified bg-white/90 p-6 text-left">
           <h2 className="text-lg font-bold text-slate-900 mb-2">الخطوة مش جاهزة دلوقتي</h2>
-          <p className="text-sm text-slate-600">لازم يكون ملف المدار فيه قراءة محفوظة عشان تشتغل الخطوة.</p>
+          <p className="text-sm text-slate-600">يلزم وجود قراءة محفوظة في ملف المدار قبل تشغيل هذه الخطوة.</p>
           <button
             type="button"
             onClick={() => setFallbackAttempt((value) => value + 1)}
@@ -304,10 +304,10 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
       </div>
 
       {contextualAffiliate && (
-        <div className="mb-6 card-unified bg-[var(--color-primary)]/80 border border-[var(--color-primary)] p-5 text-right">
+        <div className="mb-6 card-unified bg-[var(--soft-teal)]/80 border border-[var(--soft-teal)] p-5 text-right">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold text-[var(--color-primary)]">ترشيح مناسب لحالتك الآن</p>
+              <p className="text-xs font-semibold text-[var(--soft-teal)]">ترشيح مناسب لحالتك الآن</p>
               <h3 className="text-sm font-bold text-slate-900 mt-1">{contextualAffiliate.title}</h3>
               <p className="text-xs text-slate-600 mt-1">
                 {contextualAffiliateVariant === "A"
@@ -331,7 +331,7 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
                   scenarioKey: result?.scenarioKey ?? "unknown"
                 });
               }}
-              className="rounded-full bg-[var(--color-primary)] text-white px-4 py-2 text-xs font-semibold hover:bg-[var(--color-primary)] shrink-0"
+              className="rounded-full bg-[var(--soft-teal)] text-white px-4 py-2 text-xs font-semibold hover:bg-[var(--soft-teal)] shrink-0"
             >
               {contextualAffiliateVariant === "A" ? "شاهد الآن" : "ابدأ التطبيق الآن"}
             </a>
@@ -496,6 +496,5 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
     </div>
   );
 };
-
 
 

@@ -1,6 +1,7 @@
 import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
-export async function handleMissions(req: any, res: any) {
+export async function handleMissions(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdmin(req, res))) return;
   const client = getAdminSupabase();
   if (!client) {
@@ -23,13 +24,14 @@ export async function handleMissions(req: any, res: any) {
 
   if (req.method === "POST") {
     const body = await parseJsonBody(req);
-    const mission = body?.mission ?? body;
+    const bodyRecord = body as Record<string, unknown>;
+    const mission = ((bodyRecord?.mission as Record<string, unknown> | undefined) ?? bodyRecord) as Record<string, unknown>;
     const { error } = await client.from("admin_missions").insert({
-      id: mission.id,
-      title: mission.title,
-      track: mission.track,
-      difficulty: mission.difficulty,
-      created_at: mission.created_at || mission.createdAt || new Date().toISOString()
+      id: mission["id"],
+      title: mission["title"],
+      track: mission["track"],
+      difficulty: mission["difficulty"],
+      created_at: mission["created_at"] || mission["createdAt"] || new Date().toISOString()
     });
     if (error) {
       res.status(500).json({ error: "Failed to save mission" });
@@ -56,3 +58,6 @@ export async function handleMissions(req: any, res: any) {
 
   res.status(405).json({ error: "Method not allowed" });
 }
+
+
+

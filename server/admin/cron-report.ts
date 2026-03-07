@@ -1,6 +1,7 @@
 import { getAdminSupabase } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
-function verifyCron(req: any): boolean {
+function verifyCron(req: AdminRequest): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return true;
   const token = req.query?.secret || req.headers?.["x-cron-secret"];
@@ -41,7 +42,7 @@ function toDateOnly(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-export async function handleCronReportStandalone(req: any, res: any) {
+export async function handleCronReportStandalone(req: AdminRequest, res: AdminResponse) {
   if (!verifyCron(req)) {
     res.status(401).json({ error: "Unauthorized" });
     return;
@@ -55,7 +56,7 @@ export async function handleCronReportStandalone(req: any, res: any) {
 
   const period = String(req.query?.period ?? "daily");
   const now = new Date();
-  let report: any = null;
+  let report: Record<string, unknown> | null = null;
 
   if (period === "weekly") {
     const end = new Date(now);
@@ -136,3 +137,6 @@ export async function handleCronReportStandalone(req: any, res: any) {
 
   res.status(200).json({ ok: true, period });
 }
+
+
+

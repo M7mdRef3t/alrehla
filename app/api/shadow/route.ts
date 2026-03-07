@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ message: 'Shadow profile generation initiated.', source: 'shadow_protocol', is_live: true });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Error in Shadow API:', err);
         return NextResponse.json({ error: 'Shadow generation failed', source: 'generation_failed', is_live: false }, { status: 502 });
     }

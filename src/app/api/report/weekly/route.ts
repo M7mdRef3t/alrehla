@@ -8,6 +8,19 @@ const supabaseAdmin = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY || ""
 );
 
+type WeeklySummary = {
+    avgMood: string;
+    avgEnergy: string;
+    topStress: string;
+    daysLogged: number;
+    insightCount: number | null;
+    trajectory?: {
+        status: 'up' | 'down' | 'stable';
+        moodDelta: string;
+        energyDelta: string;
+    };
+};
+
 const WEEKLY_SYSTEM_PROMPT = `أنت "محلل الأنماط" في منصة "رحلتي" (Dawayir). 
 مهمتك تحويل البيانات الرقمية الأسبوعية للمستخدم إلى "سرد تطوري" (Narrative Report) حكيم وصادق بالمصري.
 
@@ -104,7 +117,7 @@ export async function GET(req: Request) {
         pulses.forEach(p => { if (p.stress_tag) stressCounts[p.stress_tag] = (stressCounts[p.stress_tag] || 0) + 1; });
         const topStress = Object.entries(stressCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'نفسي';
 
-        let summaryData: any = {
+        const summaryData: WeeklySummary = {
             avgMood: avgMood.toFixed(1),
             avgEnergy: avgEnergy.toFixed(1),
             topStress,
@@ -141,18 +154,18 @@ export async function GET(req: Request) {
 
         return NextResponse.json(saved || { report_result: parsed, summary_data: summaryData });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Weekly Report Error:', err);
         return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
     }
 }
 
-function calculateTrajectory(curr: any, prev: any) {
+function calculateTrajectory(curr: Pick<WeeklySummary, 'avgMood' | 'avgEnergy'>, prev: Pick<WeeklySummary, 'avgMood' | 'avgEnergy'>) {
     const moodDiff = parseFloat(curr.avgMood) - parseFloat(prev.avgMood);
     const energyDiff = parseFloat(curr.avgEnergy) - parseFloat(prev.avgEnergy);
 
     // Status: 'up', 'down', 'stable'
-    let status = 'stable';
+    let status: 'up' | 'down' | 'stable' = 'stable';
     if (moodDiff > 0.2 || energyDiff > 0.2) status = 'up';
     else if (moodDiff < -0.2 || energyDiff < -0.2) status = 'down';
 

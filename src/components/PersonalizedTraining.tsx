@@ -89,7 +89,7 @@ export const PersonalizedTraining: React.FC<PersonalizedTrainingProps> = ({
               مفيش تدريبات متاحة
             </h3>
             <p className="text-sm text-slate-600 mb-4">
-              لازم تختار أعراض في شاشة النتيجة عشان نقدر نولد تدريبات مخصصة ليك
+              اختر الأعراض في شاشة النتيجة أولًا حتى نتمكن من توليد تدريب مخصص لك
             </p>
             <button
               onClick={onClose}

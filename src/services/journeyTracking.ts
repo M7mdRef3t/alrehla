@@ -10,12 +10,12 @@ import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "
 import { getAuthUserId } from "../state/authState";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { sendJsonWithResilience } from "../architecture/resilientHttp";
+import { getStoredUtmParams } from "./marketingAttribution";
 
 const KEY_MODE = "dawayir-tracking-mode";
 const KEY_EVENTS = "dawayir-journey-events";
 const KEY_SESSION_ID = "dawayir-session-id";
 const KEY_API_URL = "dawayir-tracking-api-url";
-const KEY_UTM = "dawayir-utm-params";
 const MAX_EVENTS = 2000;
 const SUPABASE_EVENTS_TABLE = "journey_events";
 const SUPABASE_PROFILES_TABLE = "profiles";
@@ -64,15 +64,6 @@ let lastFlowStepTimestamp: number | null = null;
 let lastFlowStepName: string | null = null;
 
 /** UTM params reader — مخزنة من main.tsx عند أول زيارة */
-function getStoredUtmParams(): Record<string, string> | null {
-  if (!isBrowser) return null;
-  try {
-    const raw = getFromLocalStorage(KEY_UTM);
-    if (!raw) return null;
-    return JSON.parse(raw) as Record<string, string>;
-  } catch { return null; }
-}
-
 function getOrCreateSessionId(): string {
   if (!isBrowser) return "";
   let id = getFromLocalStorage(KEY_SESSION_ID);
@@ -289,6 +280,7 @@ export function getLastTaskForNode(nodeId: string): LastTaskForNode | null {
 /** نقاط تدفق الزائر — للوحة الأونر (خريطة القرارات) */
 export type FlowStep =
   | "landing_viewed"
+  | "landing_ab_assigned"
   | "landing_clicked_start"
   | "cta_free_clicked"
   | "cta_checkout_clicked"

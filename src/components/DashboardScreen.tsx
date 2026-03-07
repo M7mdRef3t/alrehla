@@ -20,8 +20,8 @@ import { supabase } from "../services/supabaseClient";
 import { TrajectoryDashboard } from "./Trajectory/TrajectoryDashboard";
 import { ResonanceAlert } from "./CommandCenter/ResonanceAlert";
 
-/* ── DASHBOARD SCREEN — غرفة العمليات
-   ════════════════════════════════════════════════ */
+/*  DASHBOARD SCREEN  غرفة اعات
+    */
 
 interface DashboardScreenProps {
   firstName: string | null;
@@ -30,7 +30,7 @@ interface DashboardScreenProps {
   onNavigateToSettings?: () => void;
 }
 
-/* ── Mini node for the live map card ── */
+/*  Mini node for the live map card  */
 interface MiniNode {
   id: string;
   label: string;
@@ -47,7 +47,7 @@ const RING_COLOR: Record<string, string> = {
   grey: "rgba(148,163,184,0.5)",
 };
 
-/* ── Floating node in mini-map ── */
+/*  Floating node in mini-map  */
 const FloatingNode: FC<{
   node: MiniNode;
   index: number;
@@ -115,7 +115,7 @@ const FloatingNode: FC<{
   );
 };
 
-/* ── Main Dashboard ── */
+/*  Main Dashboard  */
 export const DashboardScreen: FC<DashboardScreenProps> = ({
   firstName,
   onNavigateToMap,
@@ -178,11 +178,11 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
   useEffect(() => {
     const res = recordDailyVisit();
     if (res.currentStreak > 0) {
-      addXP(20, "تسجيل دخول يومي");
+      addXP(20, "تسج دخ ");
     }
   }, [addXP]);
 
-  /* Spread nodes across a virtual 100×100 grid */
+  /* Spread nodes across a virtual 100100 grid */
   const miniNodes: MiniNode[] = useMemo(() => {
     const positions = [
       [50, 38], [28, 55], [72, 52], [38, 72], [64, 70],
@@ -210,8 +210,8 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    const timeGreet = hour < 12 ? "صباح النور" : hour < 17 ? "مرحباً" : "مساء الخير";
-    return firstName ? `${timeGreet} يا قائد ${firstName}` : `${timeGreet} يا قائد`;
+    const timeGreet = hour < 12 ? "صباح ار" : hour < 17 ? "رحبا" : "ساء اخر";
+    return firstName ? `${timeGreet} ا ائد ${firstName}` : `${timeGreet} ا ائد`;
   }, [firstName]);
 
   return (
@@ -224,7 +224,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
       dir="rtl"
     >
       <ResonanceAlert />
-      {/* ── Greeting header ── */}
+      {/*  Greeting header  */}
       <motion.div
         className="flex items-center justify-between pt-2"
         initial={{ opacity: 0, y: -12 }}
@@ -233,12 +233,12 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
       >
         <div>
           <p className="text-xs font-medium text-teal-500/80 uppercase tracking-widest">
-            غرفة العمليات المركزية
+            غرفة اعات ارزة
           </p>
           <h1 className="text-xl font-bold leading-snug text-white mt-1">
             {greeting}
           </h1>
-          <p className="text-sm text-slate-400">حالة النظام: مستقر 🟢</p>
+          <p className="text-sm text-slate-400">حاة اظا: ستر </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Streak compact badge */}
@@ -255,7 +255,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
               }}
               whileHover={{ color: "#94a3b8", borderColor: "rgba(255,255,255,0.15)" }}
               whileTap={{ scale: 0.93 }}
-              aria-label="الإعدادات"
+              aria-label="اإعدادات"
             >
               <Settings className="w-4 h-4" />
             </motion.button>
@@ -276,13 +276,13 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
         </div>
       </motion.div>
 
-      {/* ── AI Oracle Insight ── */}
+      {/*  AI Oracle Insight  */}
       {subInfo?.features.hasAiOracle && <AIOracleWidget />}
 
-      {/* ── Level & Progress Banner ── */}
+      {/*  Level & Progress Banner  */}
       <LevelBanner />
 
-      {/* ── Wave 1: Quick Action Buttons ── */}
+      {/*  Wave 1: Quick Action Buttons  */}
       <motion.div
         className="grid grid-cols-2 gap-3"
         initial={{ opacity: 0, y: 12 }}
@@ -291,16 +291,16 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
       >
         <motion.button
           onClick={() => setShowQuickPath(true)}
-          className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-[var(--color-primary)] transition-colors"
+          className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-[var(--soft-teal)] transition-colors"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
         >
-          <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0">
-            <Zap className="w-5 h-5 text-[var(--color-primary)]" />
+          <div className="w-10 h-10 rounded-xl bg-[var(--soft-teal)]/10 flex items-center justify-center shrink-0">
+            <Zap className="w-5 h-5 text-[var(--soft-teal)]" />
           </div>
           <div className="text-right">
-            <p className="text-xs text-white">جملة طوارئ</p>
-            <p className="text-[10px] text-slate-400 font-normal">خروج فوري</p>
+            <p className="text-xs text-white">جة طارئ</p>
+            <p className="text-[10px] text-slate-400 font-normal">خرج فر</p>
           </div>
         </motion.button>
 
@@ -314,8 +314,8 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
             <Users className="w-5 h-5 text-teal-400" />
           </div>
           <div className="text-right">
-            <p className="text-xs text-white">مجتمع الدعم</p>
-            <p className="text-[10px] text-slate-400 font-normal">دوائر مجهولة</p>
+            <p className="text-xs text-white">جتع ادع</p>
+            <p className="text-[10px] text-slate-400 font-normal">دائر جة</p>
           </div>
         </motion.button>
 
@@ -329,8 +329,8 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
             <Gift className="w-5 h-5 text-amber-400" />
           </div>
           <div className="text-right">
-            <p className="text-xs text-white">ادعُ قائداً</p>
-            <p className="text-[10px] text-slate-400 font-normal">احصل على بريميوم</p>
+            <p className="text-xs text-white">ادعُ ائدا</p>
+            <p className="text-[10px] text-slate-400 font-normal">احص ع بر</p>
           </div>
         </motion.button>
 
@@ -344,16 +344,16 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
             <Share2 className="w-5 h-5 text-blue-400" />
           </div>
           <div className="text-right">
-            <p className="text-xs text-white">شارك الخريطة</p>
-            <p className="text-[10px] text-slate-400 font-normal">انتشار فيروسي</p>
+            <p className="text-xs text-white">شار اخرطة</p>
+            <p className="text-[10px] text-slate-400 font-normal">اتشار فرس</p>
           </div>
         </motion.button>
       </motion.div>
 
-      {/* ── Wave 1: Streak Widget ── */}
+      {/*  Wave 1: Streak Widget  */}
       <StreakWidget />
 
-      {/* ── Live Map Card (Radar) ── */}
+      {/*  Live Map Card (Radar)  */}
       <motion.div
         ref={cardRef}
         className="relative rounded-3xl overflow-hidden cursor-pointer group"
@@ -403,8 +403,8 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
 
           {activeNodes.length === 0 && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-              <p className="text-teal-500 font-bold mb-2">الرادار فاضي!</p>
-              <p className="text-slate-500 text-xs">ابدأ استطلاع محيطك وضيف أول دايرة.</p>
+              <p className="text-teal-500 font-bold mb-2">ارادار فاض!</p>
+              <p className="text-slate-500 text-xs">ابدأ استطاع حط ضف أ دارة.</p>
             </div>
           )}
         </div>
@@ -413,10 +413,10 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent p-5 pt-12 flex items-end justify-between">
           <div>
             <p className="text-xs font-mono text-teal-400/70 mb-1">
-              إحصائيات الميدان
+              إحصائات ادا
             </p>
             <div className="flex gap-3 text-xs font-bold text-white">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> {greenCount} آمن</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> {greenCount} آ</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> {redCount} خطر</span>
             </div>
           </div>
@@ -426,29 +426,29 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
             className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold bg-teal-500/10 border border-teal-500/30 text-teal-300 group-hover:bg-teal-500/20 transition-all"
             whileHover={{ scale: 1.05 }}
           >
-            فتح الخريطة الاستراتيجية
+            فتح اخرطة ااستراتجة
           </motion.div>
         </div>
       </motion.div>
 
-      {/* ── Trajectory Dashboard (The Guidance Layer) ── */}
+      {/*  Trajectory Dashboard (The Guidance Layer)  */}
       <TrajectoryDashboard userId={userId} />
 
-      {/* ── War Room Widget (Daily Intel) ── */}
+      {/*  War Room Widget (Daily Intel)  */}
       <WarRoomWidget />
 
-      {/* ── Daily Quests ── */}
+      {/*  Daily Quests  */}
       <DailyQuests />
 
-      {/* ── Medals Board ── */}
+      {/*  Medals Board  */}
       <MedalsBoard />
 
-      {/* ── Emergency SOS ── */}
+      {/*  Emergency SOS  */}
       <div className="py-4 flex justify-center">
         <EmergencySOS />
       </div>
 
-      {/* ── Wave 1: Modals ── */}
+      {/*  Wave 1: Modals  */}
       <AnimatePresence>
         {showQuickPath && (
           <QuickPathModal onClose={() => setShowQuickPath(false)} />
@@ -495,5 +495,6 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
     </motion.div>
   );
 };
+
 
 

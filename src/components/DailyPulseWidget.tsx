@@ -1,31 +1,27 @@
 import type { FC } from "react";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Check, Zap, Smile, Frown, Meh, Heart, Star, Quote, RefreshCw, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, Check, Smile, Frown, Meh, Heart, Star, RefreshCw, BookOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { useDailyPulse } from "../hooks/useDailyPulse";
 import { useDailyQuestion } from "../hooks/useDailyQuestion";
-import { supabase } from "../services/supabaseClient";
 import { GoogleAuthModal } from "./GoogleAuthModal";
 import { useAuthState } from "../state/authState";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
-import type { PostAuthIntent } from "../utils/postAuthIntent";
 import type { PulseMood } from "../state/pulseState";
 
 /**
- * 🎨 PULSE CAPSULE (Daily Vital Sign)
- * ─────────────────────────────────────────────────────────────────────────────
- * تحويل الـ DailyPulse من Widget تقليدي إلى HUD Vital Sign هادئ واحترافي.
+ *  PULSE CAPSULE (Daily Vital Sign)
+ * 
+ * تح ا DailyPulse  Widget تد إ HUD Vital Sign ادئ احتراف.
  */
 
 const MOODS = [
-  { val: 1, icon: Frown, color: '#94a3b8', label: 'متضايق', secondary: '#f87171' },
-  { val: 2, icon: Meh, color: '#94a3b8', label: 'عادي', secondary: '#fb923c' },
-  { val: 3, icon: Smile, color: '#10b981', label: 'رايق', secondary: '#facc15' },
-  { val: 4, icon: Heart, color: '#10b981', label: 'مبسوط', secondary: '#4ade80' },
-  { val: 5, icon: Star, color: '#10b981', label: 'طاير', secondary: '#2dd4bf' },
+  { val: 1, icon: Frown, color: '#94a3b8', label: 'تضا', secondary: '#f87171' },
+  { val: 2, icon: Meh, color: '#94a3b8', label: 'عاد', secondary: '#fb923c' },
+  { val: 3, icon: Smile, color: '#10b981', label: 'را', secondary: '#facc15' },
+  { val: 4, icon: Heart, color: '#10b981', label: 'بسط', secondary: '#4ade80' },
+  { val: 5, icon: Star, color: '#10b981', label: 'طار', secondary: '#2dd4bf' },
 ];
-
-const STRESS_TAGS = ["شغل", "أهل", "صحة", "فلوس", "علاقات", "نفسي"];
 
 const MOOD_MAPPING: Record<number, PulseMood> = {
   1: 'sad',
@@ -42,7 +38,7 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
   const [isExpanded, setIsExpanded] = useState(false);
   const [mood, setMood] = useState(3);
   const [energy, setEnergy] = useState(3);
-  const [stressTag, setStressTag] = useState("نفسي");
+  const [stressTag, setStressTag] = useState("فس");
   const [note, setNote] = useState("");
   const [isSaved, setIsSaved] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -67,16 +63,16 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
     }
   };
 
-  // ─── Behavioral Logic: Meaning & Diff ──────────────────────────────────────
+  //  Behavioral Logic: Meaning & Diff 
   const meaning = useMemo(() => {
-    if (!hasAnsweredToday) return "تسجيل نبض الآن";
+    if (!hasAnsweredToday) return "تسج بض اآ";
     const currentMood = todayPulse?.mood || 3;
-    if (currentMood === 1) return "حاجة للسكون (إجهاد مرتفع)";
-    if (currentMood === 2) return "مراقبة هادئة (ترقب)";
-    if (currentMood === 3) return "النظام في حالة استقرار (توازن)";
-    if (currentMood === 4) return "توازن متصاعد (نشاط إيجابي)";
-    if (currentMood === 5) return "اتساع في الوعي (حالة مثالية)";
-    return "نبض مستقر";
+    if (currentMood === 1) return "حاجة س (إجاد رتفع)";
+    if (currentMood === 2) return "رابة ادئة (ترب)";
+    if (currentMood === 3) return "اظا ف حاة استرار (تاز)";
+    if (currentMood === 4) return "تاز تصاعد (شاط إجاب)";
+    if (currentMood === 5) return "اتساع ف اع (حاة ثاة)";
+    return "بض ستر";
   }, [hasAnsweredToday, todayPulse]);
 
   const diff = useMemo(() => {
@@ -87,7 +83,7 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
     if (delta === 0) return null;
     return {
       val: Math.abs(delta).toFixed(1),
-      dir: delta > 0 ? "↑" : "↓",
+      dir: delta > 0 ? "" : "",
       color: delta > 0 ? "text-emerald-400" : "text-white/40"
     };
   }, [hasAnsweredToday, history, todayPulse]);
@@ -107,7 +103,7 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
       await savePulse({ mood: finalMood, energy, stress_tag: stressTag, note, focus: 'general' });
       setIsSaved(true);
 
-      // 🚀 Auth Conversion Trigger (Pulse #2 for Guests)
+      //  Auth Conversion Trigger (Pulse #2 for Guests)
       if (!user && history.length >= 1) {
         setTimeout(() => setIsAuthOpen(true), 1500);
       }
@@ -125,7 +121,7 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
 
   return (
     <div className="relative flex flex-col items-center">
-      {/* ── 💊 PULSE CAPSULE (Vital Sign HUD) ── */}
+      {/*   PULSE CAPSULE (Vital Sign HUD)  */}
       <motion.button
         layout
         onClick={() => setIsExpanded(!isExpanded)}
@@ -157,7 +153,7 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
           {meaning}
         </span>
 
-        {/* 🚀 Progress Illusion (Zeigarnik Effect) */}
+        {/*  Progress Illusion (Zeigarnik Effect) */}
         {hasAnsweredToday && (
           <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 whitespace-nowrap opacity-60">
             <div className="flex gap-0.5">
@@ -172,7 +168,7 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
               })}
             </div>
             <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">
-              {history.length >= 7 ? '3/3' : history.length >= 3 ? '2/3' : '1/3'} خطوة في الرحلة
+              {history.length >= 7 ? '3/3' : history.length >= 3 ? '2/3' : '1/3'} خطة ف ارحة
             </span>
           </div>
         )}
@@ -185,7 +181,7 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
             transition={{ repeat: Infinity, duration: 4 }}
             className="absolute -bottom-8 right-0 text-[8px] font-black text-[#8A8A8A] uppercase tracking-[0.3em] pointer-events-none"
           >
-            ابدأ من هنا
+            ابدأ  ا
           </motion.div>
         )}
 
@@ -210,7 +206,7 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
                 animate={{ opacity: 1, y: 0 }}
                 className="text-[9px] font-black text-emerald-400 uppercase tracking-widest"
               >
-                تم تسجيل النبض
+                ت تسج ابض
               </motion.span>
             </motion.div>
           )}
@@ -243,7 +239,7 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
         </div>
       </motion.button>
 
-      {/* ── 📦 EXPANDED PULSE (The Input Layer) ── */}
+      {/*   EXPANDED PULSE (The Input Layer)  */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -267,12 +263,12 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
                     </button>
                   )}
                 </div>
-                <h3 className="text-sm font-black text-white/40 uppercase tracking-widest">نبض النظام</h3>
+                <h3 className="text-sm font-black text-white/40 uppercase tracking-widest">بض اظا</h3>
               </div>
 
               {/* Mood Selection */}
               <div className="space-y-3">
-                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">الحالة المزاجية</p>
+                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">احاة ازاجة</p>
                 <div className="flex justify-between gap-2">
                   {MOODS.map((m) => {
                     const Icon = m.icon;
@@ -294,7 +290,7 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
 
               {/* Energy Slider */}
               <div className="space-y-3">
-                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">مستوى الطاقة</p>
+                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">ست اطاة</p>
                 <div className="flex items-center gap-3">
                   <div className="flex-1 flex gap-1.5 h-1.5">
                     {[1, 2, 3, 4, 5].map((i) => (
@@ -319,7 +315,7 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  placeholder="اكتب بصمت..."
+                  placeholder="اتب بصت..."
                   className="w-full bg-white/5 border border-white/5 rounded-2xl p-4 text-xs text-white placeholder:text-white/20 focus:border-emerald-500/30 focus:outline-none transition-all resize-none"
                   rows={2}
                 />
@@ -333,7 +329,7 @@ export const DailyPulseWidget: FC<{ onOpenArchive?: () => void }> = ({ onOpenArc
                   }`}
               >
                 {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : (isSaved ? <Check className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />)}
-                {isSaved ? "تم الضبط" : (hasAnsweredToday ? 'تحديث النبض' : 'تسجيل الدخول للنفس')}
+                {isSaved ? "ت اضبط" : (hasAnsweredToday ? 'تحدث ابض' : 'تسج ادخ فس')}
               </button>
             </div>
           </motion.div>

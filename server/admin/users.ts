@@ -1,6 +1,7 @@
 import { getAdminSupabase, verifyAdmin } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
-export async function handleUsers(req: any, res: any) {
+export async function handleUsers(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdmin(req, res))) return;
   if (req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
@@ -26,3 +27,6 @@ export async function handleUsers(req: any, res: any) {
 
   res.status(200).json({ users: data });
 }
+
+
+

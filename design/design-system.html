@@ -1,0 +1,1041 @@
+﻿
+$out = "c:\Users\moham\Downloads\alrehla\design\design-system.html"
+$html = @'
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ø§Ù„Ø±Ø­Ù„Ø© â€” Design System v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+--c-void:#0a0e1f;--c-950:#0f1629;--c-deep:#131a35;--c-mid:#1a2242;--c-nebula:#212b4f;--c-aurora:#2a3560;
+--c-teal-400:#2dd4bf;--c-teal-500:#14b8a6;--c-teal-600:#0d9488;
+--c-amber-500:#f5a623;--c-amber-600:#d97706;--c-amber-soft:rgba(245,166,35,.12);--c-amber-glow:rgba(245,166,35,.25);
+--c-emerald-500:#10b981;--c-emerald-600:#059669;--c-emerald-soft:rgba(16,185,129,.12);
+--c-rose-400:#f87171;--c-rose-soft:rgba(248,113,113,.12);
+--c-violet-400:#a78bfa;--c-violet-soft:rgba(167,139,250,.12);
+--c-sky-400:#38bdf8;--c-sky-soft:rgba(56,189,248,.12);
+--text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:rgba(148,163,184,.5);
+--border:rgba(255,255,255,.07);--border-hover:rgba(255,255,255,.14);
+--glass:rgba(15,23,42,.6);--glass-hover:rgba(15,23,42,.8);
+--radius-sm:.5rem;--radius:.75rem;--radius-lg:1.25rem;--radius-xl:1.75rem;--radius-full:9999px;
+--shadow-sm:0 2px 8px rgba(0,0,0,.3);--shadow:0 4px 24px rgba(0,0,0,.4);--shadow-lg:0 12px 48px rgba(0,0,0,.5);
+--ease:cubic-bezier(.22,1,.36,1);--dur:.25s;
+--sp-1:8px;--sp-2:16px;--sp-3:24px;--sp-4:32px;--sp-5:40px;--sp-6:48px;--sp-8:64px;--sp-10:80px;--sp-12:96px;
+--font-sans:'Almarai','IBM Plex Sans Arabic',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--c-void);color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.75;-webkit-font-smoothing:antialiased}
+a{color:var(--c-teal-400);text-decoration:none}
+/* NAV */
+.ds-nav{position:fixed;top:0;right:0;width:260px;height:100vh;background:var(--c-deep);border-left:1px solid var(--border);overflow-y:auto;padding:var(--sp-3);z-index:100}
+.ds-nav h2{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:var(--sp-2);padding-bottom:var(--sp-1);border-bottom:1px solid var(--border)}
+.ds-nav ul{list-style:none;margin-bottom:var(--sp-3)}
+.ds-nav li a{display:block;padding:5px 10px;border-radius:var(--radius-sm);font-size:.8rem;color:var(--text-secondary);transition:all var(--dur) var(--ease)}
+.ds-nav li a:hover{background:var(--border);color:var(--text-primary)}
+/* MAIN */
+.ds-main{margin-right:260px;padding:var(--sp-8) var(--sp-6)}
+/* HERO */
+.ds-hero{text-align:center;padding:var(--sp-12) 0 var(--sp-8);border-bottom:1px solid var(--border);margin-bottom:var(--sp-8)}
+.ds-hero h1{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:800;letter-spacing:-.04em;background:linear-gradient(135deg,var(--c-teal-400),var(--c-amber-500));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ds-hero p{color:var(--text-secondary);font-size:1.1rem;margin-top:var(--sp-2)}
+.ds-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:var(--c-teal-soft,rgba(45,212,191,.1));border:1px solid rgba(45,212,191,.3);border-radius:var(--radius-full);font-size:.75rem;font-weight:700;color:var(--c-teal-400);margin-bottom:var(--sp-3)}
+/* SECTION */
+.ds-section{margin-bottom:var(--sp-12)}
+.ds-section-title{font-size:1.75rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+.ds-section-sub{color:var(--text-secondary);font-size:.9rem;margin-bottom:var(--sp-4)}
+.ds-divider{height:1px;background:var(--border);margin:var(--sp-6) 0}
+/* CARDS / GLASS */
+.ds-card{background:var(--glass);backdrop-filter:blur(24px);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--sp-3);transition:all var(--dur) var(--ease)}
+.ds-card:hover{background:var(--glass-hover);border-color:var(--border-hover);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.ds-grid{display:grid;gap:var(--sp-3)}
+.ds-grid-2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.ds-grid-3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.ds-grid-4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+/* COLOR SWATCH */
+.swatch{border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)}
+.swatch-color{height:80px}
+.swatch-info{padding:10px 12px;background:var(--c-mid)}
+.swatch-name{font-size:.75rem;font-weight:700}
+.swatch-hex{font-size:.7rem;color:var(--text-muted);font-family:monospace}
+/* TYPOGRAPHY SCALE */
+.type-row{padding:var(--sp-2) 0;border-bottom:1px solid var(--border);display:grid;grid-template-columns:100px 1fr 80px 80px;align-items:center;gap:var(--sp-2)}
+.type-label{font-size:.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
+.type-meta{font-size:.72rem;color:var(--text-muted);font-family:monospace}
+/* SPACING TOKENS */
+.sp-row{display:flex;align-items:center;gap:var(--sp-2);padding:8px 0;border-bottom:1px solid var(--border)}
+.sp-bar{height:20px;background:linear-gradient(90deg,var(--c-teal-400),var(--c-amber-500));border-radius:3px;min-width:4px}
+.sp-label{font-size:.72rem;font-family:monospace;color:var(--text-secondary);min-width:60px}
+/* COMPONENT STATES */
+.comp-states{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-2)}
+.state-label{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-top:var(--sp-2);margin-bottom:6px}
+/* CODE BLOCK */
+.ds-code{background:var(--c-mid);border:1px solid var(--border);border-radius:var(--radius);padding:var(--sp-2) var(--sp-3);font-family:monospace;font-size:.78rem;color:#e2e8f0;overflow-x:auto;margin-top:var(--sp-2);line-height:1.6;white-space:pre}
+.ds-code .k{color:var(--c-violet-400)}.ds-code .s{color:var(--c-amber-500)}.ds-code .c{color:var(--text-muted)}
+/* TAG CHIP */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--radius-full);font-size:.72rem;font-weight:600;border:1px solid}
+.chip-teal{color:var(--c-teal-400);border-color:rgba(45,212,191,.3);background:rgba(45,212,191,.1)}
+.chip-amber{color:var(--c-amber-500);border-color:rgba(245,166,35,.3);background:var(--c-amber-soft)}
+.chip-rose{color:var(--c-rose-400);border-color:rgba(248,113,113,.3);background:var(--c-rose-soft)}
+.chip-violet{color:var(--c-violet-400);border-color:rgba(167,139,250,.3);background:var(--c-violet-soft)}
+.chip-emerald{color:var(--c-emerald-500);border-color:rgba(16,185,129,.3);background:var(--c-emerald-soft)}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;font-family:var(--font-sans);font-weight:700;cursor:pointer;border:none;transition:all var(--dur) var(--ease);position:relative}
+.btn-lg{padding:.875rem 2rem;font-size:1rem;border-radius:var(--radius)}
+.btn-md{padding:.625rem 1.5rem;font-size:.875rem;border-radius:var(--radius-sm)}
+.btn-sm{padding:.375rem 1rem;font-size:.75rem;border-radius:var(--radius-sm)}
+.btn-primary{background:linear-gradient(135deg,var(--c-amber-500),var(--c-amber-600));color:#0a0e1f}
+.btn-primary:hover{box-shadow:0 0 24px var(--c-amber-glow);transform:translateY(-1px)}
+.btn-success{background:linear-gradient(135deg,var(--c-emerald-500),var(--c-emerald-600));color:#fff}
+.btn-success:hover{box-shadow:0 0 24px rgba(16,185,129,.35);transform:translateY(-1px)}
+.btn-teal{background:linear-gradient(135deg,var(--c-teal-400),var(--c-teal-600));color:#0a0e1f}
+.btn-teal:hover{box-shadow:0 0 24px rgba(45,212,191,.3);transform:translateY(-1px)}
+.btn-glass{background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border:1px solid var(--border-hover);color:var(--text-primary)}
+.btn-glass:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.2)}
+.btn-ghost{background:transparent;border:1px solid var(--border-hover);color:var(--text-secondary)}
+.btn-ghost:hover{border-color:var(--c-teal-400);color:var(--c-teal-400)}
+.btn-danger{background:linear-gradient(135deg,var(--c-rose-400),#ef4444);color:#fff}
+.btn-danger:hover{box-shadow:0 0 24px rgba(248,113,113,.3)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.btn-loading::after{content:'';width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* INPUT */
+.ds-input{width:100%;padding:.625rem 1rem;background:var(--c-mid);border:1px solid var(--border-hover);border-radius:var(--radius-sm);color:var(--text-primary);font-family:var(--font-sans);font-size:.875rem;transition:all var(--dur) var(--ease);outline:none}
+.ds-input:focus{border-color:var(--c-teal-400);box-shadow:0 0 0 3px rgba(45,212,191,.15)}
+.ds-input::placeholder{color:var(--text-muted)}
+.ds-input.error{border-color:var(--c-rose-400)}
+.ds-input.success{border-color:var(--c-emerald-500)}
+.ds-label{display:block;font-size:.8rem;font-weight:700;color:var(--text-secondary);margin-bottom:6px}
+.ds-hint{font-size:.72rem;color:var(--text-muted);margin-top:4px}
+.ds-field-error{font-size:.72rem;color:var(--c-rose-400);margin-top:4px}
+/* TEXTAREA */
+.ds-textarea{min-height:100px;resize:vertical}
+/* SELECT / PILL SELECT */
+.ds-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:left .75rem center}
+/* CHECKBOX & RADIO */
+.ds-check{display:flex;align-items:center;gap:.5rem;cursor:pointer}
+.ds-check input{width:18px;height:18px;accent-color:var(--c-teal-400);cursor:pointer}
+/* TOGGLE */
+.ds-toggle{position:relative;display:inline-block;width:44px;height:24px}
+.ds-toggle input{opacity:0;width:0;height:0}
+.ds-toggle-track{position:absolute;inset:0;background:var(--c-mid);border:1px solid var(--border-hover);border-radius:var(--radius-full);transition:all var(--dur) var(--ease);cursor:pointer}
+.ds-toggle input:checked+.ds-toggle-track{background:var(--c-teal-400);border-color:var(--c-teal-400)}
+.ds-toggle-track::before{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;right:2px;transition:transform var(--dur) var(--ease)}
+.ds-toggle input:checked+.ds-toggle-track::before{transform:translateX(-20px)}
+/* BADGE */
+.ds-badge-sm{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--radius-full);font-size:.65rem;font-weight:700}
+.bs-teal{background:rgba(45,212,191,.15);color:var(--c-teal-400)}
+.bs-amber{background:var(--c-amber-soft);color:var(--c-amber-500)}
+.bs-rose{background:var(--c-rose-soft);color:var(--c-rose-400)}
+.bs-emerald{background:var(--c-emerald-soft);color:var(--c-emerald-500)}
+.bs-violet{background:var(--c-violet-soft);color:var(--c-violet-400)}
+.bs-neutral{background:rgba(148,163,184,.1);color:var(--text-secondary)}
+/* AVATAR */
+.ds-av{border-radius:50%;background:var(--c-mid);display:flex;align-items:center;justify-content:center;font-weight:700;border:2px solid var(--border-hover);overflow:hidden;flex-shrink:0}
+.av-xs{width:28px;height:28px;font-size:.65rem}
+.av-sm{width:36px;height:36px;font-size:.8rem}
+.av-md{width:48px;height:48px;font-size:1rem}
+.av-lg{width:64px;height:64px;font-size:1.25rem}
+.av-xl{width:80px;height:80px;font-size:1.5rem}
+.av-online{position:relative}.av-online::after{content:'';position:absolute;bottom:1px;left:1px;width:10px;height:10px;background:var(--c-emerald-500);border-radius:50%;border:2px solid var(--c-void)}
+/* PROGRESS */
+.ds-prog-wrap{width:100%;background:var(--c-mid);border-radius:var(--radius-full);overflow:hidden;height:8px}
+.ds-prog{height:100%;border-radius:var(--radius-full);transition:width .6s var(--ease)}
+.prog-teal{background:linear-gradient(90deg,var(--c-teal-400),var(--c-teal-500))}
+.prog-amber{background:linear-gradient(90deg,var(--c-amber-500),var(--c-amber-600))}
+.prog-rose{background:linear-gradient(90deg,var(--c-rose-400),#ef4444)}
+/* ALERT BANNER */
+.ds-alert{display:flex;gap:.75rem;padding:.875rem 1.25rem;border-radius:var(--radius);border:1px solid;font-size:.875rem;align-items:flex-start}
+.alert-info{background:rgba(45,212,191,.08);border-color:rgba(45,212,191,.25);color:var(--c-teal-400)}
+.alert-success{background:var(--c-emerald-soft);border-color:rgba(16,185,129,.3);color:var(--c-emerald-500)}
+.alert-warning{background:var(--c-amber-soft);border-color:rgba(245,166,35,.3);color:var(--c-amber-500)}
+.alert-danger{background:var(--c-rose-soft);border-color:rgba(248,113,113,.3);color:var(--c-rose-400)}
+/* TOOLTIP */
+.ds-tip{position:relative;display:inline-block}
+.ds-tip::after,.ds-tip::before{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);opacity:0;transition:opacity .2s;pointer-events:none}
+.ds-tip::after{content:attr(data-tip);background:var(--c-aurora);color:var(--text-primary);padding:4px 10px;border-radius:var(--radius-sm);font-size:.72rem;white-space:nowrap;border:1px solid var(--border-hover)}
+.ds-tip::before{content:'';border:5px solid transparent;border-top-color:var(--c-aurora);bottom:calc(100% + 2px)}
+.ds-tip:hover::after,.ds-tip:hover::before{opacity:1}
+/* MODAL OVERLAY */
+.ds-modal-demo{position:relative;min-height:200px;background:var(--c-mid);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ds-modal{background:var(--c-deep);border:1px solid var(--border-hover);border-radius:var(--radius-lg);padding:var(--sp-4);max-width:420px;width:90%;box-shadow:var(--shadow-lg)}
+.ds-modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-2)}
+.ds-modal-title{font-size:1.1rem;font-weight:800}
+.ds-modal-close{width:32px;height:32px;background:var(--c-mid);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:1rem}
+.ds-modal-close:hover{color:var(--text-primary);border-color:var(--border-hover)}
+/* TABS */
+.ds-tabs{display:flex;gap:4px;background:var(--c-mid);padding:4px;border-radius:var(--radius);border:1px solid var(--border)}
+.ds-tab{padding:.5rem 1.25rem;border-radius:calc(var(--radius) - 2px);font-size:.8rem;font-weight:700;cursor:pointer;transition:all var(--dur) var(--ease);color:var(--text-secondary);border:none;background:transparent;font-family:var(--font-sans)}
+.ds-tab:hover{color:var(--text-primary)}
+.ds-tab.active{background:var(--c-aurora);color:var(--text-primary);box-shadow:var(--shadow-sm)}
+/* TABLE */
+.ds-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.ds-table th{text-align:right;padding:.625rem .875rem;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);border-bottom:1px solid var(--border)}
+.ds-table td{padding:.625rem .875rem;border-bottom:1px solid var(--border);color:var(--text-secondary)}
+.ds-table tr:last-child td{border-bottom:none}
+.ds-table tr:hover td{background:rgba(255,255,255,.02)}
+/* CARD VARIANTS */
+.stat-card{padding:var(--sp-3);border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--glass);backdrop-filter:blur(20px)}
+.stat-value{font-size:2rem;font-weight:800;letter-spacing:-.04em;line-height:1}
+.stat-label{font-size:.75rem;color:var(--text-muted);margin-top:4px;font-weight:600}
+.stat-trend{font-size:.72rem;font-weight:700;margin-top:.5rem}
+.trend-up{color:var(--c-emerald-500)}.trend-down{color:var(--c-rose-400)}
+/* RING / ORBIT */
+.ring-indicator{width:12px;height:12px;border-radius:50%;display:inline-block}
+.ring-safe{background:var(--c-teal-400);box-shadow:0 0 8px rgba(45,212,191,.6)}
+.ring-caution{background:var(--c-amber-500);box-shadow:0 0 8px var(--c-amber-glow)}
+.ring-danger{background:var(--c-rose-400);box-shadow:0 0 8px rgba(248,113,113,.5)}
+.ring-detached{background:var(--text-muted)}
+/* SKELETON */
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.ds-skeleton{background:linear-gradient(90deg,var(--c-mid) 25%,var(--c-nebula) 50%,var(--c-mid) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius-sm)}
+/* BREADCRUMB */
+.ds-breadcrumb{display:flex;align-items:center;gap:.5rem;font-size:.8rem;flex-wrap:wrap}
+.ds-breadcrumb a{color:var(--text-secondary)}.ds-breadcrumb a:hover{color:var(--c-teal-400)}
+.ds-breadcrumb-sep{color:var(--text-muted);font-size:.6rem}
+/* PAGINATION */
+.ds-page{display:flex;gap:4px;align-items:center}
+.ds-page-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);font-size:.8rem;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-secondary);transition:all var(--dur) var(--ease)}
+.ds-page-btn:hover{border-color:var(--c-teal-400);color:var(--c-teal-400)}
+.ds-page-btn.active{background:var(--c-teal-400);color:#0a0e1f;border-color:var(--c-teal-400)}
+/* NOTIFICATION DOT */
+.notif-wrap{position:relative;display:inline-block}
+.notif-dot{position:absolute;top:-4px;left:-4px;width:16px;height:16px;background:var(--c-rose-400);border-radius:50%;border:2px solid var(--c-void);font-size:.6rem;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center}
+/* DIVIDER */
+.ds-sep{display:flex;align-items:center;gap:var(--sp-2);margin:var(--sp-3) 0}
+.ds-sep::before,.ds-sep::after{content:'';flex:1;height:1px;background:var(--border)}
+.ds-sep span{font-size:.7rem;color:var(--text-muted);white-space:nowrap}
+/* TIMELINE */
+.ds-timeline{position:relative;padding-right:24px}
+.ds-timeline::before{content:'';position:absolute;right:7px;top:0;bottom:0;width:2px;background:var(--border)}
+.ds-tl-item{position:relative;margin-bottom:var(--sp-3)}
+.ds-tl-dot{position:absolute;right:-24px;width:16px;height:16px;border-radius:50%;background:var(--c-teal-400);border:2px solid var(--c-void);box-shadow:0 0 8px rgba(45,212,191,.5)}
+.ds-tl-content{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:.875rem 1rem}
+/* SEARCH */
+.ds-search{position:relative}
+.ds-search-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;font-size:1rem}
+.ds-search input{padding-right:2.5rem}
+/* SLIDER */
+.ds-slider{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:var(--c-mid);outline:none;cursor:pointer}
+.ds-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--c-teal-400);cursor:pointer;border:2px solid var(--c-void);box-shadow:0 0 8px rgba(45,212,191,.5)}
+/* TOKENS TABLE */
+.token-row{display:grid;grid-template-columns:180px 120px 1fr;align-items:center;gap:var(--sp-2);padding:8px 0;border-bottom:1px solid var(--border);font-size:.78rem}
+.token-name{font-family:monospace;color:var(--c-violet-400)}
+.token-val{font-family:monospace;color:var(--c-amber-500)}
+/* PRINCIPLE CARD */
+.principle-card{padding:var(--sp-3);border-radius:var(--radius-lg);border:1px solid var(--border);background:var(--glass)}
+.principle-icon{font-size:2rem;margin-bottom:.5rem}
+.principle-title{font-size:1rem;font-weight:800;margin-bottom:.25rem}
+.principle-desc{font-size:.82rem;color:var(--text-secondary)}
+/* DO DONT */
+.do-dont{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2)}
+.do-box,.dont-box{border-radius:var(--radius);padding:var(--sp-2);border:1px solid}
+.do-box{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.05)}
+.dont-box{border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.05)}
+.do-label{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--c-emerald-500);margin-bottom:.5rem}
+.dont-label{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--c-rose-400);margin-bottom:.5rem}
+.do-dont-item{font-size:.8rem;color:var(--text-secondary);margin:.25rem 0;padding-right:1rem;position:relative}
+.do-dont-item::before{position:absolute;right:0}
+.do-box .do-dont-item::before{content:'âœ“';color:var(--c-emerald-500)}
+.dont-box .do-dont-item::before{content:'âœ•';color:var(--c-rose-400)}
+/* GRID VISUAL */
+.grid-demo{display:grid;grid-template-columns:repeat(12,1fr);gap:8px;padding:var(--sp-2);background:var(--c-mid);border-radius:var(--radius)}
+.grid-col{height:40px;background:rgba(45,212,191,.15);border:1px solid rgba(45,212,191,.3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--c-teal-400);font-weight:700}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--c-deep)}
+::-webkit-scrollbar-thumb{background:var(--c-aurora);border-radius:3px}
+/* MOBILE NAV */
+@media(max-width:900px){.ds-nav{position:static;width:100%;height:auto;border-left:none;border-bottom:1px solid var(--border)}.ds-main{margin-right:0;padding:var(--sp-4) var(--sp-3)}.do-dont{grid-template-columns:1fr}.token-row{grid-template-columns:1fr 1fr}.type-row{grid-template-columns:80px 1fr}}
+</style>
+</head>
+<body>
+<!-- NAV -->
+<nav class="ds-nav">
+  <div style="margin-bottom:var(--sp-3);padding-bottom:var(--sp-2);border-bottom:1px solid var(--border)">
+    <div class="ds-badge">v1.0.0</div>
+    <div style="font-size:.9rem;font-weight:800;margin-top:.25rem">Ø§Ù„Ø±Ø­Ù„Ø© DS</div>
+    <div style="font-size:.7rem;color:var(--text-muted)">Design System</div>
+  </div>
+  <h2>Ø§Ù„Ù…Ø¨Ø§Ø¯Ø¦</h2>
+  <ul><li><a href="#foundations">Ø§Ù„Ø£Ø³Ø³</a></li><li><a href="#principles">Ø§Ù„Ù…Ø¨Ø§Ø¯Ø¦</a></li></ul>
+  <h2>Ø§Ù„Ø±Ù…ÙˆØ²</h2>
+  <ul><li><a href="#colors">Ø§Ù„Ø£Ù„ÙˆØ§Ù†</a></li><li><a href="#typography">Ø§Ù„Ø·Ø¨Ø§Ø¹Ø©</a></li><li><a href="#spacing">Ø§Ù„ØªØ¨Ø§Ø¹Ø¯</a></li><li><a href="#grid">Ø§Ù„Ø´Ø¨ÙƒØ©</a></li></ul>
+  <h2>Ø§Ù„Ù…ÙƒÙˆÙ‘Ù†Ø§Øª</h2>
+  <ul>
+    <li><a href="#buttons">Ø§Ù„Ø£Ø²Ø±Ø§Ø±</a></li><li><a href="#inputs">Ø§Ù„Ù…Ø¯Ø®Ù„Ø§Øª</a></li><li><a href="#badges">Ø§Ù„Ø´Ø§Ø±Ø§Øª</a></li>
+    <li><a href="#avatars">Ø§Ù„ØµÙˆØ± Ø§Ù„Ø±Ù…Ø²ÙŠØ©</a></li><li><a href="#cards">Ø§Ù„Ø¨Ø·Ø§Ù‚Ø§Øª</a></li><li><a href="#alerts">Ø§Ù„ØªÙ†Ø¨ÙŠÙ‡Ø§Øª</a></li>
+    <li><a href="#progress">Ø§Ù„ØªÙ‚Ø¯Ù…</a></li><li><a href="#tabs">Ø§Ù„ØªØ¨ÙˆÙŠØ¨Ø§Øª</a></li><li><a href="#tables">Ø§Ù„Ø¬Ø¯Ø§ÙˆÙ„</a></li>
+    <li><a href="#modal">Ø§Ù„Ù…ÙˆØ¯Ø§Ù„</a></li><li><a href="#tooltips">Ø§Ù„ØªÙ„Ù…ÙŠØ­Ø§Øª</a></li><li><a href="#timeline">Ø§Ù„Ø¬Ø¯ÙˆÙ„ Ø§Ù„Ø²Ù…Ù†ÙŠ</a></li>
+    <li><a href="#breadcrumb">Ø§Ù„ØªÙ†Ù‚Ù„</a></li><li><a href="#pagination">Ø§Ù„ØªØ±Ù‚ÙŠÙ…</a></li><li><a href="#skeleton">Ø§Ù„Ù‡ÙŠÙƒÙ„</a></li>
+    <li><a href="#ring">Ø®Ø§ØªÙ… Ø§Ù„Ø±Ø­Ù„Ø©</a></li><li><a href="#misc">Ø¹Ù†Ø§ØµØ± Ù…ØªÙ†ÙˆØ¹Ø©</a></li>
+  </ul>
+  <h2>Ø§Ù„Ø£Ù†Ù…Ø§Ø·</h2>
+  <ul><li><a href="#patterns">Ø£Ù†Ù…Ø§Ø· Ø§Ù„ØªØµÙ…ÙŠÙ…</a></li><li><a href="#dodont">ÙŠØ¬Ø¨ / Ù„Ø§ ÙŠØ¬Ø¨</a></li></ul>
+  <h2>Ù„Ù„Ù…Ø·ÙˆØ±ÙŠÙ†</h2>
+  <ul><li><a href="#tokens">Design Tokens</a></li><li><a href="#devguide">Ø¯Ù„ÙŠÙ„ Ø§Ù„Ù…Ø·ÙˆØ±</a></li></ul>
+</nav>
+
+<main class="ds-main">
+<!-- HERO -->
+<section class="ds-hero" id="foundations">
+  <div class="ds-badge">ðŸŒŒ Design System</div>
+  <h1>Ø§Ù„Ø±Ø­Ù„Ø©</h1>
+  <p>Ù†Ø¸Ø§Ù… ØªØµÙ…ÙŠÙ… Ù…ØªÙƒØ§Ù…Ù„ â€” Ù…Ø¨Ù†ÙŠ Ø¹Ù„Ù‰ Ù…Ø³ØªÙˆÙ‰ Apple Human Interface Guidelines</p>
+  <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:var(--sp-3)">
+    <span class="chip chip-teal">30+ Ù…ÙƒÙˆÙ‘Ù†</span>
+    <span class="chip chip-amber">Design Tokens</span>
+    <span class="chip chip-violet">WCAG AA</span>
+    <span class="chip chip-emerald">RTL-First</span>
+    <span class="chip chip-teal">Dark Mode</span>
+  </div>
+</section>
+
+<!-- PRINCIPLES -->
+<section class="ds-section" id="principles">
+  <div class="ds-section-title">ðŸ§­ Ø§Ù„Ù…Ø¨Ø§Ø¯Ø¦ Ø§Ù„ØªØµÙ…ÙŠÙ…ÙŠØ©</div>
+  <p class="ds-section-sub">Ø³Ø¨Ø¹Ø© Ù…Ø¨Ø§Ø¯Ø¦ ØªÙØ´ÙƒÙ‘Ù„ ÙƒÙ„ Ù‚Ø±Ø§Ø± ØªØµÙ…ÙŠÙ…ÙŠ ÙÙŠ Ù…Ù†ØµØ© Ø§Ù„Ø±Ø­Ù„Ø©.</p>
+  <div class="ds-grid ds-grid-3">
+    <div class="principle-card"><div class="principle-icon">ðŸŒŒ</div><div class="principle-title">Ø§Ù„ÙØ¶Ø§Ø¡ Ø§Ù„Ø¹Ù„Ø§Ø¬ÙŠ</div><div class="principle-desc">ÙƒÙ„ Ø´Ø§Ø´Ø© Ù…Ø³Ø§Ø­Ø© Ù‡Ø¯ÙˆØ¡ â€” Ù„Ø§ Ø¶ÙˆØ¶Ø§Ø¡ Ø¨ØµØ±ÙŠØ©ØŒ Ø¨Ù„ ØªÙˆØ¬ÙŠÙ‡ Ù„Ø·ÙŠÙ</div></div>
+    <div class="principle-card"><div class="principle-icon">ðŸ’›</div><div class="principle-title">Ø§Ù„Ø¯ÙØ¡ Ø§Ù„Ø£ÙˆÙ„</div><div class="principle-desc">Ø§Ù„Ù„ÙˆÙ† Ø§Ù„Ø£ØµÙØ± Ø§Ù„Ø¯Ø§ÙØ¦ ÙŠÙØ¬Ø°Ø¨ Ø§Ù„Ø§Ù†ØªØ¨Ø§Ù‡ ÙÙ‚Ø· Ù„Ù„Ø£Ù‡Ù… â€” CTA ÙˆØ§Ø­Ø¯ Ø¨Ø§Ø±Ø²</div></div>
+    <div class="principle-card"><div class="principle-icon">ðŸ”®</div><div class="principle-title">Ø§Ù„Ø²Ø¬Ø§Ø¬ÙŠØ© Ø§Ù„Ù…ØªØ¹Ù…Ø¯Ø©</div><div class="principle-desc">Glassmorphism Ù„Ø®Ù„Ù‚ Ø¹Ù…Ù‚ Ø¨ØµØ±ÙŠ Ù…Ø¹ Ø§Ù„Ø­ÙØ§Ø¸ Ø¹Ù„Ù‰ Ø§Ù„ÙˆØ¶ÙˆØ­</div></div>
+    <div class="principle-card"><div class="principle-icon">ðŸ“</div><div class="principle-title">Ø§Ù„Ø´Ø¨ÙƒØ© Ø£ÙˆÙ„Ø§Ù‹</div><div class="principle-desc">12 Ø¹Ù…ÙˆØ¯Ø§Ù‹ØŒ 8px system â€” Ù„Ø§ Ù‚ÙŠÙ…Ø© Ø®Ø§Ø±Ø¬ Ø§Ù„Ù…Ù‚ÙŠØ§Ø³</div></div>
+    <div class="principle-card"><div class="principle-icon">â™¿</div><div class="principle-title">Ù„Ù„Ø¬Ù…ÙŠØ¹</div><div class="principle-desc">WCAG AA ÙƒØ­Ø¯ Ø£Ø¯Ù†Ù‰ â€” ØªØ¨Ø§ÙŠÙ†ØŒ Ù‚ÙŠØ§Ø¯Ø© Ù„ÙˆØ­ÙŠØ©ØŒ Ù‚Ø§Ø±Ø¦Ø§Øª Ø§Ù„Ø´Ø§Ø´Ø©</div></div>
+    <div class="principle-card"><div class="principle-icon">ðŸŒ™</div><div class="principle-title">Ø§Ù„Ù„ÙŠÙ„ Ø§ÙØªØ±Ø§Ø¶ÙŠ</div><div class="principle-desc">Dark mode Ù‡Ùˆ Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ â€” Ø§Ù„Ø¶ÙˆØ¡ Ø§Ø®ØªÙŠØ§Ø±ÙŠ</div></div>
+    <div class="principle-card"><div class="principle-icon">âœ¨</div><div class="principle-title">Ø§Ù„Ø­Ø±ÙƒØ© Ù‡Ø§Ø¯ÙØ©</div><div class="principle-desc">ÙƒÙ„ animation Ù…Ù‚ØµÙˆØ¯Ø© â€” Ù„Ø§ Ø­Ø±ÙƒØ© Ù„Ù„Ø­Ø±ÙƒØ©ØŒ Ø¨Ù„ Ù„Ù„Ø¥Ø±Ø´Ø§Ø¯</div></div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- COLORS -->
+<section class="ds-section" id="colors">
+  <div class="ds-section-title">ðŸŽ¨ Ù†Ø¸Ø§Ù… Ø§Ù„Ø£Ù„ÙˆØ§Ù†</div>
+  <p class="ds-section-sub">Ø®Ù…Ø³ Ù…Ø¬Ù…ÙˆØ¹Ø§Øª Ø£Ù„ÙˆØ§Ù† Ø£Ø³Ø§Ø³ÙŠØ© â€” ÙƒÙ„ Ù„ÙˆÙ† Ø¨Ù…Ø¹Ù†Ù‰ ÙˆØ¯ÙˆØ± Ù…Ø­Ø¯Ø¯.</p>
+  <div style="margin-bottom:var(--sp-3)"><span class="ds-badge-sm bs-amber" style="font-size:.75rem;padding:4px 12px">Ø§Ù„Ø£Ù„ÙˆØ§Ù† Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ© â€” Primary</span></div>
+  <div class="ds-grid ds-grid-4">
+    <div class="swatch"><div class="swatch-color" style="background:#0a0e1f"></div><div class="swatch-info"><div class="swatch-name">Space Void</div><div class="swatch-hex">--c-void Â· #0a0e1f</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#131a35"></div><div class="swatch-info"><div class="swatch-name">Space Deep</div><div class="swatch-hex">--c-deep Â· #131a35</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#1a2242"></div><div class="swatch-info"><div class="swatch-name">Space Mid</div><div class="swatch-hex">--c-mid Â· #1a2242</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#212b4f"></div><div class="swatch-info"><div class="swatch-name">Space Nebula</div><div class="swatch-hex">--c-nebula Â· #212b4f</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#2a3560"></div><div class="swatch-info"><div class="swatch-name">Space Aurora</div><div class="swatch-hex">--c-aurora Â· #2a3560</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#2dd4bf"></div><div class="swatch-info"><div class="swatch-name">Teal 400 â€” Brand</div><div class="swatch-hex">--c-teal-400 Â· #2dd4bf</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#f5a623"></div><div class="swatch-info"><div class="swatch-name">Amber 500 â€” CTA</div><div class="swatch-hex">--c-amber-500 Â· #f5a623</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#10b981"></div><div class="swatch-info"><div class="swatch-name">Emerald 500 â€” Success</div><div class="swatch-hex">--c-emerald-500 Â· #10b981</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#f87171"></div><div class="swatch-info"><div class="swatch-name">Rose 400 â€” Danger</div><div class="swatch-hex">--c-rose-400 Â· #f87171</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#a78bfa"></div><div class="swatch-info"><div class="swatch-name">Violet 400 â€” Accent</div><div class="swatch-hex">--c-violet-400 Â· #a78bfa</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:#38bdf8"></div><div class="swatch-info"><div class="swatch-name">Sky 400 â€” Info</div><div class="swatch-hex">--c-sky-400 Â· #38bdf8</div></div></div>
+    <div class="swatch"><div class="swatch-color" style="background:linear-gradient(135deg,#2dd4bf,#f5a623)"></div><div class="swatch-info"><div class="swatch-name">Brand Gradient</div><div class="swatch-hex">teal-400 â†’ amber-500</div></div></div>
+  </div>
+  <div style="margin-top:var(--sp-4)">
+    <div style="margin-bottom:var(--sp-2)"><span class="ds-badge-sm bs-teal" style="font-size:.75rem;padding:4px 12px">Ù‚ÙˆØ§Ø¹Ø¯ Ø§Ù„ØªØ¨Ø§ÙŠÙ† â€” Contrast</span></div>
+    <div class="ds-card">
+      <table class="ds-table">
+        <thead><tr><th>Ø§Ù„Ø¹Ù†ØµØ±</th><th>Ø§Ù„Ø®Ù„ÙÙŠØ©</th><th>Ø§Ù„Ù†Øµ</th><th>Ù†Ø³Ø¨Ø© Ø§Ù„ØªØ¨Ø§ÙŠÙ†</th><th>Ø§Ù„Ù…Ø³ØªÙˆÙ‰</th></tr></thead>
+        <tbody>
+          <tr><td>Ø§Ù„Ø¹Ù†Ø§ÙˆÙŠÙ† Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©</td><td>#0a0e1f</td><td>#f1f5f9</td><td>16.4:1</td><td><span class="ds-badge-sm bs-emerald">AAA</span></td></tr>
+          <tr><td>Ø§Ù„Ù†Øµ Ø§Ù„Ø«Ø§Ù†ÙˆÙŠ</td><td>#0a0e1f</td><td>#94a3b8</td><td>6.2:1</td><td><span class="ds-badge-sm bs-emerald">AA</span></td></tr>
+          <tr><td>Amber CTA Ø¹Ù„Ù‰ dark</td><td>#0a0e1f</td><td>#f5a623</td><td>7.8:1</td><td><span class="ds-badge-sm bs-emerald">AAA</span></td></tr>
+          <tr><td>Teal Ø¹Ù„Ù‰ dark</td><td>#0a0e1f</td><td>#2dd4bf</td><td>8.1:1</td><td><span class="ds-badge-sm bs-emerald">AAA</span></td></tr>
+          <tr><td>Muted text</td><td>#0a0e1f</td><td>rgba(148,163,184,.5)</td><td>3.1:1</td><td><span class="ds-badge-sm bs-amber">UI Only</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- TYPOGRAPHY -->
+<section class="ds-section" id="typography">
+  <div class="ds-section-title">âœï¸ Ø§Ù„Ø·Ø¨Ø§Ø¹Ø© â€” Typography</div>
+  <p class="ds-section-sub">9 Ù…Ø³ØªÙˆÙŠØ§Øª Ø·Ø¨Ø§Ø¹ÙŠØ© â€” Almarai Ù„Ù„Ø¹Ù†Ø§ÙˆÙŠÙ†ØŒ IBM Plex Ù„Ù„Ù†ØµÙˆØµ. Ù…Ù‚ÙŠØ§Ø³ Ù…ØªØ¬Ø§ÙˆØ¨ Ø¨Ø§Ù„ÙƒØ§Ù…Ù„.</p>
+  <div class="ds-card" style="margin-bottom:var(--sp-3)">
+    <div class="type-row"><div class="type-label">Level</div><div>Ù†Ù…ÙˆØ°Ø¬</div><div class="type-meta">Size</div><div class="type-meta">Weight</div></div>
+    <div class="type-row"><div class="type-label">Display</div><div style="font-size:clamp(2.5rem,5vw,4rem);font-weight:800;letter-spacing:-.04em;line-height:1.1">Ø§Ù„Ø±Ø­Ù„Ø©</div><div class="type-meta">4rem / clamp</div><div class="type-meta">800</div></div>
+    <div class="type-row"><div class="type-label">H1</div><div style="font-size:2.25rem;font-weight:800;letter-spacing:-.03em">Ø¹Ù†ÙˆØ§Ù† Ø±Ø¦ÙŠØ³ÙŠ</div><div class="type-meta">2.25rem</div><div class="type-meta">800</div></div>
+    <div class="type-row"><div class="type-label">H2</div><div style="font-size:1.75rem;font-weight:800;letter-spacing:-.02em">Ø¹Ù†ÙˆØ§Ù† Ø«Ø§Ù†ÙˆÙŠ</div><div class="type-meta">1.75rem</div><div class="type-meta">800</div></div>
+    <div class="type-row"><div class="type-label">H3</div><div style="font-size:1.375rem;font-weight:700">Ø¹Ù†ÙˆØ§Ù† Ø«Ø§Ù„Ø«</div><div class="type-meta">1.375rem</div><div class="type-meta">700</div></div>
+    <div class="type-row"><div class="type-label">H4</div><div style="font-size:1.125rem;font-weight:700">Ø¹Ù†ÙˆØ§Ù† Ø±Ø§Ø¨Ø¹</div><div class="type-meta">1.125rem</div><div class="type-meta">700</div></div>
+    <div class="type-row"><div class="type-label">Body LG</div><div style="font-size:1rem;font-weight:400;color:var(--text-secondary)">Ù†Øµ Ø£Ø³Ø§Ø³ÙŠ ÙƒØ¨ÙŠØ± â€” ÙŠÙØ³ØªØ®Ø¯Ù… ÙÙŠ Ø§Ù„ÙÙ‚Ø±Ø§Øª Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ© ÙˆØ§Ù„Ø´Ø±Ø­</div><div class="type-meta">1rem</div><div class="type-meta">400</div></div>
+    <div class="type-row"><div class="type-label">Body</div><div style="font-size:.875rem;color:var(--text-secondary)">Ù†Øµ Ø£Ø³Ø§Ø³ÙŠ â€” Ø§Ù„Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø§Ù„Ø¹Ø§Ù… Ø¯Ø§Ø®Ù„ Ø§Ù„Ø¨Ø·Ø§Ù‚Ø§Øª ÙˆØ§Ù„Ù…ÙƒÙˆÙ‘Ù†Ø§Øª</div><div class="type-meta">.875rem</div><div class="type-meta">400</div></div>
+    <div class="type-row"><div class="type-label">Caption</div><div style="font-size:.75rem;color:var(--text-muted)">Ù†Øµ ØªÙˆØ¶ÙŠØ­ÙŠ â€” ØªÙˆØ§Ø±ÙŠØ®ØŒ ÙˆØµÙ Ù…Ø®ØªØµØ±ØŒ Ø¨ÙŠØ§Ù†Ø§Øª Ø«Ø§Ù†ÙˆÙŠØ©</div><div class="type-meta">.75rem</div><div class="type-meta">500</div></div>
+    <div class="type-row"><div class="type-label">Label</div><div style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted)">SECTION LABEL</div><div class="type-meta">.65rem</div><div class="type-meta">700 + UC</div></div>
+  </div>
+  <div class="ds-code"><span class="c">/* Ø®Ø·ÙˆØ· Ø§Ù„Ù…Ø´Ø±ÙˆØ¹ */</span>
+<span class="k">@import</span> <span class="s">'https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap'</span>;
+
+<span class="k">--font-display</span>: 'Almarai', system-ui;
+<span class="k">--font-sans</span>:    'Almarai', 'IBM Plex Sans Arabic', system-ui;
+
+</div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- SPACING -->
+<section class="ds-section" id="spacing">
+  <div class="ds-section-title">ðŸ“ Ù†Ø¸Ø§Ù… Ø§Ù„ØªØ¨Ø§Ø¹Ø¯ â€” 8px Grid</div>
+  <p class="ds-section-sub">ÙƒÙ„ Ù‚ÙŠÙ…Ø© ØªØ¨Ø§Ø¹Ø¯ Ù…Ø¶Ø§Ø¹Ù Ù„Ù„Ù€ 8px. Ù„Ø§ Ø§Ø³ØªØ«Ù†Ø§Ø¡Ø§Øª Ø®Ø§Ø±Ø¬ Ø§Ù„Ù…Ù‚ÙŠØ§Ø³.</p>
+  <div class="ds-card">
+    <div class="sp-row"><div class="sp-label">sp-1 Â· 8px</div><div class="sp-bar" style="width:8px"></div><span class="type-meta" style="font-size:.7rem">margin ØµØºÙŠØ±ØŒ gap Ø¶ÙŠÙ‚</span></div>
+    <div class="sp-row"><div class="sp-label">sp-2 Â· 16px</div><div class="sp-bar" style="width:16px"></div><span class="type-meta" style="font-size:.7rem">padding Ø¯Ø§Ø®Ù„ÙŠ Ø®ÙÙŠÙ</span></div>
+    <div class="sp-row"><div class="sp-label">sp-3 Â· 24px</div><div class="sp-bar" style="width:24px"></div><span class="type-meta" style="font-size:.7rem">padding Ø§Ù„Ø¨Ø·Ø§Ù‚Ø§Øª Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©</span></div>
+    <div class="sp-row"><div class="sp-label">sp-4 Â· 32px</div><div class="sp-bar" style="width:32px"></div><span class="type-meta" style="font-size:.7rem">gap Ø¨ÙŠÙ† Ø§Ù„Ù…ÙƒÙˆÙ‘Ù†Ø§Øª</span></div>
+    <div class="sp-row"><div class="sp-label">sp-5 Â· 40px</div><div class="sp-bar" style="width:40px"></div><span class="type-meta" style="font-size:.7rem">sections Ø¯Ø§Ø®Ù„ÙŠØ©</span></div>
+    <div class="sp-row"><div class="sp-label">sp-6 Â· 48px</div><div class="sp-bar" style="width:48px"></div><span class="type-meta" style="font-size:.7rem">section headers</span></div>
+    <div class="sp-row"><div class="sp-label">sp-8 Â· 64px</div><div class="sp-bar" style="width:64px"></div><span class="type-meta" style="font-size:.7rem">padding Ø§Ù„ØµÙØ­Ø§Øª</span></div>
+    <div class="sp-row"><div class="sp-label">sp-10 Â· 80px</div><div class="sp-bar" style="width:80px"></div><span class="type-meta" style="font-size:.7rem">Ø¨ÙŠÙ† Ø£Ù‚Ø³Ø§Ù… ÙƒØ¨ÙŠØ±Ø©</span></div>
+    <div class="sp-row"><div class="sp-label">sp-12 Â· 96px</div><div class="sp-bar" style="width:96px"></div><span class="type-meta" style="font-size:.7rem">hero sections</span></div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- GRID -->
+<section class="ds-section" id="grid">
+  <div class="ds-section-title">ðŸ§± Ø´Ø¨ÙƒØ© 12 Ø¹Ù…ÙˆØ¯Ø§Ù‹</div>
+  <p class="ds-section-sub">Ø´Ø¨ÙƒØ© Ù…Ø±Ù†Ø© Ù…Ù† 12 Ø¹Ù…ÙˆØ¯Ø§Ù‹ØŒ gap Ø«Ø§Ø¨Øª 8pxØŒ max-width 1280pxØŒ padding Ø¬Ø§Ù†Ø¨ÙŠ 24px.</p>
+  <div class="grid-demo">
+    <div class="grid-col">1</div><div class="grid-col">2</div><div class="grid-col">3</div><div class="grid-col">4</div>
+    <div class="grid-col">5</div><div class="grid-col">6</div><div class="grid-col">7</div><div class="grid-col">8</div>
+    <div class="grid-col">9</div><div class="grid-col">10</div><div class="grid-col">11</div><div class="grid-col">12</div>
+  </div>
+  <div style="margin-top:var(--sp-2);display:grid;grid-template-columns:repeat(12,1fr);gap:8px;padding:var(--sp-2);background:var(--c-mid);border-radius:var(--radius)">
+    <div style="grid-column:span 4;height:48px;background:rgba(245,166,35,.2);border:1px solid rgba(245,166,35,.4);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--c-amber-500)">span 4</div>
+    <div style="grid-column:span 8;height:48px;background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--c-teal-400)">span 8</div>
+    <div style="grid-column:span 3;height:48px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--c-violet-400)">span 3</div>
+    <div style="grid-column:span 3;height:48px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--c-violet-400)">span 3</div>
+    <div style="grid-column:span 6;height:48px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--c-emerald-500)">span 6</div>
+  </div>
+  <div class="ds-code"><span class="c">/* Ø­Ø§ÙˆÙŠØ© Ø§Ù„Ø´Ø¨ÙƒØ© */</span>
+<span class="k">.container</span> {
+  max-width: 1280px; margin: 0 auto; padding: 0 24px;
+  display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px;
+}
+<span class="k">@media</span>(max-width: 768px) {
+  .container { grid-template-columns: repeat(4, 1fr); padding: 0 16px; }
+}
+
+</div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- BUTTONS -->
+<section class="ds-section" id="buttons">
+  <div class="ds-section-title">ðŸ”˜ Ø§Ù„Ø£Ø²Ø±Ø§Ø± â€” Buttons</div>
+  <p class="ds-section-sub">6 Ø£Ù†ÙˆØ§Ø¹ Ã— 3 Ø£Ø­Ø¬Ø§Ù… Ã— 4 Ø­Ø§Ù„Ø§Øª = 72 Ø­Ø§Ù„Ø© Ø²Ø± Ù…Ø­ØªÙ…Ù„Ø©.</p>
+  <div class="ds-card">
+    <div class="state-label">Ø§Ù„Ø£Ù†ÙˆØ§Ø¹</div>
+    <div class="comp-states">
+      <button class="btn btn-lg btn-primary">Ø£Ø³Ø§Ø³ÙŠ â€” CTA</button>
+      <button class="btn btn-lg btn-success">Ù†Ø¬Ø§Ø­</button>
+      <button class="btn btn-lg btn-teal">Ø§Ù„Ø¹Ù„Ø§Ù…Ø©</button>
+      <button class="btn btn-lg btn-glass">Ø²Ø¬Ø§Ø¬ÙŠ</button>
+      <button class="btn btn-lg btn-ghost">Ø´ÙØ§Ù</button>
+      <button class="btn btn-lg btn-danger">Ø®Ø·Ø±</button>
+    </div>
+    <div class="state-label">Ø§Ù„Ø£Ø­Ø¬Ø§Ù…</div>
+    <div class="comp-states" style="align-items:center">
+      <button class="btn btn-lg btn-primary">ÙƒØ¨ÙŠØ± LG</button>
+      <button class="btn btn-md btn-primary">Ù…ØªÙˆØ³Ø· MD</button>
+      <button class="btn btn-sm btn-primary">ØµØºÙŠØ± SM</button>
+    </div>
+    <div class="state-label">Ø§Ù„Ø­Ø§Ù„Ø§Øª</div>
+    <div class="comp-states">
+      <button class="btn btn-md btn-primary">Ø¹Ø§Ø¯ÙŠ</button>
+      <button class="btn btn-md btn-primary" disabled>Ù…Ø¹Ø·Ù‘Ù„</button>
+      <button class="btn btn-md btn-glass btn-loading">ØªØ­Ù…ÙŠÙ„</button>
+      <button class="btn btn-md btn-teal">â† Ù…Ø¹ Ø£ÙŠÙ‚ÙˆÙ†Ø©</button>
+    </div>
+  </div>
+  <div class="ds-code"><span class="c">/* Ø²Ø± Ø£Ø³Ø§Ø³ÙŠ */</span>
+&lt;<span class="k">button</span> class=<span class="s">"btn btn-lg btn-primary"</span>&gt;Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø´Ø¹ÙˆØ±&lt;/button&gt;
+<span class="c">/* Ø²Ø¬Ø§Ø¬ÙŠ Ø«Ø§Ù†ÙˆÙŠ */</span>
+&lt;<span class="k">button</span> class=<span class="s">"btn btn-md btn-glass"</span>&gt;ØªÙØ§ØµÙŠÙ„&lt;/button&gt;
+
+</div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- INPUTS -->
+<section class="ds-section" id="inputs">
+  <div class="ds-section-title">ðŸ“ Ø§Ù„Ù…Ø¯Ø®Ù„Ø§Øª â€” Form Inputs</div>
+  <p class="ds-section-sub">Ø­Ù‚ÙˆÙ„ Ù†ØµÙŠØ©ØŒ Ù‚ÙˆØ§Ø¦Ù… Ù…Ù†Ø³Ø¯Ù„Ø©ØŒ Ø®Ø§Ù†Ø§Øª Ø§Ø®ØªÙŠØ§Ø±ØŒ Ù…ÙØ§ØªÙŠØ­ ØªØ¨Ø¯ÙŠÙ„ â€” ÙƒÙ„ Ø¹Ù†ØµØ± Ø¨Ø£Ø±Ø¨Ø¹ Ø­Ø§Ù„Ø§Øª.</p>
+  <div class="ds-grid ds-grid-2">
+    <div class="ds-card">
+      <div class="state-label">Ø§Ù„Ù†Øµ Ø§Ù„Ø¹Ø§Ø¯ÙŠ</div>
+      <label class="ds-label">ÙƒÙŠÙ ØªØ´Ø¹Ø± Ø§Ù„Ø¢Ù†ØŸ</label>
+      <input class="ds-input" type="text" placeholder="Ø§ÙƒØªØ¨ Ø´Ø¹ÙˆØ±Ùƒ...">
+      <div class="ds-hint">ÙŠØªÙ… Ø§Ù„Ø­ÙØ¸ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹</div>
+      <div class="state-label" style="margin-top:var(--sp-2)">Ø­Ø§Ù„Ø© Ø§Ù„Ù†Ø¬Ø§Ø­</div>
+      <input class="ds-input success" type="text" value="Ø±Ø§Ø¦Ø¹ â€” Ø´Ø¹ÙˆØ± Ø¥ÙŠØ¬Ø§Ø¨ÙŠ">
+      <div class="state-label" style="margin-top:var(--sp-2)">Ø­Ø§Ù„Ø© Ø§Ù„Ø®Ø·Ø£</div>
+      <input class="ds-input error" type="text" value="...">
+      <div class="ds-field-error">âš  Ù‡Ø°Ø§ Ø§Ù„Ø­Ù‚Ù„ Ù…Ø·Ù„ÙˆØ¨</div>
+    </div>
+    <div class="ds-card">
+      <div class="state-label">Ù†Øµ Ø·ÙˆÙŠÙ„</div>
+      <label class="ds-label">Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø§Ù„Ø¬Ù„Ø³Ø©</label>
+      <textarea class="ds-input ds-textarea" placeholder="Ø§ÙƒØªØ¨ Ù…Ø§ ØªØ±ÙŠØ¯ Ù…Ø´Ø§Ø±ÙƒØªÙ‡..."></textarea>
+      <div class="state-label" style="margin-top:var(--sp-2)">Ù‚Ø§Ø¦Ù…Ø© Ù…Ù†Ø³Ø¯Ù„Ø©</div>
+      <label class="ds-label">Ù…Ø³ØªÙˆÙ‰ Ø§Ù„ØªØ¹Ø§ÙÙŠ</label>
+      <select class="ds-input ds-select"><option>Ø§Ù„ÙŠÙˆÙ… Ø§Ù„Ø£ÙˆÙ„</option><option>Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ø£ÙˆÙ„</option><option>Ø§Ù„Ø´Ù‡Ø± Ø§Ù„Ø£ÙˆÙ„</option></select>
+    </div>
+    <div class="ds-card">
+      <div class="state-label">Ø¨Ø­Ø«</div>
+      <div class="ds-search"><span class="ds-search-icon">ðŸ”</span><input class="ds-input" type="text" placeholder="Ø§Ø¨Ø­Ø« Ø¹Ù† Ù…Ø­ØªÙˆÙ‰..."></div>
+      <div class="state-label" style="margin-top:var(--sp-2)">Ø®ÙŠØ§Ø±Ø§Øª Ù…ØªØ¹Ø¯Ø¯Ø©</div>
+      <label class="ds-check"><input type="checkbox" checked> Ø£Ø±ÙŠØ¯ ØªÙ„Ù‚ÙŠ ØªØ°ÙƒÙŠØ±Ø§Øª</label>
+      <label class="ds-check" style="margin-top:8px"><input type="checkbox"> Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„Ù…Ø³ØªÙ…Ø±</label>
+      <label class="ds-check" style="margin-top:8px"><input type="radio" name="r" checked> ÙŠÙˆÙ…ÙŠ</label>
+      <label class="ds-check" style="margin-top:8px"><input type="radio" name="r"> Ø£Ø³Ø¨ÙˆØ¹ÙŠ</label>
+    </div>
+    <div class="ds-card">
+      <div class="state-label">Ù…ÙØªØ§Ø­ Ø§Ù„ØªØ¨Ø¯ÙŠÙ„</div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <label class="ds-label" style="margin:0">Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª</label>
+          <label class="ds-toggle"><input type="checkbox" checked><div class="ds-toggle-track"></div></label>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <label class="ds-label" style="margin:0">Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„ØµØ§Ù…Øª</label>
+          <label class="ds-toggle"><input type="checkbox"><div class="ds-toggle-track"></div></label>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <label class="ds-label" style="margin:0">Ø§Ù„Ù…Ø´Ø§Ø±ÙƒØ© Ø§Ù„ØªÙ„Ù‚Ø§Ø¦ÙŠØ©</label>
+          <label class="ds-toggle"><input type="checkbox" checked><div class="ds-toggle-track"></div></label>
+        </div>
+      </div>
+      <div class="state-label" style="margin-top:var(--sp-2)">Ø´Ø±ÙŠØ· Ø§Ù„ØªÙ…Ø±ÙŠØ±</div>
+      <label class="ds-label">Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø·Ø§Ù‚Ø©</label>
+      <input class="ds-slider" type="range" min="0" max="100" value="65">
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- BADGES & CHIPS -->
+<section class="ds-section" id="badges">
+  <div class="ds-section-title">ðŸ·ï¸ Ø§Ù„Ø´Ø§Ø±Ø§Øª ÙˆØ§Ù„Ø¹Ù„Ø§Ù…Ø§Øª</div>
+  <p class="ds-section-sub">Ø´Ø§Ø±Ø§Øª Ø§Ù„Ø­Ø§Ù„Ø©ØŒ Ø´Ø±Ø§Ø¦Ø­ Ø§Ù„ØªØµÙ†ÙŠÙØŒ Ù†Ù‚Ø§Ø· Ø§Ù„Ø¥Ø´Ø¹Ø§Ø± â€” Ù…Ø¹ÙŠØ§Ø± Ø§Ù„ØªÙˆØ§ØµÙ„ Ø§Ù„Ø¨ØµØ±ÙŠ Ø§Ù„Ø³Ø±ÙŠØ¹.</p>
+  <div class="ds-card">
+    <div class="state-label">Ø´Ø§Ø±Ø§Øª Ø§Ù„Ø­Ø§Ù„Ø© â€” Status Badges</div>
+    <div class="comp-states">
+      <span class="ds-badge-sm bs-teal">Ù†Ø´Ø·</span>
+      <span class="ds-badge-sm bs-amber">Ù‚ÙŠØ¯ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬Ø©</span>
+      <span class="ds-badge-sm bs-rose">ØªØ­Ø°ÙŠØ±</span>
+      <span class="ds-badge-sm bs-emerald">Ù…ÙƒØªÙ…Ù„</span>
+      <span class="ds-badge-sm bs-violet">Ù…Ù…ÙŠØ²</span>
+      <span class="ds-badge-sm bs-neutral">ØºÙŠØ± Ù†Ø´Ø·</span>
+    </div>
+    <div class="state-label">Ø´Ø±Ø§Ø¦Ø­ Ø§Ù„ØªØµÙ†ÙŠÙ â€” Chips</div>
+    <div class="comp-states">
+      <span class="chip chip-teal">ðŸŒŠ ØªØ¹Ø§ÙÙŠ</span>
+      <span class="chip chip-amber">âš¡ Ø·Ø§Ø±Ø¦</span>
+      <span class="chip chip-rose">ðŸ”´ Ø®Ø·Ø±</span>
+      <span class="chip chip-violet">âœ¨ Ù…Ù…ÙŠØ²</span>
+      <span class="chip chip-emerald">âœ… Ù…ÙƒØªÙ…Ù„</span>
+    </div>
+    <div class="state-label">Ø´Ø§Ø±Ø© Ø§Ù„Ø¥Ø´Ø¹Ø§Ø± â€” Notification</div>
+    <div class="comp-states" style="align-items:center">
+      <div class="notif-wrap">
+        <button class="btn btn-md btn-glass">ðŸ”” Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª</button>
+        <div class="notif-dot">3</div>
+      </div>
+      <div class="notif-wrap" style="margin-right:8px">
+        <button class="btn btn-md btn-ghost">âœ‰ Ø§Ù„Ø±Ø³Ø§Ø¦Ù„</button>
+        <div class="notif-dot">!</div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- AVATARS -->
+<section class="ds-section" id="avatars">
+  <div class="ds-section-title">ðŸ‘¤ Ø§Ù„ØµÙˆØ± Ø§Ù„Ø±Ù…Ø²ÙŠØ© â€” Avatars</div>
+  <p class="ds-section-sub">5 Ø£Ø­Ø¬Ø§Ù…ØŒ Ù…Ø¬Ù…ÙˆØ¹Ø§Øª Ù…ØªØ¯Ø§Ø®Ù„Ø©ØŒ Ù…Ø¤Ø´Ø± Ø­Ø§Ù„Ø© â€” Ù„ØªÙ…Ø«ÙŠÙ„ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ†.</p>
+  <div class="ds-card">
+    <div class="state-label">Ø§Ù„Ø£Ø­Ø¬Ø§Ù… Ø§Ù„Ø®Ù…Ø³Ø©</div>
+    <div class="comp-states" style="align-items:center">
+      <div class="ds-av av-xl" style="background:linear-gradient(135deg,var(--c-teal-400),var(--c-teal-600));color:#0a0e1f">Ø£Ø­</div>
+      <div class="ds-av av-lg" style="background:var(--c-amber-soft);border-color:rgba(245,166,35,.3);color:var(--c-amber-500)">Ù…</div>
+      <div class="ds-av av-md" style="background:var(--c-violet-soft);border-color:rgba(167,139,250,.3);color:var(--c-violet-400)">Ø³</div>
+      <div class="ds-av av-sm" style="background:var(--c-emerald-soft);border-color:rgba(16,185,129,.3);color:var(--c-emerald-500)">Ø¹</div>
+      <div class="ds-av av-xs" style="background:var(--c-rose-soft);border-color:rgba(248,113,113,.3);color:var(--c-rose-400)">Ù</div>
+    </div>
+    <div class="state-label">Ù…Ø¹ Ù…Ø¤Ø´Ø± Ø§Ù„Ø§ØªØµØ§Ù„</div>
+    <div class="comp-states" style="align-items:center">
+      <div class="ds-av av-md av-online" style="background:linear-gradient(135deg,var(--c-teal-400),var(--c-teal-600));color:#0a0e1f">Ø£Ø­</div>
+      <div class="ds-av av-md av-online" style="background:var(--c-violet-soft);color:var(--c-violet-400)">Ù…</div>
+    </div>
+    <div class="state-label">Ù…Ø¬Ù…ÙˆØ¹Ø© Ù…ØªØ¯Ø§Ø®Ù„Ø©</div>
+    <div style="display:flex;direction:ltr">
+      <div class="ds-av av-md" style="background:linear-gradient(135deg,var(--c-teal-400),var(--c-teal-600));color:#0a0e1f;margin-left:-8px;border-color:var(--c-void)">Ø£</div>
+      <div class="ds-av av-md" style="background:var(--c-amber-soft);color:var(--c-amber-500);margin-left:-8px;border-color:var(--c-void)">Ù…</div>
+      <div class="ds-av av-md" style="background:var(--c-violet-soft);color:var(--c-violet-400);margin-left:-8px;border-color:var(--c-void)">Ø³</div>
+      <div class="ds-av av-md" style="background:var(--c-mid);color:var(--text-secondary);border-color:var(--c-void)">+5</div>
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- CARDS -->
+<section class="ds-section" id="cards">
+  <div class="ds-section-title">ðŸƒ Ø§Ù„Ø¨Ø·Ø§Ù‚Ø§Øª â€” Cards</div>
+  <p class="ds-section-sub">Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„Ø¥Ø­ØµØ§Ø¡ØŒ Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„Ù…Ø­ØªÙˆÙ‰ØŒ Bento Block â€” Ù‚ÙˆØ§Ù„Ø¨ Ø¬Ø§Ù‡Ø²Ø© Ù„Ù„Ø§Ø³ØªØ®Ø¯Ø§Ù….</p>
+  <div class="ds-grid ds-grid-3">
+    <div class="stat-card">
+      <div style="font-size:1.5rem;margin-bottom:4px">ðŸ§ </div>
+      <div class="stat-value" style="color:var(--c-teal-400)">94</div>
+      <div class="stat-label">Ù†Ù‚Ø§Ø· Ø§Ù„ØªØ¹Ø§ÙÙŠ</div>
+      <div class="stat-trend trend-up">â†‘ +12 Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹</div>
+    </div>
+    <div class="stat-card">
+      <div style="font-size:1.5rem;margin-bottom:4px">ðŸ”¥</div>
+      <div class="stat-value" style="color:var(--c-amber-500)">18</div>
+      <div class="stat-label">Ø£ÙŠØ§Ù… Ù…ØªØªØ§Ù„ÙŠØ©</div>
+      <div class="stat-trend trend-up">â†‘ Ø±Ù‚Ù… Ù‚ÙŠØ§Ø³ÙŠ Ø´Ø®ØµÙŠ!</div>
+    </div>
+    <div class="stat-card">
+      <div style="font-size:1.5rem;margin-bottom:4px">ðŸ’§</div>
+      <div class="stat-value" style="color:var(--c-rose-400)">2</div>
+      <div class="stat-label">Ù„Ø­Ø¸Ø§Øª ØµØ¹Ø¨Ø©</div>
+      <div class="stat-trend trend-down">â†“ Ø£Ù‚Ù„ Ù…Ù† Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø§Ù„Ù…Ø§Ø¶ÙŠ</div>
+    </div>
+  </div>
+  <div style="margin-top:var(--sp-3)">
+    <div class="ds-card" style="display:flex;gap:var(--sp-3);align-items:flex-start">
+      <div style="width:56px;height:56px;border-radius:var(--radius);background:rgba(45,212,191,.12);border:1px solid rgba(45,212,191,.25);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">ðŸ§˜</div>
+      <div>
+        <div style="font-size:1rem;font-weight:800;margin-bottom:4px">ØªÙ…Ø±ÙŠÙ† Ø§Ù„ØªÙ†ÙØ³ Ø§Ù„Ø¹Ù…ÙŠÙ‚</div>
+        <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px">ØªÙ‚Ù†ÙŠØ© Ø¹Ù„Ø§Ø¬ÙŠØ© Â· 5 Ø¯Ù‚Ø§Ø¦Ù‚</div>
+        <p style="font-size:.83rem;color:var(--text-secondary);line-height:1.6;margin-bottom:12px">ØªÙ…Ø±ÙŠÙ† Ù…ÙØ«Ø¨ÙŽØª Ø¹Ù„Ù…ÙŠØ§Ù‹ Ù„ØªÙ‡Ø¯Ø¦Ø© Ø§Ù„Ø¬Ù‡Ø§Ø² Ø§Ù„Ø¹ØµØ¨ÙŠ ÙˆØªÙ‚Ù„ÙŠÙ„ Ø§Ù„Ø±ØºØ¨Ø© Ø§Ù„Ø¢Ù†ÙŠØ©. Ù…Ø«Ø§Ù„ÙŠ ÙÙŠ Ù„Ø­Ø¸Ø§Øª Ø§Ù„Ø¶ØºØ·.</p>
+        <div class="comp-states">
+          <button class="btn btn-sm btn-primary">Ø§Ø¨Ø¯Ø£ Ø§Ù„Ø¢Ù†</button>
+          <button class="btn btn-sm btn-glass">Ø®Ø²Ù‘Ù† Ù„Ù„Ø§Ø­Ù‚Ø§Ù‹</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- ALERTS -->
+<section class="ds-section" id="alerts">
+  <div class="ds-section-title">ðŸ“¢ Ø§Ù„ØªÙ†Ø¨ÙŠÙ‡Ø§Øª â€” Alerts</div>
+  <p class="ds-section-sub">4 Ù…Ø³ØªÙˆÙŠØ§Øª ØªÙ†Ø¨ÙŠÙ‡ â€” Ù…Ø¹Ù„ÙˆÙ…Ø§ØªÙŠØŒ Ù†Ø¬Ø§Ø­ØŒ ØªØ­Ø°ÙŠØ±ØŒ Ø®Ø·Ø±.</p>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="ds-alert alert-info">â„¹ <div><strong>Ù…Ø¹Ù„ÙˆÙ…Ø© Ù…ÙÙŠØ¯Ø©</strong> â€” Ù†Ù‚Ø§Ø·Ùƒ Ø¹Ù„Ù‰ ÙˆØ´Ùƒ Ø§Ù„Ø§Ù†ØªÙ‡Ø§Ø¡ØŒ Ø¬Ø¯Ù‘Ø¯ Ø§Ø´ØªØ±Ø§ÙƒÙƒ.</div></div>
+    <div class="ds-alert alert-success">âœ… <div><strong>Ø£Ø­Ø³Ù†Øª!</strong> â€” Ø£ØªÙ…Ù…Øª 7 Ø£ÙŠØ§Ù… Ù…ØªØªØ§Ù„ÙŠØ© ÙÙŠ Ù…Ù†Ø·Ù‚Ø© Ø§Ù„Ø£Ù…Ø§Ù†.</div></div>
+    <div class="ds-alert alert-warning">âš ï¸ <div><strong>ØªÙ†Ø¨ÙŠÙ‡</strong> â€” Ù„Ø§Ø­Ø¸Ù†Ø§ Ø§Ù†Ø®ÙØ§Ø¶ ÙÙŠ Ù†Ø´Ø§Ø·Ùƒ Ø®Ù„Ø§Ù„ Ø§Ù„Ù€ 48 Ø³Ø§Ø¹Ø© Ø§Ù„Ù…Ø§Ø¶ÙŠØ©.</div></div>
+    <div class="ds-alert alert-danger">ðŸš¨ <div><strong>Ù„Ø­Ø¸Ø© ØµØ¹Ø¨Ø©</strong> â€” Ø¥Ø°Ø§ Ø´Ø¹Ø±Øª Ø¨Ø®Ø·Ø± Ø­Ù‚ÙŠÙ‚ÙŠØŒ Ø§ØªØµÙ„ Ø¨Ø§Ù„Ø¯Ø¹Ù… Ø§Ù„ÙÙˆØ±ÙŠ Ø§Ù„Ø¢Ù†.</div></div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- PROGRESS -->
+<section class="ds-section" id="progress">
+  <div class="ds-section-title">ðŸ“Š Ø§Ù„ØªÙ‚Ø¯Ù… â€” Progress</div>
+  <p class="ds-section-sub">Ø£Ø´Ø±Ø·Ø© ØªÙ‚Ø¯Ù… Ù…ØªØ¯Ø±Ø¬Ø© Ø¨Ø­Ø¬Ù…ÙŠÙ† ÙˆÙ…Ø¹ ØªØ³Ù…ÙŠØ§Øª.</p>
+  <div class="ds-card" style="display:flex;flex-direction:column;gap:var(--sp-2)">
+    <div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:.8rem;font-weight:700">Ù†Ù‚Ø§Ø· Ø§Ù„ØªØ¹Ø§ÙÙŠ</span><span style="font-size:.8rem;color:var(--c-teal-400)">94%</span></div><div class="ds-prog-wrap"><div class="ds-prog prog-teal" style="width:94%"></div></div></div>
+    <div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:.8rem;font-weight:700">Ø§Ù„Ø£ÙŠØ§Ù… Ø§Ù„Ù…ØªØªØ§Ù„ÙŠØ©</span><span style="font-size:.8rem;color:var(--c-amber-500)">60%</span></div><div class="ds-prog-wrap"><div class="ds-prog prog-amber" style="width:60%"></div></div></div>
+    <div><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:.8rem;font-weight:700">Ù…Ø³ØªÙˆÙ‰ Ø§Ù„Ø®Ø·Ø±</span><span style="font-size:.8rem;color:var(--c-rose-400)">25%</span></div><div class="ds-prog-wrap"><div class="ds-prog prog-rose" style="width:25%"></div></div></div>
+    <div style="margin-top:var(--sp-1)"><div class="ds-prog-wrap" style="height:4px"><div class="ds-prog prog-teal" style="width:78%"></div></div><div style="font-size:.72rem;color:var(--text-muted);margin-top:4px">Ø´Ø±ÙŠØ· Ø±ÙÙŠØ¹ â€” Ù„Ù„Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø¯Ø§Ø®Ù„ Ø§Ù„Ø¨Ø·Ø§Ù‚Ø§Øª</div></div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- TABS -->
+<section class="ds-section" id="tabs">
+  <div class="ds-section-title">ðŸ“Œ Ø§Ù„ØªØ¨ÙˆÙŠØ¨Ø§Øª â€” Tabs</div>
+  <div class="ds-card">
+    <div class="ds-tabs" style="margin-bottom:var(--sp-3)">
+      <button class="ds-tab active">Ø§Ù„ÙŠÙˆÙ…</button>
+      <button class="ds-tab">Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹</button>
+      <button class="ds-tab">Ø§Ù„Ø´Ù‡Ø±</button>
+      <button class="ds-tab">Ø§Ù„ÙƒÙ„</button>
+    </div>
+    <div style="padding:var(--sp-2);background:var(--c-mid);border-radius:var(--radius);font-size:.85rem;color:var(--text-secondary)">Ù…Ø­ØªÙˆÙ‰ Ø§Ù„ØªØ¨ÙˆÙŠØ¨ Ø§Ù„Ù†Ø´Ø· ÙŠØ¸Ù‡Ø± Ù‡Ù†Ø§ â€” Ø§Ù„ÙŠÙˆÙ…</div>
+    <div class="ds-code" style="margin-top:var(--sp-2)">&lt;<span class="k">div</span> class=<span class="s">"ds-tabs"</span>&gt;
+  &lt;<span class="k">button</span> class=<span class="s">"ds-tab active"</span>&gt;Ø§Ù„ÙŠÙˆÙ…&lt;/button&gt;
+  &lt;<span class="k">button</span> class=<span class="s">"ds-tab"</span>&gt;Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹&lt;/button&gt;
+&lt;/div&gt;
+
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- TABLES -->
+<section class="ds-section" id="tables">
+  <div class="ds-section-title">ðŸ“‹ Ø§Ù„Ø¬Ø¯Ø§ÙˆÙ„ â€” Tables</div>
+  <div class="ds-card" style="overflow-x:auto">
+    <table class="ds-table">
+      <thead><tr><th>Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…</th><th>Ø§Ù„Ù…Ø³ØªÙˆÙ‰</th><th>Ø§Ù„Ø£ÙŠØ§Ù…</th><th>Ø§Ù„Ù†Ù‚Ø§Ø·</th><th>Ø§Ù„Ø­Ø§Ù„Ø©</th></tr></thead>
+      <tbody>
+        <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="ds-av av-xs" style="background:rgba(45,212,191,.2);color:var(--c-teal-400)">Ø£</div>Ø£Ø­Ù…Ø¯ Ù…Ø­Ù…ÙˆØ¯</div></td><td><span class="chip chip-teal">Ù…Ø³ØªÙˆÙ‰ 4</span></td><td>18</td><td>940</td><td><span class="ds-badge-sm bs-emerald">Ø¢Ù…Ù†</span></td></tr>
+        <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="ds-av av-xs" style="background:rgba(245,166,35,.2);color:var(--c-amber-500)">Ù…</div>Ù…Ø­Ù…Ø¯ Ø¹Ù„ÙŠ</div></td><td><span class="chip chip-amber">Ù…Ø³ØªÙˆÙ‰ 2</span></td><td>6</td><td>320</td><td><span class="ds-badge-sm bs-amber">ØªØ­Øª Ø§Ù„Ù…Ø±Ø§Ù‚Ø¨Ø©</span></td></tr>
+        <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="ds-av av-xs" style="background:rgba(248,113,113,.2);color:var(--c-rose-400)">Ø³</div>Ø³Ø§Ø±Ø© Ø®Ø§Ù„Ø¯</div></td><td><span class="chip chip-rose">Ù…Ø³ØªÙˆÙ‰ 1</span></td><td>2</td><td>80</td><td><span class="ds-badge-sm bs-rose">ÙŠØ­ØªØ§Ø¬ Ø¯Ø¹Ù…</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- MODAL -->
+<section class="ds-section" id="modal">
+  <div class="ds-section-title">ðŸªŸ Ø§Ù„Ù…ÙˆØ¯Ø§Ù„ â€” Modal</div>
+  <div class="ds-modal-demo">
+    <div class="ds-modal">
+      <div class="ds-modal-header">
+        <div class="ds-modal-title">Ù‡Ù„ Ø£Ù†Øª Ø¨Ø®ÙŠØ± Ø§Ù„Ø¢Ù†ØŸ</div>
+        <div class="ds-modal-close">âœ•</div>
+      </div>
+      <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:var(--sp-3);line-height:1.7">Ù„Ø§Ø­Ø¸Ù†Ø§ Ø£Ù†Ùƒ Ù„Ù… ØªØ³Ø¬Ù‘Ù„ Ø´Ø¹ÙˆØ±Ùƒ Ù…Ù†Ø° Ø£ÙƒØ«Ø± Ù…Ù† 24 Ø³Ø§Ø¹Ø©. Ø®Ø° Ù„Ø­Ø¸Ø© Ù„Ù†ÙØ³Ùƒ Ø§Ù„Ø¢Ù†.</p>
+      <div style="display:flex;gap:.75rem;justify-content:flex-end">
+        <button class="btn btn-sm btn-ghost">Ù„Ø§Ø­Ù‚Ø§Ù‹</button>
+        <button class="btn btn-sm btn-primary">Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¢Ù†</button>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- TOOLTIPS -->
+<section class="ds-section" id="tooltips">
+  <div class="ds-section-title">ðŸ’¬ Ø§Ù„ØªÙ„Ù…ÙŠØ­Ø§Øª â€” Tooltips</div>
+  <div class="ds-card">
+    <div class="comp-states">
+      <span class="ds-tip" data-tip="Ù†Ù‚Ø§Ø· Ø§Ù„ØªØ¹Ø§ÙÙŠ Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠØ©"><button class="btn btn-md btn-glass">940 Ù†Ù‚Ø·Ø© ØŸ</button></span>
+      <span class="ds-tip" data-tip="ÙŠØ¹Ø±Ø¶ ØªØ§Ø±ÙŠØ® Ù†Ø´Ø§Ø·Ùƒ ÙƒØ§Ù…Ù„Ø§Ù‹"><button class="btn btn-md btn-ghost">ðŸ“… Ø§Ù„Ø³Ø¬Ù„</button></span>
+      <span class="ds-tip" data-tip="ØªÙˆØ§ØµÙ„ Ù…Ø¹ Ø§Ù„Ù…Ø¹Ø§Ù„Ø¬ Ù…Ø¨Ø§Ø´Ø±Ø©"><button class="btn btn-md btn-teal">ðŸ’¬ Ø¯Ø¹Ù… ÙÙˆØ±ÙŠ</button></span>
+    </div>
+    <p style="font-size:.78rem;color:var(--text-muted);margin-top:var(--sp-2)">âœ¦ Ù…Ø±Ù‘Ø± ÙÙˆÙ‚ Ø§Ù„Ø¹Ù†Ø§ØµØ± Ù„Ø±Ø¤ÙŠØ© Ø§Ù„ØªÙ„Ù…ÙŠØ­Ø§Øª</p>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- TIMELINE -->
+<section class="ds-section" id="timeline">
+  <div class="ds-section-title">â± Ø§Ù„Ø¬Ø¯ÙˆÙ„ Ø§Ù„Ø²Ù…Ù†ÙŠ â€” Timeline</div>
+  <div class="ds-card">
+    <div class="ds-timeline">
+      <div class="ds-tl-item">
+        <div class="ds-tl-dot"></div>
+        <div class="ds-tl-content">
+          <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:4px">Ø§Ù„ÙŠÙˆÙ… Â· 09:30 Øµ</div>
+          <div style="font-weight:700;margin-bottom:4px">Ø³Ø¬Ù‘Ù„Øª Ø´Ø¹ÙˆØ±Ùƒ ðŸŒŸ</div>
+          <div style="font-size:.82rem;color:var(--text-secondary)">Ø´Ø¹ÙˆØ± Ø¥ÙŠØ¬Ø§Ø¨ÙŠ â€” Ø·Ø§Ù‚Ø© Ø¹Ø§Ù„ÙŠØ©</div>
+        </div>
+      </div>
+      <div class="ds-tl-item">
+        <div class="ds-tl-dot" style="background:var(--c-amber-500);box-shadow:0 0 8px var(--c-amber-glow)"></div>
+        <div class="ds-tl-content">
+          <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:4px">Ø£Ù…Ø³ Â· 11:15 Ù…</div>
+          <div style="font-weight:700;margin-bottom:4px">Ù„Ø­Ø¸Ø© ØµØ¹Ø¨Ø© ðŸ’›</div>
+          <div style="font-size:.82rem;color:var(--text-secondary)">Ø§Ø³ØªØ®Ø¯Ù…Øª ØªÙ…Ø±ÙŠÙ† Ø§Ù„ØªÙ†ÙØ³ â€” Ù†Ø¬Ø­Øª!</div>
+        </div>
+      </div>
+      <div class="ds-tl-item">
+        <div class="ds-tl-dot" style="background:var(--c-emerald-500);box-shadow:0 0 8px rgba(16,185,129,.5)"></div>
+        <div class="ds-tl-content">
+          <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:4px">Ù‚Ø¨Ù„ ÙŠÙˆÙ…ÙŠÙ†</div>
+          <div style="font-weight:700;margin-bottom:4px">ÙˆØµÙ„Øª Ø§Ù„Ù…Ø³ØªÙˆÙ‰ 4 ðŸ†</div>
+          <div style="font-size:.82rem;color:var(--text-secondary)">Ø£Ù†Ø¬Ø²Øª 18 ÙŠÙˆÙ… Ù…ØªØªØ§Ù„ÙŠ!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- BREADCRUMB -->
+<section class="ds-section" id="breadcrumb">
+  <div class="ds-section-title">ðŸ—ºï¸ Ù…Ø³Ø§Ø± Ø§Ù„ØªÙ†Ù‚Ù„ â€” Breadcrumb</div>
+  <div class="ds-card">
+    <div class="ds-breadcrumb">
+      <a href="#">Ø§Ù„Ø±Ø­Ù„Ø©</a>
+      <span class="ds-breadcrumb-sep">â€º</span>
+      <a href="#">Ø§Ù„Ø£Ø¯ÙˆØ§Øª</a>
+      <span class="ds-breadcrumb-sep">â€º</span>
+      <a href="#">ØªÙ…Ø§Ø±ÙŠÙ† Ø§Ù„ØªÙ†ÙØ³</a>
+      <span class="ds-breadcrumb-sep">â€º</span>
+      <span style="color:var(--text-primary);font-weight:700">4-7-8 Breathing</span>
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- PAGINATION -->
+<section class="ds-section" id="pagination">
+  <div class="ds-section-title">ðŸ“„ ØªØ±Ù‚ÙŠÙ… Ø§Ù„ØµÙØ­Ø§Øª â€” Pagination</div>
+  <div class="ds-card">
+    <div class="ds-page">
+      <button class="ds-page-btn">â€¹</button>
+      <button class="ds-page-btn">1</button>
+      <button class="ds-page-btn active">2</button>
+      <button class="ds-page-btn">3</button>
+      <button class="ds-page-btn">4</button>
+      <span style="color:var(--text-muted);padding:0 4px">...</span>
+      <button class="ds-page-btn">12</button>
+      <button class="ds-page-btn">â€º</button>
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- SKELETON -->
+<section class="ds-section" id="skeleton">
+  <div class="ds-section-title">ðŸ’€ Ù‡ÙŠÙƒÙ„ Ø§Ù„ØªØ­Ù…ÙŠÙ„ â€” Skeleton</div>
+  <div class="ds-card">
+    <div style="display:flex;gap:var(--sp-2);align-items:flex-start">
+      <div class="ds-skeleton" style="width:48px;height:48px;border-radius:50%;flex-shrink:0"></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div class="ds-skeleton" style="height:16px;width:60%"></div>
+        <div class="ds-skeleton" style="height:12px;width:80%"></div>
+        <div class="ds-skeleton" style="height:12px;width:45%"></div>
+      </div>
+    </div>
+    <div style="margin-top:var(--sp-2);display:flex;flex-direction:column;gap:8px">
+      <div class="ds-skeleton" style="height:120px;border-radius:var(--radius)"></div>
+      <div class="ds-skeleton" style="height:40px;border-radius:var(--radius)"></div>
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- RING -->
+<section class="ds-section" id="ring">
+  <div class="ds-section-title">ðŸ”˜ Ø®Ø§ØªÙ… Ø§Ù„Ø±Ø­Ù„Ø© â€” Ring System</div>
+  <p class="ds-section-sub">Ù†Ø¸Ø§Ù… Ø§Ù„Ù…Ù†Ø§Ø·Ù‚ Ø§Ù„Ø£Ø±Ø¨Ø¹ â€” Ø§Ù„Ù…Ø­Ø±Ùƒ Ø§Ù„Ø¨ØµØ±ÙŠ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ Ù„Ù…Ù†ØµØ© Ø§Ù„Ø±Ø­Ù„Ø©.</p>
+  <div class="ds-grid ds-grid-4">
+    <div class="ds-card" style="text-align:center">
+      <div class="ring-indicator ring-safe" style="width:40px;height:40px;margin:0 auto var(--sp-2)"></div>
+      <div style="font-weight:800;color:var(--c-teal-400)">Ù…Ù†Ø·Ù‚Ø© Ø§Ù„Ø£Ù…Ø§Ù†</div>
+      <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">7+ Ø£ÙŠØ§Ù… Â· Ø­Ø§Ù„Ø© Ù…Ù…ØªØ§Ø²Ø©</div>
+    </div>
+    <div class="ds-card" style="text-align:center">
+      <div class="ring-indicator ring-caution" style="width:40px;height:40px;margin:0 auto var(--sp-2)"></div>
+      <div style="font-weight:800;color:var(--c-amber-500)">Ù…Ù†Ø·Ù‚Ø© Ø§Ù„Ø­Ø°Ø±</div>
+      <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">3-6 Ø£ÙŠØ§Ù… Â· ØªØ­ØªØ§Ø¬ Ø§Ù†ØªØ¨Ø§Ù‡</div>
+    </div>
+    <div class="ds-card" style="text-align:center">
+      <div class="ring-indicator ring-danger" style="width:40px;height:40px;margin:0 auto var(--sp-2)"></div>
+      <div style="font-weight:800;color:var(--c-rose-400)">Ù…Ù†Ø·Ù‚Ø© Ø§Ù„Ø®Ø·Ø±</div>
+      <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">0-2 Ø£ÙŠØ§Ù… Â· Ø¯Ø¹Ù… ÙÙˆØ±ÙŠ</div>
+    </div>
+    <div class="ds-card" style="text-align:center">
+      <div class="ring-indicator ring-detached" style="width:40px;height:40px;margin:0 auto var(--sp-2)"></div>
+      <div style="font-weight:800;color:var(--text-secondary)">Ù…Ù†ÙØµÙ„</div>
+      <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">ØºÙŠØ± Ù†Ø´Ø· Ù…Ù†Ø° Ø£Ø³Ø¨ÙˆØ¹+</div>
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- MISC -->
+<section class="ds-section" id="misc">
+  <div class="ds-section-title">âœ¦ Ø¹Ù†Ø§ØµØ± Ù…ØªÙ†ÙˆØ¹Ø©</div>
+  <div class="ds-grid ds-grid-2">
+    <div class="ds-card">
+      <div class="state-label">ÙØ§ØµÙ„ Ù…Ø¹ Ù†Øµ</div>
+      <div class="ds-sep"><span>Ø£Ùˆ ØªØ§Ø¨Ø¹ Ù…Ø¹</span></div>
+      <div class="ds-sep"><span>Ø§Ù„Ù…Ø²ÙŠØ¯ Ù…Ù† Ø§Ù„Ø®ÙŠØ§Ø±Ø§Øª</span></div>
+    </div>
+    <div class="ds-card">
+      <div class="state-label">Ø¨Ø·Ø§Ù‚Ø© Ø§Ù„Ø§Ù‚ØªØ¨Ø§Ø³</div>
+      <blockquote style="border-right:3px solid var(--c-teal-400);padding-right:var(--sp-2);margin:0">
+        <p style="font-size:.9rem;color:var(--text-secondary);font-style:italic;line-height:1.7">"ÙƒÙ„ ÙŠÙˆÙ… ØªØªØ¬Ø§ÙˆØ² ÙÙŠÙ‡ Ù‡Ùˆ Ø§Ù†ØªØµØ§Ø± â€” Ù„Ø§ ØªÙ†Ø³ÙŽ Ø°Ù„Ùƒ."</p>
+        <cite style="font-size:.75rem;color:var(--text-muted);margin-top:8px;display:block">â€” ÙØ±ÙŠÙ‚ Ø§Ù„Ø±Ø­Ù„Ø©</cite>
+      </blockquote>
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- PATTERNS -->
+<section class="ds-section" id="patterns">
+  <div class="ds-section-title">ðŸŽ¯ Ø£Ù†Ù…Ø§Ø· Ø§Ù„ØªØµÙ…ÙŠÙ… â€” Patterns</div>
+  <p class="ds-section-sub">Ø£Ù†Ù…Ø§Ø· Ù…ÙØ¹Ø§Ø¯Ø© Ø§Ù„Ø§Ø³ØªØ®Ø¯Ø§Ù… â€” Ù„Ø¶Ù…Ø§Ù† Ø§Ù„Ø§ØªØ³Ø§Ù‚ Ø¹Ø¨Ø± Ø§Ù„Ø´Ø§Ø´Ø§Øª.</p>
+  <div class="ds-grid ds-grid-2">
+    <div class="ds-card">
+      <div class="state-label">Empty State</div>
+      <div style="text-align:center;padding:var(--sp-4) var(--sp-2)">
+        <div style="font-size:3rem;margin-bottom:12px">ðŸŒŒ</div>
+        <div style="font-size:1rem;font-weight:800;margin-bottom:8px">Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ù†Ø´Ø§Ø· Ø¨Ø¹Ø¯</div>
+        <p style="font-size:.82rem;color:var(--text-secondary);margin-bottom:var(--sp-2)">Ø§Ø¨Ø¯Ø£ Ø±Ø­Ù„ØªÙƒ Ø¨ØªØ³Ø¬ÙŠÙ„ Ø´Ø¹ÙˆØ±Ùƒ Ø§Ù„Ø£ÙˆÙ„</p>
+        <button class="btn btn-md btn-primary">Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¢Ù† âœ¨</button>
+      </div>
+    </div>
+    <div class="ds-card">
+      <div class="state-label">Ù†Ù…Ø· Ø§Ù„Ø¨Ø·Ø§Ù‚Ø© Ù…Ø¹ CTA</div>
+      <div style="background:linear-gradient(135deg,rgba(45,212,191,.1),rgba(167,139,250,.1));border:1px solid rgba(45,212,191,.2);border-radius:var(--radius);padding:var(--sp-3);text-align:center">
+        <div style="font-size:1.5rem;margin-bottom:8px">ðŸ†</div>
+        <div style="font-size:.9rem;font-weight:800;margin-bottom:6px">Ø£ÙƒÙ…Ù„Øª 18 ÙŠÙˆÙ…!</div>
+        <p style="font-size:.78rem;color:var(--text-secondary);margin-bottom:12px">Ø´Ø§Ø±Ùƒ Ø¥Ù†Ø¬Ø§Ø²Ùƒ Ù…Ø¹ Ù…Ø¬ØªÙ…Ø¹ Ø§Ù„Ø±Ø­Ù„Ø©</p>
+        <button class="btn btn-sm btn-teal">Ø´Ø§Ø±Ùƒ Ø§Ù„Ø¥Ù†Ø¬Ø§Ø²</button>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- DO / DON'T -->
+<section class="ds-section" id="dodont">
+  <div class="ds-section-title">âœ… ÙŠØ¬Ø¨ / âŒ Ù„Ø§ ÙŠØ¬Ø¨</div>
+  <div class="do-dont">
+    <div class="do-box">
+      <div class="do-label">âœ“ ÙŠØ¬Ø¨</div>
+      <div class="do-dont-item">Ø§Ø³ØªØ®Ø¯Ø§Ù… CTA ÙˆØ§Ø­Ø¯ Ø¨Ø§Ø±Ø² Ù„ÙƒÙ„ Ø´Ø§Ø´Ø©</div>
+      <div class="do-dont-item">Glassmorphism Ù…Ø¹ backdrop-filter</div>
+      <div class="do-dont-item">8px grid Ù„ÙƒÙ„ Ø§Ù„ØªØ¨Ø§Ø¹Ø¯Ø§Øª</div>
+      <div class="do-dont-item">IBM Plex / Almarai Ù„Ù„Ø¹Ø±Ø¨ÙŠØ©</div>
+      <div class="do-dont-item">ØªØ¨Ø§ÙŠÙ† 4.5:1 Ø­Ø¯Ø§Ù‹ Ø£Ø¯Ù†Ù‰</div>
+      <div class="do-dont-item">Bento Grid Ø¨Ø¯Ù„ Ø§Ù„Ù‚ÙˆØ§Ø¦Ù…</div>
+      <div class="do-dont-item">Ø§Ù†ÙŠÙ…ÙŠØ´Ù† Ø¨Ù€ cubic-bezier(0.22,1,0.36,1)</div>
+    </div>
+    <div class="dont-box">
+      <div class="dont-label">âœ• Ù„Ø§ ÙŠØ¬Ø¨</div>
+      <div class="do-dont-item">Ø£ÙƒØ«Ø± Ù…Ù† CTA ÙˆØ§Ø­Ø¯ Ø¨Ù†ÙØ³ Ø§Ù„Ø£Ù‡Ù…ÙŠØ©</div>
+      <div class="do-dont-item">Ø®Ù„ÙÙŠØ© Ø³ÙˆØ¯Ø§Ø¡ #000 â€” Ø§Ø³ØªØ®Ø¯Ù… #0a0e1f</div>
+      <div class="do-dont-item">Ù‚ÙŠÙ… ØªØ¨Ø§Ø¹Ø¯ Ø®Ø§Ø±Ø¬ Ø§Ù„Ù…Ù‚ÙŠØ§Ø³ (Ù…Ø«Ù„ 13px)</div>
+      <div class="do-dont-item">Ù†ØµÙˆØµ Ø¨Ø­Ø¬Ù… Ø£Ù‚Ù„ Ù…Ù† 12px</div>
+      <div class="do-dont-item">Ø£Ù„ÙˆØ§Ù† Ø³Ø§Ø·Ø¹Ø© Ø¹Ù„Ù‰ Ø®Ù„ÙÙŠØ© ÙØ§ØªØ­Ø©</div>
+      <div class="do-dont-item">Ø§Ù†ÙŠÙ…ÙŠØ´Ù† Ø£Ø·ÙˆÙ„ Ù…Ù† 400ms</div>
+      <div class="do-dont-item">Ø£ÙŠÙ‚ÙˆÙ†Ø§Øª Ø¨Ø¯ÙˆÙ† Ù†Øµ ØªÙˆØ¶ÙŠØ­ÙŠ Ù…Ø¹ Ø²Ø±</div>
+    </div>
+  </div>
+</section>
+<div class="ds-divider"></div>
+
+<!-- TOKENS -->
+<section class="ds-section" id="tokens">
+  <div class="ds-section-title">ðŸ”‘ Design Tokens â€” JSON</div>
+  <p class="ds-section-sub">Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø±Ù…ÙˆØ² Ø§Ù„ØªØµÙ…ÙŠÙ…ÙŠØ© Ø¨ØµÙŠØºØ© JSON â€” Ù…ØªÙˆØ§ÙÙ‚ Ù…Ø¹ Style Dictionary Ùˆ CSS Custom Properties.</p>
+  <div class="ds-code">{
+  <span class="s">"color"</span>: {
+    <span class="s">"space"</span>: {
+      <span class="s">"void"</span>:   { <span class="s">"value"</span>: <span class="s">"#0a0e1f"</span>, <span class="k">"role"</span>: <span class="s">"page background"</span> },
+      <span class="s">"deep"</span>:   { <span class="s">"value"</span>: <span class="s">"#131a35"</span>, <span class="k">"role"</span>: <span class="s">"nav, sidebar"</span> },
+      <span class="s">"mid"</span>:    { <span class="s">"value"</span>: <span class="s">"#1a2242"</span>, <span class="k">"role"</span>: <span class="s">"card inner"</span> },
+      <span class="s">"nebula"</span>: { <span class="s">"value"</span>: <span class="s">"#212b4f"</span>, <span class="k">"role"</span>: <span class="s">"hover state"</span> },
+      <span class="s">"aurora"</span>: { <span class="s">"value"</span>: <span class="s">"#2a3560"</span>, <span class="k">"role"</span>: <span class="s">"active tab"</span> }
+    },
+    <span class="s">"brand"</span>: {
+      <span class="s">"teal-400"</span>:    { <span class="s">"value"</span>: <span class="s">"#2dd4bf"</span>, <span class="k">"role"</span>: <span class="s">"primary brand"</span> },
+      <span class="s">"amber-500"</span>:   { <span class="s">"value"</span>: <span class="s">"#f5a623"</span>, <span class="k">"role"</span>: <span class="s">"CTA primary"</span> },
+      <span class="s">"emerald-500"</span>: { <span class="s">"value"</span>: <span class="s">"#10b981"</span>, <span class="k">"role"</span>: <span class="s">"success"</span> },
+      <span class="s">"rose-400"</span>:    { <span class="s">"value"</span>: <span class="s">"#f87171"</span>, <span class="k">"role"</span>: <span class="s">"danger"</span> },
+      <span class="s">"violet-400"</span>:  { <span class="s">"value"</span>: <span class="s">"#a78bfa"</span>, <span class="k">"role"</span>: <span class="s">"accent / code"</span> }
+    },
+    <span class="s">"text"</span>: {
+      <span class="s">"primary"</span>:   { <span class="s">"value"</span>: <span class="s">"#f1f5f9"</span> },
+      <span class="s">"secondary"</span>: { <span class="s">"value"</span>: <span class="s">"#94a3b8"</span> },
+      <span class="s">"muted"</span>:     { <span class="s">"value"</span>: <span class="s">"rgba(148,163,184,0.5)"</span> }
+    }
+  },
+  <span class="s">"spacing"</span>: {
+    <span class="s">"1"</span>:<span class="s">"8px"</span>, <span class="s">"2"</span>:<span class="s">"16px"</span>, <span class="s">"3"</span>:<span class="s">"24px"</span>, <span class="s">"4"</span>:<span class="s">"32px"</span>,
+    <span class="s">"5"</span>:<span class="s">"40px"</span>, <span class="s">"6"</span>:<span class="s">"48px"</span>, <span class="s">"8"</span>:<span class="s">"64px"</span>, <span class="s">"10"</span>:<span class="s">"80px"</span>, <span class="s">"12"</span>:<span class="s">"96px"</span>
+  },
+  <span class="s">"radius"</span>: {
+    <span class="s">"sm"</span>:<span class="s">"0.5rem"</span>, <span class="s">"base"</span>:<span class="s">"0.75rem"</span>,
+    <span class="s">"lg"</span>:<span class="s">"1.25rem"</span>, <span class="s">"xl"</span>:<span class="s">"1.75rem"</span>, <span class="s">"full"</span>:<span class="s">"9999px"</span>
+  },
+  <span class="s">"typography"</span>: {
+    <span class="s">"fontFamily"</span>: { <span class="s">"sans"</span>:<span class="s">"Almarai, IBM Plex Sans Arabic, system-ui"</span> },
+    <span class="s">"scale"</span>: {
+      <span class="s">"display"</span>: { <span class="s">"size"</span>:<span class="s">"clamp(2.5rem,5vw,4rem)"</span>, <span class="s">"weight"</span>:<span class="s">"800"</span> },
+      <span class="s">"h1"</span>:      { <span class="s">"size"</span>:<span class="s">"2.25rem"</span>, <span class="s">"weight"</span>:<span class="s">"800"</span> },
+      <span class="s">"h2"</span>:      { <span class="s">"size"</span>:<span class="s">"1.75rem"</span>, <span class="s">"weight"</span>:<span class="s">"800"</span> },
+      <span class="s">"h3"</span>:      { <span class="s">"size"</span>:<span class="s">"1.375rem"</span>,<span class="s">"weight"</span>:<span class="s">"700"</span> },
+      <span class="s">"h4"</span>:      { <span class="s">"size"</span>:<span class="s">"1.125rem"</span>,<span class="s">"weight"</span>:<span class="s">"700"</span> },
+      <span class="s">"body-lg"</span>: { <span class="s">"size"</span>:<span class="s">"1rem"</span>,    <span class="s">"weight"</span>:<span class="s">"400"</span> },
+      <span class="s">"body"</span>:    { <span class="s">"size"</span>:<span class="s">".875rem"</span>, <span class="s">"weight"</span>:<span class="s">"400"</span> },
+      <span class="s">"caption"</span>: { <span class="s">"size"</span>:<span class="s">".75rem"</span>,  <span class="s">"weight"</span>:<span class="s">"500"</span> },
+      <span class="s">"label"</span>:   { <span class="s">"size"</span>:<span class="s">".65rem"</span>,  <span class="s">"weight"</span>:<span class="s">"700"</span>, <span class="s">"transform"</span>:<span class="s">"uppercase"</span> }
+    }
+  },
+  <span class="s">"animation"</span>: {
+    <span class="s">"ease"</span>:    <span class="s">"cubic-bezier(0.22,1,0.36,1)"</span>,
+    <span class="s">"dur-fast"</span>:<span class="s">"150ms"</span>,
+    <span class="s">"dur-base"</span>:<span class="s">"250ms"</span>,
+    <span class="s">"dur-slow"</span>:<span class="s">"400ms"</span>
+  }
+}
+
+</section>
+<div class="ds-divider"></div>
+
+<!-- DEVELOPER GUIDE -->
+<section class="ds-section" id="devguide">
+  <div class="ds-section-title">ðŸ‘¨â€ðŸ’» Ø¯Ù„ÙŠÙ„ Ø§Ù„Ù…Ø·ÙˆØ± â€” Developer Guide</div>
+  <p class="ds-section-sub">ÙƒÙ„ Ù…Ø§ ÙŠØ­ØªØ§Ø¬Ù‡ Ø§Ù„Ù…Ø·ÙˆØ± Ù„ØªØ·Ø¨ÙŠÙ‚ Ù†Ø¸Ø§Ù… Ø§Ù„ØªØµÙ…ÙŠÙ… Ø¨Ø´ÙƒÙ„ ØµØ­ÙŠØ­ Ù…Ù† Ø§Ù„ÙŠÙˆÙ… Ø§Ù„Ø£ÙˆÙ„.</p>
+  <div class="ds-grid ds-grid-2">
+    <div class="ds-card">
+      <div style="font-weight:800;margin-bottom:var(--sp-2);color:var(--c-teal-400)">1. ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø®Ø·ÙˆØ·</div>
+      <div class="ds-code">&lt;<span class="k">link</span> href=<span class="s">"https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap"</span> rel=<span class="s">"stylesheet"</span>&gt;
+
+    </div>
+    <div class="ds-card">
+      <div style="font-weight:800;margin-bottom:var(--sp-2);color:var(--c-amber-500)">2. Ù…ØªØºÙŠØ±Ø§Øª CSS Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©</div>
+      <div class="ds-code"><span class="k">:root</span> {
+  --c-void: #0a0e1f;
+  --c-teal-400: #2dd4bf;
+  --c-amber-500: #f5a623;
+  --sp-3: 24px; <span class="c">/* 8px Ã— 3 */</span>
+  --font-sans: 'Almarai', system-ui;
+  --radius-lg: 1.25rem;
+  --ease: cubic-bezier(.22,1,.36,1);
+}
+
+    </div>
+    <div class="ds-card">
+      <div style="font-weight:800;margin-bottom:var(--sp-2);color:var(--c-violet-400)">3. Ù‡ÙŠÙƒÙ„ Ù…ÙƒÙˆÙ‘Ù† React / Next.js</div>
+      <div class="ds-code"><span class="k">function</span> AlrehlaCard({ icon, title, description, cta }) {
+  <span class="k">return</span> (
+    &lt;div className=<span class="s">"ds-card"</span>&gt;
+      &lt;div style={{ display:<span class="s">'flex'</span>, gap:<span class="s">'1rem'</span> }}&gt;
+        &lt;div style={{ background:<span class="s">'rgba(45,212,191,.12)'</span>,
+          borderRadius:<span class="s">'var(--radius)'</span>, padding:<span class="s">'12px'</span> }}&gt;
+          {icon}
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;h3 style={{ fontWeight:800 }}&gt;{title}&lt;/h3&gt;
+          &lt;p style={{ color:<span class="s">'var(--text-secondary)'</span> }}&gt;{description}&lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;button className=<span class="s">"btn btn-sm btn-primary"</span>&gt;{cta}&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}
+
+</div>
+<div class="ds-card">
+<div style="font-weight:800;margin-bottom:var(--sp-2);color:var(--c-emerald-500)">4. Ù‚Ø§Ø¦Ù…Ø© ØªØ­Ù‚Ù‚ Ù‚Ø¨Ù„ Ø§Ù„Ù†Ø´Ø±</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<label class="ds-check"><input type="checkbox" checked> ØªØ­Ù…ÙŠÙ„ Ø®Ø·ÙˆØ· Almarai + IBM Plex Sans Arabic</label>
+<label class="ds-check"><input type="checkbox" checked> CSS variables ÙÙŠ :root</label>
+<label class="ds-check"><input type="checkbox" checked> dir="rtl" Ùˆ lang="ar" Ø¹Ù„Ù‰ &lt; html&gt; </label>
+<label class="ds-check"><input type="checkbox" checked> ØªØ¨Ø§ÙŠÙ† Ù†Øµ Ù„Ø§ ÙŠÙ‚Ù„ Ø¹Ù† 4.5:1</label>
+<label class="ds-check"><input type="checkbox" checked> Ø¬Ù…ÙŠØ¹ Ø§Ù„ØµÙˆØ± Ù…Ø¹ alt attribute</label>
+<label class="ds-check"><input type="checkbox" checked> focus-visible Ø¹Ù„Ù‰ ÙƒÙ„ Ø§Ù„Ø¹Ù†Ø§ØµØ± Ø§Ù„ØªÙØ§Ø¹Ù„ÙŠØ©</label>
+<label class="ds-check"><input type="checkbox"> Ø§Ø®ØªØ¨Ø§Ø± Ø¹Ù„Ù‰ Ù…ÙˆØ¨Ø§ÙŠÙ„ 375px</label>
+<label class="ds-check"><input type="checkbox"> Ø§Ø®ØªØ¨Ø§Ø± Ø¨Ø¨Ø·Ø¡ Ø§ØªØµØ§Ù„ 3G</label>
+</div>
+</div>
+</div>
+
+<!-- Closing footer -->
+<div style="margin-top:var(--sp-8);padding:var(--sp-4);border-radius:var(--radius-lg);background:linear-gradient(135deg,rgba(45,212,191,.08),rgba(167,139,250,.08));border:1px solid rgba(45,212,191,.2);text-align:center">
+<div style="font-size:2rem;margin-bottom:.5rem">ðŸŒŒ</div>
+<div style="font-size:1.1rem;font-weight:800;background:linear-gradient(135deg,var(--c-teal-400),var(--c-amber-500));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Ø§Ù„Ø±Ø­Ù„Ø© â€” Design System v1.0.0</div>
+<div style="font-size:.8rem;color:var(--text-muted);margin-top:.5rem">Ù…Ø¨Ù†ÙŠ Ø¨Ù…Ø¹Ø§ÙŠÙŠØ± Apple HIG Â· 30+ Ù…ÙƒÙˆÙ‘Ù† Â· WCAG AA Â· RTL-First Â· Dark Mode</div>
+<div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Ø¢Ø®Ø± ØªØ­Ø¯ÙŠØ«: Ù…Ø§Ø±Ø³ 2026</div>
+</div>
+</section>
+
+</main>
+</body>
+</html>

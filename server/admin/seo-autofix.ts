@@ -3,6 +3,7 @@ import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { parseJsonBody, verifyAdminWithRoles } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
 const execFileAsync = promisify(execFile);
 
@@ -175,7 +176,7 @@ async function fixSitemap(root: string): Promise<FixItem> {
   }
 }
 
-export async function handleSeoAutofix(req: any, res: any) {
+export async function handleSeoAutofix(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdminWithRoles(req, res, ["owner", "superadmin", "developer", "admin"]))) return;
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -197,3 +198,6 @@ export async function handleSeoAutofix(req: any, res: any) {
     fixes
   });
 }
+
+
+

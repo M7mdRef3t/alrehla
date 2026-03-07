@@ -1,10 +1,10 @@
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Volume2, VolumeX, Mic2 } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 import { supabase } from "../services/supabaseClient";
 
 export const VoicePresence: FC<{
-    trigger?: { event: 'shadow_insight' | 'milestone_unlocked' | 'high_impact_action'; context: any }
+    trigger?: { event: 'shadow_insight' | 'milestone_unlocked' | 'high_impact_action'; context: Record<string, unknown> }
 }> = ({ trigger }) => {
     const [isOptedIn, setIsOptedIn] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -35,7 +35,7 @@ export const VoicePresence: FC<{
         window.speechSynthesis.speak(utterance);
     };
 
-    const handleTrigger = async () => {
+    const handleTrigger = useCallback(async () => {
         if (!isOptedIn || !trigger) return;
 
         try {
@@ -59,11 +59,11 @@ export const VoicePresence: FC<{
         } catch (err) {
             console.error("Voice Trigger Error:", err);
         }
-    };
+    }, [isOptedIn, trigger]);
 
     useEffect(() => {
         if (trigger) handleTrigger();
-    }, [trigger]);
+    }, [trigger, handleTrigger]);
 
     const toggleOptIn = () => {
         const newVal = !isOptedIn;
@@ -78,7 +78,7 @@ export const VoicePresence: FC<{
                 className={`p-3 rounded-full border transition-all flex items-center gap-2 group
                     ${isOptedIn ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' : 'bg-slate-900/50 border-white/5 text-slate-500'}
                 `}
-                title={isOptedIn ? "الحضور الصوتي مفعّل" : "تفعيل الحضور الصوتي (الصوت الحكيم)"}
+                title={isOptedIn ? "احضر اصت فع" : "تفع احضر اصت (اصت اح)"}
             >
                 {isOptedIn ? (
                     <Volume2 className={`w-4 h-4 ${isPlaying ? 'animate-pulse' : ''}`} />
@@ -94,7 +94,7 @@ export const VoicePresence: FC<{
                             exit={{ opacity: 0, x: -10 }}
                             className="text-[10px] font-black uppercase tracking-tighter hidden md:inline"
                         >
-                            حضور الوعي...
+                            حضر اع...
                         </motion.span>
                     )}
                 </AnimatePresence>

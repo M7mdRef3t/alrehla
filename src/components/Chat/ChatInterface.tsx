@@ -7,9 +7,9 @@ interface ChatInterfaceProps {
 }
 
 const QUESTIONS = [
-    "ما هي أهم 3 أشياء تشغل تفكيرك الآن؟",
-    "من 1 إلى 10، كم تستنزفك هذه الأشياء طاقياً؟",
-    "ما هو الشيء الذي تتجاهله وتعرف أنك يجب أن تفعله؟"
+    "ا  أ 3 أشاء تشغ تفر اآ",
+    " 1 إ 10  تستزف ذ اأشاء طاا",
+    "ا  اشء اذ تتجا تعرف أ جب أ تفع"
 ];
 
 export default function ChatInterface({ onAnalyze, isLoading }: ChatInterfaceProps) {
@@ -45,14 +45,14 @@ export default function ChatInterface({ onAnalyze, isLoading }: ChatInterfacePro
                 <div className="relative w-24 h-24">
                     <div className="absolute inset-0 bg-teal-500/20 blur-2xl rounded-full animate-pulse" />
                     <div className="absolute inset-0 border-t-2 border-teal-500 rounded-full animate-spin" />
-                    <div className="absolute inset-4 border-b-2 border-[var(--color-primary)] rounded-full animate-spin-reverse" style={{ animationDuration: '3s' }} />
+                    <div className="absolute inset-4 border-b-2 border-[var(--soft-teal)] rounded-full animate-spin-reverse" style={{ animationDuration: '3s' }} />
                     <div className="absolute inset-0 flex items-center justify-center">
                         <Loader2 className="w-8 h-8 text-teal-400 animate-pulse" />
                     </div>
                 </div>
                 <div className="text-center space-y-2">
-                    <p className="text-teal-400 text-xs font-black tracking-[0.3em] animate-pulse uppercase font-mono">جاري_المسح_العصبي</p>
-                    <p className="text-[10px] text-slate-600 font-mono uppercase mt-4">جاري_معايرة_الفيزياء_الداخلية...</p>
+                    <p className="text-teal-400 text-xs font-black tracking-[0.3em] animate-pulse uppercase font-mono">جار_اسح_اعصب</p>
+                    <p className="text-[10px] text-slate-600 font-mono uppercase mt-4">جار_عارة_افزاء_اداخة...</p>
                 </div>
             </div>
         );
@@ -80,7 +80,7 @@ export default function ChatInterface({ onAnalyze, isLoading }: ChatInterfacePro
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="اكتب إجابتك هنا..."
+                    placeholder="اتب إجابت ا..."
                     className="w-full bg-white/5 border border-white/10 text-white rounded-2xl px-6 py-4 pr-14 focus:outline-none focus:border-teal-500/30 focus:ring-1 focus:ring-teal-500/20 resize-none h-32 transition-all relative z-10 font-medium placeholder:text-slate-600"
                 />
                 <button
@@ -94,4 +94,5 @@ export default function ChatInterface({ onAnalyze, isLoading }: ChatInterfacePro
         </div>
     );
 }
+
 

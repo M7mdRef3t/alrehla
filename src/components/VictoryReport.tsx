@@ -1,7 +1,7 @@
 /**
- * Victory Report — تقرير الانتصار 🏆
+ * Victory Report  ترر ااتصار 
  * ==========================================
- * يعرض إنجازات المستخدم وتحليل النمو الاستراتيجي.
+ * عرض إجازات استخد تح ا ااستراتج.
  */
 
 import React, { useMemo } from "react";
@@ -33,8 +33,8 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose, onTakeTod
                         <ChevronLeft className="w-6 h-6 text-slate-400" />
                     </button>
                     <div className="flex flex-col items-end">
-                        <h1 className="text-2xl font-black text-white tracking-tight">تقرير الانتصار التكتيكي</h1>
-                        <p className="text-xs text-teal-400 font-bold tracking-widest">وحدة ذكاء الانتصار</p>
+                        <h1 className="text-2xl font-black text-white tracking-tight">ترر ااتصار اتت</h1>
+                        <p className="text-xs text-teal-400 font-bold tracking-widest">حدة ذاء ااتصار</p>
                     </div>
                 </header>
 
@@ -67,7 +67,7 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose, onTakeTod
                     </svg>
                     <div className="absolute flex flex-col items-center">
                         <span className="text-4xl font-black text-white">{Math.round(metrics.harmonyScore)}%</span>
-                        <span className="text-[10px] font-bold text-slate-500 tracking-widest">مؤشر الانسجام</span>
+                        <span className="text-[10px] font-bold text-slate-500 tracking-widest">ؤشر ااسجا</span>
                     </div>
                 </div>
 
@@ -75,15 +75,15 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose, onTakeTod
                 <div className="grid grid-cols-2 gap-4 w-full mb-12">
                     <MetricCard
                         icon={<TrendingUp className="w-5 h-5 text-emerald-400" />}
-                        label="سرعة النمو"
+                        label="سرعة ا"
                         value={Math.round(metrics.growthVelocity) + "%"}
-                        desc="مدى اقترابك من بناء الثقة"
+                        desc="د اتراب  باء اثة"
                     />
                     <MetricCard
                         icon={<Shield className="w-5 h-5 text-rose-400" />}
-                        label="قوة الحسم"
+                        label="ة احس"
                         value={Math.round(metrics.detachmentStrength) + "%"}
-                        desc="القدرة على قطع الاستنزاف"
+                        desc="ادرة ع طع ااستزاف"
                     />
                 </div>
 
@@ -91,7 +91,7 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose, onTakeTod
                 <div className="w-full space-y-6">
                     <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                         <Trophy className="w-4 h-4" />
-                        أوسمة الشرف
+                        أسة اشرف
                     </h2>
 
                     <div className="space-y-4">
@@ -115,11 +115,11 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose, onTakeTod
                             </motion.div>
                         )) : (
                             <div className="py-6 px-4 text-slate-300 border border-dashed border-white/10 rounded-2xl">
-                                <p className="text-sm font-bold text-white mb-3 text-center">خطواتك الأولى لكسب أول وسام</p>
+                                <p className="text-sm font-bold text-white mb-3 text-center">خطات اأ سب أ سا</p>
                                 <ul className="space-y-2 text-xs leading-relaxed">
-                                    <li>1. حرّك علاقة مستنزِفة من الأحمر إلى الأصفر أو الأخضر.</li>
-                                    <li>2. نفّذ مهمة واحدة كاملة وسجّل إنجازها.</li>
-                                    <li>3. راجع الخريطة بعد التنفيذ وثبّت خطوة متابعة لليوم التالي.</li>
+                                    <li>1. حر عاة ستزِفة  اأحر إ اأصفر أ اأخضر.</li>
+                                    <li>2. فذ ة احدة اة سج إجازا.</li>
+                                    <li>3. راجع اخرطة بعد اتفذ ثبت خطة تابعة  اتا.</li>
                                 </ul>
                             </div>
                         )}
@@ -132,13 +132,13 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose, onTakeTod
                         onClick={onClose}
                         className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-sm active:scale-[0.98] transition-all"
                     >
-                        إغلاق التقرير
+                        إغا اترر
                     </button>
                     <button
                         onClick={() => onTakeTodayAction?.()}
-                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-teal-500 to-[var(--color-primary)] text-white font-bold text-sm shadow-xl active:scale-[0.98] transition-all"
+                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-teal-500 to-[var(--soft-teal)] text-white font-bold text-sm shadow-xl active:scale-[0.98] transition-all"
                     >
-                        نفّذ خطوة اليوم
+                        فذ خطة ا
                     </button>
                 </div>
             </div>
@@ -158,4 +158,5 @@ const MetricCard: React.FC<{ icon: React.ReactNode; label: string; value: string
         </div>
     </div>
 );
+
 

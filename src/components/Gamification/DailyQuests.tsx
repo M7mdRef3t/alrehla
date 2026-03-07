@@ -6,9 +6,9 @@ import { CheckCircle2, Zap, Sparkles, Trophy } from 'lucide-react';
 import { getDailyQuests, DailyQuest } from '../../services/gamificationEngine';
 
 /**
- * Daily Quests Component — المهمات اليومية
+ * Daily Quests Component  اات اة
  * ==========================================
- * يعرض قائمة من المهام البسيطة التي تعطي المستخدم مكافآت فورية.
+ * عرض ائة  اا ابسطة ات تعط استخد افآت فرة.
  */
 
 export const DailyQuests = () => {
@@ -20,9 +20,9 @@ export const DailyQuests = () => {
             <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
                     <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
-                    <h2 className="text-sm font-bold text-white uppercase tracking-wider">مهمات الاستطلاع</h2>
+                    <h2 className="text-sm font-bold text-white uppercase tracking-wider">ات ااستطاع</h2>
                 </div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">تحتاج 24 ساعة للتجديد</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">تحتاج 24 ساعة تجدد</span>
             </div>
 
             <div className="grid gap-2.5">
@@ -55,29 +55,30 @@ export const DailyQuests = () => {
                             </div>
                         </div>
 
-                        <div className="shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--color-primary)]/10 border border-[var(--color-primary)]">
-                            <span className="text-xs font-black text-[var(--color-primary)]">+{quest.xpReward}</span>
-                            <Sparkles className="w-3 h-3 text-[var(--color-primary)] opacity-70" />
+                        <div className="shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--soft-teal)]/10 border border-[var(--soft-teal)]">
+                            <span className="text-xs font-black text-[var(--soft-teal)]">+{quest.xpReward}</span>
+                            <Sparkles className="w-3 h-3 text-[var(--soft-teal)] opacity-70" />
                         </div>
                     </motion.div>
                 ))}
             </div>
 
             {/* Completion Summary */}
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-[var(--color-primary)] to-purple-500/10 border border-[var(--color-primary)] flex items-center justify-between overflow-hidden relative">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-[var(--soft-teal)] to-purple-500/10 border border-[var(--soft-teal)] flex items-center justify-between overflow-hidden relative">
                 <div className="absolute -bottom-2 -right-2 opacity-5">
                     <Trophy className="w-16 h-16 text-white" />
                 </div>
                 <div>
-                    <h3 className="text-sm font-bold text-white mb-0.5">أنجز كل المهمات</h3>
-                    <p className="text-[10px] text-[var(--color-primary)] font-medium tracking-wide">واحصل على صندوق عشوائي (قريباً)</p>
+                    <h3 className="text-sm font-bold text-white mb-0.5">أجز  اات</h3>
+                    <p className="text-[10px] text-[var(--soft-teal)] font-medium tracking-wide">احص ع صد عشائ (ربا)</p>
                 </div>
-                <div className="w-12 h-12 rounded-full border-2 border-[var(--color-primary)] flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full border-2 border-[var(--soft-teal)] flex items-center justify-center">
                     <span className="text-sm font-black text-white">1/3</span>
                 </div>
             </div>
         </div>
     );
 };
+
 
 

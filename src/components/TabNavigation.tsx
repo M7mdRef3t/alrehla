@@ -1,55 +1,77 @@
-/**
- * ════════════════════════════════════════════════════════════════════════════
- * 🗂️ TAB NAVIGATION — نظام التبويبات
- * ════════════════════════════════════════════════════════════════════════════
- */
-
 import type { FC } from "react";
 import { motion } from "framer-motion";
-import { Map, Activity, BookOpen, Settings } from "lucide-react";
-import { useLayoutState, type ActiveTab } from "../state/layoutState";
+import { Map, Activity, HeartPulse, BookOpen, User } from "lucide-react";
+import { useLayoutState } from "../state/layoutState";
 
 interface TabNavigationProps {
   hidden?: boolean;
+  onPulse?: () => void;
+  onLibrary?: () => void;
+  onProfile?: () => void;
 }
 
-export const TabNavigation: FC<TabNavigationProps> = ({ hidden = false }) => {
+type AppTab = "map" | "trajectory" | "pulse" | "library" | "profile";
+
+export const TabNavigation: FC<TabNavigationProps> = ({
+  hidden = false,
+  onPulse,
+  onLibrary,
+  onProfile
+}) => {
   const activeTab = useLayoutState((s) => s.activeTab);
   const setActiveTab = useLayoutState((s) => s.setActiveTab);
 
   if (hidden) return null;
 
   const tabs: Array<{
-    id: ActiveTab;
+    id: AppTab;
     label: string;
     icon: typeof Map;
     color: string;
+    isActive: boolean;
+    onClick: () => void;
   }> = [
-      {
-        id: "operational",
-        label: "الخريطة",
-        icon: Map,
-        color: "var(--layer-operational)"
-      },
-      {
-        id: "analytical",
-        label: "التحليل",
-        icon: Activity,
-        color: "var(--layer-analytical)"
-      },
-      {
-        id: "narrative",
-        label: "رحلتي",
-        icon: BookOpen,
-        color: "var(--layer-narrative)"
-      },
-      {
-        id: "settings",
-        label: "الإعدادات",
-        icon: Settings,
-        color: "var(--layer-muted)"
-      }
-    ];
+    {
+      id: "map",
+      label: "الخريطة",
+      icon: Map,
+      color: "var(--layer-operational)",
+      isActive: activeTab === "operational",
+      onClick: () => setActiveTab("operational")
+    },
+    {
+      id: "trajectory",
+      label: "المسار",
+      icon: Activity,
+      color: "var(--layer-analytical)",
+      isActive: activeTab === "analytical" || activeTab === "narrative",
+      onClick: () => setActiveTab("analytical")
+    },
+    {
+      id: "pulse",
+      label: "النبض",
+      icon: HeartPulse,
+      color: "var(--soft-teal)",
+      isActive: false,
+      onClick: () => onPulse?.()
+    },
+    {
+      id: "library",
+      label: "المكتبة",
+      icon: BookOpen,
+      color: "var(--layer-narrative)",
+      isActive: false,
+      onClick: () => onLibrary?.()
+    },
+    {
+      id: "profile",
+      label: "أنا",
+      icon: User,
+      color: "var(--layer-muted)",
+      isActive: activeTab === "settings",
+      onClick: () => onProfile?.()
+    }
+  ];
 
   return (
     <div
@@ -68,13 +90,13 @@ export const TabNavigation: FC<TabNavigationProps> = ({ hidden = false }) => {
       >
         {tabs.map((tab) => {
           const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
+          const isActive = tab.isActive;
 
           return (
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id)}
+              onClick={tab.onClick}
               className="relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all"
               style={{
                 color: isActive ? "white" : "var(--text-secondary)"

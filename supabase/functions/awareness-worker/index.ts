@@ -7,7 +7,7 @@ const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 
 Deno.serve(async (req) => {
     const startTime = Date.now();
-    console.log("🚀 [AwarenessWorker] Received trigger notification.");
+    console.warn("🚀 [AwarenessWorker] Received trigger notification.");
 
     try {
         const payload = await req.json();
@@ -100,11 +100,11 @@ Deno.serve(async (req) => {
                 if (phoenixCard.phoenix_score > 0.8) {
                     // Thrived under pressure: increase challenge
                     nextDDA = Math.min(5, nextDDA + 1);
-                    console.log(`🔥 [Phoenix] User ${record.user_id} thrived (Score: ${phoenixCard.phoenix_score}). DDA +1.`);
+                    console.warn(`🔥 [Phoenix] User ${record.user_id} thrived (Score: ${phoenixCard.phoenix_score}). DDA +1.`);
                 } else if (phoenixCard.phoenix_score < 0.3 && !phoenixCard.is_insulated) {
                     // Struggled significantly: reduce pressure to prevent spiral
                     nextDDA = Math.max(1, nextDDA - 1);
-                    console.log(`🕊️ [Phoenix] User ${record.user_id} struggled (Score: ${phoenixCard.phoenix_score}). DDA -1.`);
+                    console.warn(`🕊️ [Phoenix] User ${record.user_id} struggled (Score: ${phoenixCard.phoenix_score}). DDA -1.`);
                 }
                 // Log recalibration to telemetry
                 await supabase.from('system_telemetry_logs').insert({
@@ -178,7 +178,7 @@ Deno.serve(async (req) => {
                         const decayFactor = Math.pow(0.5, hoursSincePenalty / 6); // 6-hour half-life
                         const decayedBoost = penaltyBoost * decayFactor;
 
-                        console.log(`🕊️ [AwarenessWorker] Resurrection Protocol: Decaying penalty from ${penaltyBoost.toFixed(3)} to ${decayedBoost.toFixed(3)} (${hoursSincePenalty.toFixed(1)}h elapsed)`);
+                        console.warn(`🕊️ [AwarenessWorker] Resurrection Protocol: Decaying penalty from ${penaltyBoost.toFixed(3)} to ${decayedBoost.toFixed(3)} (${hoursSincePenalty.toFixed(1)}h elapsed)`);
 
                         // Apply the decay to the SE derivation
                         initialVector.se = Math.max(initialVector.se - (penaltyBoost - decayedBoost), 0);
@@ -200,15 +200,15 @@ Deno.serve(async (req) => {
 
                     if (isInsulated && activeEvent.dda_override >= 5) {
                         nextDDA = 4; // Buffer: Drop to Level 4 for insulated users during the peak
-                        console.log(`🌀 [AwarenessWorker] INSULATED USER DETECTED: Reducing Wave Pressure to LVL ${nextDDA}`);
+                        console.warn(`🌀 [AwarenessWorker] INSULATED USER DETECTED: Reducing Wave Pressure to LVL ${nextDDA}`);
                     } else {
                         nextDDA = activeEvent.dda_override;
-                        console.log(`🌀 [AwarenessWorker] GLOBAL EVENT DETECTED: Overriding DDA to ${nextDDA}`);
+                        console.warn(`🌀 [AwarenessWorker] GLOBAL EVENT DETECTED: Overriding DDA to ${nextDDA}`);
                     }
                 }
             } else if (recoveryCount > 2) {
                 nextDDA = Math.max(prevDDA - 1, 1);
-                console.log(`📉 [AwarenessWorker] High Recovery usage (${recoveryCount}). Downshifting DDA to ${nextDDA}`);
+                console.warn(`📉 [AwarenessWorker] High Recovery usage (${recoveryCount}). Downshifting DDA to ${nextDDA}`);
             } else {
                 // Simplified momentum logic (High BI = +1, Low BI = -1)
                 if (prevBI > 0.8) nextDDA = Math.min(prevDDA + 1, 5);
@@ -240,7 +240,7 @@ Deno.serve(async (req) => {
                 .update({ status: "processing" })
                 .eq("id", record.id);
 
-            console.log(`⚙️ [AwarenessWorker] Generating journey for event: ${record.action_type}`);
+            console.warn(`⚙️ [AwarenessWorker] Generating journey for event: ${record.action_type}`);
 
             // 3. ACTUAL AI MISSION GENERATION (Consciousness Hacker)
             const model = "gemini-1.5-flash";
@@ -317,9 +317,9 @@ interface GeneratedMission {
                 })
                 .eq("id", record.id);
 
-            console.log(`✅ [AwarenessWorker] Journey generation successful for ${record.user_id}`);
+            console.warn(`✅ [AwarenessWorker] Journey generation successful for ${record.user_id}`);
 
-            console.log(`✅ [AwarenessWorker] Journey generation successful for ${record.user_id}`);
+            console.warn(`✅ [AwarenessWorker] Journey generation successful for ${record.user_id}`);
 
             // 7. Log Telemetry
             const latency = Date.now() - startTime;
@@ -341,15 +341,16 @@ interface GeneratedMission {
                     consecutive_shadow_turns: 0
                 })
                 .eq('user_id', record.user_id);
-            console.log(`🔓 [AwarenessWorker] Lock released & Stats reset for User ${record.user_id}`);
+            console.warn(`🔓 [AwarenessWorker] Lock released & Stats reset for User ${record.user_id}`);
         }
 
         return new Response(JSON.stringify({ success: true }), {
             headers: { "Content-Type": "application/json" },
             status: 200,
         });
-    } catch (error: any) {
-        console.error("❌ [AwarenessWorker] Error:", error.message);
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error("AwarenessWorker Error:", errorMessage);
 
         // Update record with error
         const payload = await req.json().catch(() => ({}));
@@ -361,14 +362,15 @@ interface GeneratedMission {
                 .from("awareness_events_queue")
                 .update({
                     status: "failed",
-                    last_error: error.message
+                    last_error: errorMessage
                 })
                 .eq("id", recordId);
         }
 
-        return new Response(JSON.stringify({ error: error.message }), {
+        return new Response(JSON.stringify({ error: errorMessage }), {
             headers: { "Content-Type": "application/json" },
             status: 500,
         });
     }
 });
+

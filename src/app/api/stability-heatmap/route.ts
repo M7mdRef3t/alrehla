@@ -25,7 +25,7 @@ export async function GET(req: Request) {
             .maybeSingle();
 
         return NextResponse.json(snapshot || { node_stability: [], edge_stability: [] });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Stability fetch failed' }, { status: 500 });
     }
 }

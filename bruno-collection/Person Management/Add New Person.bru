@@ -1,0 +1,26 @@
+meta {
+  name: Add New Person
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/persons/add
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{supabaseAnonKey}}
+}
+
+body:json {
+  {
+    "name": "أحمد",
+    "relation": "صديق",
+    "gender": "m",
+    "initialOrbit": "safe",
+    "notes": "يدعمني دائماً في العمل"
+  }
+}

@@ -36,6 +36,7 @@ import { FunnelAndEmergency } from "./components/FunnelAndEmergency"; // New Imp
 import { DeepAnalytics } from "./components/DeepAnalytics"; // New Import
 import { AwarenessAndScenarios } from "./components/AwarenessAndScenarios"; // New Import
 import { MarketingAndRetention } from "./components/MarketingAndRetention"; // New Import
+import { MarketingLeadsPanel } from "./components/MarketingLeadsPanel";
 import { AdminTools } from "./components/AdminTools"; // New Import
 import { SecuritySentinel } from "./components/SecuritySentinel";
 import { LiveFreezeGuard } from "./components/LiveFreezeGuard";
@@ -525,6 +526,7 @@ export const OverviewPanel: FC = () => {
         retentionCohorts={remoteStats?.retentionCohorts}
         loading={initialLoading}
       />
+      <MarketingLeadsPanel data={remoteStats?.marketingLeads} loading={initialLoading} />
 
       <RevenueCardBoundary>
         <RevenueEngineCard

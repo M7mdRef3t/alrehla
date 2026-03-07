@@ -1,7 +1,8 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, TrendingUp, Zap, Target, Quote, ChevronRight, Lock, AlertCircle, RefreshCw, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
+import { motion } from "framer-motion";
+import { Calendar, TrendingUp, Zap, Target, Quote, ChevronRight, Lock, AlertCircle, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { supabase } from "../services/supabaseClient";
 
 interface WeeklyReport {
@@ -50,7 +51,7 @@ export const WeeklyReportWidget: FC = () => {
             }
         } catch (err) {
             console.error(err);
-            setError({ code: 'FETCH_ERROR', message: 'فشل في استلام التقرير' });
+            setError({ code: 'FETCH_ERROR', message: 'فش ف استا اترر' });
         } finally {
             setLoading(false);
         }
@@ -65,7 +66,7 @@ export const WeeklyReportWidget: FC = () => {
     if (error?.code === 'INSUFFICIENT_DATA') return (
         <div className="rounded-[1.5rem] p-6 bg-white/5 border border-white/10 text-right relative overflow-hidden">
             <div className="flex items-center gap-3 justify-end mb-4">
-                <h3 className="text-sm font-bold text-white">تقرير المحطة الأسبوعي</h3>
+                <h3 className="text-sm font-bold text-white">ترر احطة اأسبع</h3>
                 <Lock className="w-4 h-4 text-slate-500" />
             </div>
             <p className="text-xs text-slate-400 leading-relaxed mb-4">
@@ -97,7 +98,7 @@ export const WeeklyReportWidget: FC = () => {
                     )}
                 </div>
                 <div className="text-right">
-                    <h3 className="text-lg md:text-xl font-black text-white mb-1">تقرير المحطة</h3>
+                    <h3 className="text-lg md:text-xl font-black text-white mb-1">ترر احطة</h3>
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2 justify-end">
                         {new Date(report.start_date).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })}
                         <Calendar className="w-3 h-3" />
@@ -107,16 +108,16 @@ export const WeeklyReportWidget: FC = () => {
 
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
-                <StatBox label="متوسط الموود" value={`${report.summary_data.avgMood}/5`} icon={TrendingUp} color="text-emerald-400" />
-                <StatBox label="مستوى الطاقة" value={`${report.summary_data.avgEnergy}/5`} icon={Zap} color="text-amber-400" />
-                <StatBox label="أكبر ضغط" value={report.summary_data.topStress} icon={AlertCircle} color="text-rose-400" />
-                <StatBox label="تحليلات الخريطة" value={report.summary_data.insightCount} icon={Target} color="text-indigo-400" />
+                <StatBox label="تسط اد" value={`${report.summary_data.avgMood}/5`} icon={TrendingUp} color="text-emerald-400" />
+                <StatBox label="ست اطاة" value={`${report.summary_data.avgEnergy}/5`} icon={Zap} color="text-amber-400" />
+                <StatBox label="أبر ضغط" value={report.summary_data.topStress} icon={AlertCircle} color="text-rose-400" />
+                <StatBox label="تحات اخرطة" value={report.summary_data.insightCount} icon={Target} color="text-indigo-400" />
             </div>
 
             <div className="space-y-8">
                 <section>
                     <div className="flex items-center gap-2 justify-end mb-3">
-                        <p className="text-[10px] md:text-[11px] font-bold text-indigo-400 uppercase tracking-wider">نمط الموجة</p>
+                        <p className="text-[10px] md:text-[11px] font-bold text-indigo-400 uppercase tracking-wider">ط اجة</p>
                         <div className="w-8 h-[1px] bg-indigo-500/30" />
                     </div>
                     <p className="text-sm text-slate-200 leading-[1.8] font-medium pr-4 border-r-2 border-indigo-500/20">
@@ -126,7 +127,7 @@ export const WeeklyReportWidget: FC = () => {
 
                 <section>
                     <div className="flex items-center gap-2 justify-end mb-3">
-                        <p className="text-[10px] md:text-[11px] font-bold text-blue-400 uppercase tracking-wider">رؤية الأنماط</p>
+                        <p className="text-[10px] md:text-[11px] font-bold text-blue-400 uppercase tracking-wider">رؤة اأاط</p>
                         <div className="w-8 h-[1px] bg-blue-500/30" />
                     </div>
                     <div className="bg-white/5 rounded-2xl p-4 md:p-5 border border-white/5 hover:border-blue-500/20 transition-all group">
@@ -138,7 +139,7 @@ export const WeeklyReportWidget: FC = () => {
 
                 <section className="relative">
                     <div className="flex items-center gap-2 justify-end mb-3">
-                        <p className="text-[10px] md:text-[11px] font-bold text-emerald-400 uppercase tracking-wider">المناورة القادمة</p>
+                        <p className="text-[10px] md:text-[11px] font-bold text-emerald-400 uppercase tracking-wider">اارة اادة</p>
                         <div className="w-8 h-[1px] bg-emerald-500/30" />
                     </div>
                     <div className="bg-emerald-500/5 rounded-2xl p-4 md:p-5 border border-emerald-500/20 flex gap-4 items-center justify-end">
@@ -162,7 +163,7 @@ export const WeeklyReportWidget: FC = () => {
     );
 };
 
-const StatBox: FC<{ label: string; value: any; icon: any; color: string }> = ({ label, value, icon: Icon, color }) => (
+const StatBox: FC<{ label: string; value: string | number; icon: LucideIcon; color: string }> = ({ label, value, icon: Icon, color }) => (
     <div className="p-3 md:p-4 rounded-2xl bg-white/5 border border-white/5 flex flex-col items-end gap-1">
         <Icon className={`w-3 h-3 md:w-3.5 md:h-3.5 ${color} mb-1`} />
         <span className="text-[8px] md:text-[9px] text-slate-500 font-bold uppercase tracking-tighter">{label}</span>
@@ -180,7 +181,7 @@ const TrajectoryBadge: FC<{ trajectory: NonNullable<WeeklyReport['summary_data']
                     'bg-slate-500/10 border-slate-500/20 text-slate-400'
             }`}>
             {isUp ? <ArrowUpRight className="w-3 h-3" /> : isDown ? <ArrowDownRight className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
-            <span>مسار {isUp ? 'تصاعدي' : isDown ? 'تراجعي' : 'مستقر'}</span>
+            <span>سار {isUp ? 'تصاعد' : isDown ? 'تراجع' : 'ستر'}</span>
             <span className="opacity-50">({trajectory.moodDelta})</span>
         </div>
     );

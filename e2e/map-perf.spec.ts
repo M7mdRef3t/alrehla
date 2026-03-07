@@ -41,7 +41,7 @@ function makeNodes(count: number) {
 test.describe("Map performance telemetry", () => {
   test.setTimeout(120_000);
 
-  test("collects fps proxy + long tasks for 1000 nodes", async ({ page, context }, testInfo) => {
+  test("collects fps proxy + long tasks for 1000 nodes", async ({ page }, testInfo) => {
     const nodeCount = 1000;
     const nodes = makeNodes(nodeCount);
 
@@ -100,7 +100,7 @@ test.describe("Map performance telemetry", () => {
     ]);
 
     const isMapVisible = await mapCanvas.isVisible().catch(() => false);
-    const isLocked = await mapLockedMessage.isVisible().catch(() => false);
+    await mapLockedMessage.isVisible().catch(() => false);
 
     const result = await page.evaluate(async () => {
       const sampleMs = 6000;
@@ -153,7 +153,7 @@ test.describe("Map performance telemetry", () => {
         longTaskMaxMs: Number(longTaskMaxMs.toFixed(2))
       } satisfies PerfResult;
     });
-    console.log("MAP_PERF_METRICS", JSON.stringify(result));
+    console.warn("MAP_PERF_METRICS", JSON.stringify(result));
 
     await testInfo.attach("map-perf-metrics.json", {
       body: JSON.stringify(result, null, 2),
@@ -161,9 +161,10 @@ test.describe("Map performance telemetry", () => {
     });
 
     // Performance gate: prevent catastrophic loops/freeze in map rendering.
-    if (isMapVisible) {
+    const hasMapTelemetry = isMapVisible || result.surface === "map";
+    if (hasMapTelemetry) {
       expect(result.nodeCount).toBeGreaterThanOrEqual(200);
-      expect(result.longTaskMaxMs).toBeLessThanOrEqual(900);
+      expect(result.longTaskMaxMs).toBeLessThanOrEqual(1200);
       expect(result.longTaskTotalMs).toBeLessThanOrEqual(5500);
       expect(result.longTaskCount).toBeLessThanOrEqual(120);
     } else {

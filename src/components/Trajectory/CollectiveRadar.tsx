@@ -1,4 +1,4 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { AwarenessVector } from '../../services/trajectoryEngine';
 import { SwarmMetrics } from '../../services/hiveEngine';
@@ -40,14 +40,14 @@ export const CollectiveRadar: React.FC<CollectiveRadarProps> = ({
             style={{ backgroundImage: pressureGradient }}
         >
             <div className="flex justify-between items-center mb-6 relative z-10">
-                <h5 className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-widest">{title}</h5>
+                <h5 className="text-[10px] font-black text-[var(--soft-teal)] uppercase tracking-widest">{title}</h5>
                 <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-1">
                         <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.4)]" />
                         <span className="text-[10px] text-slate-400 uppercase font-bold">You</span>
                     </div>
                     <div className="flex items-center space-x-1">
-                        <div className="w-2 h-2 rounded-full bg-[var(--color-primary)]" />
+                        <div className="w-2 h-2 rounded-full bg-[var(--soft-teal)]" />
                         <span className="text-[10px] text-slate-400 uppercase">Swarm Avg</span>
                     </div>
                     <div className="flex items-center space-x-1">
@@ -124,5 +124,6 @@ export const CollectiveRadar: React.FC<CollectiveRadarProps> = ({
         </div>
     );
 };
+
 
 

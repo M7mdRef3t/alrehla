@@ -10,6 +10,19 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
 let cachedClient: SupabaseClient | null = null;
 
+export type AdminRequest = {
+  method?: string;
+  url?: string;
+  query?: Record<string, unknown>;
+  headers?: Record<string, unknown>;
+  body?: unknown;
+};
+
+export type AdminResponse = {
+  status: (code: number) => AdminResponse;
+  json: (data: unknown) => AdminResponse;
+};
+
 export function getAdminSupabase(): SupabaseClient | null {
   if (!supabaseUrl || !serviceRoleKey) return null;
   if (!cachedClient) {
@@ -25,7 +38,7 @@ function getAllowedRoles(): string[] {
   return raw.split(",").map((r) => r.trim()).filter(Boolean);
 }
 
-function getBearerToken(req: any): string | null {
+function getBearerToken(req: AdminRequest): string | null {
   const auth = req.headers?.authorization || req.headers?.Authorization;
   if (typeof auth === "string" && auth.toLowerCase().startsWith("bearer ")) {
     return auth.slice(7).trim();
@@ -41,7 +54,7 @@ function isAdminSecretToken(token: string | null): boolean {
   return allowedSecrets.includes(token);
 }
 
-export async function verifyAdmin(req: any, res: any): Promise<boolean> {
+export async function verifyAdmin(req: AdminRequest, res: AdminResponse): Promise<boolean> {
   const client = getAdminSupabase();
   if (!client) {
     res.status(503).json({ error: "Admin API not configured" });
@@ -94,7 +107,7 @@ function getAllowedRolesSet(raw?: string): Set<string> {
   );
 }
 
-export async function verifyAdminWithRoles(req: any, res: any, allowedRoles: string[]): Promise<boolean> {
+export async function verifyAdminWithRoles(req: AdminRequest, res: AdminResponse, allowedRoles: string[]): Promise<boolean> {
   if (!(await verifyAdmin(req, res))) return false;
   const client = getAdminSupabase();
   const bearer = getBearerToken(req);
@@ -126,7 +139,7 @@ export async function verifyAdminWithRoles(req: any, res: any, allowedRoles: str
 }
 
 export async function recordAdminAudit(
-  req: any,
+  req: AdminRequest,
   action: string,
   payload?: Record<string, unknown>
 ): Promise<void> {
@@ -156,8 +169,8 @@ export async function recordAdminAudit(
   }
 }
 
-export async function parseJsonBody(req: any): Promise<any> {
-  if (req.body && typeof req.body === "object") return req.body;
+export async function parseJsonBody(req: AdminRequest): Promise<Record<string, unknown>> {
+  if (req.body && typeof req.body === "object") return req.body as Record<string, unknown>;
   if (typeof req.body === "string") {
     try {
       return JSON.parse(req.body);
@@ -167,3 +180,4 @@ export async function parseJsonBody(req: any): Promise<any> {
   }
   return {};
 }
+

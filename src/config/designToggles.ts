@@ -1,5 +1,3 @@
-import { runtimeEnv } from "./runtimeEnv";
-
 export interface DesignToggles {
   enableLiveLandingSections: boolean;
   enableCircuitBreakerForLiveData: boolean;

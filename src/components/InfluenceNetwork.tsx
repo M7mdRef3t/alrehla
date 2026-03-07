@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Network, Info, Activity, ShieldCheck, Zap } from "lucide-react";
+import { motion } from "framer-motion";
+import { Network, Info, Activity, Zap } from "lucide-react";
 import { supabase } from "../services/supabaseClient";
 
 interface Node {
@@ -16,10 +16,12 @@ interface Edge {
     target: string;
     strength: number;
     confidence: number;
+    currentStrength?: number;
+    drift?: number;
 }
 
 export const InfluenceNetwork: FC = () => {
-    const [data, setData] = useState<{ nodes: Node[], edges: any[] }>({ nodes: [], edges: [] });
+    const [data, setData] = useState<{ nodes: Node[], edges: Edge[] }>({ nodes: [], edges: [] });
     const [isDriftMode, setIsDriftMode] = useState(false);
     const [hoveredNode, setHoveredNode] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -64,8 +66,8 @@ export const InfluenceNetwork: FC = () => {
                 <div className="p-4 rounded-full bg-white/5 w-fit mx-auto mb-4">
                     <Activity className="w-6 h-6 text-slate-500 animate-pulse" />
                 </div>
-                <h3 className="text-white font-black text-sm mb-2">جاري استكشاف الأنماط</h3>
-                <p className="text-slate-500 text-[11px] font-bold">السيستم في حالة صمت وتحليل حالياً. أول ما الداتا تكتمل (٧ أيام نبض)، خريطة التأثير هتظهر هنا.</p>
+                <h3 className="text-white font-black text-sm mb-2">جار استشاف اأاط</h3>
+                <p className="text-slate-500 text-[11px] font-bold">اسست ف حاة صت تح حاا. أ ا اداتا تت (٧ أا بض) خرطة اتأثر تظر ا.</p>
             </div>
         );
     }
@@ -79,7 +81,7 @@ export const InfluenceNetwork: FC = () => {
                     </div>
                     <div>
                         <h3 className="text-[15px] font-black text-white leading-tight">
-                            {isDriftMode ? 'محرك الانحراف الزمني' : 'خريطة التأثير الإدراكي'}
+                            {isDriftMode ? 'حر ااحراف از' : 'خرطة اتأثر اإدرا'}
                         </h3>
                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                             {isDriftMode ? 'Temporal Pattern Drift' : 'Cognitive Influence Map'}
@@ -95,19 +97,19 @@ export const InfluenceNetwork: FC = () => {
                         }`}
                 >
                     <Activity className={`w-3.5 h-3.5 ${isDriftMode ? 'animate-pulse' : ''}`} />
-                    <span className="text-[10px] font-black uppercase tracking-tight">رادار التطور</span>
+                    <span className="text-[10px] font-black uppercase tracking-tight">رادار اتطر</span>
                 </button>
             </div>
 
             <div className="relative aspect-square flex items-center justify-center bg-black/20 rounded-[2rem] border border-white/5 shadow-inner" ref={containerRef}>
                 <svg viewBox="0 0 320 320" className="w-full h-full drop-shadow-[0_0_15px_rgba(99,102,241,0.1)]">
                     {/* Edges */}
-                    {data.edges.map((edge: any, i) => {
+                    {data.edges.map((edge: Edge, i) => {
                         const sourceNode = data.nodes.find(n => n.id === edge.source);
                         const targetNode = data.nodes.find(n => n.id === edge.target);
                         if (!sourceNode || !targetNode) return null;
 
-                        const strength = isDriftMode ? edge.currentStrength : edge.strength;
+                        const strength = isDriftMode ? (edge.currentStrength ?? edge.strength) : edge.strength;
                         const isHighlighted = hoveredNode === edge.source || hoveredNode === edge.target;
                         const color = strength > 0 ? "rgba(16, 185, 129, 0.4)" : "rgba(239, 68, 68, 0.4)";
                         const highlightColor = strength > 0 ? "#10b981" : "#ef4444";
@@ -131,18 +133,18 @@ export const InfluenceNetwork: FC = () => {
                                         opacity: { duration: 0.3 }
                                     }}
                                 />
-                                {isDriftMode && Math.abs(edge.drift) > 0.05 && (
+                                {isDriftMode && Math.abs(edge.drift ?? 0) > 0.05 && (
                                     <motion.text
                                         x={(sourceNode.x! + targetNode.x!) / 2}
                                         y={(sourceNode.y! + targetNode.y!) / 2 - 10}
                                         textAnchor="middle"
-                                        fill={edge.drift > 0 ? '#10b981' : '#ef4444'}
+                                        fill={(edge.drift ?? 0) > 0 ? '#10b981' : '#ef4444'}
                                         fontSize="10"
                                         fontWeight="bold"
                                         initial={{ opacity: 0, scale: 0 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                     >
-                                        {edge.drift > 0 ? '↑' : '↓'}
+                                        {(edge.drift ?? 0) > 0 ? '' : ''}
                                     </motion.text>
                                 )}
                             </motion.g>
@@ -203,11 +205,11 @@ export const InfluenceNetwork: FC = () => {
                 <div className="absolute bottom-4 right-4 text-right">
                     <div className="flex items-center gap-2 mb-1">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-                        <span className="text-[8px] font-black text-slate-400">تأثير إيجابي</span>
+                        <span className="text-[8px] font-black text-slate-400">تأثر إجاب</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]" />
-                        <span className="text-[8px] font-black text-slate-400">تأثير سلبي</span>
+                        <span className="text-[8px] font-black text-slate-400">تأثر سب</span>
                     </div>
                 </div>
             </div>
@@ -220,14 +222,14 @@ export const InfluenceNetwork: FC = () => {
                     </div>
                     <div className="text-right">
                         <p className="text-[12px] font-black text-white mb-1">
-                            {isDriftMode ? 'تحليل مسار التحول' : 'الرؤية الحالية للهيكل'}
+                            {isDriftMode ? 'تح سار اتح' : 'ارؤة احاة '}
                         </p>
                         <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
                             {data.edges.length === 0
-                                ? "الأنماط الحالية لم تصل لمستوى دلالة إحصائية كافي (Confidence < 0.3). استمر في تسجيل النبض لتفعيل محرك الربط."
+                                ? "اأاط احاة  تص ست داة إحصائة اف (Confidence < 0.3). استر ف تسج ابض تفع حر اربط."
                                 : isDriftMode
-                                    ? "الأسهم بتوضح العلاقات اللي اتحسنت (↑) أو ساءت (↓) مقارنة بآخر لقطة. ده فيلم تطورك الحقيقي مش مجرد صورة لحظية."
-                                    : `الشبكة بتوضح إن ${data.edges[0]?.source} ليها أقوى تأثير ${data.edges[0]?.strength > 0 ? 'إيجابي' : 'سلبي'} حالياً. الهالة حوالين الدواير بتمثل ثقة السيستم في التحليل ده.`
+                                    ? "اأس بتضح اعاات ا اتحست () أ ساءت () ارة بآخر طة. د ف تطر اح ش جرد صرة حظة."
+                                    : `اشبة بتضح إ ${data.edges[0]?.source} ا أ تأثر ${data.edges[0]?.strength > 0 ? 'إجاب' : 'سب'} حاا. ااة حا ادار بتث ثة اسست ف اتح د.`
                             }
                         </p>
                     </div>

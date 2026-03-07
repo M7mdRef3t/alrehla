@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { getAdminSupabase, verifyAdmin } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
-function getBearerToken(req: any): string | null {
+function getBearerToken(req: AdminRequest): string | null {
   const authHeader = req.headers?.authorization || req.headers?.Authorization;
   if (typeof authHeader !== "string") return null;
   if (!authHeader.toLowerCase().startsWith("bearer ")) return null;
@@ -28,7 +29,7 @@ function getRpcClientWithUserJwt(jwt: string) {
   });
 }
 
-export async function handleRadar(req: any, res: any) {
+export async function handleRadar(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdmin(req, res))) return;
 
   const adminClient = getAdminSupabase();
@@ -79,3 +80,6 @@ export async function handleRadar(req: any, res: any) {
     is_live: true
   });
 }
+
+
+

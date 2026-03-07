@@ -128,9 +128,9 @@ export function GenesisOnboarding({ userId, onCompleted }: GenesisOnboardingProp
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-2xl rounded-3xl border border-white/10 bg-white/5 p-8 text-center"
         >
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-teal-300 mb-4">Genesis Flow</p>
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-teal-300 mb-4">بداية الرحلة</p>
           <h2 className="text-2xl font-black text-white mb-2">{title}</h2>
-          <p className="text-sm text-slate-400 mb-8">اسحب الدائرة إلى منطقة الإفلات. هذه أول بصمة وعي حركية لك.</p>
+          <p className="text-sm text-slate-400 mb-8">اسحب الدائرة إلى منطقة الإفلات. هذه أول بصمة وعي في رحلتك.</p>
 
           <DndContext sensors={sensors} onDragStart={onDragStart} onDragMove={onDragMove} onDragEnd={handleDragEnd}>
             <div className="flex flex-col items-center gap-8">

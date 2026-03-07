@@ -1,0 +1,71 @@
+{
+  "version": "1.0.0",
+  "source": "design/alrehla_figma_specs.md + design/tokens.json",
+  "autoLayout": {
+    "frame": {
+      "desktop": {
+        "width": 1280,
+        "direction": "HORIZONTAL",
+        "overflow": "VERTICAL_SCROLL",
+        "background": "color/space/void"
+      },
+      "tablet": {
+        "width": 768,
+        "direction": "HORIZONTAL",
+        "overflow": "VERTICAL_SCROLL",
+        "background": "color/space/void"
+      },
+      "mobile": {
+        "width": 390,
+        "direction": "VERTICAL",
+        "overflow": "VERTICAL_SCROLL",
+        "background": "color/space/void"
+      }
+    },
+    "sidebar": {
+      "width": 240,
+      "direction": "VERTICAL",
+      "gap": 8,
+      "padding": {
+        "top": 24,
+        "right": 16,
+        "bottom": 24,
+        "left": 16
+      },
+      "background": "color/space/deep"
+    },
+    "content": {
+      "direction": "VERTICAL",
+      "gap": 24,
+      "padding": 32
+    },
+    "components": {
+      "button": {
+        "direction": "HORIZONTAL",
+        "alignItems": "CENTER",
+        "justifyContent": "CENTER",
+        "gap": 8,
+        "paddingX": 24,
+        "paddingY": 16,
+        "radius": 9999,
+        "minWidth": 120
+      },
+      "card": {
+        "direction": "VERTICAL",
+        "gap": 16,
+        "padding": 24,
+        "radius": 20,
+        "stroke": "color/border/default",
+        "fill": "color/glass/default"
+      },
+      "badge": {
+        "direction": "HORIZONTAL",
+        "alignItems": "CENTER",
+        "gap": 4,
+        "paddingX": 10,
+        "paddingY": 4,
+        "radius": 9999
+      }
+    }
+  }
+}

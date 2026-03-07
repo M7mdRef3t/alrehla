@@ -13,6 +13,29 @@ type FallbackCandidate = {
   tags: string[];
 };
 
+type DecisionCandidateStoreItem = {
+  id: string;
+  contentId: string | null;
+  edgeId: string | null;
+  finalScore: number;
+  policyScore: number;
+  swarmScore: number;
+  cognitivePenalty: number;
+  explorationBonus: number;
+};
+
+type ApiRequest = {
+  method?: string;
+  body?: {
+    candidates?: unknown;
+  };
+};
+
+type ApiResponse = {
+  status: (code: number) => ApiResponse;
+  json: (body: unknown) => void;
+};
+
 function buildFallbackFromIncomingCandidates(candidates: FallbackCandidate[]) {
   const chosen = candidates[0];
   return {
@@ -22,7 +45,7 @@ function buildFallbackFromIncomingCandidates(candidates: FallbackCandidate[]) {
   };
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -39,10 +62,10 @@ export default async function handler(req: any, res: any) {
   }
 
   const precomputed = await loadPrecomputedCandidates(supabase, context, 20);
-  let chosen: any = null;
+  let chosen: FallbackCandidate | null = null;
   let source: "cloud_ranker_v2" | "template_fallback" = "cloud_ranker_v2";
   let confidence = 0.72;
-  let rankedForStore: any[] = [];
+  let rankedForStore: DecisionCandidateStoreItem[] = [];
   let isExploration = false;
 
   if (precomputed.length > 0) {
@@ -69,6 +92,11 @@ export default async function handler(req: any, res: any) {
     chosen = fallback.action;
     source = fallback.source;
     confidence = fallback.confidence;
+  }
+
+  if (!chosen) {
+    res.status(500).json({ error: "Failed to choose candidate" });
+    return;
   }
 
   const response = {

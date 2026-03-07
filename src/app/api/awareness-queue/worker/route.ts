@@ -77,7 +77,7 @@ export async function POST() {
             processed: batchApplyResult ?? null,
             outcomes
         });
-    } catch (err) {
+    } catch (err: unknown) {
         console.error('Worker General Error:', err);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }

@@ -1,6 +1,28 @@
 import { getServiceSupabase, parseJsonBody } from "./_shared.js";
 
-export default async function handler(req: any, res: any) {
+type InterventionBody = {
+  decisionId?: unknown;
+  userId?: unknown;
+  sessionId?: unknown;
+  segmentKey?: unknown;
+  surface?: unknown;
+  source?: unknown;
+  hesitationSec?: unknown;
+  cognitiveLoadRequired?: unknown;
+  actionType?: unknown;
+};
+
+type ApiRequest = {
+  method?: string;
+  body?: InterventionBody;
+};
+
+type ApiResponse = {
+  status: (code: number) => ApiResponse;
+  json: (body: unknown) => void;
+};
+
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;

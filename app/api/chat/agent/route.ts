@@ -3,6 +3,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AIOrchestrator } from '../../../../src/services/aiOrchestrator';
 import { supabase } from '../../../../src/services/supabaseClient';
 import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
+import type { AwarenessVector } from '../../../../src/services/trajectoryEngine';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const MAX_AGENT_REQUEST_BYTES = 120_000;
@@ -32,6 +33,20 @@ type KineticTelemetryInput = {
     erraticDeviation?: number;
     profile?: string;
     summary?: string;
+};
+
+type ActiveResonanceEvent = {
+    event_name?: string;
+    dda_override?: number;
+    event_type?: string;
+};
+
+type UsageMetadata = {
+    promptTokenCount?: number;
+    inputTokenCount?: number;
+    candidatesTokenCount?: number;
+    outputTokenCount?: number;
+    totalTokenCount?: number;
 };
 
 function classifyFailureReason(raw: string | null | undefined): AIFailureReason {
@@ -109,6 +124,10 @@ function buildKineticContext(input: KineticTelemetryInput | null | undefined): s
     parts.push('- instruction: adjust opening tone based on kinetic profile before first probing question.');
 
     return parts.join('\n');
+}
+
+function toErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error || 'unknown_error');
 }
 
 type MasterPromptInput = {
@@ -282,7 +301,7 @@ export async function POST(req: Request) {
         const kineticPromptContext = buildKineticContext((kineticTelemetry ?? null) as KineticTelemetryInput);
 
         const evalStartTime = Date.now();
-        let activeEvent: any = null;
+        let activeEvent: ActiveResonanceEvent | null = null;
         let eventContext = "";
 
         // 1. Dual-Sensing & Stealth Evaluation (The Verification Engine)
@@ -317,7 +336,7 @@ export async function POST(req: Request) {
 
             if (trajectory && trajectory.data?.daily_missions) {
                 const currentDay = trajectory.data.current_day || 1;
-                const activeMission = trajectory.data.daily_missions.find((m: any) => m.day === currentDay);
+                const activeMission = trajectory.data.daily_missions.find((m: { day?: number }) => m.day === currentDay);
 
                 if (activeMission && activeMission.verification_criteria) {
                     const criteria = activeMission.verification_criteria;
@@ -331,7 +350,7 @@ export async function POST(req: Request) {
                     const intentEmbedding = intentResult.embedding.values;
 
                     const similarity = cosineSimilarity(msgEmbedding, intentEmbedding);
-                    console.log(`🔍 [Verification] Similarity for Day ${currentDay}: ${similarity.toFixed(4)}`);
+                    console.warn(`🔍 [Verification] Similarity for Day ${currentDay}: ${similarity.toFixed(4)}`);
 
                     // Step 2: Stealth Evaluation (LLM Verification Gate)
                     if (similarity > 0.75) {
@@ -362,7 +381,7 @@ Output strictly as JSON:
                         const isVerified = evalData.verified;
 
                         if (isVerified) {
-                            console.log(`✅ [Verification] Mission Day ${currentDay} VERIFIED. Reason: ${evalData.reason}`);
+                            console.warn(`✅ [Verification] Mission Day ${currentDay} VERIFIED. Reason: ${evalData.reason}`);
                             // Step 3: Silent Execution (Atomic Status Update)
                             const nextDay = currentDay + 1;
                             const isTrajectoryComplete = nextDay > (trajectory.data.duration_days || 7);
@@ -378,7 +397,7 @@ Output strictly as JSON:
                             let sovereigntyScore = 0;
 
                             if (isTrajectoryComplete) {
-                                console.log("🌟 [Evolution] Journey Complete! Generating Sovereignty Report...");
+                                console.warn("🌟 [Evolution] Journey Complete! Generating Sovereignty Report...");
 
                                 // A. Fetch Final State
                                 const { data: finalSnapshots } = await supabase
@@ -402,7 +421,7 @@ Output strictly as JSON:
                                     .limit(5);
 
                                 const { TrajectoryEngine } = await import('../../../../src/services/trajectoryEngine');
-                                const history: any[] = (prevTrajectories || [])
+                                const history: AwarenessVector[] = (prevTrajectories || [])
                                     .map(t => t.final_vector || t.initial_vector)
                                     .filter(Boolean);
 
@@ -458,7 +477,7 @@ Format: JSON
                             if (isTrajectoryComplete && sovereigntyScore >= 800) {
                                 const { HiveEngine } = await import('../../../../src/services/hiveEngine');
                                 await HiveEngine.contributeToVault(trajectory.id, userId);
-                                console.log(`🏛️ [Hive] Journey archived to Wisdom Vault (Oracle Rank).`);
+                                console.warn(`🏛️ [Hive] Journey archived to Wisdom Vault (Oracle Rank).`);
                             }
 
                             verificationResult = {
@@ -469,7 +488,7 @@ Format: JSON
                                 report: sovereigntyReport
                             };
                         } else {
-                            console.log(`❌ [Verification] Mission Day ${currentDay} REJECTED. Reason: ${evalData.reason}`);
+                            console.warn(`❌ [Verification] Mission Day ${currentDay} REJECTED. Reason: ${evalData.reason}`);
 
                             // Hive Harvesting: Log evasion pattern
                             await supabase
@@ -541,11 +560,11 @@ Format: JSON
 
             if (eventData) {
                 activeEvent = eventData;
-                eventContext = `[SYNC_EVENT_ACTIVE: ${activeEvent.event_name}] Difficulty forced to LVL_${activeEvent.dda_override}.`;
+                eventContext = `[SYNC_EVENT_ACTIVE: ${eventData.event_name}] Difficulty forced to LVL_${eventData.dda_override}.`;
 
                 // 🛡️ D. Resilience Buffer Resolver (Riddle Solution)
-                if (activeEvent.event_type === 'high_pressure' && latestMessage.includes('السيادة')) {
-                    console.log(`🛡️ [ResilienceBuffer] Solution detected for User ${userId}. Applying Cognitive Insulation.`);
+                if (eventData.event_type === 'high_pressure' && latestMessage.includes('السيادة')) {
+                    console.warn(`🛡️ [ResilienceBuffer] Solution detected for User ${userId}. Applying Cognitive Insulation.`);
 
                     const { data: profile } = await supabase
                         .from('profiles')
@@ -615,7 +634,7 @@ Format: JSON
                         }
 
                         if (isFirst) {
-                            console.log("🌌 [SwarmBroadcast] First Sovereign insulated! Initializing async vibration.");
+                            console.warn("🌌 [SwarmBroadcast] First Sovereign insulated! Initializing async vibration.");
                             // 2. ASYNC BROADCAST (Non-blocking)
                             (async () => {
                                 try {
@@ -626,8 +645,8 @@ Format: JSON
                                         user_id: userId
                                     });
                                     if (broadcastErr) throw broadcastErr;
-                                    console.log("✨ [SwarmBroadcast] Vibration propagated successfully.");
-                                } catch (err) {
+                                    console.warn("✨ [SwarmBroadcast] Vibration propagated successfully.");
+                                } catch (err: unknown) {
                                     console.error("❌ [SwarmBroadcast] Propagation failed:", err);
                                 }
                             })();
@@ -653,10 +672,10 @@ Format: JSON
         const isAlchemicalCatalystTriggered = shadowTurns >= 3;
 
         if (isShadowMode) {
-            console.log(`[ShadowProtocol] High Entropy (${currentSE.toFixed(2)}). Sequence: ${shadowTurns}`);
+            console.warn(`[ShadowProtocol] High Entropy (${currentSE.toFixed(2)}). Sequence: ${shadowTurns}`);
 
             if (isAlchemicalCatalystTriggered) {
-                console.log('[AlchemicalCatalyst] 3 Shadow turns reached. Injecting Discharge Mission.');
+                console.warn('[AlchemicalCatalyst] 3 Shadow turns reached. Injecting Discharge Mission.');
 
                 // Increment recovery triggers for DDA downshifting later
                 if (userId && supabase) {
@@ -718,15 +737,15 @@ Language: Sharp Egyptian Slang.
         try {
             const result = await chat.sendMessage(latestMessage);
             telemetryLatencyMs = Date.now() - llmStart;
-            const usage = (result as any)?.response?.usageMetadata || {};
+            const usage = ((result as { response?: { usageMetadata?: UsageMetadata } })?.response?.usageMetadata) || {};
             telemetryPromptTokens = Number(usage?.promptTokenCount || usage?.inputTokenCount || 0);
             telemetryCompletionTokens = Number(usage?.candidatesTokenCount || usage?.outputTokenCount || 0);
             telemetryTotalTokens = Number(usage?.totalTokenCount || (telemetryPromptTokens + telemetryCompletionTokens));
             responseText = result.response.text();
-        } catch (llmErr: any) {
+        } catch (llmErr: unknown) {
             telemetryLatencyMs = Date.now() - llmStart;
-            telemetryFailureReason = classifyFailureReason(String(llmErr?.message || llmErr || 'unknown_error'));
-            telemetryErrorMessage = String(llmErr?.message || llmErr || 'unknown_error');
+            telemetryFailureReason = classifyFailureReason(toErrorMessage(llmErr));
+            telemetryErrorMessage = toErrorMessage(llmErr);
             usedFallbackResponse = true;
             responseText = 'تم استقبال رسالتك. نكمل الآن خطوة واحدة مركزة: ما الفعل الصغير الذي ستقوم به خلال الخمس دقائق القادمة؟';
         }
@@ -740,7 +759,7 @@ Language: Sharp Egyptian Slang.
                 responseText = responseText.replace(jsonMatch[0], '').trim();
                 telemetryJsonSuccess = true;
                 telemetryFailureReason = 'unknown';
-            } catch (e) { console.error(e); }
+            } catch (e: unknown) { console.error(e); }
         }
         if (!telemetryJsonSuccess && !usedFallbackResponse) {
             telemetryFailureReason = 'format_mismatch';
@@ -795,9 +814,9 @@ Language: Sharp Egyptian Slang.
             ...(debugTelemetryPromptEnabled ? { __debug_system_prompt: systemPrompt, __debug_telemetry_context: telemetryPromptContext } : {})
         });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Error in Agent Route:', err);
-        telemetryErrorMessage = String(err?.message || err || 'unknown_error');
+        telemetryErrorMessage = toErrorMessage(err);
         telemetryFailureReason = classifyFailureReason(telemetryErrorMessage);
         const admin = getSupabaseAdminClient();
         if (admin) {
@@ -823,7 +842,7 @@ Language: Sharp Egyptian Slang.
         }
         return NextResponse.json(
             {
-                error: err.message,
+                error: toErrorMessage(err),
                 llm_latency_ms: telemetryLatencyMs || (Date.now() - requestStart),
                 ...(debugTelemetryPromptEnabled
                     ? { __debug_system_prompt: debugSystemPrompt, __debug_telemetry_context: debugTelemetryContext }

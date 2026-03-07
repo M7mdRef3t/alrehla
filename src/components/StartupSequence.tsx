@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShieldCheck, Cpu, Zap, Radio, Globe } from "lucide-react";
 
 const STARTUP_STEPS = [
-    { text: "INITIALIZING COSMIC KERNEL...", icon: Globe, color: "text-blue-400" },
-    { text: "LOADING PHYSICS ENGINE...", icon: Zap, color: "text-yellow-400" },
-    { text: "CALIBRATING SENSORS...", icon: Radio, color: "text-purple-400" },
-    { text: "NEURAL LINK ESTABLISHED.", icon: Cpu, color: "text-emerald-400" },
-    { text: "SYSTEM ONLINE.", icon: ShieldCheck, color: "text-white" },
+    { text: "جاري تهيئة مساحة الوعي...", icon: Globe, color: "text-blue-400" },
+    { text: "جاري تجهيز أدوات القراءة...", icon: Zap, color: "text-yellow-400" },
+    { text: "جاري معايرة المؤشرات...", icon: Radio, color: "text-purple-400" },
+    { text: "تم ربط السياق الشخصي.", icon: Cpu, color: "text-emerald-400" },
+    { text: "المنصة جاهزة.", icon: ShieldCheck, color: "text-white" },
 ] as const;
 
 export const StartupSequence: FC<{ onComplete: () => void }> = ({ onComplete }) => {
@@ -58,10 +58,10 @@ export const StartupSequence: FC<{ onComplete: () => void }> = ({ onComplete }) 
                         className="mt-8 text-center"
                     >
                         <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-rose-500 animate-pulse">
-                            DAWAYIR OS
+                            ALREHLA
                         </div>
-                        <div className="text-xs text-slate-500 mt-2 tracking-[0.5em] uppercase">
-                            Transhumanism v2.0
+                        <div className="text-xs text-slate-500 mt-2 tracking-[0.25em] uppercase">
+                            Consciousness Platform
                         </div>
                     </motion.div>
                 )}

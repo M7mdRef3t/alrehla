@@ -17,6 +17,17 @@ export interface CandidateV2 {
   cognitiveLoad: number;
 }
 
+type ContentItemRow = {
+  id: string;
+  title: unknown;
+  difficulty: unknown;
+  cognitive_load_required: unknown;
+  metadata?: {
+    summary?: unknown;
+    tags?: unknown;
+  } | null;
+};
+
 export async function loadPrecomputedCandidates(
   supabase: SupabaseClient,
   context: RoutingContextV2,
@@ -45,7 +56,8 @@ export async function loadPrecomputedCandidates(
     .select("id,title,difficulty,cognitive_load_required,metadata")
     .in("id", contentIds);
 
-  const byId = new Map<string, any>((contentRows ?? []).map((row: any) => [row.id, row]));
+  const typedContentRows = (contentRows ?? []) as ContentItemRow[];
+  const byId = new Map<string, ContentItemRow>(typedContentRows.map((row) => [row.id, row]));
   const candidates: CandidateV2[] = [];
 
   for (const row of rows) {

@@ -12,9 +12,9 @@ export const ThemeSettings: FC<ThemeSettingsProps> = ({ isOpen, onClose }) => {
   const { theme, setTheme } = useThemeState();
 
   const themes = [
-    { id: "light" as const, label: "فاتح", icon: Sun, description: "ألوان فاتحة دائماً" },
-    { id: "dark" as const, label: "داكن", icon: Moon, description: "ألوان داكنة دائماً" },
-    { id: "system" as const, label: "النظام", icon: Monitor, description: "حسب إعدادات جهازك" }
+    { id: "light" as const, label: "فاتح", icon: Sun, description: "أا فاتحة دائا" },
+    { id: "dark" as const, label: "دا", icon: Moon, description: "أا داة دائا" },
+    { id: "system" as const, label: "اظا", icon: Monitor, description: "حسب إعدادات جاز" }
   ];
 
   return (
@@ -43,9 +43,9 @@ export const ThemeSettings: FC<ThemeSettingsProps> = ({ isOpen, onClose }) => {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
                     <Sun className="w-5 h-5 text-amber-500 dark:hidden" />
-                    <Moon className="w-5 h-5 text-[var(--color-primary)] hidden dark:block" />
+                    <Moon className="w-5 h-5 text-[var(--soft-teal)] hidden dark:block" />
                   </div>
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">المظهر</h2>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">اظر</h2>
                 </div>
                 <button
                   type="button"
@@ -113,4 +113,5 @@ export const ThemeSettings: FC<ThemeSettingsProps> = ({ isOpen, onClose }) => {
     </AnimatePresence>
   );
 };
+
 

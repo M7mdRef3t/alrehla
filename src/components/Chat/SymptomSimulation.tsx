@@ -63,11 +63,11 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
                 <div className="w-20 h-20 bg-teal-500/20 border border-teal-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Shield className="w-10 h-10 text-teal-400" />
                 </div>
-                <h3 className="text-2xl font-black text-white tracking-widest font-mono uppercase">اكتمل_البروتوكول</h3>
+                <h3 className="text-2xl font-black text-white tracking-widest font-mono uppercase">ات_ابرت</h3>
                 <p className="text-slate-400 font-mono text-sm">
                     {score === relevantScenarios.length
-                        ? "مستوى_السيادة: أقصى. لقد نجحت في الدفاع عن حدودك."
-                        : `مستوى_السيادة: ${Math.round((score / relevantScenarios.length) * 100)}%. مطلوب استمرار التدريب.`}
+                        ? "ست_اسادة: أص. د جحت ف ادفاع ع حدد."
+                        : `ست_اسادة: ${Math.round((score / relevantScenarios.length) * 100)}%. طب استرار اتدرب.`}
                 </p>
 
                 <div className="grid grid-cols-2 gap-4 mt-8">
@@ -82,13 +82,13 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
                         className="p-4 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-xs uppercase hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                     >
                         <RotateCcw className="w-4 h-4" />
-                        إعادة_المحاكاة
+                        إعادة_احااة
                     </button>
                     <button
                         onClick={onClose}
                         className="p-4 rounded-xl bg-teal-500/20 border border-teal-500/30 text-teal-400 font-mono text-xs uppercase hover:bg-teal-500/30 transition-all"
                     >
-                        خروج_من_المحاكاة
+                        خرج__احااة
                     </button>
                 </div>
             </motion.div>
@@ -100,11 +100,11 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
             {/* Header */}
             <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-[var(--color-primary)]/20 border border-[var(--color-primary)]">
-                        <Terminal className="w-4 h-4 text-[var(--color-primary)]" />
+                    <div className="p-2 rounded-lg bg-[var(--soft-teal)]/20 border border-[var(--soft-teal)]">
+                        <Terminal className="w-4 h-4 text-[var(--soft-teal)]" />
                     </div>
                     <div>
-                        <h2 className="text-sm font-black text-white tracking-widest font-mono uppercase">محاكاة_عصبية // v1.0</h2>
+                        <h2 className="text-sm font-black text-white tracking-widest font-mono uppercase">حااة_عصبة // v1.0</h2>
                         <div className="flex items-center gap-1 mt-1">
                             {relevantScenarios.map((_, i) => (
                                 <div
@@ -131,12 +131,12 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
                         className="space-y-6"
                     >
                         {/* Scenario Context */}
-                        <div className="p-4 rounded-xl bg-slate-900/50 border border-[var(--color-primary)] relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-[var(--color-primary)]/50" />
+                        <div className="p-4 rounded-xl bg-slate-900/50 border border-[var(--soft-teal)] relative overflow-hidden group">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-[var(--soft-teal)]/50" />
                             <div className="flex items-start gap-4">
-                                <Brain className="w-5 h-5 text-[var(--color-primary)] mt-1 shrink-0" />
+                                <Brain className="w-5 h-5 text-[var(--soft-teal)] mt-1 shrink-0" />
                                 <div className="space-y-1">
-                                    <span className="text-[10px] font-bold text-[var(--color-primary)] uppercase tracking-tighter opacity-70">إدخال_السياق</span>
+                                    <span className="text-[10px] font-bold text-[var(--soft-teal)] uppercase tracking-tighter opacity-70">إدخا_اسا</span>
                                     <p className="text-slate-300 text-sm leading-relaxed">{currentScenario.context}</p>
                                 </div>
                             </div>
@@ -146,7 +146,7 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
                         <div className="space-y-4">
                             <div className="flex items-center gap-2">
                                 <Target className="w-4 h-4 text-rose-400" />
-                                <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono">الهدف: 💡 {currentScenario.situation}</h3>
+                                <h3 className="text-sm font-bold text-white uppercase tracking-widest font-mono">ادف:  {currentScenario.situation}</h3>
                             </div>
 
                             <div className="grid gap-3">
@@ -169,8 +169,8 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
                                             icon = <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />;
                                         }
                                     } else if (isSelected) {
-                                        borderColor = "border-[var(--color-primary)]";
-                                        bgColor = "bg-[var(--color-primary)]/10";
+                                        borderColor = "border-[var(--soft-teal)]";
+                                        bgColor = "bg-[var(--soft-teal)]/10";
                                     }
 
                                     return (
@@ -178,12 +178,12 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
                                             key={option.id}
                                             onClick={() => handleOptionSelect(option.id)}
                                             disabled={showFeedback}
-                                            className={`w-full p-4 rounded-xl border ${borderColor} ${bgColor} text-right transition-all duration-300 flex items-center justify-between gap-4 group hover:border-[var(--color-primary)]`}
+                                            className={`w-full p-4 rounded-xl border ${borderColor} ${bgColor} text-right transition-all duration-300 flex items-center justify-between gap-4 group hover:border-[var(--soft-teal)]`}
                                         >
                                             <span className={`text-sm ${isSelected ? 'text-white font-bold' : 'text-slate-400'} group-hover:text-white transition-colors`}>
                                                 {option.text}
                                             </span>
-                                            {icon || <div className="w-4 h-4 rounded-full border border-white/20 shrink-0 group-hover:border-[var(--color-primary)]" />}
+                                            {icon || <div className="w-4 h-4 rounded-full border border-white/20 shrink-0 group-hover:border-[var(--soft-teal)]" />}
                                         </button>
                                     );
                                 })}
@@ -214,7 +214,7 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
                                         onClick={handleNext}
                                         className="w-full mt-4 py-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-mono text-xs uppercase tracking-widest flex items-center justify-center gap-2"
                                     >
-                                        المسار_التالي
+                                        اسار_اتا
                                         <ChevronRight className="w-4 h-4" />
                                     </button>
                                 </motion.div>
@@ -226,5 +226,6 @@ export const SymptomSimulation: React.FC<SymptomSimulationProps> = ({
         </div>
     );
 };
+
 
 

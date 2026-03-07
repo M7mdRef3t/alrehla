@@ -1,4 +1,4 @@
-import type { FC } from "react";
+﻿import type { FC } from "react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { X, PenLine, Wind, Shield } from "lucide-react";
@@ -48,7 +48,7 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
       aria-labelledby="me-card-title"
     >
       <motion.div
-        className="w-full max-w-md rounded-2xl overflow-hidden bg-linear-to-br from-[var(--color-primary)] via-purple-500 to-[var(--color-primary)] text-white"
+        className="w-full max-w-md rounded-2xl overflow-hidden bg-linear-to-br from-[var(--soft-teal)] via-purple-500 to-[var(--soft-teal)] text-white"
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
@@ -83,7 +83,7 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
                   onClick={() => setBattery(opt.value)}
                   className={`flex-1 flex flex-col items-center gap-1 py-2.5 px-2 rounded-lg text-sm font-medium transition-all ${
                     battery === opt.value
-                      ? "bg-white text-[var(--color-primary)]"
+                      ? "bg-white text-[var(--soft-teal)]"
                       : "text-white/90 hover:bg-white/10"
                   }`}
                 >
@@ -198,7 +198,7 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
               onChange={(e) => setJournalInput(e.target.value)}
               placeholder={journalPlaceholder}
               rows={5}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 resize-none focus:outline-none focus:ring-2 focus:ring-[var(--soft-teal)]"
             />
             <div className="mt-3 flex gap-2 justify-end">
               <button
@@ -211,7 +211,7 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
               <button
                 type="button"
                 onClick={handleSaveJournal}
-                className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-white text-sm font-semibold hover:bg-[var(--color-primary)]"
+                className="px-4 py-2 rounded-lg bg-[var(--soft-teal)] text-white text-sm font-semibold hover:bg-[var(--soft-teal)]"
               >
                 حفظ
               </button>

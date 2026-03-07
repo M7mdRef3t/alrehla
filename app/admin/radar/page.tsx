@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { downloadBlobFile } from "../../../src/services/clientDom";
 import { supabase } from "../../../src/services/supabaseClient";
 import { useAdminState } from "../../../src/state/adminState";
@@ -221,6 +221,15 @@ export default function AdminRadarPage() {
   const [selectedTicketIds, setSelectedTicketIds] = useState<string[]>([]);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
+  const getAdminAccessToken = useCallback(async (): Promise<string> => {
+    const { data: sessionData } = await supabase?.auth.getSession() ?? { data: { session: null } };
+    const accessToken = sessionData?.session?.access_token;
+    const fallbackToken = typeof adminCode === "string" ? adminCode.trim() : "";
+    const effectiveToken = accessToken || fallbackToken;
+    if (!effectiveToken) throw new Error("Unauthorized");
+    return effectiveToken;
+  }, [adminCode]);
+
   useEffect(() => {
     let isMounted = true;
     let timer: ReturnType<typeof setInterval> | null = null;
@@ -271,8 +280,8 @@ export default function AdminRadarPage() {
           setSupportTickets(
             Array.isArray(supportBody?.tickets)
               ? supportBody.tickets
-                  .map(toSupportTicket)
-                  .filter((ticket) => ticket.source === "checkout_manual_proof" || ticket.category === "payment_activation")
+                .map(toSupportTicket)
+                .filter((ticket) => ticket.source === "checkout_manual_proof" || ticket.category === "payment_activation")
               : []
           );
         }
@@ -292,7 +301,7 @@ export default function AdminRadarPage() {
       isMounted = false;
       if (timer) clearInterval(timer);
     };
-  }, []);
+  }, [getAdminAccessToken]);
 
   useEffect(() => {
     setSelectedTicketIds((current) => current.filter((ticketId) => supportTickets.some((ticket) => ticket.id === ticketId)));
@@ -411,10 +420,10 @@ export default function AdminRadarPage() {
         const updated = updatesById.get(ticket.id);
         return updated
           ? {
-              ...ticket,
-              ...updated,
-              metadata: ticket.metadata ?? updated.metadata
-            }
+            ...ticket,
+            ...updated,
+            metadata: ticket.metadata ?? updated.metadata
+          }
           : ticket;
       })
     );
@@ -457,15 +466,6 @@ export default function AdminRadarPage() {
     } finally {
       setContentLoading(false);
     }
-  }
-
-  async function getAdminAccessToken(): Promise<string> {
-    const { data: sessionData } = await supabase?.auth.getSession() ?? { data: { session: null } };
-    const accessToken = sessionData?.session?.access_token;
-    const fallbackToken = typeof adminCode === "string" ? adminCode.trim() : "";
-    const effectiveToken = accessToken || fallbackToken;
-    if (!effectiveToken) throw new Error("Unauthorized");
-    return effectiveToken;
   }
 
   async function requestPremiumGrant(userId: string, accessToken: string) {
@@ -877,7 +877,7 @@ export default function AdminRadarPage() {
   </head>
   <body>
     <h1>Payment Proof Review Sheet</h1>
-    <p class="lead">Generated ${escapeHtml(new Date().toLocaleString())} • ${escapeHtml(String(selectedTickets.length))} selected ticket(s)</p>
+    <p class="lead">Generated ${escapeHtml(new Date().toLocaleString())}  ${escapeHtml(String(selectedTickets.length))} selected ticket(s)</p>
     <section class="grid">
       ${cards}
     </section>
@@ -902,7 +902,7 @@ export default function AdminRadarPage() {
 
         {!loading && !error && showAnomaly && (
           <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-100">
-            <strong>انتباه:</strong> انحدار جماعي في طاقة التعافي (Anomaly Detected). استعد للتدخل.
+            <strong>اتبا:</strong> احدار جاع ف طاة اتعاف (Anomaly Detected). استعد تدخ.
           </div>
         )}
 
@@ -924,12 +924,12 @@ export default function AdminRadarPage() {
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Global Phoenix Index</p>
               <p className="mt-3 text-4xl font-black">{Number(pulse.global_phoenix_avg).toFixed(2)}</p>
               <p className={`mt-2 text-sm ${pulse.healing_velocity >= 0 ? "text-emerald-300" : "text-rose-300"}`}>
-                {pulse.healing_velocity >= 0 ? "▲" : "▼"} {formatSigned(pulse.healing_velocity)} / day
+                {pulse.healing_velocity >= 0 ? "" : ""} {formatSigned(pulse.healing_velocity)} / day
               </p>
               <div className="mt-3">
                 {trendPath ? (
                   <svg viewBox="0 0 220 64" className="w-full h-16">
-                    <path d={trendPath} fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d={trendPath} fill="none" stroke="var(--soft-teal)" strokeWidth="2.5" strokeLinecap="round" />
                   </svg>
                 ) : (
                   <p className="text-xs text-[var(--color-text-muted)]">Trend builds after next refresh.</p>
@@ -947,7 +947,7 @@ export default function AdminRadarPage() {
                       <span>{item.value}</span>
                     </div>
                     <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                      <div className="h-full bg-[var(--color-primary)]" style={{ width: `${item.percent}%` }} />
+                      <div className="h-full bg-[var(--soft-teal)]" style={{ width: `${item.percent}%` }} />
                     </div>
                   </div>
                 ))}
@@ -976,12 +976,12 @@ export default function AdminRadarPage() {
                     </div>
                     <div className="mt-2 h-2 rounded-full bg-white/10 overflow-hidden">
                       <div
-                        className="h-full bg-[var(--color-primary)]"
+                        className="h-full bg-[var(--soft-teal)]"
                         style={{ width: `${Math.min((point.landingViewed / funnelPeak) * 100, 100)}%` }}
                       />
                     </div>
                     <p className="mt-2 text-[11px] text-slate-300">
-                      L:{point.landingViewed} • F:{point.ctaFreeClicked} • C:{point.ctaCheckoutClicked} • V:{point.checkoutPageViewed} • P:{point.paymentSuccess}
+                      L:{point.landingViewed}  F:{point.ctaFreeClicked}  C:{point.ctaCheckoutClicked}  V:{point.checkoutPageViewed}  P:{point.paymentSuccess}
                     </p>
                   </div>
                 ))}
@@ -1024,12 +1024,11 @@ export default function AdminRadarPage() {
                 {opsAlerts.map((alert) => (
                   <div
                     key={`${alert.code}-${alert.level}`}
-                    className={`rounded-xl border px-3 py-2 text-sm ${
-                      alert.level === "critical" ? "border-rose-400/40 bg-rose-500/10 text-rose-100" : "border-amber-300/30 bg-amber-500/10 text-amber-100"
-                    }`}
+                    className={`rounded-xl border px-3 py-2 text-sm ${alert.level === "critical" ? "border-rose-400/40 bg-rose-500/10 text-rose-100" : "border-amber-300/30 bg-amber-500/10 text-amber-100"
+                      }`}
                   >
                     <p className="font-semibold">{alert.message}</p>
-                    <p className="text-xs opacity-80">code: {alert.code} • value: {alert.value} • threshold: {alert.threshold}</p>
+                    <p className="text-xs opacity-80">code: {alert.code}  value: {alert.value}  threshold: {alert.threshold}</p>
                   </div>
                 ))}
               </div>
@@ -1039,15 +1038,15 @@ export default function AdminRadarPage() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Content Oracle</p>
-                  <p className="text-sm text-[var(--color-text-muted)]">حول نبض الوعي الجمعي إلى أفكار Reels فورية.</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">ح بض اع اجع إ أفار Reels فرة.</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => { void generateContentFromPulse(); }}
                   disabled={contentLoading}
-                  className="px-4 py-2 rounded-xl bg-[var(--color-primary)] text-slate-950 text-sm font-bold disabled:opacity-60"
+                  className="px-4 py-2 rounded-xl bg-[var(--soft-teal)] text-slate-950 text-sm font-bold disabled:opacity-60"
                 >
-                  {contentLoading ? "جارٍ التحليل..." : "استلهم محتوى من الوعي الجمعي"}
+                  {contentLoading ? "جارٍ اتح..." : "است حت  اع اجع"}
                 </button>
               </div>
 
@@ -1090,66 +1089,60 @@ export default function AdminRadarPage() {
                   <button
                     type="button"
                     onClick={() => setTicketVisibility("open")}
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-                      ticketVisibility === "open"
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${ticketVisibility === "open"
                         ? "border-teal-400/30 bg-teal-400/15 text-teal-100"
                         : "border-white/10 bg-white/5 text-[var(--color-text-muted)] hover:bg-white/10"
-                    }`}
+                      }`}
                   >
                     Open only ({openSupportTicketCount})
                   </button>
                   <button
                     type="button"
                     onClick={() => setTicketVisibility("linked")}
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-                      ticketVisibility === "linked"
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${ticketVisibility === "linked"
                         ? "border-teal-400/30 bg-teal-400/15 text-teal-100"
                         : "border-white/10 bg-white/5 text-[var(--color-text-muted)] hover:bg-white/10"
-                    }`}
+                      }`}
                   >
                     Linked only
                   </button>
                   <button
                     type="button"
                     onClick={() => setTicketVisibility("all")}
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-                      ticketVisibility === "all"
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${ticketVisibility === "all"
                         ? "border-teal-400/30 bg-teal-400/15 text-teal-100"
                         : "border-white/10 bg-white/5 text-[var(--color-text-muted)] hover:bg-white/10"
-                    }`}
+                      }`}
                   >
                     All ({supportTickets.length})
                   </button>
                   <button
                     type="button"
                     onClick={() => setTicketSort("newest")}
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-                      ticketSort === "newest"
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${ticketSort === "newest"
                         ? "border-amber-300/30 bg-amber-400/15 text-amber-100"
                         : "border-white/10 bg-white/5 text-[var(--color-text-muted)] hover:bg-white/10"
-                    }`}
+                      }`}
                   >
                     Newest
                   </button>
                   <button
                     type="button"
                     onClick={() => setTicketSort("oldest")}
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-                      ticketSort === "oldest"
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${ticketSort === "oldest"
                         ? "border-amber-300/30 bg-amber-400/15 text-amber-100"
                         : "border-white/10 bg-white/5 text-[var(--color-text-muted)] hover:bg-white/10"
-                    }`}
+                      }`}
                   >
                     Oldest
                   </button>
                   <button
                     type="button"
                     onClick={() => setTicketSort("priority")}
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-                      ticketSort === "priority"
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${ticketSort === "priority"
                         ? "border-amber-300/30 bg-amber-400/15 text-amber-100"
                         : "border-white/10 bg-white/5 text-[var(--color-text-muted)] hover:bg-white/10"
-                    }`}
+                      }`}
                   >
                     High priority
                   </button>
@@ -1316,11 +1309,10 @@ export default function AdminRadarPage() {
                           </div>
                           <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
                             <span
-                              className={`rounded-full border px-2 py-1 ${
-                                userId
+                              className={`rounded-full border px-2 py-1 ${userId
                                   ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-100"
                                   : "border-rose-400/20 bg-rose-400/10 text-rose-100"
-                              }`}
+                                }`}
                             >
                               {userId ? "Linked" : "Unlinked"}
                             </span>
@@ -1416,7 +1408,7 @@ export default function AdminRadarPage() {
             <article className="rounded-2xl border border-white/10 bg-black/20 p-5 md:col-span-3">
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Manual Subscription Activation</p>
               <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-                تفعيل يدوي للاشتراك (100 token / 21 day) عبر RPC `grant_premium_access`.
+                تفع د اشترا (100 token / 21 day) عبر RPC `grant_premium_access`.
               </p>
               <div className="mt-4 flex flex-col md:flex-row gap-3">
                 <input
@@ -1431,7 +1423,7 @@ export default function AdminRadarPage() {
                   disabled={grantLoading}
                   className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 text-sm font-bold disabled:opacity-60"
                 >
-                  {grantLoading ? "جارٍ التفعيل..." : "تفعيل يدوي"}
+                  {grantLoading ? "جارٍ اتفع..." : "تفع د"}
                 </button>
               </div>
               {grantResult && (

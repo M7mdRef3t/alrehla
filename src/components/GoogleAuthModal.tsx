@@ -84,7 +84,7 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
 
   const handleGoogle = async () => {
     if (!isAgeVerified) {
-      setError("يجب تأكيد أن عمرك +18 للمتابعة.");
+      setError("أكد أن عمرك +18 للمتابعة.");
       return;
     }
 

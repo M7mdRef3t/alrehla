@@ -200,13 +200,14 @@ export function useLandingLiveData(
   _fallbackTestimonials: TestimonialItem[],
   options: { enableLiveMetrics: boolean; enableLiveTestimonials: boolean }
 ) {
+  const { enableLiveMetrics, enableLiveTestimonials } = options;
   const [state, dispatch] = useReducer(reducer, {
     ...initialState,
     testimonials: { ...initialState.testimonials, data: [] }
   });
 
   useEffect(() => {
-    const strategy = new RuntimeDataStrategy(options);
+    const strategy = new RuntimeDataStrategy({ enableLiveMetrics, enableLiveTestimonials });
     const repository = new LandingRepository();
     let mounted = true;
     let metricsTimer: ReturnType<typeof setInterval> | null = null;
@@ -258,7 +259,7 @@ export function useLandingLiveData(
       if (metricsTimer) clearInterval(metricsTimer);
       if (testimonialsTimer) clearInterval(testimonialsTimer);
     };
-  }, [options.enableLiveMetrics, options.enableLiveTestimonials]);
+  }, [enableLiveMetrics, enableLiveTestimonials]);
 
   return state;
 }

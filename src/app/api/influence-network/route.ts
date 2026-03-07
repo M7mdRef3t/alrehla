@@ -35,7 +35,7 @@ export async function GET(req: Request) {
         }
 
         return NextResponse.json(maps[0]);
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Influence map fetch failed' }, { status: 500 });
     }
 }

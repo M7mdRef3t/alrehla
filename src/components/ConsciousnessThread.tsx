@@ -8,8 +8,14 @@ interface ThreadEvent {
     id: string;
     date: string;
     type: 'report' | 'insight' | 'pulse' | 'action' | 'milestone';
-    report_result?: any;
-    result?: any;
+    report_result?: {
+        wave_pattern?: string;
+        final_word?: string;
+    };
+    result?: {
+        summary?: string;
+        recommendations?: string[];
+    };
     mood?: number;
     stress_tag?: string;
     note?: string;
@@ -58,8 +64,8 @@ export const ConsciousnessThread: FC = () => {
                         <History className="w-4 h-4" />
                     </div>
                     <div className="text-right">
-                        <p className="text-sm font-bold text-white">خط الوعي (Consciousness Thread)</p>
-                        <p className="text-[10px] text-slate-500">سجل تطور بصيرتك الزمني</p>
+                        <p className="text-sm font-bold text-white">خط اع (Consciousness Thread)</p>
+                        <p className="text-[10px] text-slate-500">سج تطر بصرت از</p>
                     </div>
                 </div>
                 <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -78,7 +84,7 @@ export const ConsciousnessThread: FC = () => {
                             <div className="absolute top-0 right-7 bottom-0 w-[2px] bg-gradient-to-b from-indigo-500/40 via-blue-500/20 to-transparent" />
 
                             {loading ? (
-                                <div className="py-20 text-center text-slate-500 text-xs animate-pulse font-medium">جاري استرجاع ذكريات الوعي...</div>
+                                <div className="py-20 text-center text-slate-500 text-xs animate-pulse font-medium">جار استرجاع ذرات اع...</div>
                             ) : events.length > 0 ? (
                                 <div className="space-y-12">
                                     {events.map((ev, idx) => (
@@ -86,7 +92,7 @@ export const ConsciousnessThread: FC = () => {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="py-20 text-center text-slate-500 text-xs">بداية رحلة الوعي.. لم يكتب التاريخ بعد.</div>
+                                <div className="py-20 text-center text-slate-500 text-xs">بداة رحة اع..  تب اتارخ بعد.</div>
                             )}
                         </div>
                     </motion.div>
@@ -107,10 +113,10 @@ const ThreadItem: FC<{ event: ThreadEvent }> = ({ event }) => {
     const colorClass = isMilestone ? 'bg-amber-400 shadow-amber-500/60' : isReport ? 'bg-indigo-500 shadow-indigo-500/40' : isInsight ? 'bg-blue-500 shadow-blue-500/40' : isAction ? 'bg-orange-500 shadow-orange-500/40' : 'bg-emerald-500 shadow-emerald-500/40';
 
     const getActionLabel = (type?: string) => {
-        if (type === 'red_orbit_analysis') return 'تحليل مدار أحمر';
-        if (type === 'quick_journal') return 'تفريغ مشاعر';
-        if (type === 'rebalance_circles') return 'إعادة توزيع الدوائر';
-        return 'إجراء وعي';
+        if (type === 'red_orbit_analysis') return 'تح دار أحر';
+        if (type === 'quick_journal') return 'تفرغ شاعر';
+        if (type === 'rebalance_circles') return 'إعادة تزع ادائر';
+        return 'إجراء ع';
     }
 
     return (
@@ -125,7 +131,7 @@ const ThreadItem: FC<{ event: ThreadEvent }> = ({ event }) => {
                 <div className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all">
                     <div className="flex items-center gap-2 justify-end mb-3">
                         <span className={`text-[10px] font-black uppercase ${isMilestone ? 'text-amber-400' : isReport ? 'text-indigo-400' : isInsight ? 'text-blue-400' : isAction ? 'text-orange-400' : 'text-emerald-400'}`}>
-                            {isMilestone ? 'إنجاز تطوري' : isReport ? 'تقرير أسبوعي' : isInsight ? 'بصيرة خريطة' : isAction ? 'إجراء تعديل' : 'نبض خاطرة'}
+                            {isMilestone ? 'إجاز تطر' : isReport ? 'ترر أسبع' : isInsight ? 'بصرة خرطة' : isAction ? 'إجراء تعد' : 'بض خاطرة'}
                         </span>
                         <Icon className="w-3 h-3 opacity-50" />
                     </div>
@@ -138,9 +144,9 @@ const ThreadItem: FC<{ event: ThreadEvent }> = ({ event }) => {
                                 </p>
                             </div>
                             <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 inline-block text-[10px] text-amber-200/80">
-                                {event.milestone_type === 'shadow_breakthrough' && '🧬 كسر نمط تلقائي'}
-                                {event.milestone_type === 'behavioral_diversity' && '🚀 توسيع جينوم الأفعال'}
-                                {event.milestone_type === 'stability_recovery' && '⚖️ استعادة الاتزان النفسي'}
+                                {event.milestone_type === 'shadow_breakthrough' && ' سر ط تائ'}
+                                {event.milestone_type === 'behavioral_diversity' && ' تسع ج اأفعا'}
+                                {event.milestone_type === 'stability_recovery' && '️ استعادة ااتزا افس'}
                             </div>
                         </div>
                     )}
@@ -175,7 +181,7 @@ const ThreadItem: FC<{ event: ThreadEvent }> = ({ event }) => {
                             {event.impact_score !== undefined && event.impact_score !== null && (
                                 <div className="flex items-center gap-2 justify-end pt-1 pr-9">
                                     <span className={`text-[10px] font-bold ${Number(event.impact_score) > 0 ? 'text-emerald-400' : Number(event.impact_score) < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
-                                        {Number(event.impact_score) > 0 ? '📈 تأثير إيجابي' : Number(event.impact_score) < 0 ? '📉 تأثير سلبي' : '⚖️ بدون أثر'}
+                                        {Number(event.impact_score) > 0 ? ' تأثر إجاب' : Number(event.impact_score) < 0 ? ' تأثر سب' : '️ بد أثر'}
                                         {' '} ({Number(event.impact_score) > 0 ? '+' : ''}{event.impact_score})
                                     </span>
                                 </div>
@@ -186,11 +192,11 @@ const ThreadItem: FC<{ event: ThreadEvent }> = ({ event }) => {
                     {isPulse && (
                         <div>
                             <div className="flex items-center gap-2 justify-end mb-2">
-                                <span className="text-[10px] text-slate-500">مود {event.mood}/5</span>
+                                <span className="text-[10px] text-slate-500">د {event.mood}/5</span>
                                 <Zap className={`w-3 h-3 ${event.mood && event.mood > 3 ? 'text-yellow-400' : 'text-slate-600'}`} />
                             </div>
                             <p className="text-[12px] text-slate-200 leading-relaxed pr-2 border-r border-emerald-500/30">
-                                {event.note || `سجلت ضغط من نوع: ${event.stress_tag}`}
+                                {event.note || `سجت ضغط  ع: ${event.stress_tag}`}
                             </p>
                         </div>
                     )}

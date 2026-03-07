@@ -1,6 +1,7 @@
 import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
-export async function handleContent(req: any, res: any) {
+export async function handleContent(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdmin(req, res))) return;
   const client = getAdminSupabase();
   if (!client) {
@@ -38,8 +39,9 @@ export async function handleContent(req: any, res: any) {
 
   if (req.method === "POST") {
     const body = await parseJsonBody(req);
-    const entry = body?.entry ?? body;
-    const normalizedKey = String(entry?.key ?? "").trim();
+    const bodyRecord = body as Record<string, unknown>;
+    const entry = ((bodyRecord?.entry as Record<string, unknown> | undefined) ?? bodyRecord) as Record<string, unknown>;
+    const normalizedKey = String(entry["key"] ?? "").trim();
     if (!normalizedKey) {
       res.status(400).json({ error: "Missing key" });
       return;
@@ -47,8 +49,8 @@ export async function handleContent(req: any, res: any) {
 
     const payload = {
       key: normalizedKey,
-      content: String(entry?.content ?? ""),
-      page: entry?.page ? String(entry.page) : null
+      content: String(entry["content"] ?? ""),
+      page: entry["page"] ? String(entry["page"]) : null
     };
 
     const { error } = await client.from("app_content").upsert(payload, { onConflict: "key" });
@@ -78,3 +80,6 @@ export async function handleContent(req: any, res: any) {
 
   res.status(405).json({ error: "Method not allowed" });
 }
+
+
+

@@ -1,7 +1,7 @@
 /**
- * Guilt Court — محكمة الشعور بالذنب ⚖️
+ * Guilt Court  حة اشعر باذب ️
  * ==========================================
- * واجهة تفاعلية لمقاضاة وتفكيك مشاعر الذنب غير المنطقية.
+ * اجة تفاعة اضاة تف شاعر اذب غر اطة.
  */
 
 import React, { useState } from "react";
@@ -24,12 +24,12 @@ export const GuiltCourt: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-950 text-slate-200 p-6 flex flex-col font-sans">
             <header className="flex items-center gap-4 mb-12">
-                <div className="w-12 h-12 rounded-2xl bg-[var(--color-primary)]/10 flex items-center justify-center border border-[var(--color-primary)]">
-                    <Gavel className="w-6 h-6 text-[var(--color-primary)]" />
+                <div className="w-12 h-12 rounded-2xl bg-[var(--soft-teal)]/10 flex items-center justify-center border border-[var(--soft-teal)]">
+                    <Gavel className="w-6 h-6 text-[var(--soft-teal)]" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-black text-white">محكمة الشعور بالذنب</h1>
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">بروتوكول تفكيك الذنب</p>
+                    <h1 className="text-2xl font-black text-white">حة اشعر باذب</h1>
+                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">برت تف اذب</p>
                 </div>
             </header>
 
@@ -44,23 +44,23 @@ export const GuiltCourt: React.FC = () => {
                             className="space-y-8"
                         >
                             <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md">
-                                <h2 className="text-xl font-bold text-white mb-4 text-right">ما هي "التهمة" التي يوجهها لك ضميرك؟</h2>
+                                <h2 className="text-xl font-bold text-white mb-4 text-right">ا  "اتة" ات جا  ضر</h2>
                                 <textarea
-                                    className="w-full h-32 bg-black/40 border border-white/5 rounded-2xl p-4 text-slate-200 focus:border-[var(--color-primary)] transition-all outline-none text-right text-lg"
-                                    placeholder="مثال: أشعر بالذنب لأني لم أرد على اتصال والدي المسيء..."
+                                    className="w-full h-32 bg-black/40 border border-white/5 rounded-2xl p-4 text-slate-200 focus:border-[var(--soft-teal)] transition-all outline-none text-right text-lg"
+                                    placeholder="ثا: أشعر باذب أ  أرد ع اتصا اد اسء..."
                                     value={charge}
                                     onChange={(e) => setCharge(e.target.value)}
                                 />
                                 <button
                                     onClick={startTrial}
-                                    className="w-full mt-6 py-4 bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/30 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-2 group"
+                                    className="w-full mt-6 py-4 bg-[var(--soft-teal)] hover:bg-[var(--soft-teal)]/30 text-white font-black rounded-2xl transition-all flex items-center justify-center gap-2 group"
                                 >
-                                    بدأ المحاكمة
+                                    بدأ احاة
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </button>
                             </div>
                             <p className="text-center text-slate-500 text-sm">
-                                "نحن لا نتجاهل الصوت الداخلي، نحن نضعه تحت مجهر المنطق."
+                                "ح ا تجا اصت اداخ ح ضع تحت جر اط."
                             </p>
                         </motion.div>
                     )}
@@ -76,21 +76,21 @@ export const GuiltCourt: React.FC = () => {
                             <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-3">
                                 <AlertCircle className="w-5 h-5 text-rose-400 mt-1" />
                                 <div>
-                                    <h3 className="font-bold text-rose-400 text-sm uppercase mb-1">صوت الناقد الداخلي</h3>
+                                    <h3 className="font-bold text-rose-400 text-sm uppercase mb-1">صت ااد اداخ</h3>
                                     <p className="text-slate-300">"{charge}"</p>
                                 </div>
                             </div>
 
                             <div className="glass-card p-8 border-white/5 space-y-6">
                                 <p className="text-lg text-white font-medium leading-relaxed text-right">
-                                    هذا الصوت يقول أنك "قاسٍ" أو "جاحد". لكن هل سألت نفسك: هل هناك فرق بين القسوة وبين **تأمين حدودك** للحفاظ على بقائك؟
+                                    ذا اصت  أ "اسٍ" أ "جاحد".   سأت فس:  ا فر ب اسة ب **تأ حدد** حفاظ ع بائ
                                 </p>
                                 <div className="flex justify-between gap-4">
                                     <button
                                         onClick={() => setStage("defense")}
-                                        className="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-bold text-[var(--color-primary)] transition-all"
+                                        className="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-bold text-[var(--soft-teal)] transition-all"
                                     >
-                                        استدعاء دفاع جارفيس
+                                        استدعاء دفاع جارفس
                                     </button>
                                 </div>
                             </div>
@@ -105,18 +105,18 @@ export const GuiltCourt: React.FC = () => {
                             className="space-y-6 text-right"
                         >
                             <div className="flex items-center gap-3 justify-end mb-6">
-                                <h2 className="text-2xl font-black text-white">دفاع جارفيس الاستراتيجي</h2>
+                                <h2 className="text-2xl font-black text-white">دفاع جارفس ااستراتج</h2>
                                 <ShieldCheck className="w-8 h-8 text-teal-400" />
                             </div>
 
                             <div className="space-y-4">
                                 <DefenseArgument
-                                    title="قانون الحفاظ على الطاقة"
-                                    text="العلاقات التي تستنزف طاقتك دون تبادل صحي هي ثقوب سوداء. حمايتك لنفسك ليست جريمة، بل فريضة استراتيجية."
+                                    title="ا احفاظ ع اطاة"
+                                    text="اعاات ات تستزف طات د تباد صح  ثب سداء. حات فس ست جرة ب فرضة استراتجة."
                                 />
                                 <DefenseArgument
-                                    title="مبدأ المسؤولية الفردية"
-                                    text="أنت مسؤول عن استقرارك، لا عن تهدئة مخاوف الآخرين الناتجة عن سلوكهم المسيء."
+                                    title="بدأ اسؤة افردة"
+                                    text="أت سؤ ع استرار ا ع تدئة خاف اآخر ااتجة ع س اسء."
                                 />
                             </div>
 
@@ -124,7 +124,7 @@ export const GuiltCourt: React.FC = () => {
                                 onClick={() => setStage("verdict")}
                                 className="w-full mt-8 py-4 bg-teal-500 text-slate-950 font-black rounded-2xl flex items-center justify-center gap-2"
                             >
-                                النطق بالحكم
+                                اط باح
                                 <Scale className="w-5 h-5" />
                             </button>
                         </motion.div>
@@ -137,15 +137,15 @@ export const GuiltCourt: React.FC = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             className="text-center space-y-10"
                         >
-                            <div className="w-24 h-24 rounded-full bg-[var(--color-primary)]/20 border border-[var(--color-primary)] flex items-center justify-center mx-auto mb-8 animate-pulse">
-                                <Gavel className="w-12 h-12 text-[var(--color-primary)]" />
+                            <div className="w-24 h-24 rounded-full bg-[var(--soft-teal)]/20 border border-[var(--soft-teal)] flex items-center justify-center mx-auto mb-8 animate-pulse">
+                                <Gavel className="w-12 h-12 text-[var(--soft-teal)]" />
                             </div>
 
-                            <h1 className="text-4xl font-black text-white tracking-tight">حكم المحكمة: براءة استراتيجية</h1>
+                            <h1 className="text-4xl font-black text-white tracking-tight">ح احة: براءة استراتجة</h1>
 
                             <div className="bg-slate-900/60 p-8 rounded-3xl border border-white/5 backdrop-blur-xl">
                                 <p className="text-xl text-slate-300 leading-relaxed font-medium">
-                                    "بناءً على الأدلة، تم تصنيف شعورك بالذنب كـ **ألم نمو**. أنت لا تؤذي أحداً، أنت فقط تتوقف عن إيذاء نفسك."
+                                    "باء ع اأدة ت تصف شعر باذب  **أ **. أت ا تؤذ أحدا أت فط تتف ع إذاء فس."
                                 </p>
                             </div>
 
@@ -153,7 +153,7 @@ export const GuiltCourt: React.FC = () => {
                                 onClick={() => window.location.reload()}
                                 className="px-10 py-4 bg-white/5 border border-white/10 rounded-full text-slate-400 font-bold hover:bg-white/10 transition-all"
                             >
-                                العودة لغرفة العمليات
+                                اعدة غرفة اعات
                             </button>
                         </motion.div>
                     )}
@@ -169,5 +169,6 @@ const DefenseArgument = ({ title, text }: { title: string, text: string }) => (
         <p className="text-slate-300 leading-relaxed font-medium">{text}</p>
     </div>
 );
+
 
 

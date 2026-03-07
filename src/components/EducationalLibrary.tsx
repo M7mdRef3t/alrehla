@@ -35,7 +35,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
 
   const searchPlaceholder = useAppContentString(
     "library_search_placeholder",
-    "ابحث...",
+    "...",
     { page: "library" }
   );
 
@@ -83,12 +83,12 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
             className="fixed inset-4 z-50 bg-white rounded-2xl overflow-hidden flex flex-col max-w-4xl mx-auto my-auto"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-linear-to-l from-[var(--color-primary)] to-white shrink-0">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-linear-to-l from-[var(--soft-teal)] to-white shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/15 flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-[var(--color-primary)]" />
+                <div className="w-10 h-10 rounded-full bg-[var(--soft-teal)]/15 flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-[var(--soft-teal)]" />
                 </div>
-                <h2 className="text-lg font-bold text-slate-900">مكتبة المحتوى</h2>
+                <h2 className="text-lg font-bold text-slate-900"> </h2>
               </div>
               <button
                 type="button"
@@ -109,7 +109,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={searchPlaceholder}
-                  className="w-full pr-10 pl-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
+                  className="w-full pr-10 pl-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--soft-teal)] focus:border-transparent"
                 />
               </div>
 
@@ -119,11 +119,11 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                   type="button"
                   onClick={() => setSelectedCategory("all")}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${selectedCategory === "all"
-                      ? "bg-[var(--color-primary)] text-white"
+                      ? "bg-[var(--soft-teal)] text-white"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     }`}
                 >
-                  الكل
+                  
                 </button>
                 {(Object.keys(categoryLabels) as ContentCategory[]).map((cat) => (
                   <button
@@ -131,7 +131,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                     type="button"
                     onClick={() => setSelectedCategory(cat)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${selectedCategory === cat
-                        ? "bg-[var(--color-primary)] text-white"
+                        ? "bg-[var(--soft-teal)] text-white"
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                       }`}
                   >
@@ -147,34 +147,34 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                 type="button"
                 onClick={() => setActiveTab("videos")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 font-semibold transition-all ${activeTab === "videos"
-                    ? "text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]"
+                    ? "text-[var(--soft-teal)] border-b-2 border-[var(--soft-teal)]"
                     : "text-slate-500 hover:text-slate-700"
                   }`}
               >
                 <Video className="w-4 h-4" />
-                <span className="text-sm">فيديوهات ({filteredVideos.length})</span>
+                <span className="text-sm"> ({filteredVideos.length})</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab("stories")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 font-semibold transition-all ${activeTab === "stories"
-                    ? "text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]"
+                    ? "text-[var(--soft-teal)] border-b-2 border-[var(--soft-teal)]"
                     : "text-slate-500 hover:text-slate-700"
                   }`}
               >
                 <BookOpen className="w-4 h-4" />
-                <span className="text-sm">قصص ({filteredStories.length})</span>
+                <span className="text-sm"> ({filteredStories.length})</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab("faqs")}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 font-semibold transition-all ${activeTab === "faqs"
-                    ? "text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]"
+                    ? "text-[var(--soft-teal)] border-b-2 border-[var(--soft-teal)]"
                     : "text-slate-500 hover:text-slate-700"
                   }`}
               >
                 <HelpCircle className="w-4 h-4" />
-                <span className="text-sm">أسئلة ({filteredFaqs.length})</span>
+                <span className="text-sm"> ({filteredFaqs.length})</span>
               </button>
             </div>
 
@@ -190,7 +190,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                     className="space-y-3"
                   >
                     {filteredVideos.length === 0 ? (
-                      <EmptyState message="لا توجد فيديوهات" />
+                      <EmptyState message="  " />
                     ) : (
                       filteredVideos.map((video) => (
                         <VideoCard key={video.id} video={video} />
@@ -208,7 +208,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                     className="space-y-3"
                   >
                     {filteredStories.length === 0 ? (
-                      <EmptyState message="لا توجد قصص" />
+                      <EmptyState message="  " />
                     ) : (
                       filteredStories.map((story) => (
                         <StoryCard key={story.id} story={story} />
@@ -226,7 +226,7 @@ export const EducationalLibrary: FC<EducationalLibraryProps> = ({ isOpen, onClos
                     className="space-y-2"
                   >
                     {filteredFaqs.length === 0 ? (
-                      <EmptyState message="لا توجد أسئلة" />
+                      <EmptyState message="  " />
                     ) : (
                       filteredFaqs.map((faq) => (
                         <FAQCard key={faq.id} faq={faq} />
@@ -265,13 +265,13 @@ const VideoCard: FC<{ video: VideoContent }> = ({ video }) => {
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-[var(--color-primary)] transition-all">
+    <div className="bg-white border border-slate-200 rounded-xl p-4 hover:border-[var(--soft-teal)] transition-all">
       <div className="flex gap-3">
-        <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-linear-to-br from-[var(--color-primary)] to-purple-100 flex items-center justify-center">
+        <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-linear-to-br from-[var(--soft-teal)] to-purple-100 flex items-center justify-center">
           {video.thumbnailUrl ? (
             <img src={video.thumbnailUrl} alt="" className="w-full h-full object-cover" />
           ) : (
-            <Video className="w-8 h-8 text-[var(--color-primary)]" />
+            <Video className="w-8 h-8 text-[var(--soft-teal)]" />
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -279,19 +279,19 @@ const VideoCard: FC<{ video: VideoContent }> = ({ video }) => {
           <p className="text-xs text-slate-600 mb-2 line-clamp-2">{video.description}</p>
           <div className="flex items-center gap-2 text-xs text-slate-500 flex-wrap">
             <span>{video.duration}</span>
-            <span>•</span>
+            <span></span>
             <span>{categoryLabels[video.category]}</span>
             {hasVideo && (
               <>
-                <span>•</span>
+                <span></span>
                 <a
                   href={video.videoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={handleVideoLinkClick}
-                  className="text-[var(--color-primary)] hover:underline font-medium"
+                  className="text-[var(--soft-teal)] hover:underline font-medium"
                 >
-                  شاهد
+                  
                 </a>
               </>
             )}
@@ -308,7 +308,7 @@ const StoryCard: FC<{ story: SuccessStory }> = ({ story }) => {
   const isTargetStory = story.id === "story-1"; // The specific story for the integration
 
   return (
-    <div className={`bg-white border rounded-xl overflow-hidden transition-all ${isTargetStory && isExpanded ? 'border-[var(--color-primary)] shadow-md transform scale-[1.01]' : 'border-slate-200 hover:border-purple-300'}`}>
+    <div className={`bg-white border rounded-xl overflow-hidden transition-all ${isTargetStory && isExpanded ? 'border-[var(--soft-teal)] shadow-md transform scale-[1.01]' : 'border-slate-200 hover:border-purple-300'}`}>
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -323,7 +323,7 @@ const StoryCard: FC<{ story: SuccessStory }> = ({ story }) => {
             <p className="text-xs text-slate-600 mb-2">{story.summary}</p>
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <span>{story.duration}</span>
-              <span>•</span>
+              <span></span>
               <span>{categoryLabels[story.category]}</span>
             </div>
           </div>
@@ -338,19 +338,19 @@ const StoryCard: FC<{ story: SuccessStory }> = ({ story }) => {
           className="px-4 pb-4 space-y-3 text-sm"
         >
           <div className="p-3 bg-rose-50 rounded-lg">
-            <p className="font-semibold text-rose-900 mb-1">قبل:</p>
+            <p className="font-semibold text-rose-900 mb-1">:</p>
             <p className="text-rose-800">{story.journey.before}</p>
           </div>
           <div className="p-3 bg-amber-50 rounded-lg">
-            <p className="font-semibold text-amber-900 mb-1">التحدي:</p>
+            <p className="font-semibold text-amber-900 mb-1">:</p>
             <p className="text-amber-800">{story.journey.challenge}</p>
           </div>
           <div className="p-3 bg-blue-50 rounded-lg">
-            <p className="font-semibold text-blue-900 mb-1">الإجراء:</p>
+            <p className="font-semibold text-blue-900 mb-1">:</p>
             <p className="text-blue-800">{story.journey.action}</p>
           </div>
           <div className="p-3 bg-green-50 rounded-lg">
-            <p className="font-semibold text-green-900 mb-1">بعد:</p>
+            <p className="font-semibold text-green-900 mb-1">:</p>
             <p className="text-green-800">{story.journey.after}</p>
           </div>
 
@@ -360,15 +360,15 @@ const StoryCard: FC<{ story: SuccessStory }> = ({ story }) => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="mt-6 pt-4 border-t border-slate-100 flex flex-col items-center text-center bg-[var(--color-primary)]/50 p-4 rounded-xl"
+              className="mt-6 pt-4 border-t border-slate-100 flex flex-col items-center text-center bg-[var(--soft-teal)]/50 p-4 rounded-xl"
             >
-              <h4 className="font-bold text-[var(--color-primary)] mb-2">هل تشعر باستنزاف مشابه؟</h4>
-              <p className="text-xs text-[var(--color-primary)] mb-4 max-w-sm">لا تترك الوعي نظرياً. استخدم "دواير" الآن لترسم خريطة علاقاتك وتكتشف أين يذهب مجهودك.</p>
+              <h4 className="font-bold text-[var(--soft-teal)] mb-2">   </h4>
+              <p className="text-xs text-[var(--soft-teal)] mb-4 max-w-sm">   .  ""        .</p>
               <a
                 href="/dawayir?source=story-1"
-                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[var(--color-primary)] text-white rounded-lg font-medium shadow-md shadow-[var(--color-primary-glow)] hover:bg-[var(--color-primary)] hover:-translate-y-0.5 transition-all w-full sm:w-auto"
+                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[var(--soft-teal)] text-white rounded-lg font-medium shadow-md shadow-[var(--soft-teal)] hover:bg-[var(--soft-teal)] hover:-translate-y-0.5 transition-all w-full sm:w-auto"
               >
-                ارسم دوايرك الآن <ArrowLeft className="w-4 h-4" />
+                   <ArrowLeft className="w-4 h-4" />
               </a>
             </motion.div>
           )}
@@ -438,9 +438,10 @@ const EmptyState: FC<{ message: string }> = ({ message }) => (
       <Search className="w-8 h-8 text-slate-400" />
     </div>
     <p className="text-slate-500">{message}</p>
-    <p className="text-xs text-slate-400 mt-1">جرب كلمات بحث أخرى</p>
+    <p className="text-xs text-slate-400 mt-1">   </p>
   </div>
 );
+
 
 
 

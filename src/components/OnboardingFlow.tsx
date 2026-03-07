@@ -426,7 +426,7 @@ const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onC
             : count === 2
               ? `حطيت ${names[0]} و${names[1]} في مداراتهم.`
               : `حطيت ${names[0]}، ${names[1]}، و${names[2]} في مداراتهم.`}
-          {" "}مش لازم تكون مثالية، المهم إنها حقيقية.
+          {" "}مش محتاجة تكون مثالية، المهم إنها حقيقية.
         </p>
       </div>
 

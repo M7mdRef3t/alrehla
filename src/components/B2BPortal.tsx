@@ -14,9 +14,9 @@ import {
     type B2BRole,
 } from "../services/b2bService";
 
-/* ══════════════════════════════════════════
-   B2B PORTAL — بوابة الكوتشات والمعالجين
-   ══════════════════════════════════════════ */
+/* 
+   B2B PORTAL  بابة اتشات اعاج
+    */
 
 type B2BView = "landing" | "coach_register" | "coach_dashboard" | "client_share";
 
@@ -96,11 +96,11 @@ export const B2BPortal: FC = () => {
                     >
                         {/* Header */}
                         <div className="text-center mb-6">
-                            <div className="w-14 h-14 rounded-2xl bg-[var(--color-primary)]/20 flex items-center justify-center mx-auto mb-3">
-                                <Briefcase className="w-7 h-7 text-[var(--color-primary)]" />
+                            <div className="w-14 h-14 rounded-2xl bg-[var(--soft-teal)]/20 flex items-center justify-center mx-auto mb-3">
+                                <Briefcase className="w-7 h-7 text-[var(--soft-teal)]" />
                             </div>
-                            <h1 className="text-xl font-black text-white">بوابة المحترفين</h1>
-                            <p className="text-sm text-slate-400 mt-1">للكوتشات والمعالجين النفسيين</p>
+                            <h1 className="text-xl font-black text-white">بابة احترف</h1>
+                            <p className="text-sm text-slate-400 mt-1">تشات اعاج افس</p>
                         </div>
 
                         {/* Features */}
@@ -109,11 +109,11 @@ export const B2BPortal: FC = () => {
                                 background: "rgba(99,102,241,0.08)",
                                 border: "1px solid rgba(99,102,241,0.2)",
                             }}>
-                            <p className="text-xs font-bold text-[var(--color-primary)] mb-3 uppercase tracking-wider">ما تحصل عليه</p>
+                            <p className="text-xs font-bold text-[var(--soft-teal)] mb-3 uppercase tracking-wider">ا تحص ع</p>
                             <div className="space-y-2">
                                 {B2B_FEATURES.map((f) => (
                                     <div key={f} className="flex items-center gap-2">
-                                        <Shield className="w-3.5 h-3.5 text-[var(--color-primary)] shrink-0" />
+                                        <Shield className="w-3.5 h-3.5 text-[var(--soft-teal)] shrink-0" />
                                         <span className="text-sm text-slate-300">{f}</span>
                                     </div>
                                 ))}
@@ -130,7 +130,7 @@ export const B2BPortal: FC = () => {
                                 whileTap={{ scale: 0.98 }}
                             >
                                 <Briefcase className="w-4 h-4" />
-                                أنا كوتش / معالج — سجّل
+                                أا تش / عاج  سج
                             </motion.button>
 
                             <motion.button
@@ -145,7 +145,7 @@ export const B2BPortal: FC = () => {
                                 whileTap={{ scale: 0.98 }}
                             >
                                 <Users className="w-4 h-4" />
-                                أنا عميل — شارك كودي مع كوتشي
+                                أا ع  شار د ع تش
                             </motion.button>
                         </div>
                     </motion.div>
@@ -163,17 +163,17 @@ export const B2BPortal: FC = () => {
                             onClick={() => setView("landing")}
                             className="flex items-center gap-1.5 text-slate-400 text-sm mb-4 hover:text-white transition-colors"
                         >
-                            ← رجوع
+                             رجع
                         </button>
-                        <h2 className="text-lg font-bold text-white mb-4">تسجيل كمحترف</h2>
+                        <h2 className="text-lg font-bold text-white mb-4">تسج حترف</h2>
 
                         <div className="space-y-3">
                             <div>
-                                <label className="text-xs text-slate-400 mb-1.5 block">اسمك</label>
+                                <label className="text-xs text-slate-400 mb-1.5 block">اس</label>
                                 <input
                                     value={coachName}
                                     onChange={(e) => setCoachName(e.target.value)}
-                                    placeholder="د. أحمد محمد"
+                                    placeholder="د. أحد حد"
                                     className="w-full rounded-xl p-3 text-sm text-white outline-none"
                                     style={{
                                         background: "rgba(255,255,255,0.05)",
@@ -183,7 +183,7 @@ export const B2BPortal: FC = () => {
                             </div>
 
                             <div>
-                                <label className="text-xs text-slate-400 mb-1.5 block">دورك</label>
+                                <label className="text-xs text-slate-400 mb-1.5 block">در</label>
                                 <div className="flex gap-2">
                                     {(Object.keys(B2B_ROLE_LABELS) as B2BRole[]).map((role) => (
                                         <button
@@ -203,11 +203,11 @@ export const B2BPortal: FC = () => {
                             </div>
 
                             <div>
-                                <label className="text-xs text-slate-400 mb-1.5 block">تخصصك (اختياري)</label>
+                                <label className="text-xs text-slate-400 mb-1.5 block">تخصص (اختار)</label>
                                 <input
                                     value={coachSpec}
                                     onChange={(e) => setCoachSpec(e.target.value)}
-                                    placeholder="علاقات، قلق، تطوير ذات..."
+                                    placeholder="عاات  تطر ذات..."
                                     className="w-full rounded-xl p-3 text-sm text-white outline-none"
                                     style={{
                                         background: "rgba(255,255,255,0.05)",
@@ -228,7 +228,7 @@ export const B2BPortal: FC = () => {
                                 whileHover={coachName.trim() ? { scale: 1.02 } : {}}
                                 whileTap={coachName.trim() ? { scale: 0.98 } : {}}
                             >
-                                تسجيل وفتح لوحة التحكم
+                                تسج فتح حة اتح
                             </motion.button>
                         </div>
                     </motion.div>
@@ -243,10 +243,10 @@ export const B2BPortal: FC = () => {
                         exit={{ opacity: 0, y: -12 }}
                     >
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-bold text-white">لوحة تحكم الكوتش</h2>
+                            <h2 className="text-lg font-bold text-white">حة تح اتش</h2>
                             <div className="px-2.5 py-1 rounded-full text-xs font-bold"
                                 style={{ background: "rgba(99,102,241,0.2)", color: "#818cf8" }}>
-                                {clients.length} عميل
+                                {clients.length} ع
                             </div>
                         </div>
 
@@ -258,13 +258,13 @@ export const B2BPortal: FC = () => {
                             }}>
                             <p className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1.5">
                                 <UserPlus className="w-3.5 h-3.5" />
-                                إضافة عميل جديد
+                                إضافة ع جدد
                             </p>
                             <div className="space-y-2">
                                 <input
                                     value={clientCode}
                                     onChange={(e) => setClientCode(e.target.value)}
-                                    placeholder="كود العميل (B2B-XXXXXX)"
+                                    placeholder="د اع (B2B-XXXXXX)"
                                     className="w-full rounded-xl p-2.5 text-sm text-white outline-none font-mono"
                                     style={{
                                         background: "rgba(255,255,255,0.05)",
@@ -274,7 +274,7 @@ export const B2BPortal: FC = () => {
                                 <input
                                     value={clientAlias}
                                     onChange={(e) => setClientAlias(e.target.value)}
-                                    placeholder="اسم مستعار (للخصوصية)"
+                                    placeholder="اس ستعار (خصصة)"
                                     className="w-full rounded-xl p-2.5 text-sm text-white outline-none"
                                     style={{
                                         background: "rgba(255,255,255,0.05)",
@@ -294,7 +294,7 @@ export const B2BPortal: FC = () => {
                                     }}
                                     whileTap={{ scale: 0.97 }}
                                 >
-                                    {addSuccess ? "✓ تم الإضافة!" : "إضافة عميل"}
+                                    {addSuccess ? " ت اإضافة!" : "إضافة ع"}
                                 </motion.button>
                             </div>
                         </div>
@@ -302,7 +302,7 @@ export const B2BPortal: FC = () => {
                         {/* Clients list */}
                         {clients.length > 0 ? (
                             <div className="space-y-2">
-                                <p className="text-xs font-bold text-slate-500 mb-2">عملاؤك</p>
+                                <p className="text-xs font-bold text-slate-500 mb-2">عاؤ</p>
                                 {clients.map((c) => (
                                     <div key={c.clientCode}
                                         className="flex items-center justify-between p-3 rounded-xl"
@@ -316,7 +316,7 @@ export const B2BPortal: FC = () => {
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-2 h-2 rounded-full bg-green-500" />
-                                            <span className="text-xs text-slate-400">نشط</span>
+                                            <span className="text-xs text-slate-400">شط</span>
                                         </div>
                                     </div>
                                 ))}
@@ -324,8 +324,8 @@ export const B2BPortal: FC = () => {
                         ) : (
                             <div className="text-center py-8 text-slate-600">
                                 <Users className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                                <p className="text-sm">لا يوجد عملاء بعد</p>
-                                <p className="text-xs mt-1">اطلب من عملائك مشاركة كودهم معك</p>
+                                <p className="text-sm">ا جد عاء بعد</p>
+                                <p className="text-xs mt-1">اطب  عائ شارة د ع</p>
                             </div>
                         )}
                     </motion.div>
@@ -343,12 +343,12 @@ export const B2BPortal: FC = () => {
                             onClick={() => setView("landing")}
                             className="flex items-center gap-1.5 text-slate-400 text-sm mb-4 hover:text-white transition-colors"
                         >
-                            ← رجوع
+                             رجع
                         </button>
 
-                        <h2 className="text-lg font-bold text-white mb-2">كودك للمتابعة</h2>
+                        <h2 className="text-lg font-bold text-white mb-2">د تابعة</h2>
                         <p className="text-sm text-slate-400 mb-4">
-                            شارك هذا الكود مع كوتشك أو معالجك. يتيح له متابعة تقدمك العام فقط — بدون تفاصيل شخصية.
+                            شار ذا اد ع تش أ عاج. تح  تابعة تد اعا فط  بد تفاص شخصة.
                         </p>
 
                         {/* Code display */}
@@ -357,7 +357,7 @@ export const B2BPortal: FC = () => {
                                 background: "rgba(99,102,241,0.1)",
                                 border: "1px solid rgba(99,102,241,0.25)",
                             }}>
-                            <p className="text-xs text-[var(--color-primary)] mb-2 font-bold">كودك الشخصي</p>
+                            <p className="text-xs text-[var(--soft-teal)] mb-2 font-bold">د اشخص</p>
                             <p className="text-3xl font-black text-white tracking-widest font-mono">{shareCode}</p>
                         </div>
 
@@ -369,8 +369,8 @@ export const B2BPortal: FC = () => {
                             }}>
                             <Shield className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                             <p className="text-xs text-emerald-300">
-                                الكوتش يرى فقط: عدد الأيام النشطة، مستوى التقدم العام، وعدد الحدود المُضافة.
-                                لا يرى الأسماء أو التفاصيل الشخصية.
+                                اتش ر فط: عدد اأا اشطة ست اتد اعا عدد احدد اُضافة.
+                                ا ر اأساء أ اتفاص اشخصة.
                             </p>
                         </div>
 
@@ -386,7 +386,7 @@ export const B2BPortal: FC = () => {
                             whileTap={{ scale: 0.98 }}
                         >
                             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                            {copied ? "تم النسخ!" : "نسخ الكود ورسالة المشاركة"}
+                            {copied ? "ت اسخ!" : "سخ اد رساة اشارة"}
                         </motion.button>
                     </motion.div>
                 )}
@@ -395,5 +395,6 @@ export const B2BPortal: FC = () => {
         </div>
     );
 };
+
 
 

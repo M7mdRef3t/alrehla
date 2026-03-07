@@ -1,15 +1,17 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminSupabase, parseJsonBody } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
 const ACTIVE_INCIDENT_STATUSES = ["open", "ack"] as const;
 
-function getBearerToken(req: any): string | null {
+function getBearerToken(req: AdminRequest): string | null {
   const auth = req.headers?.authorization || req.headers?.Authorization;
   if (typeof auth !== "string") return null;
   if (!auth.toLowerCase().startsWith("bearer ")) return null;
   return auth.slice(7).trim();
 }
 
-async function resolveActor(client: any, req: any) {
+async function resolveActor(client: SupabaseClient, req: AdminRequest) {
   const token = getBearerToken(req);
   if (!token) return { actorId: null, actorRole: null };
   const adminSecrets = [process.env.CRON_SECRET, process.env.ADMIN_API_SECRET]
@@ -30,7 +32,7 @@ async function resolveActor(client: any, req: any) {
 }
 
 async function logIncidentHistory(
-  client: any,
+  client: SupabaseClient,
   incidentIds: string[],
   payload: { fromStatus: string | null; toStatus: string; reason: string | null; actorId: string | null; actorRole: string | null }
 ) {
@@ -47,7 +49,7 @@ async function logIncidentHistory(
   );
 }
 
-export async function handleAlerts(req: any, res: any) {
+export async function handleAlerts(req: AdminRequest, res: AdminResponse) {
   const client = getAdminSupabase();
   if (!client) {
     res.status(503).json({ error: "Admin API not configured" });
@@ -162,3 +164,4 @@ export async function handleAlerts(req: any, res: any) {
 
   res.status(405).json({ error: "Method not allowed" });
 }
+

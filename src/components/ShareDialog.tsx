@@ -1,11 +1,11 @@
 import { FC, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Share2, Copy, Check, Clock, ShieldCheck, X, LockKeyhole } from "lucide-react";
+import { Share2, Check, Clock, ShieldCheck, X, LockKeyhole } from "lucide-react";
 import { supabase } from "../services/supabaseClient";
 
 /**
- * 🔐 DOCUMENT ISSUANCE PANEL (إصدار وثيقة التحول)
- * ─────────────────────────────────────────────────────────────────────────────
+ *  DOCUMENT ISSUANCE PANEL (إصدار ثة اتح)
+ * 
  * Final Surgery: 'Decision Room' atmosphere.
  * Backdrop: Dim 0.25 | Blur 64px | Desaturate -10%.
  * Aesthetics: Authority through silence.
@@ -52,7 +52,7 @@ export const ShareDialog: FC = () => {
                     className="p-4 rounded-full bg-white text-black shadow-3xl flex items-center gap-3 transition-all active:scale-[0.98] group hover:bg-white/90 border border-white/10"
                 >
                     <Share2 className="w-5 h-5" />
-                    <span className="text-[12px] font-black uppercase tracking-tight hidden md:inline">إصدار وثيقة التحول</span>
+                    <span className="text-[12px] font-black uppercase tracking-tight hidden md:inline">إصدار ثة اتح</span>
                 </button>
             </div>
 
@@ -65,7 +65,7 @@ export const ShareDialog: FC = () => {
                             exit={{ opacity: 0, scale: 0.995, y: 5 }}
                             className="w-full max-w-md bg-[#050505] border border-white/[0.03] rounded-[2rem] p-12 shadow-3xl relative overflow-hidden"
                         >
-                            {/* 🎞️ System Processing Indicator (Top Progress) */}
+                            {/* ️ System Processing Indicator (Top Progress) */}
                             {isLoading && (
                                 <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-white/[0.02] overflow-hidden">
                                     <motion.div
@@ -88,19 +88,19 @@ export const ShareDialog: FC = () => {
                                 <div className="w-14 h-14 rounded-full bg-white/[0.01] border border-white/[0.03] flex items-center justify-center text-white/20 mb-8">
                                     <ShieldCheck className="w-6 h-6" />
                                 </div>
-                                <h3 className="text-xl font-black text-[#FFFFFF] leading-tight tracking-tighter">إصدار وثيقة التحول</h3>
+                                <h3 className="text-xl font-black text-[#FFFFFF] leading-tight tracking-tighter">إصدار ثة اتح</h3>
                                 <p className="text-[10px] text-[#8A8A8A] mt-4 leading-relaxed max-w-[260px] opacity-60">
-                                    سيتم استخراج وثيقة رسمية مشفرة تجمد لحظات تطورك في لقطة مصفاة، صالحة لمدة محدودة وتحت حماية النظام.
+                                    ست استخراج ثة رسة شفرة تجد حظات تطر ف طة صفاة صاحة دة حددة تحت حاة اظا.
                                 </p>
                             </div>
 
                             <div className="space-y-4 mb-12">
                                 <div className="flex items-center justify-end gap-3 px-6 py-4 rounded-xl bg-white/[0.005] border border-white/[0.02]">
-                                    <span className="text-[10px] font-bold text-[#8A8A8A] opacity-40">مدة صلاحية الاستقصاء: ٧ أيام</span>
+                                    <span className="text-[10px] font-bold text-[#8A8A8A] opacity-40">دة صاحة ااستصاء: ٧ أا</span>
                                     <Clock className="w-3.5 h-3.5 text-white/[0.05]" />
                                 </div>
                                 <div className="flex items-center justify-end gap-3 px-6 py-4 rounded-xl bg-white/[0.005] border border-white/[0.02]">
-                                    <span className="text-[10px] font-bold text-[#8A8A8A] opacity-40">تشفير الهوية مفعّل آلياً</span>
+                                    <span className="text-[10px] font-bold text-[#8A8A8A] opacity-40">تشفر اة فع آا</span>
                                     <LockKeyhole className="w-3.5 h-3.5 text-white/[0.05]" />
                                 </div>
                             </div>
@@ -112,7 +112,7 @@ export const ShareDialog: FC = () => {
                                             onClick={copyToClipboard}
                                             className="px-5 py-2.5 rounded-xl bg-[#D6D6D6] text-black text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all transform active:scale-95"
                                         >
-                                            {copied ? <Check className="w-3.5 h-3.5" /> : "نسخ الرابط"}
+                                            {copied ? <Check className="w-3.5 h-3.5" /> : "سخ ارابط"}
                                         </button>
                                         <span className="text-[9px] text-emerald-500/40 font-bold truncate max-w-[180px] text-left ml-4 font-mono">{shareUrl}</span>
                                     </div>
@@ -124,7 +124,7 @@ export const ShareDialog: FC = () => {
                                     disabled={isLoading}
                                     className="w-full py-5 rounded-xl bg-[#D6D6D6] text-black font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl disabled:opacity-20 active:scale-[0.99] transition-all hover:bg-white"
                                 >
-                                    {isLoading ? 'جاري الإصدار والتشفير...' : 'إصدار الوثيقة الآن'}
+                                    {isLoading ? 'جار اإصدار اتشفر...' : 'إصدار اثة اآ'}
                                 </button>
                             )}
                         </motion.div>

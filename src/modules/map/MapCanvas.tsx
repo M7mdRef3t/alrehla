@@ -21,11 +21,11 @@ import { useKineticSensors } from "../../hooks/useKineticSensors";
 import { useDailyPulse } from "../../hooks/useDailyPulse";
 import { useDailyQuestion } from "../../hooks/useDailyQuestion";
 
-/* ════════════════════════════════════════════════
-   🌌 COSMIC MAP CANVAS — Digital Sanctuary
-   ════════════════════════════════════════════════ */
+/* 
+    COSMIC MAP CANVAS  Digital Sanctuary
+    */
 
-/* ── Orbital Ring (Breathing) ── */
+/*  Orbital Ring (Breathing)  */
 
 interface RingProps {
   ring: Ring;
@@ -84,7 +84,7 @@ const OrbitalRing: FC<RingProps> = memo(({ label, radius, color, glowColor, brea
   );
 });
 
-/* ── Node Position Calculations ── */
+/*  Node Position Calculations  */
 
 const getRingPosition = (ring: Ring, nodeIndex: number, totalInRing: number): { x: number; y: number } => {
   const angleStep = (2 * Math.PI) / Math.max(totalInRing, 1);
@@ -108,7 +108,7 @@ const getGreyZonePosition = (nodeIndex: number, totalInGrey: number): { x: numbe
   return { x, y };
 };
 
-/* ── Node Colors (Cosmic) ── */
+/*  Node Colors (Cosmic)  */
 
 const RING_COLORS = {
   safe: { stroke: "#FFFFFF", glow: "rgba(255, 255, 255, 0.1)" },
@@ -127,7 +127,7 @@ const MAX_NODES_FOR_FULL_CONNECTIONS = 140;
 const MAX_NODES_FOR_INTERFERENCE_SCAN = 220;
 const MAX_NODES_FOR_FULL_MOTION = 120;
 
-/* ── Map Node View (Glass Orb) ── */
+/*  Map Node View (Glass Orb)  */
 
 interface NodeProps {
   node: MapNodeType;
@@ -184,7 +184,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const ok = typeof window === "undefined" ? true : window.confirm(`تأكيد: خرّج "${node.label}" من دوايرك؟\nهيتحفظ في "أشخاص مشيوا" — تقدر ترجعه لو احتجت.`);
+    const ok = typeof window === "undefined" ? true : window.confirm(`تأد: خرج "${node.label}"  دار\nتحفظ ف "أشخاص شا"  تدر ترجع  احتجت.`);
     if (!ok) return;
     archiveNode(node.id);
   }, [archiveNode, node.id, node.label]);
@@ -199,7 +199,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     if (onClick) onClick(node.id);
   }, [node.id, justDraggedId, onClick]);
 
-  /* ── Ring color for the breathing aura ── */
+  /*  Ring color for the breathing aura  */
   const auraColor = isHighlighted
     ? (node.ring === "red" ? "rgba(248, 113, 113, 0.25)" : node.ring === "yellow" ? "rgba(251, 191, 36, 0.2)" : "rgba(45, 212, 191, 0.2)")
     : "rgba(255, 255, 255, 0.02)";
@@ -219,7 +219,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
       exit={{ scale: 0.6, opacity: 0, y: -12, filter: "blur(4px)" }}
       transition={justAdded ? { type: "spring", stiffness: 160, damping: 28, mass: 0.8 } : { duration: 0.35, ease: "easeOut" }}
     >
-      {/* Breathing aura ring — نبضة أقوى عند التحديد من السجل */}
+      {/* Breathing aura ring  بضة أ عد اتحدد  اسج */}
       <motion.div
         className="absolute -inset-2 rounded-full pointer-events-none"
         style={{
@@ -251,7 +251,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         }}
       />
 
-      {/* Main node body — Glass Orb */}
+      {/* Main node body  Glass Orb */}
       <motion.div
         ref={setNodeRef}
         className={`relative z-10 node-glass ${glowClass} select-none flex items-center gap-0.5 pr-1 ${isDragging ? "opacity-90 scale-105" : ""
@@ -270,7 +270,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           delay: (nodeIndex % 7) * 0.6
         }}
       >
-        {/* Avatar — cosmic circle */}
+        {/* Avatar  cosmic circle */}
         <span className="shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold"
           style={{
             background: isDetached
@@ -283,7 +283,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           {node.avatarUrl ? (
             <img src={node.avatarUrl} alt="" className="w-full h-full object-cover" />
           ) : (
-            <span aria-hidden className="text-xs">{node.label.trim() ? node.label.trim()[0] : "؟"}</span>
+            <span aria-hidden className="text-xs">{node.label.trim() ? node.label.trim()[0] : ""}</span>
           )}
         </span>
 
@@ -296,11 +296,11 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           title={
             hasMismatch
               ? canOpenDetails
-                ? "⚠️ تعارض — اضغط للتفاصيل"
-                : "⚠️ تعارض — التفاصيل مقفولة حالياً"
+                ? "️ تعارض  اضغط تفاص"
+                : "️ تعارض  اتفاص فة حاا"
               : canOpenDetails
-                ? `اضغط لرؤية تفاصيل ${node.label}`
-                : "التفاصيل مقفولة حالياً"
+                ? `اضغط رؤة تفاص ${node.label}`
+                : "اتفاص فة حاا"
           }
           whileHover={reduceMotion ? undefined : { scale: 1.02 }}
           whileTap={reduceMotion ? undefined : { scale: 0.97 }}
@@ -333,8 +333,8 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           {...attributes}
           className="shrink-0 p-1.5 rounded-r-full cursor-grab active:cursor-grabbing touch-none"
           style={{ color: "var(--text-muted)" }}
-          title="اسحب لتحريك الدائرة"
-          aria-label="اسحب لتحريك"
+          title="اسحب تحر ادائرة"
+          aria-label="اسحب تحر"
         >
           <GripVertical className="w-4 h-4" strokeWidth={2} />
         </span>
@@ -374,7 +374,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
               background: "linear-gradient(135deg, #94a3b8, #64748b)",
               boxShadow: "0 0 10px rgba(100, 116, 139, 0.25)"
             }}
-            title="خرّجه من دوايرك دلوقتي"
+            title="خرج  دار دت"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
@@ -409,7 +409,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   );
 });
 
-/* ── Ring Labels ── */
+/*  Ring Labels  */
 
 const RING_LABELS: Record<Ring, string> = {
   green: mapCopy.legendGreen,
@@ -417,7 +417,7 @@ const RING_LABELS: Record<Ring, string> = {
   red: mapCopy.legendRed
 };
 
-/* ── Droppable Ring Zone ── */
+/*  Droppable Ring Zone  */
 
 const DroppableRing: FC<{ id: Ring | "grey"; sizePct: number; zIndex: number }> = memo(({ id, sizePct, zIndex }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -444,7 +444,7 @@ const DroppableRing: FC<{ id: Ring | "grey"; sizePct: number; zIndex: number }> 
   );
 });
 
-/* ── Me Center Colors (Cosmic Orb) ── */
+/*  Me Center Colors (Cosmic Orb)  */
 
 const ME_CENTER_STYLES: Record<string, { fill: string; glow: string; pulseScale: number[] }> = {
   drained: {
@@ -464,7 +464,7 @@ const ME_CENTER_STYLES: Record<string, { fill: string; glow: string; pulseScale:
   }
 };
 
-/* ── Filter Context Nodes ── */
+/*  Filter Context Nodes  */
 
 function filterNodesByContext(
   nodes: MapNodeType[],
@@ -488,9 +488,9 @@ function filterNodesByContext(
   return nodes;
 }
 
-/* ════════════════════════════════════════════════
-   🌌 MAIN CANVAS COMPONENT
-   ════════════════════════════════════════════════ */
+/* 
+    MAIN CANVAS COMPONENT
+    */
 
 interface MapCanvasProps {
   onNodeClick?: (id: string) => void;
@@ -498,9 +498,9 @@ interface MapCanvasProps {
   canOpenDetails?: boolean;
   goalIdFilter?: string;
   galaxyGoalIds?: string[];
-  /** عند الضغط من السجل — العقدة تعمل نبضة بلون مدارها */
+  /** عد اضغط  اسج  اعدة تع بضة ب دارا */
   highlightNodeId?: string | null;
-  /** حالة بؤرة الوعي */
+  /** حاة بؤرة اع */
   aiState?: {
     isConnected: boolean;
     isListening: boolean;
@@ -603,7 +603,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
     applyOptimistic: applyOptimisticPhoenix
   } = useOptimisticPhoenixSync(user?.id);
 
-  // ─── Cognitive Debounce Integration ───
+  //  Cognitive Debounce Integration 
   const { registerMutation } = useCognitiveDebounce(async (payload) => {
     setIsCommitProcessing(true);
     try {
@@ -645,7 +645,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
           setSimulatedNodes(prev => prev.map(n => n.id === activeId ? { ...n, isDetached: true } : n));
         } else {
           setDetached(activeId, true);
-          // ─── Cognitive Audit ───
+          //  Cognitive Audit 
           if (user) {
             applyOptimisticPhoenix('MAJOR_DETACHMENT');
             registerMutation({
@@ -680,7 +680,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
           } else if (node.ring !== toRing) {
             moveNodeToRing(activeId, toRing);
           }
-          // ─── Cognitive Audit ───
+          //  Cognitive Audit 
           if (user && (fromRing !== toRing || node.isDetached)) {
             applyOptimisticPhoenix('CIRCLE_SHIFT');
             registerMutation({
@@ -700,7 +700,17 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         return;
       }
     },
-    [nodes, setDetached, moveNodeToRing, isSimulation, aiState, onKineticDragEnd]
+    [
+      nodes,
+      setDetached,
+      moveNodeToRing,
+      isSimulation,
+      aiState,
+      onKineticDragEnd,
+      applyOptimisticPhoenix,
+      registerMutation,
+      user
+    ]
   );
 
   const confirmPlacement = useCallback(() => {
@@ -825,7 +835,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         className={`relative w-full min-h-[280px] sm:min-h-[340px] md:min-h-[400px] transition-all duration-700 ${isSimulation ? "scale-[0.85] saturate-[0.8] brightness-125" : ""}`}
         id="map-canvas"
       >
-        {/* 🌟 Reveal State Banner */}
+        {/*  Reveal State Banner */}
         <AnimatePresence>
           {isRevealState && (
             <motion.div
@@ -833,7 +843,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               animate={{ opacity: 1, y: 0 }}
               className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] px-6 py-2 rounded-2xl bg-teal-500/10 border border-teal-500/20 backdrop-blur-xl shadow-2xl"
             >
-              <p className="text-xs font-bold text-teal-400 whitespace-nowrap">هنا مركزك.. ابدأ من هنا كل يوم.</p>
+              <p className="text-xs font-bold text-teal-400 whitespace-nowrap">ا رز.. ابدأ  ا  .</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -885,7 +895,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
             className="absolute top-2 left-2 z-[60] flex items-center gap-2 px-3 py-1.5 rounded-xl bg-teal-500/10 border border-teal-500/30 text-teal-200 text-xs font-bold backdrop-blur-md hover:bg-teal-500/20 transition-all shadow-lg"
           >
             <Telescope className="w-4 h-4" />
-            وضع المحاكاة (What-If)
+            ضع احااة (What-If)
           </button>
         ) : (
           <FutureSimulator nodes={simulatedNodes} onExitSimulation={() => setIsSimulation(false)} />
@@ -894,7 +904,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
           <div className="absolute inset-0">
             {shouldUseLightweightRendering && (
               <div className="absolute top-2 right-2 z-[70] rounded-xl bg-slate-900/80 border border-slate-700 px-2.5 py-1.5 text-[10px] text-slate-300">
-                تم تفعيل وضع الأداء العالي لعرض خفيف
+                ت تفع ضع اأداء اعا عرض خفف
               </div>
             )}
             <motion.svg
@@ -925,7 +935,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 </filter>
               </defs>
 
-              {/* ── Connection Threads ── */}
+              {/*  Connection Threads  */}
               {connectionThreads.map((line) => (
                 <motion.line
                   key={line.id}
@@ -942,7 +952,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 />
               ))}
 
-              {/* 🛰️ Sync Circles / Interference Waves */}
+              {/* ️ Sync Circles / Interference Waves */}
               {!shouldReduceMotion && interferenceLines.map((line) => (
                 <motion.line
                   key={line.id}
@@ -965,10 +975,10 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 />
               ))}
 
-              {/* ── Orbital Rings (Breathing) ── */}
+              {/*  Orbital Rings (Breathing)  */}
               {!shouldReduceMotion && <OrbitalRing
                 ring="red"
-                label="دائرة الخطر والاستنزاف"
+                label="دائرة اخطر ااستزاف"
                 radius={40}
                 color={RING_COLORS.danger.stroke}
                 glowColor={RING_COLORS.danger.glow}
@@ -976,7 +986,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               />}
               {!shouldReduceMotion && <OrbitalRing
                 ring="yellow"
-                label="دائرة القرب المشروط"
+                label="دائرة ارب اشرط"
                 radius={29}
                 color={RING_COLORS.caution.stroke}
                 glowColor={RING_COLORS.caution.glow}
@@ -984,14 +994,14 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               />}
               {!shouldReduceMotion && <OrbitalRing
                 ring="green"
-                label="دائرة القرب الصحي"
+                label="دائرة ارب اصح"
                 radius={18}
                 color={RING_COLORS.safe.stroke}
                 glowColor={RING_COLORS.safe.glow}
                 breatheDuration={4}
               />}
 
-              {/* 🛰️ Halo around Center during Reveal State */}
+              {/* ️ Halo around Center during Reveal State */}
               <AnimatePresence>
                 {isRevealState && (
                   <motion.circle
@@ -1008,7 +1018,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 )}
               </AnimatePresence>
 
-              {/* ── Detachment Zone (Dashed Orbit) ── */}
+              {/*  Detachment Zone (Dashed Orbit)  */}
               <motion.circle
                 cx="50"
                 cy="50"
@@ -1022,9 +1032,9 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 transition={shouldReduceMotion ? { duration: 0.2 } : { duration: 6, repeat: Infinity, ease: "easeInOut" }}
               />
 
-              {/* ── Center "Me" — Cosmic Orb ── */}
+              {/*  Center "Me"  Cosmic Orb  */}
               <g filter="url(#cosmicGlow)">
-                {/* 🌈 Reveal Halo (The Light of Awareness) */}
+                {/*  Reveal Halo (The Light of Awareness) */}
                 {isRevealState && (
                   <motion.circle
                     cx="50%"
@@ -1069,7 +1079,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     filter: "none"
                   }}
                 />
-                {/* "أنت" label */}
+                {/* "أت" label */}
                 <text
                   x="50"
                   y="50"
@@ -1083,11 +1093,11 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     letterSpacing: "0.08em"
                   }}
                 >
-                  أنت
+                  أت
                 </text>
               </g>
 
-              {/* ── Drag Assist Hint ── */}
+              {/*  Drag Assist Hint  */}
               <AnimatePresence>
                 {!shouldReduceMotion && showDragHint && (
                   <motion.g
@@ -1129,7 +1139,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               </AnimatePresence>
             </motion.svg>
 
-            {/* ── Node Overlays ── */}
+            {/*  Node Overlays  */}
             <div className="absolute inset-0 pointer-events-none">
               <div className="relative w-full h-full pointer-events-auto">
                 <AnimatePresence>
@@ -1173,7 +1183,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               </div>
             </div>
 
-            {/* ── Hint Banner for Reveal State ── */}
+            {/*  Hint Banner for Reveal State  */}
             <AnimatePresence>
               {isRevealState && (
                 <motion.div
@@ -1184,19 +1194,19 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 >
                   <div className="px-6 py-2.5 rounded-full glass-card border border-teal-500/30 flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                    <span className="text-xs font-bold text-teal-100/90 whitespace-nowrap">هنا مركزك.. ابدأ من هنا كل يوم</span>
+                    <span className="text-xs font-bold text-teal-100/90 whitespace-nowrap">ا رز.. ابدأ  ا  </span>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* ── Droppable Zones ── */}
+            {/*  Droppable Zones  */}
             <DroppableRing id="grey" sizePct={92} zIndex={9} />
             <DroppableRing id="red" sizePct={80} zIndex={10} />
             <DroppableRing id="yellow" sizePct={58} zIndex={11} />
             <DroppableRing id="green" sizePct={36} zIndex={12} />
 
-            {/* ── Me click zone ── */}
+            {/*  Me click zone  */}
             {onMeClick && (
               <button
                 type="button"
@@ -1205,12 +1215,12 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   onMeClick();
                 }}
                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[20%] min-w-[56px] h-[20%] min-h-[56px] rounded-full z-30 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50 focus-visible:ring-offset-0"
-                title="بطاقتك — حالتك اليوم"
-                aria-label="افتح بطاقة أنا"
+                title="بطات  حات ا"
+                aria-label="افتح بطاة أا"
               />
             )}
 
-            {/* ── AINode (Organic Agent) ── */}
+            {/*  AINode (Organic Agent)  */}
             {aiState && (
               <AINode
                 isConnected={aiState.isConnected}
@@ -1222,7 +1232,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
           </div>
         </DndContext>
 
-        {/* ── Pending Move Confirmation (Glass) ── */}
+        {/*  Pending Move Confirmation (Glass)  */}
         {pendingMove && (
           <motion.div
             className="relative z-50 glass-card flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 px-5 py-4 text-right"
@@ -1231,7 +1241,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
             transition={{ duration: 0.25 }}
           >
             <p className="text-sm font-semibold flex-1" style={{ color: "var(--text-primary)" }}>
-              نقل "{pendingMove.nodeLabel}" إلى {RING_LABELS[pendingMove.toRing]}؟
+               "{pendingMove.nodeLabel}" إ {RING_LABELS[pendingMove.toRing]}
             </p>
             <div className="flex gap-2 shrink-0">
               <button
@@ -1239,7 +1249,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 onClick={() => setPendingMove(null)}
                 className="cta-muted px-4 py-2 text-sm font-medium"
               >
-                إلغاء
+                إغاء
               </button>
               <button
                 type="button"
@@ -1253,7 +1263,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         )}
       </div>
 
-      {/* ── Archive Toast ── */}
+      {/*  Archive Toast  */}
       <JourneyToast
         variant="archive"
         personName={lastArchivedName}

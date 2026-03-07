@@ -28,7 +28,15 @@ const supabaseAdmin = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY || ""
 );
 
-function canonicalize(snapshot: any[]) {
+type SnapshotNode = {
+    label?: string;
+    ring?: string;
+    goalId?: string;
+    detachmentMode?: boolean;
+    missionCompleted?: boolean;
+};
+
+function canonicalize(snapshot: SnapshotNode[]) {
     return snapshot
         .map(n => ({
             l: (n.label || '').trim(),
@@ -40,7 +48,7 @@ function canonicalize(snapshot: any[]) {
         .sort((a, b) => a.l.localeCompare(b.l) || a.r.localeCompare(b.r));
 }
 
-function generateMapHash(snapshot: any[]) {
+function generateMapHash(snapshot: SnapshotNode[]) {
     const canonical = canonicalize(snapshot);
     const str = JSON.stringify(canonical);
     return crypto.createHash('sha256').update(str).digest('hex');
@@ -130,10 +138,10 @@ export async function POST(req: Request) {
             }).select().single();
 
             return NextResponse.json({ ...parsed, _source: 'gemini', _id: saved?.id });
-        } catch (e) {
+        } catch {
             return NextResponse.json({ error: 'MODEL_BAD_JSON' }, { status: 502 });
         }
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Gemini Backend Error:', err);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
@@ -160,7 +168,7 @@ export async function GET(req: Request) {
 
         if (error) throw error;
         return NextResponse.json(data);
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'History failed' }, { status: 500 });
     }
 }

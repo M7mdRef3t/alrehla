@@ -56,7 +56,7 @@ const SCENARIOS = [
     options: [
       { id: "a", text: "ألغي خططي وأقعد معاه عشان مش عايز يزعل", isCorrect: false, feedback: "ده ابتزاز عاطفي. لو ألغيت احتياجاتك كل مرة، هتفقد نفسك." },
       { id: "b", text: "أقوله: 'الوقت لنفسي مش معناه إني مش بحبك'", isCorrect: true, feedback: "صح! الحب الصحي مش معناه الذوبان. كل واحد ليه مساحة." },
-      { id: "c", text: "أخرج وأسيب الموضوع يهدى لوحده", isCorrect: false, feedback: "الهروب من المواجهة بيخلي النمط يتكرر. لازم نوضح الحدود." },
+      { id: "c", text: "أخرج وأسيب الموضوع يهدى لوحده", isCorrect: false, feedback: "الهروب من المواجهة بيخلي النمط يتكرر. الأفضل توضيح الحدود بهدوء." },
     ]
   }
 ];
@@ -115,7 +115,7 @@ export const RelationshipGym: React.FC<RelationshipGymProps> = ({ onClose, onSta
       message = "كويس! لسه محتاج تدريب أكتر";
       emoji = "💪";
     } else {
-      message = "لازم تشتغل على حدودك أكتر";
+      message = "محتاج تشتغل على حدودك أكتر";
       emoji = "📚";
     }
 

@@ -19,7 +19,6 @@ import { TEIWidget } from "./TEIWidget";
 import { FloatingActionMenu } from "./FloatingActionMenu";
 import { InsightsSidebar } from "./InsightsSidebar";
 import { MapInsightPanel } from "./MapInsightPanel";
-import { DeepPatternsPanel } from "./DeepPatternsPanel";
 import { InfluenceNetwork } from "./InfluenceNetwork";
 import { StabilityHeatmap } from "./StabilityHeatmap";
 import { ShareDialog } from "./ShareDialog";
@@ -55,9 +54,9 @@ import { getShadowScore } from "../state/shadowPulseState";
 
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 
-/* ════════════════════════════════════════════════
-   🌌 CORE MAP SCREEN — Digital Sanctuary
-   ════════════════════════════════════════════════ */
+/* 
+    CORE MAP SCREEN  Digital Sanctuary
+    */
 
 const cosmicFade = {
   hidden: { opacity: 0, y: 10, filter: "blur(4px)" },
@@ -96,6 +95,10 @@ interface CoreMapScreenProps {
   nextStepDecision?: NextStepDecisionV1 | null;
   onTakeNextStep?: (decision: NextStepDecisionV1) => void;
   onRefreshNextStep?: () => void;
+  onOpenPulse?: () => void;
+  onOpenLibrary?: () => void;
+  onOpenProfile?: () => void;
+  hideBottomDock?: boolean;
 }
 
 export const CoreMapScreen: FC<CoreMapScreenProps> = ({
@@ -119,10 +122,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   onFeatureLocked,
   nextStepDecision = null,
   onTakeNextStep,
-  onRefreshNextStep
+  onRefreshNextStep,
+  onOpenPulse,
+  onOpenLibrary,
+  onOpenProfile,
+  hideBottomDock = false
 }) => {
-  useGraphSync(); // تفعيل المزامنة التلقائية للجراف
-  useAdaptiveLayout(); // تفعيل النظام التكيفي للتخطيط
+  useGraphSync(); // تفع ازاة اتائة جراف
+  useAdaptiveLayout(); // تفع اظا اتف تخطط
 
   const mode = useLayoutState((s) => s.mode);
   const activeTab = useLayoutState((s) => s.activeTab);
@@ -132,7 +139,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [isCloudAuthOpen, setIsCloudAuthOpen] = useState(false);
   const user = useAuthState(s => s.user);
 
-  // ─── Gemini Live Integration (bureau of consciousness) ───
+  //  Gemini Live Integration (bureau of consciousness) 
   const {
     isConnected,
     isListening,
@@ -168,7 +175,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     void startListening();
 
     // Contextual nudge
-    sendContext(`المستخدم اختار يركز دلوقتي على "${node.label}" (دائرة ${node.ring}). لاحظ حركته وابدأ معاه حوار سقراطي عن طبيعة العلاقة دي دلوقتي.`);
+    sendContext(`استخد اختار رز دت ع "${node.label}" (دائرة ${node.ring}). احظ حرت ابدأ عا حار سراط ع طبعة اعاة د دت.`);
   }, [user, nodes, isConnected, connect, startListening, sendContext]);
 
   const toggleAI = useCallback(() => {
@@ -217,15 +224,18 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [showOnboarding, setShowOnboarding] = useState(() => nodes.length === 0 && !hasSeenOnboarding() && !journeyMode);
   const lastAddedNode = lastAddedNodeId ? nodes.find((node) => node.id === lastAddedNodeId) ?? null : null;
 
-  /* ── Dashboard Widget ── */
+  /*  Dashboard Widget  */
   const [showDashboard, setShowDashboard] = useState(false);
-  const [voiceTrigger, setVoiceTrigger] = useState<{ event: any; context: any } | undefined>();
+  const [voiceTrigger, setVoiceTrigger] = useState<{
+    event: "shadow_insight" | "milestone_unlocked" | "high_impact_action";
+    context: Record<string, unknown>;
+  } | undefined>();
   const [showJournalArchive, setShowJournalArchive] = useState(false);
   const activeNodes = useMemo(() => nodes.filter((n) => !n.isNodeArchived), [nodes]);
   const archivedNodes = useMemo(() => nodes.filter((n) => n.isNodeArchived), [nodes]);
   const greenNodes = useMemo(() => activeNodes.filter((n) => n.ring === "green" && !n.isDetached), [activeNodes]);
 
-  /* ── Adaptive Layout Engine ── */
+  /*  Adaptive Layout Engine  */
   const { hasAnsweredToday } = useDailyQuestion();
   const tei = useMemo(() => computeTEI(nodes).score, [nodes]);
   const shadowScore = useMemo(() => getShadowScore(), []);
@@ -375,7 +385,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       initial="hidden"
       animate="visible"
     >
-      {/* ── Header ── */}
+      {/*  Header  */}
       <motion.header variants={cosmicFade}>
         <div className="flex flex-col items-center gap-2 mb-4">
           <h1
@@ -394,15 +404,15 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         </p>
       </motion.header>
 
-      {/* ══════════════════════════════════════
-          الكتلة الأم — مؤشر الوضوح + سؤال اليوم
-          تظهر دائماً (60% من الاهتمام البصري)
-          ══════════════════════════════════════ */}
+      {/* 
+          اتة اأ  ؤشر اضح + سؤا ا
+          تظر دائا (60%  ااتا ابصر)
+           */}
       {!journeyMode && activeNodes.length > 0 && (
         <div className="fixed inset-x-0 top-0 z-30 pointer-events-none">
           <div className="max-w-[42rem] mx-auto px-4 py-6 flex flex-col items-center">
 
-            {/* 1️⃣ HUD: OPERATIONAL (Sanctuary Mode) */}
+            {/* 1️ HUD: OPERATIONAL (Sanctuary Mode) */}
             {activeTab === "operational" && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -414,35 +424,35 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className="w-full pointer-events-auto flex flex-col items-center gap-10 pt-10"
               >
-                {/* 💊 Pulse Capsule: The Vital Sign HUD */}
+                {/*  Pulse Capsule: The Vital Sign HUD */}
                 <div className="w-full flex justify-center">
                   <DailyPulseWidget />
                 </div>
 
-                {/* 🛡️ Priority Intervention (High Breathing Space) */}
+                {/* ️ Priority Intervention (High Breathing Space) */}
                 <div className="w-full max-w-sm">
                   <InterventionPanel />
                 </div>
               </motion.div>
             )}
 
-            {/* 2️⃣ HUD: ANALYTICAL (Observatory Mode) */}
+            {/* 2️ HUD: ANALYTICAL (Observatory Mode) */}
             {activeTab === "analytical" && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="w-full pointer-events-auto space-y-4 pt-12"
               >
-                {/* 🧭 Segmented Control: Choose your Lens */}
+                {/*  Segmented Control: Choose your Lens */}
                 <div className="flex items-center justify-center gap-2 p-1 rounded-full bg-white/[0.03] border border-white/5 mx-auto w-fit mb-8">
                   {[
-                    { id: "network", label: "الشبكة" },
-                    { id: "stability", label: "الاستقرار" },
-                    { id: "metrics", label: "المؤشرات" }
+                    { id: "network", label: "اشبة" },
+                    { id: "stability", label: "ااسترار" },
+                    { id: "metrics", label: "اؤشرات" }
                   ].map((tab) => (
                     <button
                       key={tab.id}
-                      onClick={() => setSegmentedView(tab.id as any)}
+                      onClick={() => setSegmentedView(tab.id as "network" | "stability" | "metrics")}
                       className={`px-6 py-2 rounded-full text-xs font-black transition-all ${segmentedView === tab.id
                         ? "bg-amber-500 text-black shadow-lg shadow-amber-500/20"
                         : "text-white/30 hover:text-white/60"
@@ -457,7 +467,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   {segmentedView === "metrics" && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
                       <div className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 text-right font-black">
-                        <h3 className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-3">حمولة الوعي (Trauma Entropy)</h3>
+                        <h3 className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-3">حة اع (Trauma Entropy)</h3>
                         <TEIWidget />
                       </div>
                       <MapInsightPanel />
@@ -479,7 +489,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               </motion.div>
             )}
 
-            {/* 3️⃣ HUD: NARRATIVE (Chronicle Mode) */}
+            {/* 3️ HUD: NARRATIVE (Chronicle Mode) */}
             {activeTab === "narrative" && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -487,8 +497,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 className="w-full pointer-events-auto space-y-6 pt-12 max-h-[80vh] overflow-y-auto no-scrollbar pb-32"
               >
                 <div className="border-r-2 border-indigo-500/30 pr-4">
-                  <h2 className="text-xl font-black text-white mb-1">الكرونيكل</h2>
-                  <p className="text-xs text-white/40">سجل تطور وعيك الزمني</p>
+                  <h2 className="text-xl font-black text-white mb-1">ار</h2>
+                  <p className="text-xs text-white/40">سج تطر ع از</p>
                 </div>
 
                 <WeeklyReportWidget />
@@ -512,9 +522,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/* Global Presence Overlay (The Witness) */}
       <VoicePresence trigger={voiceTrigger} />
 
-      {/* ══════════════════════════════════════
-          الكتلة الداعمة — تفاصيل قابلة للطي (30%)
-          ══════════════════════════════════════ */}
+      {/* 
+          اتة اداعة  تفاص ابة ط (30%)
+           */}
       {!journeyMode && (
         <motion.div
           variants={cosmicFade}
@@ -535,7 +545,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             }}
           >
             <span className="text-[11px]" style={{ color: "rgba(148,163,184,0.45)" }}>
-              {showDashboard ? "▲ إخفاء التفاصيل" : "▼ تفاصيل الدواير"}
+              {showDashboard ? " إخفاء اتفاص" : " تفاص ادار"}
             </span>
             <span className="text-[11px]">
               {mapCopy.dashboardMapSummary(activeNodes.length, greenNodes.length, archivedNodes.length)}
@@ -559,11 +569,11 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     backdropFilter: "blur(12px)"
                   }}
                 >
-                  {/* توازن الدواير — Mini Gauge */}
+                  {/* تاز ادار  Mini Gauge */}
                   {activeNodes.length > 0 && (
                     <div>
                       <p className="text-[10px] font-semibold mb-2" style={{ color: "var(--text-muted)" }}>
-                        توازن الدواير
+                        تاز ادار
                       </p>
                       <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden">
                         {["green", "yellow", "red"].map((ring) => {
@@ -582,13 +592,13 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                           );
                         })}
                       </div>
-                      {/* أعداد تفصيلية */}
+                      {/* أعداد تفصة */}
                       <div className="flex justify-between mt-1.5">
                         {["green", "yellow", "red"].map((ring) => {
                           const count = activeNodes.filter((n) => n.ring === ring).length;
                           if (!count) return null;
                           const colors = { green: "#34d399", yellow: "#fbbf24", red: "#f87171" };
-                          const labels = { green: "آمن", yellow: "تعب", red: "ضاغط" };
+                          const labels = { green: "آ", yellow: "تعب", red: "ضاغط" };
                           return (
                             <span key={ring} className="text-[10px]" style={{ color: colors[ring as keyof typeof colors] }}>
                               {count} {labels[ring as keyof typeof labels]}
@@ -599,7 +609,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     </div>
                   )}
 
-                  {/* Slogan — كتلة التنفس (10%) */}
+                  {/* Slogan  تة اتفس (10%) */}
                   <p className="text-[11px] text-center pt-1" style={{ color: "rgba(45,212,191,0.35)" }}>
                     {mapCopy.dashboardSlogan}
                   </p>
@@ -610,7 +620,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         </motion.div>
       )}
 
-      {/* ── Weekday Labels Modal ── */}
+      {/*  Weekday Labels Modal  */}
       {showWeekdayLabelsModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -626,20 +636,20 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           >
             <div className="flex items-center justify-between mb-3">
               <h2 id="weekday-labels-title" className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-                ربط أيام الأسبوع بنشاط أو شخص
+                ربط أا اأسبع بشاط أ شخص
               </h2>
               <button
                 type="button"
                 onClick={() => setShowWeekdayLabelsModal(false)}
                 className="p-1.5 rounded-full transition-colors"
                 style={{ color: "var(--text-muted)" }}
-                aria-label="إغلاق"
+                aria-label="إغا"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             <p className="text-xs mb-3" style={{ color: "var(--text-secondary)" }}>
-              لو يوم معيّن دايماً طاقتك فيه منخفضة، اربطه بنشاط أو شخص عشان التقرير يذكّرك.
+                ع داا طات ف خفضة اربط بشاط أ شخص عشا اترر ذر.
             </p>
             <div className="space-y-2">
               {PULSE_DAY_NAMES.map((dayName, i) => (
@@ -649,8 +659,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     type="text"
                     value={weekdayLabels[i] ?? ""}
                     onChange={(e) => setWeekdayLabel(i, e.target.value || null)}
-                    placeholder="مثلاً: اجتماع مع المدير"
-                    className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400/30"
+                    placeholder="ثا: اجتاع ع ادر"
+                    className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300/30"
                     style={{
                       background: "rgba(255, 255, 255, 0.05)",
                       border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -665,7 +675,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               onClick={() => setShowWeekdayLabelsModal(false)}
               className="mt-4 w-full cta-primary py-2.5 text-sm font-semibold"
             >
-              تم
+              ت
             </button>
           </motion.div>
         </div>
@@ -678,7 +688,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         intent={{ kind: "ai_focus", createdAt: Date.now() }}
       />
 
-      {/* ── Status Cards (Pulse Modes) ── */}
+      {/*  Status Cards (Pulse Modes)  */}
       {
         pulseMode === "low" && (
           <motion.div
@@ -690,14 +700,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             }}
           >
             <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-              الطاقة منخفضة.. أولويتنا وقف الضغط
+              اطاة خفضة.. أتا ف اضغط
             </p>
             <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
-              نفّذ خطوة صيانة واحدة وبس، من غير أي اشتباك.
+              فذ خطة صاة احدة بس  غر أ اشتبا.
             </p>
             {suppressLowPulseCocoon ? (
               <p className="mt-3 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
-                تم تنفيذ دقيقة الشحن. خُد دقيقة هدوء وكمل خطوة بسيطة على الخريطة.
+                ت تفذ دة اشح. خُد دة دء  خطة بسطة ع اخرطة.
               </p>
             ) : (
               <button
@@ -706,7 +716,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 className="mt-3 w-full cta-muted py-2.5 text-sm font-semibold transition-all hover:bg-white/10"
                 style={{ borderColor: "rgba(148, 163, 184, 0.3)" }}
               >
-                دقيقة شحن
+                دة شح
               </button>
             )}
           </motion.div>
@@ -726,17 +736,17 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 }}
               >
                 <p className="text-sm font-semibold" style={{ color: "var(--ring-danger)" }}>
-                  الرادار بيقول ضجيج عالي.. ثبّت مكانك الأول
+                  ارادار ب ضجج عا.. ثبت ا اأ
                 </p>
                 <p className="text-xs mt-1" style={{ color: "rgba(248, 113, 113, 0.7)" }}>
-                  قبل أي قرار، افصل الشوشرة وارجع للتحكم.
+                  ب أ رار افص اششرة ارجع تح.
                 </p>
                 <button
                   type="button"
                   onClick={onOpenNoise}
                   className="mt-3 w-full cta-danger py-2.5 text-sm font-semibold"
                 >
-                  إسكات الضجيج
+                  إسات اضجج
                 </button>
               </motion.div>
             )}
@@ -751,10 +761,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 }}
               >
                 <p className="text-sm font-semibold" style={{ color: "var(--ring-safe)" }}>
-                  طاقتك جاهزة.. وقت حسم مدار
+                  طات جازة.. ت حس دار
                 </p>
                 <p className="text-xs mt-1" style={{ color: "rgba(45, 212, 191, 0.7)" }}>
-                  {challengeLabel ?? "جاهز لمناورة النهاردة؟"}
+                  {challengeLabel ?? "جاز ارة ااردة"}
                 </p>
                 <button
                   type="button"
@@ -762,12 +772,12 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   className="mt-3 w-full cta-primary py-2.5 text-sm font-semibold disabled:opacity-40"
                   disabled={!onOpenChallenge}
                 >
-                  مناورة اليوم
+                  ارة ا
                 </button>
               </motion.div>
             )}
 
-            {/* ── Controls Bar ── */}
+            {/*  Controls Bar  */}
             <motion.div
               className="mt-8 flex items-center justify-center gap-3 flex-wrap"
               variants={cosmicFade}
@@ -783,7 +793,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 onClick={() => setGalaxyMode((v) => !v)}
                 className={`glass-button px-4 py-2.5 text-sm font-semibold ${galaxyMode ? "glass-button-active" : ""
                   }`}
-                title={galaxyMode ? "رجوع لسياق واحد" : "عرض كل المدارات"}
+                title={galaxyMode ? "رجع سا احد" : "عرض  ادارات"}
               >
                 {galaxyMode ? (
                   <EditableText id="map_view_single_cta" defaultText={mapCopy.viewSingleCta} page="map" editOnClick={false} />
@@ -837,10 +847,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     onClick={() => setViewMode("map")}
                     className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${viewMode === "map" ? "cta-primary" : ""}`}
                     style={viewMode !== "map" ? { color: "var(--text-secondary)" } : {}}
-                    title="عرض الخريطة"
+                    title="عرض اخرطة"
                   >
                     <Map className="w-4 h-4" />
-                    <EditableText id="map_view_mode_map" defaultText="الخريطة" page="map" editOnClick={false} />
+                    <EditableText id="map_view_mode_map" defaultText="اخرطة" page="map" editOnClick={false} />
                   </button>
                   <button
                     type="button"
@@ -850,19 +860,19 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     }}
                     className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${viewMode === "tree" ? "cta-primary" : ""}`}
                     style={viewMode !== "tree" ? { color: canUseFamilyTree ? "var(--text-secondary)" : "var(--text-muted)" } : {}}
-                    title="شجرة العيلة"
+                    title="شجرة اعة"
                   >
                     <TreeDeciduous className="w-4 h-4" />
                     {canUseFamilyTree
-                      ? <EditableText id="map_view_mode_tree" defaultText="شجرة العيلة" page="map" editOnClick={false} />
-                      : <EditableText id="map_view_mode_tree_locked" defaultText="شجرة العيلة 🔒" page="map" editOnClick={false} />
+                      ? <EditableText id="map_view_mode_tree" defaultText="شجرة اعة" page="map" editOnClick={false} />
+                      : <EditableText id="map_view_mode_tree_locked" defaultText="شجرة اعة " page="map" editOnClick={false} />
                     }
                   </button>
                 </div>
               )}
               <motion.button
                 type="button"
-                className="cta-primary px-6 py-3 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0"
+                className="cta-primary px-6 py-3 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/40 focus-visible:ring-offset-0"
                 onClick={() => { onSelectNode(null); setShowAddPerson(true); }}
                 title={mapCopy.addPersonTitle}
                 whileHover={{ scale: 1.04, y: -1 }}
@@ -876,7 +886,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         )
       }
 
-      {/* ── Pulse Insight ── */}
+      {/*  Pulse Insight  */}
       {
         pulseInsight && (
           <motion.div className="mt-4 mx-auto max-w-[38rem] card-unified status-card-insight px-4 py-4 text-right" variants={cosmicFade}>
@@ -888,13 +898,13 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               className="mt-2 text-xs font-medium hover:underline"
               style={{ color: "rgba(167, 139, 250, 0.7)" }}
             >
-              ربط يوم بنشاط أو شخص
+              ربط  بشاط أ شخص
             </button>
           </motion.div>
         )
       }
 
-      {/* ── Map Canvas Views ── */}
+      {/*  Map Canvas Views  */}
       {
         nextStepDecision && onTakeNextStep && onRefreshNextStep && (
           <NextStepCard
@@ -905,7 +915,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         )
       }
 
-      {/* ── Operational Visuals ── */}
+      {/*  Operational Visuals  */}
       {
         activeTab === "operational" && (
           <>
@@ -997,7 +1007,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               ) : null}
             </AnimatePresence>
 
-            {/* ── Empty state ── */}
+            {/*  Empty state  */}
             {nodes.length === 0 && !showOnboarding && !journeyMode && (
               <motion.div
                 className="mt-6 mx-auto max-w-sm p-4 card-unified text-center"
@@ -1029,7 +1039,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         )
       }
 
-      {/* ── Placement tooltip ── */}
+      {/*  Placement tooltip  */}
       {
         showPlacementTooltip && (
           <motion.div
@@ -1043,8 +1053,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             <span>
               {lastAddedNode ? (
                 <>
-                  تم إضافة <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{lastAddedNode.label}</span>{" "}
-                  في{" "}
+                  ت إضافة <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{lastAddedNode.label}</span>{" "}
+                  ف{" "}
                   <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
                     <span
                       style={{
@@ -1064,8 +1074,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     </span>
                   </span>
                   {canUseBasicDiagnosis
-                    ? ". اضغط عليه للتفاصيل أو اسحبه لو عايز تغيّر مكانه."
-                    : ". التفاصيل مقفولة حالياً من Feature Flags."}
+                    ? ". اضغط ع تفاص أ اسحب  عاز تغر ا."
+                    : ". اتفاص فة حاا  Feature Flags."}
                 </>
               ) : (
                 <EditableText id="map_first_placement_tooltip" defaultText={mapCopy.firstPlacementTooltip} page="map" showEditIcon={false} />
@@ -1085,24 +1095,24 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   }}
                   className="rounded-full px-2.5 py-1 text-xs font-semibold border border-white/15 hover:bg-white/5 transition-colors"
                   style={{ color: "var(--text-primary)" }}
-                  title="افتح الشخص"
-                  aria-label="افتح الشخص"
+                  title="افتح اشخص"
+                  aria-label="افتح اشخص"
                 >
-                  افتحه
+                  افتح
                 </button>
               )}
-              <button type="button" onClick={dismissPlacementTooltip} className="rounded-full p-1.5 transition-colors" style={{ color: "var(--text-muted)" }} title="إغلاق" aria-label="إغلاق">
-                ✕
+              <button type="button" onClick={dismissPlacementTooltip} className="rounded-full p-1.5 transition-colors" style={{ color: "var(--text-muted)" }} title="إغا" aria-label="إغا">
+                
               </button>
             </div>
           </motion.div>
         )
       }
 
-      {/* ── Ring Legend ── */}
+      {/*  Ring Legend  */}
       <motion.div
         className="mt-6 flex flex-wrap justify-center gap-3 text-sm"
-        aria-label="معاني دوائر المسافة"
+        aria-label="عا دائر اسافة"
         variants={cosmicFade}
         style={{
           order: sectionOrder["ring-legend"],
@@ -1129,7 +1139,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               <button
                 type="button"
                 onClick={() => setLegendTooltip((prev) => (prev === key ? null : key))}
-                className={`${config.pillClass} inline-flex items-center gap-2 font-medium active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-teal-400/30`}
+                className={`${config.pillClass} inline-flex items-center gap-2 font-medium active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-amber-300/30`}
                 aria-label={config.label}
                 aria-expanded={isActive}
               >
@@ -1144,23 +1154,23 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         <EditableText id="map_threat_level_hint" defaultText={mapCopy.threatLevelHint} page="map" multiline showEditIcon={false} />
       </p>
 
-      {/* ── Journey complete ── */}
+      {/*  Journey complete  */}
       {
         journeyMode && onJourneyComplete && (
           <div className="mt-8 flex flex-col items-center gap-2">
             <button type="button" onClick={onJourneyComplete} disabled={!canCompleteJourneyStep} className="cta-primary px-6 py-3 font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
-              كمل الرحلة
+               ارحة
             </button>
             {!canCompleteJourneyStep && nodes.length > 0 && (
               <p className="text-sm max-w-xs text-center" style={{ color: "var(--text-muted)" }}>
-                افتح المدار، راجع النتيجة ومسار الحماية أو كمّل التدريب، وبعدها اضغط "كمل الرحلة"
+                افتح ادار راجع اتجة سار احاة أ  اتدرب بعدا اضغط " ارحة"
               </p>
             )}
           </div>
         )
       }
 
-      {/* ── Modals ── */}
+      {/*  Modals  */}
       {
         showAddPerson && (
           <AddPersonModal
@@ -1191,20 +1201,20 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         )
       }
 
-      {/* ── أرشيف سؤال اليوم ── */}
+      {/*  أرشف سؤا ا  */}
       <DailyJournalArchive
         isOpen={showJournalArchive}
         onClose={() => setShowJournalArchive(false)}
       />
 
-      {/* ── نبضة الظل — Shadow Pulse Alert ── */}
+      {/*  بضة اظ  Shadow Pulse Alert  */}
       {
         !journeyMode && (
           <ShadowPulseAlert onSelectNode={handleNodeClick} />
         )
       }
 
-      {/* ── Floating Action Menu — القائمة العائمة ── */}
+      {/*  Floating Action Menu  اائة اعائة  */}
       {
         !journeyMode && mode === "focus" && (
           <FloatingActionMenu
@@ -1221,30 +1231,35 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         )
       }
 
-      {/* ── Insights Sidebar — الشريط الجانبي للإحصائيات ── */}
+      {/*  Insights Sidebar  اشرط اجاب إحصائات  */}
       {
         !journeyMode && (mode === "insights" || mode === "adaptive") && (
           <InsightsSidebar onOpenArchive={() => setShowJournalArchive(true)} />
         )
       }
 
-      {/* ── Tab Navigation — التبويبات (Global Dock) ── */}
+      {/*  Tab Navigation  اتببات (Global Dock)  */}
       {
         !journeyMode && (
-          <div className="fixed bottom-0 left-0 right-0 z-50">
-            <TabNavigation />
+          <div className="hidden md:block fixed bottom-0 left-0 right-0 z-50">
+            <TabNavigation
+              hidden={hideBottomDock}
+              onPulse={onOpenPulse}
+              onLibrary={onOpenLibrary}
+              onProfile={onOpenProfile}
+            />
           </div>
         )
       }
 
-      {/* ── Layout Mode Switcher — مبدل الأوضاع ── */}
+      {/*  Layout Mode Switcher  بد اأضاع  */}
       {
-        !journeyMode && (
+        !journeyMode && !hideBottomDock && (
+          <div className="hidden md:block">
           <LayoutModeSwitcher />
+          </div>
         )
       }
     </motion.main >
   );
 };
-
-

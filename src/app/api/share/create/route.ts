@@ -7,6 +7,9 @@ const supabaseAdmin = createClient(
     process.env.SUPABASE_SERVICE_ROLE_KEY || ""
 );
 
+type DriftEdge = { source: string; target: string; drift: number };
+type HotspotNode = { label: string; volatility_score: number };
+
 export async function POST(req: Request) {
     try {
         const authHeader = req.headers.get("Authorization");
@@ -34,15 +37,15 @@ export async function POST(req: Request) {
             .order('snapshot_date', { ascending: false })
             .limit(2);
 
-        let driftEdges: any[] = [];
+        let driftEdges: DriftEdge[] = [];
         if (influence && influence.length >= 2) {
             const { calculateDrift } = await import('../../../../services/driftEngine');
             const drift = calculateDrift(influence[0], influence[1]);
             driftEdges = drift.edges
-                .filter((e: any) => e.drift > 0)
-                .sort((a: any, b: any) => b.drift - a.drift)
+                .filter((e: DriftEdge) => e.drift > 0)
+                .sort((a: DriftEdge, b: DriftEdge) => b.drift - a.drift)
                 .slice(0, 3)
-                .map((e: any) => ({ source: e.source, target: e.target, drift: e.drift }));
+                .map((e: DriftEdge) => ({ source: e.source, target: e.target, drift: e.drift }));
         }
 
         // C. Hotspots (from Stability Heatmap)
@@ -55,9 +58,9 @@ export async function POST(req: Request) {
             .maybeSingle();
 
         const hotspots = (stability?.node_stability || [])
-            .filter((n: any) => n.volatility_score > 0.5)
+            .filter((n: HotspotNode) => n.volatility_score > 0.5)
             .slice(0, 3)
-            .map((n: any) => ({ label: n.label, volatility: n.volatility_score }));
+            .map((n: HotspotNode) => ({ label: n.label, volatility: n.volatility_score }));
 
         // D. Milestones
         const { data: milestones } = await supabaseAdmin
@@ -113,7 +116,7 @@ export async function POST(req: Request) {
             url: `${new URL(req.url).origin}/s/${artifact.id}`
         });
 
-    } catch (err) {
+    } catch (err: unknown) {
         console.error("Share creation failed:", err);
         return NextResponse.json({ error: 'Failed to create share' }, { status: 500 });
     }

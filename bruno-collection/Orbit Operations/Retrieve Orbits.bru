@@ -1,0 +1,15 @@
+meta {
+  name: Retrieve Orbits
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/orbits
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{supabaseAnonKey}}
+}

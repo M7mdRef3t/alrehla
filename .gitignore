@@ -58,3 +58,5 @@ tsconfig.typecheck.tsbuildinfo
 .next_stale_*
 
 .vercel
+
+.env.vercel.production

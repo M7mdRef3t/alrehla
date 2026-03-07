@@ -17,7 +17,14 @@ import {
   buildOutputContractViolationResponse
 } from "./_promptGuard.js";
 
-export default async function handler(req: any, res: any) {
+type ApiRequest = { method?: string; body?: Record<string, unknown> };
+type ApiResponse = {
+  status: (code: number) => ApiResponse;
+  json: (payload: unknown) => void;
+};
+type GeminiResponseWithUsage = { usageMetadata?: unknown; text: () => string };
+
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -64,7 +71,7 @@ export default async function handler(req: any, res: any) {
             return;
           }
         }
-        const usage = (response as any)?.usageMetadata ?? null;
+        const usage = (response as GeminiResponseWithUsage)?.usageMetadata ?? null;
         res.status(200).json({ text, usage });
         return;
       } catch (error) {

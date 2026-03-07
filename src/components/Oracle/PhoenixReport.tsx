@@ -1,7 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Flame, Crown, Shield, TrendingUp, TrendingDown, Users, Zap, Clock } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
+import { Flame, Crown, Shield, TrendingUp, Users, Zap, Clock } from 'lucide-react';
 import { PhoenixEngine, PhoenixEventSummary, PioneerReportCard } from '../../services/phoenixEngine';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
 import { ResonancePair } from '../../services/phoenixEngine';
@@ -26,7 +25,7 @@ export const PhoenixReport: React.FC = () => {
                 transition={{ repeat: Infinity, duration: 2 }}
                 className="text-amber-400 text-2xl font-black tracking-widest"
             >
-                ðŸ”¥ PHOENIX ENGINE INITIALIZING...
+                ⦸⬝ PHOENIX ENGINE INITIALIZING...
             </motion.div>
         </div>
     );
@@ -146,7 +145,7 @@ export const PhoenixReport: React.FC = () => {
                 {/* Swarm Vector Shift Radar */}
                 <div className="p-8 bg-slate-900/40 rounded-[2rem] border border-white/5">
                     <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4" /> Swarm Vector Shift (Before â†’ After)
+                        <TrendingUp className="w-4 h-4" /> Swarm Vector Shift (Before  ⬢ After)
                     </h3>
                     <div className="h-[280px]">
                         <ResponsiveContainer width="100%" height="100%">
@@ -173,7 +172,7 @@ export const PhoenixReport: React.FC = () => {
 
                 {summary.entanglement_links.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                        {summary.entanglement_links.slice(0, 2).map((pair, idx) => (
+                        {summary.entanglement_links.slice(0, 2).map((pair) => (
                             <MagneticTether key={pair.id} pair={pair} />
                         ))}
                     </div>
@@ -199,7 +198,7 @@ export const PhoenixReport: React.FC = () => {
 
                 {/* DDA Recalibration Table */}
                 <div className="p-6 bg-slate-950/80 rounded-3xl border border-white/5 h-fit">
-                    <h4 className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+                    <h4 className="text-[10px] font-black text-[var(--soft-teal)] uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
                         <Clock className="w-3 h-3" /> Adaptive DDA Recalibration Queue
                     </h4>
                     <div className="space-y-2">
@@ -210,7 +209,7 @@ export const PhoenixReport: React.FC = () => {
                                 <div key={rec.user_id} className="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5">
                                     <span className="text-xs font-mono text-slate-400">{rec.user_id.slice(0, 8)}...</span>
                                     <span className="text-xs font-bold">
-                                        DDA {rec.current_dda} â†’ <span className={rec.recommended_dda > rec.current_dda ? 'text-red-400' : 'text-emerald-400'}>{rec.recommended_dda}</span>
+                                        DDA {rec.current_dda}  ⬢ <span className={rec.recommended_dda > rec.current_dda ? 'text-red-400' : 'text-emerald-400'}>{rec.recommended_dda}</span>
                                     </span>
                                     <span className="text-[9px] text-slate-500 max-w-[200px] truncate">{rec.reason}</span>
                                 </div>
@@ -308,4 +307,5 @@ const PioneerRow: React.FC<{ pioneer: PioneerReportCard; rank: number; variant: 
         </span>
     </div>
 );
+
 

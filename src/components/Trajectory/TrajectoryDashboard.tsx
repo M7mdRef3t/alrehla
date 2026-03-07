@@ -1,17 +1,21 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Battery, CheckCircle2, CircleDashed, Clock, Zap, Award, Sparkles, ChevronRight, Share2, ShieldAlert } from 'lucide-react';
+import { Activity, Battery, CheckCircle2, CircleDashed, Clock, Zap, Award, ChevronRight, ShieldAlert } from 'lucide-react';
 import { useTrajectoryRealtime } from '../../hooks/useTrajectoryRealtime';
 import { AwarenessHeatmap } from './AwarenessHeatmap';
 import { CollectiveRadar } from './CollectiveRadar';
 import { HiveEngine, SwarmMetrics } from '../../services/hiveEngine';
-import { AwarenessVector } from '../../services/trajectoryEngine';
 
 interface TrajectoryDashboardProps {
     userId?: string;
 }
 
 type SovereigntyRank = 'Aspirant' | 'Initiate' | 'Sovereign' | 'Oracle';
+type DailyMission = {
+    day: number;
+    actionable_task: string;
+    estimated_minutes: number;
+};
 
 const getRank = (score: number): SovereigntyRank => {
     if (score >= 801) return 'Oracle';
@@ -76,14 +80,14 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="relative p-12 overflow-hidden bg-gradient-to-br from-[var(--color-primary)] to-slate-950 rounded-[3rem] border border-[var(--color-primary)] text-center shadow-3xl backdrop-blur-3xl"
+                    className="relative p-12 overflow-hidden bg-gradient-to-br from-[var(--soft-teal)] to-slate-950 rounded-[3rem] border border-[var(--soft-teal)] text-center shadow-3xl backdrop-blur-3xl"
                 >
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
 
                     <Award className="w-20 h-20 mx-auto mb-6 text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
 
                     <h2 className="text-4xl font-black text-white mb-2 leading-tight">
-                        {report?.report_title || "تقرير السيادة"}
+                        {report?.report_title || " "}
                     </h2>
                     <p className="text-cyan-400 font-bold tracking-widest uppercase mb-8 text-xs">
                         {completedTrajectory.title} | Completed
@@ -91,7 +95,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
 
                     <div className="p-8 bg-slate-900/50 rounded-3xl border border-white/5 mb-8">
                         <p className="text-2xl font-serif italic text-slate-200 leading-relaxed">
-                            "{report?.narrative || "أنت الآن تملك زمام وعيك بشكل أعمق."}"
+                            "{report?.narrative || "      ."}"
                         </p>
                     </div>
 
@@ -110,7 +114,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                                 <div className="flex flex-col items-end">
                                     <span className="text-2xl font-black text-white">{completedTrajectory.sovereignty_score || 0}</span>
                                     <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md border ${getRank(completedTrajectory.sovereignty_score || 0) === 'Oracle' ? 'bg-amber-400/10 border-amber-400 text-amber-400' :
-                                        getRank(completedTrajectory.sovereignty_score || 0) === 'Sovereign' ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)] text-[var(--color-primary)]' :
+                                        getRank(completedTrajectory.sovereignty_score || 0) === 'Sovereign' ? 'bg-[var(--soft-teal)]/10 border-[var(--soft-teal)] text-[var(--soft-teal)]' :
                                             getRank(completedTrajectory.sovereignty_score || 0) === 'Initiate' ? 'bg-cyan-400/10 border-cyan-400 text-cyan-400' :
                                                 'bg-slate-400/10 border-slate-400 text-slate-400'
                                         }`}>
@@ -180,8 +184,8 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     className={`relative p-6 rounded-3xl border shadow-2xl backdrop-blur-2xl transition-all duration-700 ${activeTrajectory?.data?.is_insulated
-                        ? 'bg-gradient-to-br from-amber-900/40 via-[var(--color-primary)] to-slate-900 border-amber-500/50 shadow-[0_0_50px_rgba(245,158,11,0.2)]'
-                        : 'bg-gradient-to-br from-[var(--color-primary)] to-slate-900 border-[var(--color-primary)]'
+                        ? 'bg-gradient-to-br from-amber-900/40 via-[var(--soft-teal)] to-slate-900 border-amber-500/50 shadow-[0_0_50px_rgba(245,158,11,0.2)]'
+                        : 'bg-gradient-to-br from-[var(--soft-teal)] to-slate-900 border-[var(--soft-teal)]'
                         }`}
                 >
                     {/* Aegis Aura Glow */}
@@ -197,7 +201,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                         <div className="flex justify-between items-start mb-6">
                             <h2 className={`text-2xl font-black text-transparent bg-clip-text ${activeTrajectory?.data?.is_insulated
                                 ? 'bg-gradient-to-r from-amber-400 to-amber-200'
-                                : 'bg-gradient-to-r from-cyan-400 to-[var(--color-primary)]'
+                                : 'bg-gradient-to-r from-cyan-400 to-[var(--soft-teal)]'
                                 }`}>
                                 {activeTrajectory?.data?.is_insulated ? 'Insulated Path' : 'Current Path'}
                             </h2>
@@ -235,7 +239,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                             <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${cb * 100}%` }}
-                                className="h-full bg-gradient-to-r from-[var(--color-primary)] via-cyan-400 to-emerald-400"
+                                className="h-full bg-gradient-to-r from-[var(--soft-teal)] via-cyan-400 to-emerald-400"
                                 transition={{ duration: 1.5, ease: "easeOut" }}
                             />
                         </div>
@@ -279,7 +283,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
             {/* --- Right Column: Mission Cards --- */}
             <div className="space-y-4 lg:col-span-8">
                 <AnimatePresence mode="popLayout">
-                    {mission.daily_missions.map((m: any, idx: number) => {
+                    {mission.daily_missions.map((m: DailyMission, idx: number) => {
                         const isCurrentDay = m.day === (activeTrajectory?.data?.current_day || 1);
                         const isCompleted = m.day < (activeTrajectory?.data?.current_day || 1);
 
@@ -290,12 +294,12 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 }}
                                 whileHover={{ scale: 1.01, x: 5 }}
-                                className={`group relative overflow-hidden p-6 bg-slate-900/40 rounded-3xl border ${isCurrentDay ? 'border-[var(--color-primary)] ring-1 ring-indigo-500/20 shadow-[var(--color-primary-glow)]' : 'border-white/5'
+                                className={`group relative overflow-hidden p-6 bg-slate-900/40 rounded-3xl border ${isCurrentDay ? 'border-[var(--soft-teal)] ring-1 ring-indigo-500/20 shadow-[var(--soft-teal)]' : 'border-white/5'
                                     } backdrop-blur-xl transition-all duration-300 shadow-2xl ${isCompleted ? 'opacity-50' : ''}`}
                             >
                                 {/* Decorative Background Glow for Active Mission */}
                                 {isCurrentDay && (
-                                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--color-primary)]/20 blur-[80px] rounded-full" />
+                                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--soft-teal)]/20 blur-[80px] rounded-full" />
                                 )}
 
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -305,8 +309,8 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-center space-x-2 mb-1">
-                                                <span className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-widest">Day Task</span>
-                                                {isCurrentDay && <span className="text-[10px] font-bold text-emerald-400 animate-pulse uppercase tracking-widest">● Active Now</span>}
+                                                <span className="text-[10px] font-black text-[var(--soft-teal)] uppercase tracking-widest">Day Task</span>
+                                                {isCurrentDay && <span className="text-[10px] font-bold text-emerald-400 animate-pulse uppercase tracking-widest"> Active Now</span>}
                                                 {isCompleted && <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Verified</span>}
                                             </div>
                                             <p className="text-lg font-bold text-slate-100 leading-tight">
@@ -321,7 +325,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                                             <span className="text-xs">{m.estimated_minutes}M</span>
                                         </div>
                                         {isCurrentDay ? (
-                                            <button className="flex items-center space-x-2 px-5 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary)] text-white rounded-xl font-bold text-xs transition-all shadow-lg shadow-[var(--color-primary-glow)] active:scale-95">
+                                            <button className="flex items-center space-x-2 px-5 py-2.5 bg-[var(--soft-teal)] hover:bg-[var(--soft-teal)] text-white rounded-xl font-bold text-xs transition-all shadow-lg shadow-[var(--soft-teal)] active:scale-95">
                                                 <span>Execute</span>
                                                 <Zap className="w-3 h-3 fill-current" />
                                             </button>
@@ -344,10 +348,10 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
                 {/* Behavioral Integrity Footer */}
                 <div className="mt-8 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="flex items-center space-x-4 text-slate-500">
-                        <Activity className="w-5 h-5 text-[var(--color-primary)]" />
+                        <Activity className="w-5 h-5 text-[var(--soft-teal)]" />
                         <span className="text-xs font-bold leading-none tracking-tight">Mission status depends on organic behavioral detection.</span>
                     </div>
-                    <div className="px-4 py-2 bg-[var(--color-primary)]/10 rounded-xl border border-[var(--color-primary)] text-[10px] font-black text-[var(--color-primary)] uppercase tracking-[0.2em]">
+                    <div className="px-4 py-2 bg-[var(--soft-teal)]/10 rounded-xl border border-[var(--soft-teal)] text-[10px] font-black text-[var(--soft-teal)] uppercase tracking-[0.2em]">
                         Behavioral Integrity (BI) Mode: Enabled
                     </div>
                 </div>
@@ -355,6 +359,7 @@ export const TrajectoryDashboard: React.FC<TrajectoryDashboardProps> = ({ userId
         </div>
     );
 };
+
 
 
 

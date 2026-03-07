@@ -1,97 +1,97 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "../../_lib/supabaseAdmin";
 
+export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
-type RecommendationCandidate = {
-  id: string;
-  title: string;
-  message: string;
-  cta: string;
-  actionType: string;
-  actionPayload?: Record<string, unknown>;
-  tags?: string[];
-};
+const FOUNDING_COHORT_CAPACITY = 50;
 
-function randomId(prefix: string): string {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-}
-
-function chooseCandidate(candidates: RecommendationCandidate[]): RecommendationCandidate | null {
-  if (candidates.length === 0) return null;
-  const breathing = candidates.find((item) => item.actionType === "open_breathing");
-  return breathing ?? candidates[0];
-}
-
-export async function POST(req: NextRequest, ctx: { params: { action: string } }) {
-  const action = String(ctx.params.action || "");
-  const body = await req.json().catch(() => ({}));
-  const supabaseAdmin = getSupabaseAdminClient();
-
-  if (action === "next-step") {
-    const candidates = Array.isArray(body?.candidates) ? (body.candidates as RecommendationCandidate[]) : [];
-    const selected = chooseCandidate(candidates);
-    if (!selected) {
-      return NextResponse.json({ error: "Missing candidates" }, { status: 400 });
-    }
-
-    const decisionId = randomId("decision_cloud");
-    const riskRatio = Number(body?.features?.riskRatio ?? 0);
-    const response = {
-      decisionId,
-      action: selected,
-      why: {
-        headline: "تم اختيار الخطوة الأعلى أمانًا وتأثيرًا الآن",
-        reasons: [
-          { code: "pulse_instability", label: "اعتمادًا على مؤشرات الحالة الحالية" },
-          { code: "task_gap", label: "وبناءً على فجوة التنفيذ الأخيرة" }
-        ]
+export async function GET() {
+  const client = getSupabaseAdminClient();
+  if (!client) {
+    return NextResponse.json(
+      {
+        total_seats: FOUNDING_COHORT_CAPACITY,
+        seats_left: null,
+        active_premium: null,
+        closes_at: null,
+        source: "unavailable",
+        is_live: false
       },
-      confidence: 0.72,
-      riskBand: riskRatio >= 0.7 ? "high" : riskRatio >= 0.45 ? "medium" : "low",
-      source: "cloud_ranker",
-      expiresAt: Date.now() + 12 * 60 * 60 * 1000
-    };
-
-    if (supabaseAdmin) {
-      await supabaseAdmin.from("next_step_decisions").insert({
-        id: decisionId,
-        session_id: body?.sessionId ?? null,
-        phase: body?.phase ?? null,
-        risk_band: response.riskBand,
-        source: response.source,
-        confidence: response.confidence,
-        action_type: selected.actionType,
-        action_payload: selected.actionPayload ?? null,
-        feature_snapshot: body?.features ?? null,
-        created_at: new Date().toISOString(),
-        expires_at: new Date(response.expiresAt).toISOString()
-      });
-    }
-
-    return NextResponse.json(response, { status: 200 });
+      { status: 200, headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+    );
   }
 
-  if (action === "outcome") {
-    const decisionId = typeof body?.decisionId === "string" ? body.decisionId : "";
-    if (!decisionId) {
-      return NextResponse.json({ error: "Missing decisionId" }, { status: 400 });
-    }
+  const { data: scarcityRpcData, error: scarcityRpcError } = await client.rpc("get_founding_cohort_scarcity");
+  const scarcityRow = Array.isArray(scarcityRpcData)
+    ? (scarcityRpcData[0] as Record<string, unknown> | undefined)
+    : (scarcityRpcData as Record<string, unknown> | null);
 
-    if (supabaseAdmin) {
-      await supabaseAdmin.from("next_step_outcomes").insert({
-        decision_id: decisionId,
-        acted: Boolean(body?.acted),
-        completed: body?.completed == null ? null : Boolean(body.completed),
-        pulse_delta: typeof body?.pulseDelta === "number" ? body.pulseDelta : null,
-        time_to_action_sec: typeof body?.timeToActionSec === "number" ? body.timeToActionSec : null,
-        reported_at: new Date(typeof body?.reportedAt === "number" ? body.reportedAt : Date.now()).toISOString()
-      });
-    }
+  if (!scarcityRpcError && scarcityRow) {
+    const totalSeats = Number(scarcityRow.total_seats ?? FOUNDING_COHORT_CAPACITY);
+    const seatsLeftRaw = Number(scarcityRow.seats_left ?? 0);
+    const activePremiumRaw = Number(scarcityRow.active_premium ?? 0);
+    const isLive = Boolean(scarcityRow.is_live);
+    const closesAt = typeof scarcityRow.closes_at === "string" ? scarcityRow.closes_at : null;
 
-    return NextResponse.json({ ok: true }, { status: 200 });
+    return NextResponse.json(
+      {
+        total_seats: Number.isFinite(totalSeats) && totalSeats > 0 ? totalSeats : FOUNDING_COHORT_CAPACITY,
+        seats_left: Number.isFinite(seatsLeftRaw) ? Math.max(seatsLeftRaw, 0) : null,
+        active_premium: Number.isFinite(activePremiumRaw) ? Math.max(activePremiumRaw, 0) : null,
+        closes_at: closesAt,
+        source: "cohort_seats_rpc",
+        is_live: isLive
+      },
+      { status: 200, headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+    );
   }
 
-  return NextResponse.json({ error: "Unknown recommendations action" }, { status: 404 });
+  // Backward-compatible fallback while the migration is rolling out.
+  const { count, error } = await client
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .gt("awareness_tokens", 0)
+    .gt("journey_expires_at", new Date().toISOString());
+
+  if (error) {
+    return NextResponse.json(
+      {
+        total_seats: FOUNDING_COHORT_CAPACITY,
+        seats_left: null,
+        active_premium: null,
+        closes_at: null,
+        source: "unavailable",
+        is_live: false
+      },
+      { status: 200, headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+    );
+  }
+
+  const activePremium = Number(count ?? 0);
+  const seatsLeft = Math.max(FOUNDING_COHORT_CAPACITY - activePremium, 0);
+  const { data: cohortWindowRows } = await client
+    .from("profiles")
+    .select("journey_expires_at")
+    .gt("awareness_tokens", 0)
+    .gt("journey_expires_at", new Date().toISOString())
+    .order("journey_expires_at", { ascending: true })
+    .limit(1);
+
+  const closesAt =
+    cohortWindowRows?.[0] && typeof cohortWindowRows[0].journey_expires_at === "string"
+      ? cohortWindowRows[0].journey_expires_at
+      : null;
+
+  return NextResponse.json(
+    {
+      total_seats: FOUNDING_COHORT_CAPACITY,
+      seats_left: seatsLeft,
+      active_premium: activePremium,
+      closes_at: closesAt,
+      source: "supabase",
+      is_live: true
+    },
+    { status: 200, headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
+  );
 }
-

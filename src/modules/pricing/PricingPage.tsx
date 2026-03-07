@@ -1,192 +1,206 @@
 "use client";
 
-import React, { useMemo, useState } from 'react';
-import { supabase } from '../../services/supabaseClient';
-import { stripeService } from '../../services/stripeIntegration';
-import { Shield, Target, Check, Sparkles } from 'lucide-react';
-import { consumeEmotionalOffer, getEmotionalOffer } from '../../services/subscriptionManager';
+import React, { useMemo, useState } from "react";
+import { Check, Lock, Shield, Sparkles, Target } from "lucide-react";
+import { consumeEmotionalOffer, getEmotionalOffer } from "../../services/subscriptionManager";
+import { stripeService } from "../../services/stripeIntegration";
+import { supabase } from "../../services/supabaseClient";
 
 export default function PricingPage() {
-    const [isLoading, setIsLoading] = useState<'premium' | 'coach' | null>(null);
-    const [offerConsumed, setOfferConsumed] = useState(false);
-    const emotionalOffer = useMemo(() => getEmotionalOffer(), []);
+  const [isLoading, setIsLoading] = useState<"premium" | "coach" | null>(null);
+  const [offerConsumed, setOfferConsumed] = useState(false);
+  const emotionalOffer = useMemo(() => getEmotionalOffer(), []);
 
-    const handleSubscribe = async (tier: 'premium' | 'coach') => {
-        setIsLoading(tier);
+  const handleSubscribe = async (tier: "premium" | "coach") => {
+    setIsLoading(tier);
 
-        // 1. Check Auth Step
-        if (!supabase) {
-            alert('خدمة التسجيل غير متوفرة حالياً.');
-            setIsLoading(null);
-            return;
-        }
+    if (!supabase) {
+      alert("خدمة التسجيل غير متاحة حاليًا.");
+      setIsLoading(null);
+      return;
+    }
 
-        const { data: { session } } = await supabase.auth.getSession();
-        const user = session?.user;
+    const {
+      data: { session }
+    } = await supabase.auth.getSession();
+    const user = session?.user;
 
-        // Redirect to login if not authenticated
-        if (!user) {
-            await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: window.location.origin + '/pricing' }
-            });
-            return;
-        }
+    if (!user) {
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/pricing` }
+      });
+      return;
+    }
 
-        // 2. Call our Integrated Stripe Service
-        try {
-            const data = await stripeService.createCheckoutSession({
-                userId: user.id,
-                tier: tier
-            });
+    try {
+      const data = await stripeService.createCheckoutSession({
+        userId: user.id,
+        tier
+      });
 
-            if (data?.url) {
-                window.location.href = data.url; // Redirect to Stripe
-            } else {
-                throw new Error("لم نتمكن من جلب صفحة الدفع");
-            }
-        } catch (error) {
-            console.error("Payment error:", error);
-            alert("حدث خطأ أثناء الانتقال لصفحة الدفع. يرجى المحاولة لاحقاً.");
-            setIsLoading(null);
-        }
-    };
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("تعذر إنشاء رابط الدفع");
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      alert("حدث خطأ أثناء فتح صفحة الدفع. حاول مرة أخرى.");
+      setIsLoading(null);
+    }
+  };
 
-    return (
-        <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center py-20 px-4 font-sans" dir="rtl">
-            {emotionalOffer && !offerConsumed && (
-                <div className="w-full max-w-4xl mb-8 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-right shadow-sm">
-                    <p className="text-sm font-bold text-emerald-800 leading-tight">{emotionalOffer.title}</p>
-                    <p className="text-sm text-emerald-700 mt-1 leading-[1.7]">{emotionalOffer.message}</p>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            consumeEmotionalOffer();
-                            setOfferConsumed(true);
-                        }}
-                        className="mt-3 rounded-lg bg-emerald-600 text-white px-4 py-2 text-xs font-semibold hover:bg-emerald-700 transition-colors"
-                    >
-                        تم الاستلام
-                    </button>
-                </div>
-            )}
-            <div className="text-center max-w-2xl mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="inline-flex items-center justify-center gap-2 px-3 py-1.5 mb-6 bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-full text-sm font-semibold border border-[var(--color-primary)]">
-                    <Sparkles className="w-4 h-4" /> العودة للتوازن تبدأ بخطوة
-                </div>
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">استثمر في وعيك، ضاعف طاقتك</h1>
-                <p className="text-lg text-gray-600 leading-[1.8]">
-                    اختر الخطة التي تتناسب مع احتياجك. سواء كنت تصمم رحلة تعافيك الشخصية، أو تساعد عملائك على ذلك.
-                </p>
-            </div>
+  return (
+    <div className="min-h-screen bg-[#f8fafc] px-4 py-20 font-sans" dir="rtl">
+      <div className="mx-auto flex w-full max-w-5xl flex-col items-center">
+        {emotionalOffer && !offerConsumed && (
+          <div className="mb-8 w-full rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-right shadow-sm">
+            <p className="text-sm font-bold leading-tight text-emerald-800">{emotionalOffer.title}</p>
+            <p className="mt-1 text-sm leading-[1.7] text-emerald-700">{emotionalOffer.message}</p>
+            <button
+              type="button"
+              onClick={() => {
+                consumeEmotionalOffer();
+                setOfferConsumed(true);
+              }}
+              className="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"
+            >
+              تم الاستلام
+            </button>
+          </div>
+        )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl w-full">
-
-                {/* Plan A: Personal PRO */}
-                <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
-                    <div className="mb-8">
-                        <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
-                            <Shield className="w-6 h-6" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-2 leading-tight">للاستخدام الشخصي (PRO)</h2>
-                        <p className="text-gray-500 text-sm h-10 leading-[1.8]">ارسم خرائطك الذاتية وراقب تطور وعيك بشكل مستمر، دون قيود.</p>
-                    </div>
-
-                    <div className="mb-8 p-6 bg-gray-50 rounded-2xl">
-                        <div className="flex items-end gap-1 mb-1">
-                            <span className="text-4xl font-black text-gray-900">$9</span>
-                            <span className="text-gray-500 font-medium mb-1">/ شهرياً</span>
-                        </div>
-                        <div className="text-sm text-gray-400">يلغى الاشتراك في أي وقت</div>
-                    </div>
-
-                    <ul className="space-y-4 mb-10 flex-1 text-gray-700">
-                        <li className="flex items-start gap-3">
-                            <Check className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" />
-                            <span className="leading-relaxed"><strong>حفظ عدد لا محدود</strong> من خرائط دائرة التوازن</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Check className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" />
-                            <span className="leading-relaxed"><strong>المقارنة التاريخية:</strong> راقب كيف تتغير طاقتك بمرور الشهور</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <Check className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" />
-                            <span className="leading-relaxed">تحليل الذكاء الاصطناعي المعمق لاستنزاف الطاقة</span>
-                        </li>
-                    </ul>
-
-                    <button
-                        onClick={() => handleSubscribe('premium')}
-                        disabled={isLoading === 'premium'}
-                        className="w-full py-4 bg-gray-900 text-white rounded-xl font-bold text-lg hover:bg-black transition-colors shadow-lg shadow-gray-900/20 flex items-center justify-center"
-                    >
-                        {isLoading === 'premium' ? 'جاري التحويل للبنك...' : 'استعد طاقتك الآن'}
-                    </button>
-                </div>
-
-                {/* Plan B: Coach B2B */}
-                <div className="bg-gradient-to-br from-[var(--color-primary)] via-[var(--color-primary)] to-[var(--color-primary)] rounded-3xl p-8 md:p-10 shadow-2xl flex flex-col relative overflow-hidden transition-all duration-300 hover:shadow-[var(--color-primary-glow)] hover:-translate-y-1">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-
-                    <div className="absolute top-6 left-6 bg-[var(--color-primary)]/30 border border-[var(--color-primary)] text-[var(--color-primary)] text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm">
-                        للمعالجين والمدربين
-                    </div>
-
-                    <div className="mb-8 relative z-10">
-                        <div className="w-12 h-12 bg-[var(--color-primary)]/20 text-[var(--color-primary)] rounded-2xl flex items-center justify-center mb-6 border border-[var(--color-primary)] backdrop-blur-sm">
-                            <Target className="w-6 h-6" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-white mb-2 leading-tight">رخصة المدرب (Practice)</h2>
-                        <p className="text-[var(--color-primary)] text-sm h-10 leading-[1.8]">لوحة تحكم كاملة لإدارة عملائك ومتابعة تقدمهم ببيانات حقيقية.</p>
-                    </div>
-
-                    <div className="mb-8 p-6 bg-white/5 border border-white/10 rounded-2xl relative z-10">
-                        <div className="flex items-end gap-1 mb-1">
-                            <span className="text-4xl font-black text-white">$49</span>
-                            <span className="text-[var(--color-primary)] font-medium mb-1">/ شهرياً</span>
-                        </div>
-                        <div className="text-sm text-[var(--color-primary)]">يشمل أول 10 مقاعد للعملاء</div>
-                    </div>
-
-                    <ul className="space-y-4 mb-10 flex-1 text-[var(--color-primary)] relative z-10">
-                        <li className="flex items-start gap-3">
-                            <div className="rounded-full bg-[var(--color-primary)]/30 p-1 shrink-0 mt-0.5"><Check className="w-3 h-3 text-white" /></div>
-                            <span className="leading-relaxed"><strong>لوحة تحكم بانورامية:</strong> نظام فرز سريع (Triage) لحالات العملاء</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <div className="rounded-full bg-[var(--color-primary)]/30 p-1 shrink-0 mt-0.5"><Check className="w-3 h-3 text-white" /></div>
-                            <span className="leading-relaxed">متابعة خرائط العملاء لحظياً (بموافقتهم)</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <div className="rounded-full bg-[var(--color-primary)]/30 p-1 shrink-0 mt-0.5"><Check className="w-3 h-3 text-white" /></div>
-                            <span className="leading-relaxed"><strong>نظام المقاعد القابل للتوسع:</strong> أضف عملاء أكثر بسعر مخفض متى شئت</span>
-                        </li>
-                    </ul>
-
-                    <button
-                        onClick={() => handleSubscribe('coach')}
-                        disabled={isLoading === 'coach'}
-                        className="w-full py-4 bg-white text-[var(--color-primary)] rounded-xl font-bold text-lg hover:bg-[var(--color-primary)]/10 transition-colors shadow-lg shadow-white/10 relative z-10 flex items-center justify-center"
-                    >
-                        {isLoading === 'coach' ? 'جاري التحويل للبنك...' : 'ابدأ تشغيل عيادتك الرقمية'}
-                    </button>
-                </div>
-
-            </div>
-
-            {/* Trust Footer */}
-            <div className="mt-16 text-center text-sm text-gray-500 flex items-center justify-center gap-6">
-                <div className="flex items-center gap-2"><Lock className="w-4 h-4" /> مدفوعات آمنة عبر Stripe</div>
-                <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                <div className="flex items-center gap-2">إلغاء الاشتراك في أي وقت</div>
-            </div>
+        <div className="mb-14 max-w-2xl text-center">
+          <div className="mb-6 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--soft-teal)] bg-[var(--soft-teal)]/10 px-3 py-1.5 text-sm font-semibold text-[var(--soft-teal)]">
+            <Sparkles className="h-4 w-4" />
+            خطوة واضحة نحو توازن أفضل
+          </div>
+          <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight text-gray-900 md:text-5xl">
+            اختر الخطة المناسبة لك
+          </h1>
+          <p className="text-lg leading-[1.8] text-gray-600">
+            سواء كنت تستخدم الرحلة لنفسك أو لعملائك، ستحصل على تجربة واضحة تدعم قراراتك اليومية.
+          </p>
         </div>
-    );
+
+        <div className="grid w-full grid-cols-1 gap-8 md:grid-cols-2">
+          <div className="relative flex flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white p-8 shadow-xl shadow-gray-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl md:p-10">
+            <div className="mb-8">
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                <Shield className="h-6 w-6" />
+              </div>
+              <h2 className="mb-2 text-2xl font-bold leading-tight text-gray-900">للاستخدام الشخصي (مميز)</h2>
+              <p className="h-10 text-sm leading-[1.8] text-gray-500">
+                تتبع علاقاتك وأنماطك مع الوقت، وخذ قرارات أكثر وضوحًا.
+              </p>
+            </div>
+
+            <div className="mb-8 rounded-2xl bg-gray-50 p-6">
+              <div className="mb-1 flex items-end gap-1">
+                <span className="text-4xl font-black text-gray-900">9 دولار</span>
+                <span className="mb-1 font-medium text-gray-500">/ شهريًا</span>
+              </div>
+              <div className="text-sm text-gray-400">يمكن الإلغاء في أي وقت</div>
+            </div>
+
+            <ul className="mb-10 flex-1 space-y-4 text-gray-700">
+              <li className="flex items-start gap-3">
+                <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--soft-teal)]" />
+                <span className="leading-relaxed">
+                  <strong>خرائط غير محدودة</strong> لعلاقاتك وتغيراتها
+                </span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--soft-teal)]" />
+                <span className="leading-relaxed">
+                  <strong>مقارنة زمنية</strong> لفهم التحسن بوضوح
+                </span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--soft-teal)]" />
+                <span className="leading-relaxed">تحليل ذكي يدعم خطواتك اليومية</span>
+              </li>
+            </ul>
+
+            <button
+              onClick={() => void handleSubscribe("premium")}
+              disabled={isLoading === "premium"}
+              className="flex w-full items-center justify-center rounded-xl bg-gray-900 py-4 text-lg font-bold text-white shadow-lg shadow-gray-900/20 transition-colors hover:bg-black"
+            >
+              {isLoading === "premium" ? "جاري تحويلك للدفع..." : "ابدأ الخطة الشخصية"}
+            </button>
+          </div>
+
+          <div className="relative flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--soft-teal)] via-[var(--soft-teal)] to-[var(--soft-teal)] p-8 shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--soft-teal)] md:p-10">
+            <div className="absolute -translate-y-1/2 translate-x-1/2 rounded-full bg-white opacity-5 blur-3xl right-0 top-0 h-64 w-64" />
+
+            <div className="absolute left-6 top-6 rounded-full border border-[var(--soft-teal)] bg-[var(--soft-teal)]/30 px-3 py-1 text-xs font-bold text-[var(--soft-teal)] backdrop-blur-sm">
+              للمدربين والمعالجين
+            </div>
+
+            <div className="relative z-10 mb-8">
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--soft-teal)] bg-[var(--soft-teal)]/20 text-[var(--soft-teal)] backdrop-blur-sm">
+                <Target className="h-6 w-6" />
+              </div>
+              <h2 className="mb-2 text-2xl font-bold leading-tight text-white">رخصة المدرب (العيادة)</h2>
+              <p className="h-10 text-sm leading-[1.8] text-[var(--soft-teal)]">
+                إدارة عملائك ومتابعة تقدمهم عبر لوحة واضحة ومتكاملة.
+              </p>
+            </div>
+
+            <div className="relative z-10 mb-8 rounded-2xl border border-white/10 bg-white/5 p-6">
+              <div className="mb-1 flex items-end gap-1">
+                <span className="text-4xl font-black text-white">49 دولار</span>
+                <span className="mb-1 font-medium text-[var(--soft-teal)]">/ شهريًا</span>
+              </div>
+              <div className="text-sm text-[var(--soft-teal)]">يشمل أول 10 مقاعد للعملاء</div>
+            </div>
+
+            <ul className="relative z-10 mb-10 flex-1 space-y-4 text-[var(--soft-teal)]">
+              <li className="flex items-start gap-3">
+                <div className="mt-0.5 shrink-0 rounded-full bg-[var(--soft-teal)]/30 p-1">
+                  <Check className="h-3 w-3 text-white" />
+                </div>
+                <span className="leading-relaxed">
+                  <strong>لوحة متابعة شاملة:</strong> فرز واضح للحالات
+                </span>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="mt-0.5 shrink-0 rounded-full bg-[var(--soft-teal)]/30 p-1">
+                  <Check className="h-3 w-3 text-white" />
+                </div>
+                <span className="leading-relaxed">متابعة لحظية لخرائط العملاء (بموافقتهم)</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <div className="mt-0.5 shrink-0 rounded-full bg-[var(--soft-teal)]/30 p-1">
+                  <Check className="h-3 w-3 text-white" />
+                </div>
+                <span className="leading-relaxed">
+                  <strong>نظام مقاعد مرن:</strong> قابل للتوسع حسب احتياجك
+                </span>
+              </li>
+            </ul>
+
+            <button
+              onClick={() => void handleSubscribe("coach")}
+              disabled={isLoading === "coach"}
+              className="relative z-10 flex w-full items-center justify-center rounded-xl bg-white py-4 text-lg font-bold text-[var(--soft-teal)] shadow-lg shadow-white/10 transition-colors hover:bg-[var(--soft-teal)]/10"
+            >
+              {isLoading === "coach" ? "جاري تحويلك للدفع..." : "ابدأ خطة العيادة"}
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-14 flex flex-wrap items-center justify-center gap-4 text-center text-sm text-gray-500">
+          <div className="flex items-center gap-2">
+            <Lock className="h-4 w-4" />
+            مدفوعات آمنة عبر Stripe
+          </div>
+          <span className="h-1 w-1 rounded-full bg-gray-300" />
+          <div>إلغاء الاشتراك في أي وقت</div>
+        </div>
+      </div>
+    </div>
+  );
 }
-
-// Temporary Lock icon component until full lucide import is fixed for it
-function Lock(props: React.SVGProps<SVGSVGElement>) {
-    return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>;
-}
-
-

@@ -1,7 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { verifyAdminWithRoles, parseJsonBody } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
-function getBearerToken(req: any): string | null {
+function getBearerToken(req: AdminRequest): string | null {
   const authHeader = req.headers?.authorization || req.headers?.Authorization;
   if (typeof authHeader !== "string") return null;
   if (!authHeader.toLowerCase().startsWith("bearer ")) return null;
@@ -28,7 +29,7 @@ function getRpcClientWithUserJwt(jwt: string) {
   });
 }
 
-export async function handleRadarGrants(req: any, res: any) {
+export async function handleRadarGrants(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdminWithRoles(req, res, ["admin", "owner", "superadmin", "super_admin"]))) return;
 
   if (req.method !== "POST") {
@@ -66,4 +67,7 @@ export async function handleRadarGrants(req: any, res: any) {
 
   res.status(200).json({ success: Boolean(data), userId });
 }
+
+
+
 

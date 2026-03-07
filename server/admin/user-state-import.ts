@@ -1,4 +1,5 @@
 import { getAdminSupabase, verifyAdmin, parseJsonBody } from "./_shared";
+import type { AdminRequest, AdminResponse } from "./_shared";
 
 type UserStateImportRow = {
   device_token?: string;
@@ -7,7 +8,7 @@ type UserStateImportRow = {
   updated_at?: string;
 };
 
-export async function handleUserStateImportStandalone(req: any, res: any) {
+export async function handleUserStateImportStandalone(req: AdminRequest, res: AdminResponse) {
   if (!(await verifyAdmin(req, res))) return;
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
@@ -52,3 +53,6 @@ export async function handleUserStateImportStandalone(req: any, res: any) {
 
   res.status(200).json({ ok: true, count: payload.length });
 }
+
+
+

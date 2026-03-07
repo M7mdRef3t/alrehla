@@ -1,4 +1,4 @@
-import type { FC } from "react";
+﻿import type { FC } from "react";
 import { Suspense, lazy, useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -664,7 +664,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 trackEvent(AnalyticsEvents.LIBRARY_OPENED);
                 setShowLibrary(true);
               }}
-              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-[var(--color-primary)] dark:hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 dark:hover:bg-[var(--color-primary)]/30 hover:text-[var(--color-primary)] dark:hover:text-[var(--color-primary)] transition-all text-right shrink-0 whitespace-nowrap"
+              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-[var(--soft-teal)] dark:hover:border-[var(--soft-teal)] hover:bg-[var(--soft-teal)]/10 dark:hover:bg-[var(--soft-teal)]/30 hover:text-[var(--soft-teal)] dark:hover:text-[var(--soft-teal)] transition-all text-right shrink-0 whitespace-nowrap"
               title="مكتبة المحتوى التعليمي"
             >
               <BookOpen className="w-5 h-5 shrink-0" />
@@ -1281,7 +1281,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     setShowLibrary(true);
                     handleClose();
                   }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-[var(--color-primary)] dark:hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 dark:hover:bg-[var(--color-primary)]/30 hover:text-[var(--color-primary)] dark:hover:text-[var(--color-primary)] transition-all text-right"
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-[var(--soft-teal)] dark:hover:border-[var(--soft-teal)] hover:bg-[var(--soft-teal)]/10 dark:hover:bg-[var(--soft-teal)]/30 hover:text-[var(--soft-teal)] dark:hover:text-[var(--soft-teal)] transition-all text-right"
                 >
                   <BookOpen className="w-6 h-6 shrink-0" />
                   <span>المكتبة</span>

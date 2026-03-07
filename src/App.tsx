@@ -40,7 +40,7 @@ import { PWAInstallProvider } from "./contexts/PWAInstallContext";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
 import { AwarenessSkeleton } from "./components/AwarenessSkeleton";
 import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
-import { OnboardingFlow, hasCompletedJourneyOnboarding } from "./components/OnboardingFlow";
+import { OnboardingFlow } from "./components/OnboardingFlow";
 import { JourneyToast } from "./components/JourneyToast";
 import { AnalyticsConsentBanner } from "./components/AnalyticsConsentBanner";
 import { ActiveInterventionPrompt } from "./components/ActiveInterventionPrompt";
@@ -591,9 +591,10 @@ export default function App() {
         showAuthModal,
         showPulseCheck,
         isLandingScreen,
-        hasWhatsAppLink: Boolean(whatsAppLink)
+        hasWhatsAppLink: Boolean(whatsAppLink),
+        isSanctuaryActive: showBreathing || showCocoon || isEmergencyOpen
       }),
-    [isAdminRoute, isLandingScreen, showAuthModal, showPulseCheck, whatsAppLink]
+    [isAdminRoute, isEmergencyOpen, isLandingScreen, showAuthModal, showBreathing, showCocoon, showPulseCheck, whatsAppLink]
   );
 
   const navigateToScreen = useCallback((target: Screen): boolean => {
@@ -612,6 +613,106 @@ export default function App() {
     setScreen(result.screen);
     return result.kind === "navigate";
   }, [canUseJourneyTools, canUseMap, isLockedPhaseOne]);
+
+  const resolveEdgeSwipeBackTarget = useCallback((): Screen | null => {
+    if (showAuthModal || showPulseCheck || showBreathing || showCocoon || isEmergencyOpen) return null;
+
+    switch (screen) {
+      case "goal":
+      case "guided":
+        return "landing";
+      case "mission":
+      case "diplomacy":
+      case "guilt-court":
+      case "enterprise":
+      case "oracle-dashboard":
+      case "armory":
+        return "map";
+      case "tools":
+        return toolsBackScreen;
+      case "settings":
+        return canUseMap ? "map" : "landing";
+      default:
+        return null;
+    }
+  }, [
+    canUseMap,
+    isEmergencyOpen,
+    screen,
+    showAuthModal,
+    showBreathing,
+    showCocoon,
+    showPulseCheck,
+    toolsBackScreen
+  ]);
+
+  useEffect(() => {
+    const windowRef = getWindowOrNull();
+    if (!windowRef) return;
+
+    let startX = 0;
+    let startY = 0;
+    let tracking = false;
+    let startedOnInteractiveElement = false;
+
+    const isSmallScreen = () => windowRef.innerWidth < 768;
+    const isInteractive = (target: EventTarget | null): boolean => {
+      if (!(target instanceof Element)) return false;
+      return Boolean(
+        target.closest("input, textarea, select, button, [role='slider'], [contenteditable='true']")
+      );
+    };
+
+    const onTouchStart = (event: TouchEvent) => {
+      if (!isSmallScreen()) return;
+      if (event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      if (touch.clientX > 24) return;
+
+      startedOnInteractiveElement = isInteractive(event.target);
+      tracking = true;
+      startX = touch.clientX;
+      startY = touch.clientY;
+    };
+
+    const onTouchEnd = (event: TouchEvent) => {
+      if (!tracking || startedOnInteractiveElement) {
+        tracking = false;
+        startedOnInteractiveElement = false;
+        return;
+      }
+      if (!isSmallScreen()) {
+        tracking = false;
+        startedOnInteractiveElement = false;
+        return;
+      }
+      const touch = event.changedTouches[0];
+      if (!touch) {
+        tracking = false;
+        startedOnInteractiveElement = false;
+        return;
+      }
+
+      const deltaX = touch.clientX - startX;
+      const deltaY = Math.abs(touch.clientY - startY);
+      const isValidBackSwipe = deltaX >= 72 && deltaY <= 40 && deltaX > deltaY * 1.2;
+
+      tracking = false;
+      startedOnInteractiveElement = false;
+      if (!isValidBackSwipe) return;
+
+      const target = resolveEdgeSwipeBackTarget();
+      if (!target) return;
+      void navigateToScreen(target);
+    };
+
+    windowRef.addEventListener("touchstart", onTouchStart, { passive: true });
+    windowRef.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      windowRef.removeEventListener("touchstart", onTouchStart);
+      windowRef.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [navigateToScreen, resolveEdgeSwipeBackTarget]);
   const screenFlowTrackInitializedRef = useRef(false);
   useEffect(() => {
     if (!screenFlowTrackInitializedRef.current) {
@@ -2729,6 +2830,13 @@ export default function App() {
                       nextStepDecision={nextStepDecision}
                       onTakeNextStep={handleTakeNextStep}
                       onRefreshNextStep={handleRefreshNextStep}
+                      onOpenPulse={() => {
+                        setPulseCheckContext("regular");
+                        setShowPulseCheck(true);
+                      }}
+                      onOpenLibrary={() => setShowLibrary(true)}
+                      onOpenProfile={() => { void navigateToScreen("settings"); }}
+                      hideBottomDock={showBreathing || showCocoon || isEmergencyOpen}
                     />
                   </ErrorBoundary>
                 )}
@@ -3207,7 +3315,7 @@ export default function App() {
           />
         )}
 
-        {/* Mobile Bottom Navigation - hidden on md+ */}
+        {/* Mobile Bottom Navigation (Apple HIG style) - hidden on md+ */}
         {chromeVisibility.showMobileBottomNav && (
           <nav
             className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center"
@@ -3221,56 +3329,52 @@ export default function App() {
             }}
             aria-label="التنقل الرئيسي"
           >
-            <button type="button" onClick={() => { void navigateToScreen("landing"); }}
-              className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
-              style={{ color: screen !== "map" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
-              aria-label="مساري">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                <polyline points="9 22 9 12 15 12 15 22" />
-              </svg>
-              <span className="text-[10px] font-semibold">مساري</span>
-            </button>
             <button type="button" onClick={() => { void navigateToScreen("map"); }}
-              className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
+              className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
               style={{ color: screen === "map" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
-              aria-label="دوايري">
+              aria-label="الخريطة">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="5.5" />
+                <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+              </svg>
+              <span className="text-[10px] font-semibold">الخريطة</span>
+            </button>
+            <button type="button" onClick={() => { void navigateToScreen("tools"); }}
+              className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
+              style={{ color: screen === "tools" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
+              aria-label="المسار">
               <span className="relative inline-flex items-center justify-center">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-                  style={{ filter: screen === "map" ? "drop-shadow(0 0 8px rgba(45,212,191,0.7))" : "none", transition: "filter 0.3s" }}>
-                  <circle cx="12" cy="12" r="10" />
-                  <circle cx="12" cy="12" r="5.5" />
-                  <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                  style={{ filter: screen === "tools" ? "drop-shadow(0 0 8px rgba(45,212,191,0.7))" : "none", transition: "filter 0.3s" }}>
+                  <path d="M3 3v18h18" />
+                  <path d="M7 15l4-4 3 3 5-6" />
                 </svg>
-                {screen !== "map" && nodes.some(n => !n.isNodeArchived) && (
+                {screen !== "tools" && nodes.some(n => !n.isNodeArchived) && (
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full animate-pulse"
                     style={{ background: "var(--soft-teal)", boxShadow: "0 0 0 1.5px rgba(15,23,42,0.95)" }}
                     aria-hidden="true" />
                 )}
               </span>
-              <span className="text-[10px] font-semibold">دوايري</span>
+              <span className="text-[10px] font-semibold">المسار</span>
             </button>
-            <button type="button" onClick={() => { void navigateToScreen("armory"); }}
-              className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
-              style={{ color: screen === "armory" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
-              aria-label="حماية">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              <span className="text-[10px] font-semibold">الترسانة</span>
-            </button>
-            <button type="button" onClick={() => setShowAchievements(true)}
+            <button type="button" onClick={() => { setPulseCheckContext("regular"); setShowPulseCheck(true); }}
               className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
               style={{ color: "rgba(148,163,184,0.55)" }}
-            >
+              aria-label="النبض">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+              <span className="text-[10px] font-semibold">النبض</span>
+            </button>
+            <button type="button" onClick={() => setShowLibrary(true)}
+              className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
+              style={{ color: showLibrary ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
+              aria-label="المكتبة">
               <span className="relative inline-flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 21v-4a7 7 0 0 1 14 0v4" />
-                  <path d="M5 3v4a7 7 0 0 0 14 0V3" />
-                  <line x1="5" y1="3" x2="19" y2="3" />
-                  <line x1="5" y1="21" x2="19" y2="21" />
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                 </svg>
                 {nodes.filter(n => n.isNodeArchived).length > 0 && (
                   <span className="absolute -top-1 -right-2 min-w-[15px] h-[15px] rounded-full text-[8px] font-bold flex items-center justify-center px-0.5"
@@ -3279,17 +3383,17 @@ export default function App() {
                   </span>
                 )}
               </span>
-              <span className="text-[10px] font-semibold">محطات</span>
+              <span className="text-[10px] font-semibold">المكتبة</span>
             </button>
-            <button type="button" onClick={() => setShowFaq(true)}
+            <button type="button" onClick={() => { void navigateToScreen("settings"); }}
               className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
-              style={{ color: "rgba(148,163,184,0.55)" }}
-              aria-label="وعي">
+              style={{ color: screen === "settings" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
+              aria-label="أنا">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                <path d="M20 21a8 8 0 0 0-16 0" />
+                <circle cx="12" cy="7" r="4" />
               </svg>
-              <span className="text-[10px] font-semibold">وعي</span>
+              <span className="text-[10px] font-semibold">أنا</span>
             </button>
           </nav>
         )}

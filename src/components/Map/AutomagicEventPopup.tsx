@@ -6,9 +6,9 @@ import type { GraphEvent } from '../../services/automagicLoop';
 import { getPrescription } from '../../services/automagicLoop';
 
 /**
- * Automagic Events Popup (Live Context) — النافذة التفاعلية الذاتية
+ * Automagic Events Popup (Live Context)  اافذة اتفاعة اذاتة
  * ==========================================
- * تظهر فوراً عندما يكتشف النظام حدثاً استراتيجياً في الخريطة.
+ * تظر فرا عدا تشف اظا حدثا استراتجا ف اخرطة.
  */
 export const AutomagicEventPopup: React.FC = () => {
     const { events } = useEventHistoryStore();
@@ -39,8 +39,8 @@ export const AutomagicEventPopup: React.FC = () => {
 
     // Determine icon and colors based on event type
     let Icon = Sparkles;
-    let colorTheme = "from-[var(--color-primary)] to-[var(--color-primary)] border-[var(--color-primary)] text-[var(--color-primary)]";
-    let iconColor = "text-[var(--color-primary)] bg-[var(--color-primary)]/20";
+    let colorTheme = "from-[var(--soft-teal)] to-[var(--soft-teal)] border-[var(--soft-teal)] text-[var(--soft-teal)]";
+    let iconColor = "text-[var(--soft-teal)] bg-[var(--soft-teal)]/20";
 
     switch (latestEvent.type) {
         case "VAMPIRE_DETECTED":
@@ -109,5 +109,6 @@ export const AutomagicEventPopup: React.FC = () => {
         </AnimatePresence>
     );
 };
+
 
 

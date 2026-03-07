@@ -40,7 +40,7 @@ export async function GET(req: Request) {
             source: 'supabase',
             is_live: true
         }, { status: 200, headers: { "Cache-Control": "no-store" } });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Error fetching subscription:', err);
         return NextResponse.json(
             { error: 'Failed to fetch subscription', source: 'query_failed', is_live: false },

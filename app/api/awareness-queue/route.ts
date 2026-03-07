@@ -10,7 +10,16 @@ async function triggerWorker(originUrl: string): Promise<void> {
   await fetch(workerUrl, { method: "POST", signal: AbortSignal.timeout(3_000) });
 }
 
-async function enqueueWithRetry(supabaseAdmin: ReturnType<typeof getSupabaseAdminClient>, payload: any) {
+type QueuePayload = {
+  userId: string;
+  actionType: string;
+  [key: string]: unknown;
+};
+
+async function enqueueWithRetry(
+  supabaseAdmin: ReturnType<typeof getSupabaseAdminClient>,
+  payload: QueuePayload
+) {
   if (!supabaseAdmin) {
     return { error: { message: "Supabase is not configured" } };
   }
@@ -48,7 +57,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
     }
 
-    const payload = await req.json();
+    const payload = (await req.json()) as QueuePayload;
     if (!payload?.userId || !payload?.actionType) {
       return NextResponse.json({ error: "Invalid Payload" }, { status: 400 });
     }

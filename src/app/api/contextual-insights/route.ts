@@ -24,7 +24,7 @@ export async function GET(req: Request) {
             .limit(5);
 
         return NextResponse.json(insights);
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: 'Context insights fetch failed' }, { status: 500 });
     }
 }

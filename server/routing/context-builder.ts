@@ -24,7 +24,25 @@ type RecentTelemetryInput = {
   activeElapsedSec?: number;
 };
 
-export function buildRoutingContextV2(body: any): RoutingContextV2 {
+type RoutingFeaturesInput = {
+  riskRatio?: unknown;
+  pulseInstability7d?: unknown;
+  sessionHesitation?: unknown;
+  taskCompletion7d?: unknown;
+  dominantRing?: unknown;
+  focusNodeId?: unknown;
+};
+
+type RoutingBodyInput = {
+  features?: RoutingFeaturesInput;
+  recentTelemetry?: unknown;
+  phase?: unknown;
+  sessionId?: unknown;
+  userId?: unknown;
+  surface?: unknown;
+};
+
+export function buildRoutingContextV2(body: RoutingBodyInput): RoutingContextV2 {
   const features = body?.features ?? {};
   const riskRatio = clamp(Number(features?.riskRatio ?? 0), 0, 1);
   const pulseInstability7d = clamp(Number(features?.pulseInstability7d ?? 0), 0, 1);

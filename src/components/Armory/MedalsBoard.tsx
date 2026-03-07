@@ -7,7 +7,7 @@ import { useAchievementState } from '../../state/achievementState';
 const GRADIENTS = [
     "from-amber-400 to-yellow-600",
     "from-blue-400 to-cyan-600",
-    "from-purple-400 to-[var(--color-primary)]",
+    "from-purple-400 to-[var(--soft-teal)]",
     "from-emerald-400 to-teal-600",
     "from-rose-400 to-red-600",
     "from-slate-300 to-slate-500",
@@ -31,7 +31,7 @@ export const MedalsBoard: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg md:text-xl text-slate-200 font-bold flex items-center gap-2">
                     <Award className="w-5 h-5 md:w-6 md:h-6 text-amber-500" />
-                    خزانة الأوسمة والميداليات
+                    خزاة اأسة اداات
                 </h3>
                 <div className="flex items-center gap-2 bg-slate-800 p-2 rounded-xl border border-slate-700">
                     <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
@@ -42,7 +42,7 @@ export const MedalsBoard: React.FC = () => {
             {/* Progress Bar */}
             <div className="mb-6">
                 <div className="flex justify-between text-[10px] text-slate-400 mb-1 font-bold tracking-widest">
-                    <span>التقدم العام</span>
+                    <span>اتد اعا</span>
                     <span>{completionPercentage}%</span>
                 </div>
                 <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
@@ -120,7 +120,7 @@ export const MedalsBoard: React.FC = () => {
                                     <h4 className="text-lg font-bold text-white">{selectedMedal.title}</h4>
                                     {isEarned(selectedMedal.id) && (
                                         <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-500/20">
-                                            مكتسب
+                                            تسب
                                         </span>
                                     )}
                                 </div>
@@ -135,7 +135,7 @@ export const MedalsBoard: React.FC = () => {
                                 ) : (
                                     <div className="mt-3 text-[11px] font-bold tracking-wide text-slate-400 bg-slate-900/80 px-3 py-2 rounded-lg border border-slate-700/80 w-fit flex items-center gap-2">
                                         <Lock className="w-3.5 h-3.5" />
-                                        لفتح الوسام: استمر في التقدم لاكتشافه
+                                        فتح اسا: استر ف اتد اتشاف
                                     </div>
                                 )}
                             </div>
@@ -146,4 +146,5 @@ export const MedalsBoard: React.FC = () => {
         </div>
     );
 };
+
 

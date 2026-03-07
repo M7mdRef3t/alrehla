@@ -4,12 +4,12 @@ import { Brain, Sparkles, RefreshCw } from 'lucide-react';
 import { generatePredictiveInsight, calculateEntropy } from '../../services/predictiveEngine';
 
 /**
- * AI Oracle Widget — العرّاف الذكي المشرف على الحالة
+ * AI Oracle Widget  اعراف اذ اشرف ع احاة
  * ==========================================
- * يقرأ مستويات الاستنزاف (Pulse) وفوضى الخريطة ثم يقدم نصيحة تكتيكية فورية.
+ * رأ ستات ااستزاف (Pulse) فض اخرطة ث د صحة تتة فرة.
  */
 export const AIOracleWidget: React.FC = () => {
-    const [insightMessage, setInsightMessage] = useState<string>("جاري تحليل مساراتك ومراجعة الرادار...");
+    const [insightMessage, setInsightMessage] = useState<string>("جار تح سارات راجعة ارادار...");
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [stateType, setStateType] = useState<"CHAOS" | "ORDER" | "FLOW">("ORDER");
 
@@ -50,11 +50,11 @@ export const AIOracleWidget: React.FC = () => {
         }
         // ORDER (Neutral)
         return {
-            border: "border-[var(--color-primary)]",
-            bg: "bg-[var(--color-primary)]/20",
-            iconbg: "bg-[var(--color-primary)]/20 text-[var(--color-primary)]",
-            glow: "from-[var(--color-primary)] to-transparent",
-            text: "text-[var(--color-primary)]"
+            border: "border-[var(--soft-teal)]",
+            bg: "bg-[var(--soft-teal)]/20",
+            iconbg: "bg-[var(--soft-teal)]/20 text-[var(--soft-teal)]",
+            glow: "from-[var(--soft-teal)] to-transparent",
+            text: "text-[var(--soft-teal)]"
         };
     };
 
@@ -83,11 +83,11 @@ export const AIOracleWidget: React.FC = () => {
                 <div className="flex-1 min-w-0 pt-0.5">
                     <div className="flex items-center justify-between mb-1">
                         <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                            الأوراكل_الذكي
+                            اأرا_اذ
                             {stateType === "CHAOS" && (
                                 <span className="flex items-center gap-1 text-[9px] text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
                                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                                    تنبيه استنزاف
+                                    تب استزاف
                                 </span>
                             )}
                         </h3>
@@ -109,5 +109,6 @@ export const AIOracleWidget: React.FC = () => {
         </motion.div>
     );
 };
+
 
 

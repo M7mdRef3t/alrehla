@@ -23,10 +23,11 @@ import type { PulseFocus, PulseMood } from "../state/pulseState";
 import type { BaselineAnswers } from "../data/baselineQuestions";
 import { EditableText } from "./EditableText";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
+import { Badge, Button, Card } from "./UI";
 
-/* ════════════════════════════════════════════════
-   🌌 GOAL PICKER — Cosmic Orbit Selection
-   ════════════════════════════════════════════════ */
+/* 
+   GOAL PICKER - Cosmic Orbit Selection
+    */
 
 const ICON_MAP: Record<string, LucideIcon> = {
   work: Briefcase,
@@ -39,7 +40,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 const ALL_GOAL_IDS = ["family", "friends", "work", "love", "money", "self", "unknown"];
-/** وضع المستخدم: العيلة فقط. وضع التطوير: كل الخرائط. */
+/** ضع استخد: اعة فط. ضع اتطر:  اخرائط. */
 const ENABLED_GOAL_IDS = isUserMode ? ["family"] : ALL_GOAL_IDS;
 
 const cosmicEase = [0.22, 1, 0.36, 1] as [number, number, number, number];
@@ -69,7 +70,7 @@ const fadeUp = {
   }
 };
 
-/** توصيات من البوصلة: event+غضبان=صراعات، body+طاقة منخفضة=مستقبل/اكتشاف، thought+قلق=توهان */
+/** تصات  ابصة: event+غضبا=صراعات body+طاة خفضة=ستب/اتشاف thought+=تا */
 function getPulseRecommendations(pulse: { mood: PulseMood; focus: PulseFocus; energy: number }): string[] {
   const { mood, focus, energy } = pulse;
   const recs: string[] = [];
@@ -151,48 +152,46 @@ export const GoalPicker: FC<GoalPickerProps> = ({
       className="w-full max-w-4xl h-full min-h-0 py-2 sm:py-3 text-center overflow-hidden flex flex-col"
       aria-labelledby="goal-title"
     >
-      {/* Progress indicator — cosmic style */}
+      {/* Progress indicator - cosmic style */}
       <motion.div
         variants={fadeUp}
         initial="hidden"
         animate="visible"
         className="mb-1.5 sm:mb-2 shrink-0"
       >
-        <div className="flex items-center justify-center gap-3">
+        <Card className="mx-auto max-w-xl p-3 sm:p-4">
+          <div className="flex items-center justify-center gap-3">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(139, 92, 246, 0.15))",
+                border: "1px solid rgba(45, 212, 191, 0.3)",
+                boxShadow: "0 0 20px rgba(45, 212, 191, 0.15)"
+              }}
+            >
+              <Target className="w-5 h-5" style={{ color: "var(--soft-teal)" }} />
+            </div>
+            <div className="text-right">
+              <h3 className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>ارحة 2  4</h3>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>تحدد اة</p>
+            </div>
+          </div>
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center"
-            style={{
-              background: "linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(139, 92, 246, 0.15))",
-              border: "1px solid rgba(45, 212, 191, 0.3)",
-              boxShadow: "0 0 20px rgba(45, 212, 191, 0.15)"
-            }}
+            className="mt-3 w-full max-w-xs mx-auto h-1 rounded-full overflow-hidden"
+            style={{ background: "rgba(255, 255, 255, 0.06)" }}
           >
-            <Target className="w-5 h-5" style={{ color: "var(--soft-teal)" }} />
+            <motion.div
+              className="h-full rounded-full"
+              style={{
+                background: "linear-gradient(90deg, var(--soft-teal), rgba(139, 92, 246, 0.6))",
+                boxShadow: "0 0 8px rgba(45, 212, 191, 0.3)"
+              }}
+              initial={{ width: "25%" }}
+              animate={{ width: "50%" }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            />
           </div>
-          <div className="text-right">
-            <h3 className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
-              المرحلة 2 من 4
-            </h3>
-            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              تحديد المهمة
-            </p>
-          </div>
-        </div>
-        <div
-          className="mt-3 w-full max-w-xs mx-auto h-1 rounded-full overflow-hidden"
-          style={{ background: "rgba(255, 255, 255, 0.06)" }}
-        >
-          <motion.div
-            className="h-full rounded-full"
-            style={{
-              background: "linear-gradient(90deg, var(--soft-teal), rgba(139, 92, 246, 0.6))",
-              boxShadow: "0 0 8px rgba(45, 212, 191, 0.3)"
-            }}
-            initial={{ width: "25%" }}
-            animate={{ width: "50%" }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          />
-        </div>
+        </Card>
       </motion.div>
 
       {/* Emotional introduction */}
@@ -223,12 +222,12 @@ export const GoalPicker: FC<GoalPickerProps> = ({
         </p>
       </motion.div>
 
-      {/* Goal cards — تملأ الارتفاع بدون سكرول */}
+      {/* Goal cards  تأ اارتفاع بد سر */}
       <div
         className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5 items-stretch justify-items-stretch max-w-4xl mx-auto w-full flex-1 min-h-0 overflow-hidden mb-2 sm:mb-3"
         style={{ gridAutoRows: "minmax(0, 1fr)" }}
         role="group"
-        aria-label="حدد ملف المهمة القادمة"
+        aria-label="حدد ف اة اادة"
       >
         {goalPickerCopy.options.map((option, i) => {
           const Icon = ICON_MAP[option.id];
@@ -269,7 +268,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                   cursor: isEnabled ? "pointer" : "not-allowed"
                 }}
                 onClick={() => handleSelect(option.id)}
-                title={isEnabled ? option.label : "قريبًا"}
+                title={isEnabled ? option.label : "ربا"}
                 disabled={!isEnabled}
                 whileTap={isEnabled ? { scale: 0.97 } : undefined}
                 whileHover={isEnabled ? { scale: 1.02 } : {}}
@@ -281,8 +280,8 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                     transition={{ delay: 0.45 + i * 0.08, type: "spring", stiffness: 320 }}
                     className="mb-1 sm:mb-1.5 flex justify-center shrink-0"
                   >
-                    <span
-                      className="px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1"
+                    <Badge
+                      className="px-2.5 py-1 text-[11px] font-bold inline-flex items-center gap-1"
                       style={{
                         background: "linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(139, 92, 246, 0.15))",
                         border: "1px solid rgba(45, 212, 191, 0.35)",
@@ -291,8 +290,8 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                       }}
                     >
                       <Star className="w-3 h-3" />
-                      موصى به
-                    </span>
+                      ص ب
+                    </Badge>
                   </motion.div>
                 )}
 
@@ -306,7 +305,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
                   >
                     <EditableText
                       id="goal_picker_coming_soon"
-                      defaultText="قريبًا"
+                      defaultText="ربا"
                       page="goal_picker"
                       showEditIcon={false}
                     />
@@ -373,15 +372,13 @@ export const GoalPicker: FC<GoalPickerProps> = ({
         animate="visible"
         className="flex justify-center pt-1 shrink-0"
       >
-        <motion.button
-          type="button"
-          className="glass-button px-6 py-3 text-sm sm:text-base font-medium select-none"
-          style={{ color: "var(--text-secondary)" }}
+        <Button
+          variant="ghost"
+          size="md"
+          className="glass-button px-6 py-3 text-sm sm:text-base font-medium select-none text-[var(--text-secondary)]"
           onClick={onBack}
-          title="رجوع للشاشة السابقة"
-          aria-label="رجوع"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          title="رجع شاشة اسابة"
+          aria-label="رجع"
         >
           <EditableText
             id="goal_picker_back"
@@ -389,7 +386,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({
             page="goal_picker"
             editOnClick={false}
           />
-        </motion.button>
+        </Button>
       </motion.div>
     </main>
   );

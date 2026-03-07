@@ -9,17 +9,17 @@ import {
     Scale,
     Database,
     History,
-    AlertTriangle,
     Lock,
     ChevronRight
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface ProtectiveSystem {
     id: string;
     name: string;
     description: string;
     status: "active" | "standby" | "locked";
-    icon: any;
+    icon: LucideIcon;
     colorClass: string;
     bgClass: string;
     actionLabel?: string;
@@ -49,73 +49,73 @@ export const TheArmoryScreen: FC<TheArmoryScreenProps> = ({
     const systems: ProtectiveSystem[] = [
         {
             id: "mute",
-            name: "بروتوكول العزل (Mute Protocol)",
-            description: "فصل ضوضاء العالم الخارجي والضغوطات تماماً. (تخفيض Cognitive Load)",
+            name: "برت اعز (Mute Protocol)",
+            description: "فص ضضاء اعا اخارج اضغطات تاا. (تخفض Cognitive Load)",
             status: "standby",
             icon: EarOff,
             colorClass: "text-emerald-400",
             bgClass: "bg-emerald-500/10 border-emerald-500/30",
-            actionLabel: "تفعيل العزل",
+            actionLabel: "تفع اعز",
             onActivate: onOpenMuteProtocol,
-            metrics: "Load: 80% → 0%"
+            metrics: "Load: 80%  0%"
         },
         {
             id: "cocoon",
-            name: "وضع الشرنقة (Cocoon Mode)",
-            description: "إغلاق منافذ اتخاذ القرار مؤقتاً عند الانهيار الطاقي، وفرض Hard Reset.",
+            name: "ضع اشرة (Cocoon Mode)",
+            description: "إغا افذ اتخاذ ارار ؤتا عد ااار اطا فرض Hard Reset.",
             status: "standby",
             icon: Waves,
             colorClass: "text-sky-400",
             bgClass: "bg-sky-500/10 border-sky-500/30",
-            actionLabel: "دخول الشرنقة",
+            actionLabel: "دخ اشرة",
             onActivate: onOpenCocoon,
             metrics: "Energy Level < 15%"
         },
         {
             id: "mirror",
-            name: "نظام المرايا (Mirror Protocol)",
-            description: "مواجهة التناقضات الشعورية الصامتة. (الاستهلاك ضد الرغبة الحقيقية)",
+            name: "ظا اراا (Mirror Protocol)",
+            description: "اجة اتاضات اشعرة اصاتة. (ااستا ضد ارغبة احة)",
             status: "standby",
             icon: Eye,
             colorClass: "text-rose-400",
             bgClass: "bg-rose-500/10 border-rose-500/30",
-            actionLabel: "كشف التناقض",
+            actionLabel: "شف اتاض",
             onActivate: onOpenMirror,
             metrics: "Align: 42% (Low)"
         },
         {
             id: "guilt",
-            name: "محكمة الذنب (Guilt Court)",
-            description: "تفكيك مشاعر الذنب المبرمجة مجتمعياً بالأدلة المنطقية.",
+            name: "حة اذب (Guilt Court)",
+            description: "تف شاعر اذب ابرجة جتعا باأدة اطة.",
             status: "standby",
             icon: Scale,
             colorClass: "text-orange-400",
             bgClass: "bg-orange-500/10 border-orange-500/30",
-            actionLabel: "فتح الجلسة",
+            actionLabel: "فتح اجسة",
             onActivate: onOpenGuiltCourt,
             metrics: "Queue: 2 Cases"
         },
         {
             id: "archive",
-            name: "أرشيف الوعي (Consciousness)",
-            description: "سجل تاريخي لا يمكن التلاعب به لتطورك ووقوعك بنظام الـ Blockchain-ish.",
+            name: "أرشف اع (Consciousness)",
+            description: "سج تارخ ا  اتاعب ب تطر ع بظا ا Blockchain-ish.",
             status: "standby",
             icon: Database,
             colorClass: "text-indigo-400",
             bgClass: "bg-indigo-500/10 border-indigo-500/30",
-            actionLabel: "استعراض السجل",
+            actionLabel: "استعراض اسج",
             onActivate: onOpenConsciousnessArchive,
             metrics: "Nodes: 1,204"
         },
         {
             id: "time",
-            name: "كبسولة الزمن (Time Vault)",
-            description: "رسائل لهويتك المستقبلية لمنع النسيان العاطفي وقت الانتكاسات.",
+            name: "بسة از (Time Vault)",
+            description: "رسائ ت استبة ع اسا اعاطف ت ااتاسات.",
             status: "locked",
             icon: History,
             colorClass: "text-slate-400",
             bgClass: "bg-slate-500/10 border-slate-500/30",
-            actionLabel: "بروتوكول مقفل",
+            actionLabel: "برت ف",
             onActivate: onOpenTimeCapsule,
             metrics: "Phase 30 Req."
         }
@@ -139,7 +139,7 @@ export const TheArmoryScreen: FC<TheArmoryScreenProps> = ({
                     </button>
                     <div>
                         <h1 className="text-xl font-black tracking-widest text-slate-100 flex items-center gap-2 uppercase">
-                            الترسانة <ShieldAlert className="w-5 h-5 text-amber-500" />
+                            اترساة <ShieldAlert className="w-5 h-5 text-amber-500" />
                         </h1>
                         <p className="text-[10px] text-slate-500 uppercase tracking-widest font-mono font-bold mt-1">
                             Cognitive Defense Matrix // Active
@@ -166,9 +166,9 @@ export const TheArmoryScreen: FC<TheArmoryScreenProps> = ({
                         <Activity className="w-6 h-6 text-amber-400" />
                     </div>
                     <div className="flex-1">
-                        <h2 className="text-sm font-bold text-amber-400 mb-1">تحذير مستوى الفوضى (Entropy Alert)</h2>
+                        <h2 className="text-sm font-bold text-amber-400 mb-1">تحذر ست افض (Entropy Alert)</h2>
                         <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
-                            تم رصد ارتفاع في مستوى التشتت خلال آخر ساعتين. بناءً على قياسات "محرك الأثر"، يُنصح بتفعيل (وضع الشرنقة) أو (أرشيف الوعي) لإعادة ضبط التمركز.
+                            ت رصد ارتفاع ف ست اتشتت خا آخر ساعت. باء ع اسات "حر اأثر" ُصح بتفع (ضع اشرة) أ (أرشف اع) إعادة ضبط اترز.
                         </p>
                     </div>
                     <div className="hidden sm:block text-right">

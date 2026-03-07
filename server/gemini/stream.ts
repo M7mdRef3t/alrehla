@@ -17,7 +17,25 @@ import {
   validateCodingCommentContract
 } from "./_promptGuard.js";
 
-export default async function handler(req: any, res: any) {
+type ApiRequest = {
+  method?: string;
+  body?: {
+    prompt?: unknown;
+    generationConfig?: unknown;
+    modelOrder?: unknown;
+  };
+};
+
+type ApiResponse = {
+  status: (code: number) => ApiResponse;
+  json: (body: unknown) => void;
+  setHeader: (name: string, value: string) => void;
+  end: (body?: string) => void;
+  write: (chunk: string) => void;
+  statusCode: number;
+};
+
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
