@@ -131,14 +131,15 @@ export const LiveConversationWidget: FC<LiveConversationWidgetProps> = ({
         }}
       >
         <div
-          className="glass-card overflow-hidden"
-          style={{
-            background: "rgba(15, 23, 42, 0.95)",
-            backdropFilter: "blur(16px)",
-            border: isConnected
-              ? "1px solid rgba(45, 212, 191, 0.3)"
-              : "1px solid rgba(255, 255, 255, 0.1)"
-          }}
+          className={`glass-card overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${error
+              ? "bg-red-500/10 border-red-500/30 shadow-[0_0_40px_rgba(248,113,113,0.15)]"
+              : isListening
+                ? "bg-teal-500/10 border-teal-500/30 shadow-[0_0_40px_rgba(45,212,191,0.15)]"
+                : isConnected
+                  ? "bg-emerald-500/5 border-emerald-500/20 shadow-[0_0_40px_rgba(16,185,129,0.1)]"
+                  : "bg-slate-900/90 border-white/10"
+            }`}
+          style={{ backdropFilter: "blur(24px)" }}
         >
           {/* ── Header ── */}
           <div className="flex items-center justify-between p-4 border-b border-white/10">
@@ -190,7 +191,7 @@ export const LiveConversationWidget: FC<LiveConversationWidgetProps> = ({
           {/* ── Error Display ── */}
           {error && (
             <div
-              className="px-4 py-3 text-xs border-b border-white/10"
+              className="px-4 py-3 text-sm font-semibold border-b border-white/10"
               style={{
                 background: "rgba(248, 113, 113, 0.1)",
                 color: "var(--ring-danger)"
@@ -208,7 +209,7 @@ export const LiveConversationWidget: FC<LiveConversationWidgetProps> = ({
             >
               {messages.length === 0 ? (
                 <p
-                  className="text-xs text-center py-8"
+                  className="text-sm font-medium text-center py-8"
                   style={{ color: "var(--text-muted)" }}
                 >
                   {isConnected
@@ -219,12 +220,11 @@ export const LiveConversationWidget: FC<LiveConversationWidgetProps> = ({
                 messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`flex ${
-                      msg.role === "user" ? "justify-end" : "justify-start"
-                    }`}
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"
+                      }`}
                   >
                     <div
-                      className="max-w-[80%] px-3 py-2 rounded-lg text-xs"
+                      className="max-w-[80%] px-3 py-2 rounded-lg text-sm"
                       style={{
                         background:
                           msg.role === "user"
@@ -247,9 +247,8 @@ export const LiveConversationWidget: FC<LiveConversationWidgetProps> = ({
             <button
               type="button"
               onClick={handleToggleConnection}
-              className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${
-                isConnected ? "cta-danger" : "cta-primary"
-              }`}
+              className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${isConnected ? "cta-danger" : "cta-primary"
+                }`}
               disabled={!apiKey}
             >
               {isConnected ? (
@@ -270,18 +269,10 @@ export const LiveConversationWidget: FC<LiveConversationWidgetProps> = ({
               <button
                 type="button"
                 onClick={handleToggleListening}
-                className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${
-                  isListening
-                    ? "bg-red-500/20 border border-red-500/30 text-red-400"
+                className={`w-full py-3 rounded-xl font-semibold text-sm transition-all ${isListening
+                    ? "bg-red-500/20 border border-red-500/30 text-red-400 animate-pulse delay-75"
                     : "glass-button"
-                }`}
-                style={
-                  isListening
-                    ? {
-                        animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite"
-                      }
-                    : undefined
-                }
+                  }`}
               >
                 {isListening ? (
                   <span className="flex items-center justify-center gap-2">
@@ -299,7 +290,7 @@ export const LiveConversationWidget: FC<LiveConversationWidgetProps> = ({
 
             {/* حالة الـ connection */}
             <p
-              className="text-[10px] text-center"
+              className="text-sm font-medium text-center"
               style={{ color: "var(--text-muted)" }}
             >
               {isConnected
@@ -311,17 +302,7 @@ export const LiveConversationWidget: FC<LiveConversationWidgetProps> = ({
           </div>
         </div>
 
-        {/* CSS للـ pulse animation */}
-        <style>{`
-          @keyframes pulse {
-            0%, 100% {
-              opacity: 1;
-            }
-            50% {
-              opacity: 0.7;
-            }
-          }
-        `}</style>
+        {/* Removed internal <style> block to depend on Tailwind's innate animations */}
       </motion.div>
     </AnimatePresence>
   );

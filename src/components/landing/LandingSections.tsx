@@ -3,7 +3,6 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import {
-  Quote,
   Heart,
   Users,
   TrendingUp,
@@ -11,61 +10,24 @@ import {
   Target,
   ShieldCheck,
   ChevronLeft,
-  Lock,
   Clock3,
   CreditCard,
-  CircleHelp,
   Activity,
   Layers,
   Brain,
   Cpu,
-  Unplug,
   Eye,
   HardDrive
 } from "lucide-react";
 import { LiveStatusBar } from "../shared/LiveStatusBar";
-import type { LiveMetrics, TestimonialItem } from "../../architecture/landingLiveData";
+import type { LiveMetrics } from "../../architecture/landingLiveData";
 import { isUserMode } from "../../config/appEnv";
-
-const TRUST_ITEMS = [
-  {
-    title: "خصوصية كاملة",
-    body: "لن تُعرض قصتك علنًا، وتبدأ بدون كشف تفاصيلك الحساسة من أول دقيقة.",
-    icon: Lock
-  },
-  {
-    title: "بدون بطاقة",
-    body: "الدخول الأول مجاني بالكامل. لا يوجد طلب دفع قبل أن ترى إن كانت التجربة تناسبك.",
-    icon: CreditCard
-  },
-  {
-    title: "أقل من 3 دقائق",
-    body: "البدء مصمم ليعطيك أول قراءة واضحة بسرعة بدل جولة طويلة من الشرح.",
-    icon: Clock3
-  },
-  {
-    title: "لن يُطلب منك كل شيء",
-    body: "لن تحتاج إلى كتابة تاريخك كاملًا أو تبرير مشاعرك قبل أن تحصل على أول خطوة.",
-    icon: CircleHelp
-  }
-] as const;
 
 const PREVIEW_METRICS = [
   { val: "3 دقائق", label: "حتى أول قراءة واضحة", icon: Clock3, color: "text-teal-400" },
   { val: "بدون بطاقة", label: "لبداية التجربة", icon: CreditCard, color: "text-[var(--color-primary)]" },
   { val: "خصوصية كاملة", label: "في أول جلسة", icon: ShieldCheck, color: "text-rose-400" }
 ] as const;
-
-const PREVIEW_TESTIMONIALS: TestimonialItem[] = [
-  {
-    quote: "دخلت وأنا مشتتة، وخلال دقائق فهمت أين يبدأ الاستنزاف وما هي أول خطوة عملية.",
-    author: "معاينة من تجربة مستخدمة جديدة"
-  },
-  {
-    quote: "الصفحة جعلت القرار سهلًا: أبدأ، أحدد وضعي، ثم آخذ خطوة أولى قابلة للتنفيذ فورًا.",
-    author: "معاينة من رحلة ضبط البوصلة"
-  }
-];
 
 export const ProblemFirstSection: FC<{
   stagger: Variants;
@@ -80,10 +42,11 @@ export const ProblemFirstSection: FC<{
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-10%" }}
+      aria-labelledby="problem-section-heading"
     >
       <div className="rounded-[2.5rem] border border-rose-500/20 bg-rose-500/5 p-8 md:p-12 text-center relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-500/30 to-transparent" />
-        <motion.h2 variants={item} className="text-2xl md:text-4xl font-black text-white mb-8 leading-tight">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-500/30 to-transparent" aria-hidden="true" />
+        <motion.h2 id="problem-section-heading" variants={item} className="text-2xl md:text-4xl font-black text-white mb-8 leading-tight">
           {data.title}
         </motion.h2>
         <div className="grid gap-4 md:grid-cols-3 mb-10">
@@ -104,7 +67,7 @@ export const ProblemFirstSection: FC<{
           <motion.button
             variants={item}
             onClick={onShowExample}
-            className="inline-flex items-center gap-2 rounded-full border border-rose-400/30 bg-rose-500/10 px-6 py-3 text-sm font-black text-rose-200 hover:bg-rose-500/20 transition-all active:scale-95"
+            className="organic-tap inline-flex items-center gap-2 rounded-full border border-rose-400/30 bg-rose-500/10 px-6 py-3 text-sm font-bold text-rose-200 hover:bg-rose-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#131a35]"
           >
             [ شوف مثال ]
           </motion.button>
@@ -113,96 +76,6 @@ export const ProblemFirstSection: FC<{
     </motion.section>
   );
 };
-
-export const StartJourneyStepsSection: FC<{ stagger: Variants; item: Variants }> = ({ stagger, item }) => (
-  <motion.section
-    className="phi-section"
-    variants={stagger}
-    initial="hidden"
-    whileInView="visible"
-    viewport={{ once: true, margin: "-60px" }}
-  >
-    <motion.div
-      variants={item}
-      className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 sm:p-8"
-    >
-      <div className="mb-6 text-center">
-        <p className="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-teal-300">كيف تبدأ</p>
-        <h2 className="text-2xl font-black text-white sm:text-3xl">ماذا يحدث بعد الضغط على ابدأ؟</h2>
-        <p className="mx-auto mt-3 max-w-[44ch] text-sm leading-7 text-slate-400">
-          ثلاث خطوات مباشرة تنقلك من التردد إلى أول رؤية واضحة لما يستنزفك الآن.
-        </p>
-      </div>
-      <div className="grid gap-4 md:grid-cols-3">
-        {[
-          {
-            step: "1",
-            title: "تفتح بوابة ضبط البوصلة",
-            body: "تدخل من نقطة بداية قصيرة بدل فورم طويل أو تسجيل مرهق.",
-            icon: Target
-          },
-          {
-            step: "2",
-            title: "تحدد أين الضغط الحقيقي",
-            body: "تختار ما يستهلكك الآن لتبدأ الخريطة من واقعك الحالي لا من وصف عام.",
-            icon: TrendingUp
-          },
-          {
-            step: "3",
-            title: "تأخذ أول خطوة واضحة",
-            body: "تحصل على اتجاه أولي وخطوة يمكن تنفيذها فورًا بدل نصائح فضفاضة.",
-            icon: ChevronLeft
-          }
-        ].map(({ step, title, body, icon: Icon }) => (
-          <motion.div
-            key={step}
-            variants={item}
-            className="rounded-2xl border border-white/10 bg-slate-950/40 p-5"
-          >
-            <div className="mb-4 flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-500/15 text-sm font-black text-teal-300">
-                {step}
-              </span>
-              <Icon className="h-5 w-5 text-teal-300" />
-            </div>
-            <h3 className="mb-2 text-lg font-black text-white">{title}</h3>
-            <p className="text-sm leading-7 text-slate-400">{body}</p>
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-  </motion.section>
-);
-
-export const TrustSignalsSection: FC<{ stagger: Variants; item: Variants }> = ({ stagger, item }) => (
-  <motion.section
-    className="phi-section"
-    variants={stagger}
-    initial="hidden"
-    whileInView="visible"
-    viewport={{ once: true, margin: "-60px" }}
-  >
-    <motion.div variants={item} className="mb-6 text-center">
-      <p className="mb-2 text-[11px] font-black uppercase tracking-[0.2em] text-teal-300">عناصر الثقة</p>
-      <h2 className="text-2xl font-black text-white sm:text-3xl">كل ما تحتاج معرفته قبل البدء</h2>
-    </motion.div>
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {TRUST_ITEMS.map(({ title, body, icon: Icon }) => (
-        <motion.div
-          key={title}
-          variants={item}
-          className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
-        >
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-300">
-            <Icon className="h-5 w-5" />
-          </div>
-          <h3 className="mb-2 text-lg font-black text-white">{title}</h3>
-          <p className="text-sm leading-7 text-slate-400">{body}</p>
-        </motion.div>
-      ))}
-    </div>
-  </motion.section>
-);
 
 interface FeatureShowcaseSectionProps {
   stagger: Variants;
@@ -227,13 +100,14 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
     initial="hidden"
     whileInView="visible"
     viewport={{ once: true, margin: "-60px" }}
+    aria-labelledby="features-section-heading"
   >
     <motion.div variants={item} className="mb-10 px-2 text-center leading-tight">
-      <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1">
+      <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1" aria-hidden="true">
         <Target className="h-3 w-3 text-teal-400" />
-        <span className="text-[10px] font-black uppercase tracking-widest text-teal-300">أدوات يومية واضحة</span>
+        <span className="text-sm font-bold uppercase tracking-widest text-teal-300">أدوات يومية واضحة</span>
       </div>
-      <h2 className="mb-3 text-2xl font-black leading-tight text-white sm:text-3xl">أدوات استعادة الاتزان</h2>
+      <h2 id="features-section-heading" className="mb-3 text-2xl font-black leading-tight text-white sm:text-3xl">أدوات استعادة الاتزان</h2>
       <p className="mx-auto max-w-[45ch] text-sm leading-relaxed text-slate-400">
         أدوات عملية تساعدك تفهم الإشارات بسرعة وتحولها لخطوة واضحة قابلة للتنفيذ.
       </p>
@@ -251,15 +125,15 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
             boxShadow: "0 20px 40px -20px rgba(0,0,0,0.5)"
           }}
         >
-          <div className="absolute right-0 top-0 p-4 opacity-5 transition-opacity group-hover:opacity-10">
+          <div className="absolute right-0 top-0 p-4 opacity-5 transition-opacity group-hover:opacity-10" aria-hidden="true">
             <Activity className="h-32 w-32 text-teal-400" />
           </div>
           <div>
             <div className="mb-4 flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-teal-500/30 bg-teal-500/20 text-xs font-black text-teal-400">1</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-teal-400">الرادار اليومي</span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-teal-500/30 bg-teal-500/20 text-sm font-bold text-teal-400" aria-hidden="true">1</span>
+              <span className="text-sm font-bold uppercase tracking-widest text-teal-400">الرادار اليومي</span>
             </div>
-            <h3 className="mb-2 text-2xl font-black leading-tight text-white">مسح استطلاعي (Pulse)</h3>
+            <h3 className="mb-2 text-2xl font-black leading-tight text-white">مسح استطلاعي <span lang="en">(Pulse)</span></h3>
             <p className="text-sm leading-[1.8] text-slate-300">سحب وإفلات في أقل من 5 ثوانٍ لقياس طاقتك وتفريغ فوضى اليوم في إحداثيات واضحة.</p>
           </div>
           <div className="relative flex h-32 w-full items-center justify-center rounded-2xl border border-teal-500/10 bg-teal-900/10 transition-colors group-hover:border-teal-500/30 overflow-hidden">
@@ -271,7 +145,7 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
           <button
             type="button"
             onClick={onOpenRadar}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-500 py-3 text-xs font-black text-slate-950 transition-all hover:bg-teal-400 active:scale-95"
+            className="organic-tap mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-500 py-3 text-sm font-bold text-slate-950 hover:bg-teal-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f172a]"
           >
             جرب عملية استطلاع الآن
             <ChevronLeft className="h-4 w-4" />
@@ -292,8 +166,8 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
           </div>
           <div>
             <div className="mb-4 flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--color-primary)] bg-[var(--color-primary)]/20 text-xs font-black text-[var(--color-primary)]">2</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-primary)]">نظام الإحداثيات</span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--color-primary)] bg-[var(--color-primary)]/20 text-sm font-bold text-[var(--color-primary)]" aria-hidden="true">2</span>
+              <span className="text-sm font-bold uppercase tracking-widest text-[var(--color-primary)]">نظام الإحداثيات</span>
             </div>
             <h3 className="mb-2 text-2xl font-black leading-tight text-white">خريطة التأثير الاجتماعي</h3>
             <p className="text-sm leading-[1.8] text-slate-300">صنف الأشخاص في حياتك (مدار قريب، حدود، مناطق محظورة) لتكشف من يستنزف مواردك.</p>
@@ -303,7 +177,7 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
             <div className="absolute w-12 h-12 rounded-full border-2 border-[var(--color-primary)]/60 animate-[spin_15s_linear_infinite_reverse]" />
             <Users className="w-6 h-6 text-[var(--color-primary)]" />
           </div>
-          <div className="text-center text-[10px] font-medium text-[var(--color-primary)] border border-indigo-500/20 bg-indigo-500/10 py-2 rounded-xl mt-3">كشف أنماط السحب الطاقي تلقائياً</div>
+          <div className="text-center text-sm font-medium text-[var(--color-primary)] border border-indigo-500/20 bg-indigo-500/10 py-2 rounded-xl mt-3">كشف أنماط السحب الطاقي تلقائياً</div>
         </motion.div>
 
         <motion.div
@@ -315,25 +189,25 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
             boxShadow: "0 20px 40px -20px rgba(0,0,0,0.5)"
           }}
         >
-          <div className="absolute right-0 top-0 p-4 opacity-5 transition-opacity group-hover:opacity-10">
+          <div className="absolute right-0 top-0 p-4 opacity-5 transition-opacity group-hover:opacity-10" aria-hidden="true">
             <Zap className="h-32 w-32 text-amber-400" />
           </div>
           <div>
             <div className="mb-4 flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/20 text-xs font-black text-amber-400">3</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">التوجيه الذكي</span>
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/20 text-sm font-bold text-amber-400" aria-hidden="true">3</span>
+              <span className="text-sm font-bold uppercase tracking-widest text-amber-400">التوجيه الذكي</span>
             </div>
-            <h3 className="mb-2 text-2xl font-black leading-tight text-white">خطوة مقترحة فورية (AI)</h3>
+            <h3 className="mb-2 text-2xl font-black leading-tight text-white">خطوة مقترحة فورية <span lang="en">(AI)</span></h3>
             <p className="text-sm leading-[1.8] text-slate-300">عند تسجيل حالتك، يعطيك النظام خطوة أولى هادئة ومباشرة تناسب وضعك الحالي.</p>
           </div>
           <div className="flex h-32 w-full flex-col items-center justify-center rounded-2xl border border-amber-500/10 bg-amber-900/10">
-            <span className="text-[10px] font-black uppercase text-amber-400/80 tracking-[0.2em] mb-2 border border-amber-500/30 px-2 py-0.5 rounded">قرار واعٍ</span>
+            <span className="text-sm font-bold uppercase text-amber-400/80 tracking-[0.2em] mb-2 border border-amber-500/30 px-2 py-0.5 rounded">قرار واعٍ</span>
             <p className="text-sm font-bold text-amber-300 max-w-[80%] text-center">"قسّم الضغط إلى خطوة واحدة قابلة للتنفيذ الآن."</p>
           </div>
           <button
             type="button"
             onClick={onOpenCourt}
-            className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 py-3 text-xs font-black text-amber-300 transition-all hover:bg-amber-500/20"
+            className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 py-3 text-sm font-bold text-amber-300 transition-all hover:bg-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f172a]"
           >
             فعّل البوصلة الآن
           </button>
@@ -385,6 +259,7 @@ export const MetricsSection: FC<{
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-10%" }}
+      aria-labelledby="metrics-section-heading"
     >
       <div
         className="relative overflow-hidden rounded-[2.5rem] p-8 sm:p-12"
@@ -400,10 +275,11 @@ export const MetricsSection: FC<{
               lastUpdatedAt={metricsState.lastUpdatedAt}
               showModeBadge={showModeBadge}
             />
-            <p className="mt-3 inline-flex items-center rounded-full border border-teal-500/20 bg-teal-500/10 px-3 py-1 text-[10px] font-bold text-teal-100">
-              {liveEnabled ? "أرقام حيّة من المنصة" : "Preview ثابت لحظة الإقلاع الأولى"}
+            <p className="mt-3 inline-flex items-center rounded-full border border-teal-500/20 bg-teal-500/10 px-3 py-1 text-sm font-bold text-teal-100">
+              {liveEnabled ? "أرقام حيّة من المنصة" : <span lang="en">Preview</span>}
+              {!liveEnabled && " ثابت لحظة الإقلاع الأولى"}
             </p>
-            <h3 className="mt-4 mb-4 text-2xl font-black leading-tight text-white sm:text-3xl">الصفحة لا تبيع لك غموضًا، بل بداية واضحة</h3>
+            <h3 id="metrics-section-heading" className="mt-4 mb-4 text-2xl font-black leading-tight text-white sm:text-3xl">الصفحة لا تبيع لك غموضًا، بل بداية واضحة</h3>
             <p className="mb-8 text-sm leading-relaxed text-slate-400">
               بدل كتل غير جاهزة أو إشارات ناقصة، تعرض الصفحة الآن ما يهم المستخدم فعلًا: سرعة البدء، الخصوصية، وما الذي سيكسبه من أول ضغط على زر البداية.
             </p>
@@ -414,7 +290,7 @@ export const MetricsSection: FC<{
                     <Heart className="h-5 w-5 text-slate-500" />
                   </div>
                 ))}
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-slate-900 bg-teal-500 text-[10px] font-black text-slate-950">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-slate-900 bg-teal-500 text-sm font-bold text-slate-950">
                   ثقة
                 </div>
               </div>
@@ -435,7 +311,7 @@ export const MetricsSection: FC<{
                   <div className="text-2xl font-black text-white sm:text-3xl">
                     {metricsState.isLoading && liveEnabled ? <div className="h-8 w-20 animate-pulse rounded-lg bg-white/10" /> : s.val}
                   </div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-slate-500">{s.label}</p>
+                  <p className="text-sm font-bold uppercase tracking-widest text-slate-500">{s.label}</p>
                 </div>
               </motion.div>
             ))}
@@ -459,9 +335,10 @@ export const HowItWorksSection: FC<{
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-10%" }}
+      aria-labelledby="how-it-works-heading"
     >
       <div className="mb-10 text-center">
-        <h2 className="text-3xl font-black text-white mb-3">{data.title}</h2>
+        <h2 id="how-it-works-heading" className="text-3xl font-black text-white mb-3">{data.title}</h2>
         <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">{data.subtitle}</p>
       </div>
       <div className="grid gap-6 md:grid-cols-3">
@@ -473,10 +350,10 @@ export const HowItWorksSection: FC<{
               variants={item}
               className="group relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.03] p-8 transition-all hover:bg-white/[0.06]"
             >
-              <div className="absolute -right-4 -top-4 opacity-[0.03] transition-opacity group-hover:opacity-[0.08]">
+              <div className="absolute -right-4 -top-4 opacity-[0.03] transition-opacity group-hover:opacity-[0.08]" aria-hidden="true">
                 <Icon size={120} />
               </div>
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-400">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-400" aria-hidden="true">
                 <Icon size={28} />
               </div>
               <h3 className="mb-4 text-xl font-black text-white">{step.title}</h3>
@@ -507,13 +384,13 @@ export const FinalReadinessSection: FC<{
       variants={item}
       className="rounded-[2rem] border border-teal-500/20 bg-gradient-to-br from-teal-500/10 to-transparent p-8 text-center sm:p-10"
     >
-      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.2em] text-teal-300">جاهزية البدء</p>
+      <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-teal-300">جاهزية البدء</p>
       <h2 className="mb-3 text-2xl font-black text-white sm:text-3xl">واضح ماذا بعد. واضح لماذا تبدأ الآن.</h2>
       <p className="mx-auto max-w-[44ch] text-sm leading-7 text-slate-300">
         الصفحة أصبحت تشرح البداية بوضوح، وتترك الميزات التي لم يحن وقتها تحت تحكم الأونر بدل أن تضع المستخدم أمام رسائل نقص أو عدم جاهزية.
       </p>
       {lastGoalLabel && (
-        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-slate-200">
+        <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-slate-200">
           {LastGoalIcon ? <LastGoalIcon className={badgePulse ? "h-4 w-4 text-teal-300" : "h-4 w-4 text-slate-300"} /> : null}
           <span>آخر نية محفوظة: {lastGoalLabel}</span>
         </div>
@@ -532,15 +409,16 @@ export const SystemOverclockSection: FC<{
     initial="hidden"
     whileInView="visible"
     viewport={{ once: true, margin: "-10%" }}
+    aria-labelledby="system-overclock-heading"
   >
     <div className="mb-10 text-center">
-      <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 mb-4">
+      <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 mb-4" aria-hidden="true">
         <Cpu className="h-4 w-4 text-amber-400 animate-pulse" />
-        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-amber-300">
+        <span className="text-sm font-bold uppercase tracking-[0.2em] text-amber-300" lang="en">
           System Overclock: God Mode Active
         </span>
       </div>
-      <h2 className="text-3xl font-black text-white mb-3">غرفة التحكم (System Under-the-Hood)</h2>
+      <h2 id="system-overclock-heading" className="text-3xl font-black text-white mb-3">غرفة التحكم <span lang="en">(System Under-the-Hood)</span></h2>
       <p className="text-sm text-slate-400 max-w-[50ch] mx-auto">
         بما إنك System Architect، دي نظرة على المحركات الصامتة اللي بتشكل وعي "دواير" دلوقتي.
       </p>
@@ -591,16 +469,16 @@ export const SystemOverclockSection: FC<{
           className={`relative overflow-hidden rounded-3xl border ${sys.border} ${sys.bg} p-6 transition-all hover:scale-[1.02]`}
         >
           <div className="mb-4 flex items-center justify-between">
-            <div className={`p-2 rounded-xl bg-white/5 ${sys.color}`}>
+            <div className={`p-2 rounded-xl bg-white/5 ${sys.color}`} aria-hidden="true">
               <sys.icon size={20} />
             </div>
-            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${sys.border} ${sys.color}`}>
+            <span className={`text-sm font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${sys.border} ${sys.color}`} lang="en">
               {sys.stat}
             </span>
           </div>
-          <h3 className="text-sm font-black text-white mb-2">{sys.title}</h3>
-          <p className="text-[11px] leading-relaxed text-slate-400">{sys.desc}</p>
-          <div className="absolute -right-6 -bottom-6 opacity-[0.03] rotate-12">
+          <h3 className="text-sm font-bold text-white mb-2">{sys.title}</h3>
+          <p className="text-sm leading-relaxed text-slate-400">{sys.desc}</p>
+          <div className="absolute -right-6 -bottom-6 opacity-[0.03] rotate-12" aria-hidden="true">
             <sys.icon size={100} />
           </div>
         </motion.div>
@@ -610,11 +488,11 @@ export const SystemOverclockSection: FC<{
     <div className="mt-8 rounded-3xl border border-white/5 bg-white/[0.02] p-6">
       <div className="flex items-center gap-4 mb-4">
         <HardDrive className="h-4 w-4 text-slate-500" />
-        <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase">البروتوكولات القادمة (Phase 30 Skeletons)</span>
+        <span className="text-sm font-bold text-slate-500 tracking-widest uppercase">البروتوكولات القادمة (Phase 30 Skeletons)</span>
       </div>
       <div className="flex flex-wrap gap-2">
         {["Ambient Reality", "Time Capsule Vault", "Holographic Feedback", "Global Atlas Simulation", "Collective Pulse Ranking"].map((p, i) => (
-          <span key={i} className="px-3 py-1.5 rounded-full bg-slate-900 border border-white/5 text-[10px] text-slate-400 font-bold italic">
+          <span key={i} className="px-3 py-1.5 rounded-full bg-slate-900 border border-white/5 text-sm text-slate-400 font-bold italic">
             {"//"} {p} {"->"} Hooked
           </span>
         ))}

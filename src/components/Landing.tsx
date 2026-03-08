@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Smartphone, Target } from "lucide-react";
+import { ArrowLeft, Smartphone } from "lucide-react";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
 import { landingCopy } from "../copy/landing";
@@ -22,6 +22,10 @@ import {
   FinalReadinessSection,
   SystemOverclockSection
 } from "./landing/LandingSections";
+import { AmbientBackground } from "./landing/AmbientBackground";
+import { ScarcityMeter } from "./landing/ScarcityMeter";
+import { InlineCompass } from "./landing/InlineCompass";
+import { LandingFooter } from "./landing/LandingFooter";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 import { useLandingLiveData } from "../architecture/landingLiveData";
 import { isPublicPaymentsEnabled } from "../config/payments";
@@ -85,43 +89,6 @@ const formatCountdown = (isoDate: string | null): string | null => {
   if (hours < 24) return `ينتهي خلال ${hours} ساعة`;
   const days = Math.ceil(hours / 24);
   return `ينتهي خلال ${days} يوم`;
-};
-
-const FloatingParticles: FC = () => {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-      <div className="absolute top-[20%] left-[30%] w-2 h-2 rounded-full bg-teal-300 shadow-[0_0_10px_rgba(45,212,191,0.6)] animate-pulse" style={{ animationDuration: "3s" }} />
-      <div className="absolute top-[60%] left-[80%] w-1.5 h-1.5 rounded-full bg-indigo-300 shadow-[0_0_8px_rgba(167,139,250,0.6)] animate-pulse" style={{ animationDuration: "4s" }} />
-      <div className="absolute top-[80%] left-[20%] w-2.5 h-2.5 rounded-full bg-sky-300 shadow-[0_0_12px_rgba(125,211,252,0.6)] animate-pulse" style={{ animationDuration: "5s" }} />
-      <div className="absolute top-[10%] left-[70%] w-1 h-1 rounded-full bg-teal-200 shadow-[0_0_6px_rgba(45,212,191,0.4)] animate-pulse" style={{ animationDuration: "2.5s" }} />
-    </div>
-  );
-};
-
-const OrbitalRings: FC = () => {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-50">
-      <div className="absolute rounded-full border border-dashed border-teal-500/10 w-[320px] h-[320px] animate-[spin_40s_linear_infinite]" />
-      <div className="absolute rounded-full border border-dashed border-indigo-500/10 w-[480px] h-[480px] animate-[spin_60s_linear_infinite_reverse]" />
-    </div>
-  );
-};
-
-const RadarSweep: FC = () => {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 opacity-30">
-      <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-[spin_12s_linear_infinite]"
-        style={{
-          width: "120vh",
-          height: "120vh",
-          background: "conic-gradient(from 0deg, rgba(45,212,191,0.15) 0deg, rgba(45,212,191,0) 60deg, transparent 360deg)",
-          borderRadius: "50%",
-          filter: "blur(40px)"
-        }}
-      />
-    </div>
-  );
 };
 
 export const Landing: FC<LandingProps> = ({
@@ -468,17 +435,20 @@ export const Landing: FC<LandingProps> = ({
 
   return (
     <div className="relative w-full min-h-screen" dir="rtl">
-      <div className="fixed inset-0 pointer-events-none z-0" aria-hidden="true">
-        <div
-          className="absolute inset-0"
-          style={{ background: ambientBackground }}
-        />
-        {showHeavyAmbientLayers && <FloatingParticles />}
-        {!reduceMotion && <OrbitalRings />}
-        {showHeavyAmbientLayers && <RadarSweep />}
-      </div>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:right-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-teal-500 focus:text-slate-950 focus:rounded-lg focus:font-black"
+      >
+        تخطى إلى المحتوى الرئيسي
+      </a>
 
-      <div className="relative z-10 w-full min-h-screen px-4 pt-8 sm:pt-10 pb-28 md:pb-16 overflow-x-hidden">
+      <AmbientBackground
+        ambientBackground={ambientBackground}
+        showHeavyAmbientLayers={showHeavyAmbientLayers}
+        reduceMotion={reduceMotion}
+      />
+
+      <main id="main-content" aria-label="محتوى صفحة الترحيب" className="relative z-10 w-full min-h-screen px-4 pt-8 sm:pt-10 pb-28 md:pb-16 overflow-x-hidden">
         <motion.section
           className="min-h-[88vh] flex flex-col items-center justify-center text-center max-w-5xl mx-auto"
           variants={stagger}
@@ -487,20 +457,28 @@ export const Landing: FC<LandingProps> = ({
         >
           <motion.div variants={fadeUp(reduceMotion)} className="mb-5">
             <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-teal-300/50 bg-teal-500/20 shadow-[0_0_20px_rgba(45,212,191,0.22)]">
-              <span className="w-2.5 h-2.5 rounded-full bg-teal-300 animate-pulse" />
-              <span className="text-xs font-black tracking-[0.18em] uppercase text-teal-100">
+              <span className="w-2.5 h-2.5 rounded-full bg-teal-300 animate-pulse" aria-hidden="true" />
+              <span className="text-sm font-bold tracking-[0.18em] uppercase text-teal-100">
                 جاهز للتفعيل
               </span>
             </div>
           </motion.div>
 
           <motion.div variants={item(reduceMotion)} className="mb-4 min-h-[50px] flex flex-col items-center justify-center">
-            <div className="inline-flex h-[34px] items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 text-xs text-emerald-200">
-              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+            <div
+              aria-live="polite"
+              aria-atomic="true"
+              className="inline-flex h-[34px] items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 text-sm text-emerald-200"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" aria-hidden="true" />
               {isPublicPulseLoading ? (
-                <span className="inline-flex h-[14px] w-[17rem] items-center gap-2">
-                  <span className="h-3.5 w-44 rounded bg-emerald-200/20 animate-pulse" />
-                  <span className="h-3.5 w-14 rounded bg-emerald-200/20 animate-pulse" />
+                <span
+                  className="inline-flex h-[14px] w-[17rem] items-center gap-2"
+                  role="status"
+                  aria-label="جارٍ تحميل بيانات المنصة…"
+                >
+                  <span className="h-3.5 w-44 rounded bg-emerald-200/20 animate-pulse" aria-hidden="true" />
+                  <span className="h-3.5 w-14 rounded bg-emerald-200/20 animate-pulse" aria-hidden="true" />
                 </span>
               ) : (
                 <span>
@@ -508,7 +486,7 @@ export const Landing: FC<LandingProps> = ({
                 </span>
               )}
             </div>
-            <p className="mt-2 text-[10px] text-slate-400/80">آخر تحديث: {formatLiveAge(lastLiveUpdatedAt)}</p>
+            <p className="mt-2 text-sm text-slate-400">آخر تحديث: {formatLiveAge(lastLiveUpdatedAt)}</p>
           </motion.div>
 
           <motion.h1
@@ -536,7 +514,7 @@ export const Landing: FC<LandingProps> = ({
             {heroValuePoints.map((point) => (
               <li
                 key={point}
-                className="rounded-full border border-white/15 bg-slate-900/45 px-3 py-1 text-[11px] font-semibold text-slate-200/90"
+                className="rounded-full border border-white/15 bg-slate-900/45 px-3 py-1 text-sm font-semibold text-slate-200/90"
               >
                 {point}
               </li>
@@ -545,51 +523,19 @@ export const Landing: FC<LandingProps> = ({
 
           <motion.div variants={item(reduceMotion)} className="flex flex-col items-center">
             {scarcity.isLive && scarcityMeter && (
-              <div className="mb-6 w-[min(22rem,92vw)] flex flex-col items-center justify-center">
-                <motion.button
-                  type="button"
-                  variants={item(reduceMotion)}
-                  onClick={handleOpenCheckout}
-                  className="w-full text-right rounded-2xl px-4 py-3 bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40"
-                  aria-label="متابعة حجز المقعد"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-[12px] font-black text-amber-200 uppercase tracking-wider">
-                      تبقى {scarcityMeter.seatsLeft} مقعد فقط 🚨
-                    </div>
-                    <div className="text-[10px] font-bold text-slate-400">
-                      {scarcityMeter.seatsLeft}/{scarcityMeter.totalSeats}
-                    </div>
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-white/5 overflow-hidden border border-white/5">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${scarcityMeter.fillPercent}%`,
-                        backgroundColor: scarcityMeter.fillColor
-                      }}
-                    />
-                  </div>
-                  <p className="mt-1.5 text-[10px] text-slate-300/85 font-semibold">
-                    الفوج الحالي يغلق عند اكتمال المقاعد.
-                  </p>
-                  {scarcityCountdown && (
-                    <p className="mt-1 text-[10px] font-black text-amber-200/95">{scarcityCountdown}</p>
-                  )}
-                </motion.button>
-                <p
-                  className={`mt-1 h-4 text-[10px] font-semibold transition-opacity ${showCheckoutHint ? "opacity-100 text-amber-200" : "opacity-0"
-                    }`}
-                >
-                  سيتم فتح صفحة الحجز
-                </p>
-              </div>
+              <ScarcityMeter
+                meter={scarcityMeter}
+                countdown={scarcityCountdown}
+                showCheckoutHint={showCheckoutHint}
+                onOpenCheckout={handleOpenCheckout}
+                itemVariants={item(reduceMotion)}
+              />
             )}
 
             <motion.button
               type="button"
               onClick={handleStartJourney}
-              className="group relative inline-flex items-center justify-center gap-3 rounded-full px-10 sm:px-14 py-5 text-[18px] sm:text-[20px] font-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 overflow-hidden"
+              className="group relative inline-flex items-center justify-center gap-3 rounded-full px-10 sm:px-14 py-5 text-sm sm:text-[20px] font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 overflow-hidden"
               style={{
                 background: "linear-gradient(135deg, #0ea5e9 0%, #2dd4bf 50%, #10b981 100%)",
                 backgroundSize: "200% auto",
@@ -603,8 +549,8 @@ export const Landing: FC<LandingProps> = ({
             >
               <div className="relative flex items-center gap-4">
                 <span>{landingCopy.ctaJourney}</span>
-                <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform group-hover:-translate-x-1">
-                  <ArrowLeft className="w-5 h-5" />
+                <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center transition-transform group-hover:-translate-x-1" aria-hidden="true">
+                  <ArrowLeft className="w-5 h-5" aria-hidden="true" />
                 </span>
               </div>
             </motion.button>
@@ -612,80 +558,38 @@ export const Landing: FC<LandingProps> = ({
               <button
                 type="button"
                 onClick={handleCheckoutCta}
-                className="mt-3 inline-flex items-center justify-center gap-2 rounded-full border border-amber-300/40 bg-amber-500/10 px-7 py-3 text-sm font-black text-amber-100 hover:bg-amber-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/50"
+                className="mt-3 inline-flex items-center justify-center gap-2 rounded-full border border-amber-300/40 bg-amber-500/10 px-7 py-3 text-sm font-bold text-amber-100 hover:bg-amber-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/50"
               >
                 {checkoutCtaLabel}
               </button>
             )}
 
-            <p className="mt-4 text-[13px] font-bold text-slate-300/90 tracking-wide bg-white/5 border border-white/5 px-4 py-1 rounded-full">
+            <p className="mt-4 text-sm font-bold text-slate-300/90 tracking-wide bg-white/5 border border-white/5 px-4 py-1 rounded-full">
               ابدأ مجانًا — بدون بطاقة.
             </p>
-            <p className="mt-2 text-[10px] text-teal-400 font-black uppercase tracking-widest opacity-80">
+            <p className="mt-2 text-sm text-teal-400 font-bold uppercase tracking-widest opacity-90">
               بياناتك تظل ملكك بالكامل.
             </p>
 
-            <div className="landing-inline-compass mt-5 w-full max-w-xl rounded-2xl border border-teal-500/25 bg-teal-500/10 p-4 text-right">
-              <p className="text-[11px] font-black uppercase tracking-[0.15em] text-teal-300">AI Compass</p>
-              <p className="mt-2 text-sm font-semibold text-slate-200">
-                {publicPulseAvg != null && publicPulseAvg < 45
-                  ? "ابدأ بخطوة استعادة هادئة قبل أي قرار كبير."
-                  : "ابدأ بخطوة واحدة واضحة وثبّت الإيقاع اليومي."}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setInlineIntent("clarity")}
-                  className={`rounded-full border px-3 py-1 text-xs font-bold transition-colors ${
-                    inlineIntent === "clarity"
-                      ? "border-teal-300/70 bg-teal-400/20 text-teal-100"
-                      : "border-white/15 bg-white/5 text-slate-200"
-                  }`}
-                >
-                  وضوح
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setInlineIntent("boundaries")}
-                  className={`rounded-full border px-3 py-1 text-xs font-bold transition-colors ${
-                    inlineIntent === "boundaries"
-                      ? "border-teal-300/70 bg-teal-400/20 text-teal-100"
-                      : "border-white/15 bg-white/5 text-slate-200"
-                  }`}
-                >
-                  حدود
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setInlineIntent("calm")}
-                  className={`rounded-full border px-3 py-1 text-xs font-bold transition-colors ${
-                    inlineIntent === "calm"
-                      ? "border-teal-300/70 bg-teal-400/20 text-teal-100"
-                      : "border-white/15 bg-white/5 text-slate-200"
-                  }`}
-                >
-                  اتزان
-                </button>
-              </div>
-              <p className="mt-3 text-xs font-semibold text-slate-100">{inlineRecommendation}</p>
-              <button
-                type="button"
-                onClick={handleStartJourney}
-                className="mt-3 rounded-lg border border-teal-300/40 bg-teal-500/20 px-3 py-2 text-xs font-black text-teal-100 hover:bg-teal-500/30 transition-colors"
-              >
-                ابدأ بالمسار المقترح
-              </button>
-            </div>
+            <InlineCompass
+              inlineIntent={inlineIntent}
+              onIntentChange={setInlineIntent}
+              recommendation={inlineRecommendation}
+              pulseAvg={publicPulseAvg}
+              onStartJourney={handleStartJourney}
+            />
 
             <div className="mt-8 flex flex-col items-center gap-4">
               <button
                 type="button"
+                aria-expanded={showSimulationSection}
+                aria-controls="simulation-playground"
                 onClick={() => {
                   setShowSimulationSection(true);
                   const el = document.getElementById('simulation-playground');
                   el?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="text-xs font-black text-teal-200/90 hover:text-teal-100 underline underline-offset-8 decoration-teal-500/30 transition-all hover:decoration-teal-500"
+                className="min-h-[44px] px-2 text-sm font-bold text-teal-200/90 hover:text-teal-100 underline underline-offset-8 decoration-teal-500/30 transition-all hover:decoration-teal-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/70 rounded"
               >
                 [ شوف مثال حيّ للقوة التحليلية ]
               </button>
@@ -694,8 +598,10 @@ export const Landing: FC<LandingProps> = ({
             {!isUserMode && (
               <button
                 type="button"
+                aria-expanded={showExtendedMobileContent}
+                aria-controls="extended-mobile-content"
                 onClick={() => setShowExtendedMobileContent((prev) => !prev)}
-                className="mt-2 text-xs font-semibold text-slate-300/85 hover:text-slate-200 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 rounded md:hidden"
+                className="mt-2 min-h-[44px] px-2 text-sm font-semibold text-slate-300/85 hover:text-slate-200 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 rounded md:hidden"
               >
                 {showExtendedMobileContent ? "إخفاء التفاصيل" : "اكتشف أكثر"}
               </button>
@@ -705,7 +611,7 @@ export const Landing: FC<LandingProps> = ({
               variants={fadeUp(reduceMotion)}
               className="mt-6 flex flex-col items-center gap-1 text-center"
             >
-              <p className="text-[14px] sm:text-[16px] font-black text-teal-200/90 tracking-wide uppercase">
+              <p className="text-sm sm:text-sm font-bold text-teal-200/90 tracking-wide uppercase">
                 {landingCopy.hook}
               </p>
             </motion.div>
@@ -719,10 +625,9 @@ export const Landing: FC<LandingProps> = ({
                   triggerPwaInstall();
                 }}
                 onMouseEnter={() => soundManager.playHover()}
-                className="mt-6 inline-flex items-center gap-2 rounded-xl border border-blue-400/35 bg-blue-500/10 px-5 py-2.5 text-sm font-semibold text-blue-200 hover:bg-blue-500/20 transition-colors"
-                aria-label="تثبيت التطبيق"
+                className="mt-6 inline-flex items-center gap-2 rounded-xl border border-blue-400/35 bg-blue-500/10 px-5 py-2.5 text-sm font-semibold text-blue-200 hover:bg-blue-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f172a]"
               >
-                <Smartphone className="w-4 h-4" />
+                <Smartphone className="w-4 h-4" aria-hidden="true" />
                 تثبيت التطبيق
               </motion.button>
             )}
@@ -735,7 +640,7 @@ export const Landing: FC<LandingProps> = ({
           data={landingCopy.problemSection}
           onShowExample={() => setShowSimulationSection(true)}
         />
-        <div className={isUserMode ? "block" : showLongSections ? "block" : "hidden md:block"}>
+        <div className={isUserMode ? "block" : showLongSections ? "block" : "hidden md:block"} id="extended-mobile-content">
           {!isUserMode && showSimulationSection && (
             <motion.section
               id="simulation-playground"
@@ -758,9 +663,7 @@ export const Landing: FC<LandingProps> = ({
                     ? "اسحب شخصًا وشوف بسرعة وضعه الحالي قبل قرارك التالي."
                     : "اسحب شخصًا للمدار المناسب لك لتشوف أثر القرار قبل ما تبدأ."}
                 </p>
-                <div className="scale-75 sm:scale-90 origin-center">
-                  <LandingSimulation />
-                </div>
+                <LandingSimulation />
               </motion.div>
             </motion.section>
           )}
@@ -822,85 +725,46 @@ export const Landing: FC<LandingProps> = ({
               variants={item(reduceMotion)}
               type="button"
               onClick={handleStartJourney}
-              className="inline-flex items-center justify-center gap-3 rounded-full px-10 py-4 text-lg font-black text-white bg-teal-500 hover:bg-teal-400 transition-colors"
+              className="inline-flex items-center justify-center gap-3 rounded-full px-10 py-4 text-lg font-black text-white bg-teal-500 hover:bg-teal-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0f172a]"
             >
               {landingCopy.ctaJourney}
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-5 h-5" aria-hidden="true" />
             </motion.button>
           </motion.section>
         </div>
 
-        <motion.footer
-          className="pb-8 flex flex-col items-center gap-4 text-[13px]"
-          variants={stagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-        >
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <button
-              type="button"
-              onClick={() => openLegalPage("/privacy")}
-              className="text-slate-400 hover:text-teal-400 transition-colors underline underline-offset-2"
-            >
-              سياسة الخصوصية
-            </button>
-            <button
-              type="button"
-              onClick={() => openLegalPage("/terms")}
-              className="text-slate-400 hover:text-teal-400 transition-colors underline underline-offset-2"
-            >
-              شروط الاستخدام
-            </button>
-            <a
-              href="https://wa.me/0201023050092"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-slate-400 hover:text-teal-400 transition-colors underline underline-offset-2"
-            >
-              تواصل معنا
-            </a>
-          </div>
-          <div className="flex flex-col items-center gap-3 mb-6 bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-1">تعهد الأمان</p>
-            <div className="flex flex-col items-center gap-1.5">
-              {landingCopy.trustPoints.map((point, idx) => (
-                <p key={idx} className="text-[10px] text-slate-500 font-bold flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-teal-500/40" />
-                  {point}
-                </p>
-              ))}
-            </div>
-          </div>
-          <span className="text-[10px] text-slate-600 font-mono tracking-widest">
-            ALREHLA // ALPHA v0.1
-          </span>
-        </motion.footer>
-      </div>
+        <LandingFooter
+          trustPoints={landingCopy.trustPoints}
+          stagger={stagger}
+          onOpenLegal={openLegalPage}
+        />
+      </main>
 
       <div className="fixed inset-x-0 bottom-0 z-30 px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] md:hidden">
         <div className="mx-auto max-w-md rounded-2xl border border-teal-300/20 bg-slate-900/85 p-2.5 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
           <button
             type="button"
             onClick={handleStartJourney}
-            className="w-full rounded-xl bg-teal-500 py-3 text-sm font-black text-slate-950 hover:bg-teal-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300/60"
+            className="w-full rounded-xl bg-teal-500 py-3 text-sm font-bold text-slate-950 hover:bg-teal-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300/60"
           >
             {landingCopy.ctaJourney}
           </button>
         </div>
       </div>
 
-      {isPublicPaymentsEnabled && (
-        <div className="fixed left-6 top-1/2 -translate-y-1/2 z-30 hidden md:flex">
-          <button
-            type="button"
-            onClick={handleDesktopStickyCheckout}
-            className="rounded-2xl border border-amber-300/35 bg-slate-900/85 px-4 py-3 text-sm font-black text-amber-100 hover:bg-slate-900 transition-colors shadow-[0_10px_26px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/50"
-          >
-            {checkoutCtaLabel}
-          </button>
-        </div>
-      )}
-    </div>
+      {
+        isPublicPaymentsEnabled && (
+          <div className="fixed left-6 top-1/2 -translate-y-1/2 z-30 hidden md:flex">
+            <button
+              type="button"
+              onClick={handleDesktopStickyCheckout}
+              className="rounded-2xl border border-amber-300/35 bg-slate-900/85 px-4 py-3 text-sm font-bold text-amber-100 hover:bg-slate-900 transition-colors shadow-[0_10px_26px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/50"
+            >
+              {checkoutCtaLabel}
+            </button>
+          </div>
+        )
+      }
+    </div >
   );
 };
