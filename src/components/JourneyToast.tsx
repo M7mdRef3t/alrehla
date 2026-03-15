@@ -11,6 +11,7 @@ export type JourneyToastVariant =
   | "archive"               /* بعد إرسال شخص لمحطات عدت */
   | "weekly_gratitude"      /* الإشعار الأسبوعي */
   | "map_revisit"          /* ذكرى اليوم */
+  | "undo"                  /* للـ Undo toast */
   | "nudge";                /* تنبيه ذكي من المحرك */
 
 interface JourneyToastProps {
@@ -19,6 +20,7 @@ interface JourneyToastProps {
   nudgeData?: { title: string; message: string; icon: string; cta?: string };
   visible: boolean;
   onClose?: () => void;
+  onAction?: () => void;
 }
 
 /* ── Feather / light-pulse icon ── */
@@ -70,6 +72,11 @@ const TOAST_CONTENT: Record<
     title: "",
     body: () => "",
   },
+  undo: {
+    title: "تم تغيير المدار",
+    body: (name) => `تم نقل "${name}" بنجاح.`,
+    cta: "تراجع (Undo)",
+  },
 };
 
 export const JourneyToast: FC<JourneyToastProps> = ({
@@ -78,6 +85,7 @@ export const JourneyToast: FC<JourneyToastProps> = ({
   nudgeData,
   visible,
   onClose,
+  onAction,
 }) => {
   const content = variant === "nudge" && nudgeData
     ? { title: nudgeData.title, body: () => nudgeData.message, cta: nudgeData.cta }
@@ -140,11 +148,14 @@ export const JourneyToast: FC<JourneyToastProps> = ({
               {content.cta && (
                 <button
                   type="button"
-                  onClick={onClose}
-                  className="mt-2 text-xs font-semibold transition-colors"
-                  style={{ color: "rgba(45,212,191,0.7)" }}
+                  onClick={() => {
+                    if (variant === "undo" && onAction) onAction();
+                    else if (onClose) onClose();
+                  }}
+                  className="mt-2 text-xs font-semibold transition-colors bg-teal-500/10 hover:bg-teal-500/20 px-3 py-1.5 rounded-md border border-teal-500/20 active:scale-95"
+                  style={{ color: "rgba(45,212,191,0.9)" }}
                 >
-                  {content.cta} ←
+                  {variant === "undo" ? "↩ " : ""}{content.cta} {variant !== "undo" ? "←" : ""}
                 </button>
               )}
             </div>

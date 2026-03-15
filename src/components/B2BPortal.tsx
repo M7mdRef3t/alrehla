@@ -1,7 +1,8 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, UserPlus, Copy, Check, Shield, Briefcase } from "lucide-react";
+import { Users, UserPlus, Copy, Check, Shield, Briefcase, Link2, Loader2 } from "lucide-react";
+import { supabase } from "../services/supabaseClient";
 import {
     registerAsCoach,
     addClient,
@@ -18,7 +19,7 @@ import {
    B2B PORTAL  بابة اتشات اعاج
     */
 
-type B2BView = "landing" | "coach_register" | "coach_dashboard" | "client_share";
+type B2BView = "landing" | "coach_register" | "coach_dashboard" | "client_share" | "join_coach";
 
 export const B2BPortal: FC = () => {
     const [view, setView] = useState<B2BView>("landing");
@@ -34,6 +35,11 @@ export const B2BPortal: FC = () => {
 
     const [shareCode, setShareCode] = useState("");
     const [clients, setClients] = useState<Array<{ clientCode: string; clientAlias: string }>>([]);
+
+    // Join coach
+    const [inviteCode, setInviteCode] = useState("");
+    const [isJoining, setIsJoining] = useState(false);
+    const [joinMessage, setJoinMessage] = useState({ text: "", type: "" });
 
 
     useEffect(() => {
@@ -79,6 +85,59 @@ export const B2BPortal: FC = () => {
             const updated = await getClients();
             setClients(updated);
             setTimeout(() => setAddSuccess(false), 2000);
+        }
+    };
+
+    const handleJoinCoach = async () => {
+        if (!inviteCode.trim() || !supabase) return;
+        setIsJoining(true);
+        setJoinMessage({ text: "", type: "" });
+        try {
+            // 1. Validate Invite Code
+            const { data: inviteData, error: inviteError } = await supabase
+                .from('coach_invites')
+                .select('*')
+                .eq('code', inviteCode.trim())
+                .eq('used', false)
+                .single();
+
+            if (inviteError || !inviteData) {
+                setJoinMessage({ text: "الكود غير صحيح أو مستخدم مسبقاً", type: "error" });
+                setIsJoining(false);
+                return;
+            }
+
+            // 2. Add coach_id to profile and set code to used
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) {
+                setJoinMessage({ text: "يجب تسجيل الدخول أولاً", type: "error" });
+                setIsJoining(false);
+                return;
+            }
+
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update({ coach_id: inviteData.coach_id })
+                .eq('id', session.user.id);
+
+            if (profileError) {
+                setJoinMessage({ text: "فشل في تحديث الحساب", type: "error" });
+                setIsJoining(false);
+                return;
+            }
+
+            await supabase
+                .from('coach_invites')
+                .update({ used: true, used_by: session.user.id })
+                .eq('code', inviteData.code);
+
+            setJoinMessage({ text: "تم ربط الحساب بنجاح!", type: "success" });
+            setInviteCode("");
+            setTimeout(() => setView("landing"), 2000);
+        } catch (e) {
+            setJoinMessage({ text: "حدث خطأ غير متوقع", type: "error" });
+        } finally {
+            setIsJoining(false);
         }
     };
 
@@ -145,7 +204,22 @@ export const B2BPortal: FC = () => {
                                 whileTap={{ scale: 0.98 }}
                             >
                                 <Users className="w-4 h-4" />
-                                أا ع  شار د ع تش
+                                أط اعاج أ تابع (شارك دك)
+                            </motion.button>
+
+                            <motion.button
+                                onClick={() => setView("join_coach")}
+                                className="w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 mt-2"
+                                style={{
+                                    background: "rgba(16, 185, 129, 0.1)",
+                                    border: "1px solid rgba(16, 185, 129, 0.2)",
+                                    color: "#34d399",
+                                }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                <Link2 className="w-4 h-4" />
+                                لدي كود دعوة من معالج (ربط حسابي)
                             </motion.button>
                         </div>
                     </motion.div>
@@ -163,7 +237,7 @@ export const B2BPortal: FC = () => {
                             onClick={() => setView("landing")}
                             className="flex items-center gap-1.5 text-slate-400 text-sm mb-4 hover:text-white transition-colors"
                         >
-                             رجع
+                            رجع
                         </button>
                         <h2 className="text-lg font-bold text-white mb-4">تسج حترف</h2>
 
@@ -343,7 +417,7 @@ export const B2BPortal: FC = () => {
                             onClick={() => setView("landing")}
                             className="flex items-center gap-1.5 text-slate-400 text-sm mb-4 hover:text-white transition-colors"
                         >
-                             رجع
+                            رجع
                         </button>
 
                         <h2 className="text-lg font-bold text-white mb-2">د تابعة</h2>
@@ -388,6 +462,63 @@ export const B2BPortal: FC = () => {
                             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                             {copied ? "ت اسخ!" : "سخ اد رساة اشارة"}
                         </motion.button>
+                    </motion.div>
+                )}
+
+                {/* Join Coach using Invite Code */}
+                {view === "join_coach" && (
+                    <motion.div
+                        key="join_coach"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        <button
+                            onClick={() => setView("landing")}
+                            className="flex items-center gap-1.5 text-slate-400 text-sm mb-4 hover:text-white transition-colors"
+                        >
+                            رجع للبوابة
+                        </button>
+                        <h2 className="text-lg font-bold text-white mb-4">الانضمام لمعالج محترف</h2>
+                        <p className="text-sm text-slate-400 mb-6">
+                            أدخل كود الدعوة المكون من 15 حرف والذي حصلت عليه من معالجك النفسي أو مدربك الخاص.
+                        </p>
+
+                        <div className="space-y-4">
+                            <div>
+                                <input
+                                    value={inviteCode}
+                                    onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                                    placeholder="DWYR-COACH-XXXX"
+                                    className="w-full rounded-xl p-4 text-center text-xl font-mono text-white outline-none tracking-widest placeholder:text-slate-600 focus:bg-white/5"
+                                    style={{
+                                        background: "rgba(255,255,255,0.02)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                    }}
+                                />
+                            </div>
+
+                            {joinMessage.text && (
+                                <div className={`p-3 rounded-lg text-sm text-center font-bold ${joinMessage.type === 'error' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
+                                    {joinMessage.text}
+                                </div>
+                            )}
+
+                            <motion.button
+                                onClick={handleJoinCoach}
+                                disabled={isJoining || inviteCode.length < 15}
+                                className="w-full py-3.5 rounded-2xl font-bold text-white mt-2 disabled:opacity-50 flex items-center justify-center gap-2"
+                                style={{
+                                    background: inviteCode.length >= 15
+                                        ? "linear-gradient(135deg, #059669, #047857)"
+                                        : "rgba(52,211,153,0.1)",
+                                }}
+                                whileHover={inviteCode.length >= 15 && !isJoining ? { scale: 1.02 } : {}}
+                                whileTap={inviteCode.length >= 15 && !isJoining ? { scale: 0.98 } : {}}
+                            >
+                                {isJoining ? <Loader2 className="w-5 h-5 animate-spin" /> : "ربط الحساب بالمعالج"}
+                            </motion.button>
+                        </div>
                     </motion.div>
                 )}
 

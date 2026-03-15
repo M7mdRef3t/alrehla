@@ -5,6 +5,7 @@ import { useMapState } from "../state/mapState";
 import { setInLocalStorage } from "../services/browserStorage";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
+import { AlertTriangle } from "lucide-react";
 import type { AdviceCategory } from "../data/adviceScripts";
 
 /* ════════════════════════════════════════════════
@@ -441,6 +442,22 @@ const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onC
           "التعافي مش سحر، هو إنك بقيت شايف خريطتك بوضوح."
         </p>
       </div>
+
+      <motion.div
+        className="w-full rounded-2xl p-4 border border-rose-500/20 bg-rose-950/20 relative overflow-hidden"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.8 }}
+      >
+        <div className="absolute top-0 right-0 w-16 h-16 bg-rose-500/10 rounded-full blur-xl pointer-events-none" />
+        <p className="text-xs font-bold text-rose-400 mb-1 flex items-center gap-1 justify-center">
+          <AlertTriangle className="w-4 h-4" />
+          سر الدواير (The Aha Moment)
+        </p>
+        <p className="text-[13px] text-slate-300 leading-relaxed mt-2">
+          علاقاتك اللي بتستنزفك مش بس أسماء، دي بتتحول لـ <span className="text-rose-400 font-bold">ثقوب سوداء</span> مرئية تسحب طاقتك بانقباض مستمر.. إحنا هنا عشان نوقّف النزيف ده.
+        </p>
+      </motion.div>
 
       <motion.button
         type="button"

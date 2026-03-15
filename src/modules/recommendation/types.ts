@@ -12,7 +12,8 @@ export type DawayirSignalTypeV1 =
   | "detachment_toggled"
   | "symptoms_updated"
   | "situation_logged"
-  | "path_stage_changed";
+  | "path_stage_changed"
+  | "energy_transaction";
 
 export interface DawayirSignalEventV1 {
   id: string;
@@ -58,13 +59,13 @@ export interface NextStepCandidateV1 {
 
 export interface WhyReasonV1 {
   code:
-    | "pulse_instability"
-    | "red_shift"
-    | "entropy_high"
-    | "session_hesitation"
-    | "task_gap"
-    | "boundary_progress"
-    | "stability_gain";
+  | "pulse_instability"
+  | "red_shift"
+  | "entropy_high"
+  | "session_hesitation"
+  | "task_gap"
+  | "boundary_progress"
+  | "stability_gain";
   label: string;
   value?: string;
 }

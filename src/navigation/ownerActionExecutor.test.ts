@@ -54,6 +54,7 @@ const createContext = (overrides?: {
         openBreathingSession: vi.fn(),
         openAmbientReality: vi.fn(),
         openWisdomVault: vi.fn(),
+        openEnterpriseDashboard: vi.fn(),
         lockFeature: calls.lockFeature
       }
     }

@@ -1,6 +1,7 @@
 import type { FC, KeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Tag } from "lucide-react";
 import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "../state/pulseState";
 import { usePulseState } from "../state/pulseState";
 import { useAdminState, isFeatureAllowed, type PulseCopyOverrideValue } from "../state/adminState";
@@ -21,6 +22,7 @@ interface PulseCheckModalProps {
     energy: number | null;
     mood: PulseMood | null;
     focus: PulseFocus | null;
+    topics?: string[];
     auto?: boolean;
     notes?: string;
     energyReasons?: string[];
@@ -28,6 +30,15 @@ interface PulseCheckModalProps {
   }) => void;
   onClose: (reason?: "backdrop" | "close_button") => void;
 }
+
+const TOPIC_OPTIONS = [
+  { id: "work", label: "العمل" },
+  { id: "family", label: "العائلة" },
+  { id: "relationships", label: "العلاقات" },
+  { id: "health", label: "الصحة" },
+  { id: "finance", label: "المال" },
+  { id: "future", label: "المستقبل" }
+];
 
 const MOODS: Array<{ id: PulseMood; label: string; emoji: string }> = [
   { id: "bright", label: "\u0631\u0627\u064a\u0642", emoji: "\u2600\uFE0F" },
@@ -143,6 +154,7 @@ type PulseDraft = {
   hasPickedEnergy: boolean;
   mood: PulseMood | null;
   focus: PulseFocus | null;
+  topics: string[];
   notes: string;
   energyReasons: string[];
   energyConfidence: PulseEnergyConfidence | null;
@@ -370,6 +382,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [hasPickedEnergy, setHasPickedEnergy] = useState(false);
   const [mood, setMood] = useState<PulseMood | null>(null);
   const [focus, setFocus] = useState<PulseFocus | null>(null);
+  const [topics, setTopics] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [energyReasons, setEnergyReasons] = useState<string[]>([]);
   const [energyConfidence, setEnergyConfidence] = useState<PulseEnergyConfidence | null>(null);
@@ -573,6 +586,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
             setHasPickedEnergy(Boolean(parsed.hasPickedEnergy));
             setMood(parsed.mood ?? null);
             setFocus(parsed.focus ?? null);
+            setTopics(Array.isArray(parsed.topics) ? parsed.topics.filter((x) => typeof x === "string") : []);
             setNotes(typeof parsed.notes === "string" ? parsed.notes : "");
             setEnergyReasons(Array.isArray(parsed.energyReasons) ? parsed.energyReasons.filter((x) => typeof x === "string") : []);
             setEnergyConfidence(parsed.energyConfidence ?? null);
@@ -599,6 +613,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       }
       setMood(null);
       setFocus(null);
+      setTopics([]);
       setNotes("");
       setEnergyReasons([]);
       setEnergyConfidence(null);
@@ -610,6 +625,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       hasPickedEnergy: restored ? hasPickedEnergy : (typeof lastEnergyValue === "number"),
       mood: restored ? mood : null,
       focus: restored ? focus : null,
+      topics: restored ? topics : [],
       notes: restored ? notes : "",
       step: restored ? step : 1
     }));
@@ -681,6 +697,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       hasPickedEnergy,
       mood,
       focus,
+      topics,
       notes,
       energyReasons,
       energyConfidence,
@@ -698,6 +715,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     hasPickedEnergy,
     mood,
     focus,
+    topics,
     notes,
     energyReasons,
     energyConfidence,
@@ -790,6 +808,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
         energy: finalEnergy,
         mood: finalMood,
         focus: finalFocus,
+        topics: topics.length > 0 ? topics : undefined,
         notes: mergedNotes || undefined,
         energyReasons: energyReasons.length > 0 ? energyReasons : undefined,
         energyConfidence: energyConfidence ?? undefined
@@ -1333,6 +1352,39 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                           >
                             {isSelected && <motion.div layoutId="f-dot" className="absolute top-2 right-2 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_white]" />}
                             {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 3.5. Topics (Tax) */}
+                  <div className="flex flex-col gap-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                      مواضيع الاستنزاف (اختياري)
+                    </label>
+                    <div className="flex flex-wrap gap-2 pb-2">
+                      {TOPIC_OPTIONS.map((t) => {
+                        const isSelected = topics.includes(t.id);
+                        return (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => {
+                              setTopics((prev) =>
+                                isSelected ? prev.filter((id) => id !== t.id) : [...prev, t.id]
+                              );
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all"
+                            style={{
+                              background: isSelected ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255,255,255,0.02)',
+                              borderColor: isSelected ? 'rgba(99, 102, 241, 0.4)' : 'rgba(255,255,255,0.06)',
+                              color: isSelected ? '#818cf8' : 'rgba(255,255,255,0.4)',
+                            }}
+                          >
+                            <Tag className="w-3 h-3" />
+                            {t.label}
                           </button>
                         );
                       })}

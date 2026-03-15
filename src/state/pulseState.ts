@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushPulseLog } from "../services/pulseSync";
+import { useGamificationState } from "./gamificationState";
 
 export type PulseMood = "bright" | "calm" | "anxious" | "angry" | "sad" | "tense" | "hopeful" | "overwhelmed";
 export type PulseFocus = "event" | "thought" | "body" | "none";
@@ -11,6 +12,7 @@ export interface PulseEntry {
   mood: PulseMood;
   focus: PulseFocus;
   energyReasons?: string[];
+  topics?: string[]; // Added for Topic Tax feature
   energyConfidence?: PulseEnergyConfidence;
   timestamp: number;
   auto?: boolean;
@@ -50,6 +52,7 @@ export const usePulseState = create<PulseState>()(
         const next: PulseEntry = { ...entry, timestamp: Date.now() };
         const logs = [next, ...(get().logs ?? [])].slice(0, MAX_LOGS);
         set({ lastPulse: next, logs });
+        useGamificationState.getState().addXP(15, "تسجيل النبضة");
         void pushPulseLog(next);
       },
       snoozeNotifications: (minutes) => {
@@ -65,10 +68,10 @@ export const usePulseState = create<PulseState>()(
           weekdayLabels: label
             ? { ...s.weekdayLabels, [d]: label.trim() }
             : (() => {
-                const next = { ...s.weekdayLabels };
-                delete next[d];
-                return next;
-              })()
+              const next = { ...s.weekdayLabels };
+              delete next[d];
+              return next;
+            })()
         }));
       }
     }),

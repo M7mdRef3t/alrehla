@@ -29,7 +29,8 @@ export type OwnerActionKey =
   | "noise_silencing"
   | "breathing_session"
   | "ambient_reality"
-  | "wisdom_vault";
+  | "wisdom_vault"
+  | "enterprise_dashboard";
 
 const PREVIEW_FEATURE_KEYS = new Set<FeatureFlagKey>([
   "dawayir_map",
@@ -75,7 +76,8 @@ const OWNER_ACTION_KEYS = new Set<OwnerActionKey>([
   "noise_silencing",
   "breathing_session",
   "ambient_reality",
-  "wisdom_vault"
+  "wisdom_vault",
+  "enterprise_dashboard"
 ]);
 
 export function normalizePreviewFeature(value: string | null): FeatureFlagKey | null {

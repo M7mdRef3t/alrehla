@@ -13,6 +13,14 @@ import { emergencyCopy } from "../../copy/emergency";
 import { recordFlowEvent, recordPathStartedOnce } from "../../services/journeyTracking";
 import { useSyncState } from "../../state/syncState";
 import { isUserMode } from "../../config/appEnv";
+import { SovereigntySnapshotCard } from "../SovereigntySnapshotCard";
+import { deriveSovereigntySnapshot } from "../../utils/sovereigntySnapshot";
+import { BoundaryEvidenceCard } from "../BoundaryEvidenceCard";
+import { deriveBoundaryEvidence } from "../../utils/boundaryEvidence";
+import { PressureSentenceCard } from "../PressureSentenceCard";
+import { derivePressureSentence } from "../../utils/pressureSentence";
+import { GenerationalEchoCard } from "../GenerationalEchoCard";
+import { deriveGenerationalEcho } from "../../utils/generationalEcho";
 
 interface ResultScreenProps {
   personLabel: string;
@@ -69,13 +77,30 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   }), [score, feelingAnswers, realityAnswers, isEmergency, safetyAnswer, personGender]);
   const isEmotionalPrisoner = result.scenarioKey === "emotional_prisoner";
 
-  const ring = useMemo(() => (realityAnswers ? realityScoreToRing(realityAnswers) : "green"), [realityAnswers]);
+  const derivedRing = useMemo(
+    () => (realityAnswers ? realityScoreToRing(realityAnswers) : "green"),
+    [realityAnswers]
+  );
+  const missionProgress = useMapState((s) =>
+    addedNodeId ? s.nodes.find((node) => node.id === addedNodeId)?.missionProgress : undefined
+  );
+  const nodes = useMapState((s) => s.nodes);
+  const setRecoveryPlanOpenWith = useMapState((s) => s.setRecoveryPlanOpenWith);
+  const addedNode = useMapState((s) =>
+    addedNodeId ? s.nodes.find((node) => node.id === addedNodeId) : undefined
+  );
+  const activeRing = addedNode?.ring ?? derivedRing;
+  const detachmentReasons = useMapState((s) =>
+    addedNodeId
+      ? s.nodes.find((node) => node.id === addedNodeId)?.recoveryProgress?.detachmentReasons
+      : undefined
+  );
   const ringInsight = useMemo(() => {
     const presence = personGender === "female" ? "وجودها" : personGender === "male" ? "وجوده" : "وجود الشخص ده";
-    if (ring === "red") return `علاقتك بـ ${displayName} بتسحب طاقتك. ${presence} في المدار الأحمر حماية ليك.`;
-    if (ring === "yellow") return `علاقتك بـ ${displayName} بتتبدل. ضبط المسافة هيساعدك.`;
+    if (activeRing === "red") return `علاقتك بـ ${displayName} بتسحب طاقتك. ${presence} في المدار الأحمر حماية ليك.`;
+    if (activeRing === "yellow") return `علاقتك بـ ${displayName} بتتبدل. ضبط المسافة هيساعدك.`;
     return `علاقتك بـ ${displayName} مصدر أمان. حافظ عليها.`;
-  }, [ring, displayName, personGender]);
+  }, [activeRing, displayName, personGender]);
   const relationshipToneText = useMemo(() => {
     if (isEmotionalPrisoner) return "في هدوء خارجي، بس لسه محتاجين نقفل الضغط الداخلي.";
     if (summaryOnly) return ringInsight;
@@ -90,15 +115,6 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     if (personGender === "male") return "بتكلمه";
     return "بتكلمي الشخص ده";
   }, [personGender]);
-
-  const missionProgress = useMapState((s) =>
-    addedNodeId ? s.nodes.find((node) => node.id === addedNodeId)?.missionProgress : undefined
-  );
-  const detachmentReasons = useMapState((s) =>
-    addedNodeId
-      ? s.nodes.find((node) => node.id === addedNodeId)?.recoveryProgress?.detachmentReasons
-      : undefined
-  );
   const startMission = useMapState((s) => s.startMission);
   const shareCardRef = useRef<HTMLDivElement | null>(null);
   const [showRealityPopup, setShowRealityPopup] = useState(false);
@@ -135,6 +151,30 @@ export const ResultScreen: FC<ResultScreenProps> = ({
       })),
     [result.obstacles]
   );
+  const sovereigntySnapshot = useMemo(
+    () =>
+      deriveSovereigntySnapshot({
+        displayName,
+        ring: activeRing,
+        node: addedNode ?? null,
+        isEmotionalPrisoner,
+        completedSteps,
+        totalSteps
+      }),
+    [activeRing, addedNode, completedSteps, displayName, isEmotionalPrisoner, totalSteps]
+  );
+  const boundaryEvidence = useMemo(
+    () => (addedNode ? deriveBoundaryEvidence(addedNode, displayName) : null),
+    [addedNode, displayName]
+  );
+  const pressureSentence = useMemo(
+    () => (addedNode ? derivePressureSentence({ displayName, ring: activeRing, node: addedNode }) : null),
+    [activeRing, addedNode, displayName]
+  );
+  const generationalEcho = useMemo(
+    () => (addedNode ? deriveGenerationalEcho(addedNode, nodes) : null),
+    [addedNode, nodes]
+  );
   const shareText = useMemo(() => {
     const lines = [
       `نتيجتي مع ${displayName}: ${isEmotionalPrisoner ? result.state_label : result.title}`,
@@ -170,6 +210,16 @@ export const ResultScreen: FC<ResultScreenProps> = ({
       zone: node.ring,
       relationshipRole: personTitle?.trim() || undefined
     });
+  };
+
+  const handleOpenTraumaRecoveryPath = () => {
+    if (!addedNodeId) return;
+
+    setRecoveryPlanOpenWith({
+      focusTraumaInheritance: true,
+      preselectedNodeId: addedNodeId
+    });
+    onClose?.();
   };
 
   const handleShareResult = async () => {
@@ -231,22 +281,22 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     >
       <>
         <motion.div
-          className={`mb-5 card-unified border px-4 py-3 text-center ${ring === "red"
+          className={`mb-5 card-unified border px-4 py-3 text-center ${activeRing === "red"
             ? "bg-rose-50/80 border-rose-200"
-            : ring === "yellow"
+            : activeRing === "yellow"
               ? "bg-amber-50/80 border-amber-200"
               : "bg-teal-50/80 border-teal-100"
             }`}
           animate={summaryOnly ? { scale: [1, 1.015, 1] } : {}}
           transition={{ duration: 1.5, repeat: summaryOnly ? Infinity : 0, repeatDelay: 2.5 }}
         >
-          <p className={`text-xs font-semibold ${ring === "red" ? "text-rose-800" : ring === "yellow" ? "text-amber-800" : "text-teal-800"}`}>
+          <p className={`text-xs font-semibold ${activeRing === "red" ? "text-rose-800" : activeRing === "yellow" ? "text-amber-800" : "text-teal-800"}`}>
             قراءة المدار الحالي
           </p>
           <h3 className="mt-1 text-xl font-extrabold leading-tight text-slate-900">
             علاقتك مع{" "}
             <span
-              className={`inline-flex items-center rounded-full px-3 py-1 font-bold text-white max-w-[72vw] truncate sm:max-w-full ${ring === "red" ? "bg-rose-500" : ring === "yellow" ? "bg-amber-500" : "bg-teal-500"
+              className={`inline-flex items-center rounded-full px-3 py-1 font-bold text-white max-w-[72vw] truncate sm:max-w-full ${activeRing === "red" ? "bg-rose-500" : activeRing === "yellow" ? "bg-amber-500" : "bg-teal-500"
                 }`}
               title={displayName}
             >
@@ -262,6 +312,22 @@ export const ResultScreen: FC<ResultScreenProps> = ({
             {relationshipToneText}
           </p>
         </motion.div>
+
+        {summaryOnly && (
+          <SovereigntySnapshotCard snapshot={sovereigntySnapshot} />
+        )}
+        {summaryOnly && pressureSentence && (
+          <PressureSentenceCard snapshot={pressureSentence} />
+        )}
+        {summaryOnly && boundaryEvidence && (
+          <BoundaryEvidenceCard evidence={boundaryEvidence} />
+        )}
+        {summaryOnly && generationalEcho && (
+          <GenerationalEchoCard
+            snapshot={generationalEcho}
+            onOpenRecoveryPath={handleOpenTraumaRecoveryPath}
+          />
+        )}
 
         <div ref={shareCardRef} className="p-6 card-unified bg-linear-to-b from-slate-50 to-white border border-slate-200 mb-6 text-center">
           <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">

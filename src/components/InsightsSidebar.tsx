@@ -16,6 +16,8 @@ import { X, ChevronRight, ChevronLeft } from "lucide-react";
 import { useLayoutState } from "../state/layoutState";
 import { TEIWidget } from "./TEIWidget";
 import { DailyPulseWidget } from "./DailyPulseWidget";
+import { WeeklyEnergyWrapWidget } from "./WeeklyEnergyWrapWidget";
+import { StagnationAlertWidget } from "./StagnationAlertWidget";
 import { useMapState } from "../state/mapState";
 import { useMemo } from "react";
 
@@ -64,8 +66,8 @@ export const InsightsSidebar: FC<InsightsSidebarProps> = ({ onOpenArchive }) => 
   const translateX = sidebarExpanded
     ? 0
     : isRight
-    ? sidebarWidth
-    : -sidebarWidth;
+      ? sidebarWidth
+      : -sidebarWidth;
 
   // ─── Render ───────────────────────────────────────────────────────────────
   if (sidebarPosition === "hidden") return null;
@@ -133,15 +135,29 @@ export const InsightsSidebar: FC<InsightsSidebarProps> = ({ onOpenArchive }) => 
             </div>
           )}
 
+          {/* Stagnation Alerts */}
+          <StagnationAlertWidget />
+
+          {/* Sidebar */}
+          <div>
+            <h3
+              className="text-xs font-semibold mb-2 text-right"
+              style={{ color: "var(--text-muted)" }}
+            >
+              ملخص النزيف الأسبوعي
+            </h3>
+            <WeeklyEnergyWrapWidget />
+          </div>
+
           {/* Daily Pulse */}
           <div>
             <h3
               className="text-xs font-semibold mb-2 text-right"
               style={{ color: "var(--text-muted)" }}
             >
-              سؤال اليوم
+              النبضة التكتيكية
             </h3>
-            <DailyPulseWidget onOpenArchive={onOpenArchive} />
+            <DailyPulseWidget />
           </div>
 
           {/* Dashboard Stats */}

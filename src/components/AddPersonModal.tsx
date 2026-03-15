@@ -21,6 +21,7 @@ import type { PersonGender } from "../utils/resultScreenAI";
 import { FeelingStep } from "./AddPersonModal/FeelingStep";
 import { PositionStep } from "./AddPersonModal/PositionStep";
 import { isUserMode } from "../config/appEnv";
+import { buildEmergencyContextFromNode } from "../utils/emergencyContext";
 
 type AddPersonStep =
   | "select"
@@ -367,7 +368,16 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
             addedNodeId={addedNodeId ?? undefined}
             onClose={handleClose}
             onOpenMission={onOpenMissionFromAddPerson ?? onOpenMission}
-            onOpenEmergency={isEmergency ? openEmergency : undefined}
+            onOpenEmergency={
+              isEmergency
+                ? () => {
+                    const node = addedNodeId
+                      ? useMapState.getState().nodes.find((item) => item.id === addedNodeId)
+                      : null;
+                    openEmergency(node ? buildEmergencyContextFromNode(node) : undefined);
+                  }
+                : undefined
+            }
             realityAnswers={lastRealityAnswers ?? undefined}
             feelingAnswers={lastFeelingAnswers ?? undefined}
             isEmergency={isEmergency}

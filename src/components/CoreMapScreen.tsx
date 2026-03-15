@@ -10,10 +10,11 @@ import { MeNodeDetails } from "./MeNodeDetails";
 import { BreathingOverlay } from "./BreathingOverlay";
 import { MapOnboardingOverlay } from "./MapOnboardingOverlay";
 import { hasSeenOnboarding } from "../utils/mapOnboarding";
-import { Map, TreeDeciduous, X } from "lucide-react";
+import { Map, TreeDeciduous, X, Mic } from "lucide-react";
 import { DailyPulseWidget } from "./DailyPulseWidget";
 import { GoogleAuthModal } from "./GoogleAuthModal";
 import { DailyJournalArchive } from "./DailyJournalArchive";
+import { UpgradeScreen } from "./UpgradeScreen";
 import { ShadowPulseAlert } from "./ShadowPulseAlert";
 import { TEIWidget } from "./TEIWidget";
 import { FloatingActionMenu } from "./FloatingActionMenu";
@@ -27,6 +28,7 @@ import { ConsciousnessThread } from "./ConsciousnessThread";
 import { InterventionPanel } from "./InterventionPanel";
 import { ShadowInsightPanel } from "./ShadowInsightPanel";
 import { VoicePresence } from "./VoicePresence";
+import { VoicePulseModal } from "./VoicePulseModal";
 import { TabNavigation } from "./TabNavigation";
 import { LayoutModeSwitcher } from "./LayoutModeSwitcher";
 import { useGeminiLive } from "../hooks/useGeminiLive";
@@ -39,6 +41,8 @@ import { useMapState } from "../state/mapState";
 import { usePulseState } from "../state/pulseState";
 import { PULSE_DAY_NAMES } from "../utils/pulseInsights";
 import { NextStepCard } from "./NextStepCard";
+import { RelationshipWeatherCard } from "./RelationshipWeatherCard";
+import { ContextAtlasCard } from "./ContextAtlasCard";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { useAdminState } from "../state/adminState";
 import { getEffectiveFeatureAccess } from "../utils/featureFlags";
@@ -48,9 +52,12 @@ import type { NextStepDecisionV1 } from "../modules/recommendation/types";
 import { isUserMode } from "../config/appEnv";
 import { runtimeEnv } from "../config/runtimeEnv";
 import { adaptiveLayoutEngine } from "../ai/adaptiveLayoutEngine";
+import { loadSubscription, canSendAIMessage } from "../services/subscriptionManager";
 import { computeTEI } from "../utils/traumaEntropyIndex";
 import { useDailyQuestion } from "../hooks/useDailyQuestion";
 import { getShadowScore } from "../state/shadowPulseState";
+import { deriveRelationshipWeather } from "../utils/relationshipWeather";
+import { deriveContextAtlas, type ContextAtlasKey } from "../utils/contextAtlas";
 
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 
@@ -137,6 +144,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [showAddPerson, setShowAddPerson] = useState(false);
   const [segmentedView, setSegmentedView] = useState<"network" | "stability" | "metrics">("network");
   const [isCloudAuthOpen, setIsCloudAuthOpen] = useState(false);
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const user = useAuthState(s => s.user);
 
   //  Gemini Live Integration (bureau of consciousness) 
@@ -166,6 +174,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       setIsCloudAuthOpen(true);
       return;
     }
+    if (!canSendAIMessage()) {
+      setIsUpgradeOpen(true);
+      return;
+    }
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
 
@@ -183,19 +195,25 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       setIsCloudAuthOpen(true);
       return;
     }
+    if (!canSendAIMessage()) {
+      setIsUpgradeOpen(true);
+      return;
+    }
     if (isConnected) disconnect();
     else connect();
   }, [user, isConnected, connect, disconnect]);
   const [showMeCard, setShowMeCard] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
   const [showWeekdayLabelsModal, setShowWeekdayLabelsModal] = useState(false);
+  const lastPulse = usePulseState((s) => s.lastPulse);
   const weekdayLabels = usePulseState((s) => s.weekdayLabels);
   const setWeekdayLabel = usePulseState((s) => s.setWeekdayLabel);
   const [legendTooltip, setLegendTooltip] = useState<"green" | "yellow" | "red" | null>(null);
   const [viewMode, setViewMode] = useState<"map" | "tree">("map");
   const [galaxyMode, setGalaxyMode] = useState(false);
+  const [showVoicePulse, setShowVoicePulse] = useState(false);
   const [galaxySubView, setGalaxySubView] = useState<"map" | "forest">("map");
-  const [selectedContexts, setSelectedContexts] = useState<string[]>(["family", "work", "love", "general"]);
+  const [selectedContexts, setSelectedContexts] = useState<ContextAtlasKey[]>(["family", "work", "love", "general"]);
   const isFamily = goalId === "family";
   const featureFlags = useAdminState((s) => s.featureFlags);
   const betaAccess = useAdminState((s) => s.betaAccess);
@@ -213,7 +231,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const canUseGalaxyView = featureAccess.global_atlas;
   const canUseFamilyTreeView = canUseFamilyTree;
 
-  const toggleContext = (ctx: string) => {
+  const toggleContext = (ctx: ContextAtlasKey) => {
     setSelectedContexts((prev) =>
       prev.includes(ctx) ? prev.filter((c) => c !== ctx) : [...prev, ctx]
     );
@@ -234,6 +252,11 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const activeNodes = useMemo(() => nodes.filter((n) => !n.isNodeArchived), [nodes]);
   const archivedNodes = useMemo(() => nodes.filter((n) => n.isNodeArchived), [nodes]);
   const greenNodes = useMemo(() => activeNodes.filter((n) => n.ring === "green" && !n.isDetached), [activeNodes]);
+  const relationshipWeather = useMemo(
+    () => deriveRelationshipWeather(nodes, lastPulse?.energy ?? null),
+    [lastPulse?.energy, nodes]
+  );
+  const contextAtlas = useMemo(() => deriveContextAtlas(nodes), [nodes]);
 
   /*  Adaptive Layout Engine  */
   const { hasAnsweredToday } = useDailyQuestion();
@@ -276,8 +299,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   }, [nodes.length, showOnboarding]);
 
   useEffect(() => {
-    if (!canUseGalaxyView && galaxyMode) setGalaxyMode(false);
-  }, [canUseGalaxyView, galaxyMode]);
+    if (!canUseGalaxyView && galaxySubView === "forest") setGalaxySubView("map");
+  }, [canUseGalaxyView, galaxySubView]);
 
   useEffect(() => {
     if (!canUseFamilyTreeView && viewMode === "tree") setViewMode("map");
@@ -376,6 +399,20 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     onSelectNode(id);
   };
 
+  const handleToggleUnifiedContexts = () => {
+    if (selectedContexts.length === 0) {
+      setSelectedContexts(["family", "work", "love", "general"]);
+    }
+    setGalaxySubView("map");
+    setGalaxyMode((value) => !value);
+  };
+
+  const handleFocusContext = (context: ContextAtlasKey) => {
+    setGalaxySubView("map");
+    setSelectedContexts([context]);
+    setGalaxyMode(true);
+  };
+
   return (
     <motion.main
       className="w-full text-center relative px-4 sm:px-6 flex flex-col"
@@ -424,10 +461,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className="w-full pointer-events-auto flex flex-col items-center gap-10 pt-10"
               >
-                {/*  Pulse Capsule: The Vital Sign HUD */}
-                <div className="w-full flex justify-center">
-                  <DailyPulseWidget />
-                </div>
+                {/*  Pulse Capsule moved out to float at the bottom */}
+
 
                 {/* ️ Priority Intervention (High Breathing Space) */}
                 <div className="w-full max-w-sm">
@@ -523,6 +558,17 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       <VoicePresence trigger={voiceTrigger} />
 
       {/* 
+          النبضة التكتيكية: تطفو أسفل الخريطة لسهولة الوصول
+      */}
+      {!journeyMode && (
+        <div className="fixed bottom-24 inset-x-0 z-40 pointer-events-none flex justify-center">
+          <div className="pointer-events-auto">
+            <DailyPulseWidget />
+          </div>
+        </div>
+      )}
+
+      {/* 
           اتة اداعة  تفاص ابة ط (30%)
            */}
       {!journeyMode && (
@@ -610,6 +656,23 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   )}
 
                   {/* Slogan  تة اتفس (10%) */}
+                  {contextAtlas && (
+                    <ContextAtlasCard
+                      snapshot={contextAtlas}
+                      isUnifiedMode={galaxyMode}
+                      selectedContexts={selectedContexts}
+                      onToggleMode={handleToggleUnifiedContexts}
+                      onToggleContext={toggleContext}
+                      onFocusContext={handleFocusContext}
+                      onSelectNode={handleNodeClick}
+                    />
+                  )}
+                  {relationshipWeather && (
+                    <RelationshipWeatherCard
+                      snapshot={relationshipWeather}
+                      onSelectNode={handleNodeClick}
+                    />
+                  )}
                   <p className="text-[11px] text-center pt-1" style={{ color: "rgba(45,212,191,0.35)" }}>
                     {mapCopy.dashboardSlogan}
                   </p>
@@ -649,7 +712,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               </button>
             </div>
             <p className="text-xs mb-3" style={{ color: "var(--text-secondary)" }}>
-                ع داا طات ف خفضة اربط بشاط أ شخص عشا اترر ذر.
+              ع داا طات ف خفضة اربط بشاط أ شخص عشا اترر ذر.
             </p>
             <div className="space-y-2">
               {PULSE_DAY_NAMES.map((dayName, i) => (
@@ -870,10 +933,36 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   </button>
                 </div>
               )}
+
+              <motion.button
+                type="button"
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-all cosmic-shimmer"
+                style={{
+                  background: "linear-gradient(135deg, rgba(45,212,191,0.2) 0%, rgba(20,184,166,0.05) 100%)",
+                  border: "1px solid rgba(45,212,191,0.3)",
+                  color: "var(--soft-teal)"
+                }}
+                onClick={() => setShowVoicePulse(true)}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                title="تفريغ صوتي"
+                aria-label="تفريغ صوتي"
+              >
+                <Mic size={20} />
+              </motion.button>
+
               <motion.button
                 type="button"
                 className="cta-primary px-6 py-3 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/40 focus-visible:ring-offset-0"
-                onClick={() => { onSelectNode(null); setShowAddPerson(true); }}
+                onClick={() => {
+                  onSelectNode(null);
+                  const sub = loadSubscription();
+                  if (sub.tier === "basic" && nodes.length >= 3) {
+                    setIsUpgradeOpen(true);
+                  } else {
+                    setShowAddPerson(true);
+                  }
+                }}
                 title={mapCopy.addPersonTitle}
                 whileHover={{ scale: 1.04, y: -1 }}
                 whileTap={{ scale: 0.97 }}
@@ -920,7 +1009,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         activeTab === "operational" && (
           <>
             <AnimatePresence mode="wait">
-              {canUseGalaxyView && galaxyMode && galaxySubView === "forest" ? (
+              {galaxyMode && canUseGalaxyView && galaxySubView === "forest" ? (
                 <motion.div
                   key="forest"
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -933,7 +1022,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 >
                   <ForestView onNodeClick={handleNodeClick} />
                 </motion.div>
-              ) : canUseGalaxyView && galaxyMode && galaxySubView === "map" ? (
+              ) : galaxyMode ? (
                 <motion.div
                   key="galaxy-map"
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -1102,7 +1191,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 </button>
               )}
               <button type="button" onClick={dismissPlacementTooltip} className="rounded-full p-1.5 transition-colors" style={{ color: "var(--text-muted)" }} title="إغا" aria-label="إغا">
-                
+
               </button>
             </div>
           </motion.div>
@@ -1159,7 +1248,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         journeyMode && onJourneyComplete && (
           <div className="mt-8 flex flex-col items-center gap-2">
             <button type="button" onClick={onJourneyComplete} disabled={!canCompleteJourneyStep} className="cta-primary px-6 py-3 font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
-               ارحة
+              ارحة
             </button>
             {!canCompleteJourneyStep && nodes.length > 0 && (
               <p className="text-sm max-w-xs text-center" style={{ color: "var(--text-muted)" }}>
@@ -1186,10 +1275,16 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         )
       }
       {
+        showVoicePulse && (
+          <VoicePulseModal onClose={() => setShowVoicePulse(false)} />
+        )
+      }
+      {
         selectedNodeId && canUseBasicDiagnosis && (
           <ViewPersonModal nodeId={selectedNodeId} category={category} goalId={goalId} onOpenMission={onOpenMission} onClose={() => onSelectNode(null)} />
         )
       }
+      <UpgradeScreen isOpen={isUpgradeOpen} onClose={() => setIsUpgradeOpen(false)} />
       {
         showMeCard && (
           <MeNodeDetails onClose={() => setShowMeCard(false)} onStartBreathing={() => { setShowMeCard(false); if (onOpenBreathing) onOpenBreathing(); else setShowBreathing(true); }} />
@@ -1256,7 +1351,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {
         !journeyMode && !hideBottomDock && (
           <div className="hidden md:block">
-          <LayoutModeSwitcher />
+            <LayoutModeSwitcher />
           </div>
         )
       }

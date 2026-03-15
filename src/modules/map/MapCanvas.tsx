@@ -20,6 +20,7 @@ import { useOptimisticPhoenixSync } from "../../hooks/useOptimisticPhoenixSync";
 import { useKineticSensors } from "../../hooks/useKineticSensors";
 import { useDailyPulse } from "../../hooks/useDailyPulse";
 import { useDailyQuestion } from "../../hooks/useDailyQuestion";
+import { soundManager } from "../../services/soundManager";
 
 /* 
     COSMIC MAP CANVAS  Digital Sanctuary
@@ -199,14 +200,18 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     if (onClick) onClick(node.id);
   }, [node.id, justDraggedId, onClick]);
 
-  /*  Ring color for the breathing aura  */
+  /*  Ring color for the breathing aura & Black Hole effect */
+  const netEnergy = node.energyBalance?.netEnergy ?? 0;
+  const isVampire = netEnergy < 0;
+  const vampireIntensity = Math.min(Math.abs(netEnergy) / 20, 1); // Max intensity at -20
+
   const auraColor = isHighlighted
     ? (node.ring === "red" ? "rgba(248, 113, 113, 0.25)" : node.ring === "yellow" ? "rgba(251, 191, 36, 0.2)" : "rgba(45, 212, 191, 0.2)")
-    : "rgba(255, 255, 255, 0.02)";
+    : isVampire ? `rgba(185, 28, 28, ${0.1 + vampireIntensity * 0.3})` : "rgba(255, 255, 255, 0.02)";
 
   const auraBorderColor = isHighlighted
     ? (node.ring === "red" ? "rgba(248, 113, 113, 0.4)" : node.ring === "yellow" ? "rgba(251, 191, 36, 0.35)" : "rgba(45, 212, 191, 0.35)")
-    : "rgba(255, 255, 255, 0.05)";
+    : isVampire ? `rgba(153, 27, 27, ${0.3 + vampireIntensity * 0.5})` : "rgba(255, 255, 255, 0.05)";
 
   return (
     <motion.div
@@ -236,12 +241,17 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
               x: [0, 2, -1, 1, 0],
               y: [0, -1, 2, -2, 0]
             }
-            : {
-              opacity: [0.4, 0.8, 0.4],
-              scale: [1, 1.08, 1],
-              x: [0, 1.5, -1, 1, 0],
-              y: [0, -1.2, 1.8, -0.8, 0]
-            }
+            : isVampire && !isHighlighted
+              ? {
+                opacity: [0.3, 0.6, 0.3],
+                scale: [1, 0.85, 1], // Pulls inward like gravity
+              }
+              : {
+                opacity: [0.4, 0.8, 0.4],
+                scale: [1, 1.08, 1],
+                x: [0, 1.5, -1, 1, 0],
+                y: [0, -1.2, 1.8, -0.8, 0]
+              }
         }
         transition={reduceMotion ? undefined : {
           duration: isHighlighted && !pulseDone ? 1.2 : 6 + (nodeIndex % 3),
@@ -271,13 +281,16 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         }}
       >
         {/* Avatar  cosmic circle */}
-        <span className="shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold"
+        <span className="shrink-0 w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold relative"
           style={{
-            background: isDetached
-              ? "rgba(100, 116, 139, 0.3)"
-              : "linear-gradient(135deg, rgba(45, 212, 191, 0.15), rgba(139, 92, 246, 0.1))",
-            color: "var(--text-primary)",
-            border: "1px solid rgba(255, 255, 255, 0.1)"
+            background: isVampire
+              ? `radial-gradient(circle, #050505 20%, rgba(153,27,27,${0.3 + vampireIntensity * 0.7}) 100%)`
+              : isDetached
+                ? "rgba(100, 116, 139, 0.3)"
+                : "linear-gradient(135deg, rgba(45, 212, 191, 0.15), rgba(139, 92, 246, 0.1))",
+            color: isVampire ? "rgba(255,255,255,0.8)" : "var(--text-primary)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            boxShadow: isVampire ? `inset 0 0 ${5 + vampireIntensity * 10}px #000, 0 0 ${vampireIntensity * 15}px rgba(153,27,27,0.5)` : "none"
           }}
         >
           {node.avatarUrl ? (
@@ -592,6 +605,47 @@ export const MapCanvas: FC<MapCanvasProps> = ({
   const setDetached = useMapState((s) => s.setDetached);
   const battery = useMeState((s) => s.battery);
   const meStyle = ME_CENTER_STYLES[battery] ?? ME_CENTER_STYLES.okay;
+
+  // Haptic feedback helper
+  const triggerHaptic = useCallback(() => {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(50); // Short, crisp vibration
+    }
+  }, []);
+
+  // Set up listener for the custom undo event dispatched from mapState
+  const [undoData, setUndoData] = useState<{ nodeId: string; nodeLabel: string; fromRing: Ring; toRing: Ring } | null>(null);
+  const [showUndoToast, setShowUndoToast] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleUndoReady = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        triggerHaptic(); // Vibrate when a person is moved
+        setUndoData(customEvent.detail);
+        setShowUndoToast(true);
+
+        // Auto-hide the undo toast after 5 seconds
+        const t = setTimeout(() => {
+          setShowUndoToast(false);
+        }, 5000);
+
+        // Cleanup the timer if another move happens
+        return () => clearTimeout(t);
+      }
+    };
+    window.addEventListener("dawayir-undo-ring", handleUndoReady);
+    return () => window.removeEventListener("dawayir-undo-ring", handleUndoReady);
+  }, [triggerHaptic]);
+
+  const commitUndo = useCallback(() => {
+    if (!undoData) return;
+    triggerHaptic();
+    moveNodeToRing(undoData.nodeId, undoData.fromRing);
+    setShowUndoToast(false);
+    setUndoData(null);
+  }, [undoData, moveNodeToRing, triggerHaptic]);
 
   const { user } = useAuthState();
   const [isCommitProcessing, setIsCommitProcessing] = useState(false);
@@ -1241,7 +1295,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
             transition={{ duration: 0.25 }}
           >
             <p className="text-sm font-semibold flex-1" style={{ color: "var(--text-primary)" }}>
-               "{pendingMove.nodeLabel}" إ {RING_LABELS[pendingMove.toRing]}
+              "{pendingMove.nodeLabel}" إ {RING_LABELS[pendingMove.toRing]}
             </p>
             <div className="flex gap-2 shrink-0">
               <button
@@ -1269,6 +1323,15 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         personName={lastArchivedName}
         visible={showArchiveToast}
         onClose={() => setShowArchiveToast(false)}
+      />
+
+      {/* Undo Toast */}
+      <JourneyToast
+        variant="undo"
+        personName={undoData?.nodeLabel}
+        visible={showUndoToast}
+        onClose={() => setShowUndoToast(false)}
+        onAction={commitUndo}
       />
     </div>
   );

@@ -8,6 +8,7 @@ import { runtimeEnv } from "../config/runtimeEnv";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 
 export type UserToneGender = "male" | "female" | "neutral";
+export type SubscriptionTier = "free" | "pro";
 
 interface AuthState {
   status: "loading" | "ready";
@@ -18,9 +19,11 @@ interface AuthState {
   toneGender: UserToneGender;
   role: string | null;
   roleOverride: string | null;
+  tier: SubscriptionTier;
   setSession: (session: Session | null) => void;
   setRole: (role: string | null) => void;
   setRoleOverride: (role: string | null) => void;
+  setTier: (tier: SubscriptionTier) => void;
 }
 
 const ROLE_OVERRIDE_KEY = "dawayir-role-override";
@@ -140,6 +143,7 @@ export const useAuthState = create<AuthState>((set) => ({
   toneGender: "neutral",
   role: null,
   roleOverride: getInitialRoleOverride(),
+  tier: "free",
   setSession: (session) =>
     set(() => {
       const user = session?.user ?? null;
@@ -168,7 +172,8 @@ export const useAuthState = create<AuthState>((set) => ({
         }
       }
       return { roleOverride: normalized };
-    })
+    }),
+  setTier: (tier) => set({ tier })
 }));
 
 export function getAuthToken(): string | null {
@@ -224,11 +229,17 @@ async function syncAuthRole(session: Session | null): Promise<void> {
   try {
     const { data, error } = await supabaseClient
       .from("profiles")
-      .select("role")
+      .select("role, tier")
       .eq("id", user.id)
       .maybeSingle();
-    if (!error && data && typeof data.role === "string" && data.role.trim()) {
-      useAuthState.getState().setRole(data.role.trim());
+
+    if (!error && data) {
+      if (typeof data.role === "string" && data.role.trim()) {
+        useAuthState.getState().setRole(data.role.trim());
+      }
+      if (typeof data.tier === "string" && (data.tier === "free" || data.tier === "pro")) {
+        useAuthState.getState().setTier(data.tier as SubscriptionTier);
+      }
       return;
     }
   } catch {

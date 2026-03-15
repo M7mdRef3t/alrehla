@@ -40,7 +40,7 @@ import { PWAInstallProvider } from "./contexts/PWAInstallContext";
 import { GoogleAuthModal } from "./components/GoogleAuthModal";
 import { AwarenessSkeleton } from "./components/AwarenessSkeleton";
 import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
-import { OnboardingFlow } from "./components/OnboardingFlow";
+import { OnboardingFlow, hasCompletedJourneyOnboarding } from "./components/OnboardingFlow";
 import { JourneyToast } from "./components/JourneyToast";
 import { AnalyticsConsentBanner } from "./components/AnalyticsConsentBanner";
 import { ActiveInterventionPrompt } from "./components/ActiveInterventionPrompt";
@@ -48,6 +48,9 @@ import { FaqScreen } from "./components/FaqScreen";
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
 import { geminiClient } from "./services/geminiClient";
 import { isSupabaseReady, supabase } from "./services/supabaseClient";
+import { syncGamificationOnLoad } from "./services/gamificationSync";
+import { useGamificationState } from "./state/gamificationState";
+import { syncSubscription } from "./services/subscriptionManager";
 import { fetchAdminConfig, fetchOwnerAlerts } from "./services/adminApi";
 import { usePulseCheckLogic } from "./hooks/usePulseCheckLogic";
 import { AscensionRitual } from "./components/Oracle/AscensionRitual";
@@ -57,6 +60,7 @@ import { isPhaseOneUserFlow, isUserMode } from "./config/appEnv";
 import {
   createCurrentUrl,
   getHash,
+  getHref,
   getOrigin,
   getPathname,
   getSearch,
@@ -96,6 +100,7 @@ import { startAutonomousStartupJobs } from "./app/orchestration/startupJobs";
 
 const OracleCouncilDashboard = lazy(() => import("./components/Oracle/OracleDashboard").then(m => ({ default: m.OracleCouncilDashboard })));
 import { GlobalToast } from "./components/GlobalToast";
+import { useToastState } from "./state/toastState";
 import { TheArmoryScreen } from "./components/TheArmoryScreen";
 
 
@@ -156,6 +161,7 @@ const MissionScreen = lazy(() => import("./components/MissionScreen").then((m) =
 const JourneyToolsScreen = lazy(() => import("./components/JourneyToolsScreen").then((m) => ({ default: m.JourneyToolsScreen })));
 const SettingsScreen = lazy(() => import("./components/SettingsScreen").then((m) => ({ default: m.SettingsScreen })));
 const AdminDashboard = lazy(() => import("./components/admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
+const CoachDashboard = lazy(() => import("./components/CoachDashboard").then((m) => ({ default: m.CoachDashboard })));
 const AdminOverviewPanel = lazy(() =>
   import("./components/admin/dashboard/Overview/OverviewPanel").then((m) => ({ default: m.OverviewPanel }))
 );
@@ -913,6 +919,7 @@ export default function App() {
   useEffect(() => {
     // Check for nudges after 2 seconds
     const timer = setTimeout(() => {
+      if (runtimeEnv.isDemoMode) return;
       const nudge = getNextNudge();
       if (nudge) {
         setActiveNudge(nudge);
@@ -927,6 +934,7 @@ export default function App() {
     if (typeof window === "undefined") return;
     // Check after 4 seconds to avoid conflict with Nudge
     const timer = setTimeout(() => {
+      if (runtimeEnv.isDemoMode) return;
       const insight = detectContradictions();
       if (insight) {
         setActiveMirrorInsight(insight);
@@ -1397,10 +1405,41 @@ export default function App() {
     };
   }, [authStatus, authUser, authFirstName, authToneGender, logPulse, navigateToScreen, setPulseCheckContext, setShowPulseCheck]);
 
+  // Trigger Onboarding for new users when they leave the landing screen
+  useEffect(() => {
+    if (
+      screen !== "landing" &&
+      screen !== "enterprise" &&
+      !hasCompletedJourneyOnboarding()
+    ) {
+      setShowOnboarding(true);
+    }
+  }, [screen]);
+
   useEffect(() => {
     if (!authUser) {
       offlineInterventionHydratedForUserRef.current = null;
       return;
+    }
+    // Sync backend data on login
+    void syncGamificationOnLoad();
+    void syncSubscription();
+
+    // Enforce Habit Hooks (Streaks and XP Decay)
+    const { xpLost, streakMaintained } = useGamificationState.getState().recordActivity();
+    if (xpLost > 0) {
+      useToastState.getState().showToast(
+        `فقدت ${xpLost} XP بسبب انقطاعك عن تسجيل الدخول. العزم يجدد كل يوم!`,
+        "error"
+      );
+    } else if (streakMaintained) {
+      const currentStreak = useGamificationState.getState().streak;
+      if (currentStreak > 1) {
+        useToastState.getState().showToast(
+          `أبقيت على شعلة الوعي! سلسلة الحضور: ${currentStreak} يوم 🔥`,
+          "success"
+        );
+      }
     }
   }, [authUser]);
 
@@ -1931,6 +1970,7 @@ export default function App() {
         openBreathingSession: () => setShowBreathing(true),
         openAmbientReality: () => setShowAmbientReality(true),
         openWisdomVault: () => setShowTimeCapsuleVault(true),
+        openEnterpriseDashboard: () => void navigateToScreen("enterprise"),
         lockFeature: setLockedFeature
       }
     });
@@ -2421,6 +2461,15 @@ export default function App() {
           </div>
         </Suspense>
       </div>
+    );
+  }
+
+  const isCoachPathname = getHref().includes("/coach");
+  if (isCoachPathname) {
+    return (
+      <Suspense fallback={<div className="min-h-screen" style={{ background: "var(--space-void)" }} />}>
+        <CoachDashboard isOpen={true} onClose={() => pushUrl("/")} />
+      </Suspense>
     );
   }
 
@@ -3125,6 +3174,17 @@ export default function App() {
               onStartScenario={() => {
                 useEmergencyState.getState().close();
                 setShowGym(true);
+              }}
+              onOpenPowerBank={(nodeId) => {
+                const node = useMapState.getState().nodes.find((item) => item.id === nodeId);
+                const nextGoalId =
+                  node?.goalId ?? (node?.treeRelation?.type === "family" ? "family" : goalId === "unknown" ? "family" : goalId);
+
+                useEmergencyState.getState().close();
+                setGoalId(nextGoalId);
+                setCategory(resolveAdviceCategory(nextGoalId));
+                setSelectedNodeId(nodeId);
+                void navigateToScreen("map");
               }}
             />
           )}

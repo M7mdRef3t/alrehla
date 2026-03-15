@@ -10,12 +10,14 @@ import type {
   RealityAnswers,
   QuickAnswerValue,
   MissionProgress,
-  PersonViewInsights
+  PersonViewInsights,
+  OrbitHistoryEntry
 } from "../modules/map/mapTypes";
 import { loadStoredState, saveStoredState } from "../services/localStore";
 import { resolvePathId } from "../modules/pathEngine/pathResolver";
 import type { ContactLevel } from "../modules/pathEngine/pathTypes";
 import { emitDawayirSignal } from "../modules/recommendation/recommendationBus";
+import { useGamificationState } from "./gamificationState";
 
 export interface RecoveryPlanOpenWith {
   focusTraumaInheritance?: boolean;
@@ -44,6 +46,8 @@ interface MapState {
   incrementRuminationLog: (nodeId: string) => void;
   dismissPlacementTooltip: () => void;
   moveNodeToRing: (id: string, ring: Ring, realityAnswers?: RealityAnswers) => void;
+  updateNode: (id: string, updates: Partial<MapNode>) => void;
+  updateNodeRing: (id: string, newRing: MapNode["ring"]) => void;
   setDetached: (nodeId: string, value: boolean) => void;
   analyzeNode: (id: string, result: { score: number; answers: HealthAnswers }) => void;
   addNoteToNode: (nodeId: string, text: string, comment?: string) => void;
@@ -87,6 +91,10 @@ interface MapState {
   archiveMission: (nodeId: string) => void;
   /** إلغاء أرشفة المهمة */
   unarchiveMission: (nodeId: string) => void;
+  /** إضافة شحن أو استنزاف لطاقة هذه العلاقة (Energy P&L) */
+  addEnergyTransaction: (nodeId: string, amount: number, note?: string) => void;
+  /** تحويل العلاقة إلى بطارية بشرية للطوارئ */
+  togglePowerBank: (nodeId: string) => void;
 }
 
 let nextId = 1;
@@ -109,6 +117,73 @@ function derivePathStageFromCompletion(completedStepsCount: number): "awareness"
   if (completedStepsCount >= 4) return "acceptance";
   if (completedStepsCount >= 2) return "resistance";
   return "awareness";
+}
+
+function createOrbitHistoryEntry(
+  nodeId: string,
+  type: OrbitHistoryEntry["type"],
+  ring: Ring,
+  timestamp: number,
+  fromRing?: Ring
+): OrbitHistoryEntry {
+  return {
+    id: `orbit-${nodeId}-${timestamp}-${Math.random().toString(36).slice(2, 8)}`,
+    type,
+    timestamp,
+    ring,
+    ...(fromRing ? { fromRing } : {})
+  };
+}
+
+function seedOrbitHistory(node: MapNode): OrbitHistoryEntry[] {
+  const createdAt =
+    node.analysis?.timestamp ??
+    node.journeyStartDate ??
+    node.lastRingChangeAt ??
+    node.archivedAt ??
+    Date.now();
+
+  const history: OrbitHistoryEntry[] = [
+    createOrbitHistoryEntry(node.id, "created", node.ring, createdAt)
+  ];
+
+  if (node.isNodeArchived && node.archivedAt && node.archivedAt > createdAt) {
+    history.push(createOrbitHistoryEntry(node.id, "archived", node.ring, node.archivedAt, node.ring));
+  }
+
+  return history.sort((a, b) => a.timestamp - b.timestamp);
+}
+
+function getOrbitHistory(node: MapNode): OrbitHistoryEntry[] {
+  return node.orbitHistory && node.orbitHistory.length > 0
+    ? [...node.orbitHistory].sort((a, b) => a.timestamp - b.timestamp)
+    : seedOrbitHistory(node);
+}
+
+function withOrbitEvent(
+  node: MapNode,
+  type: OrbitHistoryEntry["type"],
+  ring: Ring,
+  timestamp: number,
+  fromRing?: Ring
+): MapNode {
+  const nextHistory = [...getOrbitHistory(node), createOrbitHistoryEntry(node.id, type, ring, timestamp, fromRing)]
+    .sort((a, b) => a.timestamp - b.timestamp)
+    .slice(-12);
+
+  return {
+    ...node,
+    lastRingChangeAt: timestamp,
+    orbitHistory: nextHistory
+  };
+}
+
+function normalizeNodeOrbitHistory(node: MapNode): MapNode {
+  if (node.orbitHistory && node.orbitHistory.length > 0) return node;
+  return {
+    ...node,
+    orbitHistory: seedOrbitHistory(node)
+  };
 }
 
 export const useMapState = create<MapState>((set, get) => ({
@@ -141,7 +216,7 @@ export const useMapState = create<MapState>((set, get) => ({
       } else {
         recommendedRing = "green";
       }
-      
+
       processedAnalysis = {
         ...analysis,
         timestamp: Date.now(),
@@ -157,6 +232,7 @@ export const useMapState = create<MapState>((set, get) => ({
     });
 
     const nodeId = String(nextId++);
+    const createdAt = Date.now();
     const missionProgress: MissionProgress = {
       checkedSteps: [],
       isArchived: false
@@ -180,7 +256,9 @@ export const useMapState = create<MapState>((set, get) => ({
       },
       missionProgress,
       notes: [],
-      journeyStartDate: Date.now(), // Set journey start date
+      journeyStartDate: createdAt, // Set journey start date
+      lastRingChangeAt: createdAt,
+      orbitHistory: [createOrbitHistoryEntry(nodeId, "created", ring, createdAt)],
       hasCompletedTraining: false,
       ...(goalId != null && goalId !== "" && { goalId }),
       ...(treeRelation != null && { treeRelation }),
@@ -202,25 +280,40 @@ export const useMapState = create<MapState>((set, get) => ({
         pathStage: "awareness"
       }
     });
+    useGamificationState.getState().addXP(50, "إضافة شخص جديد للخريطة");
     return nodeId;
   },
   moveNodeToRing: (id, ring, realityAnswers) => {
     const previous = get().nodes.find((node) => node.id === id);
     const isLowContact = (a: RealityAnswers) =>
       [a.q1, a.q2, a.q3].filter((q) => q === "rarely" || q === "never").length >= 2;
+    const changedAt = Date.now();
     const nextNodes = get().nodes.map((node) =>
-      node.id === id
-        ? {
+      node.id !== id
+        ? node
+        : (() => {
+          const updatedNode: MapNode = {
             ...node,
             ring,
             ...(realityAnswers != null && ring === "red" && isLowContact(realityAnswers)
               ? { detachmentMode: true as const, realityAnswers }
               : {})
+          };
+
+          if (node.ring === ring) {
+            return {
+              ...updatedNode,
+              lastRingChangeAt: changedAt,
+              orbitHistory: getOrbitHistory(node)
+            };
           }
-        : node
+
+          return withOrbitEvent(updatedNode, "ring_changed", ring, changedAt, node.ring);
+        })()
     );
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+    useGamificationState.getState().addXP(20, "تعديل مدار شخص");
     const next = nextNodes.find((node) => node.id === id);
     if (previous && next && previous.ring !== next.ring) {
       emitDawayirSignal({
@@ -241,6 +334,64 @@ export const useMapState = create<MapState>((set, get) => ({
         }
       });
     }
+
+    // Expose undo payload via CustomEvent for the UI toast
+    if (previous && previous.ring !== ring) {
+      if (typeof window !== "undefined") {
+        const undoEvent = new CustomEvent("dawayir-undo-ring", {
+          detail: {
+            nodeId: id,
+            nodeLabel: previous.label,
+            fromRing: previous.ring,
+            toRing: ring,
+            timestamp: Date.now()
+          }
+        });
+        window.dispatchEvent(undoEvent);
+      }
+    }
+  },
+  updateNode: (id: string, updates: Partial<MapNode>) => {
+    const changedAt = Date.now();
+    const nextNodes = get().nodes.map((node) => {
+      if (node.id !== id) return node;
+
+      const baseNode: MapNode = { ...node, ...updates };
+      let nextNode: MapNode = baseNode;
+
+      if (updates.ring && updates.ring !== node.ring) {
+        nextNode = withOrbitEvent(nextNode, "ring_changed", updates.ring, changedAt, node.ring);
+      } else if ("isNodeArchived" in updates && updates.isNodeArchived !== node.isNodeArchived) {
+        nextNode = withOrbitEvent(
+          nextNode,
+          updates.isNodeArchived ? "archived" : "restored",
+          nextNode.ring,
+          changedAt,
+          node.ring
+        );
+      } else {
+        nextNode = {
+          ...nextNode,
+          orbitHistory: getOrbitHistory(node)
+        };
+      }
+
+      return nextNode;
+    });
+    saveStoredState({ nodes: nextNodes });
+    set({ nodes: nextNodes });
+  },
+  updateNodeRing: (id: string, newRing: MapNode["ring"]) => {
+    const changedAt = Date.now();
+    const nextNodes = get().nodes.map((node) => {
+      if (node.id !== id) return node;
+      if (node.ring === newRing) {
+        return { ...node, lastRingChangeAt: changedAt, orbitHistory: getOrbitHistory(node) };
+      }
+      return withOrbitEvent({ ...node, ring: newRing }, "ring_changed", newRing, changedAt, node.ring);
+    });
+    saveStoredState({ nodes: nextNodes });
+    set({ nodes: nextNodes });
   },
   setDetached: (nodeId, value) => {
     const previous = get().nodes.find((node) => node.id === nodeId);
@@ -249,6 +400,9 @@ export const useMapState = create<MapState>((set, get) => ({
     );
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+    if (value) {
+      useGamificationState.getState().addXP(30, "تفعيل العزل/التجميد لشخص");
+    }
     if (previous && Boolean(previous.isDetached) !== Boolean(value)) {
       emitDawayirSignal({
         type: "detachment_toggled",
@@ -270,17 +424,18 @@ export const useMapState = create<MapState>((set, get) => ({
     const nextNodes = get().nodes.map((node) =>
       node.id === id
         ? {
-            ...node,
-            analysis: {
-              ...result,
-              timestamp: Date.now(),
-              recommendedRing
-            }
+          ...node,
+          analysis: {
+            ...result,
+            timestamp: Date.now(),
+            recommendedRing
           }
+        }
         : node
     );
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+    useGamificationState.getState().addXP(40, "تحليل بيانات شخص");
   },
   deleteNode: (id) => {
     const nextNodes = get().nodes.filter((node) => node.id !== id);
@@ -288,16 +443,39 @@ export const useMapState = create<MapState>((set, get) => ({
     set({ nodes: nextNodes });
   },
   archiveNode: (id) => {
-    const nextNodes = get().nodes.map((node) =>
-      node.id === id ? { ...node, isNodeArchived: true, archivedAt: Date.now() } : node
-    );
+    const changedAt = Date.now();
+    const nextNodes = get().nodes.map((node) => {
+      if (node.id !== id) return node;
+      if (node.isNodeArchived) {
+        return { ...node, archivedAt: node.archivedAt ?? changedAt, orbitHistory: getOrbitHistory(node) };
+      }
+      return withOrbitEvent(
+        { ...node, isNodeArchived: true, archivedAt: changedAt },
+        "archived",
+        node.ring,
+        changedAt,
+        node.ring
+      );
+    });
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+    useGamificationState.getState().addXP(20, "أرشفة وتجميد علاقة");
   },
   unarchiveNode: (id) => {
-    const nextNodes = get().nodes.map((node) =>
-      node.id === id ? { ...node, isNodeArchived: false, archivedAt: undefined } : node
-    );
+    const changedAt = Date.now();
+    const nextNodes = get().nodes.map((node) => {
+      if (node.id !== id) return node;
+      if (!node.isNodeArchived) {
+        return { ...node, orbitHistory: getOrbitHistory(node) };
+      }
+      return withOrbitEvent(
+        { ...node, isNodeArchived: false, archivedAt: undefined },
+        "restored",
+        node.ring,
+        changedAt,
+        node.ring
+      );
+    });
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
   },
@@ -319,9 +497,9 @@ export const useMapState = create<MapState>((set, get) => ({
     const nextNodes = get().nodes.map((node) =>
       node.id === nodeId
         ? {
-            ...node,
-            notes: [...(node.notes || []), newNote]
-          }
+          ...node,
+          notes: [...(node.notes || []), newNote]
+        }
         : node
     );
     saveStoredState({ nodes: nextNodes });
@@ -331,9 +509,9 @@ export const useMapState = create<MapState>((set, get) => ({
     const nextNodes = get().nodes.map((node) =>
       node.id === nodeId
         ? {
-            ...node,
-            notes: (node.notes || []).filter((note) => note.id !== noteId)
-          }
+          ...node,
+          notes: (node.notes || []).filter((note) => note.id !== noteId)
+        }
         : node
     );
     saveStoredState({ nodes: nextNodes });
@@ -343,14 +521,14 @@ export const useMapState = create<MapState>((set, get) => ({
     const previousNodes = get().nodes;
     const nextNodes = previousNodes.map((node) => {
       if (node.id !== nodeId) return node;
-      
+
       const progress = node.recoveryProgress || { completedSteps: [], situationLogs: [] };
       const isCompleted = progress.completedSteps.includes(stepId);
       const completedSteps = isCompleted
         ? progress.completedSteps.filter(id => id !== stepId)
         : [...progress.completedSteps, stepId];
       const nextPathStage = derivePathStageFromCompletion(completedSteps.length);
-      
+
       return {
         ...node,
         recoveryProgress: {
@@ -386,9 +564,9 @@ export const useMapState = create<MapState>((set, get) => ({
 
     const nextNodes = get().nodes.map((node) => {
       if (node.id !== nodeId) return node;
-      
+
       const progress = node.recoveryProgress || { completedSteps: [], situationLogs: [] };
-      
+
       return {
         ...node,
         recoveryProgress: {
@@ -410,9 +588,9 @@ export const useMapState = create<MapState>((set, get) => ({
   deleteSituationLog: (nodeId, logId) => {
     const nextNodes = get().nodes.map((node) => {
       if (node.id !== nodeId) return node;
-      
+
       const progress = node.recoveryProgress || { completedSteps: [], situationLogs: [] };
-      
+
       return {
         ...node,
         recoveryProgress: {
@@ -427,10 +605,10 @@ export const useMapState = create<MapState>((set, get) => ({
   toggleFirstStepCompletion: (nodeId, stepId) => {
     const nextNodes = get().nodes.map((node) => {
       if (node.id !== nodeId) return node;
-      
+
       const progress = node.firstStepProgress || { completedFirstSteps: [], stepInputs: {} };
       const isCompleted = progress.completedFirstSteps.includes(stepId);
-      
+
       return {
         ...node,
         firstStepProgress: {
@@ -447,9 +625,9 @@ export const useMapState = create<MapState>((set, get) => ({
   updateFirstStepInputs: (nodeId, stepId, inputs) => {
     const nextNodes = get().nodes.map((node) => {
       if (node.id !== nodeId) return node;
-      
+
       const progress = node.firstStepProgress || { completedFirstSteps: [], stepInputs: {} };
-      
+
       return {
         ...node,
         firstStepProgress: {
@@ -467,9 +645,9 @@ export const useMapState = create<MapState>((set, get) => ({
   updateDynamicStepInput: (nodeId, stepId, value) => {
     const nextNodes = get().nodes.map((node) => {
       if (node.id !== nodeId) return node;
-      
+
       const progress = node.recoveryProgress || { completedSteps: [], situationLogs: [] };
-      
+
       return {
         ...node,
         recoveryProgress: {
@@ -493,9 +671,9 @@ export const useMapState = create<MapState>((set, get) => ({
     const nextNodes = get().nodes.map((node) =>
       node.id === nodeId
         ? {
-            ...node,
-            lastViewedStep: step
-          }
+          ...node,
+          lastViewedStep: step
+        }
         : node
     );
     saveStoredState({ nodes: nextNodes });
@@ -506,12 +684,12 @@ export const useMapState = create<MapState>((set, get) => ({
     const nextNodes = get().nodes.map((node) =>
       node.id === nodeId && node.analysis
         ? {
-            ...node,
-            analysis: {
-              ...node.analysis,
-              selectedSymptoms: symptomIds
-            }
+          ...node,
+          analysis: {
+            ...node.analysis,
+            selectedSymptoms: symptomIds
           }
+        }
         : node
     );
     saveStoredState({ nodes: nextNodes });
@@ -563,15 +741,15 @@ export const useMapState = create<MapState>((set, get) => ({
     const nextNodes = get().nodes.map((node) =>
       node.id === nodeId
         ? {
-            ...node,
-            recoveryProgress: {
-              ...node.recoveryProgress,
-              completedSteps: node.recoveryProgress?.completedSteps ?? [],
-              situationLogs: node.recoveryProgress?.situationLogs ?? [],
-              recoveryPathSnapshot: snapshot,
-              lastPathGeneratedAt: now
-            }
+          ...node,
+          recoveryProgress: {
+            ...node.recoveryProgress,
+            completedSteps: node.recoveryProgress?.completedSteps ?? [],
+            situationLogs: node.recoveryProgress?.situationLogs ?? [],
+            recoveryPathSnapshot: snapshot,
+            lastPathGeneratedAt: now
           }
+        }
         : node
     );
     saveStoredState({ nodes: nextNodes });
@@ -755,12 +933,66 @@ export const useMapState = create<MapState>((set, get) => ({
     });
     saveStoredState({ nodes: nextNodes });
     set({ nodes: nextNodes });
+  },
+  addEnergyTransaction: (nodeId, amount, note) => {
+    const nextNodes = get().nodes.map((node) => {
+      if (node.id !== nodeId) return node;
+
+      const prevBalance = node.energyBalance ?? {
+        totalCharge: 0,
+        totalDrain: 0,
+        netEnergy: 0,
+        transactions: []
+      };
+
+      const newTransaction = {
+        id: `energy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        amount,
+        timestamp: Date.now(),
+        note
+      };
+
+      const newTotalCharge = prevBalance.totalCharge + (amount > 0 ? amount : 0);
+      const newTotalDrain = prevBalance.totalDrain + (amount < 0 ? Math.abs(amount) : 0);
+
+      return {
+        ...node,
+        energyBalance: {
+          totalCharge: newTotalCharge,
+          totalDrain: newTotalDrain,
+          netEnergy: newTotalCharge - newTotalDrain,
+          transactions: [newTransaction, ...prevBalance.transactions]
+        }
+      };
+    });
+
+    saveStoredState({ nodes: nextNodes });
+    set({ nodes: nextNodes });
+
+    useGamificationState.getState().addXP(10, amount > 0 ? "اكتساب طاقة" : "استنزاف وتحليل طاقة");
+
+    emitDawayirSignal({
+      type: "energy_transaction",
+      nodeId,
+      payload: { amount }
+    });
+  },
+  togglePowerBank: (nodeId) => {
+    const nextNodes = get().nodes.map((node) =>
+      node.id === nodeId ? { ...node, isPowerBank: !node.isPowerBank } : node
+    );
+    saveStoredState({ nodes: nextNodes });
+    set({ nodes: nextNodes });
+    const isNowPowerBank = nextNodes.find((n) => n.id === nodeId)?.isPowerBank;
+    if (isNowPowerBank) {
+      useGamificationState.getState().addXP(15, "تفعيل بطارية الطوارئ");
+    }
   }
 }));
 
 async function hydrateMapState() {
   const initial = await loadStoredState();
-  const initialNodes: MapNode[] = initial?.nodes ?? [];
+  const initialNodes: MapNode[] = (initial?.nodes ?? []).map(normalizeNodeOrbitHistory);
   if (initialNodes.length > 0) {
     deriveNextId(initialNodes);
     useMapState.setState({ nodes: initialNodes });

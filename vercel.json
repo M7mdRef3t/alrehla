@@ -1,91 +1,27 @@
 {
-  "outputDirectory": ".next",
   "rewrites": [
     {
-      "source": "/privacy",
-      "destination": "/privacy.html"
-    },
-    {
-      "source": "/terms",
-      "destination": "/terms.html"
-    },
-    {
-      "source": "/about",
-      "destination": "/about.html"
-    },
-    {
-      "source": "/contact",
-      "destination": "/contact.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
     {
-      "source": "/api/(.*)",
+      "source": "/(.*)",
       "headers": [
         {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/((?!api/|_next/).*)",
-      "headers": [
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
         {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/_next/static/(.*)",
-      "headers": [
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
         {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
         }
       ]
-    },
-    {
-      "source": "/admin",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        }
-      ]
-    },
-    {
-      "source": "/admin/:path*",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        }
-      ]
-    },
-    {
-      "source": "/analytics",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        }
-      ]
-    }
-  ],
-  "crons": [
-    {
-      "path": "/api/admin?path=overview&kind=cron-report&period=daily",
-      "schedule": "0 20 * * *"
-    },
-    {
-      "path": "/api/admin?path=overview&kind=cron-report&period=weekly",
-      "schedule": "0 8 * * 1"
-    },
-    {
-      "path": "/api/cron/marketing-outreach",
-      "schedule": "*/10 * * * *"
     }
   ]
 }

@@ -24,6 +24,7 @@ import {
   Compass,
   Star,
   ShieldCheck,
+  BrainCircuit,
   Radar,
   Scale,
   Crosshair,
@@ -119,6 +120,7 @@ const ManualPlacementModal = lazy(() =>
 const FeedbackModal = lazy(() =>
   import("./FeedbackModal").then((m) => ({ default: m.FeedbackModal }))
 );
+import { ShareableCard } from "./ShareableCard";
 
 const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
 
@@ -186,6 +188,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showThoughtSniper, setShowThoughtSniper] = useState(false);
   const [showFastingCapsule, setShowFastingCapsule] = useState(false);
   const [showInnerCourt, setShowInnerCourt] = useState(false);
+  const [showGlobalMissions, setShowGlobalMissions] = useState(false);
   const [showAtlasDashboard, setShowAtlasDashboard] = useState(false);
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [showClassicRecovery, setShowClassicRecovery] = useState(false);
@@ -298,6 +301,17 @@ export const AppSidebar: FC<AppSidebarProps> = ({
     }
   };
 
+  const openCoachDashboard = () => {
+    try {
+      const next = new URL(getHref());
+      next.pathname = "/coach";
+      next.search = "";
+      pushUrl(next);
+    } catch {
+      assignUrl("/coach");
+    }
+  };
+
   useEffect(() => {
     if (!lastGoalLabel) return;
     if (lastGoalRef.current && lastGoalRef.current !== lastGoalLabel) {
@@ -384,6 +398,26 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             >
               <ShieldCheck className="w-5 h-5 shrink-0 text-teal-600" />
               لوحة التحكم
+            </button>
+            <button
+              type="button"
+              onClick={openCoachDashboard}
+              className="w-full flex items-center gap-3 rounded-xl bg-indigo-50/80 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 px-4 py-3 text-sm font-semibold hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+              title="بوابة المعالجين B2B"
+            >
+              <BrainCircuit className="w-5 h-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
+              بوابة المعالجين
+            </button>
+            <button
+              onClick={() => {
+                setShowGlobalMissions(true);
+              }}
+              className="flex items-center w-full gap-3 px-4 py-3 text-sm font-bold text-amber-300 transition-colors rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 mb-2 relative group"
+            >
+              <div className="absolute -inset-0 bg-amber-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <Globe className="w-5 h-5 relative z-10" />
+              <span className="relative z-10">تحديات الوعي الجماعي</span>
+              <span className="relative z-10 mr-auto flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] text-slate-900 font-black">!</span>
             </button>
             <button
               type="button"
@@ -1036,6 +1070,30 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 >
                   <ShieldCheck className="w-6 h-6 shrink-0 text-teal-600" />
                   <span>لوحة التحكم</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    openCoachDashboard();
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-indigo-50/80 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all text-right"
+                  title="بوابة المعالجين B2B"
+                >
+                  <BrainCircuit className="w-6 h-6 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                  <span>بوابة المعالجين</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowGlobalMissions(true);
+                    handleClose();
+                  }}
+                  className="flex items-center w-full gap-3 px-4 py-3 text-sm font-bold text-amber-300 transition-colors rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 mb-2 relative group"
+                >
+                  <div className="absolute -inset-0 bg-amber-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <Globe className="w-6 h-6 relative z-10" />
+                  <span className="relative z-10">تحديات الوعي الجماعي</span>
+                  <span className="relative z-10 mr-auto flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] text-slate-900 font-black">!</span>
                 </button>
                 <button
                   type="button"

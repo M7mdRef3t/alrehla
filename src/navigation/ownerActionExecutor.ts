@@ -38,6 +38,7 @@ interface OwnerActionCallbacks {
   openBreathingSession: () => void;
   openAmbientReality: () => void;
   openWisdomVault: () => void;
+  openEnterpriseDashboard: () => void;
   lockFeature: (feature: FeatureFlagKey) => void;
 }
 
@@ -141,6 +142,9 @@ export function executeOwnerAction(action: OwnerActionKey, ctx: OwnerActionExecu
       break;
     case "wisdom_vault":
       callbacks.openWisdomVault();
+      break;
+    case "enterprise_dashboard":
+      callbacks.openEnterpriseDashboard();
       break;
     default:
       break;

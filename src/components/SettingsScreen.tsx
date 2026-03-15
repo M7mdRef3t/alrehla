@@ -9,6 +9,7 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 import { B2BPortal } from "./B2BPortal";
 import { ReferralPanel } from "./ReferralPanel";
 import { PaywallGate } from "./PaywallGate";
+import { DemoInjector } from "./dev/DemoInjector";
 import { getCurrentTier, TIER_LABELS, TIER_PRICES } from "../services/subscriptionManager";
 import { loadStreak } from "../services/streakSystem";
 import { loadUserMemory } from "../services/userMemory";
@@ -100,7 +101,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -8 }}
                         >
-                             رجع
+                            رجع
                         </motion.button>
                     ) : (
                         <motion.h1
@@ -188,6 +189,9 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                     </motion.button>
                                 ))}
                             </div>
+
+                            {/* Admin/Investor Tools */}
+                            <DemoInjector />
 
                             {/* App info */}
                             <div className="mt-6 text-center">

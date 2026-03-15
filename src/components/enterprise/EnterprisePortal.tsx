@@ -1,202 +1,264 @@
-/**
- * Standalone Enterprise Portal     
- * =======================================================
- *        .
- */
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Activity, Users, Flame, ChevronRight, BarChart3, TrendingUp, AlertTriangle, Shield, Settings, LogOut } from 'lucide-react';
 
-import React, { useState, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-    Users, Shield, BarChart3, Settings, LogOut,
-    Download, Plus, Search, Filter, TrendingUp,
-    ShieldAlert, BrainCircuit, Globe
-} from "lucide-react";
-import { loadEnterpriseData, type EnterpriseProfile } from "../../services/enterpriseAnalytics";
+const DEPARTMENTS = [
+    { id: 'eng', name: 'الهندسة (Engineering)', employees: 142, burnoutScore: 85, trend: '+15%', status: 'critical' },
+    { id: 'sales', name: 'المبيعات (Sales)', employees: 85, burnoutScore: 65, trend: '+5%', status: 'warning' },
+    { id: 'hr', name: 'الموارد البشرية (HR)', employees: 24, burnoutScore: 40, trend: '-2%', status: 'stable' },
+    { id: 'product', name: 'المنتج (Product)', employees: 56, burnoutScore: 78, trend: '+12%', status: 'critical' },
+    { id: 'marketing', name: 'التسويق (Marketing)', employees: 45, burnoutScore: 50, trend: '0%', status: 'stable' },
+];
 
 export const EnterprisePortal: React.FC = () => {
-    const [sidebarOpen, setSidebarOpen] = useState(true);
-    const data = useMemo(() => {
-        const loaded = loadEnterpriseData();
-        // Fallback mock if no profile
-        if (!loaded.profile) {
-            return {
-                profile: {
-                    id: "DEMO-1",
-                    name: "Alpha Corp (Demo)",
-                    type: "company" as const,
-                    size: "medium" as const,
-                    adminEmail: "admin@alpha.com",
-                    joinedAt: Date.now(),
-                    memberCount: 42,
-                },
-                metrics: {
-                    avgEnergyLevel: 7.5,
-                    weeklyActiveRate: 0.85,
-                    stressIndex: 4.2,
-                    topBoundaryPatterns: ["Work Pressure"],
-                    recommendation: "Focus on team alignment sessions."
-                }
-            };
-        }
-        return loaded;
-    }, []);
+    const [selectedDept, setSelectedDept] = useState<string | null>(null);
+
+    const getHealthColor = (score: number) => {
+        if (score >= 75) return 'var(--ring-danger)'; // Red
+        if (score >= 60) return 'var(--ring-caution)'; // Yellow
+        return 'var(--ring-safe)'; // Green
+    };
+
+    const getHealthBg = (score: number) => {
+        if (score >= 75) return 'rgba(248, 113, 113, 0.1)';
+        if (score >= 60) return 'rgba(251, 191, 36, 0.1)';
+        return 'rgba(52, 211, 153, 0.1)';
+    };
+
+    const criticalDeptCount = DEPARTMENTS.filter(d => d.status === 'critical').length;
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-200 flex font-sans overflow-hidden">
+        <div className="flex h-[100dvh] w-full bg-slate-950 text-slate-200 font-sans overflow-hidden" dir="rtl">
+
             {/* Sidebar */}
             <motion.aside
-                initial={false}
-                animate={{ width: sidebarOpen ? 260 : 80 }}
-                className="bg-slate-900 border-r border-slate-800 flex flex-col relative z-20"
+                initial={{ width: 260 }}
+                className="bg-slate-900 border-l border-slate-800 flex flex-col relative z-20 shrink-0 hidden md:flex"
             >
-                <div className="p-6 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[var(--soft-teal)] flex items-center justify-center shrink-0">
-                        <Shield className="w-6 h-6 text-white" />
+                <div className="p-6 flex items-center gap-3 border-b border-slate-800">
+                    <div className="w-10 h-10 rounded-xl bg-teal-500/20 flex flex-col items-center justify-center shrink-0 border border-teal-500/30">
+                        <Shield className="w-5 h-5 text-teal-400" />
                     </div>
-                    {sidebarOpen && <span className="font-black text-xl tracking-tighter text-white">DAWAYIR B2B</span>}
+                    <span className="font-black text-xl tracking-tighter text-white">دواير للشركات</span>
                 </div>
 
                 <nav className="flex-1 px-4 py-6 space-y-2">
-                    <NavItem icon={BarChart3} label="Dashboard" active={true} collapsed={!sidebarOpen} />
-                    <NavItem icon={Users} label="Members" collapsed={!sidebarOpen} />
-                    <NavItem icon={BrainCircuit} label="Psych Safety" collapsed={!sidebarOpen} />
-                    <NavItem icon={Globe} label="Region Analytics" collapsed={!sidebarOpen} />
-                    <NavItem icon={Settings} label="Portal Settings" collapsed={!sidebarOpen} />
+                    <button className="w-full flex items-center gap-3 p-3 rounded-xl transition-all bg-teal-500/10 text-teal-400">
+                        <Activity className="w-5 h-5 shrink-0" />
+                        <span className="text-sm font-bold">خريطة الاحتراق</span>
+                    </button>
+                    <button className="w-full flex items-center gap-3 p-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                        <Users className="w-5 h-5 shrink-0" />
+                        <span className="text-sm font-bold">الفرق والأقسام</span>
+                    </button>
+                    <button className="w-full flex items-center gap-3 p-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                        <Settings className="w-5 h-5 shrink-0" />
+                        <span className="text-sm font-bold">إعدادات المنصة</span>
+                    </button>
                 </nav>
 
                 <div className="p-4 border-t border-slate-800">
-                    <button className="w-full flex items-center gap-3 p-3 text-slate-400 hover:text-white transition-colors">
+                    <button className="w-full flex items-center gap-3 p-3 text-slate-500 hover:text-rose-400 transition-colors">
                         <LogOut className="w-5 h-5" />
-                        {sidebarOpen && <span className="text-sm font-bold">Logout</span>}
+                        <span className="text-sm font-bold">تسجيل الخروج</span>
                     </button>
                 </div>
             </motion.aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col h-screen overflow-y-auto bg-slate-950">
-                {/* Header */}
-                <header className="h-16 border-b border-slate-800 flex items-center justify-between px-8 bg-slate-950/50 backdrop-blur-md sticky top-0 z-10">
-                    <div>
-                        <h2 className="text-sm font-bold text-slate-400">Enterprise Overview</h2>
-                        <h1 className="text-xl font-black text-white">{data.profile?.name}</h1>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <button className="flex items-center gap-2 bg-[var(--soft-teal)] hover:bg-[var(--soft-teal)] text-white px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-lg shadow-[var(--soft-teal)]">
-                            <Plus className="w-4 h-4" />
-                            Add Members
-                        </button>
-                        <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center">
-                            <span className="text-xs font-bold">HR</span>
-                        </div>
-                    </div>
-                </header>
+            <main className="flex-1 min-w-0 flex flex-col h-[100dvh] overflow-y-auto bg-[#0a0f1c] relative relative">
+                {/* Background glow */}
+                <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 50% -20%, rgba(99, 102, 241, 0.1), transparent 70%)' }} />
 
-                {/* Dashboard Body */}
-                <div className="p-8 space-y-8">
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <StatCard
-                            title="Active Members"
-                            value={data.profile?.memberCount.toString() || "0"}
-                            icon={Users}
-                            trend="+12%"
-                        />
-                        <StatCard
-                            title="Avg Energy"
-                            value={`${(data.metrics?.avgEnergyLevel || 0) * 10}%`}
-                            icon={TrendingUp}
-                            trend="+4.2%"
-                        />
-                        <StatCard
-                            title="Stress Index"
-                            value={`${data.metrics?.stressIndex || 0}/10`}
-                            icon={ShieldAlert}
-                            color="text-emerald-400"
-                        />
-                        <StatCard
-                            title="Activity Rate"
-                            value={`${(data.metrics?.weeklyActiveRate || 0) * 100}%`}
-                            icon={TrendingUp}
-                            trend="+5%"
-                        />
-                    </div>
-
-                    {/* Charts & Tables Area */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Main Inventory */}
-                        <div className="lg:col-span-2 bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="font-bold text-lg">Operational Readiness</h3>
-                                <button className="text-slate-400 hover:text-white transition-colors">
-                                    <Download className="w-5 h-5" />
-                                </button>
-                            </div>
-                            <div className="aspect-video bg-slate-800/20 rounded-xl flex items-center justify-center border border-dashed border-slate-700">
-                                <span className="text-slate-500 font-medium">[Interactive Analytics Visualization]</span>
-                            </div>
+                <div className="p-8 max-w-7xl mx-auto w-full relative z-10">
+                    {/* Header */}
+                    <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                        <div>
+                            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-l from-white to-slate-400">
+                                لوحة القيادة المؤسسية (B2B)
+                            </h1>
+                            <p className="text-slate-400 mt-1">الرؤية الكلية: خريطة النزيف الطاقي الأسبوعية</p>
                         </div>
 
-                        {/* Recent Alerts */}
-                        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-                            <h3 className="font-bold text-lg mb-6">Tactical Alerts</h3>
-                            <div className="space-y-4">
-                                <AlertItem
-                                    type="info"
-                                    text="Boundary violations are trending down in Dept-X."
-                                />
-                                <AlertItem
-                                    type="warning"
-                                    text="Isolation metrics rising in remote teams."
-                                />
-                                <AlertItem
-                                    type="success"
-                                    text="Weekly Victory Report generated for HR."
-                                />
+                        <div className="flex items-center gap-6 bg-slate-900/50 p-4 rounded-2xl border border-slate-800/60 backdrop-blur-md">
+                            <div className="flex flex-col items-end">
+                                <span className="text-xs text-slate-500">معدل الاستمرار المتوقع</span>
+                                <span className="text-xl font-bold text-emerald-400">92%</span>
+                            </div>
+                            <div className="h-10 w-[1px] bg-slate-800" />
+                            <div className="flex flex-col items-end">
+                                <span className="text-xs text-slate-500">بؤر الاحتراق النشطة</span>
+                                <span className="text-xl font-bold text-rose-500 flex items-center gap-2">
+                                    <Flame size={18} />
+                                    {criticalDeptCount}
+                                </span>
                             </div>
                         </div>
-                    </div>
+                    </header>
 
-                    {/* Member Table Mock */}
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
-                        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-                            <h3 className="font-bold">Team Deployment</h3>
-                            <div className="flex items-center gap-2">
-                                <div className="relative">
-                                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search members..."
-                                        className="bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-[var(--soft-teal)] transition-colors w-64"
-                                    />
-                                </div>
-                                <button className="p-2 border border-slate-800 rounded-lg hover:bg-slate-800 transition-colors">
-                                    <Filter className="w-4 h-4" />
-                                </button>
+                    <div className="flex flex-col xl:flex-row gap-8">
+                        {/* Heatmap Grid */}
+                        <div className="flex-1 space-y-6">
+                            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2 text-slate-200">
+                                <Activity className="text-indigo-400" />
+                                توزيع الاحتراق عبر الأقسام (Heatmap)
+                            </h2>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {DEPARTMENTS.map((dept) => (
+                                    <motion.div
+                                        key={dept.id}
+                                        onClick={() => setSelectedDept(dept.id)}
+                                        className={`relative overflow-hidden rounded-2xl cursor-pointer border transition-all duration-300 ${selectedDept === dept.id ? 'ring-2 ring-indigo-500 scale-[1.02] z-10' : 'hover:border-slate-600'
+                                            }`}
+                                        style={{
+                                            background: 'rgba(15, 23, 42, 0.6)',
+                                            borderColor: selectedDept === dept.id ? 'transparent' : 'rgba(255, 255, 255, 0.05)',
+                                            boxShadow: selectedDept === dept.id ? '0 0 40px rgba(99, 102, 241, 0.15)' : 'none',
+                                            backdropFilter: 'blur(10px)'
+                                        }}
+                                        whileHover={{ y: -4 }}
+                                    >
+                                        {/* Background glow based on health */}
+                                        <div
+                                            className="absolute inset-0 opacity-20 transition-opacity duration-500 mix-blend-screen"
+                                            style={{ background: `radial-gradient(circle at top right, ${getHealthColor(dept.burnoutScore)}, transparent 70%)` }}
+                                        />
+
+                                        <div className="relative p-6">
+                                            <div className="flex justify-between items-start mb-6">
+                                                <h3 className="text-lg font-bold text-white">{dept.name}</h3>
+                                                <div
+                                                    className="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap border"
+                                                    style={{
+                                                        background: getHealthBg(dept.burnoutScore),
+                                                        color: getHealthColor(dept.burnoutScore),
+                                                        borderColor: getHealthColor(dept.burnoutScore).replace(')', ', 0.2)').replace('var', 'rgba')
+                                                    }}
+                                                >
+                                                    {dept.burnoutScore}% احتراق
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-5">
+                                                <div>
+                                                    <div className="flex justify-between text-xs text-slate-400 mb-2">
+                                                        <span>مؤشر الضغط والإرهاق</span>
+                                                        <span className="flex items-center gap-1 font-semibold" style={{ color: getHealthColor(dept.burnoutScore) }}>
+                                                            {dept.trend} <TrendingUp size={12} />
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full bg-slate-800/80 rounded-full h-2 overflow-hidden border border-slate-700/50">
+                                                        <motion.div
+                                                            className="h-full rounded-full"
+                                                            style={{ backgroundColor: getHealthColor(dept.burnoutScore) }}
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: `${dept.burnoutScore}%` }}
+                                                            transition={{ duration: 1, ease: "easeOut" }}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
+                                                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                                                        <Users size={16} />
+                                                        <span className="font-medium">{dept.employees} موظف مشمول</span>
+                                                    </div>
+                                                    <button className="text-xs font-semibold text-indigo-400 hover:text-indigo-300">التفاصيل &larr;</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
                             </div>
                         </div>
-                        <div className="p-4">
-                            <table className="w-full text-left">
-                                <thead className="text-xs text-slate-500 uppercase tracking-wider">
-                                    <tr>
-                                        <th className="px-4 py-3 font-medium">Commander ID</th>
-                                        <th className="px-4 py-3 font-medium">Deployment Status</th>
-                                        <th className="px-4 py-3 font-medium">Stress Resistance</th>
-                                        <th className="px-4 py-3 font-medium">Last Sync</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-sm divide-y divide-slate-800">
-                                    {[1, 2, 3, 4, 5].map(i => (
-                                        <tr key={i} className="hover:bg-slate-800/10 transition-colors">
-                                            <td className="px-4 py-4 font-mono text-slate-400">#CMD-{1000 + i}</td>
-                                            <td className="px-4 py-4">
-                                                <span className="px-2 py-1 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase">Active</span>
-                                            </td>
-                                            <td className="px-4 py-4">High</td>
-                                            <td className="px-4 py-4 text-slate-500 text-xs">2 hours ago</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+
+                        {/* Sidebar Insights */}
+                        <div className="w-full xl:w-96 shrink-0 h-full">
+                            <AnimatePresence mode="popLayout">
+                                {selectedDept ? (
+                                    <motion.div
+                                        key="details"
+                                        initial={{ opacity: 0, x: -20, scale: 0.95 }}
+                                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                                        exit={{ opacity: 0, x: -20, scale: 0.95 }}
+                                        className="rounded-3xl p-6 sticky top-8 border border-slate-800/80 shadow-2xl"
+                                        style={{ background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(20px)' }}
+                                    >
+                                        <div className="flex items-center justify-between mb-8">
+                                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                                <Flame className="text-rose-500" />
+                                                تشريح بؤرة الاحتراق
+                                            </h3>
+                                            <button onClick={() => setSelectedDept(null)} className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition">
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            <div className="p-4 rounded-xl relative overflow-hidden border border-rose-500/20" style={{ background: 'linear-gradient(180deg, rgba(244,63,94,0.05) 0%, rgba(15,23,42,0) 100%)' }}>
+                                                <div className="flex items-center gap-3 mb-3 text-rose-400">
+                                                    <AlertTriangle size={18} />
+                                                    <span className="font-semibold text-sm">تحذير: ثقب أسود إداري</span>
+                                                </div>
+                                                <p className="text-xs leading-relaxed text-slate-300/90 font-medium">
+                                                    نظام الذكاء الاصطناعي رصد زيادة 15% في معدلات النبضات المرتبطة بـ <span className="text-rose-400 font-bold">"غياب الوضوح"</span> و <span className="text-rose-400 font-bold">"صراعات الصلاحيات"</span> في هذا القسم خلال آخر أسبوعين.
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <h4 className="text-sm font-semibold mb-4 flex items-center gap-2 text-slate-300 pb-2 border-b border-slate-800">
+                                                    <BarChart3 size={16} />
+                                                    أبرز مصادر الاحتكاك (مجهول)
+                                                </h4>
+                                                <ul className="space-y-4">
+                                                    {[
+                                                        { label: 'الاجتماعات غير المنتجة', val: 45, color: 'bg-rose-500' },
+                                                        { label: 'ضبابية الأهداف', val: 32, color: 'bg-amber-500' },
+                                                        { label: 'نقص التقدير الإداري', val: 23, color: 'bg-indigo-500' },
+                                                    ].map((item, idx) => (
+                                                        <li key={idx}>
+                                                            <div className="flex justify-between text-xs mb-1.5 font-medium">
+                                                                <span className="text-slate-300">{item.label}</span>
+                                                                <span className="text-slate-400">{item.val}%</span>
+                                                            </div>
+                                                            <div className="w-full bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                                                                <motion.div
+                                                                    className={`h-full rounded-full ${item.color}`}
+                                                                    initial={{ width: 0 }}
+                                                                    animate={{ width: `${item.val}%` }}
+                                                                    transition={{ delay: 0.2 + idx * 0.1, duration: 0.8 }}
+                                                                />
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+
+                                            <button className="w-full py-3.5 mt-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)] active:scale-[0.98]">
+                                                اقتراح تدخل مبكر (AI Intervention)
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="empty"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="h-full rounded-3xl p-6 border border-slate-800/50 flex flex-col items-center justify-center text-center px-8"
+                                        style={{ background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(10px)' }}
+                                    >
+                                        <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4 text-slate-500 border border-slate-700">
+                                            <Activity size={24} />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-slate-300 mb-2">اختر قسماً للتفاصيل</h3>
+                                        <p className="text-sm text-slate-500 leading-relaxed">
+                                            اضغط على أي من الأقسام في الخريطة الحرارية للحصول على تحليل ذكي لمصادر الاحتراق والنزيف الطاقي.
+                                        </p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
                 </div>
@@ -205,43 +267,9 @@ export const EnterprisePortal: React.FC = () => {
     );
 };
 
-const NavItem: React.FC<{ icon: any; label: string; active?: boolean; collapsed?: boolean }> = ({
-    icon: Icon, label, active, collapsed
-}) => (
-    <button className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${active ? 'bg-[var(--soft-teal)]/10 text-[var(--soft-teal)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-        <Icon className="w-5 h-5 shrink-0" />
-        {!collapsed && <span className="text-sm font-bold">{label}</span>}
-    </button>
+// Local component X icon
+const X = ({ size = 24 }: { size?: number }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
 );
-
-const StatCard: React.FC<{ title: string; value: string; icon: any; trend?: string; color?: string; inverse?: boolean }> = ({
-    title, value, icon: Icon, trend, color = "text-white", inverse
-}) => (
-    <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 relative overflow-hidden group">
-        <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                <Icon className="w-5 h-5 text-slate-400" />
-            </div>
-            {trend && (
-                <span className={`text-xs font-bold ${inverse ? 'text-rose-400' : 'text-emerald-400'}`}>
-                    {trend}
-                </span>
-            )}
-        </div>
-        <h3 className="text-sm font-medium text-slate-400">{title}</h3>
-        <p className={`text-2xl font-black mt-1 ${color}`}>{value}</p>
-        <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-[var(--soft-teal)]/5 rounded-full blur-2xl group-hover:bg-[var(--soft-teal)]/10 transition-all" />
-    </div>
-);
-
-const AlertItem: React.FC<{ type: 'info' | 'warning' | 'success'; text: string }> = ({ type, text }) => (
-    <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-800/20 border border-slate-800/50">
-        <div className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${type === 'warning' ? 'bg-rose-500' :
-            type === 'success' ? 'bg-emerald-500' : 'bg-blue-500'
-            }`} />
-        <p className="text-xs text-slate-400 leading-relaxed">{text}</p>
-    </div>
-);
-
-
-

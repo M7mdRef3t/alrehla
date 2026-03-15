@@ -126,6 +126,30 @@ export interface TreeRelation {
   relationLabel: string;
 }
 
+export interface EnergyTransaction {
+  id: string;
+  amount: number; // Positive for charge, Negative for drain
+  timestamp: number;
+  note?: string;
+}
+
+export interface EnergyBalance {
+  totalCharge: number;
+  totalDrain: number;
+  netEnergy: number;
+  transactions: EnergyTransaction[];
+}
+
+export type OrbitHistoryEventType = "created" | "ring_changed" | "archived" | "restored";
+
+export interface OrbitHistoryEntry {
+  id: string;
+  type: OrbitHistoryEventType;
+  timestamp: number;
+  ring: Ring;
+  fromRing?: Ring;
+}
+
 export interface MapNode {
   id: string;
   label: string;
@@ -162,4 +186,14 @@ export interface MapNode {
   /** أرشفة الشخص بدل الحذف النهائي — بيختفي من الخريطة بس بيفضل محفوظ */
   isNodeArchived?: boolean;
   archivedAt?: number;
+
+  /** كشف حساب الطاقة (Energy P&L) - تتبع الاستنزاف أو الشحن من هذه العلاقة */
+  energyBalance?: EnergyBalance;
+
+  /** بطارية طوارئ بشرية: شخص آمن يمكن اللجوء إليه عند نفاذ الطاقة */
+  isPowerBank?: boolean;
+
+  /** البصمة الخفية: وقت آخر تغيير للمدار أو الأرشفة، يُستخدم لحساب غرامة الركود */
+  lastRingChangeAt?: number;
+  orbitHistory?: OrbitHistoryEntry[];
 }
