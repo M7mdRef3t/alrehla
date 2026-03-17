@@ -66,8 +66,9 @@ const RepoIntelPanel = lazy(() => import("./dashboard/Intelligence/RepoIntelPane
 const FleetCommander = lazy(() => import("./dashboard/Fleet/FleetCommander").then(m => ({ default: m.FleetCommander })));
 const SeoGeoAuditorPanel = lazy(() => import("./dashboard/SEO/SeoGeoAuditorPanel").then(m => ({ default: m.SeoGeoAuditorPanel })));
 const AlertsPanel = lazy(() => import("./WarRoom/AlertsPanel"));
+const LiveAdminPanel = lazy(() => import("../../modules/dawayir-live/pages/LiveAdminPanel").then(m => ({ default: m.default })));
 
-type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "sales-enablement" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo" | "repo-intel" | "war-room";
+type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "sales-enablement" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo" | "repo-intel" | "war-room" | "dawayir-live";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
@@ -97,7 +98,8 @@ const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
   { id: "dreams-matrix", label: "Dreams Matrix", icon: <Target className="w-4 h-4 text-teal-400" /> },
   { id: "digital-twin", label: "Digital Twin", icon: <User className="w-4 h-4 text-indigo-400" /> },
   { id: "fleet", label: "Fleet", icon: <Rocket className="w-4 h-4 text-indigo-500" /> },
-  { id: "repo-intel", label: "Repo Intel", icon: <Terminal className="w-4 h-4 text-teal-300" /> }
+  { id: "repo-intel", label: "Repo Intel", icon: <Terminal className="w-4 h-4 text-teal-300" /> },
+  { id: "dawayir-live", label: "Dawayir Live", icon: <Sparkles className="w-4 h-4 text-teal-300" /> }
 ];
 const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   entity: "Entity (DNA)",
@@ -123,7 +125,8 @@ const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "digital-twin": "Digital Twin",
   fleet: "Fleet",
   "seo-geo": "SEO / GEO",
-  "repo-intel": "Repo Intel"
+  "repo-intel": "Repo Intel",
+  "dawayir-live": "Dawayir Live"
 };
 
 const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
@@ -459,6 +462,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "digital-twin" && <ConsciousnessGraph />}
                 {effectiveTab === "fleet" && <FleetCommander />}
                 {effectiveTab === "repo-intel" && <RepoIntelPanel />}
+                {effectiveTab === "dawayir-live" && <LiveAdminPanel />}
               </Suspense>
             </div>
           </div>
@@ -471,5 +475,3 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
     </AdminGate>
   );
 };
-
-

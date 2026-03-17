@@ -31,7 +31,6 @@ import { VoicePresence } from "./VoicePresence";
 import { VoicePulseModal } from "./VoicePulseModal";
 import { TabNavigation } from "./TabNavigation";
 import { LayoutModeSwitcher } from "./LayoutModeSwitcher";
-import { useGeminiLive } from "../hooks/useGeminiLive";
 import { useGraphSync } from "../hooks/useGraphSync";
 import { useAdaptiveLayout } from "../hooks/useAdaptiveLayout";
 import { useLayoutState } from "../state/layoutState";
@@ -58,6 +57,7 @@ import { useDailyQuestion } from "../hooks/useDailyQuestion";
 import { getShadowScore } from "../state/shadowPulseState";
 import { deriveRelationshipWeather } from "../utils/relationshipWeather";
 import { deriveContextAtlas, type ContextAtlasKey } from "../utils/contextAtlas";
+import { assignUrl } from "../services/navigation";
 
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 
@@ -147,20 +147,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const user = useAuthState(s => s.user);
 
-  //  Gemini Live Integration (bureau of consciousness) 
-  const {
-    isConnected,
-    isListening,
-    isSpeaking,
-    connect,
-    disconnect,
-    startListening,
-    sendContext
-  } = useGeminiLive({
-    // Security: do not expose provider keys in client bundles.
-    apiKey: "",
-    autoSendContext: true
-  });
+  const isConnected = false;
+  const isListening = false;
+  const isSpeaking = false;
 
   const nodes = useMapState((s) => s.nodes); // Moved up for handleNodeDropOnAI
 
@@ -181,16 +170,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
 
-    if (!isConnected) connect();
+    assignUrl(`/dawayir-live?surface=map-drop&nodeId=${encodeURIComponent(node.id)}&nodeLabel=${encodeURIComponent(node.label)}&goalId=${encodeURIComponent(goalId)}`);
+  }, [goalId, nodes, user]);
 
-    // Start listening immediately on drop
-    void startListening();
-
-    // Contextual nudge
-    sendContext(`استخد اختار رز دت ع "${node.label}" (دائرة ${node.ring}). احظ حرت ابدأ عا حار سراط ع طبعة اعاة د دت.`);
-  }, [user, nodes, isConnected, connect, startListening, sendContext]);
-
-  const toggleAI = useCallback(() => {
+  const openLiveRoute = useCallback(() => {
     if (!user) {
       setIsCloudAuthOpen(true);
       return;
@@ -199,9 +182,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       setIsUpgradeOpen(true);
       return;
     }
-    if (isConnected) disconnect();
-    else connect();
-  }, [user, isConnected, connect, disconnect]);
+    assignUrl(`/dawayir-live?surface=map-fab&goalId=${encodeURIComponent(goalId)}`);
+  }, [goalId, user]);
   const [showMeCard, setShowMeCard] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
   const [showWeekdayLabelsModal, setShowWeekdayLabelsModal] = useState(false);
@@ -1046,7 +1028,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                       isConnected,
                       isListening,
                       isSpeaking,
-                      onToggle: toggleAI,
+                      onToggle: openLiveRoute,
                       onNodeDrop: handleNodeDropOnAI
                     }}
                   />
@@ -1075,7 +1057,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                       isConnected,
                       isListening,
                       isSpeaking,
-                      onToggle: toggleAI,
+                      onToggle: openLiveRoute,
                       onNodeDrop: handleNodeDropOnAI
                     }}
                   />
@@ -1319,7 +1301,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             }}
             onOpenInsights={() => setShowDashboard((v) => !v)}
             onOpenSettings={() => undefined}
-            onToggleAI={toggleAI}
+            onToggleAI={openLiveRoute}
             isAIConnected={isConnected}
             showAIOption={true}
           />

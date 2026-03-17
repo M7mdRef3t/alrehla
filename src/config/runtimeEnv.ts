@@ -27,7 +27,11 @@ type RuntimeKey =
   | "VITE_STRIPE_PUBLISHABLE_KEY"
   | "VITE_STRIPE_PRICE_PREMIUM"
   | "VITE_STRIPE_PRICE_COACH"
-  | "VITE_DEMO_MODE";
+  | "VITE_DEMO_MODE"
+  | "VITE_DAWAYIR_LIVE_ENABLED"
+  | "VITE_DAWAYIR_LIVE_API_KEY"
+  | "VITE_DAWAYIR_LIVE_MODEL"
+  | "VITE_DAWAYIR_LIVE_VOICE";
 
 type NextPublicKey =
   | "NEXT_PUBLIC_APP_ENV"
@@ -58,7 +62,11 @@ type NextPublicKey =
   | "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"
   | "NEXT_PUBLIC_STRIPE_PRICE_PREMIUM"
   | "NEXT_PUBLIC_STRIPE_PRICE_COACH"
-  | "NEXT_PUBLIC_DEMO_MODE";
+  | "NEXT_PUBLIC_DEMO_MODE"
+  | "NEXT_PUBLIC_DAWAYIR_LIVE_ENABLED"
+  | "NEXT_PUBLIC_DAWAYIR_LIVE_API_KEY"
+  | "NEXT_PUBLIC_DAWAYIR_LIVE_MODEL"
+  | "NEXT_PUBLIC_DAWAYIR_LIVE_VOICE";
 
 /** Safe accessor for process.env that never throws in browser/Vite */
 function safeProcessEnv(): Record<string, unknown> {
@@ -106,7 +114,11 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     NEXT_PUBLIC_STRIPE_PRICE_PREMIUM: process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM,
     NEXT_PUBLIC_STRIPE_PRICE_COACH: process.env.NEXT_PUBLIC_STRIPE_PRICE_COACH,
-    NEXT_PUBLIC_DEMO_MODE: process.env.NEXT_PUBLIC_DEMO_MODE
+    NEXT_PUBLIC_DEMO_MODE: process.env.NEXT_PUBLIC_DEMO_MODE,
+    NEXT_PUBLIC_DAWAYIR_LIVE_ENABLED: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_ENABLED,
+    NEXT_PUBLIC_DAWAYIR_LIVE_API_KEY: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_API_KEY,
+    NEXT_PUBLIC_DAWAYIR_LIVE_MODEL: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_MODEL,
+    NEXT_PUBLIC_DAWAYIR_LIVE_VOICE: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_VOICE
   };
   const value = candidates[key];
   return typeof value === "string" && value.length > 0 ? value.trim() : undefined;
@@ -115,7 +127,7 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
 function readViteEnvValue(key: RuntimeKey): string | undefined {
   try {
     // Keep access in property form for Next/Webpack compatibility.
-    const viteEnv = import.meta.env as Record<string, unknown> | undefined;
+    const viteEnv = (import.meta as ImportMeta & { env?: Record<string, unknown> }).env;
     const value = viteEnv?.[key];
     if (typeof value === "string" && value.length > 0) return value.trim();
   } catch {
@@ -180,4 +192,8 @@ export const runtimeEnv = {
   stripePricePremium: readEnv("VITE_STRIPE_PRICE_PREMIUM"),
   stripePriceCoach: readEnv("VITE_STRIPE_PRICE_COACH"),
   isDemoMode: readEnv("VITE_DEMO_MODE") === "true",
+  dawayirLiveEnabled: readEnv("VITE_DAWAYIR_LIVE_ENABLED"),
+  dawayirLiveApiKey: readEnv("VITE_DAWAYIR_LIVE_API_KEY"),
+  dawayirLiveModel: readEnv("VITE_DAWAYIR_LIVE_MODEL"),
+  dawayirLiveVoice: readEnv("VITE_DAWAYIR_LIVE_VOICE"),
 } as const;

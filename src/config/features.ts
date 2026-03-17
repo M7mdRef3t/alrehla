@@ -19,7 +19,11 @@ export type FeatureFlagKey =
   | "language_switcher"
   | "armory_section"
   | "landing_live_metrics"
-  | "landing_live_testimonials";
+  | "landing_live_testimonials"
+  | "dawayir_live"
+  | "dawayir_live_couple"
+  | "dawayir_live_coach"
+  | "dawayir_live_camera";
 
 export interface FeatureFlagDefinition {
   key: FeatureFlagKey;
@@ -146,6 +150,34 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
     label: "الشهادات الحية للصفحة الرئيسية",
     description: "فتح الشهادات الحية في الصفحة الرئيسية عند جاهزيتها",
     group: "Insights"
+  },
+  {
+    key: "dawayir_live",
+    label: "Dawayir Live",
+    description: "ØªÙØ¹ÙŠÙ„ Ø§Ù„Ù…Ø³Ø§Ø± Ø§Ù„Ø­ÙŠ Ø¯Ø§Ø®Ù„ Ø§Ù„Ù…Ù†ØµØ©",
+    group: "AI",
+    supportsBeta: true
+  },
+  {
+    key: "dawayir_live_couple",
+    label: "Dawayir Live Couple",
+    description: "ØªÙØ¹ÙŠÙ„ couple mode ÙˆÙ…Ø´Ø§Ø±ÙƒØ© Ø§Ù„Ø¬Ù„Ø³Ø§Øª",
+    group: "AI",
+    supportsBeta: true
+  },
+  {
+    key: "dawayir_live_coach",
+    label: "Dawayir Live Coach",
+    description: "ØªÙØ¹ÙŠÙ„ Ù…Ø´Ø§Ù‡Ø¯ coach/teacher Ù„Ø¬Ù„Ø³Ø§Øª Dawayir Live",
+    group: "AI",
+    supportsBeta: true
+  },
+  {
+    key: "dawayir_live_camera",
+    label: "Dawayir Live Camera",
+    description: "ØªÙØ¹ÙŠÙ„ Ø­ÙØ¸ Ù…Ù„Ù‚Ø·Ø§Øª Ø§Ù„ÙƒØ§Ù…ÙŠØ±Ø§ Ù…Ø¹ Ø§Ù„Ø¬Ù„Ø³Ø©",
+    group: "AI",
+    supportsBeta: true
   }
 ];
 
@@ -168,5 +200,9 @@ export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, FeatureFlagMode> = {
   language_switcher: "on",
   armory_section: "on",
   landing_live_metrics: "on",
-  landing_live_testimonials: "on"
+  landing_live_testimonials: "on",
+  dawayir_live: "on",
+  dawayir_live_couple: "beta",
+  dawayir_live_coach: "beta",
+  dawayir_live_camera: "beta"
 };
