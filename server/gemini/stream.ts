@@ -64,7 +64,10 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   }
 
   const finalPrompt = applyCodingOutputContractToPrompt(prompt);
-  const config = generationConfig ?? DEFAULT_GENERATION_CONFIG;
+  const config: Record<string, unknown> =
+    generationConfig && typeof generationConfig === "object"
+      ? (generationConfig as Record<string, unknown>)
+      : DEFAULT_GENERATION_CONFIG;
   const models: string[] = Array.isArray(modelOrder) && modelOrder.length > 0 ? modelOrder : DEFAULT_MODEL_ORDER;
 
   let lastError: unknown = null;

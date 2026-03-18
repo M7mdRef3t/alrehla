@@ -1,4 +1,4 @@
-import { FunctionCallingMode, type ToolConfig } from "@google/generative-ai";
+import { FunctionCallingMode, type Tool, type ToolConfig } from "@google/generative-ai";
 import {
   DEFAULT_GENERATION_CONFIG,
   DEFAULT_MODEL_ORDER,
@@ -67,13 +67,18 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     res.status(422).json(buildPromptGuardResponse(guard.missing));
     return;
   }
+  const instructionText = typeof systemInstruction === "string" ? systemInstruction : "";
   const finalSystemInstruction = guard.coding
-    ? `${systemInstruction ?? ""}\n\n${CODING_OUTPUT_CONTRACT}`
-    : (systemInstruction ?? undefined);
+    ? `${instructionText}\n\n${CODING_OUTPUT_CONTRACT}`
+    : (instructionText || undefined);
 
-  const config = generationConfig ?? DEFAULT_GENERATION_CONFIG;
+  const config: Record<string, unknown> =
+    generationConfig && typeof generationConfig === "object"
+      ? (generationConfig as Record<string, unknown>)
+      : DEFAULT_GENERATION_CONFIG;
   const models: string[] = Array.isArray(modelOrder) && modelOrder.length > 0 ? modelOrder : DEFAULT_MODEL_ORDER;
   const toolConfig: ToolConfig = { functionCallingConfig: { mode: FunctionCallingMode.AUTO } };
+  const safeTools = Array.isArray(tools) ? (tools as Tool[]) : undefined;
 
   let lastError: unknown = null;
   try {
@@ -82,7 +87,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         const model = getModel(client, models[i], config);
         const result = await withTimeout(model.generateContent({
           contents,
-          tools,
+          tools: safeTools,
           systemInstruction: finalSystemInstruction,
           toolConfig
         }), 18_000);

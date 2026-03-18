@@ -248,7 +248,9 @@ export async function handleSeoAudit(req: AdminRequest, res: AdminResponse) {
   }
 
   const fallbackUrl = process.env.PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://www.alrehla.app/";
-  const body = req.body && typeof req.body === "object" ? req.body : {};
+  const body: Record<string, unknown> = req.body && typeof req.body === "object"
+    ? (req.body as Record<string, unknown>)
+    : {};
   const candidateUrl = String(req.query?.url ?? body?.url ?? fallbackUrl).trim();
   const urlObject = safeUrl(candidateUrl);
   if (!urlObject) {

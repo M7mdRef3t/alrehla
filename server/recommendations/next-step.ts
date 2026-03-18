@@ -38,6 +38,10 @@ function randomId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function isRecommendationFeatures(value: unknown): value is RecommendationFeatures {
+  return Boolean(value) && typeof value === "object";
+}
+
 function rankCandidates(candidates: Candidate[], features?: RecommendationFeatures): Candidate[] {
   const entropy = Number(features?.entropyScore ?? 0);
   const riskRatio = Number(features?.riskRatio ?? 0);
@@ -70,7 +74,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
 
-  const ranked = rankCandidates(candidates, body?.features);
+  const features = isRecommendationFeatures(body?.features) ? body.features : undefined;
+  const ranked = rankCandidates(candidates, features);
   const chosen = ranked[0];
   const now = Date.now();
   const decisionId = randomId("decision_cloud");
@@ -85,7 +90,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       ]
     },
     confidence: 0.72,
-    riskBand: body?.features?.riskRatio >= 0.7 ? "high" : body?.features?.riskRatio >= 0.45 ? "medium" : "low",
+    riskBand: Number(features?.riskRatio ?? 0) >= 0.7 ? "high" : Number(features?.riskRatio ?? 0) >= 0.45 ? "medium" : "low",
     source: "cloud_ranker",
     expiresAt: now + 12 * 60 * 60 * 1000
   };
@@ -101,7 +106,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       confidence: response.confidence,
       action_type: chosen.actionType,
       action_payload: chosen.actionPayload ?? null,
-      feature_snapshot: body?.features ?? null,
+      feature_snapshot: features ?? null,
       created_at: new Date(now).toISOString(),
       expires_at: new Date(response.expiresAt).toISOString()
     });

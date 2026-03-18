@@ -81,7 +81,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       cognitivePenalty: item.cognitivePenalty,
       explorationBonus: item.explorationBonus
     }));
-    isExploration = Boolean(chosen?.isExploration);
+    isExploration = "isExploration" in chosen ? Boolean(chosen.isExploration) : false;
   } else {
     const incoming = Array.isArray(body?.candidates) ? (body.candidates as FallbackCandidate[]) : [];
     if (incoming.length === 0) {
