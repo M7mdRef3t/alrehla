@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
+﻿import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, User, MessageCircle, Cpu } from "lucide-react";
-import { Landing } from "./components/Landing";
 import { useNotificationState } from "./state/notificationState";
 import { useEmergencyState } from "./state/emergencyState";
 import { useMapState } from "./state/mapState";
@@ -71,6 +70,7 @@ import { runtimeEnv } from "./config/runtimeEnv";
 import { getNextNudge, dismissNudge } from "./services/nudgeEngine";
 import { detectContradictions, dismissMirrorInsight, type MirrorInsight } from "./services/mirrorLogic";
 import { calculateEntropy, type UserState } from "./services/predictiveEngine";
+import { requestIdleCallback, cancelIdleCallback } from "./utils/performanceOptimizations";
 import {
   computeNextStepDecision,
   reportDecisionOutcome,
@@ -86,10 +86,12 @@ import { executeOwnerAction } from "./navigation/ownerActionExecutor";
 import { resolveLandingChromeVisibility } from "./app/orchestration/chromeVisibility";
 import { AUTO_COCOON_LAST_SHOWN_DATE_KEY, evaluateCocoonOpen } from "./app/orchestration/modalOrchestrator";
 import { startAutonomousStartupJobs } from "./app/orchestration/startupJobs";
+import { AppStartScreens } from "./components/AppStartScreens";
+import { InstallHintBanner } from "./components/InstallHintBanner";
+import { AppJourneyScreens } from "./components/AppJourneyScreens";
+import { AppMetaScreens } from "./components/AppMetaScreens";
 
-const OracleCouncilDashboard = lazy(() => import("./components/Oracle/OracleDashboard").then(m => ({ default: m.OracleCouncilDashboard })));
 import { useToastState } from "./state/toastState";
-import { TheArmoryScreen } from "./components/TheArmoryScreen";
 const LegalPage = lazy(() => import("./components/LegalPage").then((m) => ({ default: m.LegalPage })));
 const SyncStatusUI = lazy(() => import("./components/SyncStatusUI").then((m) => ({ default: m.SyncStatusUI })));
 const GoogleAuthModal = lazy(() => import("./components/GoogleAuthModal").then((m) => ({ default: m.GoogleAuthModal })));
@@ -143,10 +145,8 @@ function inferCognitiveLoadFromDecision(decision: NextStepDecisionV1): number {
   if (decision.action.actionType === "open_breathing") return 1;
   return 3;
 }
-/** مسافة للمينيو - تاب صغير ظاهر (الشريط يظهر عند التحريك) */
+/** Ù…Ø³Ø§ÙØ© Ù„Ù„Ù…ÙŠÙ†ÙŠÙˆ - ØªØ§Ø¨ ØµØºÙŠØ± Ø¸Ø§Ù‡Ø± (Ø§Ù„Ø´Ø±ÙŠØ· ÙŠØ¸Ù‡Ø± Ø¹Ù†Ø¯ Ø§Ù„ØªØ­Ø±ÙŠÙƒ) */
 
-const CoreMapScreen = lazy(() => import("./components/CoreMapScreen").then((m) => ({ default: m.CoreMapScreen })));
-const GoalPicker = lazy(() => import("./components/GoalPicker").then((m) => ({ default: m.GoalPicker })));
 const RelationshipGym = lazy(() => import("./components/RelationshipGym").then((m) => ({ default: m.RelationshipGym })));
 const BaselineAssessment = lazy(() => import("./components/BaselineAssessment").then((m) => ({ default: m.BaselineAssessment })));
 const PulseCheckModal = lazy(() => import("./components/PulseCheckModal").then((m) => ({ default: m.PulseCheckModal })));
@@ -166,10 +166,6 @@ const ConsciousnessArchiveModal = lazy(
   () => import("./components/ConsciousnessArchiveModal").then((m) => ({ default: m.ConsciousnessArchiveModal }))
 );
 const EmergencyOverlay = lazy(() => import("./components/EmergencyOverlay").then((m) => ({ default: m.EmergencyOverlay })));
-const GuidedJourneyFlow = lazy(() => import("./components/GuidedJourneyFlow").then((m) => ({ default: m.GuidedJourneyFlow })));
-const MissionScreen = lazy(() => import("./components/MissionScreen").then((m) => ({ default: m.MissionScreen })));
-const JourneyToolsScreen = lazy(() => import("./components/JourneyToolsScreen").then((m) => ({ default: m.JourneyToolsScreen })));
-const SettingsScreen = lazy(() => import("./components/SettingsScreen").then((m) => ({ default: m.SettingsScreen })));
 const AdminDashboard = lazy(() => import("./components/admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
 const CoachDashboard = lazy(() => import("./components/CoachDashboard").then((m) => ({ default: m.CoachDashboard })));
 const AdminOverviewPanel = lazy(() =>
@@ -206,21 +202,15 @@ const ManualPlacementModal = lazy(() =>
   import("./components/ManualPlacementModal").then((m) => ({ default: m.ManualPlacementModal }))
 );
 const FeedbackModal = lazy(() => import("./components/FeedbackModal").then((m) => ({ default: m.FeedbackModal })));
-const EnterprisePortal = lazy(() => import("./components/enterprise/EnterprisePortal").then((m) => ({ default: m.EnterprisePortal })));
-const GuiltCourt = lazy(() => import("./components/GuiltCourt").then((m) => ({ default: m.GuiltCourt })));
-const DiplomaticCables = lazy(() => import("./components/DiplomaticCables").then((m) => ({ default: m.DiplomaticCables })));
-const ResearchSurvey = lazy(() => import("./components/ResearchSurvey").then((m) => ({ default: m.ResearchSurvey })));
-const ExitScriptsLibrary = lazy(() => import("./components/ExitScriptsLibrary").then((m) => ({ default: m.ExitScriptsLibrary })));
-const GroundingToolkit = lazy(() => import("./components/GroundingToolkit").then((m) => ({ default: m.GroundingToolkit })));
 
 // Phase 30: Holographic Legacy
 const AmbientRealityMode = lazy(() => import("./components/AmbientRealityMode").then((m) => ({ default: m.AmbientRealityMode })));
 const TimeCapsuleVault = lazy(() => import("./components/TimeCapsuleVault").then((m) => ({ default: m.TimeCapsuleVault })));
 
 const preloadCoreMap = () => import("./components/CoreMapScreen");
-const preloadChatbot = () => import("./components/AIChatbot");
 const preloadGym = () => import("./components/RelationshipGym");
 const hasSupabaseEnv = Boolean(runtimeEnv.supabaseUrl && runtimeEnv.supabaseAnonKey);
+const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 type AgentModule = typeof import("./agent");
 const LAST_SEEN_BROADCAST_KEY = "dawayir-last-seen-broadcast-id";
 const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
@@ -334,17 +324,17 @@ function buildPulseDeltaToast(currentEnergy: number, yesterdayEnergy: number | n
 }
 
 function buildStartRecoveryWelcome(firstName: string | null, toneGender: UserToneGender): string {
-  const prefix = firstName ? `أهلاً يا ${firstName}` : "أهلاً";
-  if (toneGender === "female") return `${prefix}، هل أنتِ مستعدة لبدء الرحلة؟ التعافي مش سحر، هو رحلة بتبدأها بخطواتك.`;
-  if (toneGender === "male") return `${prefix}، هل أنت مستعد لبدء الرحلة؟ التعافي مش سحر، هو رحلة بتبدأها بخطواتك.`;
-  return `${prefix}، هل أنت مستعد لبدء الرحلة؟ التعافي مش سحر، هو رحلة بتبدأها بخطواتك.`;
+  const prefix = firstName ? `Ø£Ù‡Ù„Ø§Ù‹ ÙŠØ§ ${firstName}` : "Ø£Ù‡Ù„Ø§Ù‹";
+  if (toneGender === "female") return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†ØªÙ Ù…Ø³ØªØ¹Ø¯Ø© Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ Ø§Ù„ØªØ¹Ø§ÙÙŠ Ù…Ø´ Ø³Ø­Ø±ØŒ Ù‡Ùˆ Ø±Ø­Ù„Ø© Ø¨ØªØ¨Ø¯Ø£Ù‡Ø§ Ø¨Ø®Ø·ÙˆØ§ØªÙƒ.`;
+  if (toneGender === "male") return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†Øª Ù…Ø³ØªØ¹Ø¯ Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ Ø§Ù„ØªØ¹Ø§ÙÙŠ Ù…Ø´ Ø³Ø­Ø±ØŒ Ù‡Ùˆ Ø±Ø­Ù„Ø© Ø¨ØªØ¨Ø¯Ø£Ù‡Ø§ Ø¨Ø®Ø·ÙˆØ§ØªÙƒ.`;
+  return `${prefix}ØŒ Ù‡Ù„ Ø£Ù†Øª Ù…Ø³ØªØ¹Ø¯ Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©ØŸ Ø§Ù„ØªØ¹Ø§ÙÙŠ Ù…Ø´ Ø³Ø­Ø±ØŒ Ù‡Ùˆ Ø±Ø­Ù„Ø© Ø¨ØªØ¨Ø¯Ø£Ù‡Ø§ Ø¨Ø®Ø·ÙˆØ§ØªÙƒ.`;
 }
 
 function buildWelcomePrompt(firstName: string | null, toneGender: UserToneGender): string {
-  const toneLabel = toneGender === "female" ? "مؤنث دافئ" : toneGender === "male" ? "مذكر دافئ" : "محايد ودود";
-  const namePart = firstName ? ` لمستخدم اسمه "${firstName}"` : "";
-  const tonePart = toneGender === "neutral" ? "بدون تذكير/تأنيث مباشر" : `بصيغة مخاطبة ${toneLabel}`;
-  return `اكتب ترحيب قصير وودود باللهجة المصرية${namePart}. جملة واحدة بشكل طبيعي (بدون سؤال منفصل). بدون إيموجي. بدون علامات اقتباس. أقل من 15 كلمة. ${tonePart}. لا تكرر الاسم كثيرًا.`;
+  const toneLabel = toneGender === "female" ? "Ù…Ø¤Ù†Ø« Ø¯Ø§ÙØ¦" : toneGender === "male" ? "Ù…Ø°ÙƒØ± Ø¯Ø§ÙØ¦" : "Ù…Ø­Ø§ÙŠØ¯ ÙˆØ¯ÙˆØ¯";
+  const namePart = firstName ? ` Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø§Ø³Ù…Ù‡ "${firstName}"` : "";
+  const tonePart = toneGender === "neutral" ? "Ø¨Ø¯ÙˆÙ† ØªØ°ÙƒÙŠØ±/ØªØ£Ù†ÙŠØ« Ù…Ø¨Ø§Ø´Ø±" : `Ø¨ØµÙŠØºØ© Ù…Ø®Ø§Ø·Ø¨Ø© ${toneLabel}`;
+  return `Ø§ÙƒØªØ¨ ØªØ±Ø­ÙŠØ¨ Ù‚ØµÙŠØ± ÙˆÙˆØ¯ÙˆØ¯ Ø¨Ø§Ù„Ù„Ù‡Ø¬Ø© Ø§Ù„Ù…ØµØ±ÙŠØ©${namePart}. Ø¬Ù…Ù„Ø© ÙˆØ§Ø­Ø¯Ø© Ø¨Ø´ÙƒÙ„ Ø·Ø¨ÙŠØ¹ÙŠ (Ø¨Ø¯ÙˆÙ† Ø³Ø¤Ø§Ù„ Ù…Ù†ÙØµÙ„). Ø¨Ø¯ÙˆÙ† Ø¥ÙŠÙ…ÙˆØ¬ÙŠ. Ø¨Ø¯ÙˆÙ† Ø¹Ù„Ø§Ù…Ø§Øª Ø§Ù‚ØªØ¨Ø§Ø³. Ø£Ù‚Ù„ Ù…Ù† 15 ÙƒÙ„Ù…Ø©. ${tonePart}. Ù„Ø§ ØªÙƒØ±Ø± Ø§Ù„Ø§Ø³Ù… ÙƒØ«ÙŠØ±Ù‹Ø§.`;
 }
 
 function cleanSingleLine(text: string): string {
@@ -355,7 +345,7 @@ function cleanWelcomeMessage(text: string | null): string | null {
   if (!text) return null;
   const oneLine = cleanSingleLine(text);
   if (!oneLine) return null;
-  const unquoted = oneLine.replace(/^["â€œ]+|["â€]+$/g, "").trim();
+  const unquoted = oneLine.replace(/^["Ã¢â‚¬Å“]+|["Ã¢â‚¬Â]+$/g, "").trim();
   if (!unquoted) return null;
   return unquoted.length > 140 ? `${unquoted.slice(0, 140).trim()}...` : unquoted;
 }
@@ -431,13 +421,17 @@ function saveOwnerMilestonesState(value: OwnerMilestonesState): void {
 import { JourneyTimeline } from "./components/JourneyTimeline";
 
 export default function App() {
-  // Phase 19: Startup Sequence — shows once per session
+  // Phase 19: Startup Sequence â€” shows once per session
   const [showStartup, setShowStartup] = useState(() => {
     if (typeof window === "undefined") return false;
     const seen = sessionStorage.getItem("dawayir-startup-seen");
     return !seen;
   });
-  const [screen, setScreen] = useState<Screen>("landing");
+  const [screen, setScreen] = useState<Screen>(() => {
+    if (typeof window === "undefined") return "landing";
+    const bootAction = window.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
+    return bootAction === "start_recovery" ? "map" : "landing";
+  });
   const isLandingScreen = screen === "landing";
 
   // Phase 27: Swarm State & Automatic Selection
@@ -454,7 +448,7 @@ export default function App() {
   const phaseOneMissionBypassRef = useRef(false);
   const [toolsBackScreen, setToolsBackScreen] = useState<Screen>("landing");
   const [showCocoon, setShowCocoon] = useState(false);
-  /** عند إغلاق التنفس: لو فُتح من مسار دقيقة شحن نرجع لشاشة الخريطة */
+  /** Ø¹Ù†Ø¯ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªÙ†ÙØ³: Ù„Ùˆ ÙÙØªØ­ Ù…Ù† Ù…Ø³Ø§Ø± Ø¯Ù‚ÙŠÙ‚Ø© Ø´Ø­Ù† Ù†Ø±Ø¬Ø¹ Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø®Ø±ÙŠØ·Ø© */
   const [returnToGoalOnBreathingClose, setReturnToGoalOnBreathingClose] = useState(false);
   const breathingFromCocoonRef = useRef(false);
   const [suppressLowPulseCocoonUntil, setSuppressLowPulseCocoonUntil] = useState(0);
@@ -476,7 +470,7 @@ export default function App() {
   const [isAnalyticsRoute, setIsAnalyticsRoute] = useState(() => isAnalyticsPath());
   const [postAuthIntent, setPostAuthIntentState] = useState<PostAuthIntent | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  /** ربط الرجوع بالتاتش/زر الرجوع بالشاشة السابقة بدل إغلاق التطبيق */
+  /** Ø±Ø¨Ø· Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„ØªØ§ØªØ´/Ø²Ø± Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø³Ø§Ø¨Ù‚Ø© Ø¨Ø¯Ù„ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ */
   const fromPopStateRef = useRef(false);
   const hasHistorySyncedRef = useRef(false);
   const restoredLastScreenForUserRef = useRef<string | null>(null);
@@ -809,23 +803,36 @@ export default function App() {
 
   useEffect(() => {
     void initThemePalette();
-    startAutonomousStartupJobs({ enabled: !isUserMode });
+    if (isUserMode || typeof window === "undefined") return;
+
+    const idleHandle = requestIdleCallback(() => {
+      startAutonomousStartupJobs({ enabled: true });
+    }, { timeout: 2500 });
+
+    return () => {
+      cancelIdleCallback(idleHandle);
+    };
   }, []);
 
   useEffect(() => {
     if (!canShowAIChatbot) return;
+    if (screen === "landing") return;
     let cancelled = false;
-    import("./agent")
-      .then((mod) => {
-        if (!cancelled) setAgentModule(mod);
-      })
-      .catch(() => {
-        // keep chatbot available in fallback mode
-      });
+    const idleHandle = requestIdleCallback(() => {
+      import("./agent")
+        .then((mod) => {
+          if (!cancelled) setAgentModule(mod);
+        })
+        .catch(() => {
+          // keep chatbot available in fallback mode
+        });
+    }, { timeout: 1500 });
+
     return () => {
       cancelled = true;
+      cancelIdleCallback(idleHandle);
     };
-  }, [canShowAIChatbot]);
+  }, [canShowAIChatbot, screen]);
 
   useEffect(() => {
     if (screen !== "map") return;
@@ -837,7 +844,7 @@ export default function App() {
     });
   }, [screen, nodes, baselineCompletedAt, checkAndUnlock]);
 
-  // فتح مودال الإنجازات عند الضغط على Toast
+  // ÙØªØ­ Ù…ÙˆØ¯Ø§Ù„ Ø§Ù„Ø¥Ù†Ø¬Ø§Ø²Ø§Øª Ø¹Ù†Ø¯ Ø§Ù„Ø¶ØºØ· Ø¹Ù„Ù‰ Toast
   useEffect(() => {
     if (!openAchievementsRequest) return;
     setShowAchievements(true);
@@ -913,7 +920,7 @@ export default function App() {
     return subscribePopstate(handler);
   }, []);
 
-  /** ربط History API بالشاشات - الرجوع بالتاتش/زر الرجوع يرجع للشاشة السابقة بدل إغلاق التطبيق */
+  /** Ø±Ø¨Ø· History API Ø¨Ø§Ù„Ø´Ø§Ø´Ø§Øª - Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¨Ø§Ù„ØªØ§ØªØ´/Ø²Ø± Ø§Ù„Ø±Ø¬ÙˆØ¹ ÙŠØ±Ø¬Ø¹ Ù„Ù„Ø´Ø§Ø´Ø© Ø§Ù„Ø³Ø§Ø¨Ù‚Ø© Ø¨Ø¯Ù„ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ */
   useEffect(() => {
     if (isAdminPath()) return;
     if (hasOAuthCallbackParams()) return;
@@ -953,7 +960,7 @@ export default function App() {
   }, [canUseJourneyTools, canUseMap, isLockedPhaseOne]);
 
   useEffect(() => {
-    // Check for nudges after 8 seconds — let the UI settle first
+    // Check for nudges after 8 seconds â€” let the UI settle first
     const timer = setTimeout(() => {
       if (runtimeEnv.isDemoMode) return;
       const nudge = getNextNudge();
@@ -983,17 +990,24 @@ export default function App() {
   // Phase 24: Biometrics Bridge Integration
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (screen === "landing") return;
 
-    const stopStream = startBiometricStream((pulse: BiometricPulse) => {
-      const result = analyzeStressLevels(pulse);
-      if (result.isCrisis && !showCocoon && !showBreathing) {
-        trackEvent("biometric_crisis_triggered", { hr: pulse.heartRate, reason: result.reason || "unknown" });
-        openCocoonModal("auto");
-      }
-    });
+    let stopStream: (() => void) | null = null;
+    const idleHandle = requestIdleCallback(() => {
+      stopStream = startBiometricStream((pulse: BiometricPulse) => {
+        const result = analyzeStressLevels(pulse);
+        if (result.isCrisis && !showCocoon && !showBreathing) {
+          trackEvent("biometric_crisis_triggered", { hr: pulse.heartRate, reason: result.reason || "unknown" });
+          openCocoonModal("auto");
+        }
+      });
+    }, { timeout: 3000 });
 
-    return () => stopStream();
-  }, [openCocoonModal, showCocoon, showBreathing]);
+    return () => {
+      cancelIdleCallback(idleHandle);
+      stopStream?.();
+    };
+  }, [openCocoonModal, screen, showCocoon, showBreathing]);
 
   // Predictive Engine (Phase 13) - State Adaptation
   const [, setUserPsychState] = useState<UserState>("ORDER");
@@ -1011,11 +1025,11 @@ export default function App() {
       setActiveNudge({
         id: 'chaos-containment-' + Date.now(),
         type: 'streak_risk',
-        title: 'محتاج تاخد نَفَس 🍃',
-        message: 'حاسين إنك مضغوط شوية دلوقتي.. خد دقيقة لنفسك.',
-        cta: 'افصل شوية',
+        title: 'Ù…Ø­ØªØ§Ø¬ ØªØ§Ø®Ø¯ Ù†ÙŽÙÙŽØ³ ðŸƒ',
+        message: 'Ø­Ø§Ø³ÙŠÙ† Ø¥Ù†Ùƒ Ù…Ø¶ØºÙˆØ· Ø´ÙˆÙŠØ© Ø¯Ù„ÙˆÙ‚ØªÙŠ.. Ø®Ø¯ Ø¯Ù‚ÙŠÙ‚Ø© Ù„Ù†ÙØ³Ùƒ.',
+        cta: 'Ø§ÙØµÙ„ Ø´ÙˆÙŠØ©',
         priority: 1,
-        icon: '🍃'
+        icon: 'ðŸƒ'
       });
       setShowNudgeToast(true);
     }
@@ -1129,9 +1143,18 @@ export default function App() {
   ]);
 
   useEffect(() => {
-    const stop = initAppContentRealtime();
-    return () => stop();
-  }, []);
+    if (screen === "landing") return;
+
+    let stop: (() => void) | null = null;
+    const idleHandle = requestIdleCallback(() => {
+      stop = initAppContentRealtime();
+    }, { timeout: 2500 });
+
+    return () => {
+      cancelIdleCallback(idleHandle);
+      stop?.();
+    };
+  }, [screen]);
 
   useEffect(() => {
     if (runtimeEnv.isDev) {
@@ -1139,7 +1162,7 @@ export default function App() {
         (window as Window & { __seedStressTest?: () => { nodeCount: number; eventCount: number } }).__seedStressTest =
           () => {
             const result = seedStressTestData();
-            console.warn("[Stress Test] تم:", result.nodeCount, "عُقدة،", result.eventCount, "حدث. إعادة تحميل...");
+            console.warn("[Stress Test] ØªÙ…:", result.nodeCount, "Ø¹ÙÙ‚Ø¯Ø©ØŒ", result.eventCount, "Ø­Ø¯Ø«. Ø¥Ø¹Ø§Ø¯Ø© ØªØ­Ù…ÙŠÙ„...");
             setTimeout(() => reloadPage(), 500);
             return result;
           };
@@ -1149,41 +1172,46 @@ export default function App() {
 
   useEffect(() => {
     if (!hasSupabaseEnv) return;
+    if (screen === "landing") return;
     let cancelled = false;
-    fetchAdminConfig()
-      .then((config) => {
-        if (!config || cancelled) return;
-        if (config.featureFlags) setFeatureFlags(config.featureFlags);
-        if (config.systemPrompt) setSystemPrompt(config.systemPrompt);
-        if (config.scoringWeights) setScoringWeights(config.scoringWeights);
-        if (config.scoringThresholds) setScoringThresholds(config.scoringThresholds);
-        if (config.pulseCheckMode) setPulseCheckMode(config.pulseCheckMode);
-      })
-      .catch(() => {
-        // ignore remote errors, fallback to local
-      });
+    const idleHandle = requestIdleCallback(() => {
+      fetchAdminConfig()
+        .then((config) => {
+          if (!config || cancelled) return;
+          if (config.featureFlags) setFeatureFlags(config.featureFlags);
+          if (config.systemPrompt) setSystemPrompt(config.systemPrompt);
+          if (config.scoringWeights) setScoringWeights(config.scoringWeights);
+          if (config.scoringThresholds) setScoringThresholds(config.scoringThresholds);
+          if (config.pulseCheckMode) setPulseCheckMode(config.pulseCheckMode);
+        })
+        .catch(() => {
+          // ignore remote errors, fallback to local
+        });
+    }, { timeout: 2000 });
+
     return () => {
       cancelled = true;
+      cancelIdleCallback(idleHandle);
     };
-  }, [setFeatureFlags, setSystemPrompt, setScoringWeights, setScoringThresholds, setPulseCheckMode]);
+  }, [screen, setFeatureFlags, setSystemPrompt, setScoringWeights, setScoringThresholds, setPulseCheckMode]);
 
   useEffect(() => {
     const pageNames: Record<Screen, string> = {
-      landing: "الرئيسية",
-      goal: "اختيار الهدف",
-      map: "خريطة العلاقات",
-      guided: "الرحلة الموجهة",
-      mission: "شاشة المهمة",
-      tools: "أدوات الرحلة",
-      settings: "الإعدادات",
-      enterprise: "بوابة المؤسسات",
-      "guilt-court": "محكمة الشعور بالذنب",
-      diplomacy: "البرقيات الدبلوماسية",
-      "oracle-dashboard": "مجلس الحكماء",
-      armory: "الترسانة (Armory)",
-      survey: "استبيان البحث",
-      "exit-scripts": "مكتبة جمل الخروج",
-      grounding: "تقنيات تهدئة الجسم"
+      landing: "Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©",
+      goal: "Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ù‡Ø¯Ù",
+      map: "Ø®Ø±ÙŠØ·Ø© Ø§Ù„Ø¹Ù„Ø§Ù‚Ø§Øª",
+      guided: "Ø§Ù„Ø±Ø­Ù„Ø© Ø§Ù„Ù…ÙˆØ¬Ù‡Ø©",
+      mission: "Ø´Ø§Ø´Ø© Ø§Ù„Ù…Ù‡Ù…Ø©",
+      tools: "Ø£Ø¯ÙˆØ§Øª Ø§Ù„Ø±Ø­Ù„Ø©",
+      settings: "Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª",
+      enterprise: "Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„Ù…Ø¤Ø³Ø³Ø§Øª",
+      "guilt-court": "Ù…Ø­ÙƒÙ…Ø© Ø§Ù„Ø´Ø¹ÙˆØ± Ø¨Ø§Ù„Ø°Ù†Ø¨",
+      diplomacy: "Ø§Ù„Ø¨Ø±Ù‚ÙŠØ§Øª Ø§Ù„Ø¯Ø¨Ù„ÙˆÙ…Ø§Ø³ÙŠØ©",
+      "oracle-dashboard": "Ù…Ø¬Ù„Ø³ Ø§Ù„Ø­ÙƒÙ…Ø§Ø¡",
+      armory: "Ø§Ù„ØªØ±Ø³Ø§Ù†Ø© (Armory)",
+      survey: "Ø§Ø³ØªØ¨ÙŠØ§Ù† Ø§Ù„Ø¨Ø­Ø«",
+      "exit-scripts": "Ù…ÙƒØªØ¨Ø© Ø¬Ù…Ù„ Ø§Ù„Ø®Ø±ÙˆØ¬",
+      grounding: "ØªÙ‚Ù†ÙŠØ§Øª ØªÙ‡Ø¯Ø¦Ø© Ø§Ù„Ø¬Ø³Ù…"
     };
     trackPageView(pageNames[screen]);
   }, [screen]);
@@ -1313,24 +1341,24 @@ export default function App() {
 
       for (const sessionId of alerts.newVisitors.sessionIds) {
         await sendOwnerNotification(
-          "زائر جديد دخل المنصة",
-          `Session: ${sessionId.slice(0, 14)}â€¦`,
+          "Ø²Ø§Ø¦Ø± Ø¬Ø¯ÙŠØ¯ Ø¯Ø®Ù„ Ø§Ù„Ù…Ù†ØµØ©",
+          `Session: ${sessionId.slice(0, 14)}Ã¢â‚¬Â¦`,
           `owner-visitor-${sessionId}`
         );
       }
 
       for (const sessionId of alerts.logins.sessionIds) {
         await sendOwnerNotification(
-          "زائر أكمل تسجيل الدخول",
-          `Session: ${sessionId.slice(0, 14)}â€¦`,
+          "Ø²Ø§Ø¦Ø± Ø£ÙƒÙ…Ù„ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„",
+          `Session: ${sessionId.slice(0, 14)}Ã¢â‚¬Â¦`,
           `owner-login-${sessionId}`
         );
       }
 
       for (const sessionId of alerts.installs.sessionIds) {
         await sendOwnerNotification(
-          "زائر ثبّت التطبيق",
-          `Session: ${sessionId.slice(0, 14)}â€¦`,
+          "Ø²Ø§Ø¦Ø± Ø«Ø¨Ù‘Øª Ø§Ù„ØªØ·Ø¨ÙŠÙ‚",
+          `Session: ${sessionId.slice(0, 14)}Ã¢â‚¬Â¦`,
           `owner-install-${sessionId}`
         );
       }
@@ -1345,29 +1373,29 @@ export default function App() {
 
       if (!prevMilestones.registeredReached && nextMilestones.registeredReached) {
         await sendOwnerNotification(
-          "تحقق الهدف: 10 تسجيلات",
-          `تم الوصول إلى ${alerts.phaseOne.registeredUsers} مستخدمين مسجلين.`,
+          "ØªØ­Ù‚Ù‚ Ø§Ù„Ù‡Ø¯Ù: 10 ØªØ³Ø¬ÙŠÙ„Ø§Øª",
+          `ØªÙ… Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ ${alerts.phaseOne.registeredUsers} Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† Ù…Ø³Ø¬Ù„ÙŠÙ†.`,
           "owner-goal-registered"
         );
       }
       if (!prevMilestones.installedReached && nextMilestones.installedReached) {
         await sendOwnerNotification(
-          "تحقق الهدف: 10 تثبيتات",
-          `تم الوصول إلى ${alerts.phaseOne.installedUsers} مستخدمين ثبّتوا التطبيق.`,
+          "ØªØ­Ù‚Ù‚ Ø§Ù„Ù‡Ø¯Ù: 10 ØªØ«Ø¨ÙŠØªØ§Øª",
+          `ØªÙ… Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ ${alerts.phaseOne.installedUsers} Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ† Ø«Ø¨Ù‘ØªÙˆØ§ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚.`,
           "owner-goal-installed"
         );
       }
       if (!prevMilestones.addedReached && nextMilestones.addedReached) {
         await sendOwnerNotification(
-          "تحقق الهدف: 10 أشخاص مضافين",
-          `تم الوصول إلى ${alerts.phaseOne.addedPeople} أشخاص مضافين على الخرائط.`,
+          "ØªØ­Ù‚Ù‚ Ø§Ù„Ù‡Ø¯Ù: 10 Ø£Ø´Ø®Ø§Øµ Ù…Ø¶Ø§ÙÙŠÙ†",
+          `ØªÙ… Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ ${alerts.phaseOne.addedPeople} Ø£Ø´Ø®Ø§Øµ Ù…Ø¶Ø§ÙÙŠÙ† Ø¹Ù„Ù‰ Ø§Ù„Ø®Ø±Ø§Ø¦Ø·.`,
           "owner-goal-added"
         );
       }
       if (!prevMilestones.fullyCompleted && nextMilestones.fullyCompleted) {
         await sendOwnerNotification(
-          "اكتمل هدف المرحلة الأولى",
-          "10 تسجيلات + 10 تثبيتات + 10 أشخاص مضافين تحققوا بالكامل.",
+          "Ø§ÙƒØªÙ…Ù„ Ù‡Ø¯Ù Ø§Ù„Ù…Ø±Ø­Ù„Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰",
+          "10 ØªØ³Ø¬ÙŠÙ„Ø§Øª + 10 ØªØ«Ø¨ÙŠØªØ§Øª + 10 Ø£Ø´Ø®Ø§Øµ Ù…Ø¶Ø§ÙÙŠÙ† ØªØ­Ù‚Ù‚ÙˆØ§ Ø¨Ø§Ù„ÙƒØ§Ù…Ù„.",
           "owner-goal-phase-one-complete"
         );
       }
@@ -1438,8 +1466,8 @@ export default function App() {
 
     let cancelled = false;
     void (async () => {
-      // تحليل الوعي الأولي عند الدخول
-      const insight = await consciousnessService.analyzeConsciousness(`بدأ المستخدم ${authFirstName || ""} رحلة جديدة`);
+      // ØªØ­Ù„ÙŠÙ„ Ø§Ù„ÙˆØ¹ÙŠ Ø§Ù„Ø£ÙˆÙ„ÙŠ Ø¹Ù†Ø¯ Ø§Ù„Ø¯Ø®ÙˆÙ„
+      const insight = await consciousnessService.analyzeConsciousness(`Ø¨Ø¯Ø£ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ${authFirstName || ""} Ø±Ø­Ù„Ø© Ø¬Ø¯ÙŠØ¯Ø©`);
       if (!cancelled) setConsciousnessInsight(insight);
 
       if (!geminiClient.isAvailable()) return;
@@ -1480,14 +1508,14 @@ export default function App() {
     const { xpLost, streakMaintained } = useGamificationState.getState().recordActivity();
     if (xpLost > 0) {
       useToastState.getState().showToast(
-        `فقدت ${xpLost} XP بسبب انقطاعك عن تسجيل الدخول. العزم يجدد كل يوم!`,
+        `ÙÙ‚Ø¯Øª ${xpLost} XP Ø¨Ø³Ø¨Ø¨ Ø§Ù†Ù‚Ø·Ø§Ø¹Ùƒ Ø¹Ù† ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„. Ø§Ù„Ø¹Ø²Ù… ÙŠØ¬Ø¯Ø¯ ÙƒÙ„ ÙŠÙˆÙ…!`,
         "error"
       );
     } else if (streakMaintained) {
       const currentStreak = useGamificationState.getState().streak;
       if (currentStreak > 1) {
         useToastState.getState().showToast(
-          `أبقيت على شعلة الوعي! سلسلة الحضور: ${currentStreak} يوم 🔥`,
+          `Ø£Ø¨Ù‚ÙŠØª Ø¹Ù„Ù‰ Ø´Ø¹Ù„Ø© Ø§Ù„ÙˆØ¹ÙŠ! Ø³Ù„Ø³Ù„Ø© Ø§Ù„Ø­Ø¶ÙˆØ±: ${currentStreak} ÙŠÙˆÙ… ðŸ”¥`,
           "success"
         );
       }
@@ -1578,16 +1606,29 @@ export default function App() {
     void navigateToScreen("map");
   };
 
+  useEffect(() => {
+    const windowRef = getWindowOrNull();
+    if (!windowRef) return;
+    const bootAction = windowRef.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
+    if (!bootAction) return;
+    windowRef.sessionStorage.removeItem(APP_BOOT_ACTION_KEY);
+    if (bootAction === "start_recovery") {
+      startRecovery();
+    }
+  }, []);
+
 
   useEffect(() => {
-    if (screen === "landing" && canShowAIChatbot) {
-      void preloadChatbot();
-    }
-    if (screen === "goal") {
+    if (screen !== "goal") return;
+    const idleHandle = requestIdleCallback(() => {
       void preloadCoreMap();
       void preloadGym();
-    }
-  }, [screen, canShowAIChatbot]);
+    }, { timeout: 1200 });
+
+    return () => {
+      cancelIdleCallback(idleHandle);
+    };
+  }, [screen]);
 
   useEffect(() => {
     if (screen !== "map") setSelectedNodeId(null);
@@ -2184,8 +2225,8 @@ export default function App() {
     }
     closePulseCheck(true, "programmatic");
 
-    // توصيل البوصلة بمرآة الوعي (غير معطّل للتجربة)
-    const numericPart = `طاقة ${payload.energy}/10، مزاج ${payload.mood}، تركيز ${payload.focus}`;
+    // ØªÙˆØµÙŠÙ„ Ø§Ù„Ø¨ÙˆØµÙ„Ø© Ø¨Ù…Ø±Ø¢Ø© Ø§Ù„ÙˆØ¹ÙŠ (ØºÙŠØ± Ù…Ø¹Ø·Ù‘Ù„ Ù„Ù„ØªØ¬Ø±Ø¨Ø©)
+    const numericPart = `Ø·Ø§Ù‚Ø© ${payload.energy}/10ØŒ Ù…Ø²Ø§Ø¬ ${payload.mood}ØŒ ØªØ±ÙƒÙŠØ² ${payload.focus}`;
     const feelingText = payload.notes ? `${payload.notes.trim()}\n\n(${numericPart})` : numericPart;
     if (hasConcretePulseSelection(payload)) {
       const userId = authUser?.id ?? null;
@@ -2289,7 +2330,7 @@ export default function App() {
   const pulseMode = useMemo(() => {
     if (!lastPulse) return "normal";
     const ageMs = Date.now() - (lastPulse.timestamp ?? 0);
-    if (ageMs > 24 * 60 * 60 * 1000) return "normal"; // آخر نبض خلال 24 ساعة فقط
+    if (ageMs > 24 * 60 * 60 * 1000) return "normal"; // Ø¢Ø®Ø± Ù†Ø¨Ø¶ Ø®Ù„Ø§Ù„ 24 Ø³Ø§Ø¹Ø© ÙÙ‚Ø·
     if (lastPulse.mood === "angry") return "angry";
     if (lastPulse.energy <= 3) return "low";
     if (lastPulse.energy >= 8) return "high";
@@ -2325,7 +2366,7 @@ export default function App() {
   }, [nodes]);
 
   const challengeLabel = challengeTarget
-    ? `مع ${challengeTarget.label} — ${challengeTarget.missionLabel} (خطوة ${challengeTarget.stepIndex + 1}/${challengeTarget.total})`
+    ? `Ù…Ø¹ ${challengeTarget.label} â€” ${challengeTarget.missionLabel} (Ø®Ø·ÙˆØ© ${challengeTarget.stepIndex + 1}/${challengeTarget.total})`
     : null;
 
   const canSkipCocoonBreathing = useMemo(
@@ -2432,8 +2473,8 @@ export default function App() {
         const reminderTarget = pickMissionReminderTarget(todayKey);
         const send = reminderTarget
           ? sendNotification({
-            title: "مهمتك مستنياك 🎯",
-            body: `مع ${reminderTarget.node.label} — خطوة ${reminderTarget.next.stepIndex + 1}/${reminderTarget.next.total}: ${reminderTarget.next.step}`,
+            title: "Ù…Ù‡Ù…ØªÙƒ Ù…Ø³ØªÙ†ÙŠØ§Ùƒ ðŸŽ¯",
+            body: `Ù…Ø¹ ${reminderTarget.node.label} â€” Ø®Ø·ÙˆØ© ${reminderTarget.next.stepIndex + 1}/${reminderTarget.next.total}: ${reminderTarget.next.step}`,
             tag: "mission-reminder"
           })
           : sendPresetNotification(NOTIFICATION_TYPES.MISSION_REMINDER);
@@ -2500,9 +2541,9 @@ export default function App() {
               background: "rgba(255, 255, 255, 0.95)",
               color: "var(--space-deep)"
             }}
-            title={previewedFeature ? `الرجوع من معاينة: ${previewedFeature}` : "الرجوع إلى Feature Flags"}
+            title={previewedFeature ? `Ø§Ù„Ø±Ø¬ÙˆØ¹ Ù…Ù† Ù…Ø¹Ø§ÙŠÙ†Ø©: ${previewedFeature}` : "Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags"}
           >
-            الرجوع إلى Feature Flags
+            Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags
           </button>
         )}
         <div className="nebula-bg absolute inset-0 -z-10" aria-hidden="true" />
@@ -2542,8 +2583,8 @@ export default function App() {
       <div className={`min-h-screen flex flex-col transition-colors relative isolate ${screen !== "landing" ? "overflow-hidden" : ""}`} dir="rtl"
         style={{ background: "var(--space-void)" }}
       >
-        {/* Phase 19: Startup Sequence — shows once per session */}
-        {showStartup && (
+        {/* Phase 19: Startup Sequence â€” shows once per session */}
+        {showStartup && screen !== "landing" && (
           <StartupSequence
             onComplete={() => {
               sessionStorage.setItem("dawayir-startup-seen", "1");
@@ -2561,9 +2602,9 @@ export default function App() {
               background: "rgba(255, 255, 255, 0.95)",
               color: "var(--space-deep)"
             }}
-            title={previewedFeature ? `الرجوع من معاينة: ${previewedFeature}` : "الرجوع إلى Feature Flags"}
+            title={previewedFeature ? `Ø§Ù„Ø±Ø¬ÙˆØ¹ Ù…Ù† Ù…Ø¹Ø§ÙŠÙ†Ø©: ${previewedFeature}` : "Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags"}
           >
-            الرجوع إلى Feature Flags
+            Ø§Ù„Ø±Ø¬ÙˆØ¹ Ø¥Ù„Ù‰ Feature Flags
           </button>
         )}
         {/* Nebula Background - Deep Cosmic Blue Canvas */}
@@ -2583,7 +2624,7 @@ export default function App() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="text-right">
                     <p className="text-xs font-semibold mb-1" style={{ color: "var(--soft-gold, #fbbf24)" }}>
-                      رسالة من إدارة الرحلة
+                      Ø±Ø³Ø§Ù„Ø© Ù…Ù† Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø±Ø­Ù„Ø©
                     </p>
                     <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{activeBroadcast.title}</p>
                     <p className="text-xs mt-1 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
@@ -2595,9 +2636,9 @@ export default function App() {
                     onClick={() => setActiveBroadcast(null)}
                     className="rounded-full px-2.5 py-1 text-xs font-semibold border border-white/15 hover:bg-white/5 transition-colors"
                     style={{ color: "var(--text-primary)" }}
-                    aria-label="إخفاء الرسالة"
+                    aria-label="Ø¥Ø®ÙØ§Ø¡ Ø§Ù„Ø±Ø³Ø§Ù„Ø©"
                   >
-                    إخفاء
+                    Ø¥Ø®ÙØ§Ø¡
                   </button>
                 </div>
               </div>
@@ -2621,10 +2662,10 @@ export default function App() {
                 }}
               >
                 <p className="text-base font-medium" style={{ color: "var(--text-primary)" }}>
-                  تم الشحن.. رجعت للخريطة
+                  ØªÙ… Ø§Ù„Ø´Ø­Ù†.. Ø±Ø¬Ø¹Øª Ù„Ù„Ø®Ø±ÙŠØ·Ø©
                 </p>
                 <p className="text-sm mt-1 opacity-90" style={{ color: "var(--text-secondary)" }}>
-                  كمّل خطوة بسيطة وبس
+                  ÙƒÙ…Ù‘Ù„ Ø®Ø·ÙˆØ© Ø¨Ø³ÙŠØ·Ø© ÙˆØ¨Ø³
                 </p>
               </div>
             </motion.div>
@@ -2658,10 +2699,10 @@ export default function App() {
                 }}
               >
                 <p className="text-base font-medium" style={{ color: "var(--text-primary)" }}>
-                  حمد لله على السلامة 🌿
+                  Ø­Ù…Ø¯ Ù„Ù„Ù‡ Ø¹Ù„Ù‰ Ø§Ù„Ø³Ù„Ø§Ù…Ø© ðŸŒ¿
                 </p>
                 <p className="text-sm mt-1 opacity-90" style={{ color: "var(--text-secondary)" }}>
-                  يومك بقى أخف دلوقتي
+                  ÙŠÙˆÙ…Ùƒ Ø¨Ù‚Ù‰ Ø£Ø®Ù Ø¯Ù„ÙˆÙ‚ØªÙŠ
                 </p>
               </div>
             </motion.div>
@@ -2716,10 +2757,10 @@ export default function App() {
                     color: "var(--warm-amber)"
                   }}
                 >
-                  âœ¨
+                  Ã¢Å“Â¨
                 </div>
                 <div className="text-right flex-1 min-w-0">
-                  <h3 className="text-sm font-bold mb-3" style={{ color: "var(--warm-amber)" }}>ومضة من الذاكرة</h3>
+                  <h3 className="text-sm font-bold mb-3" style={{ color: "var(--warm-amber)" }}>ÙˆÙ…Ø¶Ø© Ù…Ù† Ø§Ù„Ø°Ø§ÙƒØ±Ø©</h3>
                   <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                     {lastPulseInsights.map((insight) => (
                       <div
@@ -2731,10 +2772,10 @@ export default function App() {
                         }}
                       >
                         <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                          شعورك دلوقتي بيشبه موقف{" "}
+                          Ø´Ø¹ÙˆØ±Ùƒ Ø¯Ù„ÙˆÙ‚ØªÙŠ Ø¨ÙŠØ´Ø¨Ù‡ Ù…ÙˆÙ‚Ù{" "}
                           {insight.created_at && (
                             <span className="font-bold" style={{ color: "var(--text-primary)" }}>
-                              حصل يوم{" "}
+                              Ø­ØµÙ„ ÙŠÙˆÙ…{" "}
                               {new Date(insight.created_at).toLocaleDateString("ar-EG")}
                             </span>
                           )}
@@ -2755,12 +2796,12 @@ export default function App() {
                 className="glass-button w-full text-xs font-bold"
                 style={{ color: "var(--warm-amber)" }}
               >
-                تم · إخفاء الومضة
+                ØªÙ… Â· Ø¥Ø®ÙØ§Ø¡ Ø§Ù„ÙˆÙ…Ø¶Ø©
               </button>
             </div>
           </div>
         )}
-        {/* Legacy pattern removed â€” nebula-bg handles the cosmic background */}
+        {/* Legacy pattern removed Ã¢â‚¬â€ nebula-bg handles the cosmic background */}
         {chromeVisibility.showFloatingProfile && (
           <div className="fixed z-[80] top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4" dir="ltr">
             <button
@@ -2781,7 +2822,7 @@ export default function App() {
               }}
               className="group w-11 h-11 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40 focus-visible:ring-offset-0 cursor-pointer relative"
               style={{ color: "var(--text-secondary)" }}
-              aria-label={authUser ? "حسابي" : "تسجيل الدخول"}
+              aria-label={authUser ? "Ø­Ø³Ø§Ø¨ÙŠ" : "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„"}
             >
               <span className="relative inline-flex items-center justify-center">
                 <User className="w-5 h-5" />
@@ -2796,7 +2837,7 @@ export default function App() {
               <span
                 className="pointer-events-none absolute top-full mt-1 right-0 max-w-48 rounded-2xl px-3 py-1 text-[11px] font-medium leading-snug opacity-0 translate-y-1 bg-slate-900/90 text-slate-50 border border-white/10 backdrop-blur-md group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 text-center"
               >
-                {authUser ? "افتح حسابك" : "سجّل دخولك واحفظ رحلتك"}            </span>
+                {authUser ? "Ø§ÙØªØ­ Ø­Ø³Ø§Ø¨Ùƒ" : "Ø³Ø¬Ù‘Ù„ Ø¯Ø®ÙˆÙ„Ùƒ ÙˆØ§Ø­ÙØ¸ Ø±Ø­Ù„ØªÙƒ"}            </span>
             </button>
           </div>
         )}
@@ -2808,8 +2849,8 @@ export default function App() {
               openInNewTab(whatsAppLink);
             }}
             className="fixed z-40 right-4 md:right-6 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] md:bottom-6 inline-flex items-center justify-center rounded-full bg-emerald-600 text-white w-12 h-12 shadow-lg hover:bg-emerald-500 active:scale-95 transition-all"
-            title="تواصل واتساب"
-            aria-label="تواصل واتساب"
+            title="ØªÙˆØ§ØµÙ„ ÙˆØ§ØªØ³Ø§Ø¨"
+            aria-label="ØªÙˆØ§ØµÙ„ ÙˆØ§ØªØ³Ø§Ø¨"
           >
             <MessageCircle className="w-5 h-5 shrink-0" />
           </button>
@@ -2818,6 +2859,7 @@ export default function App() {
           className={`flex-1 min-w-0 flex flex-col pb-14 md:pb-0 ${showPulseCheck ? "opacity-0 pointer-events-none select-none" : ""} ${isLandingScreen ? "overflow-visible" : "overflow-hidden"}`}
           aria-hidden={showPulseCheck}
         >
+          <InstallHintBanner />
           <SyncStatusUI />
           {welcome?.source === "offline_intervention" && (
             <div className="fixed z-[75] top-[calc(env(safe-area-inset-top)+3.5rem)] left-1/2 -translate-x-1/2 w-[min(680px,calc(100%-1.25rem))] pointer-events-none">
@@ -2837,19 +2879,19 @@ export default function App() {
               onCardClick={(nodeId) => setSelectedNodeId(nodeId)}
             />
           )}
-          <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...جاري التحميل</div>}>
+          <Suspense fallback={<div className="text-sm" style={{ color: "var(--text-muted)" }}>...Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„</div>}>
             <ErrorBoundary
               fallback={
                 <div className="min-h-[260px] w-full flex items-center justify-center p-6">
                   <div className="text-center space-y-3">
-                    <h3 className="text-lg font-bold text-orange-400">حدث خطأ في مسار الرحلة</h3>
-                    <p className="text-sm text-slate-400">جلسة دواير معزولة. تقدر ترجع للخريطة فوراً بدون إعادة تحميل.</p>
+                    <h3 className="text-lg font-bold text-orange-400">Ø­Ø¯Ø« Ø®Ø·Ø£ ÙÙŠ Ù…Ø³Ø§Ø± Ø§Ù„Ø±Ø­Ù„Ø©</h3>
+                    <p className="text-sm text-slate-400">Ø¬Ù„Ø³Ø© Ø¯ÙˆØ§ÙŠØ± Ù…Ø¹Ø²ÙˆÙ„Ø©. ØªÙ‚Ø¯Ø± ØªØ±Ø¬Ø¹ Ù„Ù„Ø®Ø±ÙŠØ·Ø© ÙÙˆØ±Ø§Ù‹ Ø¨Ø¯ÙˆÙ† Ø¥Ø¹Ø§Ø¯Ø© ØªØ­Ù…ÙŠÙ„.</p>
                     <button
                       type="button"
                       onClick={() => { void navigateToScreen("map"); }}
                       className="px-4 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-500 transition-colors"
                     >
-                      العودة لدواير
+                      Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„Ø¯ÙˆØ§ÙŠØ±
                     </button>
                   </div>
                 </div>
@@ -2867,10 +2909,10 @@ export default function App() {
                           exit={{ opacity: 0, scale: 0.8, x: 20 }}
                           className="glass-heavy flex flex-col gap-2 p-3 border-amber-500/30 min-w-[140px]"
                         >
-                          <button onClick={() => setShowConsciousnessArchive(true)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-teal-400 border border-teal-500/20 rounded-xl hover:bg-teal-500/10 text-right">Archive 📁</button>
-                          <button onClick={() => setShowAmbientReality(true)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-rose-400 border border-rose-500/20 rounded-xl hover:bg-rose-500/10 text-right">Ambient 🌌</button>
-                          <button onClick={() => setShowTimeCapsuleVault(true)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-amber-400 border border-amber-500/20 rounded-xl hover:bg-amber-500/10 text-right">Vault ⏳</button>
-                          <button onClick={() => void navigateToScreen("oracle-dashboard")} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-blue-400 border border-blue-500/20 rounded-xl hover:bg-blue-500/10 text-right">Oracle 🔮</button>
+                          <button onClick={() => setShowConsciousnessArchive(true)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-teal-400 border border-teal-500/20 rounded-xl hover:bg-teal-500/10 text-right">Archive ðŸ“</button>
+                          <button onClick={() => setShowAmbientReality(true)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-rose-400 border border-rose-500/20 rounded-xl hover:bg-rose-500/10 text-right">Ambient ðŸŒŒ</button>
+                          <button onClick={() => setShowTimeCapsuleVault(true)} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-amber-400 border border-amber-500/20 rounded-xl hover:bg-amber-500/10 text-right">Vault â³</button>
+                          <button onClick={() => void navigateToScreen("oracle-dashboard")} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-blue-400 border border-blue-500/20 rounded-xl hover:bg-blue-500/10 text-right">Oracle ðŸ”®</button>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -2885,183 +2927,99 @@ export default function App() {
                   </div>
                 )}
 
-                {screen === "landing" && (
-                  <Landing
-                    onStartJourney={startRecovery}
-                    onOpenSurvey={() => { void navigateToScreen("survey"); }}
+                {(screen === "landing" || screen === "goal" || screen === "survey" || screen === "map") && (
+                  <AppStartScreens
+                    screen={screen}
                     ownerInstallRequestNonce={ownerInstallRequestNonce}
                     onOwnerInstallRequestHandled={() => setOwnerInstallRequestNonce(0)}
+                    welcome={welcome}
+                    onClearWelcome={() => setWelcome(null)}
+                    category={category}
+                    goalId={goalId}
+                    selectedNodeId={selectedNodeId}
+                    pulseMode={pulseMode}
+                    pulseInsight={pulseInsight}
+                    isLowPulseCocoonSuppressed={isLowPulseCocoonSuppressed}
+                    canUseBasicDiagnosis={availableFeatures.basic_diagnosis}
+                    challengeTarget={challengeTarget ? { nodeId: challengeTarget.nodeId } : null}
+                    challengeLabel={challengeLabel}
+                    nextStepDecision={nextStepDecision}
+                    hideBottomDock={showBreathing || showCocoon || isEmergencyOpen}
+                    onStartJourney={startRecovery}
+                    onOpenSurvey={() => { void navigateToScreen("survey"); }}
+                    onGoalBack={() => { void navigateToScreen("landing"); }}
+                    onGoalSelected={(nextCategory, nextGoalId) => {
+                      setCategory(nextCategory);
+                      setGoalId(nextGoalId);
+                      skipNextPulseCheck();
+                      void navigateToScreen("map");
+                    }}
+                    onSurveyComplete={() => { void navigateToScreen("landing"); }}
+                    onSelectNode={setSelectedNodeId}
+                    onOpenBreathing={() => setShowBreathing(true)}
+                    onOpenMission={openMissionScreen}
+                    onOpenMissionFromAddPerson={openMissionFromAddPerson}
+                    onOpenCocoon={() => openCocoonModal("manual")}
+                    onOpenNoise={() => setShowNoiseSilencingPulse(true)}
+                    onFeatureLocked={setLockedFeature}
+                    onTakeNextStep={handleTakeNextStep}
+                    onRefreshNextStep={handleRefreshNextStep}
+                    onOpenPulse={() => {
+                      setPulseCheckContext("regular");
+                      setShowPulseCheck(true);
+                    }}
+                    onOpenLibrary={() => setShowLibrary(true)}
+                    onOpenProfile={() => { void navigateToScreen("settings"); }}
                   />
                 )}
 
-                {screen === "goal" && (
-                  <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col px-3 sm:px-4">
-                    {welcome && welcome.source !== "offline_intervention" && (
-                      <OnboardingWelcomeBubble
-                        message={welcome.message}
-                        source={welcome.source}
-                        onClose={() => setWelcome(null)}
-                      />
-                    )}
-                    <GoalPicker
-                      onBack={() => { void navigateToScreen("landing"); }}
-                      onContinue={(nextCategory, nextGoalId) => {
-                        recordFlowEvent("goal_selected", {
-                          meta: { goalId: nextGoalId, category: nextCategory }
-                        });
-                        setWelcome(null);
-                        setCategory(nextCategory);
-                        setGoalId(nextGoalId);
-                        useJourneyState.getState().setLastGoal(nextGoalId, nextCategory);
-                        skipNextPulseCheck();
-                        void navigateToScreen("map");
-                      }}
-                    />
-                  </div>
-                )}
-
-                {screen === "survey" && (
-                  <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-auto flex flex-col items-center justify-center">
-                    <Suspense fallback={null}>
-                      <ResearchSurvey onComplete={() => { void navigateToScreen("landing"); }} />
-                    </Suspense>
-                  </div>
-                )}
-
-                {screen === "map" && (
-                  <ErrorBoundary fallback={<MapErrorFallback />}>
-                    <CoreMapScreen
-                      category={category}
-                      goalId={goalId}
-                      selectedNodeId={selectedNodeId}
-                      onSelectNode={setSelectedNodeId}
-                      onOpenBreathing={() => setShowBreathing(true)}
-                      onOpenMission={openMissionScreen}
-                      onOpenMissionFromAddPerson={openMissionFromAddPerson}
-                      pulseMode={pulseMode}
-                      pulseInsight={pulseInsight}
-                      onOpenCocoon={openCocoonModal}
-                      suppressLowPulseCocoon={isLowPulseCocoonSuppressed}
-                      onOpenNoise={() => setShowNoiseSilencingPulse(true)}
-                      canUseBasicDiagnosis={availableFeatures.basic_diagnosis}
-                      onFeatureLocked={setLockedFeature}
-                      onOpenChallenge={
-                        challengeTarget ? () => openMissionScreen(challengeTarget.nodeId) : undefined
-                      }
-                      challengeLabel={challengeLabel}
-                      nextStepDecision={nextStepDecision}
-                      onTakeNextStep={handleTakeNextStep}
-                      onRefreshNextStep={handleRefreshNextStep}
-                      onOpenPulse={() => {
-                        setPulseCheckContext("regular");
-                        setShowPulseCheck(true);
-                      }}
-                      onOpenLibrary={() => setShowLibrary(true)}
-                      onOpenProfile={() => { void navigateToScreen("settings"); }}
-                      hideBottomDock={showBreathing || showCocoon || isEmergencyOpen}
-                    />
-                  </ErrorBoundary>
-                )}
-
-                {screen === "tools" && (
-                  <JourneyToolsScreen
-                    onBack={() => { void navigateToScreen(toolsBackScreen); }}
+                {(screen === "tools" ||
+                  screen === "settings" ||
+                  screen === "guided" ||
+                  screen === "mission" ||
+                  screen === "exit-scripts" ||
+                  screen === "grounding") && (
+                  <AppJourneyScreens
+                    screen={screen}
+                    toolsBackScreen={toolsBackScreen}
+                    missionNodeId={missionNodeId}
+                    canUseMap={canUseMap}
+                    availableFeatures={availableFeatures}
+                    nextStepDecision={nextStepDecision}
+                    onNavigate={(nextScreen) => { void navigateToScreen(nextScreen as Screen); }}
                     onOpenDawayir={openDawayirTool}
                     onOpenDawayirSetup={openDawayirSetup}
                     onFeatureLocked={setLockedFeature}
-                    availableFeatures={availableFeatures}
                     onOpenGoal={(goalId, category) => {
                       setGoalId(goalId);
                       setCategory(category as AdviceCategory);
                       void navigateToScreen("map");
                     }}
-                    nextStepDecision={nextStepDecision}
                     onTakeNextStep={handleTakeNextStep}
                     onRefreshNextStep={handleRefreshNextStep}
-                    onOpenExitScripts={() => { void navigateToScreen("exit-scripts"); }}
-                    onOpenGrounding={() => { void navigateToScreen("grounding"); }}
                   />
                 )}
 
-                {screen === "settings" && (
-                  <SettingsScreen
-                    onClose={() => {
-                      if (canUseMap) {
-                        void navigateToScreen("map");
-                        return;
-                      }
-                      void navigateToScreen("landing");
-                    }}
-                  />
-                )}
-
-                {screen === "guided" && (
-                  <GuidedJourneyFlow
-                    onBackToLanding={() => { void navigateToScreen("landing"); }}
-                    onFinishJourney={() => { void navigateToScreen("map"); }}
-                  />
-                )}
-
-                {screen === "mission" && missionNodeId && (
-                  <MissionScreen
-                    nodeId={missionNodeId}
-                    onBack={() => { void navigateToScreen("map"); }}
-                  />
-                )}
-
-                {screen === "enterprise" && (
-                  <EnterprisePortal onBack={() => { void navigateToScreen("map"); }} />
-                )}
-
-                {screen === "guilt-court" && (
-                  <GuiltCourt onBack={() => { void navigateToScreen("map"); }} />
-                )}
-
-                {screen === "diplomacy" && (
-                  <DiplomaticCables onBack={() => { void navigateToScreen("map"); }} />
-                )}
-
-                {screen === "oracle-dashboard" && authUser?.id && (
-                  <OracleCouncilDashboard oracleId={authUser.id} />
-                )}
-
-                {screen === "armory" && (
-                  <TheArmoryScreen
-                    onBack={() => { void navigateToScreen("landing"); }}
+                {(screen === "enterprise" ||
+                  screen === "guilt-court" ||
+                  screen === "diplomacy" ||
+                  screen === "oracle-dashboard" ||
+                  screen === "armory") && (
+                  <AppMetaScreens
+                    screen={screen}
+                    authUserId={authUser?.id}
+                    onNavigate={(nextScreen) => { void navigateToScreen(nextScreen as Screen); }}
                     onOpenMuteProtocol={() => setShowNoiseSilencingPulse(true)}
                     onOpenCocoon={() => openCocoonModal("manual")}
-                    onOpenMirror={() => {
-                      setActiveMirrorInsight({
-                        id: "manual-confront",
-                        type: "emotional_denial",
-                        title: "المواجهة الاختيارية 🪞",
-                        message: "أنت اخترت تفتح المراية دي دلوقتي. النظام بيقول لإنك مسؤول عن وعيك، دي فرصة للصدق.",
-                        question: "إيه أكتر حاجة بتهرب منها دلوقتي؟",
-                        severity: "firm"
-                      });
+                    onOpenMirror={(insight) => {
+                      setActiveMirrorInsight(insight);
                       setShowMirrorOverlay(true);
                     }}
-                    onOpenGuiltCourt={() => { void navigateToScreen("guilt-court"); }}
                     onOpenConsciousnessArchive={() => setShowConsciousnessArchive(true)}
                     onOpenTimeCapsule={() => setShowTimeCapsuleVault(true)}
                   />
                 )}
 
-                {screen === "exit-scripts" && (
-                  <Suspense fallback={<AwarenessSkeleton />}>
-                    <ExitScriptsLibrary
-                      onBack={() => { void navigateToScreen("tools"); }}
-                    />
-                  </Suspense>
-                )}
-
-                {screen === "grounding" && (
-                  <Suspense fallback={<AwarenessSkeleton />}>
-                    <GroundingToolkit
-                      onBack={() => { void navigateToScreen("tools"); }}
-                    />
-                  </Suspense>
-                )}
               </div>
             </ErrorBoundary>
           </Suspense>
@@ -3089,7 +3047,7 @@ export default function App() {
                   type="button"
                   onClick={() => setShowBaseline(false)}
                   className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors z-20"
-                  aria-label="إغلاق"
+                  aria-label="Ø¥ØºÙ„Ø§Ù‚"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -3116,7 +3074,7 @@ export default function App() {
             />
           )}
 
-          {/* زر إضافي لفتح أرشيف الوعي من شاشة الهبوط - وضع التطوير فقط */}
+          {/* Ø²Ø± Ø¥Ø¶Ø§ÙÙŠ Ù„ÙØªØ­ Ø£Ø±Ø´ÙŠÙ Ø§Ù„ÙˆØ¹ÙŠ Ù…Ù† Ø´Ø§Ø´Ø© Ø§Ù„Ù‡Ø¨ÙˆØ· - ÙˆØ¶Ø¹ Ø§Ù„ØªØ·ÙˆÙŠØ± ÙÙ‚Ø· */}
           <ConsciousnessArchiveModal
             isOpen={showConsciousnessArchive}
             onClose={() => setShowConsciousnessArchive(false)}
@@ -3374,25 +3332,6 @@ export default function App() {
           </Suspense>
         )}
 
-        {screen === "exit-scripts" && (
-          <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-auto">
-            <Suspense fallback={null}>
-              <ExitScriptsLibrary
-                onBack={() => { void navigateToScreen("tools"); }}
-                onOpenGrounding={() => { void navigateToScreen("grounding"); }}
-              />
-            </Suspense>
-          </div>
-        )}
-
-        {screen === "grounding" && (
-          <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-auto">
-            <Suspense fallback={null}>
-              <GroundingToolkit onBack={() => { void navigateToScreen("tools"); }} />
-            </Suspense>
-          </div>
-        )}
-
         {/* Phase 30: Holographic Legacy Components */}
         {showAmbientReality && (
           <Suspense fallback={<AwarenessSkeleton />}>
@@ -3420,7 +3359,7 @@ export default function App() {
                 <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "var(--soft-teal)" }} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-bold mb-3" style={{ color: "var(--soft-teal)" }}>بصيرة الوعي</h3>
+                <h3 className="text-sm font-bold mb-3" style={{ color: "var(--soft-teal)" }}>Ø¨ØµÙŠØ±Ø© Ø§Ù„ÙˆØ¹ÙŠ</h3>
                 <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--text-secondary)" }}>
                   {consciousnessInsight.suggestedAction}
                 </p>
@@ -3433,7 +3372,7 @@ export default function App() {
                   <span className="px-3 py-1.5 text-xs font-bold rounded-full"
                     style={{ background: "rgba(139, 92, 246, 0.12)", color: "rgba(167, 139, 250, 0.9)" }}
                   >
-                    نمط: {consciousnessInsight.underlyingPattern}
+                    Ù†Ù…Ø·: {consciousnessInsight.underlyingPattern}
                   </span>
                 </div>
               </div>
@@ -3462,7 +3401,7 @@ export default function App() {
           visible={showNudgeToast && chromeVisibility.showNudgeToast}
           nudgeData={activeNudge ?? undefined}
           onClose={() => {
-            if (activeNudge?.title === 'محتاج تاخد نَفَس 🍃') {
+            if (activeNudge?.title === 'Ù…Ø­ØªØ§Ø¬ ØªØ§Ø®Ø¯ Ù†ÙŽÙÙŽØ³ ðŸƒ') {
               openCocoonModal("manual");
             }
             handleNudgeDismiss();
@@ -3498,23 +3437,23 @@ export default function App() {
               paddingBottom: "env(safe-area-inset-bottom)",
               height: "calc(60px + env(safe-area-inset-bottom))"
             }}
-            aria-label="التنقل الرئيسي"
+            aria-label="Ø§Ù„ØªÙ†Ù‚Ù„ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ"
           >
             <button type="button" onClick={() => { void navigateToScreen("map"); }}
               className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
               style={{ color: screen === "map" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
-              aria-label="الخريطة">
+              aria-label="Ø§Ù„Ø®Ø±ÙŠØ·Ø©">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <circle cx="12" cy="12" r="5.5" />
                 <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none" />
               </svg>
-              <span className="text-[10px] font-semibold">الخريطة</span>
+              <span className="text-[10px] font-semibold">Ø§Ù„Ø®Ø±ÙŠØ·Ø©</span>
             </button>
             <button type="button" onClick={() => { void navigateToScreen("tools"); }}
               className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
               style={{ color: screen === "tools" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
-              aria-label="المسار">
+              aria-label="Ø§Ù„Ù…Ø³Ø§Ø±">
               <span className="relative inline-flex items-center justify-center">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
                   style={{ filter: screen === "tools" ? "drop-shadow(0 0 8px rgba(45,212,191,0.7))" : "none", transition: "filter 0.3s" }}>
@@ -3527,21 +3466,21 @@ export default function App() {
                     aria-hidden="true" />
                 )}
               </span>
-              <span className="text-[10px] font-semibold">المسار</span>
+              <span className="text-[10px] font-semibold">Ø§Ù„Ù…Ø³Ø§Ø±</span>
             </button>
             <button type="button" onClick={() => { setPulseCheckContext("regular"); setShowPulseCheck(true); }}
               className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
               style={{ color: "rgba(148,163,184,0.55)" }}
-              aria-label="النبض">
+              aria-label="Ø§Ù„Ù†Ø¨Ø¶">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
               </svg>
-              <span className="text-[10px] font-semibold">النبض</span>
+              <span className="text-[10px] font-semibold">Ø§Ù„Ù†Ø¨Ø¶</span>
             </button>
             <button type="button" onClick={() => setShowLibrary(true)}
               className="relative flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
               style={{ color: showLibrary ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
-              aria-label="المكتبة">
+              aria-label="Ø§Ù„Ù…ÙƒØªØ¨Ø©">
               <span className="relative inline-flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
@@ -3554,27 +3493,28 @@ export default function App() {
                   </span>
                 )}
               </span>
-              <span className="text-[10px] font-semibold">المكتبة</span>
+              <span className="text-[10px] font-semibold">Ø§Ù„Ù…ÙƒØªØ¨Ø©</span>
             </button>
             <button type="button" onClick={() => { void navigateToScreen("settings"); }}
               className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all duration-200"
               style={{ color: screen === "settings" ? "var(--soft-teal)" : "rgba(148,163,184,0.55)" }}
-              aria-label="أنا">
+              aria-label="Ø£Ù†Ø§">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21a8 8 0 0 0-16 0" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-              <span className="text-[10px] font-semibold">أنا</span>
+              <span className="text-[10px] font-semibold">Ø£Ù†Ø§</span>
             </button>
           </nav>
         )}
         {/* Phase 27: The Ascension Protocol - The Ritual */}
         <AscensionRitual />
       </div>
-      {/* Phase 20: Automagic Loop Toast — Global Reactive Prescription */}
+      {/* Phase 20: Automagic Loop Toast â€” Global Reactive Prescription */}
       <GlobalToast />
       <GraphEventToast />
     </PWAInstallProvider>
 
   );
 }
+

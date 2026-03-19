@@ -20,6 +20,32 @@ function isLikelyInAppBrowser(ua: string): boolean {
   return /(FBAN|FBAV|Instagram|Line|TikTok|Snapchat|wv)/i.test(ua);
 }
 
+function showInstallInstructions(options: {
+  isAndroid: boolean;
+  isIOS: boolean;
+  isInAppBrowser: boolean;
+}) {
+  const windowRef = getWindowOrNull();
+  if (!windowRef) return;
+
+  if (options.isInAppBrowser) {
+    windowRef.alert('متصفح التطبيق الحالي لا يدعم التثبيت مباشرة. افتح الصفحة في Chrome أو Safari ثم اختر "إضافة إلى الشاشة الرئيسية".');
+    return;
+  }
+
+  if (options.isAndroid) {
+    windowRef.alert('على Android: افتح قائمة المتصفح ثم اختر "إضافة إلى الشاشة الرئيسية" (Add to Home screen).');
+    return;
+  }
+
+  if (options.isIOS) {
+    windowRef.alert('على iPhone/iPad: اضغط زر المشاركة ثم اختر "إضافة إلى الشاشة الرئيسية".');
+    return;
+  }
+
+  windowRef.alert('على Chrome أو Edge من الكمبيوتر: افتح قائمة المتصفح ثم اختر "Install app" أو "تثبيت التطبيق".');
+}
+
 interface PWAInstallContextValue {
   canShowInstallButton: boolean;
   triggerInstall: () => Promise<void>;
@@ -75,6 +101,7 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
     const iPadOS = nav.platform === "MacIntel" && nav.maxTouchPoints > 1;
     const iPadUA = /iPad/.test(ua);
     const iPhoneIPod = /iPhone|iPod/.test(ua);
+
     setIsIPad(iPadUA || iPadOS);
     setIsIOS(iPhoneIPod || iPadUA || iPadOS);
     setIsAndroid(/Android/i.test(ua));
@@ -95,14 +122,14 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
   useEffect(() => {
     const windowRef = getWindowOrNull();
     if (!windowRef) return;
+
     const handler = (event: Event) => {
-      const isMobileNow = windowRef.matchMedia("(max-width: 768px)").matches;
-      const isTouchNow = "ontouchstart" in windowRef || windowRef.navigator.maxTouchPoints > 0;
-      if ((!isMobileNow && !isTouchNow) || isStandaloneDisplay()) return;
+      if (isStandaloneDisplay()) return;
       event.preventDefault();
       setInstallEvent(event as BeforeInstallPromptEvent);
       setIsVisible(true);
     };
+
     windowRef.addEventListener("beforeinstallprompt", handler);
     return () => windowRef.removeEventListener("beforeinstallprompt", handler);
   }, []);
@@ -112,18 +139,20 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
     if (!windowRef) return;
     if (!isTouchDevice && !windowRef.matchMedia("(max-width: 768px)").matches) return;
     if (isStandalone) return;
-    const t = windowRef.setTimeout(() => setIsVisible(true), 800);
-    return () => windowRef.clearTimeout(t);
+    const timer = windowRef.setTimeout(() => setIsVisible(true), 800);
+    return () => windowRef.clearTimeout(timer);
   }, [isTouchDevice, isStandalone]);
 
   useEffect(() => {
     const windowRef = getWindowOrNull();
     if (!windowRef) return;
+
     const handler = () => {
       setIsVisible(false);
       setInstallEvent(null);
       setIsStandalone(true);
     };
+
     windowRef.addEventListener("appinstalled", handler);
     return () => windowRef.removeEventListener("appinstalled", handler);
   }, []);
@@ -133,18 +162,7 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
       setDismissed(false);
       setForceShowHint(true);
       setIsVisible(true);
-
-      const windowRef = getWindowOrNull();
-      if (windowRef) {
-        const ua = windowRef.navigator.userAgent ?? "";
-        if (isLikelyInAppBrowser(ua)) {
-          windowRef.alert('متصفح التطبيق الحالي لا يدعم التثبيت. افتح الصفحة في Chrome أو Safari ثم اختر "إضافة إلى الشاشة الرئيسية".');
-        } else if (isAndroid) {
-          windowRef.alert('على Android: افتح قائمة المتصفح ثم اختر "إضافة إلى الشاشة الرئيسية" (Add to Home screen).');
-        } else if (isIOS) {
-          windowRef.alert('على iPhone/iPad: اضغط زر المشاركة ثم اختر "إضافة إلى الشاشة الرئيسية".');
-        }
-      }
+      showInstallInstructions({ isAndroid, isIOS, isInAppBrowser });
       return;
     }
 
@@ -155,29 +173,17 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
       // ignore
     }
     setInstallEvent(null);
-  }, [installEvent, isAndroid, isIOS]);
+  }, [installEvent, isAndroid, isIOS, isInAppBrowser]);
 
   const showInstallHint = useCallback(() => {
     setDismissed(false);
     setForceShowHint(true);
     setIsVisible(true);
 
-    const windowRef = getWindowOrNull();
-    if (windowRef && !installEvent) {
-      const ua = windowRef.navigator.userAgent ?? "";
-      if (isLikelyInAppBrowser(ua)) {
-        windowRef.alert('متصفح فيسبوك/إنستجرام الداخلي لا يدعم التثبيت مباشرة. افتح الرابط في Chrome أو Safari ثم اختر "إضافة إلى الشاشة الرئيسية".');
-        return;
-      }
-      if (isAndroid) {
-        windowRef.alert('على Android: افتح قائمة المتصفح ثم اختر "إضافة إلى الشاشة الرئيسية" (Add to Home screen).');
-        return;
-      }
-      if (isIOS) {
-        windowRef.alert('لتثبيت التطبيق على iPhone/iPad: اضغط زر المشاركة ثم "إضافة إلى الشاشة الرئيسية".');
-      }
+    if (!installEvent) {
+      showInstallInstructions({ isAndroid, isIOS, isInAppBrowser });
     }
-  }, [installEvent, isAndroid, isIOS]);
+  }, [installEvent, isAndroid, isIOS, isInAppBrowser]);
 
   const dismissBanner = useCallback(() => {
     setDismissed(true);
@@ -188,9 +194,8 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
   }, []);
 
   const windowRef = hasMounted ? getWindowOrNull() : null;
-  const canShowInstallButton =
-    hasMounted && !isStandalone && ((windowRef?.matchMedia("(max-width: 1024px)").matches ?? false) || isTouchDevice);
   const hasInstallPrompt = Boolean(installEvent);
+  const canShowInstallButton = hasMounted && !isStandalone;
   const canRenderBanner =
     hasMounted && !dismissed && (isTouchDevice || (windowRef?.matchMedia("(max-width: 768px)").matches ?? false));
   const showAndroidBanner = canRenderBanner && (forceShowHint || isVisible) && isAndroid;

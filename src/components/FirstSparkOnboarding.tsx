@@ -22,7 +22,6 @@ function seededUnit(index: number, salt: number) {
 export const FirstSparkOnboarding: FC<FirstSparkProps> = ({ onComplete }) => {
     const [stage, setStage] = useState<0 | 1 | 2>(0);
 
-    // Sound effect placeholders (could be integrated with soundManager later)
     const playSound = (_type: "swoosh" | "ping" | "click") => {
         // soundManager.play(type);
     };
@@ -48,7 +47,7 @@ export const FirstSparkOnboarding: FC<FirstSparkProps> = ({ onComplete }) => {
             </AnimatePresence>
 
             {/* Progress Indicators */}
-            <div className="flex gap-2 z-10">
+            <div className="flex gap-2 z-10 mt-6 pb-2">
                 {[0, 1, 2].map((i) => (
                     <motion.div
                         key={i}
@@ -68,7 +67,6 @@ export const FirstSparkOnboarding: FC<FirstSparkProps> = ({ onComplete }) => {
 
 /* ── Stage 1: Chaos (The Reality Check) ── */
 const StageChaos: FC<{ onNext: () => void }> = ({ onNext }) => {
-    // Generate random chaotic dots
     const dots = useMemo(() => Array.from({ length: 40 }, (_, i) => ({
         id: i,
         x: (seededUnit(i, 1) - 0.5) * 280,
@@ -125,11 +123,11 @@ const StageChaos: FC<{ onNext: () => void }> = ({ onNext }) => {
             </div>
 
             {/* Copy */}
-            <div className="text-center px-6 max-w-sm z-10">
-                <h2 className="text-xl font-bold text-white mb-2">
+            <div className="text-center px-6 max-w-sm z-10 pb-6">
+                <h2 className="text-xl font-bold text-white mb-3">
                     حاسس إن طاقتك بتخلص؟
                 </h2>
-                <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+                <p className="text-sm text-slate-400 mb-10 leading-relaxed">
                     ناس كتير حواليك بتسحب منك من غير ما تحس.. المشكلة مش فيك — المشكلة إنك ما حطيتش <span className="text-teal-400 font-bold">"مسافة"</span>.
                 </p>
 
@@ -182,27 +180,27 @@ const StageOrder: FC<{ onNext: () => void }> = ({ onNext }) => {
                 <motion.div
                     className="absolute w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.6)]"
                     initial={{ x: 80, y: -40, opacity: 0 }}
-                    animate={{ x: 28, y: -28, opacity: 1 }} // Inner orbit
+                    animate={{ x: 28, y: -28, opacity: 1 }}
                     transition={{ delay: 0.5, duration: 0.6, type: "spring" }}
                 />
                 <motion.div
                     className="absolute w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.6)]"
                     initial={{ x: -90, y: 80, opacity: 0 }}
-                    animate={{ x: -60, y: 60, opacity: 1 }} // Middle orbit
+                    animate={{ x: -60, y: 60, opacity: 1 }}
                     transition={{ delay: 0.6, duration: 0.6, type: "spring" }}
                 />
                 <motion.div
                     className="absolute w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_10px_rgba(248,113,113,0.6)]"
                     initial={{ x: 120, y: 20, opacity: 0 }}
-                    animate={{ x: 100, y: 0, opacity: 1 }} // Outer orbit
+                    animate={{ x: 100, y: 0, opacity: 1 }}
                     transition={{ delay: 0.7, duration: 0.6, type: "spring" }}
                 />
             </div>
 
             {/* Copy */}
-            <div className="text-center px-6 max-w-sm z-10">
+            <div className="text-center px-6 max-w-sm z-10 pb-6">
                 <motion.h2
-                    className="text-xl font-bold text-white mb-2"
+                    className="text-xl font-bold text-white mb-3"
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3 }}
@@ -210,7 +208,7 @@ const StageOrder: FC<{ onNext: () => void }> = ({ onNext }) => {
                     هنرتب الناس في حياتك
                 </motion.h2>
                 <motion.p
-                    className="text-sm text-slate-400 mb-6 leading-relaxed"
+                    className="text-sm text-slate-400 mb-10 leading-relaxed"
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4 }}
@@ -275,11 +273,11 @@ const StageValue: FC<{ onNext: () => void }> = ({ onNext }) => {
             </div>
 
             {/* Copy */}
-            <div className="text-center px-6 max-w-sm z-10">
-                <h2 className="text-xl font-bold text-white mb-2">
+            <div className="text-center px-6 max-w-sm z-10 pb-6">
+                <h2 className="text-xl font-bold text-white mb-3">
                     مش بس خريطة.. دي خطة حماية
                 </h2>
-                <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+                <p className="text-sm text-slate-400 mb-10 leading-relaxed">
                     هنساعدك تفهم كل علاقة وتاخد <span className="text-white font-bold">"خطوات عملية"</span> تحمي بيها نفسك وطاقتك.
                 </p>
 

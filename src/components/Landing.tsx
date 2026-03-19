@@ -215,26 +215,34 @@ const TypingWord: FC = () => {
   }, []);
 
   return (
-    <AnimatePresence mode="wait">
-      {visible && (
-        <motion.span
-          key={index}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-          className="inline-block"
-          style={{
-            background: "linear-gradient(90deg, #14B8A6, #7C3AED)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text"
-          }}
-        >
-          {ROTATING_WORDS[index]}
-        </motion.span>
-      )}
-    </AnimatePresence>
+    <span className="relative inline-flex items-center justify-start" style={{ minWidth: "6em", height: "1.2em", verticalAlign: "baseline" }}>
+      {/* Invisible spacer — uses the longest word to reserve space */}
+      <span className="invisible select-none pointer-events-none whitespace-nowrap" aria-hidden="true"
+        style={{ background: "linear-gradient(90deg, #14B8A6, #7C3AED)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}
+      >
+        العلاقات المُستنزِفة
+      </span>
+      <AnimatePresence mode="wait">
+        {visible && (
+          <motion.span
+            key={index}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="absolute inset-0 flex items-center"
+            style={{
+              background: "linear-gradient(90deg, #14B8A6, #7C3AED)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text"
+            }}
+          >
+            {ROTATING_WORDS[index]}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </span>
   );
 };
 
@@ -258,9 +266,20 @@ export const Landing: FC<LandingProps> = ({
   const hasExistingJourney = Boolean(baselineCompletedAt || nodesCount > 0);
 
   const pwaInstall = usePWAInstall();
-  const [hasMounted, setHasMounted] = useState(false);
-  useEffect(() => { setHasMounted(true); }, []);
-  const canShowInstallButton = hasMounted && Boolean(pwaInstall?.canShowInstallButton);
+  const [showDesktopInstallFallback, setShowDesktopInstallFallback] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const nav = window.navigator as Navigator & { standalone?: boolean };
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
+    const isTouch = "ontouchstart" in window || nav.maxTouchPoints > 0;
+    setShowDesktopInstallFallback(!isStandalone && !isTouch);
+  }, []);
+
+  const shouldShowLandingInstallButton =
+    Boolean(pwaInstall?.canShowInstallButton) || showDesktopInstallFallback;
+  const installButtonLabel =
+    pwaInstall?.isIOS || pwaInstall?.isAndroid ? "ثبّت على الهاتف" : "ثبّت التطبيق";
 
   // Feature flags
   const featureFlags = useAdminState((s) => s.featureFlags);
@@ -270,7 +289,11 @@ export const Landing: FC<LandingProps> = ({
   const lastNonceRef = useRef(0);
 
   const handleInstall = useCallback(() => {
-    pwaInstall?.triggerInstall();
+    if (pwaInstall) {
+      void pwaInstall.triggerInstall();
+    } else if (typeof window !== "undefined") {
+      window.alert('على Chrome أو Edge من الكمبيوتر: افتح قائمة المتصفح ثم اختر "Install app" أو "تثبيت التطبيق".');
+    }
     onOwnerInstallRequestHandled?.();
     void recordFlowEvent("install_clicked");
   }, [pwaInstall, onOwnerInstallRequestHandled]);
@@ -315,7 +338,7 @@ export const Landing: FC<LandingProps> = ({
       {/* ══════════════════════════════════════════════
           SECTION 1: HERO
       ══════════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center px-5 pt-10 pb-20 max-w-6xl mx-auto">
+      <section className="relative min-h-screen flex items-center px-4 sm:px-5 pt-16 sm:pt-10 pb-20 max-w-6xl mx-auto">
         <motion.div
           className="w-full flex flex-col lg:flex-row items-center gap-10 lg:gap-16"
           variants={stagger}
@@ -334,7 +357,7 @@ export const Landing: FC<LandingProps> = ({
             {/* Headline */}
             <motion.h1
               variants={fadeUp}
-              className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.1] mb-6"
+              className="text-[2.5rem] sm:text-6xl lg:text-7xl font-black leading-[1.15] mb-6"
               style={{ fontFamily: "Tajawal, sans-serif", color: "#F8FAFC" }}
             >
               وضوح حقيقي
@@ -385,7 +408,7 @@ export const Landing: FC<LandingProps> = ({
                 <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
               </motion.button>
 
-              {canShowInstallButton && (
+              {shouldShowLandingInstallButton && (
                 <button
                   type="button"
                   onClick={handleInstall}
@@ -393,7 +416,7 @@ export const Landing: FC<LandingProps> = ({
                   style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", color: "#64748B" }}
                 >
                   <Smartphone className="w-4 h-4" />
-                  ثبّت على الهاتف
+                  {installButtonLabel}
                 </button>
               )}
             </motion.div>
@@ -412,7 +435,7 @@ export const Landing: FC<LandingProps> = ({
           </div>
 
           {/* ── Orbit Visual ── */}
-          <motion.div variants={fadeUp} className="flex-shrink-0">
+          <motion.div variants={fadeUp} className="flex-shrink-0 origin-center scale-[0.82] sm:scale-100">
             <OrbitViz reduceMotion={reduceMotion} />
           </motion.div>
         </motion.div>

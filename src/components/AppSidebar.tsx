@@ -324,12 +324,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   }, [lastGoalLabel]);
 
   const pwaInstall = usePWAInstall();
-  const [hasMounted, setHasMounted] = useState(false);
-  const canShowInstallButton = hasMounted && Boolean(pwaInstall?.canShowInstallButton);
-
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
+  const canShowInstallButton = Boolean(pwaInstall?.canShowInstallButton);
   const badgePulseClass = badgePulse ? "animate-bounce" : "";
   const fallbackBadgeClasses =
     "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200";
@@ -343,8 +338,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const triggerPwaInstall = () => {
     if (!pwaInstall || !canShowInstallButton) return;
     recordFlowEvent("install_clicked");
-    if (pwaInstall.hasInstallPrompt) void pwaInstall.triggerInstall();
-    else pwaInstall.showInstallHint();
+    void pwaInstall.triggerInstall();
   };
 
   return (
