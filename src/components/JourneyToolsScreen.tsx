@@ -128,11 +128,11 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full"
           style={{ background: "rgba(20,184,166,0.1)", border: "1px solid rgba(20,184,166,0.2)" }}>
           <Compass className="w-4 h-4 text-teal-400" />
-          <span className="text-xs font-bold text-teal-400">ÙØ¶Ø§Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©</span>
+          <span className="text-xs font-bold text-teal-400">فضاء الرحلة</span>
         </div>
-        <h1 className="text-3xl md:text-4xl font-black text-white">Ø£Ø¯ÙˆØ§Øª Ø§Ù„Ø±Ø­Ù„Ø©</h1>
+        <h1 className="text-3xl md:text-4xl font-black text-white">أدوات الرحلة</h1>
         <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "rgba(255,255,255,0.4)" }}>
-          ÙƒÙ„ Ø£Ø¯Ø§Ø© Ø®Ø·ÙˆØ© â€” ØªØ¨Ø¯Ø£ Ù…Ù† <span className="text-teal-400 font-bold">Ø¯ÙˆØ§ÙŠØ±</span>ØŒ ÙˆØ§Ù„Ø¨Ø§Ù‚ÙŠ ÙŠØªÙØ¹Ù‘Ù„ Ù…Ø¹ ØªÙ‚Ø¯Ù‘Ù…Ùƒ.
+          كل أداة خطوة: تبدأ من <span className="text-teal-400 font-bold">دواير</span>، والباقي يتفعّل مع تقدّمك.
         </p>
       </motion.header>
 
@@ -211,7 +211,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
           <div className="rounded-2xl p-4"
             style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)" }}>
             <h2 className="text-xs font-bold mb-3 flex items-center gap-1.5" style={{ color: "#a78bfa" }}>
-              ðŸ›¡ï¸ Ø£Ø¯ÙˆØ§Øª Ø§Ù„Ø­Ù…Ø§ÙŠØ© Ø§Ù„Ø°Ø§ØªÙŠØ©
+              أدوات الحماية الذاتية
             </h2>
             <div className="grid grid-cols-2 gap-3">
               {onOpenExitScripts && (
@@ -224,10 +224,10 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
                       style={{ background: "rgba(167,139,250,0.15)" }}>
                       <BookOpen className="w-4 h-4" style={{ color: "#a78bfa" }} />
                     </div>
-                    <span className="text-sm font-bold text-white">Ø¬Ù…Ù„ Ø§Ù„Ø®Ø±ÙˆØ¬</span>
+                    <span className="text-sm font-bold text-white">جمل الخروج</span>
                   </div>
                   <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    24 Ø¬Ù…Ù„Ø© + AI Ù„ÙƒÙ„ Ù…ÙˆÙ‚Ù ØµØ¹Ø¨
+                    24 جملة + AI لكل موقف صعب
                   </p>
                 </button>
               )}
@@ -241,10 +241,10 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
                       style={{ background: "rgba(56,189,248,0.15)" }}>
                       <Wind className="w-4 h-4" style={{ color: "#38bdf8" }} />
                     </div>
-                    <span className="text-sm font-bold text-white">ØªÙ‡Ø¯Ø¦Ø© Ø§Ù„Ø¬Ø³Ù…</span>
+                    <span className="text-sm font-bold text-white">تهدئة الجسم</span>
                   </div>
                   <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    ØªÙ†ÙØ³ + Ø­ÙˆØ§Ø³ + Ù…Ø³Ø­ Ø§Ù„Ø¬Ø³Ù…
+                    تنفّس + حواس + مسح الجسم
                   </p>
                 </button>
               )}
@@ -260,8 +260,8 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
       {savedGoals.length > 0 && (
         <section className="mt-6 text-right">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xs font-bold" style={{ color: "rgba(255,255,255,0.4)" }}>ØªØ¨Ø¯ÙŠÙ„ Ø§Ù„Ù…Ø³Ø§Ø±</h2>
-            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>Ø®Ø·ÙˆØ© Ø³Ø±ÙŠØ¹Ø©</span>
+            <h2 className="text-xs font-bold" style={{ color: "rgba(255,255,255,0.4)" }}>تبديل المسار</h2>
+            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>خطوة سريعة</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {savedGoals.map((goal) => (
@@ -297,7 +297,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
           className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition-all"
           style={{ background: "linear-gradient(135deg, #0d9488, #0f766e)" }}
         >
-          Ø§ÙØªØ­ ØºØ±ÙØ© Ø¯ÙˆØ§ÙŠØ± <ArrowRight className="w-4 h-4" />
+          افتح غرفة دواير <ArrowRight className="w-4 h-4" />
         </button>
         {lastGoalLabel && (
           <span
@@ -305,7 +305,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
             style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)", color: "#fbbf24" }}
           >
             {lastGoalMeta ? <lastGoalMeta.icon className="w-3 h-3" /> : <Star className="w-3 h-3" />}
-            Ø¢Ø®Ø± Ù‡Ø¯Ù: {lastGoalLabel}
+            آخر هدف: {lastGoalLabel}
           </span>
         )}
         {onOpenDawayirSetup && (
@@ -313,14 +313,14 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
             className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all"
             style={{ background: "rgba(20,184,166,0.08)", border: "1px solid rgba(20,184,166,0.2)", color: "#34d399" }}
           >
-            Ø¬Ù‡Ù‘Ø² ØºØ±ÙØ© Ø¯ÙˆØ§ÙŠØ±
+            جهّز غرفة دواير
           </button>
         )}
         <button type="button" onClick={onBack}
           className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all"
           style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}
         >
-          Ø±Ø¬ÙˆØ¹
+          رجوع
         </button>
       </motion.div>
     </main>

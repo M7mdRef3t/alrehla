@@ -31,24 +31,31 @@ export const MapOnboardingOverlay: FC<MapOnboardingOverlayProps> = ({ onClose })
         <button
           onClick={handleFinish}
           className="absolute top-4 left-4 p-1.5 rounded-full text-slate-500 hover:text-white transition-colors hover:bg-white/5"
+          aria-label="إغلاق"
         >
           <X className="w-4 h-4" />
         </button>
 
-        <h2 className="text-lg font-bold text-white mb-6 pr-2">بداة اإدرا</h2>
+        <h2 className="text-lg font-bold text-white mb-6 pr-2">بداية الإدراك</h2>
 
         <div className="space-y-5 mb-8">
           <div className="flex items-start gap-3">
             <Activity className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-            <p className="text-sm text-slate-300 leading-relaxed">سج بض بسرعة (بضغطة سة) أ بع (بتفاص).</p>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              سجّل نبضك بسرعة بضغطة سريعة، أو بتفاصيل أكثر لو حبيت.
+            </p>
           </div>
           <div className="flex items-start gap-3">
             <Radar className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-            <p className="text-sm text-slate-300 leading-relaxed">اظا براب ف صت حد ا اداتا تف.</p>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              الدوائر بتراقب شكل العلاقات وتوضح لك أماكن الأمان والضغط.
+            </p>
           </div>
           <div className="flex items-start gap-3">
             <Brain className="w-5 h-5 text-teal-400 shrink-0 mt-0.5" />
-            <p className="text-sm text-slate-300 leading-relaxed">اخرطة تب أذ ع ات ع  بضة.</p>
+            <p className="text-sm text-slate-300 leading-relaxed">
+              الخريطة تتبدل مع الوقت بحسب نبضك وتغيّر علاقاتك.
+            </p>
           </div>
         </div>
 
@@ -56,10 +63,9 @@ export const MapOnboardingOverlay: FC<MapOnboardingOverlayProps> = ({ onClose })
           onClick={handleFinish}
           className="w-full py-3.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(16,185,129,0.1)] active:scale-[0.98]"
         >
-          أ
+          ابدأ
         </button>
       </motion.div>
     </div>
   );
 };
-
