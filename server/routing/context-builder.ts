@@ -1,4 +1,4 @@
-import { clamp } from "./_shared.js";
+﻿import { clamp } from "./_shared";
 
 export interface RoutingContextV2 {
   sessionId: string | null;

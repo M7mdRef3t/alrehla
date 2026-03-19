@@ -1,6 +1,6 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { RoutingContextV2 } from "./context-builder.js";
-import type { RoutingCandidateRow } from "./_shared.js";
+﻿import type { SupabaseClient } from "@supabase/supabase-js";
+import type { RoutingContextV2 } from "./context-builder";
+import type { RoutingCandidateRow } from "./_shared";
 
 export interface CandidateV2 {
   id: string;

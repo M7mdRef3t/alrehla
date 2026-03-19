@@ -1,7 +1,7 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { clamp } from "./_shared.js";
-import type { CandidateV2 } from "./candidate-generator.js";
-import type { RoutingContextV2 } from "./context-builder.js";
+﻿import type { SupabaseClient } from "@supabase/supabase-js";
+import { clamp } from "./_shared";
+import type { CandidateV2 } from "./candidate-generator";
+import type { RoutingContextV2 } from "./context-builder";
 
 export interface RankedCandidateV2 extends CandidateV2 {
   finalScore: number;

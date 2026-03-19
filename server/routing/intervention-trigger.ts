@@ -1,4 +1,4 @@
-import { getServiceSupabase, parseJsonBody } from "./_shared.js";
+﻿import { getServiceSupabase, parseJsonBody } from "./_shared";
 
 type InterventionBody = {
   decisionId?: unknown;

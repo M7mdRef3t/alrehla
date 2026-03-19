@@ -1,7 +1,7 @@
-import { buildRoutingContextV2 } from "./context-builder.js";
-import { loadPrecomputedCandidates } from "./candidate-generator.js";
-import { getEpsilon, rankCandidatesV2 } from "./swarm-ranker.js";
-import { getServiceSupabase, parseJsonBody, randomId } from "./_shared.js";
+﻿import { buildRoutingContextV2 } from "./context-builder";
+import { loadPrecomputedCandidates } from "./candidate-generator";
+import { getEpsilon, rankCandidatesV2 } from "./swarm-ranker";
+import { getServiceSupabase, parseJsonBody, randomId } from "./_shared";
 
 type FallbackCandidate = {
   id: string;
@@ -111,12 +111,12 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     },
     why: {
       headline: isExploration
-        ? "نختبر خطوة جديدة مناسبة لرفع جودة التوجيه"
-        : "تم اختيار أعلى خطوة تأثيرًا مع مراعاة الحمل الإدراكي",
+        ? "Ù†Ø®ØªØ¨Ø± Ø®Ø·ÙˆØ© Ø¬Ø¯ÙŠØ¯Ø© Ù…Ù†Ø§Ø³Ø¨Ø© Ù„Ø±ÙØ¹ Ø¬ÙˆØ¯Ø© Ø§Ù„ØªÙˆØ¬ÙŠÙ‡"
+        : "ØªÙ… Ø§Ø®ØªÙŠØ§Ø± Ø£Ø¹Ù„Ù‰ Ø®Ø·ÙˆØ© ØªØ£Ø«ÙŠØ±Ù‹Ø§ Ù…Ø¹ Ù…Ø±Ø§Ø¹Ø§Ø© Ø§Ù„Ø­Ù…Ù„ Ø§Ù„Ø¥Ø¯Ø±Ø§ÙƒÙŠ",
       reasons: [
-        { code: "policy_score", label: "بناءً على إشارات الحالة الحالية" },
-        { code: "swarm_score", label: "ومؤشرات نجاح التجارب السابقة (مع decay)" },
-        { code: "cognitive_capacity", label: "ومواءمة الطاقة الإدراكية الحالية" }
+        { code: "policy_score", label: "Ø¨Ù†Ø§Ø¡Ù‹ Ø¹Ù„Ù‰ Ø¥Ø´Ø§Ø±Ø§Øª Ø§Ù„Ø­Ø§Ù„Ø© Ø§Ù„Ø­Ø§Ù„ÙŠØ©" },
+        { code: "swarm_score", label: "ÙˆÙ…Ø¤Ø´Ø±Ø§Øª Ù†Ø¬Ø§Ø­ Ø§Ù„ØªØ¬Ø§Ø±Ø¨ Ø§Ù„Ø³Ø§Ø¨Ù‚Ø© (Ù…Ø¹ decay)" },
+        { code: "cognitive_capacity", label: "ÙˆÙ…ÙˆØ§Ø¡Ù…Ø© Ø§Ù„Ø·Ø§Ù‚Ø© Ø§Ù„Ø¥Ø¯Ø±Ø§ÙƒÙŠØ© Ø§Ù„Ø­Ø§Ù„ÙŠØ©" }
       ]
     },
     confidence,

@@ -1,4 +1,4 @@
-import { getServiceSupabase, parseJsonBody } from "../../api/user/_shared.js";
+﻿import { getServiceSupabase, parseJsonBody } from "../../api/user/_shared";
 
 export type RoutingCandidateRow = {
   id: number;

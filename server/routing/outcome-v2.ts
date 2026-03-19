@@ -1,4 +1,4 @@
-import { getServiceSupabase, parseJsonBody } from "./_shared.js";
+﻿import { getServiceSupabase, parseJsonBody } from "./_shared";
 
 function toNumber(v: unknown): number | null {
   return typeof v === "number" && Number.isFinite(v) ? v : null;

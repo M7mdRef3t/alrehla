@@ -1,4 +1,4 @@
-import type { FC } from "react";
+﻿import type { FC } from "react";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Compass, Star, BookOpen, Wind } from "lucide-react";
@@ -111,37 +111,39 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
   }, [lastGoalLabel]);
 
   const badgePulseClass = badgePulse ? "animate-bounce" : "";
-  const fallbackBadgeClasses =
-    "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200";
 
   return (
-    <main className="w-full max-w-2xl py-10 md:py-14 text-center">
+    <main
+      className="w-full max-w-2xl py-10 md:py-14"
+      dir="rtl"
+      style={{ fontFamily: "IBM Plex Sans Arabic, Tajawal, sans-serif" }}
+    >
+      {/* â”€â”€ Header â”€â”€ */}
       <motion.header
-        className="space-y-3"
+        className="text-center space-y-3 mb-10"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25, ease: "easeOut" }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
       >
-        <div className="flex items-center justify-center gap-2 text-teal-600">
-          <Compass className="w-6 h-6" />
-          <span className="text-sm font-semibold">فضاء الرحلة</span>
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full"
+          style={{ background: "rgba(20,184,166,0.1)", border: "1px solid rgba(20,184,166,0.2)" }}>
+          <Compass className="w-4 h-4 text-teal-400" />
+          <span className="text-xs font-bold text-teal-400">ÙØ¶Ø§Ø¡ Ø§Ù„Ø±Ø­Ù„Ø©</span>
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
-          أدوات الرحلة
-        </h1>
-        <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-xl mx-auto">
-          كل أداة هي خطوة. البداية من <strong className="text-slate-800">دواير</strong>،
-          والباقي يتفعل مع تقدّمك في المدارات.
+        <h1 className="text-3xl md:text-4xl font-black text-white">Ø£Ø¯ÙˆØ§Øª Ø§Ù„Ø±Ø­Ù„Ø©</h1>
+        <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "rgba(255,255,255,0.4)" }}>
+          ÙƒÙ„ Ø£Ø¯Ø§Ø© Ø®Ø·ÙˆØ© â€” ØªØ¨Ø¯Ø£ Ù…Ù† <span className="text-teal-400 font-bold">Ø¯ÙˆØ§ÙŠØ±</span>ØŒ ÙˆØ§Ù„Ø¨Ø§Ù‚ÙŠ ÙŠØªÙØ¹Ù‘Ù„ Ù…Ø¹ ØªÙ‚Ø¯Ù‘Ù…Ùƒ.
         </p>
       </motion.header>
 
+      {/* â”€â”€ Tools List â”€â”€ */}
       <motion.section
-        className="mt-8 space-y-3 text-right"
+        className="space-y-3 text-right"
         variants={containerVariants}
         initial="hidden"
         animate="show"
       >
-              {tools.map((tool) => (
+        {tools.map((tool) => (
           <motion.button
             key={tool.id}
             type="button"
@@ -149,112 +151,117 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
               if (!tool.locked || !tool.featureKey || !onFeatureLocked) return;
               onFeatureLocked(tool.featureKey);
             }}
-            className={`w-full rounded-2xl border px-5 py-4 text-right ${
-              tool.locked
-                ? "border-slate-200 bg-white"
-                : "border-teal-200 bg-teal-50/70"
-            }`}
+            className="w-full rounded-2xl px-5 py-4 text-right transition-all"
+            style={{
+              background: tool.locked ? "rgba(255,255,255,0.02)" : "rgba(20,184,166,0.06)",
+              border: `1px solid ${tool.locked ? "rgba(255,255,255,0.06)" : "rgba(20,184,166,0.2)"}`,
+              backdropFilter: "blur(12px)",
+            }}
             variants={cardVariants}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${
-                    tool.locked
-                      ? "bg-slate-100 text-slate-600"
-                      : "bg-teal-100 text-teal-700"
-                  }`}
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0"
+                  style={{
+                    background: tool.locked ? "rgba(255,255,255,0.04)" : "rgba(20,184,166,0.12)",
+                    border: `1px solid ${tool.locked ? "rgba(255,255,255,0.06)" : "rgba(20,184,166,0.25)"}`,
+                  }}
                 >
                   <span aria-hidden="true">{tool.icon}</span>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-slate-900 truncate">{tool.name}</p>
-                  <p className="text-xs text-slate-500 truncate">{tool.tagline}</p>
+                <div className="min-w-0 text-right">
+                  <p className="text-sm font-bold text-white truncate">{tool.name}</p>
+                  <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.35)" }}>{tool.tagline}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <span
-                  className={`text-[11px] font-semibold rounded-full px-3 py-1 whitespace-nowrap ${
-                    tool.locked
-                      ? "bg-slate-100 text-slate-500"
-                      : "bg-teal-100 text-teal-700"
-                  }`}
+                  className="text-[11px] font-semibold rounded-full px-3 py-1 whitespace-nowrap"
+                  style={{
+                    background: tool.locked ? "rgba(255,255,255,0.05)" : "rgba(20,184,166,0.15)",
+                    color: tool.locked ? "rgba(255,255,255,0.3)" : "#34d399",
+                  }}
                 >
                   {tool.status}
                 </span>
                 {!tool.locked && tool.id !== "dawayir" && (
-                  <span className="text-[10px] font-semibold rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700 whitespace-nowrap">
-                    مفعّلة
-                  </span>
+                  <span className="text-[10px] font-bold rounded-full px-2 py-0.5 whitespace-nowrap"
+                    style={{ background: "rgba(52,211,153,0.12)", color: "#34d399" }}>âœ“</span>
                 )}
               </div>
             </div>
-            <p className="text-xs text-slate-600 mt-3 leading-relaxed">
+            <p className="text-xs mt-3 leading-relaxed" style={{ color: "rgba(255,255,255,0.3)" }}>
               {tool.description}
             </p>
           </motion.button>
         ))}
       </motion.section>
 
-      {/* ── Body-First & Exit Scripts ── */}
+      {/* â”€â”€ Protection Tools â”€â”€ */}
       {(onOpenExitScripts || onOpenGrounding) && (
         <motion.section
-          className="mt-6 space-y-3 text-right"
+          className="mt-6 text-right"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.25 }}
         >
-          <h2 className="text-sm font-bold text-slate-600 mb-2 flex items-center gap-1">
-            🛡️ أدوات الحماية الذاتية
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            {onOpenExitScripts && (
-              <button
-                type="button"
-                onClick={onOpenExitScripts}
-                className="rounded-2xl border border-violet-200 bg-violet-50/70 px-4 py-4 text-right hover:bg-violet-100/70 transition-all"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
-                    <BookOpen className="w-4 h-4 text-violet-600" />
+          <div className="rounded-2xl p-4"
+            style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)" }}>
+            <h2 className="text-xs font-bold mb-3 flex items-center gap-1.5" style={{ color: "#a78bfa" }}>
+              ðŸ›¡ï¸ Ø£Ø¯ÙˆØ§Øª Ø§Ù„Ø­Ù…Ø§ÙŠØ© Ø§Ù„Ø°Ø§ØªÙŠØ©
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              {onOpenExitScripts && (
+                <button type="button" onClick={onOpenExitScripts}
+                  className="rounded-xl px-4 py-4 text-right transition-all"
+                  style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)" }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ background: "rgba(167,139,250,0.15)" }}>
+                      <BookOpen className="w-4 h-4" style={{ color: "#a78bfa" }} />
+                    </div>
+                    <span className="text-sm font-bold text-white">Ø¬Ù…Ù„ Ø§Ù„Ø®Ø±ÙˆØ¬</span>
                   </div>
-                  <span className="text-sm font-bold text-slate-900">جمل الخروج</span>
-                </div>
-                <p className="text-[11px] text-slate-500 leading-relaxed">24 جملة جاهزة لكل موقف صعب + AI</p>
-              </button>
-            )}
-            {onOpenGrounding && (
-              <button
-                type="button"
-                onClick={onOpenGrounding}
-                className="rounded-2xl border border-teal-200 bg-teal-50/70 px-4 py-4 text-right hover:bg-teal-100/70 transition-all"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
-                    <Wind className="w-4 h-4 text-teal-600" />
+                  <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    24 Ø¬Ù…Ù„Ø© + AI Ù„ÙƒÙ„ Ù…ÙˆÙ‚Ù ØµØ¹Ø¨
+                  </p>
+                </button>
+              )}
+              {onOpenGrounding && (
+                <button type="button" onClick={onOpenGrounding}
+                  className="rounded-xl px-4 py-4 text-right transition-all"
+                  style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)" }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ background: "rgba(56,189,248,0.15)" }}>
+                      <Wind className="w-4 h-4" style={{ color: "#38bdf8" }} />
+                    </div>
+                    <span className="text-sm font-bold text-white">ØªÙ‡Ø¯Ø¦Ø© Ø§Ù„Ø¬Ø³Ù…</span>
                   </div>
-                  <span className="text-sm font-bold text-slate-900">تهدئة الجسم</span>
-                </div>
-                <p className="text-[11px] text-slate-500 leading-relaxed">تنفس مربع + 5-4-3-2-1 + مسح الجسم</p>
-              </button>
-            )}
+                  <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    ØªÙ†ÙØ³ + Ø­ÙˆØ§Ø³ + Ù…Ø³Ø­ Ø§Ù„Ø¬Ø³Ù…
+                  </p>
+                </button>
+              )}
+            </div>
           </div>
         </motion.section>
       )}
 
       {nextStepDecision && onTakeNextStep && onRefreshNextStep && (
-        <NextStepCard
-          decision={nextStepDecision}
-          onTakeAction={onTakeNextStep}
-          onRefresh={onRefreshNextStep}
-        />
+        <NextStepCard decision={nextStepDecision} onTakeAction={onTakeNextStep} onRefresh={onRefreshNextStep} />
       )}
 
       {savedGoals.length > 0 && (
         <section className="mt-6 text-right">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-bold text-slate-700">تبديل المسار</h2>
-            <span className="text-[11px] text-slate-500">خطوة سريعة</span>
+            <h2 className="text-xs font-bold" style={{ color: "rgba(255,255,255,0.4)" }}>ØªØ¨Ø¯ÙŠÙ„ Ø§Ù„Ù…Ø³Ø§Ø±</h2>
+            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.25)" }}>Ø®Ø·ÙˆØ© Ø³Ø±ÙŠØ¹Ø©</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {savedGoals.map((goal) => (
@@ -262,11 +269,14 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
                 key={goal.goalId}
                 type="button"
                 onClick={() => handleOpenGoal(goal.goalId, goal.category)}
-                className={`inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1.5 text-xs font-semibold transition-all ${
-                  goal.meta?.buttonClasses ?? "border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
-                }`}
+                className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold transition-all"
+                style={{
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "rgba(255,255,255,0.6)"
+                }}
               >
-                {goal.meta ? <goal.meta.icon className="w-3.5 h-3.5" /> : <Compass className="w-3.5 h-3.5 text-teal-600" />}
+                {goal.meta ? <goal.meta.icon className="w-3.5 h-3.5" /> : <Compass className="w-3.5 h-3.5 text-teal-400" />}
                 {goal.label}
               </button>
             ))}
@@ -274,6 +284,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
         </section>
       )}
 
+      {/* â”€â”€ Action Buttons â”€â”€ */}
       <motion.div
         className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3"
         initial={{ opacity: 0, y: 8 }}
@@ -283,38 +294,36 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
         <button
           type="button"
           onClick={handleOpenDawayir}
-          className="inline-flex items-center gap-2 rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold hover:bg-teal-700 transition-all"
+          className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold text-white transition-all"
+          style={{ background: "linear-gradient(135deg, #0d9488, #0f766e)" }}
         >
-          افتح غرفة دواير
-          <ArrowRight className="w-4 h-4" />
+          Ø§ÙØªØ­ ØºØ±ÙØ© Ø¯ÙˆØ§ÙŠØ± <ArrowRight className="w-4 h-4" />
         </button>
         {lastGoalLabel && (
           <span
-            className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
-              lastGoalMeta?.badgeClasses ?? fallbackBadgeClasses
-            } ${badgePulseClass}`}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${badgePulseClass}`}
+            style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.25)", color: "#fbbf24" }}
           >
             {lastGoalMeta ? <lastGoalMeta.icon className="w-3 h-3" /> : <Star className="w-3 h-3" />}
-            آخر هدف محفوظ: {lastGoalLabel}
+            Ø¢Ø®Ø± Ù‡Ø¯Ù: {lastGoalLabel}
           </span>
         )}
         {onOpenDawayirSetup && (
-          <button
-            type="button"
-            onClick={handleSetup}
-            className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-6 py-3 text-sm font-semibold text-teal-700 hover:border-teal-300 hover:bg-teal-100 transition-all"
+          <button type="button" onClick={handleSetup}
+            className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all"
+            style={{ background: "rgba(20,184,166,0.08)", border: "1px solid rgba(20,184,166,0.2)", color: "#34d399" }}
           >
-            جهّز غرفة دواير
+            Ø¬Ù‡Ù‘Ø² ØºØ±ÙØ© Ø¯ÙˆØ§ÙŠØ±
           </button>
         )}
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-all"
+        <button type="button" onClick={onBack}
+          className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all"
+          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}
         >
-          رجوع
+          Ø±Ø¬ÙˆØ¹
         </button>
       </motion.div>
     </main>
   );
 };
+
