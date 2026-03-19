@@ -1,0 +1,87 @@
+:root {
+  --font-display: 'Cairo', sans-serif;
+  --font-ui: 'Outfit', 'Noto Sans Arabic', sans-serif;
+  --font-arabic-body: 'Cairo', sans-serif;
+
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --color-bg-primary: #030305;
+  --color-bg-secondary: #0a0a0f;
+  --color-bg-tertiary: #111118;
+  --color-bg-elevated: #1a1a24;
+
+  --color-surface-glass: rgba(255, 255, 255, 0.06);
+  --color-surface-glass-hover: rgba(255, 255, 255, 0.1);
+  --color-surface-glass-active: rgba(255, 255, 255, 0.15);
+  --color-surface-overlay: rgba(0, 0, 0, 0.52);
+
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+  --color-border-default: rgba(255, 255, 255, 0.1);
+  --color-border-strong: rgba(255, 255, 255, 0.25);
+  --color-border-focus: rgba(255, 255, 255, 0.5);
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: rgba(255, 255, 255, 0.7);
+  --color-text-tertiary: rgba(255, 255, 255, 0.5);
+  --color-text-disabled: rgba(255, 255, 255, 0.55);
+
+  --color-accent-gold: #ffd700;
+  --color-accent-cyan: #78c8ff;
+  --color-accent-emerald: #5effb3;
+  --color-accent-rose: #ff6b8a;
+  --color-accent-violet: #a78bfa;
+  --color-accent-coral: #ff7e67;
+
+  --color-emotion-joy: #ffd700;
+  --color-emotion-sadness: #4a9eff;
+  --color-emotion-anger: #ff4444;
+  --color-emotion-fear: #8b5cf6;
+  --color-emotion-love: #ff6b8a;
+  --color-emotion-hope: #5effb3;
+
+  --glass-bg: var(--color-surface-glass);
+  --glass-border: var(--color-border-default);
+  --glass-blur: 20px;
+
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
+  --radius-pill: 999px;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  --shadow-soft: 0 18px 60px rgba(0, 0, 0, 0.3);
+  --shadow-glow-hope: 0 0 40px rgba(94, 255, 179, 0.12);
+  --shadow-glow-cyan: 0 0 32px rgba(120, 200, 255, 0.16);
+
+  --type-display-xl: clamp(3.5rem, 8vw, 6.5rem);
+  --type-display-lg: clamp(2rem, 4vw, 3rem);
+  --type-title-md: clamp(1.35rem, 2.2vw, 1.8rem);
+  --type-body-lg: clamp(1rem, 2vw, 1.125rem);
+  --type-body-md: clamp(0.95rem, 1.6vw, 1rem);
+  --type-body-sm: clamp(0.82rem, 1.2vw, 0.9rem);
+
+  --panel-width: min(100%, 72rem);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
