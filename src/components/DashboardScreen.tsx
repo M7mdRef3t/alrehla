@@ -182,7 +182,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
     }
   }, [addXP]);
 
-  /* Spread nodes across a virtual 100100 grid */
+  /* Spread nodes across a virtual grid */
   const miniNodes: MiniNode[] = useMemo(() => {
     const positions = [
       [50, 38], [28, 55], [72, 52], [38, 72], [64, 70],
@@ -210,8 +210,8 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    const timeGreet = hour < 12 ? "صباح ار" : hour < 17 ? "رحبا" : "ساء اخر";
-    return firstName ? `${timeGreet} ا ائد ${firstName}` : `${timeGreet} ا ائد`;
+    const timeGreet = hour < 12 ? "صباح الخير" : hour < 17 ? "مساء الخير" : "مساء الخير";
+    return firstName ? `${timeGreet}، ${firstName}` : `${timeGreet}`;
   }, [firstName]);
 
   return (
@@ -232,13 +232,13 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
         transition={{ delay: 0.1, duration: 0.5 }}
       >
         <div>
-          <p className="text-xs font-medium text-teal-500/80 uppercase tracking-widest">
-            غرفة اعات ارزة
+          <p className="text-xs font-medium text-slate-500/80 uppercase tracking-widest">
+            مساحتك الآمنة
           </p>
           <h1 className="text-xl font-bold leading-snug text-white mt-1">
             {greeting}
           </h1>
-          <p className="text-sm text-slate-400">حاة اظا: ستر </p>
+          <p className="text-sm text-slate-400">خذ نفساً عميقاً.. نحن هنا لترتيب الفوضى.</p>
         </div>
         <div className="flex items-center gap-2">
           {/* Streak compact badge */}
@@ -299,8 +299,8 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
             <Zap className="w-5 h-5 text-[var(--soft-teal)]" />
           </div>
           <div className="text-right">
-            <p className="text-xs text-white">جة طارئ</p>
-            <p className="text-[10px] text-slate-400 font-normal">خرج فر</p>
+            <p className="text-xs text-white">فك الاشتباك</p>
+            <p className="text-[10px] text-slate-400 font-normal">خطوة سريعة للإنجاز</p>
           </div>
         </motion.button>
 
@@ -314,44 +314,50 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
             <Users className="w-5 h-5 text-teal-400" />
           </div>
           <div className="text-right">
-            <p className="text-xs text-white">جتع ادع</p>
-            <p className="text-[10px] text-slate-400 font-normal">دائر جة</p>
+            <p className="text-xs text-white">دوائر الدعم</p>
+            <p className="text-[10px] text-slate-400 font-normal">الناس اللي بتفهمك</p>
           </div>
         </motion.button>
+        {/* Referral and Share maps hidden for Lost Youth to reduce clutter */}
+        {false && (
+          <>
+            <motion.button
+              onClick={() => setShowReferral(true)}
+              className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-amber-500/50 transition-colors"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+                <Gift className="w-5 h-5 text-amber-400" />
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-white">ادعُ ائدا</p>
+                <p className="text-[10px] text-slate-400 font-normal">احص ع بر</p>
+              </div>
+            </motion.button>
 
-        <motion.button
-          onClick={() => setShowReferral(true)}
-          className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-amber-500/50 transition-colors"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-        >
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
-            <Gift className="w-5 h-5 text-amber-400" />
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-white">ادعُ ائدا</p>
-            <p className="text-[10px] text-slate-400 font-normal">احص ع بر</p>
-          </div>
-        </motion.button>
-
-        <motion.button
-          onClick={() => setShowShareCard(true)}
-          className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-blue-500/50 transition-colors"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-        >
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-            <Share2 className="w-5 h-5 text-blue-400" />
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-white">شار اخرطة</p>
-            <p className="text-[10px] text-slate-400 font-normal">اتشار فرس</p>
-          </div>
-        </motion.button>
+            <motion.button
+              onClick={() => setShowShareCard(true)}
+              className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-blue-500/50 transition-colors"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                <Share2 className="w-5 h-5 text-blue-400" />
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-white">شار اخرطة</p>
+                <p className="text-[10px] text-slate-400 font-normal">اتشار فرس</p>
+              </div>
+            </motion.button>
+          </>
+        )}
       </motion.div>
 
-      {/*  Wave 1: Streak Widget  */}
-      <StreakWidget />
+      {/*  Wave 1: Streak Widget - visually simplified */}
+      <div className="opacity-70">
+        <StreakWidget />
+      </div>
 
       {/*  Live Map Card (Radar)  */}
       <motion.div
@@ -403,8 +409,8 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
 
           {activeNodes.length === 0 && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-              <p className="text-teal-500 font-bold mb-2">ارادار فاض!</p>
-              <p className="text-slate-500 text-xs">ابدأ استطاع حط ضف أ دارة.</p>
+              <p className="text-teal-500 font-bold mb-2">عقلك صافي حالياً</p>
+              <p className="text-slate-500 text-xs">لا يوجد استنزاف للطاقة مسجل.</p>
             </div>
           )}
         </div>
@@ -413,11 +419,11 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent p-5 pt-12 flex items-end justify-between">
           <div>
             <p className="text-xs font-mono text-teal-400/70 mb-1">
-              إحصائات ادا
+              أين تذهب طاقتك؟
             </p>
             <div className="flex gap-3 text-xs font-bold text-white">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> {greenCount} آ</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> {redCount} خطر</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> {greenCount} آمن</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> {redCount} استنزاف</span>
             </div>
           </div>
 
@@ -426,7 +432,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
             className="flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold bg-teal-500/10 border border-teal-500/30 text-teal-300 group-hover:bg-teal-500/20 transition-all"
             whileHover={{ scale: 1.05 }}
           >
-            فتح اخرطة ااستراتجة
+            تحديد خطوتك القادمة
           </motion.div>
         </div>
       </motion.div>
@@ -434,14 +440,14 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
       {/*  Trajectory Dashboard (The Guidance Layer)  */}
       <TrajectoryDashboard userId={userId} />
 
-      {/*  War Room Widget (Daily Intel)  */}
-      <WarRoomWidget />
+      {/*  War Room Widget (Daily Intel) - Hidden for clarity */}
+      {/* <WarRoomWidget /> */}
 
-      {/*  Daily Quests  */}
-      <DailyQuests />
+      {/*  Daily Quests - Hidden for clarity */}
+      {/* <DailyQuests /> */}
 
-      {/*  Medals Board  */}
-      <MedalsBoard />
+      {/*  Medals Board - Hidden for clarity */}
+      {/* <MedalsBoard /> */}
 
       {/*  Emergency SOS  */}
       <div className="py-4 flex justify-center">

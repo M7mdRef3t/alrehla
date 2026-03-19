@@ -10,7 +10,10 @@ export type AppScreen =
   | "guilt-court"
   | "diplomacy"
   | "oracle-dashboard"
-  | "armory";
+  | "armory"
+  | "survey"
+  | "exit-scripts"
+  | "grounding";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 

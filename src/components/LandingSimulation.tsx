@@ -1,201 +1,275 @@
-import { useState, useRef, useCallback } from "react";
-import { motion, useAnimation, PanInfo } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, ArrowLeft, Loader2, BrainCircuit, Target, AlertCircle } from "lucide-react";
+import { setEmotionalOffer } from "../services/subscriptionManager";
 
-/** Internal coordinate system is 320x320. All drag/ring math uses this base. */
-const BASE = 320;
-const CENTER_OFFSET_Y = 112; // distance from center to start position (85% of 320 - 50%)
+type Question = {
+  id: string;
+  text: string;
+  options: { id: string; text: string; category: "future" | "relationships" | "progress" }[];
+};
+
+const QUESTIONS: Question[] = [
+  {
+    id: "q1",
+    text: "إيه أكتر حاجة بتسحب طاقتك الذهنية الأيام دي؟",
+    options: [
+      { id: "o1", text: "التفكير المستمر في المستقبل وخايف منه", category: "future" },
+      { id: "o2", text: "علاقة أو وضع متعب بحاول أسايره", category: "relationships" },
+      { id: "o3", text: "حاسس إني متأخر عن كل اللي في سني", category: "progress" },
+    ],
+  },
+  {
+    id: "q2",
+    text: "لما تصحى من النوم ومفيش وراك حاجة ضرورية، إحساسك إيه؟",
+    options: [
+      { id: "o4", text: "بمسك الموبايل عشان أهرب من التفكير", category: "progress" },
+      { id: "o5", text: "بحس إن ورايا هم ومش عارف أبدأ منين", category: "future" },
+      { id: "o6", text: "بحس بوحدة أو بتجنب أكلم حد معين", category: "relationships" },
+    ],
+  },
+  {
+    id: "q3",
+    text: "لو معاك عصاية سحرية تحل بيها مشكلة واحدة دلوقتي، تختار إيه؟",
+    options: [
+      { id: "o7", text: "أعرف خطوتي الجاية صح إيه ومترددش", category: "future" },
+      { id: "o8", text: "أبطل أقارن نفسي بغيري وأركز في حالي", category: "progress" },
+      { id: "o9", text: "أرسم حدود واضحة مع الناس اللي بتستنزفني", category: "relationships" },
+    ],
+  },
+];
 
 export function LandingSimulation() {
-    const [activeZone, setActiveZone] = useState<"green" | "yellow" | "red" | null>(null);
-    const [placed, setPlaced] = useState(false);
-    const controls = useAnimation();
-    const constraintsRef = useRef<HTMLDivElement>(null);
-    const [hintVisible, setHintVisible] = useState(true);
+  const [step, setStep] = useState<"intro" | "questions" | "analyzing" | "result">("intro");
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [dominantCategory, setDominantCategory] = useState<"future" | "relationships" | "progress" | null>(null);
 
-    const rings = [
-        { id: "green", radius: 70, color: "#34d399", label: "قريب", labelAr: "الآمن" },
-        { id: "yellow", radius: 110, color: "#fbbf24", label: "متذبذب", labelAr: "نطاق اضطراب" },
-        { id: "red", radius: 150, color: "#f87171", label: "بعيد", labelAr: "نطاق استنزاف" },
-    ] as const;
+  const handleStart = () => setStep("questions");
 
-    /** Get scale factor: actual container width / BASE (320). */
-    const getScale = useCallback(() => {
-        if (!constraintsRef.current) return 1;
-        return constraintsRef.current.offsetWidth / BASE;
-    }, []);
+  const handleAnswer = (optionId: string, category: "future" | "relationships" | "progress") => {
+    setAnswers({ ...answers, [QUESTIONS[currentQuestionIndex].id]: category });
+    
+    if (currentQuestionIndex < QUESTIONS.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      // Analyze answers
+      const categories = Object.values({ ...answers, [QUESTIONS[currentQuestionIndex].id]: category });
+      const counts = categories.reduce((acc, curr) => {
+        acc[curr] = (acc[curr] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      let maxCount = 0;
+      let dominant = "future"; // default
+      for (const [cat, count] of Object.entries(counts)) {
+        if (count > maxCount) {
+          maxCount = count;
+          dominant = cat;
+        }
+      }
+      setDominantCategory(dominant as "future" | "relationships" | "progress");
+      setStep("analyzing");
+    }
+  };
 
-    const handleDrag = (_: unknown, info: PanInfo) => {
-        if (hintVisible) setHintVisible(false);
-        const s = getScale();
-        const currentX = info.offset.x / s;
-        const currentY = CENTER_OFFSET_Y + info.offset.y / s;
-        const dist = Math.sqrt(currentX * currentX + currentY * currentY);
-
-        if (dist < 80) setActiveZone("green");
-        else if (dist < 120) setActiveZone("yellow");
-        else if (dist < 165) setActiveZone("red");
-        else setActiveZone(null);
-    };
-
-    const handleDragEnd = (_: unknown, info: PanInfo) => {
-        const s = getScale();
-        const currentX = info.offset.x / s;
-        const currentY = CENTER_OFFSET_Y + info.offset.y / s;
-        const dist = Math.sqrt(currentX * currentX + currentY * currentY);
-
-        let targetZone: "green" | "yellow" | "red" | null = null;
-        let targetRadius = 0;
-
-        if (dist < 85) { targetZone = "green"; targetRadius = 60; }
-        else if (dist < 125) { targetZone = "yellow"; targetRadius = 100; }
-        else if (dist < 180) { targetZone = "red"; targetRadius = 140; }
-
-        if (targetZone) {
-            setPlaced(true);
-            setActiveZone(targetZone);
-
-            if (typeof navigator !== 'undefined' && navigator.vibrate) {
-                navigator.vibrate(targetZone === "red" ? [50, 30, 50] : targetZone === "yellow" ? [40] : [20]);
-            }
-
-            const angle = Math.atan2(currentY, currentX);
-            const snapX = Math.cos(angle) * targetRadius * s;
-            const snapY = (Math.sin(angle) * targetRadius - CENTER_OFFSET_Y) * s;
-
-            controls.start({
-                x: snapX,
-                y: snapY,
-                transition: { type: "spring", stiffness: 300, damping: 20 }
+  useEffect(() => {
+    if (step === "analyzing") {
+      const timer = setTimeout(() => {
+        setStep("result");
+        // Store emotional offer right before showing result
+        if (dominantCategory === "future") {
+            setEmotionalOffer({
+               title: "عشان تفك اشتباك المستقبل",
+               message: "إنت محتاج خطوتك لبكرة بس، مش خطة لـ 10 سنين قدام. استخدم الخطة الشخصية بـ 9$ عشاب توضح الرؤية ومتتعلّقش في التفكير.",
+               discountPercentage: 0,
+               urgencyLevel: "high"
+            });
+        } else if (dominantCategory === "progress") {
+             setEmotionalOffer({
+               title: "عشان تبطل جلد ذات",
+               message: "المقارنات هي اللي بتوقفك مش الكسل. افتح الخريطة الشخصية بـ 9$ عشان تشوف إنجازك إنت، بعيد عن دوشة السوشيال ميديا.",
+               discountPercentage: 0,
+               urgencyLevel: "high"
             });
         } else {
-            setPlaced(false);
-            setActiveZone(null);
-            controls.start({ x: 0, y: 0, transition: { type: "spring" } });
+             setEmotionalOffer({
+               title: "عشان تنظف دوائرك",
+               message: "في حد بيسحب طاقتك وإنت مش واخد بالك أو بتساير. ابدأ خطتك بـ 9$ وارسم دوائرك عشان تعرف مين بيشحنك ومين بيستنزفك.",
+               discountPercentage: 0,
+               urgencyLevel: "high"
+            });
         }
-    };
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [step, dominantCategory]);
 
-    return (
-        <div
-            className="relative w-full max-w-[320px] aspect-square mx-auto my-6 select-none"
-            ref={constraintsRef}
-            aria-label="محاكاة تفاعلية للوضع في المدرات"
-        >
-            <div className="sr-only" aria-live="polite" aria-atomic="true">
-                {placed
-                    ? `تم التثبيت في: ${rings.find(r => r.id === activeZone)?.labelAr ?? "لم يحدد"}`
-                    : activeZone
-                        ? `يحوم حالياً فوق: ${rings.find(r => r.id === activeZone)?.labelAr}`
-                        : "اسحب الهدف لتسكينه في أحد المدارات"
-                }
-            </div>
-            {/* Background Rings — sizes as % of container (radius/160 * 100) */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
-                {rings.map((ring) => {
-                    const pct = (ring.radius / (BASE / 2)) * 100;
-                    return (
-                        <motion.div
-                            key={ring.id}
-                            className="absolute rounded-full flex items-start justify-center pt-2 transition-all duration-300"
-                            animate={{
-                                scale: activeZone === ring.id ? 1.05 : 1,
-                                borderColor: activeZone === ring.id ? ring.color : "rgba(255,255,255,0.1)",
-                                backgroundColor: activeZone === ring.id ? `${ring.color}15` : "transparent",
-                            }}
-                            style={{
-                                width: `${pct}%`,
-                                height: `${pct}%`,
-                                borderWidth: 1.5,
-                                borderStyle: "dashed",
-                                zIndex: 1
-                            }}
-                        >
-                            <span
-                                className="text-[clamp(0.625rem,2.5vw,0.875rem)] font-bold transition-all duration-300 whitespace-nowrap"
-                                style={{
-                                    color: ring.color,
-                                    opacity: activeZone === ring.id || placed ? 1 : 0,
-                                    background: "rgba(15,23,42,0.9)",
-                                    padding: "2px 8px",
-                                    borderRadius: "12px",
-                                    marginTop: "-11px",
-                                    boxShadow: `0 0 10px ${ring.color}40`,
-                                    transform: activeZone === ring.id ? "translateY(0)" : "translateY(4px)"
-                                }}
-                            >
-                                {ring.labelAr}
-                            </span>
-                        </motion.div>
-                    );
-                })}
+  const getResultContent = () => {
+    switch (dominantCategory) {
+      case "future":
+        return {
+          title: "إنت مش يائس، إنت غرقان في بكرة",
+          message: "تحليلات المشكلة: عقلك شغال بأقصى طاقة عشان يرسم كل السيناريوهات السيئة للمستقبل. ده مش معناه إنك فاشل، ده معناه إن مخك بيحاول يحميك بطريقة غلط بتخليك متشُل.",
+          action: "اكتشف خطوتك الصغيرة بكرة",
+          icon: <Target className="h-10 w-10 text-emerald-400" />
+        };
+      case "progress":
+        return {
+          title: "إنت مش كسول، إنت بتحارب وهم المقارنة",
+          message: "تحليل المشكلة: إنت رابط قيمتك بسرعة نجاح اللي حواليك. كل مرة بتشرد فيها على السوشيال ميديا، بتجلد ذاتك أكتر وبتقول 'أنا متأخر'. الحقيقة إنت واقف في مكانك عشان بتبص لورا.",
+          action: "ارسم مسارك إنت، مش مسارهم",
+          icon: <Loader2 className="h-10 w-10 text-amber-400" /> // Using Loader2 as a placeholder for 'waiting/progress'
+        };
+      case "relationships":
+        return {
+          title: "طاقتك مسروقة، مش خلصانة",
+          message: "تحليل المشكلة: المشكلة مش إنك معندكش طاقة تشتغل أو تبني مستقبلك. المشكلة إن فيه علاقة (ممكن تكون قريبة جداً) بتسحب كهربتك أول بأول عشان تراضيها أو تسايرها.",
+          action: "حدد مين بيستنزفك النهارده",
+          icon: <AlertCircle className="h-10 w-10 text-red-400" />
+        };
+      default:
+         return {
+          title: "عقلك زحمة محتاج ترتيب",
+          message: "جزء كبير من طاقتك رايح في التفكير مش في الفعل. خلينا نحدد إيه أولوية حرق الأعصاب دي.",
+          action: "فك الزحمة دي الأول",
+          icon: <BrainCircuit className="h-10 w-10 text-blue-400" />
+        };
+    }
+  };
 
-                {/* Center Self */}
-                <div className="absolute w-[15%] aspect-square rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center z-10 shadow-2xl shadow-teal-900/30">
-                    <span className="text-[clamp(0.625rem,2.5vw,0.875rem)] text-slate-400 font-bold">المركز</span>
-                </div>
-            </div>
 
-            {/* Draggable Node */}
+  return (
+    <div className="relative mx-auto mt-8 w-full max-w-lg overflow-hidden rounded-3xl border border-gray-800 bg-[#0a0a0a] shadow-2xl" id="simulation" dir="rtl">
+      
+      {/* Dynamic Background Glow based on Step */}
+      <div className={`absolute -inset-20 opacity-20 blur-3xl transition-colors duration-1000 ${
+            step === 'analyzing' ? 'bg-indigo-500 animate-pulse' : 
+            step === 'result' ? (dominantCategory === 'future' ? 'bg-emerald-500' : dominantCategory === 'progress' ? 'bg-amber-500' : 'bg-red-500') : 
+            'bg-[var(--soft-teal)]'
+        }`} />
+
+      <div className="relative z-10 min-h-[400px] p-8 sm:p-10 flex flex-col justify-center">
+        <AnimatePresence mode="wait">
+          
+          {/* STEP 1: Intro */}
+          {step === "intro" && (
             <motion.div
-                className="absolute w-[14%] aspect-square rounded-full shadow-lg flex items-center justify-center cursor-grab active:cursor-grabbing z-20 backdrop-blur-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-                tabIndex={0}
-                role="button"
-                aria-label="الهدف المراد تسكينه، اسحبه وأفلته، أو العب بالأسهم للمحاكاة"
-                aria-grabbed={!placed}
-                style={{
-                    background: placed
-                        ? activeZone === "green" ? "#34d399" : activeZone === "yellow" ? "#fbbf24" : "#f87171"
-                        : "rgba(255,255,255,0.1)",
-                    border: "2px solid rgba(255,255,255,0.4)",
-                    color: placed ? "#0f172a" : "#fff",
-                    left: "50%",
-                    top: "85%",
-                    transform: "translate(-50%, -50%)"
-                }}
-                drag
-                dragConstraints={constraintsRef}
-                dragElastic={0.2}
-                dragMomentum={false}
-                onDragStart={() => setPlaced(false)}
-                onDrag={handleDrag}
-                onDragEnd={handleDragEnd}
-                animate={controls}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onKeyDown={(e) => {
-                    const zones = [null, "green", "yellow", "red"] as const;
-                    const currentIndex = zones.indexOf(activeZone);
-                    const s = getScale();
-                    if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
-                        e.preventDefault();
-                        const nextIndex = currentIndex < 3 ? currentIndex + 1 : 3;
-                        setActiveZone(zones[nextIndex]);
-                        setPlaced(false);
-                    } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
-                        e.preventDefault();
-                        const nextIndex = currentIndex > 0 ? currentIndex - 1 : 0;
-                        setActiveZone(zones[nextIndex]);
-                        setPlaced(false);
-                    } else if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        if (activeZone) {
-                            const target = activeZone === "red" ? 140 : activeZone === "yellow" ? 100 : 60;
-                            setPlaced(true);
-                            controls.start({ x: target * s, y: (target - CENTER_OFFSET_Y) * s, transition: { type: "spring" } });
-                        }
-                    }
-                }}
+              key="intro"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="text-center"
             >
-                <span className="text-[clamp(0.625rem,2.5vw,0.875rem)] font-bold">{placed ? "جاهز" : "هدف"}</span>
+              <div className="mb-6 inline-flex rounded-full bg-white/5 p-4 text-[var(--soft-teal)] shadow-inner border border-white/10">
+                <BrainCircuit className="h-8 w-8" />
+              </div>
+              <h3 className="mb-4 text-2xl font-bold text-white leading-tight">عقلك زحمة ومشوش؟</h3>
+              <p className="mb-8 text-[15px] leading-relaxed text-gray-400">
+                مش لازم تبقى فاهم كل حاجة دلوقتي. جاوب على 3 أسئلة بسرعة وبدون تفكير، وخلينا نكتشف <span className="text-white font-semibold border-b border-[var(--soft-teal)]/50 pb-0.5">الحاجة الحقيقية</span> اللي سارقة طاقتك وموقفاك.
+              </p>
+              <button
+                onClick={handleStart}
+                className="group w-full rounded-2xl bg-white px-6 py-4 text-[16px] font-bold text-black transition-all hover:bg-gray-100 hover:scale-[1.02] flex items-center justify-center gap-2"
+              >
+                فك الزحمة دي في دقيقتين
+                <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+              </button>
             </motion.div>
+          )}
 
-            {/* Simulation Hint */}
-            <div
-                className={`absolute bottom-0 left-0 right-0 text-center pointer-events-none transition-opacity duration-500 ${hintVisible && !placed ? "opacity-100" : "opacity-0"}`}
+          {/* STEP 2: Questions */}
+          {step === "questions" && (
+            <motion.div
+              key="questions"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              className="flex flex-col h-full justify-between"
             >
-                <p className="text-[clamp(0.625rem,2.5vw,0.875rem)] text-slate-400/80 animate-pulse bg-slate-900/50 inline-block px-3 py-1 rounded-full border border-white/5" aria-hidden="true">
-                    جرب رصد "هدف" وسحبه للمدار
+              <div>
+                 <div className="mb-8 flex items-center gap-2">
+                    {[0, 1, 2].map((idx) => (
+                      <div key={idx} className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${idx <= currentQuestionIndex ? 'bg-[var(--soft-teal)]' : 'bg-white/10'}`} />
+                    ))}
+                 </div>
+                 <h3 className="mb-8 text-xl font-bold text-white leading-relaxed">
+                   {QUESTIONS[currentQuestionIndex].text}
+                 </h3>
+              </div>
+              
+              <div className="space-y-3">
+                {QUESTIONS[currentQuestionIndex].options.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => handleAnswer(option.id, option.category)}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 p-4 text-right text-[15px] text-gray-300 transition-all hover:bg-white/10 hover:border-[var(--soft-teal)]/50 hover:text-white active:scale-[0.98]"
+                  >
+                    {option.text}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* STEP 3: Analyzing */}
+          {step === "analyzing" && (
+            <motion.div
+              key="analyzing"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center text-center py-10"
+            >
+              <Loader2 className="mb-6 h-12 w-12 animate-spin text-indigo-400" />
+              <h3 className="text-lg font-bold text-white mb-2">بنحلل نمط تفكيرك...</h3>
+              <p className="text-sm text-gray-400">بنربط إجاباتك ببعض عشان نوصّل للنقطة العميا</p>
+            </motion.div>
+          )}
+
+          {/* STEP 4: Result (Aha Moment) */}
+          {step === "result" && (
+            <motion.div
+              key="result"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center"
+            >
+              <div className="mb-6 inline-flex rounded-full bg-white/5 p-4 border border-white/10 shadow-lg">
+                 {getResultContent()?.icon}
+              </div>
+              
+              <h3 className="mb-4 text-2xl font-bold leading-tight text-white px-2">
+                {getResultContent()?.title}
+              </h3>
+              
+              <div className="mb-8 rounded-2xl bg-white/5 border border-white/10 p-5 text-right relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-white/30 to-transparent" />
+                <p className="text-[15px] leading-relaxed text-gray-300">
+                  {getResultContent()?.message}
                 </p>
-            </div>
-        </div>
-    );
+              </div>
+
+              <div className="space-y-4">
+                 <button
+                    onClick={() => window.location.href = '/pricing'}
+                    className="group relative w-full overflow-hidden rounded-2xl bg-white px-6 py-4 text-[16px] font-bold text-black transition-transform hover:scale-[1.02] shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+                  >
+                    <div className="relative flex justify-center items-center gap-2 z-10">
+                        <Sparkles className="h-5 w-5 text-amber-500" />
+                        {getResultContent()?.action} (9$ شهرياً)
+                    </div>
+                  </button>
+                  <p className="text-xs text-gray-500">
+                      ابشر، الإلغاء بضغطة زر لو حسيت إنها مش مفيدة.
+                  </p>
+              </div>
+              
+            </motion.div>
+          )}
+          
+        </AnimatePresence>
+      </div>
+    </div>
+  );
 }

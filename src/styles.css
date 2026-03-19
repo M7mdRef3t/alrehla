@@ -1,4 +1,7 @@
-﻿
+/* ═══ Brand Fonts — Tajawal (headings) + IBM Plex Arabic (body) + Inter (en) ═══ */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap');
+
+
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ðŸŒŒ Ø§Ù„Ø±Ø­Ù„Ø© â€” THERAPEUTIC SPACESHIP DASHBOARD
    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -25,7 +28,7 @@
     --phi-space-base: 1rem;
 
     /* â”€â”€ ðŸŒŒ Deep Cosmic Blue â€” Therapeutic Background â”€â”€ */
-    --space-void: #0a0e1f;
+    --space-void: #0A0A1A;  /* Brand: Deep Space */
     --space-950: #0f1629;
     --space-deep: #131a35;
     --space-mid: #1a2242;
@@ -44,8 +47,8 @@
     --soft-emerald-glow: rgba(16, 185, 129, 0.25);
 
     /* â”€â”€ ðŸŒŠ Soft Teal â€” Brand Primary â”€â”€ */
-    --soft-teal: #2dd4bf;
-    --soft-teal-dim: rgba(45, 212, 191, 0.12);
+    --soft-teal: #14B8A6;   /* Brand: Teal Haven */
+    --soft-teal-dim: rgba(20, 184, 166, 0.12);
     --soft-teal-glow: rgba(45, 212, 191, 0.25);
     --color-primary: #334155;
     --color-primary-soft: rgba(51, 65, 85, 0.92);
@@ -79,8 +82,20 @@
     --text-secondary: #94a3b8;
     --text-muted: rgba(148, 163, 184, 0.5);
     --text-accent: var(--soft-teal);
-    --font-display: "Almarai", system-ui, sans-serif;
-    --font-sans: "Almarai", "IBM Plex Sans Arabic", system-ui, sans-serif;
+    --font-display: "Tajawal", "IBM Plex Sans Arabic", system-ui, sans-serif;
+    --font-sans: "IBM Plex Sans Arabic", "Tajawal", system-ui, sans-serif;
+    --font-en: "Inter", system-ui, sans-serif;
+
+    /* ═══ Brand Color Aliases ═══ */
+    --brand-teal: #14B8A6;       /* Teal Haven — primary */
+    --brand-violet: #7C3AED;     /* Sage Violet — wisdom */
+    --brand-deep: #0A0A1A;       /* Deep Space — background */
+    --brand-orbit-safe: #34D399; /* Orbit Safe — green ring */
+    --brand-orbit-mixed: #FBBF24;/* Orbit Mixed — yellow ring */
+    --brand-orbit-strain: #F87171;/* Orbit Strain — red ring */
+    --brand-sky: #38BDF8;        /* Sky Accent */
+    --brand-mist: #94A3B8;       /* Mist — secondary text */
+    --brand-white: #F8FAFC;      /* Soft White */
 
     /* â”€â”€ Spacing & Rhythm â”€â”€ */
     --tracking-tight: -0.02em;

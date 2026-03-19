@@ -20,6 +20,71 @@ function getRedirectUrl(): string | undefined {
   return undefined;
 }
 
+function buildRedirectUrl(pathname?: string): string | undefined {
+  const base = getRedirectUrl();
+  if (!base) return undefined;
+  if (!pathname) return base;
+
+  try {
+    return new URL(pathname, base).toString();
+  } catch {
+    return base;
+  }
+}
+
+function buildOAuthCallbackUrl(pathname?: string): string | undefined {
+  const base = getRedirectUrl();
+  if (!base) return undefined;
+
+  try {
+    const callbackUrl = new URL("/auth/callback", base);
+    const nextPath = pathname || "/";
+    callbackUrl.searchParams.set("next", nextPath);
+    return callbackUrl.toString();
+  } catch {
+    return buildRedirectUrl(pathname);
+  }
+}
+
+async function signInWithGoogleInternal(pathname?: string): Promise<OAuthResponse> {
+  if (!supabase) {
+    return {
+      data: { provider: "google", url: null },
+      error: buildSupabaseUnavailableError()
+    } as OAuthResponse;
+  }
+  const redirectTo = buildOAuthCallbackUrl(pathname);
+  const response = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo,
+      // Control the final browser navigation ourselves so dev/local testing
+      // cannot silently fall back to a different origin.
+      skipBrowserRedirect: true
+    }
+  });
+
+  if (!response.error && response.data?.url) {
+    const windowRef = getWindowOrNull();
+    const target = response.data.url;
+
+    if (windowRef) {
+      try {
+        const nextUrl = new URL(target);
+        if (redirectTo) {
+          nextUrl.searchParams.set("redirect_to", redirectTo);
+          nextUrl.searchParams.set("redirectTo", redirectTo);
+        }
+        windowRef.location.assign(nextUrl.toString());
+      } catch {
+        windowRef.location.assign(target);
+      }
+    }
+  }
+
+  return response;
+}
+
 function buildSupabaseUnavailableError() {
   return new Error("Supabase غير متاح");
 }
@@ -45,16 +110,11 @@ export async function signUpWithEmail(email: string, password: string): Promise<
 }
 
 export async function signInWithGoogle(): Promise<OAuthResponse> {
-  if (!supabase) {
-    return {
-      data: { provider: "google", url: null },
-      error: buildSupabaseUnavailableError()
-    } as OAuthResponse;
-  }
-  return supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: getRedirectUrl() }
-  });
+  return signInWithGoogleInternal();
+}
+
+export async function signInWithGoogleAtPath(pathname: string): Promise<OAuthResponse> {
+  return signInWithGoogleInternal(pathname);
 }
 
 export async function signInWithMagicLink(email: string): Promise<AuthOtpResponse> {

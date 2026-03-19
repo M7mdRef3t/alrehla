@@ -34,6 +34,13 @@ export interface EmotionalOffer {
     consumed: boolean;
 }
 
+export interface LegacyEmotionalOfferInput {
+    title: string;
+    message: string;
+    discountPercentage?: number;
+    urgencyLevel?: "low" | "medium" | "high";
+}
+
 export interface TierLimits {
     maxMapNodes: number;         // -1 = لا حد
     dailyAIMessages: number;     // -1 = لا حد
@@ -198,6 +205,20 @@ export function saveEmotionalOffer(offer: EmotionalOffer): void {
     } catch {
         // noop
     }
+}
+
+export function setEmotionalOffer(input: LegacyEmotionalOfferInput): void {
+    const durationDays = input.urgencyLevel === "high" ? 3 : input.urgencyLevel === "medium" ? 7 : 14;
+    saveEmotionalOffer({
+        id: `offer-${Date.now()}`,
+        createdAt: Date.now(),
+        type: input.discountPercentage && input.discountPercentage > 0 ? "premium_discount" : "free_month",
+        title: input.title,
+        message: input.message,
+        discountPercent: input.discountPercentage,
+        expiresAt: Date.now() + durationDays * 24 * 60 * 60 * 1000,
+        consumed: false,
+    });
 }
 
 export function getEmotionalOffer(): EmotionalOffer | null {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Users, Flame, ChevronRight, BarChart3, TrendingUp, AlertTriangle, Shield, Settings, LogOut } from 'lucide-react';
+import { Activity, Users, Flame, ChevronRight, BarChart3, TrendingUp, AlertTriangle, Shield, Settings, LogOut, ArrowLeft } from 'lucide-react';
 
 const DEPARTMENTS = [
     { id: 'eng', name: 'الهندسة (Engineering)', employees: 142, burnoutScore: 85, trend: '+15%', status: 'critical' },
@@ -10,7 +10,7 @@ const DEPARTMENTS = [
     { id: 'marketing', name: 'التسويق (Marketing)', employees: 45, burnoutScore: 50, trend: '0%', status: 'stable' },
 ];
 
-export const EnterprisePortal: React.FC = () => {
+export const EnterprisePortal: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     const [selectedDept, setSelectedDept] = useState<string | null>(null);
 
     const getHealthColor = (score: number) => {
@@ -36,6 +36,11 @@ export const EnterprisePortal: React.FC = () => {
                 className="bg-slate-900 border-l border-slate-800 flex flex-col relative z-20 shrink-0 hidden md:flex"
             >
                 <div className="p-6 flex items-center gap-3 border-b border-slate-800">
+                    {onBack && (
+                        <button onClick={onBack} className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all" aria-label="رجوع">
+                            <ArrowLeft className="w-4 h-4" />
+                        </button>
+                    )}
                     <div className="w-10 h-10 rounded-xl bg-teal-500/20 flex flex-col items-center justify-center shrink-0 border border-teal-500/30">
                         <Shield className="w-5 h-5 text-teal-400" />
                     </div>

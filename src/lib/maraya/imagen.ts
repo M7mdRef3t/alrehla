@@ -1,6 +1,6 @@
 /**
  * Imagen Image Generation Service for Maraya
- * Ported from maraya-storyteller/server/services/imagen.js
+ * Adapted from the legacy Maraya image runtime.
  */
 
 import { GoogleGenAI } from '@google/genai';

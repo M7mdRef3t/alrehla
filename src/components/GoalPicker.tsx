@@ -3,31 +3,19 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import {
-  Briefcase,
-  Home,
-  Heart,
-  Wallet,
-  HelpCircle,
-  Users,
-  UserCircle,
-  Star,
-  Target
+  Briefcase, Home, Heart, Wallet, HelpCircle,
+  Users, UserCircle, Star, ArrowRight
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { resolveAdviceCategory, type AdviceCategory } from "../data/adviceScripts";
-import { isUserMode } from "../config/appEnv";
 import { goalPickerCopy } from "../copy/goalPicker";
 import { useJourneyState } from "../state/journeyState";
 import { usePulseState } from "../state/pulseState";
 import type { PulseFocus, PulseMood } from "../state/pulseState";
 import type { BaselineAnswers } from "../data/baselineQuestions";
-import { EditableText } from "./EditableText";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
-import { Badge, Button, Card } from "./UI";
 
-/* 
-   GOAL PICKER - Cosmic Orbit Selection
-    */
+/* ─── Types ─────────────────────────────────────────────────────────────────── */
 
 const ICON_MAP: Record<string, LucideIcon> = {
   work: Briefcase,
@@ -39,56 +27,46 @@ const ICON_MAP: Record<string, LucideIcon> = {
   unknown: HelpCircle
 };
 
+const GOAL_COLORS: Record<string, { color: string; bg: string; border: string; glow: string }> = {
+  work:    { color: "#60A5FA", bg: "rgba(96,165,250,0.10)",  border: "rgba(96,165,250,0.25)",  glow: "rgba(96,165,250,0.20)"  },
+  family:  { color: "#34D399", bg: "rgba(52,211,153,0.10)",  border: "rgba(52,211,153,0.25)",  glow: "rgba(52,211,153,0.20)"  },
+  friends: { color: "#A78BFA", bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.25)", glow: "rgba(167,139,250,0.20)" },
+  love:    { color: "#FB7185", bg: "rgba(251,113,133,0.10)", border: "rgba(251,113,133,0.25)", glow: "rgba(251,113,133,0.20)" },
+  money:   { color: "#FBBF24", bg: "rgba(251,191,36,0.10)",  border: "rgba(251,191,36,0.25)",  glow: "rgba(251,191,36,0.20)"  },
+  self:    { color: "#14B8A6", bg: "rgba(20,184,166,0.10)",  border: "rgba(20,184,166,0.25)",  glow: "rgba(20,184,166,0.20)"  },
+  unknown: { color: "#94A3B8", bg: "rgba(148,163,184,0.08)", border: "rgba(148,163,184,0.18)", glow: "rgba(148,163,184,0.12)" },
+};
+
 const ALL_GOAL_IDS = ["family", "friends", "work", "love", "money", "self", "unknown"];
-/** ضع استخد: اعة فط. ضع اتطر:  اخرائط. */
-const ENABLED_GOAL_IDS = isUserMode ? ["family"] : ALL_GOAL_IDS;
+const ENABLED_GOAL_IDS = ALL_GOAL_IDS;
+
+/* ─── Animations ─────────────────────────────────────────────────────────────── */
 
 const cosmicEase = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
+const headerVariants: Variants = {
+  hidden: { opacity: 0, y: 20, filter: "blur(8px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.65, ease: cosmicEase } }
+};
+
 const tileVariants: Variants = {
-  hidden: { opacity: 0, y: 20, scale: 0.95, filter: "blur(6px)" },
+  hidden: { opacity: 0, y: 22, scale: 0.96, filter: "blur(5px)" },
   visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    filter: "blur(0px)",
-    transition: {
-      delay: i * 0.1,
-      duration: 0.6,
-      ease: cosmicEase
-    }
+    opacity: 1, y: 0, scale: 1, filter: "blur(0px)",
+    transition: { delay: i * 0.07, duration: 0.55, ease: cosmicEase }
   })
 };
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 16, filter: "blur(8px)" },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.7, ease: cosmicEase }
-  }
-};
+/* ─── Recommendation Logic ───────────────────────────────────────────────────── */
 
-/** تصات  ابصة: event+غضبا=صراعات body+طاة خفضة=ستب/اتشاف thought+=تا */
 function getPulseRecommendations(pulse: { mood: PulseMood; focus: PulseFocus; energy: number }): string[] {
   const { mood, focus, energy } = pulse;
   const recs: string[] = [];
-  if (focus === "event" && (mood === "angry" || mood === "anxious" || mood === "tense")) {
-    recs.push("family", "work");
-  }
-  if (focus === "event" && mood === "sad") {
-    recs.push("family", "friends");
-  }
-  if (focus === "thought" && (mood === "anxious" || mood === "sad" || mood === "overwhelmed")) {
-    recs.push("unknown", "friends");
-  }
-  if (focus === "body" || energy <= 3) {
-    recs.push("money", "unknown");
-  }
-  if (focus === "none" && energy >= 6) {
-    recs.push("money", "work");
-  }
+  if (focus === "event" && (mood === "angry" || mood === "anxious" || mood === "tense")) recs.push("family", "work");
+  if (focus === "event" && mood === "sad") recs.push("family", "friends");
+  if (focus === "thought" && (mood === "anxious" || mood === "sad" || mood === "overwhelmed")) recs.push("unknown", "friends");
+  if (focus === "body" || energy <= 3) recs.push("money", "unknown");
+  if (focus === "none" && energy >= 6) recs.push("money", "work");
   return recs.length > 0 ? [...new Set(recs)] : ["unknown"];
 }
 
@@ -103,21 +81,121 @@ function getSmartRecommendations(
   const q2 = typeof baselineAnswers.q2 === "number" ? baselineAnswers.q2 : null;
   const q3 = typeof baselineAnswers.q3 === "string" ? baselineAnswers.q3 : null;
   const q4 = typeof baselineAnswers.q4 === "number" ? baselineAnswers.q4 : null;
-  if (q1 != null && q1 <= 2) {
-    recommendations.push("family", "friends");
-  }
-  if (q2 != null && q2 >= 4) {
-    recommendations.push("work", "money");
-  }
-  if (q3 === "no") {
-    recommendations.push("love");
-  }
-  if (q4 != null && q4 >= 4) {
-    return ENABLED_GOAL_IDS;
-  }
+  if (q1 != null && q1 <= 2) recommendations.push("family", "friends");
+  if (q2 != null && q2 >= 4) recommendations.push("work", "money");
+  if (q3 === "no") recommendations.push("love");
+  if (q4 != null && q4 >= 4) return ENABLED_GOAL_IDS;
   const baseline = recommendations.length > 0 ? recommendations : ["family"];
   return pulseRecs.length > 0 ? [...new Set([...pulseRecs, ...baseline])] : baseline;
 }
+
+/* ─── Goal Card ──────────────────────────────────────────────────────────────── */
+
+interface GoalCardProps {
+  option: { id: string; label: string; subtitle: string };
+  index: number;
+  isEnabled: boolean;
+  isSelected: boolean;
+  isRecommended: boolean;
+  onSelect: (id: string) => void;
+}
+
+const GoalCard: FC<GoalCardProps> = ({ option, index, isEnabled, isSelected, isRecommended, onSelect }) => {
+  const Icon = ICON_MAP[option.id] ?? HelpCircle;
+  const c = GOAL_COLORS[option.id] ?? GOAL_COLORS.unknown;
+
+  return (
+    <motion.div
+      custom={index}
+      variants={tileVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.button
+        type="button"
+        disabled={!isEnabled}
+        onClick={() => isEnabled && onSelect(option.id)}
+        className="relative w-full flex flex-col gap-3 rounded-2xl p-5 text-right transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50"
+        style={{
+          background: isSelected ? c.bg : "rgba(15,15,28,0.55)",
+          border: `1.5px solid ${isSelected ? c.border : "rgba(255,255,255,0.06)"}`,
+          backdropFilter: "blur(14px)",
+          boxShadow: isSelected ? `0 0 24px ${c.glow}, 0 8px 24px rgba(0,0,0,0.2)` : "0 4px 20px rgba(0,0,0,0.15)",
+          opacity: isEnabled ? 1 : 0.45,
+          cursor: isEnabled ? "pointer" : "not-allowed"
+        }}
+        whileHover={isEnabled ? { y: -3, scale: 1.02 } : {}}
+        whileTap={isEnabled ? { scale: 0.98 } : {}}
+        transition={{ duration: 0.2 }}
+      >
+        {/* Recommended badge */}
+        {isRecommended && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.35 + index * 0.07, type: "spring", stiffness: 300 }}
+            className="absolute top-3 left-3 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+            style={{ background: c.bg, border: `1px solid ${c.border}`, color: c.color }}
+          >
+            <Star className="w-2.5 h-2.5" />
+            مناسب ليك
+          </motion.div>
+        )}
+
+        {/* Selected indicator line */}
+        {isSelected && (
+          <motion.div
+            layoutId="selected-indicator"
+            className="absolute inset-0 rounded-2xl pointer-events-none"
+            style={{ border: `2px solid ${c.color}`, opacity: 0.6 }}
+          />
+        )}
+
+        {/* Icon + label row */}
+        <div className="flex items-center gap-3">
+          <motion.div
+            className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+            style={{
+              background: isSelected ? c.bg : "rgba(255,255,255,0.04)",
+              border: `1px solid ${isSelected ? c.border : "rgba(255,255,255,0.06)"}`,
+              boxShadow: isSelected ? `0 0 16px ${c.glow}` : "none"
+            }}
+            whileHover={isEnabled ? { scale: 1.08 } : {}}
+          >
+            <Icon
+              className="w-5 h-5"
+              style={{ color: isSelected ? c.color : isEnabled ? "#94A3B8" : "#475569" }}
+            />
+          </motion.div>
+
+          <div className="flex-1 text-right">
+            <p
+              className="text-sm font-black mb-0.5"
+              style={{ color: isSelected ? c.color : "#E2E8F0", fontFamily: "Tajawal, sans-serif" }}
+            >
+              {option.label}
+            </p>
+            <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: "#64748B" }}>
+              {option.subtitle}
+            </p>
+          </div>
+        </div>
+
+        {/* "Coming soon" overlay */}
+        {!isEnabled && (
+          <div
+            className="absolute inset-0 flex items-center justify-center rounded-2xl text-xs font-bold"
+            style={{ background: "rgba(10,10,26,0.8)", color: "#475569" }}
+          >
+            قريباً
+          </div>
+        )}
+      </motion.button>
+    </motion.div>
+  );
+};
+
+/* ─── Main Component ─────────────────────────────────────────────────────────── */
 
 interface GoalPickerProps {
   initialGoalId?: string;
@@ -125,269 +203,137 @@ interface GoalPickerProps {
   onContinue: (category: AdviceCategory, goalId: string) => void;
 }
 
-export const GoalPicker: FC<GoalPickerProps> = ({
-  initialGoalId,
-  onBack,
-  onContinue
-}) => {
+export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onContinue }) => {
   const [recommendedGoals, setRecommendedGoals] = useState<string[]>([]);
+  const [selectedId, setSelectedId] = useState<string | undefined>(initialGoalId);
   const baselineAnswers = useJourneyState((s) => s.baselineAnswers);
   const lastPulse = usePulseState((s) => s.lastPulse);
 
   useEffect(() => {
     const pulse = lastPulse ? { mood: lastPulse.mood, focus: lastPulse.focus, energy: lastPulse.energy } : null;
-    const recommendations = getSmartRecommendations(baselineAnswers, pulse);
-    setRecommendedGoals(recommendations);
+    setRecommendedGoals(getSmartRecommendations(baselineAnswers, pulse));
   }, [baselineAnswers, lastPulse]);
 
   const handleSelect = (goalId: string) => {
-    if (!ENABLED_GOAL_IDS.includes(goalId)) return;
+    setSelectedId(goalId);
     const category = resolveAdviceCategory(goalId);
     trackEvent(AnalyticsEvents.GOAL_SELECTED, { goal_id: goalId, category });
-    onContinue(category, goalId);
+    // Small delay for animation to complete
+    setTimeout(() => {
+      onContinue(category, goalId);
+    }, 220);
   };
 
   return (
     <main
-      className="w-full max-w-4xl h-full min-h-0 py-2 sm:py-3 text-center overflow-hidden flex flex-col"
+      className="relative w-full min-h-screen flex flex-col items-center"
+      style={{ background: "#0A0A1A", fontFamily: "IBM Plex Sans Arabic, Tajawal, sans-serif" }}
+      dir="rtl"
       aria-labelledby="goal-title"
     >
-      {/* Progress indicator - cosmic style */}
-      <motion.div
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="mb-1.5 sm:mb-2 shrink-0"
-      >
-        <Card className="mx-auto max-w-xl p-3 sm:p-4">
-          <div className="flex items-center justify-center gap-3">
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center"
-              style={{
-                background: "linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(139, 92, 246, 0.15))",
-                border: "1px solid rgba(45, 212, 191, 0.3)",
-                boxShadow: "0 0 20px rgba(45, 212, 191, 0.15)"
-              }}
-            >
-              <Target className="w-5 h-5" style={{ color: "var(--soft-teal)" }} />
-            </div>
-            <div className="text-right">
-              <h3 className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>ارحة 2  4</h3>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>تحدد اة</p>
-            </div>
-          </div>
-          <div
-            className="mt-3 w-full max-w-xs mx-auto h-1 rounded-full overflow-hidden"
-            style={{ background: "rgba(255, 255, 255, 0.06)" }}
-          >
-            <motion.div
-              className="h-full rounded-full"
-              style={{
-                background: "linear-gradient(90deg, var(--soft-teal), rgba(139, 92, 246, 0.6))",
-                boxShadow: "0 0 8px rgba(45, 212, 191, 0.3)"
-              }}
-              initial={{ width: "25%" }}
-              animate={{ width: "50%" }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-            />
-          </div>
-        </Card>
-      </motion.div>
-
-      {/* Emotional introduction */}
-      <motion.div
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="mb-2 sm:mb-3 shrink-0"
-      >
-        <h1
-          id="goal-title"
-          className="text-lg sm:text-xl md:text-2xl font-bold mb-1.5 sm:mb-2"
-          style={{ color: "var(--text-primary)", letterSpacing: "var(--tracking-wider)" }}
-        >
-          <EditableText id="goal_picker_title" defaultText={goalPickerCopy.title} page="goal_picker" />
-        </h1>
-        <p
-          className="text-xs sm:text-sm md:text-base leading-relaxed max-w-2xl mx-auto"
-          style={{ color: "var(--text-secondary)" }}
-        >
-          <EditableText
-            id="goal_picker_subtitle"
-            defaultText={goalPickerCopy.subtitle}
-            page="goal_picker"
-            multiline
-            showEditIcon={false}
-          />
-        </p>
-      </motion.div>
-
-      {/* Goal cards  تأ اارتفاع بد سر */}
-      <div
-        className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5 items-stretch justify-items-stretch max-w-4xl mx-auto w-full flex-1 min-h-0 overflow-hidden mb-2 sm:mb-3"
-        style={{ gridAutoRows: "minmax(0, 1fr)" }}
-        role="group"
-        aria-label="حدد ف اة اادة"
-      >
-        {goalPickerCopy.options.map((option, i) => {
-          const Icon = ICON_MAP[option.id];
-          const isEnabled = ENABLED_GOAL_IDS.includes(option.id);
-          const isSelected = initialGoalId != null && option.id === initialGoalId;
-          const isRecommended = recommendedGoals.includes(option.id);
-
-          return (
-            <motion.div
-              key={option.id}
-              custom={i}
-              variants={tileVariants}
-              initial="hidden"
-              animate="visible"
-              className="group h-full min-h-0 flex"
-            >
-              <motion.button
-                type="button"
-                className="group/card relative w-full min-w-0 h-full min-h-0 flex flex-col text-center transition-all duration-300 focus-visible:outline-none select-none"
-                style={{
-                  background: isSelected
-                    ? "rgba(45, 212, 191, 0.08)"
-                    : "rgba(15, 20, 50, 0.5)",
-                  backdropFilter: "blur(16px)",
-                  WebkitBackdropFilter: "blur(16px)",
-                  border: `1.5px solid ${!isEnabled
-                      ? "rgba(255, 255, 255, 0.04)"
-                      : isSelected
-                        ? "rgba(45, 212, 191, 0.35)"
-                        : "rgba(255, 255, 255, 0.08)"
-                    }`,
-                  borderRadius: "1rem",
-                  padding: "0.75rem 0.9rem",
-                  boxShadow: isSelected
-                    ? "0 0 30px rgba(45, 212, 191, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05)"
-                    : "0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
-                  opacity: isEnabled ? 1 : 0.5,
-                  cursor: isEnabled ? "pointer" : "not-allowed"
-                }}
-                onClick={() => handleSelect(option.id)}
-                title={isEnabled ? option.label : "ربا"}
-                disabled={!isEnabled}
-                whileTap={isEnabled ? { scale: 0.97 } : undefined}
-                whileHover={isEnabled ? { scale: 1.02 } : {}}
-              >
-                {isRecommended && (
-                  <motion.div
-                    initial={{ scale: 0.95, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.45 + i * 0.08, type: "spring", stiffness: 320 }}
-                    className="mb-1 sm:mb-1.5 flex justify-center shrink-0"
-                  >
-                    <Badge
-                      className="px-2.5 py-1 text-[11px] font-bold inline-flex items-center gap-1"
-                      style={{
-                        background: "linear-gradient(135deg, rgba(45, 212, 191, 0.2), rgba(139, 92, 246, 0.15))",
-                        border: "1px solid rgba(45, 212, 191, 0.35)",
-                        color: "var(--soft-teal)",
-                        boxShadow: "0 0 12px rgba(45, 212, 191, 0.16)"
-                      }}
-                    >
-                      <Star className="w-3 h-3" />
-                      ص ب
-                    </Badge>
-                  </motion.div>
-                )}
-
-                {!isEnabled && (
-                  <span
-                    className="absolute inset-0 flex items-center justify-center rounded-[1.25rem] opacity-0 group-hover/card:opacity-100 transition-opacity z-10 text-base font-bold"
-                    style={{
-                      background: "rgba(10, 10, 26, 0.85)",
-                      color: "var(--text-muted)"
-                    }}
-                  >
-                    <EditableText
-                      id="goal_picker_coming_soon"
-                      defaultText="ربا"
-                      page="goal_picker"
-                      showEditIcon={false}
-                    />
-                  </span>
-                )}
-
-                <div className="flex justify-center mb-1 sm:mb-2 shrink-0">
-                  <motion.div
-                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center"
-                    style={{
-                      background: isEnabled
-                        ? "radial-gradient(circle at 40% 35%, rgba(45, 212, 191, 0.15), rgba(139, 92, 246, 0.08) 60%, transparent 80%)"
-                        : "rgba(255, 255, 255, 0.04)",
-                      border: `1px solid ${isEnabled ? "rgba(45, 212, 191, 0.2)" : "rgba(255, 255, 255, 0.06)"}`,
-                      boxShadow: isEnabled ? "0 0 20px rgba(45, 212, 191, 0.1)" : "none"
-                    }}
-                    whileHover={isEnabled ? { scale: 1.1 } : {}}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    <Icon
-                      className="w-5 h-5 sm:w-6 sm:h-6"
-                      style={{
-                        color: isEnabled ? "var(--soft-teal)" : "var(--text-muted)"
-                      }}
-                      aria-hidden="true"
-                    />
-                  </motion.div>
-                </div>
-
-                <p
-                  className="text-xs sm:text-sm font-bold mb-0.5 sm:mb-1 shrink-0 line-clamp-1"
-                  style={{ color: isEnabled ? "var(--text-primary)" : "var(--text-muted)" }}
-                >
-                  <EditableText
-                    id={`goal_picker_option_${option.id}_label`}
-                    defaultText={option.label}
-                    page="goal_picker"
-                    editOnClick={false}
-                  />
-                </p>
-
-                <p
-                  className="text-[11px] sm:text-xs leading-relaxed min-h-0 flex-1 line-clamp-2 overflow-hidden"
-                  style={{ color: isEnabled ? "var(--text-secondary)" : "var(--text-muted)" }}
-                >
-                  <EditableText
-                    id={`goal_picker_option_${option.id}_subtitle`}
-                    defaultText={option.subtitle}
-                    page="goal_picker"
-                    multiline
-                    editOnClick={false}
-                  />
-                </p>
-              </motion.button>
-            </motion.div>
-          );
-        })}
+      {/* Ambient background */}
+      <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
+        <div className="absolute inset-0" style={{
+          background: [
+            "radial-gradient(ellipse 60% 40% at 20% 15%, rgba(124,58,237,0.08) 0%, transparent 55%)",
+            "radial-gradient(ellipse 50% 35% at 80% 80%, rgba(20,184,166,0.06) 0%, transparent 50%)"
+          ].join(", ")
+        }} />
+        <div className="absolute inset-0" style={{
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px)",
+          backgroundSize: "40px 40px"
+        }} />
       </div>
 
-      {/* Back button */}
-      <motion.div
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        className="flex justify-center pt-1 shrink-0"
-      >
-        <Button
-          variant="ghost"
-          size="md"
-          className="glass-button px-6 py-3 text-sm sm:text-base font-medium select-none text-[var(--text-secondary)]"
-          onClick={onBack}
-          title="رجع شاشة اسابة"
-          aria-label="رجع"
+      <div className="relative w-full max-w-2xl px-5 pt-10 pb-20 flex flex-col gap-8">
+
+        {/* ── Header ── */}
+        <motion.div
+          variants={headerVariants}
+          initial="hidden"
+          animate="visible"
+          className="text-center"
         >
-          <EditableText
-            id="goal_picker_back"
-            defaultText={goalPickerCopy.buttons.back}
-            page="goal_picker"
-            editOnClick={false}
-          />
-        </Button>
-      </motion.div>
+          {/* Step indicator */}
+          <div className="inline-flex items-center gap-2 mb-5">
+            {[1, 2, 3].map((step) => (
+              <div
+                key={step}
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: step === 2 ? 20 : 8,
+                  height: 8,
+                  background: step === 2
+                    ? "linear-gradient(90deg, #14B8A6, #7C3AED)"
+                    : step < 2 ? "rgba(20,184,166,0.5)" : "rgba(255,255,255,0.1)"
+                }}
+              />
+            ))}
+          </div>
+
+          <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#7C3AED" }}>
+            خطوة ٢ من ٤
+          </p>
+          <h1
+            id="goal-title"
+            className="text-3xl sm:text-4xl font-black text-white mb-3"
+            style={{ fontFamily: "Tajawal, sans-serif", lineHeight: 1.2 }}
+          >
+            {goalPickerCopy.title}
+          </h1>
+          <p className="text-sm sm:text-base leading-loose max-w-[40ch] mx-auto" style={{ color: "#64748B" }}>
+            {goalPickerCopy.subtitle}
+          </p>
+        </motion.div>
+
+        {/* ── Goal Cards Grid ── */}
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+          role="group"
+          aria-label="أختار مجال الرحلة"
+        >
+          {goalPickerCopy.options.map((option, i) => (
+            <GoalCard
+              key={option.id}
+              option={option}
+              index={i}
+              isEnabled={ENABLED_GOAL_IDS.includes(option.id)}
+              isSelected={selectedId === option.id}
+              isRecommended={recommendedGoals.includes(option.id)}
+              onSelect={handleSelect}
+            />
+          ))}
+        </div>
+
+        {/* ── Back button ── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7, duration: 0.4 }}
+          className="flex justify-center pt-2"
+        >
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all duration-200 hover:opacity-70"
+            style={{ color: "#475569", border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
+          >
+            <ArrowRight className="w-4 h-4" />
+            {goalPickerCopy.buttons.back}
+          </button>
+        </motion.div>
+
+        {/* Privacy note */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.5 }}
+          className="text-center text-[11px] font-medium"
+          style={{ color: "#334155" }}
+        >
+          🔒 اختيارك خاص وبيتخزن على جهازك بس
+        </motion.p>
+      </div>
     </main>
   );
 };

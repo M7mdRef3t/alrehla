@@ -41,6 +41,7 @@ import { usePulseState } from "../state/pulseState";
 import { PULSE_DAY_NAMES } from "../utils/pulseInsights";
 import { NextStepCard } from "./NextStepCard";
 import { RelationshipWeatherCard } from "./RelationshipWeatherCard";
+import { RelationshipPulse } from "./RelationshipPulse";
 import { ContextAtlasCard } from "./ContextAtlasCard";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { useAdminState } from "../state/adminState";
@@ -655,6 +656,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                       onSelectNode={handleNodeClick}
                     />
                   )}
+                  <RelationshipPulse />
                   <p className="text-[11px] text-center pt-1" style={{ color: "rgba(45,212,191,0.35)" }}>
                     {mapCopy.dashboardSlogan}
                   </p>

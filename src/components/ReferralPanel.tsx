@@ -10,8 +10,8 @@ import {
 } from "../services/referralEngine";
 
 /* 
-   REFERRAL PANEL  حة اإحاة
-   "ادعُ ائد  اسب داة + أسبع بر"
+   REFERRAL PANEL — لوحة الإحالة
+   "ادعُ قائداً → اكسب ميدالية + أسبوع بريميوم"
     */
 
 interface ReferralPanelProps {
@@ -37,7 +37,7 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
         try {
             if (navigator.share) {
                 await navigator.share({
-                    title: "اض رحت ف دار",
+                    title: "ابدأ رحلتك في دواير",
                     text: shareText,
                     url: link,
                 });
@@ -67,8 +67,8 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
                         <Gift className="w-5 h-5 text-[var(--soft-teal)]" />
                     </div>
                     <div>
-                        <h2 className="text-base font-bold text-white">ادعُ ائدا</h2>
-                        <p className="text-xs text-slate-400">أسبع بر جا  إحاة</p>
+                        <h2 className="text-base font-bold text-white">ادعُ قائداً</h2>
+                        <p className="text-xs text-slate-400">أسبوع بريميوم مجاني لكل إحالة</p>
                     </div>
                 </div>
 
@@ -77,19 +77,19 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
                     <div className="flex-1 p-3 rounded-xl text-center"
                         style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}>
                         <p className="text-2xl font-black text-[var(--soft-teal)]">{status.count}</p>
-                        <p className="text-xs text-slate-500">إحاة اجحة</p>
+                        <p className="text-xs text-slate-500">إحالة ناجحة</p>
                     </div>
                     <div className="flex-1 p-3 rounded-xl text-center"
                         style={{ background: "rgba(217,119,6,0.1)", border: "1px solid rgba(217,119,6,0.2)" }}>
                         <p className="text-2xl font-black text-amber-400">{status.earnedWeeks}</p>
-                        <p className="text-xs text-slate-500">أسبع تسب</p>
+                        <p className="text-xs text-slate-500">أسابيع مكتسبة</p>
                     </div>
                 </div>
 
                 {/* Referral code */}
                 <div className="p-4 rounded-2xl mb-3"
                     style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                    <p className="text-xs text-slate-500 mb-2">د اشخص</p>
+                    <p className="text-xs text-slate-500 mb-2">كودك الشخصي</p>
                     <div className="flex items-center justify-between">
                         <span className="text-2xl font-black text-white tracking-widest font-mono">{code}</span>
                         <motion.button
@@ -103,7 +103,7 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
                             whileTap={{ scale: 0.95 }}
                         >
                             {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                            {copied ? "ت!" : "سخ"}
+                            {copied ? "تم!" : "نسخ"}
                         </motion.button>
                     </div>
                 </div>
@@ -119,18 +119,18 @@ export const ReferralPanel: FC<ReferralPanelProps> = ({ onClose: _onClose }) => 
                     whileTap={{ scale: 0.98 }}
                 >
                     <Share2 className="w-4 h-4" />
-                    شار ادعة
+                    شارك الدعوة
                 </motion.button>
             </div>
 
             {/* How it works */}
             <div className="px-5 pb-5">
-                <p className="text-xs text-slate-500 mb-2 font-bold">ف شتغ</p>
+                <p className="text-xs text-slate-500 mb-2 font-bold">كيف يشتغل؟</p>
                 <div className="space-y-2">
                     {[
-                        { step: "1", text: "شار د ع صاحب" },
-                        { step: "2", text: "سج باستخدا د" },
-                        { step: "3", text: "تسب أسبع بر جا" },
+                        { step: "1", text: "شارك كودك مع صاحبك" },
+                        { step: "2", text: "يسجل باستخدام كودك" },
+                        { step: "3", text: "تكسب أسبوع بريميوم مجاني" },
                     ].map(({ step, text }) => (
                         <div key={step} className="flex items-center gap-2.5">
                             <div className="w-5 h-5 rounded-full bg-[var(--soft-teal)]/30 flex items-center justify-center shrink-0">

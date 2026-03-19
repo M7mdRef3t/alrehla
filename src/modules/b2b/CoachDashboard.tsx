@@ -5,6 +5,7 @@ import { supabase } from '../../services/supabaseClient';
 import { Users, Activity, Clock, LogOut, ChevronLeft, AlertTriangle, ShieldAlert, Sparkles, Brain, Search, LayoutDashboard, Settings, Bell } from 'lucide-react';
 import { getClients } from '../../services/b2bService';
 import { motion, AnimatePresence } from 'framer-motion';
+import { signInWithGoogleAtPath } from '../../services/authService';
 
 // Mock AI Insights for the B2B portal
 const MOCK_ORACLE_INSIGHTS = [
@@ -143,9 +144,7 @@ export default function CoachDashboard() {
                     <p className="text-slate-500 mb-8 leading-relaxed">            .</p>
                     <button
                         onClick={() => {
-                            if (supabase) {
-                                supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/coach' } });
-                            }
+                            void signInWithGoogleAtPath('/coach');
                         }}
                         className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition shadow-lg shadow-slate-900/20"
                     >
@@ -466,7 +465,6 @@ export default function CoachDashboard() {
         </div>
     );
 }
-
 
 
 

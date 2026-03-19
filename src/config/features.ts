@@ -154,28 +154,28 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
   {
     key: "dawayir_live",
     label: "Dawayir Live",
-    description: "ØªÙØ¹ÙŠÙ„ Ø§Ù„Ù…Ø³Ø§Ø± Ø§Ù„Ø­ÙŠ Ø¯Ø§Ø®Ù„ Ø§Ù„Ù…Ù†ØµØ©",
+    description: "تفعيل مسار الجلسة الحية (صوت + AI) داخل المنصة",
     group: "AI",
     supportsBeta: true
   },
   {
     key: "dawayir_live_couple",
-    label: "Dawayir Live Couple",
-    description: "ØªÙØ¹ÙŠÙ„ couple mode ÙˆÙ…Ø´Ø§Ø±ÙƒØ© Ø§Ù„Ø¬Ù„Ø³Ø§Øª",
+    label: "Dawayir Live — Couple",
+    description: "تفعيل وضع couple لمشاركة الجلسات مع شريك أو زوج/زوجة",
     group: "AI",
     supportsBeta: true
   },
   {
     key: "dawayir_live_coach",
-    label: "Dawayir Live Coach",
-    description: "ØªÙØ¹ÙŠÙ„ Ù…Ø´Ø§Ù‡Ø¯ coach/teacher Ù„Ø¬Ù„Ø³Ø§Øª Dawayir Live",
+    label: "Dawayir Live — Coach",
+    description: "تفعيل مشاهد الكوتش/المدرب في جلسات Dawayir Live",
     group: "AI",
     supportsBeta: true
   },
   {
     key: "dawayir_live_camera",
-    label: "Dawayir Live Camera",
-    description: "ØªÙØ¹ÙŠÙ„ Ø­ÙØ¸ Ù…Ù„Ù‚Ø·Ø§Øª Ø§Ù„ÙƒØ§Ù…ÙŠØ±Ø§ Ù…Ø¹ Ø§Ù„Ø¬Ù„Ø³Ø©",
+    label: "Dawayir Live — Camera",
+    description: "تفعيل حفظ ملقطات الكاميرا مع جلسة Dawayir Live",
     group: "AI",
     supportsBeta: true
   }

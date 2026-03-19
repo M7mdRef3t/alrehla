@@ -199,6 +199,9 @@ const FeedbackModal = lazy(() => import("./components/FeedbackModal").then((m) =
 const EnterprisePortal = lazy(() => import("./components/enterprise/EnterprisePortal").then((m) => ({ default: m.EnterprisePortal })));
 const GuiltCourt = lazy(() => import("./components/GuiltCourt").then((m) => ({ default: m.GuiltCourt })));
 const DiplomaticCables = lazy(() => import("./components/DiplomaticCables").then((m) => ({ default: m.DiplomaticCables })));
+const ResearchSurvey = lazy(() => import("./components/ResearchSurvey").then((m) => ({ default: m.ResearchSurvey })));
+const ExitScriptsLibrary = lazy(() => import("./components/ExitScriptsLibrary").then((m) => ({ default: m.ExitScriptsLibrary })));
+const GroundingToolkit = lazy(() => import("./components/GroundingToolkit").then((m) => ({ default: m.GroundingToolkit })));
 
 // Phase 30: Holographic Legacy
 const AmbientRealityMode = lazy(() => import("./components/AmbientRealityMode").then((m) => ({ default: m.AmbientRealityMode })));
@@ -251,8 +254,8 @@ function getUserLastUiStateStorageKey(userId: string): string {
 }
 
 function normalizeRestorableScreen(value: string | null): Screen | null {
-  if (value === "landing" || value === "goal" || value === "map" || value === "guided" || value === "tools" || value === "enterprise" || value === "oracle-dashboard") {
-    return value;
+  if (value === "landing" || value === "goal" || value === "map" || value === "guided" || value === "tools" || value === "enterprise" || value === "oracle-dashboard" || value === "armory" || value === "survey") {
+    return value as Screen;
   }
   return null;
 }
@@ -633,8 +636,13 @@ export default function App() {
       case "guilt-court":
       case "enterprise":
       case "oracle-dashboard":
-      case "armory":
         return "map";
+      case "armory":
+      case "survey":
+        return "landing";
+      case "exit-scripts":
+      case "grounding":
+        return "tools";
       case "tools":
         return toolsBackScreen;
       case "settings":
@@ -736,6 +744,9 @@ export default function App() {
     if (screen === "enterprise") recordFlowEvent("screen_enterprise_viewed");
     if (screen === "settings") recordFlowEvent("screen_settings_viewed");
     if (screen === "oracle-dashboard") recordFlowEvent("screen_oracle_dashboard_viewed");
+    if (screen === "armory") recordFlowEvent("screen_armory_viewed");
+    if (screen === "exit-scripts") recordFlowEvent("screen_exit_scripts_viewed");
+    if (screen === "grounding") recordFlowEvent("screen_grounding_viewed");
   }, [screen]);
 
   const openCocoonModal = useCallback((source: "auto" | "manual" = "manual") => {
@@ -1144,7 +1155,10 @@ export default function App() {
       "guilt-court": "محكمة الشعور بالذنب",
       diplomacy: "البرقيات الدبلوماسية",
       "oracle-dashboard": "مجلس الحكماء",
-      armory: "الترسانة (Armory)"
+      armory: "الترسانة (Armory)",
+      survey: "استبيان البحث",
+      "exit-scripts": "مكتبة جمل الخروج",
+      grounding: "تقنيات تهدئة الجسم"
     };
     trackPageView(pageNames[screen]);
   }, [screen]);
@@ -1200,6 +1214,18 @@ export default function App() {
       armory: {
         title: "The Armory | Alrehla",
         description: "Access advanced cognitive and psychological defense protocols."
+      },
+      survey: {
+        title: "Research Survey | Alrehla",
+        description: "Help us understand your needs through a quick research survey."
+      },
+      "exit-scripts": {
+        title: "Exit Scripts Library | Alrehla",
+        description: "Ready-made exit phrases for every difficult situation."
+      },
+      grounding: {
+        title: "Grounding Toolkit | Alrehla",
+        description: "Body-first calming techniques to regulate your nervous system."
       }
     };
 
@@ -2837,6 +2863,7 @@ export default function App() {
                 {screen === "landing" && (
                   <Landing
                     onStartJourney={startRecovery}
+                    onOpenSurvey={() => { void navigateToScreen("survey"); }}
                     ownerInstallRequestNonce={ownerInstallRequestNonce}
                     onOwnerInstallRequestHandled={() => setOwnerInstallRequestNonce(0)}
                   />
@@ -2865,6 +2892,14 @@ export default function App() {
                         void navigateToScreen("map");
                       }}
                     />
+                  </div>
+                )}
+
+                {screen === "survey" && (
+                  <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-auto flex flex-col items-center justify-center">
+                    <Suspense fallback={null}>
+                      <ResearchSurvey onComplete={() => { void navigateToScreen("landing"); }} />
+                    </Suspense>
                   </div>
                 )}
 
@@ -2918,6 +2953,8 @@ export default function App() {
                     nextStepDecision={nextStepDecision}
                     onTakeNextStep={handleTakeNextStep}
                     onRefreshNextStep={handleRefreshNextStep}
+                    onOpenExitScripts={() => { void navigateToScreen("exit-scripts"); }}
+                    onOpenGrounding={() => { void navigateToScreen("grounding"); }}
                   />
                 )}
 
@@ -2948,15 +2985,15 @@ export default function App() {
                 )}
 
                 {screen === "enterprise" && (
-                  <EnterprisePortal />
+                  <EnterprisePortal onBack={() => { void navigateToScreen("map"); }} />
                 )}
 
                 {screen === "guilt-court" && (
-                  <GuiltCourt />
+                  <GuiltCourt onBack={() => { void navigateToScreen("map"); }} />
                 )}
 
                 {screen === "diplomacy" && (
-                  <DiplomaticCables />
+                  <DiplomaticCables onBack={() => { void navigateToScreen("map"); }} />
                 )}
 
                 {screen === "oracle-dashboard" && authUser?.id && (
@@ -2983,6 +3020,22 @@ export default function App() {
                     onOpenConsciousnessArchive={() => setShowConsciousnessArchive(true)}
                     onOpenTimeCapsule={() => setShowTimeCapsuleVault(true)}
                   />
+                )}
+
+                {screen === "exit-scripts" && (
+                  <Suspense fallback={<AwarenessSkeleton />}>
+                    <ExitScriptsLibrary
+                      onBack={() => { void navigateToScreen("tools"); }}
+                    />
+                  </Suspense>
+                )}
+
+                {screen === "grounding" && (
+                  <Suspense fallback={<AwarenessSkeleton />}>
+                    <GroundingToolkit
+                      onBack={() => { void navigateToScreen("tools"); }}
+                    />
+                  </Suspense>
                 )}
               </div>
             </ErrorBoundary>
@@ -3120,6 +3173,7 @@ export default function App() {
                 onClose={() => setShowNoiseSilencingPulse(false)}
                 onSessionComplete={() => {
                   setShowNoiseSilencingPulse(false);
+                  setPostNoiseSessionMessage(true);
                   setTimeout(() => setPostNoiseSessionMessage(false), 4500);
                 }}
               />
@@ -3293,6 +3347,25 @@ export default function App() {
               }}
             />
           </Suspense>
+        )}
+
+        {screen === "exit-scripts" && (
+          <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-auto">
+            <Suspense fallback={null}>
+              <ExitScriptsLibrary
+                onBack={() => { void navigateToScreen("tools"); }}
+                onOpenGrounding={() => { void navigateToScreen("grounding"); }}
+              />
+            </Suspense>
+          </div>
+        )}
+
+        {screen === "grounding" && (
+          <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-auto">
+            <Suspense fallback={null}>
+              <GroundingToolkit onBack={() => { void navigateToScreen("tools"); }} />
+            </Suspense>
+          </div>
         )}
 
         {/* Phase 30: Holographic Legacy Components */}

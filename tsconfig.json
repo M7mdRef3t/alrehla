@@ -7,7 +7,7 @@
       "DOM.Iterable",
       "ESNext"
     ],
-    "allowJs": false,
+    "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -28,15 +28,20 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "include": [
     "next-env.d.ts",
     "src",
     "app",
+    "server",
     ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
   ]
-}
+}

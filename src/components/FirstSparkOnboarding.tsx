@@ -14,6 +14,11 @@ interface FirstSparkProps {
     onComplete: () => void;
 }
 
+function seededUnit(index: number, salt: number) {
+    const value = Math.sin(index * 12.9898 + salt * 78.233) * 43758.5453;
+    return value - Math.floor(value);
+}
+
 export const FirstSparkOnboarding: FC<FirstSparkProps> = ({ onComplete }) => {
     const [stage, setStage] = useState<0 | 1 | 2>(0);
 
@@ -66,10 +71,13 @@ const StageChaos: FC<{ onNext: () => void }> = ({ onNext }) => {
     // Generate random chaotic dots
     const dots = useMemo(() => Array.from({ length: 40 }, (_, i) => ({
         id: i,
-        x: (Math.random() - 0.5) * 280,
-        y: (Math.random() - 0.5) * 280,
-        scale: Math.random() * 0.5 + 0.5,
-        delay: Math.random() * 2
+        x: (seededUnit(i, 1) - 0.5) * 280,
+        y: (seededUnit(i, 2) - 0.5) * 280,
+        scale: seededUnit(i, 3) * 0.5 + 0.5,
+        delay: seededUnit(i, 4) * 2,
+        driftX: (seededUnit(i, 5) - 0.5) * 40,
+        driftY: (seededUnit(i, 6) - 0.5) * 40,
+        duration: 2 + seededUnit(i, 7) * 2,
     })), []);
 
     return (
@@ -95,12 +103,12 @@ const StageChaos: FC<{ onNext: () => void }> = ({ onNext }) => {
                         className="absolute w-2 h-2 rounded-full bg-slate-500/40"
                         initial={{ x: d.x, y: d.y }}
                         animate={{
-                            x: [d.x, d.x + (Math.random() - 0.5) * 40, d.x],
-                            y: [d.y, d.y + (Math.random() - 0.5) * 40, d.y],
+                            x: [d.x, d.x + d.driftX, d.x],
+                            y: [d.y, d.y + d.driftY, d.y],
                             opacity: [0.3, 0.7, 0.3]
                         }}
                         transition={{
-                            duration: 2 + Math.random() * 2,
+                            duration: d.duration,
                             repeat: Infinity,
                             ease: "easeInOut",
                             delay: d.delay

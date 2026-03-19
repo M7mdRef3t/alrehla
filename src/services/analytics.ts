@@ -203,7 +203,12 @@ export const AnalyticsEvents = {
 
   // Behavioral signals
   HESITATION: "hesitation",
-  HESITATION_HEARTBEAT: "hesitation_heartbeat"
+  HESITATION_HEARTBEAT: "hesitation_heartbeat",
+
+  // Research Survey
+  SURVEY_OPENED: "survey_opened",
+  SURVEY_COMPLETED: "survey_completed",
+  SURVEY_QUESTION_ANSWERED: "survey_question_answered"
 } as const;
 
 // Analytics consent management

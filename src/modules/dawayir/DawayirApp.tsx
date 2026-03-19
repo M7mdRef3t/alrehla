@@ -15,6 +15,7 @@ import { Typewriter } from '../../components/UI/Typewriter';
 import { useAIOrchestration } from '../../hooks/useAIOrchestration';
 import { useGestureSanctuary } from '../../hooks/useGestureSanctuary';
 import { GenesisOnboarding } from '../../components/GenesisOnboarding';
+import { signInWithGoogleAtPath } from '../../services/authService';
 
 export default function DawayirApp() {
     useAIOrchestration();
@@ -198,13 +199,7 @@ export default function DawayirApp() {
     };
 
     const handleGoogleLogin = async () => {
-        if (!supabase) return;
-        await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: window.location.origin + '/dawayir'
-            }
-        });
+        await signInWithGoogleAtPath('/dawayir');
     };
 
     const handleSave = async () => {
@@ -623,6 +618,5 @@ export default function DawayirApp() {
         </div >
     );
 }
-
 
 

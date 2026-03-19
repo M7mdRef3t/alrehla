@@ -51,28 +51,11 @@ const PREMIUM_FEATURES = [
 export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade: _onUpgrade }) => {
     const copy = REASON_COPY[reason];
 
-    const handleUpgrade = async (_tier: 'premium' | 'coach') => {
+    const handleUpgrade = (_tier: 'premium' | 'coach') => {
         if (!isPublicPaymentsEnabled) return;
+        // Always go to checkout — manual payment model
         if (typeof globalThis !== "undefined" && "location" in globalThis) {
             globalThis.location.href = "/checkout";
-            return;
-        }
-        try {
-            if (!supabase) return;
-            const { data: { session } } = await supabase.auth.getSession();
-            const user = session?.user;
-
-            if (!user) {
-                // If not logged in, we can't do checkout
-                await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: { redirectTo: window.location.origin + '/pricing' }
-                });
-                return;
-            }
-        } catch (error) {
-            console.error("Upgrade error:", error);
-            alert("حدث خطأ في الانتقال للدفع.");
         }
     };
 

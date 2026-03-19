@@ -17,5 +17,11 @@
         }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/marketing-outreach",
+      "schedule": "0 9 * * *"
+    }
   ]
 }

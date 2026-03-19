@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
+export const dynamic = "force-dynamic";
 import React from 'react';
 import DawayirLiveApp from '../../src/modules/dawayir-live/DawayirLiveApp';
 

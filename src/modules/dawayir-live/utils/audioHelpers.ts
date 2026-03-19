@@ -3,7 +3,7 @@
  * Dawayir Live — Audio Helpers
  * ════════════════════════════════════════════════════════════════════════════
  *
- * Audio pipeline utilities ported from dawayir-live-agent client.
+ * Audio pipeline utilities adapted from the legacy live audio client.
  * Handles PCM ↔ Float32 ↔ Base64 conversions and resampling.
  */
 

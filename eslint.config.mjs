@@ -38,7 +38,6 @@ export default tseslint.config(
       "src/components/admin/dashboard/**/*.{ts,tsx}",
       "src/components/admin/AIDecisionLog.tsx",
       "src/components/PulseCheckModal.tsx",
-      "src/hooks/useGeminiLive.ts",
       "src/ai/**/*.{ts,tsx}"
     ],
     rules: {

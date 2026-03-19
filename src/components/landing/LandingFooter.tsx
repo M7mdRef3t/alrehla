@@ -36,6 +36,18 @@ export const LandingFooter: FC<LandingFooterProps> = ({
         شروط الاستخدام
       </a>
       <a
+        href="/pricing"
+        className="text-amber-300/80 hover:text-amber-200 transition-colors underline underline-offset-2 font-bold"
+      >
+        الخطط والأسعار
+      </a>
+      <a
+        href="/checkout"
+        className="text-teal-300/80 hover:text-teal-200 transition-colors underline underline-offset-2 font-bold"
+      >
+        تفعيل الرحلة
+      </a>
+      <a
         href="https://wa.me/0201023050092"
         target="_blank"
         rel="noopener noreferrer"

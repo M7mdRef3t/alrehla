@@ -1,6 +1,6 @@
 /**
  * Whisper Emotion Inference for Maraya
- * Ported from maraya-storyteller/server/services/whisperEmotion.js
+ * Adapted from the legacy Maraya whisper emotion analyzer.
  */
 
 const EMOTION_KEYWORDS: Record<string, string[]> = {

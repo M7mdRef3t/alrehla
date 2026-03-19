@@ -1,6 +1,6 @@
 /**
  * Mirror Memory Service for Maraya — Supabase version
- * Ported from maraya-storyteller/server/services/mirrorMemory.js
+ * Adapted from the legacy Maraya memory runtime.
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';

@@ -1,6 +1,7 @@
-import dynamic from "next/dynamic";
+export const dynamic = "force-dynamic";
+import dynamic_import from "next/dynamic";
 
-const ClientAppEntry = dynamic(() => import("./client-app-entry"), {
+const ClientAppEntry = dynamic_import(() => import("./client-app-entry"), {
   ssr: false,
 });
 

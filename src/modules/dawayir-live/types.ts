@@ -124,6 +124,20 @@ export interface LoopRecall {
   reward: string;
 }
 
+export interface MirrorMomentState {
+  visible: boolean;
+  nodeId: number;
+  whyNowText: string;
+}
+
+export interface VoiceTattooMeta {
+  hasTattoo: boolean;
+  savedAt: string | null;
+  nodeId: number | null;
+  label: string | null;
+  whyNowLine: string | null;
+}
+
 export interface DawayirLiveConfig {
   apiKey?: string;
   model?: string;
@@ -218,6 +232,8 @@ export interface BootstrapResponse {
   enabled: boolean;
   requiresAuth: boolean;
   apiConfigured: boolean;
+  apiKey?: string;
+  ephemeralToken?: string;
   model: string;
   voice: string;
   featureFlags: {

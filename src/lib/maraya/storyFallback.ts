@@ -1,6 +1,6 @@
 /**
  * Story Fallback Service for Maraya
- * Ported from maraya-storyteller/server/services/storyFallback.js
+ * Adapted from the legacy Maraya story fallback runtime.
  */
 
 import type { MarayaScene } from './gemini';

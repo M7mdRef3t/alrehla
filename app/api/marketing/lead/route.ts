@@ -36,33 +36,112 @@ async function enqueueOutreach(
   utm: Record<string, string> | null
 ): Promise<void> {
   const now = Date.now();
-  const rows = [
+  const MINUTE = 60 * 1000;
+  const HOUR = 60 * MINUTE;
+  const DAY = 24 * HOUR;
+
+  // 5-step drip campaign over 7 days
+  const steps = [
     {
-      lead_email: email,
-      channel: "email",
-      status: "pending" as OutreachQueueStatus,
-      scheduled_at: new Date(now + 5 * 60 * 1000).toISOString(),
+      channel: "email" as const,
+      delay: 5 * MINUTE,
       payload: {
-        subject: "أهلاً بك في الرحلة - خطوتك الأولى خلال 3 دقائق",
-        source,
-        utm
+        step: 1,
+        subject: "أهلاً بك في الرحلة — خطوتك الأولى خلال 3 دقائق",
+        html: `
+          <div dir="rtl" style="font-family:'Segoe UI',Arial,sans-serif;line-height:1.9;max-width:520px;margin:0 auto;color:#e2e8f0;background:#0f172a;padding:32px;border-radius:16px">
+            <h2 style="color:#2dd4bf;margin-bottom:8px">مرحباً بك في الرحلة 🌙</h2>
+            <p>في أقل من 3 دقائق، هتشوف خريطة علاقاتك لأول مرة.</p>
+            <p>مش محتاج تعرف كل حاجة — المهم تبدأ.</p>
+            <a href="https://www.alrehla.app/onboarding" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px">ابدأ رحلتك الآن</a>
+            <p style="color:#64748b;font-size:12px;margin-top:24px">— فريق الرحلة</p>
+          </div>`,
+        source, utm
       }
     },
     {
-      lead_email: email,
-      channel: "whatsapp",
-      status: "pending" as OutreachQueueStatus,
-      scheduled_at: new Date(now + 24 * 60 * 60 * 1000).toISOString(),
+      channel: "email" as const,
+      delay: 1 * DAY,
       payload: {
-        template: "alrehla_onboarding_24h",
-        source,
-        utm
+        step: 2,
+        subject: "هل جربت خريطة الوعي؟ — شوف إيه اللي اتغير",
+        html: `
+          <div dir="rtl" style="font-family:'Segoe UI',Arial,sans-serif;line-height:1.9;max-width:520px;margin:0 auto;color:#e2e8f0;background:#0f172a;padding:32px;border-radius:16px">
+            <h2 style="color:#2dd4bf">خريطة وعيك مستنياك 🗺️</h2>
+            <p>ناس كتير بتفضل مترددة... لحد ما بتشوف أول دايرة.</p>
+            <p><strong style="color:#f59e0b">سؤال واحد بس:</strong> مين أكتر شخص واخد مساحة من تفكيرك النهاردة؟</p>
+            <p>حطه في الخريطة وشوف إيه اللي هيظهر.</p>
+            <a href="https://www.alrehla.app/onboarding" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px">جرّب دلوقتي</a>
+          </div>`,
+        source, utm
+      }
+    },
+    {
+      channel: "email" as const,
+      delay: 3 * DAY,
+      payload: {
+        step: 3,
+        subject: "\"أتمنى لو كنت عملت ده من زمان\" — حكاية مستخدم حقيقي",
+        html: `
+          <div dir="rtl" style="font-family:'Segoe UI',Arial,sans-serif;line-height:1.9;max-width:520px;margin:0 auto;color:#e2e8f0;background:#0f172a;padding:32px;border-radius:16px">
+            <h2 style="color:#2dd4bf">حكاية من الرحلة 💬</h2>
+            <blockquote style="border-right:3px solid #7c3aed;padding-right:16px;margin:16px 0;color:#94a3b8;font-style:italic">
+              "كنت فاكر إن العلاقة دي طبيعية. بس لما شفت الخريطة، اكتشفت إنها بتسحب 70% من طاقتي. قررت أحط حدود... والنتيجة؟ راحة بال حقيقية."
+            </blockquote>
+            <p>الخريطة مش بتحكم — هي بتوضّح. والوضوح هو أول خطوة للتغيير.</p>
+            <a href="https://www.alrehla.app" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px">ابدأ خريطتك</a>
+          </div>`,
+        source, utm
+      }
+    },
+    {
+      channel: "whatsapp" as const,
+      delay: 5 * DAY,
+      payload: {
+        step: 4,
+        template: "alrehla_onboarding_5day",
+        message: "مرحباً 👋 لاحظنا إنك سجلت في الرحلة بس لسه ما بدأت. لو عندك أي سؤال أو محتاج مساعدة، إحنا هنا. جرّب الرحلة من هنا: https://www.alrehla.app/onboarding",
+        source, utm
+      }
+    },
+    {
+      channel: "email" as const,
+      delay: 7 * DAY,
+      payload: {
+        step: 5,
+        subject: "آخر فرصة — عرض الرواد بيخلص قريب 🔥",
+        html: `
+          <div dir="rtl" style="font-family:'Segoe UI',Arial,sans-serif;line-height:1.9;max-width:520px;margin:0 auto;color:#e2e8f0;background:#0f172a;padding:32px;border-radius:16px">
+            <h2 style="color:#f59e0b">عرض الرواد — المقاعد بتخلص ⏰</h2>
+            <p>فاضل <strong style="color:#ef4444">مقاعد محدودة</strong> في فوج التأسيس:</p>
+            <ul style="color:#94a3b8;padding-right:20px">
+              <li>21 يوم تركيز عميق</li>
+              <li>100 نقطة وعي</li>
+              <li>ذكاء اصطناعي شخصي</li>
+              <li><strong style="color:#2dd4bf">السعر: 12-15 دولار فقط</strong> (بدل 9.99$/شهر)</li>
+            </ul>
+            <a href="https://www.alrehla.app/checkout" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px;font-size:16px">احجز مقعدك الآن</a>
+            <p style="color:#64748b;font-size:12px;margin-top:24px">لو مش مهتم، تقدر تتجاهل الرسالة. مش هنزعجك تاني.</p>
+          </div>`,
+        source, utm
       }
     }
   ];
+
+  // Use step number as unique key to allow multiple emails per lead
+  const rows = steps.map((s) => ({
+    lead_email: email,
+    channel: s.channel,
+    step: s.payload.step,
+    status: "pending" as OutreachQueueStatus,
+    scheduled_at: new Date(now + s.delay).toISOString(),
+    payload: s.payload
+  }));
+
+  // Insert all steps — ignore conflicts (lead may re-subscribe)
   const { error } = await supabaseAdmin
     .from("marketing_lead_outreach_queue")
-    .upsert(rows, { onConflict: "lead_email,channel" });
+    .upsert(rows, { onConflict: "lead_email,channel,step", ignoreDuplicates: true });
   if (error) throw error;
 }
 

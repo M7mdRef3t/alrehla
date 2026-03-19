@@ -22,7 +22,7 @@ export function getLiveModel(): string {
   return (
     process.env.NEXT_PUBLIC_DAWAYIR_LIVE_MODEL ||
     process.env.DAWAYIR_LIVE_MODEL ||
-    "gemini-2.5-flash-native-audio-preview-12-2025"
+    "gemini-2.5-flash-native-audio-latest"
   );
 }
 

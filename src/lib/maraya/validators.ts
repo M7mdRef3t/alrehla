@@ -1,6 +1,6 @@
 /**
  * Validators for Maraya
- * Ported from maraya-storyteller/server/validators.js
+ * Adapted from the legacy Maraya validation layer.
  */
 
 import { STYLE_MAP } from './storytellerPrompts';

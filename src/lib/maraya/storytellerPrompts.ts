@@ -1,6 +1,6 @@
 /**
  * Maraya Storyteller - System Prompt Builder
- * Ported from maraya-storyteller/server/prompts/storyteller.js
+ * Adapted from the legacy Maraya storyteller prompts.
  */
 
 export const STYLE_MAP: Record<string, { ar: string; en: string; architecture: string; visual: string; palette: string }> = {

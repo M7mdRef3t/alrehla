@@ -5,6 +5,7 @@ import { Check, Lock, Shield, Sparkles, Target } from "lucide-react";
 import { consumeEmotionalOffer, getEmotionalOffer } from "../../services/subscriptionManager";
 import { stripeService } from "../../services/stripeIntegration";
 import { supabase } from "../../services/supabaseClient";
+import { signInWithGoogleAtPath } from "../../services/authService";
 
 export default function PricingPage() {
   const [isLoading, setIsLoading] = useState<"premium" | "coach" | null>(null);
@@ -26,10 +27,7 @@ export default function PricingPage() {
     const user = session?.user;
 
     if (!user) {
-      await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/pricing` }
-      });
+      await signInWithGoogleAtPath("/pricing");
       return;
     }
 
@@ -74,13 +72,13 @@ export default function PricingPage() {
         <div className="mb-14 max-w-2xl text-center">
           <div className="mb-6 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--soft-teal)] bg-[var(--soft-teal)]/10 px-3 py-1.5 text-sm font-semibold text-[var(--soft-teal)]">
             <Sparkles className="h-4 w-4" />
-            خطوة واضحة نحو توازن أفضل
+            توقف عن التفكير المفرط، ابدأ في الإنجاز
           </div>
           <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight text-gray-900 md:text-5xl">
-            اختر الخطة المناسبة لك
+             استثمر في وضوح عقلك
           </h1>
           <p className="text-lg leading-[1.8] text-gray-600">
-            سواء كنت تستخدم الرحلة لنفسك أو لعملائك، ستحصل على تجربة واضحة تدعم قراراتك اليومية.
+            اختار البوصلة اللي تناسبك ووفر طاقتك الذهنية للنجاح.. 9 دولار فقط تفصلك عن شلل التفكير.
           </p>
         </div>
 
@@ -90,9 +88,9 @@ export default function PricingPage() {
               <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
                 <Shield className="h-6 w-6" />
               </div>
-              <h2 className="mb-2 text-2xl font-bold leading-tight text-gray-900">للاستخدام الشخصي (مميز)</h2>
+              <h2 className="mb-2 text-2xl font-bold leading-tight text-gray-900">طوق النجاة (خطة شخصية)</h2>
               <p className="h-10 text-sm leading-[1.8] text-gray-500">
-                تتبع علاقاتك وأنماطك مع الوقت، وخذ قرارات أكثر وضوحًا.
+                افهم نفسك ومشاكلك، اتخذ قرارك اليوم بوضوح تام، ووفر طاقتك للمستقبل.
               </p>
             </div>
 
@@ -108,18 +106,20 @@ export default function PricingPage() {
               <li className="flex items-start gap-3">
                 <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--soft-teal)]" />
                 <span className="leading-relaxed">
-                  <strong>خرائط غير محدودة</strong> لعلاقاتك وتغيراتها
+                  <strong>خطة يومية واضحة</strong> تخرجك من عشوائية التفكير
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--soft-teal)]" />
                 <span className="leading-relaxed">
-                  <strong>مقارنة زمنية</strong> لفهم التحسن بوضوح
+                  <strong>توقع المستقبل</strong> لتتجنب الانهيارات والاستنزاف
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--soft-teal)]" />
-                <span className="leading-relaxed">تحليل ذكي يدعم خطواتك اليومية</span>
+                <span className="leading-relaxed">
+                  <strong>تحليل ذكي عميق</strong> يفهمك أفضل من أي شخص
+                </span>
               </li>
             </ul>
 

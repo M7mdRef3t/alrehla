@@ -2,34 +2,39 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, History, Link2, Users } from "lucide-react";
+import { ArrowRight, History } from "lucide-react";
 import { assignUrl } from "../../services/navigation";
 import { runtimeEnv } from "../../config/runtimeEnv";
 import LiveCanvas from "./components/LiveCanvas";
+import BreathingGuideOverlay from "./components/BreathingGuideOverlay";
 import LiveHUD from "./components/LiveHUD";
+import MirrorMomentOverlay from "./components/MirrorMomentOverlay";
+import SacredPauseOverlay from "./components/SacredPauseOverlay";
 import LiveTranscript from "./components/LiveTranscript";
-import LiveWelcome from "./components/LiveWelcome";
+import LiveSetupScreen from "./components/LiveSetupScreen";
+import ParityOnboardingModal from "./components/ParityOnboardingModal";
+import ParityWelcomeScreen from "./components/ParityWelcomeScreen";
 import { useDawayirLiveSession } from "./hooks/useDawayirLiveSession";
+import { PARITY_ONBOARDING_STEPS } from "./parityContent";
 import type { DawayirLiveConfig, LiveLanguage, LiveMode } from "./types";
-
-const MODES: Array<{ value: LiveMode; label: string; hint: string }> = [
-  { value: "standard", label: "جلسة فردية", hint: "النسخة الأساسية للتفريغ والتركيز." },
-  { value: "hybrid", label: "جلسة معمّقة", hint: "تولّد تقارير وأدوات أكثر أثناء الجلسة." },
-  { value: "couple", label: "Couple Mode", hint: "تمهيد لمسار المشاركة الثنائية." },
-];
-
-const LANGUAGES: Array<{ value: LiveLanguage; label: string }> = [
-  { value: "ar", label: "العربية" },
-  { value: "en", label: "English" },
-];
 
 export default function DawayirLiveApp() {
   const searchParams = useSearchParams();
-  const [mode, setMode] = useState<LiveMode>((searchParams.get("mode") as LiveMode) || "standard");
-  const [language, setLanguage] = useState<LiveLanguage>((searchParams.get("lang") as LiveLanguage) || "ar");
+  const safeSearchParams = useMemo(() => searchParams ?? new URLSearchParams(), [searchParams]);
+  const [mode, setMode] = useState<LiveMode>((safeSearchParams.get("mode") as LiveMode) || "standard");
+  const [language, setLanguage] = useState<LiveLanguage>((safeSearchParams.get("lang") as LiveLanguage) || "ar");
   const [showTranscript, setShowTranscript] = useState(false);
   const [composer, setComposer] = useState("");
+  const [appView, setAppView] = useState<"welcome" | "setup" | "live">("welcome");
+  const [showBreathingGuide, setShowBreathingGuide] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("dawayir-onboarding-seen") !== "true";
+  });
+  const [onboardingStep, setOnboardingStep] = useState(0);
   const autoMicRef = useRef(false);
+  const tenseStartRef = useRef<number | null>(null);
+  const breathingCooldownRef = useRef(0);
 
   const config = useMemo<DawayirLiveConfig>(
     () => ({
@@ -38,18 +43,19 @@ export default function DawayirLiveApp() {
       voice: runtimeEnv.dawayirLiveVoice || undefined,
       mode,
       language,
-      entrySurface: searchParams.get("surface") || "dawayir-live",
+      entrySurface: safeSearchParams.get("surface") || "dawayir-live",
       initialContext: {
-        nodeId: searchParams.get("nodeId"),
-        nodeLabel: searchParams.get("nodeLabel"),
-        goalId: searchParams.get("goalId"),
-        note: searchParams.get("note"),
+        nodeId: safeSearchParams.get("nodeId"),
+        nodeLabel: safeSearchParams.get("nodeLabel"),
+        goalId: safeSearchParams.get("goalId"),
+        note: safeSearchParams.get("note"),
       },
     }),
-    [language, mode, searchParams],
+    [language, mode, safeSearchParams],
   );
 
   const session = useDawayirLiveSession(config);
+  const onboardingSteps = PARITY_ONBOARDING_STEPS[language];
 
   useEffect(() => {
     if ((session.status === "connected" || session.status === "speaking") && autoMicRef.current && !session.isMicActive) {
@@ -57,6 +63,40 @@ export default function DawayirLiveApp() {
       void session.toggleMic();
     }
   }, [session]);
+
+  useEffect(() => {
+    if (session.status === "connected" || session.status === "speaking") {
+      setAppView("live");
+    }
+  }, [session.status]);
+
+  useEffect(() => {
+    const liveActive = session.status === "connected" || session.status === "speaking";
+    if (!liveActive) {
+      tenseStartRef.current = null;
+      setShowBreathingGuide(false);
+      return;
+    }
+
+    const isTense = session.metrics.overloadIndex > 0.72 || (session.journeyStage === "Overwhelmed" && session.metrics.overloadIndex > 0.52);
+    if (session.isAgentSpeaking || !isTense) {
+      tenseStartRef.current = null;
+      return;
+    }
+
+    if (!tenseStartRef.current) {
+      tenseStartRef.current = Date.now();
+      return;
+    }
+
+    if (Date.now() < breathingCooldownRef.current) return;
+
+    if (Date.now() - tenseStartRef.current >= 3000) {
+      setShowBreathingGuide(true);
+      breathingCooldownRef.current = Date.now() + 90000;
+      tenseStartRef.current = null;
+    }
+  }, [session.status, session.isAgentSpeaking, session.journeyStage, session.metrics.overloadIndex]);
 
   const handleStart = useCallback(async () => {
     autoMicRef.current = true;
@@ -76,11 +116,39 @@ export default function DawayirLiveApp() {
     setComposer("");
   }, [composer, session]);
 
+  const handleShare = useCallback(async () => {
+    const url = await session.createShareLink();
+    if (url && typeof window !== "undefined") {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  }, [session]);
+
   const handleBack = useCallback(() => {
+    if (appView === "setup") {
+      setAppView("welcome");
+      return;
+    }
     if (typeof window !== "undefined") {
       window.history.back();
     }
+  }, [appView]);
+
+  const dismissOnboarding = useCallback(() => {
+    setShowOnboarding(false);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("dawayir-onboarding-seen", "true");
+    }
   }, []);
+
+  const advanceOnboarding = useCallback(() => {
+    setOnboardingStep((current) => {
+      if (current >= onboardingSteps.length - 1) {
+        dismissOnboarding();
+        return current;
+      }
+      return current + 1;
+    });
+  }, [dismissOnboarding, onboardingSteps.length]);
 
   const isIdle = session.status === "idle" || session.status === "disconnected";
   const isConnecting =
@@ -90,94 +158,60 @@ export default function DawayirLiveApp() {
   const isLive = session.status === "connected" || session.status === "speaking";
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-slate-950 text-white">
-      {(isIdle || isConnecting) && (
-        <>
-          <LiveWelcome onStartSession={handleStart} onBack={handleBack} isConnecting={isConnecting} />
+    <div className="dawayir-parity-shell" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
+      <a className="skip-link" href="#main-canvas-content">
+        {language === "ar" ? "تخطي إلى المحتوى الرئيسي" : "Skip to main content"}
+      </a>
 
-          <div className="absolute inset-x-0 bottom-4 z-30 mx-auto grid w-[min(92vw,72rem)] gap-4 md:grid-cols-3">
-            <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-4 shadow-2xl backdrop-blur-xl">
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-400">Onboarding</p>
-              <ol className="mt-3 space-y-2 text-sm text-slate-200">
-                <li>1. ادخل الجلسة بصوتك أو بالكتابة.</li>
-                <li>2. راقب الدوائر والموضوعات وهي تتكوّن.</li>
-                <li>3. اختم الجلسة لتحصل على report + truth contract + replay.</li>
-              </ol>
-            </div>
+      {appView === "welcome" && (
+        <ParityWelcomeScreen
+          language={language}
+          isTransitioningToSetup={false}
+          isLaunching={false}
+          voiceTattoo={session.voiceTattoo}
+          onEnterSetup={() => setAppView("setup")}
+          onSetLanguage={setLanguage}
+          onGoToCouple={() => assignUrl("/dawayir-live/couple")}
+          onGoToTeacher={() => assignUrl("/coach?tab=dawayir-live")}
+        />
+      )}
 
-            <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-4 shadow-2xl backdrop-blur-xl">
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-400">Session Mode</p>
-              <div className="mt-3 space-y-2">
-                {MODES.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    onClick={() => setMode(item.value)}
-                    className={`w-full rounded-2xl border px-3 py-3 text-right transition ${
-                      mode === item.value
-                        ? "border-teal-400 bg-teal-400/10 text-white"
-                        : "border-white/10 bg-white/5 text-slate-300 hover:border-white/20"
-                    }`}
-                  >
-                    <div className="font-semibold">{item.label}</div>
-                    <div className="mt-1 text-xs text-slate-400">{item.hint}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-4 shadow-2xl backdrop-blur-xl">
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-400">Settings</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {LANGUAGES.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    onClick={() => setLanguage(item.value)}
-                    className={`rounded-full border px-3 py-2 text-sm ${
-                      language === item.value
-                        ? "border-amber-300 bg-amber-300/15 text-amber-100"
-                        : "border-white/10 bg-white/5 text-slate-300"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-slate-300">
-                <p>Model: {config.model || "gemini-2.5-flash-native-audio-preview-12-2025"}</p>
-                <p className="mt-1">Voice: {config.voice || "Aoede"}</p>
-                {config.initialContext?.nodeLabel && (
-                  <p className="mt-1">Start context: {config.initialContext.nodeLabel}</p>
-                )}
-              </div>
-
-              <div className="mt-4 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => assignUrl("/dawayir-live/history")}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-slate-200"
-                >
-                  <History className="h-4 w-4" />
-                  السجل
-                </button>
-                <button
-                  type="button"
-                  onClick={() => assignUrl("/dawayir-live/couple")}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-slate-200"
-                >
-                  <Users className="h-4 w-4" />
-                  Couple
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
+      {(appView === "setup" || (isIdle && appView !== "welcome")) && !isLive && (
+        <LiveSetupScreen
+          language={language}
+          mode={mode}
+          isConnecting={isConnecting}
+          model={config.model || "gemini-2.5-flash-native-audio-latest"}
+          voice={config.voice || "Aoede"}
+          nodeLabel={config.initialContext?.nodeLabel}
+          onStartSession={handleStart}
+          onOpenHistory={() => assignUrl("/dawayir-live/history")}
+          onOpenCouple={() => assignUrl("/dawayir-live/couple")}
+          onOpenTeacher={() => assignUrl("/coach?tab=dawayir-live")}
+          onToggleLanguage={setLanguage}
+          onToggleMode={setMode}
+        />
       )}
 
       {isLive && (
         <>
+          <BreathingGuideOverlay
+            active={showBreathingGuide}
+            language={language}
+            onComplete={() => setShowBreathingGuide(false)}
+          />
+          <MirrorMomentOverlay
+            moment={session.mirrorMoment}
+            language={language}
+            onDismiss={session.dismissMirrorMoment}
+          />
+          <SacredPauseOverlay
+            language={language}
+            isLive={isLive}
+            isAgentSpeaking={session.isAgentSpeaking}
+            transcript={session.transcript}
+          />
+
           <LiveCanvas
             circles={session.circles}
             spawnedOthers={session.spawnedOthers}
@@ -186,45 +220,41 @@ export default function DawayirLiveApp() {
             thoughtMap={session.thoughtMap}
             whyNowLine={session.whyNowLine}
             isAgentSpeaking={session.isAgentSpeaking}
+            journeyStage={session.journeyStage}
+            language={language}
           />
 
           <LiveHUD
+            language={language}
             status={session.status}
             isMicActive={session.isMicActive}
             isAgentSpeaking={session.isAgentSpeaking}
+            isTranscriptVisible={showTranscript}
             metrics={session.metrics}
             journeyStage={session.journeyStage}
+            whyNowLine={session.whyNowLine}
+            latestTruthContract={session.latestTruthContract}
+            composer={composer}
+            onComposerChange={setComposer}
+            onSendText={handleSend}
+            onToggleTranscript={() => setShowTranscript((value) => !value)}
             onToggleMic={session.toggleMic}
+            onToggleSilentMirror={session.toggleSilentMirror}
             onEndSession={handleEnd}
+            onOpenHistory={() => assignUrl("/dawayir-live/history")}
+            onShare={handleShare}
+            onBack={handleBack}
+            showBreathingGuide={showBreathingGuide}
+            isSilentMirrorMode={session.isSilentMirrorMode}
           />
 
-          <div className="absolute bottom-6 left-1/2 z-30 flex w-[min(92vw,44rem)] -translate-x-1/2 items-center gap-3 rounded-3xl border border-white/10 bg-slate-950/70 p-3 shadow-2xl backdrop-blur-xl">
-            <button
-              type="button"
-              onClick={() => setShowTranscript((value) => !value)}
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200"
-            >
-              {showTranscript ? "إخفاء النص" : "إظهار النص"}
-            </button>
-            <input
-              value={composer}
-              onChange={(event) => setComposer(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") handleSend();
-              }}
-              placeholder="اكتب ما تريد قوله لو لم تستخدم الميكروفون..."
-              className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500"
-            />
-            <button
-              type="button"
-              onClick={handleSend}
-              className="rounded-2xl bg-teal-400 px-4 py-3 text-sm font-bold text-slate-950"
-            >
-              إرسال
-            </button>
-          </div>
-
-          <LiveTranscript entries={session.transcript} isVisible={showTranscript} onToggle={() => setShowTranscript((value) => !value)} />
+          <LiveTranscript
+            entries={session.transcript}
+            isVisible={showTranscript}
+            onToggle={() => setShowTranscript((value) => !value)}
+            showToggle={false}
+            language={language}
+          />
         </>
       )}
 
@@ -246,7 +276,7 @@ export default function DawayirLiveApp() {
               </button>
               <button
                 type="button"
-                onClick={() => assignUrl("/profile")}
+                onClick={() => assignUrl("/onboarding")}
                 className="rounded-2xl bg-teal-400 px-5 py-3 text-sm font-bold text-slate-950"
               >
                 الذهاب للحساب
@@ -284,35 +314,36 @@ export default function DawayirLiveApp() {
         </div>
       )}
 
-      <div className="absolute left-4 top-4 z-30 flex gap-2">
-        <button
-          type="button"
-          onClick={() => assignUrl("/dawayir-live/history")}
-          className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/60 px-4 py-2 text-xs font-semibold text-slate-200 backdrop-blur-xl"
-        >
-          <History className="h-4 w-4" />
-          History
-        </button>
-        <button
-          type="button"
-          onClick={() => assignUrl("/coach?tab=dawayir-live")}
-          className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/60 px-4 py-2 text-xs font-semibold text-slate-200 backdrop-blur-xl"
-        >
-          <ArrowRight className="h-4 w-4" />
-          Coach
-        </button>
-        <button
-          type="button"
-          onClick={async () => {
-            const url = await session.createShareLink();
-            if (url) window.open(url, "_blank", "noopener,noreferrer");
-          }}
-          className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/60 px-4 py-2 text-xs font-semibold text-slate-200 backdrop-blur-xl"
-        >
-          <Link2 className="h-4 w-4" />
-          Share
-        </button>
-      </div>
+      {!isLive && (
+        <div className="absolute left-4 top-4 z-30 flex gap-2">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/60 px-4 py-2 text-xs font-semibold text-slate-200 backdrop-blur-xl"
+          >
+            <ArrowRight className="h-4 w-4" />
+            {appView === "setup" ? "رجوع" : "Back"}
+          </button>
+          <button
+            type="button"
+            onClick={() => assignUrl("/dawayir-live/history")}
+            className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/60 px-4 py-2 text-xs font-semibold text-slate-200 backdrop-blur-xl"
+          >
+            <History className="h-4 w-4" />
+            History
+          </button>
+        </div>
+      )}
+
+      {showOnboarding && appView === "setup" && (
+        <ParityOnboardingModal
+          language={language}
+          step={onboardingStep}
+          steps={onboardingSteps}
+          onSkip={dismissOnboarding}
+          onNext={advanceOnboarding}
+        />
+      )}
     </div>
   );
 }

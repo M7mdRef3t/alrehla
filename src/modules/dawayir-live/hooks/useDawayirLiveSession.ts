@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { GoogleGenAI, Modality } from "@google/genai";
 import { runtimeEnv } from "../../../config/runtimeEnv";
 import {
   appendLiveEvents,
@@ -14,11 +15,7 @@ import type {
   CircleNode,
   CognitiveMetrics,
   DawayirLiveConfig,
-  GeminiClientContentMessage,
-  GeminiRealtimeInputMessage,
   GeminiServerMessage,
-  GeminiSetupMessage,
-  GeminiToolResponseMessage,
   JourneyStage,
   LiveReplaySnapshot,
   LiveSessionEventRecord,
@@ -33,13 +30,16 @@ import type {
   LiveSessionSummary,
   TruthContract,
   LoopRecall,
+  MirrorMomentState,
+  VoiceTattooMeta,
 } from "../types";
-import { AudioOutputPlayer, MicCapture, parsePcmSampleRate } from "../utils/audioHelpers";
+import { AudioOutputPlayer, MicCapture, base64ToArrayBuffer, parsePcmSampleRate } from "../utils/audioHelpers";
+import { createVoiceTattooFromChunks, hasVoiceTattoo, readVoiceTattoo, saveVoiceTattoo } from "../utils/voiceTattoo";
 
 const DEFAULT_CIRCLES: CircleNode[] = [
-  { id: 1, label: "وعي", radius: 50, color: "#FFD700", fluidity: 0.5 },
-  { id: 2, label: "علم", radius: 50, color: "#14b8a6", fluidity: 0.5 },
-  { id: 3, label: "حقيقة", radius: 50, color: "#4169E1", fluidity: 0.5 },
+  { id: 1, label: "ÙˆØ¹ÙŠ", radius: 50, color: "#FFD700", fluidity: 0.5 },
+  { id: 2, label: "Ø¹Ù„Ù…", radius: 50, color: "#14b8a6", fluidity: 0.5 },
+  { id: 3, label: "Ø­Ù‚ÙŠÙ‚Ø©", radius: 50, color: "#4169E1", fluidity: 0.5 },
 ];
 
 const DEFAULT_METRICS: CognitiveMetrics = {
@@ -47,10 +47,6 @@ const DEFAULT_METRICS: CognitiveMetrics = {
   overloadIndex: 0.2,
   clarityDelta: 0,
 };
-
-function buildSocketUrl(apiKey: string) {
-  return `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${apiKey}`;
-}
 
 function nextId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -90,9 +86,14 @@ export interface UseDawayirLiveReturn {
   latestSummary: LiveSessionSummary | null;
   latestTruthContract: TruthContract | null;
   latestLoopRecall: LoopRecall | null;
+  isSilentMirrorMode: boolean;
+  mirrorMoment: MirrorMomentState | null;
+  voiceTattoo: VoiceTattooMeta;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   toggleMic: () => Promise<void>;
+  toggleSilentMirror: () => void;
+  dismissMirrorMoment: () => void;
   sendTextMessage: (text: string) => void;
   completeSession: () => Promise<string | null>;
   createShareLink: () => Promise<string | null>;
@@ -116,8 +117,20 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
   const [latestSummary, setLatestSummary] = useState<LiveSessionSummary | null>(null);
   const [latestTruthContract, setLatestTruthContract] = useState<TruthContract | null>(null);
   const [latestLoopRecall, setLatestLoopRecall] = useState<LoopRecall | null>(null);
+  const [isSilentMirrorMode, setIsSilentMirrorMode] = useState(false);
+  const [mirrorMoment, setMirrorMoment] = useState<MirrorMomentState | null>(null);
+  const [voiceTattoo, setVoiceTattoo] = useState<VoiceTattooMeta>(() => {
+    const existing = readVoiceTattoo();
+    return {
+      hasTattoo: Boolean(existing),
+      savedAt: existing?.savedAt ?? null,
+      nodeId: existing?.nodeId ?? null,
+      label: existing?.label ?? null,
+      whyNowLine: existing?.whyNowLine ?? null,
+    };
+  });
 
-  const wsRef = useRef<WebSocket | null>(null);
+  const sessionRef = useRef<any>(null);
   const micRef = useRef<MicCapture | null>(null);
   const playerRef = useRef<AudioOutputPlayer | null>(null);
   const manualCloseRef = useRef(false);
@@ -129,8 +142,14 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
   const pendingFramesRef = useRef<Array<{ seq: number; frame: LiveReplaySnapshot }>>([]);
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const whyNowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const connectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInputTranscriptRef = useRef("");
   const lastOutputTranscriptRef = useRef("");
+  const dominantNodeRef = useRef<number>(DEFAULT_CIRCLES[0].id);
+  const mirrorMomentShownRef = useRef(false);
+  const tattooSavedThisSessionRef = useRef(false);
+  const recentUserAudioChunksRef = useRef<string[]>([]);
+  const recentUserAudioBytesRef = useRef(0);
 
   const snapshot = useMemo<LiveReplaySnapshot>(
     () => ({
@@ -151,6 +170,17 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
     snapshotRef.current = snapshot;
   }, [snapshot]);
 
+  useEffect(() => {
+    const existing = readVoiceTattoo();
+    setVoiceTattoo({
+      hasTattoo: Boolean(existing),
+      savedAt: existing?.savedAt ?? null,
+      nodeId: existing?.nodeId ?? null,
+      label: existing?.label ?? null,
+      whyNowLine: existing?.whyNowLine ?? null,
+    });
+  }, []);
+
   const addTranscript = useCallback((entry: Omit<TranscriptEntry, "timestamp">) => {
     const nextEntry = { ...entry, timestamp: Date.now() };
     setTranscript((previous) => [...previous, nextEntry]);
@@ -161,6 +191,10 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
       actor: entry.role,
       payload: entry as unknown as Record<string, unknown>,
     });
+  }, []);
+
+  const dismissMirrorMoment = useCallback(() => {
+    setMirrorMoment(null);
   }, []);
 
   const queueFrame = useCallback(() => {
@@ -206,6 +240,35 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
     if (whyNowTimerRef.current) clearTimeout(whyNowTimerRef.current);
     whyNowTimerRef.current = setTimeout(() => setWhyNowLine(null), durationMs);
   }, []);
+
+  const captureVoiceTattoo = useCallback(
+    (nodeId?: number | null, whyLine?: string | null) => {
+      if (tattooSavedThisSessionRef.current || !recentUserAudioChunksRef.current.length) return;
+      const audio = createVoiceTattooFromChunks(recentUserAudioChunksRef.current, 16_000);
+      if (!audio) return;
+
+      const dominantCircle = circles.find((circle) => circle.id === (nodeId ?? dominantNodeRef.current));
+      const saved = saveVoiceTattoo({
+        audio,
+        savedAt: new Date().toISOString(),
+        nodeId: nodeId ?? dominantNodeRef.current,
+        label: dominantCircle?.label,
+        whyNowLine: whyLine ?? whyNowLine ?? dominantCircle?.reason ?? null,
+      });
+      if (!saved) return;
+
+      tattooSavedThisSessionRef.current = true;
+      const existing = readVoiceTattoo();
+      setVoiceTattoo({
+        hasTattoo: hasVoiceTattoo(),
+        savedAt: existing?.savedAt ?? null,
+        nodeId: existing?.nodeId ?? null,
+        label: existing?.label ?? null,
+        whyNowLine: existing?.whyNowLine ?? null,
+      });
+    },
+    [circles, whyNowLine],
+  );
 
   const enqueueStateEvent = useCallback((payload: Record<string, unknown>) => {
     pendingEventsRef.current.push({
@@ -261,7 +324,7 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
           ...previous,
           {
             id: nextId("other"),
-            name: String(call.args.name ?? "عنصر جديد"),
+            name: String(call.args.name ?? "Ø¹Ù†ØµØ± Ø¬Ø¯ÙŠØ¯"),
             tension: Number(call.args.tension ?? 0.5),
             color: String(call.args.color ?? "#94a3b8"),
           },
@@ -274,7 +337,7 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
           ...previous,
           {
             id: nextId("topic"),
-            topic: String(call.args.topic ?? "موضوع"),
+            topic: String(call.args.topic ?? "Ù…ÙˆØ¶ÙˆØ¹"),
             weight: Number(call.args.weight ?? 0.5),
             color: String(call.args.color ?? "#f59e0b"),
           },
@@ -300,8 +363,8 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
         setThoughtMap((previous) => [
           ...previous.filter((thought) => thought.topic !== call.args.topic),
           {
-            topic: String(call.args.topic ?? "فكرة"),
-            emoji: String(call.args.emoji ?? "•"),
+            topic: String(call.args.topic ?? "ÙÙƒØ±Ø©"),
+            emoji: String(call.args.emoji ?? "â€¢"),
             weight: Number(call.args.weight ?? 0.5),
             connects_to:
               typeof call.args.connects_to === "string"
@@ -319,31 +382,52 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
       case "update_journey": {
         const nextStage = String(call.args.stage ?? "Overwhelmed") as JourneyStage;
         setJourneyStage(nextStage);
+        if (nextStage === "Clarity") {
+          captureVoiceTattoo(undefined, typeof call.args.reason === "string" ? call.args.reason : null);
+        }
         queueFrame();
         return { ok: true, stage: nextStage };
       }
       default:
         return { ok: false, ignored: true };
     }
-  }, [pushWhyNow, queueFrame]);
-
-  const send = useCallback((payload: GeminiSetupMessage | GeminiClientContentMessage | GeminiRealtimeInputMessage | GeminiToolResponseMessage) => {
-    const socket = wsRef.current;
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-      return;
-    }
-    socket.send(JSON.stringify(payload));
-  }, []);
+  }, [captureVoiceTattoo, pushWhyNow, queueFrame]);
 
   const sendClientText = useCallback((text: string) => {
-    const message: GeminiClientContentMessage = {
-      clientContent: {
-        turns: [{ role: "user", parts: [{ text }] }],
-        turnComplete: true,
-      },
-    };
-    send(message);
-  }, [send]);
+    const session = sessionRef.current;
+    if (!session) return;
+    session.sendClientContent({
+      turns: [{
+        role: "user",
+        parts: [{ text }],
+      }],
+      turnComplete: true,
+    });
+  }, []);
+
+  const sendToolResponses = useCallback((functionResponses: unknown) => {
+    const session = sessionRef.current;
+    if (!session) return;
+    session.sendToolResponse({
+      functionResponses,
+    });
+  }, []);
+
+  const sendRealtimeAudio = useCallback((base64: string, mimeType: string) => {
+    const session = sessionRef.current;
+    if (!session) return;
+    session.sendRealtimeInput({
+      audio: new Blob([base64ToArrayBuffer(base64)], { type: mimeType }),
+    });
+  }, []);
+
+  const endRealtimeAudio = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    session.sendRealtimeInput({
+      audioStreamEnd: true,
+    });
+  }, []);
 
   const resolveToolCalls = useCallback(async (calls: ToolCallPayload[]) => {
     const activeSessionId = sessionIdRef.current;
@@ -384,7 +468,7 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
         if (result.truthContract) setLatestTruthContract(result.truthContract);
         if (result.loopRecall) setLatestLoopRecall(result.loopRecall);
         if (call.name === "save_mental_map") {
-          addTranscript({ role: "system", text: "تم حفظ الخريطة الذهنية." });
+          addTranscript({ role: "system", text: "ØªÙ… Ø­ÙØ¸ Ø§Ù„Ø®Ø±ÙŠØ·Ø© Ø§Ù„Ø°Ù‡Ù†ÙŠØ©." });
         }
         responses.push({
           id: call.id,
@@ -402,15 +486,15 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
     }
 
     scheduleFlush();
-    send({
-      toolResponse: {
-        functionResponses: responses,
-      },
-    });
-  }, [addTranscript, handleLocalToolCall, scheduleFlush, send]);
+    sendToolResponses(responses);
+  }, [addTranscript, handleLocalToolCall, scheduleFlush, sendToolResponses]);
 
   const handleServerMessage = useCallback((message: GeminiServerMessage) => {
     if (message.setupComplete) {
+      if (connectTimeoutRef.current) {
+        clearTimeout(connectTimeoutRef.current);
+        connectTimeoutRef.current = null;
+      }
       setStatus("connected");
       enqueueStateEvent({ phase: "setup_complete" });
       sendClientText(buildInitialContextMessage(config));
@@ -418,6 +502,10 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
     }
 
     if (message.error?.message) {
+      if (connectTimeoutRef.current) {
+        clearTimeout(connectTimeoutRef.current);
+        connectTimeoutRef.current = null;
+      }
       hadErrorRef.current = true;
       setStatus("error");
       setErrorMessage(message.error.message);
@@ -457,15 +545,17 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
       }
       const audio = safeInlineAudio(part);
       if (audio?.data) {
-        setStatus("speaking");
-        void playerRef.current?.enqueueBase64Pcm(audio.data, parsePcmSampleRate(audio.mimeType));
+        if (!isSilentMirrorMode) {
+          setStatus("speaking");
+          void playerRef.current?.enqueueBase64Pcm(audio.data, parsePcmSampleRate(audio.mimeType));
+        }
       }
     }
 
     if (message.serverContent?.turnComplete && status === "speaking") {
       setStatus("connected");
     }
-  }, [addTranscript, config, enqueueStateEvent, resolveToolCalls, scheduleFlush, sendClientText, status]);
+  }, [addTranscript, config, enqueueStateEvent, isSilentMirrorMode, resolveToolCalls, scheduleFlush, sendClientText, status]);
 
   const stopMic = useCallback(() => {
     micRef.current?.stop();
@@ -482,6 +572,12 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
     setStatus("bootstrapping");
     hadErrorRef.current = false;
     manualCloseRef.current = false;
+    mirrorMomentShownRef.current = false;
+    tattooSavedThisSessionRef.current = false;
+    recentUserAudioChunksRef.current = [];
+    recentUserAudioBytesRef.current = 0;
+    dominantNodeRef.current = DEFAULT_CIRCLES[0].id;
+    setMirrorMoment(null);
 
     const bootstrap = await bootstrapLiveSession().catch((error) => {
       setStatus("error");
@@ -500,8 +596,9 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
       return;
     }
 
-    const apiKey = config.apiKey || runtimeEnv.dawayirLiveApiKey || "";
-    if (!apiKey) {
+    const apiKey = config.apiKey || runtimeEnv.dawayirLiveApiKey || bootstrap.apiKey || "";
+    const ephemeralToken = bootstrap.ephemeralToken || undefined;
+    if (!apiKey && !ephemeralToken) {
       setStatus("error");
       setErrorMessage("مفتاح Dawayir Live غير مضبوط في البيئة.");
       return;
@@ -536,67 +633,78 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
 
     setStatus("connecting");
     try {
-      const socket = new WebSocket(buildSocketUrl(apiKey));
-      wsRef.current = socket;
+      const ai = new GoogleGenAI(
+        apiKey
+          ? { apiKey, apiVersion: "v1beta" }
+          : { apiKey: ephemeralToken, apiVersion: "v1alpha" },
+      );
 
-      socket.onopen = () => {
-        setStatus("setup");
-        const setup: GeminiSetupMessage = {
-          setup: {
-            model: `models/${config.model || runtimeEnv.dawayirLiveModel || bootstrap.model}`,
-            generationConfig: {
-              responseModalities: ["AUDIO"],
-              speechConfig: {
-                voiceConfig: {
-                  prebuiltVoiceConfig: {
-                    voiceName: config.voice || runtimeEnv.dawayirLiveVoice || bootstrap.voice,
-                  },
-                },
-              },
-            },
-            systemInstruction: {
-              parts: [{ text: buildDawayirSystemInstruction(config) }],
-            },
-            tools: LIVE_TOOL_DECLARATIONS as never,
-            inputAudioTranscription: {},
-            outputAudioTranscription: {},
-          },
-        };
-        send(setup);
-      };
-
-      socket.onmessage = (event) => {
-        try {
-          handleServerMessage(JSON.parse(String(event.data)) as GeminiServerMessage);
-        } catch {
-          // Ignore malformed packets.
-        }
-      };
-
-      socket.onerror = () => {
+      connectTimeoutRef.current = setTimeout(() => {
+        if (!sessionRef.current) return;
         hadErrorRef.current = true;
+        sessionRef.current.close();
         setStatus("error");
-        setErrorMessage("فشل الاتصال المباشر بـ Gemini Live.");
-      };
+        setErrorMessage([
+          "انتهت مهلة الاتصال بـ Gemini Live.",
+          "تم إنشاء الجلسة داخل المنصة، لكن Gemini لم يُكمل handshake.",
+          "غالبًا المفتاح الحالي لا يسمح من localhost/الدومين الحالي أو أن Gemini Live غير مفعّل عليه.",
+        ].join("\n"));
+      }, 15000);
 
-      socket.onclose = () => {
-        stopMic();
-        if (!manualCloseRef.current && !hadErrorRef.current) {
-          setStatus("disconnected");
-        }
-      };
+      sessionRef.current = await ai.live.connect({
+        model: config.model || runtimeEnv.dawayirLiveModel || bootstrap.model,
+        config: {
+          responseModalities: [Modality.AUDIO],
+          systemInstruction: buildDawayirSystemInstruction(config),
+          tools: LIVE_TOOL_DECLARATIONS as never,
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
+        },
+        callbacks: {
+          onopen: () => {
+            setStatus("setup");
+          },
+          onmessage: (event) => {
+            handleServerMessage(event as unknown as GeminiServerMessage);
+          },
+          onerror: () => {
+            if (connectTimeoutRef.current) {
+              clearTimeout(connectTimeoutRef.current);
+              connectTimeoutRef.current = null;
+            }
+            hadErrorRef.current = true;
+            setStatus("error");
+            setErrorMessage("فشل الاتصال المباشر بـ Gemini Live.");
+          },
+          onclose: () => {
+            if (connectTimeoutRef.current) {
+              clearTimeout(connectTimeoutRef.current);
+              connectTimeoutRef.current = null;
+            }
+            stopMic();
+            sessionRef.current = null;
+            if (!manualCloseRef.current && !hadErrorRef.current) {
+              setStatus("disconnected");
+            }
+          },
+        },
+      });
     } catch (error) {
       setStatus("error");
       setErrorMessage(error instanceof Error ? error.message : "socket_failed");
     }
-  }, [config, handleServerMessage, send, status, stopMic]);
+  }, [config, handleServerMessage, status, stopMic]);
 
   const disconnect = useCallback(async () => {
     manualCloseRef.current = true;
     stopMic();
     playerRef.current?.stop();
-    wsRef.current?.close();
-    wsRef.current = null;
+    sessionRef.current?.close();
+    sessionRef.current = null;
+    if (connectTimeoutRef.current) {
+      clearTimeout(connectTimeoutRef.current);
+      connectTimeoutRef.current = null;
+    }
 
     if (flushTimerRef.current) {
       clearTimeout(flushTimerRef.current);
@@ -624,32 +732,50 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
   }, [metrics, stopMic]);
 
   const toggleMic = useCallback(async () => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+    if (!sessionRef.current) {
       return;
     }
 
     if (isMicActive) {
       stopMic();
+      endRealtimeAudio();
       enqueueStateEvent({ mic: "off" });
       return;
     }
 
     const mic = new MicCapture();
     mic.onAudioChunk = (base64) => {
-      send({
-        realtimeInput: {
-          audio: {
-            data: base64,
-            mimeType: "audio/pcm;rate=16000",
-          },
-        },
-      });
+      recentUserAudioChunksRef.current.push(base64);
+      recentUserAudioBytesRef.current += Math.ceil((base64.length * 3) / 4);
+      while (recentUserAudioBytesRef.current > 320_000 && recentUserAudioChunksRef.current.length > 1) {
+        const removed = recentUserAudioChunksRef.current.shift();
+        if (removed) {
+          recentUserAudioBytesRef.current -= Math.ceil((removed.length * 3) / 4);
+        }
+      }
+
+      if (isSilentMirrorMode) return;
+
+      sendRealtimeAudio(base64, "audio/pcm;rate=16000");
     };
     await mic.start();
     micRef.current = mic;
     setIsMicActive(true);
     enqueueStateEvent({ mic: "on" });
-  }, [enqueueStateEvent, isMicActive, send, stopMic]);
+  }, [endRealtimeAudio, enqueueStateEvent, isMicActive, isSilentMirrorMode, sendRealtimeAudio, stopMic]);
+
+  const toggleSilentMirror = useCallback(() => {
+    setIsSilentMirrorMode((current) => {
+      const next = !current;
+      if (next) {
+        playerRef.current?.stop();
+        setIsAgentSpeaking(false);
+        setStatus((existing) => (existing === "speaking" ? "connected" : existing));
+      }
+      enqueueStateEvent({ silentMirror: next ? "on" : "off" });
+      return next;
+    });
+  }, [enqueueStateEvent]);
 
   const sendTextMessage = useCallback((text: string) => {
     const clean = text.trim();
@@ -693,9 +819,32 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
   }, []);
 
   useEffect(() => {
+    const dominant = [...circles].sort((left, right) => right.radius - left.radius)[0];
+    if (!dominant) return;
+
+    const previous = dominantNodeRef.current;
+    if (!mirrorMomentShownRef.current && previous !== dominant.id) {
+      mirrorMomentShownRef.current = true;
+      setMirrorMoment({
+        visible: true,
+        nodeId: dominant.id,
+        whyNowText: whyNowLine || dominant.reason || dominant.topic || "",
+      });
+    }
+
+    dominantNodeRef.current = dominant.id;
+  }, [circles, whyNowLine]);
+
+  useEffect(() => {
+    if (!latestTruthContract && journeyStage !== "Clarity") return;
+    captureVoiceTattoo(undefined, whyNowLine);
+  }, [captureVoiceTattoo, journeyStage, latestTruthContract, whyNowLine]);
+
+  useEffect(() => {
     return () => {
       void disconnect();
       if (whyNowTimerRef.current) clearTimeout(whyNowTimerRef.current);
+      if (connectTimeoutRef.current) clearTimeout(connectTimeoutRef.current);
       playerRef.current?.dispose();
       playerRef.current = null;
     };
@@ -719,11 +868,17 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
     latestSummary,
     latestTruthContract,
     latestLoopRecall,
+    isSilentMirrorMode,
+    mirrorMoment,
+    voiceTattoo,
     connect,
     disconnect,
     toggleMic,
+    toggleSilentMirror,
+    dismissMirrorMoment,
     sendTextMessage,
     completeSession: completeSessionFlow,
     createShareLink,
   };
 }
+

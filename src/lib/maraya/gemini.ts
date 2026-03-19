@@ -1,6 +1,6 @@
 /**
  * Gemini Structured Output Service for Maraya
- * Ported from maraya-storyteller/server/services/gemini.js
+ * Adapted from the legacy Maraya Gemini runtime.
  */
 
 import { GoogleGenAI } from '@google/genai';

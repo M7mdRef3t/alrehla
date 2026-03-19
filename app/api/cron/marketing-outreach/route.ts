@@ -37,11 +37,13 @@ async function sendEmail(leadEmail: string, payload: Record<string, unknown> | n
     };
   }
   const subject = String(payload?.subject ?? "أهلاً بك في الرحلة");
-  const html = `
+  const html = typeof payload?.html === "string" && payload.html.trim()
+    ? payload.html
+    : `
     <div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8">
       <h2>مرحباً بك في الرحلة</h2>
       <p>نرسل لك أول خطوة عملية تبدأ بها اليوم.</p>
-      <p><a href="https://alrehla.app" target="_blank" rel="noopener noreferrer">ابدأ من هنا</a></p>
+      <p><a href="https://www.alrehla.app/onboarding" target="_blank" rel="noopener noreferrer">ابدأ من هنا</a></p>
     </div>
   `;
   const response = await fetch("https://api.resend.com/emails", {

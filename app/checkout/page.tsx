@@ -44,7 +44,8 @@ const LOCAL_PROOF_METHODS: Array<{ value: ManualProofMethod; label: string }> = 
   { value: "fawry", label: "فوري" }
 ];
 const INTERNATIONAL_PROOF_METHODS: Array<{ value: ManualProofMethod; label: string }> = [
-  { value: "paypal", label: "PayPal" }
+  { value: "paypal", label: "PayPal" },
+  { value: "etisalat_cash", label: "Etisalat International" }
 ];
 type ProofImageState = {
   name: string;
@@ -575,6 +576,21 @@ export default function CheckoutPage() {
                   if (PAYPAL_EMAIL) void copyValue(PAYPAL_EMAIL, setPaymentNotice);
                 }}
                 icon={<MessageCircle className="h-5 w-5" />}
+              />
+
+              <MethodCard
+                title="Etisalat Cash — تحويل دولي"
+                subtitle="تحويل دولي عبر محفظة اتصالات e&money. متاح من أي بلد يدعم الخدمة. بعد التحويل أرسل إثبات الدفع لتفعيل الرحلة."
+                value={ETISALAT_CASH_NUMBER || undefined}
+                valueLabel={ETISALAT_CASH_NUMBER ? "رقم المحفظة" : undefined}
+                actionLabel="تفاصيل الخدمة"
+                href="https://www.eand.com.eg/portal/pages/services/International_money_remittance.html"
+                onAction={() => {
+                  setProofMethod("etisalat_cash");
+                  trackManualIntent("etisalat_international");
+                  if (ETISALAT_CASH_NUMBER) void copyValue(ETISALAT_CASH_NUMBER, setPaymentNotice);
+                }}
+                icon={<Wallet className="h-5 w-5" />}
               />
             </div>
           )}

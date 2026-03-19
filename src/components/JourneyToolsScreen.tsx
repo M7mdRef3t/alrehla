@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Compass, Star } from "lucide-react";
+import { ArrowRight, Compass, Star, BookOpen, Wind } from "lucide-react";
 import { getJourneyToolsView } from "../data/journeyTools";
 import { useJourneyState } from "../state/journeyState";
 import { useMapState } from "../state/mapState";
@@ -22,6 +22,8 @@ interface JourneyToolsScreenProps {
   nextStepDecision?: NextStepDecisionV1 | null;
   onTakeNextStep?: (decision: NextStepDecisionV1) => void;
   onRefreshNextStep?: () => void;
+  onOpenExitScripts?: () => void;
+  onOpenGrounding?: () => void;
 }
 
 export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
@@ -33,7 +35,9 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
   availableFeatures,
   nextStepDecision = null,
   onTakeNextStep,
-  onRefreshNextStep
+  onRefreshNextStep,
+  onOpenExitScripts,
+  onOpenGrounding
 }) => {
   const containerVariants = {
     hidden: { opacity: 0, y: 12 },
@@ -191,6 +195,52 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
           </motion.button>
         ))}
       </motion.section>
+
+      {/* ── Body-First & Exit Scripts ── */}
+      {(onOpenExitScripts || onOpenGrounding) && (
+        <motion.section
+          className="mt-6 space-y-3 text-right"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <h2 className="text-sm font-bold text-slate-600 mb-2 flex items-center gap-1">
+            🛡️ أدوات الحماية الذاتية
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            {onOpenExitScripts && (
+              <button
+                type="button"
+                onClick={onOpenExitScripts}
+                className="rounded-2xl border border-violet-200 bg-violet-50/70 px-4 py-4 text-right hover:bg-violet-100/70 transition-all"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
+                    <BookOpen className="w-4 h-4 text-violet-600" />
+                  </div>
+                  <span className="text-sm font-bold text-slate-900">جمل الخروج</span>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">24 جملة جاهزة لكل موقف صعب + AI</p>
+              </button>
+            )}
+            {onOpenGrounding && (
+              <button
+                type="button"
+                onClick={onOpenGrounding}
+                className="rounded-2xl border border-teal-200 bg-teal-50/70 px-4 py-4 text-right hover:bg-teal-100/70 transition-all"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
+                    <Wind className="w-4 h-4 text-teal-600" />
+                  </div>
+                  <span className="text-sm font-bold text-slate-900">تهدئة الجسم</span>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">تنفس مربع + 5-4-3-2-1 + مسح الجسم</p>
+              </button>
+            )}
+          </div>
+        </motion.section>
+      )}
 
       {nextStepDecision && onTakeNextStep && onRefreshNextStep && (
         <NextStepCard
