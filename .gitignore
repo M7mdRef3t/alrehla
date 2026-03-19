@@ -68,3 +68,7 @@ vercel.marketing.env
 .tmp-lint.json
 .tmp-openapi.json
 nul
+
+build_output.txt
+dev_out*.txt
+dev_output.txt

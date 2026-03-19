@@ -31,24 +31,23 @@ function playAchievementSuccessSound(): void {
     second.start(now + 0.12);
     second.stop(now + 0.25);
 
-    window.setTimeout(() => {
-      void context.close();
-    }, 420);
+    window.setTimeout(() => { void context.close(); }, 420);
   } catch {
-    // تجاهل أي خطأ تشغيل صوتي (مثل سياسات المتصفح)
+    // تجاهل أي خطأ تشغيل صوتي
   }
 }
 
-/** تهنئة صغيرة تظهر عند فتح إنجاز جديد */
+/** تهنئة صغيرة تظهر عند فتح إنجاز جديد — dark glassmorphism + قابل للضغط */
 export const AchievementToast: FC = () => {
   const lastNewAchievementId = useAchievementState((s) => s.lastNewAchievementId);
   const clearLastNew = useAchievementState((s) => s.clearLastNew);
+  const requestOpenAchievements = useAchievementState((s) => s.requestOpenAchievements);
   const achievement = lastNewAchievementId ? getAchievementById(lastNewAchievementId) : null;
 
   useEffect(() => {
     if (!lastNewAchievementId) return;
     playAchievementSuccessSound();
-    const t = setTimeout(clearLastNew, 4000);
+    const t = setTimeout(clearLastNew, 4500);
     return () => clearTimeout(t);
   }, [lastNewAchievementId, clearLastNew]);
 
@@ -56,18 +55,46 @@ export const AchievementToast: FC = () => {
     <AnimatePresence>
       {achievement && (
         <motion.div
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] max-w-sm w-full mx-4 px-4 py-3 rounded-2xl bg-amber-100 dark:bg-amber-900/80 border-2 border-amber-300 dark:border-amber-700 text-center"
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[calc(100%-2rem)] max-w-sm cursor-pointer"
+          style={{
+            background: "linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.88))",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,215,0,0.25)",
+            borderRadius: "20px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,215,0,0.1), inset 0 1px 0 rgba(255,255,255,0.06)"
+          }}
+          initial={{ opacity: 0, y: 20, scale: 0.92 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 10 }}
-          transition={{ duration: 0.3 }}
-          role="status"
-          aria-live="polite"
+          exit={{ opacity: 0, y: 16, scale: 0.95 }}
+          transition={{ duration: 0.32, ease: [0.34, 1.56, 0.64, 1] }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          role="button"
+          aria-label="افتح كل إنجازاتك"
+          onClick={requestOpenAchievements}
         >
-          <p className="text-2xl mb-1" aria-hidden>{achievement.icon}</p>
-          <p className="font-bold text-amber-900 dark:text-amber-100">إنجاز جديد!</p>
-          <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">{achievement.title}</p>
-          <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">{achievement.hint}</p>
+          {/* Golden glow bar */}
+          <div
+            className="h-0.5 rounded-t-[20px]"
+            style={{ background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.6), transparent)" }}
+          />
+
+          <div className="px-4 py-3 text-center">
+            <p className="text-3xl mb-1.5" aria-hidden>{achievement.icon}</p>
+            <p
+              className="text-xs font-bold uppercase tracking-widest mb-0.5"
+              style={{ color: "rgba(255,215,0,0.8)", letterSpacing: "0.15em" }}
+            >
+              إنجاز جديد!
+            </p>
+            <p className="font-black text-white text-base">{achievement.title}</p>
+            <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
+              {achievement.hint}
+            </p>
+            <p className="text-[10px] mt-2 font-semibold" style={{ color: "rgba(255,215,0,0.4)" }}>
+              اضغط لترى كل إنجازاتك ←
+            </p>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

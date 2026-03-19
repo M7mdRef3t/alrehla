@@ -1,0 +1,2 @@
+email,phone,name,source,sourceType,campaign,adset,ad,placement,note,status
+lead@example.com,201000000000,Example Lead,meta_instant_form,meta_instant_form,energy_map_eg_v1,adset_a,creative_a,instagram_reels,Imported from Meta instant form,new

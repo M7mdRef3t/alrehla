@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import type { MapNode } from "../modules/map/mapTypes";
 import { ACHIEVEMENTS } from "../data/achievements";
 import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
+import { loadStreak } from "../services/streakSystem";
 
 const STORAGE_KEY = "dawayir-achievements";
 
@@ -31,12 +32,18 @@ export interface AchievementState {
   totalPoints: number;
   actionCounts: Record<string, number>;
   lastNewAchievementId: string | null;
+  /** flag يُعيّن عندما يضغط المستخدم على Toast لفتح مودال الإنجازات */
+  openAchievementsRequest: boolean;
   /** فتح إنجاز (يُستدعى من الواجهة أو من فحص تلقائي). يفعّل عرض التهاني إن كان أول فتح. */
   unlock: (id: string) => void;
   /** فتح بدون عرض تهاني (للاستخدام عند فتح عدة إنجازات في نفس الفحص) */
   unlockSilent: (id: string) => void;
   /** مسح آخر إنجاز جديد (بعد عرض التهاني) */
   clearLastNew: () => void;
+  /** طلب فتح مودال الإنجازات (يُستدعى من Toast عند الضغط عليه) */
+  requestOpenAchievements: () => void;
+  /** مسح طلب الفتح (يُستدعى من App.tsx بعد استيعاب الطلب) */
+  clearOpenAchievementsRequest: () => void;
   /** تسجيل أن المستخدم فتح المكتبة */
   markLibraryOpened: () => void;
   /** تسجيل أن المستخدم استخدم التنفس */
@@ -82,7 +89,17 @@ const ACTION_POINTS: Record<string, number> = {
 
   // Direct actions not always covered by journey events
   action_library_opened: 4,
-  action_breathing_used: 4
+  action_breathing_used: 4,
+
+  // New screens
+  screen_armory_viewed: 5,
+  screen_exit_scripts_viewed: 5,
+  screen_grounding_viewed: 5,
+
+  // Streak milestones
+  streak_milestone_1: 10,
+  streak_milestone_3: 25,
+  streak_milestone_7: 60
 };
 
 const ACTION_ACHIEVEMENTS: Record<string, string> = {
@@ -91,7 +108,13 @@ const ACTION_ACHIEVEMENTS: Record<string, string> = {
   flow_install_clicked: "installer_click",
   flow_pulse_notes_used: "pulse_explainer",
   flow_pulse_completed: "pulse_saver",
-  flow_add_person_done_show_on_map: "person_located_on_map"
+  flow_add_person_done_show_on_map: "person_located_on_map",
+  screen_armory_viewed: "armory_visited",
+  screen_exit_scripts_viewed: "exit_scripts_visited",
+  screen_grounding_viewed: "grounding_visited",
+  streak_milestone_1: "streak_1",
+  streak_milestone_3: "streak_3",
+  streak_milestone_7: "streak_7"
 };
 
 export const useAchievementState = create<AchievementState>()(
@@ -101,6 +124,7 @@ export const useAchievementState = create<AchievementState>()(
       totalPoints: 0,
       actionCounts: {},
       lastNewAchievementId: null,
+      openAchievementsRequest: false,
 
       unlock: (id: string) => {
         const { unlockedIds } = get();
@@ -122,6 +146,9 @@ export const useAchievementState = create<AchievementState>()(
       },
 
       clearLastNew: () => set({ lastNewAchievementId: null }),
+
+      requestOpenAchievements: () => set({ openAchievementsRequest: true, lastNewAchievementId: null }),
+      clearOpenAchievementsRequest: () => set({ openAchievementsRequest: false }),
 
       markLibraryOpened: () => {
         const key = `${STORAGE_KEY}-library-opened`;
@@ -169,6 +196,9 @@ export const useAchievementState = create<AchievementState>()(
         const situationsCount = countSituations(nodes);
         let newlyUnlocked: string | null = null;
 
+        const streak = loadStreak();
+        const s = streak.currentStreak;
+
         const toCheck: { id: string; condition: boolean }[] = [
           { id: "first_step", condition: nodes.length >= 1 },
           { id: "writer", condition: situationsCount >= 1 },
@@ -179,7 +209,10 @@ export const useAchievementState = create<AchievementState>()(
           { id: "measured", condition: baselineCompletedAt != null },
           { id: "reader", condition: libraryOpenedAt != null },
           { id: "breather", condition: breathingUsedAt != null },
-          { id: "mission_complete", condition: hasCompletedMission(nodes) }
+          { id: "mission_complete", condition: hasCompletedMission(nodes) },
+          { id: "streak_1", condition: s >= 1 },
+          { id: "streak_3", condition: s >= 3 },
+          { id: "streak_7", condition: s >= 7 }
         ];
 
         for (const { id, condition } of toCheck) {

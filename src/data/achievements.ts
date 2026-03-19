@@ -140,6 +140,54 @@ export const ACHIEVEMENTS: Achievement[] = [
     hint: "خطوة ممتازة. كده الصورة على الخريطة بقت أوضح.",
     icon: "📍",
     order: 16
+  },
+  {
+    id: "armory_visited",
+    title: "صاحب ترسانة",
+    description: "فتحت شاشة المدرعة (الردود الجاهزة)",
+    hint: "اللي عنده أدوات مش بيتفاجئ بالمواقف.",
+    icon: "🛡️",
+    order: 17
+  },
+  {
+    id: "exit_scripts_visited",
+    title: "عارف مخرجه",
+    description: "فتحت مكتبة المخارج الذكية",
+    hint: "الخروج الهادئ فن — وإنت بتتعلمه.",
+    icon: "🚪",
+    order: 18
+  },
+  {
+    id: "grounding_visited",
+    title: "لقي أرضه",
+    description: "جربت أدوات التأريض",
+    hint: "في الوقت الصعب، اللي يلاقي أرضه يعدّي أي عاصفة.",
+    icon: "🌿",
+    order: 19
+  },
+  {
+    id: "streak_1",
+    title: "بداية الطريق",
+    description: "عدت للمنصة يوماً واحداً متواصلاً",
+    hint: "أول يوم أصعب يوم — وإنت عديته.",
+    icon: "📅",
+    order: 20
+  },
+  {
+    id: "streak_3",
+    title: "ثلاثة أيام",
+    description: "عدت 3 أيام متواصلة",
+    hint: "3 أيام من الوعي تساوي أسابيع من الضياع.",
+    icon: "🔥",
+    order: 21
+  },
+  {
+    id: "streak_7",
+    title: "أسبوع كامل",
+    description: "عدت 7 أيام متواصلة",
+    hint: "7 أيام من الوضوح تغيّر طريقة تفكيرك. أنت تغيّرت فعلاً.",
+    icon: "⚡",
+    order: 22
   }
 ].sort((a, b) => a.order - b.order);
 

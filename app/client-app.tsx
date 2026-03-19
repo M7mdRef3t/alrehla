@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, lazy, Suspense, useState } from "react";
-import App from "../src/App";
 import { AwarenessSkeleton } from "../src/components/AwarenessSkeleton";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { initAnalytics } from "../src/services/analytics";
@@ -11,6 +10,7 @@ import { applyDesignSystemTokens } from "../src/services/designSystemTokens";
 import { captureUtmFromCurrentUrl } from "../src/services/marketingAttribution";
 import { recordFlowEvent } from "../src/services/journeyTracking";
 
+const App = lazy(() => import("../src/App"));
 const Analytics = lazy(() => import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })));
 const SpeedInsights = lazy(() => import("@vercel/speed-insights/react").then((m) => ({ default: m.SpeedInsights })));
 
@@ -43,7 +43,9 @@ export default function ClientApp() {
 
   return (
     <ErrorBoundary>
-      <App />
+      <Suspense fallback={<AwarenessSkeleton />}>
+        <App />
+      </Suspense>
       {runtimeEnv.isProd && (
         <Suspense fallback={<AwarenessSkeleton />}>
           <Analytics />

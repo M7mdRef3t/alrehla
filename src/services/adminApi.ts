@@ -720,6 +720,8 @@ export interface MarketingLeadsStats {
   total: number;
   last24h: number;
   bySource: UtmBreakdownEntry[];
+  bySourceType: UtmBreakdownEntry[];
+  byStatus: UtmBreakdownEntry[];
   byCampaign: UtmBreakdownEntry[];
   dailyTrend: MarketingLeadTrendPoint[];
   conversion: {
@@ -1365,7 +1367,7 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       supabase.from("marketing_leads").select("email", { count: "exact", head: true }).gte("created_at", twentyFourHoursAgo),
       supabase
         .from("marketing_leads")
-        .select("source,utm,created_at")
+        .select("source,source_type,status,utm,created_at")
         .gte("created_at", fourteenDaysAgo)
         .order("created_at", { ascending: true })
         .limit(10000)
@@ -1376,12 +1378,18 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       .filter(Boolean)
   ).size;
   const marketingBySource = new Map<string, number>();
+  const marketingBySourceType = new Map<string, number>();
+  const marketingByStatus = new Map<string, number>();
   const marketingByCampaign = new Map<string, number>();
   const marketingByDate = new Map<string, number>();
   for (const day of last14Dates) marketingByDate.set(day, 0);
   for (const row of (marketingLeadsRows ?? []) as Array<Record<string, unknown>>) {
     const source = String(row.source ?? "").trim() || "landing";
     marketingBySource.set(source, (marketingBySource.get(source) ?? 0) + 1);
+    const sourceType = String(row.source_type ?? "").trim() || "website";
+    marketingBySourceType.set(sourceType, (marketingBySourceType.get(sourceType) ?? 0) + 1);
+    const status = String(row.status ?? "").trim() || "new";
+    marketingByStatus.set(status, (marketingByStatus.get(status) ?? 0) + 1);
     const utm = (row.utm as Record<string, unknown> | null) ?? null;
     const campaign = String(utm?.utm_campaign ?? "").trim();
     if (campaign) {
@@ -1465,6 +1473,8 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
         total: marketingLeadsTotalCount ?? 0,
         last24h: marketingLeadsLast24hCount ?? 0,
         bySource: toTopEntries(marketingBySource),
+        bySourceType: toTopEntries(marketingBySourceType),
+        byStatus: toTopEntries(marketingByStatus),
         byCampaign: toTopEntries(marketingByCampaign),
         dailyTrend: last14Dates.map((date) => ({ date, count: marketingByDate.get(date) ?? 0 })),
         conversion: {
@@ -1807,6 +1817,8 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     total: marketingLeadsTotal,
     last24h: marketingLeadsLast24hCount ?? 0,
     bySource: toTopEntries(marketingBySource),
+    bySourceType: toTopEntries(marketingBySourceType),
+    byStatus: toTopEntries(marketingByStatus),
     byCampaign: toTopEntries(marketingByCampaign),
     dailyTrend: last14Dates.map((date) => ({ date, count: marketingByDate.get(date) ?? 0 })),
     conversion: {

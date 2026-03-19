@@ -4,6 +4,7 @@ import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Building2, Copy, ExternalLink, Landmark, MessageCircle, Wallet } from "lucide-react";
 import { supabase } from "../../src/services/supabaseClient";
+import { trackCheckoutViewed, trackInitiateCheckout } from "../../src/services/analytics";
 import { recordFlowEvent } from "../../src/services/journeyTracking";
 
 type ScarcityResponse = {
@@ -185,6 +186,7 @@ export default function CheckoutPage() {
     if (!CHECKOUT_PUBLIC_ENABLED) return;
     try {
       recordFlowEvent("checkout_page_viewed");
+      trackCheckoutViewed();
     } catch {
       // never block checkout rendering on analytics failures
     }
@@ -294,6 +296,10 @@ export default function CheckoutPage() {
   const trackManualIntent = (method: string) => {
     try {
       recordFlowEvent("payment_intent_submitted", { meta: { source: `manual_${method}` } });
+      trackInitiateCheckout({
+        payment_method: method,
+        payment_mode: mode
+      });
     } catch {
       // keep payment actions resilient even if tracking fails
     }

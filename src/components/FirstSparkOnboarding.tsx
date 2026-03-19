@@ -1,4 +1,4 @@
-﻿import type { FC } from "react";
+import type { FC } from "react";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, ArrowRight } from "lucide-react";
@@ -130,7 +130,7 @@ const StageChaos: FC<{ onNext: () => void }> = ({ onNext }) => {
                     حاسس إن طاقتك بتخلص؟
                 </h2>
                 <p className="text-sm text-slate-400 mb-6 leading-relaxed">
-                    في خناقات مش بتاعتك.. الشوشرة دي سببها إن مفيش <span className="text-teal-400 font-bold">"حدود"</span>.
+                    ناس كتير حواليك بتسحب منك من غير ما تحس.. المشكلة مش فيك — المشكلة إنك ما حطيتش <span className="text-teal-400 font-bold">"مسافة"</span>.
                 </p>
 
                 <motion.button
@@ -139,7 +139,7 @@ const StageChaos: FC<{ onNext: () => void }> = ({ onNext }) => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                 >
-                    نضّف الميدان
+                    ورّيني إزاي
                 </motion.button>
             </div>
         </motion.div>
@@ -207,7 +207,7 @@ const StageOrder: FC<{ onNext: () => void }> = ({ onNext }) => {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3 }}
                 >
-                    في "دواير".. بنرتب حياتك
+                    هنرتب الناس في حياتك
                 </motion.h2>
                 <motion.p
                     className="text-sm text-slate-400 mb-6 leading-relaxed"
@@ -215,7 +215,7 @@ const StageOrder: FC<{ onNext: () => void }> = ({ onNext }) => {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4 }}
                 >
-                    كل حد ليه مكان.. يا إما <span className="text-emerald-400">سند</span>، يا <span className="text-amber-400">محتاج حدود</span>، يا <span className="text-rose-400">بيسحب طاقتك</span>.
+                    كل حد ليه مكان.. يا إما <span className="text-emerald-400">سند ليك</span>، يا <span className="text-amber-400">محتاج مسافة</span>، يا <span className="text-rose-400">بيسحب طاقتك</span>.
                 </motion.p>
 
                 <motion.button
@@ -269,7 +269,7 @@ const StageValue: FC<{ onNext: () => void }> = ({ onNext }) => {
                     </div>
                     <div className="text-right flex-1">
                         <p className="text-[10px] text-teal-500 font-bold uppercase tracking-wider mb-0.5">نظام التوجيه</p>
-                        <p className="text-xs text-slate-200 font-medium">تم رصد جبهة مستنزفة.. جاري تجهيز الدروع.</p>
+                        <p className="text-xs text-slate-200 font-medium">لاحظنا علاقة مرهقة.. جاهزين نساعدك تتعامل معاها.</p>
                     </div>
                 </motion.div>
             </div>
@@ -277,10 +277,10 @@ const StageValue: FC<{ onNext: () => void }> = ({ onNext }) => {
             {/* Copy */}
             <div className="text-center px-6 max-w-sm z-10">
                 <h2 className="text-xl font-bold text-white mb-2">
-                    ذكاء تكتيكي.. مش نصايح
+                    مش بس خريطة.. دي خطة حماية
                 </h2>
                 <p className="text-sm text-slate-400 mb-6 leading-relaxed">
-                    مش بس هترسم.. جارفيس هيديك <span className="text-white font-bold">"خطة عمليات"</span> لكل جبهة عشان تحمي نفسك.
+                    هنساعدك تفهم كل علاقة وتاخد <span className="text-white font-bold">"خطوات عملية"</span> تحمي بيها نفسك وطاقتك.
                 </p>
 
                 <motion.button
@@ -289,7 +289,7 @@ const StageValue: FC<{ onNext: () => void }> = ({ onNext }) => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                 >
-                    ابدأ رسم أول دايرة <ArrowRight className="w-4 h-4" />
+                    يلّا نبدأ <ArrowRight className="w-4 h-4" />
                 </motion.button>
             </div>
         </motion.div>

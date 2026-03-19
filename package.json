@@ -27,6 +27,7 @@
     "routing:precompute": "node scripts/precompute-routing-cache.mjs",
     "routing:load-test": "node scripts/routing-load-test.mjs",
     "routing:load-gate": "node scripts/routing-load-gate.mjs",
+    "marketing:import-leads": "node scripts/import-marketing-leads.mjs",
     "report:production": "node scripts/production-insights.mjs",
     "backup:admin": "node scripts/backup-admin-export.mjs",
     "generate:sitemap": "node scripts/generate-sitemap.mjs",

@@ -24,7 +24,7 @@ export const GOAL_ORDER: GoalId[] = ["family", "friends", "work", "love", "money
 export const GOAL_META: Record<GoalId, GoalMeta> = {
   family: {
     id: "family",
-    label: "اعة",
+    label: "الأسرة",
     icon: Home,
     badgeClasses:
       "border-teal-200 bg-teal-100 text-teal-800 dark:border-teal-700 dark:bg-teal-900/40 dark:text-teal-200",
@@ -32,7 +32,7 @@ export const GOAL_META: Record<GoalId, GoalMeta> = {
   },
   friends: {
     id: "friends",
-    label: "اأصداء",
+    label: "الأصدقاء",
     icon: Users,
     badgeClasses:
       "border-violet-200 bg-violet-100 text-violet-800 dark:border-violet-700 dark:bg-violet-900/40 dark:text-violet-200",
@@ -40,7 +40,7 @@ export const GOAL_META: Record<GoalId, GoalMeta> = {
   },
   work: {
     id: "work",
-    label: "اشغ",
+    label: "الشغل",
     icon: Briefcase,
     badgeClasses:
       "border-blue-200 bg-blue-100 text-blue-800 dark:border-blue-700 dark:bg-blue-900/40 dark:text-blue-200",
@@ -48,7 +48,7 @@ export const GOAL_META: Record<GoalId, GoalMeta> = {
   },
   love: {
     id: "love",
-    label: "احب",
+    label: "الحب",
     icon: Heart,
     badgeClasses:
       "border-rose-200 bg-rose-100 text-rose-800 dark:border-rose-700 dark:bg-rose-900/40 dark:text-rose-200",
@@ -56,7 +56,7 @@ export const GOAL_META: Record<GoalId, GoalMeta> = {
   },
   money: {
     id: "money",
-    label: "استب اأا",
+    label: "المال",
     icon: Wallet,
     badgeClasses:
       "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200",
@@ -64,7 +64,7 @@ export const GOAL_META: Record<GoalId, GoalMeta> = {
   },
   self: {
     id: "self",
-    label: "خرطة فس",
+    label: "نفسي",
     icon: UserCircle,
     badgeClasses:
       "border-indigo-200 bg-[var(--soft-teal)]/15 text-indigo-800 dark:border-indigo-700 dark:bg-[var(--soft-teal)]/40 dark:text-indigo-200",
@@ -72,7 +72,7 @@ export const GOAL_META: Record<GoalId, GoalMeta> = {
   },
   general: {
     id: "general",
-    label: "عا",
+    label: "عام",
     icon: HelpCircle,
     badgeClasses:
       "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
@@ -80,7 +80,7 @@ export const GOAL_META: Record<GoalId, GoalMeta> = {
   },
   unknown: {
     id: "unknown",
-    label: "ش عارف",
+    label: "مش عارف",
     icon: HelpCircle,
     badgeClasses:
       "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
@@ -99,4 +99,3 @@ export function getGoalOrderIndex(goalId?: string | null): number {
   const idx = GOAL_ORDER.indexOf(goalId as GoalId);
   return idx === -1 ? GOAL_ORDER.length : idx;
 }
-

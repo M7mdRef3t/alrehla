@@ -1,13 +1,3 @@
-/**
- * Analytics Service - تتبع بسيط للأحداث
- * 
- * يدعم:
- * - Google Analytics 4
- * - Microsoft Clarity
- * - ContentSquare
- * - Custom events للـ debugging
- * - Opt-out للخصوصية
- */
 import { isUserMode } from "../config/appEnv";
 import { runtimeEnv } from "../config/runtimeEnv";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
@@ -15,25 +5,62 @@ import { getHref } from "./navigation";
 import { getDocumentOrNull, getWindowOrNull, isClientRuntime } from "./clientRuntime";
 import { supabase, isSupabaseReady } from "./supabaseClient";
 
-// Check if analytics is enabled
+type AnalyticsValue = string | number | boolean;
+type AnalyticsParams = Record<string, AnalyticsValue>;
+
 function isAnalyticsEnabled(): boolean {
-  const consent = getFromLocalStorage("dawayir-analytics-consent");
-  return consent === "true";
+  return getFromLocalStorage("dawayir-analytics-consent") === "true";
 }
 
-// Get GA Measurement ID from env
 function getGAMeasurementId(): string | null {
   return runtimeEnv.gaMeasurementId || null;
 }
 
-// Get Microsoft Clarity project ID from env
+function getGoogleAdsId(): string | null {
+  return runtimeEnv.googleAdsId || null;
+}
+
+function getGoogleAdsLabel(): string | null {
+  return runtimeEnv.googleAdsLabel || null;
+}
+
+function getGoogleAdsSendTo(): string | null {
+  const adsId = getGoogleAdsId();
+  const adsLabel = getGoogleAdsLabel();
+  return adsId && adsLabel ? `${adsId}/${adsLabel}` : null;
+}
+
+function getMetaPixelId(): string | null {
+  return runtimeEnv.metaPixelId || null;
+}
+
+function areMetaEventsEnabled(): boolean {
+  return runtimeEnv.enableMetaEvents && Boolean(getMetaPixelId());
+}
+
 function getClarityProjectId(): string | null {
   return runtimeEnv.clarityProjectId || null;
 }
 
-// Get ContentSquare project ID from env
 function getContentSquareProjectId(): string | null {
   return runtimeEnv.contentsquareProjectId || null;
+}
+
+function getGtagBootstrapId(): string | null {
+  return getGAMeasurementId() || getGoogleAdsId();
+}
+
+function sanitizeAnalyticsParams(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): AnalyticsParams | undefined {
+  if (!params) return undefined;
+
+  const safeEntries = Object.entries(params).filter(([, value]) => {
+    return typeof value === "string" || typeof value === "number" || typeof value === "boolean";
+  }) as Array<[string, AnalyticsValue]>;
+
+  if (safeEntries.length === 0) return undefined;
+  return Object.fromEntries(safeEntries);
 }
 
 function loadScriptOnce(scriptId: string, src: string): void {
@@ -48,31 +75,92 @@ function loadScriptOnce(scriptId: string, src: string): void {
   documentRef.head.appendChild(script);
 }
 
-// Initialize GA4
-export function initAnalytics(): void {
-  if (!isClientRuntime()) return;
-  if (!isUserMode || !isAnalyticsEnabled()) return;
+function ensureGtag(): void {
   const windowRef = getWindowOrNull();
   if (!windowRef) return;
 
+  const bootstrapId = getGtagBootstrapId();
+  if (!bootstrapId) return;
+
+  loadScriptOnce("dawayir-gtag-script", `https://www.googletagmanager.com/gtag/js?id=${bootstrapId}`);
+
+  if (!windowRef.gtag) {
+    const dataLayer = (windowRef.dataLayer = windowRef.dataLayer || []);
+    windowRef.gtag = (...args: unknown[]) => {
+      dataLayer.push(args);
+    };
+    windowRef.gtag("js", new Date());
+  }
+
   const measurementId = getGAMeasurementId();
   if (measurementId) {
-    loadScriptOnce("dawayir-ga4-script", `https://www.googletagmanager.com/gtag/js?id=${measurementId}`);
-
-    // Initialize gtag
-    const dataLayer = (windowRef.dataLayer = windowRef.dataLayer || []);
-    function gtag(...args: unknown[]) {
-      dataLayer.push(args);
-    }
-    gtag("js", new Date());
-    gtag("config", measurementId, {
+    windowRef.gtag("config", measurementId, {
       anonymize_ip: true,
       cookie_flags: "SameSite=None;Secure"
     });
-
-    // Store gtag function globally
-    windowRef.gtag = gtag;
   }
+
+  const googleAdsId = getGoogleAdsId();
+  if (googleAdsId) {
+    windowRef.gtag("config", googleAdsId);
+  }
+}
+
+function ensureMetaPixel(): void {
+  const windowRef = getWindowOrNull();
+  const pixelId = getMetaPixelId();
+  if (!windowRef || !pixelId || !areMetaEventsEnabled()) return;
+
+  if (!windowRef.fbq) {
+    const fbq = ((...args: unknown[]) => {
+      if (typeof fbq.callMethod === "function") {
+        fbq.callMethod(...args);
+        return;
+      }
+      fbq.queue = fbq.queue || [];
+      fbq.queue.push(args);
+    }) as FbqFn;
+    fbq.queue = [];
+    fbq.loaded = true;
+    fbq.version = "2.0";
+    windowRef.fbq = fbq;
+  }
+
+  loadScriptOnce("dawayir-meta-pixel-script", "https://connect.facebook.net/en_US/fbevents.js");
+
+  if (!windowRef.__dawayirMetaPixelInitialized) {
+    windowRef.fbq("init", pixelId);
+    windowRef.__dawayirMetaPixelInitialized = true;
+  }
+}
+
+function sendGtagEvent(eventName: string, params?: Record<string, AnalyticsValue | null | undefined>): void {
+  if (!isClientRuntime() || !isAnalyticsEnabled()) return;
+  const safeParams = sanitizeAnalyticsParams(params);
+  const windowRef = getWindowOrNull();
+  if (windowRef?.gtag) {
+    windowRef.gtag("event", eventName, safeParams);
+  }
+}
+
+function sendMetaEvent(eventName: string, params?: Record<string, AnalyticsValue | null | undefined>): void {
+  if (!isClientRuntime() || !isAnalyticsEnabled() || !areMetaEventsEnabled()) return;
+  const safeParams = sanitizeAnalyticsParams(params);
+  const windowRef = getWindowOrNull();
+  if (windowRef?.fbq) {
+    windowRef.fbq("track", eventName, safeParams ?? {});
+  }
+}
+
+export function initAnalytics(): void {
+  if (!isClientRuntime()) return;
+  if (!isUserMode || !isAnalyticsEnabled()) return;
+
+  ensureGtag();
+  ensureMetaPixel();
+
+  const windowRef = getWindowOrNull();
+  if (!windowRef) return;
 
   const clarityProjectId = getClarityProjectId();
   if (clarityProjectId) {
@@ -84,10 +172,7 @@ export function initAnalytics(): void {
       windowRef.clarity = clarity;
     }
 
-    loadScriptOnce(
-      "dawayir-clarity-script",
-      `https://www.clarity.ms/tag/${clarityProjectId}`
-    );
+    loadScriptOnce("dawayir-clarity-script", `https://www.clarity.ms/tag/${clarityProjectId}`);
   }
 
   const contentSquareProjectId = getContentSquareProjectId();
@@ -99,77 +184,76 @@ export function initAnalytics(): void {
   }
 }
 
-// Track page view
 export function trackPageView(pageName: string): void {
   if (!isClientRuntime()) return;
   if (!isAnalyticsEnabled()) return;
 
-  const windowRef = getWindowOrNull();
-  if (windowRef?.gtag) {
-    windowRef.gtag("event", "page_view", {
-      page_title: pageName,
-      page_location: getHref()
-    });
-  }
-
+  sendGtagEvent("page_view", {
+    page_title: pageName,
+    page_location: getHref()
+  });
 }
 
-// Track custom event
 export function trackEvent(
   eventName: string,
-  params?: Record<string, string | number | boolean>
+  params?: Record<string, AnalyticsValue | null | undefined>
 ): void {
   if (!isClientRuntime()) return;
 
-  // GA4/External tracking requires consent
+  const safeParams = sanitizeAnalyticsParams(params);
+
   if (isAnalyticsEnabled()) {
     const windowRef = getWindowOrNull();
     if (windowRef?.gtag) {
-      windowRef.gtag("event", eventName, params);
+      windowRef.gtag("event", eventName, safeParams);
     }
   }
 
-  // Internal tracking - Zero Friction (Non-blocking)
   if (isSupabaseReady && supabase) {
     const windowRef = getWindowOrNull();
     const isMobile = windowRef ? windowRef.matchMedia("(max-width: 768px)").matches : false;
     const deviceContext = {
-      device_type: isMobile ? 'mobile' : 'desktop',
+      device_type: isMobile ? "mobile" : "desktop",
       screen_width: windowRef?.innerWidth,
       platform: windowRef?.navigator?.platform
     };
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      supabase!.from('routing_events').insert({
-        event_type: eventName,
-        user_id: session?.user?.id || null, // null means guest
-        payload: { ...deviceContext, ...(params || {}) },
-        occurred_at: new Date().toISOString()
-      }).then(({ error }) => {
-        if (error && runtimeEnv.isDev) {
-          console.warn(`[Analytics] Internal track failed: ${eventName}`, error);
-        }
-      });
+      supabase!
+        .from("routing_events")
+        .insert({
+          event_type: eventName,
+          user_id: session?.user?.id || null,
+          payload: { ...deviceContext, ...(safeParams || {}) },
+          occurred_at: new Date().toISOString()
+        })
+        .then(({ error }) => {
+          if (error && runtimeEnv.isDev) {
+            console.warn(`[Analytics] Internal track failed: ${eventName}`, error);
+          }
+        });
     });
   }
 }
 
-// Predefined events
 export const AnalyticsEvents = {
-  // Navigation
   PAGE_VIEW: "page_view",
   LANDING_VIEW: "landing_view",
   CTA_CLICK: "cta_click",
   SANCTUARY_LOADED: "sanctuary_loaded",
   FIRST_PULSE_SUBMITTED: "first_pulse_submitted",
 
-  // Journey events
   JOURNEY_STARTED: "journey_started",
   GOAL_SELECTED: "goal_selected",
   PERSON_ADDED: "person_added",
   BASELINE_COMPLETED: "baseline_completed",
 
-  // Conversion (micro-commitment)
+  LEAD_FORM_SUBMITTED: "lead_form_submitted",
+  ONBOARDING_STARTED: "onboarding_started",
+  ONBOARDING_COMPLETED: "onboarding_completed",
+  CHECKOUT_VIEWED: "checkout_viewed",
+  PAYMENT_INTENT_SUBMITTED: "payment_intent_submitted",
+
   MICRO_COMPASS_OPENED: "micro_compass_opened",
   MICRO_COMPASS_COMPLETED: "micro_compass_completed",
   AUTH_GOOGLE_CLICKED: "auth_google_clicked",
@@ -177,14 +261,12 @@ export const AnalyticsEvents = {
   AUTH_COMPLETED: "auth_completed",
   MERGE_SUCCESS: "merge_success",
 
-  // Feature usage
   BREATHING_USED: "breathing_exercise_used",
   EMERGENCY_USED: "emergency_button_used",
   LIBRARY_OPENED: "library_opened",
   EXPORT_DATA: "data_exported",
   AI_ATTEMPT_GUEST: "ai_attempt_guest",
 
-  // Tactical Features (Phase 2 & 3)
   NOISE_SILENCING_OPENED: "noise_silencing_opened",
   SHIELD_SELECTOR_OPENED: "shield_selector_opened",
   RADAR_SHIELD_OPENED: "radar_shield_opened",
@@ -192,26 +274,60 @@ export const AnalyticsEvents = {
   FASTING_CAPSULE_OPENED: "fasting_capsule_opened",
   INNER_COURT_OPENED: "inner_court_opened",
 
-  // Engagement
   TRAINING_COMPLETED: "training_completed",
   STEP_COMPLETED: "recovery_step_completed",
   AI_CHAT_USED: "ai_chat_used",
 
-  // Consent events
   CONSENT_GIVEN: "consent_given",
   CONSENT_DENIED: "consent_denied",
 
-  // Behavioral signals
   HESITATION: "hesitation",
   HESITATION_HEARTBEAT: "hesitation_heartbeat",
 
-  // Research Survey
   SURVEY_OPENED: "survey_opened",
   SURVEY_COMPLETED: "survey_completed",
   SURVEY_QUESTION_ANSWERED: "survey_question_answered"
 } as const;
 
-// Analytics consent management
+export function trackLead(params?: Record<string, AnalyticsValue | null | undefined>): void {
+  const safeParams = sanitizeAnalyticsParams(params);
+  trackEvent(AnalyticsEvents.LEAD_FORM_SUBMITTED, safeParams);
+  sendGtagEvent("generate_lead", safeParams);
+
+  const googleAdsSendTo = getGoogleAdsSendTo();
+  if (googleAdsSendTo) {
+    sendGtagEvent("conversion", { ...(safeParams ?? {}), send_to: googleAdsSendTo });
+  }
+
+  sendMetaEvent("Lead", safeParams);
+}
+
+export function trackCompleteRegistration(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): void {
+  const safeParams = sanitizeAnalyticsParams(params);
+  trackEvent(AnalyticsEvents.ONBOARDING_COMPLETED, safeParams);
+  sendGtagEvent("sign_up", safeParams);
+  sendMetaEvent("CompleteRegistration", safeParams);
+}
+
+export function trackCheckoutViewed(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): void {
+  const safeParams = sanitizeAnalyticsParams(params);
+  trackEvent(AnalyticsEvents.CHECKOUT_VIEWED, safeParams);
+  sendMetaEvent("ViewContent", safeParams);
+}
+
+export function trackInitiateCheckout(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): void {
+  const safeParams = sanitizeAnalyticsParams(params);
+  trackEvent(AnalyticsEvents.PAYMENT_INTENT_SUBMITTED, safeParams);
+  sendGtagEvent("begin_checkout", safeParams);
+  sendMetaEvent("InitiateCheckout", safeParams);
+}
+
 export function setAnalyticsConsent(consent: boolean): void {
   setInLocalStorage("dawayir-analytics-consent", String(consent));
 
@@ -224,14 +340,22 @@ export function getAnalyticsConsent(): boolean {
   return getFromLocalStorage("dawayir-analytics-consent") === "true";
 }
 
-// Extend window type for gtag
 declare global {
   interface Window {
+    __dawayirMetaPixelInitialized?: boolean;
     dataLayer: unknown[];
-    gtag: (...args: unknown[]) => void;
+    fbq?: FbqFn;
+    gtag?: (...args: unknown[]) => void;
     clarity?: ClarityFn;
   }
 }
+
+type FbqFn = ((...args: unknown[]) => void) & {
+  queue?: unknown[][];
+  loaded?: boolean;
+  version?: string;
+  callMethod?: (...args: unknown[]) => void;
+};
 
 type ClarityFn = ((...args: unknown[]) => void) & {
   q?: unknown[][];

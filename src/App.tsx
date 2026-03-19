@@ -2,8 +2,6 @@ import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } fro
 import { motion, AnimatePresence } from "framer-motion";
 import { X, User, MessageCircle, Cpu } from "lucide-react";
 import { Landing } from "./components/Landing";
-import { LegalPage } from "./components/LegalPage";
-import { SyncStatusUI } from "./components/SyncStatusUI";
 import { useNotificationState } from "./state/notificationState";
 import { useEmergencyState } from "./state/emergencyState";
 import { useMapState } from "./state/mapState";
@@ -37,14 +35,9 @@ import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "./
 import { consciousnessService, type ConsciousnessInsight, type MemoryMatch } from "./services/consciousnessService";
 import { initAppContentRealtime } from "./state/appContentState";
 import { PWAInstallProvider } from "./contexts/PWAInstallContext";
-import { GoogleAuthModal } from "./components/GoogleAuthModal";
 import { AwarenessSkeleton } from "./components/AwarenessSkeleton";
-import { OnboardingWelcomeBubble, type WelcomeSource } from "./components/OnboardingWelcomeBubble";
-import { OnboardingFlow, hasCompletedJourneyOnboarding } from "./components/OnboardingFlow";
-import { JourneyToast } from "./components/JourneyToast";
-import { AnalyticsConsentBanner } from "./components/AnalyticsConsentBanner";
-import { ActiveInterventionPrompt } from "./components/ActiveInterventionPrompt";
-import { FaqScreen } from "./components/FaqScreen";
+import { hasCompletedJourneyOnboarding } from "./components/OnboardingFlow";
+import type { WelcomeSource } from "./components/OnboardingWelcomeBubble";
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "./utils/postAuthIntent";
 import { geminiClient } from "./services/geminiClient";
 import { isSupabaseReady, supabase } from "./services/supabaseClient";
@@ -53,7 +46,6 @@ import { useGamificationState } from "./state/gamificationState";
 import { syncSubscription } from "./services/subscriptionManager";
 import { fetchAdminConfig, fetchOwnerAlerts } from "./services/adminApi";
 import { usePulseCheckLogic } from "./hooks/usePulseCheckLogic";
-import { AscensionRitual } from "./components/Oracle/AscensionRitual";
 import { ErrorBoundary, MapErrorFallback } from "./components/ErrorBoundary";
 import { useIdleAwareTelemetry, type IdleAwareTelemetrySnapshot } from "./hooks/useIdleAwareTelemetry";
 import { isPhaseOneUserFlow, isUserMode } from "./config/appEnv";
@@ -86,9 +78,6 @@ import {
   type NextStepDecisionV1,
   type RecentTelemetrySignalV1
 } from "./modules/recommendation";
-import { MirrorOverlay } from "./components/MirrorOverlay";
-import { StartupSequence } from "./components/StartupSequence";
-import { GraphEventToast } from "./components/GraphEventToast";
 import { useSwarmState } from "./state/swarmState";
 import { determineAutoPersona } from "./agent/swarmLogic";
 import { resolveNavigation, type AppScreen } from "./navigation/navigationMachine";
@@ -99,9 +88,30 @@ import { AUTO_COCOON_LAST_SHOWN_DATE_KEY, evaluateCocoonOpen } from "./app/orche
 import { startAutonomousStartupJobs } from "./app/orchestration/startupJobs";
 
 const OracleCouncilDashboard = lazy(() => import("./components/Oracle/OracleDashboard").then(m => ({ default: m.OracleCouncilDashboard })));
-import { GlobalToast } from "./components/GlobalToast";
 import { useToastState } from "./state/toastState";
 import { TheArmoryScreen } from "./components/TheArmoryScreen";
+const LegalPage = lazy(() => import("./components/LegalPage").then((m) => ({ default: m.LegalPage })));
+const SyncStatusUI = lazy(() => import("./components/SyncStatusUI").then((m) => ({ default: m.SyncStatusUI })));
+const GoogleAuthModal = lazy(() => import("./components/GoogleAuthModal").then((m) => ({ default: m.GoogleAuthModal })));
+const OnboardingWelcomeBubble = lazy(() =>
+  import("./components/OnboardingWelcomeBubble").then((m) => ({ default: m.OnboardingWelcomeBubble }))
+);
+const OnboardingFlow = lazy(() => import("./components/OnboardingFlow").then((m) => ({ default: m.OnboardingFlow })));
+const JourneyToast = lazy(() => import("./components/JourneyToast").then((m) => ({ default: m.JourneyToast })));
+const AnalyticsConsentBanner = lazy(() =>
+  import("./components/AnalyticsConsentBanner").then((m) => ({ default: m.AnalyticsConsentBanner }))
+);
+const ActiveInterventionPrompt = lazy(() =>
+  import("./components/ActiveInterventionPrompt").then((m) => ({ default: m.ActiveInterventionPrompt }))
+);
+const FaqScreen = lazy(() => import("./components/FaqScreen").then((m) => ({ default: m.FaqScreen })));
+const AscensionRitual = lazy(() =>
+  import("./components/Oracle/AscensionRitual").then((m) => ({ default: m.AscensionRitual }))
+);
+const MirrorOverlay = lazy(() => import("./components/MirrorOverlay").then((m) => ({ default: m.MirrorOverlay })));
+const StartupSequence = lazy(() => import("./components/StartupSequence").then((m) => ({ default: m.StartupSequence })));
+const GraphEventToast = lazy(() => import("./components/GraphEventToast").then((m) => ({ default: m.GraphEventToast })));
+const GlobalToast = lazy(() => import("./components/GlobalToast").then((m) => ({ default: m.GlobalToast })));
 
 
 // Initialize language on app start
@@ -534,6 +544,8 @@ export default function App() {
   const lastGoalById = useJourneyState((s) => s.lastGoalById);
   const checkAndUnlock = useAchievementState((s) => s.checkAndUnlock);
   const lastNewAchievementId = useAchievementState((s) => s.lastNewAchievementId);
+  const openAchievementsRequest = useAchievementState((s) => s.openAchievementsRequest);
+  const clearOpenAchievementsRequest = useAchievementState((s) => s.clearOpenAchievementsRequest);
   const theme = useThemeState((s) => s.theme);
   const setTheme = useThemeState((s) => s.setTheme);
   const lastPulse = usePulseState((s) => s.lastPulse);
@@ -825,6 +837,13 @@ export default function App() {
     });
   }, [screen, nodes, baselineCompletedAt, checkAndUnlock]);
 
+  // فتح مودال الإنجازات عند الضغط على Toast
+  useEffect(() => {
+    if (!openAchievementsRequest) return;
+    setShowAchievements(true);
+    clearOpenAchievementsRequest();
+  }, [openAchievementsRequest, clearOpenAchievementsRequest]);
+
   useEffect(() => {
     if (screen !== "landing") {
       recordUserActivity();
@@ -834,8 +853,10 @@ export default function App() {
   useEffect(() => {
     if (typeof window === "undefined" || isAdminRoute) return;
     let cancelled = false;
+    let initialTimer: ReturnType<typeof setTimeout> | null = null;
 
     const checkBroadcasts = async () => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
       const list = await fetchPublicBroadcasts();
       if (cancelled || !list || list.length === 0) return;
 
@@ -862,13 +883,17 @@ export default function App() {
       }
     };
 
-    void checkBroadcasts();
+    // Broadcasts are non-critical; defer until after the initial UI settles.
+    initialTimer = setTimeout(() => {
+      void checkBroadcasts();
+    }, 4_000);
     const timer = setInterval(() => {
       void checkBroadcasts();
-    }, 60_000);
+    }, 5 * 60_000);
 
     return () => {
       cancelled = true;
+      if (initialTimer) clearTimeout(initialTimer);
       clearInterval(timer);
     };
   }, [
@@ -928,7 +953,7 @@ export default function App() {
   }, [canUseJourneyTools, canUseMap, isLockedPhaseOne]);
 
   useEffect(() => {
-    // Check for nudges after 2 seconds
+    // Check for nudges after 8 seconds — let the UI settle first
     const timer = setTimeout(() => {
       if (runtimeEnv.isDemoMode) return;
       const nudge = getNextNudge();
@@ -936,7 +961,7 @@ export default function App() {
         setActiveNudge(nudge);
         setShowNudgeToast(true);
       }
-    }, 2000);
+    }, 8000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -985,9 +1010,9 @@ export default function App() {
       // blocking other nudges if chaos is high.
       setActiveNudge({
         id: 'chaos-containment-' + Date.now(),
-        type: 'streak_risk', // reusing type for priority
-        title: 'نظام الاحتواء 🛡️',
-        message: 'المؤشرات بتقول إن فيه "فوضى" عالية.. خد دقيقة تنفس.',
+        type: 'streak_risk',
+        title: 'محتاج تاخد نَفَس 🍃',
+        message: 'حاسين إنك مضغوط شوية دلوقتي.. خد دقيقة لنفسك.',
         cta: 'افصل شوية',
         priority: 1,
         icon: '🍃'
@@ -3437,7 +3462,7 @@ export default function App() {
           visible={showNudgeToast && chromeVisibility.showNudgeToast}
           nudgeData={activeNudge ?? undefined}
           onClose={() => {
-            if (activeNudge?.title === 'نظام الاحتواء 🛡️') {
+            if (activeNudge?.title === 'محتاج تاخد نَفَس 🍃') {
               openCocoonModal("manual");
             }
             handleNudgeDismiss();

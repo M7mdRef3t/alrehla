@@ -689,14 +689,14 @@ export default function StoryReelExport({
       title: 'ريل مرايا',
       text: endingMessage
         ? `حوّلت مرايا ${rawShareMeta.transformationLine.replace(/^من\s+/u, '').replace(/\s+إلى\s+/u, ' إلى ')}. ${endingMessage}`
-        : `دليل تحول من مرايا: ${rawShareMeta.transformationLine}.`,
+        : `دليل تحوّل من مرايا: ${rawShareMeta.transformationLine}.`,
       sharedMessage: 'تمت مشاركة الريل وملصق التحوّل.',
       savedMessage: 'تم تنزيل الريل وملصق التحوّل. شاركهما أينما تريد.',
       unsupportedMessage: 'هذا المتصفح لا يدعم مشاركة الريل والملصق مباشرة، لذلك تم تنزيلهما بدلًا من ذلك.',
       partialShareMessage: 'تمت مشاركة الريل، وتم تنزيل الملصق ليبقى كغلاف أو معاينة.',
       label: 'شارك أثر التحوّل كريل',
       exportingLabel: 'نجهز الريل وملصق التحوّل...',
-      helper: 'ينشئ ريل قصيرًا مع غلاف يثبت التحول ويفتح نافذة المشاركة إذا كان المتصفح يدعم ذلك.',
+      helper: 'ينشئ ريلًا قصيرًا مع غلاف يثبت التحوّل ويفتح نافذة المشاركة إذا كان المتصفح يدعم ذلك.',
       posterLabel: 'شارك ملصق التحوّل',
       posterExportingLabel: 'نجهز ملصق التحوّل...',
       posterHelper: 'يمنحك غلافًا نظيفًا وجاهزًا للقصص والمنشورات وملخصات العرض.',
@@ -712,7 +712,7 @@ export default function StoryReelExport({
       unsupportedBrowserMessage: 'هذا المتصفح لا يدعم تسجيل الريل.',
       fallbackError: 'فشل التصدير.',
       eyebrow: 'شارك التحوّل',
-      headline: rawShareMeta.headline === 'Ù‡Ø°Ù‡ Ø§Ù„Ù„Ø­Ø¸Ø© ØªØ³ØªØ­Ù‚ Ø£Ù† ØªØ®Ø±Ø¬ Ù…Ù† Ø§Ù„ØªØ·Ø¨ÙŠÙ‚.'
+      headline: rawShareMeta.headline === 'هذه اللحظة تستحق أن تخرج من التطبيق.'
         ? 'ما دخل الطقس كشعور خرج منه كتحوّل.'
         : rawShareMeta.headline,
       prompt: 'احمل هذا الدليل على التحوّل إلى خارج الطقس.',
@@ -720,9 +720,9 @@ export default function StoryReelExport({
       reelTitle: 'هذا الشعور صار مرئيًا.',
       reelPrompt: 'شاركه ما دام الأثر دافئًا.',
       posterBadge: 'ملصق التحوّل',
-      posterPrompt: 'احتفظ بملصق يثبت هذا التحول بحجم جاهز للمشاركة.',
+      posterPrompt: 'احتفظ بملصق يثبت هذا التحوّل بحجم جاهز للمشاركة.',
       socialBadge: 'غلاف اجتماعي',
-      socialTitle: 'خذ دليل التحول إلى الخلاصة.',
+      socialTitle: 'خذ دليل التحوّل إلى الخلاصة.',
       socialPrompt: 'مقاس مخصص للمعاينة الاجتماعية لا لمشهد واحد فقط.',
       ...{ title: `ريل مرايا | ${rawShareMeta.transformationLine}` },
       ...{
@@ -734,15 +734,15 @@ export default function StoryReelExport({
           'أثر طقسي من مرايا.',
         ].filter(Boolean).join('\n'),
         captionLabel: 'نص المشاركة',
-        captionHelper: 'انسخ نصًا جاهزًا للنشر يقدّم التحول أولًا في المنشور أو الستوري أو العرض.',
+        captionHelper: 'انسخ نصًا جاهزًا للنشر يقدّم التحوّل أولًا في المنشور أو الستوري أو العرض.',
         captionActionLabel: 'انسخ النص',
         captionCopiedMessage: 'تم نسخ نص المشاركة.',
         captionUnsupportedMessage: 'النسخ غير متاح في هذا المتصفح.',
-        reelTitle: rawShareMeta.headline === 'Ã™â€¡Ã˜Â°Ã™â€¡ Ã˜Â§Ã™â€žÃ™â€žÃ˜Â­Ã˜Â¸Ã˜Â© Ã˜ÂªÃ˜Â³Ã˜ÂªÃ˜Â­Ã™â€š Ã˜Â£Ã™â€  Ã˜ÂªÃ˜Â®Ã˜Â±Ã˜Â¬ Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â·Ã˜Â¨Ã™Å Ã™â€š.'
-          ? 'ما دخل الطقس كشعور خرج منه كتحول.'
+        reelTitle: rawShareMeta.headline === 'هذه اللحظة تستحق أن تخرج من التطبيق.'
+          ? 'ما دخل الطقس كشعور خرج منه كتحوّل.'
           : rawShareMeta.headline,
-        socialTitle: rawShareMeta.headline === 'Ã™â€¡Ã˜Â°Ã™â€¡ Ã˜Â§Ã™â€žÃ™â€žÃ˜Â­Ã˜Â¸Ã˜Â© Ã˜ÂªÃ˜Â³Ã˜ÂªÃ˜Â­Ã™â€š Ã˜Â£Ã™â€  Ã˜ÂªÃ˜Â®Ã˜Â±Ã˜Â¬ Ã™â€¦Ã™â€  Ã˜Â§Ã™â€žÃ˜ÂªÃ˜Â·Ã˜Â¨Ã™Å Ã™â€š.'
-          ? 'ما دخل الطقس كشعور خرج منه كتحول.'
+        socialTitle: rawShareMeta.headline === 'هذه اللحظة تستحق أن تخرج من التطبيق.'
+          ? 'ما دخل الطقس كشعور خرج منه كتحوّل.'
           : rawShareMeta.headline,
       },
       sceneWord: 'المشهد',

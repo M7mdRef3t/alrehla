@@ -151,7 +151,7 @@ const ProductCard: FC<ProductCardProps> = ({
 }) => (
   <motion.div
     variants={fadeUp}
-    className="group relative flex flex-col rounded-2xl overflow-hidden cursor-default transition-all duration-300"
+          className="group relative flex flex-col rounded-2xl overflow-hidden cursor-default transition-all duration-300"
     style={{ border: `1px solid ${border}`, background: "rgba(15,15,28,0.6)", backdropFilter: "blur(12px)" }}
     whileHover={{ y: -4, borderColor: iconColor + "50" }}
   >
@@ -185,7 +185,7 @@ const ProductCard: FC<ProductCardProps> = ({
         <button
           type="button"
           onClick={onClick}
-          className="mt-1 w-full rounded-xl py-2.5 text-sm font-bold transition-all duration-200"
+          className="mt-1 w-full rounded-xl py-2.5 text-sm font-bold transition-all duration-200 cursor-pointer"
           style={{ background: iconColor + "18", color: iconColor, border: `1px solid ${iconColor}30` }}
         >
           {cta}
@@ -376,7 +376,7 @@ export const Landing: FC<LandingProps> = ({
                 type="button"
                 id="landing-hero-cta"
                 onClick={handleStart}
-                className="group relative inline-flex items-center gap-3 rounded-2xl px-7 py-4 text-base font-black text-white transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A1A]"
+                className="group relative inline-flex items-center gap-3 rounded-2xl px-7 py-4 text-base font-black text-white transition-all duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A1A]"
                 style={{ background: "linear-gradient(135deg, #14B8A6 0%, #0e9488 100%)", boxShadow: "0 12px 36px rgba(20,184,166,0.28)" }}
                 whileHover={{ scale: 1.03, boxShadow: "0 16px 44px rgba(20,184,166,0.38)" }}
                 whileTap={{ scale: 0.97 }}
@@ -743,7 +743,7 @@ export const Landing: FC<LandingProps> = ({
             type="button"
             id="landing-final-cta"
             onClick={handleStart}
-            className="group inline-flex items-center gap-3 rounded-2xl px-8 py-4 text-base font-black text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A1A]"
+                  className="group inline-flex items-center gap-3 rounded-2xl px-8 py-4 text-base font-black text-white cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A1A]"
             style={{ background: "linear-gradient(135deg, #14B8A6, #0d9488)", boxShadow: "0 14px 42px rgba(20,184,166,0.28)" }}
             whileHover={{ scale: 1.04, boxShadow: "0 18px 50px rgba(20,184,166,0.38)" }}
             whileTap={{ scale: 0.97 }}
@@ -757,7 +757,7 @@ export const Landing: FC<LandingProps> = ({
               variants={fadeUp}
               type="button"
               onClick={onOpenSurvey}
-              className="mt-5 block mx-auto text-xs font-semibold hover:underline"
+              className="mt-5 block mx-auto text-xs font-semibold cursor-pointer hover:underline"
               style={{ color: "#475569" }}
             >
               أو ساعدنا بمشاركة رأيك →

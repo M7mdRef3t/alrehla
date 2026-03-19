@@ -55,11 +55,11 @@ export function getNextNudge(): Nudge | null {
             return {
                 id,
                 type: "streak_risk",
-                title: "الـ Streak في خطر! ⚠️",
-                message: `${streak.currentStreak} يوم متتالي هتخسرهم لو ما سجلتش دلوقتي`,
+                title: "عدّادك مستنيك ✨",
+                message: `${streak.currentStreak} يوم متتالي — خطوة واحدة النهاردة تحافظ عليهم`,
                 cta: "سجّل دخولي",
                 priority: 1,
-                icon: "🔥",
+                icon: "✨",
             };
         }
     }
@@ -73,7 +73,7 @@ export function getNextNudge(): Nudge | null {
                 id,
                 type: "milestone",
                 title: `${m} يوم متتالي! 🏆`,
-                message: `وصلت لـ ${m} يوم في الميدان. ده إنجاز حقيقي يا قائد.`,
+                message: `وصلت لـ ${m} يوم في الرحلة. ده إنجاز حقيقي يا بطل.`,
                 priority: 1,
                 icon: "🏆",
             };
@@ -87,9 +87,9 @@ export function getNextNudge(): Nudge | null {
             return {
                 id,
                 type: "returning",
-                title: "جبهة مفتوحة 🗺️",
+                title: "حاجة شاغلاك 🎯",
                 message: `كنت شاغل بالك بـ "${memory.recurringGoals[0]}" — إيه الجديد؟`,
-                cta: "افتح جارفيس",
+                cta: "فتح المساعد",
                 priority: 2,
                 icon: "🎯",
             };
@@ -106,10 +106,10 @@ export function getNextNudge(): Nudge | null {
                 return {
                     id,
                     type: "returning",
-                    title: "وحشتنا يا قائد 🫡",
-                    message: "التعافي مش سباق، هو رحلة. المهم إنك رجعت الميدان النهاردة.",
+                    title: "وحشتنا 🤗",
+                    message: "التعافي مش سباق، هو رحلة. المهم إنك رجعت النهاردة.",
                     priority: 3,
-                    icon: "🫡",
+                    icon: "🤗",
                 };
             }
         }
@@ -123,8 +123,8 @@ export function getNextNudge(): Nudge | null {
                 id,
                 type: "quick_win",
                 title: "خطوة واحدة بس 🌱",
-                message: "ما محتاجش تعمل حاجة كبيرة. افتح التطبيق وخد نفس واحد.",
-                cta: "ابدأ",
+                message: "مش محتاج تعمل حاجة كبيرة. افتح التطبيق وخد نفس واحد.",
+                cta: "يلّا نبدأ",
                 priority: 3,
                 icon: "🌱",
             };

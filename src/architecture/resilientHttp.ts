@@ -4,6 +4,7 @@ export interface ResilientHttpOptions {
   retries?: number;
   retryDelayMs?: number;
   breaker?: CircuitBreaker;
+  timeoutMs?: number;
 }
 
 function shouldRetryStatus(status: number): boolean {
@@ -22,12 +23,13 @@ export async function fetchJsonWithResilience<T>(
   const retries = Math.max(0, options.retries ?? 1);
   const retryDelayMs = Math.max(100, options.retryDelayMs ?? 350);
   const breaker = options.breaker;
+  const timeoutMs = Math.max(500, options.timeoutMs ?? 4000);
 
   if (breaker && !breaker.canRequest()) return null;
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
-      const res = await fetch(url, init);
+      const res = await fetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
       if (res.ok) {
         if (breaker) breaker.markSuccess();
         return (await res.json()) as T;
@@ -59,6 +61,7 @@ export async function sendJsonWithResilience(
   const retries = Math.max(0, options.retries ?? 1);
   const retryDelayMs = Math.max(100, options.retryDelayMs ?? 350);
   const breaker = options.breaker;
+  const timeoutMs = Math.max(500, options.timeoutMs ?? 4000);
 
   if (breaker && !breaker.canRequest()) return false;
 
@@ -67,6 +70,7 @@ export async function sendJsonWithResilience(
       const res = await fetch(url, {
         method: "POST",
         ...init,
+        signal: AbortSignal.timeout(timeoutMs),
         headers: {
           "Content-Type": "application/json",
           ...(init.headers ?? {})

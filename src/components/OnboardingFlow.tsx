@@ -1,11 +1,12 @@
 "use client";
 
 import type { FC } from "react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMapState } from "../state/mapState";
 import { setInLocalStorage } from "../services/browserStorage";
 import { recordFlowEvent } from "../services/journeyTracking";
+import { AnalyticsEvents, trackCompleteRegistration, trackEvent } from "../services/analytics";
 import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
 import { AlertTriangle } from "lucide-react";
 import type { AdviceCategory } from "../data/adviceScripts";
@@ -16,6 +17,7 @@ import type { AdviceCategory } from "../data/adviceScripts";
    ════════════════════════════════════════════════ */
 
 const ONBOARDING_KEY = "dawayir-journey-onboarding-done";
+const ONBOARDING_COMPLETION_SESSION_KEY = "dawayir-onboarding-completed-session";
 
 /* eslint-disable react-refresh/only-export-components */
 export function markJourneyOnboardingDone(): void {
@@ -504,6 +506,18 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
   const [step, setStep] = useState(0); // 0 (noise), 1 (inventory), 2 (placement), 3 (review)
   const [direction, setDirection] = useState(-1);
   const [collectedItems, setCollectedItems] = useState<{ name: string; category: AdviceCategory }[]>([]);
+  const completionTrackedRef = useRef(false);
+
+  useEffect(() => {
+    try {
+      recordFlowEvent("onboarding_opened");
+      trackEvent(AnalyticsEvents.ONBOARDING_STARTED, {
+        entry_point: "relationship_map"
+      });
+    } catch {
+      // Never block onboarding rendering on analytics failures.
+    }
+  }, []);
 
   const goTo = useCallback((next: number) => {
     setDirection(next > step ? -1 : 1);
@@ -550,9 +564,24 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
   }, [addNode, goTo]);
 
   const handleComplete = useCallback(() => {
-    recordFlowEvent("onboarding_completed", {
-      meta: { itemsCount: collectedItems.length }
-    });
+    const hasTrackedThisSession =
+      completionTrackedRef.current ||
+      (typeof window !== "undefined" &&
+        window.sessionStorage.getItem(ONBOARDING_COMPLETION_SESSION_KEY) === "true");
+
+    if (!hasTrackedThisSession) {
+      recordFlowEvent("onboarding_completed", {
+        meta: { itemsCount: collectedItems.length }
+      });
+      trackCompleteRegistration({
+        items_count: collectedItems.length
+      });
+      completionTrackedRef.current = true;
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(ONBOARDING_COMPLETION_SESSION_KEY, "true");
+      }
+    }
+
     markJourneyOnboardingDone();
     onComplete(false); // false indicates completed normally
   }, [collectedItems.length, onComplete]);

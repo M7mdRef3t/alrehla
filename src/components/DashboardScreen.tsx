@@ -8,7 +8,8 @@ import { StreakWidget } from "./StreakWidget";
 import { QuickPathModal } from "./QuickPathModal";
 import { ShareableMapCard } from "./ShareableMapCard";
 import { recordDailyVisit } from "../services/streakSystem";
-import { Zap, Share2, Settings, X, Gift, Users } from "lucide-react";
+import { Zap, Share2, Settings, X, Gift, Users, Trophy } from "lucide-react";
+import { useAchievementState } from "../state/achievementState";
 import SupportCirclesScreen from "../modules/community/SupportCirclesScreen";
 import { ReferralPanel } from "./ReferralPanel";
 import { LevelBanner } from "./Gamification/LevelBanner";
@@ -243,6 +244,21 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
         <div className="flex items-center gap-2">
           {/* Streak compact badge */}
           <StreakWidget compact />
+          {/* Trophy button — يفتح الإنجازات */}
+          <motion.button
+            onClick={onOpenAchievements}
+            className="flex items-center gap-1 px-2 py-1.5 rounded-xl"
+            style={{
+              background: "rgba(251,191,36,0.08)",
+              border: "1px solid rgba(251,191,36,0.2)",
+            }}
+            whileHover={{ background: "rgba(251,191,36,0.15)", scale: 1.04 }}
+            whileTap={{ scale: 0.95 }}
+            aria-label="إنجازاتك"
+          >
+            <Trophy className="w-3.5 h-3.5" style={{ color: "#fbbf24" }} />
+            <span className="text-[10px] font-bold" style={{ color: "#fbbf24" }}>إنجازاتك</span>
+          </motion.button>
           {/* Settings gear */}
           {onNavigateToSettings && (
             <motion.button
