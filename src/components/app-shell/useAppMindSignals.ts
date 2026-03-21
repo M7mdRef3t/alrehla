@@ -12,9 +12,15 @@ interface UseAppMindSignalsParams {
   goalId: string;
   showBreathing: boolean;
   showCocoon: boolean;
-  openOverlay: (overlay: "nudgeToast" | "mirrorOverlay") => void;
+  /** لو true، لا تُطلق أي nudge أو mirrorOverlay — المستخدم في flow نشط */
+  activeFlows: boolean;
+  openOverlay: (overlay: "nudgeToast" | "mirrorOverlay" | "journeyGuideChat") => void;
   closeOverlay: (overlay: "nudgeToast" | "mirrorOverlay") => void;
   openCocoonModal: (source?: "auto" | "manual") => void;
+  /** يفتح pulse check بالطريقة الصحيحة (setPulseCheck) لا عبر setOverlay */
+  openPulseCheck: () => void;
+  /** يفتح ShareStats overlay للمشاركة */
+  openShareStats: () => void;
 }
 
 export function useAppMindSignals({
@@ -22,9 +28,12 @@ export function useAppMindSignals({
   goalId,
   showBreathing,
   showCocoon,
+  activeFlows,
   openOverlay,
   closeOverlay,
-  openCocoonModal
+  openCocoonModal,
+  openPulseCheck,
+  openShareStats
 }: UseAppMindSignalsParams) {
   const nodes = useMapState((s) => s.nodes);
   const lastPulse = usePulseState((s) => s.lastPulse);
@@ -34,7 +43,8 @@ export function useAppMindSignals({
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (runtimeEnv.isDemoMode) return;
+      // لا تُطلق أي nudge لو المستخدم في flow نشط (onboarding، إلخ)
+      if (runtimeEnv.isDemoMode || activeFlows) return;
       const nudge = getNextNudge();
       if (nudge) {
         setActiveNudge(nudge);
@@ -43,14 +53,15 @@ export function useAppMindSignals({
     }, 8000);
 
     return () => clearTimeout(timer);
-  }, [openOverlay]);
+  }, [openOverlay, activeFlows]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const timer = setTimeout(() => {
+      // لا تُطلق mirrorOverlay لو المستخدم في flow نشط
+      if (activeFlows) return;
       // Don't fire mirror insights within the first 2 minutes of the session
-      // to avoid hijacking the just-completed onboarding navigation
       if (Date.now() - sessionStartRef.current < 2 * 60 * 1000) return;
       if (runtimeEnv.isDemoMode) return;
       const insight = detectContradictions();
@@ -61,9 +72,11 @@ export function useAppMindSignals({
     }, 4000);
 
     return () => clearTimeout(timer);
-  }, [nodes, openOverlay, storedGoalId]);
+  }, [nodes, openOverlay, storedGoalId, activeFlows]);
 
   useEffect(() => {
+    // لا تُطلق حتى chaos nudge لو في flow نشط
+    if (activeFlows) return;
     const insight = calculateEntropy();
     if (insight.state === "CHAOS" && !showBreathing && !showCocoon) {
       setActiveNudge({
@@ -72,12 +85,13 @@ export function useAppMindSignals({
         title: "محتاج تاخد نَفَس 🍃",
         message: "حاسين إنك مضغوط شوية دلوقتي.. خد دقيقة لنفسك.",
         cta: "افصل شوية",
+        ctaAction: "dismiss_only" as const,
         priority: 1,
         icon: "🍃"
       });
       openOverlay("nudgeToast");
     }
-  }, [goalId, lastPulse, nodes, openOverlay, showBreathing, showCocoon]);
+  }, [goalId, lastPulse, nodes, openOverlay, showBreathing, showCocoon, activeFlows]);
 
   const handleNudgeDismiss = useCallback(() => {
     if (activeNudge) {
@@ -85,6 +99,23 @@ export function useAppMindSignals({
     }
     closeOverlay("nudgeToast");
   }, [activeNudge, closeOverlay]);
+
+  /**
+   * يُطلَق عند الضغط على زر الـ CTA في الـ nudge toast.
+   * لا يعمل أي navigation — فقط overlays آمنة أو dismiss.
+   */
+  const handleNudgeCtaAction = useCallback(() => {
+    const action = activeNudge?.ctaAction;
+    if (action === "pulse_check") {
+      openPulseCheck();
+    } else if (action === "open_assistant") {
+      openOverlay("journeyGuideChat");
+    } else if (action === "share_stats") {
+      // يفتح ShareStats overlay — آمن ولا يغيّر الشاشة
+      openShareStats();
+    }
+    handleNudgeDismiss();
+  }, [activeNudge, openOverlay, openPulseCheck, openShareStats, handleNudgeDismiss]);
 
   const handleNudgeToastClose = useCallback(() => {
     if (activeNudge?.title === "محتاج تاخد نَفَس 🍃") {
@@ -108,6 +139,7 @@ export function useAppMindSignals({
     activeNudge,
     activeMirrorInsight,
     handleNudgeToastClose,
+    handleNudgeCtaAction,
     handleMirrorResolve,
     presentMirrorInsight
   };

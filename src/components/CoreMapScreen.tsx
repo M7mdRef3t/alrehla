@@ -412,19 +412,19 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       animate="visible"
     >
       {/*  Header  */}
-      <motion.header variants={cosmicFade} className="text-center px-4 sm:px-6">
+      <motion.header variants={cosmicFade} className="text-center px-4 sm:px-6 pt-6">
         <div className="flex flex-col items-center gap-2 mb-4">
           <h1
             id="core-map-title"
-            className="text-[clamp(1.95rem,4.2vw,3rem)] font-bold leading-[1.12]"
+            className="text-[clamp(1.5rem,3.5vw,2.5rem)] font-bold leading-[1.12]"
             style={{ color: "var(--text-primary)", letterSpacing: "var(--tracking-wider)" }}
           >
             <EditableText id={pageTitleKey} defaultText={pageTitle} page="map" />
           </h1>
         </div>
         <p
-          className="text-base md:text-lg leading-[1.72] max-w-[42ch] mx-auto"
-          style={{ color: "var(--text-secondary)", letterSpacing: "var(--tracking-wide)" }}
+          className="text-sm md:text-base leading-[1.72] max-w-[42ch] mx-auto"
+          style={{ color: "var(--text-muted)", letterSpacing: "var(--tracking-wide)" }}
         >
           <EditableText id={subtitleKey} defaultText={subtitle} page="map" multiline showEditIcon={false} />
         </p>

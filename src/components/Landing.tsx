@@ -340,13 +340,13 @@ export const Landing: FC<LandingProps> = ({
       ══════════════════════════════════════════════ */}
       <section className="relative min-h-screen flex items-center px-4 sm:px-5 pt-16 sm:pt-10 pb-20 max-w-6xl mx-auto">
         <motion.div
-          className="w-full flex flex-col lg:flex-row items-center gap-10 lg:gap-16"
+          className="w-full flex flex-col lg:flex-row items-center gap-8 lg:gap-10"
           variants={stagger}
           initial="hidden"
           animate="visible"
         >
-          {/* ── Text ── */}
-          <div className="flex-1 text-center lg:text-right max-w-[640px]">
+          {/* ── Text ── — 55% من عرض الـ desktop */}
+          <div className="flex-1 lg:flex-none lg:basis-[55%] text-center lg:text-right">
 
             {/* Platform badge */}
             <motion.div variants={fadeUp} className="inline-flex items-center gap-2 mb-5">
@@ -434,8 +434,8 @@ export const Landing: FC<LandingProps> = ({
             )}
           </div>
 
-          {/* ── Orbit Visual ── */}
-          <motion.div variants={fadeUp} className="flex-shrink-0 origin-center scale-[0.82] sm:scale-100">
+          {/* ── Orbit Visual ── — 40% من عرض الـ desktop ، متمركز دايماً */}
+          <motion.div variants={fadeUp} className="flex-shrink-0 lg:flex-none lg:basis-[40%] flex items-center justify-center origin-center scale-[0.80] sm:scale-90 lg:scale-100">
             <OrbitViz reduceMotion={reduceMotion} />
           </motion.div>
         </motion.div>

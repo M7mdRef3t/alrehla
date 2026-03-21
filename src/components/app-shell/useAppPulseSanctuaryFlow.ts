@@ -196,9 +196,12 @@ export function useAppPulseSanctuaryFlow({
     }
 
     pulseOpenedAtRef.current = null;
+    // IMPORTANT: Must set isOpen=false AND context="regular" in ONE call.
+    // Previously two separate calls caused a stale-closure bug:
+    // setShowPulseCheck(false) → isOpen=false ✓
+    // setPulseCheckContext("regular") → re-read stale isOpen=true → isOpen=true again ✗
     setShowPulseCheck(false);
-    setPulseCheckContext("regular");
-  }, [setPulseCheckContext, setShowPulseCheck]);
+  }, [setShowPulseCheck]);
 
   useEffect(() => {
     const onPageHide = () => {

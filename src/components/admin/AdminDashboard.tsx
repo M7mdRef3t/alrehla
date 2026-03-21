@@ -71,8 +71,9 @@ const AlertsPanel = lazy(() => import("./WarRoom/AlertsPanel"));
 const LiveAdminPanel = lazy(() => import("../../modules/dawayir-live/pages/LiveAdminPanel").then(m => ({ default: m.default })));
 const AdAnalyticsDashboard = lazy(() => import("./dashboard/AdAnalytics/AdAnalyticsDashboard").then(m => ({ default: m.AdAnalyticsDashboard })));
 const SurveyResultsPanel = lazy(() => import("./dashboard/Data/SurveyResultsPanel").then(m => ({ default: m.SurveyResultsPanel })));
+const MarketingOpsPanel = lazy(() => import("./dashboard/MarketingOps/MarketingOpsPanel").then(m => ({ default: m.MarketingOpsPanel })));
 
-type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "sales-enablement" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo" | "repo-intel" | "war-room" | "dawayir-live" | "ad-analytics" | "survey-results";
+type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "sales-enablement" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo" | "repo-intel" | "war-room" | "dawayir-live" | "ad-analytics" | "survey-results" | "marketing-ops";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
@@ -105,7 +106,8 @@ const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
   { id: "repo-intel", label: "Repo Intel", icon: <Terminal className="w-4 h-4 text-teal-300" /> },
   { id: "dawayir-live", label: "Dawayir Live", icon: <Sparkles className="w-4 h-4 text-teal-300" /> },
   { id: "ad-analytics", label: "Ad Analytics", icon: <BarChart3 className="w-4 h-4 text-cyan-400" /> },
-  { id: "survey-results", label: "Survey Results", icon: <ClipboardList className="w-4 h-4 text-teal-400" /> }
+  { id: "survey-results", label: "Survey Results", icon: <ClipboardList className="w-4 h-4 text-teal-400" /> },
+  { id: "marketing-ops", label: "Marketing Ops", icon: <Rocket className="w-4 h-4 text-rose-400" /> }
 ];
 const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   entity: "Entity (DNA)",
@@ -134,7 +136,8 @@ const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "repo-intel": "Repo Intel",
   "dawayir-live": "Dawayir Live",
   "ad-analytics": "Ad Analytics",
-  "survey-results": "Survey Results"
+  "survey-results": "Survey Results",
+  "marketing-ops": "Marketing Ops"
 };
 
 const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
@@ -473,6 +476,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "dawayir-live" && <LiveAdminPanel />}
                 {effectiveTab === "ad-analytics" && <AdAnalyticsDashboard />}
                 {effectiveTab === "survey-results" && <SurveyResultsPanel />}
+                {effectiveTab === "marketing-ops" && <MarketingOpsPanel />}
               </Suspense>
             </div>
           </div>

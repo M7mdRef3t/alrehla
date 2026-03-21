@@ -7,6 +7,7 @@ import { EmergencySOS } from "./CommandCenter/EmergencySOS";
 import { StreakWidget } from "./StreakWidget";
 import { QuickPathModal } from "./QuickPathModal";
 import { ShareableMapCard } from "./ShareableMapCard";
+import { ShareStats } from "./ShareStats";
 import { recordDailyVisit } from "../services/streakSystem";
 import { Zap, Share2, Settings, X, Gift, Users, Trophy } from "lucide-react";
 import { useAchievementState } from "../state/achievementState";
@@ -20,6 +21,14 @@ import { AccessManager, SubscriptionInfo } from "../modules/billing/AccessManage
 import { supabase } from "../services/supabaseClient";
 import { TrajectoryDashboard } from "./Trajectory/TrajectoryDashboard";
 import { ResonanceAlert } from "./CommandCenter/ResonanceAlert";
+import { ReturnGreetingBanner } from "./ReturnGreetingBanner";
+import {
+  WeeklyJourneySummary,
+  shouldShowWeeklySummary,
+  markWeeklySummaryShown
+} from "./WeeklyJourneySummary";
+import { useAppOverlayState } from "../state/appOverlayState";
+import { useJourneyState } from "../state/journeyState";
 
 /*  DASHBOARD SCREEN  غرفة اعات
     */
@@ -134,13 +143,18 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
 
 
 
-  // Wave 1: Modal state
   const [showQuickPath, setShowQuickPath] = useState(false);
   const [showShareCard, setShowShareCard] = useState(false);
   const [showCommunity, setShowCommunity] = useState(false);
   const [showReferral, setShowReferral] = useState(false);
+  const [showShareStats, setShowShareStats] = useState(false);
+  const { journeyStartedAt } = useJourneyState();
+  const [showWeeklySummary, setShowWeeklySummary] = useState(() =>
+    shouldShowWeeklySummary(journeyStartedAt ?? null)
+  );
   const [subInfo, setSubInfo] = useState<SubscriptionInfo | null>(null);
   const [userId, setUserId] = useState<string | undefined>(undefined);
+  const setPulseCheck = useAppOverlayState((s) => s.setPulseCheck);
 
   useEffect(() => {
     const client = supabase;
@@ -225,6 +239,11 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
       dir="rtl"
     >
       <ResonanceAlert />
+
+      {/* بانر الترحيب بالعائد — يظهر لو ميسجّلش نبضة اليوم */}
+      <ReturnGreetingBanner
+        onOpenPulseCheck={() => setPulseCheck(true, "regular")}
+      />
       {/*  Greeting header  */}
       <motion.div
         className="flex items-center justify-between pt-2"
@@ -513,6 +532,23 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ملخص الرحلة الأسبوعي */}
+      <WeeklyJourneySummary
+        isOpen={showWeeklySummary}
+        journeyStartedAt={journeyStartedAt ?? null}
+        onClose={() => {
+          setShowWeeklySummary(false);
+          markWeeklySummaryShown();
+        }}
+        onShare={() => setShowShareStats(true)}
+      />
+
+      {/* ShareStats — يُفتح من milestone أو weekly summary */}
+      <ShareStats
+        isOpen={showShareStats}
+        onClose={() => setShowShareStats(false)}
+      />
 
     </motion.div>
   );

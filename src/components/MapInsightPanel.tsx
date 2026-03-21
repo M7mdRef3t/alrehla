@@ -176,7 +176,7 @@ export const MapInsightPanel: FC = () => {
                         className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold transition-all disabled:opacity-50 active:scale-95 shadow-lg shadow-indigo-500/20"
                     >
                         {loading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                        تح جدد
+                        تحديث
                     </button>
                 </div>
 
@@ -199,7 +199,7 @@ export const MapInsightPanel: FC = () => {
                                 ) : (
                                     <div className="py-8 text-center text-slate-500">
                                         <Sparkles className="w-6 h-6 mx-auto mb-2 opacity-20" />
-                                        <p className="text-xs">اضغط "تح جدد" استشاف ااط اعاء ف خرطت.</p>
+                        <p className="text-xs">اضغط "تح جدد" لاستكشاف أنماط العلاقات في خريطتك.</p>
                                     </div>
                                 )}
                             </motion.div>
@@ -215,13 +215,13 @@ export const MapInsightPanel: FC = () => {
                                                     className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[9px] font-bold border transition-all ${isComparing ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400' : 'bg-white/5 border-white/10 text-slate-400'}`}
                                                 >
                                                     <Columns className="w-3 h-3" />
-                                                    ارة اتطر
+                                                    مقارنة الرؤى
                                                 </button>
                                             </div>
                                             {isComparing && history.length >= 2 ? (
                                                 <div className="grid grid-cols-2 gap-3 mb-6">
-                                                    <MiniInsightCard insight={history[0]} title="اأحدث" />
-                                                    <MiniInsightCard insight={history[1]} title="اساب" />
+                                                    <MiniInsightCard insight={history[0]} title="الأحدث" />
+                                                    <MiniInsightCard insight={history[1]} title="السابق" />
                                                 </div>
                                             ) : null}
                                             <div className="space-y-2">
@@ -243,7 +243,7 @@ export const MapInsightPanel: FC = () => {
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center gap-2">
-                                                            {item.cache_hit && <span title="ت استرجاع  اذارة"><CheckCircle2 className="w-3 h-3 text-emerald-500 opacity-60" /></span>}
+                                                            {item.cache_hit && <span title="تم الاسترجاع من الذاكرة"><CheckCircle2 className="w-3 h-3 text-emerald-500 opacity-60" /></span>}
                                                             <button
                                                                 onClick={(e) => { e.stopPropagation(); if (item.id) togglePin(item.id, !!item.pinned); }}
                                                                 className={`p-1.5 rounded-full transition-colors ${item.pinned ? 'bg-indigo-500 text-white' : 'hover:bg-white/10 text-slate-500'}`}
@@ -258,7 +258,7 @@ export const MapInsightPanel: FC = () => {
                                     ) : (
                                         <div className="py-8 text-center text-slate-500">
                                             <History className="w-6 h-6 mx-auto mb-2 opacity-20" />
-                                            <p className="text-xs">اسج فاض.. استشف بصرت أا.</p>
+                                            <p className="text-xs">السجل فارغ.. استكشف أول بصيرة الآن.</p>
                                         </div>
                                     )}
                                 </div>
@@ -288,13 +288,13 @@ const InsightView: FC<{ insight: MapInsight, onTogglePin: (id: string, s: boolea
                     className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${insight.pinned ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:border-indigo-500/40'}`}
                 >
                     <Pin className="w-3 h-3" />
-                    {insight.pinned ? 'ثبت ف اسج' : 'تثبت ارؤة'}
+                    {insight.pinned ? 'ثبّت في السجل' : 'تثبيت الرؤية'}
                 </button>
             )}
         </div>
 
         <div className="text-right">
-            <p className="text-[11px] font-bold text-indigo-400 mb-1">اخاصة ارزة</p>
+            <p className="text-[11px] font-bold text-indigo-400 mb-1">الخلاصة البارزة</p>
             <p className="text-sm text-slate-100 leading-relaxed font-medium">
                 {insight.summary}
             </p>
@@ -303,7 +303,7 @@ const InsightView: FC<{ insight: MapInsight, onTogglePin: (id: string, s: boolea
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="text-right p-4 rounded-xl bg-white/5 border border-white/5 group hover:border-blue-500/20 transition-all">
                 <p className="text-[10px] font-bold text-blue-400 mb-3 flex items-center gap-2 justify-end">
-                    اط عاء تشفة
+                    أنماط علاقات مكتشفة
                     <div className="w-1 h-1 rounded-full bg-blue-400" />
                 </p>
                 <ul className="space-y-3">
@@ -317,7 +317,7 @@ const InsightView: FC<{ insight: MapInsight, onTogglePin: (id: string, s: boolea
             </div>
             <div className="text-right p-4 rounded-xl bg-white/5 border border-white/5 group hover:border-emerald-500/20 transition-all">
                 <p className="text-[10px] font-bold text-emerald-400 mb-3 flex items-center gap-2 justify-end">
-                    ارات ترحة
+                    توصيات مقترحة
                     <ArrowRight className="w-3 h-3" />
                 </p>
                 <ul className="space-y-3">
@@ -336,7 +336,7 @@ const InsightView: FC<{ insight: MapInsight, onTogglePin: (id: string, s: boolea
         {insight.warning && (
             <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-right flex items-start gap-3 justify-end group">
                 <p className="text-[11px] text-amber-200 leading-relaxed">
-                    <span className="font-bold text-amber-400">تحذر  غ:</span> {insight.warning}
+                    <span className="font-bold text-amber-400">تحذير مهم:</span> {insight.warning}
                 </p>
                 <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5 group-hover:animate-pulse" />
             </div>
@@ -352,8 +352,8 @@ const MiniInsightCard: FC<{ insight: MapInsight, title: string }> = ({ insight, 
         </div>
         <p className="text-[10px] text-slate-200 line-clamp-3 mb-2 leading-relaxed">{insight.summary}</p>
         <div className="flex flex-wrap gap-1 justify-end">
-            <span className="px-1.5 py-0.5 rounded-md bg-white/5 text-[8px] text-emerald-400">{insight.recommendations.length} ا</span>
-            <span className="px-1.5 py-0.5 rounded-md bg-white/5 text-[8px] text-blue-400">{insight.insights.length} رؤ</span>
+            <span className="px-1.5 py-0.5 rounded-md bg-white/5 text-[8px] text-emerald-400">{insight.recommendations.length} توصية</span>
+            <span className="px-1.5 py-0.5 rounded-md bg-white/5 text-[8px] text-blue-400">{insight.insights.length} رؤية</span>
         </div>
     </div>
 );

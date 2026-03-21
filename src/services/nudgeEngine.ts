@@ -5,15 +5,17 @@
  * ليست عشوائية — مبنية على بيانات حقيقية.
  */
 
-import { loadStreak, isStreakAtRisk } from "./streakSystem";
+import { loadStreak, isStreakAtRisk, isStreakBroken } from "./streakSystem";
 import { loadUserMemory } from "./userMemory";
 
 export interface Nudge {
     id: string;
-    type: "streak_risk" | "returning" | "milestone" | "boundary_reminder" | "quick_win";
+    type: "streak_risk" | "returning" | "milestone" | "boundary_reminder" | "quick_win" | "streak_broken";
     title: string;
     message: string;
     cta?: string;
+    /** إجراء الـ CTA — لا يُستخدم لـ navigation، فقط overlays آمنة */
+    ctaAction?: "pulse_check" | "open_assistant" | "dismiss_only" | "share_stats";
     priority: 1 | 2 | 3; // 1=عالي, 3=منخفض
     icon: string;
 }
@@ -48,7 +50,7 @@ export function getNextNudge(): Nudge | null {
     const memory = loadUserMemory();
     const shown = getShownNudges();
 
-    // Priority 1: Streak at risk
+    // Priority 1: Streak at risk (≥3 days, لم يُسجَّل اليوم)
     if (isStreakAtRisk() && streak.currentStreak >= 3) {
         const id = `streak-risk-${new Date().toISOString().split("T")[0]}`;
         if (!shown.has(id)) {
@@ -57,7 +59,8 @@ export function getNextNudge(): Nudge | null {
                 type: "streak_risk",
                 title: "عدّادك مستنيك ✨",
                 message: `${streak.currentStreak} يوم متتالي — خطوة واحدة النهاردة تحافظ عليهم`,
-                cta: "سجّل دخولي",
+                cta: "سجّل نبضتي",
+                ctaAction: "pulse_check",
                 priority: 1,
                 icon: "✨",
             };
@@ -73,12 +76,15 @@ export function getNextNudge(): Nudge | null {
                 id,
                 type: "milestone",
                 title: `${m} يوم متتالي! 🏆`,
-                message: `وصلت لـ ${m} يوم في الرحلة. ده إنجاز حقيقي يا بطل.`,
+                message: `وصلت لـ ${m} يوم في الرحلة. ده إنجاز يستاهل يتشارك!`,
+                cta: "شارك إنجازك",
+                ctaAction: "share_stats",
                 priority: 1,
                 icon: "🏆",
             };
         }
     }
+
 
     // Priority 2: Returning user with recurring goal
     if (memory.totalSessions > 1 && memory.recurringGoals.length > 0) {
@@ -90,6 +96,7 @@ export function getNextNudge(): Nudge | null {
                 title: "حاجة شاغلاك 🎯",
                 message: `كنت شاغل بالك بـ "${memory.recurringGoals[0]}" — إيه الجديد؟`,
                 cta: "فتح المساعد",
+                ctaAction: "open_assistant",
                 priority: 2,
                 icon: "🎯",
             };
@@ -108,6 +115,7 @@ export function getNextNudge(): Nudge | null {
                     type: "returning",
                     title: "وحشتنا 🤗",
                     message: "التعافي مش سباق، هو رحلة. المهم إنك رجعت النهاردة.",
+                    ctaAction: "dismiss_only",
                     priority: 3,
                     icon: "🤗",
                 };
@@ -115,8 +123,24 @@ export function getNextNudge(): Nudge | null {
         }
     }
 
-    // Priority 3: Quick win suggestion
-    if (streak.currentStreak === 0) {
+    // Priority 3: Streak broken — كان عنده streak وانكسر (مستخدم قديم فقط)
+    if (isStreakBroken() && streak.currentStreak === 0 && memory.totalSessions > 0) {
+        const id = `streak-broken-${new Date().toISOString().split("T")[0]}`;
+        if (!shown.has(id)) {
+            return {
+                id,
+                type: "streak_broken",
+                title: "الانقطاع جزء من الرحلة 🤍",
+                message: "مش لازم تكون مثالياً. أهم حاجة إنك رجعت. هنبدأ من هنا.",
+                ctaAction: "dismiss_only",
+                priority: 3,
+                icon: "🤍",
+            };
+        }
+    }
+
+    // Priority 3: Quick win — فقط للمستخدم اللي سبق استخدم التطبيق (مش للجديد)
+    if (streak.currentStreak === 0 && memory.totalSessions > 0) {
         const id = `quick-win-${new Date().toISOString().split("T")[0]}`;
         if (!shown.has(id)) {
             return {
@@ -124,7 +148,8 @@ export function getNextNudge(): Nudge | null {
                 type: "quick_win",
                 title: "خطوة واحدة بس 🌱",
                 message: "مش محتاج تعمل حاجة كبيرة. افتح التطبيق وخد نفس واحد.",
-                cta: "يلّا نبدأ",
+                cta: "تمام",
+                ctaAction: "dismiss_only",
                 priority: 3,
                 icon: "🌱",
             };

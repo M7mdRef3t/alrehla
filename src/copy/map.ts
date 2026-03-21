@@ -1,6 +1,6 @@
 export const mapCopy = {
-  title: "لوحة الإدراك الحية (Live Cognitive Canvas)",
-  subtitle: "واجهة تتشكل وتتنفس مع صوتك (Autonomic UI Mutation)",
+  title: "لوحة الإدراك الحية",
+  subtitle: "واجهة تتشكل وتتنفس مع صوتك",
   addPersonLabel: "+ رصد هدف جديد",
   addPersonTitle: "استهدف الشخص الأكثر تأثيراً في استنزافك حالياً",
   feelingCta: "تحليل مستوى الاستنزاف",

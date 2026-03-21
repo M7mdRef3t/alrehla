@@ -841,7 +841,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               )}
             </div>
             {showSkipConfirm && (
-              <div className="mx-3.5 sm:mx-4 -mt-1 mb-1 rounded-xl px-3 py-2" style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.35)" }}>
+              <div className="mx-3.5 sm:mx-4 -mt-1 mb-1 rounded-xl px-3 py-2" style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.35)" }} onClick={(e) => e.stopPropagation()}>
                 <p className="text-xs font-semibold text-center" style={{ color: "rgba(255,236,179,0.98)" }}>
                   تريد تخطي ضبط البوصلة النهاردة؟
                 </p>
@@ -856,7 +856,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={confirmSkipClose}
+                    onClick={(e) => { e.stopPropagation(); confirmSkipClose(); }}
                     className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
                     style={{ color: "var(--text-primary)", background: "rgba(248,113,113,0.18)", border: "1px solid rgba(248,113,113,0.42)" }}
                   >

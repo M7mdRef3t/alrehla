@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import { type FC, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 /* ════════════════════════════════════════════════
@@ -20,6 +20,8 @@ interface JourneyToastProps {
   nudgeData?: { title: string; message: string; icon: string; cta?: string };
   visible: boolean;
   onClose?: () => void;
+  /** يُستدعى عند ضغط زر الـ CTA — منفصل عن onClose لتجنب الـ navigation */
+  onCtaAction?: () => void;
   onAction?: () => void;
 }
 
@@ -85,11 +87,24 @@ export const JourneyToast: FC<JourneyToastProps> = ({
   nudgeData,
   visible,
   onClose,
+  onCtaAction,
   onAction,
 }) => {
   const content = variant === "nudge" && nudgeData
     ? { title: nudgeData.title, body: () => nudgeData.message, cta: nudgeData.cta }
     : TOAST_CONTENT[variant];
+
+  // Auto-dismiss بعد 7 ثواني للـ nudge فقط — زي الـ Duolingo
+  const autoDismissRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (variant !== "nudge" || !visible) return;
+    autoDismissRef.current = setTimeout(() => {
+      onClose?.();
+    }, 7000);
+    return () => {
+      if (autoDismissRef.current) clearTimeout(autoDismissRef.current);
+    };
+  }, [visible, variant, onClose]);
 
   return (
     <AnimatePresence>
@@ -149,8 +164,14 @@ export const JourneyToast: FC<JourneyToastProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    if (variant === "undo" && onAction) onAction();
-                    else if (onClose) onClose();
+                    if (variant === "undo" && onAction) {
+                      onAction();
+                    } else if (onCtaAction) {
+                      // CTA action مخصص (overlay آمن، مش navigation)
+                      onCtaAction();
+                    } else if (onClose) {
+                      onClose();
+                    }
                   }}
                   className="mt-2 text-xs font-semibold transition-colors bg-teal-500/10 hover:bg-teal-500/20 px-3 py-1.5 rounded-md border border-teal-500/20 active:scale-95"
                   style={{ color: "rgba(45,212,191,0.9)" }}

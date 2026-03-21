@@ -286,15 +286,22 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     activeNudge,
     activeMirrorInsight,
     handleNudgeToastClose,
+    handleNudgeCtaAction,
     handleMirrorResolve
   } = useAppMindSignals({
     storedGoalId: goalId,
     goalId: goalId ?? "unknown",
     showBreathing,
     showCocoon,
+    // لو أي flow نشط، لا تُطلق أي nudge أو mirrorOverlay
+    activeFlows: showOnboarding || showBreathing || showCocoon || showNoiseSilencingPulse || pulseCheckState.isOpen,
     openOverlay: setOverlay as any,
     closeOverlay: (o) => setOverlay(o as any, false),
-    openCocoonModal
+    openCocoonModal,
+    // يفتح pulse check باستخدام setPulseCheck الصحيح لا setOverlay
+    openPulseCheck: () => setPulseCheck(true, "nudge"),
+    // يفتح ShareStats overlay للمشاركة عند milestone
+    openShareStats: () => setOverlay("shareStats", true)
   });
 
   const onOnboardingComplete = useCallback(() => {
@@ -558,6 +565,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
           visible={showNudgeToast && !!activeNudge && isVisible("nudgeToast")}
           nudgeData={activeNudge ?? undefined}
           onClose={handleNudgeToastClose}
+          onCtaAction={handleNudgeCtaAction}
         />
 
         <AnalyticsConsentBanner suppressed={!showConsentBanner} />

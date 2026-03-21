@@ -31,7 +31,7 @@ export const NextStepCard: FC<NextStepCardProps> = ({ decision, onTakeAction, on
           الخطوة التالية الآن
         </p>
         <span className="text-[10px] rounded-full px-2 py-0.5 bg-slate-900/50 text-slate-200">
-          {decision.source === "cloud_ranker" ? "AI" : "Template"}
+          {decision.source === "cloud_ranker" ? "ذكاء اصطناعي" : "قالب"}
         </span>
       </div>
 
