@@ -57,26 +57,34 @@ function sanitizeUtm(value: unknown): MarketingLeadUtm | null {
 }
 
 export function isValidMarketingLeadEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  // More robust regex to catch common "dirty" inputs like email+phone concatenation
+  return /^[a-zA-Z0-9.\-_]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,10}$/.test(value);
 }
 
 export function normalizeMarketingLeadPayload(
-  payload: MarketingLeadPayload,
+  payload: MarketingLeadPayload & Record<string, unknown>,
   fallbackSourceType: MarketingLeadSourceType = "website"
 ): NormalizedMarketingLeadInput | null {
   const email = sanitizeText(payload.email, 160)?.toLowerCase() ?? null;
   if (!email || !isValidMarketingLeadEmail(email)) return null;
 
+  // Map common Facebook Lead Ads field names
+  const name = sanitizeText(payload.name || payload.full_name, 120);
+  const phone = sanitizePhone(payload.phone || payload.phone_number);
+  const campaign = sanitizeText(payload.campaign || payload.campaign_name, 160);
+  const adset = sanitizeText(payload.adset || payload.adset_name, 160);
+  const ad = sanitizeText(payload.ad || payload.ad_name, 160);
+
   return {
     email,
-    phone: sanitizePhone(payload.phone),
-    name: sanitizeText(payload.name, 120),
+    phone,
+    name,
     source: sanitizeSource(payload.source),
     sourceType: sanitizeSourceType(payload.sourceType, fallbackSourceType),
     utm: sanitizeUtm(payload.utm),
-    campaign: sanitizeText(payload.campaign, 160),
-    adset: sanitizeText(payload.adset, 160),
-    ad: sanitizeText(payload.ad, 160),
+    campaign,
+    adset,
+    ad,
     placement: sanitizeText(payload.placement, 160),
     note: sanitizeText(payload.note, 600),
     status: sanitizeStatus(payload.status),

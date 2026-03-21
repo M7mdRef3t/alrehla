@@ -243,6 +243,11 @@ export function trackEvent(
         .insert({
           event_type: eventName,
           user_id: session?.user?.id || null,
+          lead_id: leadAttr?.lead_id || null,
+          lead_source: leadAttr?.lead_source || null,
+          utm_source: utm?.utm_source || null,
+          utm_medium: utm?.utm_medium || null,
+          utm_campaign: utm?.utm_campaign || null,
           payload: { ...deviceContext, ...(safeParams || {}) },
           occurred_at: new Date().toISOString()
         })

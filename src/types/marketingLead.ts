@@ -14,6 +14,7 @@ export type MarketingLeadStatus = (typeof MARKETING_LEAD_STATUSES)[number];
 export type MarketingLeadUtm = Record<string, string>;
 
 export interface MarketingLeadPayload {
+  [key: string]: any; // Allow index signature for raw data processing
   leadId?: string;
   email?: string;
   phone?: string;

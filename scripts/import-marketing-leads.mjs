@@ -17,7 +17,7 @@ function parseArgs(argv) {
   return options;
 }
 
-function parseCsv(content) {
+function parseCsv(content, delimiter = ",") {
   const rows = [];
   let current = "";
   let row = [];
@@ -37,7 +37,7 @@ function parseCsv(content) {
       continue;
     }
 
-    if (char === "," && !inQuotes) {
+    if (char === delimiter && !inQuotes) {
       row.push(current);
       current = "";
       continue;
@@ -68,12 +68,31 @@ function parseCsv(content) {
 }
 
 async function loadLeads(filePath) {
-  const content = await fs.readFile(filePath, "utf8");
+  const buffer = await fs.readFile(filePath);
+
+  // Simple encoding detection
+  let content = "";
+  if (buffer[0] === 0xff && buffer[1] === 0xfe) {
+    content = buffer.toString("utf16le");
+  } else if (buffer[0] === 0xfe && buffer[1] === 0xff) {
+    content = buffer.toString("utf16be");
+  } else if (buffer.slice(0, 100).includes(0x00)) {
+    // If null bytes in header, likely UTF-16
+    content = buffer.toString("utf16le");
+  } else {
+    content = buffer.toString("utf8");
+  }
+
   if (filePath.toLowerCase().endsWith(".json")) {
     const parsed = JSON.parse(content);
     return Array.isArray(parsed) ? parsed : parsed.leads ?? [];
   }
-  return parseCsv(content);
+
+  // Simple delimiter detection
+  const firstLine = content.split(/[\r\n]+/)[0] || "";
+  const delimiter = firstLine.includes("\t") ? "\t" : ",";
+
+  return parseCsv(content, delimiter);
 }
 
 async function main() {

@@ -40,8 +40,7 @@ function buildPersonalizedUrl(leadId: string, source: string, path = "/onboardin
 }
 
 function toLeadRow(input: NormalizedMarketingLeadInput) {
-  return {
-    lead_id: input.leadId ?? undefined, // P0-1: if provided use it; else DB generates uuid via DEFAULT
+  const row: any = {
     email: input.email,
     phone: input.phone,
     name: input.name,
@@ -57,6 +56,10 @@ function toLeadRow(input: NormalizedMarketingLeadInput) {
     last_contacted_at: input.lastContactedAt,
     qualified_at: input.qualifiedAt
   };
+  if (input.leadId) {
+    row.lead_id = input.leadId;
+  }
+  return row;
 }
 
 async function enqueueOutreach(
@@ -309,7 +312,12 @@ export async function handleMarketingLeadImportPost(req: Request) {
     const rows = deduped.map(toLeadRow);
     const { error } = await supabaseAdmin.from("marketing_leads").upsert(rows, { onConflict: "email" });
     if (error) {
-      console.error("[marketing/lead/import] Supabase upsert failed:", error);
+      console.error("[marketing/lead/import] Supabase upsert failed:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return NextResponse.json({ ok: false, error: "lead_store_failed" }, { status: 500 });
     }
 
