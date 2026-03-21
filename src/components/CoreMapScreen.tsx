@@ -405,15 +405,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   return (
     <motion.main
-      className="flex-1 w-full h-full text-center relative px-4 sm:px-6 flex flex-col pb-32"
-      style={{ maxWidth: "var(--phi-content-focus)" }}
+      className="flex-1 w-full h-full relative flex flex-col pb-24 md:pb-8"
       aria-labelledby="core-map-title"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"
     >
       {/*  Header  */}
-      <motion.header variants={cosmicFade}>
+      <motion.header variants={cosmicFade} className="text-center px-4 sm:px-6">
         <div className="flex flex-col items-center gap-2 mb-4">
           <h1
             id="core-map-title"
@@ -1336,10 +1335,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         )
       }
 
-      {/*  Tab Navigation — التبويبات (Global Dock)  */}
+      {/*  Tab Navigation — التبويبات (Desktop Only — Mobile uses AppChromeShell nav)  */}
       {
         !journeyMode && (
-          <div className="fixed bottom-0 left-0 right-0 z-[100]">
+          <div className="hidden md:block fixed bottom-0 left-0 right-0 z-50">
             <TabNavigation
               hidden={hideBottomDock}
               onPulse={onOpenPulse}

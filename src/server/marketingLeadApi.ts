@@ -30,8 +30,18 @@ function isDebugAuthorized(request: Request): boolean {
   return request.headers.get("x-marketing-debug-key") === key;
 }
 
+/**
+ * P0-2: Builds a personalized URL with lead_id and lead_source for full attribution tracking.
+ * Every outreach message MUST use this — never a bare /onboarding or /checkout link.
+ */
+function buildPersonalizedUrl(leadId: string, source: string, path = "/onboarding"): string {
+  const base = "https://www.alrehla.app";
+  return `${base}${path}?lead_id=${encodeURIComponent(leadId)}&lead_source=${encodeURIComponent(source)}`;
+}
+
 function toLeadRow(input: NormalizedMarketingLeadInput) {
   return {
+    lead_id: input.leadId ?? undefined, // P0-1: if provided use it; else DB generates uuid via DEFAULT
     email: input.email,
     phone: input.phone,
     name: input.name,
@@ -52,11 +62,16 @@ function toLeadRow(input: NormalizedMarketingLeadInput) {
 async function enqueueOutreach(
   email: string,
   source: string,
-  utm: Record<string, string> | null
+  utm: Record<string, string> | null,
+  leadId: string // P0-2: required — no generic URLs allowed
 ): Promise<void> {
   const now = Date.now();
   const MINUTE = 60 * 1000;
   const DAY = 24 * 60 * 60 * 1000;
+
+  // P0-2: Both URLs are personalized — carry lead_id + lead_source for full attribution
+  const onboardingUrl = buildPersonalizedUrl(leadId, source, "/onboarding");
+  const checkoutUrl = buildPersonalizedUrl(leadId, source, "/checkout");
 
   const steps = [
     {
@@ -70,7 +85,7 @@ async function enqueueOutreach(
             <h2 style="color:#2dd4bf;margin-bottom:8px">مرحباً بك في الرحلة 🌙</h2>
             <p>في أقل من 3 دقائق، هتشوف خريطة علاقاتك لأول مرة.</p>
             <p>مش محتاج تعرف كل حاجة — المهم تبدأ.</p>
-            <a href="https://www.alrehla.app/onboarding" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px">ابدأ رحلتك الآن</a>
+            <a href="${onboardingUrl}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px">ابدأ رحلتك الآن</a>
             <p style="color:#64748b;font-size:12px;margin-top:24px">— فريق الرحلة</p>
           </div>`,
         source,
@@ -89,7 +104,7 @@ async function enqueueOutreach(
             <p>ناس كتير بتفضل مترددة... لحد ما بتشوف أول دايرة.</p>
             <p><strong style="color:#f59e0b">سؤال واحد بس:</strong> مين أكثر شخص واخد مساحة من تفكيرك النهاردة؟</p>
             <p>حطه في الخريطة وشوف إيه اللي هيظهر.</p>
-            <a href="https://www.alrehla.app/onboarding" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px">جرّب دلوقتي</a>
+            <a href="${onboardingUrl}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px">جرّب دلوقتي</a>
           </div>`,
         source,
         utm
@@ -108,7 +123,7 @@ async function enqueueOutreach(
               "كنت فاكر إن العلاقة دي طبيعية. بس لما شفت الخريطة، اكتشفت إنها بتسحب 70% من طاقتي. قررت أحط حدود... والنتيجة؟ راحة بال حقيقية."
             </blockquote>
             <p>الخريطة مش بتحكم — هي بتوضّح. والوضوح هو أول خطوة للتغيير.</p>
-            <a href="https://www.alrehla.app/onboarding" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px">ابدأ خريطتك</a>
+            <a href="${onboardingUrl}" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px">ابدأ خريطتك</a>
           </div>`,
         source,
         utm
@@ -120,7 +135,7 @@ async function enqueueOutreach(
       payload: {
         step: 4,
         template: "alrehla_onboarding_5day",
-        message: "مرحباً 👋 لاحظنا إنك سجلت في الرحلة بس لسه ما بدأت. لو عندك أي سؤال أو محتاج مساعدة، إحنا هنا. جرّب الرحلة من هنا: https://www.alrehla.app/onboarding",
+        message: `مرحباً 👋 لاحظنا إنك سجلت في الرحلة بس لسه ما بدأت. لو عندك أي سؤال أو محتاج مساعدة، إحنا هنا. جرّب الرحلة من هنا: ${onboardingUrl}`,
         source,
         utm
       }
@@ -141,7 +156,7 @@ async function enqueueOutreach(
               <li>ذكاء اصطناعي شخصي</li>
               <li><strong style="color:#2dd4bf">السعر: 12-15 دولار فقط</strong></li>
             </ul>
-            <a href="https://www.alrehla.app/checkout" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px;font-size:16px">احجز مقعدك الآن</a>
+            <a href="${checkoutUrl}" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;margin-top:16px;font-size:16px">احجز مقعدك الآن</a>
             <p style="color:#64748b;font-size:12px;margin-top:24px">لو مش مهتم، تقدر تتجاهل الرسالة. مش هنزعجك تاني.</p>
           </div>`,
         source,
@@ -152,6 +167,7 @@ async function enqueueOutreach(
 
   const rows = steps.map((step) => ({
     lead_email: email,
+    lead_id: leadId, // P0-1: store lead_id in every outreach row for full traceability
     channel: step.channel,
     step: step.payload.step,
     status: "pending" as OutreachQueueStatus,
@@ -168,9 +184,10 @@ async function enqueueOutreach(
 function enqueueOutreachAsync(
   email: string,
   source: string,
-  utm: Record<string, string> | null
+  utm: Record<string, string> | null,
+  leadId: string
 ): void {
-  void enqueueOutreach(email, source, utm).catch((error) => {
+  void enqueueOutreach(email, source, utm, leadId).catch((error) => {
     console.error("[marketing/lead] enqueue_outreach_failed:", error);
   });
 }
@@ -191,7 +208,7 @@ export async function handleMarketingLeadGet(req: Request) {
 
   const { data, error } = await supabaseAdmin
     .from("marketing_leads")
-    .select("email,phone,name,source,source_type,status,campaign,adset,ad,placement,utm,note,last_contacted_at,qualified_at,created_at,updated_at")
+    .select("lead_id,email,phone,name,source,source_type,status,campaign,adset,ad,placement,utm,note,last_contacted_at,qualified_at,created_at,updated_at")
     .eq("email", email)
     .maybeSingle();
   if (error) {
@@ -215,7 +232,23 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
         console.error("[marketing/lead] Supabase upsert failed:", error);
         return NextResponse.json({ ok: false, error: "lead_store_failed" }, { status: 500 });
       }
-      enqueueOutreachAsync(input.email, input.source, input.utm);
+
+      // P0-1: Fetch the stored lead_id (DB-generated uuid if not provided by caller)
+      const { data: stored } = await supabaseAdmin
+        .from("marketing_leads")
+        .select("lead_id")
+        .eq("email", input.email)
+        .single();
+
+      const storedLeadId = stored?.lead_id as string | undefined;
+      if (storedLeadId) {
+        enqueueOutreachAsync(input.email, input.source, input.utm, storedLeadId);
+      }
+
+      return NextResponse.json({
+        ok: true,
+        lead: { email: input.email, source: input.source, sourceType: input.sourceType, lead_id: storedLeadId }
+      });
     }
 
     return NextResponse.json({ ok: true, lead: { email: input.email, source: input.source, sourceType: input.sourceType } });
@@ -280,8 +313,19 @@ export async function handleMarketingLeadImportPost(req: Request) {
       return NextResponse.json({ ok: false, error: "lead_store_failed" }, { status: 500 });
     }
 
+    // P0-1: Fetch stored lead_ids after upsert (DB may have generated them)
+    const { data: storedLeads } = await supabaseAdmin
+      .from("marketing_leads")
+      .select("email, lead_id")
+      .in("email", emails);
+
+    const leadIdMap = new Map((storedLeads ?? []).map((r: { email: string; lead_id: string }) => [r.email, r.lead_id]));
+
     deduped.forEach((lead) => {
-      enqueueOutreachAsync(lead.email, lead.source, lead.utm);
+      const storedLeadId = leadIdMap.get(lead.email);
+      if (storedLeadId) {
+        enqueueOutreachAsync(lead.email, lead.source, lead.utm, storedLeadId);
+      }
     });
 
     const result: MarketingLeadImportResult = {
@@ -291,7 +335,14 @@ export async function handleMarketingLeadImportPost(req: Request) {
       errors
     };
 
-    return NextResponse.json({ ok: true, result });
+    // P0-1: Return leads with lead_ids so follow-up scripts can build personalized URLs
+    const leadsWithIds = deduped.map((lead) => ({
+      email: lead.email,
+      source: lead.source,
+      lead_id: leadIdMap.get(lead.email) ?? null
+    }));
+
+    return NextResponse.json({ ok: true, result, leads: leadsWithIds });
   } catch (error) {
     console.error("[marketing/lead/import] unexpected error:", error);
     return NextResponse.json({ ok: false, error: "lead_import_failed" }, { status: 500 });

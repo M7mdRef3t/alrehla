@@ -14,6 +14,7 @@ export type MarketingLeadStatus = (typeof MARKETING_LEAD_STATUSES)[number];
 export type MarketingLeadUtm = Record<string, string>;
 
 export interface MarketingLeadPayload {
+  leadId?: string;
   email?: string;
   phone?: string;
   name?: string;
@@ -31,6 +32,7 @@ export interface MarketingLeadPayload {
 }
 
 export interface NormalizedMarketingLeadInput {
+  leadId?: string;
   email: string;
   phone: string | null;
   name: string | null;

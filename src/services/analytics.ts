@@ -4,6 +4,7 @@ import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 import { getHref } from "./navigation";
 import { getDocumentOrNull, getWindowOrNull, isClientRuntime } from "./clientRuntime";
 import { supabase, isSupabaseReady, isSupabaseAbortError, safeGetSession } from "./supabaseClient";
+import { getStoredLeadAttribution, getStoredUtmParams } from "./marketingAttribution";
 
 type AnalyticsValue = string | number | boolean;
 type AnalyticsParams = Record<string, AnalyticsValue>;
@@ -203,7 +204,22 @@ export function trackEvent(
 ): void {
   if (!isClientRuntime()) return;
 
-  const safeParams = sanitizeAnalyticsParams(params);
+  // P0-3: Auto-inject lead attribution so every event carries lead_id + UTM
+  // getStoredLeadAttribution() reads from localStorage — set when user arrives via personalized URL
+  const leadAttr = getStoredLeadAttribution();
+  const utm = getStoredUtmParams();
+  const attributionProps: Record<string, AnalyticsValue> = {};
+  if (leadAttr?.lead_id) attributionProps.lead_id = leadAttr.lead_id;
+  if (leadAttr?.lead_source) attributionProps.lead_source = leadAttr.lead_source;
+  if (utm?.utm_source) attributionProps.utm_source = utm.utm_source;
+  if (utm?.utm_campaign) attributionProps.utm_campaign = utm.utm_campaign;
+  if (utm?.utm_medium) attributionProps.utm_medium = utm.utm_medium;
+
+  const enrichedParams = Object.keys(attributionProps).length > 0
+    ? { ...attributionProps, ...(params ?? {}) }
+    : params;
+
+  const safeParams = sanitizeAnalyticsParams(enrichedParams);
 
   if (isAnalyticsEnabled()) {
     const windowRef = getWindowOrNull();
