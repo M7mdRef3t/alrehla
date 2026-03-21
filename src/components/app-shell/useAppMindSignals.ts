@@ -13,14 +13,14 @@ interface UseAppMindSignalsParams {
   showBreathing: boolean;
   showCocoon: boolean;
   /** لو true، لا تُطلق أي nudge أو mirrorOverlay — المستخدم في flow نشط */
-  activeFlows: boolean;
+  activeFlows?: boolean;
   openOverlay: (overlay: "nudgeToast" | "mirrorOverlay" | "journeyGuideChat") => void;
   closeOverlay: (overlay: "nudgeToast" | "mirrorOverlay") => void;
   openCocoonModal: (source?: "auto" | "manual") => void;
   /** يفتح pulse check بالطريقة الصحيحة (setPulseCheck) لا عبر setOverlay */
-  openPulseCheck: () => void;
+  openPulseCheck?: () => void;
   /** يفتح ShareStats overlay للمشاركة */
-  openShareStats: () => void;
+  openShareStats?: () => void;
 }
 
 export function useAppMindSignals({
@@ -28,12 +28,12 @@ export function useAppMindSignals({
   goalId,
   showBreathing,
   showCocoon,
-  activeFlows,
+  activeFlows = false,
   openOverlay,
   closeOverlay,
   openCocoonModal,
-  openPulseCheck,
-  openShareStats
+  openPulseCheck = () => {},
+  openShareStats = () => {}
 }: UseAppMindSignalsParams) {
   const nodes = useMapState((s) => s.nodes);
   const lastPulse = usePulseState((s) => s.lastPulse);
