@@ -133,7 +133,7 @@ export const RecoveryRoadmap: FC<RecoveryRoadmapProps> = ({
           </p>
 
           {/* Current Goals */}
-          <div className="mb-3">
+          <div className="mb-4">
             <p className="text-xs font-semibold text-slate-900 mb-2">
               🎯 أهداف المحطة دي:
             </p>
@@ -145,6 +145,21 @@ export const RecoveryRoadmap: FC<RecoveryRoadmapProps> = ({
                 </li>
               ))}
             </ul>
+          </div>
+
+          {/* Milestones */}
+          <div className="mb-4">
+            <p className="text-[10px] font-bold text-teal-800 mb-2 uppercase tracking-wider">
+              🚩 المعالم (Milestones):
+            </p>
+            <div className="grid grid-cols-1 gap-2">
+              {currentPhase.milestones.map((m, i) => (
+                <div key={i} className="p-2 bg-teal-50 border border-teal-100 rounded-lg flex items-center justify-between">
+                   <span className="text-[10px] font-bold text-teal-900">{m.title}</span>
+                   <span className="text-[10px] text-teal-600 italic">← {m.completed}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Tips */}

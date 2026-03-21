@@ -1,7 +1,7 @@
-﻿import type { FC } from "react";
+import type { FC } from "react";
 import { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { LayoutTemplate, Info } from "lucide-react";
+import { LayoutTemplate, Info, Target, ClipboardList, BookOpen, Sparkles, ShieldAlert } from "lucide-react";
 import type { FeelingAnswers } from "../FeelingCheck";
 import type { RealityAnswers } from "../RealityCheck";
 import type { QuickAnswer2 } from "../../utils/suggestInitialRing";
@@ -9,6 +9,8 @@ import type { PersonGender } from "../../utils/resultScreenAI";
 import { buildResultTemplateFromAnswers } from "../../utils/resultScreenTemplates";
 import { realityScoreToRing } from "../../utils/realityScore";
 import { useMapState } from "../../state/mapState";
+import { trackEvent, AnalyticsEvents } from "../../services/analytics";
+import type { AdviceCategory } from "../../data/adviceScripts";
 import { emergencyCopy } from "../../copy/emergency";
 import { recordFlowEvent, recordPathStartedOnce } from "../../services/journeyTracking";
 import { useSyncState } from "../../state/syncState";
@@ -20,7 +22,12 @@ import { deriveBoundaryEvidence } from "../../utils/boundaryEvidence";
 import { PressureSentenceCard } from "../PressureSentenceCard";
 import { derivePressureSentence } from "../../utils/pressureSentence";
 import { GenerationalEchoCard } from "../GenerationalEchoCard";
+import { RecoveryRoadmap } from "../RecoveryRoadmap";
+import { SuggestedPlacement } from "../SuggestedPlacement";
 import { deriveGenerationalEcho } from "../../utils/generationalEcho";
+import { PersonalizedTraining } from "../PersonalizedTraining";
+import { SymptomsChecklist } from "../SymptomsChecklist";
+import { BoundaryScriptsLibrary } from "../BoundaryScriptsLibrary";
 
 interface ResultScreenProps {
   personLabel: string;
@@ -32,15 +39,14 @@ interface ResultScreenProps {
   addedNodeId?: string;
   onClose?: (openNodeId?: string) => void;
   onOpenMission?: (nodeId: string) => void;
-  /** عند الطوارئ — فتح غرفة الطوارئ (تمرين تنفس، أرقام نجدة) */
   onOpenEmergency?: () => void;
   realityAnswers?: RealityAnswers;
   feelingAnswers?: FeelingAnswers;
   isEmergency?: boolean;
   safetyAnswer?: QuickAnswer2;
   forcedGate?: boolean;
+  category?: AdviceCategory;
 }
-
 
 export const ResultScreen: FC<ResultScreenProps> = ({
   personLabel,
@@ -57,8 +63,17 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   feelingAnswers,
   isEmergency,
   safetyAnswer,
-  forcedGate = false
+  forcedGate = false,
+  category = "general"
 }) => {
+  const [showTraining, setShowTraining] = useState(false);
+  const [showScripts, setShowScripts] = useState(false);
+  const [showRealityPopup, setShowRealityPopup] = useState(false);
+  const [showDopaminePopup, setShowDopaminePopup] = useState(false);
+  const [shareStatus, setShareStatus] = useState<string | null>(null);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [ctaStatus, setCtaStatus] = useState<string | null>(null);
+
   const displayName = useMemo(() => {
     const name = personName?.trim();
     const title = personTitle?.trim();
@@ -81,68 +96,43 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     () => (realityAnswers ? realityScoreToRing(realityAnswers) : "green"),
     [realityAnswers]
   );
-  const missionProgress = useMapState((s) =>
-    addedNodeId ? s.nodes.find((node) => node.id === addedNodeId)?.missionProgress : undefined
-  );
+  
   const nodes = useMapState((s) => s.nodes);
+  const updateNodeSymptoms = useMapState((s) => s.updateNodeSymptoms);
   const setRecoveryPlanOpenWith = useMapState((s) => s.setRecoveryPlanOpenWith);
-  const addedNode = useMapState((s) =>
-    addedNodeId ? s.nodes.find((node) => node.id === addedNodeId) : undefined
-  );
-  const activeRing = addedNode?.ring ?? derivedRing;
-  const detachmentReasons = useMapState((s) =>
-    addedNodeId
-      ? s.nodes.find((node) => node.id === addedNodeId)?.recoveryProgress?.detachmentReasons
-      : undefined
-  );
-  const ringInsight = useMemo(() => {
-    const presence = personGender === "female" ? "وجودها" : personGender === "male" ? "وجوده" : "وجود الشخص ده";
-    if (activeRing === "red") return `علاقتك بـ ${displayName} بتسحب طاقتك. ${presence} في المدار الأحمر حماية ليك.`;
-    if (activeRing === "yellow") return `علاقتك بـ ${displayName} بتتبدل. ضبط المسافة هيساعدك.`;
-    return `علاقتك بـ ${displayName} مصدر أمان. حافظ عليها.`;
-  }, [activeRing, displayName, personGender]);
-  const relationshipToneText = useMemo(() => {
-    if (isEmotionalPrisoner) return "في هدوء خارجي، بس لسه محتاجين نقفل الضغط الداخلي.";
-    if (summaryOnly) return ringInsight;
-    const label = result.state_label ?? "";
-    if (label.includes("حمراء") || label.includes("استنزاف")) return "المدار ده ضاغط، وأولوية المرحلة حماية طاقتك.";
-    if (label.includes("صفراء")) return "في إشارات ضغط، ومع ضبط المساحة الوضع يتحسن بسرعة.";
-    if (label.includes("خضراء")) return "المدار متوازن، والهدف دلوقتي الحفاظ على استقراره.";
-    return "دي خلاصة واضحة لوضع المدار بناءً على إجاباتك.";
-  }, [isEmotionalPrisoner, summaryOnly, ringInsight, result.state_label]);
-  const singularReferenceText = useMemo(() => {
-    if (personGender === "female") return "بتكلميها";
-    if (personGender === "male") return "بتكلمه";
-    return "بتكلمي الشخص ده";
-  }, [personGender]);
   const startMission = useMapState((s) => s.startMission);
-  const shareCardRef = useRef<HTMLDivElement | null>(null);
-  const [showRealityPopup, setShowRealityPopup] = useState(false);
-  const [showDopaminePopup, setShowDopaminePopup] = useState(false);
-  const [shareStatus, setShareStatus] = useState<string | null>(null);
-  const [shareBusy, setShareBusy] = useState(false);
-  const [ctaStatus, setCtaStatus] = useState<string | null>(null);
+
+  const addedNode = useMemo(() => 
+    addedNodeId ? nodes.find((n) => n.id === addedNodeId) : undefined
+  , [nodes, addedNodeId]);
+
+  const missionProgress = addedNode?.missionProgress;
+  const activeRing = addedNode?.ring ?? derivedRing;
+  const detachmentReasons = addedNode?.recoveryProgress?.detachmentReasons;
+
   const mapSyncStatus = useSyncState((s) => s.status);
+  const totalSteps = result.steps.length;
+  
   const completedSteps = useMemo(() => {
     const checked = new Set(missionProgress?.checkedSteps ?? []);
     return result.steps.reduce((acc, _, index) => acc + (checked.has(index) ? 1 : 0), 0);
   }, [missionProgress?.checkedSteps, result.steps]);
-  const totalSteps = result.steps.length;
+
   const isMissionStarted = Boolean(missionProgress?.startedAt);
   const isMissionCompleted = Boolean(missionProgress?.isCompleted);
+  
   const missionButtonLabel = isMissionCompleted
     ? "الخطوة اتقفلت"
     : isMissionStarted
       ? "كمّل الخطوة"
       : "ابدأ الخطوة";
-  const missionButtonTone = isMissionCompleted
-    ? "bg-emerald-600 hover:bg-emerald-700"
-    : "bg-slate-900 hover:bg-slate-800";
+
   const shortPromiseBody = useMemo(() => {
     const trimmed = result.promise_body.trim();
     if (trimmed.length <= 120) return trimmed;
     return `${trimmed.slice(0, 120).trim()}...`;
   }, [result.promise_body]);
+
   const normalizedObstacles = useMemo(
     () =>
       result.obstacles.map((item) => ({
@@ -151,30 +141,28 @@ export const ResultScreen: FC<ResultScreenProps> = ({
       })),
     [result.obstacles]
   );
-  const sovereigntySnapshot = useMemo(
-    () =>
-      deriveSovereigntySnapshot({
-        displayName,
-        ring: activeRing,
-        node: addedNode ?? null,
-        isEmotionalPrisoner,
-        completedSteps,
-        totalSteps
-      }),
-    [activeRing, addedNode, completedSteps, displayName, isEmotionalPrisoner, totalSteps]
-  );
-  const boundaryEvidence = useMemo(
-    () => (addedNode ? deriveBoundaryEvidence(addedNode, displayName) : null),
-    [addedNode, displayName]
-  );
-  const pressureSentence = useMemo(
-    () => (addedNode ? derivePressureSentence({ displayName, ring: activeRing, node: addedNode }) : null),
-    [activeRing, addedNode, displayName]
-  );
-  const generationalEcho = useMemo(
-    () => (addedNode ? deriveGenerationalEcho(addedNode, nodes) : null),
-    [addedNode, nodes]
-  );
+
+  const sovereigntySnapshot = useMemo(() => deriveSovereigntySnapshot({
+    displayName,
+    ring: activeRing,
+    node: addedNode ?? null,
+    isEmotionalPrisoner,
+    completedSteps,
+    totalSteps
+  }), [activeRing, addedNode, completedSteps, displayName, isEmotionalPrisoner, totalSteps]);
+
+  const boundaryEvidence = useMemo(() => 
+    addedNode ? deriveBoundaryEvidence(addedNode, displayName) : null
+  , [addedNode, displayName]);
+
+  const pressureSentence = useMemo(() => 
+    addedNode ? derivePressureSentence({ displayName, ring: activeRing, node: addedNode }) : null
+  , [activeRing, addedNode, displayName]);
+
+  const generationalEcho = useMemo(() => 
+    addedNode ? deriveGenerationalEcho(addedNode, nodes) : null
+  , [addedNode, nodes]);
+
   const shareText = useMemo(() => {
     const lines = [
       `نتيجتي مع ${displayName}: ${isEmotionalPrisoner ? result.state_label : result.title}`,
@@ -184,52 +172,29 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     return lines.join("\n");
   }, [displayName, isEmotionalPrisoner, result.goal_label, result.mission_goal, result.mission_label, result.state_label, result.title]);
 
-
-
-  const shouldShowMapSyncBanner = mapSyncStatus === "error";
-  const mapSyncBannerText = mapSyncStatus === "error"
-    ? "عطل فني.. جاري إعادة الحفظ"
-    : "تعذر الحفظ السحابي مؤقتًا. هنحاول تلقائيًا عند فتح التطبيق.";
+  const shareCardRef = useRef<HTMLDivElement | null>(null);
   const isForcedCtaMode = isUserMode && forcedGate;
+  const shouldShowMapSyncBanner = mapSyncStatus === "error";
+  const mapSyncBannerText = "تعذر الحفظ السحابي مؤقتًا. هنحاول تلقائيًا عند فتح التطبيق.";
 
   const startMissionAndTrack = (nodeId: string) => {
     const node = useMapState.getState().nodes.find((item) => item.id === nodeId);
     if (!node) return;
-
-    if (!node.missionProgress?.startedAt) {
-      startMission(nodeId);
-    }
-
-    const pathId =
-      node.recoveryProgress?.pathId ??
-      (node.ring === "red" ? "path_protection" : node.ring === "green" ? "path_deepening" : "path_negotiation");
-
-    recordPathStartedOnce({
-      nodeId,
-      pathId,
-      zone: node.ring,
-      relationshipRole: personTitle?.trim() || undefined
-    });
+    if (!node.missionProgress?.startedAt) startMission(nodeId);
+    const pathId = node.recoveryProgress?.pathId ?? (node.ring === "red" ? "path_protection" : node.ring === "green" ? "path_deepening" : "path_negotiation");
+    recordPathStartedOnce({ nodeId, pathId, zone: node.ring, relationshipRole: personTitle?.trim() || undefined });
   };
 
   const handleOpenTraumaRecoveryPath = () => {
     if (!addedNodeId) return;
-
-    setRecoveryPlanOpenWith({
-      focusTraumaInheritance: true,
-      preselectedNodeId: addedNodeId
-    });
+    setRecoveryPlanOpenWith({ focusTraumaInheritance: true, preselectedNodeId: addedNodeId });
     onClose?.();
   };
 
   const handleShareResult = async () => {
     setShareStatus(null);
     const nav = typeof navigator !== "undefined" ? navigator : null;
-    const shareData = {
-      title: `نتيجة ${displayName}`,
-      text: shareText,
-      url: typeof window !== "undefined" ? window.location.origin : undefined
-    };
+    const shareData = { title: `نتيجة ${displayName}`, text: shareText, url: typeof window !== "undefined" ? window.location.origin : undefined };
     try {
       if (nav && typeof nav.share === "function") {
         await nav.share(shareData);
@@ -253,11 +218,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     setShareStatus(null);
     try {
       const { default: html2canvas } = await import("html2canvas");
-      const canvas = await html2canvas(shareCardRef.current, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        useCORS: true
-      });
+      const canvas = await html2canvas(shareCardRef.current, { backgroundColor: "#010314", scale: 2, useCORS: true });
       const dataUrl = canvas.toDataURL("image/png");
       const link = document.createElement("a");
       link.href = dataUrl;
@@ -271,49 +232,105 @@ export const ResultScreen: FC<ResultScreenProps> = ({
     }
   };
 
+  const singularReferenceText = useMemo(() => {
+    if (personGender === "female") return "بتكلميها";
+    if (personGender === "male") return "بتكلمه";
+    return "بتكلمي الشخص ده";
+  }, [personGender]);
+
   return (
     <motion.div
-      key="result"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3 }}
-      className="text-center"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="max-w-3xl mx-auto space-y-8 pb-12"
     >
-      <>
-        <motion.div
-          className={`mb-5 card-unified border px-4 py-3 text-center ${activeRing === "red"
-            ? "bg-rose-50/80 border-rose-200"
-            : activeRing === "yellow"
-              ? "bg-amber-50/80 border-amber-200"
-              : "bg-teal-50/80 border-teal-100"
-            }`}
-          animate={summaryOnly ? { scale: [1, 1.015, 1] } : {}}
-          transition={{ duration: 1.5, repeat: summaryOnly ? Infinity : 0, repeatDelay: 2.5 }}
-        >
-          <p className={`text-xs font-semibold ${activeRing === "red" ? "text-rose-800" : activeRing === "yellow" ? "text-amber-800" : "text-teal-800"}`}>
-            قراءة المدار الحالي
-          </p>
-          <h3 className="mt-1 text-xl font-extrabold leading-tight text-slate-900">
-            علاقتك مع{" "}
-            <span
-              className={`inline-flex items-center rounded-full px-3 py-1 font-bold text-white max-w-[72vw] truncate sm:max-w-full ${activeRing === "red" ? "bg-rose-500" : activeRing === "yellow" ? "bg-amber-500" : "bg-teal-500"
-                }`}
-              title={displayName}
-            >
-              {displayName}
-            </span>
-          </h3>
-          {isEmotionalPrisoner && (
-            <p className="mt-2 text-2xl font-extrabold text-slate-900">
-              {result.title}
-            </p>
-          )}
-          <p className="mt-1 text-xs text-slate-600">
-            {relationshipToneText}
-          </p>
-        </motion.div>
+        {isEmotionalPrisoner && !summaryOnly && (
+          <div className="rounded-3xl bg-linear-to-b from-indigo-950/30 to-purple-950/20 border border-indigo-500/20 p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden group">
+             <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 blur-[80px] rounded-full group-hover:bg-indigo-500/20 transition-all duration-700" />
+             <div className="flex items-center gap-5 mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30 shadow-inner">
+                   <ShieldAlert className="w-8 h-8 text-indigo-400" />
+                </div>
+                <div className="text-right">
+                  <h4 className="text-lg font-black text-white">أعراض بتحصل معاك مع {displayName}؟</h4>
+                  <p className="text-xs text-slate-400 font-medium mt-1">اختار كل اللي ينطبق عليك للوصول لأدق خطة تعافي</p>
+                </div>
+             </div>
+            <SymptomsChecklist
+              ring={activeRing}
+              personLabel={displayName}
+              selectedSymptoms={addedNode?.analysis?.selectedSymptoms ?? []}
+              onSymptomsChange={(ids) => addedNode && updateNodeSymptoms(addedNode.id, ids)}
+            />
+          </div>
+        )}
 
-        {summaryOnly && (
+        {addedNode && (
+          <div className="mb-6">
+            <RecoveryRoadmap
+              personLabel={displayName}
+              hasAnalysis={Boolean(score > 0 || feelingAnswers || addedNode.analysis)}
+              hasSelectedSymptoms={Boolean(addedNode.analysis?.selectedSymptoms && addedNode.analysis.selectedSymptoms.length > 0)}
+              hasWrittenSituations={Boolean(addedNode.recoveryProgress?.situationLogs && addedNode.recoveryProgress.situationLogs.length > 0)}
+              hasCompletedTraining={addedNode.hasCompletedTraining}
+              completedRecoverySteps={addedNode.recoveryProgress?.completedSteps?.length ?? 0}
+              totalRecoverySteps={totalSteps}
+              journeyStartDate={addedNode.journeyStartDate}
+            />
+          </div>
+        )}
+
+        {addedNode && (
+          <div className="mb-6">
+            <SuggestedPlacement
+              currentRing={activeRing}
+              personLabel={displayName}
+              category={category}
+              selectedSymptoms={addedNode.analysis?.selectedSymptoms}
+            />
+          </div>
+        )}
+
+        {addedNode && (addedNode.analysis?.selectedSymptoms?.length ?? 0) > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="p-8 rounded-3xl bg-linear-to-br from-teal-600/80 to-cyan-700/80 backdrop-blur-2xl border border-teal-400/30 shadow-[0_20px_50px_-15px_rgba(20,184,166,0.3)] relative overflow-hidden"
+          >
+            <motion.div 
+               animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+               transition={{ duration: 4, repeat: Infinity }}
+               className="absolute -top-10 -left-10 w-40 h-40 bg-white blur-[60px] rounded-full" 
+            />
+            
+            <div className="flex items-center gap-5 mb-6 relative z-10 text-right">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/20 shadow-inner">
+                <Target className="w-9 h-9 text-white" />
+              </div>
+              <div>
+                <h4 className="text-2xl font-black text-white">تدريب المواجهة المخصص</h4>
+                <p className="text-sm text-teal-100/80 font-medium">خطوات عملية لمواجهة {displayName} بناءً على أعراضك</p>
+              </div>
+            </div>
+            
+            <p className="text-base leading-relaxed mb-8 text-teal-50 font-medium text-right relative z-10">
+              هنحطك في مواقف حقيقية ونشوف هتتعامل إزاي. التدريب ده هو اللي هيبني "عضلة الحدود" عشان تقدر تحمي نفسك في الواقع.
+            </p>
+            
+            <button
+              onClick={() => setShowTraining(true)}
+              data-variant="primary"
+              data-size="lg"
+              className="ds-button w-full relative z-10"
+            >
+              ابدأ التدريب الآن
+              <Sparkles className="w-5 h-5" />
+            </button>
+          </motion.div>
+        )}
+
+        {summaryOnly && sovereigntySnapshot && (
           <SovereigntySnapshotCard snapshot={sovereigntySnapshot} />
         )}
         {summaryOnly && pressureSentence && (
@@ -329,74 +346,79 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           />
         )}
 
-        <div ref={shareCardRef} className="p-6 card-unified bg-linear-to-b from-slate-50 to-white border border-slate-200 mb-6 text-center">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
+        <div ref={shareCardRef} className="p-8 rounded-3xl bg-linear-to-b from-white/[0.03] to-white/[0.01] border border-white/10 backdrop-blur-xl mb-8 text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-radial-gradient(circle_at_center,rgba(255,255,255,0.03),transparent) pointer-events-none" />
+          
+          <h2 className="text-3xl font-black text-white mb-4 flex items-center justify-center gap-3">
             <span>
               {isEmotionalPrisoner ? `تشخيص المدار: ${result.state_label}` : result.title}
             </span>
             <span
-              className="inline-flex items-center justify-center rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
+              className="inline-flex items-center justify-center rounded-full bg-white/10 px-3 py-1 text-[10px] font-black text-slate-300 tracking-widest uppercase border border-white/5"
               title="نسخة ثابتة"
-              aria-label="نسخة ثابتة"
             >
-              <LayoutTemplate className="w-3 h-3" aria-hidden="true" />
+              SNAPSHOT
             </span>
           </h2>
           {isEmotionalPrisoner && (
-            <p className="mb-2 text-sm text-slate-600 leading-relaxed text-center">
+            <p className="mb-6 text-base text-slate-300 leading-relaxed text-center font-medium">
               جسمك حر.. بس عقلك لسه متعلق. أنت دلوقتي مش في نفس المكان، لكن التفكير لسه ماسكك. بتصحى وتنام وأنت {singularReferenceText} في خيالك وبتدافع عن نفسك في محاكمات جوه دماغك.
             </p>
           )}
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm text-gray-500 text-center">
+          <div className="flex flex-col items-center gap-4 text-center">
             {isEmotionalPrisoner ? (
-              <p className="w-full">
-                التركيز الآن: <span className="font-semibold text-slate-700">{result.goal_label}</span>
+              <p className="text-sm font-black text-amber-400 uppercase tracking-wider">
+                التركيز الآن: <span className="text-white ml-1">{result.goal_label}</span>
               </p>
             ) : (
-              <p>
-                الحالة: <span className="font-semibold text-slate-700">{result.state_label}</span>
+              <p className="text-sm font-black text-emerald-400 uppercase tracking-wider">
+                الحالة: <span className="text-white ml-1">{result.state_label}</span>
               </p>
             )}
-            <p className="w-full text-xs text-slate-500 leading-relaxed">
-              {shortPromiseBody}
+            <p className="max-w-xl text-sm text-slate-400 leading-relaxed font-medium italic">
+              "{shortPromiseBody}"
             </p>
-            <div className="w-full mt-2 rounded-xl border border-slate-200 bg-white/70 px-3 py-2 text-xs text-slate-600">
+            <div className="mt-4 px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm font-black text-white shadow-inner">
               {result.mission_label} —{" "}
-              <span className="font-semibold text-slate-700">{result.mission_goal}</span>
+              <span className="text-emerald-400">{result.mission_goal}</span>
             </div>
           </div>
         </div>
 
         {!summaryOnly && (
           <>
-            <div className="p-5 card-unified bg-sky-50/70 border border-sky-200 text-right mb-6">
-              <h3 className="text-sm font-bold text-blue-900 mb-2 flex items-center gap-2">
-                <span>🔍</span> {result.understanding_title}
+            <div className="p-8 rounded-3xl bg-blue-950/20 border border-blue-500/20 backdrop-blur-xl text-right mb-8 shadow-2xl transition-all hover:bg-blue-950/30">
+              <h3 className="text-lg font-black text-blue-300 mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-xl">🔍</span> 
+                {result.understanding_title}
               </h3>
-              <p className="text-sm text-gray-700 leading-relaxed">
+              <p className="text-base text-slate-300 leading-relaxed font-medium">
                 {result.understanding_body}
               </p>
             </div>
 
-            <div className="p-5 card-unified bg-violet-50/70 border border-violet-200 text-right mb-6">
-              <h3 className="text-sm font-bold text-violet-900 mb-2 flex items-center gap-2">
+            <div className="p-8 rounded-3xl bg-violet-950/20 border border-violet-500/20 backdrop-blur-xl text-right mb-8 shadow-2xl transition-all hover:bg-violet-950/30">
+              <h3 className="text-lg font-black text-violet-300 mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center text-xl">✨</span>
                 {result.explanation_title}
               </h3>
-              <p className="text-sm text-gray-700 leading-relaxed">{result.explanation_body}</p>
+              <p className="text-base text-slate-300 leading-relaxed font-medium">{result.explanation_body}</p>
             </div>
 
-            <div className="p-5 card-unified bg-amber-50/80 border border-amber-200 text-right mb-6">
-              <h3 className="text-sm font-bold text-amber-900 mb-3 flex items-center gap-2">
-                <span>🎒</span> أدواتك المطلوبة
+            <div className="p-8 rounded-3xl bg-amber-950/20 border border-amber-500/20 backdrop-blur-xl text-right mb-8 shadow-2xl relative overflow-hidden transition-all hover:bg-amber-950/30">
+               <div className="absolute top-0 left-0 w-24 h-24 bg-amber-500/5 blur-3xl rounded-full" />
+              <h3 className="text-lg font-black text-amber-300 mb-5 flex items-center gap-3">
+                <span className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-xl">🎒</span> 
+                أدواتك المطلوبة
               </h3>
-              <ul className="space-y-2 text-sm text-slate-700">
+              <ul className="space-y-3 text-base text-slate-200">
                 {result.requirements.map((item, index) => {
                   const isReality = item.title.includes("ملف القضية") || item.title.includes("قائمة الواقع");
                   const isDopamine = item.title.includes("بديل الدوبامين");
                   return (
-                    <li key={`${item.title}-${index}`} className="rounded-lg bg-white/70 px-3 py-2 border border-amber-200 flex items-start justify-between gap-2">
-                      <span>
-                        <span className="font-semibold text-slate-800">{item.title}:</span>{" "}
+                    <li key={`${item.title}-${index}`} className="group rounded-2xl bg-white/[0.03] px-5 py-4 border border-white/5 flex items-start justify-between gap-4 transition-colors hover:bg-white/[0.06]">
+                      <span className="font-medium leading-relaxed">
+                        <span className="font-black text-amber-400 block mb-1">{item.title}</span>{" "}
                         {item.detail}
                       </span>
                       {(isReality || isDopamine) && (
@@ -406,11 +428,10 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                             if (isReality) setShowRealityPopup((v) => !v);
                             else setShowDopaminePopup((v) => !v);
                           }}
-                          className="shrink-0 rounded-full p-1 text-amber-700 hover:bg-amber-200/80 transition-colors"
+                          className="shrink-0 rounded-xl p-2 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-all border border-amber-500/20"
                           title={isReality ? "قائمة الواقع" : "بديل الدوبامين"}
-                          aria-label={isReality ? "شرح قائمة الواقع" : "شرح بديل الدوبامين"}
                         >
-                          <Info className="w-4 h-4" />
+                          <Info className="w-5 h-5" />
                         </button>
                       )}
                     </li>
@@ -418,183 +439,218 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                 })}
               </ul>
               {showRealityPopup && (
-                <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50/90 p-3 text-right text-sm text-slate-800">
-                  <p className="font-semibold text-amber-900 mb-2">قائمة الواقع (ملف القضية الحقيقي)</p>
+                <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-950/40 backdrop-blur-2xl p-6 text-right text-base text-amber-100 shadow-2xl relative z-20">
+                  <p className="font-black text-amber-300 mb-3 text-lg">قائمة الواقع (ملف القضية الحقيقي)</p>
                   {detachmentReasons && detachmentReasons.length > 0 ? (
-                    <ul className="list-disc list-inside space-y-1">
+                    <ul className="list-disc list-inside space-y-2 font-medium">
                       {detachmentReasons.map((r, i) => (
                         <li key={i}>{r}</li>
                       ))}
                     </ul>
                   ) : (
-                    <p>ورقة مكتوب فيها «ليه بعدت عنهم؟» — تكتبها في خطة التعافي (مرساة الواقع) وتقرأها وقت الضعف.</p>
+                    <p className="font-medium leading-relaxed opacity-90">ورقة مكتوب فيها «ليه بعدت عنهم؟» — تكتبها في خطة التعافي (مرساة الواقع) وتقرأها وقت الضعف لتثبيت عقلك.</p>
                   )}
-                  <button type="button" onClick={() => setShowRealityPopup(false)} className="mt-2 text-xs text-amber-700 underline">إغلاق</button>
+                  <button type="button" onClick={() => setShowRealityPopup(false)} className="mt-4 text-sm font-black text-amber-400 hover:text-amber-300 underline underline-offset-4">إغلاق التلميح</button>
                 </div>
               )}
               {showDopaminePopup && (
-                <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50/90 p-3 text-right text-sm text-slate-800">
-                  <p className="font-semibold text-amber-900 mb-2">بديل الدوبامين</p>
-                  <p>نشاط ممتع جاهز فوراً لما الفكرة تهاجمك — مثلاً: مشي، مكالمة صديق، لعبة، أو أي شيء يخلّيك تركز في الحاضر.</p>
-                  <button type="button" onClick={() => setShowDopaminePopup(false)} className="mt-2 text-xs text-amber-700 underline">إغلاق</button>
+                <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-950/40 backdrop-blur-2xl p-6 text-right text-base text-amber-100 shadow-2xl relative z-20">
+                  <p className="font-black text-amber-300 mb-3 text-lg">بديل الدوبامين</p>
+                  <p className="font-medium leading-relaxed opacity-90">نشاط ممتع جاهز فوراً لما الفكرة تهاجمك — مثلاً: مشي، مكالمة صديق، لعبة، أو أي شيء يخلّيك تركز في الحاضر وتكسر حلقة التفكير.</p>
+                  <button type="button" onClick={() => setShowDopaminePopup(false)} className="mt-4 text-sm font-black text-amber-400 hover:text-amber-300 underline underline-offset-4">إغلاق التلميح</button>
                 </div>
               )}
             </div>
 
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-700">
-              <div className="flex flex-col gap-1">
-                <span className="font-semibold text-slate-800">لو جاهز، ابدأ خطوتك</span>
-                <span className="text-xs text-slate-500">تقدر تتابع التنفيذ في شاشة مستقلة.</span>
+            <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-6 rounded-3xl border border-white/10 bg-white/[0.02] p-8 shadow-2xl backdrop-blur-md relative overflow-hidden transition-all hover:bg-white/[0.04]">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl pointer-events-none" />
+              <div className="flex flex-col gap-2 text-right">
+                <span className="text-xl font-black text-white">لو جاهز، ابدأ خطوتك</span>
+                <span className="text-sm text-slate-400 font-medium">تقدر تتابع التنفيذ والخطوات في شاشة مستقلة مخصصة.</span>
               </div>
-              <div className="flex flex-col items-end gap-2">
+              <div className="flex flex-col items-center sm:items-end gap-3 w-full sm:w-auto">
                 <button
                   type="button"
+                  data-variant={isMissionCompleted ? "secondary" : "primary"}
+                  data-size="lg"
                   disabled={!addedNodeId}
                   onClick={() => {
                     if (!addedNodeId) return;
                     if (!isMissionStarted) startMission(addedNodeId);
                     onOpenMission?.(addedNodeId);
                   }}
-                  className={`rounded-full text-white px-4 py-2 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${missionButtonTone}`}
+                  className="ds-button w-full sm:w-auto px-10"
                 >
                   {missionButtonLabel}
                 </button>
                 {!isMissionCompleted && isMissionStarted ? (
-                  <span className="text-xs text-slate-500">
-                    التقدم: {completedSteps}/{totalSteps}
-                  </span>
+                  <div className="flex items-center gap-3">
+                     <span className="text-xs font-black text-emerald-400 tracking-widest uppercase">
+                      التقدم: {completedSteps}/{totalSteps}
+                    </span>
+                    <div className="w-24 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                       <motion.div 
+                          className="h-full bg-emerald-400" 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(completedSteps/totalSteps)*100}%` }}
+                       />
+                    </div>
+                  </div>
                 ) : null}
               </div>
             </div>
 
-            <div className="p-5 card-unified bg-emerald-50/70 border border-emerald-200 text-right mb-6">
-              <h3 className="text-sm font-bold text-emerald-900 mb-3 flex items-center gap-2">
-                <span>🗺️</span> خطة الخطوة
+            <div className="p-8 rounded-3xl bg-emerald-950/20 border border-emerald-500/20 backdrop-blur-xl text-right mb-8 shadow-2xl transition-all hover:bg-emerald-950/30">
+              <h3 className="text-lg font-black text-emerald-300 mb-6 flex items-center gap-3">
+                <span className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-xl">🗺️</span> 
+                خطة الخطوة الأولى
               </h3>
-              <ol className="space-y-2 text-sm text-slate-700 list-decimal list-inside">
+              <ol className="space-y-4 text-base text-slate-200">
                 {result.steps.map((step, index) => (
-                  <li key={`${step}-${index}`} className="rounded-lg bg-white/70 px-3 py-2 border border-emerald-200">
-                    {step}
+                  <li key={`${step}-${index}`} className="flex items-center gap-4 group">
+                    <span className="shrink-0 w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs font-black text-emerald-400 group-hover:bg-emerald-500/40 transition-colors">
+                       {index + 1}
+                    </span>
+                    <span className="font-medium text-slate-300 group-hover:text-white transition-colors">
+                      {step}
+                    </span>
                   </li>
                 ))}
               </ol>
             </div>
 
-            <div className="p-5 card-unified bg-rose-50/70 border border-rose-200 text-right mb-6">
-              <h3 className="text-sm font-bold text-rose-900 mb-3 flex items-center gap-2">
-                <span>⚠️</span> التحديات المتوقعة
+            <div className="p-8 rounded-3xl bg-rose-950/20 border border-rose-500/20 backdrop-blur-xl text-right mb-8 shadow-2xl relative overflow-hidden transition-all hover:bg-rose-950/30">
+               <div className="absolute bottom-0 right-0 w-24 h-24 bg-rose-500/5 blur-3xl" />
+              <h3 className="text-lg font-black text-rose-300 mb-6 flex items-center gap-3">
+                <span className="w-8 h-8 rounded-lg bg-rose-500/20 flex items-center justify-center text-xl">⚠️</span> 
+                التحديات المتوقعة
               </h3>
-              <ul className="space-y-2 text-sm text-slate-700">
+              <ul className="space-y-4">
                 {normalizedObstacles.map((item, index) => {
                   const solutionHasReality = item.solution.includes("ملف القضية الحقيقي") || item.solution.includes("قائمة الواقع");
                   return (
-                    <li key={`${item.title}-${index}`} className="rounded-lg bg-white/70 px-3 py-2 border border-rose-200">
-                      <span className="font-semibold text-slate-800">{item.title}:</span>{" "}
-                      {solutionHasReality ? (
-                        <>
-                          {item.solution.includes("ملف القضية الحقيقي")
-                            ? (() => {
-                              const [before, after] = item.solution.split("ملف القضية الحقيقي");
-                              return (
-                                <>
-                                  {before}
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowRealityPopup((v) => !v)}
-                                    className="text-rose-700 font-semibold underline hover:text-rose-800"
-                                  >
-                                    ملف القضية الحقيقي
-                                  </button>
-                                  {after}
-                                </>
-                              );
-                            })()
-                            : (() => {
-                              const [before, after] = item.solution.split("قائمة الواقع");
-                              return (
-                                <>
-                                  {before}
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowRealityPopup((v) => !v)}
-                                    className="text-rose-700 font-semibold underline hover:text-rose-800"
-                                  >
-                                    قائمة الواقع
-                                  </button>
-                                  {after}
-                                </>
-                              );
-                            })()}
-                        </>
-                      ) : (
-                        item.solution
-                      )}
+                    <li key={`${item.title}-${index}`} className="p-5 rounded-2xl bg-white/[0.03] border border-white/5 transition-colors hover:bg-white/[0.05]">
+                      <span className="font-black text-rose-400 block mb-2">{item.title}:</span>{" "}
+                      <span className="text-base text-slate-300 font-medium leading-relaxed">
+                        {solutionHasReality ? (
+                          <>
+                            {item.solution.includes("ملف القضية الحقيقي")
+                              ? (() => {
+                                const [before, after] = item.solution.split("ملف القضية الحقيقي");
+                                return (
+                                  <>
+                                    {before}
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowRealityPopup((v) => !v)}
+                                      className="text-rose-400 font-black border-b border-rose-400/30 hover:text-rose-300 transition-colors"
+                                    >
+                                      ملف القضية الحقيقي
+                                    </button>
+                                    {after}
+                                  </>
+                                );
+                              })()
+                              : (() => {
+                                const [before, after] = item.solution.split("قائمة الواقع");
+                                return (
+                                  <>
+                                    {before}
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowRealityPopup((v) => !v)}
+                                      className="text-rose-400 font-black border-b border-rose-400/30 hover:text-rose-300 transition-colors"
+                                    >
+                                      قائمة الواقع
+                                    </button>
+                                    {after}
+                                  </>
+                                );
+                              })()}
+                          </>
+                        ) : (
+                          item.solution
+                        )}
+                      </span>
                     </li>
                   );
                 })}
               </ul>
             </div>
 
-            <div className="p-5 card-unified bg-slate-50/90 border border-slate-300 text-right mb-6">
-              <h3 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
-                <span>🎯</span> {result.suggested_zone_title}
+            <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-xl text-right mb-8 shadow-2xl relative overflow-hidden group transition-all hover:bg-white/[0.04]">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl pointer-events-none" />
+              <h3 className="text-lg font-black text-indigo-300 mb-4 flex items-center gap-3">
+                <span className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-xl">🎯</span> 
+                {result.suggested_zone_title}
               </h3>
-              <p className="font-semibold text-slate-700 mb-2">{result.suggested_zone_label}</p>
-              <p className="text-sm text-gray-700 leading-relaxed">
+              <p className="text-xl font-black text-white mb-3 tracking-tight">{result.suggested_zone_label}</p>
+              <p className="text-base text-slate-400 font-medium leading-relaxed mb-6">
                 {result.suggested_zone_body}
               </p>
+              <button
+                onClick={() => setShowScripts(true)}
+                className="w-full py-5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-2xl text-sm font-black flex items-center justify-center gap-3 transition-all shadow-xl backdrop-blur-md active:scale-[0.98]"
+              >
+                <BookOpen className="w-6 h-6 text-indigo-400" />
+                الموسوعة: جمل جاهزة للرد على {displayName}
+              </button>
             </div>
           </>
         )}
-      </>
 
-      {summaryOnly && onClose ? (
+      {summaryOnly && onClose && (
         <div className="flex flex-col gap-3">
-          {!isForcedCtaMode ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => void handleShareResult()}
-                className="w-full rounded-full bg-[var(--soft-teal)] text-white px-6 py-3 text-sm font-semibold hover:bg-[var(--soft-teal)] active:scale-[0.98] transition-all duration-200"
-              >
-                مشاركة النتيجة
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleDownloadShareImage()}
-                disabled={shareBusy}
-                className="w-full rounded-full bg-slate-700 text-white px-6 py-3 text-sm font-semibold hover:bg-slate-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-60"
-              >
-                {shareBusy ? "جارٍ تجهيز الصورة..." : "تحميل صورة النتيجة"}
-              </button>
+          {!isForcedCtaMode && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => void handleShareResult()}
+                  data-variant="ghost"
+                  data-size="md"
+                  className="ds-button w-full"
+                >
+                  مشاركة النتيجة
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleDownloadShareImage()}
+                  data-variant="ghost"
+                  data-size="md"
+                  disabled={shareBusy}
+                  className="ds-button w-full"
+                >
+                  {shareBusy ? "جارٍ تجهيز الصورة..." : "تحميل صورة النتيجة"}
+                </button>
             </div>
-          ) : null}
-          {shareStatus ? (
-            <p className="text-xs text-slate-600 text-center">{shareStatus}</p>
-          ) : null}
-          {ctaStatus ? (
-            <p className="text-xs text-amber-700 text-center">{ctaStatus}</p>
-          ) : null}
-          {shouldShowMapSyncBanner ? (
-            <p className="text-xs text-amber-700 text-center">{mapSyncBannerText}</p>
-          ) : null}
+          )}
+          {shareStatus && (
+            <p className="text-xs text-slate-400 text-center font-medium">{shareStatus}</p>
+          )}
+          {ctaStatus && (
+            <p className="text-xs text-amber-400 text-center font-black">{ctaStatus}</p>
+          )}
+          {shouldShowMapSyncBanner && (
+            <p className="text-xs text-amber-400 text-center font-black">{mapSyncBannerText}</p>
+          )}
           {isEmergency && (
-            <div className="rounded-xl border-2 border-rose-300 bg-rose-50/90 p-4 text-right mb-2">
-              <p className="text-sm font-semibold text-rose-900 mb-2">سلامتك أولاً</p>
-              <p className="text-xs text-rose-800 leading-relaxed mb-3">
+            <div className="rounded-3xl border border-rose-500/30 bg-rose-950/20 p-6 text-right mb-4 backdrop-blur-xl overflow-hidden relative shadow-2xl">
+               <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 blur-2xl" />
+              <p className="text-lg font-black text-rose-300 mb-2 relative z-10">سلامتك أولاً</p>
+              <p className="text-sm text-slate-300 leading-relaxed mb-4 relative z-10">
                 الشخص اتضاف في المدار الأحمر. لو محتاج تتكلم مع حد الآن:
               </p>
               {emergencyCopy.supportLines.length > 0 && (
-                <ul className="space-y-2 mb-3">
+                <ul className="space-y-3 mb-6 relative z-10">
                   {emergencyCopy.supportLines.map((line) => (
-                    <li key={line.phone} className="flex items-center justify-end gap-2">
+                    <li key={line.phone} className="flex items-center justify-end gap-3 rounded-xl bg-white/5 py-3 px-4 border border-white/5">
                       <a
                         href={`tel:${line.phone}`}
-                        className="text-rose-700 font-bold hover:text-rose-900 underline"
+                        className="text-rose-400 font-black hover:text-rose-300 underline underline-offset-4"
                       >
                         {line.phone}
                       </a>
-                      <span className="text-rose-800 text-xs">{line.name}</span>
+                      <span className="text-slate-300 text-xs font-bold">{line.name}</span>
                     </li>
                   ))}
                 </ul>
@@ -602,8 +658,11 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               {onOpenEmergency && (
                 <button
                   type="button"
-                  onClick={onOpenEmergency}
-                  className="w-full rounded-full bg-rose-600 text-white px-6 py-3 text-sm font-semibold hover:bg-rose-700 active:scale-[0.98] transition-all"
+                  onClick={() => {
+                    trackEvent(AnalyticsEvents.EMERGENCY_OPENED, { source: "result_screen" });
+                    onOpenEmergency();
+                  }}
+                  className="w-full rounded-2xl bg-rose-600 text-white px-6 py-4 text-base font-black hover:bg-rose-500 active:scale-[0.98] transition-all shadow-xl shadow-rose-950/40 relative z-10"
                 >
                   غرفة الطوارئ — تنفس ودعم
                 </button>
@@ -612,6 +671,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           )}
           <button
             type="button"
+            data-variant="primary"
+            data-size="lg"
             onClick={() => {
               if (!addedNodeId) {
                 recordFlowEvent("add_person_start_path_blocked_missing_node", {
@@ -626,23 +687,48 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               onOpenMission?.(addedNodeId);
               onClose();
             }}
-            className="w-full rounded-full bg-slate-900 text-white px-8 py-4 text-base font-semibold hover:bg-slate-800 active:scale-[0.98] transition-all duration-200"
+            className="ds-button w-full"
           >
-            ابدأ المسار الآن
+            افتح رحلة {displayName}
           </button>
           {isForcedCtaMode ? (
-            <p className="text-xs text-slate-500 text-center">الخطوة التالية المطلوبة: ابدأ المسار الآن.</p>
+            <p className="text-xs text-slate-500 text-center mt-2 font-medium">الخطوة التالية المطلوبة: ابدأ المسار الآن.</p>
           ) : (
             <button
               type="button"
+              data-variant="secondary"
+              data-size="lg"
               onClick={() => onClose(addedNodeId)}
-              className="w-full rounded-full bg-teal-600 text-white px-8 py-4 text-base font-semibold hover:bg-teal-700 active:scale-[0.98] transition-all duration-200"
+              className="ds-button w-full"
             >
               ضيف على الخريطة
             </button>
           )}
         </div>
-      ) : null}
+      )}
+
+      {showTraining && addedNode && (
+        <PersonalizedTraining
+          personLabel={displayName}
+          selectedSymptoms={addedNode.analysis?.selectedSymptoms ?? []}
+          ring={activeRing}
+          goalId={addedNode.goalId ?? "unknown"}
+          onClose={() => setShowTraining(false)}
+          onComplete={() => {
+            setShowTraining(false);
+          }}
+        />
+      )}
+
+      {showScripts && addedNode && (
+        <BoundaryScriptsLibrary
+          isOpen={showScripts}
+          onClose={() => setShowScripts(false)}
+          ring={activeRing as any}
+          category={category}
+          personLabel={displayName}
+        />
+      )}
     </motion.div>
   );
 };

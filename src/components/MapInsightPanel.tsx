@@ -120,9 +120,9 @@ export const MapInsightPanel: FC = () => {
 
             if (!res.ok) {
                 if (res.status === 429) {
-                    throw new Error('استفذت حصت اة بصرة اع (30/30). جرب تا برة.');
+                    throw new Error('استنفذت حصتك اليومية لبصيرة الوعي (30/30). جرّب تاني بكرة.');
                 }
-                throw new Error('فش ااتصا ب بصرة اع');
+                throw new Error('فشل الاتصال ببصيرة الوعي');
             }
 
             const data = await res.json();
@@ -134,7 +134,7 @@ export const MapInsightPanel: FC = () => {
             };
             setInsight(mapped);
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : "حدث خطأ غر تع");
+            setError(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
         } finally {
             setLoading(false);
         }
@@ -159,13 +159,13 @@ export const MapInsightPanel: FC = () => {
                                 onClick={() => setActiveTab('current')}
                                 className={`px-3 py-1 text-[10px] font-bold rounded-full transition-all ${activeTab === 'current' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
                             >
-                                بصرة احاضر
+                                بصيرة الحاضر
                             </button>
                             <button
                                 onClick={() => setActiveTab('history')}
                                 className={`px-3 py-1 text-[10px] font-bold rounded-full transition-all ${activeTab === 'history' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}
                             >
-                                سج ارؤ
+                                سجل الرؤى
                             </button>
                         </div>
                     </div>
@@ -187,7 +187,7 @@ export const MapInsightPanel: FC = () => {
                                 {loading ? (
                                     <div className="py-12 flex flex-col items-center gap-3">
                                         <div className="w-10 h-10 border-2 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-                                        <p className="text-xs text-slate-400 animate-pulse font-medium">بصرة اع بتح ادارات...</p>
+                                        <p className="text-xs text-slate-400 animate-pulse font-medium">بصيرة الوعي بتحلل الدوائر...</p>
                                     </div>
                                 ) : error ? (
                                     <div className="py-4 px-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-2">
@@ -209,7 +209,7 @@ export const MapInsightPanel: FC = () => {
                                     {history.length > 0 ? (
                                         <>
                                             <div className="flex justify-between items-center mb-2 px-1">
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">سج جسات اتح</p>
+                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">سجل جلسات التحليل</p>
                                                 <button
                                                     onClick={() => setIsComparing(!isComparing)}
                                                     className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[9px] font-bold border transition-all ${isComparing ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400' : 'bg-white/5 border-white/10 text-slate-400'}`}
@@ -278,7 +278,7 @@ const InsightView: FC<{ insight: MapInsight, onTogglePin: (id: string, s: boolea
                 {insight.cache_hit && (
                     <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-400">
                         <CheckCircle2 className="w-3 h-3" />
-                         اذارة (سرع)
+                        من الذاكرة (أسرع)
                     </div>
                 )}
             </div>

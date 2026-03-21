@@ -52,15 +52,15 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
 
   return (
     <form onSubmit={onContinue} className="text-right flex flex-col min-h-0 h-full">
-      <h2 id="add-person-title" className="text-xl font-bold text-slate-900 mb-4 shrink-0">
+      <h2 id="add-person-title" className="text-xl font-extrabold text-slate-100 mb-6 shrink-0 tracking-tight">
         <EditableText id="map_add_person_title" defaultText={mapCopy.addPersonTitle} page="map" />
       </h2>
 
       {/* Step 1: Select Title — ??? ?? ???????? ?? ??????? ?????? ????? ???? ???? ????? */}
-      <div className="flex flex-col min-h-0 flex-auto overflow-hidden mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2 shrink-0">
-          <EditableText id="add_person_select_label" defaultText="???? ?????" page="add_person" showEditIcon={false} />{" "}
-          <span className="text-red-500">*</span>
+      <div className="flex flex-col min-h-0 flex-auto overflow-hidden mb-6">
+        <label className="block text-sm font-semibold text-slate-300 mb-3 shrink-0">
+          <EditableText id="add_person_select_label" defaultText="نوع العلاقة" page="add_person" showEditIcon={false} />{" "}
+          <span className="text-rose-500">*</span>
         </label>
         <div
           className="grid grid-cols-3 gap-2 items-stretch min-h-0 flex-1 overflow-hidden"
@@ -74,22 +74,22 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
                 key={suggestion.label}
                 type="button"
                 onClick={() => onTitleSelect(suggestion.label)}
-                className={`w-full h-full min-h-0 flex flex-col items-center justify-center gap-2 rounded-xl border-2 p-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-1 ${isSelected
-                    ? "bg-teal-50 border-teal-500"
-                    : "bg-white border-gray-100 hover:border-teal-300 hover:bg-teal-50"
+                className={`w-full h-full min-h-0 flex flex-col items-center justify-center gap-2 rounded-2xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50 p-3 ${isSelected
+                    ? "bg-teal-500/20 border-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.15)]"
+                    : "bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10"
                   }`}
                 title={`???? "${suggestion.label}"`}
                 whileHover={{ scale: isSelected ? 1 : 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <div
-                  className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center ${isSelected ? "bg-teal-200" : "bg-teal-100"
+                  className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-colors ${isSelected ? "bg-teal-500/30" : "bg-white/5"
                     }`}
                 >
-                  <Icon className={`${isSelected ? "text-teal-700" : "text-teal-600"} w-5 h-5`} strokeWidth={2} />
+                  <Icon className={`${isSelected ? "text-teal-400" : "text-slate-400"} w-5 h-5`} strokeWidth={2} />
                 </div>
                 <div
-                  className={`min-h-9 flex items-center justify-center text-center font-semibold leading-tight ${isSelected ? "text-teal-900" : "text-slate-900"
+                  className={`min-h-9 flex items-center justify-center text-center font-bold leading-tight ${isSelected ? "text-teal-100" : "text-slate-300"
                     } text-xs sm:text-sm line-clamp-2`}
                 >
                   {suggestion.label}
@@ -100,18 +100,18 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           <motion.button
             type="button"
             onClick={() => onTitleSelect("__custom__")}
-            className={`w-full h-full min-h-0 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-3 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-1 ${showCustomTitleInput && customTitleInput.trim()
-                ? "bg-gray-100 border-gray-400"
-                : "bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-gray-100"
+            className={`w-full h-full min-h-0 flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 p-3 ${showCustomTitleInput && customTitleInput.trim()
+                ? "bg-white/10 border-white/30"
+                : "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
               }`}
             title="???? ??? ??????"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="w-10 h-10 shrink-0 rounded-full bg-slate-200 flex items-center justify-center">
-              <span className="text-slate-700 text-lg font-bold leading-none">+</span>
+            <div className="w-10 h-10 shrink-0 rounded-xl bg-white/5 flex items-center justify-center">
+              <span className="text-slate-400 text-lg font-bold leading-none">+</span>
             </div>
-            <div className="min-h-9 flex items-center justify-center text-center text-xs sm:text-sm font-semibold text-gray-700 leading-tight">
+            <div className="min-h-9 flex items-center justify-center text-center text-xs sm:text-sm font-bold text-slate-400 leading-tight">
               <EditableText id="add_person_select_other" defaultText="?? ????" page="add_person" showEditIcon={false} />
             </div>
           </motion.button>
@@ -123,7 +123,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
               value={customTitleInput}
               onChange={(e) => onCustomTitleChange(e.target.value)}
               placeholder={customTitlePlaceholder}
-              className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"
+              className="ds-input"
               autoFocus
             />
           </div>
@@ -138,8 +138,8 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           transition={{ duration: 0.3 }}
           className="shrink-0"
         >
-          <label htmlFor="person-name-input" className="block text-xs font-medium text-gray-700 mb-1">
-            <EditableText id="add_person_name_label" defaultText="????? (???????)" page="add_person" showEditIcon={false} />
+          <label htmlFor="person-name-input" className="block text-xs font-semibold text-slate-400 mb-2">
+            <EditableText id="add_person_name_label" defaultText="الاسم (اختياري)" page="add_person" showEditIcon={false} />
           </label>
           <input
             id="person-name-input"
@@ -148,12 +148,12 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
             value={customName}
             onChange={(event) => onNameChange(event.target.value)}
             placeholder={namePlaceholder}
-            title="???? ??? ????? (???????)"
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+            title="اكتب اسم الشخص (اختياري)"
+            className="ds-input"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            <EditableText id="add_person_name_preview_prefix" defaultText="????? ??:" page="add_person" showEditIcon={false} />{" "}
-            <span className="font-semibold text-teal-700">
+          <p className="text-xs text-slate-500 mt-2">
+            <EditableText id="add_person_name_preview_prefix" defaultText="سيظهر بـ:" page="add_person" showEditIcon={false} />{" "}
+            <span className="font-bold text-teal-400">
               {customName.trim() || selectedTitle}
             </span>
           </p>
@@ -163,8 +163,8 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
             </p>
           ) : null}
           {encouragementHint && !contextualHint && (
-            <p className="text-xs text-teal-600 mt-1 bg-teal-50 rounded-lg px-2 py-1.5 border border-teal-100">
-              ???? ?????? ??? ?? ??? (???: ?? ??????? ?? ????? ?????) ??????? ?????.
+            <p className="text-xs text-teal-400 mt-2 bg-teal-500/10 rounded-xl px-3 py-2.5 border border-teal-500/20">
+              ممكن تكتفي بلقب أو رمز (مثلاً: حد من العيلة أو زميل عمل) وتحافظ على خصوصيتك.
             </p>
           )}
         </motion.div>
@@ -174,30 +174,32 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
         <motion.p
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-xs text-teal-600 mt-2 bg-teal-50 rounded-lg px-2 py-1.5 border border-teal-100 shrink-0"
+          className="text-xs text-teal-400 mt-4 bg-teal-500/10 rounded-xl px-3 py-2.5 border border-teal-500/20 shrink-0"
         >
-          ???? ?????? ??? ?? ??? (???: ?? ??????? ?? ????? ?????) ??????? ?????.
+          اختار الشخص اللي شاغل بالك دلوقتي (سواء للأفضل أو للأسوأ) وهنحلل أثره.
         </motion.p>
       )}
 
       {afterNameContent ? <div className="shrink-0">{afterNameContent}</div> : null}
 
-      <div className="mt-3 shrink-0 flex gap-2">
+      <div className="mt-6 shrink-0 flex gap-3">
         <button
           type="button"
-          className="flex-1 rounded-full bg-gray-100 px-6 py-3 text-sm text-gray-700 font-medium hover:bg-gray-200 active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
+          data-variant="ghost"
+          data-size="md"
+          className="ds-button flex-1"
           onClick={onCancel}
-          title="????? ?????? ???????"
         >
-          <EditableText id="add_person_cancel" defaultText="?????" page="add_person" editOnClick={false} />
+          <EditableText id="add_person_cancel" defaultText="إلغاء الأمر" page="add_person" editOnClick={false} />
         </button>
         <button
           type="submit"
+          data-variant="primary"
+          data-size="md"
           disabled={!selectedTitle}
-          className="flex-1 rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-          title={selectedTitle ? "??????: ??? ??????" : "???? ????? ?????"}
+          className="ds-button flex-1"
         >
-          <EditableText id="add_person_next" defaultText="??????" page="add_person" editOnClick={false} />
+          <EditableText id="add_person_next" defaultText="استمر" page="add_person" editOnClick={false} />
         </button>
       </div>
     </form>

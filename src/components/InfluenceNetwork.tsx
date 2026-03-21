@@ -1,7 +1,7 @@
 import { FC, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Network, Info, Activity, Zap } from "lucide-react";
-import { supabase } from "../services/supabaseClient";
+import { safeGetSession, supabase } from "../services/supabaseClient";
 
 interface Node {
     id: string;
@@ -26,9 +26,15 @@ export const InfluenceNetwork: FC = () => {
     const [hoveredNode, setHoveredNode] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    const positionedNodes = data.nodes.filter(
+        (node): node is Node & { x: number; y: number } =>
+            Number.isFinite(node.x) && Number.isFinite(node.y)
+    );
+
     const fetchMap = async (compare = false) => {
         try {
-            const { data: { session } } = await supabase!.auth.getSession();
+            if (!supabase) return;
+            const session = await safeGetSession();
             const res = await fetch(`/api/influence-network?compare=${compare}`, {
                 headers: { 'Authorization': `Bearer ${session?.access_token}` }
             });
@@ -66,8 +72,8 @@ export const InfluenceNetwork: FC = () => {
                 <div className="p-4 rounded-full bg-white/5 w-fit mx-auto mb-4">
                     <Activity className="w-6 h-6 text-slate-500 animate-pulse" />
                 </div>
-                <h3 className="text-white font-black text-sm mb-2">جار استشاف اأاط</h3>
-                <p className="text-slate-500 text-[11px] font-bold">اسست ف حاة صت تح حاا. أ ا اداتا تت (٧ أا بض) خرطة اتأثر تظر ا.</p>
+                <h3 className="text-white font-black text-sm mb-2">جاري استكشاف الأنماط</h3>
+                <p className="text-slate-500 text-[11px] font-bold">المنصة في حالة رصد وتحليل حالياً. أول ما الداتا تتكون (٧ أيام نبض + خريطة) خريطة التأثير تظهر هنا.</p>
             </div>
         );
     }
@@ -81,7 +87,7 @@ export const InfluenceNetwork: FC = () => {
                     </div>
                     <div>
                         <h3 className="text-[15px] font-black text-white leading-tight">
-                            {isDriftMode ? 'حر ااحراف از' : 'خرطة اتأثر اإدرا'}
+                            {isDriftMode ? 'محور الانحراف الزمني' : 'خريطة التأثير الإدراكي'}
                         </h3>
                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                             {isDriftMode ? 'Temporal Pattern Drift' : 'Cognitive Influence Map'}
@@ -97,7 +103,7 @@ export const InfluenceNetwork: FC = () => {
                         }`}
                 >
                     <Activity className={`w-3.5 h-3.5 ${isDriftMode ? 'animate-pulse' : ''}`} />
-                    <span className="text-[10px] font-black uppercase tracking-tight">رادار اتطر</span>
+                    <span className="text-[10px] font-black uppercase tracking-tight">رادار التطور</span>
                 </button>
             </div>
 
@@ -105,8 +111,8 @@ export const InfluenceNetwork: FC = () => {
                 <svg viewBox="0 0 320 320" className="w-full h-full drop-shadow-[0_0_15px_rgba(99,102,241,0.1)]">
                     {/* Edges */}
                     {data.edges.map((edge: Edge, i) => {
-                        const sourceNode = data.nodes.find(n => n.id === edge.source);
-                        const targetNode = data.nodes.find(n => n.id === edge.target);
+                        const sourceNode = positionedNodes.find(n => n.id === edge.source);
+                        const targetNode = positionedNodes.find(n => n.id === edge.target);
                         if (!sourceNode || !targetNode) return null;
 
                         const strength = isDriftMode ? (edge.currentStrength ?? edge.strength) : edge.strength;
@@ -152,7 +158,7 @@ export const InfluenceNetwork: FC = () => {
                     })}
 
                     {/* Nodes - Same as before but with morphing positioning if needed */}
-                    {data.nodes.map((node) => (
+                    {positionedNodes.map((node) => (
                         <motion.g
                             key={node.id}
                             layout
@@ -162,23 +168,21 @@ export const InfluenceNetwork: FC = () => {
                             onHoverEnd={() => setHoveredNode(null)}
                             className="cursor-pointer"
                         >
-                            <motion.circle
-                                cx={node.x}
-                                cy={node.y}
-                                r={22}
-                                fill="transparent"
-                                stroke={node.type === 'state' ? '#818cf8' : '#334155'}
-                                strokeWidth="2"
-                                strokeDasharray="100"
+                            <motion.g
                                 animate={{ rotate: 360 }}
                                 transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                                style={{ opacity: 0.2 }}
-                            />
+                                style={{ transformOrigin: `${node.x}px ${node.y}px`, opacity: 0.2 }}
+                            >
+                                <circle
+                                    cx={node.x} cy={node.y} r={22}
+                                    fill="transparent"
+                                    stroke={node.type === 'state' ? '#818cf8' : '#334155'}
+                                    strokeWidth="2" strokeDasharray="100"
+                                />
+                            </motion.g>
 
-                            <motion.circle
-                                cx={node.x}
-                                cy={node.y}
-                                r={18}
+                            <circle
+                                cx={node.x} cy={node.y} r={18}
                                 fill={node.type === 'state' ? '#4f46e5' : '#1e293b'}
                                 stroke={hoveredNode === node.id ? '#fff' : 'rgba(255,255,255,0.1)'}
                                 strokeWidth="2"
@@ -222,14 +226,14 @@ export const InfluenceNetwork: FC = () => {
                     </div>
                     <div className="text-right">
                         <p className="text-[12px] font-black text-white mb-1">
-                            {isDriftMode ? 'تح سار اتح' : 'ارؤة احاة '}
+                            {isDriftMode ? 'تحليل مسار التحول' : 'الرؤية الحالية'}
                         </p>
                         <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
                             {data.edges.length === 0
-                                ? "اأاط احاة  تص ست داة إحصائة اف (Confidence < 0.3). استر ف تسج ابض تفع حر اربط."
+                                ? "الأنماط الحالية لم تصل لمستوى دلالة إحصائية كافية (Confidence < 0.3). استمر في تسجيل النبض لتفعيل محور الربط."
                                 : isDriftMode
                                     ? "اأس بتضح اعاات ا اتحست () أ ساءت () ارة بآخر طة. د ف تطر اح ش جرد صرة حظة."
-                                    : `اشبة بتضح إ ${data.edges[0]?.source} ا أ تأثر ${data.edges[0]?.strength > 0 ? 'إجاب' : 'سب'} حاا. ااة حا ادار بتث ثة اسست ف اتح د.`
+                                    : `الشبكة بتوضح إن ${data.edges[0]?.source} ليه أكبر تأثير ${data.edges[0]?.strength > 0 ? 'إيجابي' : 'سلبي'} حالياً. الحالة حول الدائرة بتثبت ثقة المنصة في التحليل ده.`
                             }
                         </p>
                     </div>

@@ -3,10 +3,13 @@ import { runtimeEnv } from "../config/runtimeEnv";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 import { getHref } from "./navigation";
 import { getDocumentOrNull, getWindowOrNull, isClientRuntime } from "./clientRuntime";
-import { supabase, isSupabaseReady } from "./supabaseClient";
+import { supabase, isSupabaseReady, isSupabaseAbortError, safeGetSession } from "./supabaseClient";
 
 type AnalyticsValue = string | number | boolean;
 type AnalyticsParams = Record<string, AnalyticsValue>;
+
+// Circuit breaker: disable Supabase INSERT after first RLS/permission error
+let supabaseTrackingEnabled = true;
 
 function isAnalyticsEnabled(): boolean {
   return getFromLocalStorage("dawayir-analytics-consent") === "true";
@@ -209,7 +212,7 @@ export function trackEvent(
     }
   }
 
-  if (isSupabaseReady && supabase) {
+  if (isSupabaseReady && supabase && supabaseTrackingEnabled) {
     const windowRef = getWindowOrNull();
     const isMobile = windowRef ? windowRef.matchMedia("(max-width: 768px)").matches : false;
     const deviceContext = {
@@ -218,7 +221,7 @@ export function trackEvent(
       platform: windowRef?.navigator?.platform
     };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    safeGetSession().then((session) => {
       supabase!
         .from("routing_events")
         .insert({
@@ -228,16 +231,28 @@ export function trackEvent(
           occurred_at: new Date().toISOString()
         })
         .then(({ error }) => {
-          if (error && runtimeEnv.isDev) {
-            console.warn(`[Analytics] Internal track failed: ${eventName}`, error);
+          if (error && !isSupabaseAbortError(error)) {
+            // RLS or permission errors → disable for rest of session to stop console spam
+            if (error.code === "42501" || error.code === "42P01") {
+              supabaseTrackingEnabled = false;
+            }
+            if (runtimeEnv.isDev) {
+              console.warn(`[Analytics] Internal track failed: ${eventName}`, error);
+            }
           }
         });
+    }).catch((err: unknown) => {
+      if (!isSupabaseAbortError(err) && runtimeEnv.isDev) {
+        console.warn(`[Analytics] getSession failed for ${eventName}`, err);
+      }
     });
   }
 }
 
 export const AnalyticsEvents = {
   PAGE_VIEW: "page_view",
+  MICRO_COMPASS_OPENED: "micro_compass_opened",
+  MICRO_COMPASS_COMPLETED: "micro_compass_completed",
   LANDING_VIEW: "landing_view",
   CTA_CLICK: "cta_click",
   SANCTUARY_LOADED: "sanctuary_loaded",
@@ -247,6 +262,14 @@ export const AnalyticsEvents = {
   GOAL_SELECTED: "goal_selected",
   PERSON_ADDED: "person_added",
   BASELINE_COMPLETED: "baseline_completed",
+  AI_CHAT_USED: "ai_chat_used",
+  BREATHING_OPENED: "breathing_opened",
+  EMERGENCY_OPENED: "emergency_opened",
+
+  // --- Consciousness Architecture (v1.0) Events ---
+  SHADOW_PULSE_SNAPSHOT: "shadow_pulse_snapshot",
+  PUNITIVE_FEEDBACK_GIVEN: "punitive_feedback_given",
+  MUTEX_LOCK_ACTIVE: "mutex_lock_active",
 
   LEAD_FORM_SUBMITTED: "lead_form_submitted",
   ONBOARDING_STARTED: "onboarding_started",
@@ -254,8 +277,6 @@ export const AnalyticsEvents = {
   CHECKOUT_VIEWED: "checkout_viewed",
   PAYMENT_INTENT_SUBMITTED: "payment_intent_submitted",
 
-  MICRO_COMPASS_OPENED: "micro_compass_opened",
-  MICRO_COMPASS_COMPLETED: "micro_compass_completed",
   AUTH_GOOGLE_CLICKED: "auth_google_clicked",
   AUTH_MODAL_SHOWN: "auth_modal_shown",
   AUTH_COMPLETED: "auth_completed",
@@ -276,7 +297,6 @@ export const AnalyticsEvents = {
 
   TRAINING_COMPLETED: "training_completed",
   STEP_COMPLETED: "recovery_step_completed",
-  AI_CHAT_USED: "ai_chat_used",
 
   CONSENT_GIVEN: "consent_given",
   CONSENT_DENIED: "consent_denied",

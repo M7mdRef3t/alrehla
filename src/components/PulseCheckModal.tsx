@@ -1,7 +1,8 @@
-import type { FC, KeyboardEvent } from "react";
+import type { FC, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tag } from "lucide-react";
+import { VoiceInput } from "./VoiceInput";
 import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "../state/pulseState";
 import { usePulseState } from "../state/pulseState";
 import { useAdminState, isFeatureAllowed, type PulseCopyOverrideValue } from "../state/adminState";
@@ -11,9 +12,16 @@ import {
   getWeeklyEnergyRecommendation,
   type EnergyCopyVariant
 } from "../utils/pulseEnergy";
-import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
-import { getAudioContextConstructor, setDocumentBodyOverflow } from "../services/clientDom";
-
+import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
+import { setDocumentBodyOverflow, getAudioContextConstructor } from "../services/clientDom";
+import { usePulseManagement } from "../hooks/usePulseManagement";
+import { TOPIC_OPTIONS, MOODS, MOOD_COSMIC, FOCUS_OPTIONS, FOCUS_LABELS, FOCUS_COSMIC } from "./PulseCheckModalParts/constants";
+import { energyGradient, getEnergyStateLabel, getEnergyQuickHint, getMoodQuickHint, getFocusQuickHint, generateTacticalAdvice, getPostSaveAction } from "./PulseCheckModalParts/helpers";
+import type { TacticalAdvice } from "./PulseCheckModalParts/helpers";
+import { Step1View } from "./PulseCheckModalParts/Step1View";
+import { Step2View } from "./PulseCheckModalParts/Step2View";
+import { AnalysisOverlay } from "./PulseCheckModalParts/AnalysisOverlay";
+import { WarpVelocityEffect } from "./PulseCheckModalParts/WarpVelocityEffect";
 
 interface PulseCheckModalProps {
   isOpen: boolean;
@@ -31,136 +39,6 @@ interface PulseCheckModalProps {
   onClose: (reason?: "backdrop" | "close_button") => void;
 }
 
-const TOPIC_OPTIONS = [
-  { id: "work", label: "العمل" },
-  { id: "family", label: "العائلة" },
-  { id: "relationships", label: "العلاقات" },
-  { id: "health", label: "الصحة" },
-  { id: "finance", label: "المال" },
-  { id: "future", label: "المستقبل" }
-];
-
-const MOODS: Array<{ id: PulseMood; label: string; emoji: string }> = [
-  { id: "bright", label: "\u0631\u0627\u064a\u0642", emoji: "\u2600\uFE0F" },
-  { id: "calm", label: "\u0647\u0627\u062f\u0626", emoji: "\uD83C\uDF24\uFE0F" },
-  { id: "tense", label: "\u0645\u062a\u0648\u062a\u0631", emoji: "\uD83C\uDF2A\uFE0F" },
-  { id: "hopeful", label: "\u0645\u062a\u0641\u0627\u0626\u0644", emoji: "\uD83C\uDF08" },
-  { id: "anxious", label: "\u0642\u0644\u0642\u0627\u0646", emoji: "\u2601\uFE0F" },
-  { id: "angry", label: "\u063a\u0636\u0628\u0627\u0646", emoji: "\u26C8\uFE0F" },
-  { id: "sad", label: "\u062d\u0632\u064a\u0646", emoji: "\uD83C\uDF27\uFE0F" },
-  { id: "overwhelmed", label: "\u0625\u0631\u0647\u0627\u0642", emoji: "\uD83C\uDF2B\uFE0F" }
-];
-
-const FOCUS_OPTIONS: Array<{ id: PulseFocus; labelKey: "event" | "thought" | "body" | "none_new" | "none_returning" }> = [
-  { id: "event", labelKey: "event" },      // اشتبا دا
-  { id: "thought", labelKey: "thought" },  // تف رادار
-  { id: "body", labelKey: "body" },        // صاة اأظة
-  { id: "none", labelKey: "none_new" }     // استطاع استراتج
-];
-
-const FOCUS_LABELS: Record<string, string> = {
-  event: "اشتبا دا",
-  thought: "تف رادار",
-  body: "صاة اأظة",
-  none_returning: "تفذ اخطة",
-  none_new: "استطاع استراتج"
-};
-
-const MOOD_COSMIC: Record<PulseMood, { bg: string; border: string; glow: string; text: string; nebula: string }> = {
-  bright: { bg: "rgba(250, 204, 21, 0.1)", border: "rgba(250, 204, 21, 0.5)", glow: "0 0 25px rgba(250, 204, 21, 0.3)", text: "#facc15", nebula: "radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.5) 0%, transparent 70%)" },
-  calm: { bg: "rgba(45, 212, 191, 0.1)", border: "rgba(45, 212, 191, 0.5)", glow: "0 0 25px rgba(45, 212, 191, 0.3)", text: "#2dd4bf", nebula: "radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.5) 0%, transparent 70%)" },
-  anxious: { bg: "rgba(251, 191, 36, 0.1)", border: "rgba(251, 191, 36, 0.5)", glow: "0 0 25px rgba(251, 191, 36, 0.3)", text: "#fbbf24", nebula: "radial-gradient(circle at 50% 0%, rgba(251, 191, 36, 0.5) 0%, transparent 70%)" },
-  angry: { bg: "rgba(248, 113, 113, 0.1)", border: "rgba(248, 113, 113, 0.5)", glow: "0 0 25px rgba(248, 113, 113, 0.3)", text: "#f87171", nebula: "radial-gradient(circle at 50% 0%, rgba(248, 113, 113, 0.5) 0%, transparent 70%)" },
-  sad: { bg: "rgba(96, 165, 250, 0.1)", border: "rgba(96, 165, 250, 0.5)", glow: "0 0 25px rgba(96, 165, 250, 0.3)", text: "#60a5fa", nebula: "radial-gradient(circle at 50% 0%, rgba(96, 165, 250, 0.5) 0%, transparent 70%)" },
-  tense: { bg: "rgba(245, 158, 11, 0.1)", border: "rgba(245, 158, 11, 0.5)", glow: "0 0 25px rgba(245, 158, 11, 0.3)", text: "#f59e0b", nebula: "radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.5) 0%, transparent 70%)" },
-  hopeful: { bg: "rgba(34, 197, 94, 0.1)", border: "rgba(34, 197, 94, 0.5)", glow: "0 0 25px rgba(34, 197, 94, 0.3)", text: "#22c55e", nebula: "radial-gradient(circle at 50% 0%, rgba(34, 197, 94, 0.5) 0%, transparent 70%)" },
-  overwhelmed: { bg: "rgba(139, 92, 246, 0.1)", border: "rgba(139, 92, 246, 0.5)", glow: "0 0 25px rgba(139, 92, 246, 0.3)", text: "#8b5cf6", nebula: "radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.5) 0%, transparent 70%)" }
-};
-
-const FOCUS_COSMIC: Record<PulseFocus, { bg: string; border: string; text: string }> = {
-  event: { bg: "rgba(45, 212, 191, 0.12)", border: "rgba(45, 212, 191, 0.3)", text: "#2dd4bf" },
-  thought: { bg: "rgba(167, 139, 250, 0.12)", border: "rgba(167, 139, 250, 0.3)", text: "#a78bfa" },
-  body: { bg: "rgba(248, 113, 113, 0.12)", border: "rgba(248, 113, 113, 0.3)", text: "#f87171" },
-  none: { bg: "rgba(45, 212, 191, 0.08)", border: "rgba(45, 212, 191, 0.2)", text: "#2dd4bf" }
-};
-
-function energyGradient(energy: number | null): string {
-  if (energy == null || energy <= 0) return "radial-gradient(ellipse at 50% 60%, rgba(148, 163, 184, 0.1) 0%, transparent 60%)";
-  if (energy <= 2) return "radial-gradient(ellipse at 50% 60%, rgba(248, 113, 113, 0.12) 0%, transparent 60%)";
-  if (energy <= 4) return "radial-gradient(ellipse at 50% 60%, rgba(251, 191, 36, 0.1) 0%, transparent 60%)";
-  if (energy <= 6) return "radial-gradient(ellipse at 50% 60%, rgba(45, 212, 191, 0.08) 0%, transparent 55%)";
-  if (energy <= 8) return "radial-gradient(ellipse at 50% 60%, rgba(45, 212, 191, 0.12) 0%, transparent 55%)";
-  return "radial-gradient(ellipse at 50% 60%, rgba(45, 212, 191, 0.18) 0%, rgba(139, 92, 246, 0.06) 40%, transparent 65%)";
-}
-
-function getEnergyStateLabel(energy: number | null): string {
-  if (energy == null) return "\u063a\u064a\u0631 \u0645\u062d\u062f\u062f\u0629";
-  if (energy <= 2) return "\u0645\u0646\u062e\u0641\u0636\u0629 \u062c\u062f\u064b\u0627";
-  if (energy <= 4) return "\u0645\u0646\u062e\u0641\u0636\u0629";
-  if (energy <= 6) return "\u0645\u062a\u0648\u0633\u0637\u0629";
-  if (energy <= 8) return "\u0645\u0631\u062a\u0641\u0639\u0629";
-  return "\u0645\u0631\u062a\u0641\u0639\u0629 \u062c\u062f\u064b\u0627";
-}
-
-
-
-function getEnergyQuickHint(energy: number | null): string {
-  if (energy == null) return "\u0627\u062e\u062a\u0631 \u0627\u0644\u062f\u0631\u062c\u0629";
-  if (energy <= 2) return "\u0628\u0627\u062d\u062a\u0627\u062c \u0647\u062f\u0648\u0621";
-  if (energy <= 4) return "\u0647\u0627\u062f\u064a \u0628\u0634\u0648\u064a\u0629";
-  if (energy <= 6) return "\u0645\u062a\u0648\u0627\u0632\u0646";
-  if (energy <= 8) return "\u062c\u0627\u0647\u0632";
-  return "\u0637\u0627\u0642\u0629 \u0639\u0627\u0644\u064a\u0629";
-}
-
-function getMoodQuickHint(mood: PulseMood | null): string {
-  if (!mood) return "\u0627\u062e\u062a\u0631 \u0648\u0635\u0641\u0627\u064b \u0642\u0631\u064a\u0628\u0627\u064b \u0645\u0646 \u062d\u0627\u0644\u062a\u0643";
-  switch (mood) {
-    case "bright":
-      return "\u0627\u0633\u062a\u063a\u0644 \u0627\u0644\u0635\u0641\u0627\u0621 \u0628\u062e\u0637\u0648\u0629 \u0645\u0628\u0627\u0634\u0631\u0629.";
-    case "calm":
-      return "\u0645\u0645\u062a\u0627\u0632\u060c \u0627\u062d\u0627\u0641\u0638 \u0639\u0644\u0649 \u0627\u0644\u0646\u0633\u0642 \u0627\u0644\u0647\u0627\u062f\u0626.";
-    case "tense":
-      return "\u0646\u0641\u0633 \u0642\u0635\u064a\u0631 \u064a\u0642\u0644\u0644 \u0627\u0644\u062a\u0648\u062a\u0631 \u0642\u0628\u0644 \u0627\u0644\u062e\u0637\u0648\u0629.";
-    case "hopeful":
-      return "\u062e\u0644\u0651 \u0627\u0644\u062d\u0645\u0627\u0633 \u064a\u062a\u062d\u0648\u0644 \u0644\u062a\u0646\u0641\u064a\u0630 \u0641\u0639\u0644\u064a.";
-    case "anxious":
-      return "\u0627\u0628\u062f\u0623 \u0628\u062e\u0637\u0648\u0629 \u0645\u0648\u0636\u062d\u0629 \u0648\u0648\u0627\u062d\u062f\u0629 \u0641\u0642\u0637.";
-    case "angry":
-      return "\u062d\u0648\u0651\u0644 \u0627\u0644\u0627\u0646\u062f\u0641\u0627\u0639 \u0644\u0642\u0631\u0627\u0631 \u0645\u062d\u0633\u0648\u0628.";
-    case "sad":
-      return "\u0627\u0633\u0645\u062d \u0628\u062e\u0637\u0648\u0629 \u0635\u063a\u064a\u0631\u0629 \u0645\u0631\u0646\u0629.";
-    case "overwhelmed":
-      return "\u0628\u0633\u0651\u0637 \u0627\u0644\u0645\u0634\u0647\u062f: \u062e\u064a\u0627\u0631 \u0648\u0627\u062d\u062f \u0627\u0644\u0622\u0646.";
-    default:
-      return "\u0627\u062e\u062a\u0631 \u0648\u0635\u0641\u0627\u064b \u0642\u0631\u064a\u0628\u0627\u064b \u0645\u0646 \u062d\u0627\u0644\u062a\u0643";
-  }
-}
-
-function getFocusQuickHint(focus: PulseFocus | null, isStartRecovery: boolean): string {
-  if (!focus) return "حدد ع اعة ات تد تفذا اآ";
-  if (focus === "event") return "تحدد إحداثات ااشتبا تح اثغرات.";
-  if (focus === "thought") return "تج ارادار تف اظة افرة اعادة.";
-  if (focus === "body") return "إاف اعات ؤتا صاة ارد اظا ابد.";
-  return isStartRecovery
-    ? "تح خرطة ااستطاع.. ابحث ع احة خف ازف."
-    : "ت استعادة باات اجسة..  تفذ اة.";
-}
-
-
-type PulseDraft = {
-  energy: number | null;
-  previousEnergy: number | null;
-  hasPickedEnergy: boolean;
-  mood: PulseMood | null;
-  focus: PulseFocus | null;
-  topics: string[];
-  notes: string;
-  energyReasons: string[];
-  energyConfidence: PulseEnergyConfidence | null;
-  step: 1 | 2;
-};
-
 type EnergyUndoSnapshot = {
   energy: number | null;
   previousEnergy: number | null;
@@ -172,98 +50,12 @@ type EnergyUndoSnapshot = {
   source: "weekly_recommendation" | "immediate_action";
 };
 
-
-type TacticalAdvice = {
-  title: string;
-  message: string;
-  action: string;
-  theme: "attack" | "defend" | "recover";
-  icon: string;
-};
-
-function generateTacticalAdvice(energy: number, mood: PulseMood | null, focus: PulseFocus | null): TacticalAdvice {
-  // 1. Maintenance Protocol (صاة اأظة)
-  if (focus === "body") {
-    if (energy <= 4) {
-      return {
-        title: "PROTOCOL: SYSTEM REBOOT",
-        message: "حاة اجسد تستدع اإاف اإجبار. ااسترار ف اعات ؤد استزاف .",
-        action: "ابدأ دت تفس فرا افص ارادار.",
-        theme: "recover",
-        icon: ""
-      };
-    }
-    return {
-      title: "PROTOCOL: MAINTENANCE",
-      message: "اأظة سترة ا تحتاج عارة بسطة حفاظ ع اأداء اعا.",
-      action: "تر تدد سرع أ شرب اء.",
-      theme: "recover",
-      icon: ""
-    };
-  }
-
-  // 2. Engagement Protocol (اشتبا دا)
-  if (focus === "event") {
-    if (energy <= 4) {
-      return {
-        title: "PROTOCOL: DEFENSIVE SHIELD",
-        message: "حاة ااشتبا بطاة خفضة  خطة فاشة. اسحب خط ادفاع اأ.",
-        action: "تجب أ اجة تف ع تح اف اآ.",
-        theme: "defend",
-        icon: "️"
-      };
-    }
-    return {
-      title: "PROTOCOL: TACTICAL ENGAGEMENT",
-      message: "ادف رصد اطاة افة. استخد 'ابادئ اأ' تف اف.",
-      action: "ابدأ بتد اثغرات اطة ف اف.",
-      theme: "attack",
-      icon: "️"
-    };
-  }
-
-  // 3. Radar Deconstruction (تف رادار)
-  if (focus === "thought") {
-    return {
-      title: "PROTOCOL: LOGICAL SCAN",
-      message: "رصد فرة عادة تحا اخترا اع. تشغ عاج اتف.",
-      action: "اسأ فس:  ذ افرة حة أ ",
-      theme: "defend",
-      icon: ""
-    };
-  }
-
-  // 4. Strategic Recon (استطاع استراتج)
-  if (energy >= 7) {
-    return {
-      title: "PROTOCOL: BLITZKRIEG",
-      message: "جع أظة اع ف حاة استعداد ص. ات ثا ج.",
-      action: "فذ أصعب ة ف ائت اآ.",
-      theme: "attack",
-      icon: ""
-    };
-  }
-
-  return {
-    title: "PROTOCOL: STEADY PROGRESS",
-    message: "استرار ف اإشارات احة.  تفذ اخطة احاة بفس ادء.",
-    action: "استر ف تفذ اا ارتة.",
-    theme: "defend",
-    icon: ""
-  };
-}
-
 type MoodWeeklyRecommendation = {
   mood: PulseMood;
   count: number;
 };
+
 type CopyVariant = "a" | "b";
-
-
-
-
-
-
 
 function getEnergyCopyVariant(forced: PulseCopyOverrideValue): EnergyCopyVariant {
   return getStoredCopyVariant("dawayir-energy-copy-variant", forced);
@@ -293,37 +85,31 @@ function getStoredCopyVariant(key: string, forced: PulseCopyOverrideValue): Copy
 
 function getMoodVariantSubtitle(variant: CopyVariant): string {
   return variant === "a"
-    ? "\u0627\u062e\u062a\u0627\u0631 \u0648\u0635\u0641 \u0642\u0631\u064a\u0628 \u0645\u0646 \u0625\u062d\u0633\u0627\u0633\u0643 \u062f\u0644\u0648\u0642\u062a\u064a."
-    : "\u0645\u0632\u0627\u062c\u0643 \u0627\u0644\u062d\u0627\u0644\u064a \u0628\u064a\u0648\u0636\u062d \u0634\u0643\u0644 \u062e\u0637\u0648\u062a\u0643 \u0627\u0644\u062c\u0627\u064a\u0629.";
+    ? "اختار وصف قريب من إحساسك دلوقتي."
+    : "مزاجك الحالي بيوضح شكل خطوتك الجاية.";
 }
 
 function getFocusVariantSubtitle(_variant: CopyVariant): string {
-  return "تحدد ع اعة (ع ااشتبا) ات تد تفذا اآ.";
-}
-
-function getPostSaveAction(energy: number): string {
-  if (energy <= 3) return "\u062e\u0637\u0648\u0629 \u062a\u0627\u0644\u064a\u0629: \u062f\u0642\u064a\u0642\u062a\u064a\u0646 \u062a\u0646\u0641\u0633 \u062b\u0645 \u062e\u0637\u0648\u0629 \u0635\u063a\u064a\u0631\u0629.";
-  if (energy <= 7) return "\u062e\u0637\u0648\u0629 \u062a\u0627\u0644\u064a\u0629: \u0645\u0647\u0645\u0629 \u0648\u0627\u062d\u062f\u0629 \u0644\u0645\u062f\u0629 10 \u062f\u0642\u0627\u0626\u0642.";
-  return "\u062e\u0637\u0648\u0629 \u062a\u0627\u0644\u064a\u0629: \u0627\u0628\u062f\u0623 \u0623\u0648\u0644 15 \u062f\u0642\u064a\u0642\u0629 \u0627\u0644\u0622\u0646.";
+  return "حدّد على إيه عايز تركّز دلوقتي — ده بيحدد خطوتك الجاية.";
 }
 
 function getImmediateEnergyAction(energy: number | null): { cta: string; hint: string } | null {
   if (energy == null) return null;
   if (energy <= 3) {
     return {
-      cta: "\u0628\u062f\u0623 \u062a\u0646\u0641\u0633 \u062f\u0642\u064a\u0642\u062a\u064a\u0646",
-      hint: "\u062b\u0645 \u0627\u0644\u062a\u0632\u0645 \u0628\u062e\u0637\u0648\u0629 \u0635\u063a\u064a\u0631\u0629 \u0648\u0627\u062d\u062f\u0629."
+      cta: "بدأ تنفس دقيقتين",
+      hint: "ثم التزم بخطوة صغيرة واحدة."
     };
   }
   if (energy <= 7) {
     return {
-      cta: "\u062b\u0628\u0651\u062a \u0645\u0647\u0645\u0629 10 \u062f\u0642\u0627\u0626\u0642",
-      hint: "\u0645\u0647\u0645\u0629 \u0648\u0627\u062d\u062f\u0629 \u0628\u062f\u0648\u0646 \u062a\u0634\u062a\u062a."
+      cta: "ثبّت مهمة 10 دقائق",
+      hint: "مهمة واحدة بدون تشتت."
     };
   }
   return {
-    cta: "\u0627\u0628\u062f\u0623 \u0623\u0648\u0644 15 \u062f\u0642\u064a\u0642\u0629 \u0627\u0644\u0622\u0646",
-    hint: "\u0637\u0627\u0642\u0629 \u0639\u0627\u0644\u064a\u0629 \u062a\u062d\u062a\u0627\u062c \u0628\u062f\u0627\u064a\u0629 \u0633\u0631\u064a\u0639\u0629."
+    cta: "ابدأ أول 15 دقيقة الآن",
+    hint: "طاقة عالية تحتاج بداية سريعة."
   };
 }
 
@@ -331,10 +117,10 @@ const ENERGY_ANCHORS = [0, 3, 6, 10] as const;
 const ENERGY_FEEDBACK_POINTS = new Set<number>(ENERGY_ANCHORS);
 const PULSE_DRAFT_STORAGE_KEY = "dawayir-pulse-check-draft-v1";
 const NOTES_QUICK_CHIPS = [
-  "\u0641\u064a \u0645\u0648\u0642\u0641 \u0645\u0639\u064a\u0646 \u0645\u0636\u0627\u064a\u0642\u0646\u064a",
-  "\u0641\u0643\u0631\u0629 \u0645\u062a\u0643\u0631\u0631\u0629 \u0645\u0634 \u0631\u0627\u0636\u064a\u0629 \u062a\u0633\u064a\u0628\u0646\u064a",
-  "\u062c\u0633\u0645\u064a \u062a\u0639\u0628\u0627\u0646 \u0648\u0645\u062d\u062a\u0627\u062c \u0647\u062f\u0648\u0621",
-  "\u0628\u0633 \u062d\u0627\u0628\u0628 \u0623\u0641\u0636\u0641\u0636 \u0628\u062c\u0645\u0644\u0629 \u0633\u0631\u064a\u0639\u0629"
+  "في موقف معين مضايقني",
+  "فكرة متكررة مش راضية تسيبني",
+  "جسمي تعبان ومحتاج هدوء",
+  "بس حابب أفضفض بجملة سريعة"
 ] as const;
 
 function getWeeklyMoodRecommendation(
@@ -363,6 +149,7 @@ const cosmicUp = {
   })
 };
 
+
 export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   isOpen,
   context = "regular",
@@ -372,38 +159,57 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const isStartRecovery = context === "start_recovery";
   const pulseLogs = usePulseState((s) => s.logs);
   const pulseCopyOverrides = useAdminState((s) => s.pulseCopyOverrides);
-  isFeatureAllowed("pulse_weekly_recommendation");
-  isFeatureAllowed("pulse_immediate_action");
-  isFeatureAllowed("golden_needle_enabled");
+  const _allowWeekly = isFeatureAllowed("pulse_weekly_recommendation");
+  const _allowImmediate = isFeatureAllowed("pulse_immediate_action");
+  const _allowGoldenNeedle = isFeatureAllowed("golden_needle_enabled");
+  void _allowWeekly; void _allowImmediate; void _allowGoldenNeedle;
   const allowSkip = true;
 
-  const [energy, setEnergy] = useState<number | null>(null);
-  const [previousEnergy, setPreviousEnergy] = useState<number | null>(null);
-  const [hasPickedEnergy, setHasPickedEnergy] = useState(false);
-  const [mood, setMood] = useState<PulseMood | null>(null);
-  const [focus, setFocus] = useState<PulseFocus | null>(null);
-  const [topics, setTopics] = useState<string[]>([]);
-  const [notes, setNotes] = useState("");
-  const [energyReasons, setEnergyReasons] = useState<string[]>([]);
-  const [energyConfidence, setEnergyConfidence] = useState<PulseEnergyConfidence | null>(null);
+  // --- Hook-managed Pulse State ---
+  const {
+    energy,
+    setEnergy,
+    previousEnergy,
+    setPreviousEnergy,
+    hasPickedEnergy,
+    setHasPickedEnergy,
+    mood,
+    setMood,
+    focus,
+    setFocus,
+    notes,
+    setNotes,
+    topics,
+    setTopics,
+    energyReasons,
+    setEnergyReasons,
+    energyConfidence,
+    setEnergyConfidence,
+    step,
+    setStep,
+    clearDraft,
+    loadDraft,
+  } = usePulseManagement(isOpen);
+
+  // --- Local UI State ---
   const [showRequiredHint, setShowRequiredHint] = useState(false);
   const [hasTrackedNotesUsage, setHasTrackedNotesUsage] = useState(false);
   const [suggestionApplied, setSuggestionApplied] = useState(false);
   const [isSavingPulse, setIsSavingPulse] = useState(false);
   const [saveToastText, setSaveToastText] = useState("\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643");
-  const [, setKeyboardEnergyHint] = useState<number | null>(null);
+  const [keyboardEnergyHint, setKeyboardEnergyHint] = useState<number | null>(null);
+  void keyboardEnergyHint; // prevent SWC tree-shaking of unused destructured variable
   const isEnergySelectionUnstableRef = useRef(false);
   const [needsEnergyConfirmation, setNeedsEnergyConfirmation] = useState(false);
-  const [, setEnergyConfirmPulseActive] = useState(false);
-  const [, setEnergyUndoSnapshot] = useState<EnergyUndoSnapshot | null>(null);
-  const [, setEnergyUndoLabel] = useState<string | null>(null);
+  const [energyConfirmPulseActive, setEnergyConfirmPulseActive] = useState(false);
+  const [energyUndoSnapshot, setEnergyUndoSnapshot] = useState<EnergyUndoSnapshot | null>(null);
+  const [energyUndoLabel, setEnergyUndoLabel] = useState<string | null>(null);
   const [immediateActionApplied, setImmediateActionApplied] = useState(false);
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
-  const [, setNotesChars] = useState(0);
+  const [notesChars, setNotesChars] = useState(0);
   const [isWarping, setIsWarping] = useState(false);
   const [tacticalAdvice, setTacticalAdvice] = useState<TacticalAdvice | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [step, setStep] = useState<1 | 2>(1);
   const notesRef = useRef<HTMLTextAreaElement | null>(null);
   const lastFeedbackAnchorRef = useRef<number | null>(null);
   const lastHapticAtRef = useRef<number>(0);
@@ -427,62 +233,16 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const needleContainerRef = useRef<HTMLDivElement>(null);
   const isNeedleDraggingRef = useRef(false);
 
-  useEffect(() => {
-    const getAngleEnergy = (e: MouseEvent): number | null => {
-      if (!needleContainerRef.current) return null;
-      const rect = needleContainerRef.current.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height * 0.83;
-      const deltaX = e.clientX - centerX;
-      const deltaY = e.clientY - centerY;
-      // 0=right(-90°) 10=left(+90°): angle from top, RTL
-      const angle = Math.atan2(-deltaX, -deltaY) * (180 / Math.PI);
-      const clampedAngle = Math.max(-90, Math.min(90, angle));
-      return (clampedAngle + 90) / 18;
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isNeedleDraggingRef.current) return;
-      const val = getAngleEnergy(e);
-      if (val !== null) setEnergyValue(val);
-    };
-
-    const handleMouseUp = (e: MouseEvent) => {
-      if (!isNeedleDraggingRef.current) return;
-      isNeedleDraggingRef.current = false;
-      const val = getAngleEnergy(e);
-      if (val !== null) setEnergyValue(Math.round(val), { skipHaptic: true });
-    };
-
-    const handlePointerDown = (e: PointerEvent) => {
-      // Only activate on the needle container itself, not the range input
-      if (!needleContainerRef.current) return;
-      isNeedleDraggingRef.current = true;
-      e.preventDefault();
-      const val = getAngleEnergy(e as unknown as MouseEvent);
-      if (val !== null) setEnergyValue(val);
-    };
-
-    const el = needleContainerRef.current;
-    el?.addEventListener("pointerdown", handlePointerDown);
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-
-    return () => {
-      el?.removeEventListener("pointerdown", handlePointerDown);
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, []);
 
 
 
 
 
   const energyStateLabel = getEnergyStateLabel(energy);
-  getEnergyQuickHint(energy);
-  getMoodQuickHint(mood);
-  getFocusQuickHint(focus, isStartRecovery);
+  const _energyQuickHint = getEnergyQuickHint(energy);
+  const _moodQuickHint = getMoodQuickHint(mood);
+  const _focusQuickHint = getFocusQuickHint(focus, isStartRecovery);
+  void _energyQuickHint; void _moodQuickHint; void _focusQuickHint;
   const energyCopyVariant = useMemo(
     () => getEnergyCopyVariant(pulseCopyOverrides.energy),
     [pulseCopyOverrides.energy]
@@ -496,31 +256,29 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     [pulseCopyOverrides.focus]
   );
 
-  getMoodVariantSubtitle(moodCopyVariant);
-  getFocusVariantSubtitle(focusCopyVariant);
+  const _moodVariantSubtitle = getMoodVariantSubtitle(moodCopyVariant);
+  const _focusVariantSubtitle = getFocusVariantSubtitle(focusCopyVariant);
+  void _moodVariantSubtitle; void _focusVariantSubtitle;
 
   const weeklyEnergyRecommendation = useMemo(() => getWeeklyEnergyRecommendation(pulseLogs), [pulseLogs]);
   const weeklyMoodRecommendation = useMemo(
     () => getWeeklyMoodRecommendation(pulseLogs.map((item) => ({ mood: item.mood, timestamp: item.timestamp }))),
     [pulseLogs]
   );
-  Boolean(weeklyMoodRecommendation && (!mood || mood !== weeklyMoodRecommendation.mood));
-  useMemo(() => getImmediateEnergyAction(energy), [energy]);
+  const _showWeeklyMoodSuggestion = weeklyMoodRecommendation != null && (!mood || mood !== weeklyMoodRecommendation.mood);
+  void _showWeeklyMoodSuggestion;
+  const _immediateEnergyAction = useMemo(() => getImmediateEnergyAction(energy), [energy]);
+  void _immediateEnergyAction;
   const energySuggestion = useMemo(() => getEnergySuggestion(energy), [energy]);
-  Boolean(weeklyEnergyRecommendation && (!hasPickedEnergy || energy == null || Math.abs(weeklyEnergyRecommendation.value - energy) >= 2));
-  useMemo(() => { if (!energySuggestion) return ""; const hasSuggestedNote = notes.trim().includes(energySuggestion.note); return hasSuggestedNote ? "ready" : "pending"; }, [energySuggestion, notes]);
-  useMemo(() => { if (pulseLogs.length === 0) return null; const sum = pulseLogs.reduce((acc, item) => acc + item.energy, 0); const avg = Math.round((sum / pulseLogs.length) * 10) / 10; return { avg, count: pulseLogs.length }; }, [pulseLogs]);
+  const _showWeeklyEnergySuggestion = weeklyEnergyRecommendation != null && (!hasPickedEnergy || energy == null || Math.abs(weeklyEnergyRecommendation.value - energy) >= 2);
+  void _showWeeklyEnergySuggestion;
+  const _suggestionState = useMemo(() => { if (!energySuggestion) return ""; const hasSuggestedNote = notes.trim().includes(energySuggestion.note); return hasSuggestedNote ? "ready" : "pending"; }, [energySuggestion, notes]);
+  void _suggestionState;
+  const _pulseStats = useMemo(() => { if (pulseLogs.length === 0) return null; const sum = pulseLogs.reduce((acc, item) => acc + item.energy, 0); const avg = Math.round((sum / pulseLogs.length) * 10) / 10; return { avg, count: pulseLogs.length }; }, [pulseLogs]);
+  void _pulseStats;
   const isComplete = hasPickedEnergy && mood !== null && focus !== null;
   const currentStepComplete = isComplete;
 
-  const clearDraft = () => {
-    if (typeof window === "undefined") return;
-    try {
-      removeFromLocalStorage(PULSE_DRAFT_STORAGE_KEY);
-    } catch {
-      // no-op
-    }
-  };
 
   const clearUndoState = () => {
     if (undoTimerRef.current != null) {
@@ -574,33 +332,11 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     }
     if (isInitializedRef.current) return;
 
-    let restored = false;
-    if (typeof window !== "undefined" && !isStartRecovery) { // Don't restore draft if starting fresh recovery
-      try {
-        const raw = getFromLocalStorage(PULSE_DRAFT_STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw) as PulseDraft;
-          if (parsed && typeof parsed === "object") {
-            setEnergy(typeof parsed.energy === "number" ? parsed.energy : null);
-            setPreviousEnergy(typeof parsed.previousEnergy === "number" ? parsed.previousEnergy : null);
-            setHasPickedEnergy(Boolean(parsed.hasPickedEnergy));
-            setMood(parsed.mood ?? null);
-            setFocus(parsed.focus ?? null);
-            setTopics(Array.isArray(parsed.topics) ? parsed.topics.filter((x) => typeof x === "string") : []);
-            setNotes(typeof parsed.notes === "string" ? parsed.notes : "");
-            setEnergyReasons(Array.isArray(parsed.energyReasons) ? parsed.energyReasons.filter((x) => typeof x === "string") : []);
-            setEnergyConfidence(parsed.energyConfidence ?? null);
-            setStep(parsed.step === 2 ? 2 : 1);
-            lastFeedbackAnchorRef.current = typeof parsed.energy === "number" ? parsed.energy : null;
-            restored = true;
-          }
-        }
-      } catch {
-        // ignore invalid drafts
-      }
-    }
+    // Try loading draft from hook
+    const restored = loadDraft();
+
     if (!restored) {
-      if (typeof lastEnergyValue === "number" && !isStartRecovery) { // Only pre-fill energy if NOT starting a fresh recovery
+      if (typeof lastEnergyValue === "number" && !isStartRecovery) {
         setEnergy(lastEnergyValue);
         setPreviousEnergy(lastEnergyValue);
         setHasPickedEnergy(true);
@@ -613,22 +349,9 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       }
       setMood(null);
       setFocus(null);
-      setTopics([]);
       setNotes("");
-      setEnergyReasons([]);
-      setEnergyConfidence(null);
       setStep(1);
     }
-
-    setInLocalStorage(PULSE_DRAFT_STORAGE_KEY, JSON.stringify({
-      energy: restored ? energy : (typeof lastEnergyValue === "number" ? lastEnergyValue : null),
-      hasPickedEnergy: restored ? hasPickedEnergy : (typeof lastEnergyValue === "number"),
-      mood: restored ? mood : null,
-      focus: restored ? focus : null,
-      topics: restored ? topics : [],
-      notes: restored ? notes : "",
-      step: restored ? step : 1
-    }));
 
     setShowRequiredHint(false);
     setHasTrackedNotesUsage(false);
@@ -654,7 +377,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     copyVariantTrackedRef.current = false;
 
     isInitializedRef.current = true;
-  }, [isOpen, lastEnergyValue, isStartRecovery]);
+  }, [isOpen, lastEnergyValue, isStartRecovery, loadDraft, setEnergy, setPreviousEnergy, setHasPickedEnergy, setMood, setFocus, setNotes, setStep]);
 
   useEffect(() => {
     if (!isOpen || copyVariantTrackedRef.current) return;
@@ -689,38 +412,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     };
   }, []);
 
-  useEffect(() => {
-    if (!isOpen || typeof window === "undefined") return;
-    const draft: PulseDraft = {
-      energy,
-      previousEnergy,
-      hasPickedEnergy,
-      mood,
-      focus,
-      topics,
-      notes,
-      energyReasons,
-      energyConfidence,
-      step
-    };
-    try {
-      setInLocalStorage(PULSE_DRAFT_STORAGE_KEY, JSON.stringify(draft));
-    } catch {
-      // no-op
-    }
-  }, [
-    isOpen,
-    energy,
-    previousEnergy,
-    hasPickedEnergy,
-    mood,
-    focus,
-    topics,
-    notes,
-    energyReasons,
-    energyConfidence,
-    step
-  ]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -1029,7 +720,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     }
   };
 
-  const handleEnergyKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleEnergyKeyUp = (e: ReactKeyboardEvent<HTMLInputElement>) => {
     snapToInteger();
     const key = e?.key ?? "";
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(key)) return;
@@ -1048,12 +739,12 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   }, [step]);
 
   const stepLabel = step === 1
-    ? "ترر احاة اتتة"
-    : "ابرت اترح";
+    ? "سجّل حالتك الحالية"
+    : "النصيحة المقترحة";
 
   const footerHintText = showRequiredHint && !currentStepComplete
-    ? "طب إا باات اسح اح (اطاة ازاج) ع اعة."
-    : "راجع إحداثات حات ب اضغط ع تفذ.";
+    ? "محتاج تختار الطاقة والمزاج والبوصلة على الأقل."
+    : "راجع حالتك وبعدين اضغط تنفيذ.";
 
   const footerHintColor = showRequiredHint && !currentStepComplete
     ? "rgba(248, 113, 113, 0.95)"
@@ -1152,7 +843,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
             {showSkipConfirm && (
               <div className="mx-3.5 sm:mx-4 -mt-1 mb-1 rounded-xl px-3 py-2" style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.35)" }}>
                 <p className="text-xs font-semibold text-center" style={{ color: "rgba(255,236,179,0.98)" }}>
-                  {" ترد تخط ضبط ابصة ا"}
+                  تريد تخطي ضبط البوصلة النهاردة؟
                 </p>
                 <div className="mt-2 flex items-center justify-center gap-2">
                   <button
@@ -1161,7 +852,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                     className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
                     style={{ color: "var(--text-secondary)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)" }}
                   >
-                    {"إغاء"}
+                    إلغاء
                   </button>
                   <button
                     type="button"
@@ -1169,7 +860,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                     className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
                     style={{ color: "var(--text-primary)", background: "rgba(248,113,113,0.18)", border: "1px solid rgba(248,113,113,0.42)" }}
                   >
-                    {"ع تخط"}
+                    أيوه، تخطي
                   </button>
                 </div>
               </div>
@@ -1177,266 +868,29 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
             <div className="pulse-check-content flex-1 overflow-y-auto px-4 sm:px-5 pb-3 sm:pb-4 pt-1 custom-scrollbar">
               {step === 1 && (
-                <motion.div className="pulse-check-section flex flex-col gap-6 py-4" custom={1} variants={cosmicUp} initial="hidden" animate="visible">
-
-                  {/* 1. Biometric Energy (Needle) */}
-                  <div className="flex flex-col gap-3">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                      ؤشر اأظة احة
-                    </label>
-                    <div
-                      ref={needleContainerRef}
-                      className="relative w-full flex flex-col items-center justify-center p-8 rounded-[2.5rem] bg-slate-950/40 border border-white/5 shadow-2xl overflow-hidden group cursor-crosshair touch-none"
-                    >
-
-                      {/* Ambient background glow */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-
-                      <div className="relative w-full max-w-[240px] h-32 scale-90 sm:scale-105 transition-transform duration-500">
-                        <svg viewBox="0 0 200 120" className="w-full h-full overflow-visible">
-                          <defs>
-                            <linearGradient id="needleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
-                              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.8" />
-                              <stop offset="100%" stopColor="#fbbf24" stopOpacity="1" />
-                            </linearGradient>
-                            <radialGradient id="pivotGlow" cx="50%" cy="50%" r="50%">
-                              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
-                              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
-                            </radialGradient>
-                            <filter id="needleGlow" x="-20%" y="-20%" width="140%" height="140%">
-                              <feGaussianBlur stdDeviation="3" result="blur" />
-                              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                            </filter>
-                          </defs>
-
-                          {/* Dial Ticks */}
-                          {[...Array(11)].map((_, i) => {
-                            const angle = ((10 - i) * 18) - 180;
-                            const rad = (angle * Math.PI) / 180;
-                            const r1 = 82;
-                            const r2 = 90;
-                            const x1 = 100 + r1 * Math.cos(rad);
-                            const y1 = 100 + r1 * Math.sin(rad);
-                            const x2 = 100 + r2 * Math.cos(rad);
-                            const y2 = 100 + r2 * Math.sin(rad);
-                            return (
-                              <line
-                                key={i} x1={x1} y1={y1} x2={x2} y2={y2}
-                                stroke={(energy ?? 0) >= i ? "rgba(251,191,36,0.6)" : "rgba(255,255,255,0.1)"}
-                                strokeWidth="2" strokeLinecap="round"
-                              />
-                            );
-                          })}
-
-                          {/* Background Arc */}
-                          <path d="M 10,100 A 90,90 0 0,1 190,100" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="12" strokeLinecap="round" />
-
-                          {/* Active Filled Arc */}
-                          <motion.path
-                            d="M 190,100 A 90,90 0 0,0 10,100" fill="none" stroke="url(#needleGrad)" strokeWidth="12" strokeLinecap="round"
-                            strokeDasharray="283"
-                            initial={{ strokeDashoffset: 283 }}
-                            animate={{
-                              strokeDashoffset: 283 * (1 - ((energy ?? 0) / 10))
-                            }}
-                            transition={{
-                              type: "tween",
-                              ease: "linear",
-                              duration: 0.05
-                            }}
-                            style={{ filter: energy != null && energy > 7 ? 'drop-shadow(0 0 8px rgba(251,191,36,0.3))' : 'none' }}
-                          />
-
-
-                          {/* Center Pivot Glow */}
-                          <circle cx="100" cy="100" r="16" fill="url(#pivotGlow)" />
-
-                          {/* The Needle - Balanced Group for Perfect Center Rotation */}
-                          <motion.g
-                            animate={{
-                              rotate: 90 - (energy ?? 0) * 18
-                            }}
-                            transition={{
-                              type: "tween",
-                              ease: "linear",
-                              duration: 0.05
-                            }}
-                          >
-
-                            {/* 1. The Invisible Anchor: Forces the group's bounding box center to be exactly (100, 100) */}
-                            <circle cx="100" cy="100" r="90" fill="transparent" pointerEvents="none" />
-
-                            {/* 2. The Actual Needle */}
-                            <path
-                              d="M 98.5,100 L 100,10 L 101.5,100 Z"
-                              fill="#fbbf24"
-                              filter="url(#needleGlow)"
-                            />
-                          </motion.g>
-
-                          {/* Fixed Pivot circles (No rotation for better stability) */}
-                          <circle cx="100" cy="100" r="6" fill="#0f172a" stroke="#fbbf24" strokeWidth="2" />
-                          <circle cx="100" cy="100" r="2" fill="#fbbf24" />
-                        </svg>
-
-                        <input
-                          type="range" min={0} max={10} step={1}
-                          value={Math.round(energy ?? 5)}
-                          onChange={(e) => setEnergyValue(Number(e.target.value))}
-                          onKeyUp={handleEnergyKeyUp}
-                          className="needle-range-input absolute inset-0 w-full h-full opacity-0 z-10 appearance-none m-0 p-0"
-                          tabIndex={0}
-                          aria-label="ست اطاة"
-                        />
-                      </div>
-                      <div className="text-center -mt-4 relative z-10">
-                        <motion.p
-                          key={energy}
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="text-5xl font-black text-white font-mono tracking-tighter"
-                        >
-                          {energy !== null ? Math.round(energy) : 0}
-                        </motion.p>
-                        <p className="text-[10px] font-black text-amber-500 mt-1 uppercase tracking-[0.3em]">{energyStateLabel}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 2. interior Weather (Mood) */}
-                  <div className="flex flex-col gap-3">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--soft-teal)]/30 animate-pulse" />
-                      اطس اشعر
-                    </label>
-                    <div className="grid grid-cols-4 gap-2.5 p-3 rounded-3xl bg-white/[0.03] border border-white/5">
-                      {MOODS.map((m) => {
-                        const isSelected = mood === m.id;
-                        const mStyle = MOOD_COSMIC[m.id];
-                        return (
-                          <button
-                            key={m.id} type="button" onClick={() => setMoodValue(m.id)}
-                            className="flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all"
-                            style={{ background: isSelected ? `${mStyle.text}22` : 'transparent' }}
-                          >
-                            <span className="text-2xl" style={{ filter: isSelected ? 'none' : 'grayscale(1) opacity(0.3)' }}>{m.emoji}</span>
-                            <span className={`text-[8px] font-black whitespace-nowrap ${isSelected ? 'text-white' : 'text-slate-500'}`}>{m.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 3. Objective Selection (Focus) */}
-                  <div className="flex flex-col gap-3">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                      تج ابصة
-                    </label>
-                    <div className="grid grid-cols-2 gap-3 pb-2">
-                      {FOCUS_OPTIONS.map((f) => {
-                        const isSelected = focus === f.id;
-                        const label = f.id === "none" ? FOCUS_LABELS["none_new"] : FOCUS_LABELS[f.labelKey];
-                        const fStyle = FOCUS_COSMIC[f.id];
-                        return (
-                          <button
-                            key={f.id} type="button" onClick={() => setFocusValue(f.id)}
-                            className="relative flex flex-col items-center justify-center p-4 rounded-2xl border text-[10px] font-black transition-all"
-                            style={{
-                              background: isSelected ? `${fStyle.bg}44` : 'rgba(255,255,255,0.02)',
-                              borderColor: isSelected ? fStyle.border : 'rgba(255,255,255,0.06)',
-                              color: isSelected ? 'white' : 'rgba(255,255,255,0.3)',
-                            }}
-                          >
-                            {isSelected && <motion.div layoutId="f-dot" className="absolute top-2 right-2 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_white]" />}
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 3.5. Topics (Tax) */}
-                  <div className="flex flex-col gap-3">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                      مواضيع الاستنزاف (اختياري)
-                    </label>
-                    <div className="flex flex-wrap gap-2 pb-2">
-                      {TOPIC_OPTIONS.map((t) => {
-                        const isSelected = topics.includes(t.id);
-                        return (
-                          <button
-                            key={t.id}
-                            type="button"
-                            onClick={() => {
-                              setTopics((prev) =>
-                                isSelected ? prev.filter((id) => id !== t.id) : [...prev, t.id]
-                              );
-                            }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all"
-                            style={{
-                              background: isSelected ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255,255,255,0.02)',
-                              borderColor: isSelected ? 'rgba(99, 102, 241, 0.4)' : 'rgba(255,255,255,0.06)',
-                              color: isSelected ? '#818cf8' : 'rgba(255,255,255,0.4)',
-                            }}
-                          >
-                            <Tag className="w-3 h-3" />
-                            {t.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 4. Notes */}
-                  <div className="flex flex-col gap-3">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">باات اسح اإضافة</label>
-                    <textarea
-                      ref={notesRef} value={notes} onChange={(e) => setNotes(e.target.value)}
-                      placeholder="اتب احظة ختصرة..."
-                      className="w-full h-24 p-4 rounded-2xl bg-white/[0.03] border border-white/5 text-sm text-white focus:outline-none focus:border-white/10 resize-none transition-all placeholder:text-white/10"
-                    />
-                  </div>
-
-                </motion.div>
+                <Step1View
+                  energy={energy}
+                  setEnergyValue={setEnergyValue}
+                  energyStateLabel={energyStateLabel}
+                  handleEnergyKeyUp={handleEnergyKeyUp}
+                  mood={mood}
+                  setMoodValue={setMoodValue}
+                  focus={focus}
+                  setFocusValue={setFocusValue}
+                  isStartRecovery={isStartRecovery}
+                  topics={topics}
+                  setTopics={setTopics}
+                  notes={notes}
+                  setNotes={setNotes}
+                  notesRef={notesRef}
+                />
               )}
 
               {step === 2 && tacticalAdvice && (
-                <motion.div className="pulse-check-section flex flex-col items-center justify-center text-center gap-8 py-10" custom={2} variants={cosmicUp} initial="hidden" animate="visible">
-                  <div className="w-32 h-32 rounded-[2.5rem] flex items-center justify-center text-6xl relative"
-                    style={{
-                      background: tacticalAdvice.theme === 'attack' ? 'rgba(52, 211, 153, 0.1)' : 'rgba(251, 191, 36, 0.1)',
-                      border: `2px solid ${tacticalAdvice.theme === 'attack' ? '#34d39966' : '#fbbf2466'}`
-                    }}
-                  >
-                    {tacticalAdvice.icon}
-                    <div className="absolute inset-0 animate-pulse opacity-20 bg-current rounded-[2.5rem]" />
-                  </div>
-                  <div className="space-y-3">
-                    <h3 className="text-3xl font-black tracking-tighter text-white">{tacticalAdvice.title}</h3>
-                    <p className="text-slate-400 text-base max-w-[280px] leading-relaxed mx-auto font-medium">
-                      {tacticalAdvice.message}
-                    </p>
-                  </div>
-                  <div className="w-full p-6 rounded-[2rem] bg-white/[0.03] border border-dashed border-white/10 scale-105 shadow-2xl">
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 block mb-3">اتج اس اباشر</span>
-                    <p className="text-xl font-black text-white leading-tight">{tacticalAdvice.action}</p>
-                  </div>
-                </motion.div>
+                <Step2View tacticalAdvice={tacticalAdvice} />
               )}
 
-              {/* Analysis Overlay */}
-              <AnimatePresence>
-                {isAnalyzing && (
-                  <motion.div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-2xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    <div className="w-12 h-12 border-2 border-teal-500/20 border-t-teal-500 rounded-full animate-spin mb-6" />
-                    <p className="text-teal-400 font-mono text-[10px] tracking-[0.5em] animate-pulse">GENERATING TACTICAL PROTOCOL</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <AnalysisOverlay isAnalyzing={isAnalyzing} />
             </div>
 
             {/* Footer Area */}
@@ -1445,7 +899,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 {footerHintText}
               </p>
               <p className={`text-center text-[10px] font-black tracking-[0.14em] uppercase ${isPrimaryEnabled ? "text-emerald-300" : "text-rose-300/70"}`}>
-                {isPrimaryEnabled ? "جاز تح" : "أ اطاة + ازاج + ابصة"}
+                {isPrimaryEnabled ? "جاهز للتنفيذ" : "اختار الطاقة + المزاج + البوصلة"}
               </p>
               <div className="flex gap-3">
                 {step > 1 && (
@@ -1464,38 +918,12 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   animate={!isPrimaryEnabled ? {} : { boxShadow: ["0 0 20px rgba(45,212,191,0.35)", "0 0 36px rgba(16,185,129,0.62)", "0 0 20px rgba(45,212,191,0.35)"] }}
                   transition={!isPrimaryEnabled ? {} : { duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  {step === 1 ? "تح اباات" : "اعتاد ابرت"}
+                  {step === 1 ? "تحليل البيانات" : "اعتماد النصيحة"}
                 </motion.button>
               </div>
             </div>
 
-            {/* Warp Velocity Effect */}
-            <AnimatePresence>
-              {isWarping && (
-                <motion.div
-                  key="warp-speed"
-                  className="absolute inset-0 z-50 pointer-events-none overflow-hidden rounded-[2rem]"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  style={{ background: "rgba(10, 15, 30, 0.4)", backdropFilter: "blur(2px)" }}
-                >
-                  <div className="relative w-full h-full">
-                    {[...Array(8)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        className="absolute bg-gradient-to-b from-transparent via-teal-400 to-transparent w-[1px]"
-                        style={{ left: `${12 + (i * 12)}%`, height: "100px", top: "50%" }}
-                        initial={{ scaleY: 0, opacity: 0, y: -200 }}
-                        animate={{ scaleY: [0, 15, 0], opacity: [0, 0.5, 0], y: ["-100%", "100%"] }}
-                        transition={{ duration: 0.4, ease: "easeInOut", delay: i * 0.03 }}
-                      />
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <WarpVelocityEffect isWarping={isWarping} />
           </motion.div>
         </motion.div>
       )}

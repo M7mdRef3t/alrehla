@@ -43,6 +43,8 @@ output/home-*.txt
 
 # Temp files
 *.tmp
+*.bak
+tmp/
 .tmp_*.txt
 .codex-temp-package.ps1
 .cache/

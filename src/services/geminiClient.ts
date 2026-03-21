@@ -147,9 +147,11 @@ class GeminiClient {
     if (!result) return null;
 
     try {
-      // Extract JSON from markdown code blocks if present
-      const jsonMatch = result.match(/```json\n([\s\S]*?)\n```/) || result.match(/```\n([\s\S]*?)\n```/);
-      const jsonText = jsonMatch ? jsonMatch[1] : result;
+      // Extract JSON from various delimiters: [BEGIN JSON], markdown code blocks, or raw text
+      const customMatch = result.match(/\[BEGIN JSON\]\n?([\s\S]*?)\n?\[END JSON\]/i);
+      const markdownMatch = result.match(/```json\n([\s\S]*?)\n```/i) || result.match(/```\n([\s\S]*?)\n```/i);
+      
+      const jsonText = customMatch ? customMatch[1] : (markdownMatch ? markdownMatch[1] : result);
       return JSON.parse(jsonText.trim());
     } catch {
       return null;

@@ -10,7 +10,7 @@ import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "
 import { getAuthUserId } from "../state/authState";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { sendJsonWithResilience } from "../architecture/resilientHttp";
-import { getStoredUtmParams } from "./marketingAttribution";
+import { getStoredLeadAttribution, getStoredUtmParams } from "./marketingAttribution";
 
 const KEY_MODE = "dawayir-tracking-mode";
 const KEY_EVENTS = "dawayir-journey-events";
@@ -377,10 +377,11 @@ export function recordFlowEvent(
 
   // UTM params — مصدر الزيارة التسويقي
   const utmParams = getStoredUtmParams();
+  const leadAttribution = getStoredLeadAttribution();
 
   const hasExtra = Boolean(
     extra?.atStep || extra?.closeReason || extra?.meta ||
-    utmParams || dwellTime != null || previousStep
+    utmParams || leadAttribution || dwellTime != null || previousStep
   );
   const event = {
     type: "flow_event" as const,
@@ -393,6 +394,7 @@ export function recordFlowEvent(
             ...(extra?.closeReason ? { closeReason: extra.closeReason } : {}),
             ...(extra?.meta ? extra.meta : {}),
             ...(utmParams ? { utm: utmParams } : {}),
+            ...(leadAttribution ? { lead: leadAttribution } : {}),
             ...(dwellTime != null ? { dwellTime } : {}),
             ...(previousStep ? { previousStep } : {})
           }

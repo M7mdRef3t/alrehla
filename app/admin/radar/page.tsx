@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { downloadBlobFile } from "../../../src/services/clientDom";
-import { supabase } from "../../../src/services/supabaseClient";
+import { safeGetSession } from "../../../src/services/supabaseClient";
 import { useAdminState } from "../../../src/state/adminState";
 
 type RadarPulse = {
@@ -222,8 +222,8 @@ export default function AdminRadarPage() {
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
   const getAdminAccessToken = useCallback(async (): Promise<string> => {
-    const { data: sessionData } = await supabase?.auth.getSession() ?? { data: { session: null } };
-    const accessToken = sessionData?.session?.access_token;
+    const session = await safeGetSession();
+    const accessToken = session?.access_token;
     const fallbackToken = typeof adminCode === "string" ? adminCode.trim() : "";
     const effectiveToken = accessToken || fallbackToken;
     if (!effectiveToken) throw new Error("Unauthorized");

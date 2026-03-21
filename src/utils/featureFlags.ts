@@ -37,9 +37,10 @@ export function getEffectiveFeatureAccess(
   const keys = Object.keys(DEFAULT_FEATURE_FLAGS) as FeatureFlagKey[];
   const result = {} as Record<FeatureFlagKey, boolean>;
   for (const key of keys) {
+    const mode = context.featureFlags[key] ?? DEFAULT_FEATURE_FLAGS[key];
     result[key] = godMode
       ? true
-      : isFeatureEnabled(context.featureFlags[key], context.betaAccess);
+      : isFeatureEnabled(mode, context.betaAccess);
   }
   return result;
 }

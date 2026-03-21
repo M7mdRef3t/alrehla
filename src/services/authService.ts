@@ -1,5 +1,5 @@
 import type { AuthOtpResponse, AuthResponse, OAuthResponse } from "@supabase/supabase-js";
-import { supabase } from "./supabaseClient";
+import { safeGetSession, supabase } from "./supabaseClient";
 import { runtimeEnv } from "../config/runtimeEnv";
 import { getWindowOrNull } from "./clientRuntime";
 
@@ -139,9 +139,7 @@ export async function signOut(): Promise<void> {
 }
 
 export async function getSession() {
-  if (!supabase) return null;
-  const { data } = await supabase.auth.getSession();
-  return data.session ?? null;
+  return safeGetSession();
 }
 
 export async function updateAuthUserMetadata(metadata: Record<string, unknown>) {

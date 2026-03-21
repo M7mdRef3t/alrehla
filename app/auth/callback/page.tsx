@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "../../../src/services/supabaseClient";
+import { isSupabaseAbortError, safeGetSession, supabase } from "../../../src/services/supabaseClient";
 
 function sanitizeNextPath(value: string | null): string {
   if (!value) return "/";
@@ -11,7 +11,6 @@ function sanitizeNextPath(value: string | null): string {
   return value;
 }
 
-/** Inner component — uses useSearchParams, must be inside <Suspense> */
 function AuthCallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -31,19 +30,24 @@ function AuthCallbackInner() {
         const code = searchParams?.get("code");
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) {
-            throw error;
-          }
+          if (error) throw error;
         } else {
-          await supabase.auth.getSession();
+          await safeGetSession();
         }
 
         if (!cancelled) {
           router.replace(nextPath);
         }
-      } catch {
+      } catch (error) {
+        if (isSupabaseAbortError(error)) {
+          if (!cancelled) {
+            router.replace(nextPath);
+          }
+          return;
+        }
+
         if (!cancelled) {
-          setMessage("تعذر إكمال تسجيل الدخول. أعد المحاولة من جديد.");
+          setMessage("تعذّر إكمال تسجيل الدخول. أعد المحاولة من جديد.");
         }
       }
     };
@@ -66,7 +70,6 @@ function AuthCallbackInner() {
   );
 }
 
-/** Fallback shown during Suspense hydration */
 function AuthCallbackFallback() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6 text-center text-white" dir="rtl">
@@ -79,7 +82,6 @@ function AuthCallbackFallback() {
   );
 }
 
-/** Page — wraps the inner component in Suspense to satisfy Next.js App Router */
 export default function AuthCallbackPage() {
   return (
     <Suspense fallback={<AuthCallbackFallback />}>

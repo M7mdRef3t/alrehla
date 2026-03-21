@@ -1,7 +1,7 @@
 /**
- * Sovereign Profile  اة اسادة ️
+ * Sovereign Profile — الحالة السيادية 🛡️
  * ==========================================
- * تعرض رتبة استخد (Commander) تد ف اط اخبرة (XP).
+ * تعرض رتبة المستخدم (Commander) وتقدمه في نقاط الخبرة (XP).
  */
 
 import React from "react";
@@ -54,7 +54,7 @@ export const SovereignProfile: React.FC = () => {
                     </div>
 
                     <div className="flex items-end justify-between mb-1.5">
-                        <h3 className="text-sm font-black text-white truncate">اف اساد</h3>
+                        <h3 className="text-sm font-black text-white truncate">الملف السيادي</h3>
                         <span className="text-xs font-bold text-[var(--soft-teal)]">{xp} XP</span>
                     </div>
 

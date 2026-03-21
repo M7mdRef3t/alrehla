@@ -14,6 +14,7 @@ export interface SuggestedPlacement {
   reason: string;
   steps: string[];
   isHealthy: boolean; // لو العلاقة في مكانها الصحيح
+  shockMessage?: string; // رسالة تنبيه لو الفجوة كبيرة
 }
 
 /**
@@ -82,12 +83,19 @@ export function calculateSuggestedPlacement(
     const symptomsCount = selectedSymptoms?.length ?? 0;
     const suggestedRing = symptomsCount >= 3 ? "red" : getSuggestedRingForCategory(category);
     
+    // Shock factor: لو كان فاكرها خضراء بس هي حمراء (ده بيتحسب في resultScreenAI عادة بس هنا بنأكده)
+    let shockMessage;
+    if (currentRing === "red" && symptomsCount >= 5) {
+      shockMessage = "⚠️ الصدمة دي طبيعية.. جسمك كان شايل فوق طاقته وانكشفت الحقيقة دلوقتي.";
+    }
+
     return {
       currentRing,
       suggestedRing,
       reason: getSuggestedReason(category, suggestedRing),
       steps: getSuggestedSteps(category, suggestedRing),
-      isHealthy: suggestedRing === "red" && currentRing === "red" // في مكانه الصحيح = حماية قصوى
+      isHealthy: suggestedRing === "red" && currentRing === "red", // في مكانه الصحيح = حماية قصوى
+      shockMessage
     };
   }
 

@@ -1,7 +1,7 @@
 /**
- * Victory Report  ترر ااتصار 
+ * Victory Report — تقرير الانتصار 🏆
  * ==========================================
- * عرض إجازات استخد تح ا ااستراتج.
+ * عرض إنجازات المستخدم وتحليل المسار الاستراتيجي.
  */
 
 import React, { useMemo } from "react";
@@ -33,8 +33,8 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose, onTakeTod
                         <ChevronLeft className="w-6 h-6 text-slate-400" />
                     </button>
                     <div className="flex flex-col items-end">
-                        <h1 className="text-2xl font-black text-white tracking-tight">ترر ااتصار اتت</h1>
-                        <p className="text-xs text-teal-400 font-bold tracking-widest">حدة ذاء ااتصار</p>
+                        <h1 className="text-2xl font-black text-white tracking-tight">تقرير الانتصار المتقدم</h1>
+                        <p className="text-xs text-teal-400 font-bold tracking-widest">وحدة ذكاء الانتصار</p>
                     </div>
                 </header>
 
@@ -67,7 +67,7 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose, onTakeTod
                     </svg>
                     <div className="absolute flex flex-col items-center">
                         <span className="text-4xl font-black text-white">{Math.round(metrics.harmonyScore)}%</span>
-                        <span className="text-[10px] font-bold text-slate-500 tracking-widest">ؤشر ااسجا</span>
+                        <span className="text-[10px] font-bold text-slate-500 tracking-widest">مؤشر الانسجام</span>
                     </div>
                 </div>
 
@@ -75,15 +75,15 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose, onTakeTod
                 <div className="grid grid-cols-2 gap-4 w-full mb-12">
                     <MetricCard
                         icon={<TrendingUp className="w-5 h-5 text-emerald-400" />}
-                        label="سرعة ا"
+                        label="سرعة النمو"
                         value={Math.round(metrics.growthVelocity) + "%"}
-                        desc="د اتراب  باء اثة"
+                        desc="مدى الاقتراب من بناء الثقة"
                     />
                     <MetricCard
                         icon={<Shield className="w-5 h-5 text-rose-400" />}
-                        label="ة احس"
+                        label="قوة الحسم"
                         value={Math.round(metrics.detachmentStrength) + "%"}
-                        desc="ادرة ع طع ااستزاف"
+                        desc="القدرة على قطع الاستنزاف"
                     />
                 </div>
 
@@ -91,7 +91,7 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose, onTakeTod
                 <div className="w-full space-y-6">
                     <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                         <Trophy className="w-4 h-4" />
-                        أسة اشرف
+                        أوسمة الشرف
                     </h2>
 
                     <div className="space-y-4">
@@ -132,13 +132,13 @@ export const VictoryReport: React.FC<VictoryReportProps> = ({ onClose, onTakeTod
                         onClick={onClose}
                         className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-sm active:scale-[0.98] transition-all"
                     >
-                        إغا اترر
+                        إغلاق التقرير
                     </button>
                     <button
                         onClick={() => onTakeTodayAction?.()}
                         className="w-full py-4 rounded-2xl bg-gradient-to-r from-teal-500 to-[var(--soft-teal)] text-white font-bold text-sm shadow-xl active:scale-[0.98] transition-all"
                     >
-                        فذ خطة ا
+                        نفّذ خطوة اليوم
                     </button>
                 </div>
             </div>

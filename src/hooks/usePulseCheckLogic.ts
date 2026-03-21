@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { usePulseState } from "../state/pulseState";
+import { useAppOverlayState } from "../state/appOverlayState";
 
 export type PulseCheckContext = "regular" | "start_recovery";
 
@@ -12,8 +13,9 @@ export function usePulseCheckLogic(
   currentScreen: string,
   shouldGateStartWithAuth: boolean
 ) {
-  const [showPulseCheck, setShowPulseCheck] = useState(false);
-  const [pulseCheckContext, setPulseCheckContext] = useState<PulseCheckContext>("regular");
+  const pulseCheck = useAppOverlayState((s) => s.pulseCheck);
+  const setPulseCheck = useAppOverlayState((s) => s.setPulseCheck);
+
   const skipNextPulseCheckRef = useRef(false);
   const prevScreenRef = useRef<string>("landing");
 
@@ -41,8 +43,7 @@ export function usePulseCheckLogic(
       }
       prevScreenRef.current = currentScreen;
       const t = window.setTimeout(() => {
-        setPulseCheckContext("regular");
-        setShowPulseCheck(true);
+        setPulseCheck(true, "regular");
       }, 350);
       return () => window.clearTimeout(t);
     }
@@ -61,28 +62,26 @@ export function usePulseCheckLogic(
 
     prevScreenRef.current = currentScreen;
     const t = window.setTimeout(() => {
-      setPulseCheckContext("regular");
-      setShowPulseCheck(true);
+      setPulseCheck(true, "regular");
     }, 350);
     return () => window.clearTimeout(t);
-  }, [lastPulse, pulseCheckMode, canUsePulseCheck, currentScreen, shouldGateStartWithAuth]);
+  }, [lastPulse, pulseCheckMode, canUsePulseCheck, currentScreen, shouldGateStartWithAuth, setPulseCheck]);
 
   // Hide pulse check if feature becomes unavailable
   useEffect(() => {
     if (canUsePulseCheck) return;
-    if (showPulseCheck) setShowPulseCheck(false);
-    if (pulseCheckContext !== "regular") setPulseCheckContext("regular");
-  }, [canUsePulseCheck, showPulseCheck, pulseCheckContext]);
+    if (pulseCheck.isOpen) setPulseCheck(false, "regular");
+  }, [canUsePulseCheck, pulseCheck.isOpen, setPulseCheck]);
 
   const skipNextCheck = useCallback(() => {
     skipNextPulseCheckRef.current = true;
   }, []);
 
   return {
-    showPulseCheck,
-    setShowPulseCheck,
-    pulseCheckContext,
-    setPulseCheckContext,
+    showPulseCheck: pulseCheck.isOpen,
+    setShowPulseCheck: (val: boolean) => setPulseCheck(val, pulseCheck.context),
+    pulseCheckContext: pulseCheck.context,
+    setPulseCheckContext: (ctx: PulseCheckContext) => setPulseCheck(pulseCheck.isOpen, ctx),
     skipNextCheck
   };
 }

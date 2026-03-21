@@ -1,4 +1,4 @@
-﻿import type { FC } from "react";
+import type { FC } from "react";
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
@@ -16,12 +16,14 @@ import { useEmergencyState } from "../state/emergencyState";
 import { quick1Tier, quick2Tier } from "../utils/optionColors";
 import { SelectPersonStep } from "./AddPersonModal/SelectPersonStep";
 import { QuickQuestionsStep } from "./AddPersonModal/QuickQuestionsStep";
-import { ResultScreen } from "./AddPersonModal/ResultScreen";
-import type { PersonGender } from "../utils/resultScreenAI";
-import { FeelingStep } from "./AddPersonModal/FeelingStep";
 import { PositionStep } from "./AddPersonModal/PositionStep";
 import { isUserMode } from "../config/appEnv";
+import { resolveAdviceCategory } from "../data/adviceScripts";
 import { buildEmergencyContextFromNode } from "../utils/emergencyContext";
+import type { PersonGender } from "../utils/resultScreenAI";
+import { FeelingStep } from "./AddPersonModal/FeelingStep";
+import { ResultScreen } from "./AddPersonModal/ResultScreen";
+import { triggerBackgroundAnalysis } from "../services/backgroundAnalysis";
 
 type AddPersonStep =
   | "select"
@@ -116,6 +118,26 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
   const handleContinue = (event: React.FormEvent) => {
     event.preventDefault();
     if (selectedTitle) {
+      const finalLabel = customName.trim() || selectedTitle;
+      // Optimistic Add: Add node immediately with isAnalyzing: true
+      const nodeId = addNode(
+        finalLabel,
+        "yellow", // Default ring while analyzing
+        undefined,
+        goalId,
+        undefined, // Will be updated later if needed
+        false,
+        "medium",
+        false,
+        undefined,
+        undefined,
+        true // isAnalyzing: true
+      );
+      setAddedNodeId(nodeId);
+      
+      // Trigger Background Analysis (Optimistic UI)
+      triggerBackgroundAnalysis(nodeId, `إضافة شخص جديد باسم: ${finalLabel}`);
+      
       setStep("quickQuestions");
     }
   };
@@ -123,6 +145,15 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
   const handleQuickQuestionsDone = (e: React.FormEvent) => {
     e.preventDefault();
     if (quickAnswer1 == null || quickAnswer2 == null) return;
+    
+    // Update node with preliminary safety/emergency info
+    if (addedNodeId) {
+      useMapState.getState().updateNode(addedNodeId, {
+        isEmergency: isEmergency,
+        safetyAnswer: quickAnswer2 ?? undefined
+      });
+    }
+    
     setStep("feeling");
   };
 
@@ -138,38 +169,49 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
   };
 
   const handleRealityDone = (answers: Parameters<typeof realityScoreToRing>[0]) => {
-    if (!pendingPlacement) return;
+    if (!pendingPlacement || !addedNodeId) return;
     const ring = isEmergency ? "red" : realityScoreToRing(answers);
     setLastRealityAnswers(answers);
     const { finalLabel, score, healthAnswers } = pendingPlacement;
     const resolvedRelationLabel = (customRelationLabel.trim() || linkRelationLabel.trim() || selectedTitle).trim();
+    
     const treeRelation =
       canLinkInFamilyTree && linkToParentId
         ? { type: "family" as const, parentId: linkToParentId, relationLabel: resolvedRelationLabel }
         : undefined;
+        
     const detachmentMode = ring === "red" && isLowContact(answers);
     const contact = realityAnswersToContact(answers);
-    const nodeId = addNode(
-      finalLabel,
+
+    // Final Update: Remove isAnalyzing and set final ring/analysis
+    useMapState.getState().updateNode(addedNodeId, {
+      label: finalLabel,
       ring,
-      { score, answers: healthAnswers },
-      goalId,
+      analysis: {
+        score,
+        answers: healthAnswers,
+        timestamp: Date.now(),
+        recommendedRing: ring
+      },
       treeRelation,
       detachmentMode,
-      contact,
-      isEmergency,
-      answers,
-      quickAnswer2 ?? undefined
-    );
-    recordJourneyEvent("node_added", { ring, detachmentMode: detachmentMode ?? false, isEmergency: isEmergency ?? false, personLabel: finalLabel, nodeId });
-    // Track person addition for conversion funnel
+      realityAnswers: answers,
+      isAnalyzing: false // Done analyzing!
+    });
+
+    recordJourneyEvent("node_added", { ring, detachmentMode: detachmentMode ?? false, isEmergency: isEmergency ?? false, personLabel: finalLabel, nodeId: addedNodeId });
     trackEvent(AnalyticsEvents.PERSON_ADDED, {
       person_label: finalLabel,
       ring: ring,
       is_emergency: isEmergency ?? false,
       goal_id: goalId
     });
-    setAddedNodeId(nodeId);
+
+    // Check for Baseline Completion (3+ nodes)
+    if (nodes.filter(n => !n.isNodeArchived).length >= 2) { // current node + 2 existing = 3
+      trackEvent(AnalyticsEvents.BASELINE_COMPLETED, { goal_id: goalId });
+    }
+    
     setPendingPlacement(null);
     setStep("result");
   };
@@ -224,14 +266,14 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-md px-4"
       onClick={() => handleCloseAttempt("backdrop")}
       aria-labelledby="add-person-title"
       role="dialog"
       aria-modal="true"
     >
       <motion.div
-        className="relative bg-white border border-gray-200 rounded-2xl px-6 py-6 max-w-md w-full min-h-0 flex flex-col overflow-hidden"
+        className="relative ds-card px-6 py-6 max-w-md w-full min-h-0 flex flex-col overflow-hidden text-slate-100"
         style={{ height: "min(90vh, fit-content)", maxHeight: "90vh" }}
         onClick={(e) => e.stopPropagation()}
         initial={{ scale: 0.95, opacity: 0, y: 10 }}
@@ -242,7 +284,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
           <button
             type="button"
             onClick={() => handleCloseAttempt("close_button")}
-            className="absolute top-3 left-3 w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors text-slate-500 hover:text-slate-700 z-10 shrink-0"
+            className="absolute top-3 left-3 w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors text-slate-400 hover:text-white z-10 shrink-0"
             aria-label="إغلاق"
           >
             <X className="w-4 h-4" />
@@ -383,6 +425,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
             isEmergency={isEmergency}
             safetyAnswer={quickAnswer2 ?? undefined}
             forcedGate={isForcedResultGate}
+            category={resolveAdviceCategory(goalId)}
           />
         ) : null}
         </div>

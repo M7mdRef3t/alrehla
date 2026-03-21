@@ -3,7 +3,7 @@
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Building2, Copy, ExternalLink, Landmark, MessageCircle, Wallet } from "lucide-react";
-import { supabase } from "../../src/services/supabaseClient";
+import { safeGetSession } from "../../src/services/supabaseClient";
 import { trackCheckoutViewed, trackInitiateCheckout } from "../../src/services/analytics";
 import { recordFlowEvent } from "../../src/services/journeyTracking";
 
@@ -225,7 +225,7 @@ export default function CheckoutPage() {
     const load = async () => {
       try {
         const [sessionRes, scarcityRes] = await Promise.all([
-          supabase?.auth.getSession() ?? Promise.resolve({ data: { session: null } }),
+          safeGetSession().then((session) => ({ data: { session } })),
           fetch("/api/public/scarcity", { cache: "no-store" })
         ]);
         const sessionUser = sessionRes?.data?.session?.user ?? null;
@@ -349,7 +349,7 @@ export default function CheckoutPage() {
     }
     setIsSubmittingProof(true);
     try {
-      const session = (await supabase?.auth.getSession())?.data?.session ?? null;
+      const session = await safeGetSession();
       const response = await fetch("/api/checkout/manual-proof", {
         method: "POST",
         headers: {

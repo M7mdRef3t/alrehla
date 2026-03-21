@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
-import { useAdminState } from "../state/adminState";
+import { LandingSimulation } from "./LandingSimulation";
 
 import { useJourneyState } from "../state/journeyState";
 import { useMapState } from "../state/mapState";
@@ -72,43 +72,46 @@ const OrbitViz: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) => {
         style={{ background: "radial-gradient(circle at 50% 50%, rgba(20,184,166,0.07) 0%, transparent 65%)" }} />
 
       <svg width="320" height="320" viewBox="0 0 320 320" fill="none">
-        {/* Orbit rings */}
+        {/* Orbit rings — motion.g avoids cx/cy being treated as animatable */}
         {[
           { r: 72,  stroke: "rgba(20,184,166,0.45)",  dash: "none", dur: 3.2 },
           { r: 110, stroke: "rgba(251,191,36,0.3)",   dash: "4 6",  dur: 4.5 },
           { r: 148, stroke: "rgba(248,113,113,0.22)", dash: "2 8",  dur: 6 },
         ].map((ring, i) => (
-          <motion.circle key={i}
-            cx="160" cy="160" r={ring.r}
-            stroke={ring.stroke} strokeWidth="1.5"
-            strokeDasharray={ring.dash === "none" ? undefined : ring.dash}
+          <motion.g key={i}
             animate={reduceMotion ? {} : { opacity: [0.6, 1, 0.6] }}
             transition={{ duration: ring.dur, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 }}
-          />
+          >
+            <circle
+              cx="160" cy="160" r={ring.r}
+              stroke={ring.stroke} strokeWidth="1.5" fill="none"
+              strokeDasharray={ring.dash === "none" ? undefined : ring.dash}
+            />
+          </motion.g>
         ))}
 
-        {/* Node dots */}
+        {/* Node dots — wrap in motion.g so scale doesn't clobber cx/cy */}
         {nodes.map((node, i) => (
-          <motion.circle key={i}
-            cx={node.cx} cy={node.cy} r={node.r}
-            fill={node.color}
+          <motion.g key={i}
             animate={reduceMotion ? {} : {
               opacity: [0.75, 1, 0.75],
               scale: [1, 1.15, 1]
             }}
             transition={{ duration: 3 + node.delay, repeat: Infinity, ease: "easeInOut", delay: node.delay }}
             style={{ transformOrigin: `${node.cx}px ${node.cy}px` }}
-          />
+          >
+            <circle cx={node.cx} cy={node.cy} r={node.r} fill={node.color} />
+          </motion.g>
         ))}
 
-        {/* Center — scale animation only (r is static) */}
-        <motion.circle
-          cx="160" cy="160" r={8}
-          fill="#14B8A6"
+        {/* Center — wrap in motion.g for scale */}
+        <motion.g
           animate={reduceMotion ? {} : { scale: [1, 1.2, 1], opacity: [0.85, 1, 0.85] }}
           transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
           style={{ transformOrigin: "160px 160px" }}
-        />
+        >
+          <circle cx="160" cy="160" r={8} fill="#14B8A6" />
+        </motion.g>
         <circle cx="160" cy="160" r={4} fill="white" opacity={0.9} />
       </svg>
 
@@ -197,7 +200,7 @@ const ProductCard: FC<ProductCardProps> = ({
 
 /* ─── Typing Text Animation ──────────────────────────────────────────────────── */
 
-const ROTATING_WORDS = ["الإرهاق", "الضبابية", "الذنب الزائف", "الحدود المكسورة", "العلاقات المُستنزِفة"];
+const ROTATING_WORDS = ["استنزاف طاقتك", "الذنب اللي مالوش لزوم", "الضغط العصبي", "الحدود المكسورة", "العلاقات المرهقة"];
 
 const TypingWord: FC = () => {
   const [index, setIndex] = useState(0);
@@ -217,10 +220,8 @@ const TypingWord: FC = () => {
   return (
     <span className="relative inline-flex items-center justify-start" style={{ minWidth: "6em", height: "1.2em", verticalAlign: "baseline" }}>
       {/* Invisible spacer — uses the longest word to reserve space */}
-      <span className="invisible select-none pointer-events-none whitespace-nowrap" aria-hidden="true"
-        style={{ background: "linear-gradient(90deg, #14B8A6, #7C3AED)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}
-      >
-        العلاقات المُستنزِفة
+      <span className="invisible select-none pointer-events-none whitespace-nowrap" aria-hidden="true">
+        الذنب اللي مالوش لزوم
       </span>
       <AnimatePresence mode="wait">
         {visible && (
@@ -281,10 +282,9 @@ export const Landing: FC<LandingProps> = ({
   const installButtonLabel =
     pwaInstall?.isIOS || pwaInstall?.isAndroid ? "ثبّت على الهاتف" : "ثبّت التطبيق";
 
-  // Feature flags
-  const featureFlags = useAdminState((s) => s.featureFlags);
-  const showLiveMetrics = featureFlags["landing_live_metrics"] === "on" || featureFlags["landing_live_metrics"] === "beta";
-  const showTestimonials = featureFlags["landing_live_testimonials"] === "on" || featureFlags["landing_live_testimonials"] === "beta";
+  // Always show metrics and testimonials in final product
+  const showLiveMetrics = true;
+  const showTestimonials = true;
 
   const lastNonceRef = useRef(0);
 
@@ -346,7 +346,7 @@ export const Landing: FC<LandingProps> = ({
           animate="visible"
         >
           {/* ── Text ── */}
-          <div className="flex-1 text-center lg:text-right max-w-[540px]">
+          <div className="flex-1 text-center lg:text-right max-w-[640px]">
 
             {/* Platform badge */}
             <motion.div variants={fadeUp} className="inline-flex items-center gap-2 mb-5">
@@ -357,10 +357,10 @@ export const Landing: FC<LandingProps> = ({
             {/* Headline */}
             <motion.h1
               variants={fadeUp}
-              className="text-[2.5rem] sm:text-6xl lg:text-7xl font-black leading-[1.15] mb-6"
+              className="text-[1.8rem] sm:text-5xl lg:text-6xl font-black leading-[1.25] mb-8"
               style={{ fontFamily: "Tajawal, sans-serif", color: "#F8FAFC" }}
             >
-              وضوح حقيقي
+              {landingCopy.hook}
               <br />
               من <TypingWord />
             </motion.h1>
@@ -368,10 +368,10 @@ export const Landing: FC<LandingProps> = ({
             {/* Subtitle */}
             <motion.p
               variants={fadeUp}
-              className="text-base sm:text-lg leading-loose mb-7 max-w-[44ch] mx-auto lg:mx-0"
+              className="text-lg sm:text-xl leading-relaxed mb-10 max-w-[50ch]"
               style={{ color: "#94A3B8" }}
             >
-              منصة متكاملة تساعدك تشوف علاقاتك بوضوح، تسمع صوتك الداخلي، وتاخد خطوة عملية — كل يوم.
+              {landingCopy.subtitle}
             </motion.p>
 
             {/* Value chips */}
@@ -404,7 +404,7 @@ export const Landing: FC<LandingProps> = ({
                 whileHover={{ scale: 1.03, boxShadow: "0 16px 44px rgba(20,184,166,0.38)" }}
                 whileTap={{ scale: 0.97 }}
               >
-                ابدأ رحلتك — مجاناً
+                ابدأ خريطتك — مجاناً
                 <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
               </motion.button>
 
@@ -455,48 +455,88 @@ export const Landing: FC<LandingProps> = ({
         </motion.div>
       </section>
 
+      {/* ── Section Divider ── */}
+      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.3), transparent)" }} />
+      </div>
+
       {/* ══════════════════════════════════════════════
-          SECTION 1.5: LIVE METRICS STRIP
+          SECTION 1.5: INTERACTIVE DEMO
+      ══════════════════════════════════════════════ */}
+      <section className="relative py-20 px-4 max-w-3xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.7, ease }}
+        >
+          <div className="text-center mb-8">
+            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: "#7C3AED" }}>
+              جرّب بنفسك
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-black text-white mb-3" style={{ fontFamily: "Tajawal, sans-serif" }}>
+              دقيقتين تكشفلك الحقيقة
+            </h2>
+            <p className="text-sm max-w-[38ch] mx-auto" style={{ color: "#94A3B8" }}>
+              3 أسئلة بسيطة — بدون تفكير — وهتعرف إيه اللي سارق طاقتك فعلاً
+            </p>
+          </div>
+          <LandingSimulation />
+        </motion.div>
+      </section>
+
+      {/* ── Section Divider ── */}
+      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(20,184,166,0.25), transparent)" }} />
+      </div>
+
+      {/* ══════════════════════════════════════════════
+          SECTION 1.75: LIVE METRICS STRIP
       ══════════════════════════════════════════════ */}
       {showLiveMetrics && (
-        <section className="relative py-8 px-5 max-w-5xl mx-auto">
+        <section className="relative py-16 px-5 max-w-5xl mx-auto">
           <motion.div
             variants={staggerFast}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-40px" }}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+            className="grid grid-cols-2 sm:grid-cols-4 gap-4"
           >
             {[
-              { value: "٣٢٠٠+", label: "مستخدم جرّب المنصة",  color: "#14B8A6", glow: "rgba(20,184,166,0.15)" },
-              { value: "١٢٠٠٠+", label: "جلسة دواير مكتملة",   color: "#7C3AED", glow: "rgba(124,58,237,0.15)" },
-              { value: "٨٧٪",   label: "شعروا بتحسّن داخلي",  color: "#FBBF24", glow: "rgba(251,191,36,0.15)" },
-              { value: "٤.٨★",  label: "متوسط تقييم التجربة", color: "#F472B6", glow: "rgba(244,114,182,0.15)" },
+              { value: "٣٢٠٠+", label: "مستخدم جرّب المنصة",  color: "#14B8A6", glow: "rgba(20,184,166,0.08)" },
+              { value: "١٢٠٠٠+", label: "جلسة دواير مكتملة",   color: "#7C3AED", glow: "rgba(124,58,237,0.08)" },
+              { value: "٨٧٪",   label: "شعروا بتحسّن داخلي",  color: "#FBBF24", glow: "rgba(251,191,36,0.08)" },
+              { value: "٤.٨★",  label: "متوسط تقييم التجربة", color: "#F472B6", glow: "rgba(244,114,182,0.08)" },
             ].map((m, i) => (
               <motion.div
                 key={i}
                 variants={fadeUp}
-                className="rounded-2xl p-5 text-center"
+                className="rounded-2xl p-6 text-center"
                 style={{
                   background: m.glow,
-                  border: `1px solid ${m.color}22`,
+                  border: `1px solid ${m.color}18`,
                   backdropFilter: "blur(12px)"
                 }}
               >
-                <p className="text-2xl sm:text-3xl font-black mb-1" style={{ color: m.color, fontFamily: "Tajawal, sans-serif" }}>
+                <p className="text-2xl sm:text-3xl font-black mb-1.5" style={{ color: m.color, fontFamily: "Tajawal, sans-serif" }}>
                   {m.value}
                 </p>
-                <p className="text-[11px] font-semibold" style={{ color: "#64748B" }}>{m.label}</p>
+                <p className="text-[11px] font-semibold" style={{ color: "#94A3B8" }}>{m.label}</p>
               </motion.div>
             ))}
           </motion.div>
         </section>
       )}
 
+      {/* ── Section Divider ── */}
+      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.2), transparent)" }} />
+      </div>
+
       {/* ══════════════════════════════════════════════
           SECTION 2: PLATFORM PRODUCTS
       ══════════════════════════════════════════════ */}
-      <section className="relative py-28 px-5 max-w-6xl mx-auto">
+      <section className="relative py-20 px-5 max-w-6xl mx-auto">
         <motion.div
           variants={stagger}
           initial="hidden"
@@ -516,8 +556,8 @@ export const Landing: FC<LandingProps> = ({
             </p>
           </motion.div>
 
-          {/* Products Grid — 2-col always, 3-col on md */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+          {/* Products Grid — 1-col mobile, 2-col sm, 3-col md */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
             <ProductCard
               icon={MapPin}
               iconColor="#14B8A6"
@@ -592,10 +632,15 @@ export const Landing: FC<LandingProps> = ({
         </motion.div>
       </section>
 
+      {/* ── Section Divider ── */}
+      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(248,113,113,0.2), transparent)" }} />
+      </div>
+
       {/* ══════════════════════════════════════════════
           SECTION 3: PROBLEM
       ══════════════════════════════════════════════ */}
-      <section className="relative py-28 px-5 max-w-4xl mx-auto">
+      <section className="relative py-20 px-5 max-w-4xl mx-auto">
         <motion.div
           variants={stagger}
           initial="hidden"
@@ -634,10 +679,15 @@ export const Landing: FC<LandingProps> = ({
         </motion.div>
       </section>
 
+      {/* ── Section Divider ── */}
+      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(20,184,166,0.2), transparent)" }} />
+      </div>
+
       {/* ══════════════════════════════════════════════
           SECTION 4: HOW IT WORKS
       ══════════════════════════════════════════════ */}
-      <section className="relative py-28 px-5 max-w-5xl mx-auto">
+      <section className="relative py-20 px-5 max-w-5xl mx-auto">
         <motion.div
           variants={stagger}
           initial="hidden"
@@ -686,34 +736,54 @@ export const Landing: FC<LandingProps> = ({
           SECTION 5: TESTIMONIALS
       ══════════════════════════════════════════════ */}
       {showTestimonials && (
-        <section className="relative py-20 px-5 max-w-4xl mx-auto">
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-80px" }}
-          >
-            <motion.p variants={fadeUp} className="text-xs font-bold tracking-widest uppercase mb-8 text-center" style={{ color: "#7C3AED" }}>
-              فوج التأسيس
-            </motion.p>
+        <>
+          {/* ── Section Divider ── */}
+          <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
+            <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.2), transparent)" }} />
+          </div>
 
-            <div className="grid sm:grid-cols-2 gap-4">
-              {landingCopy.testimonials?.map((t, i) => (
-                <motion.div
-                  key={i}
-                  variants={fadeUp}
-                  className="relative rounded-2xl p-6"
-                  style={{ border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
-                >
-                  <Heart className="w-4 h-4 mb-4" style={{ color: "#7C3AED" }} />
-                  <p className="text-sm leading-loose mb-4" style={{ color: "#CBD5E1" }}>&#x201C;{t.quote}&#x201D;</p>
-                  <p className="text-xs font-bold" style={{ color: "#475569" }}>— {t.author}</p>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </section>
+          <section className="relative py-20 px-5 max-w-4xl mx-auto">
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-80px" }}
+            >
+              <motion.div variants={fadeUp} className="text-center mb-10">
+                <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: "#7C3AED" }}>
+                  فوج التأسيس
+                </p>
+                <h2 className="text-2xl sm:text-3xl font-black text-white" style={{ fontFamily: "Tajawal, sans-serif" }}>
+                  ناس زيّك بدأوا رحلتهم
+                </h2>
+              </motion.div>
+
+              <div className="grid sm:grid-cols-2 gap-5">
+                {landingCopy.testimonials?.map((t, i) => (
+                  <motion.div
+                    key={i}
+                    variants={fadeUp}
+                    className="relative rounded-2xl p-7"
+                    style={{
+                      border: "1px solid rgba(124,58,237,0.15)",
+                      background: "radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.05) 0%, transparent 70%)"
+                    }}
+                  >
+                    <Heart className="w-4 h-4 mb-4" style={{ color: "#7C3AED" }} />
+                    <p className="text-sm leading-loose mb-5" style={{ color: "#CBD5E1" }}>&#x201C;{t.quote}&#x201D;</p>
+                    <p className="text-xs font-bold" style={{ color: "#64748B" }}>— {t.author}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </section>
+        </>
       )}
+
+      {/* ── Section Divider ── */}
+      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(20,184,166,0.25), transparent)" }} />
+      </div>
 
       {/* ══════════════════════════════════════════════
           SECTION 6: FINAL CTA
@@ -788,6 +858,11 @@ export const Landing: FC<LandingProps> = ({
           )}
         </motion.div>
       </section>
+
+      {/* ── Footer Divider ── */}
+      <div className="max-w-5xl mx-auto px-8 mt-8" aria-hidden="true">
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)" }} />
+      </div>
 
       {/* ── Footer ── */}
       <LandingFooter

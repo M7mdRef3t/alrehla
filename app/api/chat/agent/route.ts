@@ -1,9 +1,10 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AIOrchestrator } from '../../../../src/services/aiOrchestrator';
 import { supabase } from '../../../../src/services/supabaseClient';
 import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
-import type { AwarenessVector } from '../../../../src/services/trajectoryEngine';
+import { TrajectoryEngine, type AwarenessVector } from '../../../../src/services/trajectoryEngine';
+import { HiveEngine } from '../../../../src/services/hiveEngine';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const MAX_AGENT_REQUEST_BYTES = 120_000;
@@ -420,7 +421,7 @@ Output strictly as JSON:
                                     .order('created_at', { ascending: false })
                                     .limit(5);
 
-                                const { TrajectoryEngine } = await import('../../../../src/services/trajectoryEngine');
+
                                 const history: AwarenessVector[] = (prevTrajectories || [])
                                     .map(t => t.final_vector || t.initial_vector)
                                     .filter(Boolean);
@@ -475,7 +476,7 @@ Format: JSON
 
                             // Hive Archiving: If Oracle, contribute to Wisdom Vault
                             if (isTrajectoryComplete && sovereigntyScore >= 800) {
-                                const { HiveEngine } = await import('../../../../src/services/hiveEngine');
+
                                 await HiveEngine.contributeToVault(trajectory.id, userId);
                                 console.warn(`🏛️ [Hive] Journey archived to Wisdom Vault (Oracle Rank).`);
                             }

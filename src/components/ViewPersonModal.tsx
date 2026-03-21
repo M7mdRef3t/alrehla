@@ -17,6 +17,9 @@ import { buildEmergencyContextFromNode } from "../utils/emergencyContext";
 import { deriveRedReturnAlarm } from "../utils/redReturnAlarm";
 import { deriveOrbitDriftReplay } from "../utils/orbitDriftReplay";
 import { OrbitDriftReplayCard } from "./OrbitDriftReplayCard";
+import { PersonalizedTraining } from "./PersonalizedTraining";
+import { SymptomsChecklist } from "./SymptomsChecklist";
+import { Target, ClipboardList } from "lucide-react";
 
 interface ViewPersonModalProps {
   nodeId: string;
@@ -28,6 +31,7 @@ interface ViewPersonModalProps {
 
 export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   nodeId,
+  category,
   onClose,
   onOpenMission
 }) => {
@@ -44,6 +48,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
     desc: string;
     type: "boundary" | "achievement" | "milestone";
   } | null>(null);
+  const [showTraining, setShowTraining] = useState(false);
   const openEmergency = useEmergencyState((state) => state.open);
   const returnAlarm = useMemo(
     () => (node ? deriveRedReturnAlarm(node, node.label) : null),
@@ -390,7 +395,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               <div className="flex items-center justify-between gap-4">
                 <div className="text-right">
                   <span className="block text-base font-bold text-rose-300">
-                    غرفة الطوارئ لهذا الشخص
+                    غرفة الطوارئ لـ {node.label}
                   </span>
                   <span className="mt-1 block text-xs leading-relaxed text-rose-400/80">
                     افتح بروتوكول تهدئة سريع مرتبط بهذه العلاقة قبل أي رد أو رجوع لنفس الحلقة.
@@ -398,6 +403,54 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
                 </div>
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-500/20 text-rose-300">
                   !
+                </div>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {node && (
+          <div className="mb-8 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-3 mb-4">
+               <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                 <ClipboardList className="w-6 h-6 text-purple-600" />
+               </div>
+               <div className="text-right">
+                 <h4 className="text-sm font-bold text-slate-900">أعراض مسجلة مع {node.label}</h4>
+                 <p className="text-[10px] text-slate-500">مراجعة وتحديث الإشارات اللي بتظهر معاك</p>
+               </div>
+            </div>
+            <SymptomsChecklist
+              ring={node.ring}
+              personLabel={node.label}
+              selectedSymptoms={node.analysis?.selectedSymptoms ?? []}
+              onSymptomsChange={(ids) => useMapState.getState().updateNodeSymptoms(node.id, ids)}
+            />
+          </div>
+        )}
+
+        {/* التدريب المخصص */}
+        {node && (node.analysis?.selectedSymptoms?.length ?? 0) > 0 && (
+          <div className="mb-6">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setShowTraining(true);
+              }}
+              className="w-full rounded-2xl border border-teal-500/30 bg-linear-to-br from-teal-500/10 to-cyan-500/10 p-4 text-teal-600 shadow-md transition-all duration-300 hover:bg-teal-500/20"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div className="text-right">
+                  <span className="block text-base font-bold text-teal-700">
+                    🎯 ابدأ تدريب مخصص لـ {node.label}
+                  </span>
+                  <span className="mt-1 block text-xs leading-relaxed text-teal-600/80">
+                    تدرب على التعامل مع {node.analysis?.selectedSymptoms?.length ?? 0} أعراض رصدناها في علاقتك.
+                  </span>
+                </div>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500 text-white shadow-lg">
+                  <Target className="w-6 h-6" />
                 </div>
               </div>
             </button>
@@ -475,6 +528,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
           addedNodeId={node.id}
           onOpenMission={handleOpenMission}
           onClose={() => onClose()}
+          category={category}
         />
       </motion.div>
 
@@ -510,6 +564,17 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
           onClose={() => setShowShareCard(null)}
         />
       ) : null}
+
+      {showTraining && node && (
+        <PersonalizedTraining
+          personLabel={node.label}
+          selectedSymptoms={node.analysis?.selectedSymptoms ?? []}
+          ring={node.ring}
+          goalId={node.goalId ?? "unknown"}
+          onClose={() => setShowTraining(false)}
+          onComplete={() => setShowTraining(false)}
+        />
+      )}
     </div>
   );
 };

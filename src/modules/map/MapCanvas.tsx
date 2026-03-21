@@ -46,41 +46,19 @@ const OrbitalRing: FC<RingProps> = memo(({ label, radius, color, glowColor, brea
   return (
     <g aria-label={label}>
       {/* Ambient glow layer */}
-      <motion.circle
-        cx="50"
-        cy="50"
-        r={safeRadius}
-        fill="none"
-        stroke={neutralGlow}
-        strokeWidth={4}
-        opacity={0.1}
-        animate={{
-          opacity: [0.05, 0.1, 0.05]
-        }}
-        transition={{
-          duration: 12,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
+      <motion.g
+        animate={{ opacity: [0.05, 0.1, 0.05] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <circle cx="50" cy="50" r={safeRadius} fill="none" stroke={neutralGlow} strokeWidth={4} opacity={0.1} />
+      </motion.g>
       {/* Main breathing ring (Neutral by default) */}
-      <motion.circle
-        cx="50"
-        cy="50"
-        r={safeRadius}
-        fill="none"
-        stroke={neutralColor}
-        className="orbital-ring"
-        animate={{
-          strokeWidth: [0.5, 0.8, 0.5],
-          opacity: [0.2, 0.4, 0.2]
-        }}
-        transition={{
-          duration: breatheDuration * 2,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
+      <motion.g
+        animate={{ strokeWidth: [0.5, 0.8, 0.5], opacity: [0.2, 0.4, 0.2] }}
+        transition={{ duration: breatheDuration * 2, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <circle cx="50" cy="50" r={safeRadius} fill="none" stroke={neutralColor} className="orbital-ring" />
+      </motion.g>
     </g>
   );
 });
@@ -185,7 +163,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const ok = typeof window === "undefined" ? true : window.confirm(`تأد: خرج "${node.label}"  دار\nتحفظ ف "أشخاص شا"  تدر ترجع  احتجت.`);
+    const ok = typeof window === "undefined" ? true : window.confirm(`تأكيد: خرّج "${node.label}" من المدار\nتتحفظ في "أشخاص مشافين" وتقدر ترجعها لو احتجت.`);
     if (!ok) return;
     archiveNode(node.id);
   }, [archiveNode, node.id, node.label]);
@@ -309,11 +287,11 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           title={
             hasMismatch
               ? canOpenDetails
-                ? "️ تعارض  اضغط تفاص"
-                : "️ تعارض  اتفاص فة حاا"
+                ? "⚠️ تعارض — اضغط للتفاصيل"
+                : "⚠️ تعارض — التفاصيل موقفة حالياً"
               : canOpenDetails
-                ? `اضغط رؤة تفاص ${node.label}`
-                : "اتفاص فة حاا"
+                ? `اضغط لرؤية تفاصيل ${node.label}`
+                : "التفاصيل موقفة حالياً"
           }
           whileHover={reduceMotion ? undefined : { scale: 1.02 }}
           whileTap={reduceMotion ? undefined : { scale: 0.97 }}
@@ -346,8 +324,8 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           {...attributes}
           className="shrink-0 p-1.5 rounded-r-full cursor-grab active:cursor-grabbing touch-none"
           style={{ color: "var(--text-muted)" }}
-          title="اسحب تحر ادائرة"
-          aria-label="اسحب تحر"
+          title="اسحب لتحريك الدائرة"
+          aria-label="اسحب للتحريك"
         >
           <GripVertical className="w-4 h-4" strokeWidth={2} />
         </span>
@@ -387,7 +365,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
               background: "linear-gradient(135deg, #94a3b8, #64748b)",
               boxShadow: "0 0 10px rgba(100, 116, 139, 0.25)"
             }}
-            title="خرج  دار دت"
+            title="خرّج من المدار (نقل للمشافين)"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
@@ -1058,68 +1036,55 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               {/* ️ Halo around Center during Reveal State */}
               <AnimatePresence>
                 {isRevealState && (
-                  <motion.circle
+                  <motion.g
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: [1, 1.1, 1], opacity: [0.1, 0.2, 0.1] }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    cx="50"
-                    cy="50"
-                    r="15"
-                    fill="url(#centerHaloGradient)"
-                    className="pointer-events-none"
-                  />
+                    style={{ transformOrigin: "50px 50px" }}
+                  >
+                    <circle cx="50" cy="50" r="15" fill="url(#centerHaloGradient)" className="pointer-events-none" />
+                  </motion.g>
                 )}
               </AnimatePresence>
 
               {/*  Detachment Zone (Dashed Orbit)  */}
-              <motion.circle
-                cx="50"
-                cy="50"
-                r={Number.isFinite(GREY_ZONE_STROKE_RADIUS) ? GREY_ZONE_STROKE_RADIUS : 0}
-                fill="none"
-                stroke="rgba(148, 163, 184, 0.25)"
-                strokeWidth={1}
-                strokeDasharray="2 2.5"
-                className="pointer-events-none"
+              <motion.g
                 animate={shouldReduceMotion ? { opacity: 0.28 } : { opacity: [0.2, 0.4, 0.2] }}
                 transition={shouldReduceMotion ? { duration: 0.2 } : { duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              />
+              >
+                <circle
+                  cx="50" cy="50"
+                  r={Number.isFinite(GREY_ZONE_STROKE_RADIUS) ? GREY_ZONE_STROKE_RADIUS : 0}
+                  fill="none" stroke="rgba(148, 163, 184, 0.25)"
+                  strokeWidth={1} strokeDasharray="2 2.5"
+                  className="pointer-events-none"
+                />
+              </motion.g>
 
               {/*  Center "Me"  Cosmic Orb  */}
               <g filter="url(#cosmicGlow)">
                 {/*  Reveal Halo (The Light of Awareness) */}
                 {isRevealState && (
-                  <motion.circle
-                    cx="50%"
-                    cy="50%"
-                    r={14}
-                    fill="none"
-                    stroke="rgba(45, 212, 191, 0.15)"
-                    strokeWidth={0.5}
+                  <motion.g
                     animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  />
+                    style={{ transformOrigin: "50% 50%" }}
+                  >
+                    <circle cx="50" cy="50" r={14} fill="none" stroke="rgba(45, 212, 191, 0.15)" strokeWidth={0.5} />
+                  </motion.g>
                 )}
                 {/* Outer aura */}
-                <motion.circle
-                  cx="50"
-                  cy="50"
-                  r={9}
-                  fill="none"
-                  stroke={battery === "drained" ? "rgba(148, 163, 184, 0.1)" : "rgba(45, 212, 191, 0.12)"}
-                  strokeWidth="0.5"
-                  animate={shouldReduceMotion ? { opacity: 0.35 } : {
-                    opacity: [0.3, 0.15, 0.3]
-                  }}
+                <motion.g
+                  animate={shouldReduceMotion ? { opacity: 0.35 } : { opacity: [0.3, 0.15, 0.3] }}
                   transition={shouldReduceMotion ? { duration: 0.2 } : { duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                />
+                >
+                  <circle cx="50" cy="50" r={9} fill="none"
+                    stroke={battery === "drained" ? "rgba(148, 163, 184, 0.1)" : "rgba(45, 212, 191, 0.12)"}
+                    strokeWidth="0.5" />
+                </motion.g>
                 {/* Main orb */}
-                <motion.circle
-                  cx="50"
-                  cy="50"
-                  r={6}
-                  fill={meStyle.fill}
+                <motion.g
                   animate={shouldReduceMotion ? undefined : {
                     scale: meStyle.pulseScale,
                     opacity: battery === "drained" ? [0.6, 0.8, 0.6] : [0.85, 1, 0.85]
@@ -1129,10 +1094,10 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
-                  style={{
-                    filter: "none"
-                  }}
-                />
+                  style={{ transformOrigin: "50px 50px", filter: "none" }}
+                >
+                  <circle cx="50" cy="50" r={6} fill={meStyle.fill} />
+                </motion.g>
                 {/* "أت" label */}
                 <text
                   x="50"
@@ -1161,12 +1126,10 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     className="pointer-events-none"
                   >
                     {/* Ghost node */}
-                    <motion.circle
-                      r={2.5}
-                      fill="rgba(45, 212, 191, 0.4)"
+                    <motion.g
                       animate={{
-                        cx: [92, 68, 68, 92],
-                        cy: [50, 50, 50, 50],
+                        x: [92, 68, 68, 92],
+                        y: [50, 50, 50, 50],
                         opacity: [0, 0.8, 0.8, 0],
                         scale: [0.8, 1.1, 1.1, 0.8]
                       }}
@@ -1176,18 +1139,17 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                         ease: "easeInOut",
                         times: [0, 0.4, 0.8, 1]
                       }}
-                    />
+                    >
+                      <circle r={2.5} fill="rgba(45, 212, 191, 0.4)" />
+                    </motion.g>
                     {/* Pulsing target */}
-                    <motion.circle
-                      cx={68}
-                      cy={50}
-                      r={4}
-                      fill="none"
-                      stroke="rgba(45, 212, 191, 0.4)"
-                      strokeWidth={0.5}
+                    <motion.g
                       animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.5, 0.2] }}
                       transition={{ duration: 2, repeat: Infinity }}
-                    />
+                      style={{ transformOrigin: "68px 50px" }}
+                    >
+                      <circle cx={68} cy={50} r={4} fill="none" stroke="rgba(45, 212, 191, 0.4)" strokeWidth={0.5} />
+                    </motion.g>
                   </motion.g>
                 )}
               </AnimatePresence>

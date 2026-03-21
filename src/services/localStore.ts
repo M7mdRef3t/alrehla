@@ -1,4 +1,4 @@
-import type { MapNode } from "../modules/map/mapTypes";
+import type { MapNode, MapType, FeelingCheckResult } from "../modules/map/mapTypes";
 import { getJSON, setJSON } from "./secureStore";
 import { queueMapSync } from "./mapSync";
 import { sanitizeMapNodes } from "../utils/mapNodeSchema";
@@ -7,6 +7,8 @@ const STORAGE_KEY = "dawayir-map-nodes";
 
 export interface StoredState {
   nodes: MapNode[];
+  mapType?: MapType;
+  feelingResults?: FeelingCheckResult | null;
 }
 
 const isBrowser = typeof window !== "undefined";
@@ -44,7 +46,11 @@ export const loadStoredState = async (): Promise<StoredState | null> => {
       }
       return node;
     });
-    return { nodes: migratedNodes };
+    return { 
+      nodes: migratedNodes,
+      mapType: parsed.mapType,
+      feelingResults: parsed.feelingResults
+    };
   } catch (error) {
     if (runtimeEnv.isDev) console.error("Error loading from localStorage:", error);
     return null;
@@ -53,7 +59,11 @@ export const loadStoredState = async (): Promise<StoredState | null> => {
 
 export const saveStoredState = (state: StoredState) => {
   if (!isBrowser) return;
-  const safeState: StoredState = { nodes: sanitizeMapNodes(state.nodes) };
+  const safeState: StoredState = { 
+    nodes: sanitizeMapNodes(state.nodes),
+    mapType: state.mapType,
+    feelingResults: state.feelingResults
+  };
 
   // Debounce saves to prevent race conditions
   if (saveTimeout) {

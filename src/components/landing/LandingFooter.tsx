@@ -48,7 +48,7 @@ export const LandingFooter: FC<LandingFooterProps> = ({
         تفعيل الرحلة
       </a>
       <a
-        href="https://wa.me/0201023050092"
+        href="https://wa.me/201023050092"
         target="_blank"
         rel="noopener noreferrer"
         className="text-slate-400 hover:text-teal-400 transition-colors underline underline-offset-2 inline-flex items-center gap-1"
@@ -69,7 +69,7 @@ export const LandingFooter: FC<LandingFooterProps> = ({
       </div>
     </div>
     <span className="text-sm text-slate-600 font-mono tracking-widest">
-      ALREHLA // ALPHA v0.1
+      الرحلة — منصة الوعي الذاتي
     </span>
   </motion.footer>
 );

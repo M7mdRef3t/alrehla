@@ -10,24 +10,24 @@ const TIER_STYLES: Record<
   { selected: string; unselected: string; unselectedHover: string }
 > = {
   red: {
-    selected: "bg-rose-500 text-white border-2 border-rose-600",
-    unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
-    unselectedHover: "hover:bg-rose-50 hover:border-rose-200 hover:text-rose-800"
+    selected: "bg-rose-500 text-white border-2 border-rose-600 shadow-[0_0_15px_rgba(244,63,94,0.3)]",
+    unselected: "bg-white/5 text-slate-400 border-2 border-transparent",
+    unselectedHover: "hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-400"
   },
   amber: {
-    selected: "bg-amber-500 text-white border-2 border-amber-600",
-    unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
-    unselectedHover: "hover:bg-amber-50 hover:border-amber-200 hover:text-amber-800"
+    selected: "bg-amber-500 text-white border-2 border-amber-600 shadow-[0_0_15px_rgba(245,158,11,0.3)]",
+    unselected: "bg-white/5 text-slate-400 border-2 border-transparent",
+    unselectedHover: "hover:bg-amber-500/10 hover:border-amber-500/20 hover:text-amber-400"
   },
   yellow: {
-    selected: "bg-yellow-300 text-slate-900 border-2 border-yellow-400",
-    unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
-    unselectedHover: "hover:bg-yellow-50 hover:border-yellow-200 hover:text-yellow-900"
+    selected: "bg-yellow-400 text-slate-950 border-2 border-yellow-500 shadow-[0_0_15px_rgba(250,204,21,0.3)]",
+    unselected: "bg-white/5 text-slate-400 border-2 border-transparent",
+    unselectedHover: "hover:bg-yellow-400/10 hover:border-yellow-400/20 hover:text-yellow-400"
   },
   green: {
-    selected: "bg-teal-500 text-white border-2 border-teal-600",
-    unselected: "bg-slate-100 text-slate-700 border-2 border-transparent",
-    unselectedHover: "hover:bg-teal-50 hover:border-teal-200 hover:text-teal-800"
+    selected: "bg-teal-500 text-white border-2 border-teal-600 shadow-[0_0_15px_rgba(20,184,166,0.3)]",
+    unselected: "bg-white/5 text-slate-400 border-2 border-transparent",
+    unselectedHover: "hover:bg-teal-500/10 hover:border-teal-500/20 hover:text-teal-400"
   }
 };
 

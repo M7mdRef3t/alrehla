@@ -84,7 +84,6 @@ async function tryCloudSync() {
   }
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    if (runtimeEnv.isDev) console.log("[MapSync] Anon user: Cloud sync skipped.");
     return;
   }
   scheduleFlush(SYNC_DEBOUNCE_MS);

@@ -11,7 +11,10 @@ import type {
   QuickAnswerValue,
   MissionProgress,
   PersonViewInsights,
-  OrbitHistoryEntry
+  OrbitHistoryEntry,
+  MapType,
+  FeelingCheckResult,
+  FeelingCheckAsset
 } from "../modules/map/mapTypes";
 import { loadStoredState, saveStoredState } from "../services/localStore";
 import { resolvePathId } from "../modules/pathEngine/pathResolver";
@@ -26,6 +29,10 @@ export interface RecoveryPlanOpenWith {
 
 interface MapState {
   nodes: MapNode[];
+  mapType: MapType;
+  feelingResults: FeelingCheckResult | null;
+  setMapType: (type: MapType) => void;
+  updateFeelingResults: (results: Partial<FeelingCheckResult>) => void;
   showPlacementTooltip: boolean;
   lastAddedNodeId: string | null;
   recoveryPlanOpenWith: RecoveryPlanOpenWith | null;
@@ -40,7 +47,8 @@ interface MapState {
     contact?: ContactLevel,
     isSOS?: boolean,
     realityAnswers?: RealityAnswers,
-    safetyAnswer?: QuickAnswerValue
+    safetyAnswer?: QuickAnswerValue,
+    isAnalyzing?: boolean
   ) => string;
   updateDetachmentReasons: (nodeId: string, reasons: string[]) => void;
   incrementRuminationLog: (nodeId: string) => void;
@@ -188,6 +196,17 @@ function normalizeNodeOrbitHistory(node: MapNode): MapNode {
 
 export const useMapState = create<MapState>((set, get) => ({
   nodes: [],
+  mapType: "masafaty",
+  feelingResults: null,
+  setMapType: (mapType) => {
+    saveStoredState({ nodes: get().nodes, mapType });
+    set({ mapType });
+  },
+  updateFeelingResults: (results) => {
+    const next = { ...(get().feelingResults || { body: 50, time: 50, energy: 50, money: 50, space: 50 }), ...results };
+    saveStoredState({ nodes: get().nodes, mapType: get().mapType, feelingResults: next });
+    set({ feelingResults: next });
+  },
   showPlacementTooltip: false,
   lastAddedNodeId: null,
   recoveryPlanOpenWith: null,
@@ -203,7 +222,8 @@ export const useMapState = create<MapState>((set, get) => ({
     contact?,
     isSOS?,
     realityAnswers?,
-    safetyAnswer?
+    safetyAnswer?,
+    isAnalyzing = false
   ) => {
     let processedAnalysis;
     if (analysis) {
@@ -265,7 +285,8 @@ export const useMapState = create<MapState>((set, get) => ({
       ...(detachmentMode === true && { detachmentMode: true }),
       ...(realityAnswers != null && { realityAnswers }),
       ...(isSOS === true && { isEmergency: true }),
-      ...(safetyAnswer != null && { safetyAnswer })
+      ...(safetyAnswer != null && { safetyAnswer }),
+      isAnalyzing
     };
     const nextNodes = [...get().nodes, newNode];
     saveStoredState({ nodes: nextNodes });

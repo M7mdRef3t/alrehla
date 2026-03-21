@@ -3,7 +3,7 @@
  * hook لإدارة حالة البوصلة والنبض
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, type Dispatch, type SetStateAction } from "react";
 import type { PulseMood, PulseFocus, PulseEnergyConfidence } from "../state/pulseState";
 import { usePulseState } from "../state/pulseState";
 import { recordFlowEvent } from "../services/journeyTracking";
@@ -19,6 +19,7 @@ interface PulseDraft {
   mood: PulseMood | null;
   focus: PulseFocus | null;
   notes: string;
+  topics: string[];
   energyReasons: string[];
   energyConfidence: PulseEnergyConfidence | null;
   step: 1 | 2;
@@ -26,19 +27,25 @@ interface PulseDraft {
 
 interface UsePulseManagementReturn {
   energy: number | null;
-  setEnergy: (energy: number | null) => void;
+  setEnergy: Dispatch<SetStateAction<number | null>>;
   previousEnergy: number | null;
-  setPreviousEnergy: (energy: number | null) => void;
+  setPreviousEnergy: Dispatch<SetStateAction<number | null>>;
   hasPickedEnergy: boolean;
-  setHasPickedEnergy: (value: boolean) => void;
+  setHasPickedEnergy: Dispatch<SetStateAction<boolean>>;
   mood: PulseMood | null;
-  setMood: (mood: PulseMood | null) => void;
+  setMood: Dispatch<SetStateAction<PulseMood | null>>;
   focus: PulseFocus | null;
-  setFocus: (focus: PulseFocus | null) => void;
+  setFocus: Dispatch<SetStateAction<PulseFocus | null>>;
   notes: string;
-  setNotes: (notes: string) => void;
+  setNotes: Dispatch<SetStateAction<string>>;
+  topics: string[];
+  setTopics: Dispatch<SetStateAction<string[]>>;
+  energyReasons: string[];
+  setEnergyReasons: Dispatch<SetStateAction<string[]>>;
+  energyConfidence: PulseEnergyConfidence | null;
+  setEnergyConfidence: Dispatch<SetStateAction<PulseEnergyConfidence | null>>;
   step: 1 | 2;
-  setStep: (step: 1 | 2) => void;
+  setStep: Dispatch<SetStateAction<1 | 2>>;
   saveDraft: () => void;
   loadDraft: () => boolean;
   clearDraft: () => void;
@@ -51,6 +58,7 @@ export function usePulseManagement(isOpen: boolean): UsePulseManagementReturn {
   const [mood, setMood] = useState<PulseMood | null>(null);
   const [focus, setFocus] = useState<PulseFocus | null>(null);
   const [notes, setNotes] = useState("");
+  const [topics, setTopics] = useState<string[]>([]);
   const [energyReasons, setEnergyReasons] = useState<string[]>([]);
   const [energyConfidence, setEnergyConfidence] = useState<PulseEnergyConfidence | null>(null);
   const [step, setStep] = useState<1 | 2>(1);
@@ -67,6 +75,7 @@ export function usePulseManagement(isOpen: boolean): UsePulseManagementReturn {
       mood,
       focus,
       notes,
+      topics,
       energyReasons,
       energyConfidence,
       step
@@ -77,7 +86,7 @@ export function usePulseManagement(isOpen: boolean): UsePulseManagementReturn {
     } catch {
       // ignore storage errors
     }
-  }, [energy, previousEnergy, hasPickedEnergy, mood, focus, notes, energyReasons, energyConfidence, step]);
+  }, [energy, previousEnergy, hasPickedEnergy, mood, focus, notes, topics, energyReasons, energyConfidence, step]);
 
   const loadDraft = useCallback((): boolean => {
     if (typeof window === "undefined") return false;
@@ -95,6 +104,7 @@ export function usePulseManagement(isOpen: boolean): UsePulseManagementReturn {
       setMood(parsed.mood ?? null);
       setFocus(parsed.focus ?? null);
       setNotes(typeof parsed.notes === "string" ? parsed.notes : "");
+      setTopics(Array.isArray(parsed.topics) ? parsed.topics.filter((x): x is string => typeof x === "string") : []);
       setEnergyReasons(Array.isArray(parsed.energyReasons) ? parsed.energyReasons.filter((x): x is string => typeof x === "string") : []);
       setEnergyConfidence(parsed.energyConfidence ?? null);
       setStep(parsed.step === 2 ? 2 : 1);
@@ -118,7 +128,7 @@ export function usePulseManagement(isOpen: boolean): UsePulseManagementReturn {
   useEffect(() => {
     if (!isOpen) return;
     saveDraft();
-  }, [isOpen, energy, mood, focus, notes, step, saveDraft]);
+  }, [isOpen, energy, mood, focus, notes, topics, energyReasons, energyConfidence, step, saveDraft]);
 
   return {
     energy,
@@ -133,6 +143,12 @@ export function usePulseManagement(isOpen: boolean): UsePulseManagementReturn {
     setFocus,
     notes,
     setNotes,
+    topics,
+    setTopics,
+    energyReasons,
+    setEnergyReasons,
+    energyConfidence,
+    setEnergyConfidence,
     step,
     setStep,
     saveDraft,

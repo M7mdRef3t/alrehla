@@ -49,12 +49,12 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
 }) => {
   return (
     <form onSubmit={onContinue} className="text-right h-full min-h-0 flex flex-col">
-      <h2 className="text-xl font-bold text-slate-900 mb-4">
+      <h2 className="text-xl font-extrabold text-slate-100 mb-6 tracking-tight">
         <EditableText id="add_person_quick_title" defaultText={title} page="add_person" />
       </h2>
       <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-5 mb-6">
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">
+          <p className="text-sm font-semibold text-slate-300 mb-3">
             <EditableText id="add_person_quick_q1" defaultText={question1} page="add_person" showEditIcon={false} />
           </p>
           <div className="flex flex-wrap gap-2">
@@ -74,7 +74,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
           </div>
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">
+          <p className="text-sm font-semibold text-slate-300 mb-3">
             <EditableText id="add_person_quick_q2" defaultText={question2} page="add_person" showEditIcon={false} />
           </p>
           <div className="flex flex-wrap gap-2">
@@ -94,7 +94,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
           </div>
         </div>
         <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">
+            <p className="text-sm font-semibold text-slate-300 mb-3">
               <EditableText
                 id="add_person_emergency_q"
                 defaultText="هل الوضع طوارئ؟ (إيذاء بدني، ابتزاز خطير)"
@@ -125,18 +125,22 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
             </div>
         </div>
       </div>
-      <div className="mt-4 shrink-0 flex gap-3">
+      <div className="mt-6 shrink-0 flex gap-3">
         <button
           type="button"
-          className="flex-1 rounded-full bg-gray-100 px-6 py-3 text-sm text-gray-700 font-medium hover:bg-gray-200"
+          data-variant="ghost"
+          data-size="md"
+          className="ds-button flex-1"
           onClick={onBack}
         >
           <EditableText id="add_person_quick_back" defaultText="رجوع" page="add_person" editOnClick={false} />
         </button>
         <button
           type="submit"
+          data-variant="primary"
+          data-size="md"
           disabled={disableSubmit}
-          className="flex-1 rounded-full bg-teal-600 text-white px-6 py-3 text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+          className="ds-button flex-1"
         >
           <EditableText id="add_person_quick_next" defaultText={nextLabel} page="add_person" editOnClick={false} />
         </button>

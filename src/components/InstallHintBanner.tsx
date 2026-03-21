@@ -40,7 +40,7 @@ export const InstallHintBanner: FC = () => {
             <button
               onClick={dismissBanner}
               className="absolute top-2 left-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
-              aria-label="إغا"
+              aria-label="إغلاق"
             >
               <X className="h-4 w-4" />
             </button>
@@ -50,38 +50,38 @@ export const InstallHintBanner: FC = () => {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-bold text-blue-900 dark:text-blue-100">
-                  تطب ارحة أسرع أفض
+                  تطبيق الرحلة أسرع وأفضل
                 </p>
                 <p className="mt-1 text-[11px] text-blue-700 dark:text-blue-300">
-                  ذا س تزا  اتجر  اختصار ضف اتطب شاشة ارئسة.
+                  هذا ليس تنزيل من المتجر — مجرد اختصار يضيف التطبيق لشاشة الرئيسية.
                 </p>
                 {isInAppBrowser && (
                   <p className="mt-2 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
-                    أت داخ تصفح فسب/إستجرا. افتح ارابط ف Chrome ث اختر "إضافة إ اشاشة ارئسة".
+                    أنت داخل متصفح فيسبوك/إنستجرام. افتح الرابط في Chrome ثم اختر "إضافة إلى الشاشة الرئيسية".
                   </p>
                 )}
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
                     <Zap className="h-3 w-3" />
-                    <span>ص فر تجربة أسرع</span>
+                    <span>صفر — تجربة أسرع</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
                     <Wifi className="h-3 w-3" />
-                    <span>ع حت بد إترت</span>
+                    <span>يعمل حتى بدون إنترنت</span>
                   </div>
                 </div>
                 <p className="text-xs text-blue-700 dark:text-blue-300 mt-2 font-medium">
                   {installEvent ? (
                     <>
-                      اضغط زر "إضافة شاشة ارئسة" ا تحت أ ف اائة اجابة.
+                      اضغط زر "إضافة للشاشة الرئيسية" اللي تحت أو في القائمة الجانبية.
                     </>
                   ) : (
                     <>
-                      اضغط ع أة اتثبت ف شرط اعا باأع{" "}
+                      اضغط على أيقونة التثبيت في شريط العنوان بالأعلى{" "}
                       <span className="inline-flex align-middle mx-0.5 text-blue-600 dark:text-blue-300">
                         <ArrowUpRight className="h-3.5 w-3.5 animate-pulse" aria-hidden />
                       </span>
-                      أ افتح ائة اتصفح اختر "إضافة شاشة ارئسة".
+                      أو افتح قائمة المتصفح واختر "إضافة للشاشة الرئيسية".
                     </>
                   )}
                 </p>
@@ -92,7 +92,7 @@ export const InstallHintBanner: FC = () => {
                       onClick={triggerInstall}
                       className="rounded-full bg-gradient-to-r from-blue-600 to-[var(--soft-teal)] text-white px-3 py-1.5 text-xs font-semibold hover:from-blue-700 hover:to-[var(--soft-teal)] transition-all"
                     >
-                      إضافة شاشة ارئسة
+                      إضافة للشاشة الرئيسية
                     </button>
                   )}
                 </div>
@@ -116,7 +116,7 @@ export const InstallHintBanner: FC = () => {
             <button
               onClick={dismissBanner}
               className="absolute top-2 left-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
-              aria-label="إغا"
+              aria-label="إغلاق"
             >
               <X className="h-4 w-4" />
             </button>
@@ -126,33 +126,33 @@ export const InstallHintBanner: FC = () => {
               </div>
               <div className="flex-1">
                 <p className="text-sm font-bold text-blue-900 dark:text-blue-100">
-                  تطب ارحة أسرع أفض
+                  تطبيق الرحلة أسرع وأفضل
                 </p>
                 <p className="mt-1 text-[11px] text-blue-700 dark:text-blue-300">
-                  ذا س تزا  اتجر  اختصار ضف اتطب شاشة ارئسة.
+                  هذا ليس تنزيل من المتجر — مجرد اختصار يضيف التطبيق لشاشة الرئيسية.
                 </p>
                 {isInAppBrowser && (
                   <p className="mt-2 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
-                    أت داخ تصفح فسب/إستجرا. افتح ارابط ف Safari ث اختر "إضافة إ اشاشة ارئسة".
+                    أنت داخل متصفح فيسبوك/إنستجرام. افتح الرابط في Safari ثم اختر "إضافة إلى الشاشة الرئيسية".
                   </p>
                 )}
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
                     <Zap className="h-3 w-3" />
-                    <span>ص فر تجربة أسرع</span>
+                    <span>صفر — تجربة أسرع</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
                     <Wifi className="h-3 w-3" />
-                    <span>ع حت بد إترت</span>
+                    <span>يعمل حتى بدون إنترنت</span>
                   </div>
                 </div>
                 <p className="text-xs text-blue-700 dark:text-blue-300 mt-2 font-medium">
-                  {isIPad ? "ع اآباد: " : ""}
-                  اضغط زر اشارة
+                  {isIPad ? "على الآيباد: " : ""}
+                  اضغط زر المشاركة
                   <span className="inline-flex items-center justify-center mx-1 align-middle text-blue-600 dark:text-blue-300">
                     <Share2 className="h-3.5 w-3.5 animate-pulse" aria-hidden />
                   </span>
-                  ث اختر "إضافة إ اشاشة ارئسة" عشا تح اتطب.
+                  ثم اختر "إضافة إلى الشاشة الرئيسية" عشان يتحول التطبيق.
                 </p>
               </div>
             </div>

@@ -16,7 +16,7 @@ import { fetchJsonWithResilience, sendJsonWithResilience } from "../../architect
 
 const OUTCOME_QUEUE_KEY = "dawayir-next-step-outcome-queue-v1";
 const CACHE_KEY = "dawayir-next-step-decision-cache-v1";
-const CACHE_TTL_MS = 90_000;
+const CACHE_TTL_MS = 600_000; // 10 minutes — reduces API hammering from 90s to 10min
 const nextStepApiBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
 const outcomeApiBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
 

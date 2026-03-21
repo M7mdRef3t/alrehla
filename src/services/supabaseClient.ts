@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
 import { runtimeEnv } from "../config/runtimeEnv";
 
 const supabaseUrl = runtimeEnv.supabaseUrl;
@@ -12,6 +12,44 @@ export const supabase: SupabaseClient | null =
     : null;
 
 export const isSupabaseReady = Boolean(supabase);
+
+export function isSupabaseAbortError(error: unknown): boolean {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message: unknown }).message === "string"
+  ) {
+    const message = (error as { message: string }).message;
+    if (/signal is aborted/i.test(message) || /aborterror/i.test(message)) {
+      return true;
+    }
+  }
+
+  if (error instanceof DOMException) {
+    return error.name === "AbortError";
+  }
+
+  if (error instanceof Error) {
+    return error.name === "AbortError" || /signal is aborted/i.test(error.message);
+  }
+
+  return false;
+}
+
+export async function safeGetSession(): Promise<Session | null> {
+  if (!supabase) return null;
+
+  try {
+    const { data } = await supabase.auth.getSession();
+    return data.session ?? null;
+  } catch (error) {
+    if (isSupabaseAbortError(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
 
 // Debug logging for production
 if (typeof window !== 'undefined' && !isSupabaseReady) {

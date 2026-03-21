@@ -117,7 +117,7 @@ export const WeeklyReportWidget: FC = () => {
             <div className="space-y-8">
                 <section>
                     <div className="flex items-center gap-2 justify-end mb-3">
-                        <p className="text-[10px] md:text-[11px] font-bold text-indigo-400 uppercase tracking-wider">ط اجة</p>
+                        <p className="text-[10px] md:text-[11px] font-bold text-indigo-400 uppercase tracking-wider">نمط الموجة</p>
                         <div className="w-8 h-[1px] bg-indigo-500/30" />
                     </div>
                     <p className="text-sm text-slate-200 leading-[1.8] font-medium pr-4 border-r-2 border-indigo-500/20">
@@ -127,7 +127,7 @@ export const WeeklyReportWidget: FC = () => {
 
                 <section>
                     <div className="flex items-center gap-2 justify-end mb-3">
-                        <p className="text-[10px] md:text-[11px] font-bold text-blue-400 uppercase tracking-wider">رؤة اأاط</p>
+                        <p className="text-[10px] md:text-[11px] font-bold text-blue-400 uppercase tracking-wider">رؤية الأنماط</p>
                         <div className="w-8 h-[1px] bg-blue-500/30" />
                     </div>
                     <div className="bg-white/5 rounded-2xl p-4 md:p-5 border border-white/5 hover:border-blue-500/20 transition-all group">
@@ -139,7 +139,7 @@ export const WeeklyReportWidget: FC = () => {
 
                 <section className="relative">
                     <div className="flex items-center gap-2 justify-end mb-3">
-                        <p className="text-[10px] md:text-[11px] font-bold text-emerald-400 uppercase tracking-wider">اارة اادة</p>
+                        <p className="text-[10px] md:text-[11px] font-bold text-emerald-400 uppercase tracking-wider">المناورة القادمة</p>
                         <div className="w-8 h-[1px] bg-emerald-500/30" />
                     </div>
                     <div className="bg-emerald-500/5 rounded-2xl p-4 md:p-5 border border-emerald-500/20 flex gap-4 items-center justify-end">

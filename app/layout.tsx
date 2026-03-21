@@ -5,14 +5,9 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.alrehla.app"),
-  title: "Alrehla | Relationship Clarity Platform",
-  description: "Alrehla helps you understand your relationships and boundaries with clarity through Dawayir.",
+  title: "الرحلة — منصة الوعي الذاتي وخريطة العلاقات",
+  description: "اكتشف خريطة علاقاتك في 3 دقائق. شوف مين بيشحنك ومين بيستنزفك بالذكاء الاصطناعي — بدون تسجيل.",
   manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "الرحلة"
-  },
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -25,22 +20,22 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ar_AR",
     url: "https://www.alrehla.app/",
-    siteName: "Alrehla",
-    title: "Alrehla | Relationship Clarity Platform",
-    description: "Alrehla helps you understand your relationships and boundaries with clarity through Dawayir.",
+    siteName: "الرحلة",
+    title: "الرحلة — منصة الوعي الذاتي وخريطة العلاقات",
+    description: "اكتشف خريطة علاقاتك في 3 دقائق. شوف مين بيشحنك ومين بيستنزفك بالذكاء الاصطناعي — بدون تسجيل.",
     images: [
       {
         url: "/og-home.png",
         width: 1200,
         height: 630,
-        alt: "Alrehla homepage preview"
+        alt: "الرحلة — منصة الوعي الذاتي"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Alrehla | Relationship Clarity Platform",
-    description: "Alrehla helps you understand your relationships and boundaries with clarity through Dawayir.",
+    title: "الرحلة — منصة الوعي الذاتي وخريطة العلاقات",
+    description: "اكتشف خريطة علاقاتك في 3 دقائق. شوف مين بيشحنك ومين بيستنزفك بالذكاء الاصطناعي — بدون تسجيل.",
     images: ["/og-home.png"]
   }
 };
@@ -53,6 +48,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <head>
+        <meta name="mobile-web-app-capable" content="yes" />
+      </head>
       <body>{children}</body>
     </html>
   );

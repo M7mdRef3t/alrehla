@@ -140,7 +140,8 @@ export function LandingSimulation() {
 
 
   return (
-    <div className="relative mx-auto mt-8 w-full max-w-lg overflow-hidden rounded-3xl border border-gray-800 bg-[#0a0a0a] shadow-2xl" id="simulation" dir="rtl">
+    <div className="relative mx-auto mt-8 w-full max-w-lg overflow-hidden rounded-3xl border border-white/[0.08] shadow-2xl" id="simulation" dir="rtl"
+      style={{ background: "rgba(15, 15, 28, 0.8)", backdropFilter: "blur(20px)" }}>
       
       {/* Dynamic Background Glow based on Step */}
       <div className={`absolute -inset-20 opacity-20 blur-3xl transition-colors duration-1000 ${

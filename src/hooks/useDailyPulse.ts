@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabase, isSupabaseAbortError } from '../services/supabaseClient';
 import { getLocalDayString } from '../utils/dateUtils';
 import { trackEvent, AnalyticsEvents } from '../services/analytics';
 
@@ -62,7 +62,9 @@ export function useDailyPulse() {
                 setStreak(data.length); // Simple streak for guests
             }
         } catch (err) {
-            console.error("Failed to fetch pulse data", err);
+            if (!isSupabaseAbortError(err)) {
+                console.error("Failed to fetch pulse data", err);
+            }
         } finally {
             setLoading(false);
         }
@@ -129,6 +131,7 @@ export function useDailyPulse() {
                 return newEntry;
             }
         } catch (err) {
+            if (isSupabaseAbortError(err)) return;
             console.error("Save pulse failed", err);
             throw err;
         } finally {

@@ -1,5 +1,4 @@
 /* ═══ Brand Fonts — Tajawal (headings) + IBM Plex Arabic (body) + Inter (en) ═══ */
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap');
 
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -132,6 +131,7 @@
   html {
     background: var(--space-void);
     color-scheme: dark;
+    scroll-behavior: smooth;
   }
 
   body {

@@ -125,14 +125,25 @@ export const SuggestedPlacement: FC<SuggestedPlacementProps> = ({
 
       {/* Current vs Suggested */}
       <div className="grid grid-cols-1 gap-3 mb-4">
+        {/* Shock Message if exists */}
+        {placement.shockMessage && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="p-3 bg-red-100 border border-red-300 rounded-lg text-xs font-bold text-red-900 text-center"
+          >
+            {placement.shockMessage}
+          </motion.div>
+        )}
+
         {/* Current Ring */}
         <div className="p-3 bg-white rounded-lg border-2 border-red-200">
-          <p className="text-xs font-semibold text-slate-700 mb-1">
-            التموضع الحالي:
+          <p className="text-xs font-semibold text-slate-500 mb-1">
+            التموضع اللي إنت فيه دلوقتي:
           </p>
           <div className="flex items-center gap-2">
             <span className="text-2xl">{getRingIcon(placement.currentRing)}</span>
-            <span className="text-sm font-bold text-red-900">
+            <span className="text-sm font-extrabold text-red-900 uppercase tracking-wide">
               {getSuggestedRingLabel(placement.currentRing)}
             </span>
           </div>

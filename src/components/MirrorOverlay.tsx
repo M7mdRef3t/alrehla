@@ -1,6 +1,6 @@
-import { FC } from "react";
+import { FC, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MirrorInsight } from "../services/mirrorLogic";
+import type { MirrorInsight } from "../services/mirrorLogic";
 
 interface MirrorOverlayProps {
     insight: MirrorInsight | null;
@@ -8,7 +8,7 @@ interface MirrorOverlayProps {
     onDeny: (insight: MirrorInsight) => void;
 }
 
-export const MirrorOverlay: FC<MirrorOverlayProps> = ({ insight, onConfront, onDeny }) => {
+export const MirrorOverlay: FC<MirrorOverlayProps> = memo(({ insight, onConfront, onDeny }) => {
     if (!insight) return null;
 
     return (
@@ -40,12 +40,13 @@ export const MirrorOverlay: FC<MirrorOverlayProps> = ({ insight, onConfront, onD
 
                         <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700 mb-8 backdrop-blur-sm">
                             <p className="text-rose-400 font-medium text-xl font-serif">
-                                "{insight.question}"
+                                &ldquo;{insight.question}&rdquo;
                             </p>
                         </div>
 
                         <div className="flex flex-col gap-4">
                             <button
+                                type="button"
                                 onClick={() => onConfront(insight)}
                                 className="w-full py-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-rose-600/20 active:scale-[0.98]"
                             >
@@ -53,6 +54,7 @@ export const MirrorOverlay: FC<MirrorOverlayProps> = ({ insight, onConfront, onD
                             </button>
 
                             <button
+                                type="button"
                                 onClick={() => onDeny(insight)}
                                 className="w-full py-4 bg-transparent hover:bg-white/5 text-slate-400 hover:text-white rounded-xl font-medium transition-colors"
                             >
@@ -64,4 +66,5 @@ export const MirrorOverlay: FC<MirrorOverlayProps> = ({ insight, onConfront, onD
             </motion.div>
         </AnimatePresence>
     );
-};
+});
+MirrorOverlay.displayName = "MirrorOverlay";

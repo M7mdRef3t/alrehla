@@ -72,8 +72,8 @@ export function useOptimisticPhoenixSync(userId?: string | null) {
 
   useEffect(() => {
     if (!supabase || !userId) return;
+    let cancelled = false;
     const client = supabase;
-
     const channel = client
       .channel(`phoenix-sync:${userId}`)
       .on(
@@ -85,6 +85,7 @@ export function useOptimisticPhoenixSync(userId?: string | null) {
           filter: `user_id=eq.${userId}`
         },
         (payload) => {
+          if (cancelled) return;
           const status = String((payload as { new?: { status?: string } })?.new?.status ?? "").toLowerCase();
           if (status === "completed" || status === "failed" || status === "dlq") {
             void refreshFromSourceTruth();
@@ -94,7 +95,8 @@ export function useOptimisticPhoenixSync(userId?: string | null) {
       .subscribe();
 
     return () => {
-      client.removeChannel(channel);
+      cancelled = true;
+      void client.removeChannel(channel);
     };
   }, [refreshFromSourceTruth, userId]);
 

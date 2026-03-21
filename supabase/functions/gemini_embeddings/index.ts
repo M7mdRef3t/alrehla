@@ -5,14 +5,25 @@
 const GEMINI_EMBEDDING_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
 Deno.serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
   if (req.method !== "POST") {
-    return new Response("Only POST supported", { status: 405 });
+    return new Response("Only POST supported", { status: 405, headers: corsHeaders });
   }
 
   const apiKey = Deno.env.get("GOOGLE_API_KEY");
   if (!apiKey) {
-    return new Response("Missing GOOGLE_API_KEY", { status: 500 });
+    return new Response("Missing GOOGLE_API_KEY", { status: 500, headers: corsHeaders });
   }
 
   try {
@@ -20,7 +31,7 @@ Deno.serve(async (req) => {
     const text = body.text?.trim();
 
     if (!text) {
-      return new Response("Missing `text`", { status: 400 });
+      return new Response("Missing `text`", { status: 400, headers: corsHeaders });
     }
 
     const res = await fetch(`${GEMINI_EMBEDDING_URL}?key=${apiKey}`, {
@@ -34,7 +45,7 @@ Deno.serve(async (req) => {
 
     if (!res.ok) {
       const errText = await res.text();
-      return new Response(errText, { status: res.status });
+      return new Response(errText, { status: res.status, headers: corsHeaders });
     }
 
     const data = await res.json();
@@ -44,16 +55,15 @@ Deno.serve(async (req) => {
       [];
 
     if (!Array.isArray(embedding) || embedding.length !== 768) {
-      return new Response("Invalid embedding size", { status: 500 });
+      return new Response("Invalid embedding size", { status: 500, headers: corsHeaders });
     }
 
     return new Response(JSON.stringify({ embedding }), {
       status: 200,
-      headers: { "Content-Type": "application/json" }
+      headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   } catch (err) {
     console.error(err);
-    return new Response("Internal error", { status: 500 });
+    return new Response("Internal error", { status: 500, headers: corsHeaders });
   }
 });
-

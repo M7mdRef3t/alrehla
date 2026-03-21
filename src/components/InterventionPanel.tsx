@@ -1,8 +1,8 @@
 import type { FC } from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, ShieldAlert, X, ChevronRight } from "lucide-react";
-import { supabase } from "../services/supabaseClient";
+import { supabase, isSupabaseAbortError, safeGetSession } from "../services/supabaseClient";
 
 interface Intervention {
     id: string;
@@ -17,28 +17,36 @@ interface Intervention {
 
 export const InterventionPanel: FC = () => {
     const [items, setItems] = useState<Intervention[]>([]);
+    const [isApiAvailable, setIsApiAvailable] = useState(true);
 
-    const fetchInterventions = async () => {
+    const fetchInterventions = useCallback(async () => {
         try {
-            const { data: { session } } = await supabase!.auth.getSession();
+            if (!supabase || !isApiAvailable) return;
+            const session = await safeGetSession();
             const res = await fetch('/api/interventions', {
                 headers: { 'Authorization': `Bearer ${session?.access_token}` }
             });
+            if (res.status === 404) {
+                setIsApiAvailable(false);
+                setItems([]);
+                return;
+            }
             if (res.ok) {
                 const data = await res.json();
                 setItems(data);
             }
         } catch (err) {
-            console.error(err);
+            if (!isSupabaseAbortError(err)) console.error(err);
         }
-    };
+    }, [isApiAvailable]);
 
     const executeAction = async (interventionId: string, actionType: string) => {
         try {
-            const { data: { session } } = await supabase!.auth.getSession();
+            if (!supabase || !isApiAvailable) return;
+            const session = await safeGetSession();
 
             // 1. Record the action
-            await fetch('/api/micro-actions', {
+            const response = await fetch('/api/micro-actions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -46,6 +54,10 @@ export const InterventionPanel: FC = () => {
                 },
                 body: JSON.stringify({ interventionId, actionType })
             });
+            if (response.status === 404) {
+                setIsApiAvailable(false);
+                return;
+            }
 
             // 2. Perform UI Side Effect
             handleUIEffect(actionType);
@@ -53,7 +65,7 @@ export const InterventionPanel: FC = () => {
             // 3. Remove from UI
             setItems(prev => prev.filter(item => item.id !== interventionId));
         } catch (err) {
-            console.error(err);
+            if (!isSupabaseAbortError(err)) console.error(err);
         }
     };
 
@@ -70,8 +82,9 @@ export const InterventionPanel: FC = () => {
 
     const acknowledge = async (id: string) => {
         try {
-            const { data: { session } } = await supabase!.auth.getSession();
-            await fetch('/api/interventions', {
+            if (!supabase || !isApiAvailable) return;
+            const session = await safeGetSession();
+            const response = await fetch('/api/interventions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -79,17 +92,22 @@ export const InterventionPanel: FC = () => {
                 },
                 body: JSON.stringify({ id })
             });
+            if (response.status === 404) {
+                setIsApiAvailable(false);
+                setItems([]);
+                return;
+            }
             setItems(prev => prev.filter(item => item.id !== id));
         } catch (err) {
-            console.error(err);
+            if (!isSupabaseAbortError(err)) console.error(err);
         }
     };
 
     useEffect(() => {
         fetchInterventions();
-    }, []);
+    }, [fetchInterventions]);
 
-    if (items.length === 0) return null;
+    if (!isApiAvailable || items.length === 0) return null;
 
     return (
         <div className="w-full max-w-[38rem] mx-auto mb-4 space-y-3 px-4">

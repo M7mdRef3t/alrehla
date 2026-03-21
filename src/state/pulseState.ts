@@ -7,6 +7,16 @@ export type PulseMood = "bright" | "calm" | "anxious" | "angry" | "sad" | "tense
 export type PulseFocus = "event" | "thought" | "body" | "none";
 export type PulseEnergyConfidence = "low" | "medium" | "high";
 
+export type PulseSubmitPayload = {
+  energy: number | null;
+  mood: PulseMood | null;
+  focus: PulseFocus | null;
+  auto?: boolean;
+  notes?: string;
+  energyReasons?: string[];
+  energyConfidence?: PulseEnergyConfidence;
+};
+
 export interface PulseEntry {
   energy: number; // 1-10
   mood: PulseMood;

@@ -1,85 +1,148 @@
-import { supabase } from "./supabaseClient";
+import { isUserMode } from "../config/appEnv";
+import { safeGetSession, supabase } from "./supabaseClient";
 import { useGamificationState, type Badge } from "../state/gamificationState";
 
-/**
- * دمج نظام النِقاط (Gamification) مع قاعدة بيانات السحابة (Supabase)
- * لجعل البيانات حقيقية ومستمرة عبر الأجهزة.
- */
+// User mode stays local-first until the cloud schema for gamification is provisioned.
+// Once we detect the schema is missing, remember it for the session to avoid repeat 400/404 errors.
+const SESSION_PROFILE_KEY = "gam-profile-sync-disabled";
+const SESSION_BADGE_KEY = "gam-badge-sync-disabled";
+
+function sessionFlag(key: string): boolean {
+    try { return typeof sessionStorage !== "undefined" && sessionStorage.getItem(key) === "1"; } catch { return false; }
+}
+function setSessionFlag(key: string): void {
+    try { if (typeof sessionStorage !== "undefined") sessionStorage.setItem(key, "1"); } catch { /* ignore */ }
+}
+
+let profileGamificationSyncEnabled = !isUserMode && !sessionFlag(SESSION_PROFILE_KEY);
+let badgeGamificationSyncEnabled = !isUserMode && !sessionFlag(SESSION_BADGE_KEY);
+
+function isSchemaMismatchError(error: unknown): boolean {
+    if (!error || typeof error !== "object") return false;
+
+    const maybeError = error as {
+        code?: string;
+        message?: string;
+        details?: string;
+        hint?: string;
+    };
+
+    const code = typeof maybeError.code === "string" ? maybeError.code.toUpperCase() : "";
+    if (code === "42703" || code === "42P01" || code === "PGRST205") {
+        return true;
+    }
+
+    const combined = [maybeError.message, maybeError.details, maybeError.hint]
+        .filter((value): value is string => typeof value === "string" && value.length > 0)
+        .join(" ")
+        .toLowerCase();
+
+    return (
+        combined.includes("column") ||
+        combined.includes("relation") ||
+        combined.includes("table") ||
+        combined.includes("does not exist") ||
+        combined.includes("could not find")
+    );
+}
+
+function disableProfileGamificationSync(error: unknown): void {
+    if (!profileGamificationSyncEnabled) return;
+    profileGamificationSyncEnabled = false;
+    setSessionFlag(SESSION_PROFILE_KEY);
+    console.warn("Gamification profile sync disabled: Supabase schema is not available for xp/level.", error);
+}
+
+function disableBadgeGamificationSync(error: unknown): void {
+    if (!badgeGamificationSyncEnabled) return;
+    badgeGamificationSyncEnabled = false;
+    setSessionFlag(SESSION_BADGE_KEY);
+    console.warn("Gamification badge sync disabled: Supabase schema is not available for user_badges.", error);
+}
 
 /**
- * جلب بيانات الـ Gamification من السيرفر وتحديث الـ Local State.
- * يُستدعى عند تسجيل الدخول أو فتح التطبيق.
+ * دمج نظام النقاط (Gamification) مع قاعدة بيانات Supabase عندما تكون الجداول متاحة.
+ * إذا كانت بيئة المستخدم لا تحتوي على schema الخاص بالـ gamification، نرجع بهدوء للـ local state.
  */
 export async function syncGamificationOnLoad(): Promise<void> {
     if (!supabase) return;
 
     try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = await safeGetSession();
         if (!session?.user) return;
 
-        // 1. Fetch XP & Level from profiles
-        const { data: profile } = await supabase
-            .from("profiles")
-            .select("xp, level")
-            .eq("id", session.user.id)
-            .single();
+        if (profileGamificationSyncEnabled) {
+            const { data: profile, error: profileError } = await supabase
+                .from("profiles")
+                .select("xp, level")
+                .eq("id", session.user.id)
+                .maybeSingle();
 
-        if (profile) {
-            useGamificationState.setState((s) => ({
-                ...s,
-                xp: Math.max(s.xp, profile.xp || 0), // Use whichever is higher to prevent data loss if offline
-                level: Math.max(s.level, profile.level || 1)
-            }));
+            if (profileError) {
+                if (isSchemaMismatchError(profileError)) {
+                    disableProfileGamificationSync(profileError);
+                } else {
+                    console.error("Failed to fetch gamification profile:", profileError);
+                }
+            } else if (profile) {
+                useGamificationState.setState((state) => ({
+                    ...state,
+                    xp: Math.max(state.xp, profile.xp || 0),
+                    level: Math.max(state.level, profile.level || 1)
+                }));
+            }
         }
 
-        // 2. Fetch Badges
-        const { data: badges } = await supabase
-            .from("user_badges")
-            .select("badge_id, name, description, icon, earned_at")
-            .eq("user_id", session.user.id);
+        if (badgeGamificationSyncEnabled) {
+            const { data: badges, error: badgesError } = await supabase
+                .from("user_badges")
+                .select("badge_id, name, description, icon, earned_at")
+                .eq("user_id", session.user.id);
 
-        if (badges && badges.length > 0) {
-            useGamificationState.setState((s) => {
-                const localBadges = [...s.badges];
+            if (badgesError) {
+                if (isSchemaMismatchError(badgesError)) {
+                    disableBadgeGamificationSync(badgesError);
+                } else {
+                    console.error("Failed to fetch gamification badges:", badgesError);
+                }
+            } else if (badges && badges.length > 0) {
+                useGamificationState.setState((state) => {
+                    const localBadges = [...state.badges];
 
-                // Merge badges, avoiding duplicates
-                badges.forEach((serverBadge) => {
-                    if (!localBadges.some((b) => b.id === serverBadge.badge_id)) {
-                        localBadges.push({
-                            id: serverBadge.badge_id,
-                            name: serverBadge.name,
-                            description: serverBadge.description,
-                            icon: serverBadge.icon,
-                            earnedAt: new Date(serverBadge.earned_at).getTime()
-                        });
-                    }
+                    badges.forEach((serverBadge) => {
+                        if (!localBadges.some((badge) => badge.id === serverBadge.badge_id)) {
+                            localBadges.push({
+                                id: serverBadge.badge_id,
+                                name: serverBadge.name,
+                                description: serverBadge.description,
+                                icon: serverBadge.icon,
+                                earnedAt: new Date(serverBadge.earned_at).getTime()
+                            });
+                        }
+                    });
+
+                    return { ...state, badges: localBadges };
                 });
-
-                return { ...s, badges: localBadges };
-            });
+            }
         }
 
-        // After merging, push the potentially higher local stats back to the server
-        await pushGamificationStats();
-
+        if (profileGamificationSyncEnabled) {
+            await pushGamificationStats();
+        }
     } catch (err) {
         console.error("Failed to sync gamification on load:", err);
     }
 }
 
-/**
- * دفع النقاط والمستويات الحالية إلى السيرفر
- */
 export async function pushGamificationStats(): Promise<void> {
-    if (!supabase) return;
+    if (!supabase || !profileGamificationSyncEnabled) return;
 
     try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = await safeGetSession();
         if (!session?.user) return;
 
         const state = useGamificationState.getState();
-
-        await supabase
+        const { error } = await supabase
             .from("profiles")
             .update({
                 xp: state.xp,
@@ -87,22 +150,26 @@ export async function pushGamificationStats(): Promise<void> {
             })
             .eq("id", session.user.id);
 
+        if (error) {
+            if (isSchemaMismatchError(error)) {
+                disableProfileGamificationSync(error);
+                return;
+            }
+            console.error("Failed to push gamification stats:", error);
+        }
     } catch (err) {
         console.error("Failed to push gamification stats:", err);
     }
 }
 
-/**
- * تسجيل شارة جديدة في السيرفر
- */
 export async function pushGamificationBadge(badge: Badge): Promise<void> {
-    if (!supabase) return;
+    if (!supabase || !badgeGamificationSyncEnabled) return;
 
     try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = await safeGetSession();
         if (!session?.user) return;
 
-        await supabase
+        const { error } = await supabase
             .from("user_badges")
             .insert({
                 user_id: session.user.id,
@@ -113,6 +180,13 @@ export async function pushGamificationBadge(badge: Badge): Promise<void> {
                 earned_at: new Date(badge.earnedAt).toISOString()
             });
 
+        if (error) {
+            if (isSchemaMismatchError(error)) {
+                disableBadgeGamificationSync(error);
+                return;
+            }
+            console.error("Failed to push gamification badge:", error);
+        }
     } catch (err) {
         console.error("Failed to push gamification badge:", err);
     }

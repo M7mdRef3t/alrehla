@@ -36,9 +36,9 @@ export const StabilityHeatmap: FC = () => {
     }, []);
 
     const getStatus = (score: number) => {
-        if (score > 0.7) return { label: 'اشتعا عا', color: 'bg-red-500/20 border-red-500/40 text-red-500', icon: <Flame className="w-3 h-3" /> };
-        if (score > 0.4) return { label: 'تذبذب حظ', color: 'bg-orange-500/20 border-orange-500/40 text-orange-500', icon: <Activity className="w-3 h-3" /> };
-        return { label: 'س ستر', color: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500', icon: <ShieldAlert className="w-3 h-3" /> };
+        if (score > 0.7) return { label: 'اشتعال عالي', color: 'bg-red-500/20 border-red-500/40 text-red-500', icon: <Flame className="w-3 h-3" /> };
+        if (score > 0.4) return { label: 'تذبذب ملحوظ', color: 'bg-orange-500/20 border-orange-500/40 text-orange-500', icon: <Activity className="w-3 h-3" /> };
+        return { label: 'مسار مستقر', color: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500', icon: <ShieldAlert className="w-3 h-3" /> };
     };
 
     if (nodes.length === 0) return null;
@@ -51,7 +51,7 @@ export const StabilityHeatmap: FC = () => {
                         <Flame className="w-5 h-5 animate-pulse" />
                     </div>
                     <div>
-                        <h3 className="text-[15px] font-black text-white leading-tight">رادار ااسترار</h3>
+                        <h3 className="text-[15px] font-black text-white leading-tight">رادار الاستقرار</h3>
                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Stability & Volatility Map</p>
                     </div>
                 </div>
@@ -102,8 +102,8 @@ export const StabilityHeatmap: FC = () => {
                             </div>
                             <div className="text-right flex-1">
                                 <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                                    اساحة "{selected.label}" {selected.volatility_score > 0.5 ? 'بتر بحاة عد استرار حادة.' : 'ف حاة س حاا.'}
-                                    {selected.volatility_score > 0.5 ? ' اتذبذب د بشر إ رارات أ شاعر ا ش ثابتة د بست طاة برة  ع.' : ' د ت س تع اأثر با إ اأرضة ثابتة.'}
+                                    المساحة "{selected.label}" {selected.volatility_score > 0.5 ? 'بتمر بحالة عدم استقرار حادة.' : 'في حالة مستقرة حالياً.'}
+                                    {selected.volatility_score > 0.5 ? ' التذبذب هنا بيشير لقرارات أو مشاعر مش ثابتة وبتستنزف طاقة كبيرة منك.' : ' ده تم مستقر وتقدر تعتمد عليه كأرضية ثابتة.'}
                                 </p>
                             </div>
                         </div>

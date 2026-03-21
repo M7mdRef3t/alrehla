@@ -1,5 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "../../_lib/supabaseAdmin";
+import nextStepHandlerV2 from "../../../../server/routing/next-step-v2";
+import outcomeHandlerV2 from "../../../../server/routing/outcome-v2";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
@@ -94,4 +96,43 @@ export async function GET() {
     },
     { status: 200, headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } }
   );
+}
+
+export async function POST(req: NextRequest, { params }: { params: { action: string } }) {
+  const action = params.action;
+
+  let parsedBody: unknown = null;
+  try {
+    parsedBody = await req.json();
+  } catch {
+    parsedBody = {};
+  }
+
+  let statusCode = 200;
+  let responseBody: unknown = null;
+
+  const fakeReq = {
+    method: "POST",
+    body: parsedBody as any
+  };
+
+  const fakeRes = {
+    status(code: number) {
+      statusCode = code;
+      return fakeRes;
+    },
+    json(body: unknown) {
+      responseBody = body;
+    }
+  };
+
+  if (action === "next-step") {
+    await nextStepHandlerV2(fakeReq, fakeRes);
+  } else if (action === "outcome") {
+    await outcomeHandlerV2(fakeReq, fakeRes);
+  } else {
+    return NextResponse.json({ error: `Action ${action} not supported via POST` }, { status: 405 });
+  }
+
+  return NextResponse.json(responseBody, { status: statusCode });
 }

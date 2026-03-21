@@ -111,7 +111,7 @@ function integrateSymptomExercises(
         id: `symptom-week-${weekNum}`,
         week: weekNum,
         title: exercise.title,
-        goal: `التركيز على: ${exercise.title}`,
+        goal: `تجاوز شعور: ${exercise.title}`,
         description: exercise.description,
         actions: exercise.actions,
         completed: false,
@@ -120,18 +120,18 @@ function integrateSymptomExercises(
     } else {
       // Multiple exercises - create combined step
       const titles = weekExercises.map(e => e.title).join(" + ");
-      const allActions = weekExercises.flatMap(e => e.actions);
-      const criteria = weekExercises.map(e => e.successCriteria).join(" و ");
+      const mainSymptomTitle = weekExercises[0].title;
+      const combinedCriteria = weekExercises.map(e => e.successCriteria).join(" و ");
       
       steps.push({
         id: `symptom-week-${weekNum}`,
         week: weekNum,
-        title: `أسبوع ${weekNum}: تمارين متعددة`,
+        title: `مواجهة ${mainSymptomTitle} (تمارين مجمعة)`,
         goal: titles,
         description: weekExercises.map(e => `• ${e.title}: ${e.description}`).join('\n\n'),
-        actions: allActions,
+        actions: weekExercises.flatMap(e => e.actions),
         completed: false,
-        successCriteria: criteria
+        successCriteria: combinedCriteria
       });
     }
   });

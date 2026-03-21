@@ -75,6 +75,8 @@ function isCrossOriginDevAdminApi(): boolean {
 }
 
 export async function callAdminApi<T>(path: string, options?: RequestInit): Promise<T | null> {
+  // No admin API configured — nothing to call.
+  if (!ADMIN_API_BASE) return null;
   // In local dev, avoid calling a cross-origin admin API directly from browser
   // to prevent CORS console noise and fallback to local sources gracefully.
   if (isCrossOriginDevAdminApi()) return null;

@@ -1,7 +1,7 @@
 /**
- * Group Pulse Room  غرفة ابض اجاع ️
+ * Group Pulse Room — غرفة النبض الجماعي 🫀
  * ==========================================
- * اجة عرض "ازاج اجاع" ؤسسة أ اعائة بش ج.
+ * واجهة عرض "المزاج الجماعي" لمؤسسة أو العائلة بشكل مجمع.
  */
 
 import React, { useMemo } from "react";
@@ -15,10 +15,10 @@ interface MoodData {
 }
 
 const MOCK_GROUP_MOODS: MoodData[] = [
-    { mood: "Energetic / تدف", count: 12, color: "bg-emerald-500" },
+    { mood: "Energetic / متدفق", count: 12, color: "bg-emerald-500" },
     { mood: "Stressed / ضغط", count: 8, color: "bg-amber-500" },
-    { mood: "Exhausted / استزاف", count: 4, color: "bg-rose-500" },
-    { mood: "Calm / دء", count: 15, color: "bg-teal-500" },
+    { mood: "Exhausted / استنزاف", count: 4, color: "bg-rose-500" },
+    { mood: "Calm / هدوء", count: 15, color: "bg-teal-500" },
 ];
 
 export const GroupPulseRoom: React.FC = () => {
@@ -30,14 +30,14 @@ export const GroupPulseRoom: React.FC = () => {
                 <div>
                     <h1 className="text-2xl font-black text-white flex items-center gap-3">
                         <Users className="w-8 h-8 text-[var(--soft-teal)]" />
-                        رادار بض اجعة
+                        رادار نبض المجموعة
                     </h1>
-                    <p className="text-slate-400 text-sm mt-1">تزا ح زاج افر (باات جعة جة اة)</p>
+                    <p className="text-slate-400 text-sm mt-1">ملخص لحظي لمزاج الفريق (بيانات مجمعة للواجهة التجريبية)</p>
                 </div>
                 <div className="flex gap-4">
                     <div className="glass-card px-4 py-2 border-white/5 flex items-center gap-2">
                         <Activity className="w-4 h-4 text-emerald-400" />
-                        <span className="text-xs font-bold text-slate-200">{total} عُد شطة</span>
+                        <span className="text-xs font-bold text-slate-200">{total} عُضو نشطة</span>
                     </div>
                 </div>
             </header>
@@ -47,7 +47,7 @@ export const GroupPulseRoom: React.FC = () => {
                 <div className="glass-card p-6 border-white/5 bg-slate-900/40">
                     <h3 className="text-sm font-bold text-slate-400 mb-6 flex items-center gap-2">
                         <ShieldCheck className="w-4 h-4 text-[var(--soft-teal)]" />
-                        تزع اع احظ
+                        توزيع المزاج اللحظي
                     </h3>
 
                     <div className="space-y-6">
@@ -73,9 +73,9 @@ export const GroupPulseRoom: React.FC = () => {
                     <div className="w-20 h-20 rounded-full bg-[var(--soft-teal)]/10 flex items-center justify-center mb-4 animate-pulse">
                         <Zap className="w-10 h-10 text-[var(--soft-teal)]" />
                     </div>
-                    <h3 className="font-bold text-white mb-2">تصة جارفس جعة</h3>
+                    <h3 className="font-bold text-white mb-2">توصية جارفيس الجماعية</h3>
                     <p className="text-sm text-slate-400 leading-relaxed italic">
-                        "ا ضغط ترا فDEPARTMENT-X. ص بتفع جسة 'صت ضضاء' جاعة دة 10 دائ رفع ست ادء اعا."
+                        "في ضغط متراكم في DEPARTMENT-X. نوصي بتفعيل جلسة 'صمت وضوضاء' جماعية لمدة 10 دقايق لرفع مستوى الهدوء العام."
                     </p>
                 </div>
             </section>

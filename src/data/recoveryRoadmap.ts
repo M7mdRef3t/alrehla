@@ -11,6 +11,7 @@ export interface RoadmapPhase {
   icon: string;
   duration: string; // تقديري
   goals: string[];
+  milestones: { title: string; completed: string }[];
   successIndicators: string[];
   challenges: string[];
   tips: string[];
@@ -38,6 +39,11 @@ export const RECOVERY_PHASES: RoadmapPhase[] = [
       "فهم الواقع الحقيقي للعلاقة",
       "التعرف على الأعراض اللي بتحس بيها",
       "قبول إن فيه مشكلة محتاجة حل"
+    ],
+    milestones: [
+      { title: "كشف الوهم", completed: "عملت Reality Check" },
+      { title: "الاستماع للجسم", completed: "عملت Feeling Check" },
+      { title: "تحديد الألم", completed: "اخترت الأعراض الحالية" }
     ],
     successIndicators: [
       "✓ عملت Reality Check + Feeling Check",
@@ -71,6 +77,11 @@ export const RECOVERY_PHASES: RoadmapPhase[] = [
       "فهم الفرق بين الحب والضغط",
       "التعرف على أنماط التلاعب"
     ],
+    milestones: [
+      { title: "بناء الدرع", completed: "فهمت مفهوم الدوائر" },
+      { title: "كسر الصمت", completed: "تدربت على 3+ سيناريوهات" },
+      { title: "كشف التلاعب", completed: "عرفت الفرق بين الطلب والضغط" }
+    ],
     successIndicators: [
       "✓ خلصت السيناريوهات التدريبية",
       "✓ عرفت إزاي ترد على المواقف الصعبة",
@@ -102,6 +113,11 @@ export const RECOVERY_PHASES: RoadmapPhase[] = [
       "قول 'لأ' مرة واحدة على الأقل",
       "تحديد وقت للتواصل",
       "الانسحاب من موقف ضاغط مرة واحدة"
+    ],
+    milestones: [
+      { title: "أول 'لأ'", completed: "قلت لأ بدون تبرير" },
+      { title: "ساعة الصفر", completed: "تحكمت في وقت التواصل" },
+      { title: "الانسحاب الآمن", completed: "خرجت من موقف مستنزف" }
     ],
     successIndicators: [
       "✓ طبقت حد واحد على الأقل",
@@ -137,6 +153,11 @@ export const RECOVERY_PHASES: RoadmapPhase[] = [
       "تحديد مواضيع 'محظورة'",
       "تقليل وقت التواصل"
     ],
+    milestones: [
+      { title: "الثبات الانفعالي", completed: "صمدت في 3 مواقف ضاغطة" },
+      { title: "تقليل الانتظار", completed: "بطلت تنتظر دعم منهم" },
+      { title: "استعادة المساحة", completed: "بقى عندك وقت خاص بيك" }
+    ],
     successIndicators: [
       "✓ طبقت 3+ حدود في نفس الأسبوع",
       "✓ رفضت طلبات متعددة",
@@ -171,6 +192,11 @@ export const RECOVERY_PHASES: RoadmapPhase[] = [
       "استرجاع الطاقة والصحة النفسية",
       "بناء حياة مستقلة عن العلاقة"
     ],
+    milestones: [
+      { title: "الروتين الجديد", completed: "يومك بقى ملكك" },
+      { title: "الصداقات الآمنة", completed: "لقيت بديل صحي للدعم" },
+      { title: "راحة البال", completed: "بطلت تفكر فيهم قبل النوم" }
+    ],
     successIndicators: [
       "✓ الحدود بقت تلقائية",
       "✓ الذنب قل بنسبة 80%+",
@@ -204,6 +230,11 @@ export const RECOVERY_PHASES: RoadmapPhase[] = [
       "مساعدة الآخرين من خبرتك",
       "الازدهار في حياتك الشخصية",
       "تطوير علاقات صحية جديدة"
+    ],
+    milestones: [
+      { title: "ولادة جديدة", completed: "نسيت آخر مرة ضايقوك" },
+      { title: "الحياد", completed: "وجودهم ما بقاش بيحرك مشاعرك" },
+      { title: "التعافي التام", completed: "بقيت شخص أقوى وأوعى" }
     ],
     successIndicators: [
       "✓ العلاقة مستقرة في مكانها الصحيح",

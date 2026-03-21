@@ -1,8 +1,33 @@
 "use client";
 
 import type { FC } from "react";
-import { useState, useCallback, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback, useEffect, useRef, memo, useTransition } from "react";
+import { motion } from "framer-motion";
+
+const ONBOARDING_STYLES = `
+@keyframes ob-ring-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+@keyframes ob-center-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+@keyframes ob-icon-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+.ob-step-enter {
+  opacity: 1; transform: translateX(0);
+  transition: opacity 0.32s ease-out, transform 0.32s ease-out;
+}
+.ob-step-exit {
+  opacity: 0; transform: translateX(40px);
+  transition: opacity 0.2s ease-in, transform 0.2s ease-in;
+  pointer-events: none; position: absolute; inset: 0;
+}
+.ob-btn-tap:active { transform: scale(0.97); }
+`;
 import { useMapState } from "../state/mapState";
 import { setInLocalStorage } from "../services/browserStorage";
 import { recordFlowEvent } from "../services/journeyTracking";
@@ -41,14 +66,7 @@ interface OnboardingFlowProps {
 }
 
 
-/* ── Slide transition ── */
-const slideVariants = {
-  enter: (dir: number) => ({ x: dir * -60, opacity: 0, filter: "blur(6px)" }),
-  center: { x: 0, opacity: 1, filter: "blur(0px)" },
-  exit: (dir: number) => ({ x: dir * 60, opacity: 0, filter: "blur(6px)" }),
-};
-
-const slideTransition = { duration: 0.42, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] };
+/* ── Slide transition removed: now CSS-only (see ONBOARDING_STYLES) ── */
 
 /* ── Ring colors ── */
 type Ring = "green" | "yellow" | "red";
@@ -65,44 +83,55 @@ const RING_COLORS: Record<Ring, { bg: string; border: string; label: string; lab
 const StepInventory: FC<{
   onNext: (items: { name: string; category: AdviceCategory }[]) => void;
   onSkip: () => void;
-}> = ({ onNext, onSkip }) => {
-  const [items, setItems] = useState<{ name: string; category: AdviceCategory }[]>([
-    { name: "", category: "family" },
-    { name: "", category: "family" },
-    { name: "", category: "family" },
-  ]);
+}> = memo(({ onNext, onSkip }) => {
+  // Use refs for input values to avoid re-rendering the entire tree on each keystroke
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null]);
+  const [categories, setCategories] = useState<AdviceCategory[]>(["family", "family", "family"]);
+  // Track which inputs have text (for UI updates like border color and category buttons)
+  const [hasText, setHasText] = useState<boolean[]>([false, false, false]);
+  // Track if at least one field is filled for the button state
+  const [canContinue, setCanContinue] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const updateName = (i: number, val: string) => {
-    setItems((prev) => {
+  const syncHasText = useCallback(() => {
+    // Debounce: only trigger React state update after 200ms of inactivity
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const newHasText = inputRefs.current.map((ref) => (ref?.value?.trim()?.length ?? 0) > 0);
+      setHasText(newHasText);
+      setCanContinue(newHasText.some(Boolean));
+    }, 200);
+  }, []);
+
+  const updateCategory = useCallback((i: number, cat: AdviceCategory) => {
+    setCategories((prev) => {
       const n = [...prev];
-      n[i] = { ...n[i], name: val };
+      n[i] = cat;
       return n;
     });
-  };
+  }, []);
 
-  const updateCategory = (i: number, cat: AdviceCategory) => {
-    setItems((prev) => {
-      const n = [...prev];
-      n[i] = { ...n[i], category: cat };
-      return n;
-    });
-  };
-
-  const filled = items.filter((item) => item.name.trim().length > 0);
-  const canContinue = filled.length >= 1;
+  const handleNext = useCallback(() => {
+    const items = inputRefs.current
+      .map((ref, i) => ({
+        name: ref?.value?.trim() ?? "",
+        category: categories[i],
+      }))
+      .filter((item) => item.name.length > 0);
+    onNext(items);
+  }, [categories, onNext]);
 
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Illustration */}
       <div className="flex justify-center">
-        <motion.div
+        <div
           className="w-20 h-20 rounded-full flex items-center justify-center"
           style={{
             background: "linear-gradient(135deg, rgba(45,212,191,0.12), rgba(139,92,246,0.12))",
             border: "1.5px solid rgba(45,212,191,0.25)",
+            animation: "ob-icon-breathe 3s ease-in-out infinite",
           }}
-          animate={{ scale: [1, 1.06, 1] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(45,212,191,0.8)" strokeWidth="1.5" strokeLinecap="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -110,7 +139,7 @@ const StepInventory: FC<{
             <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
           </svg>
-        </motion.div>
+        </div>
       </div>
 
       <div className="text-center">
@@ -123,30 +152,28 @@ const StepInventory: FC<{
       </div>
 
       <div className="flex flex-col gap-4">
-        {items.map((item, i) => (
-          <motion.div
+        {[0, 1, 2].map((i) => (
+          <div
             key={i}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1, duration: 0.35 }}
             className="flex flex-col gap-2 p-2 rounded-2xl"
             style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}
           >
             <input
               type="text"
-              value={item.name}
-              onChange={(e) => updateName(i, e.target.value)}
+              ref={(el) => { inputRefs.current[i] = el; }}
+              defaultValue=""
+              onInput={syncHasText}
               placeholder={i === 0 ? "الاسم الأول.." : i === 1 ? "الاسم الثاني.." : "الاسم الثالث (اختياري).."}
               className="w-full rounded-xl px-4 py-2 text-sm text-right outline-none transition-all"
               style={{
                 background: "rgba(255,255,255,0.04)",
-                border: `1.5px solid ${item.name.trim() ? "rgba(45,212,191,0.4)" : "rgba(255,255,255,0.1)"}`,
+                border: `1.5px solid ${hasText[i] ? "rgba(45,212,191,0.4)" : "rgba(255,255,255,0.1)"}`,
                 color: "var(--text-primary)",
               }}
               maxLength={30}
               dir="rtl"
             />
-            {item.name.trim() && (
+            {hasText[i] && (
               <div className="flex gap-1 justify-end items-center">
                 <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>ده يقربلك إيه؟</span>
                 {(["family", "work", "general"] as AdviceCategory[]).map((cat) => (
@@ -156,9 +183,9 @@ const StepInventory: FC<{
                     onClick={() => updateCategory(i, cat)}
                     className="px-3 py-1 rounded-full text-[10px] font-bold transition-all"
                     style={{
-                      background: item.category === cat ? "rgba(45,212,191,0.2)" : "transparent",
-                      border: `1px solid ${item.category === cat ? "rgba(45,212,191,0.5)" : "rgba(255,255,255,0.1)"}`,
-                      color: item.category === cat ? "var(--soft-teal)" : "var(--text-muted)"
+                      background: categories[i] === cat ? "rgba(45,212,191,0.2)" : "transparent",
+                      border: `1px solid ${categories[i] === cat ? "rgba(45,212,191,0.5)" : "rgba(255,255,255,0.1)"}`,
+                      color: categories[i] === cat ? "var(--soft-teal)" : "var(--text-muted)"
                     }}
                   >
                     {cat === "family" ? "عيلة" : cat === "work" ? "شغل" : "تاني"}
@@ -166,24 +193,23 @@ const StepInventory: FC<{
                 ))}
               </div>
             )}
-          </motion.div>
+          </div>
         ))}
       </div>
 
-      <motion.button
+      <button
         type="button"
-        onClick={() => onNext(items.filter((item) => item.name.trim()))}
+        onClick={handleNext}
         disabled={!canContinue}
-        className="w-full rounded-2xl py-3.5 text-sm font-bold transition-all"
+        className="w-full rounded-2xl py-3.5 text-sm font-bold transition-all ob-btn-tap"
         style={{
           background: canContinue ? "rgba(45,212,191,0.9)" : "rgba(255,255,255,0.05)",
           color: canContinue ? "#0f172a" : "rgba(255,255,255,0.25)",
           cursor: canContinue ? "pointer" : "not-allowed",
         }}
-        whileTap={canContinue ? { scale: 0.97 } : {}}
       >
         يلا نكمل →
-      </motion.button>
+      </button>
 
       <button
         type="button"
@@ -195,7 +221,7 @@ const StepInventory: FC<{
       </button>
     </div>
   );
-};
+});
 
 /* ── Step 2: Mapping (drag-drop simulation) ── */
 interface NameCard { name: string; category: AdviceCategory; ring: Ring | null; placed: boolean }
@@ -281,9 +307,9 @@ const StepMapping: FC<{
       <div className="flex flex-wrap gap-2 justify-center min-h-[40px]">
         {cards.map((c, i) =>
           !c.placed ? (
-            <motion.div
+            <div
               key={c.name}
-              className="px-4 py-2 rounded-full text-sm font-semibold cursor-grab active:cursor-grabbing select-none"
+              className="px-4 py-2 rounded-full text-sm font-semibold cursor-grab active:cursor-grabbing select-none transition-transform hover:scale-105 active:scale-95"
               style={{
                 background: "rgba(255,255,255,0.08)",
                 border: "1px solid rgba(255,255,255,0.15)",
@@ -292,12 +318,9 @@ const StepMapping: FC<{
               draggable
               onDragStart={() => setDragging(i)}
               onDragEnd={() => setDragging(null)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              layout
             >
               {c.name}
-            </motion.div>
+            </div>
           ) : null
         )}
       </div>
@@ -336,34 +359,28 @@ const StepMapping: FC<{
       )}
 
       {/* Encouragement after first placement */}
-      <AnimatePresence>
-        {firstPlaced && !allPlaced && (
-          <motion.p
-            className="text-center text-xs"
-            style={{ color: "rgba(45,212,191,0.7)" }}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-          >
-            بالظبط كدة.. إنت اللي بتحدد المساحة.
-          </motion.p>
-        )}
-      </AnimatePresence>
+      {firstPlaced && !allPlaced && (
+        <p
+          className="text-center text-xs transition-opacity duration-300"
+          style={{ color: "rgba(45,212,191,0.7)" }}
+        >
+          بالظبط كدة.. إنت اللي بتحدد المساحة.
+        </p>
+      )}
 
-      <motion.button
+      <button
         type="button"
         onClick={() => onNext(cards)}
         disabled={!allPlaced}
-        className="w-full rounded-2xl py-3.5 text-sm font-bold transition-all"
+        className="w-full rounded-2xl py-3.5 text-sm font-bold transition-all ob-btn-tap"
         style={{
           background: allPlaced ? "rgba(45,212,191,0.9)" : "rgba(255,255,255,0.05)",
           color: allPlaced ? "#0f172a" : "rgba(255,255,255,0.25)",
           cursor: allPlaced ? "pointer" : "not-allowed",
         }}
-        whileTap={allPlaced ? { scale: 0.97 } : {}}
       >
         شوف الصورة →
-      </motion.button>
+      </button>
 
       <button type="button" onClick={onSkip} className="text-center text-xs" style={{ color: "var(--text-muted)" }}>
         تخطي
@@ -380,23 +397,24 @@ const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onC
   return (
     <div className="flex flex-col gap-6 w-full items-center text-center">
 
-      {/* Animated map glow */}
+      {/* Animated map glow - CSS animations (no JS blocking) */}
       <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
         {[44, 68, 88].map((r, i) => (
-          <motion.div
+          <div
             key={r}
             className="absolute rounded-full"
-            style={{ width: r, height: r, border: `1px solid rgba(45,212,191,${0.35 - i * 0.08})` }}
-            animate={{ scale: [1, 1.04, 1] }}
-            transition={{ duration: 2.5 + i * 0.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.3 }}
+            style={{
+              width: r,
+              height: r,
+              border: `1px solid rgba(45,212,191,${0.35 - i * 0.08})`,
+              animation: `ob-ring-pulse ${2.5 + i * 0.5}s ease-in-out infinite ${i * 0.3}s`,
+            }}
           />
         ))}
         {/* Center pulse */}
-        <motion.div
+        <div
           className="rounded-full"
-          style={{ width: 18, height: 18, background: "rgba(45,212,191,0.9)", boxShadow: "0 0 24px rgba(45,212,191,0.5)" }}
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          style={{ width: 18, height: 18, background: "rgba(45,212,191,0.9)", boxShadow: "0 0 24px rgba(45,212,191,0.5)", animation: "ob-center-pulse 2s ease-in-out infinite" }}
         />
         {/* Node dots around center */}
         {names.slice(0, 3).map((_, i) => {
@@ -447,11 +465,8 @@ const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onC
         </p>
       </div>
 
-      <motion.div
+      <div
         className="w-full rounded-2xl p-4 border border-rose-500/20 bg-rose-950/20 relative overflow-hidden"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.8 }}
       >
         <div className="absolute top-0 right-0 w-16 h-16 bg-rose-500/10 rounded-full blur-xl pointer-events-none" />
         <p className="text-xs font-bold text-rose-400 mb-1 flex items-center gap-1 justify-center">
@@ -461,21 +476,16 @@ const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onC
         <p className="text-[13px] text-slate-300 leading-relaxed mt-2">
           علاقاتك اللي بتستنزفك مش بس أسماء، دي بتتحول لـ <span className="text-rose-400 font-bold">ثقوب سوداء</span> مرئية تسحب طاقتك بانقباض مستمر.. إحنا هنا عشان نوقّف النزيف ده.
         </p>
-      </motion.div>
+      </div>
 
-      <motion.button
+      <button
         type="button"
         onClick={onComplete}
-        className="w-full rounded-2xl py-3.5 text-sm font-bold"
+        className="w-full rounded-2xl py-3.5 text-sm font-bold ob-btn-tap hover:brightness-110 transition-all"
         style={{ background: "rgba(45,212,191,0.9)", color: "#0f172a" }}
-        whileHover={{ background: "rgba(45,212,191,1)" }}
-        whileTap={{ scale: 0.97 }}
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.6 }}
       >
         أنطلق لرحلتك ←
-      </motion.button>
+      </button>
 
       <button
         type="button"
@@ -501,12 +511,13 @@ const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onC
 /* ════════════════════════════════════════════════
    Main OnboardingFlow
    ════════════════════════════════════════════════ */
-export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
+export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => {
   const addNode = useMapState((s) => s.addNode);
-  const [step, setStep] = useState(0); // 0 (noise), 1 (inventory), 2 (placement), 3 (review)
-  const [direction, setDirection] = useState(-1);
+  const [step, setStep] = useState(0);
+  const [prevStep, setPrevStep] = useState(-1);
   const [collectedItems, setCollectedItems] = useState<{ name: string; category: AdviceCategory }[]>([]);
   const completionTrackedRef = useRef(false);
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
     try {
@@ -519,17 +530,25 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
     }
   }, []);
 
+  const stepRef = useRef(0);
+
   const goTo = useCallback((next: number) => {
-    setDirection(next > step ? -1 : 1);
-    setStep(next);
-  }, [step]);
+    startTransition(() => {
+      setStep((prev) => {
+        setPrevStep(prev);
+        stepRef.current = next;
+        return next;
+      });
+    });
+  }, [startTransition]);
 
   const handleSkip = useCallback(() => {
-    const stepId = step === 0 ? "noise" : step === 1 ? "inventory" : step === 2 ? "mapping" : "review";
+    const currentStep = stepRef.current;
+    const stepId = currentStep === 0 ? "noise" : currentStep === 1 ? "inventory" : currentStep === 2 ? "mapping" : "review";
     recordFlowEvent("onboarding_skipped", { atStep: stepId });
     markJourneyOnboardingDone();
-    onComplete(true); // true indicates skipped
-  }, [onComplete, step]);
+    onComplete(true);
+  }, [onComplete]);
 
 
   const handleInventoryNext = useCallback((items: { name: string; category: AdviceCategory }[]) => {
@@ -596,6 +615,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
       style={{ background: "rgba(8,12,24,0.96)", backdropFilter: "blur(8px)" }}
       dir="rtl"
     >
+      <style>{ONBOARDING_STYLES}</style>
       <div
         className="relative w-full max-w-sm mx-4 rounded-3xl flex flex-col max-h-[95vh] overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
         style={{
@@ -603,82 +623,47 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = ({ onComplete }) => {
           border: "1px solid rgba(45,212,191,0.15)",
         }}
       >
-        {/* Progress dots */}
+        {/* Progress dots — CSS transition only */}
         <div className="flex justify-center gap-2 pt-5 pb-1">
           {dots.map((d: number) => (
-            <motion.div
+            <div
               key={d}
-              className="rounded-full"
-              animate={{
+              className="rounded-full transition-all duration-300"
+              style={{
+                height: 6,
                 width: d === step ? 20 : 6,
                 background: d === step ? "rgba(45,212,191,0.9)" : d < step ? "rgba(45,212,191,0.4)" : "rgba(255,255,255,0.12)",
               }}
-              style={{ height: 6 }}
-              transition={{ duration: 0.3 }}
             />
           ))}
         </div>
 
-        {/* Content area with slide animation */}
-        <div className="px-6 py-6 overflow-y-auto custom-scrollbar">
-          <AnimatePresence mode="wait" custom={direction}>
-            {step === 0 && (
-              <motion.div
-                key="stepN"
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={slideTransition}
-              >
-                <FirstSparkOnboarding onComplete={handleNoiseNext} />
-              </motion.div>
-            )}
+        {/* Content area — CSS transitions, no AnimatePresence blocking */}
+        <div className="px-6 py-6 overflow-y-auto custom-scrollbar relative">
+          {step === 0 && (
+            <div key="stepN" className={prevStep < 0 ? "ob-step-enter" : "ob-step-enter"}>
+              <FirstSparkOnboarding onComplete={handleNoiseNext} />
+            </div>
+          )}
 
-            {step === 1 && (
-              <motion.div
-                key="step0"
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={slideTransition}
-              >
-                <StepInventory onNext={handleInventoryNext} onSkip={handleSkip} />
-              </motion.div>
-            )}
-            {step === 2 && (
-              <motion.div
-                key="mapping"
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={slideTransition}
-              >
-                <StepMapping items={collectedItems} onNext={handleMappingNext} onSkip={handleSkip} />
-              </motion.div>
-            )}
-            {step === 3 && (
-              <motion.div
-                key="insight"
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={slideTransition}
-              >
-                <StepInsight items={collectedItems} onComplete={handleComplete} onSkip={handleComplete} />
-              </motion.div>
-            )}
-
-          </AnimatePresence>
+          {step === 1 && (
+            <div key="step0" className="ob-step-enter">
+              <StepInventory onNext={handleInventoryNext} onSkip={handleSkip} />
+            </div>
+          )}
+          {step === 2 && (
+            <div key="mapping" className="ob-step-enter">
+              <StepMapping items={collectedItems} onNext={handleMappingNext} onSkip={handleSkip} />
+            </div>
+          )}
+          {step === 3 && (
+            <div key="insight" className="ob-step-enter">
+              <StepInsight items={collectedItems} onComplete={handleComplete} onSkip={handleComplete} />
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
-};
+});
+(OnboardingFlow as unknown as { displayName: string }).displayName = "OnboardingFlow";

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import { isPrivilegedRole } from "../utils/featureFlags";
-import { supabase } from "../services/supabaseClient";
+import { safeGetSession, supabase } from "../services/supabaseClient";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
 import { replaceUrl, createCurrentUrl } from "../services/navigation";
 import { runtimeEnv } from "../config/runtimeEnv";
@@ -44,6 +44,15 @@ function normalizeRole(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
   const value = raw.trim().toLowerCase();
   return value ? value : null;
+}
+
+function getTierFromProfileRow(row: { subscription_status?: unknown } | null | undefined): SubscriptionTier {
+  const status =
+    typeof row?.subscription_status === "string"
+      ? row.subscription_status.trim().toLowerCase()
+      : "";
+
+  return status === "active" || status === "trialing" ? "pro" : "free";
 }
 
 export function getEffectiveRoleFromState(
@@ -218,6 +227,7 @@ async function syncAuthRole(session: Session | null): Promise<void> {
   const user = session?.user ?? null;
   if (!user) {
     useAuthState.getState().setRole(null);
+    useAuthState.getState().setTier("free");
     return;
   }
 
@@ -229,7 +239,7 @@ async function syncAuthRole(session: Session | null): Promise<void> {
   try {
     const { data, error } = await supabaseClient
       .from("profiles")
-      .select("role, tier")
+      .select("role, subscription_status")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -237,9 +247,7 @@ async function syncAuthRole(session: Session | null): Promise<void> {
       if (typeof data.role === "string" && data.role.trim()) {
         useAuthState.getState().setRole(data.role.trim());
       }
-      if (typeof data.tier === "string" && (data.tier === "free" || data.tier === "pro")) {
-        useAuthState.getState().setTier(data.tier as SubscriptionTier);
-      }
+      useAuthState.getState().setTier(getTierFromProfileRow(data));
       return;
     }
   } catch {
@@ -266,8 +274,7 @@ async function initSupabaseAuth(): Promise<void> {
       return;
     }
     supabaseClient = supabase;
-    const { data } = await supabase.auth.getSession();
-    const session = data.session ?? null;
+    const session = await safeGetSession();
     useAuthState.getState().setSession(session);
     void syncAuthRole(session);
     supabase.auth.onAuthStateChange((event, nextSession) => {

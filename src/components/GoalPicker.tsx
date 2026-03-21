@@ -37,7 +37,7 @@ const GOAL_COLORS: Record<string, { color: string; bg: string; border: string; g
   unknown: { color: "#94A3B8", bg: "rgba(148,163,184,0.08)", border: "rgba(148,163,184,0.18)", glow: "rgba(148,163,184,0.12)" },
 };
 
-const ALL_GOAL_IDS = ["family", "friends", "work", "love", "money", "self", "unknown"];
+const ALL_GOAL_IDS = ["family", "friends", "work", "love", "money", "unknown"];
 const ENABLED_GOAL_IDS = ALL_GOAL_IDS;
 
 /* ─── Animations ─────────────────────────────────────────────────────────────── */

@@ -11,10 +11,10 @@ interface AINodeProps {
 }
 
 /**
- * ️ AINode  بؤرة اع (The Organic AI Agent)
+ * 🧿 AINode — بؤرة الوعي (The Organic AI Agent)
  * 
- * دائرة تفاعة داخ اخرطة تع ستب  Drag & Drop
- * تتح جة صتة عد احدث.
+ * دائرة تفاعلية داخل الخريطة تعمل كمستقبل عبر Drag & Drop
+ * وتتحول لموجة صوتية عند التحدث.
  */
 export const AINode: FC<AINodeProps> = ({
     isConnected,
@@ -135,7 +135,7 @@ export const AINode: FC<AINodeProps> = ({
             </motion.button>
 
             <span className="text-[10px] font-black uppercase tracking-widest text-[var(--soft-teal)]">
-                {isOver ? "اسحب ا بدء" : isConnected ? "دس اع" : "بؤرة اع"}
+                {isOver ? "اسحب هنا لبدء" : isConnected ? "جلسة الوعي" : "بؤرة الوعي"}
             </span>
         </div>
     );

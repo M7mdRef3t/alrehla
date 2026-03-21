@@ -11,8 +11,10 @@ import { type FeatureFlagKey } from "../config/features";
 import { type WelcomeSource } from "./OnboardingWelcomeBubble";
 import { type NextStepDecisionV1 } from "../modules/recommendation";
 
+import { SafeCoreMapScreen } from "./WrappedComponents";
+import type { CoreMapScreen } from "./CoreMapScreen";
+import { trackEvent, AnalyticsEvents } from "../services/analytics";
 const ResearchSurvey = lazy(() => import("./ResearchSurvey").then((m) => ({ default: m.ResearchSurvey })));
-const CoreMapScreen = lazy(() => import("./CoreMapScreen").then((m) => ({ default: m.CoreMapScreen })));
 
 type StartScreen = "landing" | "goal" | "survey" | "map";
 
@@ -119,6 +121,10 @@ export function AppStartScreens({
             recordFlowEvent("goal_selected", {
               meta: { goalId: nextGoalId, category: nextCategory }
             });
+            trackEvent(AnalyticsEvents.GOAL_SELECTED, {
+              goal_id: nextGoalId,
+              category: nextCategory
+            });
             onClearWelcome();
             useJourneyState.getState().setLastGoal(nextGoalId, nextCategory);
             onGoalSelected(nextCategory, nextGoalId);
@@ -139,34 +145,32 @@ export function AppStartScreens({
   }
 
   return (
-    <ErrorBoundary fallback={<MapErrorFallback />}>
-      <Suspense fallback={<AwarenessSkeleton />}>
-        <CoreMapScreen
-          category={category}
-          goalId={goalId}
-          selectedNodeId={selectedNodeId}
-          onSelectNode={onSelectNode}
-          onOpenBreathing={onOpenBreathing}
-          onOpenMission={onOpenMission}
-          onOpenMissionFromAddPerson={onOpenMissionFromAddPerson}
-          pulseMode={pulseMode}
-          pulseInsight={pulseInsight}
-          onOpenCocoon={onOpenCocoon}
-          suppressLowPulseCocoon={isLowPulseCocoonSuppressed}
-          onOpenNoise={onOpenNoise}
-          canUseBasicDiagnosis={canUseBasicDiagnosis}
-          onFeatureLocked={onFeatureLocked}
-          onOpenChallenge={challengeTarget ? () => onOpenMission(challengeTarget.nodeId) : undefined}
-          challengeLabel={challengeLabel}
-          nextStepDecision={nextStepDecision}
-          onTakeNextStep={onTakeNextStep}
-          onRefreshNextStep={onRefreshNextStep}
-          onOpenPulse={onOpenPulse}
-          onOpenLibrary={onOpenLibrary}
-          onOpenProfile={onOpenProfile}
-          hideBottomDock={hideBottomDock}
-        />
-      </Suspense>
-    </ErrorBoundary>
+    <div className="w-full flex-1 min-h-[100dvh] max-h-[100dvh] overflow-visible flex flex-col">
+      <SafeCoreMapScreen
+        category={category}
+        goalId={goalId}
+        selectedNodeId={selectedNodeId}
+        onSelectNode={onSelectNode}
+        onOpenBreathing={onOpenBreathing}
+        onOpenMission={onOpenMission}
+        onOpenMissionFromAddPerson={onOpenMissionFromAddPerson}
+        pulseMode={pulseMode}
+        pulseInsight={pulseInsight}
+        onOpenCocoon={onOpenCocoon}
+        suppressLowPulseCocoon={isLowPulseCocoonSuppressed}
+        onOpenNoise={onOpenNoise}
+        canUseBasicDiagnosis={canUseBasicDiagnosis}
+        onFeatureLocked={onFeatureLocked}
+        onOpenChallenge={challengeTarget ? () => onOpenMission(challengeTarget.nodeId) : undefined}
+        challengeLabel={challengeLabel}
+        nextStepDecision={nextStepDecision}
+        onTakeNextStep={onTakeNextStep}
+        onRefreshNextStep={onRefreshNextStep}
+        onOpenPulse={onOpenPulse}
+        onOpenLibrary={onOpenLibrary}
+        onOpenProfile={onOpenProfile}
+        hideBottomDock={hideBottomDock}
+      />
+    </div>
   );
 }

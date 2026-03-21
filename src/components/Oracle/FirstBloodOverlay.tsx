@@ -64,11 +64,11 @@ export const FirstBloodOverlay: React.FC<FirstBloodProps> = ({ oracleId, onCompl
 
                             <div className="space-y-4">
                                 <h1 className="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-b from-amber-200 to-amber-600">
-                                    أا ب ف جس احاء
+                                    أهلاً بيك في مجلس الحكماء
                                 </h1>
                                 <p className="text-xl text-slate-400 leading-relaxed max-w-lg mx-auto">
-                                    اسرب دت ف اتظار ح اأ.
-                                    صب  <span className="text-amber-500 font-bold">أرا</span> ش جرد رتبة د سؤة حاة ع اجاعة.
+                                    السرب ما دخلت في الانتظار حتى الآن.
+                                    لقب <span className="text-amber-500 font-bold">أوراكل</span> مش مجرد رتبة — ده مسؤولية حقيقية على الجماعة.
                                 </p>
                             </div>
 
@@ -76,7 +76,7 @@ export const FirstBloodOverlay: React.FC<FirstBloodProps> = ({ oracleId, onCompl
                                 onClick={() => setStep('task')}
                                 className="group relative px-12 py-5 bg-amber-600 hover:bg-amber-500 text-slate-950 font-black text-xl uppercase tracking-tighter rounded-2xl transition-all shadow-[0_0_40px_rgba(245,158,11,0.3)]"
                             >
-                                اترة تبدأ اآ
+                                الفترة تبدأ الآن
                                 <ArrowRight className="inline-block ml-3 group-hover:translate-x-2 transition-transform" />
                             </button>
                         </motion.div>
@@ -100,14 +100,14 @@ export const FirstBloodOverlay: React.FC<FirstBloodProps> = ({ oracleId, onCompl
 
                             <div className="bg-slate-900/40 rounded-[2.5rem] border border-white/5 p-8 space-y-6">
                                 <div className="space-y-2">
-                                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">ترر ارائد Initiate_73</span>
+                                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">تقرير الرائد Initiate_73</span>
                                     <p className="text-lg font-medium text-slate-300 italic">
-                                        "ت بغر أا ادارة بتاعت با 3 أا بس ش حاسس بأ تغر ف ضغط اعصب.. ف غرت ا أزر عشا رح أتر"
+                                        "مشيت بتغير أنا الدائرة بتاعتي بقالي 3 أيام بس مش حاسس بأي تغير في ضغط الأعصاب.. فكرت أغير اللون لأخضر عشان أريح وأترك"
                                     </p>
                                 </div>
 
                                 <div className="p-6 bg-slate-950/60 rounded-3xl border border-white/5 space-y-3">
-                                    <span className="text-[10px] font-black text-[var(--soft-teal)] uppercase">اة ا ات طبة:</span>
+                                    <span className="text-[10px] font-black text-[var(--soft-teal)] uppercase">المهمة اللي اتطلبت:</span>
                                     <p className="text-sm text-slate-400">"{taskZero.mission_data.daily_missions[0].actionable_task}"</p>
                                 </div>
 
@@ -117,14 +117,14 @@ export const FirstBloodOverlay: React.FC<FirstBloodProps> = ({ oracleId, onCompl
                                         className="py-4 bg-slate-800 hover:bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase transition-all flex items-center justify-center gap-2"
                                     >
                                         <CheckCircle className="w-4 h-4" />
-                                        اعتاد اسار
+                                        اعتماد المسار
                                     </button>
                                     <button
                                         onClick={() => handleJudgment('flag')}
                                         className="py-4 bg-slate-800 hover:bg-red-600/40 text-red-400 border border-white/5 rounded-2xl font-black text-xs uppercase transition-all flex items-center justify-center gap-2"
                                     >
                                         <AlertCircle className="w-4 h-4" />
-                                        رفض (رب فس)
+                                        رفض (تلاعب نفسي)
                                     </button>
                                 </div>
                             </div>
@@ -144,9 +144,9 @@ export const FirstBloodOverlay: React.FC<FirstBloodProps> = ({ oracleId, onCompl
                                         <Flame className="w-10 h-10 text-emerald-500" />
                                     </div>
                                     <div className="space-y-4">
-                                        <h2 className="text-3xl font-black text-white">ظرة ثابة ا أرا!</h2>
+                                        <h2 className="text-3xl font-black text-white">نظرة ثاقبة يا أوراكل!</h2>
                                         <p className="text-slate-400 leading-relaxed px-12">
-                                            ارائد د ا بستخد "اأا" رب رح بدا  اجة اصراع اح. برفض د إت حت اسرب  ترا "اضضاء" (Noise).
+                                            الرائد ده كان بيستخدم "الأمان" كهروب وراح بدل ما يواجه الصراع الحقيقي. برفضك ده إنت حميت السرب من تراكم "الضوضاء" (Noise).
                                         </p>
                                     </div>
                                 </>
@@ -156,9 +156,9 @@ export const FirstBloodOverlay: React.FC<FirstBloodProps> = ({ oracleId, onCompl
                                         <AlertCircle className="w-10 h-10 text-red-500" />
                                     </div>
                                     <div className="space-y-4">
-                                        <h2 className="text-3xl font-black text-white">ارحة ش داا تطر</h2>
+                                        <h2 className="text-3xl font-black text-white">الراحة مش دايماً تطور</h2>
                                         <p className="text-slate-400 leading-relaxed px-12">
-                                            احاة د ات "رب فس" صرح.  أرا از تتع تفر ب "اراحة"  "اتطر". اسرب بعتد ع عشا ت "اراب اصار".
+                                            الحالة دي كانت "هروب نفسي" صريح. كل أوراكل مميز يتعلم يفرق بين "الراحة" و "التطور". السرب بيعتمد عليك عشان يمنع "الاقتراب الزائف".
                                         </p>
                                     </div>
                                 </>
@@ -168,7 +168,7 @@ export const FirstBloodOverlay: React.FC<FirstBloodProps> = ({ oracleId, onCompl
                                 onClick={onComplete}
                                 className="px-12 py-5 bg-white text-slate-950 font-black text-lg uppercase tracking-tight rounded-2xl hover:scale-105 transition-transform"
                             >
-                                دخ جس احاء اح
+                                دخول مجلس الحكماء الحقيقي
                             </button>
                         </motion.div>
                     )}

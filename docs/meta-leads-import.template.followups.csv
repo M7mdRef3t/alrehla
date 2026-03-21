@@ -1,0 +1,5 @@
+email,phone,name,lead_id,personalized_url,whatsapp_message
+lead@example.com,201000000000,Example Lead,meta-lead-at-example-com,https://www.alrehla.app/onboarding?lead_id=meta-lead-at-example-com&lead_source=meta_followup,"أهلًا، شفت إنك مهتم تعرف مين بيستنزف طاقتك.
+ابدأ من هنا:
+https://www.alrehla.app/onboarding?lead_id=meta-lead-at-example-com&lead_source=meta_followup
+لو حابب، ابعتلي بعد ما تخلص وأنا أساعدك في الخطوة اللي بعدها."

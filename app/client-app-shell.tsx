@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, lazy, Suspense, useState } from "react";
+import { useEffect, Suspense, useState } from "react";
+import dynamic from "next/dynamic";
 import { AwarenessSkeleton } from "../src/components/AwarenessSkeleton";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { initAnalytics } from "../src/services/analytics";
@@ -9,10 +10,10 @@ import { runtimeEnv } from "../src/config/runtimeEnv";
 import { applyDesignSystemTokens } from "../src/services/designSystemTokens";
 import { PWAInstallProvider } from "../src/contexts/PWAInstallContext";
 
-const App = lazy(() => import("../src/App"));
-const Landing = lazy(() => import("../src/components/Landing").then((m) => ({ default: m.Landing })));
-const Analytics = lazy(() => import("@vercel/analytics/react").then((m) => ({ default: m.Analytics })));
-const SpeedInsights = lazy(() => import("@vercel/speed-insights/react").then((m) => ({ default: m.SpeedInsights })));
+const App = dynamic(() => import("../src/App"), { ssr: false });
+const Landing = dynamic(() => import("../src/components/Landing").then((m) => m.Landing), { ssr: false }) as typeof import("../src/components/Landing").Landing;
+const Analytics = dynamic(() => import("@vercel/analytics/react").then((m) => m.Analytics), { ssr: false });
+const SpeedInsights = dynamic(() => import("@vercel/speed-insights/react").then((m) => m.SpeedInsights), { ssr: false });
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 

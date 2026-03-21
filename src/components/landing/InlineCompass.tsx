@@ -1,4 +1,5 @@
-import type { FC } from "react";
+import { FC, useEffect } from "react";
+import { trackEvent, AnalyticsEvents } from "../../services/analytics";
 
 type InlineIntent = "clarity" | "boundaries" | "calm";
 
@@ -20,7 +21,12 @@ export const InlineCompass: FC<InlineCompassProps> = ({
   recommendation,
   pulseAvg,
   onStartJourney
-}) => (
+}) => {
+  useEffect(() => {
+    trackEvent(AnalyticsEvents.MICRO_COMPASS_OPENED);
+  }, []);
+
+  return (
   <div
     className="landing-inline-compass mt-5 w-full max-w-xl rounded-2xl border border-teal-500/25 bg-teal-500/10 p-4 text-right"
     role="group"
@@ -52,10 +58,14 @@ export const InlineCompass: FC<InlineCompassProps> = ({
     <p className="mt-3 text-sm font-semibold text-slate-100" aria-live="polite" aria-atomic="true">{recommendation}</p>
     <button
       type="button"
-      onClick={onStartJourney}
+      onClick={() => {
+        trackEvent(AnalyticsEvents.MICRO_COMPASS_COMPLETED, { intent: inlineIntent });
+        onStartJourney();
+      }}
       className="mt-3 min-h-[44px] rounded-lg border border-teal-300/40 bg-teal-500/20 px-4 py-2 text-sm font-bold text-teal-100 hover:bg-teal-500/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#132030]"
     >
       ابدأ بالمسار المقترح
     </button>
   </div>
-);
+  );
+};

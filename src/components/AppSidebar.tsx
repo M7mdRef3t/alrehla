@@ -1,4 +1,4 @@
-﻿import type { FC } from "react";
+import type { FC } from "react";
 import { Suspense, lazy, useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -932,7 +932,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           className="h-full w-10 shrink-0 flex flex-col justify-center items-center bg-teal-600 text-white border-l border-teal-700 cursor-default py-4"
           title="افتح محطة الانطلاق"
         >
-          <PanelRightOpen className="w-5 h-5" />
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <PanelRightOpen className="w-5 h-5" />
+          </motion.div>
         </div>
       </div>
 

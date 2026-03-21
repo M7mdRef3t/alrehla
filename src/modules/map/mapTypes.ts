@@ -1,4 +1,5 @@
 export type Ring = "green" | "yellow" | "red";
+export type MapType = "classic" | "masafaty";
 
 /** إجابات شاشة "فين الشخص في حياتك" — للاستنزاف عن بُعد وتخزينها على العقدة */
 export type RealityOption = "often" | "sometimes" | "rarely" | "never";
@@ -140,6 +141,9 @@ export interface EnergyBalance {
   transactions: EnergyTransaction[];
 }
 
+export type FeelingCheckAsset = "body" | "time" | "energy" | "money" | "space";
+export type FeelingCheckResult = Record<FeelingCheckAsset, number>; // 0-100
+
 export type OrbitHistoryEventType = "created" | "ring_changed" | "archived" | "restored";
 
 export interface OrbitHistoryEntry {
@@ -196,4 +200,6 @@ export interface MapNode {
   /** البصمة الخفية: وقت آخر تغيير للمدار أو الأرشفة، يُستخدم لحساب غرامة الركود */
   lastRingChangeAt?: number;
   orbitHistory?: OrbitHistoryEntry[];
+  /** جاري التحليل بواسطة الـ AI (Optimistic UI) */
+  isAnalyzing?: boolean;
 }

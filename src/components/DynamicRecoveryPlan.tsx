@@ -1,6 +1,6 @@
 import React, { type FC, useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp, CheckCircle2, Circle, AlertTriangle, Sparkles, HelpCircle, LayoutTemplate } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle2, Circle, AlertTriangle, Sparkles, HelpCircle, LayoutTemplate, Terminal } from "lucide-react";
 import type { Ring, DailyPathProgress } from "../modules/map/mapTypes";
 import { analyzeWithAI } from "../utils/aiPatternAnalyzer";
 import { generateAIPlan } from "../utils/aiPlanGenerator";
@@ -16,6 +16,8 @@ import { recordJourneyEvent } from "../services/journeyTracking";
 import type { PathId } from "../modules/pathEngine/pathTypes";
 import type { RecoveryPath } from "../modules/pathEngine/pathTypes";
 import { LiveStatusBar } from "./shared/LiveStatusBar";
+import { SymptomSimulation } from "./Chat/SymptomSimulation";
+
 
 function isRecoveryPath(x: unknown): x is RecoveryPath {
   if (!x || typeof x !== "object") return false;
@@ -123,33 +125,35 @@ const PathProgressPanel: FC<{
   const moodByDate = new Map(entriesWithMood.map((e) => [e.date, e.moodScore!]));
 
   return (
-    <div className="p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-right">
-      <h3 className="font-bold text-slate-900 flex items-center gap-2 mb-3">
-        <span>📊</span> لوحة المتابعة — أنت واقف فين؟
+    <div className="p-6 bg-slate-900/50 backdrop-blur-2xl border border-white/5 rounded-2xl text-right">
+      <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
+        <span className="text-2xl">📊</span> لوحة المتابعة — أنت واقف فين؟
       </h3>
-      <LiveStatusBar
-        title="حالة بيانات المتابعة"
-        mode={lastPathGeneratedAt != null ? "live" : "fallback"}
-        isLoading={false}
-        lastUpdatedAt={lastPathGeneratedAt ?? null}
-      />
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-        <div className="p-3 bg-white border border-teal-200 rounded-lg">
-          <p className="text-xs text-slate-600 mb-0.5">قوة المدار</p>
-          <p className="text-lg font-bold text-teal-600">خطوات حماية مُنجزة: {completedStepsCount}</p>
-          <p className="text-xs text-slate-500">كل خطوة حماية بتزوّد قوة المدار</p>
+      <div className="mb-4 opacity-80 scale-95 origin-right">
+        <LiveStatusBar
+          title="حالة بيانات المتابعة"
+          mode={lastPathGeneratedAt != null ? "live" : "fallback"}
+          isLoading={false}
+          lastUpdatedAt={lastPathGeneratedAt ?? null}
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-md">
+          <p className="text-xs text-slate-400 mb-1 uppercase tracking-wider font-semibold">قوة المدار</p>
+          <p className="text-xl font-bold text-teal-400">خطوات مُنجزة: {completedStepsCount}</p>
+          <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">كل خطوة حماية بتزوّد قوة المدار</p>
         </div>
-        <div className="p-3 bg-white border border-amber-200 rounded-lg">
-          <p className="text-xs text-slate-600 mb-0.5">هدوء الرادار</p>
-          <p className="text-lg font-bold text-amber-600">
-            {avgMood != null ? `مزاج ${avgMood}/5` : ruminationCount === 0 ? "بدون ضجيج مسجّل" : `ضجيج: ${ruminationCount}`}
+        <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-md">
+          <p className="text-xs text-slate-400 mb-1 uppercase tracking-wider font-semibold">هدوء الرادار</p>
+          <p className="text-xl font-bold text-amber-400">
+            {avgMood != null ? `مزاج ${avgMood}/5` : ruminationCount === 0 ? "هدوء تام" : `ضجيج: ${ruminationCount}`}
           </p>
-          <p className="text-xs text-slate-500">{avgMood != null ? "متوسط آخر 7 أيام" : "كل ما قل الضجيج، المؤشر يزيد"}</p>
+          <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">{avgMood != null ? "متوسط آخر 7 أيام" : "كل ما قل الضجيج، المؤشر يزيد"}</p>
         </div>
-        <div className="p-3 bg-white border border-violet-200 rounded-lg">
-          <p className="text-xs text-slate-600 mb-0.5">تقدم عملي</p>
-          <p className="text-lg font-bold text-violet-600">أيام إنجاز: {completedDaysCount}</p>
-          <p className="text-xs text-slate-500">كل يوم إنجاز بيثبّت استقرارك</p>
+        <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-md">
+          <p className="text-xs text-slate-400 mb-1 uppercase tracking-wider font-semibold">تقدم عملي</p>
+          <p className="text-xl font-bold text-violet-400">أيام إنجاز: {completedDaysCount}</p>
+          <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">كل يوم إنجاز بيثبّت استقرارك</p>
         </div>
       </div>
       {pathId === "path_detox" && onUpdateBoundaryLegitimacyScore && (
@@ -182,10 +186,10 @@ const PathProgressPanel: FC<{
         </div>
       )}
       {lastPathGeneratedAt != null && (
-        <p className="text-xs text-slate-500 mb-3">تحديث وصفي: {formatPathGeneratedAt(lastPathGeneratedAt)}</p>
+        <p className="text-[10px] text-slate-500 mb-3 font-medium px-1">تحديث وصفي: {formatPathGeneratedAt(lastPathGeneratedAt)}</p>
       )}
-      <div className="flex items-center gap-1 flex-wrap">
-        <span className="text-xs text-slate-500 ml-2">آخر {LAST_N_DAYS} يوم:</span>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className="text-xs text-slate-400 ml-2 font-medium opacity-60">آخر {LAST_N_DAYS} يوم:</span>
         {dates.map((date) => {
           const done = completedByDate.has(date);
           const isToday = date === today;
@@ -197,12 +201,12 @@ const PathProgressPanel: FC<{
                   ? `اليوم — ${done ? (moodByDate.has(date) ? `مُنجَز، مزاج ${moodByDate.get(date)}/5` : "مُنجَز") : ""}`
                   : `${date}${done ? (moodByDate.has(date) ? ` — مُنجَز، مزاج ${moodByDate.get(date)}/5` : " — مُنجَز") : ""}`
               }
-              className={`inline-flex w-6 h-6 rounded-full items-center justify-center text-xs font-medium ${
+              className={`inline-flex w-7 h-7 rounded-lg items-center justify-center text-[10px] font-bold transition-all ${
                 done
-                  ? "bg-teal-500 text-white"
+                  ? "bg-teal-500/80 text-white shadow-lg shadow-teal-500/20"
                   : isToday
-                    ? "bg-slate-300 text-slate-600 ring-1 ring-slate-400"
-                    : "bg-slate-200 text-slate-500"
+                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/30 ring-1 ring-amber-500/20"
+                    : "bg-white/5 text-slate-500 border border-white/5 opacity-40"
               }`}
             >
               {new Date(date + "T12:00:00").getDate()}
@@ -297,33 +301,29 @@ const PathEngineBlock: FC<{
   };
 
   return (
-    <div className="border-2 border-teal-200 rounded-xl overflow-hidden bg-white text-right">
-      <div className="p-4 bg-teal-50 border-b border-teal-200">
-        <h3 className="font-bold text-teal-900 flex items-center gap-2">
-          <span>🛤️</span> مسار الاستعادة
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-            pathSnapshot.aiGenerated ? "bg-purple-100 text-purple-800" : "bg-slate-100 text-slate-600"
-          }`}>
-            <span
-              className="inline-flex items-center justify-center"
-              title={pathSnapshot.aiGenerated ? "AI" : "نسخة ثابتة"}
-              aria-label={pathSnapshot.aiGenerated ? "AI" : "نسخة ثابتة"}
-            >
-              {pathSnapshot.aiGenerated ? "AI" : <LayoutTemplate className="w-3 h-3" aria-hidden="true" />}
+    <div className="border border-white/10 rounded-2xl overflow-hidden bg-slate-900/40 backdrop-blur-xl text-right">
+      <div className="p-6 bg-white/5 border-b border-white/5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <span className="text-2xl">🛤️</span> مسار الاستعادة
+            <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-tighter ${
+              pathSnapshot.aiGenerated ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "bg-slate-800 text-slate-400"
+            }`}>
+              {pathSnapshot.aiGenerated ? "AI Optimized" : "Standard"}
             </span>
-          </span>
-        </h3>
-        <p className="text-xs text-teal-700 mt-1">{pathNameAr}</p>
-        <div className="flex gap-2 mt-2 flex-wrap">
+          </h3>
+        </div>
+        <p className="text-xs text-slate-400 font-medium mb-4">{pathNameAr}</p>
+        <div className="flex gap-2 flex-wrap">
           {([1, 2, 3] as const).map((w) => (
             <button
               key={w}
               type="button"
               onClick={() => { setSelectedWeek(w); setSelectedDay(0); }}
-              className={`py-1.5 px-3 rounded-lg text-sm font-medium transition-all ${
+              className={`py-2 px-4 rounded-xl text-xs font-bold transition-all duration-300 ${
                 selectedWeek === w
-                  ? "bg-teal-600 text-white ring-2 ring-teal-400"
-                  : "bg-teal-100 text-teal-800 hover:bg-teal-200"
+                  ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20"
+                  : "bg-white/5 text-slate-300 hover:bg-white/10 border border-white/5"
               }`}
             >
               الأسبوع {w}
@@ -331,12 +331,12 @@ const PathEngineBlock: FC<{
           ))}
         </div>
         {phase && (
-          <>
-            <p className="text-sm text-teal-800 mt-2">{phase.focus}</p>
+          <div className="mt-4 p-4 bg-amber-500/5 border-r-2 border-amber-500/30 rounded-l-md">
+            <p className="text-sm font-bold text-amber-200">{phase.focus}</p>
             {phase.description && (
-              <p className="text-xs text-teal-600 mt-1">{phase.description}</p>
+              <p className="text-xs text-slate-400 mt-1 leading-relaxed">{phase.description}</p>
             )}
-          </>
+          </div>
         )}
       </div>
       <div className="p-4 space-y-3">
@@ -366,23 +366,29 @@ const PathEngineBlock: FC<{
             </div>
             {currentTask && (
               <div
-                className={`p-4 rounded-lg border-2 transition-all ${
-                  isCurrentDone ? "bg-green-50 border-green-300" : "bg-white border-gray-200"
+                className={`p-6 rounded-2xl border transition-all duration-500 ${
+                  isCurrentDone 
+                    ? "bg-teal-500/10 border-teal-500/30" 
+                    : "bg-white/5 border-white/10 shadow-xl shadow-black/20"
                 }`}
               >
-                <div className="flex items-start gap-3">
-                  <span className="text-xl shrink-0">{getTaskIcon(currentTask.type)}</span>
+                <div className="flex items-start gap-4">
+                  <div className={`p-3 rounded-xl ${isCurrentDone ? 'bg-teal-500/20' : 'bg-white/5 border border-white/5'}`}>
+                    <span className="text-2xl shrink-0">{getTaskIcon(currentTask.type)}</span>
+                  </div>
                   <div className="flex-1">
                     {currentTask.title && (
-                      <p className="text-sm font-semibold text-gray-900 mb-1">{currentTask.title}</p>
+                      <p className="text-md font-bold text-white mb-2 tracking-tight">{currentTask.title}</p>
                     )}
                     <p
-                      className={`text-sm ${isCurrentDone ? "text-green-800 line-through" : "text-gray-900"}`}
+                      className={`text-sm leading-relaxed ${isCurrentDone ? "text-teal-200/50 line-through" : "text-slate-200"}`}
                     >
                       {currentTask.text}
                     </p>
                     {currentTask.helpText && (
-                      <p className="text-xs text-gray-600 mt-1">💡 {currentTask.helpText}</p>
+                      <p className="text-xs text-slate-400 mt-3 p-3 bg-white/5 rounded-xl border-r-2 border-amber-500/50">
+                        💡 {currentTask.helpText}
+                      </p>
                     )}
                     {currentTask.requiresInput && (
                       <textarea
@@ -390,7 +396,7 @@ const PathEngineBlock: FC<{
                         onChange={(e) => onUpdateStepInput(currentTask.id, e.target.value)}
                         placeholder={currentTask.placeholder}
                         rows={3}
-                        className="w-full mt-2 border-2 border-teal-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                        className="w-full mt-4 bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none transition-all"
                       />
                     )}
                     {!isCurrentDone && moodPromptForTaskId !== currentTask.id && (
@@ -398,50 +404,51 @@ const PathEngineBlock: FC<{
                         type="button"
                         onClick={() => handleClickDone(currentTask.id)}
                         disabled={currentTask.requiresInput && !(stepInputs[currentTask.id] ?? "").trim()}
-                        className="mt-3 w-full py-2.5 px-4 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="mt-6 w-full py-4 px-6 rounded-2xl bg-amber-600 text-white text-sm font-bold hover:bg-amber-500 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:hover:scale-100 transition-all shadow-lg shadow-amber-900/20 flex items-center justify-center gap-2"
                       >
-                        <CheckCircle2 className="w-4 h-4" />
+                        <CheckCircle2 className="w-5 h-5" />
                         الخطوة اتنفذت ✅
                       </button>
                     )}
                     {!isCurrentDone && moodPromptForTaskId === currentTask.id && (
-                      <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                        <p className="text-sm font-semibold text-amber-900 mb-2">الرادار بيقول إيه بعد التنفيذ؟</p>
-                        <div className="flex flex-wrap gap-2 mb-2">
+                      <div className="mt-6 p-5 bg-slate-950/40 border border-amber-500/30 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+                        <p className="text-sm font-bold text-amber-200 mb-4">الرادار بيقول إيه بعد التنفيذ؟</p>
+                        <div className="flex flex-wrap gap-2 mb-3">
                           {( [1, 2, 3, 4, 5] as const ).map((score) => (
                             <button
                               key={score}
                               type="button"
                               onClick={() => handleMoodSelect(currentTask.id, score)}
-                              className="py-2 px-3 rounded-lg bg-amber-100 text-amber-900 text-sm font-medium hover:bg-amber-200"
+                              className="py-2.5 px-4 rounded-xl bg-white/5 border border-white/10 text-slate-200 text-xs font-bold hover:bg-amber-500 hover:text-slate-950 transition-all"
                             >
-                              {score} — {MOOD_LABELS[score]}
+                              {MOOD_LABELS[score]}
                             </button>
                           ))}
                         </div>
                         <button
                           type="button"
                           onClick={() => handleMoodSkip(currentTask.id)}
-                          className="text-xs text-slate-500 hover:text-slate-700"
+                          className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors uppercase font-bold tracking-widest px-1"
                         >
                           تخطي القياس
                         </button>
                       </div>
                     )}
                     {isCurrentDone && (
-                      <p className="mt-2 text-sm text-green-700 font-medium flex items-center gap-1">
-                        <CheckCircle2 className="w-4 h-4" />
-                        المهمة اتنفذت
-                      </p>
+                      <div className="mt-4 p-3 bg-teal-500/10 rounded-xl flex items-center gap-2 border border-teal-500/20">
+                        <CheckCircle2 className="w-4 h-4 text-teal-400" />
+                        <p className="text-xs text-teal-400 font-bold">برافو! المهمة دي خلصت</p>
+                      </div>
                     )}
                   </div>
                 </div>
               </div>
             )}
             {phase?.successCriteria && (
-              <p className="text-xs text-gray-600 pt-2 border-t border-teal-100">
-                <span className="font-semibold">علامة الحسم:</span> {phase.successCriteria}
-              </p>
+              <div className="p-4 bg-white/5 rounded-xl border border-white/5 mt-4">
+                <p className="text-[10px] text-slate-400 leading-relaxed uppercase tracking-wider font-bold mb-1 opacity-60">علامة الحسم</p>
+                <p className="text-xs text-slate-300 font-medium italic">"{phase.successCriteria}"</p>
+              </div>
             )}
           </>
         )}
@@ -498,125 +505,159 @@ const DetachmentSection: FC<{
   };
 
   return (
-  <div className="space-y-4 p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-right">
-    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-      <span>⚓</span>
+  <div className="space-y-6 p-6 bg-slate-900/50 backdrop-blur-2xl border border-white/5 rounded-2xl text-right">
+    <h3 className="text-xl font-bold text-white flex items-center gap-3">
+      <span className="text-2xl">⚓</span>
       {mapCopy.detachmentTitle}
     </h3>
+    
     {/* محكمة الضمير */}
-    <div>
-      <h4 className="text-sm font-semibold text-slate-700 mb-2">{mapCopy.detachmentGuiltCourtTitle}</h4>
-      <p className="text-xs text-slate-600 mb-2">{mapCopy.detachmentGuiltCourtHint}</p>
+    <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
+      <h4 className="text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">⚖️ {mapCopy.detachmentGuiltCourtTitle}</h4>
+      <p className="text-xs text-slate-400 mb-4 leading-relaxed">{mapCopy.detachmentGuiltCourtHint}</p>
       <input
         type="text"
         value={guiltInput}
         onChange={(e) => setGuiltInput(e.target.value)}
         placeholder={mapCopy.detachmentGuiltCourtPlaceholder}
-        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm mb-2"
+        className="w-full bg-slate-950/50 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-200 focus:ring-2 focus:ring-violet-500/50 mb-3"
       />
       <button
         type="button"
         onClick={handleGuiltCourt}
         disabled={guiltLoading || !guiltInput.trim()}
-        className="rounded-full bg-violet-600 text-white px-4 py-2 text-sm font-semibold disabled:opacity-50"
+        className="w-full sm:w-auto rounded-xl bg-violet-600 text-white px-6 py-3 text-sm font-bold hover:bg-violet-500 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
       >
+        {guiltLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
         {guiltLoading ? "جاري الرد…" : mapCopy.detachmentGuiltCourtButton}
       </button>
       {guiltResponse && (
-        <div className="mt-2 p-3 bg-violet-50 border border-violet-200 rounded-xl text-sm text-violet-900 font-medium">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 p-4 bg-violet-500/10 border border-violet-500/20 rounded-xl text-sm text-violet-200 font-medium leading-relaxed"
+        >
           {guiltResponse}
-        </div>
+        </motion.div>
       )}
     </div>
-    {/* مرساة الواقع */}
-    <div>
-      <h4 className="text-sm font-semibold text-slate-700 mb-2">{mapCopy.detachmentRealityAnchor}</h4>
-      <p className="text-xs text-slate-600 mb-2">{mapCopy.detachmentRealityAnchorHint}</p>
-      {[0, 1, 2].map((i) => (
-        <input
-          key={i}
-          type="text"
-          value={realityAnchorDraft[i] ?? ""}
-          onChange={(e) => {
-            const next = [...realityAnchorDraft];
-            next[i] = e.target.value;
-            setRealityAnchorDraft(next);
-          }}
-          placeholder={mapCopy.detachmentRealityAnchorPlaceholder}
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm mb-2"
-        />
-      ))}
-      <button type="button" onClick={saveRealityAnchor} className="rounded-full bg-teal-600 text-white px-4 py-2 text-sm font-semibold mt-1">
-        حفظ
-      </button>
-    </div>
-    {/* وحشني / حاسس بضعف */}
-    <div>
-      <button
-        type="button"
-        onClick={() => setShowRealityAnchor(!showRealityAnchor)}
-        className="w-full rounded-full border-2 border-rose-200 bg-rose-50 text-rose-800 px-4 py-3 text-sm font-semibold"
-      >
-        {mapCopy.detachmentWeakButton}
-      </button>
-      {showRealityAnchor && (realityAnchorDraft.some((s) => s.trim()) || detachmentReasons.length > 0) && (
-        <div className="mt-2 p-3 bg-white border border-rose-200 rounded-xl text-sm text-slate-700">
-          <p className="font-semibold mb-2">اقرأ ده قبل ما تفكر تكلمه:</p>
-          <ul className="list-disc list-inside space-y-1">
-            {(detachmentReasons.length >= 3 ? detachmentReasons : realityAnchorDraft).filter(Boolean).map((r, i) => (
-              <li key={i}>{r}</li>
-            ))}
-          </ul>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* مرساة الواقع */}
+      <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
+        <h4 className="text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">📍 {mapCopy.detachmentRealityAnchor}</h4>
+        <p className="text-xs text-slate-400 mb-4 leading-relaxed">{mapCopy.detachmentRealityAnchorHint}</p>
+        <div className="space-y-2">
+          {[0, 1, 2].map((i) => (
+            <input
+              key={i}
+              type="text"
+              value={realityAnchorDraft[i] ?? ""}
+              onChange={(e) => {
+                const next = [...realityAnchorDraft];
+                next[i] = e.target.value;
+                setRealityAnchorDraft(next);
+              }}
+              placeholder={mapCopy.detachmentRealityAnchorPlaceholder}
+              className="w-full bg-slate-950/50 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-200 focus:ring-2 focus:ring-teal-500/50"
+            />
+          ))}
         </div>
-      )}
+        <button type="button" onClick={saveRealityAnchor} className="mt-4 w-full rounded-xl bg-teal-600 text-white px-6 py-3 text-sm font-bold hover:bg-teal-500 transition-all">
+          حفظ المراسـي
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        {/* وحشني / حاسس بضعف */}
+        <div className="bg-white/5 p-5 rounded-2xl border border-white/5 h-full flex flex-col justify-center">
+          <button
+            type="button"
+            onClick={() => setShowRealityAnchor(!showRealityAnchor)}
+            className="w-full rounded-2xl border-2 border-rose-500/20 bg-rose-500/10 text-rose-200 px-6 py-6 text-md font-extrabold hover:bg-rose-500/20 transition-all"
+          >
+            {mapCopy.detachmentWeakButton}
+          </button>
+          <AnimatePresence>
+            {showRealityAnchor && (realityAnchorDraft.some((s) => s.trim()) || detachmentReasons.length > 0) && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="mt-4 p-4 bg-slate-950/50 border border-rose-500/20 rounded-xl text-sm text-slate-300">
+                  <p className="font-bold text-rose-300 mb-3 flex items-center gap-2">⚠️ اقرأ ده قبل ما تضعف:</p>
+                  <ul className="space-y-2">
+                    {(detachmentReasons.length >= 3 ? detachmentReasons : realityAnchorDraft).filter(Boolean).map((r, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-rose-500 mt-1.5">•</span>
+                        <span>{r}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
-    {/* سجل الاجترار */}
-    <div>
-      <h4 className="text-sm font-semibold text-slate-700 mb-2">{mapCopy.detachmentRumination}</h4>
-      {!showRuminationPrompt && !showRuminationResponse && (
+
+    {/* سجل الاجترار + إشارة قف (Bento Row) */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
+        <h4 className="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">🧠 {mapCopy.detachmentRumination}</h4>
+        {!showRuminationPrompt && !showRuminationResponse && (
+          <button
+            type="button"
+            onClick={() => setShowRuminationPrompt(true)}
+            className="w-full rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 px-4 py-3 text-sm font-bold hover:bg-amber-500/20 transition-all"
+          >
+            {mapCopy.detachmentRuminationButton}
+          </button>
+        )}
+        {showRuminationPrompt && (
+          <div className="space-y-3">
+            <p className="text-xs font-bold text-amber-200 px-1">{mapCopy.detachmentRuminationPrompt}</p>
+            <div className="flex flex-wrap gap-2">
+              {(["guilt", "nostalgia", "fear"] as const).map((key) => (
+                <button 
+                  key={key} 
+                  type="button" 
+                  onClick={onRuminationChoice} 
+                  className="flex-1 min-w-[80px] rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-100 px-3 py-2 text-[10px] font-bold hover:bg-amber-500/40 transition-all"
+                >
+                  {mapCopy.detachmentRuminationOptions[key]}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {showRuminationResponse && (
+          <div className="p-3 bg-teal-500/10 border border-teal-500/20 rounded-xl text-xs font-bold text-teal-300 leading-relaxed">
+            {mapCopy.detachmentRuminationResponse}
+          </div>
+        )}
+        {ruminationCount > 0 && (
+          <p className="text-[10px] text-slate-500 mt-3 font-bold uppercase tracking-widest opacity-50">عدد التسجيلات: {ruminationCount}</p>
+        )}
+      </div>
+
+      <div className="bg-white/5 p-5 rounded-2xl border border-white/5 flex flex-col justify-between">
+        <p className="text-xs text-slate-400 mb-4 leading-relaxed font-medium">{mapCopy.detachmentStopSignHint}</p>
         <button
           type="button"
-          onClick={() => setShowRuminationPrompt(true)}
-          className="rounded-full border-2 border-amber-200 bg-amber-50 text-amber-900 px-4 py-2 text-sm font-semibold"
+          onClick={() => {
+            if (typeof navigator !== "undefined" && navigator.vibrate) {
+              navigator.vibrate([150, 80, 150]);
+            }
+          }}
+          className="w-full rounded-2xl bg-slate-800 border border-white/10 text-white px-6 py-6 text-lg font-black hover:bg-slate-700 transition-all shadow-xl active:scale-95"
         >
-          {mapCopy.detachmentRuminationButton}
+          🛑 {mapCopy.detachmentStopSignButton}
         </button>
-      )}
-      {showRuminationPrompt && (
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-          <p className="text-sm font-semibold mb-2">{mapCopy.detachmentRuminationPrompt}</p>
-          <div className="flex flex-wrap gap-2">
-            {(["guilt", "nostalgia", "fear"] as const).map((key) => (
-              <button key={key} type="button" onClick={onRuminationChoice} className="rounded-full bg-amber-200 text-amber-900 px-3 py-1.5 text-xs font-medium">
-                {mapCopy.detachmentRuminationOptions[key]}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      {showRuminationResponse && (
-        <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl text-sm font-medium text-teal-900">
-          {mapCopy.detachmentRuminationResponse}
-        </div>
-      )}
-      {ruminationCount > 0 && (
-        <p className="text-xs text-slate-500 mt-2">عدد مرات التتبع: {ruminationCount}</p>
-      )}
-    </div>
-    {/* إشارة قف — اهتزاز + جملة وقف */}
-    <div>
-      <p className="text-xs text-slate-600 mb-2">{mapCopy.detachmentStopSignHint}</p>
-      <button
-        type="button"
-        onClick={() => {
-          if (typeof navigator !== "undefined" && navigator.vibrate) {
-            navigator.vibrate([150, 80, 150]);
-          }
-        }}
-        className="w-full rounded-full border-2 border-slate-400 bg-slate-200 text-slate-800 px-4 py-3 text-sm font-bold"
-      >
-        🛑 {mapCopy.detachmentStopSignButton}
-      </button>
+      </div>
     </div>
   </div>
   );
@@ -707,6 +748,8 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
   );
   const [showRuminationPrompt, setShowRuminationPrompt] = useState(false);
   const [showRuminationResponse, setShowRuminationResponse] = useState(false);
+  const [showSimulation, setShowSimulation] = useState(false);
+
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAIPowered, setIsAIPowered] = useState(false);
@@ -839,7 +882,20 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
       <div className="p-6 bg-amber-50 border-2 border-amber-300 rounded-xl text-right">
         <p className="text-base font-bold text-amber-900 mb-2">❓ {mapCopy.planRuleTitle}</p>
         <p className="text-sm text-amber-800 leading-relaxed">{mapCopy.planRuleBody}</p>
-        <p className="text-sm font-bold text-amber-800 mt-3">{mapCopy.planRuleCounter(situations.length)}</p>
+        <div className="mt-4 flex flex-col gap-2">
+          <div className="flex justify-between items-center text-xs font-black text-amber-900">
+             <span>{mapCopy.planRuleCounter(situations.length)}</span>
+             <span>{Math.min(100, (situations.length / 2) * 100)}%</span>
+          </div>
+          <div className="w-full h-2 bg-amber-200/50 rounded-full overflow-hidden">
+            <motion.div 
+              className="h-full bg-amber-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${(situations.length / 2) * 100}%` }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            />
+          </div>
+        </div>
       </div>
     );
     if (detachmentMode || pathSnapshot) {
@@ -1097,10 +1153,48 @@ export const DynamicRecoveryPlan: FC<DynamicRecoveryPlanProps> = ({
                     • {insight}
                   </div>
                 ))}
+
+              {/* Simulation Trigger */}
+              <div className="mt-4 pt-4 border-t border-blue-100 flex justify-center">
+                <button
+                  onClick={() => setShowSimulation(true)}
+                  className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                >
+                  <Terminal className="w-4 h-4" />
+                  بدء محاكاة التدريب الميداني
+                </button>
+              </div>
             </div>
           )}
         </div>
       )}
+
+      {/* Simulation Modal */}
+      <AnimatePresence>
+        {showSimulation && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSimulation(false)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-2xl bg-slate-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <SymptomSimulation
+                detectedSymptoms={selectedSymptoms}
+                onClose={() => setShowSimulation(false)}
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Weekly Steps - يوم بيوم + Why Box */}
       <div className="space-y-3">

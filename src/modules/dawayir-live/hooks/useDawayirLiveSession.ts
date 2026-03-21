@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GoogleGenAI, Modality } from "@google/genai";
 import { runtimeEnv } from "../../../config/runtimeEnv";
 import {
@@ -37,9 +37,9 @@ import { AudioOutputPlayer, MicCapture, base64ToArrayBuffer, parsePcmSampleRate 
 import { createVoiceTattooFromChunks, hasVoiceTattoo, readVoiceTattoo, saveVoiceTattoo } from "../utils/voiceTattoo";
 
 const DEFAULT_CIRCLES: CircleNode[] = [
-  { id: 1, label: "ÙˆØ¹ÙŠ", radius: 50, color: "#FFD700", fluidity: 0.5 },
-  { id: 2, label: "Ø¹Ù„Ù…", radius: 50, color: "#14b8a6", fluidity: 0.5 },
-  { id: 3, label: "Ø­Ù‚ÙŠÙ‚Ø©", radius: 50, color: "#4169E1", fluidity: 0.5 },
+  { id: 1, label: "وعي", radius: 50, color: "#FFD700", fluidity: 0.5 },
+  { id: 2, label: "علم", radius: 50, color: "#14b8a6", fluidity: 0.5 },
+  { id: 3, label: "حقيقة", radius: 50, color: "#4169E1", fluidity: 0.5 },
 ];
 
 const DEFAULT_METRICS: CognitiveMetrics = {
@@ -324,7 +324,7 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
           ...previous,
           {
             id: nextId("other"),
-            name: String(call.args.name ?? "Ø¹Ù†ØµØ± Ø¬Ø¯ÙŠØ¯"),
+            name: String(call.args.name ?? "عنصر جديد"),
             tension: Number(call.args.tension ?? 0.5),
             color: String(call.args.color ?? "#94a3b8"),
           },
@@ -337,7 +337,7 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
           ...previous,
           {
             id: nextId("topic"),
-            topic: String(call.args.topic ?? "Ù…ÙˆØ¶ÙˆØ¹"),
+            topic: String(call.args.topic ?? "موضوع"),
             weight: Number(call.args.weight ?? 0.5),
             color: String(call.args.color ?? "#f59e0b"),
           },
@@ -363,8 +363,8 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
         setThoughtMap((previous) => [
           ...previous.filter((thought) => thought.topic !== call.args.topic),
           {
-            topic: String(call.args.topic ?? "ÙÙƒØ±Ø©"),
-            emoji: String(call.args.emoji ?? "â€¢"),
+            topic: String(call.args.topic ?? "فكرة"),
+            emoji: String(call.args.emoji ?? "•"),
             weight: Number(call.args.weight ?? 0.5),
             connects_to:
               typeof call.args.connects_to === "string"
@@ -468,7 +468,7 @@ export function useDawayirLiveSession(config: DawayirLiveConfig): UseDawayirLive
         if (result.truthContract) setLatestTruthContract(result.truthContract);
         if (result.loopRecall) setLatestLoopRecall(result.loopRecall);
         if (call.name === "save_mental_map") {
-          addTranscript({ role: "system", text: "ØªÙ… Ø­ÙØ¸ Ø§Ù„Ø®Ø±ÙŠØ·Ø© Ø§Ù„Ø°Ù‡Ù†ÙŠØ©." });
+          addTranscript({ role: "system", text: "تم حفظ الخريطة الذهنية." });
         }
         responses.push({
           id: call.id,

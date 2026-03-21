@@ -51,9 +51,13 @@ export function detectContradictions(): MirrorInsight | null {
     const now = Date.now();
     const DAY_MS = 24 * 60 * 60 * 1000;
 
+    // Guard: don't evaluate contradictions if goalId is not yet set (e.g. right after onboarding)
+    // An empty goalId would cause false positives since !goalId treated as isSelfFocus
+    if (!goalId) return null;
+
     // 1. نمط "التعافي الزائف" (False Letting Go)
     // السيناريو: الهدف الحالي "تركيز على الذات" (أو غير موجود) لكن توجد عقد "صعبة" في المدار الأول (Red/Yellow).
-    const isSelfFocus = goalId === "self" || goalId === "health" || !goalId;
+    const isSelfFocus = goalId === "self" || goalId === "health";
 
     if (isSelfFocus) {
         const clingingNodes = nodes.filter(n => (n.ring === "red" || n.ring === "yellow") && !n.isNodeArchived);
