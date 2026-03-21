@@ -299,7 +299,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     closeOverlay: (o) => setOverlay(o as any, false),
     openCocoonModal,
     // يفتح pulse check باستخدام setPulseCheck الصحيح لا setOverlay
-    openPulseCheck: () => setPulseCheck(true, "nudge"),
+    openPulseCheck: () => setPulseCheck(true, "regular"),
     // يفتح ShareStats overlay للمشاركة عند milestone
     openShareStats: () => setOverlay("shareStats", true)
   });
