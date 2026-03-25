@@ -12,6 +12,7 @@ import { goalPickerCopy } from "../copy/goalPicker";
 import { useJourneyState } from "../state/journeyState";
 import { usePulseState } from "../state/pulseState";
 import type { PulseFocus, PulseMood } from "../state/pulseState";
+import { soundManager } from "../services/soundManager";
 import type { BaselineAnswers } from "../data/baselineQuestions";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 
@@ -115,78 +116,61 @@ const GoalCard: FC<GoalCardProps> = ({ option, index, isEnabled, isSelected, isR
         type="button"
         disabled={!isEnabled}
         onClick={() => isEnabled && onSelect(option.id)}
-        className="relative w-full flex flex-col gap-3 rounded-2xl p-5 text-right transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50"
+        className="relative w-full aspect-square sm:aspect-auto sm:min-h-[140px] flex flex-col items-center justify-center gap-3 rounded-[2.5rem] p-6 text-center transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/50"
         style={{
-          background: isSelected ? c.bg : "rgba(15,15,28,0.55)",
-          border: `1.5px solid ${isSelected ? c.border : "rgba(255,255,255,0.06)"}`,
+          background: isSelected
+            ? `radial-gradient(circle at center, ${c.bg}, rgba(15,15,28,0.8))`
+            : "rgba(255,255,255,0.02)",
+          border: `1.5px solid ${isSelected ? c.border : "rgba(255,255,255,0.05)"}`,
           backdropFilter: "blur(14px)",
-          boxShadow: isSelected ? `0 0 24px ${c.glow}, 0 8px 24px rgba(0,0,0,0.2)` : "0 4px 20px rgba(0,0,0,0.15)",
-          opacity: isEnabled ? 1 : 0.45,
+          boxShadow: isSelected ? `0 20px 40px ${c.glow}` : "none",
           cursor: isEnabled ? "pointer" : "not-allowed"
         }}
-        whileHover={isEnabled ? { y: -3, scale: 1.02 } : {}}
-        whileTap={isEnabled ? { scale: 0.98 } : {}}
-        transition={{ duration: 0.2 }}
+        whileHover={isEnabled ? { y: -5, scale: 1.02, backgroundColor: "rgba(255,255,255,0.04)" } : {}}
+        whileTap={isEnabled ? { scale: 0.95 } : {}}
       >
         {/* Recommended badge */}
-        {isRecommended && (
+        {isRecommended && !isSelected && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.35 + index * 0.07, type: "spring", stiffness: 300 }}
-            className="absolute top-3 left-3 flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-            style={{ background: c.bg, border: `1px solid ${c.border}`, color: c.color }}
+            className="absolute top-4 right-4"
+            style={{ color: c.color }}
           >
-            <Star className="w-2.5 h-2.5" />
-            مناسب ليك
+            <Star className="w-4 h-4 fill-current animate-pulse" />
           </motion.div>
         )}
 
-        {/* Selected indicator line */}
-        {isSelected && (
-          <motion.div
-            layoutId="selected-indicator"
-            className="absolute inset-0 rounded-2xl pointer-events-none"
-            style={{ border: `2px solid ${c.color}`, opacity: 0.6 }}
+        <motion.div
+          animate={isSelected ? { scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] } : {}}
+          transition={{ duration: 0.4 }}
+          className="w-16 h-16 rounded-3xl flex items-center justify-center mb-1"
+          style={{
+            background: isSelected ? c.bg : "rgba(255,255,255,0.03)",
+            boxShadow: isSelected ? `0 0 20px ${c.glow}` : "none"
+          }}
+        >
+          <Icon
+            className="w-8 h-8"
+            style={{ color: isSelected ? c.color : "#64748B" }}
+            strokeWidth={1.5}
           />
-        )}
+        </motion.div>
 
-        {/* Icon + label row */}
-        <div className="flex items-center gap-3">
-          <motion.div
-            className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-            style={{
-              background: isSelected ? c.bg : "rgba(255,255,255,0.04)",
-              border: `1px solid ${isSelected ? c.border : "rgba(255,255,255,0.06)"}`,
-              boxShadow: isSelected ? `0 0 16px ${c.glow}` : "none"
-            }}
-            whileHover={isEnabled ? { scale: 1.08 } : {}}
+        <div className="space-y-1">
+          <p
+            className="text-base font-black"
+            style={{ color: isSelected ? "white" : "#94A3B8", fontFamily: "Tajawal, sans-serif" }}
           >
-            <Icon
-              className="w-5 h-5"
-              style={{ color: isSelected ? c.color : isEnabled ? "#94A3B8" : "#475569" }}
-            />
-          </motion.div>
-
-          <div className="flex-1 text-right">
-            <p
-              className="text-sm font-black mb-0.5"
-              style={{ color: isSelected ? c.color : "#E2E8F0", fontFamily: "Tajawal, sans-serif" }}
-            >
-              {option.label}
-            </p>
-            <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: "#64748B" }}>
-              {option.subtitle}
-            </p>
-          </div>
+            {option.label}
+          </p>
+          <p className="text-[10px] leading-tight opacity-40 px-2" style={{ color: "#E2E8F0" }}>
+            {option.subtitle}
+          </p>
         </div>
 
-        {/* "Coming soon" overlay */}
         {!isEnabled && (
-          <div
-            className="absolute inset-0 flex items-center justify-center rounded-2xl text-xs font-bold"
-            style={{ background: "rgba(10,10,26,0.8)", color: "#475569" }}
-          >
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm rounded-[2.5rem] flex items-center justify-center text-xs font-bold text-slate-600">
             قريباً
           </div>
         )}
@@ -205,7 +189,9 @@ interface GoalPickerProps {
 
 export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onContinue }) => {
   const [recommendedGoals, setRecommendedGoals] = useState<string[]>([]);
-  const [selectedId, setSelectedId] = useState<string | undefined>(initialGoalId);
+  const [selectedId, setSelectedId] = useState<string | null>(initialGoalId ?? null);
+  const [isWarping, setIsWarping] = useState(false);
+  const mirrorName = useJourneyState((s) => s.mirrorName);
   const baselineAnswers = useJourneyState((s) => s.baselineAnswers);
   const lastPulse = usePulseState((s) => s.lastPulse);
 
@@ -216,12 +202,18 @@ export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onConti
 
   const handleSelect = (goalId: string) => {
     setSelectedId(goalId);
+    soundManager.playClick();
+    soundManager.playEffect('warp');
+    
+    setIsWarping(true);
+    
     const category = resolveAdviceCategory(goalId);
     trackEvent(AnalyticsEvents.GOAL_SELECTED, { goal_id: goalId, category });
-    // Small delay for animation to complete
+    
+    // Warp delay for cinematic effect
     setTimeout(() => {
       onContinue(category, goalId);
-    }, 220);
+    }, 1200);
   };
 
   return (
@@ -231,6 +223,25 @@ export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onConti
       dir="rtl"
       aria-labelledby="goal-title"
     >
+      {/* Mirror Echo: Subliminal identity resonance */}
+      {mirrorName && (
+        <div className="fixed inset-0 overflow-hidden pointer-events-none flex items-center justify-center select-none">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 0.025, scale: 1 }}
+            transition={{ duration: 3, ease: "easeOut" }}
+            className="text-[40vw] font-black text-white whitespace-nowrap"
+            style={{ 
+              fontFamily: "Tajawal, sans-serif",
+              filter: "blur(20px)",
+              letterSpacing: "-0.05em"
+            }}
+          >
+            {mirrorName}
+          </motion.div>
+        </div>
+      )}
+
       {/* Ambient background */}
       <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
         <div className="absolute inset-0" style={{
@@ -288,7 +299,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onConti
 
         {/* ── Goal Cards Grid ── */}
         <div
-          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+          className="grid grid-cols-2 sm:grid-cols-3 gap-4"
           role="group"
           aria-label="أختار مجال الرحلة"
         >
@@ -334,6 +345,36 @@ export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onConti
           🔒 اختيارك خاص وبيتخزن على جهازك بس
         </motion.p>
       </div>
+
+      {/* Warp Transition Overlay */}
+      {isWarping && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-1"
+          style={{ background: "radial-gradient(circle at center, #1E1E3F 0%, #0A0A1A 100%)" }}
+        >
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 10, opacity: [0, 1, 0] }}
+            transition={{ duration: 1.2, ease: "circIn" }}
+            className="absolute inset-0"
+            style={{
+              background: "radial-gradient(circle at center, white 0%, transparent 70%)",
+              filter: "blur(40px)"
+            }}
+          />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.4, 0] }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="text-white text-4xl font-black italic tracking-tighter"
+            style={{ fontFamily: "Tajawal" }}
+          >
+            جاري الانتقال...
+          </motion.div>
+        </motion.div>
+      )}
     </main>
   );
 };

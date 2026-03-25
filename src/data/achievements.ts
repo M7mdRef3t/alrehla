@@ -22,6 +22,14 @@ export const ACHIEVEMENTS: Achievement[] = [
     order: 1
   },
   {
+    id: "mirror_discovery",
+    title: "أول انعكاس",
+    description: "حولت انشغالك بـ «الاسم» إلى حقيقة على الخريطة",
+    hint: "اللي كان شاغلك بقى قدامك. دي بداية السيطرة على طاقتك.",
+    icon: "🪞",
+    order: 1.5
+  },
+  {
     id: "installer_click",
     title: "جاهز دايمًا",
     description: "ضغطت على «تثبيت التطبيق»",

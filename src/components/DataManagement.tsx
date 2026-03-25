@@ -30,6 +30,7 @@ import {
 import { useMapState } from "../state/mapState";
 import { clearLocalData } from "../services/secureStore";
 import { fetchRemoteState, pushRemoteState } from "../services/cloudStore";
+import { soundManager } from "../services/soundManager";
 import { getEffectiveRoleFromState, useAuthState, type UserToneGender } from "../state/authState";
 import { signInWithGoogle, signOut, updateAccountProfile } from "../services/authService";
 import { isPrivilegedRole } from "../utils/featureFlags";
@@ -132,6 +133,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
     try {
       await exportToJSON();
       setExportSuccess(true);
+      soundManager.playSuccess();
       setTimeout(() => setExportSuccess(false), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "فشل التصدير");
@@ -193,6 +195,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
       const data = await importFromJSON(pendingFile);
       await restoreBackupData(data);
       setImportSuccess(true);
+      soundManager.playSuccess();
       setShowConfirmImport(false);
       setPendingFile(null);
       setTimeout(() => reloadPage(), 1500);
@@ -545,7 +548,9 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                 <p className="text-center text-sm text-slate-400">استيراد الملف سيمسح جميع البيانات الحالية ويستبدلها بالنسخة الجديدة. هل أنت متأكد؟</p>
                 <div className="flex gap-3">
                   <button onClick={handleCancelImport} className="flex-1 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors text-xs font-bold">إلغاء</button>
-                  <button onClick={handleConfirmImport} disabled={isImporting} className="flex-1 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition-colors text-xs font-bold disabled:opacity-50">{isImporting ? "???? ?????????..." : "???? ?????? ????????"}</button>
+                  <button onClick={handleConfirmImport} disabled={isImporting} className="flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-colors text-xs font-bold disabled:opacity-50">
+                    {isImporting ? "جاري الاستيراد..." : "تأكيد واستبدال البيانات"}
+                  </button>
                 </div>
               </div>
             </div>

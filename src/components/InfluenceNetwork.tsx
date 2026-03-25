@@ -2,6 +2,7 @@ import { FC, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Network, Info, Activity, Zap } from "lucide-react";
 import { safeGetSession, supabase } from "../services/supabaseClient";
+import { soundManager } from "../services/soundManager";
 
 interface Node {
     id: string;
@@ -128,8 +129,11 @@ export const InfluenceNetwork: FC = () => {
                                     x2={targetNode.x}
                                     y2={targetNode.y}
                                     stroke={isHighlighted ? highlightColor : color}
-                                    strokeWidth={Math.abs(strength) * 8}
+                                    strokeWidth={isHighlighted ? Math.abs(strength) * 12 : Math.abs(strength) * 8}
                                     strokeDasharray="4 4"
+                                    onHoverStart={() => {
+                                        soundManager.playEffect(strength > 0 ? 'harmony' : 'tension');
+                                    }}
                                     animate={{
                                         strokeDashoffset: [0, strength > 0 ? -20 : 20],
                                         opacity: isHighlighted ? 1 : 0.3
@@ -138,6 +142,7 @@ export const InfluenceNetwork: FC = () => {
                                         strokeDashoffset: { repeat: Infinity, duration: 1.5, ease: "linear" },
                                         opacity: { duration: 0.3 }
                                     }}
+                                    className="cursor-pointer"
                                 />
                                 {isDriftMode && Math.abs(edge.drift ?? 0) > 0.05 && (
                                     <motion.text
@@ -164,7 +169,10 @@ export const InfluenceNetwork: FC = () => {
                             layout
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            onHoverStart={() => setHoveredNode(node.id)}
+                            onHoverStart={() => {
+                                setHoveredNode(node.id);
+                                soundManager.playHover();
+                            }}
                             onHoverEnd={() => setHoveredNode(null)}
                             className="cursor-pointer"
                         >
@@ -209,11 +217,11 @@ export const InfluenceNetwork: FC = () => {
                 <div className="absolute bottom-4 right-4 text-right">
                     <div className="flex items-center gap-2 mb-1">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-                        <span className="text-[8px] font-black text-slate-400">تأثر إجاب</span>
+                        <span className="text-[8px] font-black text-slate-400">تأثير إيجابي</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]" />
-                        <span className="text-[8px] font-black text-slate-400">تأثر سب</span>
+                        <span className="text-[8px] font-black text-slate-400">تأثير سلبي</span>
                     </div>
                 </div>
             </div>
@@ -232,8 +240,8 @@ export const InfluenceNetwork: FC = () => {
                             {data.edges.length === 0
                                 ? "الأنماط الحالية لم تصل لمستوى دلالة إحصائية كافية (Confidence < 0.3). استمر في تسجيل النبض لتفعيل محور الربط."
                                 : isDriftMode
-                                    ? "اأس بتضح اعاات ا اتحست () أ ساءت () ارة بآخر طة. د ف تطر اح ش جرد صرة حظة."
-                                    : `الشبكة بتوضح إن ${data.edges[0]?.source} ليه أكبر تأثير ${data.edges[0]?.strength > 0 ? 'إيجابي' : 'سلبي'} حالياً. الحالة حول الدائرة بتثبت ثقة المنصة في التحليل ده.`
+                                    ? "الأنماط بتوضح العلاقات اللي اتحسنت (+) أو ساءت (-) مقارنة بآخر لقطة. ده بيساعدك تشوف التطور مش مجرد صورة لحظية."
+                                    : `الشبكة بتوضح إن ${data.nodes.find(n => n.id === data.edges[0]?.source)?.label || 'المركز'} ليه أكبر تأثير ${data.edges[0]?.strength > 0 ? 'إيجابي' : 'سلبي'} حالياً. الحالة حول الدائرة بتثبت ثقة المنصة في التحليل ده.`
                             }
                         </p>
                     </div>

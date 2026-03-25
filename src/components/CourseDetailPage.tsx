@@ -9,7 +9,7 @@ import {
   Clock, Star, Users, RotateCcw, Share2, Trophy, ChevronDown,
   ChevronRight, ChevronUp, MessageCircle, FileText, BarChart2,
   Download, Wifi, WifiOff, Lock, Zap, Brain, Send,
-  AlertCircle, Sparkles, GraduationCap, Play,
+  AlertCircle, Sparkles, GraduationCap, Play, Award,
 } from "lucide-react";
 import {
   fetchCourse, fetchModules, fetchUnits, fetchUserProgress, markUnitComplete,
@@ -490,51 +490,113 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
           )}
 
           {activeTab === "progress" && (
-            <motion.div key="progress" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ padding: "8px 12px" }}>
+            <motion.div key="progress" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} style={{ padding: "12px 14px" }}>
               {/* Guest prompt */}
               {isGuest && (
-                <div style={{ marginBottom: 10, padding: "9px 11px", borderRadius: 10, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.22)", display: "flex", alignItems: "center", gap: 7 }}>
-                  <AlertCircle size={12} color="#F59E0B" />
-                  <div>
-                    <p style={{ margin: 0, fontSize: 9, fontWeight: 800, color: "#F59E0B" }}>{"سجّل الدخول لحفظ تقدمك ✨"}</p>
-                    <p style={{ margin: "1px 0 0", fontSize: 7, color: "#78716C" }}>{"تقدمك لا يُحفظ حالياً بدون جلسة"}</p>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  style={{ 
+                    marginBottom: 16, padding: "12px 14px", borderRadius: 14, 
+                    background: "rgba(245,158,11,0.06)", 
+                    border: "1px solid rgba(245,158,11,0.15)",
+                    backdropFilter: "blur(8px)",
+                    display: "flex", alignItems: "center", gap: 10 
+                  }}
+                >
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(245,158,11,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <AlertCircle size={16} color="#F59E0B" />
                   </div>
-                </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: 11, fontWeight: 900, color: "#F59E0B" }}>{"سجّل الدخول لحفظ أثرك ✨"}</p>
+                    <p style={{ margin: "2px 0 0", fontSize: 8, color: "rgba(245,158,11,0.7)", lineHeight: 1.4 }}>{"تحتاج لتسجيل الدخول ليتمكن النظام من تتبع تقدمك في المحتوى."}</p>
+                  </div>
+                </motion.div>
               )}
-              {/* Real DB stats */}
+
+              {/* Glassmorphic Stats Grid */}
               {progressStats && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
                   {[
-                    { label: "دروس مكتملة", value: progressStats.totalCompleted, clr: "#10B981", icon: "✅" },
-                    { label: "محاولات الاختبار", value: progressStats.totalQuizSessions, clr: color, icon: "🏆" },
-                    { label: "متوسط الدرجات", value: progressStats.avgScore ? `${progressStats.avgScore}%` : "—", clr: "#A78BFA", icon: "📊" },
-                    { label: "اجتيازات", value: progressStats.passedCount, clr: "#F59E0B", icon: "🎓" },
+                    { label: "دروس منتهية", value: progressStats.totalCompleted, clr: "#10B981", icon: <CheckCircle size={14} />, detail: "أحسنت!" },
+                    { label: "محاولات تقييم", value: progressStats.totalQuizSessions, clr: color, icon: <Trophy size={14} />, detail: "إصرار رائع" },
+                    { label: "متوسط الدرجات", value: progressStats.avgScore ? `${progressStats.avgScore}%` : "—", clr: "#8B5CF6", icon: <BarChart2 size={14} />, detail: "مستوى الوعي" },
+                    { label: "شهادات إتمام", value: progressStats.passedCount, clr: "#F59E0B", icon: <Award size={14} />, detail: "تميز معرفي" },
                   ].map((s, i) => (
-                    <div key={i} style={{ padding: "9px 10px", borderRadius: 11, background: `${s.clr}08`, border: `1px solid ${s.clr}20` }}>
-                      <p style={{ margin: "0 0 2px", fontSize: 14 }}>{s.icon}</p>
-                      <p style={{ margin: 0, fontSize: 15, fontWeight: 900, color: s.clr }}>{s.value}</p>
-                      <p style={{ margin: "1px 0 0", fontSize: 7, color: "#475569" }}>{s.label}</p>
-                    </div>
+                    <motion.div 
+                      key={i} 
+                      whileHover={{ translateY: -2 }}
+                      style={{ 
+                        padding: "14px 12px", borderRadius: 16, 
+                        background: "rgba(255,255,255,0.02)", 
+                        border: "1px solid rgba(255,255,255,0.05)",
+                        boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                        backdropFilter: "blur(10px)",
+                      }}
+                    >
+                      <div style={{ color: s.clr, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        {s.icon}
+                        <span style={{ fontSize: 7, color: "rgba(255,255,255,0.3)", fontWeight: 800 }}>{s.detail}</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: "#f8fafc", letterSpacing: "-0.02em" }}>{s.value}</p>
+                      <p style={{ margin: "2px 0 0", fontSize: 8, color: "#94a3b8", fontWeight: 600 }}>{s.label}</p>
+                    </motion.div>
                   ))}
                 </div>
               )}
-              <p style={{ margin: "0 0 8px", fontSize: 9, fontWeight: 800, color: "#94a3b8" }}>{"تقدم الوحدات"}</p>
-              {course.modules.map(mod => {
-                const done = mod.units.filter(u => u.isCompleted || completedUnits.has(u.id)).length;
-                const pct = Math.round((done / mod.units.length) * 100);
-                return (
-                  <div key={mod.id} style={{ marginBottom: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                      <span style={{ fontSize: 9, color: "#94a3b8" }}>{mod.title}</span>
-                      <span style={{ fontSize: 9, fontWeight: 700, color: pct === 100 ? "#10B981" : color }}>{pct}%</span>
-                    </div>
-                    <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.06)" }}>
-                      <div style={{ height: 4, borderRadius: 2, width: `${pct}%`, background: pct === 100 ? "#10B981" : `linear-gradient(90deg, ${color}, #8B5CF6)`, transition: "width 0.5s" }} />
-                    </div>
-                    <p style={{ margin: "2px 0 0", fontSize: 7, color: "#334155" }}>{done} {"من"} {mod.units.length} {"دروس"}</p>
+
+              {/* Progress Summary */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12 }}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 900, color: "#f1f5f9" }}>{"خارطة التعلم"}</p>
+                    <p style={{ margin: "2px 0 0", fontSize: 8, color: "#64748b" }}>{"تتبع رحلتك عبر الوحدات"}</p>
                   </div>
-                );
-              })}
+                  <div style={{ textAlign: "right" }}>
+                    <span style={{ fontSize: 14, fontWeight: 950, color }}>{Math.round(((progressStats?.totalCompleted || 0) / (totalUnits || 1)) * 100)}%</span>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 4, height: 6, marginBottom: 16 }}>
+                   {Array.from({ length: 12 }).map((_, i) => (
+                     <div key={i} style={{ flex: 1, borderRadius: 3, background: i < (progressStats?.totalCompleted || 0) ? `linear-gradient(to bottom, ${color}, #8B5CF6)` : "rgba(255,255,255,0.05)" }} />
+                   ))}
+                </div>
+              </div>
+
+              {/* Detailed Module Progress */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {course.modules.map(mod => {
+                  const done = mod.units.filter(u => u.isCompleted || completedUnits.has(u.id)).length;
+                  const pct = Math.round((done / mod.units.length) * 100);
+                  const isFullyDone = pct === 100;
+                  
+                  return (
+                    <div key={mod.id} style={{ padding: "0 0 14px", borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                           <div style={{ 
+                             width: 6, height: 6, borderRadius: "50%", 
+                             background: isFullyDone ? "#10B981" : pct > 0 ? color : "rgba(255,255,255,0.1)" 
+                           }} />
+                           <span style={{ fontSize: 10, fontWeight: 800, color: isFullyDone ? "#f1f5f9" : "#cbd5e1" }}>{mod.title}</span>
+                        </div>
+                        <span style={{ fontSize: 8, fontWeight: 900, color: isFullyDone ? "#10B981" : "#64748b" }}>{done}/{mod.units.length}</span>
+                      </div>
+                      <div style={{ height: 3, borderRadius: 2, background: "rgba(255,255,255,0.03)", overflow: "hidden" }}>
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          style={{ 
+                            height: "100%", borderRadius: 2, 
+                            background: isFullyDone ? "#10B981" : `linear-gradient(90deg, ${color}, #8B5CF6)`
+                          }} 
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

@@ -10,7 +10,19 @@ import type { LandingIntent } from "../../state/journeyState";
 import { isUserMode } from "../../config/appEnv";
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
+const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
 const STARTUP_SEEN_KEY = "dawayir-startup-seen";
+const LANDING_BOOT_SCREENS: AppScreen[] = [
+  "landing",
+  "tools",
+  "stories",
+  "about",
+  "insights",
+  "resources",
+  "quizzes",
+  "behavioral-analysis",
+  "settings"
+];
 
 interface UseAppStartupOnboardingParams {
   consumeLandingIntent: () => LandingIntent;
@@ -107,8 +119,16 @@ export function useAppStartupOnboarding({
     windowRef.sessionStorage.removeItem(APP_BOOT_ACTION_KEY);
     if (bootAction === "start_recovery") {
       startRecovery();
+      return;
     }
-  }, [startRecovery]);
+
+    if (bootAction.startsWith(APP_SCREEN_BOOT_ACTION_PREFIX)) {
+      const targetScreen = bootAction.slice(APP_SCREEN_BOOT_ACTION_PREFIX.length) as AppScreen;
+      if (LANDING_BOOT_SCREENS.includes(targetScreen)) {
+        void navigateToScreen(targetScreen);
+      }
+    }
+  }, [navigateToScreen, startRecovery]);
 
   useEffect(() => clearWelcomeToastTimer, [clearWelcomeToastTimer]);
 

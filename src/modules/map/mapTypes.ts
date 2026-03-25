@@ -212,4 +212,6 @@ export interface MapNode {
     timestamp: number;
     quizId: string;
   };
+  /** النقطة الأولى المختارة من الـ 10-Second Mirror (تستخدم لإضافة Aura بصري مخصص) */
+  isMirrorNode?: boolean;
 }

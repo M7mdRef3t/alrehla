@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Gavel, ShieldCheck, Scale, AlertCircle, ArrowRight, ArrowLeft } from "lucide-react";
 import { soundManager } from "../services/soundManager";
+import { useJourneyState } from "../state/journeyState";
 
 interface GuiltCourtProps {
   onBack?: () => void;
@@ -18,9 +19,11 @@ export const GuiltCourt: React.FC<GuiltCourtProps> = ({ onBack }) => {
   const [charge, setCharge] = useState("");
   const [stage, setStage] = useState<TrialStage | "entry">("entry");
 
+  const mirrorName = useJourneyState((s) => s.mirrorName);
+
   const startTrial = () => {
     if (!charge.trim()) return;
-    soundManager.playClick();
+    soundManager.playEffect("gavel");
     setStage("prosecution");
   };
 
@@ -30,7 +33,10 @@ export const GuiltCourt: React.FC<GuiltCourtProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen text-slate-200 flex flex-col font-sans" style={{ background: "var(--space-void)" }} dir="rtl">
+    <div className="min-h-screen text-slate-200 flex flex-col font-sans relative overflow-hidden" style={{ background: "var(--space-void)" }} dir="rtl">
+      {/* Cinematic Background */}
+      <div className="absolute inset-0 pointer-events-none opacity-20" style={{ background: "radial-gradient(circle at 10% 10%, rgba(45,212,191,0.1) 0%, transparent 50%), radial-gradient(circle at 90% 90%, rgba(139,92,246,0.1) 0%, transparent 50%)" }} />
+      <div className="absolute inset-0 pointer-events-none opacity-10" style={{ backgroundImage: "radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
       {/* Header with back button */}
       <header className="flex items-center gap-3 p-6 border-b border-white/5">
         {onBack && (
@@ -48,7 +54,7 @@ export const GuiltCourt: React.FC<GuiltCourtProps> = ({ onBack }) => {
         <div>
           <h1 className="text-xl font-black text-white">محكمة الذنب</h1>
           <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
-            براءة استراتيجية
+            {mirrorName ? `جاري مراجعة ذمة: ${mirrorName}` : "براءة استراتيجية"}
           </p>
         </div>
       </header>
@@ -110,7 +116,7 @@ export const GuiltCourt: React.FC<GuiltCourtProps> = ({ onBack }) => {
               <div className="p-4 rounded-xl flex items-start gap-3" style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.2)" }}>
                 <AlertCircle className="w-5 h-5 text-red-400 mt-1 shrink-0" />
                 <div className="text-right">
-                  <h3 className="font-bold text-red-400 text-sm uppercase mb-1">صوت الاتهام الداخلي</h3>
+                  <h3 className="font-bold text-red-400 text-sm uppercase mb-1">صوت الاتهام الداخلي {mirrorName && `ـ ${mirrorName}`}</h3>
                   <p className="text-slate-300">"{charge}"</p>
                 </div>
               </div>
@@ -156,7 +162,10 @@ export const GuiltCourt: React.FC<GuiltCourtProps> = ({ onBack }) => {
               </div>
 
               <button
-                onClick={() => setStage("verdict")}
+                onClick={() => {
+                  soundManager.playEffect("gavel");
+                  setStage("verdict");
+                }}
                 className="w-full mt-8 py-4 font-black rounded-2xl flex items-center justify-center gap-2 text-slate-950 transition-all hover:opacity-90 active:scale-[0.98]"
                 style={{ background: "var(--soft-teal)" }}
               >

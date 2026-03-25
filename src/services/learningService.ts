@@ -250,7 +250,65 @@ export async function fetchUserProgressStats(courseId: string): Promise<UserProg
   };
 }
 
-/** Check if a user is authenticted (for login prompts) */
+/** Aggregate global progress stats for the current user across ALL courses */
+export async function fetchGlobalUserProgressStats(): Promise<UserProgressStats | null> {
+  const session = await safeGetSession();
+  if (!session || !supabase) return null;
+  const userId = session.user.id;
+
+  const [progressRes, quizRes] = await Promise.all([
+    supabase
+      .from("user_course_progress")
+      .select("unit_id, completed_at")
+      .eq("user_id", userId)
+      .not("completed_at", "is", null),
+    supabase
+      .from("user_quiz_sessions")
+      .select("score, passed, completed_at")
+      .eq("user_id", userId)
+      .order("completed_at", { ascending: false }),
+  ]);
+
+  if (progressRes.error) console.error("[learningService] fetchGlobalStats progress:", progressRes.error.message);
+  if (quizRes.error) console.error("[learningService] fetchGlobalStats quiz:", quizRes.error.message);
+
+  const progress = (progressRes.data ?? []) as { unit_id: string; completed_at: string }[];
+  const quizzes = (quizRes.data ?? []) as { score: number; passed: boolean; completed_at: string }[];
+
+  const avgScore = quizzes.length > 0
+    ? Math.round(quizzes.reduce((sum, q) => sum + q.score, 0) / quizzes.length)
+    : 0;
+
+  const allDates = [
+    ...progress.map(p => p.completed_at),
+    ...quizzes.map(q => q.completed_at),
+  ].filter(Boolean).sort().reverse();
+
+  return {
+    totalCompleted: progress.length,
+    totalQuizSessions: quizzes.length,
+    avgScore,
+    lastActivity: allDates[0] ?? null,
+    passedCount: quizzes.filter(q => q.passed).length,
+  };
+}
+
+/** Fetch total count of articles and videos for social proof */
+export async function fetchResourceCounts(): Promise<{ articles: number; videos: number }> {
+  if (!supabase) return { articles: 0, videos: 0 };
+  
+  const [articlesRes, videosRes] = await Promise.all([
+    supabase.from("content_items").select("id", { count: "exact", head: true }).eq("content_type", "article").eq("status", "active"),
+    supabase.from("content_items").select("id", { count: "exact", head: true }).eq("content_type", "video-course").eq("status", "active"),
+  ]);
+
+  return {
+    articles: articlesRes.count ?? 0,
+    videos: videosRes.count ?? 0,
+  };
+}
+
+/** Check if a user is authenticated (for login prompts) */
 export async function hasActiveSession(): Promise<boolean> {
   const session = await safeGetSession();
   return session !== null;

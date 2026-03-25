@@ -72,14 +72,16 @@ const LiveAdminPanel = lazy(() => import("../../modules/dawayir-live/pages/LiveA
 const AdAnalyticsDashboard = lazy(() => import("./dashboard/AdAnalytics/AdAnalyticsDashboard").then(m => ({ default: m.AdAnalyticsDashboard })));
 const SurveyResultsPanel = lazy(() => import("./dashboard/Data/SurveyResultsPanel").then(m => ({ default: m.SurveyResultsPanel })));
 const MarketingOpsPanel = lazy(() => import("./dashboard/MarketingOps/MarketingOpsPanel").then(m => ({ default: m.MarketingOpsPanel })));
+const SovereignPanel = lazy(() => import("./dashboard/Sovereign/SovereignControl").then(m => ({ default: m.SovereignControl })));
 
-type AdminTab = "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "sales-enablement" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo" | "repo-intel" | "war-room" | "dawayir-live" | "ad-analytics" | "survey-results" | "marketing-ops";
+type AdminTab = "sovereign" | "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "sales-enablement" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo" | "repo-intel" | "war-room" | "dawayir-live" | "ad-analytics" | "survey-results" | "marketing-ops";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
 );
 
 const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
+  { id: "sovereign", label: "Sovereign (Owner)", icon: <ShieldCheck className="w-4 h-4 text-rose-400" /> },
   { id: "entity", label: "Entity (DNA)", icon: <Brain className="w-4 h-4 text-teal-400" /> },
   { id: "overview", label: "Journey Overview", icon: <Activity className="w-4 h-4" /> },
   { id: "war-room", label: "War Room", icon: <ShieldCheck className="w-4 h-4 text-red-500" /> },
@@ -137,7 +139,8 @@ const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "dawayir-live": "Dawayir Live",
   "ad-analytics": "Ad Analytics",
   "survey-results": "Survey Results",
-  "marketing-ops": "Marketing Ops"
+  "marketing-ops": "Marketing Ops",
+  sovereign: "Sovereign (Owner)"
 };
 
 const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
@@ -145,7 +148,7 @@ const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-sta
 const getTabFromLocation = (): AdminTab => {
   const params = new URLSearchParams(getSearch());
   const tab = params.get("tab") as AdminTab | null;
-  return NAV_ITEMS.some((item) => item.id === tab) ? tab! : "entity";
+  return NAV_ITEMS.some((item) => item.id === tab) ? tab! : "sovereign";
 };
 
 const updateTabInUrl = (tab: AdminTab) => {
@@ -449,6 +452,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
           <div className="flex-1 overflow-y-auto p-10 custom-scrollbar relative bg-[#05060f]/20">
             <div className="max-w-7xl mx-auto pb-20">
               <Suspense fallback={<div>Loading...</div>}>
+                {effectiveTab === "sovereign" && <SovereignPanel />}
                 {effectiveTab === "entity" && <EntityDashboard />}
                 {effectiveTab === "overview" && <OverviewPanel />}
                 {effectiveTab === "war-room" && <AlertsPanel />}

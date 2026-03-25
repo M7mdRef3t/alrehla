@@ -7,7 +7,8 @@ import {
   Search, Tag, Play, Copy, Check, ChevronDown, ChevronUp,
   Bookmark, BookmarkCheck, Star, Clock, Sparkles,
   Heart, Brain, Dumbbell, ExternalLink, Flame, Plus, ListVideo,
-  Wifi, WifiOff, Calendar, Zap, GraduationCap, Users, Trophy, ChevronRight
+  Wifi, WifiOff, Calendar, Zap, GraduationCap, Users, Trophy, ChevronRight,
+  Activity, TrendingUp, Award, CheckCircle2, BarChart3, PieChart
 } from "lucide-react";
 import {
   videos as rawVideos,
@@ -29,7 +30,7 @@ import { fetchContentItems, fetchDBArticles, fetchDBVideoCourses } from "../serv
    Types & Config
    ══════════════════════════════════════════ */
 
-export type ResourceTab = "videos" | "articles" | "exit-scripts" | "exercises" | "faqs" | "webinars";
+export type ResourceTab = "videos" | "articles" | "exit-scripts" | "exercises" | "faqs" | "webinars" | "progress";
 
 /* ─── Hero / Recommended ─── */
 interface HeroItem {
@@ -135,6 +136,7 @@ const TAB_CONFIG: { id: ResourceTab; label: string; icon: typeof BookOpen; color
   { id: "exercises",    label: "تمارين",       icon: Dumbbell,       color: "#10B981" },
   { id: "faqs",         label: "أسئلة شائعة", icon: HelpCircle,     color: "#F59E0B" },
   { id: "webinars",     label: "جلسات مباشرة", icon: Users,          color: "#A78BFA" },
+  { id: "progress",     label: "تقدمك",       icon: TrendingUp,     color: "#10B981" },
 ];
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -366,9 +368,27 @@ export function ResourcesCenter({
   // ── Supabase: fetch DB articles ──
   const [dbArticles, setDbArticles] = useState<Record<string, unknown>[]>([]);
   const [dbVideos, setDbVideos] = useState<Record<string, unknown>[]>([]);
+  const [globalStats, setGlobalStats] = useState<any>(null);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
+
   useEffect(() => {
     fetchDBArticles().then(items => { if (items.length > 0) setDbArticles(items); }).catch(console.error);
     fetchDBVideoCourses().then(items => { if (items.length > 0) setDbVideos(items); }).catch(console.error);
+    
+    // Fetch global stats
+    const loadStats = async () => {
+      setIsStatsLoading(true);
+      try {
+        const { fetchGlobalUserProgressStats } = await import("../services/learningService");
+        const stats = await fetchGlobalUserProgressStats();
+        setGlobalStats(stats);
+      } catch (err) {
+        console.error("Failed to load global stats:", err);
+      } finally {
+        setIsStatsLoading(false);
+      }
+    };
+    loadStats();
   }, []);
 
   // ── Supabase: fetch practice content_items ──
@@ -783,6 +803,13 @@ export function ResourcesCenter({
       {/* ── Content ── */}
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 20px 80px", position: "relative", zIndex: 1 }}>
         <AnimatePresence mode="wait">
+          {/* ═══ Progress ═══ */}
+          {activeTab === "progress" && (
+            <motion.div key="progress" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}>
+              <ProgressDashboard stats={globalStats} loading={isStatsLoading} />
+            </motion.div>
+          )}
+
           {/* ═══ Videos ═══ */}
           {activeTab === "videos" && (
             <motion.div key="videos" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
@@ -1362,6 +1389,148 @@ function FAQCard({ faq, idx, expanded, onToggle }: {
         )}
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+function ProgressDashboard({ stats, loading }: { stats: any; loading: boolean }) {
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: "48px 0" }}>
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          style={{ width: 32, height: 32, border: "3px solid rgba(6,182,212,0.1)", borderTopColor: "#06B6D4", borderRadius: "50%", margin: "0 auto 16px" }}
+        />
+        <p style={{ fontSize: 12, color: "#334155", fontWeight: 700 }}>جاري تحميل إنجازاتك...</p>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div style={{ textAlign: "center", padding: "48px 20px" }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: 20,
+          background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)",
+          display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px"
+        }}>
+          <GraduationCap size={32} color="#8B5CF6" />
+        </div>
+        <h3 style={{ fontSize: 18, fontWeight: 900, color: "#e2e8f0", margin: "0 0 10px" }}>سجّل دخولك لمتابعة تقدمك</h3>
+        <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.6, marginBottom: 24, padding: "0 20px" }}>
+          انضم لعائلة الرحلة الآن لتتمكن من حفظ إنجازاتك، تتبع الدروس التي أكملتها، ومشاهدة نموّك يوماً بعد يوم.
+        </p>
+        <button 
+          onClick={() => window.location.href = "/auth"}
+          style={{
+            background: "linear-gradient(135deg, #8B5CF6, #06B6D4)",
+            border: "none", borderRadius: 14, padding: "12px 32px",
+            fontSize: 14, fontWeight: 900, color: "#fff", cursor: "pointer",
+            boxShadow: "0 10px 20px -5px rgba(139,92,246,0.4)"
+          }}
+        >
+          تسجيل الدخول / إنشاء حساب
+        </button>
+      </div>
+    );
+  }
+
+  const statCards = [
+    { label: "دروس مكتملة", value: stats.totalCompleted, icon: CheckCircle2, color: "#10B981", bg: "rgba(16,185,129,0.1)" },
+    { label: "اختبارات منجزة", value: stats.totalQuizSessions, icon: Award, color: "#F59E0B", bg: "rgba(245,158,11,0.1)" },
+    { label: "متوسط الدرجات", value: `${stats.avgScore}%`, icon: BarChart3, color: "#06B6D4", bg: "rgba(6,182,212,0.1)" },
+    { label: "اختبارات ناجحة", value: stats.passedCount, icon: Trophy, color: "#8B5CF6", bg: "rgba(139,92,246,0.1)" },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* Grid Stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {statCards.map((s, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: i * 0.1 }}
+            style={{
+              padding: "20px 16px", borderRadius: 20,
+              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
+              textAlign: "center", position: "relative", overflow: "hidden"
+            }}
+          >
+            <div style={{
+              position: "absolute", top: -10, left: -10, opacity: 0.05,
+              transform: "rotate(-15deg)"
+            }}>
+              <s.icon size={64} color={s.color} />
+            </div>
+            <div style={{
+              width: 32, height: 32, borderRadius: 10, background: s.bg,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 12px", border: `1px solid ${s.color}30`
+            }}>
+              <s.icon size={16} color={s.color} />
+            </div>
+            <h4 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: "#fff" }}>{s.value}</h4>
+            <p style={{ margin: "4px 0 0", fontSize: 10, color: "#64748B", fontWeight: 700 }}>{s.label}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Accuracy Chart Placeholder (Using simple bars) */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+        style={{
+          padding: 20, borderRadius: 22,
+          background: "linear-gradient(135deg, rgba(6,182,212,0.05), rgba(139,92,246,0.05))",
+          border: "1px solid rgba(6,182,212,0.12)"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+          <Activity size={16} color="#06B6D4" />
+          <h4 style={{ margin: 0, fontSize: 13, fontWeight: 900, color: "#e2e8f0" }}>تحليل الأداء</h4>
+        </div>
+        
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+              <span style={{ fontSize: 10, color: "#94a3b8" }}>دقة الإجابات</span>
+              <span style={{ fontSize: 10, fontWeight: 900, color: "#06B6D4" }}>{stats.avgScore}%</span>
+            </div>
+            <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.05)", overflow: "hidden" }}>
+              <motion.div 
+                initial={{ width: 0 }} animate={{ width: `${stats.avgScore}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                style={{ height: "100%", background: "linear-gradient(90deg, #06B6D4, #8B5CF6)", borderRadius: 3 }} 
+              />
+            </div>
+          </div>
+
+          <div style={{ 
+            background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)",
+            borderRadius: 14, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12
+          }}>
+            <div style={{ 
+              width: 32, height: 32, borderRadius: "50%", background: "rgba(16,185,129,0.1)",
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+            }}>
+              <TrendingUp size={16} color="#10B981" />
+            </div>
+            <p style={{ margin: 0, fontSize: 11, color: "#94a3b8", lineHeight: 1.5 }}>
+              لقد أكملت <span style={{ color: "#fff", fontWeight: 700 }}>{stats.totalCompleted}</span> درساً حتى الآن. استمر في التقدم للوصول للدرع الذهبي!
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Last Activity */}
+      {stats.lastActivity && (
+        <div style={{ textAlign: "center", opacity: 0.6 }}>
+          <p style={{ fontSize: 9, color: "#475569" }}>
+            آخر نشاط: {new Date(stats.lastActivity).toLocaleDateString("ar-SA", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
 

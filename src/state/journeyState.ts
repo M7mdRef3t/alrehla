@@ -34,6 +34,9 @@ interface StoredJourney {
   postStepScore: number | null;
   journeyStartedAt: number | null;
   landingIntent?: LandingIntent;
+  mirrorName?: string | null;
+  isSoundEnabled?: boolean;
+  isSensoryDepthEnabled?: boolean;
 }
 
 async function loadJourney(): Promise<Partial<StoredJourney>> {
@@ -66,6 +69,10 @@ interface JourneyState extends StoredJourney {
   resetJourney: () => void;
   setLandingIntent: (intent: Exclude<LandingIntent, null>) => void;
   consumeLandingIntent: () => LandingIntent;
+  setMirrorName: (name: string) => void;
+  consumeMirrorName: () => string | null;
+  setSoundEnabled: (enabled: boolean) => void;
+  setSensoryDepthEnabled: (enabled: boolean) => void;
 }
 
 const defaultState: StoredJourney = {
@@ -80,7 +87,10 @@ const defaultState: StoredJourney = {
   postStepAnswers: null,
   postStepScore: null,
   journeyStartedAt: null,
-  landingIntent: null
+  landingIntent: null,
+  mirrorName: null,
+  isSoundEnabled: true,
+  isSensoryDepthEnabled: true
 };
 
 export const useJourneyState = create<JourneyState>((set, get) => ({
@@ -214,6 +224,37 @@ export const useJourneyState = create<JourneyState>((set, get) => ({
       return next;
     });
     return current;
+  },
+  setMirrorName(name: string) {
+    set((s) => {
+      const next: StoredJourney = { ...s, mirrorName: name };
+      saveJourney(next);
+      return next;
+    });
+  },
+  consumeMirrorName() {
+    const current = get().mirrorName ?? null;
+    if (!current) return null;
+    set((s) => {
+      const next: StoredJourney = { ...s, mirrorName: null };
+      saveJourney(next);
+      return next;
+    });
+    return current;
+  },
+  setSoundEnabled(enabled: boolean) {
+    set((s) => {
+      const next: StoredJourney = { ...s, isSoundEnabled: enabled };
+      saveJourney(next);
+      return next;
+    });
+  },
+  setSensoryDepthEnabled(enabled: boolean) {
+    set((s) => {
+      const next: StoredJourney = { ...s, isSensoryDepthEnabled: enabled };
+      saveJourney(next);
+      return next;
+    });
   }
 }));
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Users, Flame, ChevronRight, BarChart3, TrendingUp, AlertTriangle, Shield, Settings, LogOut, ArrowLeft } from 'lucide-react';
+import { Activity, Users, Flame, ChevronRight, BarChart3, TrendingUp, AlertTriangle, Shield, Settings, LogOut, ArrowLeft, BarChart } from 'lucide-react';
+import { StabilityHeatmap } from "../StabilityHeatmap";
 
 const DEPARTMENTS = [
     { id: 'eng', name: 'الهندسة (Engineering)', employees: 142, burnoutScore: 85, trend: '+15%', status: 'critical' },
@@ -102,79 +103,69 @@ export const EnterprisePortal: React.FC<{ onBack?: () => void }> = ({ onBack }) 
                     </header>
 
                     <div className="flex flex-col xl:flex-row gap-8">
-                        {/* Heatmap Grid */}
-                        <div className="flex-1 space-y-6">
-                            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2 text-slate-200">
-                                <Activity className="text-indigo-400" />
-                                توزيع الاحتراق عبر الأقسام (Heatmap)
-                            </h2>
+                        {/* Heatmap Grid & Analysis */}
+                        <div className="flex-1 space-y-8">
+                            <div>
+                              <h2 className="text-xl font-black mb-6 flex items-center gap-3 text-white">
+                                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+                                    <Activity className="w-4 h-4 text-indigo-400" />
+                                  </div>
+                                  توزيع النزيف الطاقي عبر المؤسسة
+                              </h2>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {DEPARTMENTS.map((dept) => (
-                                    <motion.div
-                                        key={dept.id}
-                                        onClick={() => setSelectedDept(dept.id)}
-                                        className={`relative overflow-hidden rounded-2xl cursor-pointer border transition-all duration-300 ${selectedDept === dept.id ? 'ring-2 ring-indigo-500 scale-[1.02] z-10' : 'hover:border-slate-600'
-                                            }`}
-                                        style={{
-                                            background: 'rgba(15, 23, 42, 0.6)',
-                                            borderColor: selectedDept === dept.id ? 'transparent' : 'rgba(255, 255, 255, 0.05)',
-                                            boxShadow: selectedDept === dept.id ? '0 0 40px rgba(99, 102, 241, 0.15)' : 'none',
-                                            backdropFilter: 'blur(10px)'
-                                        }}
-                                        whileHover={{ y: -4 }}
-                                    >
-                                        {/* Background glow based on health */}
-                                        <div
-                                            className="absolute inset-0 opacity-20 transition-opacity duration-500 mix-blend-screen"
-                                            style={{ background: `radial-gradient(circle at top right, ${getHealthColor(dept.burnoutScore)}, transparent 70%)` }}
-                                        />
+                              <div className="p-1 rounded-[2rem] bg-slate-900/30 border border-white/5 backdrop-blur-sm shadow-2xl">
+                                <StabilityHeatmap />
+                              </div>
+                              <p className="mt-4 text-[10px] text-slate-500 text-center font-medium">
+                                * البيانات تعكس النبضات المتراكمة لآخر 7 أيام. البقع الداكنة تشير إلى استنزاف طاقي حاد.
+                              </p>
+                            </div>
 
-                                        <div className="relative p-6">
-                                            <div className="flex justify-between items-start mb-6">
-                                                <h3 className="text-lg font-bold text-white">{dept.name}</h3>
-                                                <div
-                                                    className="px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap border"
-                                                    style={{
-                                                        background: getHealthBg(dept.burnoutScore),
-                                                        color: getHealthColor(dept.burnoutScore),
-                                                        borderColor: getHealthColor(dept.burnoutScore).replace(')', ', 0.2)').replace('var', 'rgba')
-                                                    }}
-                                                >
-                                                    {dept.burnoutScore}% احتراق
-                                                </div>
-                                            </div>
+                            <div className="space-y-6">
+                              <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                                <BarChart className="w-4 h-4 text-teal-400" />
+                                تقرير الأقسام المباشر
+                              </h3>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {DEPARTMENTS.map((dept) => (
+                                      <motion.div
+                                          key={dept.id}
+                                          onClick={() => setSelectedDept(dept.id)}
+                                          className={`relative overflow-hidden rounded-2xl cursor-pointer border transition-all duration-300 ${selectedDept === dept.id ? 'ring-2 ring-indigo-500 scale-[1.01] z-10' : 'hover:border-slate-700'
+                                              }`}
+                                          style={{
+                                              background: 'rgba(15, 23, 42, 0.45)',
+                                              borderColor: selectedDept === dept.id ? 'transparent' : 'rgba(255, 255, 255, 0.05)',
+                                              backdropFilter: 'blur(10px)'
+                                          }}
+                                          whileHover={{ y: -2 }}
+                                      >
+                                          <div className="p-5">
+                                              <div className="flex justify-between items-start mb-4">
+                                                  <h3 className="text-sm font-black text-white">{dept.name}</h3>
+                                                  <div
+                                                      className="px-2 py-1 rounded-lg text-[10px] font-black"
+                                                      style={{
+                                                          background: getHealthBg(dept.burnoutScore),
+                                                          color: getHealthColor(dept.burnoutScore),
+                                                      }}
+                                                  >
+                                                      {dept.burnoutScore}%
+                                                  </div>
+                                              </div>
 
-                                            <div className="space-y-5">
-                                                <div>
-                                                    <div className="flex justify-between text-xs text-slate-400 mb-2">
-                                                        <span>مؤشر الضغط والإرهاق</span>
-                                                        <span className="flex items-center gap-1 font-semibold" style={{ color: getHealthColor(dept.burnoutScore) }}>
-                                                            {dept.trend} <TrendingUp size={12} />
-                                                        </span>
-                                                    </div>
-                                                    <div className="w-full bg-slate-800/80 rounded-full h-2 overflow-hidden border border-slate-700/50">
-                                                        <motion.div
-                                                            className="h-full rounded-full"
-                                                            style={{ backgroundColor: getHealthColor(dept.burnoutScore) }}
-                                                            initial={{ width: 0 }}
-                                                            animate={{ width: `${dept.burnoutScore}%` }}
-                                                            transition={{ duration: 1, ease: "easeOut" }}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
-                                                    <div className="flex items-center gap-2 text-sm text-slate-400">
-                                                        <Users size={16} />
-                                                        <span className="font-medium">{dept.employees} موظف مشمول</span>
-                                                    </div>
-                                                    <button className="text-xs font-semibold text-indigo-400 hover:text-indigo-300">التفاصيل &larr;</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                ))}
+                                              <div className="w-full bg-slate-800/50 rounded-full h-1">
+                                                  <motion.div
+                                                      className="h-full rounded-full"
+                                                      style={{ backgroundColor: getHealthColor(dept.burnoutScore) }}
+                                                      initial={{ width: 0 }}
+                                                      animate={{ width: `${dept.burnoutScore}%` }}
+                                                  />
+                                              </div>
+                                          </div>
+                                      </motion.div>
+                                  ))}
+                              </div>
                             </div>
                         </div>
 

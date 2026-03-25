@@ -48,7 +48,8 @@ interface MapState {
     isSOS?: boolean,
     realityAnswers?: RealityAnswers,
     safetyAnswer?: QuickAnswerValue,
-    isAnalyzing?: boolean
+    isAnalyzing?: boolean,
+    isMirrorNode?: boolean
   ) => string;
   updateDetachmentReasons: (nodeId: string, reasons: string[]) => void;
   incrementRuminationLog: (nodeId: string) => void;
@@ -223,7 +224,8 @@ export const useMapState = create<MapState>((set, get) => ({
     isSOS?,
     realityAnswers?,
     safetyAnswer?,
-    isAnalyzing = false
+    isAnalyzing = false,
+    isMirrorNode = false
   ) => {
     let processedAnalysis;
     if (analysis) {
@@ -286,7 +288,8 @@ export const useMapState = create<MapState>((set, get) => ({
       ...(realityAnswers != null && { realityAnswers }),
       ...(isSOS === true && { isEmergency: true }),
       ...(safetyAnswer != null && { safetyAnswer }),
-      isAnalyzing
+      isAnalyzing,
+      isMirrorNode
     };
     const nextNodes = [...get().nodes, newNode];
     saveStoredState({ nodes: nextNodes });

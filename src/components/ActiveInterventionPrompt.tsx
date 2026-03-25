@@ -1,6 +1,8 @@
 import type { FC } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Brain, Wind } from "lucide-react";
+import { soundManager } from "../services/soundManager";
 
 interface ActiveInterventionPromptProps {
   hesitationSec: number;
@@ -15,6 +17,10 @@ export const ActiveInterventionPrompt: FC<ActiveInterventionPromptProps> = ({
   onBreathing,
   onContinue
 }) => {
+  useEffect(() => {
+    soundManager.playEffect("heartbeat");
+  }, []);
+
   const loadPercent = Math.max(0, Math.min(100, Math.round((cognitiveLoadRequired / 5) * 100)));
 
   return (
@@ -90,14 +96,22 @@ export const ActiveInterventionPrompt: FC<ActiveInterventionPromptProps> = ({
                 الحمل المعرفي
               </span>
             </div>
-            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
+            <div className="h-1.5 rounded-full overflow-hidden relative" style={{ background: "rgba(255,255,255,0.07)" }}>
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${loadPercent}%` }}
                 transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-                className="h-full rounded-full"
+                className="h-full rounded-full relative z-10"
                 style={{ background: "linear-gradient(90deg, #6366f1 0%, #a78bfa 100%)" }}
               />
+              {loadPercent > 60 && (
+                <motion.div
+                  className="absolute inset-0 z-0"
+                  style={{ background: "rgba(167,139,250,0.4)", filter: "blur(4px)" }}
+                  animate={{ opacity: [0, 0.6, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                />
+              )}
             </div>
           </div>
 

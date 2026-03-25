@@ -198,6 +198,21 @@ export function trackPageView(pageName: string): void {
   });
 }
 
+export function trackLandingView(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): void {
+  if (!isClientRuntime()) return;
+
+  const safeParams = sanitizeAnalyticsParams({
+    content_name: "alrehla_landing",
+    content_category: "landing",
+    ...(params ?? {})
+  });
+
+  trackEvent(AnalyticsEvents.LANDING_VIEW, safeParams);
+  sendMetaEvent("ViewContent", safeParams);
+}
+
 export function trackEvent(
   eventName: string,
   params?: Record<string, AnalyticsValue | null | undefined>
@@ -283,6 +298,7 @@ export const AnalyticsEvents = {
   GOAL_SELECTED: "goal_selected",
   PERSON_ADDED: "person_added",
   BASELINE_COMPLETED: "baseline_completed",
+  NODE_ADDED: "node_added",
   AI_CHAT_USED: "ai_chat_used",
   BREATHING_OPENED: "breathing_opened",
   EMERGENCY_OPENED: "emergency_opened",

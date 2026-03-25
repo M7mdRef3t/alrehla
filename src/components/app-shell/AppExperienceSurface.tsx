@@ -144,7 +144,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
             />
           </div>
           {/* Mobile breadcrumb above content, below status bar */}
-          <div className="fixed top-2 right-0 left-0 z-40 px-4 py-1.5 md:hidden">
+          <div className="fixed top-[calc(env(safe-area-inset-top)+0.5rem)] right-0 left-0 z-40 px-4 py-1.5 md:hidden">
             <PlatformBreadcrumb
               items={buildBreadcrumb(screen)}
               onNavigate={handleHeaderNavigate}

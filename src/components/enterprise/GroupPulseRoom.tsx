@@ -7,6 +7,7 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Users, Activity, ShieldCheck, Zap } from "lucide-react";
+import { soundManager } from "../../services/soundManager";
 
 interface MoodData {
     mood: string;
@@ -23,10 +24,65 @@ const MOCK_GROUP_MOODS: MoodData[] = [
 
 export const GroupPulseRoom: React.FC = () => {
     const total = useMemo(() => MOCK_GROUP_MOODS.reduce((acc, m) => acc + m.count, 0), []);
+    const [isResonating, setIsResonating] = React.useState(false);
+
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            setIsResonating(true);
+            setTimeout(() => setIsResonating(false), 5000);
+        }, 15000);
+        return () => clearInterval(interval);
+    }, []);
+
+    React.useEffect(() => {
+        soundManager.startAmbientCommunity();
+        return () => {
+            soundManager.stopAmbientCommunity();
+        };
+    }, []);
 
     return (
-        <div className="p-6 space-y-8 max-w-4xl mx-auto">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="p-6 space-y-8 max-w-4xl mx-auto relative overflow-hidden">
+            {/* ── Pulse Echo: Collective Heartbeat ── */}
+            <div className={`absolute inset-0 pointer-events-none transition-opacity duration-1000 ${isResonating ? 'opacity-40' : 'opacity-20'}`}>
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                    {[1, 2, 3].map((i) => (
+                        <motion.circle
+                            key={i}
+                            cx="50"
+                            cy="50"
+                            r="10"
+                            fill="none"
+                            stroke={isResonating ? "rgba(45,212,191,0.5)" : (i === 1 ? "rgba(45,212,191,0.3)" : "rgba(129,140,248,0.2)")}
+                            strokeWidth={isResonating ? "1" : "0.5"}
+                            animate={{
+                                r: [10, 80],
+                                opacity: [0.6, 0],
+                                strokeWidth: [1.5, 0]
+                            }}
+                            transition={{
+                                duration: isResonating ? 4 : 8,
+                                repeat: Infinity,
+                                delay: isResonating ? 0 : i * 2.5,
+                                ease: "easeOut"
+                            }}
+                        />
+                    ))}
+                </svg>
+                {isResonating && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="absolute inset-0 flex items-center justify-center"
+                    >
+                        <p className="text-[10px] uppercase font-black tracking-[0.2em] text-[var(--soft-teal)] animate-pulse">
+                            Resonance Active // رنين متزامن
+                        </p>
+                    </motion.div>
+                )}
+            </div>
+
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
                 <div>
                     <h1 className="text-2xl font-black text-white flex items-center gap-3">
                         <Users className="w-8 h-8 text-[var(--soft-teal)]" />

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Hammer, Flame, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
 import { HiveEngine, ProvenPath } from '../../services/hiveEngine';
+import { soundManager } from '../../services/soundManager';
 
 interface FirstBloodProps {
     oracleId: string;
@@ -29,9 +30,15 @@ export const FirstBloodOverlay: React.FC<FirstBloodProps> = ({ oracleId, onCompl
         tags: ['PSYCHOLOGICAL_BYPASS', 'GHOST_MODE'],
     };
 
+
     const handleJudgment = async (type: 'approve' | 'flag') => {
         setJudgment(type);
         setStep('judgment');
+        if (type === 'flag') {
+            soundManager.playSuccess();
+        } else {
+            soundManager.playError();
+        }
 
         // Calibrate initially - if they flag it (the correct choice), they get better initial rep
         if (type === 'flag') {
@@ -73,7 +80,10 @@ export const FirstBloodOverlay: React.FC<FirstBloodProps> = ({ oracleId, onCompl
                             </div>
 
                             <button
-                                onClick={() => setStep('task')}
+                                onClick={() => {
+                                    setStep('task');
+                                    soundManager.playEffect('cosmic_pulse');
+                                }}
                                 className="group relative px-12 py-5 bg-amber-600 hover:bg-amber-500 text-slate-950 font-black text-xl uppercase tracking-tighter rounded-2xl transition-all shadow-[0_0_40px_rgba(245,158,11,0.3)]"
                             >
                                 الفترة تبدأ الآن
@@ -93,7 +103,7 @@ export const FirstBloodOverlay: React.FC<FirstBloodProps> = ({ oracleId, onCompl
                             <div className="flex items-center gap-4 border-b border-white/10 pb-6">
                                 <Hammer className="w-8 h-8 text-amber-500" />
                                 <div>
-                                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">ارار اساد اأ: حاة عارة</h2>
+                                    <h2 className="text-2xl font-black text-white uppercase tracking-tight">القرار الصعب الأول: حالة معايرة</h2>
                                     <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Synthetic Trajectory Audit // Task Zero</p>
                                 </div>
                             </div>

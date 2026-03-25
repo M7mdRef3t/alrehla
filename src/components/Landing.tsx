@@ -7,6 +7,9 @@ import {
 } from "lucide-react";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
+import { getLivePulseCount, shouldTriggerHeartbeat } from "../services/pulseEngagement";
+import { fetchResourceCounts } from "../services/learningService";
+import { soundManager } from "../services/soundManager";
 import { LandingSimulation } from "./LandingSimulation";
 
 import { useJourneyState } from "../state/journeyState";
@@ -14,7 +17,7 @@ import { useMapState } from "../state/mapState";
 import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
 import { getGoalMeta } from "../data/goalMeta";
 import { LandingFooter } from "./landing/LandingFooter";
-import { trackEvent, AnalyticsEvents } from "../services/analytics";
+import { trackEvent, AnalyticsEvents, trackLandingView, trackLead } from "../services/analytics";
 import { isUserMode } from "../config/appEnv";
 import { landingCopy } from "../copy/landing";
 
@@ -54,15 +57,17 @@ const staggerFast = {
 
 /* ─── Orbit Visualization ───────────────────────────────────────────────────── */
 
-const OrbitViz: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) => {
+const OrbitViz: FC<{ reduceMotion: boolean | null; mirrorName: string }> = ({ reduceMotion, mirrorName }) => {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
   const nodes = [
-    { cx: 232, cy: 160, r: 5.5, color: "#34D399", delay: 0   },
-    { cx: 160, cy: 88,  r: 4.5, color: "#34D399", delay: 1.5 },
-    { cx: 270, cy: 160, r: 5,   color: "#FBBF24", delay: 0.3 },
-    { cx: 160, cy: 270, r: 4,   color: "#FBBF24", delay: 1   },
-    { cx: 160, cy: 12,  r: 5,   color: "#F87171", delay: 0.7 },
-    { cx: 310, cy: 160, r: 4.5, color: "#F87171", delay: 0.2 },
-    { cx: 60,  cy: 120, r: 4,   color: "#F87171", delay: 1.8 },
+    { cx: 232, cy: 160, r: 6, color: "#34D399", delay: 0, label: "علاقة مُشحِنة" },
+    { cx: 160, cy: 88,  r: 5, color: "#34D399", delay: 1.5, label: "دعم متبادل" },
+    { cx: 270, cy: 160, r: 5.5, color: "#FBBF24", delay: 0.3, label: "علاقة مختلطة" },
+    { cx: 160, cy: 270, r: 4.5, color: "#FBBF24", delay: 1, label: "تذبذب طاقي" },
+    { cx: 160, cy: 12,  r: 5.5, color: "#F87171", delay: 0.7, label: "استنزاف حاد" },
+    { cx: 310, cy: 160, r: 5, color: "#F87171", delay: 0.2, label: "حدود مكسورة" },
+    { cx: 60,  cy: 120, r: 4.5, color: "#F87171", delay: 1.8, label: "ارتباط مُرهِق" },
   ];
 
   return (
@@ -72,8 +77,8 @@ const OrbitViz: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) => {
       <div className="absolute inset-0 rounded-full"
         style={{ background: "radial-gradient(circle at 50% 50%, rgba(20,184,166,0.07) 0%, transparent 65%)" }} />
 
-      <svg width="320" height="320" viewBox="0 0 320 320" fill="none">
-        {/* Orbit rings — motion.g avoids cx/cy being treated as animatable */}
+      <svg width="320" height="320" viewBox="0 0 320 320" fill="none" style={{ overflow: "visible" }}>
+        {/* Orbit rings */}
         {[
           { r: 72,  stroke: "rgba(20,184,166,0.45)",  dash: "none", dur: 3.2 },
           { r: 110, stroke: "rgba(251,191,36,0.3)",   dash: "4 6",  dur: 4.5 },
@@ -91,24 +96,48 @@ const OrbitViz: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) => {
           </motion.g>
         ))}
 
-        {/* Node dots — wrap in motion.g so scale doesn't clobber cx/cy */}
+        {/* Node dots */}
         {nodes.map((node, i) => (
           <motion.g key={i}
+            onMouseEnter={() => setHoveredIdx(i)}
+            onMouseLeave={() => setHoveredIdx(null)}
             animate={reduceMotion ? {} : {
-              opacity: [0.75, 1, 0.75],
-              scale: [1, 1.15, 1]
+              opacity: hoveredIdx === i ? 1 : [0.75, 1, 0.75],
+              scale: hoveredIdx === i ? 1.4 : [1, 1.15, 1]
             }}
-            transition={{ duration: 3 + node.delay, repeat: Infinity, ease: "easeInOut", delay: node.delay }}
-            style={{ transformOrigin: `${node.cx}px ${node.cy}px` }}
+            transition={{ duration: hoveredIdx === i ? 0.2 : 3 + node.delay, repeat: hoveredIdx === i ? 0 : Infinity, ease: "easeInOut", delay: hoveredIdx === i ? 0 : node.delay }}
+            style={{ transformOrigin: `${node.cx}px ${node.cy}px`, cursor: "pointer" }}
           >
-            <circle cx={node.cx} cy={node.cy} r={node.r} fill={node.color} />
+            <circle cx={node.cx} cy={node.cy} r={node.r} fill={node.color} style={{ filter: hoveredIdx === i ? `drop-shadow(0 0 8px ${node.color})` : "none" }} />
+            
+            <AnimatePresence>
+              {hoveredIdx === i && (
+                <motion.foreignObject
+                  x={node.cx + 10} y={node.cy - 10} width="100" height="40"
+                  initial={{ opacity: 0, x: node.cx + 5 }}
+                  animate={{ opacity: 1, x: node.cx + 12 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <div style={{ 
+                    background: "rgba(10,10,26,0.9)", border: `1px solid ${node.color}40`, 
+                    borderRadius: 8, padding: "4px 8px", color: node.color, 
+                    fontSize: 10, fontWeight: 800, whiteSpace: "nowrap", backdropFilter: "blur(4px)" 
+                  }}>
+                    {node.label}
+                  </div>
+                </motion.foreignObject>
+              )}
+            </AnimatePresence>
           </motion.g>
         ))}
 
-        {/* Center — wrap in motion.g for scale */}
+        {/* Center */}
         <motion.g
-          animate={reduceMotion ? {} : { scale: [1, 1.2, 1], opacity: [0.85, 1, 0.85] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+          animate={reduceMotion ? {} : { 
+            scale: mirrorName ? [1, 1.4, 1] : [1, 1.2, 1], 
+            opacity: [0.85, 1, 0.85] 
+          }}
+          transition={{ duration: mirrorName ? 1.5 : 2.5, repeat: Infinity, ease: "easeInOut" }}
           style={{ transformOrigin: "160px 160px" }}
         >
           <circle cx="160" cy="160" r={8} fill="#14B8A6" />
@@ -305,11 +334,57 @@ export const Landing: FC<LandingProps> = ({
     handleInstall();
   }
 
+  const [mirrorName, setMirrorName] = useState("");
+  const [pulseCount, setPulseCount] = useState(getLivePulseCount());
+  const [resourceStats, setResourceStats] = useState({ articles: 45, videos: 12 });
+  const [isWarping, setIsWarping] = useState(false);
+  const landingViewTrackedRef = useRef(false);
+  const startTrackedRef = useRef(false);
+
+  useEffect(() => {
+    fetchResourceCounts().then(stats => setResourceStats(stats)).catch(console.error);
+
+    const interval = setInterval(() => {
+      if (shouldTriggerHeartbeat()) {
+        setPulseCount(getLivePulseCount());
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!isUserMode || landingViewTrackedRef.current) return;
+    landingViewTrackedRef.current = true;
+    trackLandingView({
+      entry_variant: "default"
+    });
+  }, []);
+
   const handleStart = useCallback(() => {
+    if (startTrackedRef.current) return;
+    startTrackedRef.current = true;
+
     void recordFlowEvent("landing_clicked_start");
     trackEvent(AnalyticsEvents.CTA_CLICK);
-    onStartJourney();
-  }, [onStartJourney]);
+    trackLead({
+      source: "landing",
+      cta_name: "start_journey",
+      destination: "full_app_boot",
+      intent: mirrorName ? "mirror_named" : "default"
+    });
+    
+    if (mirrorName) {
+      useJourneyState.getState().setMirrorName(mirrorName);
+    }
+
+    // Trigger Warp Cinema
+    setIsWarping(true);
+    soundManager.playEffect("cosmic_pulse");
+    
+    setTimeout(() => {
+      onStartJourney();
+    }, 1200);
+  }, [onStartJourney, mirrorName]);
 
   /* ─── JSX ─────────────────────────────────────────────────── */
 
@@ -340,7 +415,7 @@ export const Landing: FC<LandingProps> = ({
       {/* ══════════════════════════════════════════════
           SECTION 1: HERO
       ══════════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center px-4 sm:px-5 pt-16 sm:pt-10 pb-20 max-w-6xl mx-auto">
+      <section className="relative min-h-screen flex items-center px-4 sm:px-5 pt-10 md:pt-16 pb-12 md:pb-20 max-w-6xl mx-auto">
         <motion.div
           className="w-full flex flex-col lg:flex-row items-center gap-8 lg:gap-10"
           variants={stagger}
@@ -395,13 +470,37 @@ export const Landing: FC<LandingProps> = ({
               ))}
             </motion.div>
 
+            {/* ── 10-Second Mirror (New Hook) ── */}
+            <motion.div variants={fadeUp} className="mb-8 max-w-md mx-auto lg:mr-0 lg:ml-auto">
+              <div className="relative group">
+                <input
+                  type="text"
+                  value={mirrorName}
+                  onChange={(e) => setMirrorName(e.target.value)}
+                  placeholder="مين الشخص اللي شاغل تفكيرك دلوقتي؟"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm text-white placeholder:text-white/20 outline-none focus:border-teal-500/50 transition-all"
+                  style={{ backdropFilter: "blur(8px)" }}
+                />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+                  {mirrorName ? (
+                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-teal-400 text-xs font-bold">بدأنا نركز..</motion.span>
+                  ) : (
+                    <Sparkles className="w-4 h-4 text-white/20" />
+                  )}
+                </div>
+              </div>
+              <p className="mt-2 text-[10px] text-white/30 text-right pr-2">
+                * اكتب اسمه فقط (أو حرف)، ده بيساعد عقلك يركز في الخريطة.
+              </p>
+            </motion.div>
+
             {/* CTAs */}
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center lg:justify-end gap-3">
               <motion.button
                 type="button"
                 id="landing-hero-cta"
                 onClick={handleStart}
-                className="group relative inline-flex items-center gap-3 rounded-2xl px-7 py-4 text-base font-black text-white transition-all duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A1A]"
+                className="group relative w-full sm:w-auto sm:min-w-[15rem] inline-flex items-center justify-center gap-3 rounded-2xl px-7 py-4 text-base font-black text-white transition-all duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A1A]"
                 style={{ background: "linear-gradient(135deg, #14B8A6 0%, #0e9488 100%)", boxShadow: "0 12px 36px rgba(20,184,166,0.28)" }}
                 whileHover={{ scale: 1.03, boxShadow: "0 16px 44px rgba(20,184,166,0.38)" }}
                 whileTap={{ scale: 0.97 }}
@@ -415,12 +514,51 @@ export const Landing: FC<LandingProps> = ({
                   type="button"
                   onClick={handleInstall}
                   className="inline-flex items-center gap-2 rounded-2xl px-5 py-4 text-sm font-bold transition-all duration-200"
-                  style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", color: "#64748B" }}
+                  style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.025)", color: "#94A3B8" }}
                 >
                   <Smartphone className="w-4 h-4" />
                   {installButtonLabel}
                 </button>
               )}
+            </motion.div>
+
+            <motion.p
+              variants={fadeUp}
+              className="mt-3 text-[12px] font-bold text-center lg:text-right"
+              style={{ color: "rgba(148,163,184,0.82)" }}
+            >
+              تبدأ الآن، ترى الخريطة خلال دقائق، ثم تقرر بعدها هل تحتاج الأدوات الأعمق أم لا.
+            </motion.p>
+
+            <motion.div
+              variants={fadeUp}
+              className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto lg:mr-0 lg:ml-auto"
+            >
+              {[
+                { step: "01", title: "اكتب 3 أسماء", copy: "بدون شرح طويل. فقط الأشخاص الذين يشغلون مساحة من تفكيرك الآن." },
+                { step: "02", title: "حدد المسافة", copy: "قريب يشحنك، متذبذب يربكك، أو بعيد يستنزفك." },
+                { step: "03", title: "خذ أول خطوة", copy: "ترى الصورة فورًا، ثم تبدأ من أوضح نقطة بدل الدوران." }
+              ].map((item) => (
+                <div
+                  key={item.step}
+                  className="rounded-2xl p-4 text-right"
+                  style={{
+                    background: "rgba(255,255,255,0.035)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                    backdropFilter: "blur(10px)"
+                  }}
+                >
+                  <p className="text-[11px] font-black tracking-[0.25em] mb-2" style={{ color: "#2DD4BF" }}>
+                    {item.step}
+                  </p>
+                  <h3 className="text-sm font-black text-white mb-1" style={{ fontFamily: "Tajawal, sans-serif" }}>
+                    {item.title}
+                  </h3>
+                  <p className="text-xs leading-relaxed" style={{ color: "#94A3B8" }}>
+                    {item.copy}
+                  </p>
+                </div>
+              ))}
             </motion.div>
 
             {/* Returning user */}
@@ -436,25 +574,42 @@ export const Landing: FC<LandingProps> = ({
             )}
           </div>
 
-          {/* ── Orbit Visual ── — 40% من عرض الـ desktop ، متمركز دايماً */}
           <motion.div variants={fadeUp} className="flex-shrink-0 lg:flex-none lg:basis-[40%] flex items-center justify-center origin-center scale-[0.80] sm:scale-90 lg:scale-100">
-            <OrbitViz reduceMotion={reduceMotion} />
+            <OrbitViz reduceMotion={reduceMotion} mirrorName={mirrorName} />
           </motion.div>
         </motion.div>
 
-        {/* Scroll hint */}
-        <motion.div
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
-          initial={{ opacity: 0 }} animate={{ opacity: 0.35 }} transition={{ delay: 2.5, duration: 1 }}
-        >
-          <span className="text-[10px] tracking-widest font-bold" style={{ color: "#334155" }}>اكتشف المنصة</span>
+        {/* Scroll hint & Global Pulse */}
+        <div className="absolute bottom-6 left-0 right-0 flex flex-col items-center gap-4">
           <motion.div
-            animate={reduceMotion ? {} : { y: [0, 5, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.5 }}
+            className="flex items-center gap-4 px-4 py-2 rounded-full border border-white/5 bg-white/[0.02] backdrop-blur-md"
           >
-            <ChevronDown className="w-4 h-4" style={{ color: "#334155" }} />
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+              </span>
+              <span className="text-[10px] font-black text-teal-400/80 tracking-tight">النبض الحي:</span>
+            </div>
+            <p className="text-[10px] font-bold text-white/40">
+              <span className="text-white/80">{pulseCount.toLocaleString("ar-EG")}</span> شخص بيحاولوا يرجعوا طاقتهم دلوقتي
+            </p>
           </motion.div>
-        </motion.div>
+
+          <motion.div
+            className="flex flex-col items-center gap-1"
+            initial={{ opacity: 0 }} animate={{ opacity: 0.35 }} transition={{ delay: 2.5, duration: 1 }}
+          >
+            <span className="text-[10px] tracking-widest font-bold" style={{ color: "#334155" }}>اكتشف المنصة</span>
+            <motion.div
+              animate={reduceMotion ? {} : { y: [0, 5, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <ChevronDown className="w-4 h-4" style={{ color: "#334155" }} />
+            </motion.div>
+          </motion.div>
+        </div>
       </section>
 
       {/* ── Section Divider ── */}
@@ -507,8 +662,8 @@ export const Landing: FC<LandingProps> = ({
             {[
               { value: "٣٢٠٠+", label: "مستخدم جرّب المنصة",  color: "#14B8A6", glow: "rgba(20,184,166,0.08)" },
               { value: "١٢٠٠٠+", label: "جلسة دواير مكتملة",   color: "#7C3AED", glow: "rgba(124,58,237,0.08)" },
-              { value: "٨٧٪",   label: "شعروا بتحسّن داخلي",  color: "#FBBF24", glow: "rgba(251,191,36,0.08)" },
-              { value: "٤.٨★",  label: "متوسط تقييم التجربة", color: "#F472B6", glow: "rgba(244,114,182,0.08)" },
+              { value: `${resourceStats.articles}+`,   label: "مقال ودليل معرفي",  color: "#FBBF24", glow: "rgba(251,191,36,0.08)" },
+              { value: `${resourceStats.videos}+`,  label: "مسار وفيديو مرئي", color: "#F472B6", glow: "rgba(244,114,182,0.08)" },
             ].map((m, i) => (
               <motion.div
                 key={i}
@@ -944,6 +1099,64 @@ export const Landing: FC<LandingProps> = ({
       </div>
 
       {/* ── Footer ── */}
+      {/* ── Warp to Reality Overlay ── */}
+      <AnimatePresence>
+        {isWarping && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0A0A1A]"
+          >
+            {/* Warp streaks */}
+            <div className="absolute inset-0 overflow-hidden">
+              {[...Array(30)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute h-[1px] bg-gradient-to-l from-teal-400 to-transparent"
+                  style={{
+                    top: `${Math.random() * 100}%`,
+                    left: "-100%",
+                    width: `${20 + Math.random() * 50}%`,
+                    opacity: 0.2 + Math.random() * 0.5,
+                  }}
+                  animate={{
+                    left: ["-100%", "200%"],
+                  }}
+                  transition={{
+                    duration: 0.3 + Math.random() * 0.4,
+                    repeat: Infinity,
+                    ease: "linear",
+                    delay: Math.random() * 0.5
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Expanding central glow */}
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 4, opacity: [0, 1, 0] }}
+              transition={{ duration: 1.2, ease: "easeIn" }}
+              className="w-40 h-40 rounded-full"
+              style={{
+                background: "radial-gradient(circle, rgba(45,212,191,0.6) 0%, transparent 70%)",
+                filter: "blur(20px)"
+              }}
+            />
+            
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="text-white/50 text-xs font-black tracking-[0.4em] uppercase"
+            >
+              توليد الوعي..
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <LandingFooter
         trustPoints={landingCopy.trustPoints}
         stagger={stagger}

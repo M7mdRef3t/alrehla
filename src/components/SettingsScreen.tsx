@@ -19,6 +19,9 @@ import { getCulturalContext, saveCulturalContext, PROFILES, type CulturalContext
 import { stripeService } from "../services/stripeIntegration";
 import { supabase } from "../services/supabaseClient";
 import { syncSubscription } from "../services/subscriptionManager";
+import { useJourneyState } from "../state/journeyState";
+import { soundManager } from "../services/soundManager";
+import { Volume2, VolumeX } from "lucide-react";
 
 type SettingsSection = "main" | "language" | "b2b" | "referral" | "subscription" | "culture" | "privacy";
 
@@ -35,6 +38,29 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
     const tier = getCurrentTier();
     const streak = loadStreak();
     const memory = loadUserMemory();
+    const { isSoundEnabled, setSoundEnabled, isSensoryDepthEnabled, setSensoryDepthEnabled } = useJourneyState();
+
+    useEffect(() => {
+        soundManager.toggle(isSoundEnabled ?? true);
+    }, [isSoundEnabled]);
+
+    useEffect(() => {
+        soundManager.toggleSensory(isSensoryDepthEnabled ?? true);
+    }, [isSensoryDepthEnabled]);
+
+    const handleToggleSound = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const next = !isSoundEnabled;
+        setSoundEnabled(next);
+        if (next) soundManager.playClick();
+    };
+
+    const handleToggleSensory = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const next = !isSensoryDepthEnabled;
+        setSensoryDepthEnabled(next);
+        if (next) soundManager.playEffect('cosmic_pulse');
+    };
 
     const menuItems = [
         {
@@ -51,6 +77,24 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
             label: "ادعُ صديقاً",
             value: "أسبوع مجاني لكل دعوة",
             color: "#818cf8",
+        },
+        {
+            id: "sound" as any,
+            icon: isSoundEnabled ? Volume2 : VolumeX,
+            label: "المؤثرات الصوتية",
+            value: isSoundEnabled ? "مفعّلة" : "صامتة",
+            color: isSoundEnabled ? "#f59e0b" : "#64748b",
+            isToggle: true,
+            onAction: handleToggleSound
+        },
+        {
+            id: "sensory" as any,
+            icon: Zap,
+            label: "العمق الحسي",
+            value: isSensoryDepthEnabled ? "تجربة كاملة" : "أساسية",
+            color: isSensoryDepthEnabled ? "#818cf8" : "#64748b",
+            isToggle: true,
+            onAction: handleToggleSensory
         },
         {
             id: "language" as SettingsSection,
@@ -84,10 +128,35 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
 
     return (
         <div
-            className="min-h-screen"
-            style={{ background: "linear-gradient(160deg, #0a0f1e 0%, #0f172a 100%)" }}
+            className="min-h-screen relative overflow-hidden"
+            style={{ background: "#060914" }}
             dir="rtl"
         >
+            {/* ── Cosmic Sanctuary Background ── */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute inset-0" style={{
+                    background: [
+                        "radial-gradient(ellipse 60% 40% at 20% 15%, rgba(124,58,237,0.1) 0%, transparent 60%)",
+                        "radial-gradient(ellipse 50% 35% at 80% 85%, rgba(20,184,166,0.08) 0%, transparent 55%)"
+                    ].join(", ")
+                }} />
+                {/* Starfield */}
+                <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full opacity-30">
+                    {[...Array(20)].map((_, i) => (
+                        <motion.circle
+                            key={i}
+                            cx={Math.random() * 100}
+                            cy={Math.random() * 100}
+                            r={Math.random() * 0.2 + 0.1}
+                            fill="white"
+                            animate={{ opacity: [0.2, 0.8, 0.2] }}
+                            transition={{ duration: 2 + Math.random() * 3, repeat: Infinity, delay: Math.random() * 5 }}
+                        />
+                    ))}
+                </svg>
+            </div>
+
+            <div className="relative z-10 min-h-screen">
             {/* Header */}
             <div
                 className="sticky top-0 z-10 px-4 py-3 flex items-center justify-between"
@@ -173,12 +242,11 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                 </div>
                             </div>
 
-                            {/* Menu items */}
                             <div className="space-y-2">
                                 {menuItems.map((item) => (
                                     <motion.button
                                         key={item.id}
-                                        onClick={() => setSection(item.id)}
+                                        onClick={() => (item as any).isToggle ? (item as any).onAction?.() : setSection(item.id)}
                                         className="w-full flex items-center gap-3 p-4 rounded-2xl text-right"
                                         style={{
                                             background: "rgba(255,255,255,0.03)",
@@ -197,15 +265,34 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                             <p className="text-sm font-bold text-white">{item.label}</p>
                                             <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{item.value}</p>
                                         </div>
-                                        {item.badge && (
-                                            <span
-                                                className="px-2 py-0.5 rounded-full text-xs font-bold"
-                                                style={{ background: "rgba(217,119,6,0.2)", color: "#d97706" }}
+                                        {(item as any).isToggle ? (
+                                            <div 
+                                                className={`w-10 h-6 rounded-full p-1 transition-all ${
+                                                    (item as any).id === 'sound' 
+                                                        ? (isSoundEnabled ? 'bg-amber-500/40' : 'bg-slate-700')
+                                                        : (isSensoryDepthEnabled ? 'bg-indigo-500/40' : 'bg-slate-700')
+                                                }`}
+                                                onClick={(item as any).onAction}
                                             >
-                                                {item.badge}
-                                            </span>
+                                                <motion.div 
+                                                    className="w-4 h-4 rounded-full bg-white shadow-sm"
+                                                    animate={{ x: ((item as any).id === 'sound' ? isSoundEnabled : isSensoryDepthEnabled) ? -16 : 0 }}
+                                                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {item.badge && (
+                                                    <span
+                                                        className="px-2 py-0.5 rounded-full text-xs font-bold"
+                                                        style={{ background: "rgba(217,119,6,0.2)", color: "#d97706" }}
+                                                    >
+                                                        {item.badge}
+                                                    </span>
+                                                )}
+                                                <ChevronRight className="w-4 h-4 rotate-180" style={{ color: "rgba(255,255,255,0.2)" }} />
+                                            </>
                                         )}
-                                        <ChevronRight className="w-4 h-4 rotate-180" style={{ color: "rgba(255,255,255,0.2)" }} />
                                     </motion.button>
                                 ))}
                             </div>
@@ -357,6 +444,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                     <PaywallGate reason="ai_limit" onClose={() => setShowPaywall(false)} />
                 )}
             </AnimatePresence>
+        </div>
         </div>
     );
 };

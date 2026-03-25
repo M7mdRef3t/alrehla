@@ -10,7 +10,7 @@ import { MeNodeDetails } from "./MeNodeDetails";
 import { BreathingOverlay } from "./BreathingOverlay";
 import { MapOnboardingOverlay } from "./MapOnboardingOverlay";
 import { hasSeenOnboarding } from "../utils/mapOnboarding";
-import { Map, TreeDeciduous, X, Mic } from "lucide-react";
+import { Map, TreeDeciduous, X, Mic, Sparkles } from "lucide-react";
 import { DailyPulseWidget } from "./DailyPulseWidget";
 import { GoogleAuthModal } from "./GoogleAuthModal";
 import { DailyJournalArchive } from "./DailyJournalArchive";
@@ -37,6 +37,7 @@ import { mapCopy } from "../copy/map";
 import { EditableText } from "./EditableText";
 import { useMapState } from "../state/mapState";
 import { usePulseState } from "../state/pulseState";
+import { useJourneyState } from "../state/journeyState";
 import { PULSE_DAY_NAMES } from "../utils/pulseInsights";
 import { NextStepCard } from "./NextStepCard";
 import { RelationshipWeatherCard } from "./RelationshipWeatherCard";
@@ -58,12 +59,15 @@ import { getShadowScore } from "../state/shadowPulseState";
 import { deriveRelationshipWeather } from "../utils/relationshipWeather";
 import { deriveContextAtlas, type ContextAtlasKey } from "../utils/contextAtlas";
 import { assignUrl } from "../services/navigation";
+import { SoulGeometryOverlay } from "./SoulGeometryOverlay";
 const DawayirCanvas = lazy(() => import("../modules/dawayir/DawayirCanvas").then(m => ({ default: m.DawayirCanvas })));
 const FeelingCheckModal = lazy(() => import("../modules/dawayir/FeelingCheckModal").then(m => ({ default: m.FeelingCheckModal })));
 const EmergencyButton = lazy(() => import("../modules/dawayir/EmergencyButton").then(m => ({ default: m.EmergencyButton })));
 const ActionToolkit = lazy(() => import("../modules/dawayir/ActionToolkit").then(m => ({ default: m.ActionToolkit })));
 
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
+import { getGlobalHarmony } from "../services/globalPulse";
+import { supabase, isSupabaseReady } from "../services/supabaseClient";
 
 /* 
     CORE MAP SCREEN  Digital Sanctuary
@@ -77,6 +81,40 @@ const cosmicFade = {
     filter: "blur(0px)",
     transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }
   }
+};
+
+const SovereignBroadcastOverlay: FC<{ message: { message: string; id: string } | null }> = ({ message }) => {
+  return (
+    <AnimatePresence>
+      {message && (
+        <motion.div
+          initial={{ opacity: 0, y: -50, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          className="fixed top-8 left-1/2 -translate-x-1/2 z-[300] w-full max-w-sm px-4 pointer-events-none"
+        >
+          <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-black/60 p-4 shadow-2xl backdrop-blur-2xl ring-1 ring-white/5">
+            {/* Ambient Glow */}
+            <div className="absolute -top-12 -left-12 h-32 w-32 rounded-full bg-amber-500/20 blur-3xl" />
+            
+            <div className="relative flex items-center gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-500/40 bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                <Sparkles size={22} className="text-amber-500" />
+              </div>
+              <div className="flex flex-1 flex-col pt-0.5">
+                <span className="text-[9px] font-black uppercase tracking-[0.25em] text-amber-500/80">
+                  Sovereign Broadcast
+                </span>
+                <p className="mt-1 text-[13px] font-bold leading-relaxed text-white/90 text-right" dir="rtl">
+                  {message.message}
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 };
 
 const staggerContainer = {
@@ -150,6 +188,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [isCloudAuthOpen, setIsCloudAuthOpen] = useState(false);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const user = useAuthState(s => s.user);
+  const role = useAuthState(s => getEffectiveRoleFromState(s));
+  const isSovereign = (user?.email === "mohamedsamy@alrehla.app" || role === "owner" || role === "superadmin");
 
   const isConnected = false;
   const isListening = false;
@@ -158,6 +198,12 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const nodes = useMapState((s) => s.nodes); // Moved up for handleNodeDropOnAI
   const mapType = useMapState((s) => s.mapType);
   const feelingResults = useMapState((s) => s.feelingResults);
+  const [isExitingWarp, setIsExitingWarp] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsExitingWarp(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
 
   useEffect(() => {
@@ -179,6 +225,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
     assignUrl(`/dawayir-live?surface=map-drop&nodeId=${encodeURIComponent(node.id)}&nodeLabel=${encodeURIComponent(node.label)}&goalId=${encodeURIComponent(goalId)}`);
   }, [goalId, nodes, user]);
+
+  const handleMainDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleMainDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
 
   const openLiveRoute = useCallback(() => {
     if (!user) {
@@ -204,11 +258,45 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [showVoicePulse, setShowVoicePulse] = useState(false);
   const [galaxySubView, setGalaxySubView] = useState<"map" | "forest">("map");
   const [selectedContexts, setSelectedContexts] = useState<ContextAtlasKey[]>(["family", "work", "love", "general"]);
+  const [showSoulGeometry, setShowSoulGeometry] = useState(false);
+  const [isSacredIsolation, setIsSacredIsolation] = useState(false);
+  const [harmony, setHarmony] = useState(getGlobalHarmony());
+  const [sovereignMessage, setSovereignMessage] = useState<{ message: string; id: string } | null>(null);
+  
+  useEffect(() => {
+    const timer = setInterval(() => setHarmony(getGlobalHarmony()), 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!isSupabaseReady || !supabase) return;
+
+    // Listen for Sovereign Broadcasts
+    const channel = supabase
+      .channel("sovereign_broadcasts")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "system_settings", filter: "key=eq.sovereign_broadcast" },
+        (payload) => {
+          if (payload.new && payload.new.value && typeof payload.new.value === "object") {
+            const data = payload.new.value as { message: string; id: string };
+            setSovereignMessage(data);
+            // Hide after 8 seconds
+            setTimeout(() => setSovereignMessage(null), 8000);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (supabase) void supabase.removeChannel(channel);
+    };
+  }, []);
+
   const isFamily = goalId === "family";
   const featureFlags = useAdminState((s) => s.featureFlags);
   const betaAccess = useAdminState((s) => s.betaAccess);
   const adminAccess = useAdminState((s) => s.adminAccess);
-  const role = useAuthState(getEffectiveRoleFromState);
   const featureAccess = getEffectiveFeatureAccess({
     featureFlags,
     betaAccess,
@@ -314,6 +402,36 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     if (selectedNodeId && showPlacementTooltip) dismissPlacementTooltip();
   }, [selectedNodeId, showPlacementTooltip, dismissPlacementTooltip]);
 
+  // ── 10-Second Mirror Integration ──
+  useEffect(() => {
+    const mirrorName = useJourneyState.getState().mirrorName;
+    if (mirrorName && activeNodes.length === 0 && !showOnboarding) {
+      const nodeId = useMapState.getState().addNode(
+        mirrorName, 
+        "yellow", 
+        undefined, 
+        goalId, 
+        undefined, 
+        undefined, 
+        undefined, 
+        undefined, 
+        undefined, 
+        undefined, 
+        false, 
+        true
+      );
+      useJourneyState.getState().consumeMirrorName();
+      onSelectNode(nodeId);
+      
+      // Trigger Deluxe Reward
+      import("../state/achievementState").then(m => {
+        m.useAchievementState.getState().unlock("mirror_discovery");
+      });
+
+      void trackEvent(AnalyticsEvents.NODE_ADDED, { label: mirrorName, source: "mirror_hook" });
+    }
+  }, [goalId, activeNodes.length, onSelectNode, showOnboarding]);
+
   const canCompleteJourneyStep =
     journeyMode &&
     onJourneyComplete &&
@@ -406,28 +524,75 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   return (
     <motion.main
       className="flex-1 w-full h-full relative flex flex-col pb-24 md:pb-8"
+      style={{
+        background: [
+          "radial-gradient(ellipse 60% 50% at 15% 10%, rgba(124,58,237,0.08) 0%, transparent 60%)",
+          "radial-gradient(ellipse 50% 40% at 85% 90%, rgba(20,184,166,0.05) 0%, transparent 50%)",
+          "radial-gradient(ellipse 40% 40% at 50% 50%, rgba(20,184,166,0.03) 0%, transparent 60%)",
+          "#0A0A1A"
+        ].join(", ")
+      }}
       aria-labelledby="core-map-title"
-      variants={staggerContainer}
+      onDrop={handleMainDrop}
       initial="hidden"
       animate="visible"
     >
+      <SovereignBroadcastOverlay message={sovereignMessage} />
+
+      {/* Harmony Indicator: Collective resonance line */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-[2px] z-[100] pointer-events-none"
+        animate={{
+          background: `linear-gradient(to right, transparent, ${harmony.color}, transparent)`,
+          opacity: [0.3, 0.6, 0.3],
+          scaleX: [0.8, 1, 0.8]
+        }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Breath of the Sanctuary: Subliminal Zen Sync (Synchronized with Global Pulse) */}
+      <motion.div
+        className="fixed inset-0 z-0 pointer-events-none"
+        animate={{
+          opacity: [0.02, 0.08, 0.08, 0.02]
+        }}
+        transition={{
+          duration: harmony.breathConfig.total,
+          times: [0, harmony.breathConfig.inhale / harmony.breathConfig.total, (harmony.breathConfig.inhale + harmony.breathConfig.hold) / harmony.breathConfig.total, 1],
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+        style={{
+          background: `radial-gradient(circle at center, transparent 30%, ${harmony.color}26 100%)`
+        }}
+      />
       {/*  Header  */}
       <motion.header variants={cosmicFade} className="text-center px-4 sm:px-6 pt-6">
-        <div className="flex flex-col items-center gap-2 mb-4">
-          <h1
-            id="core-map-title"
-            className="text-[clamp(1.5rem,3.5vw,2.5rem)] font-bold leading-[1.12]"
-            style={{ color: "var(--text-primary)", letterSpacing: "var(--tracking-wider)" }}
-          >
-            <EditableText id={pageTitleKey} defaultText={pageTitle} page="map" />
-          </h1>
-        </div>
-        <p
-          className="text-sm md:text-base leading-[1.72] max-w-[42ch] mx-auto"
-          style={{ color: "var(--text-muted)", letterSpacing: "var(--tracking-wide)" }}
-        >
-          <EditableText id={subtitleKey} defaultText={subtitle} page="map" multiline showEditIcon={false} />
-        </p>
+        <AnimatePresence>
+          {!isSacredIsolation && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <div className="flex flex-col items-center gap-2 mb-4">
+                <h1
+                  id="core-map-title"
+                  className="text-[clamp(1.5rem,3.5vw,2.5rem)] font-bold leading-[1.12]"
+                  style={{ color: "var(--text-primary)", letterSpacing: "var(--tracking-wider)" }}
+                >
+                  <EditableText id={pageTitleKey} defaultText={pageTitle} page="map" />
+                </h1>
+              </div>
+              <p
+                className="text-sm md:text-base leading-[1.72] max-w-[42ch] mx-auto"
+                style={{ color: "var(--text-muted)", letterSpacing: "var(--tracking-wide)" }}
+              >
+                <EditableText id={subtitleKey} defaultText={subtitle} page="map" multiline showEditIcon={false} />
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.header>
 
       {/* 
@@ -539,13 +704,37 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         </div>
       )}
 
+      {/* ── Sacred Isolation & Soul Geometry Toolbar ── */}
+      <div className="fixed top-6 right-20 z-[70] flex gap-2">
+        <button
+          onClick={() => setIsSacredIsolation(!isSacredIsolation)}
+          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isSacredIsolation ? 'bg-teal-500 text-white shadow-[0_0_15px_rgba(45,212,191,0.5)]' : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
+          title={isSacredIsolation ? "إيقاف العزلة المقدسة" : "تفعيل العزلة المقدسة"}
+        >
+          <Mic className={`w-5 h-5 ${isSacredIsolation ? 'animate-pulse' : ''}`} />
+        </button>
+        <button
+          onClick={() => setShowSoulGeometry(true)}
+          className="w-10 h-10 rounded-full bg-white/5 text-white/40 flex items-center justify-center hover:bg-white/10 transition-all"
+          title="توليد بصمة الروح"
+        >
+          <Sparkles className="w-5 h-5" />
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {showSoulGeometry && (
+          <SoulGeometryOverlay onClose={() => setShowSoulGeometry(false)} />
+        )}
+      </AnimatePresence>
+
       {/* Global Presence Overlay (The Witness) */}
       <VoicePresence trigger={voiceTrigger} />
 
       {/* 
           النبضة التكتيكية: تطفو أسفل الخريطة لسهولة الوصول
       */}
-      {!journeyMode && (
+      {!isSacredIsolation && !journeyMode && (
         <div className="relative w-full z-40 flex justify-center my-4">
           <DailyPulseWidget />
         </div>
@@ -1028,6 +1217,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     }}
                     galaxyGoalIds={selectedContexts.length > 0 ? selectedContexts : ["family", "work", "love", "general"]}
                     highlightNodeId={selectedNodeId}
+                    isSovereign={isSovereign}
                     aiState={{
                       isConnected,
                       isListening,
@@ -1065,6 +1255,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                         }}
                         goalIdFilter={goalId}
                         highlightNodeId={selectedNodeId}
+                        isSovereign={isSovereign}
                         aiState={{
                           isConnected,
                           isListening,
@@ -1364,6 +1555,23 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           )}
         </AnimatePresence>
       </Suspense>
+
+      {/* Exit Warp Flash: Subconscious Arrival */}
+      <AnimatePresence>
+        {isExitingWarp && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className="fixed inset-0 z-[200] pointer-events-none"
+            style={{ 
+              background: "radial-gradient(circle at center, white 0%, transparent 80%)",
+              backgroundColor: "white" 
+            }}
+          />
+        )}
+      </AnimatePresence>
       </motion.main >
   );
 };

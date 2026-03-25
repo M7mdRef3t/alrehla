@@ -37,16 +37,6 @@ import { AlertTriangle } from "lucide-react";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { enableNotificationsWithPrompt, getNotificationPermission } from "../services/pushNotifications";
 
-/** Fire Meta Pixel event safely (won't throw if pixel not loaded) */
-function fbqFire(event: string, params?: Record<string, unknown>): void {
-  try {
-    const w = window as unknown as { fbq?: (...args: unknown[]) => void };
-    if (typeof w.fbq === "function") w.fbq("track", event, params);
-  } catch {
-    // fail silently
-  }
-}
-
 /* ════════════════════════════════════════════════
    ONBOARDING FLOW — 3 خطوات للرحلة
    بص جواك → حط كل حد في مكانه → شوف الصورة
@@ -572,8 +562,6 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
 
   const handleNoiseNext = useCallback(() => {
     recordFlowEvent("onboarding_phase_noise_completed");
-    // Meta Pixel: user started the actual journey
-    fbqFire("StartTrial", { content_name: "alrehla_onboarding" });
     goTo(1);
   }, [goTo]);
 
@@ -606,10 +594,9 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
         meta: { itemsCount: collectedItems.length }
       });
       trackCompleteRegistration({
-        items_count: collectedItems.length
+        items_count: collectedItems.length,
+        flow: "relationship_onboarding"
       });
-      // Meta Pixel: CompleteRegistration
-      fbqFire("CompleteRegistration", { num_items: collectedItems.length });
       completionTrackedRef.current = true;
       if (typeof window !== "undefined") {
         window.sessionStorage.setItem(ONBOARDING_COMPLETION_SESSION_KEY, "true");

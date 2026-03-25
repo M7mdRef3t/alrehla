@@ -120,9 +120,10 @@ interface NodeProps {
   isHighlighted?: boolean;
   isTouchDevice?: boolean;
   reduceMotion?: boolean;
+  isSovereign?: boolean;
 }
 
-const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, canOpenDetails = true, justDraggedId, justAdded, isHighlighted, isTouchDevice = false, reduceMotion = false }) => {
+const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, canOpenDetails = true, justDraggedId, justAdded, isHighlighted, isTouchDevice = false, reduceMotion = false, isSovereign = false }) => {
   const [showDelete, setShowDelete] = useState(false);
   const [pulseDone, setPulseDone] = useState(false);
   const archiveNode = useMapState((s) => s.archiveNode);
@@ -196,12 +197,44 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
       style={style}
       onMouseEnter={() => setShowDelete(true)}
       onMouseLeave={() => setShowDelete(false)}
-      className="relative z-20"
-      initial={justAdded ? { scale: 0, opacity: 0 } : false}
-      animate={justAdded ? { scale: 1, opacity: 1 } : undefined}
-      exit={{ scale: 0.6, opacity: 0, y: -12, filter: "blur(4px)" }}
-      transition={justAdded ? { type: "spring", stiffness: 160, damping: 28, mass: 0.8 } : { duration: 0.35, ease: "easeOut" }}
     >
+      {/* ── Mirror & Sovereign Aura: The Soul Connection ── */}
+      {node.isMirrorNode && (
+        <motion.div
+          className="absolute -inset-6 rounded-full pointer-events-none"
+          style={{
+            zIndex: -1,
+            background: isSovereign 
+              ? "radial-gradient(circle, rgba(234,179,8,0.2) 0%, rgba(139,92,246,0.1) 40%, transparent 70%)"
+              : "radial-gradient(circle, rgba(45,212,191,0.15) 0%, rgba(251,191,36,0.05) 50%, transparent 70%)",
+            filter: isSovereign ? "blur(12px)" : "blur(8px)",
+            border: isSovereign ? "1.5px solid rgba(234,179,8,0.3)" : "1.5px solid rgba(45,212,191,0.2)"
+          }}
+          animate={{
+            scale: isSovereign ? [1, 1.25, 1] : [1, 1.15, 1],
+            opacity: isSovereign ? [0.6, 0.9, 0.6] : [0.4, 0.7, 0.4],
+            rotate: [0, 90, 180, 270, 360]
+          }}
+          transition={{
+            duration: isSovereign ? 6 : 8,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+      )}
+
+      {/* Sovereign Crown (Elite Indicator) */}
+      {node.isMirrorNode && isSovereign && (
+        <motion.div
+           className="absolute -top-6 left-1/2 -translate-x-1/2 pointer-events-none"
+           initial={{ opacity: 0, y: 10 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ delay: 1 }}
+        >
+           <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_10px_#fbbf24]" />
+        </motion.div>
+      )}
+
       {/* Breathing aura ring  بضة أ عد اتحدد  اسج */}
       <motion.div
         className="absolute -inset-2 rounded-full pointer-events-none"
@@ -409,7 +442,8 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     prev.isHighlighted === next.isHighlighted &&
     prev.isTouchDevice === next.isTouchDevice &&
     prev.reduceMotion === next.reduceMotion &&
-    (prev.position?.x ?? null) === (next.position?.x ?? null) &&
+    prev.isSovereign === next.isSovereign &&
+    (prev.position?.x ?? null) === (next.position?.y ?? null) &&
     (prev.position?.y ?? null) === (next.position?.y ?? null) &&
     prev.onClick === next.onClick
   );
@@ -506,6 +540,7 @@ interface MapCanvasProps {
   galaxyGoalIds?: string[];
   /** عد اضغط  اسج  اعدة تع بضة ب دارا */
   highlightNodeId?: string | null;
+  isSovereign?: boolean;
   /** حاة بؤرة اع */
   aiState?: {
     isConnected: boolean;
@@ -524,6 +559,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
   goalIdFilter,
   galaxyGoalIds,
   highlightNodeId,
+  isSovereign = false,
   aiState
 }) => {
   const allNodes = useMapState((s) => s.nodes);
@@ -537,6 +573,22 @@ export const MapCanvas: FC<MapCanvasProps> = ({
     () => filterNodesByContext(activeNodes, goalIdFilter, galaxyGoalIds).filter((n) => !n.isNodeArchived),
     [activeNodes, goalIdFilter, galaxyGoalIds]
   );
+
+  const archivedNodes = useMemo(() => {
+    return allNodes.filter(n => n.isNodeArchived).map(n => {
+      // Deterministic but random-looking position for the nebula stars
+      const seed = n.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const angle = (seed % 360) * (Math.PI / 180);
+      const distance = 48 + (seed % 15); // Far background, beyond rings
+      return {
+        id: n.id,
+        x: 50 + distance * Math.cos(angle),
+        y: 50 + distance * Math.sin(angle),
+        opacity: 0.1 + (seed % 10) / 40,
+        size: 0.5 + (seed % 10) / 10
+      };
+    });
+  }, [allNodes]);
 
   const [showArchiveToast, setShowArchiveToast] = useState(false);
   const [lastArchivedName, setLastArchivedName] = useState<string | undefined>(undefined);
@@ -890,7 +942,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               animate={{ opacity: 1, y: 0 }}
               className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] px-6 py-2 rounded-2xl bg-teal-500/10 border border-teal-500/20 backdrop-blur-xl shadow-2xl"
             >
-              <p className="text-xs font-bold text-teal-400 whitespace-nowrap">ا رز.. ابدأ  ا  .</p>
+              <p className="text-xs font-bold text-teal-400 whitespace-nowrap">المركزية جاهزة.. ابدأ بإضافة الدائرة الأولى.</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -942,7 +994,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
             className="absolute top-2 left-2 z-[60] flex items-center gap-2 px-3 py-1.5 rounded-xl bg-teal-500/10 border border-teal-500/30 text-teal-200 text-xs font-bold backdrop-blur-md hover:bg-teal-500/20 transition-all shadow-lg"
           >
             <Telescope className="w-4 h-4" />
-            ضع احااة (What-If)
+            وضع احااة (What-If)
           </button>
         ) : (
           <FutureSimulator nodes={simulatedNodes} onExitSimulation={() => setIsSimulation(false)} />
@@ -960,6 +1012,57 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               animate={shouldReduceMotion ? undefined : { viewBox }}
               transition={shouldReduceMotion ? undefined : { duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             >
+              {/* ── Nebula of Reclamation: Archived Stars ── */}
+              <g className="nebula-reclamation">
+                {archivedNodes.map((star) => (
+                  <motion.circle
+                    key={star.id}
+                    cx={star.x}
+                    cy={star.y}
+                    r={star.size}
+                    fill="rgba(255,255,255,1)"
+                    initial={{ opacity: 0 }}
+                    animate={{ 
+                      opacity: [star.opacity, star.opacity * 2, star.opacity],
+                      scale: [1, 1.2, 1]
+                    }}
+                    transition={{
+                      duration: 3 + (star.x % 5),
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    style={{ filter: "blur(0.4px)" }}
+                  />
+                ))}
+              </g>
+
+              {/* ── Pulse Echo: Ambient Heartbeat ── */}
+              {!shouldReduceMotion && (
+                <g opacity={0.3}>
+                  {[1, 2, 3].map((i) => (
+                    <motion.circle
+                      key={i}
+                      cx="50"
+                      cy="50"
+                      r="10"
+                      fill="none"
+                      stroke="rgba(45,212,191,0.15)"
+                      strokeWidth={0.5}
+                      animate={{
+                        r: [10, 50],
+                        opacity: [0.6, 0],
+                        strokeWidth: [1, 0]
+                      }}
+                      transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        delay: i * 2.5,
+                        ease: "easeOut"
+                      }}
+                    />
+                  ))}
+                </g>
+              )}
               {/* SVG Gradients for cosmic orb */}
               <defs>
                 <radialGradient id="meDrained" cx="50%" cy="40%" r="60%">
@@ -1191,6 +1294,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                         isHighlighted={highlightNodeId === node.id}
                         isTouchDevice={isTouchDevice}
                         reduceMotion={shouldReduceMotion}
+                        isSovereign={isSovereign}
                       />
                     );
                   })}
@@ -1208,6 +1312,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                       isHighlighted={highlightNodeId === node.id}
                       isTouchDevice={isTouchDevice}
                       reduceMotion={shouldReduceMotion}
+                      isSovereign={isSovereign}
                     />
                   ))}
                 </AnimatePresence>
