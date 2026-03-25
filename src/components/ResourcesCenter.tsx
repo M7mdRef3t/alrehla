@@ -797,8 +797,8 @@ export function ResourcesCenter({
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {dbVideos
                       .filter(v => String(v.title ?? "").toLowerCase().includes(search.toLowerCase()))
-                      .map((v, i) => {
-                        const meta = (v.metadata ?? {}) as Record<string, unknown>;
+                      .map((v: any, i) => {
+                        const meta = (v.metadata ?? {}) as Record<string, any>;
                         const vid = String(v.id);
                         return (
                           <motion.div key={vid} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
@@ -853,8 +853,8 @@ export function ResourcesCenter({
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {dbArticles
                       .filter(a => String(a.title ?? "").toLowerCase().includes(search.toLowerCase()))
-                      .map((a, i) => {
-                        const meta = (a.metadata ?? {}) as Record<string, unknown>;
+                      .map((a: any, i) => {
+                        const meta = (a.metadata ?? {}) as Record<string, any>;
                         const aid = String(a.id);
                         return (
                           <motion.div key={aid} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
@@ -870,7 +870,7 @@ export function ResourcesCenter({
                                 <p style={{ margin: "4px 0 6px", fontSize: 10, color: "#64748B", lineHeight: 1.6 }}>{String(meta.summary ?? "")}</p>
                                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                                   <span style={{ fontSize: 8, color: "#475569", display: "flex", alignItems: "center", gap: 3 }}>
-                                    <Clock size={8} /> {a.estimated_minutes} دقيقة
+                                    <Clock size={8} /> {String(a.estimated_minutes ?? 0)} دقيقة
                                   </span>
                                   {meta.author && <span style={{ fontSize: 8, color: "#475569" }}>{String(meta.author)}</span>}
                                   {meta.reads && <span style={{ fontSize: 8, color: "#334155" }}>{Number(meta.reads).toLocaleString("ar")} قراءة</span>}
