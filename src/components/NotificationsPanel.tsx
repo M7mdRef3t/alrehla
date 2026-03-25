@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Trophy, Bell, Award } from "lucide-react";
 import { useAchievementState } from "../state/achievementState";
 import { ACHIEVEMENTS } from "../data/achievements";
+import { useMemo } from "react";
 
 interface NotificationsPanelProps {
   isOpen: boolean;
@@ -24,11 +25,13 @@ export const NotificationsPanel = memo(function NotificationsPanel({
   const clearLastNew       = useAchievementState((s) => s.clearLastNew);
 
   // Build notifications list: unlocked achievements in reverse order (newest first)
-  const notifications = [...unlockedIds]
-    .reverse()
-    .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
-    .filter(Boolean)
-    .slice(0, 10) as typeof ACHIEVEMENTS;
+  const notifications = useMemo(() => {
+    return [...unlockedIds]
+      .reverse()
+      .map((id) => ACHIEVEMENTS.find((a) => a.id === id))
+      .filter(Boolean)
+      .slice(0, 10) as typeof ACHIEVEMENTS;
+  }, [unlockedIds]);
 
   const isEmpty = notifications.length === 0;
 

@@ -73,10 +73,9 @@ describe("meta analytics tracking", () => {
     });
   });
 
-  it("fires standard Lead and CompleteRegistration events through fbq", { timeout: 20000 }, async () => {
+  it("fires standard Lead and CompleteRegistration events through fbq without requiring consent", { timeout: 20000 }, async () => {
     const fbq = vi.fn();
     window.fbq = fbq;
-    window.localStorage.setItem("dawayir-analytics-consent", "true");
 
     const { trackLead, trackCompleteRegistration } = await import("./analytics");
 
@@ -101,5 +100,17 @@ describe("meta analytics tracking", () => {
       items_count: 3,
       flow: "relationship_onboarding"
     });
+
+    expect(fbq).not.toHaveBeenCalledWith(
+      "trackCustom",
+      "SubscribedButtonClick",
+      expect.anything()
+    );
+
+    expect(
+      fbq.mock.calls.some(([method, eventName]) => (
+        method === "trackCustom" || eventName === "SubscribedButtonClick"
+      ))
+    ).toBe(false);
   });
 });

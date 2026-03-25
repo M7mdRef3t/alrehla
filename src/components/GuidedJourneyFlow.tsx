@@ -1,14 +1,17 @@
 import type { FC } from "react";
-import { useState } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Compass } from "lucide-react";
 import { useJourneyState } from "../state/journeyState";
+import type { JourneyStepId } from "../state/journeyState";
 import { BaselineAssessment } from "./BaselineAssessment";
 import { GoalPicker } from "./GoalPicker";
 import { CoreMapScreen } from "./CoreMapScreen";
 import { PostStepMeasurement } from "./PostStepMeasurement";
 import { JourneyCelebration } from "./JourneyCelebration";
 import { ProgressIndicator } from "./ProgressIndicator";
+import { JourneyProgressSidebar, type JourneyStage } from "./JourneyProgressSidebar";
+import { useToastState } from "../state/toastState";
 import type { AdviceCategory } from "../data/adviceScripts";
 
 const STEP_LABELS: Record<string, string> = {
@@ -17,6 +20,37 @@ const STEP_LABELS: Record<string, string> = {
   map: "العلاقة الأولى",
   measurement: "قياس التقدم",
   celebration: "الاحتفال"
+};
+
+const STEP_ICONS: Record<string, string> = {
+  baseline: "🧭",
+  goal: "🎯",
+  map: "🗺️",
+  measurement: "📊",
+  celebration: "🎉",
+};
+
+const STEP_DESCRIPTIONS: Record<string, string> = {
+  baseline: "ضبط النقطة الأولى في طريقك",
+  goal: "وضوح الاتجاه اللي تسير فيه",
+  map: "اكتشاف أول علاقة مؤثرة",
+  measurement: "قياس ما تغيّر فيك",
+  celebration: "الاعتراف بما حققته",
+};
+
+const STEP_MINUTES: Record<string, number> = {
+  baseline: 3,
+  goal: 2,
+  map: 10,
+  measurement: 3,
+  celebration: 1,
+};
+
+const STEP_COMPLETE_TOASTS: Record<string, string> = {
+  baseline: "✅ البوصلة اتضبطت — عارف وين تبدأ!",
+  goal: "🎯 الهدف اتحدد — المسار واضح!",
+  map: "🗺️ العلاقة الأولى اتكشفت!",
+  measurement: "📊 قست تقدّمك — شايف الفرق؟",
 };
 
 interface GuidedJourneyFlowProps {
@@ -29,6 +63,9 @@ export const GuidedJourneyFlow: FC<GuidedJourneyFlowProps> = ({
   onFinishJourney
 }) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const showToast = useToastState((s) => s.showToast);
+  const prevIndexRef = useRef<number>(-1);
   const {
     currentStepId,
     getStepIds,
@@ -45,11 +82,47 @@ export const GuidedJourneyFlow: FC<GuidedJourneyFlowProps> = ({
   const stepIds = getStepIds();
   const currentIndex = getCurrentStepIndex();
   const labels = stepIds.map((id) => STEP_LABELS[id] ?? id);
-
   const isBaselineStep = currentStepId === "baseline";
 
+  // Toast when a stage becomes "done" (index advances forward)
+  useEffect(() => {
+    if (prevIndexRef.current >= 0 && currentIndex > prevIndexRef.current) {
+      const completedId = stepIds[prevIndexRef.current];
+      const msg = completedId ? STEP_COMPLETE_TOASTS[completedId] : undefined;
+      if (msg) showToast(msg, "success");
+    }
+    prevIndexRef.current = currentIndex;
+  }, [currentIndex, stepIds, showToast]);
+
+  const sidebarStages = useMemo<JourneyStage[]>(() =>
+    stepIds.map((id, i) => ({
+      id,
+      label: STEP_LABELS[id] ?? id,
+      description: STEP_DESCRIPTIONS[id] ?? "",
+      icon: STEP_ICONS[id] ?? "◦",
+      estimatedMinutes: STEP_MINUTES[id],
+      status:
+        i < currentIndex ? "done"
+        : i === currentIndex ? "active"
+        : "locked",
+    })),
+    [stepIds, currentIndex]
+  );
+
   return (
-    <div className={`w-full max-w-2xl mx-auto ${isBaselineStep ? "min-h-[100dvh] flex flex-col" : ""}`}>
+    <div className="relative">
+      {/* Journey Progress Sidebar */}
+      <JourneyProgressSidebar
+        stages={sidebarStages}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen((v) => !v)}
+        onNavigate={(id) => {
+          const stage = sidebarStages.find((s) => s.id === id);
+          if (stage && stage.status !== "locked" && id !== "baseline") goToStep(id as JourneyStepId);
+        }}
+      />
+
+      <div className={`w-full max-w-2xl mx-auto ${isBaselineStep ? "min-h-[100dvh] flex flex-col" : ""}`}>
       {/* Progress Indicator */}
       <ProgressIndicator
         currentStep={currentIndex + 1}
@@ -204,6 +277,7 @@ export const GuidedJourneyFlow: FC<GuidedJourneyFlowProps> = ({
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 };

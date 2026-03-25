@@ -147,8 +147,14 @@ function sendGtagEvent(eventName: string, params?: Record<string, AnalyticsValue
   }
 }
 
-function sendMetaEvent(eventName: string, params?: Record<string, AnalyticsValue | null | undefined>): void {
-  if (!isClientRuntime() || !isAnalyticsEnabled() || !areMetaEventsEnabled()) return;
+function sendMetaEvent(
+  eventName: string,
+  params?: Record<string, AnalyticsValue | null | undefined>,
+  options?: { bypassConsent?: boolean }
+): void {
+  const bypassConsent = options?.bypassConsent === true;
+  if (!isClientRuntime() || !areMetaEventsEnabled()) return;
+  if (!bypassConsent && !isAnalyticsEnabled()) return;
   const safeParams = sanitizeAnalyticsParams(params);
   const windowRef = getWindowOrNull();
   if (windowRef?.fbq) {
@@ -356,7 +362,7 @@ export function trackLead(params?: Record<string, AnalyticsValue | null | undefi
     sendGtagEvent("conversion", { ...(safeParams ?? {}), send_to: googleAdsSendTo });
   }
 
-  sendMetaEvent("Lead", safeParams);
+  sendMetaEvent("Lead", safeParams, { bypassConsent: true });
 }
 
 export function trackCompleteRegistration(
@@ -365,7 +371,7 @@ export function trackCompleteRegistration(
   const safeParams = sanitizeAnalyticsParams(params);
   trackEvent(AnalyticsEvents.ONBOARDING_COMPLETED, safeParams);
   sendGtagEvent("sign_up", safeParams);
-  sendMetaEvent("CompleteRegistration", safeParams);
+  sendMetaEvent("CompleteRegistration", safeParams, { bypassConsent: true });
 }
 
 export function trackCheckoutViewed(

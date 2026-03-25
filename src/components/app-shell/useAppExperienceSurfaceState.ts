@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import { useMemo, type ComponentProps } from "react";
 import { useAppAgentExperience } from "./useAppAgentExperience";
 import { useAppSurfaceActions } from "./useAppSurfaceActions";
 import { useAppSurfaceMainProps } from "./useAppSurfaceMainProps";
@@ -118,7 +118,7 @@ export function useAppExperienceSurfaceState({
     onOnboardingComplete
   };
 
-  return {
+  return useMemo(() => ({
     chromeShellProps,
     mainContentProps,
     transientChromeProps,
@@ -129,5 +129,16 @@ export function useAppExperienceSurfaceState({
     toggleSystemOverclockPanel: actions.toggleSystemOverclockPanel,
     openAmbientReality: actions.openAmbientReality,
     openOracleDashboard: actions.openOracleDashboard
-  };
+  }), [
+    chromeShellProps,
+    mainContentProps,
+    transientChromeProps,
+    overlayHostProps,
+    actions.openConsciousnessArchive,
+    actions.openTimeCapsuleVault,
+    actions.navigateToMap,
+    actions.toggleSystemOverclockPanel,
+    actions.openAmbientReality,
+    actions.openOracleDashboard
+  ]);
 }

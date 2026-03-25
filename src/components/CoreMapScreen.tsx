@@ -60,6 +60,7 @@ import { deriveRelationshipWeather } from "../utils/relationshipWeather";
 import { deriveContextAtlas, type ContextAtlasKey } from "../utils/contextAtlas";
 import { assignUrl } from "../services/navigation";
 import { SoulGeometryOverlay } from "./SoulGeometryOverlay";
+import { ContextNotePanel } from "./ContextNotePanel";
 const DawayirCanvas = lazy(() => import("../modules/dawayir/DawayirCanvas").then(m => ({ default: m.DawayirCanvas })));
 const FeelingCheckModal = lazy(() => import("../modules/dawayir/FeelingCheckModal").then(m => ({ default: m.FeelingCheckModal })));
 const EmergencyButton = lazy(() => import("../modules/dawayir/EmergencyButton").then(m => ({ default: m.EmergencyButton })));
@@ -1435,6 +1436,22 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       <p className="mt-2 text-xs" style={{ color: "var(--text-muted)" }} title={mapCopy.threatLevelHint}>
         <EditableText id="map_threat_level_hint" defaultText={mapCopy.threatLevelHint} page="map" multiline showEditIcon={false} />
       </p>
+
+      {/* ── Context Note Panel ── shows when a node is selected */}
+      <AnimatePresence>
+        {selectedNodeId && (
+          <div
+            className="fixed bottom-24 md:bottom-8 right-4 left-4 md:right-auto md:left-auto md:w-80 z-[60]"
+            style={{ fontFamily: "inherit" }}
+          >
+            <ContextNotePanel
+              nodeId={selectedNodeId}
+              nodeLabel={nodes.find((n) => n.id === selectedNodeId)?.label ?? selectedNodeId}
+              onClose={() => onSelectNode(null)}
+            />
+          </div>
+        )}
+      </AnimatePresence>
 
       {/*  Journey complete  */}
       {

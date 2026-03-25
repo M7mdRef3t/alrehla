@@ -1,4 +1,4 @@
-import { lazy, Suspense, memo, useCallback, type ComponentProps } from "react";
+import { lazy, Suspense, memo, useCallback, useMemo, type ComponentProps } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Cpu } from "lucide-react";
 import { ErrorBoundary } from "../ErrorBoundary";
@@ -81,6 +81,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
 }: AppExperienceSurfaceProps) {
   const isLivePage = typeof window !== "undefined" && window.location.pathname.includes("dawayir-live");
   const actuallyShowingPulse = showPulseCheck && !isLivePage;
+  const breadcrumbItems = useMemo(() => buildBreadcrumb(screen), [screen]);
 
   // ── Header navigation handlers ──
   const handleHeaderNavigate = useCallback((id: string) => {
@@ -139,14 +140,14 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
           {/* Desktop breadcrumb below header */}
           <div className="fixed top-16 right-0 left-0 z-40 px-6 lg:px-10 py-2 hidden md:block">
             <PlatformBreadcrumb
-              items={buildBreadcrumb(screen)}
+              items={breadcrumbItems}
               onNavigate={handleHeaderNavigate}
             />
           </div>
           {/* Mobile breadcrumb above content, below status bar */}
           <div className="fixed top-[calc(env(safe-area-inset-top)+0.5rem)] right-0 left-0 z-40 px-4 py-1.5 md:hidden">
             <PlatformBreadcrumb
-              items={buildBreadcrumb(screen)}
+              items={breadcrumbItems}
               onNavigate={handleHeaderNavigate}
             />
           </div>
