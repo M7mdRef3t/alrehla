@@ -74,3 +74,9 @@ nul
 build_output.txt
 dev_out*.txt
 dev_output.txt
+
+# Temp scripts and logs
+__*
+dir_out.txt
+netstat_out.txt
+netstat_check.txt

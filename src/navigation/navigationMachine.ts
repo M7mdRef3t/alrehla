@@ -13,7 +13,13 @@ export type AppScreen =
   | "armory"
   | "survey"
   | "exit-scripts"
-  | "grounding";
+  | "grounding"
+  | "stories"
+  | "about"
+  | "insights"
+  | "quizzes"
+  | "behavioral-analysis"
+  | "resources";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 

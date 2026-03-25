@@ -118,6 +118,28 @@ export async function GET(req: Request) {
     });
   }
 
+  // ─── Email Engagement Metrics (from webhook tracking) ───────────────────────
+  const { data: emailStats } = await supabase
+    .from("marketing_lead_outreach_queue")
+    .select("opened_at, clicked_at, bounced, complained, status, channel")
+    .eq("channel", "email");
+
+  const emailSent    = emailStats?.filter(r => r.status === "sent").length ?? 0;
+  const emailOpened  = emailStats?.filter(r => r.opened_at !== null).length ?? 0;
+  const emailClicked = emailStats?.filter(r => r.clicked_at !== null).length ?? 0;
+  const emailBounced = emailStats?.filter(r => r.bounced === true).length ?? 0;
+  const emailComplained = emailStats?.filter(r => r.complained === true).length ?? 0;
+
+  const openRate    = emailSent > 0 ? Math.round((emailOpened  / emailSent) * 100) : 0;
+  const clickRate   = emailSent > 0 ? Math.round((emailClicked / emailSent) * 100) : 0;
+  const bounceRate  = emailSent > 0 ? Math.round((emailBounced / emailSent) * 100) : 0;
+
+  // Unsubscribe count
+  const { count: unsubCount } = await supabase
+    .from("marketing_leads")
+    .select("*", { count: "exact", head: true })
+    .eq("unsubscribed", true);
+
   return NextResponse.json({
     ok: true,
     totalLeads,
@@ -126,6 +148,17 @@ export async function GET(req: Request) {
     recentErrors: recentErrors ?? [],
     recentSent: recentSent ?? [],
     quickSendLeads,
+    emailMetrics: {
+      sent: emailSent,
+      opened: emailOpened,
+      clicked: emailClicked,
+      bounced: emailBounced,
+      complained: emailComplained,
+      unsubscribed: unsubCount ?? 0,
+      openRate,
+      clickRate,
+      bounceRate,
+    },
   });
 }
 

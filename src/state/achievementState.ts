@@ -99,7 +99,11 @@ const ACTION_POINTS: Record<string, number> = {
   // Streak milestones
   streak_milestone_1: 10,
   streak_milestone_3: 25,
-  streak_milestone_7: 60
+  streak_milestone_7: 60,
+
+  // Quiz actions
+  flow_quiz_completed: 15,
+  flow_quiz_hub_opened: 3,
 };
 
 const ACTION_ACHIEVEMENTS: Record<string, string> = {
@@ -114,7 +118,8 @@ const ACTION_ACHIEVEMENTS: Record<string, string> = {
   screen_grounding_viewed: "grounding_visited",
   streak_milestone_1: "streak_1",
   streak_milestone_3: "streak_3",
-  streak_milestone_7: "streak_7"
+  streak_milestone_7: "streak_7",
+  flow_quiz_hub_opened: "quiz_hub_visited",
 };
 
 export const useAchievementState = create<AchievementState>()(
@@ -212,7 +217,21 @@ export const useAchievementState = create<AchievementState>()(
           { id: "mission_complete", condition: hasCompletedMission(nodes) },
           { id: "streak_1", condition: s >= 1 },
           { id: "streak_3", condition: s >= 3 },
-          { id: "streak_7", condition: s >= 7 }
+          { id: "streak_7", condition: s >= 7 },
+          // Quiz milestones — read from localStorage
+          ...(() => {
+            try {
+              const raw = getFromLocalStorage("alrehla_quiz_history");
+              const qh: Array<{ quizId: string }> = raw ? JSON.parse(raw) : [];
+              const unique = new Set(qh.map((e) => e.quizId)).size;
+              return [
+                { id: "quiz_first",  condition: unique >= 1 },
+                { id: "quiz_double", condition: unique >= 2 },
+                { id: "quiz_half",   condition: unique >= 4 },
+                { id: "quiz_master", condition: unique >= 7 },
+              ];
+            } catch { return []; }
+          })()
         ];
 
         for (const { id, condition } of toCheck) {

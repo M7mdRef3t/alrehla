@@ -2,6 +2,7 @@ import type { Ring } from "../modules/map/mapTypes";
 import type { PulseEntry } from "../state/pulseState";
 import type { FeatureFlagKey } from "../config/features";
 import type { PersonaType } from "./personae";
+import type { AppScreen } from "../navigation/navigationMachine";
 
 /** سياق القراءة فقط للـ Agent: عُقد الخريطة، الشاشة الحالية، الهدف. */
 export interface AgentContext {
@@ -10,7 +11,7 @@ export interface AgentContext {
   /** ملخص العُقد: id, label, ring */
   nodesSummary: { id: string; label: string; ring: Ring }[];
   /** الشاشة الحالية */
-  screen: "landing" | "goal" | "map" | "guided" | "mission" | "tools" | "settings" | "enterprise" | "guilt-court" | "diplomacy" | "emergency" | "oracle-dashboard" | "armory" | "survey" | "exit-scripts" | "grounding";
+  screen: AppScreen;
   /** معرف العقدة المفتوحة (نافذة الشخص) إن وُجدت */
   selectedNodeId: string | null;
   /** هدف الرحلة الحالية */

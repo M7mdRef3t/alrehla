@@ -35,6 +35,17 @@ import { AnalyticsEvents, trackCompleteRegistration, trackEvent } from "../servi
 import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
 import { AlertTriangle } from "lucide-react";
 import type { AdviceCategory } from "../data/adviceScripts";
+import { enableNotificationsWithPrompt, getNotificationPermission } from "../services/pushNotifications";
+
+/** Fire Meta Pixel event safely (won't throw if pixel not loaded) */
+function fbqFire(event: string, params?: Record<string, unknown>): void {
+  try {
+    const w = window as unknown as { fbq?: (...args: unknown[]) => void };
+    if (typeof w.fbq === "function") w.fbq("track", event, params);
+  } catch {
+    // fail silently
+  }
+}
 
 /* ════════════════════════════════════════════════
    ONBOARDING FLOW — 3 خطوات للرحلة
@@ -561,6 +572,8 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
 
   const handleNoiseNext = useCallback(() => {
     recordFlowEvent("onboarding_phase_noise_completed");
+    // Meta Pixel: user started the actual journey
+    fbqFire("StartTrial", { content_name: "alrehla_onboarding" });
     goTo(1);
   }, [goTo]);
 
@@ -595,6 +608,8 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
       trackCompleteRegistration({
         items_count: collectedItems.length
       });
+      // Meta Pixel: CompleteRegistration
+      fbqFire("CompleteRegistration", { num_items: collectedItems.length });
       completionTrackedRef.current = true;
       if (typeof window !== "undefined") {
         window.sessionStorage.setItem(ONBOARDING_COMPLETION_SESSION_KEY, "true");
@@ -602,7 +617,12 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
     }
 
     markJourneyOnboardingDone();
-    onComplete(false); // false indicates completed normally
+    onComplete(false);
+
+    // Push Notification: best moment = right after completing the journey
+    if (typeof window !== "undefined" && getNotificationPermission() === "default") {
+      setTimeout(() => { void enableNotificationsWithPrompt(); }, 2000);
+    }
   }, [collectedItems.length, onComplete]);
 
 

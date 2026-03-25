@@ -315,6 +315,20 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
                 {missionBadge.label}
               </span>
             ) : null}
+            {node.quizResult && (
+              <span
+                title={`نتيجة الاختبار: ${node.quizResult.bandTitle}`}
+                className="mt-0.5 inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-semibold"
+                style={{
+                  background: `${node.quizResult.bandColor}18`,
+                  color: node.quizResult.bandColor,
+                  border: `1px solid ${node.quizResult.bandColor}35`,
+                  maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}
+              >
+                🔗 {node.quizResult.bandTitle.replace(/ [\u{1F300}-\u{1FFFF}]/gu, "").trim()}
+              </span>
+            )}
           </span>
         </motion.button>
 
@@ -387,6 +401,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     a.avatarUrl === b.avatarUrl &&
     a.isDetached === b.isDetached &&
     a.analysis?.recommendedRing === b.analysis?.recommendedRing &&
+    a.quizResult?.bandTitle === b.quizResult?.bandTitle &&
     prev.nodeIndex === next.nodeIndex &&
     prev.totalInRing === next.totalInRing &&
     prev.justDraggedId === next.justDraggedId &&

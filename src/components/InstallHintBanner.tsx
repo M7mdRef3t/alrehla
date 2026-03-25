@@ -1,7 +1,13 @@
 import type { FC } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, Share2, X, Smartphone, Zap, Wifi } from "lucide-react";
+import { Share2, X, Zap, Wifi, Download, Smartphone } from "lucide-react";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
+
+const BENEFITS = [
+  { icon: Zap, label: "سرعة فائقة دون تحميل" },
+  { icon: Wifi, label: "يعمل بدون إنترنت" },
+  { icon: Smartphone, label: "تجربة تطبيق حقيقي" },
+];
 
 export const InstallHintBanner: FC = () => {
   const ctx = usePWAInstall();
@@ -14,147 +20,119 @@ export const InstallHintBanner: FC = () => {
     installEvent,
     triggerInstall,
     isIPad,
-    isInAppBrowser
+    isInAppBrowser,
   } = ctx;
 
   if (!showAndroidBanner && !showIOSBanner) return null;
 
   return (
     <AnimatePresence>
-      {showAndroidBanner && (
+      {(showAndroidBanner || showIOSBanner) && (
         <motion.div
-          key="android-install"
-          className="fixed left-1/2 -translate-x-1/2 z-[40] w-[min(92vw,26rem)] top-[calc(env(safe-area-inset-top)+3.25rem)]"
-          initial={{ opacity: 0, y: -12, scale: 0.98 }}
+          key="install-banner"
+          className="fixed left-1/2 -translate-x-1/2 z-[40] w-[min(92vw,28rem)]
+                     top-[calc(env(safe-area-inset-top)+3.5rem)]"
+          initial={{ opacity: 0, y: -20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -8, scale: 0.98 }}
-          transition={{ duration: 0.25 }}
+          exit={{ opacity: 0, y: -16, scale: 0.95 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
           role="status"
           aria-live="polite"
+          dir="rtl"
         >
-          <div className="relative rounded-2xl border border-blue-300 bg-gradient-to-r from-blue-50 to-[var(--soft-teal)] backdrop-blur px-4 py-3 dark:border-blue-800/60 dark:from-slate-800/90 dark:to-[var(--soft-teal)]">
-            <div
-              className="absolute -top-2 right-6 w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-blue-50/95 dark:border-b-slate-800/90"
-              aria-hidden="true"
-            />
-            <button
-              onClick={dismissBanner}
-              className="absolute top-2 left-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
-              aria-label="إغلاق"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-[var(--soft-teal)] text-white">
-                <Smartphone className="h-5 w-5" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-blue-900 dark:text-blue-100">
-                  تطبيق الرحلة أسرع وأفضل
-                </p>
-                <p className="mt-1 text-[11px] text-blue-700 dark:text-blue-300">
-                  هذا ليس تنزيل من المتجر — مجرد اختصار يضيف التطبيق لشاشة الرئيسية.
-                </p>
-                {isInAppBrowser && (
-                  <p className="mt-2 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
-                    أنت داخل متصفح فيسبوك/إنستجرام. افتح الرابط في Chrome ثم اختر "إضافة إلى الشاشة الرئيسية".
+          {/* Backdrop + border glow */}
+          <div className="relative rounded-3xl overflow-hidden
+                          border border-teal-500/30
+                          bg-slate-900/95 backdrop-blur-xl
+                          shadow-[0_24px_64px_rgba(0,0,0,0.7),0_0_0_1px_rgba(45,212,191,0.1)]">
+
+            {/* Top accent line */}
+            <div className="h-0.5 w-full bg-gradient-to-r from-teal-500/0 via-teal-400 to-teal-500/0" />
+
+            <div className="p-5">
+              {/* Close Button */}
+              <button
+                onClick={dismissBanner}
+                className="absolute top-3.5 left-3.5 w-7 h-7 rounded-full bg-white/5
+                           flex items-center justify-center
+                           text-slate-500 hover:text-white hover:bg-white/10 transition-all"
+                aria-label="إغلاق"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600
+                                flex items-center justify-center shrink-0 shadow-[0_8px_16px_rgba(45,212,191,0.3)]">
+                  <Download className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-white font-black text-base leading-tight">
+                    احصل على تطبيق الرحلة
                   </p>
-                )}
-                <div className="mt-2 space-y-1">
-                  <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
-                    <Zap className="h-3 w-3" />
-                    <span>صفر — تجربة أسرع</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
-                    <Wifi className="h-3 w-3" />
-                    <span>يعمل حتى بدون إنترنت</span>
-                  </div>
-                </div>
-                <p className="text-xs text-blue-700 dark:text-blue-300 mt-2 font-medium">
-                  {installEvent ? (
-                    <>
-                      اضغط زر "إضافة للشاشة الرئيسية" اللي تحت أو في القائمة الجانبية.
-                    </>
-                  ) : (
-                    <>
-                      اضغط على أيقونة التثبيت في شريط العنوان بالأعلى{" "}
-                      <span className="inline-flex align-middle mx-0.5 text-blue-600 dark:text-blue-300">
-                        <ArrowUpRight className="h-3.5 w-3.5 animate-pulse" aria-hidden />
-                      </span>
-                      أو افتح قائمة المتصفح واختر "إضافة للشاشة الرئيسية".
-                    </>
-                  )}
-                </p>
-                <div className="mt-3 flex items-center gap-2">
-                  {installEvent && (
-                    <button
-                      type="button"
-                      onClick={triggerInstall}
-                      className="rounded-full bg-gradient-to-r from-blue-600 to-[var(--soft-teal)] text-white px-3 py-1.5 text-xs font-semibold hover:from-blue-700 hover:to-[var(--soft-teal)] transition-all"
-                    >
-                      إضافة للشاشة الرئيسية
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
-      {showIOSBanner && (
-        <motion.div
-          key="ios-install"
-          className="fixed left-1/2 -translate-x-1/2 z-[40] w-[min(92vw,26rem)] top-[calc(env(safe-area-inset-top)+3.25rem)]"
-          initial={{ opacity: 0, y: -12, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -8, scale: 0.98 }}
-          transition={{ duration: 0.25 }}
-          role="status"
-          aria-live="polite"
-        >
-          <div className="relative rounded-2xl border border-blue-300 bg-gradient-to-r from-blue-50 to-[var(--soft-teal)] backdrop-blur px-4 py-3 dark:border-blue-800/60 dark:from-slate-800/90 dark:to-[var(--soft-teal)]">
-            <button
-              onClick={dismissBanner}
-              className="absolute top-2 left-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
-              aria-label="إغلاق"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-[var(--soft-teal)] text-white">
-                <Smartphone className="h-5 w-5" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-blue-900 dark:text-blue-100">
-                  تطبيق الرحلة أسرع وأفضل
-                </p>
-                <p className="mt-1 text-[11px] text-blue-700 dark:text-blue-300">
-                  هذا ليس تنزيل من المتجر — مجرد اختصار يضيف التطبيق لشاشة الرئيسية.
-                </p>
-                {isInAppBrowser && (
-                  <p className="mt-2 text-[11px] font-semibold text-amber-700 dark:text-amber-300">
-                    أنت داخل متصفح فيسبوك/إنستجرام. افتح الرابط في Safari ثم اختر "إضافة إلى الشاشة الرئيسية".
+                  <p className="text-teal-400 text-xs font-semibold mt-0.5">
+                    مجاني — بدون متجر تطبيقات
                   </p>
-                )}
-                <div className="mt-2 space-y-1">
-                  <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
-                    <Zap className="h-3 w-3" />
-                    <span>صفر — تجربة أسرع</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-blue-800 dark:text-blue-200">
-                    <Wifi className="h-3 w-3" />
-                    <span>يعمل حتى بدون إنترنت</span>
-                  </div>
                 </div>
-                <p className="text-xs text-blue-700 dark:text-blue-300 mt-2 font-medium">
-                  {isIPad ? "على الآيباد: " : ""}
-                  اضغط زر المشاركة
-                  <span className="inline-flex items-center justify-center mx-1 align-middle text-blue-600 dark:text-blue-300">
-                    <Share2 className="h-3.5 w-3.5 animate-pulse" aria-hidden />
-                  </span>
-                  ثم اختر "إضافة إلى الشاشة الرئيسية" عشان يتحول التطبيق.
-                </p>
               </div>
+
+              {/* Benefits */}
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {BENEFITS.map(({ icon: Icon, label }) => (
+                  <div
+                    key={label}
+                    className="flex flex-col items-center gap-1.5 p-2.5 rounded-2xl bg-white/[0.04]
+                               border border-white/[0.06] text-center"
+                  >
+                    <Icon className="h-4 w-4 text-teal-400" />
+                    <span className="text-[10px] text-slate-400 leading-tight font-medium">{label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Instruction / in-app browser warning */}
+              {isInAppBrowser && (
+                <div className="flex items-start gap-2 mb-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                  <span className="text-amber-400 text-sm mt-0.5">⚠️</span>
+                  <p className="text-amber-300 text-xs leading-relaxed font-medium">
+                    أنت داخل متصفح فيسبوك/إنستجرام.
+                    افتح الرابط في {showIOSBanner ? "Safari" : "Chrome"} أولاً.
+                  </p>
+                </div>
+              )}
+
+              {showIOSBanner && !isInAppBrowser && (
+                <p className="text-slate-400 text-xs leading-relaxed mb-4">
+                  {isIPad ? "على الآيباد: " : "على iPhone: "}
+                  اضغط زر المشاركة{" "}
+                  <Share2 className="inline h-3.5 w-3.5 text-teal-400 animate-pulse" aria-hidden />
+                  {" "}في أسفل المتصفح، ثم اختر «إضافة إلى الشاشة الرئيسية»
+                </p>
+              )}
+
+              {showAndroidBanner && !isInAppBrowser && !installEvent && (
+                <p className="text-slate-400 text-xs leading-relaxed mb-4">
+                  اضغط على أيقونة التثبيت في شريط العنوان أو افتح قائمة المتصفح
+                  واختر «إضافة إلى الشاشة الرئيسية».
+                </p>
+              )}
+
+              {/* CTA button — only Android with native prompt */}
+              {installEvent && showAndroidBanner && (
+                <button
+                  type="button"
+                  onClick={triggerInstall}
+                  className="w-full py-3 rounded-2xl font-black text-sm text-slate-950
+                             bg-gradient-to-r from-teal-400 to-emerald-400
+                             hover:from-teal-300 hover:to-emerald-300
+                             shadow-[0_8px_24px_rgba(45,212,191,0.3)]
+                             hover:shadow-[0_12px_32px_rgba(45,212,191,0.5)]
+                             transition-all active:scale-95"
+                >
+                  إضافة إلى الشاشة الرئيسية
+                </button>
+              )}
             </div>
           </div>
         </motion.div>
@@ -162,5 +140,3 @@ export const InstallHintBanner: FC = () => {
     </AnimatePresence>
   );
 };
-
-

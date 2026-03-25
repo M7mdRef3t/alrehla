@@ -11,6 +11,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
+    "tsc:check": "tsc --noEmit && echo ✅ صفر أخطاء TypeScript || echo ❌ يوجد أخطاء TypeScript",
     "check": "npm run typecheck && npm run lint && npm run test:run",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

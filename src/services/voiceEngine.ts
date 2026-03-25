@@ -1,7 +1,7 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_PRO_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_PRO_API_KEY || "" });
+
 
 export type VoiceEvent = 'shadow_insight' | 'milestone_unlocked' | 'high_impact_action';
 
@@ -27,8 +27,11 @@ export async function generateVoiceScript(event: VoiceEvent, context: any): Prom
     `;
 
     try {
-        const result = await model.generateContent(prompt);
-        return result.response.text().trim().replace(/['"]/g, '');
+    const result = await genAI.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: prompt,
+    });
+        return (result.text ?? "").trim().replace(/['"]/g, '');
     } catch (err) {
         console.error("Voice Script Generation Error:", err);
         return "";

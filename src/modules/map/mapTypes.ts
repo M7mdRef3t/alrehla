@@ -202,4 +202,14 @@ export interface MapNode {
   orbitHistory?: OrbitHistoryEntry[];
   /** جاري التحليل بواسطة الـ AI (Optimistic UI) */
   isAnalyzing?: boolean;
+
+  /** نتيجة آخر اختبار — تُحفظ بعد إكمال أي اختبار وتظهر كشارة على بطاقة الشخص */
+  quizResult?: {
+    bandTitle: string;
+    bandColor: string;
+    score: number;
+    maxScore: number;
+    timestamp: number;
+    quizId: string;
+  };
 }

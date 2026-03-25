@@ -3,13 +3,14 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Globe, Briefcase, Crown, ChevronRight,
-    Zap, Star, Gift, Brain, ExternalLink
+    Zap, Star, Gift, Brain, ExternalLink, Shield
 } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { B2BPortal } from "./B2BPortal";
 import { ReferralPanel } from "./ReferralPanel";
 import { PaywallGate } from "./PaywallGate";
 import { DemoInjector } from "./dev/DemoInjector";
+import { PrivacySecuritySettings } from "./PrivacySecuritySettings";
 import { getCurrentTier, TIER_LABELS, TIER_PRICES } from "../services/subscriptionManager";
 import { loadStreak } from "../services/streakSystem";
 import { loadUserMemory } from "../services/userMemory";
@@ -19,7 +20,7 @@ import { stripeService } from "../services/stripeIntegration";
 import { supabase } from "../services/supabaseClient";
 import { syncSubscription } from "../services/subscriptionManager";
 
-type SettingsSection = "main" | "language" | "b2b" | "referral" | "subscription" | "culture";
+type SettingsSection = "main" | "language" | "b2b" | "referral" | "subscription" | "culture" | "privacy";
 
 interface SettingsScreenProps {
     onClose?: () => void;
@@ -71,6 +72,13 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
             label: "بوابة المؤسسات",
             value: "للشركات والفرق",
             color: "#60a5fa",
+        },
+        {
+            id: "privacy" as SettingsSection,
+            icon: Shield,
+            label: "الخصوصية والأمان",
+            value: "بياناتك · الجلسات · كلمة المرور",
+            color: "#14b8a6",
         },
     ];
 
@@ -331,6 +339,13 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                     </button>
                                 ))}
                             </div>
+                        </motion.div>
+                    )}
+
+                    {/* ── Privacy & Security ── */}
+                    {section === "privacy" && (
+                        <motion.div key="privacy" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="mt-4">
+                            <PrivacySecuritySettings onBack={() => setSection("main")} />
                         </motion.div>
                     )}
 

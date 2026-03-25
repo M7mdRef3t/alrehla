@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
+import { SocialLinks } from "../SocialLinks";
 
 interface LandingFooterProps {
   trustPoints: string[];
@@ -21,6 +22,18 @@ export const LandingFooter: FC<LandingFooterProps> = ({
     viewport={{ once: true }}
   >
     <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2" aria-label="روابط قانونية ومعلومات التواصل">
+      <a
+        href="/stories"
+        className="text-slate-400 hover:text-teal-400 transition-colors underline underline-offset-2"
+      >
+        قصص النجاح
+      </a>
+      <a
+        href="/about"
+        className="text-slate-400 hover:text-teal-400 transition-colors underline underline-offset-2"
+      >
+        لماذا الرحلة؟
+      </a>
       <a
         href="/privacy"
         onClick={(e) => { e.preventDefault(); onOpenLegal("/privacy"); }}
@@ -68,6 +81,7 @@ export const LandingFooter: FC<LandingFooterProps> = ({
         ))}
       </div>
     </div>
+    <SocialLinks />
     <span className="text-sm text-slate-600 font-mono tracking-widest">
       الرحلة — منصة الوعي الذاتي
     </span>

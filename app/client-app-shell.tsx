@@ -9,11 +9,14 @@ import { initMonitoring } from "../src/services/monitoring";
 import { runtimeEnv } from "../src/config/runtimeEnv";
 import { applyDesignSystemTokens } from "../src/services/designSystemTokens";
 import { PWAInstallProvider } from "../src/contexts/PWAInstallContext";
+import { PlatformHeader } from "../src/components/PlatformHeader";
+import { PlatformTabBar } from "../src/components/PlatformTabBar";
 
 const App = dynamic(() => import("../src/App"), { ssr: false });
 const Landing = dynamic(() => import("../src/components/Landing").then((m) => m.Landing), { ssr: false }) as typeof import("../src/components/Landing").Landing;
 const Analytics = dynamic(() => import("@vercel/analytics/react").then((m) => m.Analytics), { ssr: false });
 const SpeedInsights = dynamic(() => import("@vercel/speed-insights/react").then((m) => m.SpeedInsights), { ssr: false });
+
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 
@@ -58,31 +61,40 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
   if (!mounted) return null;
 
   return (
-    <ErrorBoundary>
-      {shouldLoadFullApp ? (
-        <Suspense fallback={<AwarenessSkeleton />}>
-          <App />
-        </Suspense>
-      ) : (
-        <PWAInstallProvider>
+    <>
+      {/* ── Global platform chrome: shows across Landing and full App ── */}
+      <PlatformHeader
+        onLogin={() => setShouldLoadFullApp(true)}
+      />
+      <PlatformTabBar
+        onLogin={() => setShouldLoadFullApp(true)}
+      />
+      <ErrorBoundary>
+        {shouldLoadFullApp ? (
           <Suspense fallback={<AwarenessSkeleton />}>
-            <Landing
-              onStartJourney={() => {
-                if (typeof window !== "undefined") {
-                  window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
-                }
-                setShouldLoadFullApp(true);
-              }}
-            />
+            <App />
           </Suspense>
-        </PWAInstallProvider>
-      )}
-      {runtimeEnv.isProd && (
-        <Suspense fallback={<AwarenessSkeleton />}>
-          <Analytics />
-          <SpeedInsights />
-        </Suspense>
-      )}
-    </ErrorBoundary>
+        ) : (
+          <PWAInstallProvider>
+            <Suspense fallback={<AwarenessSkeleton />}>
+              <Landing
+                onStartJourney={() => {
+                  if (typeof window !== "undefined") {
+                    window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
+                  }
+                  setShouldLoadFullApp(true);
+                }}
+              />
+            </Suspense>
+          </PWAInstallProvider>
+        )}
+        {runtimeEnv.isProd && (
+          <Suspense fallback={<AwarenessSkeleton />}>
+            <Analytics />
+            <SpeedInsights />
+          </Suspense>
+        )}
+      </ErrorBoundary>
+    </>
   );
 }

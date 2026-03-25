@@ -13,12 +13,51 @@ export interface PulseEntry {
     focus: string;
 }
 
+/* ══════════════════════════════════════════
+   Quiz Reminder Helpers
+   ══════════════════════════════════════════ */
+
+const ALL_QUIZ_DEFS: Array<{ id: string; title: string; emoji: string }> = [
+    { id: 'attachment',    title: 'أنماط الارتباط',     emoji: '🔗' },
+    { id: 'boundaries',   title: 'الحدود الشخصية',     emoji: '🛡️' },
+    { id: 'codependency', title: 'الاعتماد العاطفي',    emoji: '🪢' },
+    { id: 'quality',      title: 'جودة العلاقة',        emoji: '💎' },
+    { id: 'eq',           title: 'الذكاء العاطفي',      emoji: '💡' },
+    { id: 'social',       title: 'التوافق الاجتماعي',   emoji: '🌐' },
+    { id: 'communication', title: 'درجة التواصل',       emoji: '🗣️' },
+];
+
+export interface QuizReminder {
+    quizId: string;
+    title: string;
+    emoji: string;
+}
+
+function loadPendingQuizReminders(): QuizReminder[] {
+    if (typeof window === 'undefined') return [];
+    try {
+        const raw = localStorage.getItem('alrehla_quiz_history');
+        const history: Array<{ quizId: string }> = raw ? JSON.parse(raw) : [];
+        const done = new Set(history.map((e) => e.quizId));
+        return ALL_QUIZ_DEFS
+            .filter((q) => !done.has(q.id))
+            .slice(0, 3)
+            .map((q) => ({ quizId: q.id, title: q.title, emoji: q.emoji }));
+    } catch { return []; }
+}
+
 export function useDailyPulse() {
     const [history, setHistory] = useState<PulseEntry[]>([]);
     const [todayPulse, setTodayPulse] = useState<PulseEntry | null>(null);
     const [loading, setLoading] = useState(false);
     const [streak, setStreak] = useState(0);
+    const [quizReminders, setQuizReminders] = useState<QuizReminder[]>([]);
     const isSavingRef = useRef(false);
+
+    /* Load quiz reminders on mount */
+    useEffect(() => {
+        setQuizReminders(loadPendingQuizReminders());
+    }, []);
 
     const fetchPulseData = useCallback(async () => {
         setLoading(true);
@@ -59,7 +98,7 @@ export function useDailyPulse() {
                 const today = getLocalDayString();
                 const todayRes = data.find((p: PulseEntry) => p.day === today);
                 if (todayRes) setTodayPulse(todayRes);
-                setStreak(data.length); // Simple streak for guests
+                setStreak(data.length);
             }
         } catch (err) {
             if (!isSupabaseAbortError(err)) {
@@ -93,7 +132,6 @@ export function useDailyPulse() {
                     const result = await res.json();
                     setTodayPulse(result.data);
 
-                    // Track Engagement
                     const isFirst = history.length === 0;
                     if (isFirst) {
                         trackEvent(AnalyticsEvents.FIRST_PULSE_SUBMITTED, { mode: "auth" });
@@ -116,7 +154,6 @@ export function useDailyPulse() {
                 } else {
                     data = [newEntry, ...data];
 
-                    // Track Engagement for Guests
                     const isFirst = data.length === 1;
                     if (isFirst) {
                         trackEvent(AnalyticsEvents.FIRST_PULSE_SUBMITTED, { mode: "guest" });
@@ -151,6 +188,7 @@ export function useDailyPulse() {
         loading,
         savePulse,
         hasAnsweredToday: !!todayPulse,
-        refresh: fetchPulseData
+        refresh: fetchPulseData,
+        quizReminders,  // ← NEW: up to 3 uncompleted quiz reminders
     };
 }

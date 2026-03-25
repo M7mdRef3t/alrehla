@@ -7,10 +7,10 @@ import { AgentContext } from "./types";
  * يحلل السياق الحالي للمستخدم ويقترح الشخصية الأنسب من السرب.
  */
 export function determineAutoPersona(context: AgentContext): PersonaType {
-    const { pulse, screen } = context;
+    const { pulse } = context;
 
-    // 1. إذا كان المستخدم في حالة طوارئ أو توتر حاد جداً (Mood: Angry, Overwhelmed)
-    if (pulse?.mood === "angry" || pulse?.mood === "overwhelmed" || screen === "emergency") {
+    // 1. إذا كان المستخدم في حالة توتر حاد جداً (Mood: Angry, Overwhelmed)
+    if (pulse?.mood === "angry" || pulse?.mood === "overwhelmed") {
         return "COMFORTER";
     }
 
@@ -19,8 +19,8 @@ export function determineAutoPersona(context: AgentContext): PersonaType {
         return "COMFORTER";
     }
 
-    // 3. إذا كان المستخدم في شاشة "محكمة الشعور بالذنب" أو "الدبلوماسية" أو يتعامل مع أشخاص في مدارات خطرة
-    if (screen === "guilt-court" || screen === "diplomacy") {
+    // 3. إذا كان المستخدم في شاشة "محكمة الشعور بالذنب" أو "الدبلوماسية"
+    if (context.screen === "guilt-court" || context.screen === "diplomacy") {
         return "TACTICIAN";
     }
 

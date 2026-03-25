@@ -1,8 +1,15 @@
-import { memo, type ComponentProps } from "react";
+import { memo, useState, type ComponentProps } from "react";
 import { type AppScreen } from "../../navigation/navigationMachine";
 import { AppStartScreens } from "../AppStartScreens";
 import { AppJourneyScreens } from "../AppJourneyScreens";
 import { AppMetaScreens } from "../AppMetaScreens";
+import { StoriesScreen } from "../StoriesScreen";
+import { AboutScreen } from "../AboutScreen";
+import { RelationshipInsightsDashboard } from "../RelationshipInsightsDashboard";
+import { QuizzesHub } from "../QuizzesHub";
+import { BehavioralAnalysisHub } from "../BehavioralAnalysisHub";
+import { ResourcesCenter } from "../ResourcesCenter";
+import type { ResourceTab } from "../ResourcesCenter";
 
 type StartScreensProps = ComponentProps<typeof AppStartScreens>;
 type JourneyScreensProps = ComponentProps<typeof AppJourneyScreens>;
@@ -105,6 +112,9 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
   onOpenConsciousnessArchive,
   onOpenTimeCapsule
 }: AppMainExperienceContentProps) {
+  // State for deep-linking from BehavioralHub to ResourcesCenter
+  const [resourceDeepLink, setResourceDeepLink] = useState<{ tab: ResourceTab; search: string } | null>(null);
+
   if (screen === "landing" || screen === "goal" || screen === "survey" || screen === "map") {
     return (
       <AppStartScreens
@@ -141,6 +151,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
         onOpenPulse={onOpenPulse}
         onOpenLibrary={onOpenLibrary}
         onOpenProfile={onOpenProfile}
+        onNavigate={(s) => onNavigate?.(s as Parameters<typeof onNavigate>[0])}
       />
     );
   }
@@ -189,6 +200,63 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
         onOpenMirror={onOpenMirror}
         onOpenConsciousnessArchive={onOpenConsciousnessArchive}
         onOpenTimeCapsule={onOpenTimeCapsule}
+      />
+    );
+  }
+
+  if (screen === "stories") {
+    return (
+      <StoriesScreen
+        onBack={() => onNavigate?.("landing" as AppScreen)}
+      />
+    );
+  }
+
+  if (screen === "about") {
+    return (
+      <AboutScreen
+        onBack={() => onNavigate?.("landing" as AppScreen)}
+        onStart={() => onStartJourney?.()}
+      />
+    );
+  }
+
+  if (screen === "insights") {
+    return (
+      <RelationshipInsightsDashboard
+        onBack={() => onNavigate?.("landing" as AppScreen)}
+        onGoToQuizzes={() => onNavigate?.("quizzes" as AppScreen)}
+      />
+    );
+  }
+
+  if (screen === "quizzes") {
+    return (
+      <QuizzesHub
+        onBack={() => onNavigate?.("landing" as AppScreen)}
+      />
+    );
+  }
+
+  if (screen === "behavioral-analysis") {
+    return (
+      <BehavioralAnalysisHub
+        onBack={() => onNavigate?.("landing" as AppScreen)}
+        onNavigateToResources={(tab, search) => {
+          setResourceDeepLink({ tab, search });
+          onNavigate?.("resources" as AppScreen);
+        }}
+      />
+    );
+  }
+
+  if (screen === "resources") {
+    const link = resourceDeepLink;
+    return (
+      <ResourcesCenter
+        onBack={() => { setResourceDeepLink(null); onNavigate?.("landing" as AppScreen); }}
+        initialTab={link?.tab}
+        initialSearch={link?.search}
       />
     );
   }

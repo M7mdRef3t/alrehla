@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   ArrowLeft, MapPin, Mic, Eye, Shield, Zap, Clock, Lock,
-  ChevronDown, Smartphone, Star, Heart
+  ChevronDown, Smartphone, Star, Heart, BookOpen, Brain, Sparkles
 } from "lucide-react";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
@@ -25,6 +25,7 @@ interface LandingProps {
   onOpenSurvey?: () => void;
   ownerInstallRequestNonce?: number;
   onOwnerInstallRequestHandled?: () => void;
+  onNavigate?: (screen: string) => void;
 }
 
 /* ─── Animation Variants ─────────────────────────────────────────────────────── */
@@ -253,7 +254,8 @@ export const Landing: FC<LandingProps> = ({
   onStartJourney,
   onOpenSurvey,
   ownerInstallRequestNonce = 0,
-  onOwnerInstallRequestHandled
+  onOwnerInstallRequestHandled,
+  onNavigate,
 }) => {
   const reduceMotion = useReducedMotion();
   const nodesCount = useMapState((s) => s.nodes.length);
@@ -636,6 +638,83 @@ export const Landing: FC<LandingProps> = ({
       <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
         <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(248,113,113,0.2), transparent)" }} />
       </div>
+
+      {/* ══════════════════════════════════════════════
+          QUICK ACCESS SHORTCUTS
+      ══════════════════════════════════════════════ */}
+      {onNavigate && (
+        <section className="relative py-10 px-5 max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.6 }}
+          >
+            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-5 text-center" style={{ color: "#06B6D4" }}>
+              وصول سريع
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                {
+                  icon: BookOpen,
+                  label: "مركز التعلم",
+                  desc: "فيديوهات، تمارين، وجمل خروج — كل ما تحتاجه في مكان واحد",
+                  color: "#06B6D4",
+                  screen: "resources",
+                  emoji: "📚",
+                },
+                {
+                  icon: Brain,
+                  label: "تحليل الأنماط",
+                  desc: "اكتشف سلوكياتك العميقة والمحفزات الخفية",
+                  color: "#A78BFA",
+                  screen: "behavioral-analysis",
+                  emoji: "🧠",
+                },
+                {
+                  icon: Sparkles,
+                  label: "الاختبارات",
+                  desc: "نمط التعلق، رد الفعل العاطفي — تعرف على نفسك",
+                  color: "#F59E0B",
+                  screen: "quizzes",
+                  emoji: "✨",
+                },
+              ].map((item) => (
+                <motion.button
+                  key={item.screen}
+                  type="button"
+                  onClick={() => { trackEvent("landing_shortcut_click" as string, { screen: item.screen }); onNavigate(item.screen); }}
+                  whileHover={{ y: -3, scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex flex-col gap-3 rounded-2xl p-5 text-right cursor-pointer w-full"
+                  style={{
+                    background: `${item.color}08`,
+                    border: `1px solid ${item.color}20`,
+                    backdropFilter: "blur(12px)",
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{item.emoji}</span>
+                    <div
+                      className="w-8 h-8 rounded-xl flex items-center justify-center"
+                      style={{ background: `${item.color}18` }}
+                    >
+                      <item.icon className="w-4 h-4" style={{ color: item.color }} />
+                    </div>
+                    <h3 className="text-sm font-black text-white" style={{ fontFamily: "Tajawal, sans-serif" }}>
+                      {item.label}
+                    </h3>
+                  </div>
+                  <p className="text-xs leading-relaxed" style={{ color: "#64748B" }}>{item.desc}</p>
+                  <div className="text-xs font-bold self-start" style={{ color: item.color }}>
+                    اذهب إليه ←
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        </section>
+      )}
 
       {/* ══════════════════════════════════════════════
           SECTION 3: PROBLEM

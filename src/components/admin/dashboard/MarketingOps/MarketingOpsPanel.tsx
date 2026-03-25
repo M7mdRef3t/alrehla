@@ -31,6 +31,18 @@ interface QuickSendLead {
   personalLink: string;
 }
 
+interface EmailMetrics {
+  sent: number;
+  opened: number;
+  clicked: number;
+  bounced: number;
+  complained: number;
+  unsubscribed: number;
+  openRate: number;
+  clickRate: number;
+  bounceRate: number;
+}
+
 interface OpsStats {
   ok: boolean;
   totalLeads: number;
@@ -39,6 +51,7 @@ interface OpsStats {
   recentErrors: Array<{ lead_email: string; channel: string; last_error: string; updated_at: string }>;
   recentSent: Array<{ lead_email: string; channel: string; sent_at: string }>;
   quickSendLeads: QuickSendLead[];
+  emailMetrics?: EmailMetrics;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -330,7 +343,57 @@ export function MarketingOpsPanel() {
         <StatCard label="بدأ Onboarding" value={realStarts} icon={<TrendingUp className="w-5 h-5" />} accent="indigo" />
       </div>
 
-      {/* Conversion */}
+      {/* ── Email Engagement Analytics ─────────────────────────────────── */}
+      {stats?.emailMetrics && (
+        <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 space-y-4 backdrop-blur">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-xl bg-sky-500/10 flex items-center justify-center">
+              <Mail className="w-4 h-4 text-sky-400" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Email Analytics</p>
+              <p className="text-xs text-slate-400">بيانات حقيقية من الـ Webhook</p>
+            </div>
+          </div>
+
+          {/* Rate bars */}
+          <div className="space-y-3">
+            {[
+              { label: "معدل الفتح", rate: stats.emailMetrics.openRate, count: stats.emailMetrics.opened, color: "bg-emerald-400" },
+              { label: "معدل النقر", rate: stats.emailMetrics.clickRate, count: stats.emailMetrics.clicked, color: "bg-sky-400" },
+              { label: "معدل الارتداد", rate: stats.emailMetrics.bounceRate, count: stats.emailMetrics.bounced, color: "bg-rose-400" },
+            ].map(({ label, rate, count, color }) => (
+              <div key={label}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-bold text-slate-400">{label}</span>
+                  <span className="text-xs font-black text-white">{rate}% <span className="text-slate-500 font-medium">({count})</span></span>
+                </div>
+                <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ${color}`}
+                    style={{ width: `${Math.min(rate, 100)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Summary row */}
+          <div className="grid grid-cols-3 gap-3 pt-2">
+            {[
+              { label: "تم الإرسال", value: stats.emailMetrics.sent, color: "text-slate-300" },
+              { label: "ألغوا الاشتراك", value: stats.emailMetrics.unsubscribed, color: "text-amber-400" },
+              { label: "شكاوى", value: stats.emailMetrics.complained, color: "text-rose-400" },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="text-center p-3 rounded-xl bg-white/[0.03] border border-white/5">
+                <p className={`text-xl font-black ${color}`}>{value}</p>
+                <p className="text-[10px] text-slate-600 mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 flex items-center justify-between backdrop-blur">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">

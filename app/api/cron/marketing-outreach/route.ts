@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { buildUnsubLink } from "@/lib/marketing/unsubToken";
+import { buildMarketingEmail } from "@/lib/marketing/emailTemplate";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -84,74 +85,33 @@ function emailFooter(unsubLink: string): string {
 }
 
 function buildStep1Html(opts: { firstName: string; personalLink: string; unsubLink: string }): string {
-  const { firstName, personalLink, unsubLink } = opts;
-  const greeting = firstName ? `أهلاً ${firstName}،` : "أهلاً،";
-  return `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
-<body style="margin:0;padding:0;background:#0a0a12;font-family:'Segoe UI',Arial,sans-serif;direction:rtl;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a12;padding:40px 0;"><tr><td align="center">
-<table width="560" cellpadding="0" cellspacing="0" style="background:#111827;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
-  <tr><td style="background:linear-gradient(135deg,#1e1b4b 0%,#0f172a 100%);padding:36px 40px 28px;text-align:center;">
-    <p style="margin:0 0 8px;font-size:11px;font-weight:900;letter-spacing:4px;color:#6366f1;text-transform:uppercase;">ALREHLA · الرحلة</p>
-    <h1 style="margin:0;font-size:28px;font-weight:900;color:#fff;">خريطة علاقاتك<br/>تنتظرك</h1>
-  </td></tr>
-  <tr><td style="padding:36px 40px;">
-    <p style="margin:0 0 20px;font-size:17px;font-weight:600;color:#e2e8f0;">${greeting}</p>
-    <p style="margin:0 0 16px;font-size:15px;color:#94a3b8;line-height:1.8;">شكراً لاهتمامك بالرحلة — المنصة الوحيدة التي تساعدك على فهم علاقاتك بوضوح تام.</p>
-    <p style="margin:0 0 28px;font-size:15px;color:#94a3b8;line-height:1.8;">حجزنا لك مكاناً خاصاً. ابدأ الآن وستحصل على خريطة علاقاتك الأولى في دقائق.</p>
-    <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;"><tr><td>
-      <a href="${personalLink}" style="display:inline-block;padding:16px 40px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:16px;font-weight:900;text-decoration:none;border-radius:14px;box-shadow:0 8px 30px rgba(99,102,241,0.4);">ابدأ رحلتك الآن →</a>
-    </td></tr></table>
-    <p style="margin:0;font-size:12px;color:#475569;text-align:center;">اللينك ده خاص بيك — مش هيتشارك مع حد تاني.</p>
-  </td></tr>
-  ${emailFooter(unsubLink)}
-</table></td></tr></table></body></html>`;
+  return buildMarketingEmail({
+    name: opts.firstName || undefined,
+    personalLink: opts.personalLink,
+    previewText: "خريطة علاقاتك جاهزة — ابدأ الرحلة الآن",
+    senderName: "محمد",
+    unsubLink: opts.unsubLink,
+  });
 }
 
 function buildStep2Html(opts: { firstName: string; personalLink: string; unsubLink: string }): string {
-  const { firstName, personalLink, unsubLink } = opts;
-  const greeting = firstName ? `${firstName}،` : "صديقي،";
-  return `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"/></head>
-<body style="margin:0;padding:0;background:#0a0a12;font-family:'Segoe UI',Arial,sans-serif;direction:rtl;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a12;padding:40px 0;"><tr><td align="center">
-<table width="560" cellpadding="0" cellspacing="0" style="background:#111827;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
-  <tr><td style="background:linear-gradient(135deg,#0f2027 0%,#203a43 50%,#2c5364 100%);padding:36px 40px 28px;text-align:center;">
-    <p style="margin:0 0 8px;font-size:11px;font-weight:900;letter-spacing:4px;color:#38bdf8;text-transform:uppercase;">ALREHLA · الرحلة</p>
-    <h1 style="margin:0;font-size:26px;font-weight:900;color:#fff;">الخريطة لسه مستنياك 🗺️</h1>
-  </td></tr>
-  <tr><td style="padding:36px 40px;">
-    <p style="margin:0 0 20px;font-size:17px;font-weight:600;color:#e2e8f0;">${greeting}</p>
-    <p style="margin:0 0 16px;font-size:15px;color:#94a3b8;line-height:1.8;">لاحظنا إنك لسه ما بدأتش رحلتك معنا.</p>
-    <p style="margin:0 0 28px;font-size:15px;color:#94a3b8;line-height:1.8;">كتير من الناس بتفاجئوا بالأنماط اللي بتظهرلهم في أول 5 دقايق. مكانك لسه محجوز.</p>
-    <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;"><tr><td>
-      <a href="${personalLink}" style="display:inline-block;padding:16px 40px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;font-size:16px;font-weight:900;text-decoration:none;border-radius:14px;box-shadow:0 8px 30px rgba(14,165,233,0.4);">أكمل من هنا →</a>
-    </td></tr></table>
-  </td></tr>
-  ${emailFooter(unsubLink)}
-</table></td></tr></table></body></html>`;
+  return buildMarketingEmail({
+    name: opts.firstName || undefined,
+    personalLink: opts.personalLink,
+    previewText: "الخريطة لسه مستنياك — مكانك محجوز",
+    senderName: "محمد",
+    unsubLink: opts.unsubLink,
+  });
 }
 
 function buildStep3Html(opts: { firstName: string; personalLink: string; unsubLink: string }): string {
-  const { firstName, personalLink, unsubLink } = opts;
-  const greeting = firstName ? `${firstName}،` : "صديقي،";
-  return `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"/></head>
-<body style="margin:0;padding:0;background:#0a0a12;font-family:'Segoe UI',Arial,sans-serif;direction:rtl;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a12;padding:40px 0;"><tr><td align="center">
-<table width="560" cellpadding="0" cellspacing="0" style="background:#111827;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);">
-  <tr><td style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);padding:36px 40px 28px;text-align:center;">
-    <p style="margin:0 0 8px;font-size:11px;font-weight:900;letter-spacing:4px;color:#a78bfa;text-transform:uppercase;">ALREHLA · الرحلة</p>
-    <h1 style="margin:0;font-size:26px;font-weight:900;color:#fff;">رسالة أخيرة 💜</h1>
-  </td></tr>
-  <tr><td style="padding:36px 40px;">
-    <p style="margin:0 0 20px;font-size:17px;font-weight:600;color:#e2e8f0;">${greeting}</p>
-    <p style="margin:0 0 16px;font-size:15px;color:#94a3b8;line-height:1.8;">ده آخر إيميل هنبعتهولك — مش عايزين نزعجك.</p>
-    <p style="margin:0 0 8px;font-size:15px;color:#94a3b8;line-height:1.8;">لو لقيت وقتاً في أي يوم، اللينك ده هيوصلك مباشرة لخريطتك:</p>
-    <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;"><tr><td>
-      <a href="${personalLink}" style="display:inline-block;padding:16px 40px;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;font-size:16px;font-weight:900;text-decoration:none;border-radius:14px;box-shadow:0 8px 30px rgba(124,58,237,0.4);">افتح خريطتي →</a>
-    </td></tr></table>
-    <p style="margin:0;font-size:12px;color:#475569;text-align:center;">لو مش مهتم، مش هيجيلك أي إيميل تاني. نتمنالك كل خير. 🤍</p>
-  </td></tr>
-  ${emailFooter(unsubLink)}
-</table></td></tr></table></body></html>`;
+  return buildMarketingEmail({
+    name: opts.firstName || undefined,
+    personalLink: opts.personalLink,
+    previewText: "رسالة أخيرة — اللينك ده هيوصلك لخريطتك في أي وقت",
+    senderName: "محمد",
+    unsubLink: opts.unsubLink,
+  });
 }
 
 // ─── Send Email ─────────────────────────────────────────────────────────────

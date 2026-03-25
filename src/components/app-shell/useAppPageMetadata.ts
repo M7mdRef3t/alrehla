@@ -20,7 +20,13 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   armory: "الترسانة (Armory)",
   survey: "استبيان البحث",
   "exit-scripts": "مكتبة جمل الخروج",
-  grounding: "تقنيات تهدئة الجسم"
+  grounding: "تقنيات تهدئة الجسم",
+  stories: "قصص النجاح",
+  about: "لماذا الرحلة؟",
+  insights: "تحليل العلاقات",
+  quizzes: "الاختبارات",
+  "behavioral-analysis": "تحليل الأنماط السلوكية",
+  resources: "مركز الموارد التعليمية",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -83,7 +89,31 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   grounding: {
     title: "Grounding Toolkit | Alrehla",
     description: "Body-first calming techniques to regulate your nervous system."
-  }
+  },
+  stories: {
+    title: "قصص النجاح — الرحلة",
+    description: "قصص حقيقية من أناس حققوا تحولاً جذرياً في حياتهم عبر الرحلة."
+  },
+  about: {
+    title: "لماذا الرحلة؟ | Alrehla",
+    description: "تعرف على فلسفة ومنهجية الرحلة — منصة الوعي الذاتي وخريطة العلاقات."
+  },
+  insights: {
+    title: "تحليل العلاقات | الرحلة",
+    description: "نظرة شاملة على صحة علاقاتك مع تقارير بصرية وتوصيات ذكية."
+  },
+  quizzes: {
+    title: "اختبارات الشخصية والعلاقات | الرحلة",
+    description: "اكتشف نمط تعلقك وحدودك وجودة علاقاتك من خلال اختبارات تفاعلية."
+  },
+  "behavioral-analysis": {
+    title: "تحليل الأنماط السلوكية | الرحلة",
+    description: "اكتشف أنماطك العميقة المتكررة والخفية مع تحليل ذكي للوعي والسلوك."
+  },
+  resources: {
+    title: "مركز الموارد التعليمية | الرحلة",
+    description: "فيديوهات وقصص نجاح وتمارين وجمل خروج — كل ما تحتاجه للتعلم والممارسة."
+  },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {

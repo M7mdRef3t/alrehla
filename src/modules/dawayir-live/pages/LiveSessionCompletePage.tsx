@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 import { BadgeCheck, Clock3, Download, Gem, Link2, RotateCcw, Share2, Wind } from "lucide-react";
 import { assignUrl } from "../../../services/navigation";
 import { createLiveShare, getLiveSession } from "../api";
@@ -352,6 +350,12 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
     printRef.current.classList.add("complete-card--exporting");
 
     try {
+      // 📦 تحميل ديناميكي — يحفظ ~300KB من الـ initial bundle
+      const [html2canvas, { jsPDF }] = await Promise.all([
+        import("html2canvas").then((m) => m.default),
+        import("jspdf"),
+      ]);
+
       const canvas = await html2canvas(printRef.current, {
         scale: 2,
         backgroundColor: "#060618",
@@ -386,6 +390,9 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
     setShareNotice(null);
 
     try {
+      // 📦 تحميل ديناميكي
+      const html2canvas = await import("html2canvas").then((m) => m.default);
+
       const canvas = await html2canvas(printRef.current, {
         scale: 2,
         backgroundColor: "#060618",

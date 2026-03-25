@@ -57,6 +57,7 @@ interface AppStartScreensProps {
   onOpenPulse: () => void;
   onOpenLibrary: () => void;
   onOpenProfile: () => void;
+  onNavigate?: (screen: string) => void;
 }
 
 export function AppStartScreens({
@@ -92,7 +93,8 @@ export function AppStartScreens({
   onRefreshNextStep,
   onOpenPulse,
   onOpenLibrary,
-  onOpenProfile
+  onOpenProfile,
+  onNavigate
 }: AppStartScreensProps) {
   if (screen === "landing") {
     return (
@@ -101,6 +103,7 @@ export function AppStartScreens({
         onOpenSurvey={onOpenSurvey}
         ownerInstallRequestNonce={ownerInstallRequestNonce}
         onOwnerInstallRequestHandled={onOwnerInstallRequestHandled}
+        onNavigate={onNavigate}
       />
     );
   }

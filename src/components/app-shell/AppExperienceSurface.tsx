@@ -1,4 +1,4 @@
-import { lazy, Suspense, memo, type ComponentProps } from "react";
+import { lazy, Suspense, memo, useCallback, type ComponentProps } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Cpu } from "lucide-react";
 import { ErrorBoundary } from "../ErrorBoundary";
@@ -7,6 +7,10 @@ import { AppChromeShell } from "./AppChromeShell";
 import { AppMainExperienceContent } from "./AppMainExperienceContent";
 import { AppOverlayHost } from "./AppOverlayHost";
 import { AppTransientChromeHost } from "./AppTransientChromeHost";
+import { PlatformHeader } from "../PlatformHeader";
+import { PlatformTabBar } from "../PlatformTabBar";
+import { PlatformBreadcrumb, buildBreadcrumb } from "../PlatformBreadcrumb";
+import { supabase } from "../../services/supabaseClient";
 import type { AppScreen } from "../../navigation/navigationMachine";
 
 const SyncStatusUI = lazy(() => import("../SyncStatusUI").then((m) => ({ default: m.SyncStatusUI })));
@@ -19,6 +23,7 @@ const AscensionRitual = lazy(() =>
 );
 const GraphEventToast = lazy(() => import("../GraphEventToast").then((m) => ({ default: m.GraphEventToast })));
 const GlobalToast = lazy(() => import("../GlobalToast").then((m) => ({ default: m.GlobalToast })));
+const NotificationEnableButton = lazy(() => import("../NotificationEnableButton").then((m) => ({ default: m.NotificationEnableButton })));
 
 type TransientChromeProps = ComponentProps<typeof AppTransientChromeHost>;
 type ChromeShellProps = Omit<ComponentProps<typeof AppChromeShell>, "children">;
@@ -77,8 +82,76 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   const isLivePage = typeof window !== "undefined" && window.location.pathname.includes("dawayir-live");
   const actuallyShowingPulse = showPulseCheck && !isLivePage;
 
+  // ── Header navigation handlers ──
+  const handleHeaderNavigate = useCallback((id: string) => {
+    // Map header nav IDs to app screens / actions
+    if (id === "home" || id === "landing") {
+      mainContentProps.onNavigate?.("landing" as AppScreen);
+    } else if (id === "tools") {
+      mainContentProps.onNavigate?.("tools" as AppScreen);
+    } else if (id === "settings") {
+      mainContentProps.onNavigate?.("settings" as AppScreen);
+    } else if (id === "stories") {
+      mainContentProps.onNavigate?.("stories" as AppScreen);
+    } else if (id === "about") {
+      mainContentProps.onNavigate?.("about" as AppScreen);
+    } else if (id === "profile") {
+      mainContentProps.onOpenProfile?.();
+    }
+  }, [mainContentProps]);
+
+  const handleHeaderLogin = useCallback(() => {
+    mainContentProps.onStartJourney?.();
+  }, [mainContentProps]);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await supabase?.auth.signOut();
+    } catch {
+      // fail silently
+    }
+    // #4 — Redirect to landing after logout
+    mainContentProps.onNavigate?.("landing" as AppScreen);
+  }, [mainContentProps]);
+
   return (
     <>
+      {/* ── Global platform header (desktop) ── */}
+      <PlatformHeader
+        activeScreen={screen}
+        onNavigate={handleHeaderNavigate}
+        onLogin={handleHeaderLogin}
+        onLogout={handleLogout}
+      />
+      {/* ── Mobile bottom tab bar ── */}
+      <PlatformTabBar
+        activeScreen={screen}
+        onNavigate={handleHeaderNavigate}
+        onLogin={handleHeaderLogin}
+      />
+      {/* ── Push Notification prompt (floating pill) ── */}
+      <Suspense fallback={null}>
+        <NotificationEnableButton />
+      </Suspense>
+      {/* ── Breadcrumb: only on inner screens (not landing) ── */}
+      {screen !== "landing" && (
+        <>
+          {/* Desktop breadcrumb below header */}
+          <div className="fixed top-16 right-0 left-0 z-40 px-6 lg:px-10 py-2 hidden md:block">
+            <PlatformBreadcrumb
+              items={buildBreadcrumb(screen)}
+              onNavigate={handleHeaderNavigate}
+            />
+          </div>
+          {/* Mobile breadcrumb above content, below status bar */}
+          <div className="fixed top-2 right-0 left-0 z-40 px-4 py-1.5 md:hidden">
+            <PlatformBreadcrumb
+              items={buildBreadcrumb(screen)}
+              onNavigate={handleHeaderNavigate}
+            />
+          </div>
+        </>
+      )}
       <div
         className={`min-h-screen flex flex-col transition-colors relative isolate ${screen !== "landing" ? "overflow-visible" : ""}`}
         dir="rtl"

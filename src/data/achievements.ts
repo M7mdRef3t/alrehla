@@ -188,6 +188,39 @@ export const ACHIEVEMENTS: Achievement[] = [
     hint: "7 أيام من الوضوح تغيّر طريقة تفكيرك. أنت تغيّرت فعلاً.",
     icon: "⚡",
     order: 22
+  },
+  /* ══ Quiz Achievements ══ */
+  {
+    id: "quiz_first",
+    title: "أول اختبار",
+    description: "أكملت أول اختبار على منصة الرحلة",
+    hint: "الوعي يبدأ بسؤال واحد. أنت بدأت.",
+    icon: "🧠",
+    order: 23
+  },
+  {
+    id: "quiz_double",
+    title: "مزدوج",
+    description: "أكملت اختبارين مختلفين",
+    hint: "كل اختبار يضيف طبقة جديدة لفهم نفسك.",
+    icon: "👫",
+    order: 24
+  },
+  {
+    id: "quiz_half",
+    title: "في المنتصف",
+    description: "أكملت نصف الاختبارات (4 من 7)",
+    hint: "نصف الطريق مرّت — والنصف الثاني فيه وضوح أكثر!",
+    icon: "🏄",
+    order: 25
+  },
+  {
+    id: "quiz_master",
+    title: "سيد الوعي",
+    description: "أكملت جميع الاختبارات السبعة",
+    hint: "من 5٪ من المستخدمين فقط يصلون لهنا. أنت منهم.",
+    icon: "🏆",
+    order: 26
   }
 ].sort((a, b) => a.order - b.order);
 

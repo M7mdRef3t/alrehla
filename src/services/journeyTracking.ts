@@ -356,7 +356,9 @@ export type FlowStep =
   | "next_step_rendered"
   | "next_step_action_taken"
   | "next_step_dismissed"
-  | "routing_intervention_triggered";
+  | "routing_intervention_triggered"
+  | "quiz_completed"
+  | "quiz_hub_opened";
 
 export function recordFlowEvent(
   step: FlowStep,
