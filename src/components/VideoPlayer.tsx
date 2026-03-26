@@ -25,8 +25,10 @@ interface Props {
   unitId?: string;
   chapters?: Chapter[];
   color?: string;
+  savedTime?: number;
   onEnded?: () => void;
   onProgress?: (pct: number) => void;
+  onTimeUpdate?: (time: number) => void;
 }
 
 /* ═══════ Helpers ═══════ */
@@ -53,8 +55,10 @@ export function VideoPlayer({
     { title: "تمارين ختامية", time: 900 },
   ],
   color = "#06B6D4",
+  savedTime = 0,
   onEnded,
   onProgress,
+  onTimeUpdate: parentOnTimeUpdate,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -82,20 +86,24 @@ export function VideoPlayer({
 
   // Restore saved position
   useEffect(() => {
-    const saved = localStorage.getItem(LS(`pos_${unitId}`));
-    if (saved && videoRef.current) {
-      videoRef.current.currentTime = parseFloat(saved);
+    const local = localStorage.getItem(LS(`pos_${unitId}`));
+    // Priority: Local Storage (current device) > Cloud Saved Time (other devices)
+    const initial = local ? parseFloat(local) : (savedTime || 0);
+    if (initial > 0 && videoRef.current) {
+      videoRef.current.currentTime = initial;
     }
-  }, [unitId]);
+  }, [unitId, savedTime]);
 
   // Video event handlers
   const onTimeUpdate = useCallback(() => {
     const v = videoRef.current; if (!v) return;
-    setCurrentTime(v.currentTime);
-    onProgress?.(duration ? (v.currentTime / duration) * 100 : 0);
-    try { localStorage.setItem(LS(`pos_${unitId}`), String(v.currentTime)); } catch {}
+    const time = v.currentTime;
+    setCurrentTime(time);
+    onProgress?.(duration ? (time / duration) * 100 : 0);
+    parentOnTimeUpdate?.(time);
+    try { localStorage.setItem(LS(`pos_${unitId}`), String(time)); } catch {}
     if (v.buffered.length > 0) setBuffered(v.buffered.end(v.buffered.length - 1));
-  }, [unitId, duration, onProgress]);
+  }, [unitId, duration, onProgress, parentOnTimeUpdate]);
 
   const onLoadedMetadata = () => {
     if (videoRef.current) setDuration(videoRef.current.duration);

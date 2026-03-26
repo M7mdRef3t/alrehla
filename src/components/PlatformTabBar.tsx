@@ -1,20 +1,27 @@
 import { useState, useEffect, memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Map, Wrench, BookOpen, Info, LogIn, Sun, Moon, GraduationCap } from "lucide-react";
+import { Home, Wrench, BookOpen, Info, LogIn, LogOut, Sun, Moon, GraduationCap } from "lucide-react";
 import { useAuthState } from "../state/authState";
 import { useAchievementState } from "../state/achievementState";
 import { useThemeState } from "../state/themeState";
+import { signOut } from "../services/authService";
 
+/**
+ * Maps tab IDs → AppScreen values understood by AppExperienceSurface.handleHeaderNavigate.
+ * "home" maps to "landing" (the landing screen id in AppScreen union).
+ */
 const SCREEN_MAP: Record<string, string> = {
   home:      "landing",
   tools:     "tools",
   stories:   "stories",
   resources: "resources",
   about:     "about",
+  insights:  "insights",
+  settings:  "settings",
 };
 
 const TAB_ITEMS = [
-  { id: "home",      label: "الرئيسية",      icon: Map },
+  { id: "home",      label: "الرئيسية",      icon: Home },
   { id: "tools",     label: "الأدوات",       icon: Wrench },
   { id: "stories",   label: "قصص",           icon: BookOpen },
   { id: "resources", label: "تعلّم",          icon: GraduationCap },
@@ -67,10 +74,15 @@ export const PlatformTabBar = memo(function PlatformTabBar({
     setTheme(isDark ? "light" : "dark");
   }, [isDark, setTheme]);
 
-  // #1 — navigate with SCREEN_MAP
-  const handleNav = (id: TabId | string) => {
+  // logout handler
+  const handleLogout = useCallback(async () => {
+    await signOut();
+  }, []);
+
+  // navigate — useCallback for stable reference & perf
+  const handleNav = useCallback((id: TabId | string) => {
     onNavigate?.(SCREEN_MAP[id as string] ?? id);
-  };
+  }, [onNavigate]);
 
   return (
     <motion.nav
@@ -185,8 +197,21 @@ export const PlatformTabBar = memo(function PlatformTabBar({
           </span>
         </button>
 
-        {/* زر تسجيل الدخول لو مش مسجّل */}
-        {!isLoggedIn && (
+        {/* زر تسجيل الدخول لو مش مسجّل — زر الخروج لو مسجّل */}
+        {isLoggedIn ? (
+          <button
+            type="button"
+            id="tab-bar-logout"
+            aria-label="تسجيل الخروج"
+            onClick={() => void handleLogout()}
+            className="flex flex-col items-center gap-1 flex-1 py-1"
+          >
+            <span className="w-7 h-7 rounded-full bg-rose-500/10 flex items-center justify-center">
+              <LogOut className="w-4 h-4 text-rose-400" />
+            </span>
+            <span className="text-[10px] font-medium text-rose-400">خروج</span>
+          </button>
+        ) : (
           <button
             type="button"
             id="tab-bar-login"

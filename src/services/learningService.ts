@@ -122,18 +122,23 @@ export async function fetchQuizQuestions(courseId: string): Promise<DBQuizQuesti
   return (data ?? []) as DBQuizQuestion[];
 }
 
-/** Fetch completed unit IDs for the current user */
-export async function fetchUserProgress(courseId: string): Promise<Set<string>> {
+/** Fetch detailed progress records for a course (including last_position) */
+export async function fetchUserProgressDetail(courseId: string): Promise<Record<string, any>[]> {
   const session = await safeGetSession();
-  if (!session || !supabase) return new Set();
+  if (!session || !supabase) return [];
   const { data, error } = await supabase
     .from("user_course_progress")
-    .select("unit_id")
+    .select("unit_id, completed_at, last_position")
     .eq("course_id", courseId)
-    .eq("user_id", session.user.id)
-    .not("completed_at", "is", null);
-  if (error) { console.error("[learningService] fetchUserProgress:", error.message); return new Set(); }
-  return new Set((data ?? []).map((r: { unit_id: string }) => r.unit_id));
+    .eq("user_id", session.user.id);
+  if (error) { console.error("[learningService] fetchUserProgressDetail:", error.message); return []; }
+  return data ?? [];
+}
+
+/** Fetch completed unit IDs for the current user */
+export async function fetchUserProgress(courseId: string): Promise<Set<string>> {
+  const data = await fetchUserProgressDetail(courseId);
+  return new Set(data.filter(r => r.completed_at).map(r => r.unit_id));
 }
 
 /** Mark a unit as complete for the current user */
@@ -147,6 +152,21 @@ export async function markUnitComplete(courseId: string, unitId: string): Promis
     completed_at: new Date().toISOString(),
   }, { onConflict: "user_id,unit_id" });
   if (error) console.error("[learningService] markUnitComplete:", error.message);
+}
+
+/** Save the last watched position of a video unit */
+export async function saveVideoProgress(courseId: string, unitId: string, position: number): Promise<void> {
+  const session = await safeGetSession();
+  if (!session || !supabase) return;
+  // We use upsert to create or update the progress record.
+  // Note: last_position should exist in the table schema.
+  const { error } = await supabase.from("user_course_progress").upsert({
+    user_id: session.user.id,
+    course_id: courseId,
+    unit_id: unitId,
+    last_position: position,
+  }, { onConflict: "user_id,unit_id" });
+  if (error) console.error("[learningService] saveVideoProgress:", error.message);
 }
 
 /** Save a quiz session result */

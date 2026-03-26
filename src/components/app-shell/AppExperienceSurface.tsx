@@ -10,8 +10,24 @@ import { AppTransientChromeHost } from "./AppTransientChromeHost";
 import { PlatformHeader } from "../PlatformHeader";
 import { PlatformTabBar } from "../PlatformTabBar";
 import { PlatformBreadcrumb, buildBreadcrumb } from "../PlatformBreadcrumb";
-import { supabase } from "../../services/supabaseClient";
-import type { AppScreen } from "../../navigation/navigationMachine";
+import { signOut } from "../../services/authService";
+import { type AppScreen } from "../../navigation/navigationMachine";
+
+// ── Module-level constants (created once, never re-allocated on render) ──
+
+/** All valid AppScreen values — kept in sync with navigationMachine.ts */
+const KNOWN_SCREENS = new Set<AppScreen>([
+  "landing", "goal", "map", "guided", "mission", "tools",
+  "settings", "enterprise", "guilt-court", "diplomacy",
+  "oracle-dashboard", "armory", "survey", "exit-scripts",
+  "grounding", "stories", "about", "insights", "quizzes",
+  "behavioral-analysis", "resources",
+]);
+
+/** Type guard: narrows `string` → `AppScreen` safely */
+function isAppScreen(value: string): value is AppScreen {
+  return KNOWN_SCREENS.has(value as AppScreen);
+}
 
 const SyncStatusUI = lazy(() => import("../SyncStatusUI").then((m) => ({ default: m.SyncStatusUI })));
 const OnboardingWelcomeBubble = lazy(() =>
@@ -85,20 +101,18 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
 
   // ── Header navigation handlers ──
   const handleHeaderNavigate = useCallback((id: string) => {
-    // Map header nav IDs to app screens / actions
-    if (id === "home" || id === "landing") {
-      mainContentProps.onNavigate?.("landing" as AppScreen);
-    } else if (id === "tools") {
-      mainContentProps.onNavigate?.("tools" as AppScreen);
-    } else if (id === "settings") {
-      mainContentProps.onNavigate?.("settings" as AppScreen);
-    } else if (id === "stories") {
-      mainContentProps.onNavigate?.("stories" as AppScreen);
-    } else if (id === "about") {
-      mainContentProps.onNavigate?.("about" as AppScreen);
-    } else if (id === "profile") {
+    if (id === "profile") {
       mainContentProps.onOpenProfile?.();
+      return;
     }
+    if (!isAppScreen(id)) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(`[AppExperienceSurface] Unknown nav target: "${id}" — ignoring.`);
+      }
+      return;
+    }
+    // id is now narrowed to AppScreen — no unsafe cast needed
+    mainContentProps.onNavigate?.(id);
   }, [mainContentProps]);
 
   const handleHeaderLogin = useCallback(() => {
@@ -106,13 +120,8 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   }, [mainContentProps]);
 
   const handleLogout = useCallback(async () => {
-    try {
-      await supabase?.auth.signOut();
-    } catch {
-      // fail silently
-    }
-    // #4 — Redirect to landing after logout
-    mainContentProps.onNavigate?.("landing" as AppScreen);
+    await signOut(); // centralised — errors swallowed inside signOut()
+    mainContentProps.onNavigate?.("landing");
   }, [mainContentProps]);
 
   return (

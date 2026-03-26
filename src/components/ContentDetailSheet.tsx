@@ -9,6 +9,7 @@ import {
   BookOpen, Dumbbell, Timer, ChevronRight,
   Flame,
 } from "lucide-react";
+import { VideoPlayer } from "./VideoPlayer";
 
 /* ══════════════════════════════════════════
    Types
@@ -338,39 +339,16 @@ function VideoCourseLayout({ units, color, description }: { units: CourseUnit[];
 
       {/* Currently playing */}
       {activeUnit && (() => {
-        const unit = units.find(u => u.id === activeUnit);
+        const unit = units.find((u) => u.id === activeUnit);
         if (!unit) return null;
         return (
-          <div style={{
-            borderRadius: 18, overflow: "hidden",
-            background: `${color}10`, border: `1px solid ${color}25`,
-          }}>
-            <div style={{
-              aspectRatio: "16/9",
-              background: `linear-gradient(135deg, ${color}20, rgba(139,92,246,0.15))`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              position: "relative",
-            }}>
-              <div style={{
-                width: 56, height: 56, borderRadius: "50%",
-                background: "rgba(255,255,255,0.15)", border: "2px solid rgba(255,255,255,0.3)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer",
-              }}>
-                <Play size={22} color="#fff" fill="#fff" style={{ marginRight: -3 }} />
-              </div>
-              <span style={{
-                position: "absolute", top: 10, right: 10, fontSize: 8, fontWeight: 900,
-                color: color, background: `${color}20`, padding: "3px 8px", borderRadius: 6,
-              }}>جارٍ التشغيل</span>
-            </div>
-            <div style={{ padding: "10px 14px" }}>
-              <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: "#e2e8f0" }}>{unit.title}</p>
-              <p style={{ margin: "2px 0 0", fontSize: 9, color: "#475569", display: "flex", alignItems: "center", gap: 3 }}>
-                <Clock size={8} /> {unit.duration}
-              </p>
-            </div>
-          </div>
+          <VideoPlayer
+            src={unit.videoUrl || ""}
+            title={unit.title}
+            duration={unit.duration}
+            unitId={unit.id}
+            chapters={[]}
+          />
         );
       })()}
 

@@ -80,18 +80,26 @@ export const PlatformBreadcrumb = memo(function PlatformBreadcrumb({
 // ── Helper: توليد مسار Breadcrumb من اسم الشاشة ──
 export function buildBreadcrumb(screen: string): BreadcrumbItem[] {
   const screenLabels: Record<string, string> = {
-    landing:          "الرئيسية",
-    tools:            "الأدوات",
-    stories:          "قصص النجاح",
-    about:            "لماذا الرحلة؟",
-    settings:         "الإعدادات",
-    guided:           "الرحلة الموجّهة",
-    mission:          "المهمة",
-    "oracle-dashboard": "لوحة الأوراكل",
-    "guilt-court":    "محكمة الذنب",
-    diplomacy:        "الدبلوماسية",
-    armory:           "المستودع",
-    enterprise:       "المؤسسة",
+    landing:              "الرئيسية",
+    goal:                 "اختيار الهدف",
+    map:                  "خريطة الرحلة",
+    tools:                "الأدوات",
+    stories:              "قصص النجاح",
+    about:                "لماذا الرحلة؟",
+    settings:             "الإعدادات",
+    guided:               "الرحلة الموجّهة",
+    mission:              "المهمة",
+    insights:             "تحليل العلاقات",
+    quizzes:              "اختبارات الشخصية",
+    "behavioral-analysis": "تحليل الأنماط",
+    resources:            "مركز الموارد",
+    survey:               "الاستبيان",
+    grounding:            "التأريض",
+    "oracle-dashboard":   "لوحة الأوراكل",
+    "guilt-court":        "محكمة الذنب",
+    diplomacy:            "الدبلوماسية",
+    armory:               "المستودع",
+    enterprise:           "المؤسسة",
   };
 
   if (!screen || screen === "landing") {

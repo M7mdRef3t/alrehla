@@ -15,24 +15,26 @@ import {
   Moon,
   BarChart2,
   Sparkles,
-  Brain
+  Brain,
+  Home,
+  ArrowLeftCircle,
 } from "lucide-react";
 import { AlrehlaIcon } from "./logo/AlrehlaIcon";
 import { useAuthState } from "../state/authState";
 import { useAchievementState } from "../state/achievementState";
 import { useThemeState } from "../state/themeState";
-import { supabase } from "../services/supabaseClient";
+import { signOut } from "../services/authService";
 import { NotificationsPanel } from "./NotificationsPanel";
 
 const NAV_LINKS = [
-  { id: "home", label: "الرئيسية", icon: Map },
+  { id: "home", label: "الرئيسية", icon: Home },
   { id: "tools", label: "الأدوات", icon: Wrench },
   { id: "insights", label: "تحليلات", icon: BarChart2 },
   { id: "stories", label: "قصص", icon: BookOpen },
-  { id: "about", label: "لماذا الرحلة؟", icon: Info }
+  { id: "about", label: "لماذا الرحلة؟", icon: Info },
 ] as const;
 
-type NavLinkId = typeof NAV_LINKS[number]["id"];
+type NavLinkId = (typeof NAV_LINKS)[number]["id"];
 
 const SCREEN_MAP: Record<string, string> = {
   home: "landing",
@@ -45,10 +47,22 @@ const SCREEN_MAP: Record<string, string> = {
   "behavioral-analysis": "behavioral-analysis",
   resources: "resources",
   profile: "landing",
-  settings: "settings"
+  settings: "settings",
 };
 
 const MARKETING_NAV_IDS = new Set<NavLinkId>(["home", "stories", "about"]);
+
+const SCREEN_LABELS: Record<string, string> = {
+  tools: "الأدوات",
+  insights: "تحليل العلاقات",
+  stories: "قصص",
+  about: "لماذا الرحلة؟",
+  quizzes: "اختبارات الشخصية",
+  "behavioral-analysis": "تحليل الأنماط",
+  resources: "مركز الموارد",
+  settings: "الإعدادات",
+  profile: "الملف الشخصي",
+};
 
 export interface PlatformHeaderProps {
   activeScreen?: string;
@@ -63,11 +77,12 @@ function getActiveNavId(screen?: string): string {
   return screen;
 }
 
+// ─── Desktop Header ──────────────────────────────────────────────────────────
 export const PlatformHeader = memo(function PlatformHeader({
   activeScreen,
   onLogin,
   onNavigate,
-  onLogout
+  onLogout,
 }: PlatformHeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -84,7 +99,8 @@ export const PlatformHeader = memo(function PlatformHeader({
   const status = useAuthState((s) => s.status);
   const isLoggedIn = Boolean(user);
   const avatarInitial = (firstName?.[0] ?? displayName?.[0] ?? "أ").toUpperCase();
-  const avatarUrl = (user as { user_metadata?: { avatar_url?: string } } | null)?.user_metadata?.avatar_url ?? null;
+  const avatarUrl =
+    (user as { user_metadata?: { avatar_url?: string } } | null)?.user_metadata?.avatar_url ?? null;
 
   const lastNewAchievementId = useAchievementState((s) => s.lastNewAchievementId);
   const hasUnread = isLoggedIn && Boolean(lastNewAchievementId);
@@ -92,11 +108,15 @@ export const PlatformHeader = memo(function PlatformHeader({
   const resolvedTheme = useThemeState((s) => s.resolvedTheme);
   const setTheme = useThemeState((s) => s.setTheme);
   const isDark = resolvedTheme === "dark";
+
   const activeNavId = getActiveNavId(activeScreen);
   const isLandingChrome = activeNavId === "home";
   const visibleNavLinks = isLandingChrome
     ? NAV_LINKS.filter(({ id }) => MARKETING_NAV_IDS.has(id))
     : NAV_LINKS;
+
+  // Screen label shown in header while scrolled (non-landing)
+  const screenLabel = !isLandingChrome ? (SCREEN_LABELS[activeNavId] ?? null) : null;
 
   const handleThemeToggle = useCallback(() => {
     setTheme(isDark ? "light" : "dark");
@@ -111,13 +131,23 @@ export const PlatformHeader = memo(function PlatformHeader({
     const onScroll = () => {
       const y = window.scrollY;
       setScrolled(y > 20);
-      setHidden(y > lastScrollY.current && y > 120);
+      // Never hide the header on the landing page
+      setHidden(!isLandingChrome && y > lastScrollY.current && y > 120);
       lastScrollY.current = y;
     };
-
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [isLandingChrome]);
+
+  // ── Reset on screen change: show header, scroll to top ──
+  useEffect(() => {
+    // Always show header when navigating to a new screen
+    setHidden(false);
+    // Scroll page to top on screen transition (SPA doesn't do this automatically)
+    window.scrollTo({ top: 0, behavior: "instant" });
+    lastScrollY.current = 0;
+    setScrolled(false);
+  }, [activeScreen]);
 
   useEffect(() => {
     const handler = (event: MouseEvent) => {
@@ -125,24 +155,22 @@ export const PlatformHeader = memo(function PlatformHeader({
         setUserMenuOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleNav = useCallback((id: NavLinkId | string) => {
-    const mappedScreen = SCREEN_MAP[id] ?? id;
-    onNavigate?.(mappedScreen);
-    setUserMenuOpen(false);
-  }, [onNavigate]);
+  const handleNav = useCallback(
+    (id: NavLinkId | string) => {
+      const mappedScreen = SCREEN_MAP[id] ?? id;
+      onNavigate?.(mappedScreen);
+      setUserMenuOpen(false);
+    },
+    [onNavigate]
+  );
 
   const handleLogout = useCallback(async () => {
     setUserMenuOpen(false);
-    try {
-      await supabase?.auth.signOut();
-    } catch {
-      // ignore signout failures in header UI
-    }
+    await signOut(); // centralised — errors swallowed inside signOut()
     onLogout?.();
     onNavigate?.("landing");
   }, [onLogout, onNavigate]);
@@ -151,24 +179,38 @@ export const PlatformHeader = memo(function PlatformHeader({
     setNotifOpen((previous) => !previous);
   }, []);
 
+  // ── Landing CTA — FIX: if logged in → enter app, not show login ──
+  const handleLandingCta = useCallback(() => {
+    if (isLoggedIn) {
+      onNavigate?.("tools");
+    } else {
+      onLogin?.();
+    }
+  }, [isLoggedIn, onLogin, onNavigate]);
+
   return (
     <motion.header
       role="banner"
       dir="rtl"
       aria-label="الشريط العلوي"
-      initial={{ y: "-100%", opacity: 0 }}
-      animate={{ y: hidden ? "-100%" : "0%", opacity: entryDone ? 1 : 0 }}
+      // Only play the slide-down entrance on first mount; after that,
+      // skip the initial animation so it can never re-trigger.
+      initial={entryDone ? false : { y: "-100%", opacity: 0 }}
+      animate={{ y: hidden ? "-100%" : "0%", opacity: 1 }}
       transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
       className={`
         fixed top-0 right-0 left-0 z-50
         hidden md:flex items-center justify-between
         px-6 lg:px-10 h-16
         transition-[background,border-color,box-shadow] duration-300
-        ${scrolled
-          ? "backdrop-blur-xl bg-slate-900/80 border-b border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
-          : "bg-transparent border-b border-transparent"}
+        ${
+          scrolled
+            ? "backdrop-blur-xl bg-slate-900/80 border-b border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
+            : "backdrop-blur-md bg-slate-900/40 border-b border-transparent"
+        }
       `}
     >
+      {/* Logo */}
       <button
         type="button"
         id="header-logo"
@@ -182,7 +224,27 @@ export const PlatformHeader = memo(function PlatformHeader({
         </span>
       </button>
 
-      <nav aria-label="التنقل الرئيسي" className={`flex items-center ${isLandingChrome ? "gap-2" : "gap-1"}`}>
+      {/* Screen label — shows when scrolled & not on landing */}
+      <AnimatePresence>
+        {scrolled && screenLabel && (
+          <motion.span
+            key="screen-label"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2 }}
+            className="absolute left-1/2 -translate-x-1/2 text-sm font-semibold text-white/80 pointer-events-none"
+          >
+            {screenLabel}
+          </motion.span>
+        )}
+      </AnimatePresence>
+
+      {/* Nav Links */}
+      <nav
+        aria-label="التنقل الرئيسي"
+        className={`flex items-center ${isLandingChrome ? "gap-2" : "gap-1"}`}
+      >
         {visibleNavLinks.map(({ id, label }) => {
           const isActive = activeNavId === id;
           return (
@@ -210,7 +272,9 @@ export const PlatformHeader = memo(function PlatformHeader({
         })}
       </nav>
 
+      {/* Right Controls */}
       <div className="flex items-center gap-3">
+        {/* Theme Toggle */}
         <button
           type="button"
           id="header-theme-toggle"
@@ -243,6 +307,7 @@ export const PlatformHeader = memo(function PlatformHeader({
           </AnimatePresence>
         </button>
 
+        {/* Bell — only inside app */}
         {!isLandingChrome && (
           <div className="relative">
             <AnimatePresence>
@@ -258,7 +323,9 @@ export const PlatformHeader = memo(function PlatformHeader({
                   aria-label={hasUnread ? "لديك إشعارات جديدة" : "الإشعارات"}
                   aria-expanded={notifOpen}
                   onClick={handleBellClick}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all relative ${notifOpen ? "bg-white/10 text-white" : ""}`}
+                  className={`w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all relative ${
+                    notifOpen ? "bg-white/10 text-white" : ""
+                  }`}
                 >
                   <Bell className={`w-5 h-5 transition-colors ${hasUnread ? "text-teal-400" : ""}`} />
                   <AnimatePresence>
@@ -286,19 +353,31 @@ export const PlatformHeader = memo(function PlatformHeader({
           </div>
         )}
 
+        {/* User Area */}
         {status === "loading" ? (
           <div className="w-9 h-9 rounded-full bg-white/10 animate-pulse" />
         ) : isLandingChrome ? (
+          /* ── FIXED: landing CTA — shows correct label & action based on login state ── */
           <button
             type="button"
-            id="header-login"
-            onClick={onLogin}
+            id="header-landing-cta"
+            onClick={handleLandingCta}
             className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-teal-500 hover:bg-teal-400 text-slate-900 shadow-[0_0_16px_rgba(45,212,191,0.3)] hover:shadow-[0_0_24px_rgba(45,212,191,0.5)] transition-all active:scale-95"
           >
-            <LogIn className="w-4 h-4" />
-            {isLoggedIn ? "ادخل المنصة" : "ابدأ الآن"}
+            {isLoggedIn ? (
+              <>
+                <ArrowLeftCircle className="w-4 h-4" />
+                ادخل المنصة
+              </>
+            ) : (
+              <>
+                <LogIn className="w-4 h-4" />
+                ابدأ الآن
+              </>
+            )}
           </button>
         ) : isLoggedIn ? (
+          /* ── User Dropdown Menu ── */
           <div ref={userMenuRef} className="relative" id="header-user-menu">
             <button
               type="button"
@@ -319,7 +398,11 @@ export const PlatformHeader = memo(function PlatformHeader({
                 </span>
               )}
               <span className="hidden lg:inline max-w-[8rem] truncate">{firstName ?? "حسابي"}</span>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${userMenuOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                  userMenuOpen ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
             <AnimatePresence>
@@ -333,64 +416,32 @@ export const PlatformHeader = memo(function PlatformHeader({
                   role="menu"
                 >
                   <div className="px-4 py-3 border-b border-white/[0.08]">
-                    <p className="text-sm font-semibold text-white truncate">{displayName ?? firstName ?? "المستخدم"}</p>
+                    <p className="text-sm font-semibold text-white truncate">
+                      {displayName ?? firstName ?? "المستخدم"}
+                    </p>
                     <p className="text-xs text-slate-400 truncate">{user?.email ?? ""}</p>
                   </div>
                   <div className="p-2 flex flex-col gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleNav("profile")}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors text-right w-full"
-                      role="menuitem"
-                    >
-                      <User className="w-4 h-4 text-slate-400" />
-                      الملف الشخصي
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleNav("insights")}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors text-right w-full"
-                      role="menuitem"
-                    >
-                      <BarChart2 className="w-4 h-4 text-slate-400" />
-                      تحليل العلاقات
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleNav("quizzes")}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors text-right w-full"
-                      role="menuitem"
-                    >
-                      <Sparkles className="w-4 h-4 text-slate-400" />
-                      اختبارات الشخصية
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleNav("behavioral-analysis")}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors text-right w-full"
-                      role="menuitem"
-                    >
-                      <Brain className="w-4 h-4 text-slate-400" />
-                      تحليل الأنماط
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleNav("resources")}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors text-right w-full"
-                      role="menuitem"
-                    >
-                      <BookOpen className="w-4 h-4 text-slate-400" />
-                      مركز الموارد
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleNav("settings")}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors text-right w-full"
-                      role="menuitem"
-                    >
-                      <Settings className="w-4 h-4 text-slate-400" />
-                      الإعدادات
-                    </button>
+                    {[
+                      { id: "profile", label: "الملف الشخصي", Icon: User },
+                      { id: "insights", label: "تحليل العلاقات", Icon: BarChart2 },
+                      { id: "quizzes", label: "اختبارات الشخصية", Icon: Sparkles },
+                      { id: "behavioral-analysis", label: "تحليل الأنماط", Icon: Brain },
+                      { id: "resources", label: "مركز الموارد", Icon: BookOpen },
+                      { id: "settings", label: "الإعدادات", Icon: Settings },
+                    ].map(({ id, label, Icon }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => handleNav(id)}
+                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors text-right w-full"
+                        role="menuitem"
+                      >
+                        <Icon className="w-4 h-4 text-slate-400" />
+                        {label}
+                      </button>
+                    ))}
+
                     <div className="border-t border-white/[0.08] mt-1 pt-1">
                       <button
                         type="button"
@@ -420,5 +471,76 @@ export const PlatformHeader = memo(function PlatformHeader({
         )}
       </div>
     </motion.header>
+  );
+});
+
+// ─── Mobile Bottom Navigation Bar ────────────────────────────────────────────
+const MOBILE_NAV = [
+  { id: "home", label: "الرئيسية", icon: Home },
+  { id: "tools", label: "الأدوات", icon: Wrench },
+  { id: "insights", label: "تحليلات", icon: BarChart2 },
+  { id: "stories", label: "قصص", icon: BookOpen },
+  { id: "settings", label: "الإعدادات", icon: Settings },
+] as const;
+
+export const MobileNavBar = memo(function MobileNavBar({
+  activeScreen,
+  onNavigate,
+}: Pick<PlatformHeaderProps, "activeScreen" | "onNavigate">) {
+  const activeNavId = getActiveNavId(activeScreen);
+
+  const handleNav = useCallback(
+    (id: string) => {
+      const mappedScreen = SCREEN_MAP[id] ?? id;
+      onNavigate?.(mappedScreen);
+    },
+    [onNavigate]
+  );
+
+  return (
+    <nav
+      dir="rtl"
+      aria-label="التنقل السفلي"
+      className="fixed bottom-0 right-0 left-0 z-50 md:hidden
+        flex items-stretch justify-around
+        bg-slate-900/95 backdrop-blur-xl
+        border-t border-white/10
+        safe-area-pb
+        shadow-[0_-4px_24px_rgba(0,0,0,0.4)]"
+    >
+      {MOBILE_NAV.map(({ id, label, icon: Icon }) => {
+        const isActive = activeNavId === id;
+        return (
+          <button
+            key={id}
+            type="button"
+            id={`mobile-nav-${id}`}
+            onClick={() => handleNav(id)}
+            aria-current={isActive ? "page" : undefined}
+            className="flex-1 flex flex-col items-center justify-center gap-1 py-3 relative"
+          >
+            {isActive && (
+              <motion.span
+                layoutId="mobile-nav-indicator"
+                className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 rounded-full bg-teal-400"
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              />
+            )}
+            <Icon
+              className={`w-5 h-5 transition-colors ${
+                isActive ? "text-teal-400" : "text-slate-500"
+              }`}
+            />
+            <span
+              className={`text-[10px] font-medium transition-colors ${
+                isActive ? "text-teal-400" : "text-slate-500"
+              }`}
+            >
+              {label}
+            </span>
+          </button>
+        );
+      })}
+    </nav>
   );
 });

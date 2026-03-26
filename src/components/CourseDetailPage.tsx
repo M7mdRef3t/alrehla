@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import {
   fetchCourse, fetchModules, fetchUnits, fetchUserProgress, markUnitComplete,
-  fetchUserProgressStats, hasActiveSession,
+  fetchUserProgressStats, hasActiveSession, fetchUserProgressDetail, saveVideoProgress,
   type DBCourse, type DBModule, type DBUnit, type UserProgressStats,
 } from "../services/learningService";
 
@@ -25,6 +25,8 @@ export interface CourseUnit {
   id: string;
   title: string;
   duration: string;
+  videoUrl?: string;
+  chapters?: any[]; // For VideoPlayer
   isCompleted?: boolean;
   isLocked?: boolean;
   isRecommended?: boolean; // Behavioral badge
@@ -235,6 +237,8 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
           id: u.id,
           title: u.title,
           duration: u.duration,
+          videoUrl: u.video_url || undefined,
+          chapters: (u.metadata?.chapters as any[]) || undefined,
           isCompleted: dbProgress.has(u.id),
           isLocked: u.is_locked,
         })),
@@ -264,6 +268,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
   const [completedUnits, setCompletedUnits] = useState<Set<string>>(() =>
     new Set(getLS(`${courseId}_completed`, []) as string[])
   );
+  const [detailedProgress, setDetailedProgress] = useState<Record<string, any>>({});
   const [offlineUnits, setOfflineUnits] = useState<Set<string>>(() =>
     new Set(getLS(`${courseId}_offline`, []) as string[])
   );
@@ -271,17 +276,25 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
   const [achievement, setAchievement] = useState<string | null>(null);
   const [quizOpen, setQuizOpen] = useState(false);
 
-  // Sync completed units from DB into local state after load
+  // Sync progress from DB
   useEffect(() => {
-    if (!dbLoading && dbProgress.size > 0) {
-      setCompletedUnits(prev => new Set([...prev, ...dbProgress]));
-    }
+    if (!resolvedCourseId) return;
+    fetchUserProgressDetail(resolvedCourseId).then(data => {
+      const detail: Record<string, any> = {};
+      const completed = new Set<string>(completedUnits);
+      data.forEach(r => {
+        detail[r.unit_id] = r;
+        if (r.completed_at) completed.add(r.unit_id);
+      });
+      setDetailedProgress(detail);
+      setCompletedUnits(completed);
+    }).catch(console.error);
+
     if (!dbLoading && course.modules.length > 0 && !expandedModule) {
       setExpandedModule(course.modules[0]?.id ?? null);
       setActiveUnitId(course.modules[0]?.units[0]?.id ?? "");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dbLoading]);
+  }, [resolvedCourseId, dbLoading]);
 
   // Derived
   const allUnits = course.modules.flatMap(m => m.units);
@@ -303,9 +316,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
       const next = new Set(prev);
       next.add(uid);
       setLS(`${courseId}_completed`, [...next]);
-      // Persist to Supabase (best-effort)
       markUnitComplete(resolvedCourseId, uid).catch(console.error);
-      // Check if whole module complete
       const parentModule = course.modules.find(m => m.units.some(u => u.id === uid));
       if (parentModule && parentModule.units.every(u => next.has(u.id) || u.isCompleted)) {
         setAchievement(`أتممت ${parentModule.title} بنجاح! 🧠`);
@@ -313,6 +324,26 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
       return next;
     });
   }, [courseId, resolvedCourseId, course.modules]);
+
+  const handleVideoEnded = useCallback((uid: string) => {
+    markComplete(uid);
+    const currentIndex = allUnits.findIndex(u => u.id === uid);
+    if (currentIndex !== -1 && currentIndex < allUnits.length - 1) {
+      const nextUnit = allUnits[currentIndex + 1];
+      if (!nextUnit.isLocked) {
+        setAchievement("جاري الانتقال للدرس التالي... 🚀");
+        setTimeout(() => setActiveUnitId(nextUnit.id), 2000);
+      }
+    }
+  }, [allUnits, markComplete]);
+
+  const lastSyncTime = useRef(0);
+  const handleTimeUpdate = useCallback((time: number) => {
+    if (Math.abs(time - lastSyncTime.current) > 15) {
+      lastSyncTime.current = time;
+      saveVideoProgress(resolvedCourseId, activeUnitId, time).catch(console.error);
+    }
+  }, [resolvedCourseId, activeUnitId]);
 
   const toggleOffline = useCallback((uid: string) => {
     setOfflineUnits(prev => {
@@ -715,9 +746,13 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
             )}
             <VideoPlayer
               unitId={activeUnit.id}
+              src={activeUnit.videoUrl}
+              chapters={activeUnit.chapters}
               title={activeUnit.title}
               color={color}
-              onEnded={() => markComplete(activeUnit.id)}
+              savedTime={detailedProgress[activeUnit.id]?.last_position}
+              onEnded={() => handleVideoEnded(activeUnit.id)}
+              onTimeUpdate={handleTimeUpdate}
             />
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
               <div style={{ flex: 1 }}>
