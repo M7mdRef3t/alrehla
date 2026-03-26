@@ -345,7 +345,6 @@ function VideoCourseLayout({ units, color, description }: { units: CourseUnit[];
           <VideoPlayer
             src={unit.videoUrl || ""}
             title={unit.title}
-            duration={unit.duration}
             unitId={unit.id}
             chapters={[]}
           />
