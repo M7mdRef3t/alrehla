@@ -283,7 +283,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onConti
           </div>
 
           <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#7C3AED" }}>
-            خطوة ٢ من ٤
+            خطوة ٢ من ٥
           </p>
           <h1
             id="goal-title"

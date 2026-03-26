@@ -132,6 +132,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
   onOpenAchievements,
   onNavigateToSettings,
 }) => {
+  const showReferralActions = false;
   const nodes = useMapState((s) => s.nodes);
   const cardRef = useRef<HTMLDivElement>(null);
   const mouseXRaw = useMotionValue(0);
@@ -354,7 +355,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
           </div>
         </motion.button>
         {/* Referral and Share maps hidden for Lost Youth to reduce clutter */}
-        {false && (
+        {showReferralActions && (
           <>
             <motion.button
               onClick={() => setShowReferral(true)}
@@ -553,6 +554,5 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
     </motion.div>
   );
 };
-
 
 

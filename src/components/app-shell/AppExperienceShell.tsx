@@ -75,7 +75,6 @@ export function AppExperienceShell() {
     setShowSystemOverclockPanel,
     agentModule,
     setAgentModule,
-    lockedFeature,
     setLockedFeature,
     ownerInstallRequestNonce,
     setOwnerInstallRequestNonce,
@@ -88,7 +87,6 @@ export function AppExperienceShell() {
     consumeLandingIntent,
     storedCategory,
     lastGoalById,
-    lastNewAchievementId,
     theme,
     setTheme,
     snoozedUntil,
@@ -191,18 +189,15 @@ export function AppExperienceShell() {
     pulseMode,
     challengeTarget,
     challengeLabel,
-    canSkipCocoonBreathing,
     showStartup,
     handleStartupComplete,
     startRecovery,
     handleOnboardingComplete,
-    postAuthIntent,
     setStartRecoveryIntent,
     setLoginIntent,
     welcome,
     clearWelcome,
     clearPostAuthState,
-    consciousnessInsight,
     isFeaturePreviewSession,
     previewedFeature,
     forcePulsePreviewOpen,
@@ -260,15 +255,7 @@ export function AppExperienceShell() {
     openCocoonModal,
     openRegularPulseCheck,
     isLowPulseCocoonSuppressed,
-    isPulseOverlayOpen,
-    handlePulseOverlaySubmit,
-    handlePulseOverlayClose,
-    handleCocoonStart,
-    handleCocoonSkip,
-    handleCocoonClose,
-    handleNoiseSessionComplete,
-    handleBreathingOverlayClose,
-    handleAuthModalNotNow
+    openRegularPulseCheck
   } = useAppPulseSanctuaryFlow({
     goalId,
     isLandingScreen,
@@ -323,10 +310,6 @@ export function AppExperienceShell() {
     setShowBreathing
   });
   const {
-    activeNudge,
-    activeMirrorInsight,
-    handleNudgeToastClose,
-    handleMirrorResolve,
     presentMirrorInsight
   } = useAppMindSignals({
     storedGoalId,

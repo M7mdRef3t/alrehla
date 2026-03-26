@@ -5,13 +5,15 @@
 
 export interface InngestEvent {
   name: string;
-  data: any;
+  data: unknown;
   user?: string;
   timestamp?: number;
 }
 
+type InngestHandler = (data: unknown) => void;
+
 class MockInngest {
-  private listeners: Map<string, Function[]> = new Map();
+  private listeners: Map<string, InngestHandler[]> = new Map();
 
   async send(event: InngestEvent) {
     console.log(`[Mock Inngest] Sending event: ${event.name}`, event.data);
@@ -25,14 +27,14 @@ class MockInngest {
   }
 
   // Helper for mock "functions"
-  on(eventName: string, handler: Function) {
+  on(eventName: string, handler: InngestHandler) {
     if (!this.listeners.has(eventName)) {
       this.listeners.set(eventName, []);
     }
     this.listeners.get(eventName)?.push(handler);
   }
 
-  private trigger(eventName: string, data: any) {
+  private trigger(eventName: string, data: unknown) {
     console.log(`[Mock Inngest] Background job triggered for: ${eventName}`);
     const handlers = this.listeners.get(eventName) || [];
     handlers.forEach(h => h(data));

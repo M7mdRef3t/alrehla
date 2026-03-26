@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
   RotateCcw, SkipBack, SkipForward, Settings, FileText,
-  PictureInPicture, Bookmark, ChevronDown,
+  PictureInPicture, Bookmark, ChevronDown, AlertCircle,
 } from "lucide-react";
 
 /* ═══════ Types ═══════ */
@@ -26,6 +26,7 @@ interface Props {
   chapters?: Chapter[];
   color?: string;
   savedTime?: number;
+  nextUnitTitle?: string;
   onEnded?: () => void;
   onProgress?: (pct: number) => void;
   onTimeUpdate?: (time: number) => void;
@@ -54,8 +55,8 @@ export function VideoPlayer({
     { title: "التطبيق العملي", time: 540 },
     { title: "تمارين ختامية", time: 900 },
   ],
-  color = "#06B6D4",
   savedTime = 0,
+  nextUnitTitle = "",
   onEnded,
   onProgress,
   onTimeUpdate: parentOnTimeUpdate,
@@ -75,6 +76,7 @@ export function VideoPlayer({
   const [controlsVisible, setControlsVisible] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [error, setError] = useState(false);
   const [notes, setNotes] = useState<TimestampNote[]>(() => {
     try { return JSON.parse(localStorage.getItem(LS(`notes_${unitId}`)) || "[]"); } catch { return []; }
   });
@@ -87,7 +89,6 @@ export function VideoPlayer({
   // Restore saved position
   useEffect(() => {
     const local = localStorage.getItem(LS(`pos_${unitId}`));
-    // Priority: Local Storage (current device) > Cloud Saved Time (other devices)
     const initial = local ? parseFloat(local) : (savedTime || 0);
     if (initial > 0 && videoRef.current) {
       videoRef.current.currentTime = initial;
@@ -101,32 +102,49 @@ export function VideoPlayer({
     setCurrentTime(time);
     onProgress?.(duration ? (time / duration) * 100 : 0);
     parentOnTimeUpdate?.(time);
-    try { localStorage.setItem(LS(`pos_${unitId}`), String(time)); } catch {}
+    try { localStorage.setItem(LS(`pos_${unitId}`), String(time)); } catch { return; }
     if (v.buffered.length > 0) setBuffered(v.buffered.end(v.buffered.length - 1));
   }, [unitId, duration, onProgress, parentOnTimeUpdate]);
 
   const onLoadedMetadata = () => {
-    if (videoRef.current) setDuration(videoRef.current.duration);
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+      setError(false);
+    }
   };
 
   const onVideoEnded = () => {
     setPlaying(false);
-    try { localStorage.removeItem(LS(`pos_${unitId}`)); } catch {}
+    try { localStorage.removeItem(LS(`pos_${unitId}`)); } catch { return; }
     onEnded?.();
   };
 
-  // Controls visibility
+  // Countdown logic
+  const remaining = duration - currentTime;
+  const showCountdown = playing && remaining > 0 && remaining < 10 && nextUnitTitle;
+
+  // Video error handler
+  const handleVideoError = () => {
+    setError(true);
+    setPlaying(false);
+  };
+
+  /* ═══════ Rest of Handlers ═══════ */
   const showControls = () => {
     setControlsVisible(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
     if (playing) hideTimer.current = setTimeout(() => setControlsVisible(false), 3000);
   };
 
-  // Playback
   const togglePlay = () => {
     const v = videoRef.current; if (!v) return;
     if (playing) { v.pause(); setPlaying(false); }
-    else { v.play().catch(() => {}); setPlaying(true); }
+    else {
+      v.play().catch(() => {
+        setPlaying(false);
+      });
+      setPlaying(true);
+    }
   };
 
   const seek = (t: number) => {
@@ -170,7 +188,9 @@ export function VideoPlayer({
     try {
       if (document.pictureInPictureElement) { await document.exitPictureInPicture(); setIsPiP(false); }
       else { await v.requestPictureInPicture(); setIsPiP(true); }
-    } catch {}
+    } catch {
+      setIsPiP(false);
+    }
   };
 
   // Seek bar interaction
@@ -198,13 +218,13 @@ export function VideoPlayer({
     const updated = [...notes, n].sort((a, b) => a.time - b.time);
     setNotes(updated);
     setNoteInput("");
-    try { localStorage.setItem(LS(`notes_${unitId}`), JSON.stringify(updated)); } catch {}
+    try { localStorage.setItem(LS(`notes_${unitId}`), JSON.stringify(updated)); } catch { return; }
   };
 
   const deleteNote = (id: string) => {
     const updated = notes.filter(n => n.id !== id);
     setNotes(updated);
-    try { localStorage.setItem(LS(`notes_${unitId}`), JSON.stringify(updated)); } catch {}
+    try { localStorage.setItem(LS(`notes_${unitId}`), JSON.stringify(updated)); } catch { return; }
   };
 
   const progress = duration ? (currentTime / duration) * 100 : 0;
@@ -231,8 +251,55 @@ export function VideoPlayer({
           onTimeUpdate={onTimeUpdate}
           onLoadedMetadata={onLoadedMetadata}
           onEnded={onVideoEnded}
-          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+          onError={handleVideoError}
+          style={{ width: "100%", height: "100%", objectFit: "contain", opacity: error ? 0 : 1 }}
         />
+
+        {/* Interaction Layers (Double-click to skip) */}
+        {!error && src && (
+          <div style={{ position: "absolute", inset: 0, display: "flex", zIndex: 10 }}>
+            {/* Left: Skip back */}
+            <div onDoubleClick={(e) => { e.stopPropagation(); skip(-10); }} style={{ flex: 1, cursor: "pointer" }} />
+            {/* Center: Toggle play */}
+            <div onClick={(e) => { e.stopPropagation(); togglePlay(); }} style={{ flex: 2, cursor: "pointer" }} />
+            {/* Right: Skip forward */}
+            <div onDoubleClick={(e) => { e.stopPropagation(); skip(10); }} style={{ flex: 1, cursor: "pointer" }} />
+          </div>
+        )}
+
+        {/* Error Fallback */}
+        <AnimatePresence>
+          {error && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              style={{ position: "absolute", inset: 0, ...glass("#0a0a0c99"), display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 20 }}>
+              <div style={{ width: 60, height: 60, borderRadius: "50%", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                <AlertCircle size={28} color="#ef4444" />
+              </div>
+              <h3 style={{ fontSize: 16, fontWeight: 900, color: "#fff", margin: "0 0 8px" }}>معلش.. فيه مشكلة في الفيديو</h3>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginBottom: 20 }}>بنحاول نصلح الموضوع دلوقتي.. ممكن تجرب تاني كمان شوية</p>
+              <button onClick={() => window.location.reload()} style={{ padding: "10px 24px", borderRadius: 12, background: color, color: "#000", fontWeight: 900, border: "none", cursor: "pointer" }}>جرب تاني</button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Countdown Overlay */}
+        <AnimatePresence>
+          {showCountdown && (
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+              style={{ position: "absolute", bottom: 80, left: 20, ...glass("rgba(0,0,0,0.8)"), borderRadius: 16, padding: 12, display: "flex", alignItems: "center", gap: 12, zIndex: 50, border: `1px solid ${color}40` }}>
+              <div style={{ position: "relative", width: 40, height: 40, borderRadius: "50%", border: `2px solid ${color}20`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: 13, fontWeight: 900, color }}>{Math.ceil(remaining)}</span>
+                <motion.svg style={{ position: "absolute", inset: -2, transform: "rotate(-90deg)" }} viewBox="0 0 44 44">
+                  <motion.circle cx="22" cy="22" r="20" stroke={color} strokeWidth="2" fill="none" strokeDasharray="126" animate={{ strokeDashoffset: 126 }} transition={{ duration: remaining, ease: "linear" }} />
+                </motion.svg>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ margin: 0, fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.5)" }}>الدرس اللي جاي</p>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 900, color: "#fff" }}>{nextUnitTitle}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* No-src placeholder */}
         {!src && (

@@ -125,6 +125,11 @@ const glass = (bg = "rgba(255,255,255,0.03)", border = "rgba(255,255,255,0.07)")
   background: bg, border: `1px solid ${border}`, borderRadius: 16, backdropFilter: "blur(12px)",
 });
 
+const fmtTime = (s: number) => {
+  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+};
+
 const LS_PREFIX = "alrehla_course_";
 const getLS = (key: string, fallback: unknown) => {
   try { const v = localStorage.getItem(LS_PREFIX + key); return v !== null ? JSON.parse(v) : fallback; } catch { return fallback; }
@@ -263,6 +268,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
 
   // State
   const [activeTab, setActiveTab] = useState<"content" | "notes" | "community" | "progress">("content");
+  const [activeBottomTab, setActiveBottomTab] = useState<"notes" | "resources" | "discussions">("notes");
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [activeUnitId, setActiveUnitId] = useState("");
   const [completedUnits, setCompletedUnits] = useState<Set<string>>(() =>
@@ -319,7 +325,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
       markUnitComplete(resolvedCourseId, uid).catch(console.error);
       const parentModule = course.modules.find(m => m.units.some(u => u.id === uid));
       if (parentModule && parentModule.units.every(u => next.has(u.id) || u.isCompleted)) {
-        setAchievement(`أتممت ${parentModule.title} بنجاح! 🧠`);
+        setAchievement(`أنت وحش! خلصت ${parentModule.title} بنجاح.. 🧠`);
       }
       return next;
     });
@@ -331,7 +337,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
     if (currentIndex !== -1 && currentIndex < allUnits.length - 1) {
       const nextUnit = allUnits[currentIndex + 1];
       if (!nextUnit.isLocked) {
-        setAchievement("جاري الانتقال للدرس التالي... 🚀");
+        setAchievement("ثواني وهنقلب على الدرس اللي عليه الدور.. 🚀");
         setTimeout(() => setActiveUnitId(nextUnit.id), 2000);
       }
     }
@@ -348,7 +354,11 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
   const toggleOffline = useCallback((uid: string) => {
     setOfflineUnits(prev => {
       const next = new Set(prev);
-      next.has(uid) ? next.delete(uid) : next.add(uid);
+      if (next.has(uid)) {
+        next.delete(uid);
+      } else {
+        next.add(uid);
+      }
       setLS(`${courseId}_offline`, [...next]);
       return next;
     });
@@ -751,6 +761,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
               title={activeUnit.title}
               color={color}
               savedTime={detailedProgress[activeUnit.id]?.last_position}
+              nextUnitTitle={allUnits[allUnits.findIndex(u => u.id === activeUnit.id) + 1]?.title}
               onEnded={() => handleVideoEnded(activeUnit.id)}
               onTimeUpdate={handleTimeUpdate}
             />
@@ -843,20 +854,363 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
     </div>
   );
 
-  // ── DESKTOP LAYOUT ──
-  const DesktopLayout = () => (
-    <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
-      {/* Sidebar */}
-      <div style={{
-        width: 280, flexShrink: 0, borderLeft: "1px solid rgba(255,255,255,0.06)",
-        overflowY: "auto", display: "flex", flexDirection: "column",
-      }}>
-        <SidebarContent />
+  // ── DESKTOP LAYOUT — Immersive Player-First ──
+  const DesktopLayout = () => {
+    const activeBottomTabs = [
+      { id: "notes" as const, label: "الملاحظات" },
+      { id: "resources" as const, label: "المصادر" },
+      { id: "discussions" as const, label: "النقاشات" },
+    ];
+
+    const RESOURCES = [
+      { title: "دليل التعاطف التحليلي", size: "٢.٤ ميجا", type: "PDF" },
+      { title: "تمارين الوعي العاطفي", size: "١.١ ميجا", type: "PDF" },
+      { title: "ورقة عمل: قراءة المشاعر", size: "٠.٨ ميجا", type: "PDF" },
+    ];
+
+    return (
+      <div style={{ display: "flex", height: "100%", overflow: "hidden", direction: "rtl" }}>
+        {/* ── LEFT: Player + Info + Bottom Tabs ── */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", minWidth: 0 }}>
+
+          {/* ── VIDEO PLAYER (full width, sticky feel) ── */}
+          <div style={{ background: "#000", flexShrink: 0 }}>
+            {activeUnit ? (
+              <div style={{ position: "relative" }}>
+                <VideoPlayer
+                  unitId={activeUnit.id}
+                  src={activeUnit.videoUrl}
+                  chapters={activeUnit.chapters}
+                  title={activeUnit.title}
+                  color={color}
+                  savedTime={detailedProgress[activeUnit.id]?.last_position}
+                  nextUnitTitle={allUnits[allUnits.findIndex(u => u.id === activeUnit.id) + 1]?.title}
+                  onEnded={() => handleVideoEnded(activeUnit.id)}
+                  onTimeUpdate={handleTimeUpdate}
+                />
+              </div>
+            ) : (
+              <div style={{
+                aspectRatio: "16/9",
+                background: `linear-gradient(135deg, ${color}18, rgba(139,92,246,0.12), #000)`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <div style={{ textAlign: "center" }}>
+                  <Play size={48} color={`${color}80`} fill={`${color}40`} />
+                  <p style={{ color: "rgba(255,255,255,0.3)", marginTop: 8, fontSize: 13 }}>اختر درساً لتبدأ</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── UNIT TITLE + MARK COMPLETE ── */}
+          {activeUnit && (
+            <div style={{
+              display: "flex", alignItems: "flex-start", gap: 14, padding: "18px 24px 14px",
+              borderBottom: "1px solid rgba(255,255,255,0.05)",
+            }}>
+              <div style={{ flex: 1 }}>
+                {activeUnit.isRecommended && (
+                  <span style={{ fontSize: 8, fontWeight: 900, color: "#A78BFA", background: "rgba(167,139,250,0.15)", padding: "2px 8px", borderRadius: 6, display: "inline-block", marginBottom: 6 }}>⚡ موصى بناءً على نمطك</span>
+                )}
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: "#f1f5f9", lineHeight: 1.3 }}>{activeUnit.title}</h2>
+                <p style={{ margin: "6px 0 0", fontSize: 11, color: "#475569", lineHeight: 1.7 }}>
+                  ستكتشف في هذا الدرس كيف يمكن للتعاطف أن يغير ديناميكيات العمل ويبني جسوراً من الثقة غير قابلة للكسر.
+                </p>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, flexShrink: 0, alignItems: "flex-end" }}>
+                <button
+                  onClick={() => markComplete(activeUnit.id)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6, padding: "9px 16px",
+                    borderRadius: 12, border: "none", cursor: "pointer",
+                    background: completedUnits.has(activeUnit.id) || activeUnit.isCompleted
+                      ? "rgba(16,185,129,0.15)" : `${color}15`,
+                    color: completedUnits.has(activeUnit.id) || activeUnit.isCompleted ? "#10B981" : color,
+                    fontSize: 10, fontWeight: 900,
+                  }}
+                >
+                  <CheckCircle size={13} />
+                  {completedUnits.has(activeUnit.id) || activeUnit.isCompleted ? "مكتمل ✓" : "علّم مكتملاً"}
+                </button>
+                <button
+                  onClick={() => setQuizOpen(true)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6, padding: "9px 16px",
+                    borderRadius: 12, cursor: "pointer",
+                    background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)",
+                    fontSize: 10, fontWeight: 900, color: "#F59E0B",
+                  }}
+                >
+                  <Trophy size={12} /> احصل على الشهادة
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── BOTTOM TABS (Notes / Resources / Discussions) ── */}
+          <div style={{ flexShrink: 0, borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", padding: "0 24px" }}>
+            {activeBottomTabs.map(t => (
+              <button key={t.id} onClick={() => setActiveBottomTab(t.id)} style={{
+                padding: "12px 20px", background: "none", border: "none",
+                borderBottom: `2px solid ${activeBottomTab === t.id ? color : "transparent"}`,
+                cursor: "pointer", fontSize: 12, fontWeight: activeBottomTab === t.id ? 800 : 600,
+                color: activeBottomTab === t.id ? color : "#475569",
+                transition: "all 0.2s",
+              }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── BOTTOM TAB CONTENT ── */}
+          <div style={{ flex: 1, padding: "20px 24px", minHeight: 300 }}>
+            <AnimatePresence mode="wait">
+
+              {activeBottomTab === "notes" && (
+                <motion.div key="notes-panel" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  style={{ display: "flex", gap: 20 }}>
+                  {/* Note input */}
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={{
+                      background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)",
+                      borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 10,
+                    }}>
+                      <textarea
+                        value={notes}
+                        onChange={e => { setNotes(e.target.value); setLS(`${courseId}_notes`, e.target.value); }}
+                        placeholder="ابدأ بكتابة ملاحظاتك هنا..."
+                        style={{
+                          width: "100%", minHeight: 140, padding: 12, borderRadius: 12,
+                          background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
+                          color: "#e2e8f0", fontSize: 12, lineHeight: 1.8, resize: "vertical",
+                          fontFamily: "inherit", direction: "rtl", outline: "none",
+                        }}
+                      />
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: 9, color: "#334155" }}>اذكر التوقيت الزمني للفيديو للإشارة</span>
+                        <button style={{
+                          padding: "7px 18px", borderRadius: 10, border: "none", cursor: "pointer",
+                          background: `linear-gradient(135deg, ${color}, #8B5CF6)`,
+                          fontSize: 10, fontWeight: 900, color: "#fff",
+                          display: "flex", alignItems: "center", gap: 6,
+                        }}>
+                          <FileText size={11} /> حفظ الملاحظة عند {fmtTime(0)}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Previous notes */}
+                  <div style={{ width: 280, flexShrink: 0 }}>
+                    <p style={{ margin: "0 0 12px", fontSize: 10, fontWeight: 800, color: "#64748B" }}>ملاحظاتك السابقة</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {[
+                        { time: "02:15", text: "الفرق الجوهري بين التعاطف والمواساة هو القدرة على مشاركة الشعور..." },
+                        { time: "00:45", text: "الذكاء العاطفي ليس مجرد مهارة، بل هو أسلوب حياة..." },
+                      ].map((n, i) => (
+                        <div key={i} style={{
+                          background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+                          borderRadius: 12, padding: "10px 14px", display: "flex", gap: 10,
+                        }}>
+                          <button style={{
+                            flexShrink: 0, padding: "3px 8px", borderRadius: 8, cursor: "pointer",
+                            background: `${color}12`, border: `1px solid ${color}25`,
+                            fontSize: 10, fontWeight: 900, color, alignSelf: "flex-start",
+                          }}>{n.time}</button>
+                          <p style={{ margin: 0, fontSize: 10, color: "#94a3b8", lineHeight: 1.6, flex: 1 }}>{n.text}</p>
+                          <button style={{ background: "none", border: "none", cursor: "pointer", color: "#334155", fontSize: 12, padding: 2, alignSelf: "flex-start" }}>⋮</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeBottomTab === "resources" && (
+                <motion.div key="resources-panel" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                  <p style={{ margin: "0 0 16px", fontSize: 10, color: "#64748B" }}>مصادر قابلة للتحميل لهذا الدرس</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {RESOURCES.map((r, i) => (
+                      <div key={i} style={{
+                        display: "flex", alignItems: "center", gap: 14, padding: "14px 18px",
+                        background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+                        borderRadius: 14, cursor: "pointer", transition: "all 0.2s",
+                      }}>
+                        <div style={{
+                          width: 42, height: 42, borderRadius: 10, flexShrink: 0,
+                          background: `${color}12`, border: `1px solid ${color}20`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <FileText size={18} color={color} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "#e2e8f0" }}>{r.title}</p>
+                          <p style={{ margin: "3px 0 0", fontSize: 9, color: "#475569" }}>{r.type} · {r.size}</p>
+                        </div>
+                        <button style={{
+                          padding: "7px 14px", borderRadius: 10, border: `1px solid ${color}30`,
+                          background: `${color}10`, cursor: "pointer",
+                          fontSize: 10, fontWeight: 800, color, display: "flex", alignItems: "center", gap: 5,
+                        }}>
+                          <Download size={11} /> تحميل
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {activeBottomTab === "discussions" && (
+                <motion.div key="discussions-panel" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
+                    {[
+                      { name: "سارة أ.", text: "الوحدة الثانية غيّرت كيف أقرأ الناس — شكراً د. لينا!", time: "منذ ٢ ساعة", avatar: "🌸", likes: 12 },
+                      { name: "محمد خ.", text: "تمرين التحفيزات الشخصية كان بالغ الأثر. جرّبته مع زملائي.", time: "منذ ٥ ساعات", avatar: "✨", likes: 8 },
+                      { name: "نورة م.", text: "هل من أحد مرّ بصعوبة في الوحدة الثالثة؟ يسعدني التشارك.", time: "منذ يوم", avatar: "💙", likes: 5 },
+                    ].map((c, i) => (
+                      <div key={i} style={{
+                        display: "flex", gap: 12, padding: "14px 16px",
+                        background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)",
+                        borderRadius: 14,
+                      }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{c.avatar}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
+                            <span style={{ fontSize: 11, fontWeight: 800, color: "#e2e8f0" }}>{c.name}</span>
+                            <span style={{ fontSize: 9, color: "#334155" }}>{c.time}</span>
+                          </div>
+                          <p style={{ margin: 0, fontSize: 11, color: "#94a3b8", lineHeight: 1.6 }}>{c.text}</p>
+                          <button style={{ marginTop: 8, background: "none", border: "none", cursor: "pointer", fontSize: 9, color: "#475569", display: "flex", alignItems: "center", gap: 4 }}>
+                            ❤️ {c.likes}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input placeholder="شارك فكرة أو سؤالاً..." style={{
+                      flex: 1, padding: "10px 14px", borderRadius: 12,
+                      background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+                      color: "#e2e8f0", fontSize: 11, direction: "rtl", outline: "none",
+                    }} />
+                    <button style={{ background: `linear-gradient(135deg, ${color}, #8B5CF6)`, border: "none", borderRadius: 12, padding: "10px 14px", cursor: "pointer" }}>
+                      <Send size={14} color="#fff" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* ── RIGHT: Curriculum Sidebar ── */}
+        <div style={{
+          width: 300, flexShrink: 0,
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+          display: "flex", flexDirection: "column",
+          overflowY: "auto",
+          background: "rgba(7,9,26,0.6)",
+        }}>
+          {/* Module title + progress */}
+          <div style={{ padding: "18px 16px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <p style={{ margin: "0 0 2px", fontSize: 8, fontWeight: 900, color: "#64748B", letterSpacing: "0.1em", textTransform: "uppercase" }}>الوحدة الحالية</p>
+            <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 900, color: "#f1f5f9" }}>
+              {course.modules.find(m => m.units.some(u => u.id === activeUnitId))?.title ?? course.title}
+            </p>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+              <span style={{ fontSize: 9, color: "#475569" }}>{doneCount} من {totalUnits} درس</span>
+              <span style={{ fontSize: 9, fontWeight: 900, color }}>{progressPct}% اتمام</span>
+            </div>
+            <div style={{ height: 4, borderRadius: 2, background: "rgba(255,255,255,0.07)" }}>
+              <motion.div
+                initial={{ width: 0 }} animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 1, delay: 0.3 }}
+                style={{ height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${color}, #8B5CF6)` }}
+              />
+            </div>
+          </div>
+
+          {/* Course tree */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+            {course.modules.map(mod => {
+              const modDone = mod.units.every(u => u.isCompleted || completedUnits.has(u.id));
+              const isExpanded = expandedModule === mod.id;
+              return (
+                <div key={mod.id}>
+                  <button onClick={() => setExpandedModule(isExpanded ? null : mod.id)} style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "10px 16px",
+                    background: isExpanded ? "rgba(255,255,255,0.04)" : "none",
+                    border: "none", cursor: "pointer", textAlign: "right",
+                  }}>
+                    {modDone ? <CheckCircle size={13} color="#10B981" /> : <Circle size={13} color="#334155" />}
+                    <span style={{ flex: 1, fontSize: 10, fontWeight: 800, color: "#e2e8f0", textAlign: "right" }}>{mod.title}</span>
+                    {isExpanded ? <ChevronUp size={12} color="#475569" /> : <ChevronDown size={12} color="#475569" />}
+                  </button>
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: "hidden" }}>
+                        {mod.units.map(unit => {
+                          const isDone = unit.isCompleted || completedUnits.has(unit.id);
+                          const isActive = activeUnitId === unit.id;
+                          return (
+                            <div key={unit.id} style={{
+                              display: "flex", alignItems: "center", gap: 10,
+                              padding: "9px 14px 9px 26px",
+                              background: isActive ? `${color}14` : "transparent",
+                              borderRight: isActive ? `3px solid ${color}` : "3px solid transparent",
+                              opacity: unit.isLocked ? 0.35 : 1,
+                              cursor: unit.isLocked ? "not-allowed" : "pointer",
+                              transition: "all 0.15s",
+                            }} onClick={() => !unit.isLocked && setActiveUnitId(unit.id)}>
+                              <div style={{
+                                width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                                background: isDone ? "rgba(16,185,129,0.1)" : isActive ? `${color}15` : "rgba(255,255,255,0.04)",
+                                border: `1px solid ${isDone ? "rgba(16,185,129,0.3)" : isActive ? `${color}30` : "rgba(255,255,255,0.06)"}`,
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                              }}>
+                                {unit.isLocked ? <Lock size={10} color="#334155" /> :
+                                  isDone ? <CheckCircle size={11} color="#10B981" /> :
+                                  <Play size={10} color={isActive ? color : "#475569"} fill={isActive ? color : "none"} />}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0, textAlign: "right" }}>
+                                <p style={{ margin: 0, fontSize: 10, fontWeight: isActive ? 800 : 600, color: isActive ? "#e2e8f0" : "#94a3b8", lineHeight: 1.4 }}>{unit.title}</p>
+                                <div style={{ display: "flex", gap: 5, alignItems: "center", marginTop: 2, justifyContent: "flex-end" }}>
+                                  <span style={{ fontSize: 8, color: "#334155" }}>{unit.duration}</span>
+                                  {unit.isRecommended && <span style={{ fontSize: 7, fontWeight: 900, color: "#A78BFA", background: "rgba(167,139,250,0.15)", padding: "1px 4px", borderRadius: 4 }}>⚡ موصى</span>}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Certificate CTA */}
+          <div style={{ padding: "14px 16px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <button
+              onClick={() => setQuizOpen(true)}
+              style={{
+                width: "100%", padding: "13px", borderRadius: 14, border: "none", cursor: "pointer",
+                background: `linear-gradient(135deg, ${color}22, rgba(139,92,246,0.2))`,
+                border: `1px solid ${color}30`,
+                fontSize: 12, fontWeight: 900, color: "#e2e8f0",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              }}
+            >
+              <GraduationCap size={16} color={color} /> احصل على الشهادة
+            </button>
+          </div>
+        </div>
       </div>
-      {/* Main */}
-      <MainContent />
-    </div>
-  );
+    );
+  };
 
   // ── MOBILE LAYOUT ──
   const MobileLayout = () => (

@@ -3,10 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  X, Play, Pause, CheckCircle, Circle, ChevronDown, ChevronUp,
-  Bookmark, BookmarkCheck, Clock, Star, Users, RotateCcw,
-  ArrowLeft, Volume2, Maximize2, ListVideo, Share2, Trophy,
-  BookOpen, Dumbbell, Timer, ChevronRight,
+  X, Play, Pause, CheckCircle, Circle,
+  Bookmark, BookmarkCheck, Clock, Star, RotateCcw,
+  Share2, Trophy,
   Flame,
 } from "lucide-react";
 import { VideoPlayer } from "./VideoPlayer";

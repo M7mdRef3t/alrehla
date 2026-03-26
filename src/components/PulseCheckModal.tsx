@@ -743,7 +743,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     : "النصيحة المقترحة";
 
   const footerHintText = showRequiredHint && !currentStepComplete
-    ? "محتاج تختار الطاقة والمزاج والبوصلة على الأقل."
+    ? "محتاج تختار الطاقة والمزاج واتجاهك الحالي على الأقل."
     : "راجع حالتك وبعدين اضغط تنفيذ.";
 
   const footerHintColor = showRequiredHint && !currentStepComplete
@@ -822,7 +822,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
             <div className="pulse-check-header flex items-center justify-between p-3.5 sm:p-4">
               <motion.div custom={0} variants={cosmicUp} initial="hidden" animate="visible">
                 <h2 className="text-base sm:text-lg font-bold" style={{ color: "var(--text-primary)", letterSpacing: "0.04em" }}>
-                  {"\u0636\u0628\u0637 \u0627\u0644\u0628\u0648\u0635\u0644\u0629"}
+                  {"\u0641\u062d\u0635 \u062d\u0627\u0644\u062a\u0643"}
                 </h2>
                 <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
                   {`\u062e\u0637\u0648\u0629 ${step} \u0645\u0646 ${totalSteps} \u2022 ${stepLabel}`}
@@ -843,7 +843,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
             {showSkipConfirm && (
               <div className="mx-3.5 sm:mx-4 -mt-1 mb-1 rounded-xl px-3 py-2" style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.35)" }} onClick={(e) => e.stopPropagation()}>
                 <p className="text-xs font-semibold text-center" style={{ color: "rgba(255,236,179,0.98)" }}>
-                  تريد تخطي ضبط البوصلة النهاردة؟
+                  تريد تخطي فحص حالتك النهاردة؟
                 </p>
                 <div className="mt-2 flex items-center justify-center gap-2">
                   <button
@@ -899,7 +899,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 {footerHintText}
               </p>
               <p className={`text-center text-[10px] font-black tracking-[0.14em] uppercase ${isPrimaryEnabled ? "text-emerald-300" : "text-rose-300/70"}`}>
-                {isPrimaryEnabled ? "جاهز للتنفيذ" : "اختار الطاقة + المزاج + البوصلة"}
+                {isPrimaryEnabled ? "جاهز للتنفيذ" : "اختار الطاقة + المزاج + اتجاهك الحالي"}
               </p>
               <div className="flex gap-3">
                 {step > 1 && (

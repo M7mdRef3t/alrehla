@@ -240,7 +240,7 @@ class SoundManager {
         
         this.ambientSource = { 
             stop: () => { 
-                try { osc1.stop(); osc2.stop(); } catch(e) {}
+                try { osc1.stop(); osc2.stop(); } catch { return; }
             } 
         };
     }

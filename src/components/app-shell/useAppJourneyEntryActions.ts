@@ -126,12 +126,12 @@ export function useAppJourneyEntryActions({
 
     skipNextPulseCheck();
     if (isPhaseOneUserFlow) {
-      openDefaultGoalMap();
+      navigateToScreen("guided");
       return;
     }
 
     navigateToScreen("goal");
-  }, [canUseMap, navigateToScreen, openDefaultGoalMap, setLockedFeature, skipNextPulseCheck]);
+  }, [canUseMap, navigateToScreen, setLockedFeature, skipNextPulseCheck]);
 
   const openMissionScreen = useCallback((nodeId: string) => {
     if (isLockedPhaseOne) return;
@@ -222,7 +222,7 @@ export function useAppJourneyEntryActions({
 
     skipNextPulseCheck();
     if (isPhaseOneUserFlow) {
-      openDefaultGoalMap();
+      navigateToScreen("guided");
       return;
     }
 

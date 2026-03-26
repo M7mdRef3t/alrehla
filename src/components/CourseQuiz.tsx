@@ -254,7 +254,7 @@ export function CourseQuiz({ isOpen, onClose, courseId, courseTitle="إتقان 
   useEffect(()=>{
     if(phase==="quiz"){
       const s: State = { answers, confidence, flagged:[...flagged], currentIdx, timeLeft };
-      try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch{}
+      try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch { return; }
     }
   },[answers,confidence,flagged,currentIdx,timeLeft,phase]);
 
@@ -274,7 +274,7 @@ export function CourseQuiz({ isOpen, onClose, courseId, courseTitle="إتقان 
       }).catch(console.error);
     }
     setPhase("result");
-    try { localStorage.removeItem(LS_KEY); } catch{}
+    try { localStorage.removeItem(LS_KEY); } catch { return; }
   },[answers, confidence, onPassed, courseId, ACTIVE_QUESTIONS]);
 
   const handleSelect = (idx:number)=>{
@@ -289,7 +289,7 @@ export function CourseQuiz({ isOpen, onClose, courseId, courseTitle="إتقان 
   };
 
   const handlePrev = ()=>{ if(currentIdx>0){ setCurrentIdx(i=>i-1); setShowExplanation(false); setShowHeatmap(false); } };
-  const toggleFlag = ()=>{ setFlagged(prev=>{ const n=new Set(prev); n.has(q.id)?n.delete(q.id):n.add(q.id); return n; }); };
+  const toggleFlag = ()=>{ setFlagged(prev=>{ const n=new Set(prev); if (n.has(q.id)) { n.delete(q.id); } else { n.add(q.id); } return n; }); };
 
   const handleReset = ()=>{
     setPhase("intro"); setAnswers({}); setConfidence({}); setFlagged(new Set());

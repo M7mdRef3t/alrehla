@@ -15,7 +15,12 @@ export function validateChoiceText(text: string): string {
   if (!text || typeof text !== 'string') return '';
   let cleaned = text.trim();
   if (cleaned.length > 200) cleaned = cleaned.substring(0, 200);
-  cleaned = cleaned.replace(/[\x00-\x1F\x7F]/g, '');
+  cleaned = [...cleaned]
+    .filter((char) => {
+      const code = char.charCodeAt(0);
+      return (code >= 32 && code !== 127) || code > 127;
+    })
+    .join('');
   return cleaned;
 }
 

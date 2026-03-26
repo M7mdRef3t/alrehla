@@ -1,33 +1,27 @@
-import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, memo, Suspense, useCallback, useMemo } from "react";
 import { useAdminState } from "../../state/adminState";
 import { getEffectiveRoleFromState, useAuthState } from "../../state/authState";
 import { getEffectiveFeatureAccess } from "../../utils/featureFlags";
 import { isUserMode } from "../../config/appEnv";
-import { isSupabaseReady } from "../../services/supabaseClient";
-import { motion } from "framer-motion";
-import { X } from "lucide-react";
 import type { AgentActions, AgentContext } from "../../agent/types";
 import { useAppOverlayState } from "../../state/appOverlayState";
-import { useAppShellNavigationState } from "../../state/appShellNavigationState";
+import { useAppShellNavigationState, type AppShellScreen } from "../../state/appShellNavigationState";
 import { useEmergencyState } from "../../state/emergencyState";
 import { useAchievementState } from "../../state/achievementState";
 import { useThemeState } from "../../state/themeState";
 import { usePulseState } from "../../state/pulseState";
-import type { PulseEnergyConfidence, PulseFocus, PulseMood } from "../../state/pulseState";
 import { useJourneyState } from "../../state/journeyState";
 import { useAppPulseSanctuaryFlow } from "./useAppPulseSanctuaryFlow";
 import { AwarenessSkeleton } from "../AwarenessSkeleton";
 import { JourneyTimeline } from "../JourneyTimeline";
 import type { FeedbackSubmission } from "../FeedbackModal";
 import { usePulseCheckLogic } from "../../hooks/usePulseCheckLogic";
-import { useConsciousnessHistory } from "../../state/consciousnessHistoryState";
 import { useAppMindSignals } from "./useAppMindSignals";
-import { useNotificationState } from "../../state/notificationState";
-import { useMapState } from "../../state/mapState";
 import { runtimeEnv } from "../../config/runtimeEnv";
 import { SafePulseCheckModal, SafeAIChatbot } from "../WrappedComponents";
 import { OVERLAY_SEVERITY, CRITICAL_SEVERITY_THRESHOLD } from "../../utils/overlayPriorities";
 import type { AppOverlayFlag } from "../../state/appOverlayState";
+import type { PostAuthIntent } from "../../utils/postAuthIntent";
 
 const GoogleAuthModal = lazy(() => import("../GoogleAuthModal").then((m) => ({ default: m.GoogleAuthModal })));
 const AnalyticsConsentBanner = lazy(() =>
@@ -36,7 +30,6 @@ const AnalyticsConsentBanner = lazy(() =>
 const FaqScreen = lazy(() => import("../FaqScreen").then((m) => ({ default: m.FaqScreen })));
 const MirrorOverlay = lazy(() => import("../MirrorOverlay").then((m) => ({ default: m.MirrorOverlay })));
 const RelationshipGym = lazy(() => import("../RelationshipGym").then((m) => ({ default: m.RelationshipGym })));
-const BaselineAssessment = lazy(() => import("../BaselineAssessment").then((m) => ({ default: m.BaselineAssessment })));
 const CocoonModeModal = lazy(() => import("../CocoonModeModal").then((m) => ({ default: m.CocoonModeModal })));
 const AchievementToast = lazy(() => import("../AchievementToast").then((m) => ({ default: m.AchievementToast })));
 const MuteProtocol = lazy(() => import("../MuteProtocol").then((m) => ({ default: m.NoiseSilencingModal })));
@@ -81,18 +74,6 @@ const TimeCapsuleVault = lazy(() => import("../TimeCapsuleVault").then((m) => ({
 const OnboardingFlow = lazy(() => import("../OnboardingFlow").then((m) => ({ default: m.OnboardingFlow })));
 const JourneyToast = lazy(() => import("../JourneyToast").then((m) => ({ default: m.JourneyToast })));
 
-type PulseSubmitPayload = {
-  energy: number | null;
-  mood: PulseMood | null;
-  focus: PulseFocus | null;
-  auto?: boolean;
-  notes?: string;
-  energyReasons?: string[];
-  energyConfidence?: PulseEnergyConfidence;
-};
-
-type PulseCloseReason = "backdrop" | "close_button" | "programmatic" | "browser_close";
-
 interface AppOverlayHostProps {
   canShowAIChatbot: boolean;
   agentContext: AgentContext;
@@ -101,6 +82,9 @@ interface AppOverlayHostProps {
   onFeedbackSubmit: (payload: FeedbackSubmission) => Promise<void> | void;
   onOnboardingComplete?: () => void;
 }
+
+type VisibleOverlayId = AppOverlayFlag | "emergency" | "pulseCheck";
+type MindSignalOverlay = "nudgeToast" | "mirrorOverlay" | "journeyGuideChat";
 
 export const AppOverlayHost = memo(function AppOverlayHost({
   canShowAIChatbot,
@@ -129,6 +113,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   const achievementToastVisible = useAchievementState((s) => !!s.lastNewAchievementId);
   const theme = useThemeState((s) => s.theme);
   const setTheme = useThemeState((s) => s.setTheme);
+  type ThemePreference = Parameters<typeof setTheme>[0];
 
   const logPulse = usePulseState((s) => s.logPulse);
   const snoozeNotifications = usePulseState((s) => s.snoozeNotifications);
@@ -137,8 +122,6 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   const featureFlags = useAdminState((s) => s.featureFlags);
   const betaAccess = useAdminState((s) => s.betaAccess);
   const adminAccess = useAdminState((s) => s.adminAccess);
-  const authUser = useAuthState((s) => s.user);
-  const authStatus = useAuthState((s) => s.status);
   const role = useAuthState(getEffectiveRoleFromState);
 
   const canUsePulseCheck = useMemo(
@@ -152,21 +135,10 @@ export const AppOverlayHost = memo(function AppOverlayHost({
       }).pulse_check,
     [featureFlags, betaAccess, role, adminAccess]
   );
-  const shouldGateStartWithAuth = isSupabaseReady && !authUser && authStatus !== "loading";
-
   const goalId = useJourneyState((s) => s.goalId);
-  const archivedNodesCount = useMapState((s) => s.nodes.filter(n => n.isNodeArchived).length);
-
-  const isSupported = useNotificationState((s) => s.isSupported);
-  const permission = useNotificationState((s) => s.permission);
-  const notificationSettings = useNotificationState((s) => s.settings);
-
-  // Consciousness Insight from history
-  const consciousnessInsight = useConsciousnessHistory((s) => s.history[0] || null);
 
   const {
     gym: showGym,
-    baseline: showBaseline,
     breathing: showBreathing,
     cocoon: showCocoon,
     noiseSilencingPulse: showNoiseSilencingPulse,
@@ -202,15 +174,18 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   // Auto-trigger pulse check logic
   usePulseCheckLogic(canUsePulseCheck, screen, true);
   const activeFlags = (Object.keys(flags) as AppOverlayFlag[]).filter((f) => flags[f]);
-  const activeOverlayItems = activeFlags.map((f) => ({ id: f, severity: OVERLAY_SEVERITY[f] ?? 0 }));
+  const activeOverlayItems: Array<{ id: VisibleOverlayId; severity: number }> = activeFlags.map((f) => ({
+    id: f,
+    severity: OVERLAY_SEVERITY[f] ?? 0
+  }));
 
   if (isEmergencyOpen) {
-    activeOverlayItems.push({ id: "emergency" as any, severity: OVERLAY_SEVERITY.emergency });
+    activeOverlayItems.push({ id: "emergency", severity: OVERLAY_SEVERITY.emergency });
   }
 
   // Also include Pulse Check if it's open (it has its own state)
   if (pulseCheckState.isOpen) {
-    activeOverlayItems.push({ id: "pulseCheck" as any, severity: OVERLAY_SEVERITY.pulseCheck });
+    activeOverlayItems.push({ id: "pulseCheck", severity: OVERLAY_SEVERITY.pulseCheck });
   }
 
   activeOverlayItems.sort((a, b) => b.severity - a.severity);
@@ -218,6 +193,36 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   const isLockedByCritical = (activeOverlayItems[0]?.severity ?? 0) >= CRITICAL_SEVERITY_THRESHOLD;
 
   const isLivePage = typeof window !== "undefined" && window.location.pathname.includes("dawayir-live");
+
+  const setThemePreference = useCallback((nextTheme: ThemePreference) => {
+    setTheme(nextTheme);
+  }, [setTheme]);
+
+  const setScreenSafe = useCallback((nextScreen: AppShellScreen) => {
+    setScreen(nextScreen);
+    return true;
+  }, [setScreen]);
+
+  const openNoiseOverlay = useCallback(() => {
+    setOverlay("noiseSilencingPulse", true);
+  }, [setOverlay]);
+
+  const closeNoiseOverlay = useCallback(() => {
+    setOverlay("noiseSilencingPulse", false);
+  }, [setOverlay]);
+
+  const openMindSignalOverlay = useCallback((overlay: MindSignalOverlay) => {
+    setOverlay(overlay, true);
+  }, [setOverlay]);
+
+  const closeMindSignalOverlay = useCallback((overlay: "nudgeToast" | "mirrorOverlay") => {
+    setOverlay(overlay, false);
+  }, [setOverlay]);
+
+  const setLoginIntentSafe = useCallback(() => {
+    const loginIntent: PostAuthIntent = { kind: "login", createdAt: Date.now() };
+    setAuthIntent(loginIntent);
+  }, [setAuthIntent]);
 
   // Helper to determine if an overlay is allowed to render
   const isVisible = (id: AppOverlayFlag | "emergency" | "pulseCheck") => {
@@ -257,24 +262,21 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     showBreathing,
     setShowBreathing: (val) => setOverlay("breathing", val),
     setShowCocoon: (val) => setOverlay("cocoon", val),
-    theme: theme as any,
-    setTheme: (t) => setTheme(t as any),
+    theme,
+    setTheme: setThemePreference,
     authUserId: undefined,
     shouldPromptAuthAfterPulse: true,
     logPulse,
     capturePulseReflection: () => {},
     snoozeNotifications,
-    openOverlay: setOverlay as any,
-    closeOverlay: (o) => setOverlay(o as any, false),
-    navigateToScreen: (s) => {
-      setScreen(s as any);
-      return true;
-    },
+    openOverlay: openNoiseOverlay,
+    closeOverlay: closeNoiseOverlay,
+    navigateToScreen: setScreenSafe,
     openDefaultGoalMap: () => setScreen("map"),
     openDawayirSetup: () => {},
     goToGoals: () => setScreen("tools"),
     setStartRecoveryIntent: (p) => setPulseCheck(pulseCheckState.isOpen, pulseCheckState.context, p),
-    setLoginIntent: () => setAuthIntent({ type: "login" } as any),
+    setLoginIntent: setLoginIntentSafe,
     setShowAuthModal: (val) => setOverlay("authModal", val),
     clearPostAuthState: () => setAuthIntent(null),
     showNoiseSessionToast: () => {},
@@ -295,8 +297,8 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     showCocoon,
     // لو أي flow نشط، لا تُطلق أي nudge أو mirrorOverlay
     activeFlows: showOnboarding || showBreathing || showCocoon || showNoiseSilencingPulse || pulseCheckState.isOpen,
-    openOverlay: setOverlay as any,
-    closeOverlay: (o) => setOverlay(o as any, false),
+    openOverlay: openMindSignalOverlay,
+    closeOverlay: closeMindSignalOverlay,
     openCocoonModal,
     // يفتح pulse check باستخدام setPulseCheck الصحيح لا setOverlay
     openPulseCheck: () => setPulseCheck(true, "regular"),
@@ -349,28 +351,6 @@ export const AppOverlayHost = memo(function AppOverlayHost({
           />
         )}
 
-        {showBaseline && isVisible("baseline") && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-space-void/60 backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="relative glass-heavy max-w-lg w-full max-h-[90vh] overflow-auto border-teal-500/20"
-            >
-              <button
-                type="button"
-                onClick={() => setOverlay("baseline", false)}
-                className="absolute top-4 left-4 w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors z-20"
-                aria-label="إغلاق"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="p-6 md:p-8">
-                <BaselineAssessment onComplete={() => setOverlay("baseline", false)} />
-              </div>
-            </motion.div>
-          </div>
-        )}
 
         {showJourneyGuideChat && canShowAIChatbot && agentActions && isVisible("journeyGuideChat") && (
           <SafeAIChatbot

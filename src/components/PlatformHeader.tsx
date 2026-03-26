@@ -7,7 +7,6 @@ import {
   ChevronDown,
   LogOut,
   Settings,
-  Map,
   Wrench,
   BookOpen,
   Info,
@@ -88,10 +87,10 @@ export const PlatformHeader = memo(function PlatformHeader({
   const [hidden, setHidden] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [entryDone, setEntryDone] = useState(false);
   const lastScrollY = useRef(0);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLButtonElement>(null);
+
 
   const user = useAuthState((s) => s.user);
   const firstName = useAuthState((s) => s.firstName);
@@ -122,10 +121,6 @@ export const PlatformHeader = memo(function PlatformHeader({
     setTheme(isDark ? "light" : "dark");
   }, [isDark, setTheme]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setEntryDone(true), 120);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -193,11 +188,8 @@ export const PlatformHeader = memo(function PlatformHeader({
       role="banner"
       dir="rtl"
       aria-label="الشريط العلوي"
-      // Only play the slide-down entrance on first mount; after that,
-      // skip the initial animation so it can never re-trigger.
-      initial={entryDone ? false : { y: "-100%", opacity: 0 }}
-      animate={{ y: hidden ? "-100%" : "0%", opacity: 1 }}
-      transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
+      animate={{ y: hidden ? "-100%" : "0%" }}
+      transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
       className={`
         fixed top-0 right-0 left-0 z-50
         hidden md:flex items-center justify-between
@@ -372,7 +364,7 @@ export const PlatformHeader = memo(function PlatformHeader({
             ) : (
               <>
                 <LogIn className="w-4 h-4" />
-                ابدأ الآن
+                تسجيل الدخول
               </>
             )}
           </button>
@@ -466,7 +458,7 @@ export const PlatformHeader = memo(function PlatformHeader({
             className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-teal-500 hover:bg-teal-400 text-slate-900 shadow-[0_0_16px_rgba(45,212,191,0.3)] hover:shadow-[0_0_24px_rgba(45,212,191,0.5)] transition-all active:scale-95"
           >
             <LogIn className="w-4 h-4" />
-            ابدأ الآن
+            تسجيل الدخول
           </button>
         )}
       </div>
