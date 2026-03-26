@@ -1,11 +1,30 @@
-const CACHE_NAME = "alrehla-shell-v1";
+const CACHE_NAME = "alrehla-static-v2";
 const APP_SHELL = [
-  "/",
   "/manifest.json",
   "/icons/icon-192x192.png",
   "/icons/icon-512x512.png",
   "/icons/apple-touch-icon.png"
 ];
+
+function isSameOrigin(requestUrl) {
+  return requestUrl.origin === self.location.origin;
+}
+
+function isStaticAsset(requestUrl) {
+  return (
+    requestUrl.pathname === "/manifest.json"
+    || requestUrl.pathname.startsWith("/icons/")
+    || requestUrl.pathname.startsWith("/audio/")
+  );
+}
+
+function shouldBypassCache(request, requestUrl) {
+  return (
+    request.mode === "navigate"
+    || requestUrl.pathname.startsWith("/_next/")
+    || requestUrl.pathname.startsWith("/api/")
+  );
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -24,15 +43,27 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  const requestUrl = new URL(event.request.url);
+  if (!isSameOrigin(requestUrl)) return;
+
+  if (shouldBypassCache(event.request, requestUrl)) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  if (!isStaticAsset(requestUrl)) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) return cachedResponse;
 
       return fetch(event.request).then((networkResponse) => {
         if (!networkResponse || networkResponse.status !== 200) return networkResponse;
-
-        const requestUrl = new URL(event.request.url);
-        if (requestUrl.origin !== self.location.origin) return networkResponse;
 
         const responseClone = networkResponse.clone();
         void caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
