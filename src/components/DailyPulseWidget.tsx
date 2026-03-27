@@ -64,64 +64,81 @@ export const DailyPulseWidget: FC = () => {
     <div className="relative flex flex-col items-center">
       <motion.div
         layout
-        className="flex items-center justify-between gap-4 h-14 px-6 rounded-full glass border border-white/5 relative z-50 overflow-hidden"
+        className="flex items-center justify-between gap-4 h-14 px-6 rounded-full relative z-50 overflow-hidden"
         style={{
-          backdropFilter: "blur(12px)",
-          background: "rgba(10, 10, 10, 0.6)",
-          minWidth: "22rem"
+          background: "rgba(10, 10, 18, 0.7)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          backdropFilter: "blur(20px)",
+          minWidth: "24rem",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.4), inset 0 0 10px rgba(255,255,255,0.02)"
         }}
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.18, ease: "easeOut" }}
       >
+        {/* Ambient Pulsing Background (Subtle) */}
+        {!isSaved && (
+          <motion.div 
+            className="absolute inset-0 z-[-1] opacity-20"
+            animate={{
+              background: [
+                "radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.3) 0%, transparent 50%)",
+                "radial-gradient(circle at 80% 50%, rgba(239, 68, 68, 0.3) 0%, transparent 50%)",
+                "radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.3) 0%, transparent 50%)"
+              ]
+            }}
+            transition={{ duration: 5, repeat: Infinity }}
+          />
+        )}
+
         {/* Left Side: Status / Meaning */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 relative z-10">
           <Zap className="w-5 h-5 text-emerald-400 opacity-80" />
-          <span className="text-sm font-bold text-white/80 tracking-tight">
+          <span className="text-xs font-black uppercase tracking-[0.2em] text-white/70">
             {meaning}
           </span>
         </div>
 
         {/* Right Side: Quick Action Buttons (The Tactical Pulse) */}
         {!isSaved ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3 relative z-10">
             {/* Drain Button */}
             <button
               onClick={() => handleSavePulse("drain")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all font-bold text-xs uppercase tracking-wider"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all font-black text-[10px] uppercase tracking-widest"
               disabled={pulseType !== null}
             >
-              <BatteryWarning className="w-3.5 h-3.5" />
-              <span>استنزاف</span>
+              <BatteryWarning className="w-4 h-4" />
+              <span>Drain</span>
             </button>
 
             {/* Charge Button */}
             <button
               onClick={() => handleSavePulse("charge")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all font-bold text-xs uppercase tracking-wider"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all font-black text-[10px] uppercase tracking-widest"
               disabled={pulseType !== null}
             >
-              <BatteryCharging className="w-3.5 h-3.5" />
-              <span>شحن</span>
+              <BatteryCharging className="w-4 h-4" />
+              <span>Charge</span>
             </button>
           </div>
         ) : (
           /* Success Flash / Confirmation & Share Action */
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center gap-2"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3"
           >
-            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 border border-emerald-400/40 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
               <Check className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
-                تم التسجيل
+              <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">
+                Active Rec.
               </span>
             </div>
 
             <button
               onClick={() => setShowShareCard(true)}
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+              className="flex items-center justify-center w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 text-white transition-all border border-white/10"
               title="مشاركة النبضة"
             >
               <Share2 className="w-4 h-4" />

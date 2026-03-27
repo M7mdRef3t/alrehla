@@ -1,7 +1,7 @@
-﻿import type { FC } from "react";
+import type { FC } from "react";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Compass, Star, BookOpen, Wind } from "lucide-react";
+import { ArrowRight, Compass, Star, BookOpen, Wind, Archive } from "lucide-react";
 import { getJourneyToolsView } from "../data/journeyTools";
 import { useJourneyState } from "../state/journeyState";
 import { useMapState } from "../state/mapState";
@@ -24,6 +24,8 @@ interface JourneyToolsScreenProps {
   onRefreshNextStep?: () => void;
   onOpenExitScripts?: () => void;
   onOpenGrounding?: () => void;
+  onOpenMeditation?: () => void;
+  onOpenHistory?: () => void;
 }
 
 export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
@@ -37,7 +39,9 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
   onTakeNextStep,
   onRefreshNextStep,
   onOpenExitScripts,
-  onOpenGrounding
+  onOpenGrounding,
+  onOpenMeditation,
+  onOpenHistory
 }) => {
   const containerVariants = {
     hidden: { opacity: 0, y: 12 },
@@ -114,13 +118,13 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
 
   return (
     <main
-      className="w-full max-w-2xl py-10 md:py-14"
+      className="w-full max-w-2xl px-4 py-8 sm:px-0 md:py-14"
       dir="rtl"
       style={{ fontFamily: "IBM Plex Sans Arabic, Tajawal, sans-serif" }}
     >
       {/* â”€â”€ Header â”€â”€ */}
       <motion.header
-        className="text-center space-y-3 mb-10"
+        className="text-center space-y-3 mb-8 sm:mb-10"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
@@ -130,8 +134,8 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
           <Compass className="w-4 h-4 text-teal-400" />
           <span className="text-xs font-bold text-teal-400">فضاء الرحلة</span>
         </div>
-        <h1 className="text-3xl md:text-4xl font-black text-white">أدوات الرحلة</h1>
-        <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: "rgba(255,255,255,0.4)" }}>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white">أدوات الرحلة</h1>
+        <p className="text-sm leading-relaxed max-w-sm mx-auto px-1 sm:px-0" style={{ color: "rgba(255,255,255,0.5)" }}>
           كل أداة خطوة: تبدأ من <span className="text-teal-400 font-bold">دواير</span>، والباقي يتفعّل مع تقدّمك.
         </p>
       </motion.header>
@@ -143,6 +147,109 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
         initial="hidden"
         animate="show"
       >
+        {onOpenMeditation && (
+          <motion.button
+            type="button"
+            onClick={onOpenMeditation}
+            className="w-full rounded-2xl px-4 sm:px-5 py-4 text-right transition-all"
+            style={{
+              background: "linear-gradient(135deg, rgba(14,165,233,0.18), rgba(56,189,248,0.06))",
+              border: "1px solid rgba(56,189,248,0.28)",
+              backdropFilter: "blur(12px)",
+            }}
+            variants={cardVariants}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+          >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0"
+                  style={{
+                    background: "rgba(56,189,248,0.14)",
+                    border: "1px solid rgba(56,189,248,0.2)",
+                  }}
+                >
+                  <span aria-hidden="true">☾</span>
+                </div>
+                <div className="min-w-0 text-right">
+                  <p className="text-sm font-bold text-white truncate">مشغل جلسات التأمل</p>
+                  <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.5)" }}>
+                    جلسات موجهة + مؤقت + مزاج هادئ
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span
+                  className="text-[11px] font-semibold rounded-full px-3 py-1 whitespace-nowrap"
+                  style={{
+                    background: "rgba(56,189,248,0.15)",
+                    color: "#7dd3fc",
+                  }}
+                >
+                  جديد
+                </span>
+              </div>
+            </div>
+            <p className="text-xs mt-3 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
+              افتح جلسة تأمل مستقلة، واختر الإيقاع المناسب قبل أن تعود لأدوات الرحلة.
+            </p>
+          </motion.button>
+        )}
+
+        {onOpenHistory && (
+          <motion.button
+            type="button"
+            onClick={onOpenHistory}
+            className="w-full rounded-2xl px-4 sm:px-5 py-4 text-right transition-all"
+            style={{
+              background: "linear-gradient(135deg, rgba(14,165,233,0.16), rgba(99,102,241,0.08))",
+              border: "1px solid rgba(56,189,248,0.24)",
+              backdropFilter: "blur(12px)",
+            }}
+            variants={cardVariants}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0"
+                  style={{
+                    background: "rgba(56,189,248,0.14)",
+                    border: "1px solid rgba(56,189,248,0.2)",
+                  }}
+                >
+                  <Archive className="w-5 h-5 text-sky-200" />
+                </div>
+                <div className="min-w-0 text-right">
+                  <p className="text-sm font-bold text-white truncate">أرشيف الجلسات</p>
+                  <p className="text-[11px] font-medium text-sky-200/80 truncate">
+                    {"ذاكرة + تحليلات تاريخية"}
+                  </p>
+                  <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.5)" }}>
+                    تاريخ الجلسات + المقارنات + الملخصات القديمة
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span
+                  className="text-[11px] font-semibold rounded-full px-3 py-1 whitespace-nowrap"
+                  style={{
+                    background: "rgba(56,189,248,0.15)",
+                    color: "#7dd3fc",
+                  }}
+                >
+                  جديد
+                </span>
+              </div>
+            </div>
+            <p className="text-xs mt-3 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
+              افتح سجل الجلسات التاريخي واستعرض تحولاتك عبر الزمن في مكان واحد.
+            </p>
+          </motion.button>
+        )}
+
         {tools.map((tool) => (
           <motion.button
             key={tool.id}
@@ -151,7 +258,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
               if (!tool.locked || !tool.featureKey || !onFeatureLocked) return;
               onFeatureLocked(tool.featureKey);
             }}
-            className="w-full rounded-2xl px-5 py-4 text-right transition-all"
+            className="w-full rounded-2xl px-4 sm:px-5 py-4 text-right transition-all"
             style={{
               background: tool.locked ? "rgba(255,255,255,0.02)" : "rgba(20,184,166,0.06)",
               border: `1px solid ${tool.locked ? "rgba(255,255,255,0.06)" : "rgba(20,184,166,0.2)"}`,
@@ -161,7 +268,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3 min-w-0">
                 <div
                   className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0"
@@ -174,7 +281,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
                 </div>
                 <div className="min-w-0 text-right">
                   <p className="text-sm font-bold text-white truncate">{tool.name}</p>
-                  <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.35)" }}>{tool.tagline}</p>
+                  <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.5)" }}>{tool.tagline}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -193,7 +300,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
                 )}
               </div>
             </div>
-            <p className="text-xs mt-3 leading-relaxed" style={{ color: "rgba(255,255,255,0.3)" }}>
+            <p className="text-xs mt-3 leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
               {tool.description}
             </p>
           </motion.button>
@@ -201,7 +308,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
       </motion.section>
 
       {/* â”€â”€ Protection Tools â”€â”€ */}
-      {(onOpenExitScripts || onOpenGrounding) && (
+      {(onOpenExitScripts || onOpenGrounding || onOpenMeditation) && (
         <motion.section
           className="mt-6 text-right"
           initial={{ opacity: 0, y: 8 }}
@@ -213,7 +320,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
             <h2 className="text-xs font-bold mb-3 flex items-center gap-1.5" style={{ color: "#a78bfa" }}>
               أدوات الحماية الذاتية
             </h2>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {onOpenExitScripts && (
                 <button type="button" onClick={onOpenExitScripts}
                   className="rounded-xl px-4 py-4 text-right transition-all"
@@ -245,6 +352,23 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
                   </div>
                   <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
                     تنفّس + حواس + مسح الجسم
+                  </p>
+                </button>
+              )}
+              {onOpenMeditation && (
+                <button type="button" onClick={onOpenMeditation}
+                  className="rounded-xl px-4 py-4 text-right transition-all sm:col-span-2"
+                  style={{ background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)" }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ background: "rgba(14,165,233,0.15)" }}>
+                      <Wind className="w-4 h-4" style={{ color: "#38bdf8" }} />
+                    </div>
+                    <span className="text-sm font-bold text-white">مشغل التأمل</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    جلسات موجهة + مؤقت + تركيز تنفّس
                   </p>
                 </button>
               )}

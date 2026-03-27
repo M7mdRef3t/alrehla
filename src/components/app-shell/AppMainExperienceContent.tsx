@@ -10,6 +10,11 @@ import { QuizzesHub } from "../QuizzesHub";
 import { BehavioralAnalysisHub } from "../BehavioralAnalysisHub";
 import { ResourcesCenter } from "../ResourcesCenter";
 import type { ResourceTab } from "../ResourcesCenter";
+import { MeditationSessionPlayer } from "../MeditationSessionPlayer";
+import { MeditationSessionCompletionSummaryPage } from "../MeditationSessionCompletionSummaryPage";
+import AnnualGrowthReportPage from "../../modules/dawayir-live/pages/AnnualGrowthReportPage";
+import LiveHistoryPage from "../../modules/dawayir-live/pages/LiveHistoryPage";
+import { WeeklyRoutineSummaryPage } from "../WeeklyRoutineSummaryPage";
 
 type StartScreensProps = ComponentProps<typeof AppStartScreens>;
 type JourneyScreensProps = ComponentProps<typeof AppJourneyScreens>;
@@ -234,6 +239,7 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
     return (
       <QuizzesHub
         onBack={() => onNavigate?.("landing" as AppScreen)}
+        onNavigateToWeeklySummary={() => onNavigate?.("weekly-summary" as AppScreen)}
       />
     );
   }
@@ -257,6 +263,42 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
         onBack={() => { setResourceDeepLink(null); onNavigate?.("landing" as AppScreen); }}
         initialTab={link?.tab}
         initialSearch={link?.search}
+      />
+    );
+  }
+
+  if (screen === "meditation") {
+    return (
+      <MeditationSessionPlayer
+        onBack={() => onNavigate?.("tools" as AppScreen)}
+        onOpenCompletionSummary={() => onNavigate?.("meditation-complete" as AppScreen)}
+      />
+    );
+  }
+
+  if (screen === "meditation-complete") {
+    return (
+      <MeditationSessionCompletionSummaryPage
+        onBack={() => onNavigate?.("meditation" as AppScreen)}
+        onBackToTools={() => onNavigate?.("tools" as AppScreen)}
+        onStartMeditation={() => onNavigate?.("meditation" as AppScreen)}
+        onOpenResources={() => onNavigate?.("resources" as AppScreen)}
+      />
+    );
+  }
+
+  if (screen === "history") {
+    return <LiveHistoryPage />;
+  }
+
+  if (screen === "annual-report") {
+    return <AnnualGrowthReportPage />;
+  }
+
+  if (screen === "weekly-summary") {
+    return (
+      <WeeklyRoutineSummaryPage
+        onBack={() => onNavigate?.("tools" as AppScreen)}
       />
     );
   }

@@ -63,40 +63,67 @@ export function Step1View({
       initial="hidden" 
       animate="visible"
     >
-      {/* 1. Energy Level — Modern Slider */}
-      <div className="flex flex-col items-center gap-2">
-        {/* Big Number + Emoji */}
-        <div className="text-center">
+      {/* 1. Energy Level — Interactive Cosmic Orb */}
+      <div className="flex flex-col items-center gap-6 py-2">
+        <div className="relative flex items-center justify-center">
+          {/* Main Orb */}
           <motion.div
             key={energy}
-            initial={{ scale: 0.85, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="flex items-center justify-center gap-3"
+            className="w-32 h-32 rounded-full relative z-10 flex flex-col items-center justify-center overflow-hidden"
+            style={{
+              background: energy === null ? "rgba(255,255,255,0.05)"
+                : energy <= 3 ? "radial-gradient(circle, #f87171 0%, #ef4444 100%)"
+                : energy <= 6 ? "radial-gradient(circle, #fbbf24 0%, #f59e0b 100%)"
+                : "radial-gradient(circle, #2dd4bf 0%, #0d9488 100%)",
+              boxShadow: energy === null ? "none"
+                : `0 0 50px ${energy <= 3 ? "rgba(239,68,68,0.4)" : energy <= 6 ? "rgba(245,158,11,0.35)" : "rgba(13,148,136,0.45)"}`,
+              border: "2px solid rgba(255,255,255,0.1)"
+            }}
+            animate={{ 
+              scale: energy === null ? 0.9 : 1 + (energy / 20),
+              rotate: energy === null ? 0 : energy * 10
+            }}
+            transition={{ type: "spring", stiffness: 100, damping: 15 }}
           >
-            <span className="text-5xl" aria-hidden="true">
+            <span className="text-4xl mb-1" aria-hidden="true">
               {energy === null ? "🔋" : energy <= 2 ? "😮‍💨" : energy <= 4 ? "😐" : energy <= 6 ? "🙂" : energy <= 8 ? "😊" : "🔥"}
             </span>
-            <span className="text-6xl font-black text-white font-mono tracking-tighter">
+            <span className="text-5xl font-black text-white font-mono tracking-tighter">
               {energy !== null ? Math.round(energy) : "—"}
             </span>
+            
+            {/* Inner shimmer effect */}
+            <motion.div 
+              className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent pointer-events-none"
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+            />
           </motion.div>
-          <motion.p
-            key={energyStateLabel}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-xs font-bold mt-2"
-            style={{
-              color: energy === null ? "#64748B"
-                : energy <= 2 ? "#f87171"
-                : energy <= 4 ? "#fbbf24"
-                : energy <= 6 ? "#2dd4bf"
-                : energy <= 8 ? "#34d399"
-                : "#14b8a6"
-            }}
-          >
-            {energyStateLabel}
-          </motion.p>
+
+          {/* Outer Ring */}
+          <motion.div 
+            className="absolute inset-0 rounded-full border border-white/10"
+            style={{ width: "160px", height: "160px", margin: "-14px" }}
+            animate={{ scale: [1, 1.05, 1], opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          />
         </div>
+
+        <motion.p
+          key={energyStateLabel}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-sm font-bold tracking-widest uppercase"
+          style={{
+            fontFamily: "var(--font-display)",
+            color: energy === null ? "var(--text-muted)"
+              : energy <= 2 ? "var(--ring-danger)"
+              : energy <= 4 ? "var(--ring-caution)"
+              : "var(--soft-teal)"
+          }}
+        >
+          {energyStateLabel}
+        </motion.p>
 
         {/* Slider Track — forced LTR so range input direction is correct */}
         <div className="w-full max-w-xs px-2 pt-4 pb-2" dir="ltr">
@@ -191,13 +218,13 @@ export function Step1View({
         </div>
       </div>
 
-      {/* 2. Mood Picker */}
-      <div className="flex flex-col gap-3">
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-55 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--soft-teal)]/30 animate-pulse" />
+      {/* 2. Mood Picker — Mood Nebula */}
+      <div className="flex flex-col gap-4">
+        <label className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--text-muted)] flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--soft-teal)]/40 animate-pulse" />
           إزاي حاسس دلوقتي؟
         </label>
-        <div className="grid grid-cols-4 gap-2.5 p-3 rounded-3xl bg-white/[0.03] border border-white/5">
+        <div className="grid grid-cols-4 gap-3 p-4 rounded-[2rem] bg-white/[0.02] border border-white/5 backdrop-blur-sm">
           {MOODS.map((m) => {
             const isSelected = mood === m.id;
             const mStyle = MOOD_COSMIC[m.id];
@@ -221,10 +248,10 @@ export function Step1View({
         </div>
       </div>
 
-      {/* 3. Focus Picker */}
-      <div className="flex flex-col gap-3">
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-55 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+      {/* 3. Focus Picker — Bento Layout */}
+      <div className="flex flex-col gap-4">
+        <label className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--text-muted)] flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-teal-400/40 animate-pulse" />
           عايز تركّز على إيه؟
         </label>
         <div className="grid grid-cols-2 gap-3 pb-2">
@@ -233,25 +260,28 @@ export function Step1View({
             const label = f.id === "none" ? FOCUS_LABELS["none_new"] : FOCUS_LABELS[f.labelKey];
             const fStyle = FOCUS_COSMIC[f.id];
             return (
-              <button
+              <motion.button
                 key={f.id} 
                 type="button" 
                 onClick={() => setFocusValue(f.id)}
-                className="relative flex flex-col items-center justify-center p-4 rounded-2xl border text-[10px] font-black transition-all"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="relative flex flex-col items-center justify-center p-5 rounded-2xl border text-[11px] font-black transition-all"
                 style={{
-                  background: isSelected ? `${fStyle.bg}44` : 'rgba(255,255,255,0.02)',
-                  borderColor: isSelected ? fStyle.border : 'rgba(255,255,255,0.06)',
-                  color: isSelected ? 'white' : 'rgba(255,255,255,0.3)',
+                  background: isSelected ? `${fStyle.bg}33` : 'rgba(255,255,255,0.03)',
+                  borderColor: isSelected ? fStyle.border : 'rgba(255,255,255,0.08)',
+                  color: isSelected ? 'white' : 'var(--text-muted)',
+                  fontFamily: "var(--font-display)"
                 }}
               >
                 {isSelected && (
                   <motion.div 
                     layoutId="f-dot" 
-                    className="absolute top-2 right-2 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_white]" 
+                    className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_12px_white]" 
                   />
                 )}
                 {label}
-              </button>
+              </motion.button>
             );
           })}
         </div>

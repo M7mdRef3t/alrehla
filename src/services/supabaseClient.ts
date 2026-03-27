@@ -11,6 +11,17 @@ export const supabase: SupabaseClient | null =
     })
     : null;
 
+// Auto-merge achievements from Supabase on sign-in (lazy import to avoid circular deps)
+if (supabase && typeof window !== "undefined") {
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === "SIGNED_IN") {
+      import("../state/achievementState")
+        .then(({ mergeRemoteAchievements }) => mergeRemoteAchievements())
+        .catch(() => {});
+    }
+  });
+}
+
 export const isSupabaseReady = Boolean(supabase);
 
 export function isSupabaseAbortError(error: unknown): boolean {

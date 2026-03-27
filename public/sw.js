@@ -6,6 +6,24 @@ const APP_SHELL = [
   "/icons/apple-touch-icon.png"
 ];
 
+const isLocalDev =
+  self.location.hostname === "localhost" ||
+  self.location.hostname === "127.0.0.1" ||
+  self.location.port === "3030" ||
+  self.location.port === "3000";
+
+if (isLocalDev) {
+  self.addEventListener("install", (event) => {
+    event.waitUntil(self.skipWaiting());
+  });
+
+  self.addEventListener("activate", (event) => {
+    event.waitUntil(
+      self.registration.unregister().then(() => self.clients.claim())
+    );
+  });
+}
+
 function isSameOrigin(requestUrl) {
   return requestUrl.origin === self.location.origin;
 }
@@ -27,12 +45,14 @@ function shouldBypassCache(request, requestUrl) {
 }
 
 self.addEventListener("install", (event) => {
+  if (isLocalDev) return;
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener("activate", (event) => {
+  if (isLocalDev) return;
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
@@ -41,6 +61,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  if (isLocalDev) return;
   if (event.request.method !== "GET") return;
 
   const requestUrl = new URL(event.request.url);

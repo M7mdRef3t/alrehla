@@ -55,8 +55,10 @@ export function AppJourneyScreens({
         nextStepDecision={nextStepDecision}
         onTakeNextStep={onTakeNextStep}
         onRefreshNextStep={onRefreshNextStep}
-        onOpenExitScripts={() => onNavigate("exit-scripts")}
-        onOpenGrounding={() => onNavigate("grounding")}
+  onOpenExitScripts={() => onNavigate("exit-scripts")}
+  onOpenGrounding={() => onNavigate("grounding")}
+  onOpenMeditation={() => onNavigate("meditation")}
+  onOpenHistory={() => onNavigate("history")}
       />
     );
   }

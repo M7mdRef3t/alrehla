@@ -9,6 +9,7 @@ const AdminOverviewPanel = lazy(() =>
   import("../admin/dashboard/Overview/OverviewPanel").then((m) => ({ default: m.OverviewPanel }))
 );
 const DawayirApp = lazy(() => import("../../modules/dawayir/DawayirApp").then((m) => ({ default: m.default })));
+const CertificatePage = lazy(() => import("../CertificatePage").then((m) => ({ default: m.CertificatePage })));
 
 interface AppShellRouteGateProps {
   isAdminRoute: boolean;
@@ -39,6 +40,16 @@ export function AppShellRouteGate({
 
   if (pathname === "/privacy" || pathname === "/terms") {
     return <LegalPage type={pathname === "/privacy" ? "privacy" : "terms"} />;
+  }
+
+  // ── Certificate shareable page ──
+  if (pathname.startsWith("/certificate/")) {
+    const certId = pathname.replace("/certificate/", "").trim();
+    return (
+      <Suspense fallback={<AwarenessSkeleton />}>
+        <CertificatePage certId={certId} />
+      </Suspense>
+    );
   }
 
   if (isDawayirRoute) {

@@ -4,6 +4,7 @@ import type { MapNode } from "../modules/map/mapTypes";
 import { ACHIEVEMENTS } from "../data/achievements";
 import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
 import { loadStreak } from "../services/streakSystem";
+import { syncAchievementUnlock, syncAddPoints, loadRemoteAchievements, bulkSyncAchievements } from "../services/achievementSync";
 
 const STORAGE_KEY = "dawayir-achievements";
 
@@ -104,6 +105,9 @@ const ACTION_POINTS: Record<string, number> = {
   // Quiz actions
   flow_quiz_completed: 15,
   flow_quiz_hub_opened: 3,
+
+  // Resilience & Recovery
+  action_resilience_recovery: 12,
 };
 
 const ACTION_ACHIEVEMENTS: Record<string, string> = {
@@ -140,6 +144,8 @@ export const useAchievementState = create<AchievementState>()(
           unlockedIds: [...unlockedIds, id],
           lastNewAchievementId: id
         });
+        // Sync to Supabase (fire-and-forget)
+        syncAchievementUnlock(id).catch(() => {});
       },
 
       unlockSilent: (id: string) => {
@@ -148,6 +154,8 @@ export const useAchievementState = create<AchievementState>()(
         const defined = ACHIEVEMENTS.some((a) => a.id === id);
         if (!defined) return;
         set({ unlockedIds: [...unlockedIds, id] });
+        // Sync to Supabase (fire-and-forget)
+        syncAchievementUnlock(id).catch(() => {});
       },
 
       clearLastNew: () => set({ lastNewAchievementId: null }),
@@ -188,6 +196,8 @@ export const useAchievementState = create<AchievementState>()(
             [normalized]: (state.actionCounts[normalized] ?? 0) + 1
           }
         }));
+        // Sync points to Supabase (fire-and-forget)
+        syncAddPoints(points).catch(() => {});
         const achievementId = ACTION_ACHIEVEMENTS[normalized];
         if (achievementId) {
           get().unlock(achievementId);
@@ -276,4 +286,20 @@ export function awardPointsForFlowStep(step: string): void {
 
 export function awardPointsForJourneyType(type: string): void {
   useAchievementState.getState().addActionPoints(`journey_${type}`);
+}
+
+/**
+ * Call after the user signs in. Loads Supabase achievements, merges with local
+ * state, and bulk-uploads any offline-earned achievements.
+ */
+export async function mergeRemoteAchievements(): Promise<void> {
+  const { unlockedIds, unlockSilent } = useAchievementState.getState();
+  // 1. Upload any locally-earned achievements that might not be in DB yet
+  await bulkSyncAchievements(unlockedIds).catch(() => {});
+  // 2. Load remote achievements
+  const remote = await loadRemoteAchievements().catch(() => [] as string[]);
+  // 3. Silently unlock any remote achievements not yet local
+  for (const id of remote) {
+    unlockSilent(id);
+  }
 }

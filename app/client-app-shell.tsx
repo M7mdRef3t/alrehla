@@ -18,6 +18,7 @@ const SpeedInsights = dynamic(() => import("@vercel/speed-insights/react").then(
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
+const shouldRegisterServiceWorker = runtimeEnv.isProd;
 
 function shouldBootIntoFullApp(): boolean {
   if (typeof window === "undefined") return true;
@@ -29,6 +30,7 @@ function shouldBootIntoFullApp(): boolean {
 }
 
 function registerServiceWorker() {
+  if (!shouldRegisterServiceWorker) return;
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 
   const installWorker = () => {

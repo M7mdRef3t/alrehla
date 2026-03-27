@@ -123,9 +123,18 @@ export default function LiveCoachPanel() {
               وjudge share من نفس session.
             </p>
           </div>
-          <button type="button" className="primary-btn" onClick={() => assignUrl("/dawayir-live/history")}>
-            افتح بنك الذاكرة
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button type="button" className="primary-btn" onClick={() => assignUrl("/dawayir-live/history")}>
+              افتح بنك الذاكرة
+            </button>
+            <button
+              type="button"
+              className="replay-control-btn"
+              onClick={() => assignUrl("/dawayir-live/group")}
+            >
+              Group Pulse Room
+            </button>
+          </div>
         </div>
 
         {error && (

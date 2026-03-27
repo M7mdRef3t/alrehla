@@ -45,6 +45,9 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
 
   useEffect(() => {
     if (autoCloseAfterCycles > 0 && cycleCount >= autoCloseAfterCycles) {
+      // Reward Resilience
+      const state = useAchievementState.getState();
+      state.addActionPoints("action_resilience_recovery");
       onClose();
     }
   }, [autoCloseAfterCycles, cycleCount, onClose]);

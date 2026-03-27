@@ -1,6 +1,6 @@
 import { useState, useEffect, memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Wrench, BookOpen, Info, LogIn, LogOut, Sun, Moon, GraduationCap } from "lucide-react";
+import { Home, Wrench, BookOpen, Info, LogIn, LogOut, GraduationCap, Sun, Moon, MoonStar, Archive } from "lucide-react";
 import { useAuthState } from "../state/authState";
 import { useAchievementState } from "../state/achievementState";
 import { useThemeState } from "../state/themeState";
@@ -13,6 +13,9 @@ import { signOut } from "../services/authService";
 const SCREEN_MAP: Record<string, string> = {
   home:      "landing",
   tools:     "tools",
+  meditation: "meditation",
+  history:    "history",
+  weeklySummary: "weekly-summary",
   stories:   "stories",
   resources: "resources",
   about:     "about",
@@ -23,6 +26,9 @@ const SCREEN_MAP: Record<string, string> = {
 const TAB_ITEMS = [
   { id: "home",      label: "الرئيسية",      icon: Home },
   { id: "tools",     label: "الأدوات",       icon: Wrench },
+  { id: "meditation", label: "تأمل",         icon: MoonStar },
+  { id: "history",   label: "أرشيف الجلسات", icon: Archive },
+  { id: "weeklySummary", label: "ملخص الأسبوع", icon: Sun },
   { id: "stories",   label: "قصص",           icon: BookOpen },
   { id: "resources", label: "تعلّم",          icon: GraduationCap },
   { id: "about",     label: "لماذا الرحلة؟", icon: Info },
@@ -35,6 +41,9 @@ function getActiveTabId(screen?: string): string {
   if (!screen || screen === "landing") return "home";
   if (screen === "tools" || screen === "guided" || screen === "mission") return "tools";
   if (screen === "resources" || screen === "behavioral-analysis" || screen === "quizzes") return "resources";
+  if (screen === "meditation") return "meditation";
+  if (screen === "history") return "history";
+  if (screen === "weekly-summary") return "weeklySummary";
   return screen;
 }
 
@@ -66,10 +75,11 @@ export const PlatformTabBar = memo(function PlatformTabBar({
     return () => clearTimeout(t);
   }, []);
 
+
   // Dark/Light mode toggle
-  const resolvedTheme = useThemeState((s) => s.resolvedTheme);
-  const setTheme      = useThemeState((s) => s.setTheme);
-  const isDark        = resolvedTheme === "dark";
+  const resolvedTheme    = useThemeState((s) => s.resolvedTheme);
+  const setTheme         = useThemeState((s) => s.setTheme);
+  const isDark           = resolvedTheme === "dark";
   const handleThemeToggle = useCallback(() => {
     setTheme(isDark ? "light" : "dark");
   }, [isDark, setTheme]);
@@ -78,6 +88,7 @@ export const PlatformTabBar = memo(function PlatformTabBar({
   const handleLogout = useCallback(async () => {
     await signOut();
   }, []);
+
 
   // navigate — useCallback for stable reference & perf
   const handleNav = useCallback((id: TabId | string) => {
@@ -159,7 +170,7 @@ export const PlatformTabBar = memo(function PlatformTabBar({
           );
         })}
 
-        {/* زر الثيم — متاح دائماً */}
+        {/* زر الثيم */}
         <button
           type="button"
           id="tab-bar-theme-toggle"
@@ -186,13 +197,13 @@ export const PlatformTabBar = memo(function PlatformTabBar({
                 animate={{ rotate: 0, opacity: 1 }}
                 exit={{ rotate: -90, opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="w-5 h-5 flex items-center justify-center text-slate-500"
+                className="w-5 h-5 flex items-center justify-center text-amber-500"
               >
                 <Moon className="w-5 h-5" />
               </motion.span>
             )}
           </AnimatePresence>
-          <span className="text-[10px] font-medium text-slate-500">
+          <span className={`text-[10px] font-medium ${isDark ? "text-slate-500" : "text-amber-500"}`}>
             {isDark ? "فاتح" : "داكن"}
           </span>
         </button>

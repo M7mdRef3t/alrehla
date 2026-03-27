@@ -17,6 +17,8 @@ import {
   Brain,
   Home,
   ArrowLeftCircle,
+  MoonStar,
+  History,
 } from "lucide-react";
 import { AlrehlaIcon } from "./logo/AlrehlaIcon";
 import { useAuthState } from "../state/authState";
@@ -29,6 +31,9 @@ const NAV_LINKS = [
   { id: "home", label: "الرئيسية", icon: Home },
   { id: "tools", label: "الأدوات", icon: Wrench },
   { id: "insights", label: "تحليلات", icon: BarChart2 },
+  { id: "meditation", label: "تأمل", icon: MoonStar },
+  { id: "history", label: "أرشيف الجلسات", icon: History },
+  { id: "weekly-summary", label: "ملخص الأسبوع", icon: Sun },
   { id: "stories", label: "قصص", icon: BookOpen },
   { id: "about", label: "لماذا الرحلة؟", icon: Info },
 ] as const;
@@ -42,6 +47,9 @@ const SCREEN_MAP: Record<string, string> = {
   stories: "stories",
   about: "about",
   insights: "insights",
+  meditation: "meditation",
+  history: "history",
+  "weekly-summary": "weekly-summary",
   quizzes: "quizzes",
   "behavioral-analysis": "behavioral-analysis",
   resources: "resources",
@@ -56,6 +64,8 @@ const SCREEN_LABELS: Record<string, string> = {
   insights: "تحليل العلاقات",
   stories: "قصص",
   about: "لماذا الرحلة؟",
+  meditation: "مشغل جلسات التأمل",
+  history: "أرشيف الجلسات",
   quizzes: "اختبارات الشخصية",
   "behavioral-analysis": "تحليل الأنماط",
   resources: "مركز الموارد",

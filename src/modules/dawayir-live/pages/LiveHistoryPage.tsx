@@ -38,6 +38,10 @@ type LoopRecallPayload = {
 
 type HighlightTone = "cyan" | "gold" | "violet";
 
+type SessionModeFilter = "all" | "standard" | "demo" | "hybrid" | "couple";
+type SessionStatusFilter = "all" | "completed" | "active" | "error";
+type SessionPeriodFilter = "all" | "30d" | "90d" | "365d";
+
 interface HighlightMoment {
   id: string;
   label: string;
@@ -194,6 +198,24 @@ function TrendSparkline({ values }: { values: number[] }) {
   );
 }
 
+function getModeLabel(mode: string, isArabic: boolean) {
+  const labels: Record<string, { ar: string; en: string }> = {
+    standard: { ar: "فردية", en: "Individual" },
+    demo: { ar: "تجريبية", en: "Demo" },
+    hybrid: { ar: "هجينة", en: "Hybrid" },
+    couple: { ar: "جماعية", en: "Couple" },
+  };
+  const entry = labels[mode];
+  return entry ? (isArabic ? entry.ar : entry.en) : mode;
+}
+
+function isWithinPeriod(updatedAt: string, period: SessionPeriodFilter) {
+  if (period === "all") return true;
+  const days = period === "30d" ? 30 : period === "90d" ? 90 : 365;
+  const threshold = Date.now() - days * 24 * 60 * 60 * 1000;
+  return new Date(updatedAt).getTime() >= threshold;
+}
+
 export default function LiveHistoryPage() {
   const [sessions, setSessions] = useState<LiveSessionRecord[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -201,6 +223,9 @@ export default function LiveHistoryPage() {
   const [compareDetail, setCompareDetail] = useState<LiveSessionDetail | null>(null);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"recent" | "name">("recent");
+  const [modeFilter, setModeFilter] = useState<SessionModeFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<SessionStatusFilter>("all");
+  const [periodFilter, setPeriodFilter] = useState<SessionPeriodFilter>("all");
   const [error, setError] = useState<string | null>(null);
   const [judgeMode, setJudgeMode] = useState(false);
   const [presentationFullscreen, setPresentationFullscreen] = useState(false);
@@ -266,7 +291,15 @@ export default function LiveHistoryPage() {
     const query = search.trim().toLowerCase();
     const list = sessions.filter((session) => {
       const title = `${session.title || ""} ${session.summary?.headline || ""}`.toLowerCase();
-      return title.includes(query);
+      const matchesQuery = title.includes(query);
+      const matchesMode = modeFilter === "all" || session.mode === modeFilter;
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active"
+          ? session.status !== "completed" && session.status !== "error"
+          : session.status === statusFilter);
+      const matchesPeriod = isWithinPeriod(session.updated_at, periodFilter);
+      return matchesQuery && matchesMode && matchesStatus && matchesPeriod;
     });
 
     if (sortBy === "name") {
@@ -274,7 +307,7 @@ export default function LiveHistoryPage() {
     }
 
     return sortSessionsByRecent(list);
-  }, [search, sessions, sortBy]);
+  }, [modeFilter, periodFilter, search, sessions, sortBy, statusFilter]);
 
   const lang = (selectedDetail?.session.language || compareDetail?.session.language || "ar") as LiveLanguage;
   const isArabic = lang === "ar";
@@ -423,6 +456,40 @@ export default function LiveHistoryPage() {
     },
   ];
 
+  const archiveInsights = useMemo(() => {
+    const totalHours = sessions.reduce((total, session) => {
+      const minutes = Number((session as LiveSessionRecord & { session_duration_minutes?: number }).session_duration_minutes ?? 0) || 0;
+      return total + minutes / 60;
+    }, 0);
+
+    const insightPoints = sessions.reduce((total, session) => {
+      const clarity = Number(session.metrics?.clarityDelta ?? 0) || 0;
+      const equilibrium = Number(session.metrics?.equilibriumScore ?? 0) || 0;
+      return total + Math.round((clarity + equilibrium) * 120);
+    }, 0);
+
+    const bestLift = recentSessions.reduce((best, session) => {
+      const lift = Number(session.metrics?.clarityDelta ?? 0) || 0;
+      return Math.max(best, lift);
+    }, 0);
+
+    const latestSession = recentSessions[0];
+
+    return {
+      totalHours: totalHours.toFixed(1),
+      insightPoints,
+      bestLift: Math.round(bestLift * 100),
+      latestSessionLabel: latestSession
+        ? `${latestSession.title || (isArabic ? "جلسة دواير لايف" : "Dawayir Live Session")} • ${new Date(latestSession.updated_at).toLocaleDateString(isArabic ? "ar-EG" : "en-US", {
+            month: "short",
+            day: "numeric",
+          })}`
+        : isArabic
+          ? "لا توجد جلسات محفوظة بعد"
+          : "No sessions saved yet",
+    };
+  }, [isArabic, recentSessions, sessions]);
+
   const handleToggleFullscreen = async () => {
     if (!presentationRootRef.current) return;
     if (document.fullscreenElement) {
@@ -457,9 +524,16 @@ export default function LiveHistoryPage() {
             </p>
           </div>
 
-          <button type="button" className="primary-btn memory-bank-primary-btn" onClick={() => assignUrl("/dawayir-live")}>
-            {isArabic ? "ابدأ جلسة جديدة" : "Start New Session"}
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button type="button" className="primary-btn memory-bank-primary-btn rounded-full px-5 py-2.5 transition-transform hover:-translate-y-0.5" onClick={() => assignUrl("/dawayir-live")}>
+              {isArabic ? "ابدأ جلسة جديدة" : "Start New Session"}
+            </button>
+          </div>
+          <p className="mt-2 text-sm text-white/55">
+            {isArabic
+              ? "يمكنك بدء جلسة جديدة ومراجعة الأرشيف إذا أردت تتبع تحولاتك الأوسع."
+              : "You can start a new session and review the archive when you want the broader arc."}
+          </p>
         </div>
 
         {error && (
@@ -498,6 +572,89 @@ export default function LiveHistoryPage() {
           </article>
         </div>
 
+        <section className="memory-bank-insights">
+          <div className="memory-bank-section-head">
+            <div>
+              <span className="presentation-section-kicker">{isArabic ? "رؤى مجمعة" : "Aggregated Insights"}</span>
+              <h2>{isArabic ? "مسار نموك عبر الزمن" : "Your growth path over time"}</h2>
+            </div>
+            <p>{isArabic ? "ملخص سريع لآخر التحولات داخل الأرشيف." : "A quick summary of what the archive already knows."}</p>
+          </div>
+
+          <div className="memory-bank-insights-layout">
+            <div className="memory-bank-insight-grid">
+              <article className="memory-insight-card">
+                <span>{isArabic ? "إجمالي الجلسات" : "Total Sessions"}</span>
+                <strong>{sessions.length}</strong>
+                <small>{isArabic ? "كل الجلسات المتاحة للمراجعة." : "All sessions available for review."}</small>
+              </article>
+              <article className="memory-insight-card">
+                <span>{isArabic ? "ساعات التأمل" : "Meditation Hours"}</span>
+                <strong>{archiveInsights.totalHours}</strong>
+                <small>{isArabic ? "مجمعة من جلساتك المحفوظة." : "Accumulated from your saved sessions."}</small>
+              </article>
+              <article className="memory-insight-card">
+                <span>{isArabic ? "نقاط البصيرة" : "Insight Points"}</span>
+                <strong>{archiveInsights.insightPoints}</strong>
+                <small>{isArabic ? "تقريبًا بحسب مؤشرات الوضوح والاتزان." : "Estimated from clarity and equilibrium signals."}</small>
+              </article>
+              <article className="memory-insight-card">
+                <span>{isArabic ? "أحدث جلسة" : "Latest Session"}</span>
+                <strong>{archiveInsights.latestSessionLabel}</strong>
+                <small>{isArabic ? "آخر لحظة محفوظة داخل الأرشيف." : "The most recent saved moment in the archive."}</small>
+              </article>
+            </div>
+
+            <aside className="memory-emotional-panel">
+              <div className="memory-emotional-panel-head">
+                <span className="presentation-section-kicker">
+                  {isArabic ? "تطور الذكاء العاطفي" : "Emotional Intelligence Trend"}
+                </span>
+                <h3>{isArabic ? "كيف تبدّل أداؤك عبر الجلسات" : "How your pattern evolved across sessions"}</h3>
+              </div>
+
+              <ul className="memory-emotional-points">
+                <li>
+                  <strong>{archiveInsights.bestLift}%</strong>
+                  <span>
+                    {isArabic
+                      ? "أفضل قفزة في الوضوح داخل جلسة واحدة، وتظهر أين كان التحول الأقوى."
+                      : "Your strongest single-session clarity lift, showing where the biggest shift happened."}
+                  </span>
+                </li>
+                <li>
+                  <strong>
+                    {Math.max(0, Math.round((currentMetrics?.equilibriumScore ?? 0) * 100))}
+                  </strong>
+                  <span>
+                    {isArabic
+                      ? "مؤشر الاتزان في الجلسة المفتوحة الآن، لمقارنة ما قبله وما بعده."
+                      : "The equilibrium score in the selected session, useful for before/after comparison."}
+                  </span>
+                </li>
+                <li>
+                  <strong>
+                    {Math.max(0, Math.round((previousMetrics?.clarityDelta ?? 0) * 100))}
+                  </strong>
+                  <span>
+                    {isArabic
+                      ? "المؤشر السابق يوضح مسار التكرار: هل التحسن ثابت أم مرتبط بلحظات بعينها."
+                      : "The previous marker helps show whether progress is steady or session-specific."}
+                  </span>
+                </li>
+              </ul>
+
+              <div className="memory-emotional-footer">
+                <p>
+                  {isArabic
+                    ? "هذا الشريط لا يزعم التشخيص؛ هو قراءة تاريخية لما تحسّن بالفعل في الأرشيف."
+                    : "This panel is not a diagnosis; it is a historical read of what actually improved in the archive."}
+                </p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
         <div className="memory-bank-grid">
           <aside className="memory-bank-roster">
             <div className="memory-bank-roster-head">
@@ -515,6 +672,30 @@ export default function LiveHistoryPage() {
                 />
               </label>
 
+              <div className="memory-bank-filter-row">
+                <select value={modeFilter} onChange={(event) => setModeFilter(event.target.value as SessionModeFilter)}>
+                  <option value="all">{isArabic ? "كل الأنواع" : "All types"}</option>
+                  <option value="standard">{isArabic ? "فردية" : "Individual"}</option>
+                  <option value="demo">{isArabic ? "تجريبية" : "Demo"}</option>
+                  <option value="hybrid">{isArabic ? "هجينة" : "Hybrid"}</option>
+                  <option value="couple">{isArabic ? "جماعية" : "Couple"}</option>
+                </select>
+
+                <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as SessionStatusFilter)}>
+                  <option value="all">{isArabic ? "كل الحالات" : "All statuses"}</option>
+                  <option value="completed">{isArabic ? "مكتملة" : "Completed"}</option>
+                  <option value="active">{isArabic ? "نشطة" : "Active"}</option>
+                  <option value="error">{isArabic ? "أخطاء" : "Errors"}</option>
+                </select>
+
+                <select value={periodFilter} onChange={(event) => setPeriodFilter(event.target.value as SessionPeriodFilter)}>
+                  <option value="all">{isArabic ? "كل الفترات" : "All time"}</option>
+                  <option value="30d">{isArabic ? "آخر 30 يوم" : "Last 30 days"}</option>
+                  <option value="90d">{isArabic ? "آخر 90 يوم" : "Last 90 days"}</option>
+                  <option value="365d">{isArabic ? "آخر سنة" : "Last year"}</option>
+                </select>
+              </div>
+
               <select value={sortBy} onChange={(event) => setSortBy(event.target.value as "recent" | "name")}>
                 <option value="recent">{isArabic ? "الأحدث" : "Most recent"}</option>
                 <option value="name">{isArabic ? "الاسم" : "Name"}</option>
@@ -531,7 +712,7 @@ export default function LiveHistoryPage() {
                 >
                   <div className="memory-session-card-row">
                     <div>
-                      <span className="memory-session-mode">{session.mode}</span>
+                      <span className="memory-session-mode">{getModeLabel(session.mode, isArabic)}</span>
                       <h3>{session.title || (isArabic ? "جلسة دواير لايف" : "Dawayir Live Session")}</h3>
                     </div>
                     <span className="memory-session-status">{session.status}</span>

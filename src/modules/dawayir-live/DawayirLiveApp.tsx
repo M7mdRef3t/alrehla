@@ -158,10 +158,22 @@ export default function DawayirLiveApp() {
   const isLive = session.status === "connected" || session.status === "speaking";
 
   return (
-    <div className="dawayir-parity-shell" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
+    <div className="dawayir-parity-shell dawayir-group-shell" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
       <a className="skip-link" href="#main-canvas-content">
         {language === "ar" ? "تخطي إلى المحتوى الرئيسي" : "Skip to main content"}
       </a>
+
+      <div className="dawayir-live-hero-shell">
+        <div className="dawayir-live-hero">
+          <span className="dawayir-live-hero-kicker">Live Group Counseling</span>
+          <h1>{language === "ar" ? "جلسة جماعية مباشرة" : "Live Group Session"}</h1>
+          <p>
+            {language === "ar"
+              ? "تجربة زجاجية غامرة تربط بين المجال، الحضور، والدردشة الحية مع نفس هوية المجموعة."
+              : "A glassmorphic live room that keeps the field, attendance, and chat in one cohesive experience."}
+          </p>
+        </div>
+      </div>
 
       {appView === "welcome" && (
         <ParityWelcomeScreen

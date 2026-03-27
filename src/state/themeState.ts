@@ -31,8 +31,8 @@ function applyTheme(resolvedTheme: "light" | "dark") {
 export const useThemeState = create<ThemeState>()(
   persist(
     (set) => ({
-      theme: "system",
-      resolvedTheme: getSystemTheme(),
+      theme: "dark",
+      resolvedTheme: "dark",
       setTheme: (theme: Theme) => {
         const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
         applyTheme(resolvedTheme);

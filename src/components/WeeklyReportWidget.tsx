@@ -66,7 +66,7 @@ export const WeeklyReportWidget: FC = () => {
     if (error?.code === 'INSUFFICIENT_DATA') return (
         <div className="rounded-[1.5rem] p-6 bg-white/5 border border-white/10 text-right relative overflow-hidden">
             <div className="flex items-center gap-3 justify-end mb-4">
-                <h3 className="text-sm font-bold text-white">ترر احطة اأسبع</h3>
+                <h3 className="text-sm font-bold text-white">تقرير الأسبوع</h3>
                 <Lock className="w-4 h-4 text-slate-500" />
             </div>
             <p className="text-xs text-slate-400 leading-relaxed mb-4">
@@ -98,7 +98,7 @@ export const WeeklyReportWidget: FC = () => {
                     )}
                 </div>
                 <div className="text-right">
-                    <h3 className="text-lg md:text-xl font-black text-white mb-1">ترر احطة</h3>
+                    <h3 className="text-lg md:text-xl font-black text-white mb-1">تقرير الأسبوع</h3>
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-2 justify-end">
                         {new Date(report.start_date).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })}
                         <Calendar className="w-3 h-3" />
@@ -108,10 +108,10 @@ export const WeeklyReportWidget: FC = () => {
 
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
-                <StatBox label="تسط اد" value={`${report.summary_data.avgMood}/5`} icon={TrendingUp} color="text-emerald-400" />
-                <StatBox label="ست اطاة" value={`${report.summary_data.avgEnergy}/5`} icon={Zap} color="text-amber-400" />
-                <StatBox label="أبر ضغط" value={report.summary_data.topStress} icon={AlertCircle} color="text-rose-400" />
-                <StatBox label="تحات اخرطة" value={report.summary_data.insightCount} icon={Target} color="text-indigo-400" />
+                <StatBox label="متوسط المزاج" value={`${report.summary_data.avgMood}/5`} icon={TrendingUp} color="text-emerald-400" />
+                <StatBox label="متوسط الطاقة" value={`${report.summary_data.avgEnergy}/5`} icon={Zap} color="text-amber-400" />
+                <StatBox label="أكبر ضغط" value={report.summary_data.topStress} icon={AlertCircle} color="text-rose-400" />
+                <StatBox label="تحركات الخريطة" value={report.summary_data.insightCount} icon={Target} color="text-indigo-400" />
             </div>
 
             <div className="space-y-8">
@@ -181,7 +181,7 @@ const TrajectoryBadge: FC<{ trajectory: NonNullable<WeeklyReport['summary_data']
                     'bg-slate-500/10 border-slate-500/20 text-slate-400'
             }`}>
             {isUp ? <ArrowUpRight className="w-3 h-3" /> : isDown ? <ArrowDownRight className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
-            <span>سار {isUp ? 'تصاعد' : isDown ? 'تراجع' : 'ستر'}</span>
+            <span>مسار {isUp ? 'تصاعد' : isDown ? 'تراجع' : 'مستقر'}</span>
             <span className="opacity-50">({trajectory.moodDelta})</span>
         </div>
     );

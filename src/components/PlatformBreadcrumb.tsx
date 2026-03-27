@@ -78,6 +78,7 @@ export const PlatformBreadcrumb = memo(function PlatformBreadcrumb({
 });
 
 // ── Helper: توليد مسار Breadcrumb من اسم الشاشة ──
+// eslint-disable-next-line react-refresh/only-export-components
 export function buildBreadcrumb(screen: string): BreadcrumbItem[] {
   const screenLabels: Record<string, string> = {
     landing:              "الرئيسية",
@@ -95,6 +96,11 @@ export function buildBreadcrumb(screen: string): BreadcrumbItem[] {
     resources:            "مركز الموارد",
     survey:               "الاستبيان",
     grounding:            "التأريض",
+    meditation:           "مشغل جلسات التأمل",
+    "weekly-summary":     "ملخص الإحصائيات الأسبوعية",
+    history:              "أرشيف الجلسات",
+    group:                "الجلسات الجماعية المباشرة",
+  "annual-report":      "التقارير",
     "oracle-dashboard":   "لوحة الأوراكل",
     "guilt-court":        "محكمة الذنب",
     diplomacy:            "الدبلوماسية",

@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Scale, Gavel, X, Shield, CheckCircle, BookOpen } from "lucide-react";
+import { trackStartTrial } from "../services/analytics";
 
 interface InnerCourtProps {
     isOpen: boolean;
@@ -16,7 +17,13 @@ export const InnerCourt: FC<InnerCourtProps> = ({ isOpen, onClose }) => {
     const [verdict, setVerdict] = useState<VerdictType | null>(null);
 
     const handleStartTrial = () => {
-        if (accusation.trim()) setStep("trial");
+        if (!accusation.trim()) return;
+        trackStartTrial({
+            content_name: "inner_court_start_trial",
+            content_category: "trial_flow",
+            trial_context: "inner_court"
+        });
+        setStep("trial");
     };
 
     const handleVerdict = (v: VerdictType) => {

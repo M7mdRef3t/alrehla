@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
 import { getStripeClient } from '../../_lib/stripeConfig';
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
     try {
         const { client: stripe, config: stripeConfig } = getStripeClient();

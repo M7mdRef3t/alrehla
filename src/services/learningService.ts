@@ -334,3 +334,132 @@ export async function hasActiveSession(): Promise<boolean> {
   return session !== null;
 }
 
+/* ══════════ Course Comments ══════════ */
+
+export interface CourseComment {
+  id: string;
+  course_id: string;
+  user_id: string | null;
+  display_name: string;
+  avatar: string;
+  body: string;
+  likes: number;
+  created_at: string;
+  liked?: boolean; // client-computed
+}
+
+/** Fetch latest 50 comments for a course */
+export async function fetchComments(courseId: string): Promise<CourseComment[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("course_comments")
+    .select("*")
+    .eq("course_id", courseId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) { console.error("[learningService] fetchComments:", error.message); return []; }
+  return (data ?? []) as CourseComment[];
+}
+
+/** Post a new comment; falls back gracefully if not authenticated */
+export async function postComment(params: {
+  courseId: string;
+  body: string;
+  displayName?: string;
+  avatar?: string;
+}): Promise<CourseComment | null> {
+  if (!supabase) return null;
+  const session = await safeGetSession();
+  const { data, error } = await supabase
+    .from("course_comments")
+    .insert({
+      course_id: params.courseId,
+      user_id: session?.user.id ?? null,
+      display_name: params.displayName ?? (session ? "متعلم" : "زائر"),
+      avatar: params.avatar ?? "✨",
+      body: params.body,
+    })
+    .select()
+    .single();
+  if (error) { console.error("[learningService] postComment:", error.message); return null; }
+  return data as CourseComment;
+}
+
+/** Toggle like on a comment (calls DB function) */
+export async function toggleLike(commentId: string): Promise<{ liked: boolean } | null> {
+  if (!supabase) return null;
+  const session = await safeGetSession();
+  if (!session) return null;
+  const { data, error } = await supabase.rpc("toggle_comment_like", {
+    p_comment_id: commentId,
+    p_user_id: session.user.id,
+  });
+  if (error) { console.error("[learningService] toggleLike:", error.message); return null; }
+  return data as { liked: boolean };
+}
+
+/* ══════════ Certificate Persistence ══════════ */
+
+export interface CourseCompletionRecord {
+  id: string;
+  userId: string;
+  userName: string;
+  courseId: string;
+  courseTitle: string;
+  courseCategory: string;
+  instructorName: string;
+  totalHours?: string;
+  completedAt: string;
+}
+
+/** Save a course completion and issue a shareable certificate ID */
+export async function saveCourseCompletion(opts: {
+  userId: string;
+  userName: string;
+  courseId: string;
+  courseTitle: string;
+  courseCategory: string;
+  instructorName: string;
+  totalHours?: string;
+}): Promise<string | null> {
+  if (!supabase) return null;
+  const certId = `${opts.courseId}-${opts.userId}`;
+  const { error } = await supabase.from("course_completions").upsert(
+    {
+      id: certId,
+      user_id: opts.userId,
+      user_name: opts.userName,
+      course_id: opts.courseId,
+      course_title: opts.courseTitle,
+      course_category: opts.courseCategory,
+      instructor_name: opts.instructorName,
+      total_hours: opts.totalHours ?? null,
+      completed_at: new Date().toISOString(),
+    },
+    { onConflict: "id", ignoreDuplicates: true }
+  );
+  if (error) { console.error("[learningService] saveCourseCompletion:", error.message); return null; }
+  return certId;
+}
+
+/** Load a single certificate by its composite ID (public, no auth required) */
+export async function getCourseCompletion(certId: string): Promise<CourseCompletionRecord | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("course_completions")
+    .select("id, user_id, user_name, course_id, course_title, course_category, instructor_name, total_hours, completed_at")
+    .eq("id", certId)
+    .single();
+  if (error || !data) return null;
+  return {
+    id: data.id as string,
+    userId: data.user_id as string,
+    userName: data.user_name as string,
+    courseId: data.course_id as string,
+    courseTitle: data.course_title as string,
+    courseCategory: data.course_category as string,
+    instructorName: data.instructor_name as string,
+    totalHours: data.total_hours as string | undefined,
+    completedAt: data.completed_at as string,
+  };
+}

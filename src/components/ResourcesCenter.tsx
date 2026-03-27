@@ -145,15 +145,11 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   "متقدم": "#F43F5E",
 };
 
-// Fake progress per content id (Supabase in production)
-const PROGRESS_MAP: Record<string, number> = {
-  "ex1": 100, "ex2": 60, "ex5": 30,
-};
-
-// Fake ratings per content id
-const RATINGS_MAP: Record<string, number> = {
+// Mock ratings per content id (will be supplemented by dynamic logic)
+const MOCK_RATINGS: Record<string, number> = {
   "ex1": 4.9, "ex2": 4.7, "ex3": 4.8, "ex4": 4.6, "ex5": 4.9,
 };
+
 
 // Suggested by smart alert (patternId → content IDs)
 const ALERT_SUGGESTED: Record<string, string[]> = {
@@ -424,6 +420,44 @@ export function ResourcesCenter({
     () => dbExercises.length > 0 ? [...dbExercises, ...EXERCISES] : EXERCISES,
     [dbExercises]
   );
+
+  // Compute dynamic progress map for all items (Exercises & Videos)
+  const dynamicProgress = useMemo(() => {
+    const map: Record<string, number> = {};
+    
+    // Process Exercises
+    mergedExercises.forEach(ex => {
+      // For now exercises are binary (done or not viewed)
+      const isViewed = recentlyViewed.includes(ex.id);
+      map[ex.id] = isViewed ? 100 : 0;
+    });
+
+    // Process Mock Videos
+    rawVideos.forEach((v: import("../data/educationalContent").VideoContent) => {
+      try {
+        const done = JSON.parse(localStorage.getItem(`${v.id}_completed`) ?? "[]") as string[];
+        // Mock videos don't have explicit unit counts, assume 1 unit for now or default to 100 if done
+        map[v.id] = done.length > 0 ? 100 : 0;
+      } catch { map[v.id] = 0; }
+    });
+
+    // Process DB Videos (covered separately in their own render, but adding here just in case)
+    dbVideos.forEach((v: any) => {
+      try {
+        const vid = String(v.id);
+        const done = JSON.parse(localStorage.getItem(`${vid}_completed`) ?? "[]") as string[];
+        const total = Number((v.metadata as any)?.units_count ?? 5); // Fallback to 5
+        map[vid] = total > 0 ? Math.round((done.length / total) * 100) : 0;
+      } catch { map[v.id] = 0; }
+    });
+
+    return map;
+  }, [mergedExercises, dbVideos, recentlyViewed]);
+
+  // Merge mock ratings with any potential DB ratings
+  const dynamicRatings = useMemo(() => {
+    return { ...MOCK_RATINGS };
+  }, []);
 
   // Auto-cycle hero
   useEffect(() => {
@@ -831,9 +865,17 @@ export function ResourcesCenter({
                       .map((v: any, i) => {
                         const meta = (v.metadata ?? {}) as Record<string, any>;
                         const vid = String(v.id);
+                        const pct = (() => {
+                          try {
+                            const done = JSON.parse(localStorage.getItem(`${vid}_completed`) ?? "[]") as string[];
+                            const total = Number((v.metadata as any)?.units_count ?? 0);
+                            return total > 0 ? Math.round((done.length / total) * 100) : (done.length > 0 ? 50 : 0);
+                          } catch { return 0; }
+                        })();
                         return (
                           <motion.div key={vid} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                            style={{ ...glass("rgba(244,63,94,0.05)", "rgba(244,63,94,0.18)"), padding: "14px 16px", cursor: "pointer" }}
+                            style={{ ...glass("rgba(244,63,94,0.05)", "rgba(244,63,94,0.18)"), padding: "14px 16px", cursor: "pointer", position: "relative", overflow: "hidden" }}
+                            onClick={() => setDetailItem({ id: vid, type: "video-course" })}
                           >
                             <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                               {meta.thumbnail ? (
@@ -851,8 +893,14 @@ export function ResourcesCenter({
                               </div>
                               <Play size={14} color="#F43F5E" style={{ flexShrink: 0 }} />
                             </div>
-                          </motion.div>
-                        );
+                             {pct > 0 && (
+                               <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "rgba(255,255,255,0.05)" }}>
+                                 <div style={{ width: `${pct}%`, height: "100%", background: "linear-gradient(90deg, #F43F5E, #8B5CF6)" }} />
+                               </div>
+                             )}
+                           </motion.div>
+                          );
+
                     })}
                   </div>
                 </div>
@@ -862,7 +910,7 @@ export function ResourcesCenter({
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {filteredVideos.map((v, idx) => (
-                    <VideoCard key={v.id} video={v} idx={idx} bookmarked={bookmarks.has(v.id)} onBookmark={() => toggleBookmark(v.id)} inQueue={queue.includes(v.id)} onToggleQueue={() => toggleQueue(v.id)} suggested={isSuggested(v.id)} rating={RATINGS_MAP[v.id]}
+                    <VideoCard key={v.id} video={v} idx={idx} bookmarked={bookmarks.has(v.id)} onBookmark={() => toggleBookmark(v.id)} inQueue={queue.includes(v.id)} onToggleQueue={() => toggleQueue(v.id)} suggested={isSuggested(v.id)} rating={dynamicRatings[v.id] ?? 4.5} progress={dynamicProgress[v.id] ?? 0}
                       onOpenDetail={() => setDetailItem({ id: v.id, type: "video-course" })} />
                   ))}
                 </div>
@@ -996,15 +1044,15 @@ export function ResourcesCenter({
           {activeTab === "exercises" && (
             <motion.div key="exercises" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {filteredExercises.map((ex, idx) => (
-                  <ExerciseCard key={ex.id} exercise={ex} idx={idx}
-                    onToggle={() => { markViewed(ex.id); setDetailItem({ id: ex.id, type: "exercise" }); }}
-                    bookmarked={bookmarks.has(ex.id)} onBookmark={() => toggleBookmark(ex.id)}
-                    progress={PROGRESS_MAP[ex.id]}
-                    rating={RATINGS_MAP[ex.id]}
-                    inQueue={queue.includes(ex.id)} onToggleQueue={() => toggleQueue(ex.id)}
-                    suggested={isSuggested(ex.id)} />
-                ))}
+                  {filteredExercises.map((ex, idx) => (
+                    <ExerciseCard key={ex.id} exercise={ex} idx={idx}
+                      onToggle={() => { markViewed(ex.id); setDetailItem({ id: ex.id, type: "exercise" }); }}
+                      bookmarked={bookmarks.has(ex.id)} onBookmark={() => toggleBookmark(ex.id)}
+                      progress={dynamicProgress[ex.id] ?? 0}
+                      rating={dynamicRatings[ex.id] ?? 4.8}
+                      inQueue={queue.includes(ex.id)} onToggleQueue={() => toggleQueue(ex.id)}
+                      suggested={isSuggested(ex.id)} />
+                  ))}
               </div>
             </motion.div>
           )}
@@ -1108,10 +1156,10 @@ export function ResourcesCenter({
    Sub-Components
    ══════════════════════════════════════════ */
 
-function VideoCard({ video, idx, bookmarked, onBookmark, inQueue, onToggleQueue, suggested, rating, onOpenDetail }: {
+function VideoCard({ video, idx, bookmarked, onBookmark, inQueue, onToggleQueue, suggested, rating, progress, onOpenDetail }: {
   video: VideoContent; idx: number; bookmarked: boolean; onBookmark: () => void;
   inQueue?: boolean; onToggleQueue?: () => void;
-  suggested?: boolean; rating?: number; onOpenDetail?: () => void;
+  suggested?: boolean; rating?: number; progress?: number; onOpenDetail?: () => void;
 }) {
   useEffect(() => {
     if (!video.videoUrl) return;
@@ -1137,6 +1185,12 @@ function VideoCard({ video, idx, bookmarked, onBookmark, inQueue, onToggleQueue,
           <img src={video.thumbnailUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
           <Video size={24} color="#F43F5E" />
+        )}
+        {/* Progress overlay — real completion % */}
+        {progress != null && progress > 0 && (
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 3, background: "rgba(0,0,0,0.3)" }}>
+            <div style={{ width: `${progress}%`, height: "100%", background: "#F43F5E" }} />
+          </div>
         )}
         <div style={{
           position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",

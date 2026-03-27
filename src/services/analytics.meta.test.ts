@@ -113,4 +113,23 @@ describe("meta analytics tracking", () => {
       ))
     ).toBe(false);
   });
+
+  it("fires StartTrial with value and currency", { timeout: 20000 }, async () => {
+    const fbq = vi.fn();
+    window.fbq = fbq;
+
+    window.localStorage.setItem("dawayir-analytics-consent", "true");
+
+    const { trackStartTrial } = await import("./analytics");
+
+    trackStartTrial({
+      content_name: "inner_court_start_trial"
+    });
+
+    expect(fbq).toHaveBeenCalledWith("track", "StartTrial", expect.objectContaining({
+      value: 4.99,
+      currency: "USD",
+      content_name: "inner_court_start_trial"
+    }));
+  });
 });

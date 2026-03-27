@@ -1,9 +1,10 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ArrowRight, AlertCircle, RefreshCw, BrainCircuit, History, Pin, CheckCircle2, Columns } from "lucide-react";
+import { Sparkles, ArrowRight, AlertCircle, RefreshCw, BrainCircuit, History, Pin, CheckCircle2, Columns, Target } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import { supabase } from "../services/supabaseClient";
+import { usePulseState } from "../state/pulseState";
 
 interface MapInsight {
     id?: string;
@@ -34,6 +35,7 @@ export const MapInsightPanel: FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isComparing, setIsComparing] = useState(false);
+    const lastPulse = usePulseState((s) => s.lastPulse);
 
     const activeNodes = nodes.filter(n => !n.isNodeArchived);
 
@@ -271,17 +273,46 @@ export const MapInsightPanel: FC = () => {
     );
 };
 
-const InsightView: FC<{ insight: MapInsight, onTogglePin: (id: string, s: boolean) => void }> = ({ insight, onTogglePin }) => (
-    <div className="space-y-6">
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                {insight.cache_hit && (
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-400">
-                        <CheckCircle2 className="w-3 h-3" />
-                        من الذاكرة (أسرع)
-                    </div>
-                )}
-            </div>
+const InsightView: FC<{ insight: MapInsight, onTogglePin: (id: string, s: boolean) => void }> = ({ insight, onTogglePin }) => {
+    const lastPulse = usePulseState((s) => s.lastPulse);
+    const focus = lastPulse?.focus || 'none';
+
+    // Highlight engine based on focus
+    const focusKeywords: Record<string, string[]> = {
+        body: ['جسد', 'نفس', 'راحة', 'توتر', 'طاقة', 'جسدي'],
+        thought: ['تفكير', 'عقل', 'قرار', 'فكرة', 'منطق'],
+        event: ['حدث', 'موقف', 'فعل', 'تحرك', 'خطوة'],
+    };
+
+    const isMatch = (text: string) => {
+        if (focus === 'none') return false;
+        return focusKeywords[focus]?.some(kw => text.includes(kw));
+    };
+
+    const focusLabel: Record<string, string> = {
+        body: 'الوعي الجسدي',
+        thought: 'الوضوح الفكري',
+        event: 'التركيز العملي',
+        none: 'توازن عام'
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    {insight.cache_hit && (
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-bold text-emerald-400">
+                            <CheckCircle2 className="w-3 h-3" />
+                            من الذاكرة (أسرع)
+                        </div>
+                    )}
+                    {focus !== 'none' && (
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-bold text-indigo-400">
+                            <Target className="w-3 h-3" />
+                            تركيز: {focusLabel[focus]}
+                        </div>
+                    )}
+                </div>
             {insight.id && (
                 <button
                     onClick={() => onTogglePin(insight.id!, !!insight.pinned)}
@@ -307,12 +338,15 @@ const InsightView: FC<{ insight: MapInsight, onTogglePin: (id: string, s: boolea
                     <div className="w-1 h-1 rounded-full bg-blue-400" />
                 </p>
                 <ul className="space-y-3">
-                    {insight.insights.map((txt, i) => (
-                        <li key={i} className="text-[11px] text-slate-300 leading-snug flex items-start gap-2 justify-end">
-                            <span className="flex-1">{txt}</span>
-                            <div className="w-1 h-1 rounded-full bg-blue-500/40 mt-1.5 shrink-0" />
-                        </li>
-                    ))}
+                    {insight.insights.map((txt, i) => {
+                        const matched = isMatch(txt);
+                        return (
+                            <li key={i} className={`text-[11px] leading-snug flex items-start gap-2 justify-end transition-colors ${matched ? 'text-indigo-200 font-bold bg-indigo-500/5 p-1 -mr-1 rounded-md' : 'text-slate-300'}`}>
+                                <span className="flex-1">{txt}</span>
+                                <div className={`w-1 h-1 rounded-full mt-1.5 shrink-0 ${matched ? 'bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]' : 'bg-blue-500/40'}`} />
+                            </li>
+                        );
+                    })}
                 </ul>
             </div>
             <div className="text-right p-4 rounded-xl bg-white/5 border border-white/5 group hover:border-emerald-500/20 transition-all">
@@ -321,14 +355,17 @@ const InsightView: FC<{ insight: MapInsight, onTogglePin: (id: string, s: boolea
                     <ArrowRight className="w-3 h-3" />
                 </p>
                 <ul className="space-y-3">
-                    {insight.recommendations.map((txt, i) => (
-                        <li key={i} className="text-[11px] text-slate-300 leading-snug flex items-start gap-2 justify-end">
-                            <span className="flex-1">{txt}</span>
-                            <div className="w-4 h-4 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                                <ArrowRight className="w-2.5 h-2.5 text-emerald-500" />
-                            </div>
-                        </li>
-                    ))}
+                    {insight.recommendations.map((txt, i) => {
+                        const matched = isMatch(txt);
+                        return (
+                            <li key={i} className={`text-[11px] leading-snug flex items-start gap-2 justify-end transition-colors ${matched ? 'text-emerald-200 font-bold bg-emerald-500/5 p-1 -mr-1 rounded-md' : 'text-slate-300'}`}>
+                                <span className="flex-1">{txt}</span>
+                                <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${matched ? 'bg-emerald-500/20 border border-emerald-400/30' : 'bg-emerald-500/10'}`}>
+                                    <ArrowRight className={`w-2.5 h-2.5 ${matched ? 'text-emerald-300' : 'text-emerald-500'}`} />
+                                </div>
+                            </li>
+                        );
+                    })}
                 </ul>
             </div>
         </div>
@@ -342,7 +379,8 @@ const InsightView: FC<{ insight: MapInsight, onTogglePin: (id: string, s: boolea
             </div>
         )}
     </div>
-);
+    );
+};
 
 const MiniInsightCard: FC<{ insight: MapInsight, title: string }> = ({ insight, title }) => (
     <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-right">

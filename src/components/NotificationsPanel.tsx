@@ -4,6 +4,7 @@ import { X, Trophy, Bell, Award } from "lucide-react";
 import { useAchievementState } from "../state/achievementState";
 import { ACHIEVEMENTS } from "../data/achievements";
 import { useMemo } from "react";
+import { assignUrl } from "../services/navigation";
 
 interface NotificationsPanelProps {
   isOpen: boolean;
@@ -116,6 +117,16 @@ export const NotificationsPanel = memo(function NotificationsPanel({
           )}
 
           {/* ── List ── */}
+          <div className="px-4 pt-3">
+            <button
+              type="button"
+              onClick={() => assignUrl("/dawayir-live/book")}
+              className="w-full rounded-xl border border-cyan-300/20 bg-cyan-300/10 px-3 py-2 text-right text-xs font-semibold text-cyan-100 hover:bg-cyan-300/15 transition-colors"
+            >
+              معاينة تذكير الموعد / Appointment Preview
+            </button>
+          </div>
+
           <div className="max-h-80 overflow-y-auto overscroll-contain">
             {isEmpty ? (
               /* Empty state */

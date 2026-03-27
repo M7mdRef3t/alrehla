@@ -83,6 +83,32 @@ const cosmicFade = {
     transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }
   }
 };
+const CyberGrid: FC<{ harmonyColor: string }> = ({ harmonyColor }) => {
+  return (
+    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-20">
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, ${harmonyColor}22 1px, transparent 1px),
+            linear-gradient(to bottom, ${harmonyColor}22 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+          maskImage: "radial-gradient(circle at center, black 30%, transparent 80%)"
+        }}
+        animate={{
+          opacity: [0.1, 0.3, 0.1],
+          scale: [1, 1.02, 1],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+    </div>
+  );
+};
 
 const SovereignBroadcastOverlay: FC<{ message: { message: string; id: string } | null }> = ({ message }) => {
   return (
@@ -524,399 +550,378 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   return (
     <motion.main
-      className="flex-1 w-full h-full relative flex flex-col pb-24 md:pb-8"
+      className="flex-1 w-full h-screen relative flex flex-col overflow-hidden"
       style={{
-        background: [
-          "radial-gradient(ellipse 60% 50% at 15% 10%, rgba(124,58,237,0.08) 0%, transparent 60%)",
-          "radial-gradient(ellipse 50% 40% at 85% 90%, rgba(20,184,166,0.05) 0%, transparent 50%)",
-          "radial-gradient(ellipse 40% 40% at 50% 50%, rgba(20,184,166,0.03) 0%, transparent 60%)",
-          "#0A0A1A"
-        ].join(", ")
+        background: `
+          radial-gradient(ellipse 60% 50% at 15% 10%, rgba(124,58,237,0.12) 0%, transparent 60%),
+          radial-gradient(ellipse 50% 40% at 85% 90%, ${harmony.color}15 0%, transparent 50%),
+          radial-gradient(ellipse 40% 40% at 50% 50%, rgba(20,184,166,0.05) 0%, transparent 70%),
+          #050510
+        `
       }}
       aria-labelledby="core-map-title"
       onDrop={handleMainDrop}
       initial="hidden"
       animate="visible"
     >
-      <SovereignBroadcastOverlay message={sovereignMessage} />
+      {/* ── Layer 0: The Hero Background (The Map) ── */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <CyberGrid harmonyColor={harmony.color} />
+        
+        {/* Harmony Indicator Line */}
+        <motion.div
+           className="absolute top-0 left-0 right-0 h-[2.5px] z-[110] pointer-events-none"
+           animate={{
+             background: `linear-gradient(to right, transparent, ${harmony.color}, ${harmony.color}88, transparent)`,
+             opacity: [0.4, 0.8, 0.4],
+             scaleX: [0.9, 1, 0.9]
+           }}
+           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        />
 
-      {/* Harmony Indicator: Collective resonance line */}
-      <motion.div
-        className="fixed top-0 left-0 right-0 h-[2px] z-[100] pointer-events-none"
-        animate={{
-          background: `linear-gradient(to right, transparent, ${harmony.color}, transparent)`,
-          opacity: [0.3, 0.6, 0.3],
-          scaleX: [0.8, 1, 0.8]
-        }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      {/* Breath of the Sanctuary: Subliminal Zen Sync (Synchronized with Global Pulse) */}
-      <motion.div
-        className="fixed inset-0 z-0 pointer-events-none"
-        animate={{
-          opacity: [0.02, 0.08, 0.08, 0.02]
-        }}
-        transition={{
-          duration: harmony.breathConfig.total,
-          times: [0, harmony.breathConfig.inhale / harmony.breathConfig.total, (harmony.breathConfig.inhale + harmony.breathConfig.hold) / harmony.breathConfig.total, 1],
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-        style={{
-          background: `radial-gradient(circle at center, transparent 30%, ${harmony.color}26 100%)`
-        }}
-      />
-      {/*  Header  */}
-      <motion.header variants={cosmicFade} className="text-center px-4 sm:px-6 pt-6">
-        <AnimatePresence>
-          {!isSacredIsolation && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <div className="flex flex-col items-center gap-2 mb-4">
-                <h1
-                  id="core-map-title"
-                  className="text-[clamp(1.5rem,3.5vw,2.5rem)] font-bold leading-[1.12]"
-                  style={{ color: "var(--text-primary)", letterSpacing: "var(--tracking-wider)" }}
-                >
-                  <EditableText id={pageTitleKey} defaultText={pageTitle} page="map" />
-                </h1>
-              </div>
-              <p
-                className="text-sm md:text-base leading-[1.72] max-w-[42ch] mx-auto"
-                style={{ color: "var(--text-muted)", letterSpacing: "var(--tracking-wide)" }}
-              >
-                <EditableText id={subtitleKey} defaultText={subtitle} page="map" multiline showEditIcon={false} />
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.header>
-
-      {/* 
-          المنطقة الأولى — مؤشرات الوضع + سؤال اليوم
-          تظهر دائمًا (60% من الاهتمام البصري)
-           */}
-      {!journeyMode && activeNodes.length > 0 && (
-        <div className="relative w-full z-30">
-          <div className="max-w-[42rem] mx-auto px-4 py-6 flex flex-col items-center">
-
-            {/* 1️ HUD: OPERATIONAL (Sanctuary Mode) */}
-            {activeTab === "operational" && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{
-                  opacity: isSpeaking ? 0.6 : 1,
-                  scale: isSpeaking ? 0.98 : 1,
-                  y: 0
-                }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="w-full pointer-events-auto flex flex-col items-center gap-10 pt-10"
-              >
-                {/*  Pulse Capsule moved out to float at the bottom */}
-
-
-              </motion.div>
-            )}
-
-            {/* 2️ HUD: ANALYTICAL (Observatory Mode) */}
-            {activeTab === "analytical" && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full pointer-events-auto space-y-4 pt-12"
-              >
-                {/*  Segmented Control: Choose your Lens */}
-                <div className="flex items-center justify-center gap-2 p-1 rounded-full bg-white/[0.03] border border-white/5 mx-auto w-fit mb-8">
-                  {[
-                    { id: "network", label: "الشبكة" },
-                    { id: "stability", label: "الاستقرار" },
-                    { id: "metrics", label: "المؤشرات" }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setSegmentedView(tab.id as "network" | "stability" | "metrics")}
-                      className={`px-6 py-2 rounded-full text-xs font-black transition-all ${segmentedView === tab.id
-                        ? "bg-amber-500 text-black shadow-lg shadow-amber-500/20"
-                        : "text-white/30 hover:text-white/60"
-                        }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="space-y-6 max-h-[70vh] overflow-y-auto no-scrollbar pb-32">
-                  {segmentedView === "metrics" && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                      <div className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 text-right font-black">
-                        <h3 className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-3">مؤشر حِدّة الصدمة (Trauma Entropy)</h3>
-                        <TEIWidget />
-                      </div>
-                      <MapInsightPanel />
-                    </motion.div>
-                  )}
-
-                  {segmentedView === "network" && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                      <InfluenceNetwork />
-                    </motion.div>
-                  )}
-
-                  {segmentedView === "stability" && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                      <StabilityHeatmap />
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-
-            {/* 3️ HUD: NARRATIVE (Chronicle Mode) */}
-            {activeTab === "narrative" && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full pointer-events-auto space-y-6 pt-12 max-h-[80vh] overflow-y-auto no-scrollbar pb-32"
-              >
-                <div className="border-r-2 border-indigo-500/30 pr-4">
-                  <h2 className="text-xl font-black text-white mb-1">المسار</h2>
-                  <p className="text-xs text-white/40">سجل تطوّرك عبر الزمن</p>
-                </div>
-
-                <WeeklyReportWidget />
-
-                {/* Shadow Insights as a "Special Event" in Narrative */}
-                <div className="px-2">
-                  <ShadowInsightPanel onSurface={(context) => setVoiceTrigger({ event: 'shadow_insight', context })} />
-                </div>
-
-                <ConsciousnessThread />
-
-                <div className="pt-4 flex justify-center">
-                  <ShareDialog />
-                </div>
-              </motion.div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Sacred Isolation & Soul Geometry Toolbar ── */}
-      <div className="fixed top-6 right-20 z-[70] flex gap-2">
-        <button
-          onClick={() => setIsSacredIsolation(!isSacredIsolation)}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isSacredIsolation ? 'bg-teal-500 text-white shadow-[0_0_15px_rgba(45,212,191,0.5)]' : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
-          title={isSacredIsolation ? "إيقاف العزلة المقدسة" : "تفعيل العزلة المقدسة"}
-        >
-          <Mic className={`w-5 h-5 ${isSacredIsolation ? 'animate-pulse' : ''}`} />
-        </button>
-        <button
-          onClick={() => setShowSoulGeometry(true)}
-          className="w-10 h-10 rounded-full bg-white/5 text-white/40 flex items-center justify-center hover:bg-white/10 transition-all"
-          title="توليد بصمة الروح"
-        >
-          <Sparkles className="w-5 h-5" />
-        </button>
+        {/* The Actual Map Content */}
+        {!journeyMode && (
+           <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+              <AnimatePresence mode="wait">
+                {galaxyMode && canUseGalaxyView && galaxySubView === "forest" ? (
+                  <motion.div key="forest" className="w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <ForestView onNodeClick={handleNodeClick} />
+                  </motion.div>
+                ) : galaxyMode ? (
+                  <motion.div key="galaxy" className="w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <MapCanvas
+                      onNodeClick={handleNodeClick}
+                      canOpenDetails={canUseBasicDiagnosis}
+                      onMeClick={() => { if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; } setShowMeCard(true); }}
+                      galaxyGoalIds={selectedContexts.length > 0 ? selectedContexts : ["family", "work", "love", "general"]}
+                      highlightNodeId={selectedNodeId}
+                      isSovereign={isSovereign}
+                      aiState={{ isConnected, isListening, isSpeaking, onToggle: openLiveRoute, onNodeDrop: handleNodeDropOnAI }}
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div key="single" className="w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <MapCanvas
+                      onNodeClick={handleNodeClick}
+                      canOpenDetails={canUseBasicDiagnosis}
+                      onMeClick={() => { if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; } setShowMeCard(true); }}
+                      goalIdFilter={goalId}
+                      highlightNodeId={selectedNodeId}
+                      isSovereign={isSovereign}
+                      aiState={{ isConnected, isListening, isSpeaking, onToggle: openLiveRoute, onNodeDrop: handleNodeDropOnAI }}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+           </div>
+        )}
       </div>
 
-      <AnimatePresence>
-        {showSoulGeometry && (
-          <SoulGeometryOverlay onClose={() => setShowSoulGeometry(false)} />
-        )}
-      </AnimatePresence>
+      <SovereignBroadcastOverlay message={sovereignMessage} />
 
-      {/* Global Presence Overlay (The Witness) */}
-      <VoicePresence trigger={voiceTrigger} />
-
-      {/* 
-          النبضة التكتيكية: تطفو أسفل الخريطة لسهولة الوصول
-      */}
-      {!isSacredIsolation && !journeyMode && (
-        <div className="relative w-full z-40 flex justify-center my-4">
-          <DailyPulseWidget />
-        </div>
-      )}
-
-      {/* 
-          المنطقة الداعمة — تفاصيل الخريطة ومُلخّص المحطات (30%)
-           */}
-      {!journeyMode && (
-        <motion.div
-          variants={cosmicFade}
-          className="w-full max-w-[38rem] mx-auto mb-4"
-          style={{
-            order: sectionOrder["dashboard-details"],
-            transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-          }}
+      {/* ── Layer 1: The Tactical HUD (Floating interface) ── */}
+      <div className="relative z-10 flex flex-col h-full pointer-events-none overflow-hidden">
+        
+        {/* 1.1 Floating Header */}
+        <motion.header 
+          variants={cosmicFade} 
+          className="w-full flex flex-col items-center pt-8 pb-4"
         >
-          <button
-            type="button"
-            onClick={() => setShowDashboard((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-2 rounded-xl text-sm transition-all"
-            style={{
-              background: "rgba(255,255,255,0.02)",
-              border: "1px solid rgba(255,255,255,0.06)",
-              color: "var(--text-muted)"
-            }}
-          >
-            <span className="text-[11px]" style={{ color: "rgba(148,163,184,0.45)" }}>
-              {showDashboard ? "إخفاء التفاصيل" : "تفاصيل الدوائر"}
-            </span>
-            <span className="text-[11px]">
-              {mapCopy.dashboardMapSummary(activeNodes.length, greenNodes.length, archivedNodes.length)}
-            </span>
-          </button>
-
           <AnimatePresence>
-            {showDashboard && (
+            {!isSacredIsolation && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden"
+                className="pointer-events-auto flex flex-col items-center"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
               >
-                <div
-                  className="mt-2 rounded-xl p-4 space-y-4 text-right"
-                  style={{
-                    background: "rgba(15,23,42,0.5)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    backdropFilter: "blur(12px)"
-                  }}
-                >
-                  {/* توازن الدوائر — Mini Gauge */}
-                  {activeNodes.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-semibold mb-2" style={{ color: "var(--text-muted)" }}>
-                        توازن الدوائر
-                      </p>
-                      <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden">
-                        {["green", "yellow", "red"].map((ring) => {
-                          const count = activeNodes.filter((n) => n.ring === ring).length;
-                          if (!count) return null;
-                          const colors = { green: "#34d399", yellow: "#fbbf24", red: "#f87171" };
-                          return (
-                            <div
-                              key={ring}
-                              className="transition-all duration-700"
-                              style={{
-                                width: `${(count / activeNodes.length) * 100}%`,
-                                background: colors[ring as keyof typeof colors]
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-                      {/* أعداد تفصيلية */}
-                      <div className="flex justify-between mt-1.5">
-                        {["green", "yellow", "red"].map((ring) => {
-                          const count = activeNodes.filter((n) => n.ring === ring).length;
-                          if (!count) return null;
-                          const colors = { green: "#34d399", yellow: "#fbbf24", red: "#f87171" };
-                          const labels = { green: "آمن", yellow: "متعب", red: "ضاغط" };
-                          return (
-                            <span key={ring} className="text-[10px]" style={{ color: colors[ring as keyof typeof colors] }}>
-                              {count} {labels[ring as keyof typeof labels]}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Slogan — منطقة التنفّس (10%) */}
-                  {contextAtlas && (
-                    <ContextAtlasCard
-                      snapshot={contextAtlas}
-                      isUnifiedMode={galaxyMode}
-                      selectedContexts={selectedContexts}
-                      onToggleMode={handleToggleUnifiedContexts}
-                      onToggleContext={toggleContext}
-                      onFocusContext={handleFocusContext}
-                      onSelectNode={handleNodeClick}
-                    />
-                  )}
-                  {relationshipWeather && (
-                    <RelationshipWeatherCard
-                      snapshot={relationshipWeather}
-                      onSelectNode={handleNodeClick}
-                    />
-                  )}
-                  <RelationshipPulse />
-                  <p className="text-[11px] text-center pt-1" style={{ color: "rgba(45,212,191,0.35)" }}>
-                    {mapCopy.dashboardSlogan}
-                  </p>
+                <div className="flex flex-col items-center gap-1 mb-2">
+                   <div className="flex items-center gap-2 opacity-40">
+                      <div className="h-px w-4 bg-amber-500/40" />
+                      <span className="text-[8px] font-black uppercase tracking-[0.3em] text-amber-500">Cognitive OS</span>
+                      <div className="h-px w-4 bg-amber-500/40" />
+                   </div>
+                   <h1 id="core-map-title" className="text-2xl font-black text-white">
+                     <EditableText id={pageTitleKey} defaultText={pageTitle} page="map" />
+                   </h1>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </motion.header>
+
+        {/* 1.2 Sidebar Overlays (Left/Right Widgets) */}
+        {!isSacredIsolation && activeTab === "operational" && !journeyMode && (
+          <div className="absolute inset-0 pointer-events-none z-20">
+            {/* Right Sidebar: Relationship Intelligence */}
+            <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col gap-4 pointer-events-auto items-end">
+              {contextAtlas && (
+                <div className="flex flex-col items-end mb-2">
+                  <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Context Atlas</span>
+                  <div className="flex gap-1.5">
+                    {contextAtlas.contexts.map((ctx) => (
+                      <div key={ctx.key} className="w-2 h-2 rounded-full border border-white/10 bg-teal-500/40 shadow-[0_0_8px_rgba(20,184,166,0.3)]" />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {relationshipWeather && <RelationshipWeatherCard snapshot={relationshipWeather} />}
+              {nextStepDecision && (
+                <NextStepCard decision={nextStepDecision} onTakeAction={onTakeNextStep ?? (() => {})} onRefresh={onRefreshNextStep ?? (() => {})} />
+              )}
+            </div>
+
+            {/* Left Sidebar: System Info */}
+            <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col gap-4 pointer-events-auto">
+              <div className="glass-card p-3 border border-white/5 shadow-xl">
+                 <DailyPulseWidget />
+              </div>
+              <div className="glass-card p-4 border-l-2 border-amber-500/40 w-48 shadow-2xl">
+                <h4 className="text-[10px] font-black text-amber-500 uppercase tracking-tighter mb-2">Stability index</h4>
+                <TEIWidget />
+              </div>
+              <RelationshipPulse />
+            </div>
+          </div>
+        )}
+
+        {/* 1.3 Main HUD Area (Analytical/Narrative panels as full-screen overlays) */}
+        <div className="flex-1 relative">
+          <AnimatePresence>
+            {(activeTab === "analytical" || activeTab === "narrative") && (
+              <motion.div
+                key="panel-fullscreen"
+                initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                animate={{ opacity: 1, backdropFilter: "blur(24px)" }}
+                exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                className="absolute inset-0 z-50 bg-black/70 pointer-events-auto overflow-y-auto no-scrollbar pb-32"
+              >
+                <div className="max-w-[42rem] mx-auto px-6 py-16">
+                   {activeTab === "analytical" && (
+                     <div className="space-y-10">
+                        <div className="flex items-center justify-center gap-2 p-1 rounded-full bg-white/[0.03] border border-white/5 mx-auto w-fit">
+                          {[
+                            { id: "network", label: "الشبكة" },
+                            { id: "stability", label: "الاستقرار" },
+                            { id: "metrics", label: "المؤشرات" }
+                          ].map((tab) => (
+                            <button
+                              key={tab.id}
+                              onClick={() => setSegmentedView(tab.id as "network" | "stability" | "metrics")}
+                              className={`px-8 py-2 rounded-full text-xs font-black transition-all ${segmentedView === tab.id
+                                ? "bg-amber-500 text-black shadow-lg shadow-amber-500/30"
+                                : "text-white/30 hover:text-white/60"
+                                }`}
+                            >
+                              {tab.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        <div className="pt-4">
+                          {segmentedView === "metrics" && (
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                              <div className="p-8 rounded-[2rem] bg-white/[0.02] border border-white/5 text-right">
+                                <h3 className="text-[10px] font-black text-amber-500 uppercase tracking-[0.4em] mb-4">Trauma Entropy Index</h3>
+                                <TEIWidget />
+                              </div>
+                              <MapInsightPanel />
+                            </motion.div>
+                          )}
+                          {segmentedView === "network" && <InfluenceNetwork />}
+                          {segmentedView === "stability" && <StabilityHeatmap />}
+                        </div>
+                     </div>
+                   )}
+
+                   {activeTab === "narrative" && (
+                     <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="space-y-10">
+                        <div className="border-r-4 border-indigo-500/50 pr-6 mb-12">
+                          <h2 className="text-3xl font-black text-white mb-2">المسار</h2>
+                          <p className="text-sm text-white/40">سجل تطوّر الوعي عبر الزمن</p>
+                        </div>
+                        <WeeklyReportWidget />
+                        <ShadowInsightPanel onSurface={(context) => setVoiceTrigger({ event: 'shadow_insight', context })} />
+                        <ConsciousnessThread />
+                        <div className="pt-8 flex justify-center"><ShareDialog /></div>
+                     </motion.div>
+                   )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* 1.3 Floating Toolbar (Isolation/Geometry) */}
+        {!journeyMode && (
+          <div className="fixed top-8 right-8 z-[100] flex flex-col gap-3 pointer-events-auto">
+            <button
+              onClick={() => setIsSacredIsolation(!isSacredIsolation)}
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isSacredIsolation ? 'bg-teal-500 text-white shadow-[0_0_20px_rgba(45,212,191,0.6)]' : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10'}`}
+              title="العزلة المقدسة"
+            >
+              <Mic className={`w-5 h-5 ${isSacredIsolation ? 'animate-pulse' : ''}`} />
+            </button>
+            <button
+              onClick={() => setShowSoulGeometry(true)}
+              className="w-12 h-12 rounded-full bg-white/5 text-white/40 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
+              title="بصمة الروح"
+            >
+              <Sparkles className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* 1.4 The Bottom HUD (Status, Controls, Legend) */}
+        <div className="absolute inset-x-0 bottom-6 pointer-events-none z-50 flex flex-col items-center gap-6 px-6 overflow-visible">
+            
+            {/* Status Cards (Reactive HUD) */}
+            <AnimatePresence>
+              {activeTab === "operational" && !isSacredIsolation && !journeyMode && (
+                <div className="w-full max-w-[36rem] pointer-events-auto">
+                  {pulseMode === "low" && (
+                    <motion.div className="glass-card p-5 text-right mb-4 border-l-4 border-slate-400/50 shadow-2xl" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}>
+                      <p className="text-sm font-black text-white/90">السكون ضروري الآن</p>
+                      <p className="text-xs text-white/40 mt-1 mb-4">منطقة ضغط رادي — جولة شحن لتعديل المسار</p>
+                      <button type="button" onClick={onOpenCocoon} className="w-full cta-muted py-3 text-xs font-black uppercase tracking-widest">
+                        {suppressLowPulseCocoon ? "بدء استقرار تدريجي" : "بدء جولة الشحن"}
+                      </button>
+                    </motion.div>
+                  )}
+
+                  {pulseMode === "angry" && (
+                    <motion.div className="glass-card p-5 text-right mb-4 border-l-4 border-red-500/50 shadow-2xl" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}>
+                      <p className="text-sm font-black text-red-100">تحذير: ضجيج راداري عالي</p>
+                      <p className="text-xs text-white/40 mt-1 mb-4">تم رصد احتراق عاطفي — ثبّت حالك قبل الاشتباك</p>
+                      <button type="button" onClick={onOpenNoise} className="w-full cta-danger py-3 text-xs font-black uppercase tracking-widest">إسكات الضجيج</button>
+                    </motion.div>
+                  )}
+
+                  {pulseMode === "high" && (
+                    <motion.div className="glass-card p-5 text-right mb-4 border-l-4 border-emerald-500/50 shadow-2xl" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}>
+                      <p className="text-sm font-black text-emerald-100">الطاقة في ذروتها</p>
+                      <p className="text-xs text-white/40 mt-1 mb-4">القطاع آمن ومستقر — وقت التوسّع وتحدّي المسار</p>
+                      <button type="button" onClick={onOpenChallenge} className="w-full cta-primary py-3 text-xs font-black uppercase tracking-widest">تحميل التحدي</button>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+            </AnimatePresence>
+
+            {/*  Controls Bar (Operational Buttons)  */}
+            {activeTab === "operational" && !journeyMode && (
+              <motion.div className="flex items-center justify-center gap-4 flex-wrap pointer-events-auto" variants={cosmicFade}>
+                <button
+                  type="button"
+                  hidden={!canUseGalaxyView}
+                  onClick={() => setGalaxyMode((v) => !v)}
+                  className={`glass-button px-6 py-2.5 text-[9px] font-black tracking-[0.2em] uppercase ${galaxyMode ? "text-amber-500 border-amber-500/30" : "text-white/40"}`}
+                >
+                  {galaxyMode ? "Lock Sector" : "Scan Galaxy"}
+                </button>
+
+                <motion.button
+                  type="button"
+                  className="w-12 h-12 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/60 hover:text-emerald-400 hover:border-emerald-500/30 transition-all shadow-lg"
+                  onClick={() => setShowVoicePulse(true)}
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                >
+                  <Mic size={20} />
+                </motion.button>
+
+                <motion.button
+                  type="button"
+                  className="cta-primary px-8 py-3 text-[10px] font-black leading-none tracking-[0.1em] uppercase shadow-[0_0_30px_rgba(251,191,36,0.2)]"
+                  onClick={() => { onSelectNode(null); setShowAddPerson(true); }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Reroute / Add Entity
+                </motion.button>
+              </motion.div>
+            )}
+
+            {/*  Legend (Faded Presence)  */}
+            {activeTab === "operational" && !journeyMode && (
+              <motion.div className="flex justify-center gap-6 text-[8px] font-black uppercase tracking-widest pointer-events-auto opacity-30 hover:opacity-100 transition-opacity mb-24" variants={cosmicFade}>
+                {(["green", "yellow", "red"] as const).map((key) => (
+                  <div key={key} className="flex items-center gap-2">
+                     <span className="w-1 h-1 rounded-full shadow-[0_0_8px_currentColor]" style={{ color: legendConfig[key].dotColor, backgroundColor: "currentColor" }} />
+                     <span className="text-white/60">{legendConfig[key].label}</span>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+        </div>
+
+        {/* 1.5 Global Navigation & Primary Action Hub (Fixed overlays) */}
+        <div className="fixed inset-x-0 bottom-0 z-[100] pointer-events-none">
+          {/* Tab Navigation (Central Anchor) */}
+          <TabNavigation 
+            onPulse={onOpenPulse}
+            onLibrary={onOpenLibrary}
+            onProfile={onOpenProfile}
+            hidden={isSacredIsolation}
+          />
+
+          {/* Floating Action Menu (Primary Trigger) */}
+          <FloatingActionMenu 
+            onAddPerson={() => setShowAddPerson(true)}
+            onOpenInsights={() => useLayoutState.getState().setActiveTab("analytical")}
+            onOpenSettings={() => onOpenProfile?.()}
+            onToggleAI={openLiveRoute}
+            isAIConnected={isConnected}
+          />
+        </div>
+
+        {/* 1.6 System Switches */}
+        {!journeyMode && <LayoutModeSwitcher />}
+      </div>
+
+      {/* ── Layer 2: Global Modals & Overlays ── */}
+      <AnimatePresence>
+        {showSoulGeometry && <SoulGeometryOverlay onClose={() => setShowSoulGeometry(false)} />}
+        {selectedNodeId && (
+          <div className="fixed bottom-32 right-8 w-80 z-[110] pointer-events-auto">
+             <ContextNotePanel
+               nodeId={selectedNodeId}
+               nodeLabel={nodes.find((n) => n.id === selectedNodeId)?.label ?? "Entity"}
+               onClose={() => onSelectNode(null)}
+             />
+          </div>
+        )}
+      </AnimatePresence>
+
+      <VoicePresence trigger={voiceTrigger} />
+
+      {showAddPerson && (
+        <AddPersonModal
+          goalId={goalId}
+          canUseFamilyTree={canUseFamilyTree}
+          onClose={(openNodeId?: string) => { setShowAddPerson(false); onSelectNode(openNodeId ?? null); }}
+          onOpenMission={onOpenMission}
+          onOpenMissionFromAddPerson={onOpenMissionFromAddPerson}
+        />
       )}
 
-      {/*  Weekday Labels Modal  */}
-      {showWeekdayLabelsModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(10, 10, 26, 0.8)", backdropFilter: "blur(8px)" }}
-          role="dialog"
-          aria-labelledby="weekday-labels-title"
-        >
-          <motion.div
-            className="w-full max-w-sm glass-card p-5 text-right"
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.25 }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h2 id="weekday-labels-title" className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-                ربط أيام الأسبوع بنشاط أو شخص
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowWeekdayLabelsModal(false)}
-                className="p-1.5 rounded-full transition-colors"
-                style={{ color: "var(--text-muted)" }}
-                aria-label="إغلاق"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <p className="text-xs mb-3" style={{ color: "var(--text-secondary)" }}>
-              عند ملاحظة نبضات في انخفاض، الربط بنشاط أو شخص يفسّر التكرار ده أكثر.
-            </p>
-            <div className="space-y-2">
-              {PULSE_DAY_NAMES.map((dayName, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="w-20 shrink-0 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>{dayName}</span>
-                  <input
-                    type="text"
-                    value={weekdayLabels[i] ?? ""}
-                    onChange={(e) => setWeekdayLabel(i, e.target.value || null)}
-                    placeholder="مثال: اجتماع مع المدير"
-                    className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300/30"
-                    style={{
-                      background: "rgba(255, 255, 255, 0.05)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      color: "var(--text-primary)"
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowWeekdayLabelsModal(false)}
-              className="mt-4 w-full cta-primary py-2.5 text-sm font-semibold"
-            >
-              تمّ
-            </button>
-          </motion.div>
-        </div>
+      {showVoicePulse && <VoicePulseModal onClose={() => setShowVoicePulse(false)} />}
+      
+      {selectedNodeId && canUseBasicDiagnosis && (
+        <ViewPersonModal nodeId={selectedNodeId} category={category} goalId={goalId} onOpenMission={onOpenMission} onClose={() => onSelectNode(null)} />
       )}
+
+      <UpgradeScreen isOpen={isUpgradeOpen} onClose={() => setIsUpgradeOpen(false)} />
+      
+      {showMeCard && (
+        <MeNodeDetails
+          onClose={() => setShowMeCard(false)}
+          onStartBreathing={() => { setShowMeCard(false); if (onOpenBreathing) onOpenBreathing(); else setShowBreathing(true); }}
+        />
+      )}
+
+      {showBreathing && !onOpenBreathing && <BreathingOverlay onClose={() => setShowBreathing(false)} />}
+      
+      <DailyJournalArchive isOpen={showJournalArchive} onClose={() => setShowJournalArchive(false)} />
 
       <GoogleAuthModal
         isOpen={isCloudAuthOpen}
@@ -925,655 +930,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         intent={{ kind: "ai_focus", createdAt: Date.now() }}
       />
 
-      {/*  Status Cards (Pulse Modes)  */}
-      {
-        pulseMode === "low" && (
-          <motion.div
-            className="mt-5 mx-auto max-w-[38rem] card-unified status-card-low px-4 py-4 text-right"
-            variants={cosmicFade}
-            style={{
-              order: sectionOrder["status-card"],
-              transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-            }}
-          >
-            <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-              الطاقة منخفضة.. أنت في منطقة ضغط
-            </p>
-            <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
-              نفّذ خطوة صغيرة واحدة بس — من غير أي اشتباك.
-            </p>
-            {suppressLowPulseCocoon ? (
-              <p className="mt-3 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
-                تمّ تنفيذ جولة الشحن. خُد بداية هادية مع خطوة بسيطة على الخريطة.
-              </p>
-            ) : (
-              <button
-                type="button"
-                onClick={onOpenCocoon}
-                className="mt-3 w-full cta-muted py-2.5 text-sm font-semibold transition-all hover:bg-white/10"
-                style={{ borderColor: "rgba(148, 163, 184, 0.3)" }}
-              >
-                جولة شحن
-              </button>
-            )}
-          </motion.div>
-        )
-      }
-
-      {
-        pulseMode === "low" ? null : (
-          <>
-            {pulseMode === "angry" && (
-              <motion.div
-                className="mt-5 mx-auto max-w-[38rem] card-unified status-card-angry px-4 py-4 text-right"
-                variants={cosmicFade}
-                style={{
-                  order: sectionOrder["status-card"],
-                  transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-                }}
-              >
-                <p className="text-sm font-semibold" style={{ color: "var(--ring-danger)" }}>
-                  الرادار يرصد ضجيج عالي.. ثبّت حالك الأول
-                </p>
-                <p className="text-xs mt-1" style={{ color: "rgba(248, 113, 113, 0.7)" }}>
-                  قبل أي قرار، افصل المشاعر المشتعلة وارجع تحت السيطرة.
-                </p>
-                <button
-                  type="button"
-                  onClick={onOpenNoise}
-                  className="mt-3 w-full cta-danger py-2.5 text-sm font-semibold"
-                >
-                  إسكات الضجيج
-                </button>
-              </motion.div>
-            )}
-
-            {pulseMode === "high" && (
-              <motion.div
-                className="mt-5 mx-auto max-w-[38rem] card-unified status-card-high px-4 py-4 text-right"
-                variants={cosmicFade}
-                style={{
-                  order: sectionOrder["status-card"],
-                  transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-                }}
-              >
-                <p className="text-sm font-semibold" style={{ color: "var(--ring-safe)" }}>
-                  الطاقة ممتازة.. وقت تحدّي المسار
-                </p>
-                <p className="text-xs mt-1" style={{ color: "rgba(45, 212, 191, 0.7)" }}>
-                  {challengeLabel ?? "جاهز للخطوة الواردة"}
-                </p>
-                <button
-                  type="button"
-                  onClick={onOpenChallenge}
-                  className="mt-3 w-full cta-primary py-2.5 text-sm font-semibold disabled:opacity-40"
-                  disabled={!onOpenChallenge}
-                >
-                  ابدأ التحدي
-                </button>
-              </motion.div>
-            )}
-
-            {/*  Controls Bar  */}
-            <motion.div
-              className="mt-8 flex items-center justify-center gap-3 flex-wrap"
-              variants={cosmicFade}
-              style={{
-                order: sectionOrder["controls-bar"],
-                transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-              }}
-            >
-              <button
-                type="button"
-                hidden={!canUseGalaxyView}
-                aria-hidden={!canUseGalaxyView}
-                onClick={() => setGalaxyMode((v) => !v)}
-                className={`glass-button px-4 py-2.5 text-sm font-semibold ${galaxyMode ? "glass-button-active" : ""
-                  }`}
-                title={galaxyMode ? "ارجع للمسار الواحد" : "عرض كل الدوائر"}
-              >
-                {galaxyMode ? (
-                  <EditableText id="map_view_single_cta" defaultText={mapCopy.viewSingleCta} page="map" editOnClick={false} />
-                ) : (
-                  <EditableText id="map_view_all_cta" defaultText={mapCopy.viewAllCta} page="map" editOnClick={false} />
-                )}
-              </button>
-              {canUseGalaxyView && galaxyMode && (
-                <div className="flex rounded-full p-1" style={{ background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
-                  <button
-                    type="button"
-                    onClick={() => setGalaxySubView("map")}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${galaxySubView === "map" ? "cta-primary" : ""}`}
-                    style={galaxySubView !== "map" ? { color: "var(--text-secondary)" } : {}}
-                  >
-                    <EditableText id="map_galaxy_title" defaultText={mapCopy.galaxyTitle} page="map" editOnClick={false} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setGalaxySubView("forest")}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${galaxySubView === "forest" ? "cta-primary" : ""}`}
-                    style={galaxySubView !== "forest" ? { color: "var(--text-secondary)" } : {}}
-                  >
-                    <EditableText id="map_forest_title" defaultText={mapCopy.forestTitle} page="map" editOnClick={false} />
-                  </button>
-                </div>
-              )}
-              {canUseGalaxyView && galaxyMode && galaxySubView === "map" && (
-                <div className="flex flex-wrap justify-center gap-2">
-                  {(["family", "work", "love", "general"] as const).map((ctx) => {
-                    const label = ctx === "family" ? mapCopy.contextFamily : ctx === "work" ? mapCopy.contextWork : ctx === "love" ? mapCopy.contextLove : mapCopy.contextGeneral;
-                    const labelKey = ctx === "family" ? "map_context_family" : ctx === "work" ? "map_context_work" : ctx === "love" ? "map_context_love" : "map_context_general";
-                    const on = selectedContexts.includes(ctx);
-                    return (
-                      <button
-                        key={ctx}
-                        type="button"
-                        onClick={() => toggleContext(ctx)}
-                        className={`glass-button px-3 py-1.5 text-xs font-semibold ${on ? "glass-button-active" : ""}`}
-                      >
-                        <EditableText id={labelKey} defaultText={label} page="map" editOnClick={false} />
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              {!galaxyMode && isFamily && canUseFamilyTreeView && (
-                <div className="flex rounded-full p-1" style={{ background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("map")}
-                    className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${viewMode === "map" ? "cta-primary" : ""}`}
-                    style={viewMode !== "map" ? { color: "var(--text-secondary)" } : {}}
-                    title="عرض الخريطة"
-                  >
-                    <Map className="w-4 h-4" />
-                    <EditableText id="map_view_mode_map" defaultText="الخريطة" page="map" editOnClick={false} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!canUseFamilyTree) { onFeatureLocked?.("family_tree"); return; }
-                      setViewMode("tree");
-                    }}
-                    className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${viewMode === "tree" ? "cta-primary" : ""}`}
-                    style={viewMode !== "tree" ? { color: canUseFamilyTree ? "var(--text-secondary)" : "var(--text-muted)" } : {}}
-                    title="شجرة العائلة"
-                  >
-                    <TreeDeciduous className="w-4 h-4" />
-                    {canUseFamilyTree
-                      ? <EditableText id="map_view_mode_tree" defaultText="شجرة العائلة" page="map" editOnClick={false} />
-                      : <EditableText id="map_view_mode_tree_locked" defaultText="شجرة العائلة 🔒" page="map" editOnClick={false} />
-                    }
-                  </button>
-                </div>
-              )}
-
-              <motion.button
-                type="button"
-                className="w-12 h-12 rounded-full flex items-center justify-center transition-all cosmic-shimmer"
-                style={{
-                  background: "linear-gradient(135deg, rgba(45,212,191,0.2) 0%, rgba(20,184,166,0.05) 100%)",
-                  border: "1px solid rgba(45,212,191,0.3)",
-                  color: "var(--soft-teal)"
-                }}
-                onClick={() => setShowVoicePulse(true)}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                title="تفريغ صوتي"
-                aria-label="تفريغ صوتي"
-              >
-                <Mic size={20} />
-              </motion.button>
-
-              <motion.button
-                type="button"
-                className="cta-primary px-6 py-3 text-sm font-semibold cosmic-shimmer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/40 focus-visible:ring-offset-0"
-                onClick={() => {
-                  onSelectNode(null);
-                  const sub = loadSubscription();
-                  if (sub.tier === "basic" && nodes.length >= 3) {
-                    setIsUpgradeOpen(true);
-                  } else {
-                    setShowAddPerson(true);
-                  }
-                }}
-                title={mapCopy.addPersonTitle}
-                whileHover={{ scale: 1.04, y: -1 }}
-                whileTap={{ scale: 0.97 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-              >
-                <EditableText id="map_add_person_label" defaultText={mapCopy.addPersonLabel} page="map" editOnClick={false} />
-              </motion.button>
-            </motion.div>
-          </>
-        )
-      }
-
-      {/*  Pulse Insight  */}
-      {
-        pulseInsight && (
-          <motion.div className="mt-4 mx-auto max-w-[38rem] card-unified status-card-insight px-4 py-4 text-right" variants={cosmicFade}>
-            <p className="text-xs font-semibold" style={{ color: "rgba(167, 139, 250, 0.9)" }}>{pulseInsight.title}</p>
-            <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(167, 139, 250, 0.6)" }}>{pulseInsight.body}</p>
-            <button
-              type="button"
-              onClick={() => setShowWeekdayLabelsModal(true)}
-              className="mt-2 text-xs font-medium hover:underline"
-              style={{ color: "rgba(167, 139, 250, 0.7)" }}
-            >
-               ربط بنشاط أو شخص
-            </button>
-          </motion.div>
-        )
-      }
-
-      {/*  Map Canvas Views  */}
-      {
-        nextStepDecision && onTakeNextStep && onRefreshNextStep && (
-          <NextStepCard
-            decision={nextStepDecision}
-            onTakeAction={onTakeNextStep}
-            onRefresh={onRefreshNextStep}
-          />
-        )
-      }
-
-      {/*  Operational Visuals  */}
-      {
-        activeTab === "operational" && (
-          <>
-            <AnimatePresence mode="wait">
-              {galaxyMode && canUseGalaxyView && galaxySubView === "forest" ? (
-                <motion.div
-                  key="forest"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.05 }}
-                  className="min-h-[50vh]"
-                  style={{
-                    order: sectionOrder["map-canvas"],
-                    transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-                  }}
-                >
-                  <ForestView onNodeClick={handleNodeClick} />
-                </motion.div>
-              ) : galaxyMode ? (
-                <motion.div
-                  key="galaxy-map"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.05 }}
-                  className="min-h-[50vh]"
-                  style={{
-                    order: sectionOrder["map-canvas"],
-                    transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-                  }}
-                >
-                  <MapCanvas
-                    onNodeClick={handleNodeClick}
-                    canOpenDetails={canUseBasicDiagnosis}
-                    onMeClick={() => {
-                      if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; }
-                      setShowMeCard(true);
-                    }}
-                    galaxyGoalIds={selectedContexts.length > 0 ? selectedContexts : ["family", "work", "love", "general"]}
-                    highlightNodeId={selectedNodeId}
-                    isSovereign={isSovereign}
-                    aiState={{
-                      isConnected,
-                      isListening,
-                      isSpeaking,
-                      onToggle: openLiveRoute,
-                      onNodeDrop: handleNodeDropOnAI
-                    }}
-                  />
-                </motion.div>
-              ) : !canUseFamilyTreeView || viewMode === "map" ? (
-                <motion.div
-                  key="single-map"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.05 }}
-                  className="min-h-[50vh]"
-                  style={{
-                    order: sectionOrder["map-canvas"],
-                    transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-                  }}
-                >
-                  <Suspense fallback={null}>
-                    {mapType === "masafaty" ? (
-                      <DawayirCanvas 
-                        onNodeClick={(node) => onSelectNode(node.id)}
-                        onAddNode={() => setShowAddPerson(true)}
-                      />
-                    ) : (
-                      <MapCanvas
-                        onNodeClick={handleNodeClick}
-                        canOpenDetails={canUseBasicDiagnosis}
-                        onMeClick={() => {
-                          if (!canUseMirror) { onFeatureLocked?.("mirror_tool"); return; }
-                          setShowMeCard(true);
-                        }}
-                        goalIdFilter={goalId}
-                        highlightNodeId={selectedNodeId}
-                        isSovereign={isSovereign}
-                        aiState={{
-                          isConnected,
-                          isListening,
-                          isSpeaking,
-                          onToggle: openLiveRoute,
-                          onNodeDrop: handleNodeDropOnAI
-                        }}
-                      />
-                    )}
-                    {mapType === "masafaty" && (
-                      <>
-                        <EmergencyButton />
-                        <ActionToolkit />
-                      </>
-                    )}
-                  </Suspense>
-                </motion.div>
-              ) : canUseFamilyTreeView && isFamily ? (
-                <motion.div
-                  key="family-tree"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.05 }}
-                  style={{
-                    order: sectionOrder["map-canvas"],
-                    transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-                  }}
-                >
-                  <FamilyTreeView onNodeClick={handleNodeClick} />
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
-
-            {/*  Empty state  */}
-            {nodes.length === 0 && !showOnboarding && !journeyMode && (
-              <motion.div
-                className="mt-6 mx-auto max-w-sm p-4 card-unified text-center"
-                style={{ borderStyle: "dashed", borderColor: "rgba(255, 255, 255, 0.1)" }}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                role="status"
-                aria-live="polite"
-              >
-                <h3 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>
-                  <EditableText id="map_empty_title" defaultText={mapCopy.emptyMapTitle} page="map" />
-                </h3>
-                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                  <EditableText id="map_empty_hint" defaultText={mapCopy.emptyMapHint} page="map" multiline showEditIcon={false} />
-                </p>
-                <p className="text-xs mt-2" style={{ color: "var(--text-muted)" }}>
-                  <EditableText id="map_empty_reassurance" defaultText={mapCopy.emptyMapReassurance} page="map" showEditIcon={false} />
-                </p>
-              </motion.div>
-            )}
-          </>
-        )
-      }
-
-      {
-        showOnboarding && nodes.length === 0 && !journeyMode && (
-          <MapOnboardingOverlay onClose={() => setShowOnboarding(false)} />
-        )
-      }
-
-      {/*  Placement tooltip  */}
-      {
-        showPlacementTooltip && (
-          <motion.div
-            className="mt-4 mx-auto max-w-sm flex items-center justify-between gap-3 px-4 py-3 glass-card text-sm"
-            style={{ color: "var(--text-secondary)" }}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            role="status"
-            aria-live="polite"
-          >
-            <span>
-              {lastAddedNode ? (
-                <>
-                  تم إضافة <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{lastAddedNode.label}</span>{" "}
-                  في{" "}
-                  <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
-                    <span
-                      style={{
-                        color:
-                          lastAddedNode.ring === "green"
-                            ? "var(--ring-safe)"
-                            : lastAddedNode.ring === "yellow"
-                              ? "var(--ring-caution)"
-                              : "var(--ring-danger)"
-                      }}
-                    >
-                      {lastAddedNode.ring === "green"
-                        ? mapCopy.legendGreen
-                        : lastAddedNode.ring === "yellow"
-                          ? mapCopy.legendYellow
-                          : mapCopy.legendRed}
-                    </span>
-                  </span>
-                  {canUseBasicDiagnosis
-                    ? ". اضغط عليه للتفاصيل أو اسحبه لو عايز تغيّر مكانه."
-                    : ". التفاصيل مقفلة حالياً — فعّل Feature Flags."}
-                </>
-              ) : (
-                <EditableText id="map_first_placement_tooltip" defaultText={mapCopy.firstPlacementTooltip} page="map" showEditIcon={false} />
-              )}
-            </span>
-            <div className="shrink-0 flex items-center gap-1">
-              {lastAddedNode && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!canUseBasicDiagnosis) {
-                      onFeatureLocked?.("basic_diagnosis");
-                      return;
-                    }
-                    onSelectNode(lastAddedNode.id);
-                    dismissPlacementTooltip();
-                  }}
-                  className="rounded-full px-2.5 py-1 text-xs font-semibold border border-white/15 hover:bg-white/5 transition-colors"
-                  style={{ color: "var(--text-primary)" }}
-                  title="افتح الشخص"
-                  aria-label="افتح الشخص"
-                >
-                  افتح
-                </button>
-              )}
-              <button type="button" onClick={dismissPlacementTooltip} className="rounded-full p-1.5 transition-colors" style={{ color: "var(--text-muted)" }} title="إغلاق" aria-label="إغلاق">
-
-              </button>
-            </div>
-          </motion.div>
-        )
-      }
-
-      {/*  Ring Legend  */}
-      <motion.div
-        className="mt-6 flex flex-wrap justify-center gap-3 text-sm"
-        aria-label="علامات دوائر المسافة"
-        variants={cosmicFade}
-        style={{
-          order: sectionOrder["ring-legend"],
-          transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
-        }}
-      >
-        {(["green", "yellow", "red"] as const).map((key) => {
-          const isActive = legendTooltip === key;
-          const config = legendConfig[key];
-          return (
-            <div key={key} className="relative">
-              {isActive && (
-                <motion.div
-                  className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 glass-card text-xs font-medium whitespace-nowrap z-10"
-                  style={{ color: "var(--text-primary)" }}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  role="tooltip"
-                >
-                  <EditableText id={config.labelKey} defaultText={config.label} page="map" showEditIcon={false} />
-                  <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent" style={{ borderTopColor: "rgba(15, 20, 50, 0.8)" }} />
-                </motion.div>
-              )}
-              <button
-                type="button"
-                onClick={() => setLegendTooltip((prev) => (prev === key ? null : key))}
-                className={`${config.pillClass} inline-flex items-center gap-2 font-medium active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-amber-300/30`}
-                aria-label={config.label}
-                aria-expanded={isActive}
-              >
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: config.dotColor, boxShadow: `0 0 8px ${config.dotGlow}` }} />
-                <EditableText id={config.labelKey} defaultText={config.label} page="map" editOnClick={false} />
-              </button>
-            </div>
-          );
-        })}
-      </motion.div>
-      <p className="mt-2 text-xs" style={{ color: "var(--text-muted)" }} title={mapCopy.threatLevelHint}>
-        <EditableText id="map_threat_level_hint" defaultText={mapCopy.threatLevelHint} page="map" multiline showEditIcon={false} />
-      </p>
-
-      {/* ── Context Note Panel ── shows when a node is selected */}
-      <AnimatePresence>
-        {selectedNodeId && (
-          <div
-            className="fixed bottom-24 md:bottom-8 right-4 left-4 md:right-auto md:left-auto md:w-80 z-[60]"
-            style={{ fontFamily: "inherit" }}
-          >
-            <ContextNotePanel
-              nodeId={selectedNodeId}
-              nodeLabel={nodes.find((n) => n.id === selectedNodeId)?.label ?? selectedNodeId}
-              onClose={() => onSelectNode(null)}
-            />
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/*  Journey complete  */}
-      {
-        journeyMode && onJourneyComplete && (
-          <div className="mt-8 flex flex-col items-center gap-2">
-            <button type="button" onClick={onJourneyComplete} disabled={!canCompleteJourneyStep} className="cta-primary px-6 py-3 font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
-              أكمل المرحلة
-            </button>
-            {!canCompleteJourneyStep && nodes.length > 0 && (
-              <p className="text-sm max-w-xs text-center" style={{ color: "var(--text-muted)" }}>
-                افتح الدائرة وراجع التوجّه ومسار الحالة أو كمّل التدريب، بعدها اضغط "أكمل المرحلة"
-              </p>
-            )}
-          </div>
-        )
-      }
-
-      {/*  Modals  */}
-      {
-        showAddPerson && (
-          <AddPersonModal
-            goalId={goalId}
-            canUseFamilyTree={canUseFamilyTree}
-            onClose={(openNodeId?: string) => {
-              setShowAddPerson(false);
-              onSelectNode(openNodeId ?? null);
-            }}
-            onOpenMission={onOpenMission}
-            onOpenMissionFromAddPerson={onOpenMissionFromAddPerson}
-          />
-        )
-      }
-      {
-        showVoicePulse && (
-          <VoicePulseModal onClose={() => setShowVoicePulse(false)} />
-        )
-      }
-      {
-        selectedNodeId && canUseBasicDiagnosis && (
-          <ViewPersonModal nodeId={selectedNodeId} category={category} goalId={goalId} onOpenMission={onOpenMission} onClose={() => onSelectNode(null)} />
-        )
-      }
-      <UpgradeScreen isOpen={isUpgradeOpen} onClose={() => setIsUpgradeOpen(false)} />
-      {
-        showMeCard && (
-          <MeNodeDetails onClose={() => setShowMeCard(false)} onStartBreathing={() => { setShowMeCard(false); if (onOpenBreathing) onOpenBreathing(); else setShowBreathing(true); }} />
-        )
-      }
-      {
-        showBreathing && !onOpenBreathing && (
-          <BreathingOverlay onClose={() => setShowBreathing(false)} />
-        )
-      }
-
-      {/*  أرشيف سؤال اليوم  */}
-      <DailyJournalArchive
-        isOpen={showJournalArchive}
-        onClose={() => setShowJournalArchive(false)}
-      />
-
-      {/*  نبضة الظل — Shadow Pulse Alert  */}
-      {
-        !journeyMode && (
-          <ShadowPulseAlert onSelectNode={handleNodeClick} />
-        )
-      }
-
-      {/*  Floating Action Menu — القائمة العائمة  */}
-      {
-        !journeyMode && mode === "focus" && (
-          <FloatingActionMenu
-            onAddPerson={() => {
-              onSelectNode(null);
-              setShowAddPerson(true);
-            }}
-            onOpenInsights={() => setShowDashboard((v) => !v)}
-            onOpenSettings={() => undefined}
-            onToggleAI={openLiveRoute}
-            isAIConnected={isConnected}
-            showAIOption={true}
-          />
-        )
-      }
-
-      {/*  Insights Sidebar — الشريط الجانبي إحصائيات  */}
-      {
-        !journeyMode && (mode === "insights" || mode === "adaptive") && (
-          <InsightsSidebar onOpenArchive={() => setShowJournalArchive(true)} />
-        )
-      }
-
-      {/*  Tab Navigation — التبويبات (Desktop Only — Mobile uses AppChromeShell nav)  */}
-      {
-        !journeyMode && (
-          <div className="hidden md:block fixed bottom-0 left-0 right-0 z-50">
-            <TabNavigation
-              hidden={hideBottomDock}
-              onPulse={onOpenPulse}
-              onLibrary={onOpenLibrary}
-              onProfile={onOpenProfile}
-            />
-          </div>
-        )
-      }
-
-      {/*  Layout Mode Switcher — مُبدّل الأوضاع  */}
-      {
-        !journeyMode && !hideBottomDock && (
-          <LayoutModeSwitcher />
-        )
-      }
-    
-       {/* Feeling Check Modal (Masafaty) */}
-      <Suspense fallback={null}>
-        <AnimatePresence>
-          {showFeelingCheck && (
-            <FeelingCheckModal onClose={() => setShowFeelingCheck(false)} />
-          )}
-        </AnimatePresence>
-      </Suspense>
-
-      {/* Exit Warp Flash: Subconscious Arrival */}
+      {/* Exit Warp Flash */}
       <AnimatePresence>
         {isExitingWarp && (
           <motion.div
@@ -1589,6 +946,6 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           />
         )}
       </AnimatePresence>
-      </motion.main >
+    </motion.main>
   );
 };

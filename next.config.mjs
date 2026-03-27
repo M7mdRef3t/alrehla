@@ -17,6 +17,17 @@ const nextConfig = {
   // تعطيل X-Powered-By header (أمان + أداء بسيط)
   poweredByHeader: false,
 
+  // typecheck يُشغَّل بشكل مستقل عبر `npm run typecheck`
+  // لتجنب تكرار الفحص الثقيل داخل `next build`
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
+  // lint يُشغَّل كخطوة مستقلة بدل أن يبطئ build
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   experimental: {
     serverComponentsExternalPackages: ["@sentry/node"],
     typedRoutes: false,
