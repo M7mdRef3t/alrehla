@@ -345,7 +345,7 @@ export function WeeklyChallengesScreen({ onBack }: { onBack: () => void }) {
                       onClick={() => setJoinedWeekly(v => !v)}
                       style={{
                         display: "flex", alignItems: "center", gap: 8,
-                        padding: "11px 22px", borderRadius: 14, border: "none", cursor: "pointer",
+                        padding: "11px 22px", borderRadius: 14, outline: "none", cursor: "pointer",
                         background: joinedWeekly
                           ? "rgba(20,210,200,0.12)"
                           : "linear-gradient(135deg, #14d2c8, #0ea5e9)",
@@ -453,7 +453,7 @@ export function WeeklyChallengesScreen({ onBack }: { onBack: () => void }) {
                           whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                           onClick={() => toggleMission(m.id)}
                           style={{
-                            padding: "6px 14px", borderRadius: 10, border: "none", cursor: "pointer",
+                            padding: "6px 14px", borderRadius: 10, outline: "none", cursor: "pointer",
                             background: m.joined ? "rgba(20,210,200,0.1)" : "rgba(20,210,200,0.9)",
                             color: m.joined ? "#14d2c8" : "#070a14",
                             fontSize: 12, fontWeight: 900,

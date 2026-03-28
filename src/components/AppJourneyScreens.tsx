@@ -59,6 +59,7 @@ export function AppJourneyScreens({
   onOpenGrounding={() => onNavigate("grounding")}
   onOpenMeditation={() => onNavigate("meditation")}
   onOpenHistory={() => onNavigate("history")}
+  onOpenDiplomacy={() => onNavigate("diplomacy")}
       />
     );
   }

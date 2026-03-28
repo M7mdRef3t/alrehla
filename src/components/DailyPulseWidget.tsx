@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BatteryCharging, BatteryWarning, Check, Zap, Share2 } from "lucide-react";
+import { BatteryCharging, BatteryWarning, Check, Flame, Share2 } from "lucide-react";
 import { useDailyPulse } from "../hooks/useDailyPulse";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 import { soundManager } from "../services/soundManager";
@@ -14,18 +14,20 @@ import { ShareableCard } from "./ShareableCard";
  */
 
 export const DailyPulseWidget: FC = () => {
-  const { todayPulse, history, savePulse, hasAnsweredToday } = useDailyPulse();
+  const { todayPulse, history, savePulse, hasAnsweredToday, streak } = useDailyPulse();
 
   const [isSaved, setIsSaved] = useState(false);
   const [pulseType, setPulseType] = useState<"charge" | "drain" | null>(null);
   const [showShareCard, setShowShareCard] = useState(false);
 
-  // Behavioral Logic: Meaning & Diff 
+  // Behavioral Logic: Meaning & Diff
   const meaning = useMemo(() => {
-    if (!hasAnsweredToday) return "سجل نبضتك التكتيكية";
-    if ((todayPulse?.energy ?? 3) > 3) return "طاقة إيجابية مكتسبة";
-    if ((todayPulse?.energy ?? 3) < 3) return "استنزاف طاقي ملحوظ";
-    return "اتزان طاقي";
+    if (!hasAnsweredToday) return "سجّل نبضتك";
+    const e = todayPulse?.energy ?? 5;
+    if (e >= 8) return "طاقة عالية ⚡";
+    if (e >= 5) return "طاقة متوازنة";
+    if (e >= 3) return "طاقة متدنية";
+    return "استنزاف طاقي 🔋";
   }, [hasAnsweredToday, todayPulse]);
 
   const handleSavePulse = async (type: "charge" | "drain") => {
@@ -91,35 +93,38 @@ export const DailyPulseWidget: FC = () => {
           />
         )}
 
-        {/* Left Side: Status / Meaning */}
+        {/* Left Side: Status / Meaning + Streak */}
         <div className="flex items-center gap-3 relative z-10">
-          <Zap className="w-5 h-5 text-emerald-400 opacity-80" />
-          <span className="text-xs font-black uppercase tracking-[0.2em] text-white/70">
-            {meaning}
-          </span>
+          {streak > 0 && (
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/25">
+              <Flame className="w-3 h-3 text-amber-400" />
+              <span className="text-[10px] font-black text-amber-300">{streak}</span>
+            </div>
+          )}
+          <span className="text-xs font-bold text-white/70">{meaning}</span>
         </div>
 
         {/* Right Side: Quick Action Buttons (The Tactical Pulse) */}
         {!isSaved ? (
           <div className="flex items-center gap-3 relative z-10">
-            {/* Drain Button */}
+            {/* زر الاستنزاف */}
             <button
               onClick={() => handleSavePulse("drain")}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all font-black text-[10px] uppercase tracking-widest"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all font-bold text-[11px]"
               disabled={pulseType !== null}
             >
-              <BatteryWarning className="w-4 h-4" />
-              <span>Drain</span>
+              <BatteryWarning className="w-3.5 h-3.5" />
+              <span>استنزاف</span>
             </button>
 
-            {/* Charge Button */}
+            {/* زر الشحن */}
             <button
               onClick={() => handleSavePulse("charge")}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all font-black text-[10px] uppercase tracking-widest"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all font-bold text-[11px]"
               disabled={pulseType !== null}
             >
-              <BatteryCharging className="w-4 h-4" />
-              <span>Charge</span>
+              <BatteryCharging className="w-3.5 h-3.5" />
+              <span>شحن</span>
             </button>
           </div>
         ) : (
@@ -131,8 +136,8 @@ export const DailyPulseWidget: FC = () => {
           >
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 border border-emerald-400/40 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
               <Check className="w-4 h-4 text-emerald-400" />
-              <span className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">
-                Active Rec.
+              <span className="text-[11px] font-bold text-emerald-400">
+                تم التسجيل ✓
               </span>
             </div>
 

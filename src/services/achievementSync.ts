@@ -19,15 +19,23 @@ export async function syncAchievementUnlock(achievementId: string): Promise<void
   if (error) console.error("[achievementSync] unlock:", error.message);
 }
 
-/** Add points for a user action */
+/** Add points for a user action — also syncs display_name for Leaderboard */
 export async function syncAddPoints(amount: number): Promise<void> {
   if (!supabase || amount <= 0) return;
   const session = await safeGetSession();
   if (!session) return;
 
+  // Derive a human-readable name from session metadata for the leaderboard
+  const meta = session.user.user_metadata as Record<string, unknown> | undefined;
+  const displayName: string | null =
+    (meta?.full_name as string | undefined) ??
+    (meta?.name as string | undefined) ??
+    (session.user.email?.split("@")[0] ?? null);
+
   const { error } = await supabase.rpc("add_user_points", {
     p_user_id: session.user.id,
     p_amount: amount,
+    p_display_name: displayName,
   });
   if (error) console.error("[achievementSync] addPoints:", error.message);
 }

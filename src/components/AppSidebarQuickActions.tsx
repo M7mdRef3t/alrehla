@@ -8,6 +8,7 @@ export interface AppSidebarQuickActionsProps {
   onOpenJourneyTimeline?: () => void;
   openAdminDashboard: () => void;
   openCoachDashboard: () => void;
+  onOpenOwnerAnalytics?: () => void;
   onOpenDawayir?: () => void;
   onOpenGuidedJourney: () => void;
   onOpenBaseline: () => void;
@@ -39,6 +40,12 @@ export const AppSidebarQuickActions: FC<AppSidebarQuickActionsProps> = (props) =
         <ShieldCheck className="w-5 h-5 shrink-0 text-teal-600" />
         لوحة التحكم
       </button>
+      {props.onOpenOwnerAnalytics && (
+        <button type="button" onClick={props.onOpenOwnerAnalytics} className="w-full flex items-center gap-3 rounded-xl bg-violet-50/80 dark:bg-violet-900/30 text-violet-700 dark:text-violet-200 border border-violet-200 dark:border-violet-700 px-4 py-3 text-sm font-semibold hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-all text-right shrink-0 whitespace-nowrap" title="مركز التحليلات">
+          <BarChart3 className="w-5 h-5 shrink-0 text-violet-600 dark:text-violet-400" />
+          مركز التحليلات
+        </button>
+      )}
       <button type="button" onClick={props.openCoachDashboard} className="w-full flex items-center gap-3 rounded-xl bg-indigo-50/80 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 px-4 py-3 text-sm font-semibold hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all text-right shrink-0 whitespace-nowrap" title="بوابة المعالجين B2B">
         <BrainCircuit className="w-5 h-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
         بوابة المعالجين

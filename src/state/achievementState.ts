@@ -146,6 +146,10 @@ export const useAchievementState = create<AchievementState>()(
         });
         // Sync to Supabase (fire-and-forget)
         syncAchievementUnlock(id).catch(() => {});
+        // 🏅 Notify BadgeShareCard listener
+        try {
+          window.dispatchEvent(new CustomEvent("badge:unlocked", { detail: { id } }));
+        } catch { /* noop in SSR */ }
       },
 
       unlockSilent: (id: string) => {
@@ -198,6 +202,10 @@ export const useAchievementState = create<AchievementState>()(
         }));
         // Sync points to Supabase (fire-and-forget)
         syncAddPoints(points).catch(() => {});
+        // 🎯 Notify XpFloatProvider to show floating +N XP toast
+        try {
+          window.dispatchEvent(new CustomEvent("xp:earned", { detail: { amount: points } }));
+        } catch { /* noop in SSR */ }
         const achievementId = ACTION_ACHIEVEMENTS[normalized];
         if (achievementId) {
           get().unlock(achievementId);

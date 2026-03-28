@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Compass, Star, BookOpen, Wind, Archive } from "lucide-react";
+import { ArrowRight, Compass, Star, BookOpen, Wind, Archive, Send } from "lucide-react";
 import { getJourneyToolsView } from "../data/journeyTools";
 import { useJourneyState } from "../state/journeyState";
 import { useMapState } from "../state/mapState";
@@ -26,6 +26,7 @@ interface JourneyToolsScreenProps {
   onOpenGrounding?: () => void;
   onOpenMeditation?: () => void;
   onOpenHistory?: () => void;
+  onOpenDiplomacy?: () => void;
 }
 
 export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
@@ -41,7 +42,8 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
   onOpenExitScripts,
   onOpenGrounding,
   onOpenMeditation,
-  onOpenHistory
+  onOpenHistory,
+  onOpenDiplomacy
 }) => {
   const containerVariants = {
     hidden: { opacity: 0, y: 12 },
@@ -308,7 +310,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
       </motion.section>
 
       {/* â”€â”€ Protection Tools â”€â”€ */}
-      {(onOpenExitScripts || onOpenGrounding || onOpenMeditation) && (
+      {(onOpenExitScripts || onOpenGrounding || onOpenMeditation || onOpenDiplomacy) && (
         <motion.section
           className="mt-6 text-right"
           initial={{ opacity: 0, y: 8 }}
@@ -352,6 +354,23 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
                   </div>
                   <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
                     تنفّس + حواس + مسح الجسم
+                  </p>
+                </button>
+              )}
+              {onOpenDiplomacy && (
+                <button type="button" onClick={onOpenDiplomacy}
+                  className="rounded-xl px-4 py-4 text-right transition-all sm:col-span-2"
+                  style={{ background: "rgba(45,212,191,0.08)", border: "1px solid rgba(45,212,191,0.22)" }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ background: "rgba(45,212,191,0.15)" }}>
+                      <Send className="w-4 h-4" style={{ color: "#2dd4bf" }} />
+                    </div>
+                    <span className="text-sm font-bold text-white">الكابلات الدبلوماسية</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    رسائل استراتيجية جاهزة لكل موقف صعب
                   </p>
                 </button>
               )}

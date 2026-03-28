@@ -78,11 +78,33 @@ export function memoize<T extends (...args: unknown[]) => unknown>(fn: T): T {
  * });
  */
 export function batchDOMUpdates(fn: () => void): void {
-  if (typeof requestAnimationFrame !== "undefined") {
-    requestAnimationFrame(fn);
-  } else {
+  if (typeof window === "undefined" || typeof requestAnimationFrame === "undefined") {
     fn();
+    return;
   }
+
+  const queueKey = "__dawayirBatchDomUpdatesQueue";
+  const pendingKey = "__dawayirBatchDomUpdatesPending";
+  const windowRef = window as Window & {
+    [queueKey]?: Array<() => void>;
+    [pendingKey]?: boolean;
+  };
+
+  windowRef[queueKey] = windowRef[queueKey] ?? [];
+  windowRef[queueKey]!.push(fn);
+
+  if (windowRef[pendingKey]) return;
+  windowRef[pendingKey] = true;
+
+  requestAnimationFrame(() => {
+    const queue = windowRef[queueKey] ?? [];
+    windowRef[queueKey] = [];
+    windowRef[pendingKey] = false;
+
+    for (const task of queue) {
+      task();
+    }
+  });
 }
 
 /**

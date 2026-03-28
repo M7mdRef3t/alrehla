@@ -25,6 +25,7 @@ import {
   Compass,
   Star,
   ShieldCheck,
+  Zap,
   BrainCircuit,
   Radar,
   Scale,
@@ -1832,6 +1833,13 @@ export const AppSidebar: FC<AppSidebarProps> = ({
       {showTrophyRoom && (
         <Suspense fallback={<AwarenessSkeleton />}>
           <AcademicTrophyRoom onClose={() => setShowTrophyRoom(false)} />
+        </Suspense>
+      )}
+
+      {/* --- Weekly Challenges --- */}
+      {showWeeklyChallenges && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <WeeklyChallengesScreen onBack={() => setShowWeeklyChallenges(false)} />
         </Suspense>
       )}
     </>

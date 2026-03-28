@@ -593,6 +593,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
       };
     });
   }, [allNodes]);
+  const safeStarRadius = (value: unknown) => (Number.isFinite(value) ? Number(value) : 1);
 
   const [showArchiveToast, setShowArchiveToast] = useState(false);
   const [lastArchivedName, setLastArchivedName] = useState<string | undefined>(undefined);
@@ -1023,7 +1024,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     key={star.id}
                     cx={star.x}
                     cy={star.y}
-                    r={star.size}
+                    r={safeStarRadius(star.size)}
                     fill="rgba(255,255,255,1)"
                     initial={{ opacity: 0 }}
                     animate={{ 

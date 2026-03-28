@@ -6,8 +6,8 @@ import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, LayoutDashboard, Award, BookOpen, Trophy,
-  Activity, Download, Share2, Lock, ChevronRight,
-  Clock, Star, Zap, Target, Users, Brain,
+  Download, Share2, Lock, ChevronRight,
+  Zap, Target, Users, Brain,
   GraduationCap, Lightbulb, History,
 } from "lucide-react";
 import { useAchievementState } from "../state/achievementState";
@@ -15,9 +15,10 @@ import { ACHIEVEMENTS } from "../data/achievements";
 import { loadStreak } from "../services/streakSystem";
 import { getFromLocalStorage } from "../services/browserStorage";
 import { useAuthState } from "../state/authState";
+import { LeaderboardPanel } from "./LeaderboardPanel";
 
 // ── Types ──────────────────────────────────────────────────────────────────
-type NavSection = "overview" | "badges" | "certificates" | "pathways" | "library";
+type NavSection = "overview" | "badges" | "certificates" | "pathways" | "library" | "leaderboard";
 
 interface CompletedCourse { id: string; title: string; category: string; completedAt: string; instructor: string; totalHours?: string; }
 
@@ -55,6 +56,7 @@ const NAV: { id: NavSection; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "certificates",  label: "الشهادات",        icon: Award },
   { id: "pathways",      label: "مساراتي",         icon: Target },
   { id: "library",       label: "المكتبة",         icon: BookOpen },
+  { id: "leaderboard",   label: "المتصدرون",       icon: Users },
 ];
 
 // ── Badge icon map ─────────────────────────────────────────────────────────
@@ -467,6 +469,9 @@ export function AcademicTrophyRoom({ onClose }: { onClose: () => void }) {
                       </p>
                     </div>
                   )}
+
+                  {/* Leaderboard */}
+                  {nav === "leaderboard" && <LeaderboardPanel />}
 
                 </div>
 

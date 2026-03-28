@@ -24,6 +24,10 @@ function sessionHistorySavedKey(sessionId: string) {
   return `dawayir-live-history-saved:${sessionId}`;
 }
 
+function recordingStorageKey(sessionId: string) {
+  return `dawayir-live-recording:${sessionId}`;
+}
+
 function getJourneyPath(detail: LiveSessionDetail | null) {
   const frames = [...(detail?.replayFrames ?? [])].sort((left, right) => (left.seq || 0) - (right.seq || 0));
   return frames
@@ -187,6 +191,7 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
   const [truthIsUrgent, setTruthIsUrgent] = useState(false);
   const [isWaitingForRelease, setIsWaitingForRelease] = useState(false);
   const [isReleasing, setIsReleasing] = useState(false);
+  const [recordingMeta, setRecordingMeta] = useState<{ seconds: number; transcriptCount: number } | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const blowFrameRef = useRef<number | null>(null);
@@ -269,11 +274,33 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
     const key = sessionHistorySavedKey(sessionId);
     if (window.localStorage.getItem(key) === "saved") return;
 
+    const recordingRaw = window.sessionStorage.getItem(recordingStorageKey(sessionId));
+    let recording: { seconds: number; transcriptCount: number } | null = null;
+    if (recordingRaw) {
+      try {
+        const parsed = JSON.parse(recordingRaw) as unknown;
+        if (parsed && typeof parsed === "object") {
+          const candidate = parsed as Record<string, unknown>;
+          if (typeof candidate.seconds === "number" && typeof candidate.transcriptCount === "number") {
+            recording = {
+              seconds: candidate.seconds,
+              transcriptCount: candidate.transcriptCount,
+            };
+          }
+        }
+      } catch {
+        recording = null;
+      }
+    }
+    setRecordingMeta(recording);
+
     saveSessionSummary({
       dominantNodeId,
       clarityDelta: metrics?.clarityDelta ?? 0,
       overloadIndex: metrics?.overloadIndex ?? 0,
       transitionCount,
+      recordingSeconds: recording?.seconds,
+      transcriptCount: recording?.transcriptCount,
     });
     window.localStorage.setItem(key, "saved");
   }, [detail, dominantNodeId, metrics?.clarityDelta, metrics?.overloadIndex, sessionId, transitionCount]);
@@ -613,6 +640,32 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
                   <small>{language === "ar" ? "الوضوح" : "Clarity"}</small>
                   <strong>{formatPercent(metrics?.clarityDelta ?? 0)}</strong>
                 </div>
+              </div>
+            </section>
+
+            <section className="complete-summary-card">
+              <div className="complete-summary-card__head">
+                <Sparkles className="h-4 w-4 text-cyan-200" />
+                <span>{language === "ar" ? "تسجيل الجلسة" : "Session Recording"}</span>
+              </div>
+              <div className="complete-summary-stats">
+                <div className="complete-summary-stat">
+                  <small>{language === "ar" ? "المدة" : "Duration"}</small>
+                  <strong>{recordingMeta ? formatDuration(recordingMeta.seconds * 1000, language) : sessionDurationLabel}</strong>
+                </div>
+                <div className="complete-summary-stat">
+                  <small>{language === "ar" ? "النسخ" : "Transcript"}</small>
+                  <strong>{recordingMeta?.transcriptCount ?? detail.events.filter((event) => event.event_type === "transcript").length}</strong>
+                </div>
+                <div className="complete-summary-stat">
+                  <small>{language === "ar" ? "الحفظ" : "Saved"}</small>
+                  <strong>{language === "ar" ? "محليًا" : "Locally"}</strong>
+                </div>
+              </div>
+              <div className="complete-summary-note">
+                {language === "ar"
+                  ? "تم حفظ مدة التسجيل وعدد سطور الحوار في سجل الجلسة ليكونا جزءًا من الرجوع لاحقًا."
+                  : "Recording duration and transcript count are stored in the session history for later review."}
               </div>
             </section>
           </div>

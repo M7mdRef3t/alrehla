@@ -273,7 +273,8 @@ export default function LiveReplayPage({ sessionId }: { sessionId: string }) {
                 <line x1={nodes[0].x} y1={nodes[0].y} x2={nodes[2].x} y2={nodes[2].y} className="replay-link replay-link-faint" />
 
                 {nodes.map((node) => {
-                  const svgRadius = 6 + ((node.radius - 30) / 70) * 11;
+                  const safeRadius = Number.isFinite(node.radius) ? node.radius : 50;
+                  const svgRadius = 6 + ((safeRadius - 30) / 70) * 11;
                   const isFocused = Number(focusId) === node.id;
                   return (
                     <g key={node.id} className={`replay-node ${isFocused ? "focused" : ""}`} style={{ ["--replay-color" as string]: node.color }}>

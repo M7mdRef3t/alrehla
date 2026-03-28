@@ -735,6 +735,13 @@ export interface MarketingLeadsStats {
     pulseCompletedRatePct: number | null;
     mapCreatedRatePct: number | null;
   };
+  advisorInterest: {
+    total: number;
+    last24h: number;
+    successfulSubmissions: number;
+    failedSubmissions: number;
+    successRatePct: number | null;
+  };
 }
 
 export interface OverviewStats {
@@ -1343,7 +1350,9 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     { data: installedSessionsRows },
     { count: marketingLeadsTotalCount },
     { count: marketingLeadsLast24hCount },
-    { data: marketingLeadsRows }
+    { data: marketingLeadsRows },
+    { count: advisorInterestTotalCount },
+    { count: advisorInterestLast24hCount }
   ] =
     await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
@@ -1372,7 +1381,16 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
         .select("source,source_type,status,utm,created_at")
         .gte("created_at", fourteenDaysAgo)
         .order("created_at", { ascending: true })
-        .limit(10000)
+        .limit(10000),
+      supabase
+        .from("marketing_leads")
+        .select("email", { count: "exact", head: true })
+        .eq("source", "annual_growth_plan_2025"),
+      supabase
+        .from("marketing_leads")
+        .select("email", { count: "exact", head: true })
+        .eq("source", "annual_growth_plan_2025")
+        .gte("created_at", twentyFourHoursAgo)
     ]);
   const installedUsers = new Set(
     ((installedSessionsRows ?? []) as Array<{ session_id?: unknown }>)
@@ -1407,6 +1425,8 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       .map(([key, count]) => ({ key, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
+
+  const advisorInterestTotal = advisorInterestTotalCount ?? 0;
 
   if (!events) {
     return {
@@ -1487,6 +1507,13 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
           startClickRatePct: null,
           pulseCompletedRatePct: null,
           mapCreatedRatePct: null
+        },
+        advisorInterest: {
+          total: advisorInterestTotal,
+          last24h: advisorInterestLast24hCount ?? 0,
+          successfulSubmissions: 0,
+          failedSubmissions: 0,
+          successRatePct: null
         }
       }
     };
@@ -1501,6 +1528,8 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
   const pulseAbandonedByReason: Record<string, number> = {};
   let flowTimeToActionSum = 0;
   let flowTimeToActionCount = 0;
+  let advisorSubmitSuccessCount = 0;
+  let advisorSubmitFailedCount = 0;
   const sessionVariantMap = new Map<string, { energy: "a" | "b" | null; mood: "a" | "b" | null; focus: "a" | "b" | null }>();
   const pulseCopyVariants: PulseCopyVariantStats = {
     assigned: {
@@ -1590,6 +1619,15 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
           const extra = payload?.extra as Record<string, unknown> | undefined;
           const reason = typeof extra?.closeReason === "string" ? extra.closeReason : "unknown";
           pulseAbandonedByReason[reason] = (pulseAbandonedByReason[reason] ?? 0) + 1;
+        }
+        if (step === "lead_followup_connected" || step === "lead_followup_attempted") {
+          const extra = payload?.extra as Record<string, unknown> | undefined;
+          const source = typeof extra?.source === "string" ? extra.source : null;
+          const channel = typeof extra?.channel === "string" ? extra.channel : null;
+          if (source === "annual_growth_plan_2025" && channel === "advisor_interest") {
+            if (step === "lead_followup_connected") advisorSubmitSuccessCount += 1;
+            if (step === "lead_followup_attempted") advisorSubmitFailedCount += 1;
+          }
         }
       }
       if (typeof payload?.timeToAction === "number") {
@@ -1811,6 +1849,7 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
   });
   retentionCohorts.sort((a, b) => b.cohortDate.localeCompare(a.cohortDate));
   const marketingLeadsTotal = marketingLeadsTotalCount ?? 0;
+  const advisorTrackedSubmissions = advisorSubmitSuccessCount + advisorSubmitFailedCount;
   const startClicks = flowCounts["landing_clicked_start"] ?? 0;
   const pulseCompleted = flowCounts["pulse_completed"] ?? 0;
   const mapCreatedRatePct =
@@ -1833,6 +1872,16 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       pulseCompletedRatePct:
         marketingLeadsTotal > 0 ? Math.round(((pulseCompleted / marketingLeadsTotal) * 100) * 100) / 100 : null,
       mapCreatedRatePct
+    },
+    advisorInterest: {
+      total: advisorInterestTotal,
+      last24h: advisorInterestLast24hCount ?? 0,
+      successfulSubmissions: advisorSubmitSuccessCount,
+      failedSubmissions: advisorSubmitFailedCount,
+      successRatePct:
+        advisorTrackedSubmissions > 0
+          ? Math.round((advisorSubmitSuccessCount / advisorTrackedSubmissions) * 10000) / 100
+          : null
     }
   };
 

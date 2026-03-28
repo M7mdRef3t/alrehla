@@ -35,6 +35,7 @@ const OnboardingWelcomeBubble = lazy(() =>
   import("../OnboardingWelcomeBubble").then((m) => ({ default: m.OnboardingWelcomeBubble }))
 );
 const StartupSequence = lazy(() => import("../StartupSequence").then((m) => ({ default: m.StartupSequence })));
+const FirstSparkOnboarding = lazy(() => import("../FirstSparkOnboarding").then((m) => ({ default: m.FirstSparkOnboarding })));
 const AscensionRitual = lazy(() =>
   import("../Oracle/AscensionRitual").then((m) => ({ default: m.AscensionRitual }))
 );
@@ -175,7 +176,16 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
         style={{ background: "var(--space-void)" }}
       >
         {showStartup && screen !== "landing" && (
-          <StartupSequence onComplete={onStartupComplete} />
+          typeof window !== "undefined" && !localStorage.getItem("alrehla-first-spark-seen")
+            ? (
+              <FirstSparkOnboarding
+                onComplete={() => {
+                  localStorage.setItem("alrehla-first-spark-seen", "1");
+                  onStartupComplete();
+                }}
+              />
+            )
+            : <StartupSequence onComplete={onStartupComplete} />
         )}
         {isFeaturePreviewSession && (
           <button

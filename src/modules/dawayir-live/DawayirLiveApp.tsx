@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, History } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { assignUrl } from "../../services/navigation";
 import { runtimeEnv } from "../../config/runtimeEnv";
 import LiveCanvas from "./components/LiveCanvas";
@@ -12,6 +13,7 @@ import MirrorMomentOverlay from "./components/MirrorMomentOverlay";
 import SacredPauseOverlay from "./components/SacredPauseOverlay";
 import LiveTranscript from "./components/LiveTranscript";
 import LiveSetupScreen from "./components/LiveSetupScreen";
+import LivePreJoinScreen from "./components/LivePreJoinScreen";
 import ParityOnboardingModal from "./components/ParityOnboardingModal";
 import ParityWelcomeScreen from "./components/ParityWelcomeScreen";
 import { useDawayirLiveSession } from "./hooks/useDawayirLiveSession";
@@ -25,7 +27,21 @@ export default function DawayirLiveApp() {
   const [language, setLanguage] = useState<LiveLanguage>((safeSearchParams.get("lang") as LiveLanguage) || "ar");
   const [showTranscript, setShowTranscript] = useState(false);
   const [composer, setComposer] = useState("");
-  const [appView, setAppView] = useState<"welcome" | "setup" | "live">("welcome");
+  const [appView, setAppView] = useState<"welcome" | "setup" | "prejoin" | "live">("welcome");
+  const [isCameraActive, setIsCameraActive] = useState(true);
+  const [isHandRaised, setIsHandRaised] = useState(false);
+  const [currentReaction, setCurrentReaction] = useState<string | null>(null);
+  const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
+  const [notesDraft, setNotesDraft] = useState("");
+  const [pinnedNote, setPinnedNote] = useState("");
+  const [whiteboardTool, setWhiteboardTool] = useState<"pen" | "shape" | "eraser">("pen");
+  const [transcriptTab, setTranscriptTab] = useState<"notes" | "transcript" | "summary">("notes");
+  const [transcriptQuery, setTranscriptQuery] = useState("");
+  const [isVoiceSearchListening, setIsVoiceSearchListening] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordStartAt, setRecordStartAt] = useState<number | null>(null);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const [showReactionTray, setShowReactionTray] = useState(false);
   const [showBreathingGuide, setShowBreathingGuide] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -98,7 +114,7 @@ export default function DawayirLiveApp() {
     }
   }, [session.status, session.isAgentSpeaking, session.journeyStage, session.metrics.overloadIndex]);
 
-  const handleStart = useCallback(async () => {
+  const handleJoinSession = useCallback(async () => {
     autoMicRef.current = true;
     await session.connect();
   }, [session]);
@@ -106,9 +122,16 @@ export default function DawayirLiveApp() {
   const handleEnd = useCallback(async () => {
     const id = await session.completeSession();
     if (id) {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(`dawayir-live-recording:${id}`, JSON.stringify({
+          seconds: recordSeconds,
+          transcriptCount: session.transcript.length,
+          startedAt: recordStartAt,
+        }));
+      }
       assignUrl(`/dawayir-live/complete/${id}`);
     }
-  }, [session]);
+  }, [recordSeconds, recordStartAt, session]);
 
   const handleSend = useCallback(() => {
     if (!composer.trim()) return;
@@ -123,7 +146,68 @@ export default function DawayirLiveApp() {
     }
   }, [session]);
 
+  const handleToggleCamera = useCallback(() => {
+    setIsCameraActive((value) => !value);
+  }, []);
+
+  const handleToggleHandRaise = useCallback(() => {
+    setIsHandRaised((value) => !value);
+  }, []);
+
+  const handleCycleReaction = useCallback(() => {
+    setCurrentReaction((value) => {
+      if (!value) return "👍";
+      if (value === "👍") return "🙏";
+      if (value === "🙏") return "❤️";
+      return null;
+    });
+    setShowReactionTray(true);
+  }, []);
+
+  useEffect(() => {
+    if (!currentReaction) return;
+    setShowReactionTray(true);
+    const timer = window.setTimeout(() => setShowReactionTray(false), 3500);
+    return () => window.clearTimeout(timer);
+  }, [currentReaction]);
+
+  const handleToggleWhiteboard = useCallback(() => {
+    setIsWhiteboardOpen((value) => !value);
+  }, []);
+
+  const handleSelectWhiteboardTool = useCallback((tool: "pen" | "shape" | "eraser") => {
+    setWhiteboardTool(tool);
+    setIsWhiteboardOpen(true);
+  }, []);
+
+  const handleToggleRecording = useCallback(() => {
+    setIsRecording((value) => {
+      const next = !value;
+      if (next) {
+        const now = Date.now();
+        setRecordStartAt(now);
+        setRecordSeconds(0);
+      } else {
+        setRecordStartAt(null);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleToggleVoiceSearch = useCallback(() => {
+    setIsVoiceSearchListening((value) => !value);
+  }, []);
+
+  const handlePinNote = useCallback(() => {
+    if (!notesDraft.trim()) return;
+    setPinnedNote(notesDraft.trim());
+  }, [notesDraft]);
+
   const handleBack = useCallback(() => {
+    if (appView === "prejoin") {
+      setAppView("setup");
+      return;
+    }
     if (appView === "setup") {
       setAppView("welcome");
       return;
@@ -132,6 +216,10 @@ export default function DawayirLiveApp() {
       window.history.back();
     }
   }, [appView]);
+
+  const handleContinueToPreJoin = useCallback(() => {
+    setAppView("prejoin");
+  }, []);
 
   const dismissOnboarding = useCallback(() => {
     setShowOnboarding(false);
@@ -156,6 +244,14 @@ export default function DawayirLiveApp() {
     session.status === "connecting" ||
     session.status === "setup";
   const isLive = session.status === "connected" || session.status === "speaking";
+
+  useEffect(() => {
+    if (!isRecording || !recordStartAt) return;
+    const timer = window.setInterval(() => {
+      setRecordSeconds(Math.floor((Date.now() - recordStartAt) / 1000));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [isRecording, recordStartAt]);
 
   return (
     <div className="dawayir-parity-shell dawayir-group-shell" dir={language === "ar" ? "rtl" : "ltr"} lang={language}>
@@ -196,12 +292,24 @@ export default function DawayirLiveApp() {
           model={config.model || "gemini-2.5-flash-native-audio-latest"}
           voice={config.voice || "Aoede"}
           nodeLabel={config.initialContext?.nodeLabel}
-          onStartSession={handleStart}
+          onContinue={handleContinueToPreJoin}
+          onToggleLanguage={setLanguage}
+          onToggleMode={setMode}
+        />
+      )}
+
+      {appView === "prejoin" && !isLive && (
+        <LivePreJoinScreen
+          language={language}
+          model={config.model || "gemini-2.5-flash-native-audio-latest"}
+          voice={config.voice || "Aoede"}
+          nodeLabel={config.initialContext?.nodeLabel}
+          isJoining={isConnecting}
+          onJoinSession={handleJoinSession}
+          onBackToSetup={() => setAppView("setup")}
           onOpenHistory={() => assignUrl("/dawayir-live/history")}
           onOpenCouple={() => assignUrl("/dawayir-live/couple")}
           onOpenTeacher={() => assignUrl("/coach?tab=dawayir-live")}
-          onToggleLanguage={setLanguage}
-          onToggleMode={setMode}
         />
       )}
 
@@ -236,6 +344,40 @@ export default function DawayirLiveApp() {
             language={language}
           />
 
+          <AnimatePresence>
+            {showReactionTray && (
+              <motion.div
+                className="live-reaction-tray"
+                aria-label={language === "ar" ? "شريط ردود الفعل" : "Reaction tray"}
+                initial={{ opacity: 0, y: 16, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 12, scale: 0.96 }}
+                transition={{ duration: 0.24, ease: "easeOut" }}
+              >
+                {(["❤️", "✨", "🙏", "💡", "👍"] as const).map((reaction, index) => (
+                  <motion.button
+                    key={reaction}
+                    type="button"
+                    className={`live-reaction-chip ${currentReaction === reaction ? "active" : ""}`}
+                    onClick={() => setCurrentReaction(reaction)}
+                    initial={{ y: 0 }}
+                    animate={{ y: [0, -3, 0] }}
+                    transition={{ duration: 2.6, repeat: Infinity, delay: index * 0.12 }}
+                  >
+                    {reaction}
+                  </motion.button>
+                ))}
+                <button
+                  type="button"
+                  className="live-reaction-chip live-reaction-chip--close"
+                  onClick={() => setShowReactionTray(false)}
+                >
+                  ×
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <LiveHUD
             language={language}
             status={session.status}
@@ -246,11 +388,28 @@ export default function DawayirLiveApp() {
             journeyStage={session.journeyStage}
             whyNowLine={session.whyNowLine}
             latestTruthContract={session.latestTruthContract}
+            latestSummary={session.latestSummary}
             composer={composer}
             onComposerChange={setComposer}
             onSendText={handleSend}
-            onToggleTranscript={() => setShowTranscript((value) => !value)}
+          onToggleTranscript={() => setShowTranscript((value) => !value)}
             onToggleMic={session.toggleMic}
+            onToggleCamera={handleToggleCamera}
+            onToggleHandRaise={handleToggleHandRaise}
+            onCycleReaction={handleCycleReaction}
+            onToggleWhiteboard={handleToggleWhiteboard}
+            onSelectWhiteboardTool={handleSelectWhiteboardTool}
+            onPinNote={handlePinNote}
+            onToggleRecording={handleToggleRecording}
+            notesDraft={notesDraft}
+            onNotesDraftChange={setNotesDraft}
+            transcriptCount={session.transcript.length}
+            transcriptTab={transcriptTab}
+            onChangeTranscriptTab={setTranscriptTab}
+            transcriptQuery={transcriptQuery}
+            onTranscriptQueryChange={setTranscriptQuery}
+            isVoiceSearchListening={isVoiceSearchListening}
+            onToggleVoiceSearch={handleToggleVoiceSearch}
             onToggleSilentMirror={session.toggleSilentMirror}
             onEndSession={handleEnd}
             onOpenHistory={() => assignUrl("/dawayir-live/history")}
@@ -258,6 +417,14 @@ export default function DawayirLiveApp() {
             onBack={handleBack}
             showBreathingGuide={showBreathingGuide}
             isSilentMirrorMode={session.isSilentMirrorMode}
+            isCameraActive={isCameraActive}
+            isHandRaised={isHandRaised}
+            currentReaction={currentReaction}
+            isWhiteboardOpen={isWhiteboardOpen}
+            pinnedNote={pinnedNote}
+            whiteboardTool={whiteboardTool}
+            isRecording={isRecording}
+            recordSeconds={recordSeconds}
           />
 
           <LiveTranscript
@@ -266,6 +433,12 @@ export default function DawayirLiveApp() {
             onToggle={() => setShowTranscript((value) => !value)}
             showToggle={false}
             language={language}
+            searchQuery={transcriptQuery}
+            onSearchQueryChange={setTranscriptQuery}
+            isVoiceSearchListening={isVoiceSearchListening}
+            onToggleVoiceSearch={handleToggleVoiceSearch}
+            latestSummary={session.latestSummary}
+            latestTranscriptLine={session.transcript.at(-1)?.text ?? null}
           />
         </>
       )}
@@ -309,7 +482,7 @@ export default function DawayirLiveApp() {
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <button
                 type="button"
-                onClick={handleStart}
+              onClick={handleJoinSession}
                 className="rounded-2xl bg-teal-400 px-5 py-3 text-sm font-bold text-slate-950"
               >
                 حاول مرة أخرى

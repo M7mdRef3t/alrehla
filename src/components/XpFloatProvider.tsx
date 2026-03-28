@@ -7,7 +7,7 @@
  *   2. Call `triggerXpFloat(amount)` from anywhere
  */
 
-import { createContext, useCallback, useContext, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -37,6 +37,16 @@ export function XpFloatProvider({ children }: { children: React.ReactNode }) {
       setItems(prev => prev.filter(i => i.id !== id));
     }, 1500);
   }, []);
+
+  // Listen to xp:earned events dispatched from achievementState
+  useEffect(() => {
+    function onXpEarned(e: Event) {
+      const amount = (e as CustomEvent<{ amount: number }>).detail?.amount;
+      if (typeof amount === "number") triggerXpFloat(amount);
+    }
+    window.addEventListener("xp:earned", onXpEarned);
+    return () => window.removeEventListener("xp:earned", onXpEarned);
+  }, [triggerXpFloat]);
 
   return (
     <XpFloatContext.Provider value={{ triggerXpFloat }}>
