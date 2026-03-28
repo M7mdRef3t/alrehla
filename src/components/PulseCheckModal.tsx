@@ -149,7 +149,6 @@ const cosmicUp = {
   })
 };
 
-
 export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   isOpen,
   context = "regular",
@@ -198,7 +197,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [isSavingPulse, setIsSavingPulse] = useState(false);
   const [saveToastText, setSaveToastText] = useState("\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643");
   const [keyboardEnergyHint, setKeyboardEnergyHint] = useState<number | null>(null);
-  void keyboardEnergyHint; // prevent SWC tree-shaking of unused destructured variable
+  void keyboardEnergyHint;
   const isEnergySelectionUnstableRef = useRef(false);
   const [needsEnergyConfirmation, setNeedsEnergyConfirmation] = useState(false);
   const [energyConfirmPulseActive, setEnergyConfirmPulseActive] = useState(false);
@@ -232,17 +231,14 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
   const needleContainerRef = useRef<HTMLDivElement>(null);
   const isNeedleDraggingRef = useRef(false);
-
-
-
-
-
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const energyStateLabel = getEnergyStateLabel(energy);
   const _energyQuickHint = getEnergyQuickHint(energy);
   const _moodQuickHint = getMoodQuickHint(mood);
   const _focusQuickHint = getFocusQuickHint(focus, isStartRecovery);
   void _energyQuickHint; void _moodQuickHint; void _focusQuickHint;
+
   const energyCopyVariant = useMemo(
     () => getEnergyCopyVariant(pulseCopyOverrides.energy),
     [pulseCopyOverrides.energy]
@@ -265,20 +261,12 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     () => getWeeklyMoodRecommendation(pulseLogs.map((item) => ({ mood: item.mood, timestamp: item.timestamp }))),
     [pulseLogs]
   );
-  const _showWeeklyMoodSuggestion = weeklyMoodRecommendation != null && (!mood || mood !== weeklyMoodRecommendation.mood);
-  void _showWeeklyMoodSuggestion;
-  const _immediateEnergyAction = useMemo(() => getImmediateEnergyAction(energy), [energy]);
-  void _immediateEnergyAction;
   const energySuggestion = useMemo(() => getEnergySuggestion(energy), [energy]);
-  const _showWeeklyEnergySuggestion = weeklyEnergyRecommendation != null && (!hasPickedEnergy || energy == null || Math.abs(weeklyEnergyRecommendation.value - energy) >= 2);
-  void _showWeeklyEnergySuggestion;
-  const _suggestionState = useMemo(() => { if (!energySuggestion) return ""; const hasSuggestedNote = notes.trim().includes(energySuggestion.note); return hasSuggestedNote ? "ready" : "pending"; }, [energySuggestion, notes]);
-  void _suggestionState;
   const _pulseStats = useMemo(() => { if (pulseLogs.length === 0) return null; const sum = pulseLogs.reduce((acc, item) => acc + item.energy, 0); const avg = Math.round((sum / pulseLogs.length) * 10) / 10; return { avg, count: pulseLogs.length }; }, [pulseLogs]);
   void _pulseStats;
+
   const isComplete = hasPickedEnergy && mood !== null && focus !== null;
   const currentStepComplete = isComplete;
-
 
   const clearUndoState = () => {
     if (undoTimerRef.current != null) {
@@ -332,7 +320,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     }
     if (isInitializedRef.current) return;
 
-    // Try loading draft from hook
     const restored = loadDraft();
 
     if (!restored) {
@@ -412,7 +399,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     };
   }, []);
 
-
   useEffect(() => {
     if (!isOpen) return;
     const restoreOverflow = setDocumentBodyOverflow("hidden");
@@ -449,14 +435,10 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const handleTacticalAnalysis = async () => {
     if (energy === null) return;
     setIsAnalyzing(true);
-
-    // Simulate AI Processing
     await new Promise(resolve => setTimeout(resolve, 800));
-
     const advice = generateTacticalAdvice(energy, mood, focus);
     setTacticalAdvice(advice);
     setIsAnalyzing(false);
-
     setIsWarping(true);
     window.setTimeout(() => {
       setStep(2);
@@ -518,8 +500,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     }
   };
 
-
-
   const handleNextStep = () => {
     if (step === 1) {
       if (!isComplete && !showRequiredHint) {
@@ -556,28 +536,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     window.setTimeout(() => setSuggestionApplied(false), 1800);
   };
 
-  const _applyWeeklyRecommendation = () => {
-    if (!weeklyEnergyRecommendation) return;
-    rememberUndoSnapshot(
-      "\u062a\u0645 \u062a\u0637\u0628\u064a\u0642 \u0627\u0642\u062a\u0631\u0627\u062d \u0627\u0644\u0623\u0633\u0628\u0648\u0639.",
-      "weekly_recommendation"
-    );
-    recordFlowEvent("pulse_energy_weekly_recommendation_applied", {
-      meta: { value: weeklyEnergyRecommendation.value, samples: weeklyEnergyRecommendation.samples }
-    });
-    setEnergyValue(weeklyEnergyRecommendation.value);
-    setNeedsEnergyConfirmation(false);
-  };
-
-  const _applyImmediateEnergyAction = () => {
-    rememberUndoSnapshot(
-      "\u062a\u0645 \u062a\u0637\u0628\u064a\u0642 \u0627\u0644\u062e\u0637\u0648\u0629 \u0627\u0644\u0641\u0648\u0631\u064a\u0629.",
-      "immediate_action"
-    );
-    applyEnergySuggestion();
-    setImmediateActionApplied(true);
-  };
-
   const setMoodValue = (nextMood: PulseMood) => {
     const now = Date.now();
     if (mood !== nextMood) {
@@ -606,14 +564,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     if (showRequiredHint) setShowRequiredHint(false);
   };
 
-  const _applyWeeklyMoodRecommendation = () => {
-    if (!weeklyMoodRecommendation) return;
-    setMoodValue(weeklyMoodRecommendation.mood);
-    recordFlowEvent("pulse_mood_weekly_recommendation_applied", {
-      meta: { mood: weeklyMoodRecommendation.mood, count: weeklyMoodRecommendation.count }
-    });
-  };
-
   const setFocusValue = (nextFocus: PulseFocus) => {
     if (focus !== nextFocus) {
       recordFlowEvent("pulse_focus_changed", {
@@ -622,19 +572,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     }
     setFocus(nextFocus);
     if (showRequiredHint) setShowRequiredHint(false);
-  };
-
-  const _applyNotesQuickChip = (chip: string) => {
-    setNotes((prev) => {
-      const trimmed = prev.trim();
-      if (trimmed.includes(chip)) return prev;
-      const next = trimmed.length > 0 ? `${trimmed}\n${chip}` : chip;
-      if (!hasTrackedNotesUsage && next.trim().length > 0) {
-        recordFlowEvent("pulse_notes_used");
-        setHasTrackedNotesUsage(true);
-      }
-      return next;
-    });
   };
 
   const pulseAtAnchor = () => {
@@ -659,7 +596,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       oscillator.stop(t0 + 0.06);
       window.setTimeout(() => void ctx.close(), 100);
     } catch {
-      // Optional enhancement only.
+      // ignore subtle feedback failures on unsupported environments
     }
   };
 
@@ -732,23 +669,20 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     }, 900);
   };
 
+  // Scroll to top when step changes or modal opens
   useEffect(() => {
-    if (step === 1) {
-      notesRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (isOpen) {
+      if (contentRef.current) {
+        contentRef.current.scrollTop = 0;
+      }
     }
-  }, [step]);
+  }, [step, isOpen]);
 
-  const stepLabel = step === 1
-    ? "سجّل حالتك الحالية"
-    : "النصيحة المقترحة";
-
+  const stepLabel = step === 1 ? "سجّل حالتك الحالية" : "النصيحة المقترحة";
   const footerHintText = showRequiredHint && !currentStepComplete
     ? "محتاج تختار الطاقة والمزاج واتجاهك الحالي على الأقل."
     : "راجع حالتك وبعدين اضغط تنفيذ.";
-
-  const footerHintColor = showRequiredHint && !currentStepComplete
-    ? "rgba(248, 113, 113, 0.95)"
-    : "var(--text-muted)";
+  const footerHintColor = showRequiredHint && !currentStepComplete ? "rgba(248, 113, 113, 0.95)" : "var(--text-muted)";
   const isPrimaryEnabled = step === 2 || isComplete;
   const primaryCtaClassName = isPrimaryEnabled
     ? "bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 text-slate-950 shadow-[0_0_28px_rgba(52,211,153,0.48)] hover:shadow-[0_0_38px_rgba(45,212,191,0.62)] border border-emerald-200/30"
@@ -768,7 +702,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
             }}
             onClick={() => handleClose("backdrop")}
           />
-
           <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
             {[...Array(6)].map((_, i) => (
               <motion.div
@@ -780,9 +713,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               />
             ))}
           </div>
-
           <motion.div
-            data-testid="pulse-check-shell"
             className="pulse-check-shell relative z-10 w-[calc(100%-0.9rem)] max-w-md max-h-[min(98dvh,740px)] overflow-hidden flex flex-col"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -797,46 +728,20 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
             }}
           >
             {isSavingPulse && (
-              <div
-                className="absolute top-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
-                role="status"
-                aria-live="polite"
-                aria-atomic="true"
-              >
-                <div
-                  className="rounded-full px-3 py-1 text-[11px] font-semibold"
-                  style={{
-                    color: "var(--text-primary)",
-                    background: "rgba(16, 185, 129, 0.2)",
-                    border: "1px solid rgba(16, 185, 129, 0.45)",
-                    boxShadow: "0 8px 24px rgba(16,185,129,0.2)"
-                  }}
-                >
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 pointer-events-none" role="status" aria-live="polite">
+                <div className="rounded-full px-3 py-1 text-[11px] font-semibold" style={{ color: "var(--text-primary)", background: "rgba(16, 185, 129, 0.2)", border: "1px solid rgba(16, 185, 129, 0.45)", boxShadow: "0 8px 24px rgba(16,185,129,0.2)" }}>
                   {saveToastText}
                 </div>
               </div>
             )}
-            <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-              {isSavingPulse ? saveToastText : ""}
-            </p>
             <div className="pulse-check-header flex items-center justify-between p-3.5 sm:p-4">
               <motion.div custom={0} variants={cosmicUp} initial="hidden" animate="visible">
-                <h2 className="text-base sm:text-lg font-bold" style={{ color: "var(--text-primary)", letterSpacing: "0.04em" }}>
-                  {"\u0641\u062d\u0635 \u062d\u0627\u0644\u062a\u0643"}
-                </h2>
-                <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                  {`\u062e\u0637\u0648\u0629 ${step} \u0645\u0646 ${totalSteps} \u2022 ${stepLabel}`}
-                </p>
+                <h2 className="text-base sm:text-lg font-bold" style={{ color: "var(--text-primary)", letterSpacing: "0.04em" }}>{"فحص حالتك"}</h2>
+                <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{`خطوة ${step} من ${totalSteps} \u2022 ${stepLabel}`}</p>
               </motion.div>
               {allowSkip && (
-                <button
-                  type="button"
-                  onClick={requestSkipClose}
-                  className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer"
-                  style={{ color: "var(--text-muted)", background: "rgba(255, 255, 255, 0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
-                  aria-label={"\u062a\u062e\u0637\u064a \u0627\u0644\u064a\u0648\u0645"}
-                >
-                  {"\u062a\u062e\u0637\u064a \u0627\u0644\u064a\u0648\u0645"}
+                <button type="button" onClick={requestSkipClose} className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer" style={{ color: "var(--text-muted)", background: "rgba(255, 255, 255, 0.06)", border: "1px solid rgba(255,255,255,0.12)" }}>
+                  {"تخطي اليوم"}
                 </button>
               )}
             </div>
@@ -845,33 +750,22 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 <p className="text-xs font-semibold text-center" style={{ color: "rgba(255,236,179,0.98)" }}>
                   تريد تخطي فحص حالتك النهاردة؟
                 </p>
-                <div className="mt-2 flex items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowSkipConfirm(false)}
-                    className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
-                    style={{ color: "var(--text-secondary)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)" }}
-                  >
-                    إلغاء
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); confirmSkipClose(); }}
-                    className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
-                    style={{ color: "var(--text-primary)", background: "rgba(248,113,113,0.18)", border: "1px solid rgba(248,113,113,0.42)" }}
-                  >
-                    أيوه، تخطي
-                  </button>
+                <div className="flex gap-2 justify-center mt-2">
+                  <button onClick={confirmSkipClose} className="px-3 py-1 bg-amber-500/20 rounded-lg text-[10px] hover:bg-amber-500/30 transition-colors">أيوا</button>
+                  <button onClick={() => setShowSkipConfirm(false)} className="px-3 py-1 bg-white/5 rounded-lg text-[10px] hover:bg-white/10 transition-colors">لا</button>
                 </div>
               </div>
             )}
-
-            <div className="pulse-check-content flex-1 overflow-y-auto px-4 sm:px-5 pb-3 sm:pb-4 pt-1 custom-scrollbar">
+            <div
+              ref={contentRef}
+              className="pulse-check-content flex-1 overflow-y-auto px-4 sm:px-5 pb-3 sm:pb-4 pt-1 custom-scrollbar"
+              style={{ scrollPaddingTop: "1rem", scrollBehavior: "smooth" }}
+            >
               {step === 1 && (
                 <Step1View
                   energy={energy}
-                  setEnergyValue={setEnergyValue}
                   energyStateLabel={energyStateLabel}
+                  setEnergyValue={setEnergyValue}
                   handleEnergyKeyUp={handleEnergyKeyUp}
                   mood={mood}
                   setMoodValue={setMoodValue}
@@ -885,30 +779,17 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   notesRef={notesRef}
                 />
               )}
-
-              {step === 2 && tacticalAdvice && (
-                <Step2View tacticalAdvice={tacticalAdvice} />
-              )}
-
+              {step === 2 && tacticalAdvice && <Step2View tacticalAdvice={tacticalAdvice} />}
               <AnalysisOverlay isAnalyzing={isAnalyzing} />
             </div>
-
-            {/* Footer Area */}
             <div className="p-5 border-t border-white/5 space-y-4">
-              <p className="text-center text-[10px] font-bold h-4" style={{ color: footerHintColor }}>
-                {footerHintText}
-              </p>
+              <p className="text-center text-[10px] font-bold h-4" style={{ color: footerHintColor }}>{footerHintText}</p>
               <p className={`text-center text-[10px] font-black tracking-[0.14em] uppercase ${isPrimaryEnabled ? "text-emerald-300" : "text-rose-300/70"}`}>
                 {isPrimaryEnabled ? "جاهز للتنفيذ" : "اختار الطاقة + المزاج + اتجاهك الحالي"}
               </p>
               <div className="flex gap-3">
                 {step > 1 && (
-                  <button
-                    onClick={handlePreviousStep}
-                    className="flex-1 py-4 rounded-2xl bg-white/[0.03] text-white/40 font-black text-[10px] uppercase tracking-widest hover:text-white transition-all border border-white/5"
-                  >
-                    رجع
-                  </button>
+                  <button onClick={handlePreviousStep} className="flex-1 py-4 rounded-2xl bg-white/[0.03] text-white/40 font-black text-[10px] uppercase tracking-widest hover:text-white transition-all border border-white/5">رجع</button>
                 )}
                 <motion.button
                   onClick={step === 1 ? handleNextStep : handleSubmit}
@@ -922,7 +803,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 </motion.button>
               </div>
             </div>
-
             <WarpVelocityEffect isWarping={isWarping} />
           </motion.div>
         </motion.div>
@@ -930,5 +810,3 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     </AnimatePresence>
   );
 };
-
-

@@ -191,15 +191,12 @@ export function useAppPulseSanctuaryFlow({
   }, [showPulseCheck]);
 
   const closePulseCheck = useCallback((completed = false, closeReason?: PulseCloseReason) => {
+    console.log("[useAppPulseSanctuaryFlow] closePulseCheck called, completed:", completed, "reason:", closeReason);
     if (!completed && pulseOpenedAtRef.current != null) {
       recordFlowEvent("pulse_abandoned", { closeReason });
     }
 
     pulseOpenedAtRef.current = null;
-    // IMPORTANT: Must set isOpen=false AND context="regular" in ONE call.
-    // Previously two separate calls caused a stale-closure bug:
-    // setShowPulseCheck(false) → isOpen=false ✓
-    // setPulseCheckContext("regular") → re-read stale isOpen=true → isOpen=true again ✗
     setShowPulseCheck(false);
   }, [setShowPulseCheck]);
 
@@ -350,9 +347,11 @@ export function useAppPulseSanctuaryFlow({
   }, [handlePulseGateSubmit, handlePulseSubmit, pulseCheckContext]);
 
   const handlePulseOverlayClose = useCallback((reason?: PulseCloseReason) => {
+    console.log("[useAppPulseSanctuaryFlow] handlePulseOverlayClose called, reason:", reason);
     if (reason === "close_button") {
       const autoPayload = buildAutoPulsePayload();
       if (pulseCheckContext === "start_recovery") {
+        console.log("[useAppPulseSanctuaryFlow] Closing start_recovery via close_button");
         if (hasConcretePulseSelection(autoPayload)) {
           logPulse(autoPayload);
         }
@@ -362,6 +361,7 @@ export function useAppPulseSanctuaryFlow({
         return;
       }
 
+      console.log("[useAppPulseSanctuaryFlow] Closing regular pulse via close_button");
       clearPulseCheckPreview();
       closePulseCheck(false, "close_button");
       return;

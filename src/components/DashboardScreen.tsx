@@ -554,5 +554,3 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
     </motion.div>
   );
 };
-
-

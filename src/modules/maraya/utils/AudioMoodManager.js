@@ -16,6 +16,12 @@ export class AudioMoodManager {
     this.loading = new Map();
     this.pendingMood = null;
     this.isUnlocked = false;
+
+    // Sovereign Filters
+    this.lowPassNode = null;
+    this.brownNoiseSource = null;
+    this.brownNoiseGain = null;
+    this.brownNoiseBuffer = null;
   }
 
   // Unlock audio context on first user interaction
@@ -29,9 +35,32 @@ export class AudioMoodManager {
       if (this.context.state === 'suspended') {
         this.context.resume();
       }
+
+      // Initialize permanent low-pass filter
+      this.lowPassNode = this.context.createBiquadFilter();
+      this.lowPassNode.type = 'lowpass';
+      this.lowPassNode.frequency.setValueAtTime(22000, this.context.currentTime);
+      this.lowPassNode.connect(this.context.destination);
+
+      this.createBrownNoiseBuffer();
     } catch (err) {
       console.error('[audio] Failed to create AudioContext:', err);
     }
+  }
+
+  createBrownNoiseBuffer() {
+    if (!this.context) return;
+    const bufferSize = this.context.sampleRate * 2; // 2 seconds
+    const buffer = this.context.createBuffer(1, bufferSize, this.context.sampleRate);
+    const output = buffer.getChannelData(0);
+    let lastOut = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      output[i] = (lastOut + (0.02 * white)) / 1.02;
+      lastOut = output[i];
+      output[i] *= 3.5; // weight
+    }
+    this.brownNoiseBuffer = buffer;
   }
 
   async decodeMood(moodId, url) {
@@ -131,11 +160,17 @@ export class AudioMoodManager {
     source.loop = true;
 
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0, now);
+    gain.gain.setValueAtTime(0.001, now);
     gain.gain.linearRampToValueAtTime(0.45, now + FADE_DURATION);
 
     source.connect(gain);
-    gain.connect(ctx.destination);
+    // Connect through LowPass filter instead of direct destination
+    if (this.lowPassNode) {
+      gain.connect(this.lowPassNode);
+    } else {
+      gain.connect(ctx.destination);
+    }
+    
     source.start(0);
 
     this.currentSource = source;
@@ -197,6 +232,57 @@ export class AudioMoodManager {
       this.currentGain = null;
       this.currentMood = null;
     }
+    this.stopBrownNoise();
+  }
+
+  stopBrownNoise() {
+    if (this.brownNoiseSource) {
+      this.brownNoiseGain?.gain.linearRampToValueAtTime(0, this.context.currentTime + 1);
+      setTimeout(() => {
+        try { this.brownNoiseSource?.stop(); } catch(e) {}
+        this.brownNoiseSource = null;
+        this.brownNoiseGain = null;
+      }, 1100);
+    }
+  }
+
+  startBrownNoise() {
+    if (!this.context || this.brownNoiseSource || !this.brownNoiseBuffer) return;
+    
+    const source = this.context.createBufferSource();
+    source.buffer = this.brownNoiseBuffer;
+    source.loop = true;
+
+    const gain = this.context.createGain();
+    gain.gain.setValueAtTime(0, this.context.currentTime);
+    gain.gain.linearRampToValueAtTime(0.12, this.context.currentTime + 3);
+
+    source.connect(gain);
+    gain.connect(this.context.destination);
+    source.start(0);
+
+    this.brownNoiseSource = source;
+    this.brownNoiseGain = gain;
+  }
+
+  // Deep interaction: Update aesthetics based on Pulse Energy
+  updateSovereignAesthetics(energy) {
+    if (!this.context || !this.lowPassNode) return;
+    const now = this.context.currentTime;
+
+    // Filter Logic:
+    // Energy 10 -> 22000Hz (Bypass)
+    // Energy 1 -> 400Hz (Heavy muffling)
+    const freq = Math.max(400, Math.min(22000, (energy * energy * 200) + 400));
+    this.lowPassNode.frequency.setTargetAtTime(freq, now, 1.5);
+
+    // Brown Noise Logic:
+    // energy < 4 -> gradual fade in
+    if (energy < 4) {
+      this.startBrownNoise();
+    } else {
+      this.stopBrownNoise();
+    }
   }
 
   // Brand Sound for Duo Catharsis Sync
@@ -255,4 +341,4 @@ export class AudioMoodManager {
     this.loading.clear();
     this.isUnlocked = false;
   }
-}
+}

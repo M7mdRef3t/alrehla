@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { hasCompletedJourneyOnboarding } from "../OnboardingFlow";
 import { initThemePalette } from "../../services/themePalette";
 import { useAchievementState, getLibraryOpenedAt, getBreathingUsedAt } from "../../state/achievementState";
@@ -384,6 +384,38 @@ export function AppRuntimeControllers({
       cancelIdleCallback(idleHandle);
     };
   }, [authUser]);
+
+  // PHASE 7: Sovereign Soundscape Sync
+  const lastPulse = usePulseState((s) => s.lastPulse);
+  const audioManagerRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Lazy load the manager to avoid blocking startup
+    import("../../modules/maraya/utils/AudioMoodManager.js").then(({ AudioMoodManager }) => {
+      if (!audioManagerRef.current) {
+        audioManagerRef.current = new AudioMoodManager();
+      }
+    });
+
+    const handleInteraction = () => {
+      audioManagerRef.current?.unlock();
+      window.removeEventListener("mousedown", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
+    };
+    window.addEventListener("mousedown", handleInteraction);
+    window.addEventListener("keydown", handleInteraction);
+
+    return () => {
+      window.removeEventListener("mousedown", handleInteraction);
+      window.removeEventListener("keydown", handleInteraction);
+      audioManagerRef.current?.dispose();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!lastPulse || !audioManagerRef.current) return;
+    audioManagerRef.current.updateSovereignAesthetics(lastPulse.energy);
+  }, [lastPulse]);
 
   return null;
 }

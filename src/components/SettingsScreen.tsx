@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Globe, Briefcase, Crown, ChevronRight,
-    Zap, Star, Gift, Brain, ExternalLink, Shield
+    Zap, Star, Gift, Brain, ExternalLink, Shield, BarChart3
 } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { B2BPortal } from "./B2BPortal";
@@ -38,7 +38,16 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
     const tier = getCurrentTier();
     const streak = loadStreak();
     const memory = loadUserMemory();
+    const [isOwner, setIsOwner] = useState(false);
     const { isSoundEnabled, setSoundEnabled, isSensoryDepthEnabled, setSensoryDepthEnabled } = useJourneyState();
+
+    useEffect(() => {
+        // Check owner role from Supabase session
+        supabase?.auth.getSession().then(({ data: { session } }) => {
+            const role = session?.user?.app_metadata?.role as string | undefined;
+            setIsOwner(role === "owner" || role === "superadmin");
+        });
+    }, []);
 
     useEffect(() => {
         soundManager.toggle(isSoundEnabled ?? true);
@@ -296,6 +305,29 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                     </motion.button>
                                 ))}
                             </div>
+
+                            {isOwner && (
+                                <motion.button
+                                    onClick={() => window.dispatchEvent(new Event("open-owner-analytics"))}
+                                    className="w-full flex items-center gap-3 p-4 rounded-2xl text-right mb-2"
+                                    style={{
+                                        background: "linear-gradient(135deg, rgba(139,92,246,0.12), rgba(99,102,241,0.08))",
+                                        border: "1px solid rgba(139,92,246,0.25)",
+                                    }}
+                                    whileHover={{ opacity: 0.85 }}
+                                    whileTap={{ scale: 0.98 }}
+                                >
+                                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                                        style={{ background: "rgba(139,92,246,0.15)" }}>
+                                        <BarChart3 className="w-4 h-4" style={{ color: "#8b5cf6" }} />
+                                    </div>
+                                    <div className="flex-1 text-right">
+                                        <p className="text-sm font-bold text-white">مركز تحليلات المالك</p>
+                                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>إحصائيات المنصّة • صلاحيات موسعة</p>
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 rotate-180" style={{ color: "rgba(139,92,246,0.5)" }} />
+                                </motion.button>
+                            )}
 
                             <DemoInjector />
 

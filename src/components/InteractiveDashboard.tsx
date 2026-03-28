@@ -450,7 +450,7 @@ function MoodChart({ pulseHistory }: { pulseHistory: PulseEntry[] }) {
 
             {/* Dots */}
             {points.map((p, i) => p.y !== null && (
-              <circle key={i} cx={p.x} cy={p.y!} r={2}
+              <circle key={i} cx={Number.isFinite(p.x) ? p.x : 0} cy={Number.isFinite(p.y) ? p.y : 0} r={2}
                 fill="#14B8A6" stroke="#080b15" strokeWidth={1} />
             ))}
           </svg>
@@ -1197,4 +1197,3 @@ export function InteractiveDashboard({ onBack }: InteractiveDashboardProps) {
     </div>
   );
 }
-

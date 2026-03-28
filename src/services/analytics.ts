@@ -1,5 +1,6 @@
 import { isUserMode } from "../config/appEnv";
 import { runtimeEnv } from "../config/runtimeEnv";
+import { PRICING_PLANS } from "../ai/revenueAutomation";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 import { getHref } from "./navigation";
 import { getDocumentOrNull, getWindowOrNull, isClientRuntime } from "./clientRuntime";
@@ -10,7 +11,8 @@ type AnalyticsValue = string | number | boolean;
 type AnalyticsParams = Record<string, AnalyticsValue>;
 
 // Circuit breaker: disable Supabase INSERT after first RLS/permission error
-let supabaseTrackingEnabled = true;
+// and keep it off entirely outside production to avoid dev noise.
+let supabaseTrackingEnabled = runtimeEnv.isProd;
 
 function isAnalyticsEnabled(): boolean {
   return getFromLocalStorage("dawayir-analytics-consent") === "true";
@@ -112,8 +114,10 @@ function ensureGtag(): void {
 
 function ensureMetaPixel(): void {
   const windowRef = getWindowOrNull();
+  const documentRef = getDocumentOrNull();
   const pixelId = getMetaPixelId();
-  if (!windowRef || !pixelId || !areMetaEventsEnabled()) return;
+  if (!windowRef || !pixelId || !areMetaEventsEnabled() || !runtimeEnv.isProd) return;
+  if (documentRef?.getElementById("dawayir-meta-pixel-script")) return;
 
   if (!windowRef.fbq) {
     const fbq = ((...args: unknown[]) => {
@@ -134,6 +138,7 @@ function ensureMetaPixel(): void {
 
   if (!windowRef.__dawayirMetaPixelInitialized) {
     windowRef.fbq("init", pixelId);
+    windowRef.fbq("track", "PageView");
     windowRef.__dawayirMetaPixelInitialized = true;
   }
 }
@@ -249,7 +254,7 @@ export function trackEvent(
     }
   }
 
-  if (isSupabaseReady && supabase && supabaseTrackingEnabled) {
+  if (runtimeEnv.isProd && isSupabaseReady && supabase && supabaseTrackingEnabled) {
     const windowRef = getWindowOrNull();
     const isMobile = windowRef ? windowRef.matchMedia("(max-width: 768px)").matches : false;
     const deviceContext = {
@@ -389,6 +394,34 @@ export function trackInitiateCheckout(
   trackEvent(AnalyticsEvents.PAYMENT_INTENT_SUBMITTED, safeParams);
   sendGtagEvent("begin_checkout", safeParams);
   sendMetaEvent("InitiateCheckout", safeParams);
+}
+
+export function trackStartTrial(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): void {
+  const safeParams = sanitizeAnalyticsParams({
+    value: PRICING_PLANS.premium.priceMonthly,
+    currency: PRICING_PLANS.premium.priceCurrency,
+    ...(params ?? {})
+  });
+
+  trackEvent("start_trial", safeParams);
+  sendGtagEvent("start_trial", safeParams);
+  sendMetaEvent("StartTrial", safeParams, { bypassConsent: true });
+}
+
+export function trackCoachCheckout(
+  params?: Record<string, AnalyticsValue | null | undefined>
+): void {
+  const safeParams = sanitizeAnalyticsParams({
+    value: PRICING_PLANS.coach.priceMonthly,
+    currency: PRICING_PLANS.coach.priceCurrency,
+    ...(params ?? {})
+  });
+
+  trackEvent("coach_checkout", safeParams);
+  sendGtagEvent("coach_checkout", safeParams);
+  sendMetaEvent("CoachCheckout", safeParams, { bypassConsent: true });
 }
 
 export function setAnalyticsConsent(consent: boolean): void {

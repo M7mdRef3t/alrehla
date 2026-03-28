@@ -218,6 +218,10 @@ export function useAppSurfaceActions({
     void navigateToScreen("oracle-dashboard");
   }, [navigateToScreen]);
 
+  const navigateToWeeklySummary = useCallback(() => {
+    void navigateToScreen("weekly-summary");
+  }, [navigateToScreen]);
+
   return {
     handleEmergencyPowerBankOpen,
     handleFeedbackSubmit,
@@ -245,6 +249,7 @@ export function useAppSurfaceActions({
     handleChromeNavigate,
     toggleSystemOverclockPanel,
     openAmbientReality,
-    openOracleDashboard
+    openOracleDashboard,
+    navigateToWeeklySummary
   };
 }

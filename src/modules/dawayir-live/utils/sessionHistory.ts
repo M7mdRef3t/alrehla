@@ -5,6 +5,8 @@ type SessionHistoryEntry = {
   clarityDelta: number;
   overloadIndex: number;
   transitionCount: number;
+  recordingSeconds?: number;
+  transcriptCount?: number;
   timestamp: number;
 };
 
@@ -27,11 +29,13 @@ export function readSessionHistory(): SessionHistoryEntry[] {
       if (!entry || typeof entry !== "object") return false;
       const candidate = entry as Record<string, unknown>;
       return (
-        typeof candidate.dominantNodeId === "number" &&
-        typeof candidate.clarityDelta === "number" &&
-        typeof candidate.overloadIndex === "number" &&
-        typeof candidate.transitionCount === "number" &&
-        typeof candidate.timestamp === "number"
+      typeof candidate.dominantNodeId === "number" &&
+      typeof candidate.clarityDelta === "number" &&
+      typeof candidate.overloadIndex === "number" &&
+      typeof candidate.transitionCount === "number" &&
+      typeof candidate.timestamp === "number" &&
+      (candidate.recordingSeconds === undefined || typeof candidate.recordingSeconds === "number") &&
+      (candidate.transcriptCount === undefined || typeof candidate.transcriptCount === "number")
       );
     });
   } catch {

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   ArrowLeft, MapPin, Mic, Eye, Shield, Zap, Clock, Lock,
-  ChevronDown, Smartphone, Star, Heart, BookOpen, Brain, Sparkles
+  Smartphone, Star, Heart, BookOpen, Brain, Sparkles
 } from "lucide-react";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
@@ -11,7 +11,6 @@ import { getLivePulseCount, shouldTriggerHeartbeat } from "../services/pulseEnga
 import { fetchResourceCounts } from "../services/learningService";
 import { soundManager } from "../services/soundManager";
 import { LandingSimulation } from "./LandingSimulation";
-
 import { useJourneyState } from "../state/journeyState";
 import { useMapState } from "../state/mapState";
 import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
@@ -108,7 +107,7 @@ const OrbitViz: FC<{ reduceMotion: boolean | null; mirrorName: string }> = ({ re
             transition={{ duration: hoveredIdx === i ? 0.2 : 3 + node.delay, repeat: hoveredIdx === i ? 0 : Infinity, ease: "easeInOut", delay: hoveredIdx === i ? 0 : node.delay }}
             style={{ transformOrigin: `${node.cx}px ${node.cy}px`, cursor: "pointer" }}
           >
-            <circle cx={node.cx} cy={node.cy} r={node.r} fill={node.color} style={{ filter: hoveredIdx === i ? `drop-shadow(0 0 8px ${node.color})` : "none" }} />
+            <circle cx={node.cx} cy={node.cy} r={Number.isFinite(node.r) ? node.r : 5} fill={node.color} style={{ filter: hoveredIdx === i ? `drop-shadow(0 0 8px ${node.color})` : "none" }} />
             
             <AnimatePresence>
               {hoveredIdx === i && (
@@ -184,7 +183,7 @@ const ProductCard: FC<ProductCardProps> = ({
 }) => (
   <motion.div
     variants={fadeUp}
-          className="group relative flex flex-col rounded-2xl overflow-hidden cursor-default transition-all duration-300"
+    className="group relative flex flex-col rounded-2xl overflow-hidden cursor-default transition-all duration-300"
     style={{ border: `1px solid ${border}`, background: "rgba(15,15,28,0.6)", backdropFilter: "blur(12px)" }}
     whileHover={{ y: -4, borderColor: iconColor + "50" }}
   >
@@ -230,7 +229,16 @@ const ProductCard: FC<ProductCardProps> = ({
 
 /* ─── Typing Text Animation ──────────────────────────────────────────────────── */
 
-const ROTATING_WORDS = ["استنزاف طاقتك", "الذنب اللي مالوش لزوم", "الضغط العصبي", "الحدود المكسورة", "العلاقات المرهقة"];
+const ROTATING_WORDS = [
+  "استنزاف طاقتك",
+  "الذنب اللي مالوش لزوم",
+  "الضغط اللي مش بيخلص",
+  "الحدود المكسورة",
+  "العلاقات المرهقة",
+  "الناس اللي بتسحبك لتحت",
+  "التعب اللي مش عارف مصدره",
+  "اللي حاسس إنه بيستغلك",
+];
 
 const TypingWord: FC = () => {
   const [index, setIndex] = useState(0);
@@ -383,7 +391,7 @@ export const Landing: FC<LandingProps> = ({
     
     setTimeout(() => {
       onStartJourney();
-    }, 1200);
+    }, 600);
   }, [onStartJourney, mirrorName]);
 
   /* ─── JSX ─────────────────────────────────────────────────── */
@@ -410,12 +418,17 @@ export const Landing: FC<LandingProps> = ({
           backgroundSize: "40px 40px",
           opacity: 1
         }} />
+        {/* Atmospheric Film Grain */}
+        <div className="absolute inset-0 opacity-[0.035] pointer-events-none mix-blend-overlay" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+          filter: "contrast(150%) brightness(100%)",
+        }} />
       </div>
 
       {/* ══════════════════════════════════════════════
           SECTION 1: HERO
       ══════════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center px-4 sm:px-5 pt-10 md:pt-16 pb-12 md:pb-20 max-w-6xl mx-auto">
+      <section className="relative min-h-screen flex items-center px-4 sm:px-5 pt-24 md:pt-28 pb-16 md:pb-20 max-w-6xl mx-auto">
         <motion.div
           className="w-full flex flex-col lg:flex-row items-center gap-8 lg:gap-10"
           variants={stagger}
@@ -434,7 +447,7 @@ export const Landing: FC<LandingProps> = ({
             {/* Headline */}
             <motion.h1
               variants={fadeUp}
-              className="text-[1.8rem] sm:text-5xl lg:text-6xl font-black leading-[1.25] mb-8"
+              className="text-[1.8rem] sm:text-5xl lg:text-6xl font-black leading-[1.25] mb-6"
               style={{ fontFamily: "Tajawal, sans-serif", color: "#F8FAFC" }}
             >
               {landingCopy.hook}
@@ -445,14 +458,14 @@ export const Landing: FC<LandingProps> = ({
             {/* Subtitle */}
             <motion.p
               variants={fadeUp}
-              className="text-lg sm:text-xl leading-relaxed mb-10 max-w-[50ch]"
+              className="text-lg sm:text-xl leading-relaxed mb-8 max-w-[50ch]"
               style={{ color: "#94A3B8" }}
             >
               {landingCopy.subtitle}
             </motion.p>
 
             {/* Value chips */}
-            <motion.div variants={staggerFast} className="flex flex-wrap justify-center lg:justify-end gap-2 mb-8">
+            <motion.div variants={staggerFast} className="flex flex-wrap justify-center lg:justify-end gap-2 mb-6">
               {[
                 { icon: Lock, label: "بياناتك خاصة" },
                 { icon: Clock, label: "نتيجة في 3 دقائق" },
@@ -470,8 +483,8 @@ export const Landing: FC<LandingProps> = ({
               ))}
             </motion.div>
 
-            {/* ── 10-Second Mirror (New Hook) ── */}
-            <motion.div variants={fadeUp} className="mb-8 max-w-md mx-auto lg:mr-0 lg:ml-auto">
+            {/* ── Mirror Input with micro-result ── */}
+            <motion.div variants={fadeUp} className="mb-6 max-w-md mx-auto lg:mr-0 lg:ml-auto">
               <div className="relative group">
                 <input
                   type="text"
@@ -489,13 +502,32 @@ export const Landing: FC<LandingProps> = ({
                   )}
                 </div>
               </div>
-              <p className="mt-2 text-[10px] text-white/30 text-right pr-2">
-                * اكتب اسمه فقط (أو حرف)، ده بيساعد عقلك يركز في الخريطة.
-              </p>
+              {/* Micro-result: appears when user types a name */}
+              <AnimatePresence>
+                {mirrorName.length >= 2 ? (
+                  <motion.p
+                    initial={{ opacity: 0, y: -4, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                    exit={{ opacity: 0, y: -4, height: 0 }}
+                    className="mt-2 text-xs font-bold text-right pr-2"
+                    style={{ color: "#2DD4BF" }}
+                  >
+                    ✦ هنكشفلك أثر <span className="text-white font-black">{mirrorName}</span> على طاقتك في ٣ دقائق
+                  </motion.p>
+                ) : (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mt-2 text-[10px] text-white/30 text-right pr-2"
+                  >
+                    * اكتب اسمه فقط — ده بيخلي الخريطة تركز عليه مباشرة.
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </motion.div>
 
-            {/* CTAs */}
-            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center lg:justify-end gap-3">
+            {/* CTA — solo, no install button */}
+            <motion.div variants={fadeUp} className="flex flex-col items-center lg:items-end gap-3">
               <motion.button
                 type="button"
                 id="landing-hero-cta"
@@ -508,57 +540,19 @@ export const Landing: FC<LandingProps> = ({
                 ابدأ خريطتك — مجاناً
                 <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
               </motion.button>
-
-              {shouldShowLandingInstallButton && (
+              <p className="text-[12px] font-bold" style={{ color: "rgba(148,163,184,0.7)" }}>
+                تبدأ الآن، ترى الخريطة خلال دقائق.
+              </p>
+              {onNavigate && (
                 <button
                   type="button"
-                  onClick={handleInstall}
-                  className="inline-flex items-center gap-2 rounded-2xl px-5 py-4 text-sm font-bold transition-all duration-200"
-                  style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.025)", color: "#94A3B8" }}
+                  onClick={() => onNavigate("meditation")}
+                  className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full px-5 py-2 text-xs font-semibold transition-colors"
+                  style={{ background: "rgba(56,189,248,0.08)", color: "#7dd3fc", border: "1px solid rgba(125,211,252,0.18)" }}
                 >
-                  <Smartphone className="w-4 h-4" />
-                  {installButtonLabel}
+                  مشغل جلسات التأمل
                 </button>
               )}
-            </motion.div>
-
-            <motion.p
-              variants={fadeUp}
-              className="mt-3 text-[12px] font-bold text-center lg:text-right"
-              style={{ color: "rgba(148,163,184,0.82)" }}
-            >
-              تبدأ الآن، ترى الخريطة خلال دقائق، ثم تقرر بعدها هل تحتاج الأدوات الأعمق أم لا.
-            </motion.p>
-
-            <motion.div
-              variants={fadeUp}
-              className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto lg:mr-0 lg:ml-auto"
-            >
-              {[
-                { step: "01", title: "اكتب 3 أسماء", copy: "بدون شرح طويل. فقط الأشخاص الذين يشغلون مساحة من تفكيرك الآن." },
-                { step: "02", title: "حدد المسافة", copy: "قريب يشحنك، متذبذب يربكك، أو بعيد يستنزفك." },
-                { step: "03", title: "خذ أول خطوة", copy: "ترى الصورة فورًا، ثم تبدأ من أوضح نقطة بدل الدوران." }
-              ].map((item) => (
-                <div
-                  key={item.step}
-                  className="rounded-2xl p-4 text-right"
-                  style={{
-                    background: "rgba(255,255,255,0.035)",
-                    border: "1px solid rgba(255,255,255,0.07)",
-                    backdropFilter: "blur(10px)"
-                  }}
-                >
-                  <p className="text-[11px] font-black tracking-[0.25em] mb-2" style={{ color: "#2DD4BF" }}>
-                    {item.step}
-                  </p>
-                  <h3 className="text-sm font-black text-white mb-1" style={{ fontFamily: "Tajawal, sans-serif" }}>
-                    {item.title}
-                  </h3>
-                  <p className="text-xs leading-relaxed" style={{ color: "#94A3B8" }}>
-                    {item.copy}
-                  </p>
-                </div>
-              ))}
             </motion.div>
 
             {/* Returning user */}
@@ -574,13 +568,22 @@ export const Landing: FC<LandingProps> = ({
             )}
           </div>
 
-          <motion.div variants={fadeUp} className="flex-shrink-0 lg:flex-none lg:basis-[40%] flex items-center justify-center origin-center scale-[0.80] sm:scale-90 lg:scale-100">
+          {/* OrbitViz — hidden on mobile, visible on lg+ */}
+          <motion.div variants={fadeUp} className="hidden lg:flex flex-shrink-0 lg:flex-none lg:basis-[40%] items-center justify-center">
             <OrbitViz reduceMotion={reduceMotion} mirrorName={mirrorName} />
           </motion.div>
+
+          {/* Mobile glow — replaces OrbitViz on small screens */}
+          <div className="lg:hidden absolute top-0 right-0 w-[280px] h-[280px] pointer-events-none" aria-hidden="true">
+            <div className="w-full h-full rounded-full opacity-30" style={{
+              background: "radial-gradient(circle, rgba(20,184,166,0.25) 0%, rgba(124,58,237,0.1) 50%, transparent 70%)",
+              filter: "blur(40px)"
+            }} />
+          </div>
         </motion.div>
 
-        {/* Scroll hint & Global Pulse */}
-        <div className="absolute bottom-6 left-0 right-0 flex flex-col items-center gap-4">
+        {/* Live Pulse — bottom of hero, no scroll hint */}
+        <div className="absolute bottom-6 left-0 right-0 flex justify-center">
           <motion.div
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.5 }}
             className="flex items-center gap-4 px-4 py-2 rounded-full border border-white/5 bg-white/[0.02] backdrop-blur-md"
@@ -596,20 +599,67 @@ export const Landing: FC<LandingProps> = ({
               <span className="text-white/80">{pulseCount.toLocaleString("ar-EG")}</span> شخص بيحاولوا يرجعوا طاقتهم دلوقتي
             </p>
           </motion.div>
-
-          <motion.div
-            className="flex flex-col items-center gap-1"
-            initial={{ opacity: 0 }} animate={{ opacity: 0.35 }} transition={{ delay: 2.5, duration: 1 }}
-          >
-            <span className="text-[10px] tracking-widest font-bold" style={{ color: "#334155" }}>اكتشف المنصة</span>
-            <motion.div
-              animate={reduceMotion ? {} : { y: [0, 5, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <ChevronDown className="w-4 h-4" style={{ color: "#334155" }} />
-            </motion.div>
-          </motion.div>
         </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          SECTION 1.1: 3-Step Process (moved from hero)
+      ══════════════════════════════════════════════ */}
+      <section className="relative py-16 px-4 max-w-4xl mx-auto">
+        <motion.div
+          variants={staggerFast}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-60px" }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+        >
+          {[
+            { step: "01", title: "اكتب ٣ أسامي", copy: "من غير رغي كتير. بس أسامي الناس اللي واخدين مكان من تفكيرك دلوقتي." },
+            { step: "02", title: "حدد المسافة", copy: "قريب بيشحنك، متذبذب بيلخبطك، أو بعيد بيسحلك." },
+            { step: "03", title: "خد أول خطوة", copy: "هتشوف الصورة بوضوح، وتبدأ من أكتر حتة واضحة بدل ما تفضل تلف حوالين نفسك." }
+          ].map((item) => (
+            <motion.div
+              key={item.step}
+              variants={fadeUp}
+              className="rounded-2xl p-5 text-right"
+              style={{
+                background: "rgba(255,255,255,0.035)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                backdropFilter: "blur(10px)"
+              }}
+            >
+              <p className="text-[11px] font-black tracking-[0.25em] mb-2" style={{ color: "#2DD4BF" }}>
+                {item.step}
+              </p>
+              <h3 className="text-sm font-black text-white mb-1" style={{ fontFamily: "Tajawal, sans-serif" }}>
+                {item.title}
+              </h3>
+              <p className="text-xs leading-relaxed" style={{ color: "#94A3B8" }}>
+                {item.copy}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Install button — moved here from hero */}
+        {shouldShowLandingInstallButton && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="flex justify-center mt-8"
+          >
+            <button
+              type="button"
+              onClick={handleInstall}
+              className="inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold transition-all duration-200"
+              style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.025)", color: "#94A3B8" }}
+            >
+              <Smartphone className="w-4 h-4" />
+              {installButtonLabel}
+            </button>
+          </motion.div>
+        )}
       </section>
 
       {/* ── Section Divider ── */}
@@ -1088,6 +1138,18 @@ export const Landing: FC<LandingProps> = ({
               style={{ color: "#475569" }}
             >
               أو ساعدنا بمشاركة رأيك →
+              </motion.button>
+          )}
+
+          {onNavigate && (
+            <motion.button
+              variants={fadeUp}
+              type="button"
+              onClick={() => onNavigate("meditation")}
+              className="mt-3 block mx-auto px-3 py-2 text-xs font-semibold cursor-pointer hover:underline rounded-full"
+              style={{ color: "#7dd3fc" }}
+            >
+              أو افتح مشغل جلسات التأمل →
             </motion.button>
           )}
         </motion.div>

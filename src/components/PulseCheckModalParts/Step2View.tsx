@@ -20,33 +20,53 @@ export function Step2View({ tacticalAdvice }: Step2ViewProps) {
 
   return (
     <motion.div 
-      className="pulse-check-section flex flex-col items-center justify-center text-center gap-8 py-10" 
+      className="pulse-check-section flex flex-col items-center justify-center text-center gap-10 py-12" 
       custom={2} 
       variants={cosmicUp} 
       initial="hidden" 
       animate="visible"
     >
-      <div className="w-28 h-28 rounded-[2.5rem] flex items-center justify-center text-5xl relative"
-        style={{ background: colors.bg, border: `2px solid ${colors.border}` }}
-      >
-        {tacticalAdvice.icon}
-        <div className="absolute inset-0 animate-pulse opacity-20 bg-current rounded-[2.5rem]" />
+      <div className="relative">
+        <div className="w-32 h-32 rounded-[2.5rem] flex items-center justify-center text-5xl relative z-10"
+          style={{ 
+            background: colors.bg, 
+            border: `2px solid ${colors.border}`,
+            boxShadow: `0 0 40px ${colors.bg}`
+          }}
+        >
+          {tacticalAdvice.icon}
+        </div>
+        {/* Decorative Rings */}
+        <motion.div 
+          className="absolute inset-0 rounded-[2.5rem] border border-white/5 -m-4"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        />
       </div>
       
-      <div className="space-y-3">
-        <h3 className="text-2xl font-black tracking-tight text-white">{tacticalAdvice.title}</h3>
-        <p className="text-slate-400 text-sm max-w-[300px] leading-relaxed mx-auto font-medium">
+      <div className="space-y-4">
+        <h3 className="text-2xl font-black tracking-tight text-white mb-2" style={{ fontFamily: "var(--font-display)" }}>
+          {tacticalAdvice.title}
+        </h3>
+        <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-white/20 to-transparent mx-auto mb-4" />
+        <p className="text-[var(--text-secondary)] text-sm max-w-[320px] leading-relaxed mx-auto font-medium">
           {tacticalAdvice.message}
         </p>
       </div>
       
-      <div className="w-full p-5 rounded-[2rem] bg-white/[0.03] border border-dashed border-white/10 shadow-2xl">
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] block mb-3"
-          style={{ color: colors.text }}
+      <div className="relative w-full p-7 rounded-[2.5rem] bg-white/[0.04] border border-white/10 shadow-3xl overflow-hidden group">
+        <div className="absolute top-0 left-0 w-1 h-full" style={{ background: colors.text }} />
+        <span className="text-[10px] font-black uppercase tracking-[0.3em] block mb-4"
+          style={{ color: colors.text, opacity: 0.8 }}
         >
-          خطوتك الآن
+          الاشتباك التكتيكي المقترح
         </span>
-        <p className="text-lg font-black text-white leading-snug">{tacticalAdvice.action}</p>
+        <p className="text-xl font-black text-white leading-relaxed" style={{ fontFamily: "var(--font-display)" }}>
+          {tacticalAdvice.action}
+        </p>
+        
+        {/* Subtle background glow */}
+        <div className="absolute -bottom-10 -right-10 w-32 h-32 blur-3xl rounded-full opacity-10 pointer-events-none" style={{ background: colors.text }} />
       </div>
     </motion.div>
   );

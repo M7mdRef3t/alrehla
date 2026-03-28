@@ -55,6 +55,7 @@ export function VideoPlayer({
     { title: "التطبيق العملي", time: 540 },
     { title: "تمارين ختامية", time: 900 },
   ],
+  color = "#8b5cf6",
   savedTime = 0,
   nextUnitTitle = "",
   onEnded,

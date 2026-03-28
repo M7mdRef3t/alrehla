@@ -69,6 +69,10 @@ export function useAppNavigationRuntime({
         return "landing";
       case "exit-scripts":
       case "grounding":
+      case "meditation":
+      case "meditation-complete":
+      case "history":
+      case "annual-report":
         return "tools";
       case "tools":
         return toolsBackScreen;

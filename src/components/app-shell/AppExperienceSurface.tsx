@@ -21,7 +21,8 @@ const KNOWN_SCREENS = new Set<AppScreen>([
   "settings", "enterprise", "guilt-court", "diplomacy",
   "oracle-dashboard", "armory", "survey", "exit-scripts",
   "grounding", "stories", "about", "insights", "quizzes",
-  "behavioral-analysis", "resources",
+  "behavioral-analysis", "resources", "meditation", "meditation-complete",
+  "history", "annual-report", "weekly-summary",
 ]);
 
 /** Type guard: narrows `string` → `AppScreen` safely */
@@ -34,6 +35,7 @@ const OnboardingWelcomeBubble = lazy(() =>
   import("../OnboardingWelcomeBubble").then((m) => ({ default: m.OnboardingWelcomeBubble }))
 );
 const StartupSequence = lazy(() => import("../StartupSequence").then((m) => ({ default: m.StartupSequence })));
+const FirstSparkOnboarding = lazy(() => import("../FirstSparkOnboarding").then((m) => ({ default: m.FirstSparkOnboarding })));
 const AscensionRitual = lazy(() =>
   import("../Oracle/AscensionRitual").then((m) => ({ default: m.AscensionRitual }))
 );
@@ -69,6 +71,7 @@ interface AppExperienceSurfaceProps {
   onOpenTimeCapsuleVault: () => void;
   onOpenOracleDashboard: () => void;
   onNavigateToMap: () => void;
+  onNavigateToWeeklySummary: () => void;
 }
 
 export const AppExperienceSurface = memo(function AppExperienceSurface({
@@ -93,7 +96,8 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   onOpenAmbientReality,
   onOpenTimeCapsuleVault,
   onOpenOracleDashboard,
-  onNavigateToMap
+  onNavigateToMap,
+  onNavigateToWeeklySummary
 }: AppExperienceSurfaceProps) {
   const isLivePage = typeof window !== "undefined" && window.location.pathname.includes("dawayir-live");
   const actuallyShowingPulse = showPulseCheck && !isLivePage;
@@ -127,24 +131,28 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   return (
     <>
       {/* ── Global platform header (desktop) ── */}
-      <PlatformHeader
-        activeScreen={screen}
-        onNavigate={handleHeaderNavigate}
-        onLogin={handleHeaderLogin}
-        onLogout={handleLogout}
-      />
+      {screen !== "map" && (
+        <PlatformHeader
+          activeScreen={screen}
+          onNavigate={handleHeaderNavigate}
+          onLogin={handleHeaderLogin}
+          onLogout={handleLogout}
+        />
+      )}
       {/* ── Mobile bottom tab bar ── */}
-      <PlatformTabBar
-        activeScreen={screen}
-        onNavigate={handleHeaderNavigate}
-        onLogin={handleHeaderLogin}
-      />
+      {screen !== "map" && (
+        <PlatformTabBar
+          activeScreen={screen}
+          onNavigate={handleHeaderNavigate}
+          onLogin={handleHeaderLogin}
+        />
+      )}
       {/* ── Push Notification prompt (floating pill) ── */}
       <Suspense fallback={null}>
         <NotificationEnableButton />
       </Suspense>
       {/* ── Breadcrumb: only on inner screens (not landing) ── */}
-      {screen !== "landing" && (
+      {screen !== "landing" && screen !== "map" && (
         <>
           {/* Desktop breadcrumb below header */}
           <div className="fixed top-16 right-0 left-0 z-40 px-6 lg:px-10 py-2 hidden md:block">
@@ -168,7 +176,16 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
         style={{ background: "var(--space-void)" }}
       >
         {showStartup && screen !== "landing" && (
-          <StartupSequence onComplete={onStartupComplete} />
+          typeof window !== "undefined" && !localStorage.getItem("alrehla-first-spark-seen")
+            ? (
+              <FirstSparkOnboarding
+                onComplete={() => {
+                  localStorage.setItem("alrehla-first-spark-seen", "1");
+                  onStartupComplete();
+                }}
+              />
+            )
+            : <StartupSequence onComplete={onStartupComplete} />
         )}
         {isFeaturePreviewSession && (
           <button
@@ -186,7 +203,6 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
           </button>
         )}
         <div className="nebula-bg" aria-hidden="true" />
-        <AppTransientChromeHost {...transientChromeProps} />
         <AppChromeShell {...chromeShellProps}>
           <main
             className={`flex-1 min-w-0 flex flex-col pb-14 md:pb-0 ${actuallyShowingPulse ? "opacity-0 pointer-events-none select-none" : ""} overflow-visible`}
@@ -218,6 +234,13 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                         className="px-4 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-500 transition-colors"
                       >
                         العودة لدواير
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onNavigateToWeeklySummary}
+                        className="px-4 py-2 rounded-lg border border-teal-500/30 text-teal-200 hover:bg-teal-500/10 transition-colors"
+                      >
+                        ملخص الأسبوع
                       </button>
                     </div>
                   </div>
@@ -258,10 +281,11 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
               </ErrorBoundary>
             </Suspense>
           </main>
-          <AppOverlayHost {...overlayHostProps} />
         </AppChromeShell>
         <AscensionRitual />
       </div>
+      <AppTransientChromeHost {...transientChromeProps} />
+      <AppOverlayHost {...overlayHostProps} />
       <GlobalToast />
       <GraphEventToast />
     </>

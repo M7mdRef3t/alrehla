@@ -2,6 +2,8 @@
 
 import React, { useMemo, useState } from "react";
 import { Check, Lock, Shield, Sparkles, Target } from "lucide-react";
+import { PRICING_PLANS } from "../../ai/revenueAutomation";
+import { trackCoachCheckout, trackInitiateCheckout, trackStartTrial } from "../../services/analytics";
 import { consumeEmotionalOffer, getEmotionalOffer } from "../../services/subscriptionManager";
 import { stripeService } from "../../services/stripeIntegration";
 import { supabase } from "../../services/supabaseClient";
@@ -14,6 +16,28 @@ export default function PricingPage() {
 
   const handleSubscribe = async (tier: "premium" | "coach") => {
     setIsLoading(tier);
+
+    const pricingPlan = PRICING_PLANS[tier];
+    const paymentParams = {
+      value: pricingPlan.priceMonthly,
+      currency: pricingPlan.priceCurrency,
+      plan_tier: tier
+    };
+
+    trackInitiateCheckout(paymentParams);
+    if (tier === "premium") {
+      trackStartTrial({
+        ...paymentParams,
+        content_name: "pricing_page_premium",
+        content_category: "checkout"
+      });
+    } else {
+      trackCoachCheckout({
+        ...paymentParams,
+        content_name: "pricing_page_coach",
+        content_category: "checkout"
+      });
+    }
 
     if (!supabase) {
       alert("خدمة التسجيل غير متاحة حاليًا.");

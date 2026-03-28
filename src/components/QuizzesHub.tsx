@@ -350,9 +350,8 @@ function HubFirstOpenModal({ onClose }: { onClose: () => void }) {
    ══════════════════════════════════════════ */
 
 function AttachmentNodePicker({
-  band, onLink, onSkip,
+  onLink, onSkip,
 }: {
-  band: { title: string; color: string };
   onLink: (nodeId: string) => void;
   onSkip: () => void;
 }) {
@@ -789,7 +788,7 @@ function ResultComparisonGraph({ attempts, color }: {
         <polyline points={polyline} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
         {xs.map((x, i) => (
           <g key={i}>
-            <circle cx={x} cy={ys[i]} r={3} fill={color} stroke="#080b15" strokeWidth={1.5} />
+            <circle cx={Number.isFinite(x) ? x : 0} cy={Number.isFinite(ys[i]) ? ys[i] : 0} r={3} fill={color} stroke="#080b15" strokeWidth={1.5} />
             <text x={x} y={H} dy={-2} textAnchor="middle"
               fontSize={7} fill="#475569">
               {Math.round((pts[i].score / pts[i].maxScore) * 100)}%
@@ -1623,12 +1622,13 @@ function QuizSearchBar({ search, setSearch, activeTag, setActiveTag, notComplete
 
 interface QuizzesHubProps {
   onBack?: () => void;
+  onNavigateToWeeklySummary?: () => void;
 }
 
-export function QuizzesHub({ onBack }: QuizzesHubProps) {
+export function QuizzesHub({ onBack, onNavigateToWeeklySummary }: QuizzesHubProps) {
   const [state, setState] = useState<QuizView>({ view: "hub" });
   const { history, addResult, getAttempts, totalCompleted, completedQuizIds } = useQuizHistory();
-  const { streak, weeklyCount, weeklyDays, pendingCount } = useQuizStats();
+  const { streak, pendingCount } = useQuizStats();
   const { quizReminders } = useDailyPulse();
   const [search, setSearch] = useState("");
   const [activeTag, setActiveTag] = useState<QuizTag | null>(null);
@@ -1662,7 +1662,6 @@ export function QuizzesHub({ onBack }: QuizzesHubProps) {
       if (unique >= 4) unlock("quiz_half");
       if (unique >= 7) unlock("quiz_master");
     } catch { /* silent */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const completed = completedQuizIds();
@@ -1807,6 +1806,15 @@ export function QuizzesHub({ onBack }: QuizzesHubProps) {
         </div>
         {onBack && (
           <div style={{ display: "flex", gap: 8 }}>
+            {onNavigateToWeeklySummary && (
+              <button onClick={onNavigateToWeeklySummary} style={{
+                background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.16)",
+                borderRadius: 12, padding: "8px 14px", color: "#7dd3fc", fontSize: 12, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 6,
+              }}>
+                <TrendingUp size={14} /> ملخص الأسبوع
+              </button>
+            )}
             {history.length > 0 && (
               <button onClick={() => exportQuizReport(history)} style={{
                 background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
@@ -1979,7 +1987,6 @@ export function QuizzesHub({ onBack }: QuizzesHubProps) {
           >
             <div style={{ width: "100%", maxWidth: 420 }}>
               <AttachmentNodePicker
-                band={{ title: state.band.title, color: state.band.color }}
                 onLink={(nodeId) => {
                   updateNode(nodeId, { quizResult: { quizId: activeQuiz.id, bandTitle: state.band.title, bandColor: state.band.color, score: state.score, maxScore: activeQuiz.questions.length * 3, timestamp: Date.now() } });
                   setShowNodePicker(false);

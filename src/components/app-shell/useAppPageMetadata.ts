@@ -21,12 +21,17 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   survey: "استبيان البحث",
   "exit-scripts": "مكتبة جمل الخروج",
   grounding: "تقنيات تهدئة الجسم",
+  meditation: "مشغل جلسات التأمل",
+  "meditation-complete": "ملخص إكمال الجلسة",
+  history: "أرشيف الجلسات",
+  "annual-report": "التقارير",
   stories: "قصص النجاح",
   about: "لماذا الرحلة؟",
   insights: "تحليل العلاقات",
   quizzes: "الاختبارات",
   "behavioral-analysis": "تحليل الأنماط السلوكية",
   resources: "مركز الموارد التعليمية",
+  "weekly-summary": "ملخص الأسبوع",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -90,6 +95,22 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
     title: "Grounding Toolkit | Alrehla",
     description: "Body-first calming techniques to regulate your nervous system."
   },
+  meditation: {
+    title: "Meditation Session Player | Alrehla",
+    description: "Run structured meditation sessions with focus, pacing, and ambient control."
+  },
+  "meditation-complete": {
+    title: "Session Completion Summary | Alrehla",
+    description: "Review a standalone completion summary after finishing a meditation session."
+  },
+  history: {
+    title: "Session Archive & Historical Analytics | Alrehla",
+    description: "Browse historical sessions, compare outcomes, and review longitudinal insights."
+  },
+  "annual-report": {
+    title: "Reports | Alrehla",
+    description: "Review your archive, summaries, and growth insights across sessions and trends."
+  },
   stories: {
     title: "قصص النجاح — الرحلة",
     description: "قصص حقيقية من أناس حققوا تحولاً جذرياً في حياتهم عبر الرحلة."
@@ -113,6 +134,10 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   resources: {
     title: "مركز الموارد التعليمية | الرحلة",
     description: "فيديوهات وقصص نجاح وتمارين وجمل خروج — كل ما تحتاجه للتعلم والممارسة."
+  },
+  "weekly-summary": {
+    title: "ملخص الأسبوع | الرحلة",
+    description: "استعرض إحصائياتك وإنجازاتك الأسبوعية في رحلة الوعي الذاتي."
   },
 };
 
@@ -138,6 +163,10 @@ export function useAppPageMetadata(screen: AppScreen) {
     if (screen === "armory") recordFlowEvent("screen_armory_viewed");
     if (screen === "exit-scripts") recordFlowEvent("screen_exit_scripts_viewed");
     if (screen === "grounding") recordFlowEvent("screen_grounding_viewed");
+    if (screen === "meditation") recordFlowEvent("screen_meditation_viewed" as unknown as Parameters<typeof recordFlowEvent>[0]);
+    if (screen === "meditation-complete") recordFlowEvent("screen_meditation_complete_viewed" as unknown as Parameters<typeof recordFlowEvent>[0]);
+    if (screen === "history") recordFlowEvent("screen_history_viewed" as unknown as Parameters<typeof recordFlowEvent>[0]);
+    if (screen === "annual-report") recordFlowEvent("screen_annual_report_viewed" as unknown as Parameters<typeof recordFlowEvent>[0]);
   }, [screen]);
 
   useEffect(() => {

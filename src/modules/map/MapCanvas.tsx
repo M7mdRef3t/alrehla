@@ -300,8 +300,12 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
                 ? "rgba(100, 116, 139, 0.3)"
                 : "linear-gradient(135deg, rgba(45, 212, 191, 0.15), rgba(139, 92, 246, 0.1))",
             color: isVampire ? "rgba(255,255,255,0.8)" : "var(--text-primary)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            boxShadow: isVampire ? `inset 0 0 ${5 + vampireIntensity * 10}px #000, 0 0 ${vampireIntensity * 15}px rgba(153,27,27,0.5)` : "none"
+            border: node.ring === "red" ? "1.5px solid rgba(248, 113, 113, 0.6)" : "1px solid rgba(255, 255, 255, 0.1)",
+            boxShadow: isVampire 
+              ? `inset 0 0 ${5 + vampireIntensity * 10}px #000, 0 0 ${vampireIntensity * 20}px rgba(185, 28, 28, 0.6)` 
+              : node.ring === "red" 
+                ? "0 0 15px rgba(248, 113, 113, 0.4)" 
+                : "none"
           }}
         >
           {node.avatarUrl ? (
@@ -589,6 +593,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
       };
     });
   }, [allNodes]);
+  const safeStarRadius = (value: unknown) => (Number.isFinite(value) ? Number(value) : 1);
 
   const [showArchiveToast, setShowArchiveToast] = useState(false);
   const [lastArchivedName, setLastArchivedName] = useState<string | undefined>(undefined);
@@ -1019,7 +1024,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                     key={star.id}
                     cx={star.x}
                     cy={star.y}
-                    r={star.size}
+                    r={safeStarRadius(star.size)}
                     fill="rgba(255,255,255,1)"
                     initial={{ opacity: 0 }}
                     animate={{ 

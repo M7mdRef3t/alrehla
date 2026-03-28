@@ -284,6 +284,10 @@ async function initSupabaseAuth(): Promise<void> {
 
       if (event === "SIGNED_IN") {
         trackEvent(AnalyticsEvents.AUTH_COMPLETED);
+        // Sync achievements from Supabase on login
+        import("../state/achievementState").then(m => {
+          void m.mergeRemoteAchievements();
+        });
       }
     });
   } catch {

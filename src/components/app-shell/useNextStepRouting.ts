@@ -33,6 +33,7 @@ interface UseNextStepRoutingParams {
   openFeedback: () => void;
   setSelectedNodeId: (nodeId: string | null) => void;
   setShowBreathing: (show: boolean) => void;
+  isInterventionSuppressed?: boolean;
 }
 
 function inferCognitiveLoadFromDecision(decision: NextStepDecisionV1): number {
@@ -56,7 +57,8 @@ export function useNextStepRouting({
   openMissionScreen,
   openFeedback,
   setSelectedNodeId,
-  setShowBreathing
+  setShowBreathing,
+  isInterventionSuppressed = false
 }: UseNextStepRoutingParams) {
   const [activeIntervention, setActiveIntervention] = useState<ActiveInterventionState | null>(null);
   const [nextStepDecision, setNextStepDecision] = useState<NextStepDecisionV1 | null>(null);
@@ -172,8 +174,8 @@ export function useNextStepRouting({
   ]);
 
   const handleActiveIntervention = useCallback((snapshot: IdleAwareTelemetrySnapshot, decision: NextStepDecisionV1) => {
-    // Guard: don't fire if hesitation is unrealistically short — prevents React StrictMode double-invoke spurious calls
-    if (snapshot.hesitationSec < 30) return;
+    // Guard: don't fire if hesitation is unrealistically short or if suppressed (e.g. Pulse Check is open)
+    if (snapshot.hesitationSec < 30 || isInterventionSuppressed) return;
 
     const cognitiveLoadRequired = inferCognitiveLoadFromDecision(decision);
     setActiveIntervention({
@@ -211,7 +213,7 @@ export function useNextStepRouting({
   }, []);
 
   useEffect(() => {
-    if (screen !== "map" && screen !== "tools") {
+    if (screen !== "map" && screen !== "tools" || isInterventionSuppressed) {
       nextStepTelemetry.clearSession();
       setNextStepDecision(null);
       return;
@@ -261,7 +263,8 @@ export function useNextStepRouting({
     handleActiveIntervention,
     nextStepRefreshTick,
     nextStepTelemetry,
-    screen
+    screen,
+    isInterventionSuppressed
   ]);
 
   return {

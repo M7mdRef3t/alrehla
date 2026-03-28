@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, Suspense, useState } from "react";
 import dynamic from "next/dynamic";
+import App from "../src/App";
 import { AwarenessSkeleton } from "../src/components/AwarenessSkeleton";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { initAnalytics } from "../src/services/analytics";
@@ -11,13 +12,13 @@ import { applyDesignSystemTokens } from "../src/services/designSystemTokens";
 import { PWAInstallProvider } from "../src/contexts/PWAInstallContext";
 import { PlatformHeader } from "../src/components/PlatformHeader";
 
-const App = dynamic(() => import("../src/App"), { ssr: false });
 const Landing = dynamic(() => import("../src/components/Landing").then((m) => m.Landing), { ssr: false }) as typeof import("../src/components/Landing").Landing;
 const Analytics = dynamic(() => import("@vercel/analytics/react").then((m) => m.Analytics), { ssr: false });
 const SpeedInsights = dynamic(() => import("@vercel/speed-insights/react").then((m) => m.SpeedInsights), { ssr: false });
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
+const shouldRegisterServiceWorker = runtimeEnv.isProd;
 
 function shouldBootIntoFullApp(): boolean {
   if (typeof window === "undefined") return true;
@@ -29,6 +30,7 @@ function shouldBootIntoFullApp(): boolean {
 }
 
 function registerServiceWorker() {
+  if (!shouldRegisterServiceWorker) return;
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 
   const installWorker = () => {

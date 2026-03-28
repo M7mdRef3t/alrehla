@@ -16,6 +16,7 @@ import {
   Palette,
   Trophy,
   BarChart3,
+  GraduationCap,
   MessageCircle,
   Globe,
   Sparkles,
@@ -24,18 +25,21 @@ import {
   Compass,
   Star,
   ShieldCheck,
+  Zap,
   BrainCircuit,
   Radar,
   Scale,
   Crosshair,
   ScrollText,
-  Smartphone
+  Smartphone,
+  Users
 } from "lucide-react";
 import { useJourneyState } from "../state/journeyState";
 import { useNotificationState } from "../state/notificationState";
 import { useEmergencyState } from "../state/emergencyState";
 import { BreathingOverlay } from "./BreathingOverlay";
 import { useAchievementState } from "../state/achievementState";
+import { useAuthState } from "../state/authState";
 import { useMapState } from "../state/mapState";
 import type { RecoveryPlanOpenWith } from "../state/mapState";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
@@ -49,7 +53,7 @@ import { getMissionProgressSummary } from "../utils/missionProgress";
 import { getGoalLabel, getLastGoalMeta } from "../utils/goalLabel";
 import { getGoalMeta } from "../data/goalMeta";
 import { useAdminState } from "../state/adminState";
-import { getEffectiveRoleFromState, useAuthState } from "../state/authState";
+import { getEffectiveRoleFromState } from "../state/authState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "../utils/featureFlags";
 import type { FeatureFlagKey } from "../config/features";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
@@ -58,6 +62,8 @@ import { runtimeEnv } from "../config/runtimeEnv";
 import { AwarenessSkeleton } from "./AwarenessSkeleton";
 import { assignUrl, getHref, pushUrl } from "../services/navigation";
 import { openInNewTab } from "../services/clientDom";
+import { DEFAULT_WHATSAPP_CONTACT, normalizeWhatsAppPhone } from "./AppSidebar.utils";
+import { AppSidebarQuickActions } from "./AppSidebarQuickActions";
 
 const NotificationSettings = lazy(() =>
   import("./NotificationSettings").then((m) => ({ default: m.NotificationSettings }))
@@ -120,27 +126,21 @@ const ManualPlacementModal = lazy(() =>
 const FeedbackModal = lazy(() =>
   import("./FeedbackModal").then((m) => ({ default: m.FeedbackModal }))
 );
-import { ShareableCard } from "./ShareableCard";
-
-const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
-
-function normalizeArabicDigits(value: string): string {
-  return value
-    .replace(/[٠-٩]/g, (digit) => String(digit.charCodeAt(0) - 1632))
-    .replace(/[۰-۹]/g, (digit) => String(digit.charCodeAt(0) - 1776));
-}
-
-function normalizeWhatsAppPhone(rawPhone: string): string {
-  let digits = normalizeArabicDigits(rawPhone).replace(/\D/g, "");
-  if (!digits) return "";
-
-  if (digits.startsWith("00")) digits = digits.slice(2);
-  if (digits.startsWith("020")) digits = digits.slice(1); // مثال: 0201... -> 201...
-  if (digits.startsWith("0") && digits.length === 11) digits = `20${digits.slice(1)}`; // 01x... -> 201x...
-  if (digits.startsWith("2") && digits.length === 12) return digits;
-  if (digits.startsWith("20")) return digits;
-  return digits;
-}
+const LeaderboardScreen = lazy(() =>
+  import("./LeaderboardScreen").then((m) => ({ default: m.LeaderboardScreen }))
+);
+const NotificationCenter = lazy(() =>
+  import("./NotificationCenter").then((m) => ({ default: m.NotificationCenter }))
+);
+const OwnerAnalyticsDashboard = lazy(() =>
+  import("./OwnerAnalyticsDashboard").then((m) => ({ default: m.OwnerAnalyticsDashboard }))
+);
+const AcademicTrophyRoom = lazy(() =>
+  import("./AcademicTrophyRoom").then((m) => ({ default: m.AcademicTrophyRoom }))
+);
+const WeeklyChallengesScreen = lazy(() =>
+  import("./WeeklyChallengesScreen").then((m) => ({ default: m.WeeklyChallengesScreen }))
+);
 
 interface AppSidebarProps {
   onOpenGym: () => void;
@@ -172,6 +172,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   onNoiseSessionComplete
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const isOwner = useAuthState((s) => s.user?.user_metadata?.role === "owner" || s.user?.app_metadata?.role === "owner");
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
   const [showShareStats, setShowShareStats] = useState(false);
@@ -179,6 +180,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showBreathing, setShowBreathing] = useState(false);
   const [showThemeSettings, setShowThemeSettings] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showNotifCenter, setShowNotifCenter] = useState(false);
+  const [showOwnerAnalytics, setShowOwnerAnalytics] = useState(false);
+  const [showTrophyRoom, setShowTrophyRoom] = useState(false);
+  const [showWeeklyChallenges, setShowWeeklyChallenges] = useState(false);
+
   const [showSymptomsOverview, setShowSymptomsOverview] = useState(false);
   const [showRecoveryPlan, setShowRecoveryPlan] = useState(false);
   const [showTrackingDashboard, setShowTrackingDashboard] = useState(false);
@@ -188,6 +195,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showThoughtSniper, setShowThoughtSniper] = useState(false);
   const [showFastingCapsule, setShowFastingCapsule] = useState(false);
   const [showInnerCourt, setShowInnerCourt] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showGlobalMissions, setShowGlobalMissions] = useState(false);
   const [showAtlasDashboard, setShowAtlasDashboard] = useState(false);
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
@@ -352,27 +360,33 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           <aside
             className="h-full w-56 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 flex flex-col gap-3 py-6 px-4 min-w-0 invisible group-hover/sidebar:visible"
           >
-            {viewingNode?.analysis && (
-              <div className="shrink-0 space-y-1 mb-1">
-                <RecoveryProgressBar node={viewingNode} />
-                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 text-center truncate px-1" title={viewingNode.label}>
-                  {viewingNode.label}
-                </p>
-              </div>
-            )}
-            <HealthBar />
-            <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
-            {canShowJourneyToolsEntry && (
-              <button
-                type="button"
-                onClick={() => onOpenJourneyTools?.()}
-                className="w-full flex items-center gap-3 rounded-xl bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100/70 dark:hover:bg-teal-900/40 transition-all text-right shrink-0 whitespace-nowrap"
-                title="الترسانة — معداتك"
-              >
-                <Compass className="w-5 h-5 shrink-0" />
-                الترسانة
-              </button>
-            )}
+              {viewingNode?.analysis && (
+                <div className="shrink-0 space-y-1 mb-1">
+                  <RecoveryProgressBar node={viewingNode} />
+                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 text-center truncate px-1" title={viewingNode.label}>
+                    {viewingNode.label}
+                  </p>
+                </div>
+              )}
+              <HealthBar />
+              <TodayTaskStrip onOpenRecoveryPlan={(nodeId) => setRecoveryPlanOpenWith({ preselectedNodeId: nodeId })} />
+              <AppSidebarQuickActions
+                canShowJourneyToolsEntry={canShowJourneyToolsEntry}
+                onOpenJourneyTools={onOpenJourneyTools}
+                onOpenJourneyTimeline={onOpenJourneyTimeline}
+                openAdminDashboard={openAdminDashboard}
+                openCoachDashboard={openCoachDashboard}
+                onOpenDawayir={onOpenDawayir}
+                onOpenGuidedJourney={onOpenGuidedJourney}
+                onOpenBaseline={onOpenBaseline}
+                onStartJourney={onStartJourney}
+                setShowNotificationSettings={setShowNotificationSettings}
+                notificationsSupported={notificationsSupported}
+                notificationEnabled={notificationSettings.enabled}
+                setShowTrackingDashboard={setShowTrackingDashboard}
+                setShowAtlasDashboard={setShowAtlasDashboard}
+                openWithFeatureGate={openWithFeatureGate}
+              />
             {onOpenJourneyTimeline && (
               <button
                 type="button"
@@ -432,6 +446,91 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 )}
               </span>
             </button>
+            <button
+              type="button"
+              onClick={() => assignUrl("/dawayir-live/group")}
+              className="w-full flex items-center gap-3 rounded-xl bg-slate-950 text-slate-100 border border-teal-500/20 px-4 py-3 text-sm font-semibold hover:border-teal-400 hover:bg-teal-500/10 transition-all text-right shrink-0 whitespace-nowrap"
+              title="الجلسات الجماعية المباشرة"
+            >
+              <Users className="w-5 h-5 shrink-0 text-teal-400" />
+              <span className="flex flex-col items-start leading-tight">
+                <span>الجلسات الجماعية المباشرة</span>
+                <span className="text-[10px] opacity-60 font-normal">Group Pulse Room</span>
+              </span>
+            </button>
+
+            {/* ── Weekly Challenges ── */}
+            <button
+              type="button"
+              onClick={() => setShowWeeklyChallenges(true)}
+              className="w-full flex items-center gap-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all text-right shrink-0 whitespace-nowrap"
+              title="تحديات المجتمع الأسبوعية"
+            >
+              <Zap className="w-5 h-5 shrink-0 text-emerald-500" />
+              <span className="flex flex-col items-start leading-tight">
+                <span>تحديات المجتمع</span>
+                <span className="text-[10px] opacity-60 font-normal">أسبوعية · جوائز</span>
+              </span>
+            </button>
+
+            {/* ── Leaderboard ── */}
+            <button
+              type="button"
+              onClick={() => setShowLeaderboard(true)}
+              className="w-full flex items-center gap-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all text-right shrink-0 whitespace-nowrap"
+              title="لوحة المتصدرين"
+            >
+              <Trophy className="w-5 h-5 shrink-0 text-amber-500" />
+              <span className="flex flex-col items-start leading-tight">
+                <span>لوحة المتصدرين</span>
+                <span className="text-[10px] opacity-60 font-normal">Leaderboard</span>
+              </span>
+            </button>
+
+            {/* ── Academic Trophy Room ── */}
+            <button
+              type="button"
+              onClick={() => setShowTrophyRoom(true)}
+              className="w-full flex items-center gap-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all text-right shrink-0 whitespace-nowrap"
+              title="قاعة الإنجازات"
+            >
+              <GraduationCap className="w-5 h-5 shrink-0 text-teal-500" />
+              <span className="flex flex-col items-start leading-tight">
+                <span>قاعة الإنجازات</span>
+                <span className="text-[10px] opacity-60 font-normal">XP · شارات · دورات</span>
+              </span>
+            </button>
+
+            {/* ── Notification Center ── */}
+            <button
+              type="button"
+              onClick={() => setShowNotifCenter(true)}
+              className="w-full flex items-center gap-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-all text-right shrink-0 whitespace-nowrap"
+              title="مركز الإشعارات"
+            >
+              <Bell className="w-5 h-5 shrink-0 text-violet-500" />
+              <span className="flex flex-col items-start leading-tight">
+                <span>مركز الإشعارات</span>
+                <span className="text-[10px] opacity-60 font-normal">Notification Center</span>
+              </span>
+            </button>
+
+            {/* ── Owner Analytics — owner-gated ── */}
+            {isOwner && (
+              <button
+                type="button"
+                onClick={() => setShowOwnerAnalytics(true)}
+                className="w-full flex items-center gap-3 rounded-xl bg-slate-950 text-slate-100 border border-sky-500/25 px-4 py-3 text-sm font-semibold hover:border-sky-400 hover:bg-sky-500/10 transition-all text-right shrink-0 whitespace-nowrap"
+                title="تحليلات المنصة"
+              >
+                <BarChart3 className="w-5 h-5 shrink-0 text-sky-400" />
+                <span className="flex flex-col items-start leading-tight">
+                  <span>تحليلات المنصة</span>
+                  <span className="text-[10px] opacity-60 font-normal">Owner Analytics</span>
+                </span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setShowRadarShield(true)}
@@ -1044,31 +1143,6 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 >
                   <ClipboardList className="w-6 h-6 shrink-0" />
                   <span>رصد الحالة</span>
-                </button>
-                {canShowJourneyToolsEntry && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onOpenJourneyTools?.();
-                      handleClose();
-                    }}
-                    className="w-full flex items-center gap-3 rounded-xl bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100/70 dark:hover:bg-teal-900/40 transition-all text-right"
-                  >
-                    <Compass className="w-6 h-6 shrink-0" />
-                    <span>أدوات الرحلة</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    openAdminDashboard();
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right"
-                  title="لوحة التحكم"
-                >
-                  <ShieldCheck className="w-6 h-6 shrink-0 text-teal-600" />
-                  <span>لوحة التحكم</span>
                 </button>
                 <button
                   type="button"
@@ -1729,6 +1803,43 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               });
             }}
           />
+        </Suspense>
+      )}
+
+      {/* ── Leaderboard ── */}
+      {showLeaderboard && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <div style={{ position: "fixed", inset: 0, zIndex: 9000, overflowY: "auto", background: "#080b15" }}>
+            <LeaderboardScreen onBack={() => setShowLeaderboard(false)} />
+          </div>
+        </Suspense>
+      )}
+
+      {/* ── Notification Center ── */}
+      <Suspense fallback={null}>
+        <NotificationCenter isOpen={showNotifCenter} onClose={() => setShowNotifCenter(false)} />
+      </Suspense>
+
+      {/* ── Owner Analytics Dashboard ── */}
+      {showOwnerAnalytics && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <div style={{ position: "fixed", inset: 0, zIndex: 9000, overflowY: "auto", background: "#080b15" }}>
+            <OwnerAnalyticsDashboard onBack={() => setShowOwnerAnalytics(false)} />
+          </div>
+        </Suspense>
+      )}
+
+      {/* ── Academic Trophy Room ── */}
+      {showTrophyRoom && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <AcademicTrophyRoom onClose={() => setShowTrophyRoom(false)} />
+        </Suspense>
+      )}
+
+      {/* --- Weekly Challenges --- */}
+      {showWeeklyChallenges && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <WeeklyChallengesScreen onBack={() => setShowWeeklyChallenges(false)} />
         </Suspense>
       )}
     </>

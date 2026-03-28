@@ -168,6 +168,48 @@ export const NotificationSettings: FC<NotificationSettingsProps> = ({
                     animate={{ opacity: 1, height: "auto" }}
                     className="space-y-3"
                   >
+                    <div className="rounded-2xl border border-cyan-200/40 bg-gradient-to-br from-cyan-50 via-white to-slate-50 p-4 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="w-11 h-11 rounded-2xl bg-cyan-100 flex items-center justify-center text-cyan-700 border border-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.16)]">
+                          <Clock className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-black text-slate-900 text-sm">معاينة تذكير الموعد</p>
+                            <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-bold text-cyan-700 border border-cyan-200">
+                              LIVE REMINDER
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs leading-6 text-slate-600">
+                            تبدأ الجلسة مع د. سارة الفارس خلال 10 دقائق (02:00 مساءً).
+                          </p>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              className="rounded-xl bg-cyan-500 px-3 py-2 text-xs font-bold text-white shadow-md shadow-cyan-200"
+                              onClick={() => updateSettings({ enabled: settings.enabled })}
+                            >
+                              Join Now
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                              onClick={() => updateSettings({ enabled: settings.enabled })}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700"
+                              onClick={() => updateSettings({ enabled: settings.enabled })}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Daily Reminder */}
                     <SettingToggle
                       icon={<Clock className="w-4 h-4" />}

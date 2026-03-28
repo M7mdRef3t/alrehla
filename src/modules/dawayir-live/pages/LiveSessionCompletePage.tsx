@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BadgeCheck, Clock3, Download, Gem, Link2, RotateCcw, Share2, Wind } from "lucide-react";
+import { BadgeCheck, CalendarDays, Clock3, Download, Gem, HeartPulse, Link2, RotateCcw, Share2, Sparkles, Users2, Wind } from "lucide-react";
 import { assignUrl } from "../../../services/navigation";
 import { createLiveShare, getLiveSession } from "../api";
 import CognitiveWeatherSummary from "../components/CognitiveWeatherSummary";
@@ -22,6 +22,10 @@ function truthContractStorageKey(sessionId: string) {
 
 function sessionHistorySavedKey(sessionId: string) {
   return `dawayir-live-history-saved:${sessionId}`;
+}
+
+function recordingStorageKey(sessionId: string) {
+  return `dawayir-live-recording:${sessionId}`;
 }
 
 function getJourneyPath(detail: LiveSessionDetail | null) {
@@ -150,6 +154,31 @@ function sectionItems(summary: LiveSessionSummary | null, key: "breakthroughs" |
   return Array.isArray(summary?.[key]) ? summary[key] : [];
 }
 
+function formatSessionDate(value: string | null, language: "ar" | "en") {
+  if (!value) return language === "ar" ? "غير متاح" : "Unavailable";
+  const date = new Date(value);
+  try {
+    return new Intl.DateTimeFormat(language === "ar" ? "ar-EG" : "en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(date);
+  } catch {
+    return date.toLocaleString();
+  }
+}
+
+function formatDuration(ms: number, language: "ar" | "en") {
+  const totalMinutes = Math.max(1, Math.round(ms / 60000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (language === "ar") {
+    if (hours > 0) return `${hours}س ${minutes}د`;
+    return `${minutes}د`;
+  }
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
 export default function LiveSessionCompletePage({ sessionId }: { sessionId: string }) {
   const [detail, setDetail] = useState<LiveSessionDetail | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
@@ -162,6 +191,7 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
   const [truthIsUrgent, setTruthIsUrgent] = useState(false);
   const [isWaitingForRelease, setIsWaitingForRelease] = useState(false);
   const [isReleasing, setIsReleasing] = useState(false);
+  const [recordingMeta, setRecordingMeta] = useState<{ seconds: number; transcriptCount: number } | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const blowFrameRef = useRef<number | null>(null);
@@ -212,6 +242,28 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
   const nextMoves = sectionItems(summary, "nextMoves");
   const truthPromises = coerceStringArray(truthContract?.promises);
 
+  const sessionDateLabel = useMemo(
+    () => formatSessionDate(detail?.session.ended_at || detail?.session.updated_at || detail?.session.started_at || null, language),
+    [detail?.session.ended_at, detail?.session.started_at, detail?.session.updated_at, language],
+  );
+  const sessionDurationLabel = useMemo(() => formatDuration(sessionDurationMs, language), [language, sessionDurationMs]);
+  const keyTakeaways = useMemo(() => {
+    const primary = breakthroughs.slice(0, 4);
+    const secondary = nextMoves.slice(0, 2).map((item) => (language === "ar" ? `خطوة تالية: ${item}` : `Next move: ${item}`));
+    const fallback = language === "ar"
+      ? ["تنفّس أهدأ قبل القرار", "حدود صحية أوضح", "خطوة صغيرة قابلة للتنفيذ"]
+      : ["Pause before reacting", "Set clearer boundaries", "Take one small next step"];
+    const combined = [...primary, ...secondary];
+    return (combined.length > 0 ? combined : fallback).slice(0, 5);
+  }, [breakthroughs, language, nextMoves]);
+  const emotionalPulse = useMemo(() => {
+    const equilibrium = Math.round((metrics?.equilibriumScore ?? 0) * 100);
+    const overload = Math.round((metrics?.overloadIndex ?? 0) * 100);
+    const clarity = Math.round((metrics?.clarityDelta ?? 0) * 100);
+    const calm = Math.max(0, Math.min(100, Math.round((equilibrium * 0.7) + (Math.max(0, 100 - overload) * 0.3))));
+    return { equilibrium, overload, clarity, calm };
+  }, [metrics?.clarityDelta, metrics?.equilibriumScore, metrics?.overloadIndex]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     setTruthMarkedDone(window.localStorage.getItem(truthContractStorageKey(sessionId)) === "done");
@@ -222,11 +274,33 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
     const key = sessionHistorySavedKey(sessionId);
     if (window.localStorage.getItem(key) === "saved") return;
 
+    const recordingRaw = window.sessionStorage.getItem(recordingStorageKey(sessionId));
+    let recording: { seconds: number; transcriptCount: number } | null = null;
+    if (recordingRaw) {
+      try {
+        const parsed = JSON.parse(recordingRaw) as unknown;
+        if (parsed && typeof parsed === "object") {
+          const candidate = parsed as Record<string, unknown>;
+          if (typeof candidate.seconds === "number" && typeof candidate.transcriptCount === "number") {
+            recording = {
+              seconds: candidate.seconds,
+              transcriptCount: candidate.transcriptCount,
+            };
+          }
+        }
+      } catch {
+        recording = null;
+      }
+    }
+    setRecordingMeta(recording);
+
     saveSessionSummary({
       dominantNodeId,
       clarityDelta: metrics?.clarityDelta ?? 0,
       overloadIndex: metrics?.overloadIndex ?? 0,
       transitionCount,
+      recordingSeconds: recording?.seconds,
+      transcriptCount: recording?.transcriptCount,
     });
     window.localStorage.setItem(key, "saved");
   }, [detail, dominantNodeId, metrics?.clarityDelta, metrics?.overloadIndex, sessionId, transitionCount]);
@@ -512,52 +586,188 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
         </h1>
         <p className="complete-session-name">{sessionTitle}</p>
 
-        <div className="sc-arc-seen">
-          <div className="sc-arc-label" aria-hidden="true">
-            {copy.seenArc}
-          </div>
-          <div className="mirror-sentence-container">
-            <MirrorSentence journeyPath={journeyPath} transitionCount={transitionCount} language={language} />
-            <p className="complete-subtitle complete-subtitle-tight">{headline}</p>
-          </div>
-          <p className="complete-subtitle">{summary?.headline || copy.storedHeadline}</p>
-        </div>
-
-        <div className="sc-arc-clear">
-          <div className="sc-arc-label" aria-hidden="true">
-            {copy.clarityArc}
-          </div>
-
-          <JourneyTimeline
-            journeyPath={journeyPath}
-            transitionCount={transitionCount}
-            sessionDurationMs={sessionDurationMs}
-            language={language}
-          />
-
-          <div className="complete-stats-table">
-            <div className="complete-stat-row complete-stat-row-divider">
-              <span className="complete-stat-label">{copy.equilibrium}</span>
-              <span className="complete-stat-value complete-stat-success">{Math.round((metrics?.equilibriumScore ?? 0) * 100)}%</span>
+        <div className="complete-summary-panel">
+          <div className="complete-summary-panel__top">
+            <div>
+              <div className="presentation-badge">{language === "ar" ? "ملخص الجلسة الجماعية" : "Group Session Summary"}</div>
+              <h2 className="complete-summary-panel__title">{headline}</h2>
+              <p className="complete-summary-panel__body">
+                {summary?.headline || copy.storedHeadline}
+              </p>
             </div>
-            <div className="complete-stat-row complete-stat-row-divider">
-              <span className="complete-stat-label">{copy.overload}</span>
-              <span className="complete-stat-value complete-stat-info">{Math.round((metrics?.overloadIndex ?? 0) * 100)}%</span>
+            <div className="complete-summary-meta">
+              <div className="complete-summary-meta__item">
+                <CalendarDays className="h-4 w-4" />
+                <span>{sessionDateLabel}</span>
+              </div>
+              <div className="complete-summary-meta__item">
+                <Clock3 className="h-4 w-4" />
+                <span>{sessionDurationLabel}</span>
+              </div>
             </div>
-            <div className="complete-stat-row">
-              <span className="complete-stat-label">{copy.clarity}</span>
-              <span className={`complete-stat-value ${(metrics?.clarityDelta ?? 0) >= 0 ? "complete-stat-success" : "complete-stat-magenta"}`}>
-                {formatPercent(metrics?.clarityDelta ?? 0)}
+          </div>
+
+          <div className="complete-summary-grid">
+            <section className="complete-summary-card complete-summary-card--takeaways">
+              <div className="complete-summary-card__head">
+                <Sparkles className="h-4 w-4 text-cyan-200" />
+                <span>{language === "ar" ? "أهم الوجبات المعرفية" : "Key Takeaways"}</span>
+              </div>
+              <div className="complete-takeaway-list">
+                {keyTakeaways.map((item) => (
+                  <div key={item} className="complete-takeaway-pill">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="complete-summary-card">
+              <div className="complete-summary-card__head">
+                <Users2 className="h-4 w-4 text-violet-200" />
+                <span>{language === "ar" ? "المشاركة والتفاعل" : "Participation & Engagement"}</span>
+              </div>
+              <div className="complete-summary-stats">
+                <div className="complete-summary-stat">
+                  <small>{language === "ar" ? "التوازن" : "Equilibrium"}</small>
+                  <strong>{emotionalPulse.equilibrium}%</strong>
+                </div>
+                <div className="complete-summary-stat">
+                  <small>{language === "ar" ? "الضغط" : "Overload"}</small>
+                  <strong>{emotionalPulse.overload}%</strong>
+                </div>
+                <div className="complete-summary-stat">
+                  <small>{language === "ar" ? "الوضوح" : "Clarity"}</small>
+                  <strong>{formatPercent(metrics?.clarityDelta ?? 0)}</strong>
+                </div>
+              </div>
+            </section>
+
+            <section className="complete-summary-card">
+              <div className="complete-summary-card__head">
+                <Sparkles className="h-4 w-4 text-cyan-200" />
+                <span>{language === "ar" ? "تسجيل الجلسة" : "Session Recording"}</span>
+              </div>
+              <div className="complete-summary-stats">
+                <div className="complete-summary-stat">
+                  <small>{language === "ar" ? "المدة" : "Duration"}</small>
+                  <strong>{recordingMeta ? formatDuration(recordingMeta.seconds * 1000, language) : sessionDurationLabel}</strong>
+                </div>
+                <div className="complete-summary-stat">
+                  <small>{language === "ar" ? "النسخ" : "Transcript"}</small>
+                  <strong>{recordingMeta?.transcriptCount ?? detail.events.filter((event) => event.event_type === "transcript").length}</strong>
+                </div>
+                <div className="complete-summary-stat">
+                  <small>{language === "ar" ? "الحفظ" : "Saved"}</small>
+                  <strong>{language === "ar" ? "محليًا" : "Locally"}</strong>
+                </div>
+              </div>
+              <div className="complete-summary-note">
+                {language === "ar"
+                  ? "تم حفظ مدة التسجيل وعدد سطور الحوار في سجل الجلسة ليكونا جزءًا من الرجوع لاحقًا."
+                  : "Recording duration and transcript count are stored in the session history for later review."}
+              </div>
+            </section>
+          </div>
+
+          <div className="complete-summary-wide">
+            <section className="complete-summary-card complete-summary-card--pulse">
+              <div className="complete-summary-card__head">
+                <HeartPulse className="h-4 w-4 text-rose-200" />
+                <span>{language === "ar" ? "النبض العاطفي للمجموعة" : "Group Emotional Pulse"}</span>
+              </div>
+              <CognitiveWeatherSummary
+                dominantNodeId={dominantNodeId}
+                clarityDelta={metrics?.clarityDelta ?? 0}
+                overloadIndex={metrics?.overloadIndex ?? 0}
+                language={language}
+              />
+              <div className="complete-pulse-strip">
+                <div>
+                  <span>{language === "ar" ? "هدوء" : "Calm"}</span>
+                  <strong>{emotionalPulse.calm}%</strong>
+                </div>
+                <div>
+                  <span>{language === "ar" ? "انخراط" : "Engagement"}</span>
+                  <strong>{Math.max(42, emotionalPulse.equilibrium - Math.round(emotionalPulse.overload / 2))}%</strong>
+                </div>
+              </div>
+            </section>
+
+            <section className="complete-summary-card complete-summary-card--actions">
+              <div className="complete-summary-card__head">
+                <Download className="h-4 w-4 text-emerald-200" />
+                <span>{language === "ar" ? "خيارات المتابعة" : "Follow-up Actions"}</span>
+              </div>
+              <div className="complete-summary-actions">
+                <button className="primary-btn complete-action-btn" onClick={handleExportPdf} disabled={isExporting}>
+                  <Download className="inline-block h-4 w-4" /> {isExporting ? copy.exporting : copy.insightDocument}
+                </button>
+                <button className="primary-btn complete-action-btn complete-action-secondary" onClick={() => assignUrl("/dawayir-live")}>
+                  {copy.newSession}
+                </button>
+                <button className="primary-btn complete-action-btn complete-action-secondary" onClick={() => assignUrl("/dawayir-live/history")}>
+                  {copy.memoryBank}
+                </button>
+              </div>
+            </section>
+          </div>
+
+          <section className="session-action-card session-action-card--summary">
+            <div className="sac-header">
+              <span className="sac-icon" aria-hidden="true">
+                <Gem size={16} />
               </span>
+              <span className="sac-title">{copy.truthContract}</span>
             </div>
+
+            <p className="sac-body">{headline}</p>
+            <div className="complete-summary-note">
+              {language === "ar"
+                ? "هذا الملخص يجمع أبرز ما ظهر في الجلسة حتى يسهل الرجوع إليه ومشاركته."
+                : "This summary gathers the main patterns from the session so they are easy to revisit and share."}
+            </div>
+          </section>
+
+          <div className="sc-arc-seen">
+            <div className="sc-arc-label" aria-hidden="true">
+              {copy.seenArc}
+            </div>
+            <div className="mirror-sentence-container">
+              <MirrorSentence journeyPath={journeyPath} transitionCount={transitionCount} language={language} />
+              <p className="complete-subtitle complete-subtitle-tight">{headline}</p>
+            </div>
+            <p className="complete-subtitle">{summary?.headline || copy.storedHeadline}</p>
           </div>
 
-          <CognitiveWeatherSummary
-            dominantNodeId={dominantNodeId}
-            clarityDelta={metrics?.clarityDelta ?? 0}
-            overloadIndex={metrics?.overloadIndex ?? 0}
-            language={language}
-          />
+          <div className="sc-arc-clear">
+            <div className="sc-arc-label" aria-hidden="true">
+              {copy.clarityArc}
+            </div>
+
+            <JourneyTimeline
+              journeyPath={journeyPath}
+              transitionCount={transitionCount}
+              sessionDurationMs={sessionDurationMs}
+              language={language}
+            />
+
+            <div className="complete-stats-table">
+              <div className="complete-stat-row complete-stat-row-divider">
+                <span className="complete-stat-label">{copy.equilibrium}</span>
+                <span className="complete-stat-value complete-stat-success">{Math.round((metrics?.equilibriumScore ?? 0) * 100)}%</span>
+              </div>
+              <div className="complete-stat-row complete-stat-row-divider">
+                <span className="complete-stat-label">{copy.overload}</span>
+                <span className="complete-stat-value complete-stat-info">{Math.round((metrics?.overloadIndex ?? 0) * 100)}%</span>
+              </div>
+              <div className="complete-stat-row">
+                <span className="complete-stat-label">{copy.clarity}</span>
+                <span className={`complete-stat-value ${(metrics?.clarityDelta ?? 0) >= 0 ? "complete-stat-success" : "complete-stat-magenta"}`}>
+                  {formatPercent(metrics?.clarityDelta ?? 0)}
+                </span>
+              </div>
+            </div>
 
           {truthContract && (
             <div className={`session-action-card ${truthIsUrgent && !truthMarkedDone ? "session-action-card--urgent" : ""}`}>
@@ -639,6 +849,32 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
           </div>
 
           <WeeklyPatternCard language={language} />
+
+          <section className="session-action-card complete-booking-card">
+            <div className="sac-header">
+              <span className="sac-icon" aria-hidden="true">
+                <Users2 size={16} />
+              </span>
+              <span className="sac-title">{language === "ar" ? "احجز جلسة خاصة" : "Book a Private Session"}</span>
+              <span className="sac-badge">
+                {language === "ar" ? "متابعة شخصية" : "Personal follow-up"}
+              </span>
+            </div>
+            <p className="sac-body">
+              {language === "ar"
+                ? "اجلس مع د. سارة الفارس في جلسة فردية للحصول على رؤى شخصية وخطة نمو مخصصة بعد هذه المجموعة."
+                : "Meet Dr. Sarah Al-Farsi in a private session to turn this group insight into a personal growth plan."}
+            </p>
+            <div className="complete-summary-note">
+              {language === "ar"
+                ? "هذه الخطوة التالية مناسبة إذا أردت تعميق الفهم، تثبيت الوجبات، وبناء خطة تنفيذ أوضح."
+                : "This next step is ideal if you want deeper reflection, clearer takeaways, and a more tailored plan."}
+            </div>
+            <button className="primary-btn complete-action-btn" onClick={() => assignUrl("/dawayir-live/book")}>
+              {language === "ar" ? "احجز الآن" : "Schedule Now"}
+            </button>
+          </section>
+          </div>
         </div>
 
         <div className="sc-arc-ready complete-ready-arc">
@@ -647,15 +883,6 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
           </div>
 
           <div className="complete-actions-row">
-            <div className="complete-primary-row">
-              <button className="primary-btn complete-action-btn" onClick={() => assignUrl("/dawayir-live")}>
-                {copy.newSession}
-              </button>
-              <button className="primary-btn complete-action-btn complete-action-secondary" onClick={() => assignUrl("/dawayir-live/history")}>
-                {copy.memoryBank}
-              </button>
-            </div>
-
             <div className="complete-primary-row">
               <button className="primary-btn complete-action-btn complete-action-secondary" onClick={() => assignUrl(`/dawayir-live/replay/${sessionId}`)}>
                 <RotateCcw className="inline-block h-4 w-4" /> Replay

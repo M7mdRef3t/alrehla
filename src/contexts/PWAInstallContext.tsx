@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
 import { getWindowOrNull } from "../services/clientRuntime";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -120,6 +121,7 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
   }, []);
 
   useEffect(() => {
+    if (!runtimeEnv.isProd) return;
     const windowRef = getWindowOrNull();
     if (!windowRef) return;
 
@@ -135,6 +137,7 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
   }, []);
 
   useEffect(() => {
+    if (!runtimeEnv.isProd) return;
     const windowRef = getWindowOrNull();
     if (!windowRef) return;
     if (!isTouchDevice && !windowRef.matchMedia("(max-width: 768px)").matches) return;
@@ -144,6 +147,7 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
   }, [isTouchDevice, isStandalone]);
 
   useEffect(() => {
+    if (!runtimeEnv.isProd) return;
     const windowRef = getWindowOrNull();
     if (!windowRef) return;
 

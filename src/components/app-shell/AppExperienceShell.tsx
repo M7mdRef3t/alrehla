@@ -254,8 +254,7 @@ export function AppExperienceShell() {
   const {
     openCocoonModal,
     openRegularPulseCheck,
-    isLowPulseCocoonSuppressed,
-    openRegularPulseCheck
+    isLowPulseCocoonSuppressed
   } = useAppPulseSanctuaryFlow({
     goalId,
     isLandingScreen,
@@ -307,7 +306,8 @@ export function AppExperienceShell() {
     openMissionScreen,
     openFeedback: () => openAppOverlay("feedback"),
     setSelectedNodeId,
-    setShowBreathing
+    setShowBreathing,
+    isInterventionSuppressed: showPulseCheck || showCocoon || showBreathing || screen === "map"
   });
   const {
     presentMirrorInsight
@@ -450,7 +450,6 @@ export function AppExperienceShell() {
     onStartJourney: startRecovery,
     onSelectNode: setSelectedNodeId,
     onFeatureLocked: setLockedFeature,
-    openRegularPulseCheck,
     openSurveyScreen: () => {
       void navigateToScreen("survey");
     },
@@ -459,6 +458,7 @@ export function AppExperienceShell() {
     },
     openMissionScreen,
     openMissionFromAddPerson,
+    openRegularPulseCheck,
     handleTakeNextStep,
     handleRefreshNextStep,
     openDawayirTool,
@@ -535,6 +535,7 @@ export function AppExperienceShell() {
     openConsciousnessArchive,
     openTimeCapsuleVault,
     navigateToMap,
+    navigateToWeeklySummary,
     toggleSystemOverclockPanel,
     openAmbientReality,
     openOracleDashboard
@@ -610,6 +611,7 @@ export function AppExperienceShell() {
           onOpenTimeCapsuleVault={openTimeCapsuleVault}
           onOpenOracleDashboard={openOracleDashboard}
           onNavigateToMap={navigateToMap}
+          onNavigateToWeeklySummary={navigateToWeeklySummary}
         />
       </>
     </AppShellRouteGate>

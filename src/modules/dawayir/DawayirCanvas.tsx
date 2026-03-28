@@ -164,6 +164,10 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
   const baseX = 50 + radius * Math.cos(angle);
   const baseY = 50 + radius * Math.sin(angle);
 
+  // Organic Breathing Logic
+  const breatheDelay = useMemo(() => Math.random() * 5, []);
+  const breatheDuration = useMemo(() => 4 + Math.random() * 2, []);
+
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   } : undefined;
@@ -185,69 +189,87 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
     >
       <EntropyGlow x={baseX} y={baseY} level={entropyLevel} />
       
-      {/* Analyzing Glow */}
-      {node.isAnalyzing && (
-        <motion.circle
-          cx={baseX} cy={baseY} r="6"
-          fill="none"
-          stroke="rgba(20, 184, 166, 0.5)"
-          strokeWidth="0.5"
-          strokeDasharray="2 2"
-          initial={{ rotate: 0 }}
-          animate={{ rotate: 360 }}
-          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+      {/* Ambient Breathing Layer */}
+      <motion.g
+        animate={{
+          scale: [1, 1.05, 1],
+          opacity: [0.85, 1, 0.85]
+        }}
+        transition={{
+          duration: breatheDuration,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: breatheDelay
+        }}
+        style={{ transformOrigin: `${baseX}px ${baseY}px` }}
+      >
+        {/* Shadow Glow */}
+        <circle cx={baseX} cy={baseY} r="5" fill={ringColors[node.ring]} opacity="0.1" />
+
+        {/* Analyzing Glow */}
+        {node.isAnalyzing && (
+          <motion.circle
+            cx={baseX} cy={baseY} r="6.5"
+            fill="none"
+            stroke="rgba(20, 184, 166, 0.4)"
+            strokeWidth="0.3"
+            strokeDasharray="1 1"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+          />
+        )}
+
+        <circle 
+          cx={baseX} cy={baseY} r="4" 
+          fill="#0f172a" 
+          stroke={node.isAnalyzing ? "rgba(20, 184, 166, 0.8)" : ringColors[node.ring]} 
+          strokeWidth="0.8" 
+          className="transition-colors duration-300"
         />
-      )}
 
-      <circle 
-        cx={baseX} cy={baseY} r="4" 
-        fill="#0f172a" 
-        stroke={node.isAnalyzing ? "rgba(20, 184, 166, 0.4)" : ringColors[node.ring]} 
-        strokeWidth="0.8" 
-        className="transition-colors duration-300"
-      />
+        {node.avatarUrl ? (
+          <>
+            <defs>
+              <clipPath id={`clip-${node.id}`}>
+                <circle cx={baseX} cy={baseY} r="3.5" />
+              </clipPath>
+            </defs>
+            <image 
+              href={node.avatarUrl} 
+              x={baseX - 3.5} y={baseY - 3.5} 
+              width="7" height="7" 
+              clipPath={`url(#clip-${node.id})`} 
+              className={node.isAnalyzing ? "opacity-50 grayscale animate-pulse" : ""}
+            />
+          </>
+        ) : (
+          <g className="pointer-events-none">
+            <User 
+              x={baseX - 2} y={baseY - 2} 
+              width={4} height={4} 
+              className={node.isAnalyzing ? "text-teal-500/50 animate-pulse" : "text-white"} 
+            />
+          </g>
+        )}
+      </motion.g>
 
-      {node.avatarUrl ? (
-        <>
-          <defs>
-            <clipPath id={`clip-${node.id}`}>
-              <circle cx={baseX} cy={baseY} r="3.5" />
-            </clipPath>
-          </defs>
-          <image 
-            href={node.avatarUrl} 
-            x={baseX - 3.5} y={baseY - 3.5} 
-            width="7" height="7" 
-            clipPath={`url(#clip-${node.id})`} 
-            className={node.isAnalyzing ? "opacity-50 grayscale animate-pulse" : ""}
-          />
-        </>
-      ) : (
-        <g className="pointer-events-none">
-          <User 
-            x={baseX - 2} y={baseY - 2} 
-            width={4} height={4} 
-            className={node.isAnalyzing ? "text-teal-500/50 animate-pulse" : "text-white"} 
-          />
-        </g>
-      )}
-      
       {/* Label under the node */}
       <text 
-        x={baseX} y={baseY + 7} 
+        x={baseX} y={baseY + 7.5} 
         textAnchor="middle" 
-        fontSize="2" 
-        fill="rgba(255,255,255,0.6)"
-        className="pointer-events-none font-medium"
+        fontSize="1.8" 
+        fill="rgba(255,255,255,0.5)"
+        className="pointer-events-none font-bold tracking-tight"
+        style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.5))" }}
       >
         {node.label}
       </text>
 
       {/* Entropy indicator icon */}
       {entropyLevel > 0 && (
-        <g transform={`translate(${baseX + 3}, ${baseY - 3})`}>
-          <circle r="1.5" fill="#f43f5e" />
-          <text textAnchor="middle" dy="0.5" fontSize="1.2" fill="white" fontWeight="bold">!</text>
+        <g transform={`translate(${baseX + 3.5}, ${baseY - 3.5})`}>
+          <circle r="1.8" fill="#f43f5e" style={{ filter: "drop-shadow(0 0 5px #f43f5e)" }} />
+          <text textAnchor="middle" dy="0.6" fontSize="1.4" fill="white" fontWeight="black">!</text>
         </g>
       )}
     </g>

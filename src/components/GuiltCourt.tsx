@@ -7,7 +7,9 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Gavel, ShieldCheck, Scale, AlertCircle, ArrowRight, ArrowLeft } from "lucide-react";
 import { soundManager } from "../services/soundManager";
+import { trackStartTrial } from "../services/analytics";
 import { useJourneyState } from "../state/journeyState";
+import { userTrialsService } from "../services/userTrialsService";
 
 interface GuiltCourtProps {
   onBack?: () => void;
@@ -18,18 +20,44 @@ type TrialStage = "prosecution" | "defense" | "verdict";
 export const GuiltCourt: React.FC<GuiltCourtProps> = ({ onBack }) => {
   const [charge, setCharge] = useState("");
   const [stage, setStage] = useState<TrialStage | "entry">("entry");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   const mirrorName = useJourneyState((s) => s.mirrorName);
 
   const startTrial = () => {
     if (!charge.trim()) return;
     soundManager.playEffect("gavel");
+    trackStartTrial({
+      content_name: "guilt_court_start_trial",
+      content_category: "trial_flow",
+      trial_context: "guilt_court"
+    });
     setStage("prosecution");
   };
 
   const resetCourt = () => {
     setCharge("");
     setStage("entry");
+    setSaveError(false);
+  };
+
+  const handleVerdict = async () => {
+    setIsSaving(true);
+    soundManager.playEffect("gavel");
+    
+    const result = await userTrialsService.saveTrialResult({
+      charge,
+      defense_points: [
+        "الحفاظ على الطاقة ليس جريمة",
+        "مبدأ المسؤولية الفردية"
+      ],
+      verdict: "براءة استراتيجية"
+    });
+
+    setIsSaving(false);
+    if (!result) setSaveError(true);
+    setStage("verdict");
   };
 
   return (
@@ -162,14 +190,12 @@ export const GuiltCourt: React.FC<GuiltCourtProps> = ({ onBack }) => {
               </div>
 
               <button
-                onClick={() => {
-                  soundManager.playEffect("gavel");
-                  setStage("verdict");
-                }}
-                className="w-full mt-8 py-4 font-black rounded-2xl flex items-center justify-center gap-2 text-slate-950 transition-all hover:opacity-90 active:scale-[0.98]"
+                onClick={handleVerdict}
+                disabled={isSaving}
+                className="w-full mt-8 py-4 font-black rounded-2xl flex items-center justify-center gap-2 text-slate-950 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
                 style={{ background: "var(--soft-teal)" }}
               >
-                إصدار الحكم
+                {isSaving ? "جاري تسجيل الحكم في السجلات..." : "إصدار الحكم"}
                 <Scale className="w-5 h-5" />
               </button>
             </motion.div>
@@ -198,6 +224,11 @@ export const GuiltCourt: React.FC<GuiltCourtProps> = ({ onBack }) => {
                   "بناءً على الأدلة، تبيّن أن شعورك بالذنب هو{" "}
                   <strong className="text-white">رد فعل عاطفي</strong> وليس دليلاً على خطأ حقيقي. أنت لا تؤذي أحداً — أنت فقط تتوقف عن إيذاء نفسك."
                 </p>
+                
+                <div className="mt-6 pt-6 border-t border-white/5 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-teal-400 opacity-60">
+                   <ShieldCheck className="w-3 h-3" />
+                   {saveError ? "تم التسجيل محلياً (خطأ في المزامنة)" : "تم حفظ الحكم في سجلاتك السيادية"}
+                </div>
               </div>
 
               <div className="flex gap-3 justify-center">

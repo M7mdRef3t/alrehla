@@ -126,6 +126,7 @@ export function useAppExperienceSurfaceState({
     openConsciousnessArchive: actions.openConsciousnessArchive,
     openTimeCapsuleVault: actions.openTimeCapsuleVault,
     navigateToMap: actions.navigateToMap,
+    navigateToWeeklySummary: actions.navigateToWeeklySummary,
     toggleSystemOverclockPanel: actions.toggleSystemOverclockPanel,
     openAmbientReality: actions.openAmbientReality,
     openOracleDashboard: actions.openOracleDashboard
@@ -137,6 +138,7 @@ export function useAppExperienceSurfaceState({
     actions.openConsciousnessArchive,
     actions.openTimeCapsuleVault,
     actions.navigateToMap,
+    actions.navigateToWeeklySummary,
     actions.toggleSystemOverclockPanel,
     actions.openAmbientReality,
     actions.openOracleDashboard

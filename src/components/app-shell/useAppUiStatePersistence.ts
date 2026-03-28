@@ -94,6 +94,10 @@ function normalizeRestorableScreen(value: string | null): AppScreen | null {
     value === "map" ||
     value === "guided" ||
     value === "tools" ||
+    value === "meditation" ||
+    value === "meditation-complete" ||
+    value === "history" ||
+    value === "annual-report" ||
     value === "enterprise" ||
     value === "oracle-dashboard" ||
     value === "armory" ||

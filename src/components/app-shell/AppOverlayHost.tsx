@@ -1,4 +1,4 @@
-import { lazy, memo, Suspense, useCallback, useMemo } from "react";
+import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useAdminState } from "../../state/adminState";
 import { getEffectiveRoleFromState, useAuthState } from "../../state/authState";
 import { getEffectiveFeatureAccess } from "../../utils/featureFlags";
@@ -73,6 +73,9 @@ const AmbientRealityMode = lazy(() => import("../AmbientRealityMode").then((m) =
 const TimeCapsuleVault = lazy(() => import("../TimeCapsuleVault").then((m) => ({ default: m.TimeCapsuleVault })));
 const OnboardingFlow = lazy(() => import("../OnboardingFlow").then((m) => ({ default: m.OnboardingFlow })));
 const JourneyToast = lazy(() => import("../JourneyToast").then((m) => ({ default: m.JourneyToast })));
+const OwnerAnalyticsDashboard = lazy(() =>
+  import("../OwnerAnalyticsDashboard").then((m) => ({ default: m.OwnerAnalyticsDashboard }))
+);
 
 interface AppOverlayHostProps {
   canShowAIChatbot: boolean;
@@ -123,6 +126,15 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   const betaAccess = useAdminState((s) => s.betaAccess);
   const adminAccess = useAdminState((s) => s.adminAccess);
   const role = useAuthState(getEffectiveRoleFromState);
+  const [showOwnerAnalytics, setShowOwnerAnalytics] = useState(false);
+  const isOwner = role === "owner" || role === "superadmin";
+
+  // Allow any component to open owner analytics via: window.dispatchEvent(new Event('open-owner-analytics'))
+  useEffect(() => {
+    const handler = () => { if (isOwner) setShowOwnerAnalytics(true); };
+    window.addEventListener("open-owner-analytics", handler);
+    return () => window.removeEventListener("open-owner-analytics", handler);
+  }, [isOwner]);
 
   const canUsePulseCheck = useMemo(
     () =>
@@ -529,6 +541,13 @@ export const AppOverlayHost = memo(function AppOverlayHost({
         {showAmbientReality && isVisible("ambientReality") && <AmbientRealityMode onClose={() => setOverlay("ambientReality", false)} />}
 
         {showTimeCapsuleVault && isVisible("timeCapsuleVault") && <TimeCapsuleVault onClose={() => setOverlay("timeCapsuleVault", false)} />}
+
+        {/* OwnerAnalyticsDashboard — مالك فقط */}
+        {isOwner && showOwnerAnalytics && (
+          <div className="fixed inset-0 z-[200] overflow-y-auto">
+            <OwnerAnalyticsDashboard onBack={() => setShowOwnerAnalytics(false)} />
+          </div>
+        )}
 
         {showOnboarding && isVisible("onboarding") && <OnboardingFlow onComplete={onOnboardingComplete} />}
 

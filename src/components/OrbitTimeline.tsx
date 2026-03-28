@@ -1,7 +1,8 @@
 import type { FC } from "react";
 import { useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import type { OrbitHistoryEntry, Ring } from "../modules/map/mapTypes";
+import { usePulseState } from "../state/pulseState";
 
 /* ══════════════════════════════════════════
    ORBIT TIMELINE — تاريخ حركة العلاقة
@@ -58,10 +59,18 @@ export const OrbitTimeline: FC<OrbitTimelineProps> = ({
   personLabel,
   compact = false,
 }) => {
+  const lastPulse = usePulseState((s) => s.lastPulse);
+  const energy = lastPulse?.energy ?? 5; // Default to mid-range if no state
+
   const sorted = useMemo(
     () => [...history].sort((a, b) => a.timestamp - b.timestamp),
     [history]
   );
+
+  // Energy-driven physics
+  const pulseDuration = useMemo(() => 3 - (energy * 0.2), [energy]); // 3s to 1s
+  const glowIntensity = useMemo(() => energy / 10, [energy]);
+  const bounceHeight = useMemo(() => (energy / 2) + 1, [energy]);
 
   if (sorted.length === 0) return null;
 
@@ -89,7 +98,22 @@ export const OrbitTimeline: FC<OrbitTimelineProps> = ({
       {/* Timeline dots */}
       <div className="relative">
         {/* Connection line */}
-        <div className="absolute top-3 right-3 left-3 h-px bg-white/10" />
+        <div className="absolute top-3 right-3 left-3 h-px bg-white/10 overflow-hidden">
+          <motion.div
+            className="h-full w-full"
+            style={{
+              background: `linear-gradient(90deg, transparent, rgba(139, 92, 246, ${glowIntensity * 0.5}), transparent)`,
+            }}
+            animate={{
+              x: ["-100%", "100%"],
+            }}
+            transition={{
+              duration: pulseDuration,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+        </div>
 
         <div className={`flex ${compact ? "gap-1" : "gap-2"} overflow-x-auto pb-1 custom-scrollbar`}>
           {sorted.map((entry, i) => {
@@ -102,12 +126,24 @@ export const OrbitTimeline: FC<OrbitTimelineProps> = ({
                 key={entry.id}
                 className="flex flex-col items-center shrink-0"
                 initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.05 }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: 1,
+                  y: [0, -bounceHeight, 0]
+                }}
+                transition={{ 
+                  delay: i * 0.05,
+                  y: {
+                    duration: pulseDuration,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.2
+                  }
+                }}
               >
                 {/* Dot */}
-                <div
-                  className={`relative w-6 h-6 rounded-full flex items-center justify-center text-[10px] ${
+                <motion.div
+                  className={`relative w-6 h-6 rounded-full flex items-center justify-center text-[10px] z-10 ${
                     isLast ? "ring-2 ring-offset-1 ring-offset-slate-900" : ""
                   }`}
                   style={{
@@ -115,11 +151,12 @@ export const OrbitTimeline: FC<OrbitTimelineProps> = ({
                     color,
                     ...(isLast ? { ringColor: color } : {}),
                     border: `1.5px solid ${color}`,
+                    boxShadow: isLast ? `0 0 ${energy * 2}px ${color}${Math.round(glowIntensity * 100).toString(16)}` : 'none'
                   }}
                   title={`${EVENT_ICONS[entry.type]} ${RING_LABELS[entry.ring]} — ${formatRelativeTime(entry.timestamp)}`}
                 >
                   {EVENT_ICONS[entry.type]}
-                </div>
+                </motion.div>
 
                 {/* Label */}
                 {!compact && (

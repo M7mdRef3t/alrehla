@@ -1,8 +1,10 @@
 import type { FC } from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, ShieldAlert, X, ChevronRight } from "lucide-react";
+import { AlertTriangle, ShieldAlert, X, ChevronRight, Zap } from "lucide-react";
 import { supabase, isSupabaseAbortError, safeGetSession } from "../services/supabaseClient";
+import { usePulseState } from "../state/pulseState";
+import { generateTacticalAdvice } from "./PulseCheckModalParts/helpers";
 
 interface Intervention {
     id: string;
@@ -18,6 +20,38 @@ interface Intervention {
 export const InterventionPanel: FC = () => {
     const [items, setItems] = useState<Intervention[]>([]);
     const [isApiAvailable, setIsApiAvailable] = useState(true);
+    const lastPulse = usePulseState((s) => s.lastPulse);
+
+    // Pulse-driven virtual interventions
+    const pulseIntervention = useMemo<Intervention | null>(() => {
+        if (!lastPulse) return null;
+        
+        const isCritical = lastPulse.energy < 4 || lastPulse.mood === 'overwhelmed';
+        if (!isCritical) return null;
+
+        const advice = generateTacticalAdvice(lastPulse.energy, lastPulse.mood, lastPulse.focus);
+        
+        return {
+            id: 'pulse-emergency',
+            type: 'pulse_auto_trigger',
+            severity: lastPulse.energy < 3 ? 'high' : 'medium',
+            message: `[بروتوكول سيادة] طاقة منخفضة جداً (${lastPulse.energy}/10). ${advice.message}`,
+            created_at: new Date().toISOString(),
+            metadata: {
+                suggestedActions: [
+                    { id: 'view_protocol', label: `تنفيذ ${(advice as { protocol?: string }).protocol ?? advice.message}`, icon: 'zap' }
+                ]
+            }
+        };
+    }, [lastPulse]);
+
+    const displayItems = useMemo(() => {
+        const combined = [...items];
+        if (pulseIntervention) {
+            combined.unshift(pulseIntervention);
+        }
+        return combined;
+    }, [items, pulseIntervention]);
 
     const fetchInterventions = useCallback(async () => {
         try {
@@ -112,7 +146,7 @@ export const InterventionPanel: FC = () => {
     return (
         <div className="w-full max-w-[38rem] mx-auto mb-4 space-y-3 px-4">
             <AnimatePresence>
-                {items.map((item) => (
+                {displayItems.map((item: Intervention) => (
                     <motion.div
                         key={item.id}
                         initial={{ opacity: 0, y: 10 }}
@@ -149,7 +183,7 @@ export const InterventionPanel: FC = () => {
                             {/* suggestedActions CTA (Quiet) */}
                             {item.metadata?.suggestedActions && (
                                 <div className="flex flex-wrap gap-2 justify-end pt-3">
-                                    {item.metadata.suggestedActions.map((act) => (
+                                    {item.metadata.suggestedActions.map((act: { id: string; label: string; icon: string; badge?: string }) => (
                                         <div key={act.id} className="flex flex-col items-end gap-1">
                                             <button
                                                 onClick={() => executeAction(item.id, act.id)}
