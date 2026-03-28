@@ -128,6 +128,7 @@ export function useAppShellBootstrapState() {
     setTheme,
     snoozedUntil,
     logPulse,
-    snoozeNotifications
+    snoozeNotifications,
+    setAuthIntent: useAppOverlayState((s) => s.setAuthIntent)
   };
 }

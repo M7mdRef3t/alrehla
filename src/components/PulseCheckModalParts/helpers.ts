@@ -16,50 +16,50 @@ export function energyGradient(energy: number | null): string {
  * Human-readable energy state label
  */
 export function getEnergyStateLabel(energy: number | null): string {
-  if (energy == null) return "غير محددة";
-  if (energy <= 2) return "منخفضة جدًا";
-  if (energy <= 4) return "منخفضة";
-  if (energy <= 6) return "متوسطة";
-  if (energy <= 8) return "مرتفعة";
-  return "مرتفعة جدًا";
+  if (energy == null) return "مش باينة";
+  if (energy <= 2) return "واقعة خالص";
+  if (energy <= 4) return "نازلة";
+  if (energy <= 6) return "نص نص";
+  if (energy <= 8) return "عالية";
+  return "في العالي";
 }
 
 /**
  * Short hint text based on energy
  */
 export function getEnergyQuickHint(energy: number | null): string {
-  if (energy == null) return "اختر الدرجة";
-  if (energy <= 2) return "باحتاج هدوء";
-  if (energy <= 4) return "هادي بشوية";
-  if (energy <= 6) return "متوازن";
-  if (energy <= 8) return "جاهز";
-  return "طاقة عالية";
+  if (energy == null) return "اختار اللي حاسه";
+  if (energy <= 2) return "محتاج أفصل";
+  if (energy <= 4) return "هادي سيكا";
+  if (energy <= 6) return "مظبوط";
+  if (energy <= 8) return "يلا بينا";
+  return "وحش بجد";
 }
 
 /**
  * Short hint text based on mood
  */
 export function getMoodQuickHint(mood: PulseMood | null): string {
-  if (!mood) return "اختر وصفًا قريبًا من حالتك";
+  if (!mood) return "قولي حاسس بإيه دلوقتي؟";
   switch (mood) {
     case "bright":
-      return "استغل الصفاء بخطوة مباشرة.";
+      return "استغل الروقان وخد خطوة.";
     case "calm":
-      return "ممتاز، احافظ على النسق الهادئ.";
+      return "زي الفل، خليك هادي زي ما إنت.";
     case "tense":
-      return "نفس قصير يقلل التوتر قبل الخطوة.";
+      return "خد نفس عميق قبل أي حاجة.";
     case "hopeful":
-      return "خلّ الحماس يتحول لتنفيذ فعلي.";
+      return "خلي الحماس ده يتحول لفعل.";
     case "anxious":
-      return "ابدأ بخطوة موضحة وواحدة فقط.";
+      return "خطوة واحدة صغيرة كفاية دلوقتي.";
     case "angry":
-      return "حوّل الاندفاع لقرار محسوب.";
+      return "فجّر طاقتك في شغل مفيد.";
     case "sad":
-      return "اسمح بخطوة صغيرة مرنة.";
+      return "معلش، خليك حنين على نفسك.";
     case "overwhelmed":
-      return "بسّط المشهد: خيار واحد الآن.";
+      return "بسطها خالص: حاجة واحدة بس.";
     default:
-      return "اختر وصفًا قريبًا من حالتك";
+      return "قولي حاسس بإيه دلوقتي؟";
   }
 }
 
@@ -67,13 +67,13 @@ export function getMoodQuickHint(mood: PulseMood | null): string {
  * Short hint text based on focus
  */
 export function getFocusQuickHint(focus: PulseFocus | null, isStartRecovery: boolean): string {
-  if (!focus) return "حدّد على إيه عايز تركّز دلوقتي";
-  if (focus === "event") return "ركّز على الموقف اللي حصل — فكّك بتفاصيله.";
-  if (focus === "thought") return "لاحظ الفكرة المتكررة — ده أول خطوة لكسرها.";
-  if (focus === "body") return "اسمع جسمك — خطوة هادية تفرق معاك.";
+  if (!focus) return "ناوي تركز على إيه؟";
+  if (focus === "event") return "الموقف اللي حصل.. فكك منه شوية.";
+  if (focus === "thought") return "الفكرة دي شاغلة بالك ليه؟";
+  if (focus === "body") return "جسمك محتاج تفصل وتهدى.";
   return isStartRecovery
-    ? "ابدأ من هنا — استكشف احتياجاتك بهدوء."
-    : "كمّل من حيث وقفت — نفّذ خطوتك الجاية.";
+    ? "ابدأ من هنا.. استكشف بهدوء."
+    : "كمل طريقك.. الخطوة اللي جاية.";
 }
 
 export type TacticalAdvice = {
@@ -92,19 +92,19 @@ export function generateTacticalAdvice(energy: number, mood: PulseMood | null, f
   if (focus === "body") {
     if (energy <= 4) {
       return {
-        title: "إعادة شحن",
-        message: "جسمك بيقولك إنه محتاج يرتاح. الاستمرار من غير راحة هيزوّد الإرهاق.",
-        action: "خُد دقيقتين تنفّس عميق وبعدين قرّر خطوتك.",
+        title: "وضع الصيانة",
+        message: "جسمك بيقولك كفاية كده.. محتاج تفصل وتشحن بطاريتك.",
+        action: "افصل 10 دقائق 'نفس' وبعدين قرر.",
         theme: "recover",
         icon: "🔋"
       };
     }
     return {
-      title: "عناية بالجسد",
-      message: "جسمك كويس — بس محتاج عناية بسيطة تحافظ على أداءك.",
-      action: "تمرين سريع أو اشرب مية.",
+      title: "دلع نفسك",
+      message: "جسمك تمام.. بس محتاج حركة بسيطة تظبط الأداء.",
+      action: "قوم اتحرك دقيقتين أو اشرب مية.",
       theme: "recover",
-      icon: "💆"
+      icon: "🧘"
     };
   }
 
@@ -112,17 +112,17 @@ export function generateTacticalAdvice(energy: number, mood: PulseMood | null, f
   if (focus === "event") {
     if (energy <= 4) {
       return {
-        title: "حماية الطاقة",
-        message: "الموقف ده استنزف كتير من طاقتك. محتاج تحمي نفسك الأول.",
-        action: "اكتب الموقف في جملة واحدة — بس متعيشوش تاني.",
+        title: "حائط صد",
+        message: "الموقف ده خد من طاقتك كتير.. متخليش حاجة تاني تسحبك.",
+        action: "اكتب اللي حصل في جملة.. وانساه دلوقتي.",
         theme: "defend",
         icon: "🛡️"
       };
     }
     return {
-      title: "مواجهة الموقف",
-      message: "عندك طاقة كافية تتعامل مع الموقف. ركّز على النقطة الأهم.",
-      action: "حدّد حاجة واحدة تقدر تغيّرها في الموقف ده.",
+      title: "اشتباك مباشر",
+      message: "بما إن طاقتك كويسة.. خلص اللي وراك في الموقف ده.",
+      action: "حدد أهم حاجة تقدر تعملها دلوقتي.",
       theme: "attack",
       icon: "🎯"
     };
@@ -131,9 +131,9 @@ export function generateTacticalAdvice(energy: number, mood: PulseMood | null, f
   // 3. Thought focus
   if (focus === "thought") {
     return {
-      title: "فحص الأفكار",
-      message: "الفكرة المتكررة دي بتحاول تاخد انتباهك. خلّينا نفحصها بهدوء.",
-      action: "اسأل نفسك: الفكرة دي حقيقية ولا مجرد خوف؟",
+      title: "فلتر دماغك",
+      message: "الفكرة دي بقالها كتير.. خلونا نشوف شاغلة بالك ليه.",
+      action: "اسأل نفسك: الكلام ده بجد ولا فكك؟",
       theme: "defend",
       icon: "🔍"
     };
@@ -142,18 +142,18 @@ export function generateTacticalAdvice(energy: number, mood: PulseMood | null, f
   // 4. High energy — no specific focus
   if (energy >= 7) {
     return {
-      title: "انطلاق سريع",
-      message: "طاقتك عالية — استغلّها دلوقتي قبل ما تقل.",
-      action: "ابدأ أصعب حاجة في قايمتك الآن.",
+      title: "هجوم كاسح",
+      message: "طاقتك في العالي.. استغلها قبل ما تهبط.",
+      action: "ابدأ بأتقل حاجة في لستتك دلوقتي.",
       theme: "attack",
       icon: "🚀"
     };
   }
 
   return {
-    title: "تقدّم ثابت",
-    message: "إنت في حالة متوازنة. كمّل بنفس الإيقاع — خطوة خطوة.",
-    action: "اختار مهمة واحدة صغيرة ونفّذها.",
+    title: "خطوات ثابتة",
+    message: "إنت في المظبوط.. كمل بنفس النفس الهادي.",
+    action: "نقي حاجة بسيطة وخلصها.",
     theme: "defend",
     icon: "📍"
   };
@@ -163,7 +163,7 @@ export function generateTacticalAdvice(energy: number, mood: PulseMood | null, f
  * Gets a short message for post-save analytics
  */
 export function getPostSaveAction(energy: number): string {
-  if (energy <= 3) return "تم تفعيل بروتوكول الصيانة";
-  if (energy <= 6) return "تم تحديث إحداثيات الإشتباك";
-  return "الأنظمة في حالة استعداد قصوى";
+  if (energy <= 3) return "شغلنا وضع الصيانة";
+  if (energy <= 6) return "ضبطنا البوصلة";
+  return "الطيار الآلي جاهز";
 }

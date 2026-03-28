@@ -17,7 +17,9 @@ export default function OnboardingRouteClient() {
   return (
     <OnboardingFlow
       onComplete={() => {
-        window.location.href = "/";
+        // Redirect to checkout after onboarding to prevent the landing loop
+        // and guide the high-intent lead towards payment.
+        window.location.href = "/checkout";
       }}
     />
   );

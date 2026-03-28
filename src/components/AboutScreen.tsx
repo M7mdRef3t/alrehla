@@ -76,7 +76,7 @@ export const AboutScreen = memo(function AboutScreen({ onBack, onStart }: AboutS
     <div
       className="min-h-screen w-full pt-12 pb-24 px-4 md:px-8 lg:px-16 overflow-x-hidden"
       dir="rtl"
-      style={{ background: "radial-gradient(circle at 0% 0%, #1a1a2e 0%, #060b18 100%)" }}
+      style={{ background: "var(--cosmic-bg)" }}
     >
       <div className="absolute top-0 right-0 w-full h-96 bg-gradient-to-b from-violet-500/5 to-transparent pointer-events-none" />
       <div className="max-w-5xl mx-auto">

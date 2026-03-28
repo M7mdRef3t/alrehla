@@ -1197,7 +1197,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
             <button
               onClick={() => setQuizOpen(true)}
               style={{
-                width: "100%", padding: "13px", borderRadius: 14, border: "none", cursor: "pointer",
+                width: "100%", padding: "13px", borderRadius: 14, cursor: "pointer",
                 background: `linear-gradient(135deg, ${color}22, rgba(139,92,246,0.2))`,
                 border: `1px solid ${color}30`,
                 fontSize: 12, fontWeight: 900, color: "#e2e8f0",

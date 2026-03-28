@@ -1,16 +1,18 @@
-# Al-Rehla (الرحلة) — أداة دواير
+# Al-Rehla (الرحلة) — منصة الوعي الذاتي 🧭
 
 ---
-**Dawayir v1.0 | Built to observe before it speaks.**
+**Al-Rehla Platform | From MVP to Control Plane**
 ---
 
-منصّة رحلات داخلية تساعد المستخدم "يشوف" حدوده في العلاقات ويأخذ قرار سريع بدون تحليل مُرهِق. أداة **دواير** هي البوصلة الأولى داخل الرحلة.
+منصّة رحلات داخلية متكاملة تساعد المستخدم "يشوف" حدوده في العلاقات ويأخذ قرار سريع. النظام الآن يشمل (App Shell, AI Engine, Marketing Funnel, Admin Control, Manual Checkout).
+
+## 🎯 الحقيقة الوحيدة (The Golden Path)
+انظر [**`PRODUCT_TRUTH.md`**](/c:/Users/ty/Downloads/Dawayir-main/Dawayir-main/PRODUCT_TRUTH.md) للحصول على المسار المعتمد للمنتج وتحقيق هدف الـ $1000.
 
 ## Quick Links
-- docs/index.md (مدخل الوثائق)
-- docs/concept.md
-- docs/user-journey.md
-- docs/pitch.md
+- docs/index.md (مدخل الوثائق الشامل)
+- PRODUCT_TRUTH.md (الخطة الحالية للمبيعات)
+- product/mvp-scope.md (المرجع التاريخي للـ MVP)
 
 ## Repo Sections
 - docs/        : رؤية المنتج (Concept/Journey/Pitch)

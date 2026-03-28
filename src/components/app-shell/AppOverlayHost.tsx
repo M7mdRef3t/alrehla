@@ -312,12 +312,13 @@ export const AppOverlayHost = memo(function AppOverlayHost({
       // which calls startRecovery() + navigateToScreen("map") + handleStartupComplete()
       externalOnboardingComplete();
     } else {
-      // Fallback: close overlay and navigate to map
+      // Fallback: close overlay and redirect to checkout in diagnostic-to-paid mode
       setOverlay("onboarding", false);
-      setOverlay("welcomeToast", true);
-      setScreen("map");
+      if (typeof window !== "undefined") {
+        window.location.href = "/checkout";
+      }
     }
-  }, [externalOnboardingComplete, setOverlay, setScreen]);
+  }, [externalOnboardingComplete, setOverlay]);
 
   const onJourneyTimelineCardClick = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId);

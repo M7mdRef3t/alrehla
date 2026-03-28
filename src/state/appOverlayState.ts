@@ -87,6 +87,7 @@ interface AppOverlayState {
     context: PulseCheckContext;
     pendingPulse?: PulseSubmitPayload;
   };
+  lastPulseCheckScreen: string;
   isOpen: (flag: AppOverlayFlag) => boolean;
   openOverlay: (flag: AppOverlayFlag) => void;
   closeOverlay: (flag: AppOverlayFlag) => void;
@@ -94,6 +95,7 @@ interface AppOverlayState {
   setLockedFeature: (feature: FeatureFlagKey | null) => void;
   setAuthIntent: (intent: PostAuthIntent | null) => void;
   setPulseCheck: (isOpen: boolean, context?: PulseCheckContext, pendingPulse?: PulseSubmitPayload) => void;
+  setLastPulseCheckScreen: (screen: string) => void;
   patchOverlays: (patch: Partial<AppOverlayFlags>) => void;
   resetOverlays: () => void;
 }
@@ -106,6 +108,7 @@ export const useAppOverlayState = create<AppOverlayState>((set, get) => ({
     isOpen: false,
     context: "regular"
   },
+  lastPulseCheckScreen: "landing",
   isOpen: (flag) => get().flags[flag],
   openOverlay: (flag) =>
     set((state) => ({
@@ -129,6 +132,7 @@ export const useAppOverlayState = create<AppOverlayState>((set, get) => ({
         pendingPulse: pendingPulse ?? state.pulseCheck.pendingPulse
       }
     })),
+  setLastPulseCheckScreen: (screen) => set({ lastPulseCheckScreen: screen }),
   patchOverlays: (patch) =>
     set((state) => ({
       flags: { ...state.flags, ...patch }

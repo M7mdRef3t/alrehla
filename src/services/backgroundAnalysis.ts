@@ -9,7 +9,18 @@ import { geminiClient } from "./geminiClient";
  */
 
 // Define the "background function" (mock)
-inngestMock.on("analyze-relationship", async (data: { nodeId: string; context: string }) => {
+inngestMock.on("analyze-relationship", async (rawData) => {
+  if (
+    !rawData ||
+    typeof rawData !== "object" ||
+    typeof (rawData as { nodeId?: unknown }).nodeId !== "string" ||
+    typeof (rawData as { context?: unknown }).context !== "string"
+  ) {
+    console.error("[Background Job] Invalid payload for analyze-relationship", rawData);
+    return;
+  }
+
+  const data = rawData as { nodeId: string; context: string };
   console.log(`[Background Job] Starting analysis for node: ${data.nodeId}`);
   
   try {

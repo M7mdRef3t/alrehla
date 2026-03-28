@@ -1,4 +1,4 @@
-﻿/**
+/**
  * أوضاع التطبيق - فصل البيئات
  *
  * - وضع المستخدم (user): الواجهة المنشورة للجمهور، ثابتة وآمنة.
@@ -18,6 +18,12 @@ export const APP_ENV: AppEnv =
 
 export const isUserMode = APP_ENV === "user";
 export const isDevMode = APP_ENV === "dev";
+
+/** 
+ * Revenue Mode (وضع التركيز التجاري)
+ * مفعل تلقائياً في وضع المستخدم، لإلغاء أي تشتت بصري.
+ */
+export const isRevenueMode = isUserMode;
 
 /**
  * Phase-1 flow lock:

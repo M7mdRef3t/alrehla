@@ -28,9 +28,6 @@ type RuntimeKey =
   | "VITE_TELEGRAM_CHAT_ID"
   | "VITE_AFFILIATE_WHITELIST"
   | "VITE_JULES_API_KEY"
-  | "VITE_STRIPE_PUBLISHABLE_KEY"
-  | "VITE_STRIPE_PRICE_PREMIUM"
-  | "VITE_STRIPE_PRICE_COACH"
   | "VITE_DEMO_MODE"
   | "VITE_MARAYA_ENABLED"
   | "VITE_DAWAYIR_LIVE_ENABLED"
@@ -68,9 +65,6 @@ type NextPublicKey =
   | "NEXT_PUBLIC_TELEGRAM_CHAT_ID"
   | "NEXT_PUBLIC_AFFILIATE_WHITELIST"
   | "NEXT_PUBLIC_JULES_API_KEY"
-  | "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"
-  | "NEXT_PUBLIC_STRIPE_PRICE_PREMIUM"
-  | "NEXT_PUBLIC_STRIPE_PRICE_COACH"
   | "NEXT_PUBLIC_DEMO_MODE"
   | "NEXT_PUBLIC_MARAYA_ENABLED"
   | "NEXT_PUBLIC_DAWAYIR_LIVE_ENABLED"
@@ -125,9 +119,6 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
     NEXT_PUBLIC_TELEGRAM_CHAT_ID: process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID,
     NEXT_PUBLIC_AFFILIATE_WHITELIST: process.env.NEXT_PUBLIC_AFFILIATE_WHITELIST,
     NEXT_PUBLIC_JULES_API_KEY: process.env.NEXT_PUBLIC_JULES_API_KEY,
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
-    NEXT_PUBLIC_STRIPE_PRICE_PREMIUM: process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM,
-    NEXT_PUBLIC_STRIPE_PRICE_COACH: process.env.NEXT_PUBLIC_STRIPE_PRICE_COACH,
     NEXT_PUBLIC_DEMO_MODE: process.env.NEXT_PUBLIC_DEMO_MODE,
     NEXT_PUBLIC_MARAYA_ENABLED: process.env.NEXT_PUBLIC_MARAYA_ENABLED,
     NEXT_PUBLIC_DAWAYIR_LIVE_ENABLED: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_ENABLED,
@@ -142,9 +133,12 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
 function readViteEnvValue(key: RuntimeKey): string | undefined {
   try {
     // Keep access in property form for Next/Webpack compatibility.
-    const viteEnv = (import.meta as ImportMeta & { env?: Record<string, unknown> }).env;
-    const value = viteEnv?.[key];
-    if (typeof value === "string" && value.length > 0) return value.trim();
+    // Use a guarded check to prevent 'import.meta' syntax errors in environments that don't support it.
+    if (typeof import.meta !== "undefined" && (import.meta as any).env) {
+      const viteEnv = (import.meta as any).env;
+      const value = viteEnv?.[key];
+      if (typeof value === "string" && value.length > 0) return value.trim();
+    }
   } catch {
     // ignore when import.meta.env is unavailable
   }
@@ -207,9 +201,6 @@ export const runtimeEnv = {
   telegramChatId: readEnv("VITE_TELEGRAM_CHAT_ID"),
   affiliateWhitelist: readEnv("VITE_AFFILIATE_WHITELIST"),
   julesApiKey: readEnv("VITE_JULES_API_KEY"),
-  stripePublishableKey: readEnv("VITE_STRIPE_PUBLISHABLE_KEY"),
-  stripePricePremium: readEnv("VITE_STRIPE_PRICE_PREMIUM"),
-  stripePriceCoach: readEnv("VITE_STRIPE_PRICE_COACH"),
   isDemoMode: readEnv("VITE_DEMO_MODE") === "true",
   marayaEnabled: readEnv("VITE_MARAYA_ENABLED"),
   dawayirLiveEnabled: readEnv("VITE_DAWAYIR_LIVE_ENABLED"),

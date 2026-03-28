@@ -56,23 +56,23 @@ export const COLORS = {
 import type { PulseMood, PulseFocus } from "../../state/pulseState";
 
 export const TOPIC_OPTIONS = [
-  { id: "work", label: "العمل" },
-  { id: "family", label: "العائلة" },
+  { id: "work", label: "الشغل" },
+  { id: "family", label: "الأهل والبيت" },
   { id: "relationships", label: "العلاقات" },
-  { id: "health", label: "الصحة" },
-  { id: "finance", label: "المال" },
-  { id: "future", label: "المستقبل" }
+  { id: "health", label: "صحتي" },
+  { id: "finance", label: "الفلوس" },
+  { id: "future", label: "اللي جاي" }
 ];
 
 export const MOODS: Array<{ id: PulseMood; label: string; emoji: string }> = [
-  { id: "bright", label: "\u0631\u0627\u064a\u0642", emoji: "\u2600\uFE0F" },
-  { id: "calm", label: "\u0647\u0627\u062f\u0626", emoji: "\uD83C\uDF24\uFE0F" },
-  { id: "tense", label: "\u0645\u062a\u0648\u062a\u0631", emoji: "\uD83C\uDF2A\uFE0F" },
-  { id: "hopeful", label: "\u0645\u062a\u0641\u0627\u0626\u0644", emoji: "\uD83C\uDF08" },
-  { id: "anxious", label: "\u0642\u0644\u0642\u0627\u0646", emoji: "\u2601\uFE0F" },
-  { id: "angry", label: "\u063a\u0636\u0628\u0627\u0646", emoji: "\u26C8\uFE0F" },
-  { id: "sad", label: "\u062d\u0632\u064a\u0646", emoji: "\uD83C\uDF27\uFE0F" },
-  { id: "overwhelmed", label: "\u0625\u0631\u0647\u0627\u0642", emoji: "\uD83C\uDF2B\uFE0F" }
+  { id: "bright", label: "رايق", emoji: "☀️" },
+  { id: "calm", label: "هادي", emoji: "🌤️" },
+  { id: "tense", label: "متوتر", emoji: "🌪️" },
+  { id: "hopeful", label: "متفائل", emoji: "🌈" },
+  { id: "anxious", label: "قلقان", emoji: "☁️" },
+  { id: "angry", label: "متضايق", emoji: "⛈️" },
+  { id: "sad", label: "زعلان", emoji: "🌧️" },
+  { id: "overwhelmed", label: "فصلت", emoji: "🌫️" }
 ];
 
 export const FOCUS_OPTIONS: Array<{ id: PulseFocus; labelKey: "event" | "thought" | "body" | "none_new" | "none_returning" }> = [
@@ -83,11 +83,11 @@ export const FOCUS_OPTIONS: Array<{ id: PulseFocus; labelKey: "event" | "thought
 ];
 
 export const FOCUS_LABELS: Record<string, string> = {
-  event: "موقف حصل معايا",
-  thought: "فكرة مش سايباني",
-  body: "جسمي محتاج اهتمام",
-  none_returning: "مكمّل خطتي",
-  none_new: "بستكشف احتياجاتي"
+  event: "حاجة حصلتلي",
+  thought: "فكرة شاغلة بالي",
+  body: "جسمي تعبان",
+  none_returning: "ماشي في طريقي",
+  none_new: "لسه بشوف حالي"
 };
 
 export const MOOD_COSMIC: Record<PulseMood, { bg: string; border: string; glow: string; text: string; nebula: string }> = {

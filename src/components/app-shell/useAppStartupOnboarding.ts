@@ -7,7 +7,7 @@ import type { AppScreen } from "../../navigation/navigationMachine";
 import type { AppOverlayFlag } from "../../state/appOverlayState";
 import type { LandingIntent } from "../../state/journeyState";
 
-import { isUserMode } from "../../config/appEnv";
+import { isUserMode, isRevenueMode } from "../../config/appEnv";
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
@@ -79,6 +79,14 @@ export function useAppStartupOnboarding({
     }
 
     trackEvent("journey_started_frictionless", { source: "landing" });
+    
+    if (isRevenueMode) {
+      if (typeof window !== "undefined") {
+        window.location.href = "/checkout";
+      }
+      return;
+    }
+
     void navigateToScreen("map");
   }, [consumeLandingIntent, navigateToScreen, setCategory, setGoalId]);
 

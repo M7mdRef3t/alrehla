@@ -181,6 +181,20 @@ export const FEATURE_FLAGS: FeatureFlagDefinition[] = [
   }
 ];
 
+/**
+ * قائمة الميزات الأساسية للـ Revenue Mode (الخطة الذهبية)
+ * أي حاجة بره دي هتكون مخفية أو مقفولة للجمهور عشان نركز على البيع.
+ */
+export const REVENUE_FIRST_FEATURES: FeatureFlagKey[] = [
+  "dawayir_map",
+  "journey_tools",
+  "basic_diagnosis",
+  "mirror_tool",
+  "pulse_check",
+  "pulse_immediate_action",
+  "golden_needle_enabled"
+];
+
 export const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, FeatureFlagMode> = {
   dawayir_map: "on",
   journey_tools: "on",

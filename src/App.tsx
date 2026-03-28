@@ -1,10 +1,10 @@
 import { PWAInstallProvider } from "./contexts/PWAInstallContext";
 import { AppExperienceShell } from "./components/app-shell/AppExperienceShell";
 
-export default function App() {
+export default function App({ onExitToLanding }: { onExitToLanding?: () => void }) {
   return (
     <PWAInstallProvider>
-      <AppExperienceShell />
+      <AppExperienceShell onExitToLanding={onExitToLanding} />
     </PWAInstallProvider>
   );
 }

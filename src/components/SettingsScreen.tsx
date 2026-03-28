@@ -16,7 +16,6 @@ import { loadStreak } from "../services/streakSystem";
 import { loadUserMemory } from "../services/userMemory";
 import { getLanguage, LANGUAGE_OPTIONS } from "../services/i18n";
 import { getCulturalContext, saveCulturalContext, PROFILES, type CulturalContext } from "../services/culturalAdapter";
-import { stripeService } from "../services/stripeIntegration";
 import { supabase } from "../services/supabaseClient";
 import { syncSubscription } from "../services/subscriptionManager";
 import { useJourneyState } from "../state/journeyState";
@@ -371,21 +370,14 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                         <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>شكراً لدعمك للمشروع</p>
                                     </div>
                                     <button
-                                        onClick={async () => {
-                                            if (!supabase) return;
-                                            const { data: { session } } = await supabase.auth.getSession();
-                                            if (!session?.user) return;
-                                            const data = await stripeService.createPortalSession({
-                                                userId: session.user.id,
-                                                returnUrl: window.location.href
-                                            });
-                                            if (data?.url) window.location.href = data.url;
+                                        onClick={() => {
+                                            window.location.href = "/checkout";
                                         }}
                                         className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors"
                                         style={{ border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)" }}
                                     >
                                         <ExternalLink className="w-4 h-4" />
-                                        إدارة الاشتراك (الفواتير)
+                                        إدارة التفعيل والدفع
                                     </button>
                                 </div>
                             )}

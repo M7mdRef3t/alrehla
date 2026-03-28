@@ -31,7 +31,7 @@ const ONBOARDING_STYLES = `
 import { useMapState } from "../state/mapState";
 import { setInLocalStorage } from "../services/browserStorage";
 import { recordFlowEvent } from "../services/journeyTracking";
-import { AnalyticsEvents, trackCompleteRegistration, trackEvent } from "../services/analytics";
+import { AnalyticsEvents, trackCompleteRegistration, trackEvent, trackLead } from "../services/analytics";
 import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
 import { AlertTriangle } from "lucide-react";
 import type { AdviceCategory } from "../data/adviceScripts";
@@ -157,7 +157,7 @@ const StepInventory: FC<{
           <div
             key={i}
             className="flex flex-col gap-2 p-2 rounded-2xl"
-            style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}
+            style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}
           >
             <input
               type="text"
@@ -168,7 +168,7 @@ const StepInventory: FC<{
               className="w-full rounded-xl px-4 py-2 text-sm text-right outline-none transition-all"
               style={{
                 background: "rgba(255,255,255,0.04)",
-                border: `1.5px solid ${hasText[i] ? "rgba(45,212,191,0.4)" : "rgba(255,255,255,0.1)"}`,
+                border: `1.5px solid ${hasText[i] ? "rgba(45,212,191,0.4)" : "var(--glass-border)"}`,
                 color: "var(--text-primary)",
               }}
               maxLength={30}
@@ -204,8 +204,8 @@ const StepInventory: FC<{
         disabled={!canContinue}
         className="w-full rounded-2xl py-3.5 text-sm font-bold transition-all ob-btn-tap"
         style={{
-          background: canContinue ? "rgba(45,212,191,0.9)" : "rgba(255,255,255,0.05)",
-          color: canContinue ? "#0f172a" : "rgba(255,255,255,0.25)",
+          background: canContinue ? "var(--soft-teal)" : "var(--glass-border)",
+          color: canContinue ? "var(--space-void)" : "var(--text-muted)",
           cursor: canContinue ? "pointer" : "not-allowed",
         }}
       >
@@ -509,6 +509,81 @@ const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onC
 };
 
 
+/* ── Step 4: Contact Capture ── */
+const StepContactCapture: FC<{ onComplete: (email: string, whatsapp: string) => void; onSkip: () => void }> = ({ onComplete, onSkip }) => {
+  const [email, setEmail] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email && !whatsapp) {
+      setError("يا ريت تسيب وسيلة تواصل واحدة على الأقل عشان نبعتلك الخطة.");
+      return;
+    }
+    onComplete(email, whatsapp);
+  };
+
+  return (
+    <div className="flex flex-col gap-6 w-full">
+      <div className="text-center">
+        <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>
+          نبعتلك خطة التعافي فين؟
+        </h2>
+        <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+          عشان نضمن إن خريطتك وبصيرة النهاردة متضاعش، سجل وسيلة تواصل نبعتلك عليها "روشتة الدواير" والخطوات الجاية.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold pr-2" style={{ color: "var(--text-muted)" }}>الإيميل</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="example@mail.com"
+            className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.1)", color: "var(--text-primary)" }}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold pr-2" style={{ color: "var(--text-muted)" }}>رقم الواتساب (اختياري)</label>
+          <input
+            type="tel"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value)}
+            placeholder="01xxxxxxxxx"
+            className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.1)", color: "var(--text-primary)" }}
+            dir="ltr"
+          />
+        </div>
+
+        {error && <p className="text-[10px] text-rose-400 text-center">{error}</p>}
+
+        <button
+          type="submit"
+          className="w-full rounded-2xl py-3.5 text-sm font-black ob-btn-tap"
+          style={{ background: "rgba(45,212,191,0.9)", color: "#0f172a", marginTop: 8 }}
+        >
+          حفظ وتفعيل الرحلة ←
+        </button>
+      </form>
+
+      <button
+        type="button"
+        onClick={onSkip}
+        className="text-center text-xs transition-colors"
+        style={{ color: "var(--text-muted)" }}
+      >
+        تخطي حالياً
+      </button>
+    </div>
+  );
+};
+
 /* ════════════════════════════════════════════════
    Main OnboardingFlow
    ════════════════════════════════════════════════ */
@@ -537,9 +612,9 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
     startTransition(() => {
       setStep((prev) => {
         setPrevStep(prev);
-        stepRef.current = next;
         return next;
       });
+      stepRef.current = next;
     });
   }, [startTransition]);
 
@@ -612,22 +687,43 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
     }
   }, [collectedItems.length, onComplete]);
 
+  const handleContactCapture = useCallback((email: string, whatsapp: string) => {
+    recordFlowEvent("lead_form_submitted", {
+      meta: { hasEmail: !!email, hasWhatsapp: !!whatsapp }
+    });
+    
+    // Official trackLead service handles Meta Pixel 'Lead' and Gtag 'generate_lead'
+    trackLead({
+      method: email && whatsapp ? "both" : email ? "email" : "whatsapp",
+      has_email: !!email,
+      has_whatsapp: !!whatsapp
+    });
+
+    // In a real app we'd save this to a backend or state
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("dawayir-lead-email", email);
+      window.sessionStorage.setItem("dawayir-lead-whatsapp", whatsapp);
+    }
+    handleComplete();
+  }, [handleComplete]);
+
 
   /* Progress dots */
-  const dots = [0, 1, 2, 3];
+  const dots = [0, 1, 2, 3, 4];
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center"
-      style={{ background: "rgba(8,12,24,0.96)", backdropFilter: "blur(8px)" }}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      style={{ background: "var(--color-primary-soft)", backdropFilter: "blur(8px)" }}
       dir="rtl"
     >
       <style>{ONBOARDING_STYLES}</style>
       <div
-        className="relative w-full max-w-sm mx-4 rounded-3xl flex flex-col max-h-[95vh] overflow-hidden shadow-[0_24px_64px_rgba(0,0,0,0.5)]"
+        className="relative w-full max-w-sm rounded-[2rem] flex flex-col max-h-[90vh] overflow-hidden shadow-2xl"
         style={{
-          background: "linear-gradient(160deg, rgba(15,23,42,0.98), rgba(12,18,38,0.98))",
-          border: "1px solid rgba(45,212,191,0.15)",
+          background: "var(--glass-bg)",
+          backdropFilter: "blur(24px)",
+          border: "1px solid var(--glass-border)",
         }}
       >
         {/* Progress dots — CSS transition only */}
@@ -639,7 +735,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
               style={{
                 height: 6,
                 width: d === step ? 20 : 6,
-                background: d === step ? "rgba(45,212,191,0.9)" : d < step ? "rgba(45,212,191,0.4)" : "rgba(255,255,255,0.12)",
+                background: d === step ? "var(--soft-teal)" : d < step ? "var(--soft-teal-glow)" : "var(--glass-border)",
               }}
             />
           ))}
@@ -665,7 +761,12 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
           )}
           {step === 3 && (
             <div key="insight" className="ob-step-enter">
-              <StepInsight items={collectedItems} onComplete={handleComplete} onSkip={handleComplete} />
+              <StepInsight items={collectedItems} onComplete={() => goTo(4)} onSkip={() => goTo(4)} />
+            </div>
+          )}
+          {step === 4 && (
+            <div key="contact" className="ob-step-enter">
+              <StepContactCapture onComplete={handleContactCapture} onSkip={handleComplete} />
             </div>
           )}
         </div>

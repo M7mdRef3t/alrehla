@@ -1,4 +1,4 @@
-import { lazy, Suspense, memo, useCallback, useMemo, type ComponentProps } from "react";
+import { lazy, Suspense, memo, useCallback, useMemo, useState, useEffect, type ComponentProps } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Cpu } from "lucide-react";
 import { ErrorBoundary } from "../ErrorBoundary";
@@ -99,6 +99,15 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   const actuallyShowingPulse = showPulseCheck && !isLivePage;
   const breadcrumbItems = useMemo(() => buildBreadcrumb(screen), [screen]);
 
+  // ── Scroll state for header-breadcrumb sync ──
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   // ── Header navigation handlers ──
   const handleHeaderNavigate = useCallback((id: string) => {
     if (id === "profile") {
@@ -147,7 +156,8 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
       {screen !== "landing" && (
         <>
           {/* Desktop breadcrumb below header */}
-          <div className="fixed top-16 right-0 left-0 z-40 px-6 lg:px-10 py-2 hidden md:block">
+          <div className="fixed right-0 left-0 z-40 px-6 lg:px-10 py-2 hidden md:block transition-all duration-500"
+               style={{ top: scrolled ? "64px" : "80px" }}>
             <PlatformBreadcrumb
               items={breadcrumbItems}
               onNavigate={handleHeaderNavigate}
@@ -189,7 +199,9 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
         <AppTransientChromeHost {...transientChromeProps} />
         <AppChromeShell {...chromeShellProps}>
           <main
-            className={`flex-1 min-w-0 flex flex-col pb-14 md:pb-0 ${actuallyShowingPulse ? "opacity-0 pointer-events-none select-none" : ""} overflow-visible`}
+            className={`flex-1 min-w-0 flex flex-col pb-14 md:pb-0 ${
+              screen !== "landing" ? "pt-[110px] md:pt-[140px]" : ""
+            } ${actuallyShowingPulse ? "opacity-0 pointer-events-none select-none" : ""} overflow-visible`}
             aria-hidden={actuallyShowingPulse}
           >
             <InstallHintBanner />

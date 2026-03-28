@@ -36,7 +36,16 @@ const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 function getInitialScreen(): AppShellScreen {
   if (typeof window === "undefined") return "landing";
   const bootAction = window.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
-  return bootAction === "start_recovery" ? "map" : "landing";
+  if (!bootAction) return "landing";
+  
+  if (bootAction === "start_recovery") return "map";
+  
+  const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
+  if (bootAction.startsWith(APP_SCREEN_BOOT_ACTION_PREFIX)) {
+    return bootAction.replace(APP_SCREEN_BOOT_ACTION_PREFIX, "") as AppShellScreen;
+  }
+  
+  return "landing";
 }
 
 const defaultNavigationState = {

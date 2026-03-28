@@ -118,7 +118,7 @@ export const DECISION_RULES: Record<DecisionType, AutonomyLevel> = {
   ab_test_ended: "AUTONOMOUS_WITH_LOG",
   emotional_pricing_triggered: "AUTONOMOUS_WITH_LOG",
   send_marketing_email: "REQUIRES_APPROVAL",
-  process_payment: "FORBIDDEN", // فقط Stripe يعمل ده
+  process_payment: "FORBIDDEN", // الدفع لا يُنفذ تلقائيًا من الـ AI
   grant_discount: "REQUIRES_APPROVAL",
   subscription_activated: "AUTONOMOUS_WITH_LOG",
   subscription_cancelled: "AUTONOMOUS_WITH_LOG",

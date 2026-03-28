@@ -26,28 +26,42 @@ export function Step2View({ tacticalAdvice }: Step2ViewProps) {
       initial="hidden" 
       animate="visible"
     >
-      <div className="w-28 h-28 rounded-[2.5rem] flex items-center justify-center text-5xl relative"
-        style={{ background: colors.bg, border: `2px solid ${colors.border}` }}
+      <div className="w-32 h-32 rounded-[3rem] flex items-center justify-center text-6xl relative shadow-2xl"
+        style={{ 
+          background: `radial-gradient(circle at center, ${colors.bg}, transparent)`, 
+          border: `2px solid ${colors.border}`,
+          boxShadow: `0 0 40px ${colors.bg}`
+        }}
       >
         {tacticalAdvice.icon}
-        <div className="absolute inset-0 animate-pulse opacity-20 bg-current rounded-[2.5rem]" />
+        <motion.div 
+          className="absolute inset-0 rounded-[3rem]" 
+          animate={{ boxShadow: [`0 0 20px ${colors.border}`, `0 0 40px ${colors.border}`, `0 0 20px ${colors.border}`] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
       </div>
       
-      <div className="space-y-3">
-        <h3 className="text-2xl font-black tracking-tight text-white">{tacticalAdvice.title}</h3>
-        <p className="text-slate-400 text-sm max-w-[300px] leading-relaxed mx-auto font-medium">
+      <div className="space-y-4">
+        <h3 className="text-3xl font-black tracking-tight text-white drop-shadow-sm">{tacticalAdvice.title}</h3>
+        <p className="text-slate-300 text-base max-w-[320px] leading-relaxed mx-auto font-medium opacity-90">
           {tacticalAdvice.message}
         </p>
       </div>
       
-      <div className="w-full p-5 rounded-[2rem] bg-white/[0.03] border border-dashed border-white/10 shadow-2xl">
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] block mb-3"
+      <motion.div 
+        className="w-full p-6 rounded-[2.5rem] bg-white/[0.04] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-md relative overflow-hidden"
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <span className="text-[11px] font-black uppercase tracking-[0.3em] block mb-4"
           style={{ color: colors.text }}
         >
-          خطوتك الآن
+          خطة العمل
         </span>
-        <p className="text-lg font-black text-white leading-snug">{tacticalAdvice.action}</p>
-      </div>
+        <p className="text-xl font-black text-white leading-tight tracking-tight">{tacticalAdvice.action}</p>
+      </motion.div>
     </motion.div>
   );
 }

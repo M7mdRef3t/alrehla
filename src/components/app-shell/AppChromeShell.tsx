@@ -38,7 +38,7 @@ export function AppChromeShell({
   return (
     <>
       {chromeVisibility.showFloatingProfile && (
-        <div className="fixed z-[80] top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4" dir="ltr">
+        <div className="fixed z-[80] top-[calc(env(safe-area-inset-top)+0.75rem)] left-0 right-auto pl-4 md:hidden" dir="ltr">
           <button
             type="button"
             onClick={onOpenProfile}

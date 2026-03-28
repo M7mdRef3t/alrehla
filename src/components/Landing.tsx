@@ -61,67 +61,73 @@ const OrbitViz: FC<{ reduceMotion: boolean | null; mirrorName: string }> = ({ re
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const nodes = [
-    { cx: 232, cy: 160, r: 6, color: "#34D399", delay: 0, label: "علاقة مُشحِنة" },
-    { cx: 160, cy: 88,  r: 5, color: "#34D399", delay: 1.5, label: "دعم متبادل" },
-    { cx: 270, cy: 160, r: 5.5, color: "#FBBF24", delay: 0.3, label: "علاقة مختلطة" },
-    { cx: 160, cy: 270, r: 4.5, color: "#FBBF24", delay: 1, label: "تذبذب طاقي" },
-    { cx: 160, cy: 12,  r: 5.5, color: "#F87171", delay: 0.7, label: "استنزاف حاد" },
-    { cx: 310, cy: 160, r: 5, color: "#F87171", delay: 0.2, label: "حدود مكسورة" },
-    { cx: 60,  cy: 120, r: 4.5, color: "#F87171", delay: 1.8, label: "ارتباط مُرهِق" },
+    { cx: 240, cy: 190, r: 8,   color: "#10b981", delay: 0,   label: "علاقة مُشحِنة" },
+    { cx: 190, cy: 100, r: 7,   color: "#10b981", delay: 1.5, label: "دعم متبادل" },
+    { cx: 290, cy: 190, r: 7.5, color: "#f59e0b", delay: 0.3, label: "علاقة مختلطة" },
+    { cx: 190, cy: 300, r: 6.5, color: "#f59e0b", delay: 1,   label: "تذبذب طاقي" },
+    { cx: 190, cy: 30,  r: 7.5, color: "#ef4444", delay: 0.7, label: "استنزاف حاد" },
+    { cx: 340, cy: 190, r: 7,   color: "#ef4444", delay: 0.2, label: "حدود مكسورة" },
+    { cx: 70,  cy: 140, r: 6.5, color: "#ef4444", delay: 1.8, label: "ارتباط مُرهِق" },
   ];
 
   return (
     <div className="relative flex items-center justify-center select-none" aria-hidden="true"
-      style={{ width: 320, height: 320 }}>
-      {/* Background glow */}
-      <div className="absolute inset-0 rounded-full"
-        style={{ background: "radial-gradient(circle at 50% 50%, rgba(20,184,166,0.07) 0%, transparent 65%)" }} />
+      style={{ width: 380, height: 380 }}>
+      {/* Background glow disc */}
+      <div className="absolute rounded-full"
+        style={{
+          width: 340, height: 340,
+          background: "radial-gradient(circle at 50% 50%, rgba(20,184,166,0.12) 0%, rgba(20,184,166,0.04) 40%, transparent 70%)",
+          filter: "blur(2px)"
+        }} />
 
-      <svg width="320" height="320" viewBox="0 0 320 320" fill="none" style={{ overflow: "visible" }}>
-        {/* Orbit rings */}
+      <svg width="380" height="380" viewBox="0 0 380 380" fill="none" style={{ overflow: "visible" }}>
+        {/* Orbit rings — stronger for light mode */}
         {[
-          { r: 72,  stroke: "rgba(20,184,166,0.45)",  dash: "none", dur: 3.2 },
-          { r: 110, stroke: "rgba(251,191,36,0.3)",   dash: "4 6",  dur: 4.5 },
-          { r: 148, stroke: "rgba(248,113,113,0.22)", dash: "2 8",  dur: 6 },
+          { r: 82,  stroke: "rgba(16,185,129,0.55)",  dash: "none", dur: 3.2 },
+          { r: 130, stroke: "rgba(245,158,11,0.4)",   dash: "5 7",  dur: 4.5 },
+          { r: 170, stroke: "rgba(239,68,68,0.3)",    dash: "3 9",  dur: 6 },
         ].map((ring, i) => (
           <motion.g key={i}
-            animate={reduceMotion ? {} : { opacity: [0.6, 1, 0.6] }}
+            animate={reduceMotion ? {} : { opacity: [0.5, 1, 0.5] }}
             transition={{ duration: ring.dur, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 }}
           >
             <circle
-              cx="160" cy="160" r={ring.r}
-              stroke={ring.stroke} strokeWidth="1.5" fill="none"
+              cx="190" cy="190" r={ring.r}
+              stroke={ring.stroke} strokeWidth="2" fill="none"
               strokeDasharray={ring.dash === "none" ? undefined : ring.dash}
             />
           </motion.g>
         ))}
 
-        {/* Node dots */}
+        {/* Node dots — bigger for light mode visibility */}
         {nodes.map((node, i) => (
           <motion.g key={i}
             onMouseEnter={() => setHoveredIdx(i)}
             onMouseLeave={() => setHoveredIdx(null)}
             animate={reduceMotion ? {} : {
-              opacity: hoveredIdx === i ? 1 : [0.75, 1, 0.75],
-              scale: hoveredIdx === i ? 1.4 : [1, 1.15, 1]
+              opacity: hoveredIdx === i ? 1 : [0.7, 1, 0.7],
+              scale: hoveredIdx === i ? 1.4 : [1, 1.12, 1]
             }}
             transition={{ duration: hoveredIdx === i ? 0.2 : 3 + node.delay, repeat: hoveredIdx === i ? 0 : Infinity, ease: "easeInOut", delay: hoveredIdx === i ? 0 : node.delay }}
             style={{ transformOrigin: `${node.cx}px ${node.cy}px`, cursor: "pointer" }}
           >
-            <circle cx={node.cx} cy={node.cy} r={node.r} fill={node.color} style={{ filter: hoveredIdx === i ? `drop-shadow(0 0 8px ${node.color})` : "none" }} />
+            <circle cx={node.cx} cy={node.cy} r={node.r} fill={node.color}
+              style={{ filter: `drop-shadow(0 0 ${hoveredIdx === i ? 12 : 4}px ${node.color}80)` }} />
             
             <AnimatePresence>
               {hoveredIdx === i && (
                 <motion.foreignObject
-                  x={node.cx + 10} y={node.cy - 10} width="100" height="40"
+                  x={node.cx + 12} y={node.cy - 14} width="110" height="40"
                   initial={{ opacity: 0, x: node.cx + 5 }}
-                  animate={{ opacity: 1, x: node.cx + 12 }}
+                  animate={{ opacity: 1, x: node.cx + 14 }}
                   exit={{ opacity: 0 }}
                 >
                   <div style={{ 
-                    background: "rgba(10,10,26,0.9)", border: `1px solid ${node.color}40`, 
-                    borderRadius: 8, padding: "4px 8px", color: node.color, 
-                    fontSize: 10, fontWeight: 800, whiteSpace: "nowrap", backdropFilter: "blur(4px)" 
+                    background: "rgba(255,255,255,0.95)", border: `2px solid ${node.color}50`, 
+                    borderRadius: 10, padding: "5px 10px", color: "#1e293b", 
+                    fontSize: 11, fontWeight: 800, whiteSpace: "nowrap",
+                    backdropFilter: "blur(8px)", boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
                   }}>
                     {node.label}
                   </div>
@@ -131,30 +137,30 @@ const OrbitViz: FC<{ reduceMotion: boolean | null; mirrorName: string }> = ({ re
           </motion.g>
         ))}
 
-        {/* Center */}
+        {/* Center — "أنت" */}
         <motion.g
           animate={reduceMotion ? {} : { 
-            scale: mirrorName ? [1, 1.4, 1] : [1, 1.2, 1], 
+            scale: mirrorName ? [1, 1.3, 1] : [1, 1.15, 1], 
             opacity: [0.85, 1, 0.85] 
           }}
           transition={{ duration: mirrorName ? 1.5 : 2.5, repeat: Infinity, ease: "easeInOut" }}
-          style={{ transformOrigin: "160px 160px" }}
+          style={{ transformOrigin: "190px 190px" }}
         >
-          <circle cx="160" cy="160" r={8} fill="#14B8A6" />
+          <circle cx="190" cy="190" r={10} fill="#14B8A6" />
         </motion.g>
-        <circle cx="160" cy="160" r={4} fill="white" opacity={0.9} />
+        <circle cx="190" cy="190" r={5} fill="#0f172a" opacity={0.8} />
       </svg>
 
       {/* Ring legend */}
-      <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-4">
+      <div className="absolute -bottom-2 left-0 right-0 flex justify-center gap-5">
         {[
-          { color: "#34D399", label: "مُشحِن" },
-          { color: "#FBBF24", label: "مختلط" },
-          { color: "#F87171", label: "مُرهِق" },
+          { color: "#10b981", label: "مُشحِن" },
+          { color: "#f59e0b", label: "مختلط" },
+          { color: "#ef4444", label: "مُرهِق" },
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full" style={{ background: color, boxShadow: `0 0 5px ${color}` }} />
-            <span className="text-[11px] font-semibold" style={{ color: "#64748B" }}>{label}</span>
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: color, boxShadow: `0 0 6px ${color}80` }} />
+            <span className="text-[11px] font-bold" style={{ color: "#475569" }}>{label}</span>
           </div>
         ))}
       </div>
@@ -236,6 +242,7 @@ const TypingWord: FC = () => {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
 
+
   useEffect(() => {
     const interval = setInterval(() => {
       setVisible(false);
@@ -263,7 +270,7 @@ const TypingWord: FC = () => {
             transition={{ duration: 0.35, ease: "easeOut" }}
             className="absolute inset-0 flex items-center"
             style={{
-              background: "linear-gradient(90deg, #14B8A6, #7C3AED)",
+              background: "linear-gradient(90deg, #0d9488, #6d28d9)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text"
@@ -365,11 +372,9 @@ export const Landing: FC<LandingProps> = ({
     startTrackedRef.current = true;
 
     void recordFlowEvent("landing_clicked_start");
-    trackEvent(AnalyticsEvents.CTA_CLICK);
-    trackLead({
+    trackEvent(AnalyticsEvents.CTA_CLICK, {
       source: "landing",
       cta_name: "start_journey",
-      destination: "full_app_boot",
       intent: mirrorName ? "mirror_named" : "default"
     });
     
@@ -377,240 +382,188 @@ export const Landing: FC<LandingProps> = ({
       useJourneyState.getState().setMirrorName(mirrorName);
     }
 
-    // Trigger Warp Cinema
+    // Trigger Warp Cinema effect
     setIsWarping(true);
     soundManager.playEffect("cosmic_pulse");
     
     setTimeout(() => {
-      onStartJourney();
+      // Unify all acquisition to /onboarding route
+      if (typeof window !== "undefined") {
+        window.location.assign("/onboarding");
+      }
     }, 1200);
-  }, [onStartJourney, mirrorName]);
+  }, [mirrorName]);
 
   /* ─── JSX ─────────────────────────────────────────────────── */
 
   return (
     <div
       className="relative min-h-screen w-full overflow-x-hidden"
-      style={{ background: "#0A0A1A", fontFamily: "IBM Plex Sans Arabic, Tajawal, sans-serif" }}
+      style={{ background: "var(--space-void)", fontFamily: "'IBM Plex Sans Arabic', Tajawal, sans-serif" }}
       dir="rtl"
     >
 
-      {/* ── Global ambient background ── */}
+      {/* ── Global ambient background — light-mode native ── */}
       <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
         <div className="absolute inset-0" style={{
           background: [
-            "radial-gradient(ellipse 70% 55% at 15% 8%, rgba(124,58,237,0.10) 0%, transparent 55%)",
-            "radial-gradient(ellipse 55% 45% at 85% 85%, rgba(20,184,166,0.07) 0%, transparent 50%)",
-            "radial-gradient(ellipse 35% 35% at 50% 40%, rgba(20,184,166,0.04) 0%, transparent 60%)"
+            "radial-gradient(ellipse 60% 50% at 20% 10%, rgba(13,148,136,0.06) 0%, transparent 55%)",
+            "radial-gradient(ellipse 50% 40% at 80% 80%, rgba(109,40,217,0.05) 0%, transparent 50%)",
+            "radial-gradient(ellipse 40% 30% at 50% 50%, rgba(20,184,166,0.03) 0%, transparent 55%)"
           ].join(", ")
         }} />
-        {/* Subtle dot grid */}
+        {/* Subtle dot grid — light mode */}
         <div className="absolute inset-0" style={{
-          backgroundImage: "radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-          opacity: 1
+          backgroundImage: "radial-gradient(rgba(0,0,0,0.04) 1px, transparent 1px)",
+          backgroundSize: "40px 40px"
         }} />
       </div>
 
       {/* ══════════════════════════════════════════════
-          SECTION 1: HERO
+          SECTION 1: HERO — Orbital Center (Premium V2)
       ══════════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center px-4 sm:px-5 pt-10 md:pt-16 pb-12 md:pb-20 max-w-6xl mx-auto">
+      <section className="hero-orbital-center px-4 overflow-hidden">
+        {/* ── Immersive Atmospheric Visuals ── */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          {/* Main Orbit Background */}
+          <div className="orbit-atmospheric scale-[1.5] sm:scale-[2] contrast-[1.05]">
+            <OrbitViz reduceMotion={reduceMotion} mirrorName={mirrorName} />
+          </div>
+          {/* Subtle Glows */}
+          <div 
+            className="absolute inset-x-0 top-0 h-[60vh] opacity-40" 
+            style={{ background: "linear-gradient(to bottom, var(--soft-teal-dim), transparent)" }}
+          />
+          <div className="hero-starfield" />
+        </div>
+
+        {/* ── Central Content Stack ── */}
         <motion.div
-          className="w-full flex flex-col lg:flex-row items-center gap-8 lg:gap-10"
-          variants={stagger}
-          initial="hidden"
-          animate="visible"
+           variants={stagger}
+           initial="hidden"
+           animate="visible"
+           className="relative z-10 w-full max-w-5xl flex flex-col items-center text-center px-6 pt-16 sm:pt-20"
         >
-          {/* ── Text ── — 55% من عرض الـ desktop */}
-          <div className="flex-1 lg:flex-none lg:basis-[55%] text-center lg:text-right">
+          {/* Platform Badge */}
+          <motion.div 
+            variants={fadeUp} 
+            className="inline-flex items-center gap-2 mb-8 glass-button text-[10px] sm:text-[11px] tracking-[0.3em] uppercase py-2 px-5 opacity-70 backdrop-blur-3xl"
+            style={{ borderColor: "var(--glass-border)" }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.5)]" />
+            الرحلة — منصة الوعي الذاتي
+          </motion.div>
 
-            {/* Platform badge */}
-            <motion.div variants={fadeUp} className="inline-flex items-center gap-2 mb-5">
-              <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#34D399", boxShadow: "0 0 8px #34D399aa" }} />
-              <span className="text-xs font-bold tracking-widest uppercase" style={{ color: "#64748B" }}>الرحلة — منصة الوعي الذاتي</span>
-            </motion.div>
+          {/* Headline (V5: Precision Architecture) */}
+          <motion.h1
+            variants={fadeUp}
+            className="cosmic-headline text-[1.75rem] sm:text-[2.5rem] lg:text-[3.2rem] font-bold mb-5 sm:mb-6"
+            style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}
+          >
+            <span className="block opacity-90">مش محتاج تفهم أكتر...</span>
+            <span className="block mt-2 sm:mt-3 text-transparent bg-clip-text" style={{ backgroundImage: "linear-gradient(135deg, #14b8a6, #06b6d4, #6366f1)" }}>
+              محتاج تشوف نفسك من <TypingWord />
+            </span>
+          </motion.h1>
 
-            {/* Headline */}
-            <motion.h1
-              variants={fadeUp}
-              className="text-[1.8rem] sm:text-5xl lg:text-6xl font-black leading-[1.25] mb-8"
-              style={{ fontFamily: "Tajawal, sans-serif", color: "#F8FAFC" }}
-            >
-              {landingCopy.hook}
-              <br />
-              من <TypingWord />
-            </motion.h1>
+          {/* Subtitle */}
+          <motion.p
+            variants={fadeUp}
+            className="text-base sm:text-lg leading-relaxed mb-10 sm:mb-14 max-w-[42ch] font-normal"
+            style={{ color: "var(--text-secondary)", opacity: 0.8 }}
+          >
+            {landingCopy.subtitle}
+          </motion.p>
 
-            {/* Subtitle */}
-            <motion.p
-              variants={fadeUp}
-              className="text-lg sm:text-xl leading-relaxed mb-10 max-w-[50ch]"
-              style={{ color: "#94A3B8" }}
-            >
-              {landingCopy.subtitle}
-            </motion.p>
-
-            {/* Value chips */}
-            <motion.div variants={staggerFast} className="flex flex-wrap justify-center lg:justify-end gap-2 mb-8">
-              {[
-                { icon: Lock, label: "بياناتك خاصة" },
-                { icon: Clock, label: "نتيجة في 3 دقائق" },
-                { icon: Star, label: "بدون تسجيل للبداية" },
-              ].map(({ icon: Icon, label }) => (
-                <motion.div
-                  key={label}
-                  variants={fadeIn}
-                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
-                  style={{ border: "1px solid rgba(20,184,166,0.2)", background: "rgba(20,184,166,0.05)", color: "#5EEAD4" }}
-                >
-                  <Icon className="w-3 h-3" />
-                  {label}
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {/* ── 10-Second Mirror (New Hook) ── */}
-            <motion.div variants={fadeUp} className="mb-8 max-w-md mx-auto lg:mr-0 lg:ml-auto">
-              <div className="relative group">
-                <input
-                  type="text"
-                  value={mirrorName}
-                  onChange={(e) => setMirrorName(e.target.value)}
-                  placeholder="مين الشخص اللي شاغل تفكيرك دلوقتي؟"
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm text-white placeholder:text-white/20 outline-none focus:border-teal-500/50 transition-all"
-                  style={{ backdropFilter: "blur(8px)" }}
-                />
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
-                  {mirrorName ? (
-                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-teal-400 text-xs font-bold">بدأنا نركز..</motion.span>
-                  ) : (
-                    <Sparkles className="w-4 h-4 text-white/20" />
+          {/* ── Mirror Portal (Input) ── */}
+          <motion.div 
+            variants={fadeUp} 
+            className="w-full max-w-2xl mx-auto"
+          >
+            <div className="premium-glass-portal p-1.5 sm:p-2 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.6),0_0_50px_-15px_rgba(20,184,166,0.1)]">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    value={mirrorName}
+                    onChange={(e) => setMirrorName(e.target.value)}
+                    placeholder="مين شاغل تفكيرك دلوقتي؟"
+                    className="w-full bg-transparent border-none rounded-3xl px-8 py-5 text-lg sm:text-xl outline-none transition-all placeholder:text-slate-500 font-normal"
+                    style={{
+                      color: "var(--text-primary)",
+                      fontFamily: "Tajawal, sans-serif"
+                    }}
+                  />
+                  {!mirrorName && (
+                    <div 
+                      className="absolute left-8 top-1/2 -translate-y-1/2 pointer-events-none opacity-20"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      <Sparkles className="w-6 h-6" />
+                    </div>
                   )}
                 </div>
-              </div>
-              <p className="mt-2 text-[10px] text-white/30 text-right pr-2">
-                * اكتب اسمه فقط (أو حرف)، ده بيساعد عقلك يركز في الخريطة.
-              </p>
-            </motion.div>
-
-            {/* CTAs */}
-            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center lg:justify-end gap-3">
-              <motion.button
-                type="button"
-                id="landing-hero-cta"
-                onClick={handleStart}
-                className="group relative w-full sm:w-auto sm:min-w-[15rem] inline-flex items-center justify-center gap-3 rounded-2xl px-7 py-4 text-base font-black text-white transition-all duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A1A]"
-                style={{ background: "linear-gradient(135deg, #14B8A6 0%, #0e9488 100%)", boxShadow: "0 12px 36px rgba(20,184,166,0.28)" }}
-                whileHover={{ scale: 1.03, boxShadow: "0 16px 44px rgba(20,184,166,0.38)" }}
-                whileTap={{ scale: 0.97 }}
-              >
-                ابدأ خريطتك — مجاناً
-                <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-              </motion.button>
-
-              {shouldShowLandingInstallButton && (
+                
                 <button
                   type="button"
-                  onClick={handleInstall}
-                  className="inline-flex items-center gap-2 rounded-2xl px-5 py-4 text-sm font-bold transition-all duration-200"
-                  style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.025)", color: "#94A3B8" }}
-                >
-                  <Smartphone className="w-4 h-4" />
-                  {installButtonLabel}
-                </button>
-              )}
-            </motion.div>
-
-            <motion.p
-              variants={fadeUp}
-              className="mt-3 text-[12px] font-bold text-center lg:text-right"
-              style={{ color: "rgba(148,163,184,0.82)" }}
-            >
-              تبدأ الآن، ترى الخريطة خلال دقائق، ثم تقرر بعدها هل تحتاج الأدوات الأعمق أم لا.
-            </motion.p>
-
-            <motion.div
-              variants={fadeUp}
-              className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto lg:mr-0 lg:ml-auto"
-            >
-              {[
-                { step: "01", title: "اكتب 3 أسماء", copy: "بدون شرح طويل. فقط الأشخاص الذين يشغلون مساحة من تفكيرك الآن." },
-                { step: "02", title: "حدد المسافة", copy: "قريب يشحنك، متذبذب يربكك، أو بعيد يستنزفك." },
-                { step: "03", title: "خذ أول خطوة", copy: "ترى الصورة فورًا، ثم تبدأ من أوضح نقطة بدل الدوران." }
-              ].map((item) => (
-                <div
-                  key={item.step}
-                  className="rounded-2xl p-4 text-right"
-                  style={{
-                    background: "rgba(255,255,255,0.035)",
-                    border: "1px solid rgba(255,255,255,0.07)",
-                    backdropFilter: "blur(10px)"
+                  onClick={handleStart}
+                  className="group relative flex items-center justify-center gap-4 px-10 py-5 rounded-3xl overflow-hidden transition-all duration-700 active:scale-[0.97] sm:min-w-[220px] isolate"
+                  style={{ 
+                    background: mirrorName 
+                      ? "linear-gradient(135deg, #14B8A6 0%, #7C3AED 100%)" 
+                      : "rgba(255,255,255,0.06)",
+                    boxShadow: mirrorName ? "0 10px 40px -10px rgba(20,184,166,0.4)" : "none"
                   }}
                 >
-                  <p className="text-[11px] font-black tracking-[0.25em] mb-2" style={{ color: "#2DD4BF" }}>
-                    {item.step}
-                  </p>
-                  <h3 className="text-sm font-black text-white mb-1" style={{ fontFamily: "Tajawal, sans-serif" }}>
-                    {item.title}
-                  </h3>
-                  <p className="text-xs leading-relaxed" style={{ color: "#94A3B8" }}>
-                    {item.copy}
-                  </p>
+                  <span 
+                    className="text-base sm:text-lg font-bold transition-colors duration-500"
+                    style={{ 
+                      fontFamily: "Tajawal, sans-serif",
+                      color: mirrorName ? "#ffffff" : "#64748b"
+                    }}
+                  >
+                    {mirrorName ? "ابدأ الرحلة" : "ابدأ مجاناً"}
+                  </span>
+                  <ArrowLeft className={`w-5 h-5 transition-transform duration-500 ${mirrorName ? "text-white group-hover:-translate-x-2" : ""}`} style={{ color: mirrorName ? "white" : "var(--text-muted)" }} />
+                </button>
+              </div>
+            </div>
+            
+            {/* Small subtle value indicators */}
+            <div className="mt-6 flex flex-wrap justify-center gap-6 sm:gap-8 opacity-70">
+              {[
+                { icon: Lock, label: "بيانات مشفرة" },
+                { icon: Clock, label: "تحليل فوري" },
+                { icon: Star, label: "بدون تسجيل" },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="flex items-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-[0.15em]" style={{ color: "var(--text-secondary)" }}>
+                  <Icon className="w-3.5 h-3.5" />
+                  {label}
                 </div>
               ))}
-            </motion.div>
-
-            {/* Returning user */}
-            {hasExistingJourney && lastGoalLabel && (
-              <motion.div
-                variants={fadeUp}
-                className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold"
-                style={{ border: "1px solid rgba(251,191,36,0.2)", background: "rgba(251,191,36,0.05)", color: "#FCD34D" }}
-              >
-                {lastGoalMeta && <lastGoalMeta.icon className="w-3.5 h-3.5" />}
-                أهلاً بعودتك · آخر هدف: {lastGoalLabel}
-              </motion.div>
-            )}
-          </div>
-
-          <motion.div variants={fadeUp} className="flex-shrink-0 lg:flex-none lg:basis-[40%] flex items-center justify-center origin-center scale-[0.80] sm:scale-90 lg:scale-100">
-            <OrbitViz reduceMotion={reduceMotion} mirrorName={mirrorName} />
+            </div>
           </motion.div>
         </motion.div>
 
-        {/* Scroll hint & Global Pulse */}
-        <div className="absolute bottom-6 left-0 right-0 flex flex-col items-center gap-4">
+        {/* Scroll hint */}
+        <div className="absolute bottom-10 left-0 right-0 flex flex-col items-center pointer-events-none z-20">
           <motion.div
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.5 }}
-            className="flex items-center gap-4 px-4 py-2 rounded-full border border-white/5 bg-white/[0.02] backdrop-blur-md"
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 0.4 }} 
+            transition={{ delay: 3, duration: 1 }}
+            className="flex flex-col items-center gap-2"
           >
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
-              </span>
-              <span className="text-[10px] font-black text-teal-400/80 tracking-tight">النبض الحي:</span>
-            </div>
-            <p className="text-[10px] font-bold text-white/40">
-              <span className="text-white/80">{pulseCount.toLocaleString("ar-EG")}</span> شخص بيحاولوا يرجعوا طاقتهم دلوقتي
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="flex flex-col items-center gap-1"
-            initial={{ opacity: 0 }} animate={{ opacity: 0.35 }} transition={{ delay: 2.5, duration: 1 }}
-          >
-            <span className="text-[10px] tracking-widest font-bold" style={{ color: "#334155" }}>اكتشف المنصة</span>
+            <span className="text-[10px] tracking-[0.3em] font-black uppercase text-slate-500">Discover</span>
             <motion.div
-              animate={reduceMotion ? {} : { y: [0, 5, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              animate={reduceMotion ? {} : { y: [0, 6, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             >
-              <ChevronDown className="w-4 h-4" style={{ color: "#334155" }} />
+              <ChevronDown className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
             </motion.div>
           </motion.div>
         </div>
       </section>
+
 
       {/* ── Section Divider ── */}
       <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
@@ -703,13 +656,13 @@ export const Landing: FC<LandingProps> = ({
           {/* Section Header */}
           <motion.div variants={fadeUp} className="text-center mb-12">
             <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: "#7C3AED" }}>
-              المنصة الكاملة
+              رحلة التعافي
             </p>
             <h2 className="text-3xl sm:text-4xl font-black text-white mb-4" style={{ fontFamily: "Tajawal, sans-serif" }}>
-              ست أدوات. هدف واحد.
+              من التشخيص.. وصولاً للحرية.
             </h2>
             <p className="text-base max-w-[44ch] mx-auto" style={{ color: "#64748B" }}>
-              مش مجرد تطبيق — منظومة متكاملة تشتغل مع بعض عشان تديك وضوح حقيقي.
+              مش مجرد أدوات — دي منظومة متكاملة متجربة علمياً عشان تخرجك من الاستنزاف وتستعيد نفسك بجد.
             </p>
           </motion.div>
 
@@ -720,70 +673,68 @@ export const Landing: FC<LandingProps> = ({
               iconColor="#14B8A6"
               iconBg="rgba(20,184,166,0.12)"
               border="rgba(20,184,166,0.18)"
-              tag="الأساس"
+              tag="المرحلة الأولى"
               tagColor="#14B8A6"
-              title="دواير"
-              subtitle="خريطة علاقاتك التفاعلية — شوف مين قريب ومين بيستنزفك في لحظة واحدة."
-              preview="📍 رادار العلاقات التفاعلي"
+              title="خريطة التشخيص"
+              subtitle="أول خطوة حقيقية. بنحدد فيها الثقوب السوداء في علاقاتك وبنشوف النزيف منين بالظبط."
+              preview="📍 تشخيص بصري فوري"
               onClick={handleStart}
-              cta="جرّب الخريطة"
-            />
-            <ProductCard
-              icon={Mic}
-              iconColor="#7C3AED"
-              iconBg="rgba(124,58,237,0.12)"
-              border="rgba(124,58,237,0.18)"
-              tag="صوت + AI"
-              tagColor="#7C3AED"
-              title="دواير لايف"
-              subtitle="تكلم بصوتك. الذكاء الاصطناعي يسمع ويحلل ويرد في الوقت الحقيقي."
-              preview="🎙️ محادثة صوتية حية مع AI"
+              cta="ابدأ التشخيص"
             />
             <ProductCard
               icon={Eye}
               iconColor="#38BDF8"
               iconBg="rgba(56,189,248,0.12)"
               border="rgba(56,189,248,0.18)"
-              tag="أنماط عميقة"
+              tag="المرحلة الثانية"
               tagColor="#38BDF8"
-              title="مرايا"
-              subtitle="اكتشف الأنماط المتكررة والقصص اللي بتحكيها لنفسك بدون ما تعرف."
-              preview="🪞 تحليل السرد الذاتي العميق"
-            />
-            <ProductCard
-              icon={Shield}
-              iconColor="#F87171"
-              iconBg="rgba(248,113,113,0.12)"
-              border="rgba(248,113,113,0.18)"
-              tag="لحظة الأزمة"
-              tagColor="#F87171"
-              title="العدة الكاملة"
-              subtitle="جمل الخروج، تهدئة الجسم، غرفة الطوارئ — جاهزة قبل ما تحتاجها."
-              preview="🛡️ 24 جملة + تنفس + طوارئ"
-              onClick={handleStart}
-              cta="استكشف الأدوات"
+              title="تحليل الأنماط"
+              subtitle="إزاي بتوصل لنفس النقطة كل مرة؟ بنحلل القصص اللي بتكررها وبنعرف جرس الإنذار فين."
+              preview="🪞 تحليل الأنماط المتكررة"
             />
             <ProductCard
               icon={Zap}
               iconColor="#FBBF24"
               iconBg="rgba(251,191,36,0.12)"
               border="rgba(251,191,36,0.18)"
-              tag="تغيير سلوكي"
+              tag="المرحلة الثالثة"
               tagColor="#FBBF24"
-              title="خطة التعافي"
-              subtitle="خطة يومية مخصصة بالذكاء الاصطناعي — خطوة عملية كل يوم مبنية على بياناتك."
-              preview="📋 خطة AI مخصصة ليك أنت"
+              title="خطة العمل"
+              subtitle="مفيش كلام نظري. بتاخد خطة يومية مخصصة ليك، بتقولك بالظبط تعمل إيه مع كل حد."
+              preview="📋 خطة تعافي يومية AI"
+            />
+            <ProductCard
+              icon={Shield}
+              iconColor="#F87171"
+              iconBg="rgba(248,113,113,0.12)"
+              border="rgba(248,113,113,0.18)"
+              tag="أدوات الحماية"
+              tagColor="#F87171"
+              title="العدة الكاملة"
+              subtitle="جمل الرد الجاهزة، تمارين التنفس، وغرفة الطوارئ.. أسلحتك في طريقك للاستقلال."
+              preview="🛡️ مكتبة الحماية الذاتية"
             />
             <ProductCard
               icon={Heart}
               iconColor="#F472B6"
               iconBg="rgba(244,114,182,0.12)"
               border="rgba(244,114,182,0.18)"
-              tag="وضوح يومي"
+              tag="المتابعة"
               tagColor="#F472B6"
               title="النبض اليومي"
-              subtitle="سجّل كيف إنت النهارده — طاقتك، مزاجك، وين تركيزك — وشوف الأنماط."
-              preview="💓 تتبع الطاقة اليومية"
+              subtitle="بنفضل معاك. بتسجّل حالتك يومياً وبنشوف مدى التطور اللي بتوصله في قوتك النفسية."
+              preview="💓 تتبع جودة الحياة"
+            />
+            <ProductCard
+              icon={Mic}
+              iconColor="#7C3AED"
+              iconBg="rgba(124,58,237,0.12)"
+              border="rgba(124,58,237,0.18)"
+              tag="دعم حي"
+              tagColor="#7C3AED"
+              title="مساعدك الشخصي"
+              subtitle="تكلم مع ذكاء اصطناعي متخصص في العلاقات. يسمعك، يحلل صوتك، ويوجهك في لحظتها."
+              preview="🎙️ تحليل صوتي فوري"
             />
           </div>
         </motion.div>

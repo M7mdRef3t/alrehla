@@ -24,7 +24,7 @@ export const OVERLAY_SEVERITY: Record<AppOverlayFlag | "emergency" | "pulseCheck
   recoveryPlan: 5,
   symptomsOverview: 5,
   onboarding: 4,
-  authModal: 4,
+  authModal: 9,
   gym: 3,
   themeSettings: 2,
   faq: 2,

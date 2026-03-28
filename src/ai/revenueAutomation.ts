@@ -309,7 +309,7 @@ export class RevenueAutomationEngine {
 
     // تطبيق التغيير
     try {
-      // TODO: Update Stripe prices via API
+      // TODO: ربط تغيير الأسعار بمصدر التسعير الفعلي عند تفعيله
       // TODO: Update database with new pricing
       // TODO: Notify existing users about grandfathering policy
 

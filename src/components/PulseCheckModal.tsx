@@ -86,11 +86,11 @@ function getStoredCopyVariant(key: string, forced: PulseCopyOverrideValue): Copy
 function getMoodVariantSubtitle(variant: CopyVariant): string {
   return variant === "a"
     ? "اختار وصف قريب من إحساسك دلوقتي."
-    : "مزاجك الحالي بيوضح شكل خطوتك الجاية.";
+    : "مزاجك الحالي بيقولنا شكل خطوتك الجاية إيه.";
 }
 
 function getFocusVariantSubtitle(_variant: CopyVariant): string {
-  return "حدّد على إيه عايز تركّز دلوقتي — ده بيحدد خطوتك الجاية.";
+  return "حدد عايز تركز على إيه.. ده اللي هيظبط الطريق.";
 }
 
 function getImmediateEnergyAction(energy: number | null): { cta: string; hint: string } | null {
@@ -104,12 +104,12 @@ function getImmediateEnergyAction(energy: number | null): { cta: string; hint: s
   if (energy <= 7) {
     return {
       cta: "ثبّت مهمة 10 دقائق",
-      hint: "مهمة واحدة بدون تشتت."
+      hint: "مهمة واحدة بس من غير تشتيت."
     };
   }
   return {
-    cta: "ابدأ أول 15 دقيقة الآن",
-    hint: "طاقة عالية تحتاج بداية سريعة."
+    cta: "ابدأ أول 15 دقيقة دلوقتي",
+    hint: "طاقتك في العالي.. محتاجين بداية سريعة."
   };
 }
 
@@ -196,7 +196,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [hasTrackedNotesUsage, setHasTrackedNotesUsage] = useState(false);
   const [suggestionApplied, setSuggestionApplied] = useState(false);
   const [isSavingPulse, setIsSavingPulse] = useState(false);
-  const [saveToastText, setSaveToastText] = useState("\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643");
+  const [saveToastText, setSaveToastText] = useState("تمام.. حفظنا حالتك");
   const [keyboardEnergyHint, setKeyboardEnergyHint] = useState<number | null>(null);
   void keyboardEnergyHint; // prevent SWC tree-shaking of unused destructured variable
   const isEnergySelectionUnstableRef = useRef(false);
@@ -357,7 +357,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     setHasTrackedNotesUsage(false);
     setSuggestionApplied(false);
     setIsSavingPulse(false);
-    setSaveToastText("\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643");
+    setSaveToastText("تمام.. حفظنا حالتك");
     setKeyboardEnergyHint(null);
     setNeedsEnergyConfirmation(false);
     isMoodSelectionUnstableRef.current = false;
@@ -491,8 +491,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     setIsSavingPulse(true);
     setSaveToastText(
       finalEnergy == null
-        ? "\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643"
-        : `\u062a\u0645 \u062d\u0641\u0638 \u062d\u0627\u0644\u062a\u0643 \u2022 ${getPostSaveAction(finalEnergy)}${weeklyDiffLine ? ` \u2022 ${weeklyDiffLine}` : ""}`
+        ? "تمام.. حفظنا حالتك"
+        : `${getPostSaveAction(finalEnergy)}${weeklyDiffLine ? ` • ${weeklyDiffLine}` : ""}`
     );
     window.setTimeout(() => {
       onSubmit({
@@ -739,12 +739,12 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   }, [step]);
 
   const stepLabel = step === 1
-    ? "سجّل حالتك الحالية"
-    : "النصيحة المقترحة";
+    ? "قلب في إحساسك"
+    : "شور الرحلة";
 
   const footerHintText = showRequiredHint && !currentStepComplete
-    ? "محتاج تختار الطاقة والمزاج واتجاهك الحالي على الأقل."
-    : "راجع حالتك وبعدين اضغط تنفيذ.";
+    ? "محتاج تختار الطاقة والمزاج ودماغك رايحة فين."
+    : "راجع حالتك وبعدين 'يلا بينا'.";
 
   const footerHintColor = showRequiredHint && !currentStepComplete
     ? "rgba(248, 113, 113, 0.95)"
@@ -759,12 +759,19 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div className="fixed inset-0 z-50 flex items-center justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+        <motion.div
+          className="fixed inset-0 flex items-center justify-center"
+          style={{ zIndex: 100 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <div
             className="absolute inset-0"
             style={{
-              background: `${energyGradient(energy)}, radial-gradient(ellipse at 20% 30%, rgba(139, 92, 246, 0.1) 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(45, 212, 191, 0.06) 0%, transparent 45%), var(--space-void, #0a0a1a)`,
-              transition: "background 0.8s ease"
+              background: `${energyGradient(energy)}, radial-gradient(ellipse at 20% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(45, 212, 191, 0.1) 0%, transparent 55%), var(--space-void, #03030a)`,
+              transition: "background 1.2s cubic-bezier(0.22, 1, 0.36, 1)"
             }}
             onClick={() => handleClose("backdrop")}
           />
@@ -789,10 +796,10 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              background: "rgba(15, 20, 50, 0.7)",
+              background: "var(--glass-bg)",
               backdropFilter: "blur(24px)",
               WebkitBackdropFilter: "blur(24px)",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
+              border: "1px solid var(--glass-border)",
               borderRadius: "1.5rem"
             }}
           >
@@ -821,11 +828,11 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
             </p>
             <div className="pulse-check-header flex items-center justify-between p-3.5 sm:p-4">
               <motion.div custom={0} variants={cosmicUp} initial="hidden" animate="visible">
-                <h2 className="text-base sm:text-lg font-bold" style={{ color: "var(--text-primary)", letterSpacing: "0.04em" }}>
-                  {"\u0641\u062d\u0635 \u062d\u0627\u0644\u062a\u0643"}
+                <h2 className="text-base sm:text-lg font-bold" style={{ color: "var(--text-primary)", letterSpacing: "0.02em" }}>
+                  {"بوصلة اللحظة"}
                 </h2>
-                <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                  {`\u062e\u0637\u0648\u0629 ${step} \u0645\u0646 ${totalSteps} \u2022 ${stepLabel}`}
+                <p className="text-[10px] mt-0.5 font-medium uppercase tracking-[0.12em]" style={{ color: "var(--text-muted)" }}>
+                  {`الخطوة ${step} من ${totalSteps} • ${stepLabel}`}
                 </p>
               </motion.div>
               {allowSkip && (
@@ -834,9 +841,9 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   onClick={requestSkipClose}
                   className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer"
                   style={{ color: "var(--text-muted)", background: "rgba(255, 255, 255, 0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
-                  aria-label={"\u062a\u062e\u0637\u064a \u0627\u0644\u064a\u0648\u0645"}
+                  aria-label={"فوت النهاردة"}
                 >
-                  {"\u062a\u062e\u0637\u064a \u0627\u0644\u064a\u0648\u0645"}
+                  {"فوت النهاردة"}
                 </button>
               )}
             </div>
@@ -894,7 +901,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
             </div>
 
             {/* Footer Area */}
-            <div className="p-5 border-t border-white/5 space-y-4">
+            <div className="p-5 border-t space-y-4" style={{ borderColor: "var(--glass-border)" }}>
               <p className="text-center text-[10px] font-bold h-4" style={{ color: footerHintColor }}>
                 {footerHintText}
               </p>
@@ -907,7 +914,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                     onClick={handlePreviousStep}
                     className="flex-1 py-4 rounded-2xl bg-white/[0.03] text-white/40 font-black text-[10px] uppercase tracking-widest hover:text-white transition-all border border-white/5"
                   >
-                    رجع
+                    رجعني
                   </button>
                 )}
                 <motion.button
@@ -918,7 +925,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   animate={!isPrimaryEnabled ? {} : { boxShadow: ["0 0 20px rgba(45,212,191,0.35)", "0 0 36px rgba(16,185,129,0.62)", "0 0 20px rgba(45,212,191,0.35)"] }}
                   transition={!isPrimaryEnabled ? {} : { duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  {step === 1 ? "تحليل البيانات" : "اعتماد النصيحة"}
+                  {step === 1 ? "وريني الشور" : "يلا بينا"}
                 </motion.button>
               </div>
             </div>

@@ -11,9 +11,7 @@ import {
   FOCUS_COSMIC, 
   TOPIC_OPTIONS
 } from "./constants";
-
-
-
+import { EnergyGauge } from "./EnergyGauge";
 
 interface Step1ViewProps {
   energy: number | null;
@@ -49,7 +47,6 @@ export function Step1View({
   notesRef
 }: Step1ViewProps) {
 
-
   const cosmicUp = {
     hidden: { opacity: 0, y: 15 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, staggerChildren: 0.08 } }
@@ -63,50 +60,50 @@ export function Step1View({
       initial="hidden" 
       animate="visible"
     >
-      {/* 1. Energy Level — Modern Slider */}
-      <div className="flex flex-col items-center gap-2">
-        {/* Big Number + Emoji */}
-        <div className="text-center">
+      {/* 1. Energy Level — Radial Compass */}
+      <div className="flex flex-col items-center gap-1">
+        <div className="w-56 h-36 relative flex items-center justify-center">
+          <EnergyGauge 
+            energy={energy}
+            isNeedleHovering={false}
+            needleMouseAngle={0}
+          />
           <motion.div
             key={energy}
-            initial={{ scale: 0.85, opacity: 0 }}
+            initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="flex items-center justify-center gap-3"
+            className="absolute bottom-2 flex flex-col items-center"
           >
-            <span className="text-5xl" aria-hidden="true">
-              {energy === null ? "🔋" : energy <= 2 ? "😮‍💨" : energy <= 4 ? "😐" : energy <= 6 ? "🙂" : energy <= 8 ? "😊" : "🔥"}
-            </span>
-            <span className="text-6xl font-black text-white font-mono tracking-tighter">
+            <span className="text-3xl font-black font-mono tracking-tighter" style={{ color: "var(--text-primary)" }}>
               {energy !== null ? Math.round(energy) : "—"}
             </span>
           </motion.div>
-          <motion.p
-            key={energyStateLabel}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-xs font-bold mt-2"
-            style={{
-              color: energy === null ? "#64748B"
-                : energy <= 2 ? "#f87171"
-                : energy <= 4 ? "#fbbf24"
-                : energy <= 6 ? "#2dd4bf"
-                : energy <= 8 ? "#34d399"
-                : "#14b8a6"
-            }}
-          >
-            {energyStateLabel}
-          </motion.p>
         </div>
 
-        {/* Slider Track — forced LTR so range input direction is correct */}
+        <motion.p
+          key={energyStateLabel}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-xs font-black mt-1 uppercase tracking-widest"
+          style={{
+            color: energy === null ? "#64748B"
+              : energy <= 2 ? "#f87171"
+              : energy <= 4 ? "#fbbf24"
+              : energy <= 6 ? "#2dd4bf"
+              : energy <= 8 ? "#34d399"
+              : "#14b8a6"
+          }}
+        >
+          {energyStateLabel}
+        </motion.p>
+
+        {/* Slider Track */}
         <div className="w-full max-w-xs px-2 pt-4 pb-2" dir="ltr">
           <div className="relative">
-            {/* Background track */}
             <div 
               className="h-3 rounded-full overflow-hidden"
               style={{ background: "rgba(255,255,255,0.06)" }}
             >
-              {/* Active fill */}
               <motion.div
                 className="h-full rounded-full"
                 style={{
@@ -124,7 +121,6 @@ export function Step1View({
               />
             </div>
 
-            {/* Range Input — invisible but correctly directed */}
             <input
               type="range"
               min={0}
@@ -137,16 +133,11 @@ export function Step1View({
                 setEnergyValue(val);
               }}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 m-0 p-0"
-              style={{ top: "-6px", height: "24px" }}
+              style={{ top: "-6px", height: "32px" }}
               tabIndex={0}
-              aria-label="مستوى الطاقة"
-              aria-valuemin={0}
-              aria-valuemax={10}
-              aria-valuenow={energy ?? 0}
-              aria-valuetext={energyStateLabel}
+              aria-label="طاقتك دلوقتي"
             />
 
-            {/* Thumb indicator — visible circle on the track */}
             <motion.div
               className="absolute top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-2 border-white z-[5] pointer-events-none"
               style={{
@@ -164,14 +155,13 @@ export function Step1View({
             />
           </div>
 
-          {/* Anchor Labels */}
           <div className="flex justify-between mt-3 px-0.5">
             {[
-              { val: 0, label: "مرهق" },
-              { val: 3, label: "قليلة" },
-              { val: 5, label: "متوسطة" },
-              { val: 7, label: "عالية" },
-              { val: 10, label: "مشحون" },
+              { val: 0, label: "واقع" },
+              { val: 3, label: "هابط" },
+              { val: 5, label: "مستقر" },
+              { val: 8, label: "فايق" },
+              { val: 10, label: "وحش" },
             ].map((anchor) => (
               <button
                 key={anchor.val}
@@ -193,11 +183,11 @@ export function Step1View({
 
       {/* 2. Mood Picker */}
       <div className="flex flex-col gap-3">
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-55 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--soft-teal)]/30 animate-pulse" />
-          إزاي حاسس دلوقتي؟
+        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+          مودك إيه دلوقتي؟
         </label>
-        <div className="grid grid-cols-4 gap-2.5 p-3 rounded-3xl bg-white/[0.03] border border-white/5">
+        <div className="grid grid-cols-4 gap-2.5 p-3 rounded-3xl" style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}>
           {MOODS.map((m) => {
             const isSelected = mood === m.id;
             const mStyle = MOOD_COSMIC[m.id];
@@ -212,7 +202,7 @@ export function Step1View({
                 <span className="text-2xl" style={{ filter: isSelected ? 'none' : 'grayscale(1) opacity(0.3)' }}>
                   {m.emoji}
                 </span>
-                <span className={`text-[8px] font-black whitespace-nowrap ${isSelected ? 'text-white' : 'text-slate-500'}`}>
+                <span className={`text-[9px] font-bold whitespace-nowrap ${isSelected ? 'opacity-100' : 'opacity-40'}`} style={{ color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
                   {m.label}
                 </span>
               </button>
@@ -223,9 +213,9 @@ export function Step1View({
 
       {/* 3. Focus Picker */}
       <div className="flex flex-col gap-3">
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-55 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-          عايز تركّز على إيه؟
+        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          ناوي تركز على إيه؟
         </label>
         <div className="grid grid-cols-2 gap-3 pb-2">
           {FOCUS_OPTIONS.map((f) => {
@@ -239,9 +229,9 @@ export function Step1View({
                 onClick={() => setFocusValue(f.id)}
                 className="relative flex flex-col items-center justify-center p-4 rounded-2xl border text-[10px] font-black transition-all"
                 style={{
-                  background: isSelected ? `${fStyle.bg}44` : 'rgba(255,255,255,0.02)',
-                  borderColor: isSelected ? fStyle.border : 'rgba(255,255,255,0.06)',
-                  color: isSelected ? 'white' : 'rgba(255,255,255,0.3)',
+                  background: isSelected ? `${fStyle.bg}44` : 'var(--glass-bg)',
+                  borderColor: isSelected ? fStyle.border : 'var(--glass-border)',
+                  color: isSelected ? 'var(--text-primary)' : 'var(--text-muted)',
                 }}
               >
                 {isSelected && (
@@ -259,9 +249,9 @@ export function Step1View({
 
       {/* 3.5. Topics */}
       <div className="flex flex-col gap-3">
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-55 flex items-center gap-2">
+        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-          إيه اللي مشغّلك؟ (اختياري)
+          إيه اللي في دماغك؟ (اختياري)
         </label>
         <div className="flex flex-wrap gap-2 pb-2">
           {TOPIC_OPTIONS.map((t) => {
@@ -277,9 +267,9 @@ export function Step1View({
                 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all"
                 style={{
-                  background: isSelected ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255,255,255,0.02)',
-                  borderColor: isSelected ? 'rgba(99, 102, 241, 0.4)' : 'rgba(255,255,255,0.06)',
-                  color: isSelected ? '#818cf8' : 'rgba(255,255,255,0.4)',
+                  background: isSelected ? 'rgba(99, 102, 241, 0.15)' : 'var(--glass-bg)',
+                  borderColor: isSelected ? 'rgba(99, 102, 241, 0.4)' : 'var(--glass-border)',
+                  color: isSelected ? '#818cf8' : 'var(--text-muted)',
                 }}
               >
                 <Tag className="w-3 h-3" />
@@ -293,8 +283,8 @@ export function Step1View({
       {/* 4. Notes */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-55">
-            لو حابب تشرح أكتر
+          <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
+            لو حبب تفتح قلبك وتفضفض
           </label>
           <VoiceInput 
             onTranscript={(text) => {
@@ -306,8 +296,14 @@ export function Step1View({
           ref={notesRef} 
           value={notes} 
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="اكتب ملاحظة مختصرة..."
-          className="w-full h-24 p-4 rounded-2xl bg-white/[0.03] border border-white/5 text-sm text-white focus:outline-none focus:border-white/10 resize-none transition-all placeholder:text-white/10"
+          placeholder="اكتب اللي في بالك هنا.. فضفض براحتك."
+          className="w-full h-24 p-4 rounded-2xl outline-none transition-all resize-none shadow-inner"
+          style={{
+            background: "var(--glass-bg)",
+            border: "1px solid var(--glass-border)",
+            color: "var(--text-primary)",
+            fontFamily: "Tajawal, sans-serif"
+          }}
         />
       </div>
     </motion.div>

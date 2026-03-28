@@ -5,7 +5,7 @@ import { hasRecordedOfferConversion, recordEmotionalPricingEvent } from "./emoti
  * Subscription Manager — مدير الاشتراكات
  * =========================================
  * يدير مستويات الاشتراك وحدود الاستخدام.
- * الآن: Local-only (بدون Stripe). قابل للتوسع لاحقاً.
+ * الآن: تفعيل محلي/يدوي فقط. قابل للتوسع لاحقاً.
  */
 
 const SUB_KEY = "dawayir-subscription";
@@ -173,7 +173,7 @@ export function isPaidUser(): boolean {
     return getCurrentTier() !== "basic";
 }
 
-/** تفعيل اشتراك (للاختبار — سيُستبدل بـ Stripe webhook) */
+/** تفعيل اشتراك (للاختبار أو التفعيل اليدوي) */
 export function activateSubscription(tier: SubscriptionTier, durationDays: number): void {
     const sub = loadSubscription();
     sub.tier = tier;

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from "react";
-import { isPhaseOneUserFlow, isUserMode } from "../../config/appEnv";
+import { isPhaseOneUserFlow, isUserMode, isRevenueMode } from "../../config/appEnv";
 import {
   getHash,
   getSearch,
@@ -46,7 +46,11 @@ function hasOAuthCallbackParams(): boolean {
   );
 }
 
-export function AppExperienceShell() {
+interface AppExperienceShellProps {
+  onExitToLanding?: () => void;
+}
+
+export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps) {
   const {
     screen,
     setScreen,
@@ -91,8 +95,66 @@ export function AppExperienceShell() {
     setTheme,
     snoozedUntil,
     logPulse,
-    snoozeNotifications
+    snoozeNotifications,
+    setAuthIntent
   } = useAppShellBootstrapState();
+
+  // ── CONSUME LANDING INTENT (Cross-Shell Navigation) ──
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    
+    const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
+    const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
+    
+    const action = window.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
+    if (!action) return;
+
+    // Clear intent immediately after reading
+    window.sessionStorage.removeItem(APP_BOOT_ACTION_KEY);
+
+    if (action === "start_recovery") {
+      // If "Sign In" was clicked on landing, show the auth modal
+      setAuthIntent({ kind: "login", createdAt: Date.now() });
+      setShowAuthModal(true);
+    } else if (action.startsWith(APP_SCREEN_BOOT_ACTION_PREFIX)) {
+      const targetScreen = action.replace(APP_SCREEN_BOOT_ACTION_PREFIX, "");
+      // Navigate to the requested screen (e.g., tools, insights)
+      setScreen(targetScreen as any);
+    }
+  }, [setScreen, setShowAuthModal, setAuthIntent]);
+
+  // ── EXIT TO LANDING ──
+  useEffect(() => {
+    if (screen === "landing" && onExitToLanding) {
+      onExitToLanding();
+    }
+  }, [screen, onExitToLanding]);
+
+  // REVENUE MODE REDIRECTION: Force goal selection for new users in product mode
+  // 2. Goal Guard: In revenue mode, if we are NOT on a special landing/meta screen but don't have a gaol, force goal pick.
+  useEffect(() => {
+    // Whitelist screens that don't REQUIRE a goal to be visible
+    const isWhitelisted = 
+      screen === "landing" || 
+      screen === "goal" || 
+      screen === "tools" || 
+      screen === "insights" || 
+      screen === "stories" || 
+      screen === "about" || 
+      screen === "quizzes" || 
+      screen === "behavioral-analysis" || 
+      screen === "resources" || 
+      screen === "settings";
+
+    if (
+      isRevenueMode && 
+      !isWhitelisted &&
+      !goalId && 
+      !storedGoalId
+    ) {
+      void setScreen("goal");
+    }
+  }, [screen, goalId, storedGoalId, setScreen]);
 
   const {
     adminPrompt,
@@ -129,6 +191,7 @@ export function AppExperienceShell() {
     setScreen,
     setLockedFeature
   });
+
   const {
     activeBroadcast,
     handlePublicBroadcast,
@@ -149,6 +212,7 @@ export function AppExperienceShell() {
     setScreen,
     setLockedFeature
   });
+
   const {
     openDefaultGoalMap,
     goToGoals,
@@ -176,6 +240,7 @@ export function AppExperienceShell() {
     setLockedFeature,
     skipNextPulseCheck
   });
+
   const {
     postNoiseSessionMessage,
     postBreathingMessage,
@@ -251,11 +316,11 @@ export function AppExperienceShell() {
       setShowPulseCheck
     }
   });
+
   const {
     openCocoonModal,
     openRegularPulseCheck,
-    isLowPulseCocoonSuppressed,
-    openRegularPulseCheck
+    isLowPulseCocoonSuppressed
   } = useAppPulseSanctuaryFlow({
     goalId,
     isLandingScreen,
@@ -290,6 +355,7 @@ export function AppExperienceShell() {
     showBreathingSessionToast,
     skipNextPulseCheck
   });
+
   const {
     activeIntervention,
     clearActiveIntervention,
@@ -309,6 +375,7 @@ export function AppExperienceShell() {
     setSelectedNodeId,
     setShowBreathing
   });
+
   const {
     presentMirrorInsight
   } = useAppMindSignals({
@@ -320,6 +387,7 @@ export function AppExperienceShell() {
     closeOverlay: closeAppOverlay,
     openCocoonModal
   });
+
   useAppBiometricCrisisMonitor({
     screen,
     showCocoon,

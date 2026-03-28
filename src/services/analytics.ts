@@ -259,6 +259,10 @@ export function trackEvent(
     };
 
     safeGetSession().then((session) => {
+      if (!session) {
+        return; // GUARD: If no session, we cannot track routing events in Supabase due to RLS.
+      }
+      
       supabase!
         .from("routing_events")
         .insert({
@@ -275,7 +279,8 @@ export function trackEvent(
         .then(({ error }) => {
           if (error && !isSupabaseAbortError(error)) {
             // RLS or permission errors → disable for rest of session to stop console spam
-            if (error.code === "42501" || error.code === "42P01") {
+            const status = (error as any).status;
+            if (error.code === "42501" || error.code === "42P01" || status === 401) {
               supabaseTrackingEnabled = false;
             }
             if (runtimeEnv.isDev) {

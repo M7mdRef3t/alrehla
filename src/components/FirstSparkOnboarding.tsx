@@ -114,8 +114,12 @@ const StageChaos: FC<{ onNext: () => void }> = memo(({ onNext }) => {
       <div className="relative w-64 h-64 flex items-center justify-center mb-6">
         {/* The User (Center) - CSS animation instead of Framer Motion repeat:Infinity */}
         <div
-          className="w-4 h-4 bg-white rounded-full z-10 shadow-[0_0_20px_rgba(255,255,255,0.5)]"
-          style={{ animation: "fso-pulse-dot 2s ease-in-out infinite" }}
+          className="w-4 h-4 rounded-full z-10"
+          style={{ 
+            animation: "fso-pulse-dot 2s ease-in-out infinite",
+            background: "var(--text-primary)",
+            boxShadow: "0 0 20px var(--soft-teal)"
+          }}
         />
 
         {/* Chaotic Dots - pure CSS animations, zero JS overhead */}
@@ -143,10 +147,10 @@ const StageChaos: FC<{ onNext: () => void }> = memo(({ onNext }) => {
 
       {/* Copy */}
       <div className="text-center px-6 max-w-sm z-10 pb-6">
-        <h2 className="text-xl font-bold text-white mb-3">
+        <h2 className="text-xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>
           حاسس إن طاقتك بتخلص؟
         </h2>
-        <p className="text-sm text-slate-400 mb-10 leading-relaxed">
+        <p className="text-sm mb-10 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
           ناس كتير حواليك بتسحب منك من غير ما تحس.. المشكلة مش فيك — المشكلة إنك ما حطيتش <span className="text-teal-400 font-bold">&quot;مسافة&quot;</span>.
         </p>
 
@@ -187,7 +191,7 @@ const StageOrder: FC<{ onNext: () => void }> = memo(({ onNext }) => {
         ))}
 
         {/* User */}
-        <div className="w-3 h-3 bg-white rounded-full z-10" />
+        <div className="w-3 h-3 rounded-full z-10" style={{ background: "var(--text-primary)" }} />
 
         {/* Dots aligning - enter-only animation (not infinite) */}
         <motion.div
@@ -212,10 +216,10 @@ const StageOrder: FC<{ onNext: () => void }> = memo(({ onNext }) => {
 
       {/* Copy */}
       <div className="text-center px-6 max-w-sm z-10 pb-6">
-        <h2 className="text-xl font-bold text-white mb-3">
+        <h2 className="text-xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>
           هنرتب الناس في حياتك
         </h2>
-        <p className="text-sm text-slate-400 mb-10 leading-relaxed">
+        <p className="text-sm mb-10 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
           كل حد ليه مكان.. يا إما <span className="text-emerald-400">سند ليك</span>، يا <span className="text-amber-400">محتاج مسافة</span>، يا <span className="text-rose-400">بيسحب طاقتك</span>.
         </p>
 
@@ -263,18 +267,18 @@ const StageValue: FC<{ onNext: () => void }> = memo(({ onNext }) => {
           </div>
           <div className="text-right flex-1">
             <p className="text-[10px] text-teal-500 font-bold uppercase tracking-wider mb-0.5">نظام التوجيه</p>
-            <p className="text-xs text-slate-200 font-medium">لاحظنا علاقة مرهقة.. جاهزين نساعدك تتعامل معاها.</p>
+            <p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>لاحظنا علاقة مرهقة.. جاهزين نساعدك تتعامل معاها.</p>
           </div>
         </motion.div>
       </div>
 
       {/* Copy */}
       <div className="text-center px-6 max-w-sm z-10 pb-6">
-        <h2 className="text-xl font-bold text-white mb-3">
+        <h2 className="text-xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>
           مش بس خريطة.. دي خطة حماية
         </h2>
-        <p className="text-sm text-slate-400 mb-10 leading-relaxed">
-          هنساعدك تفهم كل علاقة وتاخد <span className="text-white font-bold">&quot;خطوات عملية&quot;</span> تحمي بيها نفسك وطاقتك.
+        <p className="text-sm mb-10 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+          هنساعدك تفهم كل علاقة وتاخد <span className="font-bold" style={{ color: "var(--text-primary)" }}>&quot;خطوات عملية&quot;</span> تحمي بيها نفسك وطاقتك.
         </p>
 
         <button

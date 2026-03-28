@@ -2,10 +2,9 @@
 
 import React, { useMemo, useState } from "react";
 import { Check, Lock, Shield, Sparkles, Target } from "lucide-react";
-import { consumeEmotionalOffer, getEmotionalOffer } from "../../services/subscriptionManager";
-import { stripeService } from "../../services/stripeIntegration";
-import { supabase } from "../../services/supabaseClient";
 import { signInWithGoogleAtPath } from "../../services/authService";
+import { consumeEmotionalOffer, getEmotionalOffer } from "../../services/subscriptionManager";
+import { supabase } from "../../services/supabaseClient";
 
 export default function PricingPage() {
   const [isLoading, setIsLoading] = useState<"premium" | "coach" | null>(null);
@@ -24,35 +23,20 @@ export default function PricingPage() {
     const {
       data: { session }
     } = await supabase.auth.getSession();
-    const user = session?.user;
 
-    if (!user) {
+    if (!session?.user) {
       await signInWithGoogleAtPath("/pricing");
+      setIsLoading(null);
       return;
     }
 
-    try {
-      const data = await stripeService.createCheckoutSession({
-        userId: user.id,
-        tier
-      });
-
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error("تعذر إنشاء رابط الدفع");
-      }
-    } catch (error) {
-      console.error("Payment error:", error);
-      alert("حدث خطأ أثناء فتح صفحة الدفع. حاول مرة أخرى.");
-      setIsLoading(null);
-    }
+    window.location.href = `/checkout?plan=${tier}`;
   };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] px-4 py-20 font-sans" dir="rtl">
       <div className="mx-auto flex w-full max-w-5xl flex-col items-center">
-        {emotionalOffer && !offerConsumed && (
+        {emotionalOffer && !offerConsumed ? (
           <div className="mb-8 w-full rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-right shadow-sm">
             <p className="text-sm font-bold leading-tight text-emerald-800">{emotionalOffer.title}</p>
             <p className="mt-1 text-sm leading-[1.7] text-emerald-700">{emotionalOffer.message}</p>
@@ -67,18 +51,18 @@ export default function PricingPage() {
               تم الاستلام
             </button>
           </div>
-        )}
+        ) : null}
 
         <div className="mb-14 max-w-2xl text-center">
           <div className="mb-6 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--soft-teal)] bg-[var(--soft-teal)]/10 px-3 py-1.5 text-sm font-semibold text-[var(--soft-teal)]">
             <Sparkles className="h-4 w-4" />
-            توقف عن التفكير المفرط، ابدأ في الإنجاز
+            اختار المسار المناسب وابدأ التفعيل
           </div>
           <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight text-gray-900 md:text-5xl">
-             استثمر في وضوح عقلك
+            باقات واضحة من غير فواصل وهمية
           </h1>
           <p className="text-lg leading-[1.8] text-gray-600">
-            اختار البوصلة اللي تناسبك ووفر طاقتك الذهنية للنجاح.. 9 دولار فقط تفصلك عن شلل التفكير.
+            الدفع الحالي يدوي بالكامل. تختار الباقة، تنتقل لصفحة التفعيل، وتكمل التحويل وترسل الإثبات هناك.
           </p>
         </div>
 
@@ -88,9 +72,9 @@ export default function PricingPage() {
               <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
                 <Shield className="h-6 w-6" />
               </div>
-              <h2 className="mb-2 text-2xl font-bold leading-tight text-gray-900">طوق النجاة (خطة شخصية)</h2>
+              <h2 className="mb-2 text-2xl font-bold leading-tight text-gray-900">الخطة الشخصية</h2>
               <p className="h-10 text-sm leading-[1.8] text-gray-500">
-                افهم نفسك ومشاكلك، اتخذ قرارك اليوم بوضوح تام، ووفر طاقتك للمستقبل.
+                لفرد عايز وضوح أكتر، متابعة أحسن، ومسار شخصي داخل دواير.
               </p>
             </div>
 
@@ -99,26 +83,26 @@ export default function PricingPage() {
                 <span className="text-4xl font-black text-gray-900">9 دولار</span>
                 <span className="mb-1 font-medium text-gray-500">/ شهريًا</span>
               </div>
-              <div className="text-sm text-gray-400">يمكن الإلغاء في أي وقت</div>
+              <div className="text-sm text-gray-400">التفعيل والمتابعة يدويين حاليًا</div>
             </div>
 
             <ul className="mb-10 flex-1 space-y-4 text-gray-700">
               <li className="flex items-start gap-3">
                 <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--soft-teal)]" />
                 <span className="leading-relaxed">
-                  <strong>خطة يومية واضحة</strong> تخرجك من عشوائية التفكير
+                  <strong>خريطة أوضح للعلاقات</strong> بدل التخمين واللف
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--soft-teal)]" />
                 <span className="leading-relaxed">
-                  <strong>توقع المستقبل</strong> لتتجنب الانهيارات والاستنزاف
+                  <strong>متابعة منتظمة</strong> للحالة والتقدم
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--soft-teal)]" />
                 <span className="leading-relaxed">
-                  <strong>تحليل ذكي عميق</strong> يفهمك أفضل من أي شخص
+                  <strong>دخول أسرع للمميزات الأساسية</strong>
                 </span>
               </li>
             </ul>
@@ -128,12 +112,12 @@ export default function PricingPage() {
               disabled={isLoading === "premium"}
               className="flex w-full items-center justify-center rounded-xl bg-gray-900 py-4 text-lg font-bold text-white shadow-lg shadow-gray-900/20 transition-colors hover:bg-black"
             >
-              {isLoading === "premium" ? "جاري تحويلك للدفع..." : "ابدأ الخطة الشخصية"}
+              {isLoading === "premium" ? "جاري فتح صفحة التفعيل..." : "ابدأ الخطة الشخصية"}
             </button>
           </div>
 
           <div className="relative flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--soft-teal)] via-[var(--soft-teal)] to-[var(--soft-teal)] p-8 shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--soft-teal)] md:p-10">
-            <div className="absolute -translate-y-1/2 translate-x-1/2 rounded-full bg-white opacity-5 blur-3xl right-0 top-0 h-64 w-64" />
+            <div className="absolute right-0 top-0 h-64 w-64 -translate-y-1/2 translate-x-1/2 rounded-full bg-white opacity-5 blur-3xl" />
 
             <div className="absolute left-6 top-6 rounded-full border border-[var(--soft-teal)] bg-[var(--soft-teal)]/30 px-3 py-1 text-xs font-bold text-[var(--soft-teal)] backdrop-blur-sm">
               للمدربين والمعالجين
@@ -143,9 +127,9 @@ export default function PricingPage() {
               <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--soft-teal)] bg-[var(--soft-teal)]/20 text-[var(--soft-teal)] backdrop-blur-sm">
                 <Target className="h-6 w-6" />
               </div>
-              <h2 className="mb-2 text-2xl font-bold leading-tight text-white">رخصة المدرب (العيادة)</h2>
+              <h2 className="mb-2 text-2xl font-bold leading-tight text-white">خطة العيادة</h2>
               <p className="h-10 text-sm leading-[1.8] text-[var(--soft-teal)]">
-                إدارة عملائك ومتابعة تقدمهم عبر لوحة واضحة ومتكاملة.
+                للمتابعة المنظمة، وإدارة عدد من الحالات، وتوسيع الاستخدام بشكل أنضف.
               </p>
             </div>
 
@@ -163,21 +147,21 @@ export default function PricingPage() {
                   <Check className="h-3 w-3 text-white" />
                 </div>
                 <span className="leading-relaxed">
-                  <strong>لوحة متابعة شاملة:</strong> فرز واضح للحالات
+                  <strong>لوحة متابعة أوضح</strong> للحالات والاشتراكات
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <div className="mt-0.5 shrink-0 rounded-full bg-[var(--soft-teal)]/30 p-1">
                   <Check className="h-3 w-3 text-white" />
                 </div>
-                <span className="leading-relaxed">متابعة لحظية لخرائط العملاء (بموافقتهم)</span>
+                <span className="leading-relaxed">تنظيم أفضل للتوسع والإدارة</span>
               </li>
               <li className="flex items-start gap-3">
                 <div className="mt-0.5 shrink-0 rounded-full bg-[var(--soft-teal)]/30 p-1">
                   <Check className="h-3 w-3 text-white" />
                 </div>
                 <span className="leading-relaxed">
-                  <strong>نظام مقاعد مرن:</strong> قابل للتوسع حسب احتياجك
+                  <strong>مسار تفعيل يدوي مباشر</strong> من غير بوابات وسيطة
                 </span>
               </li>
             </ul>
@@ -187,7 +171,7 @@ export default function PricingPage() {
               disabled={isLoading === "coach"}
               className="relative z-10 flex w-full items-center justify-center rounded-xl bg-white py-4 text-lg font-bold text-[var(--soft-teal)] shadow-lg shadow-white/10 transition-colors hover:bg-[var(--soft-teal)]/10"
             >
-              {isLoading === "coach" ? "جاري تحويلك للدفع..." : "ابدأ خطة العيادة"}
+              {isLoading === "coach" ? "جاري فتح صفحة التفعيل..." : "ابدأ خطة العيادة"}
             </button>
           </div>
         </div>
@@ -195,10 +179,10 @@ export default function PricingPage() {
         <div className="mt-14 flex flex-wrap items-center justify-center gap-4 text-center text-sm text-gray-500">
           <div className="flex items-center gap-2">
             <Lock className="h-4 w-4" />
-            مدفوعات آمنة عبر Stripe
+            الدفع الحالي يدوي
           </div>
           <span className="h-1 w-1 rounded-full bg-gray-300" />
-          <div>إلغاء الاشتراك في أي وقت</div>
+          <div>التفعيل يتم بعد مراجعة إثبات الدفع</div>
         </div>
       </div>
     </div>

@@ -52,16 +52,16 @@ export const EnergyGauge = memo(function EnergyGauge({
     <svg viewBox="0 0 200 120" className="w-full h-full overflow-visible">
       <defs>
         <linearGradient id="needleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
-          <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.8" />
+          <stop offset="0%" stopColor="#2dd4bf" stopOpacity="0.4" />
+          <stop offset="50%" stopColor="#34d399" stopOpacity="0.8" />
           <stop offset="100%" stopColor="#fbbf24" stopOpacity="1" />
         </linearGradient>
         <radialGradient id="pivotGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+          <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.4" />
           <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
         </radialGradient>
-        <filter id="needleGlow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
+        <filter id="needleGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
       </defs>
@@ -74,33 +74,33 @@ export const EnergyGauge = memo(function EnergyGauge({
           y1={tick.y1}
           x2={tick.x2}
           y2={tick.y2}
-          stroke={tick.isActive ? "rgba(251,191,36,0.6)" : "rgba(255,255,255,0.1)"}
-          strokeWidth="2"
+          stroke={tick.isActive ? "rgba(52, 211, 153, 0.7)" : "rgba(255,255,255,0.08)"}
+          strokeWidth={tick.isActive ? "2.5" : "1.5"}
           strokeLinecap="round"
         />
       ))}
 
       {/* Background Arc */}
       <path
-        d={`M 10,${ARC_CENTER_Y} A ${ARC_CENTER_X - 10},${ARC_CENTER_X - 10} 0 0,1 190,${ARC_CENTER_Y}`}
+        d={`M 15,${ARC_CENTER_Y} A ${ARC_CENTER_X - 15},${ARC_CENTER_X - 15} 0 0,1 185,${ARC_CENTER_Y}`}
         fill="none"
-        stroke={COLORS.arc.background}
-        strokeWidth="12"
+        stroke="rgba(255, 255, 255, 0.04)"
+        strokeWidth="10"
         strokeLinecap="round"
       />
 
       {/* Active Filled Arc */}
       <motion.path
-        d={`M 10,${ARC_CENTER_Y} A ${ARC_CENTER_X - 10},${ARC_CENTER_X - 10} 0 0,1 190,${ARC_CENTER_Y}`}
+        d={`M 15,${ARC_CENTER_Y} A ${ARC_CENTER_X - 15},${ARC_CENTER_X - 15} 0 0,1 185,${ARC_CENTER_Y}`}
         fill="none"
-        stroke={COLORS.arc.active}
-        strokeWidth="12"
+        stroke="url(#needleGrad)"
+        strokeWidth="10"
         strokeLinecap="round"
         strokeDasharray={ARC_STROKE_DASHARRAY}
         initial={{ strokeDashoffset: ARC_STROKE_DASHARRAY }}
         animate={{ strokeDashoffset: ARC_STROKE_DASHARRAY * (1 - energyValue / 10) }}
         transition={TRANSITION_TWEEN}
-        style={{ filter: energyValue > 7 ? `drop-shadow(0 0 8px ${COLORS.needle.glow})` : "none" }}
+        style={{ filter: energyValue > 6 ? `drop-shadow(0 0 12px rgba(52, 211, 153, 0.4))` : "none" }}
       />
 
       {/* Center Pivot Glow */}

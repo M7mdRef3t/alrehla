@@ -29,7 +29,8 @@ import {
   Scale,
   Crosshair,
   ScrollText,
-  Smartphone
+  Smartphone,
+  Zap
 } from "lucide-react";
 import { useJourneyState } from "../state/journeyState";
 import { useNotificationState } from "../state/notificationState";
@@ -53,7 +54,7 @@ import { getEffectiveRoleFromState, useAuthState } from "../state/authState";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "../utils/featureFlags";
 import type { FeatureFlagKey } from "../config/features";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
-import { isUserMode } from "../config/appEnv";
+import { isUserMode, isRevenueMode } from "../config/appEnv";
 import { runtimeEnv } from "../config/runtimeEnv";
 import { AwarenessSkeleton } from "./AwarenessSkeleton";
 import { assignUrl, getHref, pushUrl } from "../services/navigation";
@@ -373,7 +374,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 الترسانة
               </button>
             )}
-            {onOpenJourneyTimeline && (
+            {onOpenJourneyTimeline && !isRevenueMode && (
               <button
                 type="button"
                 onClick={() => onOpenJourneyTimeline()}
@@ -402,17 +403,19 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               <BrainCircuit className="w-5 h-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
               بوابة المعالجين
             </button>
-            <button
-              onClick={() => {
-                setShowGlobalMissions(true);
-              }}
-              className="flex items-center w-full gap-3 px-4 py-3 text-sm font-bold text-amber-300 transition-colors rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 mb-2 relative group"
-            >
-              <div className="absolute -inset-0 bg-amber-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <Globe className="w-5 h-5 relative z-10" />
-              <span className="relative z-10">تحديات الوعي الجماعي</span>
-              <span className="relative z-10 mr-auto flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] text-slate-900 font-black">!</span>
-            </button>
+            {!isRevenueMode && (
+              <button
+                onClick={() => {
+                  setShowGlobalMissions(true);
+                }}
+                className="flex items-center w-full gap-3 px-4 py-3 text-sm font-bold text-amber-300 transition-colors rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 mb-2 relative group"
+              >
+                <div className="absolute -inset-0 bg-amber-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <Globe className="w-5 h-5 relative z-10" />
+                <span className="relative z-10">تحديات الوعي الجماعي</span>
+                <span className="relative z-10 mr-auto flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] text-slate-900 font-black">!</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => onOpenDawayir?.()}
@@ -432,18 +435,20 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 )}
               </span>
             </button>
-            <button
-              type="button"
-              onClick={() => setShowRadarShield(true)}
-              className="w-full flex items-center gap-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-all text-right shrink-0 whitespace-nowrap"
-              title="رادار المسافة"
-            >
-              <Radar className="w-5 h-5 shrink-0" />
-              <span className="flex flex-col items-start leading-tight">
-                <span>رادار المسافة</span>
-                <span className="text-[10px] opacity-60 font-normal">تحليل القرب والبعد</span>
-              </span>
-            </button>
+            {availableFeatures.dawayir_map && (
+              <button
+                type="button"
+                onClick={() => setShowRadarShield(true)}
+                className="w-full flex items-center gap-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-all text-right shrink-0 whitespace-nowrap"
+                title="رادار المسافة"
+              >
+                <Radar className="w-5 h-5 shrink-0" />
+                <span className="flex flex-col items-start leading-tight">
+                  <span>رادار المسافة</span>
+                  <span className="text-[10px] opacity-60 font-normal">تحليل القرب والبعد</span>
+                </span>
+              </button>
+            )}
             {activeMissions.length > 0 && (
               <div className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 text-right">
                 <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
@@ -621,15 +626,17 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               <ArrowLeft className="w-5 h-5 shrink-0" />
               انطلاق للمهمة
             </button>
-            <button
-              type="button"
-              onClick={onOpenGuidedJourney}
-              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap"
-              title="الرحلة الموجهة خطوة بخطوة"
-            >
-              <Layers className="w-5 h-5 shrink-0" />
-              الرحلة الموجهة
-            </button>
+            {!isRevenueMode && (
+              <button
+                type="button"
+                onClick={onOpenGuidedJourney}
+                className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap"
+                title="الرحلة الموجهة خطوة بخطوة"
+              >
+                <Layers className="w-5 h-5 shrink-0" />
+                الرحلة الموجهة
+              </button>
+            )}
             <button
               type="button"
               onClick={onOpenBaseline}
@@ -650,15 +657,37 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 الإشعارات
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => setShowTrackingDashboard(true)}
-              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap"
-              title="رادار المتابعة — مؤشرات التقدم"
-            >
-              <BarChart3 className="w-5 h-5 shrink-0" />
-              رادار المتابعة
-            </button>
+            {!isRevenueMode && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowTrackingDashboard(true)}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="رادار المتابعة — مؤشرات التقدم"
+                >
+                  <BarChart3 className="w-5 h-5 shrink-0" />
+                  رادار المتابعة
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDataManagement(true)}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="تصدير/استيراد البيانات"
+                >
+                  <Database className="w-5 h-5 shrink-0" />
+                  البيانات
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowShareStats(true)}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:text-purple-700 dark:hover:text-purple-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="شارك إحصائياتك"
+                >
+                  <Share2 className="w-5 h-5 shrink-0" />
+                  شارك
+                </button>
+              </>
+            )}
             <button
               type="button"
               onClick={() => openWithFeatureGate("global_atlas", () => setShowAtlasDashboard(true))}
@@ -670,16 +699,6 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setShowDataManagement(true)}
-              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-all text-right shrink-0 whitespace-nowrap"
-              title="تصدير/استيراد البيانات"
-            >
-              <Database className="w-5 h-5 shrink-0" />
-              البيانات
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowShareStats(true)}
               className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:text-purple-700 dark:hover:text-purple-300 transition-all text-right shrink-0 whitespace-nowrap"
               title="شارك إحصائياتك"
             >
@@ -698,15 +717,17 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               <BookOpen className="w-5 h-5 shrink-0" />
               المكتبة
             </button>
-            <button
-              type="button"
-              onClick={() => setShowSymptomsOverview(true)}
-              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 px-4 py-3 text-sm font-semibold hover:border-purple-400 hover:bg-purple-50 hover:text-purple-700 transition-all text-right shrink-0 whitespace-nowrap"
-              title="شوف الأعراض لكل علاقة"
-            >
-              <ClipboardList className="w-5 h-5 shrink-0" />
-              الأعراض
-            </button>
+            {!isRevenueMode && (
+              <button
+                type="button"
+                onClick={() => setShowSymptomsOverview(true)}
+                className="w-full flex items-center gap-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 px-4 py-3 text-sm font-semibold hover:border-purple-400 hover:bg-purple-50 hover:text-purple-700 transition-all text-right shrink-0 whitespace-nowrap"
+                title="شوف الأعراض لكل علاقة"
+              >
+                <ClipboardList className="w-5 h-5 shrink-0" />
+                الأعراض
+              </button>
+            )}
             <button
               type="button"
               onClick={() => { setInitialRecoveryOptions(null); setShowRecoveryPlan(true); }}
@@ -716,15 +737,17 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               <Target className="w-5 h-5 shrink-0" />
               خطوات الرحلة
             </button>
-            <button
-              type="button"
-              onClick={() => setShowThemeSettings(true)}
-              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right shrink-0 whitespace-nowrap"
-              title="تغيير المظهر"
-            >
-              <Palette className="w-5 h-5 shrink-0" />
-              المظهر
-            </button>
+            {!isRevenueMode && (
+              <button
+                type="button"
+                onClick={() => setShowThemeSettings(true)}
+                className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right shrink-0 whitespace-nowrap"
+                title="تغيير المظهر"
+              >
+                <Palette className="w-5 h-5 shrink-0" />
+                المظهر
+              </button>
+            )}
             {canShowInstallButton && (
               <button
                 type="button"
@@ -763,20 +786,24 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               <Move className="w-5 h-5 shrink-0" />
               تحديد الدائرة يدويًا
             </button>
-            <button
-              type="button"
-              onClick={() => setShowAchievements(true)}
-              className="w-full flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all text-right shrink-0 whitespace-nowrap"
-              title="إنجازاتك"
-            >
-              <Trophy className="w-5 h-5 shrink-0" />
-              إنجازاتك
-              {unlockedCount > 0 && (
-                <span className="mr-auto text-xs font-bold bg-amber-200 dark:bg-amber-700 text-amber-900 dark:text-amber-100 rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1.5">
-                  {unlockedCount}
-                </span>
-              )}
-            </button>
+            {!isRevenueMode && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowAchievements(true)}
+                  className="w-full flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="إنجازاتك"
+                >
+                  <Trophy className="w-5 h-5 shrink-0" />
+                  إنجازاتك
+                  {unlockedCount > 0 && (
+                    <span className="mr-auto text-xs font-bold bg-amber-200 dark:bg-amber-700 text-amber-900 dark:text-amber-100 rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1.5">
+                      {unlockedCount}
+                    </span>
+                  )}
+                </button>
+              </>
+            )}
 
             {/* فاصل */}
             <div className="border-t border-slate-200 dark:border-slate-700 my-2" />
@@ -807,46 +834,50 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <span className="sr-only">تواصل واتساب</span>
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => setShowNoiseSilencing(true)}
-              className="w-full flex items-center gap-3 rounded-xl bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 px-4 py-3 text-sm font-semibold hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-all text-right shrink-0 whitespace-nowrap"
-              title="الرادار — كشف المسافة"
-            >
-              <Radar className="w-5 h-5 shrink-0" />
-              تفعيل الرادار
-            </button>
+            {!isRevenueMode && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setShowNoiseSilencing(true)}
+                  className="w-full flex items-center gap-3 rounded-xl bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 px-4 py-3 text-sm font-semibold hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="الرادار — كشف المسافة"
+                >
+                  <Radar className="w-5 h-5 shrink-0" />
+                  تفعيل الرادار
+                </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                soundManager.playClick();
-                setShowThoughtSniper(true);
-              }}
-              onMouseEnter={() => soundManager.playHover()}
-              className="w-full flex items-center gap-3 rounded-xl bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-700 px-4 py-3 text-sm font-semibold hover:border-red-400 dark:hover:border-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all text-right shrink-0 whitespace-nowrap"
-              title="قناص الأفكار — اصطياد الأفكار"
-            >
-              <Crosshair className="w-5 h-5 shrink-0" />
-              قناص الأفكار
-            </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundManager.playClick();
+                    setShowThoughtSniper(true);
+                  }}
+                  onMouseEnter={() => soundManager.playHover()}
+                  className="w-full flex items-center gap-3 rounded-xl bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-700 px-4 py-3 text-sm font-semibold hover:border-red-400 dark:hover:border-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="قناص الأفكار — اصطياد الأفكار"
+                >
+                  <Crosshair className="w-5 h-5 shrink-0" />
+                  قناص الأفكار
+                </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                soundManager.playClick();
-                setShowFastingCapsule(true);
-              }}
-              onMouseEnter={() => soundManager.playHover()}
-              className="w-full flex items-center gap-3 rounded-xl bg-slate-100 text-slate-600 border border-slate-300 px-4 py-3 text-sm font-semibold hover:border-teal-500 hover:text-teal-600 hover:bg-white transition-all text-right shrink-0 whitespace-nowrap group"
-              title="كبسولة الصيام"
-            >
-              <Layers className="w-5 h-5 shrink-0 group-hover:text-teal-500 transition-colors" />
-              <span className="flex flex-col items-start leading-tight">
-                <span>كبسولة الصيام (Detox)</span>
-                <span className="text-[10px] opacity-60 font-normal">وضع العزل والضوضاء</span>
-              </span>
-            </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    soundManager.playClick();
+                    setShowFastingCapsule(true);
+                  }}
+                  onMouseEnter={() => soundManager.playHover()}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-100 text-slate-600 border border-slate-300 px-4 py-3 text-sm font-semibold hover:border-teal-500 hover:text-teal-600 hover:bg-white transition-all text-right shrink-0 whitespace-nowrap group"
+                  title="كبسولة الصيام"
+                >
+                  <Layers className="w-5 h-5 shrink-0 group-hover:text-teal-500 transition-colors" />
+                  <span className="flex flex-col items-start leading-tight">
+                    <span>كبسولة الصيام (Detox)</span>
+                    <span className="text-[10px] opacity-60 font-normal">وضع العزل والضوضاء</span>
+                  </span>
+                </button>
+              </>
+            )}
 
             <button
               type="button"
@@ -1023,17 +1054,19 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <ArrowLeft className="w-6 h-6 shrink-0" />
                   <span>ابدأ رحلتك</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onOpenGuidedJourney();
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right"
-                >
-                  <Layers className="w-6 h-6 shrink-0" />
-                  <span>الرحلة الموجهة</span>
-                </button>
+                {!isRevenueMode && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onOpenGuidedJourney();
+                      handleClose();
+                    }}
+                    className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right"
+                  >
+                    <Layers className="w-6 h-6 shrink-0" />
+                    <span>الرحلة الموجهة</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -1082,18 +1115,20 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <BrainCircuit className="w-6 h-6 shrink-0 text-indigo-600 dark:text-indigo-400" />
                   <span>بوابة المعالجين</span>
                 </button>
-                <button
-                  onClick={() => {
-                    setShowGlobalMissions(true);
-                    handleClose();
-                  }}
-                  className="flex items-center w-full gap-3 px-4 py-3 text-sm font-bold text-amber-300 transition-colors rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 mb-2 relative group"
-                >
-                  <div className="absolute -inset-0 bg-amber-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  <Globe className="w-6 h-6 relative z-10" />
-                  <span className="relative z-10">تحديات الوعي الجماعي</span>
-                  <span className="relative z-10 mr-auto flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] text-slate-900 font-black">!</span>
-                </button>
+                {!isRevenueMode && (
+                  <button
+                    onClick={() => {
+                      setShowGlobalMissions(true);
+                      handleClose();
+                    }}
+                    className="flex items-center w-full gap-3 px-4 py-3 text-sm font-bold text-amber-300 transition-colors rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 mb-2 relative group"
+                  >
+                    <div className="absolute -inset-0 bg-amber-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <Globe className="w-6 h-6 relative z-10" />
+                    <span className="relative z-10">تحديات الوعي الجماعي</span>
+                    <span className="relative z-10 mr-auto flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] text-slate-900 font-black">!</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -1115,21 +1150,23 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     )}
                   </span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowRadarShield(true);
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-all text-right"
-                  title="رادار المسافة"
-                >
-                  <Radar className="w-6 h-6 shrink-0" />
-                  <span className="flex flex-col items-start leading-tight">
-                    <span>رادار المسافة</span>
-                    <span className="text-[10px] opacity-60 font-normal">تحليل القرب والبعد</span>
-                  </span>
-                </button>
+                {!isRevenueMode && availableFeatures.dawayir_map && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowRadarShield(true);
+                      handleClose();
+                    }}
+                    className="w-full flex items-center gap-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-all text-right"
+                    title="رادار المسافة"
+                  >
+                    <Radar className="w-6 h-6 shrink-0" />
+                    <span className="flex flex-col items-start leading-tight">
+                      <span>رادار المسافة</span>
+                      <span className="text-[10px] opacity-60 font-normal">تحليل القرب والبعد</span>
+                    </span>
+                  </button>
+                )}
                 {activeMissions.length > 0 && (
                   <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
                     <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
@@ -1309,28 +1346,32 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     <span>الإشعارات</span>
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDataManagement(true);
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-all text-right"
-                >
-                  <Database className="w-6 h-6 shrink-0" />
-                  <span>البيانات</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowShareStats(true);
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:text-purple-700 dark:hover:text-purple-300 transition-all text-right"
-                >
-                  <Share2 className="w-6 h-6 shrink-0" />
-                  <span>شارك</span>
-                </button>
+                {!isRevenueMode && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDataManagement(true);
+                        handleClose();
+                      }}
+                      className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-all text-right"
+                    >
+                      <Database className="w-6 h-6 shrink-0" />
+                      <span>البيانات</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowShareStats(true);
+                        handleClose();
+                      }}
+                      className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:text-purple-700 dark:hover:text-purple-300 transition-all text-right"
+                    >
+                      <Share2 className="w-6 h-6 shrink-0" />
+                      <span>شارك</span>
+                    </button>
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -1343,17 +1384,19 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <BookOpen className="w-6 h-6 shrink-0" />
                   <span>المكتبة</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowSymptomsOverview(true);
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-purple-400 hover:bg-purple-50 hover:text-purple-700 transition-all text-right"
-                >
-                  <ClipboardList className="w-6 h-6 shrink-0" />
-                  <span>الأعراض</span>
-                </button>
+                {!isRevenueMode && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSymptomsOverview(true);
+                      handleClose();
+                    }}
+                    className="w-full flex items-center gap-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-purple-400 hover:bg-purple-50 hover:text-purple-700 transition-all text-right"
+                  >
+                    <ClipboardList className="w-6 h-6 shrink-0" />
+                    <span>الأعراض</span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -1361,22 +1404,77 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     setShowRecoveryPlan(true);
                     handleClose();
                   }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 hover:bg-teal-50 hover:text-teal-700 transition-all text-right"
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right"
                 >
                   <Target className="w-6 h-6 shrink-0" />
                   <span>خطوات الرحلة</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowThemeSettings(true);
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right"
-                >
-                  <Palette className="w-6 h-6 shrink-0" />
-                  <span>المظهر</span>
-                </button>
+                {!isRevenueMode && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openWithFeatureGate("internal_boundaries", () => setShowAdvancedTools(true));
+                        handleClose();
+                      }}
+                      className="w-full flex items-center gap-3 rounded-xl bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-all text-right"
+                    >
+                      <Sparkles className="w-6 h-6 shrink-0" />
+                      <span>أدوات متقدمة</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openWithFeatureGate("internal_boundaries", () => setShowClassicRecovery(true));
+                        handleClose();
+                      }}
+                      className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right"
+                    >
+                      <ClipboardList className="w-6 h-6 shrink-0" />
+                      <span>الخطة الكلاسيكية</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openWithFeatureGate("internal_boundaries", () => setShowManualPlacement(true));
+                        handleClose();
+                      }}
+                      className="w-full flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all text-right"
+                    >
+                      <Move className="w-6 h-6 shrink-0" />
+                      <span>تحديد يدوي</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAchievements(true);
+                        handleClose();
+                      }}
+                      className="w-full flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all text-right"
+                    >
+                      <Trophy className="w-6 h-6 shrink-0" />
+                      <span>إنجازاتك</span>
+                      {unlockedCount > 0 && (
+                        <span className="mr-auto text-xs font-bold bg-amber-200 dark:bg-amber-700 text-amber-900 dark:text-amber-100 rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1.5">
+                          {unlockedCount}
+                        </span>
+                      )}
+                    </button>
+                  </>
+                )}
+                {!isRevenueMode && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowThemeSettings(true);
+                      handleClose();
+                    }}
+                    className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right"
+                  >
+                    <Palette className="w-6 h-6 shrink-0" />
+                    <span>المظهر</span>
+                  </button>
+                )}
                 {canShowInstallButton && (
                   <button
                     type="button"
@@ -1391,66 +1489,19 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     <span>إضافة للشاشة الرئيسية</span>
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    openWithFeatureGate("internal_boundaries", () => setShowAdvancedTools(true));
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-all text-right"
-                >
-                  <Sparkles className="w-6 h-6 shrink-0" />
-                  <span>أدوات متقدمة</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    openWithFeatureGate("internal_boundaries", () => setShowClassicRecovery(true));
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right"
-                >
-                  <ClipboardList className="w-6 h-6 shrink-0" />
-                  <span>الخطة الكلاسيكية</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    openWithFeatureGate("internal_boundaries", () => setShowManualPlacement(true));
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all text-right"
-                >
-                  <Move className="w-6 h-6 shrink-0" />
-                  <span>تحديد الدائرة يدويًا</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAchievements(true);
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-all text-right"
-                >
-                  <Trophy className="w-6 h-6 shrink-0" />
-                  <span>إنجازاتك</span>
-                  {unlockedCount > 0 && (
-                    <span className="mr-auto text-xs font-bold bg-amber-200 dark:bg-amber-700 text-amber-900 dark:text-amber-100 rounded-full min-w-[1.25rem] h-5 flex items-center justify-center px-1.5">
-                      {unlockedCount}
-                    </span>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    openWithFeatureGate("global_atlas", () => setShowAtlasDashboard(true));
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right"
-                >
-                  <Globe className="w-6 h-6 shrink-0" />
-                  <span>لوحة الأطلس</span>
-                </button>
+                {!isRevenueMode && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      openWithFeatureGate("global_atlas", () => setShowAtlasDashboard(true));
+                      handleClose();
+                    }}
+                    className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right"
+                  >
+                    <Globe className="w-6 h-6 shrink-0" />
+                    <span>لوحة الأطلس</span>
+                  </button>
+                )}
 
                 {/* فاصل */}
                 <div className="border-t border-slate-200 dark:border-slate-700 my-2" />
@@ -1481,40 +1532,33 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     <span className="sr-only">تواصل واتساب</span>
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowNoiseSilencing(true);
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-all text-right"
-                >
-                  <MessageCircle className="w-6 h-6 shrink-0" />
-                  <span>تشويش الإشارة</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowShieldSelector(true);
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right"
-                >
-                  <ShieldCheck className="w-6 h-6 shrink-0" />
-                  <span>تفعيل الدروع</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    trackEvent(AnalyticsEvents.BREATHING_USED);
-                    setShowBreathing(true);
-                    handleClose();
-                  }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-all text-right"
-                >
-                  <Wind className="w-6 h-6 shrink-0" />
-                  <span>بروتوكول الهدوء</span>
-                </button>
+                {!isRevenueMode && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowShieldSelector(true);
+                        handleClose();
+                      }}
+                      className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right"
+                    >
+                      <ShieldCheck className="w-6 h-6 shrink-0" />
+                      <span>تفعيل الدروع</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        trackEvent(AnalyticsEvents.BREATHING_USED);
+                        setShowBreathing(true);
+                        handleClose();
+                      }}
+                      className="w-full flex items-center gap-3 rounded-xl bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-all text-right"
+                    >
+                      <Wind className="w-6 h-6 shrink-0" />
+                      <span>بروتوكول الهدوء</span>
+                    </button>
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={() => {

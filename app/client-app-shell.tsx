@@ -67,6 +67,8 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
       case "landing":
         if (typeof window !== "undefined") {
           window.scrollTo({ top: 0, behavior: "smooth" });
+          document.documentElement.scrollTo({ top: 0, behavior: "smooth" });
+          document.body.scrollTo({ top: 0, behavior: "smooth" });
         }
         return;
       case "stories":
@@ -105,7 +107,7 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
       <ErrorBoundary>
         {shouldLoadFullApp ? (
           <Suspense fallback={<AwarenessSkeleton />}>
-            <App />
+            <App onExitToLanding={() => setShouldLoadFullApp(false)} />
           </Suspense>
         ) : (
           <PWAInstallProvider>

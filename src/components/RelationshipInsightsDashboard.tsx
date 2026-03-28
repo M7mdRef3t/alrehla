@@ -275,7 +275,7 @@ export function RelationshipInsightsDashboard({ onBack, onGoToQuizzes }: Relatio
   const isEmpty = ins.active.length === 0;
 
   return (
-    <div dir="rtl" style={{ minHeight: "100vh", background: "#080b15", padding: "0" }}>
+    <div dir="rtl" style={{ minHeight: "100vh", background: "var(--space-void)", padding: "0" }}>
 
       {/* ── Header ── */}
       <div style={{

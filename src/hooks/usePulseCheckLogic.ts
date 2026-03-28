@@ -15,9 +15,8 @@ export function usePulseCheckLogic(
 ) {
   const pulseCheck = useAppOverlayState((s) => s.pulseCheck);
   const setPulseCheck = useAppOverlayState((s) => s.setPulseCheck);
-
-  const skipNextPulseCheckRef = useRef(false);
-  const prevScreenRef = useRef<string>("landing");
+  const lastPulseCheckScreen = useAppOverlayState((s) => s.lastPulseCheckScreen);
+  const setLastPulseCheckScreen = useAppOverlayState((s) => s.setLastPulseCheckScreen);
 
   const lastPulse = usePulseState((s) => s.lastPulse);
   const pulseCheckMode = usePulseState((s) => s.checkInMode);
@@ -25,23 +24,19 @@ export function usePulseCheckLogic(
   // Auto-show pulse check based on mode and last pulse time
   useEffect(() => {
     if (!canUsePulseCheck) return;
-    if (skipNextPulseCheckRef.current) {
-      skipNextPulseCheckRef.current = false;
-      prevScreenRef.current = currentScreen;
-      return;
-    }
+    
     if (currentScreen === "landing") {
-      prevScreenRef.current = "landing";
+      setLastPulseCheckScreen("landing");
       return;
     }
 
     if (pulseCheckMode === "everyOpen") {
       // Show only when navigating out from landing, not on every in-app screen change.
-      if (prevScreenRef.current !== "landing") {
-        prevScreenRef.current = currentScreen;
+      if (lastPulseCheckScreen !== "landing") {
+        setLastPulseCheckScreen(currentScreen);
         return;
       }
-      prevScreenRef.current = currentScreen;
+      setLastPulseCheckScreen(currentScreen);
       const t = window.setTimeout(() => {
         setPulseCheck(true, "regular");
       }, 350);
@@ -55,17 +50,24 @@ export function usePulseCheckLogic(
       lastPulseDate.getFullYear() === now.getFullYear() &&
       lastPulseDate.getMonth() === now.getMonth() &&
       lastPulseDate.getDate() === now.getDate();
+      
     if (isSameDay) {
-      prevScreenRef.current = currentScreen;
+      setLastPulseCheckScreen(currentScreen);
       return;
     }
 
-    prevScreenRef.current = currentScreen;
+    // Still check if we're coming from landing even in daily mode for consistency
+    if (lastPulseCheckScreen !== "landing") {
+      setLastPulseCheckScreen(currentScreen);
+      return;
+    }
+
+    setLastPulseCheckScreen(currentScreen);
     const t = window.setTimeout(() => {
       setPulseCheck(true, "regular");
     }, 350);
     return () => window.clearTimeout(t);
-  }, [lastPulse, pulseCheckMode, canUsePulseCheck, currentScreen, shouldGateStartWithAuth, setPulseCheck]);
+  }, [lastPulse, pulseCheckMode, canUsePulseCheck, currentScreen, shouldGateStartWithAuth, setPulseCheck, lastPulseCheckScreen, setLastPulseCheckScreen]);
 
   // Hide pulse check if feature becomes unavailable
   useEffect(() => {
@@ -74,7 +76,7 @@ export function usePulseCheckLogic(
   }, [canUsePulseCheck, pulseCheck.isOpen, setPulseCheck]);
 
   const skipNextCheck = useCallback(() => {
-    skipNextPulseCheckRef.current = true;
+    // skipNextCheck is now handled by the lastPulseCheckScreen state logic
   }, []);
 
   return {

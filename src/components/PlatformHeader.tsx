@@ -109,13 +109,10 @@ export const PlatformHeader = memo(function PlatformHeader({
   const isDark = resolvedTheme === "dark";
 
   const activeNavId = getActiveNavId(activeScreen);
-  const isLandingChrome = activeNavId === "home";
-  const visibleNavLinks = isLandingChrome
-    ? NAV_LINKS.filter(({ id }) => MARKETING_NAV_IDS.has(id))
-    : NAV_LINKS;
+  const visibleNavLinks = NAV_LINKS;
 
-  // Screen label shown in header while scrolled (non-landing)
-  const screenLabel = !isLandingChrome ? (SCREEN_LABELS[activeNavId] ?? null) : null;
+  // Screen label shown in header while scrolled (when not on home)
+  const screenLabel = activeNavId !== "home" ? (SCREEN_LABELS[activeNavId] ?? null) : null;
 
   const handleThemeToggle = useCallback(() => {
     setTheme(isDark ? "light" : "dark");
@@ -126,13 +123,12 @@ export const PlatformHeader = memo(function PlatformHeader({
     const onScroll = () => {
       const y = window.scrollY;
       setScrolled(y > 20);
-      // Never hide the header on the landing page
-      setHidden(!isLandingChrome && y > lastScrollY.current && y > 120);
+      setHidden(y > lastScrollY.current && y > 120);
       lastScrollY.current = y;
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [isLandingChrome]);
+  }, []);
 
   // ── Reset on screen change: show header, scroll to top ──
   useEffect(() => {
@@ -188,44 +184,59 @@ export const PlatformHeader = memo(function PlatformHeader({
       role="banner"
       dir="rtl"
       aria-label="الشريط العلوي"
-      animate={{ y: hidden ? "-100%" : "0%" }}
-      transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+      animate={{ 
+        y: hidden ? "-100%" : "0%",
+        backgroundColor: scrolled ? "var(--glass-bg)" : "transparent" 
+      }}
       className={`
         fixed top-0 right-0 left-0 z-50
         hidden md:flex items-center justify-between
-        px-6 lg:px-10 h-16
-        transition-[background,border-color,box-shadow] duration-300
+        px-6 lg:px-12 h-20
+        transition-[border-color,box-shadow,height] duration-500
         ${
           scrolled
-            ? "backdrop-blur-xl bg-slate-900/80 border-b border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
-            : "backdrop-blur-md bg-slate-900/40 border-b border-transparent"
+            ? "backdrop-blur-2xl border-b shadow-[0_8px_32px_rgba(0,0,0,0.1)] h-16"
+            : "border-b border-transparent h-20"
         }
       `}
+      style={{ borderColor: scrolled ? "var(--glass-border)" : "transparent" }}
     >
       {/* Logo */}
       <button
         type="button"
         id="header-logo"
         onClick={() => handleNav("home")}
-        className="flex items-center gap-2 group"
+        className="flex items-center gap-3 group relative"
         aria-label="الرحلة - الصفحة الرئيسية"
       >
-        <AlrehlaIcon size={34} className="transition-opacity group-hover:opacity-90" />
-        <span className="text-white font-bold text-base tracking-wide group-hover:text-teal-300 transition-colors">
+        <motion.div
+          whileHover={{ scale: 1.05, rotate: [0, -5, 5, 0] }}
+          whileTap={{ scale: 0.95 }}
+          className="relative"
+        >
+           <AlrehlaIcon size={scrolled ? 36 : 42} className="transition-all duration-500" />
+           <motion.div 
+             className="absolute inset-0 bg-teal-400/20 blur-xl rounded-full -z-10"
+             animate={{ opacity: [0, 0.4, 0] }}
+             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+           />
+        </motion.div>
+        <span className="font-bold text-lg tracking-tight group-hover:text-teal-400 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
           الرحلة
         </span>
       </button>
 
-      {/* Screen label — shows when scrolled & not on landing */}
+      {/* Screen label — shows when scrolled & not on home */}
       <AnimatePresence>
-        {scrolled && screenLabel && (
+        {scrolled && activeNavId !== "home" && screenLabel && (
           <motion.span
             key="screen-label"
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
-            className="absolute left-1/2 -translate-x-1/2 text-sm font-semibold text-white/80 pointer-events-none"
+            className="absolute left-1/2 -translate-x-1/2 text-sm font-semibold pointer-events-none"
+            style={{ color: "var(--text-secondary)" }}
           >
             {screenLabel}
           </motion.span>
@@ -235,9 +246,9 @@ export const PlatformHeader = memo(function PlatformHeader({
       {/* Nav Links */}
       <nav
         aria-label="التنقل الرئيسي"
-        className={`flex items-center ${isLandingChrome ? "gap-2" : "gap-1"}`}
+        className="flex items-center relative gap-2"
       >
-        {visibleNavLinks.map(({ id, label }) => {
+        {visibleNavLinks.map(({ id, label, icon: Icon }) => {
           const isActive = activeNavId === id;
           return (
             <button
@@ -246,17 +257,31 @@ export const PlatformHeader = memo(function PlatformHeader({
               id={`header-nav-${id}`}
               onClick={() => handleNav(id)}
               className={`
-                relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-200
-                ${isActive ? "text-teal-300" : "text-slate-300 hover:text-white hover:bg-white/[0.08]"}
+                relative px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 flex items-center gap-2
+                ${isActive 
+                  ? "opacity-100" 
+                  : "opacity-60 hover:opacity-100"
+                }
               `}
+              style={{ color: isActive ? "var(--text-primary)" : "var(--text-secondary)" }}
               aria-current={isActive ? "page" : undefined}
             >
-              {label}
               {isActive && (
-                <motion.span
+                <motion.div
                   layoutId="header-nav-indicator"
-                  className="absolute inset-0 rounded-full bg-teal-500/15 border border-teal-500/30"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  className="absolute inset-0 rounded-full bg-white/5 border shadow-[inner_0_0_12px_rgba(255,255,255,0.05)]"
+                  style={{ borderColor: "var(--glass-border)" }}
+                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                />
+              )}
+              {isActive && (
+                <Icon className="w-4 h-4 text-teal-400 relative z-10" />
+              )}
+              <span className="relative z-10">{label}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="active-dot"
+                  className="w-1 h-1 rounded-full bg-teal-400 absolute -bottom-1 left-1/2 -translate-x-1/2"
                 />
               )}
             </button>
@@ -299,9 +324,8 @@ export const PlatformHeader = memo(function PlatformHeader({
           </AnimatePresence>
         </button>
 
-        {/* Bell — only inside app */}
-        {!isLandingChrome && (
-          <div className="relative">
+        {/* Bell — show everywhere if logged in */}
+        <div className="relative">
             <AnimatePresence>
               {isLoggedIn && (
                 <motion.button
@@ -343,31 +367,10 @@ export const PlatformHeader = memo(function PlatformHeader({
               />
             )}
           </div>
-        )}
 
         {/* User Area */}
         {status === "loading" ? (
           <div className="w-9 h-9 rounded-full bg-white/10 animate-pulse" />
-        ) : isLandingChrome ? (
-          /* ── FIXED: landing CTA — shows correct label & action based on login state ── */
-          <button
-            type="button"
-            id="header-landing-cta"
-            onClick={handleLandingCta}
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-teal-500 hover:bg-teal-400 text-slate-900 shadow-[0_0_16px_rgba(45,212,191,0.3)] hover:shadow-[0_0_24px_rgba(45,212,191,0.5)] transition-all active:scale-95"
-          >
-            {isLoggedIn ? (
-              <>
-                <ArrowLeftCircle className="w-4 h-4" />
-                ادخل المنصة
-              </>
-            ) : (
-              <>
-                <LogIn className="w-4 h-4" />
-                تسجيل الدخول
-              </>
-            )}
-          </button>
         ) : isLoggedIn ? (
           /* ── User Dropdown Menu ── */
           <div ref={userMenuRef} className="relative" id="header-user-menu">
@@ -404,11 +407,12 @@ export const PlatformHeader = memo(function PlatformHeader({
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -8, scale: 0.95 }}
                   transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute left-0 top-12 w-52 rounded-2xl overflow-hidden bg-slate-900/95 backdrop-blur-xl border border-white/10 shadow-[0_16px_48px_rgba(0,0,0,0.6)]"
+                  className="absolute left-0 top-12 w-52 rounded-2xl overflow-hidden backdrop-blur-xl border border-white/10 shadow-[0_16px_48px_rgba(0,0,0,0.4)]"
+                  style={{ background: "var(--glass-bg)", borderColor: "var(--glass-border)" }}
                   role="menu"
                 >
                   <div className="px-4 py-3 border-b border-white/[0.08]">
-                    <p className="text-sm font-semibold text-white truncate">
+                    <p className="text-sm font-semibold text-white truncate" style={{ color: "var(--text-primary)" }}>
                       {displayName ?? firstName ?? "المستخدم"}
                     </p>
                     <p className="text-xs text-slate-400 truncate">{user?.email ?? ""}</p>
@@ -451,15 +455,26 @@ export const PlatformHeader = memo(function PlatformHeader({
             </AnimatePresence>
           </div>
         ) : (
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             type="button"
-            id="header-login"
-            onClick={onLogin}
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-teal-500 hover:bg-teal-400 text-slate-900 shadow-[0_0_16px_rgba(45,212,191,0.3)] hover:shadow-[0_0_24px_rgba(45,212,191,0.5)] transition-all active:scale-95"
+            id="header-landing-cta"
+            onClick={handleLandingCta}
+            className="group relative flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold overflow-hidden"
           >
-            <LogIn className="w-4 h-4" />
-            تسجيل الدخول
-          </button>
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-500 transition-transform group-hover:scale-110" />
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            
+            <LogIn className="w-5 h-5 text-slate-900 relative z-10" />
+            <span className="text-slate-900 relative z-10">تسجيل الدخول</span>
+            
+            <motion.div 
+              className="absolute -right-4 top-0 w-12 h-full bg-white/20 skew-x-[30deg] -translate-x-[200%]"
+              animate={{ translateX: ["-200%", "200%"] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
+            />
+          </motion.button>
         )}
       </div>
     </motion.header>
@@ -495,10 +510,11 @@ export const MobileNavBar = memo(function MobileNavBar({
       aria-label="التنقل السفلي"
       className="fixed bottom-0 right-0 left-0 z-50 md:hidden
         flex items-stretch justify-around
-        bg-slate-900/95 backdrop-blur-xl
-        border-t border-white/10
-        safe-area-pb
-        shadow-[0_-4px_24px_rgba(0,0,0,0.4)]"
+        backdrop-blur-2xl
+        border-t
+        pb-safe pt-2 px-2
+        shadow-[0_-4px_32px_rgba(0,0,0,0.3)]"
+      style={{ background: "var(--glass-bg)", borderColor: "var(--glass-border)" }}
     >
       {MOBILE_NAV.map(({ id, label, icon: Icon }) => {
         const isActive = activeNavId === id;
