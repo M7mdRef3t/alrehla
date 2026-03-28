@@ -788,7 +788,7 @@ function ResultComparisonGraph({ attempts, color }: {
         <polyline points={polyline} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
         {xs.map((x, i) => (
           <g key={i}>
-            <circle cx={x} cy={ys[i]} r={3} fill={color} stroke="#080b15" strokeWidth={1.5} />
+            <circle cx={Number.isFinite(x) ? x : 0} cy={Number.isFinite(ys[i]) ? ys[i] : 0} r={3} fill={color} stroke="#080b15" strokeWidth={1.5} />
             <text x={x} y={H} dy={-2} textAnchor="middle"
               fontSize={7} fill="#475569">
               {Math.round((pts[i].score / pts[i].maxScore) * 100)}%

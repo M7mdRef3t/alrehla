@@ -11,7 +11,8 @@ type AnalyticsValue = string | number | boolean;
 type AnalyticsParams = Record<string, AnalyticsValue>;
 
 // Circuit breaker: disable Supabase INSERT after first RLS/permission error
-let supabaseTrackingEnabled = true;
+// and keep it off entirely outside production to avoid dev noise.
+let supabaseTrackingEnabled = runtimeEnv.isProd;
 
 function isAnalyticsEnabled(): boolean {
   return getFromLocalStorage("dawayir-analytics-consent") === "true";
@@ -253,7 +254,7 @@ export function trackEvent(
     }
   }
 
-  if (isSupabaseReady && supabase && supabaseTrackingEnabled) {
+  if (runtimeEnv.isProd && isSupabaseReady && supabase && supabaseTrackingEnabled) {
     const windowRef = getWindowOrNull();
     const isMobile = windowRef ? windowRef.matchMedia("(max-width: 768px)").matches : false;
     const deviceContext = {

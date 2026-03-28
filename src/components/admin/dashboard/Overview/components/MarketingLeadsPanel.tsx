@@ -66,6 +66,16 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
   const topStatuses = data.byStatus.slice(0, 4);
   const topCampaigns = data.byCampaign.slice(0, 5);
   const peakDaily = data.dailyTrend.reduce((max, day) => Math.max(max, day.count), 0);
+  const advisorInterest = data.advisorInterest ?? {
+    total: 0,
+    last24h: 0,
+    successfulSubmissions: 0,
+    failedSubmissions: 0,
+    successRatePct: null,
+    dailyTrend: [] as Array<{ date: string; count: number }>
+  };
+  const advisorTrend = advisorInterest.dailyTrend.length ? advisorInterest.dailyTrend : data.dailyTrend;
+  const advisorPeakDaily = advisorTrend.reduce((max, day) => Math.max(max, day.count), 0);
 
   return (
     <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
@@ -111,24 +121,40 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
           <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-lg border border-white/10 bg-slate-900/40 p-3">
               <p className="text-[10px] uppercase text-slate-400">Total</p>
-              <p className="text-lg font-black text-white">{data.advisorInterest.total.toLocaleString("ar-EG")}</p>
+              <p className="text-lg font-black text-white">{advisorInterest.total.toLocaleString("ar-EG")}</p>
             </div>
             <div className="rounded-lg border border-white/10 bg-slate-900/40 p-3">
               <p className="text-[10px] uppercase text-slate-400">Last 24h</p>
-              <p className="text-lg font-black text-cyan-200">{data.advisorInterest.last24h.toLocaleString("ar-EG")}</p>
+              <p className="text-lg font-black text-cyan-200">{advisorInterest.last24h.toLocaleString("ar-EG")}</p>
             </div>
             <div className="rounded-lg border border-white/10 bg-slate-900/40 p-3">
               <p className="text-[10px] uppercase text-slate-400">Success</p>
-              <p className="text-lg font-black text-emerald-300">{data.advisorInterest.successfulSubmissions.toLocaleString("ar-EG")}</p>
+              <p className="text-lg font-black text-emerald-300">{advisorInterest.successfulSubmissions.toLocaleString("ar-EG")}</p>
             </div>
             <div className="rounded-lg border border-white/10 bg-slate-900/40 p-3">
               <p className="text-[10px] uppercase text-slate-400">Failed</p>
-              <p className="text-lg font-black text-rose-300">{data.advisorInterest.failedSubmissions.toLocaleString("ar-EG")}</p>
+              <p className="text-lg font-black text-rose-300">{advisorInterest.failedSubmissions.toLocaleString("ar-EG")}</p>
             </div>
           </div>
           <p className="mt-3 text-xs text-slate-300">
-            Success rate: <span className="font-mono text-cyan-100">{fmtPct(data.advisorInterest.successRatePct)}</span>
+            Success rate: <span className="font-mono text-cyan-100">{fmtPct(advisorInterest.successRatePct)}</span>
           </p>
+          <div className="mt-3">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">Trend 14d</p>
+            <div className="flex h-12 items-end gap-1">
+              {advisorTrend.map((point) => {
+                const height = advisorPeakDaily > 0 ? Math.max(4, Math.round((point.count / advisorPeakDaily) * 40)) : 4;
+                return (
+                  <div
+                    key={`advisor-trend-${point.date}`}
+                    title={`${point.date}: ${point.count}`}
+                    className="flex-1 rounded-sm bg-cyan-300/70"
+                    style={{ height: `${height}px` }}
+                  />
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 

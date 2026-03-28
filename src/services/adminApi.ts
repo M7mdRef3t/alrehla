@@ -741,6 +741,7 @@ export interface MarketingLeadsStats {
     successfulSubmissions: number;
     failedSubmissions: number;
     successRatePct: number | null;
+    dailyTrend: MarketingLeadTrendPoint[];
   };
 }
 
@@ -1402,7 +1403,9 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
   const marketingByStatus = new Map<string, number>();
   const marketingByCampaign = new Map<string, number>();
   const marketingByDate = new Map<string, number>();
+  const advisorInterestByDate = new Map<string, number>();
   for (const day of last14Dates) marketingByDate.set(day, 0);
+  for (const day of last14Dates) advisorInterestByDate.set(day, 0);
   for (const row of (marketingLeadsRows ?? []) as Array<Record<string, unknown>>) {
     const source = String(row.source ?? "").trim() || "landing";
     marketingBySource.set(source, (marketingBySource.get(source) ?? 0) + 1);
@@ -1418,6 +1421,9 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
     const day = String(row.created_at ?? "").slice(0, 10);
     if (marketingByDate.has(day)) {
       marketingByDate.set(day, (marketingByDate.get(day) ?? 0) + 1);
+    }
+    if (source === "annual_growth_plan_2025" && advisorInterestByDate.has(day)) {
+      advisorInterestByDate.set(day, (advisorInterestByDate.get(day) ?? 0) + 1);
     }
   }
   const toTopEntries = (map: Map<string, number>): UtmBreakdownEntry[] =>
@@ -1513,7 +1519,8 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
           last24h: advisorInterestLast24hCount ?? 0,
           successfulSubmissions: 0,
           failedSubmissions: 0,
-          successRatePct: null
+          successRatePct: null,
+          dailyTrend: last14Dates.map((date) => ({ date, count: advisorInterestByDate.get(date) ?? 0 }))
         }
       }
     };
@@ -1881,7 +1888,8 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
       successRatePct:
         advisorTrackedSubmissions > 0
           ? Math.round((advisorSubmitSuccessCount / advisorTrackedSubmissions) * 10000) / 100
-          : null
+          : null,
+      dailyTrend: last14Dates.map((date) => ({ date, count: advisorInterestByDate.get(date) ?? 0 }))
     }
   };
 

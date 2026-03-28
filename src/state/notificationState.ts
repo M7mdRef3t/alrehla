@@ -90,7 +90,7 @@ export const useNotificationState = create<NotificationState>((set, get) => ({
       throw error;
     }
   },
-
+  
   updateSettings: (newSettings) => {
     const currentSettings = get().settings;
     const updatedSettings = { ...currentSettings, ...newSettings };
@@ -107,7 +107,8 @@ export const useNotificationState = create<NotificationState>((set, get) => ({
 // تهيئة الـ state عند تحميل الملف
 if (typeof window !== "undefined") {
   // تأخير التهيئة لما الـ DOM يكون جاهز
-  setTimeout(() => {
+  const scheduleInit = typeof queueMicrotask === "function" ? queueMicrotask : (cb: () => void) => window.setTimeout(cb, 0);
+  scheduleInit(() => {
     useNotificationState.getState().initialize();
-  }, 0);
+  });
 }

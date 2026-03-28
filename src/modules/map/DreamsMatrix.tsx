@@ -209,7 +209,7 @@ export const DreamsMatrix: FC<{ dreams: Dream[]; stats: Partial<OverviewStats> }
                         key={key}
                         cx="50"
                         cy="50"
-                        r={config.radius}
+                        r={Number.isFinite(config.radius) ? config.radius : 0}
                         fill="none"
                         stroke={isCrisis ? (key === 'action' ? '#ef4444' : '#f43f5e') : config.color}
                         strokeWidth="0.2"

@@ -595,7 +595,9 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       oscillator.start(t0);
       oscillator.stop(t0 + 0.06);
       window.setTimeout(() => void ctx.close(), 100);
-    } catch { }
+    } catch {
+      // ignore subtle feedback failures on unsupported environments
+    }
   };
 
   const triggerSoftHaptic = () => {
@@ -747,11 +749,11 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               <div className="mx-3.5 sm:mx-4 -mt-1 mb-1 rounded-xl px-3 py-2" style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.35)" }} onClick={(e) => e.stopPropagation()}>
                 <p className="text-xs font-semibold text-center" style={{ color: "rgba(255,236,179,0.98)" }}>
                   تريد تخطي فحص حالتك النهاردة؟
-                  <div className="flex gap-2 justify-center mt-2">
-                    <button onClick={confirmSkipClose} className="px-3 py-1 bg-amber-500/20 rounded-lg text-[10px] hover:bg-amber-500/30 transition-colors">أيوا</button>
-                    <button onClick={() => setShowSkipConfirm(false)} className="px-3 py-1 bg-white/5 rounded-lg text-[10px] hover:bg-white/10 transition-colors">لا</button>
-                  </div>
                 </p>
+                <div className="flex gap-2 justify-center mt-2">
+                  <button onClick={confirmSkipClose} className="px-3 py-1 bg-amber-500/20 rounded-lg text-[10px] hover:bg-amber-500/30 transition-colors">أيوا</button>
+                  <button onClick={() => setShowSkipConfirm(false)} className="px-3 py-1 bg-white/5 rounded-lg text-[10px] hover:bg-white/10 transition-colors">لا</button>
+                </div>
               </div>
             )}
             <div

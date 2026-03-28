@@ -107,7 +107,7 @@ const OrbitViz: FC<{ reduceMotion: boolean | null; mirrorName: string }> = ({ re
             transition={{ duration: hoveredIdx === i ? 0.2 : 3 + node.delay, repeat: hoveredIdx === i ? 0 : Infinity, ease: "easeInOut", delay: hoveredIdx === i ? 0 : node.delay }}
             style={{ transformOrigin: `${node.cx}px ${node.cy}px`, cursor: "pointer" }}
           >
-            <circle cx={node.cx} cy={node.cy} r={node.r} fill={node.color} style={{ filter: hoveredIdx === i ? `drop-shadow(0 0 8px ${node.color})` : "none" }} />
+            <circle cx={node.cx} cy={node.cy} r={Number.isFinite(node.r) ? node.r : 5} fill={node.color} style={{ filter: hoveredIdx === i ? `drop-shadow(0 0 8px ${node.color})` : "none" }} />
             
             <AnimatePresence>
               {hoveredIdx === i && (

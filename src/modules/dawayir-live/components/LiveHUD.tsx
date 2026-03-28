@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { ArrowRight, Camera, CameraOff, Eye, History, Hand, Link2, MessageSquareText, Mic, MicOff, PenLine, Record, Send, Sparkles, Smile, X } from "lucide-react";
+import { ArrowRight, Camera, CameraOff, Eye, History, Hand, Link2, MessageSquareText, Mic, MicOff, PenLine, Send, Sparkles, Smile, X } from "lucide-react";
 import { motion } from "framer-motion";
 import type { CognitiveMetrics, JourneyStage, LiveLanguage, LiveSessionSummary, SessionStatus, TruthContract } from "../types";
 
@@ -70,6 +70,9 @@ const COPY = {
     listening: "المجال يسمعك",
     idle: "المجال ثابت وينتظر الإشارة التالية",
     transcript: "المحادثة",
+    notesTab: "ملاحظات مشتركة",
+    transcriptTab: "النص المباشر",
+    summaryTab: "الملخص الذكي",
     micOn: "الميك مفتوح",
     micOff: "الميك مغلق",
     silentMirror: "مرآة صامتة",
@@ -99,6 +102,9 @@ const COPY = {
     listening: "The field is listening",
     idle: "The field is calm and waiting",
     transcript: "Transcript",
+    notesTab: "Shared Notes",
+    transcriptTab: "Live Transcript",
+    summaryTab: "AI Summary",
     micOn: "Mic On",
     micOff: "Mic Off",
     silentMirror: "Silent Mirror",
@@ -259,8 +265,8 @@ export default function LiveHUD({
                 disabled={!onToggleRecording}
                 aria-pressed={isRecording}
               >
-                <Record className="h-4 w-4" />
-                <span>{isRecording ? "Recording" : language === "ar" ? "تسجيل" : "Record"}</span>
+                {isRecording ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                <span>{isRecording ? (language === "ar" ? "جارٍ التسجيل" : "Recording") : language === "ar" ? "تسجيل" : "Record"}</span>
                 {isRecording && <span className="hud-state-badge">{formatRecordTime(recordSeconds)}</span>}
               </button>
               <button type="button" className="live-icon-btn" onClick={onOpenHistory} aria-label={language === "ar" ? "السجل" : "History"}>
@@ -343,7 +349,11 @@ export default function LiveHUD({
                 onClick={() => onChangeTranscriptTab?.(tab)}
                 disabled={!onChangeTranscriptTab}
               >
-                {tab === "notes" ? (language === "ar" ? "Shared Notes" : "Shared Notes") : tab === "transcript" ? (language === "ar" ? "Live Transcript" : "Live Transcript") : (language === "ar" ? "AI Summary" : "AI Summary")}
+                {tab === "notes"
+                  ? (language === "ar" ? copy.notesTab : "Shared Notes")
+                  : tab === "transcript"
+                    ? (language === "ar" ? copy.transcriptTab : "Live Transcript")
+                    : (language === "ar" ? copy.summaryTab : "AI Summary")}
                 {tab === "transcript" && transcriptCount > 0 && (
                   <span className="notes-tab-badge">{transcriptCount}</span>
                 )}

@@ -8,17 +8,18 @@ interface SoulGeometryOverlayProps {
 }
 
 export const SoulGeometryOverlay: React.FC<SoulGeometryOverlayProps> = ({ onClose }) => {
-    const nodes = useMapState((s) => s.nodes.filter(n => !n.isNodeArchived));
+    const nodes = useMapState((s) => s.nodes);
+    const activeNodes = useMemo(() => nodes.filter((n) => !n.isNodeArchived), [nodes]);
 
     const geometry = useMemo(() => {
         // Generate abstract paths and shapes based on nodes' rings and positions
         const paths: any[] = [];
         const circles: any[] = [];
 
-        nodes.forEach((node, i) => {
+        activeNodes.forEach((node, i) => {
             const seed = node.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
             const radius = node.ring === 'green' ? 40 : node.ring === 'yellow' ? 80 : 120;
-            const angle = (i / nodes.length) * Math.PI * 2;
+            const angle = (i / Math.max(activeNodes.length, 1)) * Math.PI * 2;
             const x = 200 + radius * Math.cos(angle);
             const y = 200 + radius * Math.sin(angle);
 
@@ -41,7 +42,7 @@ export const SoulGeometryOverlay: React.FC<SoulGeometryOverlayProps> = ({ onClos
         });
 
         return { paths, circles };
-    }, [nodes]);
+    }, [activeNodes]);
 
     return (
         <motion.div
@@ -105,7 +106,7 @@ export const SoulGeometryOverlay: React.FC<SoulGeometryOverlayProps> = ({ onClos
                                 key={i}
                                 cx={c.cx}
                                 cy={c.cy}
-                                r={c.r}
+                                r={Number.isFinite(c.r) ? c.r : 1}
                                 fill={c.fill}
                                 opacity={c.opacity}
                                 initial={{ scale: 0 }}

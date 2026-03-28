@@ -450,7 +450,6 @@ export function AppExperienceShell() {
     onStartJourney: startRecovery,
     onSelectNode: setSelectedNodeId,
     onFeatureLocked: setLockedFeature,
-    openRegularPulseCheck,
     openSurveyScreen: () => {
       void navigateToScreen("survey");
     },
@@ -459,6 +458,7 @@ export function AppExperienceShell() {
     },
     openMissionScreen,
     openMissionFromAddPerson,
+    openRegularPulseCheck,
     handleTakeNextStep,
     handleRefreshNextStep,
     openDawayirTool,

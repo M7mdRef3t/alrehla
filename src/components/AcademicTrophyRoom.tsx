@@ -356,12 +356,32 @@ export function AcademicTrophyRoom({ onClose }: { onClose: () => void }) {
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
                         {(nav === "overview" ? unlocked.slice(0, 3) : unlocked).map(a => (
-                          <motion.div key={a.id} whileHover={{ scale: 1.03 }} style={{
-                            borderRadius: 16, padding: "16px 12px", textAlign: "center",
-                            background: "rgba(20,210,200,0.05)",
-                            border: "1px solid rgba(20,210,200,0.15)",
-                            cursor: "default",
-                          }}>
+                          <motion.div 
+                            key={a.id} 
+                            whileHover={{ scale: 1.03 }} 
+                            style={{
+                              position: "relative",
+                              borderRadius: 16, padding: "16px 12px", textAlign: "center",
+                              background: "rgba(20,210,200,0.05)",
+                              border: "1px solid rgba(20,210,200,0.15)",
+                              cursor: "help",
+                            }}
+                          >
+                            {/* Tooltip */}
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              whileHover={{ opacity: 1, y: 0 }}
+                              style={{
+                                position: "absolute", bottom: "105%", left: "50%", transform: "translateX(-50%)",
+                                width: 140, background: "rgba(10,13,26,0.95)", backdropFilter: "blur(10px)",
+                                border: "1px solid rgba(20,210,200,0.3)", borderRadius: 10, padding: 8,
+                                fontSize: 10, color: "rgba(255,255,255,0.8)", zIndex: 100, pointerEvents: "none",
+                                boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+                              }}
+                            >
+                              {a.description}
+                            </motion.div>
+
                             <div style={{
                               width: 48, height: 48, borderRadius: "50%", margin: "0 auto 10px",
                               display: "flex", alignItems: "center", justifyContent: "center",
@@ -376,9 +396,25 @@ export function AcademicTrophyRoom({ onClose }: { onClose: () => void }) {
                         {/* Locked badge */}
                         {(nav === "overview" ? locked.slice(0, 1) : locked.slice(0, 8)).map(a => (
                           <div key={a.id} style={{
+                            position: "relative",
                             borderRadius: 16, padding: "16px 12px", textAlign: "center", opacity: 0.35,
                             background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
+                            cursor: "help",
                           }}>
+                            {/* Hidden Tooltip for locked */}
+                            <div className="badge-tooltip" style={{
+                              display: "none",
+                              position: "absolute", bottom: "105%", left: "50%", transform: "translateX(-50%)",
+                              width: 140, background: "rgba(10,13,26,0.95)", backdropFilter: "blur(10px)",
+                              border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: 8,
+                              fontSize: 10, color: "rgba(255,255,255,0.4)", zIndex: 100, pointerEvents: "none",
+                            }}>
+                              {a.description}
+                            </div>
+                            <style>{`
+                              div:hover > .badge-tooltip { display: block !important; }
+                            `}</style>
+
                             <div style={{
                               width: 48, height: 48, borderRadius: "50%", margin: "0 auto 10px",
                               display: "flex", alignItems: "center", justifyContent: "center",
