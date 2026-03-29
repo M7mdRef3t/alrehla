@@ -312,15 +312,12 @@ export const AppOverlayHost = memo(function AppOverlayHost({
 
   const onOnboardingComplete = useCallback(() => {
     if (externalOnboardingComplete) {
-      // Use the proper handler from useAppStartupOnboarding
-      // which calls startRecovery() + navigateToScreen("map") + handleStartupComplete()
       externalOnboardingComplete();
     } else {
-      // Fallback: close overlay and open the warm bridge (PremiumBridgeModal)
       setOverlay("onboarding", false);
-      setOverlay("premiumBridge", true);
+      setScreen("map");
     }
-  }, [externalOnboardingComplete, setOverlay]);
+  }, [externalOnboardingComplete, setOverlay, setScreen]);
 
   const onJourneyTimelineCardClick = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId);

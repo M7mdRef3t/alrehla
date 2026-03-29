@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   ArrowLeft, Shield, Zap, Clock, Lock,
-  ChevronDown, Smartphone, Star, Heart, Sparkles
+  ChevronDown, Heart
 } from "lucide-react";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
@@ -389,17 +389,19 @@ export const Landing: FC<LandingProps> = ({
            animate="visible"
            className="relative z-10 w-full max-w-5xl flex flex-col items-center text-center px-6 pt-16 sm:pt-20"
         >
-          {/* Platform Badge — value, not description */}
+          {/* Platform Badge — real pulseCount */}
           <motion.div
             variants={fadeUp}
             className="inline-flex items-center gap-2 mb-8 glass-button text-[10px] sm:text-[11px] tracking-[0.25em] uppercase py-2 px-5 backdrop-blur-3xl"
             style={{ borderColor: "var(--glass-border)" }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.5)] animate-pulse" />
-            دلوقتي ٣٢٠٠+ شخص شايفوا نفسهم بوضوح
+            {pulseCount > 0
+              ? `دلوقتي ${pulseCount.toLocaleString("ar-EG")}+ شخص شايفوا نفسهم بوضوح`
+              : "انضم لآلاف ماشيين في رحلتهم"}
           </motion.div>
 
-          {/* Headline V6: Two complete sentences + TypingWord as subject */}
+          {/* Headline */}
           <motion.h1
             variants={fadeUp}
             className="cosmic-headline text-[1.85rem] sm:text-[2.6rem] lg:text-[3.3rem] font-bold mb-4 sm:mb-5"
@@ -417,95 +419,87 @@ export const Landing: FC<LandingProps> = ({
           {/* Subtitle */}
           <motion.p
             variants={fadeUp}
-            className="text-base sm:text-lg leading-relaxed mb-7 sm:mb-9 max-w-[42ch] font-normal"
+            className="text-base sm:text-lg leading-relaxed mb-7 sm:mb-8 max-w-[42ch] font-normal"
             style={{ color: "var(--text-secondary)", opacity: 0.8 }}
           >
             {landingCopy.subtitle}
           </motion.p>
 
-          {/* Social Proof — trust before action */}
+          {/* 3 Problem Pills — above the fold */}
           <motion.div
             variants={fadeUp}
-            className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 mb-8 sm:mb-10"
+            className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8 sm:mb-10"
           >
-            {/* Objection handler */}
-            <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold"
-              style={{ background: "rgba(20,184,166,0.10)", border: "1px solid rgba(20,184,166,0.25)", color: "#0d9488" }}
-            >
-              <Lock className="w-3 h-3" />
-              مجاناً تماماً — بدون بطاقة
-            </div>
-            {/* Real quote-style testimonial */}
-            <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold italic"
-              style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.2)", color: "var(--text-secondary)" }}
-            >
-              <span style={{ color: "#7C3AED", fontStyle: "normal" }}>❝</span>
-              أخيراً حاجة بتشرح اللي بشعر بيه
-              <span style={{ color: "#7C3AED", fontStyle: "normal" }}>❞</span>
-            </div>
+            {landingCopy.problemSection.points.map((point, i) => (
+              <div
+                key={i}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-[11px] sm:text-xs font-semibold"
+                style={{
+                  background: [
+                    "rgba(239,68,68,0.07)",
+                    "rgba(245,158,11,0.07)",
+                    "rgba(99,102,241,0.07)"
+                  ][i],
+                  border: `1px solid ${["rgba(239,68,68,0.2)","rgba(245,158,11,0.2)","rgba(99,102,241,0.2)"][i]}`,
+                  color: ["#FCA5A5","#FCD34D","#A5B4FC"][i]
+                }}
+              >
+                <span>{["😶","💸","🤯"][i]}</span>
+                {point}
+              </div>
+            ))}
           </motion.div>
 
-          {/* Mirror Portal: Input + Always-Active CTA */}
+          {/* CTA — full width, no input friction */}
           <motion.div
             variants={fadeUp}
-            className="w-full max-w-2xl mx-auto"
+            className="w-full max-w-xl mx-auto"
           >
-            <div className="premium-glass-portal p-1.5 sm:p-2 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.5),0_0_50px_-15px_rgba(20,184,166,0.12)]">
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    value={mirrorName}
-                    onChange={(e) => setMirrorName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleStart();
-                      }
-                    }}
-                    placeholder="اكتب اسمه لو حابب — أو ابدأ مباشرة"
-                    className="w-full bg-transparent border-none rounded-3xl px-8 py-5 text-lg sm:text-xl outline-none transition-all font-normal"
-                    style={{ color: "var(--text-primary)", fontFamily: "Tajawal, sans-serif" }}
-                  />
-                  {!mirrorName && (
-                    <div
-                      className="absolute left-8 top-1/2 -translate-y-1/2 pointer-events-none opacity-15"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      <Sparkles className="w-5 h-5" />
-                    </div>
-                  )}
-                </div>
-                {/* CTA: always-active gradient — shimmer on hover */}
-                <motion.button
-                  type="button"
-                  onClick={handleStart}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="group relative flex items-center justify-center gap-3 px-8 py-5 rounded-3xl overflow-hidden sm:min-w-[210px] isolate"
-                  style={{
-                    background: mirrorName
-                      ? "linear-gradient(135deg, #14B8A6 0%, #7C3AED 100%)"
-                      : "linear-gradient(135deg, #0d9488 0%, #4f46e5 100%)",
-                    boxShadow: mirrorName
-                      ? "0 12px 40px -10px rgba(20,184,166,0.55)"
-                      : "0 8px 28px -10px rgba(13,148,136,0.4)",
-                    transition: "all 0.5s cubic-bezier(0.22,1,0.36,1)"
-                  }}
-                >
-                  <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{ background: "linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%)" }}
-                  />
-                  <span className="relative text-base sm:text-lg font-bold text-white" style={{ fontFamily: "Tajawal, sans-serif" }}>
-                    {mirrorName ? "ابدأ رحلتك الآن" : "شوف نفسك بوضوح — مجاناً"}
-                  </span>
-                  <ArrowLeft className="relative w-5 h-5 text-white transition-transform duration-300 group-hover:-translate-x-1" />
-                </motion.button>
-              </div>
-            </div>
+            <motion.button
+              type="button"
+              onClick={handleStart}
+              whileHover={{ scale: 1.03, boxShadow: "0 20px 55px rgba(20,184,166,0.45)" }}
+              whileTap={{ scale: 0.97 }}
+              className="group relative w-full flex items-center justify-center gap-3 px-8 py-5 rounded-3xl overflow-hidden isolate"
+              style={{
+                background: "linear-gradient(135deg, #14B8A6 0%, #7C3AED 100%)",
+                boxShadow: "0 12px 40px -10px rgba(20,184,166,0.45)",
+              }}
+            >
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style={{ background: "linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%)" }}
+              />
+              <Zap className="relative w-5 h-5 text-white" />
+              <span className="relative text-lg sm:text-xl font-black text-white" style={{ fontFamily: "Tajawal, sans-serif" }}>
+                شوف نفسك بوضوح — مجاناً
+              </span>
+              <ArrowLeft className="relative w-5 h-5 text-white transition-transform duration-300 group-hover:-translate-x-1" />
+            </motion.button>
+
+            {/* Optional name hint */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.55 }}
+              transition={{ delay: 1.5, duration: 0.8 }}
+              className="mt-4 text-center"
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  const name = window.prompt("اكتب اسمك — هنبدأ الرحلة باسمك:");
+                  if (name?.trim()) {
+                    setMirrorName(name.trim());
+                    handleStart();
+                  }
+                }}
+                className="text-[11px] font-semibold underline underline-offset-2 cursor-pointer hover:opacity-80 transition-opacity"
+                style={{ color: "var(--text-muted)" }}
+              >
+                أو ابدأ بـ اسمك الشخصي ←
+              </button>
+            </motion.div>
+
             {/* Micro trust indicators */}
             <div className="mt-5 flex flex-wrap justify-center gap-5 sm:gap-8">
               {[
@@ -525,8 +519,8 @@ export const Landing: FC<LandingProps> = ({
         {/* Scroll hint */}
         <div className="absolute bottom-10 left-0 right-0 flex flex-col items-center pointer-events-none z-20">
           <motion.div
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 0.4 }} 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.4 }}
             transition={{ delay: 3, duration: 1 }}
             className="flex flex-col items-center gap-2"
           >
@@ -540,54 +534,11 @@ export const Landing: FC<LandingProps> = ({
         </div>
       </section>
 
-
-
-      {/* ══════════════════════════════════════════════
-          SECTION 3: PROBLEM
-      ══════════════════════════════════════════════ */}
-      <section className="relative py-20 px-5 max-w-4xl mx-auto">
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
-          className="rounded-3xl p-8 sm:p-12"
-          style={{
-            border: "1px solid rgba(248,113,113,0.15)",
-            background: "radial-gradient(ellipse at 50% 0%, rgba(248,113,113,0.05) 0%, transparent 65%)"
-          }}
-        >
-          <motion.p variants={fadeUp} className="text-xs font-bold tracking-widest uppercase mb-4 text-center" style={{ color: "#F87171" }}>
-            هل ده بيحصل معاك؟
-          </motion.p>
-          <motion.h2 variants={fadeUp} className="text-2xl sm:text-3xl font-black text-white text-center mb-8 leading-tight" style={{ fontFamily: "Tajawal, sans-serif" }}>
-            {landingCopy.problemSection.title}
-          </motion.h2>
-
-          <motion.div variants={stagger} className="grid sm:grid-cols-3 gap-4 mb-8">
-            {landingCopy.problemSection.points.map((point, i) => (
-              <motion.div
-                key={i}
-                variants={fadeUp}
-                className="flex flex-col gap-2 rounded-2xl p-5 text-sm font-semibold text-center"
-                style={{ border: "1px solid var(--glass-border)", background: "var(--glass-bg)", color: "#CBD5E1" }}
-              >
-                <span className="text-2xl">{["😶", "💸", "🤯"][i]}</span>
-                {point}
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <motion.p variants={fadeUp} className="text-center text-sm font-bold" style={{ color: "#F87171" }}>
-            {landingCopy.problemSection.closing}
-          </motion.p>
-        </motion.div>
-      </section>
-
       {/* ── Section Divider ── */}
       <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
         <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(20,184,166,0.2), transparent)" }} />
       </div>
+
 
       {/* ══════════════════════════════════════════════
           SECTION 4: HOW IT WORKS
@@ -771,7 +722,7 @@ export const Landing: FC<LandingProps> = ({
             type="button"
             id="landing-final-cta"
             onClick={handleStart}
-                  className="group inline-flex items-center gap-3 rounded-2xl px-8 py-4 text-base font-black text-white cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A1A]"
+            className="group inline-flex items-center gap-3 rounded-2xl px-8 py-4 text-base font-black text-white cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0A1A]"
             style={{ background: "linear-gradient(135deg, #14B8A6, #0d9488)", boxShadow: "0 14px 42px rgba(20,184,166,0.28)" }}
             whileHover={{ scale: 1.04, boxShadow: "0 18px 50px rgba(20,184,166,0.38)" }}
             whileTap={{ scale: 0.97 }}

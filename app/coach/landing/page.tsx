@@ -76,10 +76,10 @@ export default function CoachLandingPage() {
 
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <a
-              href="/checkout"
+              href="https://wa.me/201023050092?text=%D8%A3%D9%87%D9%84%D8%A7%D9%8B%D8%8C%20%D8%B9%D9%86%D8%AF%D9%8A%20%D8%B3%D8%A4%D8%A7%D9%84%20%D8%B9%D9%86%20Coach%20License"
               className="inline-flex items-center gap-3 rounded-2xl bg-gradient-to-l from-indigo-500 to-teal-500 px-8 py-4 text-lg font-black text-white shadow-lg shadow-indigo-500/25 transition hover:shadow-xl hover:shadow-indigo-500/30"
             >
-              ابدأ مع Coach License
+              تواصل بخصوص المسار المتقدم
               <ArrowLeft className="h-5 w-5" />
             </a>
             <a
@@ -147,10 +147,10 @@ export default function CoachLandingPage() {
             </ul>
 
             <a
-              href="/checkout"
+              href="https://wa.me/201023050092?text=%D8%A3%D9%87%D9%84%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20Coach%20License"
               className="block w-full rounded-2xl bg-indigo-500 py-4 text-center text-base font-black text-white transition hover:bg-indigo-400"
             >
-              فعّل Coach License الآن
+              اسأل عن المسار المتقدم الآن
             </a>
 
             <p className="mt-4 text-xs text-slate-500">

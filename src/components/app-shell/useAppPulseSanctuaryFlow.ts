@@ -11,7 +11,6 @@ import { AnalyticsEvents, trackEvent } from "../../services/analytics";
 import { recordFlowEvent } from "../../services/journeyTracking";
 import type { PulseEnergyConfidence, PulseEntry, PulseFocus, PulseMood } from "../../state/pulseState";
 import { usePulseState } from "../../state/pulseState";
-import { marketingLeadService } from "../../services/marketingLeadService";
 
 type ThemePreference = "light" | "dark" | "system";
 type PulseCloseReason = "backdrop" | "close_button" | "programmatic" | "browser_close";
@@ -303,13 +302,8 @@ export function useAppPulseSanctuaryFlow({
 
     closePulseCheck(true, "programmatic");
 
-    // Sync to Marketing CRM if phone is present
-    if (payload.phone) {
-      void marketingLeadService.syncLead({
-        phone: payload.phone,
-        status: "engaged"
-      });
-    }
+    // Note: CRM phone sync now happens instantly in handleTacticalAnalysis (PulseCheckModal)
+    // at the moment the user confirms their phone number — no need to sync again here.
 
     const isLow = payload.energy != null && payload.energy <= 3;
     const isAngry = payload.mood === "angry";

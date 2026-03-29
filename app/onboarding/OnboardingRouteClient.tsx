@@ -3,12 +3,17 @@
 import { useEffect } from "react";
 
 import { OnboardingFlow } from "../../src/components/OnboardingFlow";
+import { useJourneyState } from "../../src/state/journeyState";
 import {
   captureLeadAttributionFromCurrentUrl,
   captureUtmFromCurrentUrl
 } from "../../src/services/marketingAttribution";
 
+const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
+
 export default function OnboardingRouteClient() {
+  const mirrorName = useJourneyState((s) => s.mirrorName);
+
   useEffect(() => {
     captureUtmFromCurrentUrl();
     captureLeadAttributionFromCurrentUrl();
@@ -16,10 +21,11 @@ export default function OnboardingRouteClient() {
 
   return (
     <OnboardingFlow
+      initialMirrorName={mirrorName}
       onComplete={() => {
-        // Redirect to checkout after onboarding to prevent the landing loop
-        // and guide the high-intent lead towards payment.
-        window.location.href = "/checkout";
+        // Return the user into the app shell and land them on the map flow.
+        window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
+        window.location.href = "/";
       }}
     />
   );

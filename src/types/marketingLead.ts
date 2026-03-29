@@ -3,7 +3,7 @@ export const MARKETING_LEAD_STATUSES = [
   "new",
   "engaged",
   "payment_requested",
-  "hot_checkout_interrupted",
+  "hot_activation_interrupted",
   "proof_received",
   "activated",
   "lost",

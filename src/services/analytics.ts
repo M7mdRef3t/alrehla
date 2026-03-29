@@ -328,7 +328,7 @@ export const AnalyticsEvents = {
   LEAD_FORM_SUBMITTED: "lead_form_submitted",
   ONBOARDING_STARTED: "onboarding_started",
   ONBOARDING_COMPLETED: "onboarding_completed",
-  CHECKOUT_VIEWED: "checkout_viewed",
+  ACTIVATION_VIEWED: "activation_viewed",
   PAYMENT_INTENT_SUBMITTED: "payment_intent_submitted",
 
   AUTH_GOOGLE_CLICKED: "auth_google_clicked",
@@ -389,7 +389,7 @@ export function trackCheckoutViewed(
   params?: Record<string, AnalyticsValue | null | undefined>
 ): void {
   const safeParams = sanitizeAnalyticsParams(params);
-  trackEvent(AnalyticsEvents.CHECKOUT_VIEWED, safeParams);
+  trackEvent(AnalyticsEvents.ACTIVATION_VIEWED, safeParams);
   sendMetaEvent("ViewContent", safeParams);
 }
 
@@ -398,7 +398,7 @@ export function trackInitiateCheckout(
 ): void {
   const safeParams = sanitizeAnalyticsParams(params);
   trackEvent(AnalyticsEvents.PAYMENT_INTENT_SUBMITTED, safeParams);
-  sendGtagEvent("begin_checkout", safeParams);
+  sendGtagEvent("begin_activation", safeParams);
   sendMetaEvent("InitiateCheckout", safeParams);
 }
 

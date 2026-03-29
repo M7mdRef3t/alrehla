@@ -12,17 +12,17 @@
 5. Stripe dashboard:
 - Webhook endpoint: `https://www.alrehla.app/api/webhooks/stripe`
 - Enabled events:
-  - `checkout.session.completed`
-  - `checkout.session.expired`
+  - `activation.session.completed`
+  - `activation.session.expired`
   - `invoice.payment_failed`
   - `payment_intent.payment_failed`
   - `customer.subscription.updated`
   - `customer.subscription.deleted`
 6. Deploy and verify:
-- `POST /api/checkout` returns a checkout URL.
+- `POST /api/activation` returns an activation URL.
 - One successful payment updates:
   - `profiles.awareness_tokens` to `100`
   - `cohort_seat_reservations.status` to `activated`
-  - `journey_events` contains `checkout_session_created` then `payment_success`
+- `journey_events` contains `activation_session_created` then `payment_success`
 - Replayed webhook returns deduped response.
 

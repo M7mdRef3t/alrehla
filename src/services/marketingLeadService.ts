@@ -68,12 +68,19 @@ export async function captureMarketingLead(
       return { success: false, error: data.error || "Failed to capture lead" };
     }
 
+    // API returns: { ok: true, lead: { lead_id, phone, conflict, email } }
+    // Normalize to consistent internal shape
+    const leadObj = data.lead ?? data; // fallback to top-level for backwards compat
+    const resolvedLeadId: string | undefined = leadObj.lead_id ?? leadObj.leadId;
+    const resolvedPhone: string | undefined = leadObj.phone ?? leadObj.phoneNormalized;
+    const resolvedConflict: boolean = leadObj.conflict ?? leadObj.mergeConflict ?? false;
+
     // Persist identity for session continuity
-    if (data.leadId) {
-      setInLocalStorage(STORAGE_KEY_LEAD_ID, data.leadId);
+    if (resolvedLeadId) {
+      setInLocalStorage(STORAGE_KEY_LEAD_ID, resolvedLeadId);
     }
-    if (data.phoneNormalized) {
-      setInLocalStorage(STORAGE_KEY_LEAD_PHONE, data.phoneNormalized);
+    if (resolvedPhone) {
+      setInLocalStorage(STORAGE_KEY_LEAD_PHONE, resolvedPhone);
     }
 
     // Analytics & Event Tracking
@@ -83,10 +90,10 @@ export async function captureMarketingLead(
       
       recordFlowEvent("lead_captured", {
         meta: {
-          leadId: data.leadId,
+          leadId: resolvedLeadId,
           status: payload.status,
           hasPhone: !!payload.phone,
-          mergeConflict: data.mergeConflict
+          mergeConflict: resolvedConflict
         }
       });
 
@@ -101,9 +108,9 @@ export async function captureMarketingLead(
 
     return {
       success: true,
-      leadId: data.leadId,
-      phoneNormalized: data.phoneNormalized,
-      mergeConflict: data.mergeConflict
+      leadId: resolvedLeadId,
+      phoneNormalized: resolvedPhone,
+      mergeConflict: resolvedConflict
     };
   } catch (err) {
     console.error("Marketing Lead capture error:", err);

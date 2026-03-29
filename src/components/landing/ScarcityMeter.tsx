@@ -12,23 +12,23 @@ interface ScarcityMeterData {
 interface ScarcityMeterProps {
   meter: ScarcityMeterData;
   countdown: string | null;
-  showCheckoutHint: boolean;
-  onOpenCheckout: () => void;
+  showActivationHint: boolean;
+  onOpenActivation: () => void;
   itemVariants: Variants;
 }
 
 export const ScarcityMeter: FC<ScarcityMeterProps> = ({
   meter,
   countdown,
-  showCheckoutHint,
-  onOpenCheckout,
+  showActivationHint,
+  onOpenActivation,
   itemVariants
 }) => (
   <div className="mb-6 w-[min(22rem,92vw)] flex flex-col items-center justify-center">
     <motion.button
       type="button"
       variants={itemVariants}
-      onClick={onOpenCheckout}
+      onClick={onOpenActivation}
       className="w-full text-right rounded-2xl px-4 py-3 bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400/40"
       aria-label="متابعة حجز المقعد"
     >
@@ -61,7 +61,7 @@ export const ScarcityMeter: FC<ScarcityMeterProps> = ({
       )}
     </motion.button>
     <p
-      className={`mt-1 h-4 text-sm font-semibold transition-opacity ${showCheckoutHint ? "opacity-100 text-amber-200" : "opacity-0"}`}
+      className={`mt-1 h-4 text-sm font-semibold transition-opacity ${showActivationHint ? "opacity-100 text-amber-200" : "opacity-0"}`}
     >
       سيتم فتح صفحة الحجز
     </p>

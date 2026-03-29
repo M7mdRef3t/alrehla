@@ -76,9 +76,9 @@ interface PricingRecommendation {
 **تكامل كامل مع Stripe للاشتراكات والدفع**
 
 ##### الفيتشرز:
-- **إنشاء Checkout Sessions:**
+- **إنشاء Activation Sessions:**
   ```typescript
-  await stripeService.createCheckoutSession({
+  await stripeService.createActivationSession({
     userId: "user-123",
     tier: "b2c_premium",
     successUrl: "/success",
@@ -92,7 +92,7 @@ interface PricingRecommendation {
   - إنشاء Customer Portal للمستخدم
 
 - **معالجة Webhooks من Stripe:**
-  - `checkout.session.completed` → تفعيل الاشتراك
+  - `activation.session.completed` → تفعيل الاشتراك
   - `customer.subscription.updated` → تحديث الحالة
   - `customer.subscription.deleted` → إلغاء الاشتراك
   - `invoice.payment_failed` → إرسال تنبيه للمستخدم

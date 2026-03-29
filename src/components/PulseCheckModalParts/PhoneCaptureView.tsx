@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, CheckCircle2, AlertCircle, Trash2 } from "lucide-react";
+import { Phone, CheckCircle2, AlertCircle, Trash2, WifiOff } from "lucide-react";
 
 interface PhoneCaptureViewProps {
   phone: string;
   setPhone: (val: string) => void;
   onValidSubmit?: () => void;
   autoFocus?: boolean;
+  /** Called if the CRM sync fails after submit — parent can show a toast or retry */
+  onSubmitError?: (reason: string) => void;
+  /** If true, shows a subtle inline notice that the last sync failed */
+  syncFailed?: boolean;
 }
 
 export function PhoneCaptureView({
   phone,
   setPhone,
   onValidSubmit,
-  autoFocus = true
+  autoFocus = true,
+  onSubmitError: _onSubmitError,
+  syncFailed = false
 }: PhoneCaptureViewProps) {
   const [error, setError] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -22,26 +28,24 @@ export function PhoneCaptureView({
   const validateEgyptianPhone = (val: string) => {
     const cleaned = val.replace(/\D/g, "");
     if (cleaned.length === 0) return null;
-    
-    // Check if it starts with 01
+
     if (!cleaned.startsWith("01")) {
       return "لازم يبدأ بـ 01";
     }
-    
-    // Check prefix (10, 11, 12, 15)
+
     const thirdDigit = cleaned[2];
     if (thirdDigit && !["0", "1", "2", "5"].includes(thirdDigit)) {
       return "رقم غير صحيح.. اتأكد من البداية (010, 011, 012, 015)";
     }
-    
+
     if (cleaned.length > 11) {
       return "الرقم أطول من اللازم (11 رقم بس)";
     }
-    
+
     if (cleaned.length === 11) {
       return null; // Valid
     }
-    
+
     return "ناقص أرقام.. كمل الـ 11 رقم";
   };
 
@@ -82,12 +86,18 @@ export function PhoneCaptureView({
           style={{
             background: "var(--glass-bg)",
             border: `2px solid ${
-              isValid ? "rgba(20,184,166,0.5)" : error && phone.length > 5 ? "rgba(239,68,68,0.4)" : isFocused ? "rgba(20,184,166,0.3)" : "var(--glass-border)"
+              isValid
+                ? "rgba(20,184,166,0.5)"
+                : error && phone.length > 5
+                  ? "rgba(239,68,68,0.4)"
+                  : isFocused
+                    ? "rgba(20,184,166,0.3)"
+                    : "var(--glass-border)"
             }`,
           }}
         >
           <Phone className={`w-6 h-6 transition-colors ${isValid ? "text-teal-400" : "text-slate-500 opacity-50"}`} />
-          
+
           <input
             autoFocus={autoFocus}
             type="tel"
@@ -125,7 +135,7 @@ export function PhoneCaptureView({
           </AnimatePresence>
         </div>
 
-        {/* Error Message */}
+        {/* Validation Error */}
         <AnimatePresence>
           {error && phone.length > 3 && (
             <motion.div
@@ -140,6 +150,24 @@ export function PhoneCaptureView({
           )}
         </AnimatePresence>
       </div>
+
+      {/* CRM Sync failure notice — non-blocking, subtle amber warning */}
+      <AnimatePresence>
+        {syncFailed && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="flex items-center gap-3 p-4 rounded-2xl border border-amber-500/20"
+            style={{ background: "rgba(245,158,11,0.05)" }}
+          >
+            <WifiOff className="w-4 h-4 text-amber-400/80 shrink-0" />
+            <p className="text-[11px] font-bold text-amber-300/80 leading-relaxed">
+              فيه مشكلة في الاتصال — هنسجل رقمك محليًا وهنحاول تاني بعد كده.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="flex items-center gap-3 p-4 rounded-2xl bg-teal-500/5 border border-teal-500/10">
         <div className="w-2 h-2 rounded-full bg-teal-400 animate-pulse shrink-0" />

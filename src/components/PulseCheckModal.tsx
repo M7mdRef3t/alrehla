@@ -21,7 +21,7 @@ import type { TacticalAdvice } from "./PulseCheckModalParts/helpers";
 import { Step1View } from "./PulseCheckModalParts/Step1View";
 import { Step2View } from "./PulseCheckModalParts/Step2View";
 import { PhoneCaptureView } from "./PulseCheckModalParts/PhoneCaptureView";
-import { getStoredLeadPhone } from "../services/marketingLeadService";
+import { getStoredLeadPhone, captureMarketingLead } from "../services/marketingLeadService";
 import { AnalysisOverlay } from "./PulseCheckModalParts/AnalysisOverlay";
 import { WarpVelocityEffect } from "./PulseCheckModalParts/WarpVelocityEffect";
 
@@ -200,6 +200,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [suggestionApplied, setSuggestionApplied] = useState(false);
   const [isSavingPulse, setIsSavingPulse] = useState(false);
   const [phone, setPhone] = useState("");
+  const [phoneSyncFailed, setPhoneSyncFailed] = useState(false);
   const [saveToastText, setSaveToastText] = useState("تمام.. حفظنا حالتك");
   const [keyboardEnergyHint, setKeyboardEnergyHint] = useState<number | null>(null);
   void keyboardEnergyHint; // prevent SWC tree-shaking of unused destructured variable
@@ -458,6 +459,19 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     if (!storedPhone && !phone && !isStartRecovery) {
       setStep(2);
       return;
+    }
+
+    // Instant CRM sync the moment we have a phone confirmed
+    const resolvedPhone = phone || storedPhone || undefined;
+    if (resolvedPhone) {
+      const syncResult = await captureMarketingLead({
+        phone: resolvedPhone,
+        status: "engaged",
+        source: "pulse_check",
+        sourceType: "website",
+      });
+      // Show subtle amber notice if network failed — non-blocking
+      setPhoneSyncFailed(!syncResult.success);
     }
 
     setIsAnalyzing(true);
@@ -916,7 +930,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 <PhoneCaptureView
                   phone={phone}
                   setPhone={setPhone}
-                  onValidSubmit={() => handleTacticalAnalysis()}
+                  onValidSubmit={() => void handleTacticalAnalysis()}
+                  syncFailed={phoneSyncFailed}
                 />
               )}
 

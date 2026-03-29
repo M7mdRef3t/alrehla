@@ -1976,8 +1976,8 @@ async function handleWeeklyReport(client: SupabaseClient, req: RequestLike, res:
       landing_viewed: 0,
       landing_clicked_start: 0,
       cta_free_clicked: 0,
-      cta_checkout_clicked: 0,
-      checkout_page_viewed: 0,
+      cta_activation_clicked: 0,
+      activation_page_viewed: 0,
       payment_success: 0,
       payment_failed: 0
     });
@@ -2100,38 +2100,38 @@ async function handleWeeklyReport(client: SupabaseClient, req: RequestLike, res:
       : "gate7_insufficient_traffic";
   const landingViewed = Number(flowStepCounts.landing_viewed ?? 0);
   const ctaFreeClicked = Number(flowStepCounts.cta_free_clicked ?? 0) + Number(flowStepCounts.landing_clicked_start ?? 0);
-  const ctaCheckoutClicked = Number(flowStepCounts.cta_checkout_clicked ?? 0);
-  const checkoutPageViewed = Number(flowStepCounts.checkout_page_viewed ?? 0);
+  const ctaActivationClicked = Number(flowStepCounts.cta_activation_clicked ?? 0);
+  const activationPageViewed = Number(flowStepCounts.activation_page_viewed ?? 0);
   const paymentSuccess = Number(flowStepCounts.payment_success ?? 0);
   const paymentFailed = Number(flowStepCounts.payment_failed ?? 0);
   const toPct = (value: number, total: number): number => (total > 0 ? Math.round((value / total) * 10000) / 100 : 0);
   const conversionFunnel = {
     landingViewed,
     ctaFreeClicked,
-    ctaCheckoutClicked,
-    checkoutPageViewed,
+    ctaActivationClicked,
+    activationPageViewed,
     paymentSuccess,
     paymentFailed,
     freeCtaRatePct: toPct(ctaFreeClicked, landingViewed),
-    checkoutIntentRatePct: toPct(ctaCheckoutClicked, ctaFreeClicked),
-    checkoutViewRatePct: toPct(checkoutPageViewed, ctaCheckoutClicked),
-    paymentSuccessRatePct: toPct(paymentSuccess, checkoutPageViewed)
+      activationIntentRatePct: toPct(ctaActivationClicked, ctaFreeClicked),
+      activationViewRatePct: toPct(activationPageViewed, ctaActivationClicked),
+    paymentSuccessRatePct: toPct(paymentSuccess, activationPageViewed)
   };
   const funnelDailySeries = Array.from(funnelDaily.entries())
     .map(([date, counts]) => {
       const dailyFreeCta = Number(counts.cta_free_clicked ?? 0) + Number(counts.landing_clicked_start ?? 0);
-      const dailyCheckoutCta = Number(counts.cta_checkout_clicked ?? 0);
-      const dailyCheckoutViewed = Number(counts.checkout_page_viewed ?? 0);
+        const dailyActivationCta = Number(counts.cta_activation_clicked ?? 0);
+        const dailyActivationViewed = Number(counts.activation_page_viewed ?? 0);
       const dailyPaymentSuccess = Number(counts.payment_success ?? 0);
       return {
         date,
         landingViewed: Number(counts.landing_viewed ?? 0),
         ctaFreeClicked: dailyFreeCta,
-        ctaCheckoutClicked: dailyCheckoutCta,
-        checkoutPageViewed: dailyCheckoutViewed,
+        ctaActivationClicked: dailyActivationCta,
+        activationPageViewed: dailyActivationViewed,
         paymentSuccess: dailyPaymentSuccess,
         paymentFailed: Number(counts.payment_failed ?? 0),
-        paymentSuccessRatePct: toPct(dailyPaymentSuccess, dailyCheckoutViewed)
+        paymentSuccessRatePct: toPct(dailyPaymentSuccess, dailyActivationViewed)
       };
     })
     .sort((a, b) => a.date.localeCompare(b.date));
@@ -2144,23 +2144,23 @@ async function handleWeeklyReport(client: SupabaseClient, req: RequestLike, res:
         metric: `freeCtaRate=${conversionFunnel.freeCtaRatePct}%`
       };
     }
-    if (ctaFreeClicked >= 12 && conversionFunnel.checkoutIntentRatePct < 22) {
+    if (ctaFreeClicked >= 12 && conversionFunnel.activationIntentRatePct < 22) {
       return {
         code: "upgrade_value_framing",
         title: "قوّ عرض الترقية قبل الدفع",
         action: "اربط CTA المدفوع مباشرة بقيمة (100 طاقة/21 يوم) مع دليل اجتماعي أقوى.",
-        metric: `checkoutIntentRate=${conversionFunnel.checkoutIntentRatePct}%`
+        metric: `activationIntentRate=${conversionFunnel.activationIntentRatePct}%`
       };
     }
-    if (ctaCheckoutClicked >= 8 && conversionFunnel.checkoutViewRatePct < 70) {
-      return {
-        code: "checkout_entry_friction",
+    if (ctaActivationClicked >= 8 && conversionFunnel.activationViewRatePct < 70) {
+        return {
+          code: "activation_entry_friction",
         title: "قلّل احتكاك الانتقال لصفحة الدفع",
-        action: "راجع مسار الانتقال وروابط checkout في الموبايل وتأكد من فتح الصفحة فورًا.",
-        metric: `checkoutViewRate=${conversionFunnel.checkoutViewRatePct}%`
+          action: "راجع مسار الانتقال وروابط التفعيل في الموبايل وتأكد من فتح الصفحة فورًا.",
+        metric: `activationViewRate=${conversionFunnel.activationViewRatePct}%`
       };
     }
-    if (checkoutPageViewed >= 5 && conversionFunnel.paymentSuccessRatePct < 35) {
+    if (activationPageViewed >= 5 && conversionFunnel.paymentSuccessRatePct < 35) {
       return {
         code: "payment_completion_gap",
         title: "أولوية الأسبوع: رفع إتمام الدفع",

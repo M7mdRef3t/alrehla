@@ -33,7 +33,7 @@ function isDebugAuthorized(request: Request): boolean {
 
 /**
  * P0-2: Builds a personalized URL with lead_id and lead_source for full attribution tracking.
- * Every outreach message MUST use this — never a bare /onboarding or /checkout link.
+ * Every outreach message MUST use this — never a bare /onboarding or external handoff link.
  */
 function buildPersonalizedUrl(leadId: string, source: string, path = "/onboarding"): string {
   const base = "https://www.alrehla.app";
@@ -79,8 +79,6 @@ async function enqueueOutreach(
 
   // P0-2: Both URLs are personalized — carry lead_id + lead_source for full attribution
   const onboardingUrl = buildPersonalizedUrl(leadId, source, "/onboarding");
-  const checkoutUrl = buildPersonalizedUrl(leadId, source, "/checkout");
-
   const steps = [
     // ... (rest of steps remain same, but we only queue email steps if email exists)
   ];

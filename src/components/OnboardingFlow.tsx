@@ -83,6 +83,7 @@ export function hasCompletedJourneyOnboarding(): boolean {
 
 interface OnboardingFlowProps {
   onComplete: (skipped?: boolean) => void;
+  initialMirrorName?: string | null;
 }
 
 
@@ -103,7 +104,8 @@ const RING_COLORS: Record<Ring, { bg: string; border: string; label: string; lab
 const StepInventory: FC<{
   onNext: (items: { name: string; category: AdviceCategory }[]) => void;
   onSkip: () => void;
-}> = memo(({ onNext, onSkip }) => {
+  mirrorName?: string;
+}> = memo(({ onNext, onSkip, mirrorName }) => {
   // Use refs for input values to avoid re-rendering the entire tree on each keystroke
   const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null]);
   const [categories, setCategories] = useState<AdviceCategory[]>(["family", "family", "family"]);
@@ -166,8 +168,13 @@ const StepInventory: FC<{
         <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>
           بص جواك
         </h2>
+        {mirrorName ? (
+          <p className="text-[11px] font-bold mb-2" style={{ color: "rgba(45,212,191,0.85)" }}>
+            ده اسمك أنت: {mirrorName}
+          </p>
+        ) : null}
         <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          قبل ما نرسم، فكّر في أكتر 3 أشخاص واخدين مساحة من تفكيرك النهاردة.. سواء بالسلب أو الإيجاب.
+          قبل ما نرسم، فكّر في 3 أشخاص تانيين واخدين مساحة من تفكيرك النهاردة.. سواء بالسلب أو الإيجاب.
         </p>
       </div>
 
@@ -685,19 +692,20 @@ const StepRecoveryPlanPreview: FC<{
 /* ════════════════════════════════════════════════
    Main OnboardingFlow
    ════════════════════════════════════════════════ */
-export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => {
+export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initialMirrorName }) => {
   const addNode = useMapState((s) => s.addNode);
   const [step, setStep] = useState(0);
   const [prevStep, setPrevStep] = useState(-1);
   const [collectedItems, setCollectedItems] = useState<{ name: string; category: AdviceCategory }[]>([]);
   const completionTrackedRef = useRef(false);
   const [, startTransition] = useTransition();
+  const seededMirrorName = (initialMirrorName ?? "").trim();
 
   useEffect(() => {
     try {
       recordFlowEvent("onboarding_opened");
       trackEvent(AnalyticsEvents.ONBOARDING_STARTED, {
-        entry_point: "relationship_map"
+        entry_point: seededMirrorName ? "landing_name_bridge" : "relationship_map"
       });
     } catch {
       // Never block onboarding rendering on analytics failures.
@@ -882,7 +890,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
 
           {step === 1 && (
             <div key="step0" className="ob-step-enter">
-              <StepInventory onNext={handleInventoryNext} onSkip={handleSkip} />
+              <StepInventory onNext={handleInventoryNext} onSkip={handleSkip} mirrorName={seededMirrorName || undefined} />
             </div>
           )}
           {step === 2 && (

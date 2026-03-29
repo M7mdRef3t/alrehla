@@ -518,7 +518,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                                 onClick={() => { openOverlay("premiumBridge"); }}
                                 className="px-5 py-2.5 rounded-xl bg-teal-500 text-slate-950 font-black hover:bg-teal-400 transition-colors"
                             >
-                                ابدأ رحلة التعافي
+                                افتح المسار المتقدم
                             </button>
                         )}
                         <button

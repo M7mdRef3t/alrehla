@@ -117,7 +117,7 @@ export function GenesisOnboarding({ userId, onCompleted }: GenesisOnboardingProp
     onCompleted();
   };
 
-  const handleCheckout = () => {
+  const handleActivation = () => {
     if (!isPublicPaymentsEnabled) return;
     openOverlay("premiumBridge");
   };
@@ -158,10 +158,10 @@ export function GenesisOnboarding({ userId, onCompleted }: GenesisOnboardingProp
               {isPublicPaymentsEnabled && (
                 <button
                   type="button"
-                  onClick={handleCheckout}
+                  onClick={handleActivation}
                   className="px-6 py-3 rounded-xl bg-teal-500 text-slate-950 font-bold hover:bg-teal-400 transition-colors"
                 >
-                  ابدأ رحلة التعافي
+                  افتح المسار المتقدم
                 </button>
               )}
               <button

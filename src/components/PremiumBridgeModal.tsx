@@ -1,15 +1,7 @@
 import type { FC } from "react";
 import { useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Sparkles, 
-  Map as MapIcon, 
-  ChevronRight, 
-  ShieldCheck, 
-  Compass,
-  ArrowLeft,
-  X
-} from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronRight, Compass, Map as MapIcon, ShieldCheck, Sparkles, X } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import { useAppOverlayState } from "../state/appOverlayState";
 
@@ -20,8 +12,8 @@ export const PremiumBridgeModal: FC = () => {
 
   const stats = useMemo(() => {
     const total = nodes.length;
-    const red = nodes.filter(n => n.ring === "red").length;
-    const amber = nodes.filter(n => n.ring === "yellow").length;
+    const red = nodes.filter((n) => n.ring === "red").length;
+    const amber = nodes.filter((n) => n.ring === "yellow").length;
     return { total, red, amber };
   }, [nodes]);
 
@@ -30,26 +22,21 @@ export const PremiumBridgeModal: FC = () => {
   };
 
   const handleStartRecovery = () => {
-    // We can also track this intent before redirecting
     if (typeof window !== "undefined") {
-      window.location.href = "/checkout?source=onboarding_bridge";
+      window.sessionStorage.setItem("dawayir-app-boot-action", "start_recovery");
+      window.location.href = "/";
     }
   };
 
   const handleExplore = () => {
     setOverlay("premiumBridge", false);
-    // Optionally open the map or a welcome toast
   };
 
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
-      <div 
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 select-none"
-        dir="rtl"
-      >
-        {/* Background Backdrop with extra deep blur */}
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 select-none" dir="rtl">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -58,7 +45,6 @@ export const PremiumBridgeModal: FC = () => {
           className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl"
         />
 
-        {/* Modal Container */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 40 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -69,10 +55,8 @@ export const PremiumBridgeModal: FC = () => {
             background: "radial-gradient(circle at top right, rgba(20,184,166,0.15), transparent 40%), #0f172a"
           }}
         >
-          {/* Decorative elements */}
           <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-teal-400/40 to-transparent" />
 
-          {/* Close button (Subtle) */}
           <button
             onClick={handleClose}
             className="absolute top-6 left-6 p-2 rounded-full border border-white/5 bg-white/5 hover:bg-white/10 transition-colors z-10"
@@ -81,14 +65,13 @@ export const PremiumBridgeModal: FC = () => {
           </button>
 
           <div className="p-8 pt-10">
-            {/* Header / Celebration */}
             <div className="flex flex-col items-center text-center">
               <div className="relative mb-6">
                 <div className="absolute inset-0 bg-teal-400/20 blur-2xl rounded-full" />
                 <div className="relative w-20 h-20 rounded-3xl bg-linear-to-br from-teal-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-teal-500/20 rotate-3">
                   <ShieldCheck className="w-10 h-10 text-slate-950 -rotate-3" />
                 </div>
-                <motion.div 
+                <motion.div
                   animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                   transition={{ repeat: Infinity, duration: 3 }}
                   className="absolute -top-2 -right-2"
@@ -98,16 +81,16 @@ export const PremiumBridgeModal: FC = () => {
               </div>
 
               <h2 className="text-3xl font-black text-white leading-tight">
-                خريطتك الآن حية.. <br/>
-                وعقلك بدأ يرى <span className="text-teal-400">بوضوح</span>
+                خريطتك بقت أوضح.. <br />
+                وده وقت تكمل من جوه
               </h2>
-              
+
               <p className="mt-4 text-slate-300 text-lg leading-relaxed max-w-xs">
-                لقد انتهت المرحلة الأولى بنجاح. رصدنا <span className="text-white font-bold">{stats.total} علاقة</span>، ومعرفة الحقيقة هي أول خطوة في "التعافي".
+                انتهت المرحلة الأولى بنجاح. رصدنا <span className="text-white font-bold">{stats.total} علاقة</span>،
+                واللي جاي بيتبني من نفس الخريطة.
               </p>
             </div>
 
-            {/* Stats Summary Grid */}
             <div className="mt-8 grid grid-cols-2 gap-3">
               <div className="p-4 rounded-3xl border border-white/5 bg-white/[0.03] space-y-1">
                 <p className="text-[10px] uppercase tracking-widest text-slate-500 font-black">المنطقة الحمراء</p>
@@ -120,12 +103,11 @@ export const PremiumBridgeModal: FC = () => {
                 <p className="text-[10px] uppercase tracking-widest text-slate-500 font-black">جاهز للتحول</p>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-black text-amber-400">{stats.amber}</span>
-                  <span className="text-xs text-slate-400">تحتاج لوعي أكبر</span>
+                  <span className="text-xs text-slate-400">تحتاج وعي أكبر</span>
                 </div>
               </div>
             </div>
 
-            {/* The Choice / Call to Action */}
             <div className="mt-10 space-y-3">
               <button
                 onClick={handleStartRecovery}
@@ -136,8 +118,8 @@ export const PremiumBridgeModal: FC = () => {
                     <Compass className="w-6 h-6 text-slate-950" />
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-black text-slate-950">ابدأ رحلة التعافي (The Sage)</p>
-                    <p className="text-xs text-slate-800/70 font-bold">رحلة مركزة 21 يوم لتحويل حياتك</p>
+                    <p className="text-lg font-black text-slate-950">ارجع للخريطة وكمّل من جوه</p>
+                    <p className="text-xs text-slate-800/70 font-bold">الرحلة متاحة داخل المنصة من غير قفزات خارجية</p>
                   </div>
                 </div>
                 <ChevronRight className="w-6 h-6 text-slate-950/40 group-hover:translate-x-[-4px] transition-transform" />
@@ -148,13 +130,13 @@ export const PremiumBridgeModal: FC = () => {
                 className="w-full flex items-center justify-center gap-3 p-5 rounded-[2rem] border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-slate-300 hover:text-white font-black text-sm"
               >
                 <MapIcon className="w-4 h-4" />
-                استكشف الخريطة وحدك أولاً (Limited)
+                استكشف الخريطة وحدك أولًا
               </button>
             </div>
 
             <p className="mt-6 text-center text-[11px] text-slate-500 leading-relaxed px-6">
-              * الروشتة التفصيلية (Recovery Plan) وصلت الآن لإيميلك المسجل. <br/>
-              يمكنك الاطلاع عليها في أي وقت.
+              * لو فيه ترقية، هتظهر من جوه المنصة في الوقت المناسب. <br />
+              مفيش تحويل إجباري بعد الأونبوردينج.
             </p>
           </div>
         </motion.div>

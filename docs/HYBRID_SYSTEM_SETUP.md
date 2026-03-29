@@ -308,7 +308,7 @@ console.log(result);
 
 ### **1. تفعيل Stripe (الدفع الفعلي):**
 - أضف API Keys
-- اختبر Checkout Session
+- اختبر Activation Session
 - اختبر Webhooks
 
 ### **2. توصيل الـ Emotional Pricing بـ Stripe:**

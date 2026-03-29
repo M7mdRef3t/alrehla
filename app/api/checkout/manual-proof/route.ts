@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
   // Keep support_tickets lightweight by storing the screenshot in Storage first.
   // If Storage is unavailable, fall back to inline data_url so activation never blocks.
   const { error } = await admin.from("support_tickets").insert({
-    source: "checkout_manual_proof",
+    source: "activation_manual_proof",
     status: "open",
     priority: "high",
     category: "payment_activation",

@@ -380,7 +380,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                         style={{ border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)" }}
                                     >
                                         <Zap className="w-4 h-4" />
-                                        إدارة التفعيل والاشتراك
+                                        إدارة المسار المتقدم
                                     </button>
                                 </div>
                             )}

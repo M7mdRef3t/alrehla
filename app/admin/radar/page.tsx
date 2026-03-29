@@ -41,8 +41,8 @@ type FunnelDailyPoint = {
   date: string;
   landingViewed: number;
   ctaFreeClicked: number;
-  ctaCheckoutClicked: number;
-  checkoutPageViewed: number;
+  ctaActivationClicked: number;
+  activationPageViewed: number;
   paymentSuccess: number;
   paymentFailed: number;
   paymentSuccessRatePct: number;
@@ -281,7 +281,7 @@ export default function AdminRadarPage() {
             Array.isArray(supportBody?.tickets)
               ? supportBody.tickets
                 .map(toSupportTicket)
-                .filter((ticket) => ticket.source === "checkout_manual_proof" || ticket.category === "payment_activation")
+                .filter((ticket) => ticket.source === "activation_manual_proof" || ticket.category === "payment_activation")
               : []
           );
         }
@@ -981,7 +981,7 @@ export default function AdminRadarPage() {
                       />
                     </div>
                     <p className="mt-2 text-[11px] text-slate-300">
-                      L:{point.landingViewed}  F:{point.ctaFreeClicked}  C:{point.ctaCheckoutClicked}  V:{point.checkoutPageViewed}  P:{point.paymentSuccess}
+                      L:{point.landingViewed}  F:{point.ctaFreeClicked}  A:{point.ctaActivationClicked}  V:{point.activationPageViewed}  P:{point.paymentSuccess}
                     </p>
                   </div>
                 ))}
@@ -1075,7 +1075,7 @@ export default function AdminRadarPage() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">Manual Payment Proofs</p>
-                  <p className="text-sm text-[var(--color-text-muted)]">Latest checkout proofs with image preview, payment metadata, and quick status actions.</p>
+                  <p className="text-sm text-[var(--color-text-muted)]">Latest activation proofs with image preview, payment metadata, and quick status actions.</p>
                 </div>
                 <div className="min-w-[220px] flex-1 md:max-w-xs">
                   <input

@@ -163,21 +163,21 @@ export interface WeeklyReport {
   conversionFunnel?: {
     landingViewed: number;
     ctaFreeClicked: number;
-    ctaCheckoutClicked: number;
-    checkoutPageViewed: number;
+    ctaActivationClicked: number;
+    activationPageViewed: number;
     paymentSuccess: number;
     paymentFailed: number;
     freeCtaRatePct: number;
-    checkoutIntentRatePct: number;
-    checkoutViewRatePct: number;
+    activationIntentRatePct: number;
+    activationViewRatePct: number;
     paymentSuccessRatePct: number;
   };
   funnelDailySeries?: Array<{
     date: string;
     landingViewed: number;
     ctaFreeClicked: number;
-    ctaCheckoutClicked: number;
-    checkoutPageViewed: number;
+    ctaActivationClicked: number;
+    activationPageViewed: number;
     paymentSuccess: number;
     paymentFailed: number;
     paymentSuccessRatePct: number;

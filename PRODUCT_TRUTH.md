@@ -13,7 +13,7 @@
 1. **Landing:** شاشة "الرحلة" الرئيسية.
 2. **Hook:** عمل أول "دواير" أو "Pulse Check" سريع (Aha Moment).
 3. **Paywall:** عرض الـ Scarcity (باقي 50 مكان) + زر "انضم للرحلة".
-4. **Checkout:** اختيار وسيلة الدفع اليدوي (فودافون كاش / انستاباي / تحويل بنكي / PayPal حسب الحالة).
+4. **Activation:** اختيار وسيلة الدفع اليدوي (فودافون كاش / انستاباي / تحويل بنكي / PayPal حسب الحالة).
 5. **Activation:** رفع إثبات الدفع (Manual Proof) -> تفعيل تلقائي/شبه-تلقائي.
 6. **Retention:** أول مهمة (Action Toolkit).
 
@@ -31,7 +31,7 @@
 ## ✅ المعتمد تقنياً (Technical Source of Truth)
 - **User Mode:** `VITE_APP_ENV=user` هو ما يراه المشتري.
 - **Access Flow:** `src/components/app-shell/useAppShellAccessState.ts`.
-- **Payment API:** `app/api/checkout/manual-proof/route.ts`.
+- **Payment API:** `app/api/activation/manual-proof/route.ts`.
 - **Funnel Logging:** `src/services/analytics.ts` (routing_events).
 
 ---

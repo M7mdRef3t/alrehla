@@ -6,6 +6,8 @@ import { signInWithGoogleAtPath } from "../../services/authService";
 import { consumeEmotionalOffer, getEmotionalOffer } from "../../services/subscriptionManager";
 import { supabase } from "../../services/supabaseClient";
 import { trackEvent, AnalyticsEvents } from "../../services/analytics";
+import { marketingLeadService } from "../../services/marketingLeadService";
+import { recordFlowEvent } from "../../services/journeyTracking";
 
 const FEATURES = [
   "خريطة علاقات لا محدودة",
@@ -29,7 +31,7 @@ export default function PricingPage() {
     if (viewTrackedRef.current) return;
     viewTrackedRef.current = true;
     try {
-      trackEvent(AnalyticsEvents.CHECKOUT_VIEWED, { page: "pricing" });
+      trackEvent(AnalyticsEvents.ACTIVATION_VIEWED, { page: "pricing" });
     } catch { /* never block render */ }
   }, []);
 
@@ -53,7 +55,24 @@ export default function PricingPage() {
       return;
     }
 
-    window.location.href = `/checkout?plan=premium`;
+    // Sync CRM: user clicked "open advanced track" — status is engaged (not payment_requested)
+    // since the flow is now coach-first, not direct payment.
+    const storedPhone = marketingLeadService.getStoredLeadPhone();
+    const storedLeadId = marketingLeadService.getStoredLeadId();
+    if (storedPhone || storedLeadId) {
+      try {
+        recordFlowEvent("activation_page_viewed");
+        void marketingLeadService.syncLead({
+          phone: storedPhone ?? undefined,
+          status: "engaged",
+          source: "pricing_page",
+          sourceType: "website",
+          metadata: { leadId: storedLeadId ?? undefined, plan: "premium_intent" }
+        });
+      } catch { /* non-blocking */ }
+    }
+
+    window.location.href = `/coach`;
   };
 
   return (
@@ -86,13 +105,13 @@ export default function PricingPage() {
         {/* Header */}
         <div className="mb-10 max-w-lg text-center">
           <p className="mb-4 text-xs font-black uppercase tracking-[0.28em] text-teal-400">
-            فعّل رحلتك
+            افتح المسار المتقدم
           </p>
           <h1 className="mb-4 text-3xl font-black leading-tight text-white md:text-4xl" style={{ fontFamily: "Tajawal, sans-serif" }}>
             خطوة واحدة بينك وبين التعافي
           </h1>
           <p className="text-base leading-[1.8] text-slate-400">
-            اكتشفت الخريطة. شوفت الحقيقة. دلوقتي فعّل رحلتك لتحصل على خطة عمل يومية مخصصة ليك.
+            اكتشفت الخريطة. شوفت الحقيقة. دلوقتي افتح المسار المتقدم لو عايز سعة أعمق وتجربة أوسع.
           </p>
         </div>
 
@@ -144,18 +163,18 @@ export default function PricingPage() {
             className="group w-full flex items-center justify-center gap-3 rounded-2xl bg-teal-400 py-4 text-lg font-black text-slate-950 shadow-lg shadow-teal-500/20 transition-all hover:bg-teal-300 hover:shadow-teal-500/30 active:scale-[0.98] disabled:opacity-60"
           >
             {isLoading ? (
-              "جاري فتح صفحة التفعيل..."
+              "جاري فتح المسار المتقدم..."
             ) : (
               <>
                 <Zap className="h-5 w-5" />
-                فعّل رحلتك الآن
+                افتح المسار المتقدم الآن
                 <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
               </>
             )}
           </button>
 
           <p className="mt-4 text-center text-[11px] text-slate-500">
-            الدفع يدوي بالكامل (InstaPay / Vodafone Cash / PayPal). بعد التحويل هنفعّلك في أقل من ساعة.
+            لو محتاج سعة أعلى، هتدخل من نفس المنصة أو تتواصل معنا مباشرة. بدون قفزات خارجية.
           </p>
         </div>
 
@@ -168,7 +187,7 @@ export default function PricingPage() {
           <span className="h-1 w-1 rounded-full bg-slate-700" />
           <div>إلغاء في أي وقت بدون شروط</div>
           <span className="h-1 w-1 rounded-full bg-slate-700" />
-          <div>التفعيل خلال ساعة من الدفع</div>
+          <div>الفتح خلال ساعة من التواصل أو المسار الداخلي</div>
         </div>
       </div>
     </div>

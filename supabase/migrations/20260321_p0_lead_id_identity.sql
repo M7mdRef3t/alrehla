@@ -1,6 +1,6 @@
 -- P0-1 Migration: Add explicit lead_id to marketing_leads table
 -- This gives every lead a durable UUID identity that can be tracked
--- across the full funnel: import → outreach → onboarding → checkout
+-- across the full funnel: import → outreach → onboarding → activation
 
 -- 1. Add lead_id column with auto-generated UUID default
 ALTER TABLE marketing_leads

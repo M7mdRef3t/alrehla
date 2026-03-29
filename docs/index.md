@@ -3,7 +3,7 @@
 ## Product
 - concept.md
 - user-journey.md
-- manual-checkout-env.md
+- manual-activation-env.md
 - pitch.md
 - repo-intel-agent-integration.md
 - investor-readiness-pack.md

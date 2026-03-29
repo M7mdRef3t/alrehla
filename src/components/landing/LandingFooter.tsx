@@ -55,10 +55,10 @@ export const LandingFooter: FC<LandingFooterProps> = ({
         الخطط والأسعار
       </a>
       <a
-        href="/checkout"
+        href="/coach"
         className="text-teal-300/80 hover:text-teal-200 transition-colors underline underline-offset-2 font-bold"
       >
-        تفعيل الرحلة
+        المسار المتقدم
       </a>
       <a
         href="https://wa.me/201023050092"
