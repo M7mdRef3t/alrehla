@@ -22,6 +22,7 @@ const KNOWN_SCREENS = new Set<AppScreen>([
   "oracle-dashboard", "armory", "survey", "exit-scripts",
   "grounding", "stories", "about", "insights", "quizzes",
   "behavioral-analysis", "resources",
+  "profile",
 ]);
 
 /** Type guard: narrows `string` → `AppScreen` safely */

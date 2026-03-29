@@ -126,6 +126,10 @@ export function useAppSurfaceActions({
     void navigateToScreen("settings");
   }, [navigateToScreen]);
 
+  const openProfileScreen = useCallback(() => {
+    void navigateToScreen("profile");
+  }, [navigateToScreen]);
+
   const handleExperienceNavigate = useCallback((nextScreen: string) => {
     void navigateToScreen(nextScreen as AppScreen);
   }, [navigateToScreen]);
@@ -178,7 +182,7 @@ export function useAppSurfaceActions({
   const handleChromeProfileOpen = useCallback(() => {
     recordFlowEvent("profile_clicked");
     if (authUser) {
-      openAppOverlay("dataManagement");
+      void navigateToScreen("profile");
       return;
     }
     setPulseCheckContext("regular");
@@ -193,6 +197,7 @@ export function useAppSurfaceActions({
     openAppOverlay,
     setLoginIntent,
     setPulseCheckContext,
+    navigateToScreen,
     setShowAuthModal,
     setShowPulseCheck
   ]);
@@ -229,6 +234,7 @@ export function useAppSurfaceActions({
     openNoiseSilencingPulse,
     openLibraryOverlay,
     openSettingsScreen,
+    openProfileScreen,
     handleExperienceNavigate,
     handleJourneyGoalOpen,
     openManualCocoon,

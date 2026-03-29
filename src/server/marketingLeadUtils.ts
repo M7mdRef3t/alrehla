@@ -42,7 +42,7 @@ export function sanitizePhone(value: unknown): { raw: string; normalized: string
     return { raw: text, normalized: `20${digits}` };
   }
 
-  // Strict Validation: If it doesn't look like an Egyptian mobile, reject it.
+  // Final Strict Rejection: No loose fallbacks.
   return null;
 }
 

@@ -6,114 +6,53 @@ import { getDocumentOrNull } from "../../services/clientRuntime";
 import { getOrigin, getPathname } from "../../services/navigation";
 
 const PAGE_NAMES: Record<AppScreen, string> = {
-  landing: "الرئيسية",
-  goal: "اختيار الهدف",
-  map: "خريطة العلاقات",
-  guided: "الرحلة الموجهة",
-  mission: "شاشة المهمة",
-  tools: "أدوات الرحلة",
-  settings: "الإعدادات",
-  enterprise: "بوابة المؤسسات",
-  "guilt-court": "محكمة الشعور بالذنب",
-  diplomacy: "البرقيات الدبلوماسية",
-  "oracle-dashboard": "مجلس الحكماء",
-  armory: "الترسانة (Armory)",
-  survey: "استبيان البحث",
-  "exit-scripts": "مكتبة جمل الخروج",
-  grounding: "تقنيات تهدئة الجسم",
-  stories: "قصص النجاح",
-  about: "لماذا الرحلة؟",
-  insights: "تحليل العلاقات",
-  quizzes: "الاختبارات",
-  "behavioral-analysis": "تحليل الأنماط السلوكية",
-  resources: "مركز الموارد التعليمية",
+  landing: "Landing",
+  goal: "Choose Goal",
+  map: "Relationship Map",
+  guided: "Guided Journey",
+  mission: "Mission Screen",
+  tools: "Journey Tools",
+  settings: "Settings",
+  enterprise: "Enterprise Portal",
+  "guilt-court": "Guilt Court",
+  diplomacy: "Diplomatic Cables",
+  "oracle-dashboard": "Oracle Council",
+  armory: "Armory",
+  survey: "Research Survey",
+  "exit-scripts": "Exit Scripts",
+  grounding: "Grounding Toolkit",
+  stories: "Success Stories",
+  about: "About",
+  insights: "Insights",
+  quizzes: "Quizzes",
+  "behavioral-analysis": "Behavioral Analysis",
+  resources: "Resources",
+  profile: "Profile",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
-  landing: {
-    title: "Alrehla | Relationship Clarity Platform",
-    description: "Alrehla helps you understand your relationships and boundaries with clarity through Dawayir."
-  },
-  goal: {
-    title: "Choose Your Goal | Alrehla",
-    description: "Choose the relationship goal you want to work on and start your guided journey."
-  },
-  map: {
-    title: "Relationship Map | Alrehla",
-    description: "Visualize your relationship circles and set healthier boundaries with confidence."
-  },
-  guided: {
-    title: "Guided Journey | Alrehla",
-    description: "Follow a structured journey with practical steps to regain clarity and control."
-  },
-  mission: {
-    title: "Mission Screen | Alrehla",
-    description: "Complete your mission steps and track progress in real relationship scenarios."
-  },
-  tools: {
-    title: "Journey Tools | Alrehla",
-    description: "Access focused tools that help you regulate, reflect, and take practical action."
-  },
-  settings: {
-    title: "Settings | Alrehla",
-    description: "Manage your subscription, language, and B2B portal settings."
-  },
-  enterprise: {
-    title: "Enterprise Portal | Alrehla",
-    description: "B2B psychological safety and organizational analytics dashboard."
-  },
-  "guilt-court": {
-    title: "Guilt Court | Alrehla",
-    description: "Strategically dismantle irrational guilt through logical analysis."
-  },
-  diplomacy: {
-    title: "Diplomatic Cables | Alrehla",
-    description: "Smart message templates for strategic communication and boundary setting."
-  },
-  "oracle-dashboard": {
-    title: "Oracle Council | Alrehla",
-    description: "Review system anomalies and administrative configurations."
-  },
-  armory: {
-    title: "The Armory | Alrehla",
-    description: "Access advanced cognitive and psychological defense protocols."
-  },
-  survey: {
-    title: "Research Survey | Alrehla",
-    description: "Help us understand your needs through a quick research survey."
-  },
-  "exit-scripts": {
-    title: "Exit Scripts Library | Alrehla",
-    description: "Ready-made exit phrases for every difficult situation."
-  },
-  grounding: {
-    title: "Grounding Toolkit | Alrehla",
-    description: "Body-first calming techniques to regulate your nervous system."
-  },
-  stories: {
-    title: "قصص النجاح — الرحلة",
-    description: "قصص حقيقية من أناس حققوا تحولاً جذرياً في حياتهم عبر الرحلة."
-  },
-  about: {
-    title: "لماذا الرحلة؟ | Alrehla",
-    description: "تعرف على فلسفة ومنهجية الرحلة — منصة الوعي الذاتي وخريطة العلاقات."
-  },
-  insights: {
-    title: "تحليل العلاقات | الرحلة",
-    description: "نظرة شاملة على صحة علاقاتك مع تقارير بصرية وتوصيات ذكية."
-  },
-  quizzes: {
-    title: "اختبارات الشخصية والعلاقات | الرحلة",
-    description: "اكتشف نمط تعلقك وحدودك وجودة علاقاتك من خلال اختبارات تفاعلية."
-  },
-  "behavioral-analysis": {
-    title: "تحليل الأنماط السلوكية | الرحلة",
-    description: "اكتشف أنماطك العميقة المتكررة والخفية مع تحليل ذكي للوعي والسلوك."
-  },
-  resources: {
-    title: "مركز الموارد التعليمية | الرحلة",
-    description: "فيديوهات وقصص نجاح وتمارين وجمل خروج — كل ما تحتاجه للتعلم والممارسة."
-  },
+  landing: { title: "Alrehla", description: "Understand your relationships and boundaries." },
+  goal: { title: "Choose Your Goal | Alrehla", description: "Choose the relationship goal you want to work on." },
+  map: { title: "Relationship Map | Alrehla", description: "Visualize your relationship circles and boundaries." },
+  guided: { title: "Guided Journey | Alrehla", description: "Follow a structured journey with practical steps." },
+  mission: { title: "Mission Screen | Alrehla", description: "Complete mission steps and track progress." },
+  tools: { title: "Journey Tools | Alrehla", description: "Access focused tools that help you take action." },
+  settings: { title: "Settings | Alrehla", description: "Manage app settings and account-related options." },
+  enterprise: { title: "Enterprise Portal | Alrehla", description: "B2B dashboard and organizational analytics." },
+  "guilt-court": { title: "Guilt Court | Alrehla", description: "Dismantle irrational guilt through analysis." },
+  diplomacy: { title: "Diplomatic Cables | Alrehla", description: "Message templates for strategic communication." },
+  "oracle-dashboard": { title: "Oracle Council | Alrehla", description: "Review system anomalies and admin configs." },
+  armory: { title: "Armory | Alrehla", description: "Advanced cognitive and psychological protocols." },
+  survey: { title: "Research Survey | Alrehla", description: "Help us understand your needs through a quick survey." },
+  "exit-scripts": { title: "Exit Scripts | Alrehla", description: "Ready-made exit phrases for hard situations." },
+  grounding: { title: "Grounding Toolkit | Alrehla", description: "Body-first calming techniques to regulate." },
+  stories: { title: "Stories | Alrehla", description: "Real stories of change and growth." },
+  about: { title: "About | Alrehla", description: "Learn about the platform and its approach." },
+  insights: { title: "Insights | Alrehla", description: "A holistic view of your relationship health." },
+  quizzes: { title: "Quizzes | Alrehla", description: "Discover your patterns through interactive quizzes." },
+  "behavioral-analysis": { title: "Behavioral Analysis | Alrehla", description: "Detect recurring behavioral patterns." },
+  resources: { title: "Resources | Alrehla", description: "Videos, stories, and exercises to learn and practice." },
+  profile: { title: "Profile | Alrehla", description: "Review your progress, achievements, and personal bio." },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {
@@ -154,15 +93,11 @@ export function useAppPageMetadata(screen: AppScreen) {
     documentRef.title = seo.title;
 
     const descriptionTag = documentRef.querySelector('meta[name="description"]');
-    if (descriptionTag) {
-      descriptionTag.setAttribute("content", seo.description);
-    }
+    if (descriptionTag) descriptionTag.setAttribute("content", seo.description);
 
     const setMeta = (selector: string, value: string) => {
       const tag = documentRef.querySelector(selector);
-      if (tag) {
-        tag.setAttribute("content", value);
-      }
+      if (tag) tag.setAttribute("content", value);
     };
 
     setMeta('meta[property="og:title"]', seo.title);

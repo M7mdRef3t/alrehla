@@ -424,26 +424,51 @@ export const PlatformHeader = memo(function PlatformHeader({
                     </p>
                     <p className="text-xs text-slate-400 truncate">{user?.email ?? ""}</p>
                   </div>
-                  <div className="p-2 flex flex-col gap-1">
-                    {[
-                      { id: "profile", label: "الملف الشخصي", Icon: User },
-                      { id: "insights", label: "تحليل العلاقات", Icon: BarChart2 },
-                      { id: "quizzes", label: "اختبارات الشخصية", Icon: Sparkles },
-                      { id: "behavioral-analysis", label: "تحليل الأنماط", Icon: Brain },
-                      { id: "resources", label: "مركز الموارد", Icon: BookOpen },
-                      { id: "settings", label: "الإعدادات", Icon: Settings },
-                    ].map(({ id, label, Icon }) => (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => handleNav(id)}
-                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors text-right w-full"
-                        role="menuitem"
-                      >
-                        <Icon className="w-4 h-4 text-slate-400" />
-                        {label}
-                      </button>
-                    ))}
+                  <div className="p-2 flex flex-col gap-2">
+                    <div className="px-2 pt-1">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">الحساب</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleNav("profile")}
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full text-teal-300 hover:bg-teal-500/10 hover:text-teal-200"
+                      role="menuitem"
+                    >
+                      <User className="w-4 h-4 text-teal-300" />
+                      الملف الشخصي
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleNav("settings")}
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full text-slate-300 hover:bg-white/[0.08] hover:text-white"
+                      role="menuitem"
+                    >
+                      <Settings className="w-4 h-4 text-slate-400" />
+                      الإعدادات
+                    </button>
+
+                    <div className="mt-1 border-t border-white/[0.08] pt-2">
+                      <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-500">التحكم</p>
+                      <div className="flex flex-col gap-1">
+                        {[
+                          { id: "insights", label: "تحليل العلاقات", Icon: BarChart2 },
+                          { id: "quizzes", label: "اختبارات الشخصية", Icon: Sparkles },
+                          { id: "behavioral-analysis", label: "تحليل الأنماط", Icon: Brain },
+                          { id: "resources", label: "مركز الموارد", Icon: BookOpen },
+                        ].map(({ id, label, Icon }) => (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => handleNav(id)}
+                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors text-right w-full"
+                            role="menuitem"
+                          >
+                            <Icon className="w-4 h-4 text-slate-400" />
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
                     {/* Owner Switch — only for privileged roles */}
                     {isPrivilegedUser && (
@@ -522,6 +547,7 @@ const MOBILE_NAV = [
   { id: "tools", label: "الأدوات", icon: Wrench },
   { id: "insights", label: "تحليلات", icon: BarChart2 },
   { id: "stories", label: "قصص", icon: BookOpen },
+  { id: "profile", label: "الملف", icon: User },
   { id: "settings", label: "الإعدادات", icon: Settings },
 ] as const;
 

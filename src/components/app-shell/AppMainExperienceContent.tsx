@@ -10,6 +10,7 @@ import { QuizzesHub } from "../QuizzesHub";
 import { BehavioralAnalysisHub } from "../BehavioralAnalysisHub";
 import { ResourcesCenter } from "../ResourcesCenter";
 import type { ResourceTab } from "../ResourcesCenter";
+import { UserProfile } from "../UserProfile";
 
 type StartScreensProps = ComponentProps<typeof AppStartScreens>;
 type JourneyScreensProps = ComponentProps<typeof AppJourneyScreens>;
@@ -226,6 +227,14 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
       <RelationshipInsightsDashboard
         onBack={() => onNavigate?.("landing" as AppScreen)}
         onGoToQuizzes={() => onNavigate?.("quizzes" as AppScreen)}
+      />
+    );
+  }
+
+  if (screen === "profile") {
+    return (
+      <UserProfile
+        onBack={() => onNavigate?.("landing" as AppScreen)}
       />
     );
   }

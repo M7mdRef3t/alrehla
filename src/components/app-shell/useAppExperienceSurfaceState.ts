@@ -88,7 +88,7 @@ export function useAppExperienceSurfaceState({
     onOpenNoise: actions.openNoiseSilencingPulse,
     onMainPulseOpen: mainSurface.openRegularPulseCheck,
     onMainLibraryOpen: actions.openLibraryOverlay,
-    onMainProfileOpen: actions.openSettingsScreen,
+    onMainProfileOpen: actions.openProfileScreen,
     onMainNavigate: actions.handleExperienceNavigate,
     onOpenGoal: actions.handleJourneyGoalOpen,
     onOpenConsciousnessArchive: actions.openConsciousnessArchive,

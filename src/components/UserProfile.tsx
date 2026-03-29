@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Award, BarChart3, BookOpen,
   Flame, Heart, Pencil, Check, X as XIcon,
-  Map, Settings, Star, TrendingUp, Zap, ExternalLink,
+  Map, Star, TrendingUp, Zap, ExternalLink,
 } from "lucide-react";
 import { useGamificationState } from "../services/gamificationEngine";
 import { useAchievementState } from "../state/achievementState";
@@ -545,10 +545,9 @@ function buildRadarDims(
 
 interface UserProfileProps {
   onBack?: () => void;
-  onSettings?: () => void;
 }
 
-export function UserProfile({ onBack, onSettings }: UserProfileProps) {
+export function UserProfile({ onBack }: UserProfileProps) {
   const { xp, rank, level } = useGamificationState();
   const unlockedIds = useAchievementState((s) => s.unlockedIds);
   const totalPoints = useAchievementState((s) => s.totalPoints);
@@ -584,15 +583,6 @@ export function UserProfile({ onBack, onSettings }: UserProfileProps) {
             )}
             <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#e2e8f0" }}>ملفي الشخصي</h1>
           </div>
-          {onSettings && (
-            <button onClick={onSettings} style={{
-              background: "rgba(255,255,255,0.05)", border: "none", borderRadius: 10,
-              width: 34, height: 34, cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <Settings size={14} color="#64748b" />
-            </button>
-          )}
         </div>
 
         {/* Profile Card */}
