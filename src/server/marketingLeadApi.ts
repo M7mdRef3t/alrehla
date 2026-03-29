@@ -3,7 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import {
   dedupeMarketingLeadInputs,
   isValidMarketingLeadEmail,
-  normalizeMarketingLeadPayload
+  normalizeMarketingLeadPayload,
+  sanitizePhone
 } from "./marketingLeadUtils";
 import type {
   MarketingLeadImportResult,
@@ -154,17 +155,31 @@ export async function handleMarketingLeadGet(req: Request) {
   }
 
   const url = new URL(req.url);
-  const email = String(url.searchParams.get("email") ?? "").trim().toLowerCase();
-  if (!isValidMarketingLeadEmail(email)) {
-    return NextResponse.json({ ok: false, error: "invalid_email" }, { status: 400 });
+  const rawEmail = String(url.searchParams.get("email") ?? "").trim().toLowerCase();
+  const rawPhone = String(url.searchParams.get("phone") ?? "").trim();
+  
+  const email = rawEmail && isValidMarketingLeadEmail(rawEmail) ? rawEmail : null;
+  const phoneResult = rawPhone ? sanitizePhone(rawPhone) : null;
+  const phoneNormalized = phoneResult?.normalized ?? null;
+
+  if (!email && !phoneNormalized) {
+    return NextResponse.json({ ok: false, error: "invalid_lookup_params" }, { status: 400 });
   }
 
-  const { data, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("marketing_leads")
-    .select("lead_id,email,phone,name,source,source_type,status,campaign,adset,ad,placement,utm,note,last_contacted_at,qualified_at,created_at,updated_at")
-    .eq("email", email)
-    .maybeSingle();
+    .select("lead_id,email,phone,phone_normalized,name,source,source_type,status,campaign,adset,ad,placement,utm,note,last_contacted_at,qualified_at,created_at,updated_at,merge_conflict");
+
+  if (phoneNormalized) {
+    query = query.eq("phone_normalized", phoneNormalized);
+  } else if (email) {
+    query = query.eq("email", email);
+  }
+
+  const { data, error } = await query.maybeSingle();
+
   if (error) {
+    console.error("[marketing/lead] lookup error:", error);
     return NextResponse.json({ ok: false, error: "lead_lookup_failed" }, { status: 500 });
   }
   return NextResponse.json({ ok: true, exists: Boolean(data), lead: data ?? null });
@@ -303,60 +318,73 @@ export async function handleMarketingLeadImportPost(req: Request) {
       .filter((lead): lead is NormalizedMarketingLeadInput => Boolean(lead));
 
     const deduped = dedupeMarketingLeadInputs(normalized);
-    const emails = deduped.map((lead) => lead.email);
-    const { data: existingRows, error: existingError } = await supabaseAdmin
-      .from("marketing_leads")
-      .select("email")
-      .in("email", emails);
-    if (existingError) {
-      console.error("[marketing/lead/import] existing lookup failed:", existingError);
-      return NextResponse.json({ ok: false, error: "lead_lookup_failed" }, { status: 500 });
-    }
+    const results = { imported: 0, updated: 0, skipped: 0, errors };
+    const leadsWithIds: any[] = [];
 
-    const existingEmails = new Set((existingRows ?? []).map((row: { email?: string | null }) => String(row.email ?? "").trim().toLowerCase()));
-    const rows = deduped.map(toLeadRow);
-    const { error } = await supabaseAdmin.from("marketing_leads").upsert(rows, { onConflict: "email" });
-    if (error) {
-      console.error("[marketing/lead/import] Supabase upsert failed:", {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
-      });
-      return NextResponse.json({ ok: false, error: "lead_store_failed" }, { status: 500 });
-    }
+    // Process each lead with the same Phone-First logic as handleMarketingLeadPost
+    for (const input of deduped) {
+      try {
+        let existingId: string | null = null;
+        let conflict = false;
 
-    // P0-1: Fetch stored lead_ids after upsert (DB may have generated them)
-    const { data: storedLeads } = await supabaseAdmin
-      .from("marketing_leads")
-      .select("email, lead_id")
-      .in("email", emails);
+        // 1. Phone Lookup
+        if (input.phoneNormalized) {
+          const { data } = await supabaseAdmin
+            .from("marketing_leads")
+            .select("id, email")
+            .eq("phone_normalized", input.phoneNormalized)
+            .maybeSingle();
+          if (data) {
+            existingId = data.id;
+            if (input.email && data.email && data.email !== input.email) conflict = true;
+          }
+        }
 
-    const leadIdMap = new Map((storedLeads ?? []).map((r: { email: string; lead_id: string }) => [r.email, r.lead_id]));
+        // 2. Email Lookup (if no phone match)
+        if (!existingId && input.email) {
+          const { data } = await supabaseAdmin
+            .from("marketing_leads")
+            .select("id, phone_normalized")
+            .eq("email", input.email)
+            .maybeSingle();
+          if (data) {
+            existingId = data.id;
+            if (input.phoneNormalized && data.phone_normalized && data.phone_normalized !== input.phoneNormalized) conflict = true;
+          }
+        }
 
-    deduped.forEach((lead) => {
-      const storedLeadId = leadIdMap.get(lead.email || lead.phoneNormalized || "anonymous");
-      if (storedLeadId) {
-        enqueueOutreachAsync(lead.email, lead.source, lead.utm, storedLeadId, lead.phoneNormalized);
+        input.mergeConflict = conflict;
+        const row = toLeadRow(input);
+        let stored: { email: string | null; lead_id: string } | null = null;
+
+        if (existingId) {
+          const { data, error } = await supabaseAdmin.from("marketing_leads").update(row).eq("id", existingId).select("email, lead_id").single();
+          if (error) throw error;
+          stored = data;
+          results.updated++;
+        } else {
+          const { data, error } = await supabaseAdmin.from("marketing_leads").insert(row).select("email, lead_id").single();
+          if (error) throw error;
+          stored = data;
+          results.imported++;
+        }
+
+        if (stored) {
+          leadsWithIds.push({
+            email: stored.email,
+            phone: input.phoneNormalized,
+            source: input.source,
+            lead_id: stored.lead_id
+          });
+          enqueueOutreachAsync(stored.email, input.source, input.utm, stored.lead_id, input.phoneNormalized);
+        }
+      } catch (err) {
+        console.error("[marketing/lead/import] row processing failed:", err);
+        errors.push(`Processing failed for ${input.email || input.phoneNormalized}`);
       }
-    });
+    }
 
-    const result: MarketingLeadImportResult = {
-      imported: deduped.filter((lead) => !existingEmails.has(lead.email || lead.phoneNormalized || "anonymous")).length,
-      updated: deduped.filter((lead) => existingEmails.has(lead.email || lead.phoneNormalized || "anonymous")).length,
-      skipped: rawLeads.length - deduped.length,
-      errors
-    };
-
-    // P0-1: Return leads with lead_ids so follow-up scripts can build personalized URLs
-    const leadsWithIds = deduped.map((lead) => ({
-      email: lead.email,
-      phone: lead.phoneNormalized,
-      source: lead.source,
-      lead_id: leadIdMap.get(lead.email || lead.phoneNormalized || "anonymous") ?? null
-    }));
-
-    return NextResponse.json({ ok: true, result, leads: leadsWithIds });
+    return NextResponse.json({ ok: true, result: results, leads: leadsWithIds });
   } catch (error) {
     console.error("[marketing/lead/import] unexpected error:", error);
     return NextResponse.json({ ok: false, error: "lead_import_failed" }, { status: 500 });

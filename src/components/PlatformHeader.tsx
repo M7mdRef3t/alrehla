@@ -48,7 +48,6 @@ const SCREEN_MAP: Record<string, string> = {
   quizzes: "quizzes",
   "behavioral-analysis": "behavioral-analysis",
   resources: "resources",
-  profile: "settings",
   settings: "settings",
 };
 
