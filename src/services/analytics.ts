@@ -113,7 +113,8 @@ function ensureGtag(): void {
 function ensureMetaPixel(): void {
   const windowRef = getWindowOrNull();
   const pixelId = getMetaPixelId();
-  if (!windowRef || !pixelId || !areMetaEventsEnabled() || !runtimeEnv.isProd) return;
+  if (!windowRef || !pixelId || !areMetaEventsEnabled()) return;
+  if (runtimeEnv.isDev && !areMetaEventsEnabled()) return;
 
   if (!windowRef.fbq) {
     const fbq = ((...args: unknown[]) => {
@@ -153,7 +154,9 @@ function sendMetaEvent(
   options?: { bypassConsent?: boolean }
 ): void {
   const bypassConsent = options?.bypassConsent === true;
-  if (!isClientRuntime() || !areMetaEventsEnabled() || !runtimeEnv.isProd) return;
+  if (!isClientRuntime() || !areMetaEventsEnabled()) return;
+  if (runtimeEnv.isDev && !areMetaEventsEnabled()) return;
+  if (!bypassConsent && !runtimeEnv.isProd && !isAnalyticsEnabled()) return; // Allow dev if enabled, but check consent if not bypass anyway
   if (!bypassConsent && !isAnalyticsEnabled()) return;
   const safeParams = sanitizeAnalyticsParams(params);
   const windowRef = getWindowOrNull();

@@ -611,14 +611,6 @@ const StepContactCapture: FC<{ onComplete: (email: string, whatsapp: string) => 
         </button>
       </form>
 
-      <button
-        type="button"
-        onClick={onSkip}
-        className="text-center text-[11px] text-slate-400 hover:text-white transition-colors"
-      >
-        تخطي للآن (كدخول ضيف)
-      </button>
-
       <div className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
         <ShieldCheck className="w-3.5 h-3.5 text-teal-400/70" />
         <span className="text-[10px] text-slate-400">بياناتك مشفرة ومحمية بالكامل</span>
@@ -899,19 +891,19 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
             </div>
           )}
           {step === 3 && (
-            <div key="insight" className="ob-step-enter">
-              <StepInsight items={collectedItems} onComplete={() => goTo(4)} onSkip={() => goTo(4)} />
-            </div>
-          )}
-          {step === 4 && (
             <div key="contact" className="ob-step-enter">
               <StepContactCapture
                 onComplete={handleContactCapture}
                 onSkip={() => {
                   recordFlowEvent("onboarding_contact_skipped");
-                  goTo(5); // Still show the plan preview even if they skip
+                  goTo(4);
                 }}
               />
+            </div>
+          )}
+          {step === 4 && (
+            <div key="insight" className="ob-step-enter">
+              <StepInsight items={collectedItems} onComplete={() => goTo(5)} onSkip={() => goTo(5)} />
             </div>
           )}
           {step === 5 && (

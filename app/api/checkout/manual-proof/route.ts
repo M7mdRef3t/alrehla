@@ -130,14 +130,19 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   const email = sanitizeText(body?.email, 160).toLowerCase();
+  const phone = sanitizeText(body?.phone || body?.phone_number, 40);
   const method = sanitizeText(body?.method, 40).toLowerCase();
   const reference = sanitizeText(body?.reference, 120);
   const amount = sanitizeText(body?.amount, 60);
   const note = sanitizeText(body?.note, 600);
   const proofImage = normalizeProofImage(body?.proofImage);
 
-  if (!isValidEmail(email)) {
-    return NextResponse.json({ error: "Valid email is required." }, { status: 400 });
+  // Requirement: EITHER valid email OR valid phone (at least 8 digits for safety)
+  const hasEmail = email && isValidEmail(email);
+  const hasPhone = phone && phone.replace(/\D/g, "").length >= 8;
+
+  if (!hasEmail && !hasPhone) {
+    return NextResponse.json({ error: "Email or phone is required." }, { status: 400 });
   }
   if (!ALLOWED_METHODS.has(method)) {
     return NextResponse.json({ error: "Unsupported payment method." }, { status: 400 });
@@ -149,8 +154,9 @@ export async function POST(req: NextRequest) {
   const authUserId = await getAuthUserId(req);
   const uploadedProof = proofImage ? await uploadProofImage(admin, authUserId, proofImage) : null;
   const methodLabel = method.replace(/_/g, " ");
+  const identifier = hasEmail ? email : phone;
   const message = [
-    `email: ${email}`,
+    hasEmail ? `email: ${email}` : `phone: ${phone}`,
     `method: ${methodLabel}`,
     reference ? `reference: ${reference}` : "",
     amount ? `amount: ${amount}` : "",
@@ -167,11 +173,12 @@ export async function POST(req: NextRequest) {
     status: "open",
     priority: "high",
     category: "payment_activation",
-    title: `Manual payment proof - ${methodLabel}`,
+    title: `Manual payment proof - ${methodLabel} (${identifier})`,
     message,
     session_id: authUserId,
     metadata: {
-      email,
+      email: hasEmail ? email : null,
+      phone: hasPhone ? phone : null,
       method,
       reference: reference || null,
       amount: amount || null,

@@ -309,13 +309,13 @@ export default function CheckoutPage() {
     : "السعر بيتأكد معاك يدوي قبل التحويل. مفيش رقم وهمي ولا رقم متخيل.";
   const amountPlaceholder =
     mode === "local"
-      ? LOCAL_MONTHLY_PRICE_LABEL || "150 EGP"
-      : GLOBAL_MONTHLY_PRICE_LABEL || FOUNDING_COHORT_PRICE_LABEL || "9.99 USD";
+      ? LOCAL_MONTHLY_PRICE_LABEL || "500 EGP"
+      : GLOBAL_MONTHLY_PRICE_LABEL || FOUNDING_COHORT_PRICE_LABEL || "30 USD";
 
   const pricingRows = [
-    { title: "Founding Cohort", value: FOUNDING_COHORT_PRICE_LABEL || "12 - 15 USD", note: "رحلة مركزة 21 يوم + 100 Awareness Tokens" },
-    { title: "مصر", value: LOCAL_MONTHLY_PRICE_LABEL || "150 EGP / شهر", note: "المسار المحلي الأنسب للدفع من جوه مصر" },
-    { title: "دولي", value: GLOBAL_MONTHLY_PRICE_LABEL || "9.99 USD / شهر", note: "لأي مستخدم بره مصر أو محتاج دفع دولي" }
+    { title: "Founding Cohort", value: FOUNDING_COHORT_PRICE_LABEL || "30 USD / 500 EGP", note: "رحلة مركزة 21 يوم + 100 Awareness Tokens" },
+    { title: "مصر", value: LOCAL_MONTHLY_PRICE_LABEL || "500 EGP", note: "المسار المحلي الأنسب للدفع من جوه مصر" },
+    { title: "دولي", value: GLOBAL_MONTHLY_PRICE_LABEL || "30 USD", note: "لأي مستخدم بره مصر أو محتاج دفع دولي" }
   ];
 
   const steps = [

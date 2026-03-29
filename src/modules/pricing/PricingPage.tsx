@@ -1,22 +1,45 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { Check, Lock, Shield, Sparkles, Target } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Check, Shield, Sparkles, ArrowLeft, Zap } from "lucide-react";
 import { signInWithGoogleAtPath } from "../../services/authService";
 import { consumeEmotionalOffer, getEmotionalOffer } from "../../services/subscriptionManager";
 import { supabase } from "../../services/supabaseClient";
+import { trackEvent, AnalyticsEvents } from "../../services/analytics";
+
+const FEATURES = [
+  "خريطة علاقات لا محدودة",
+  "خطة تعافي يومية مخصصة بالذكاء الاصطناعي",
+  "تحليل الأنماط المتكررة في علاقاتك",
+  "مساعد ذكي (نَواة) بلا حدود",
+  "تقارير PDF شاملة",
+  "أولوية في الدعم والمتابعة",
+];
 
 export default function PricingPage() {
-  const [isLoading, setIsLoading] = useState<"premium" | "coach" | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [offerConsumed, setOfferConsumed] = useState(false);
   const emotionalOffer = useMemo(() => getEmotionalOffer(), []);
+  const foundingPrice = process.env.NEXT_PUBLIC_FOUNDING_COHORT_PRICE_LABEL || "30 USD / 500 EGP";
+  const localPrice = process.env.NEXT_PUBLIC_LOCAL_PREMIUM_PRICE_LABEL || "500 EGP";
+  const globalPrice = process.env.NEXT_PUBLIC_GLOBAL_PREMIUM_PRICE_LABEL || "30 USD";
+  const viewTrackedRef = useRef(false);
 
-  const handleSubscribe = async (tier: "premium" | "coach") => {
-    setIsLoading(tier);
+  useEffect(() => {
+    if (viewTrackedRef.current) return;
+    viewTrackedRef.current = true;
+    try {
+      trackEvent(AnalyticsEvents.CHECKOUT_VIEWED, { page: "pricing" });
+    } catch { /* never block render */ }
+  }, []);
+
+  const handleSubscribe = async () => {
+    setIsLoading(true);
+    try { trackEvent(AnalyticsEvents.CTA_CLICK, { source: "pricing", plan: "premium" }); } catch { /* */ }
 
     if (!supabase) {
       alert("خدمة التسجيل غير متاحة حاليًا.");
-      setIsLoading(null);
+      setIsLoading(false);
       return;
     }
 
@@ -26,163 +49,126 @@ export default function PricingPage() {
 
     if (!session?.user) {
       await signInWithGoogleAtPath("/pricing");
-      setIsLoading(null);
+      setIsLoading(false);
       return;
     }
 
-    window.location.href = `/checkout?plan=${tier}`;
+    window.location.href = `/checkout?plan=premium`;
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] px-4 py-20 font-sans" dir="rtl">
-      <div className="mx-auto flex w-full max-w-5xl flex-col items-center">
+    <div
+      className="min-h-screen px-4 py-16 font-sans md:py-24"
+      dir="rtl"
+      style={{
+        background: "radial-gradient(circle at top, rgba(20,184,166,0.12), transparent 40%), linear-gradient(180deg, #060f15 0%, #0a1a24 50%, #060f15 100%)"
+      }}
+    >
+      <div className="mx-auto flex w-full max-w-xl flex-col items-center">
+        {/* Emotional offer banner */}
         {emotionalOffer && !offerConsumed ? (
-          <div className="mb-8 w-full rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-right shadow-sm">
-            <p className="text-sm font-bold leading-tight text-emerald-800">{emotionalOffer.title}</p>
-            <p className="mt-1 text-sm leading-[1.7] text-emerald-700">{emotionalOffer.message}</p>
+          <div className="mb-8 w-full rounded-2xl border border-teal-400/20 bg-teal-400/10 px-5 py-4 text-right">
+            <p className="text-sm font-bold leading-tight text-teal-100">{emotionalOffer.title}</p>
+            <p className="mt-1 text-sm leading-[1.7] text-teal-200/70">{emotionalOffer.message}</p>
             <button
               type="button"
               onClick={() => {
                 consumeEmotionalOffer();
                 setOfferConsumed(true);
               }}
-              className="mt-3 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"
+              className="mt-3 rounded-lg bg-teal-400 px-4 py-2 text-xs font-bold text-slate-950 transition-colors hover:bg-teal-300"
             >
               تم الاستلام
             </button>
           </div>
         ) : null}
 
-        <div className="mb-14 max-w-2xl text-center">
-          <div className="mb-6 inline-flex items-center justify-center gap-2 rounded-full border border-[var(--soft-teal)] bg-[var(--soft-teal)]/10 px-3 py-1.5 text-sm font-semibold text-[var(--soft-teal)]">
-            <Sparkles className="h-4 w-4" />
-            اختار المسار المناسب وابدأ التفعيل
-          </div>
-          <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight text-gray-900 md:text-5xl">
-            باقات واضحة من غير فواصل وهمية
+        {/* Header */}
+        <div className="mb-10 max-w-lg text-center">
+          <p className="mb-4 text-xs font-black uppercase tracking-[0.28em] text-teal-400">
+            فعّل رحلتك
+          </p>
+          <h1 className="mb-4 text-3xl font-black leading-tight text-white md:text-4xl" style={{ fontFamily: "Tajawal, sans-serif" }}>
+            خطوة واحدة بينك وبين التعافي
           </h1>
-          <p className="text-lg leading-[1.8] text-gray-600">
-            الدفع الحالي يدوي بالكامل. تختار الباقة، تنتقل لصفحة التفعيل، وتكمل التحويل وترسل الإثبات هناك.
+          <p className="text-base leading-[1.8] text-slate-400">
+            اكتشفت الخريطة. شوفت الحقيقة. دلوقتي فعّل رحلتك لتحصل على خطة عمل يومية مخصصة ليك.
           </p>
         </div>
 
-        <div className="grid w-full grid-cols-1 gap-8 md:grid-cols-2">
-          <div className="relative flex flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white p-8 shadow-xl shadow-gray-200/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl md:p-10">
-            <div className="mb-8">
-              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                <Shield className="h-6 w-6" />
-              </div>
-              <h2 className="mb-2 text-2xl font-bold leading-tight text-gray-900">الخطة الشخصية</h2>
-              <p className="h-10 text-sm leading-[1.8] text-gray-500">
-                لفرد عايز وضوح أكتر، متابعة أحسن، ومسار شخصي داخل دواير.
-              </p>
+        {/* Single Plan Card */}
+        <div
+          className="relative w-full overflow-hidden rounded-[2rem] border border-white/10 p-8 md:p-10"
+          style={{
+            background: "radial-gradient(circle at top right, rgba(20,184,166,0.12), transparent 50%), rgba(15,23,42,0.85)",
+            backdropFilter: "blur(20px)"
+          }}
+        >
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-400/50 to-transparent" />
+
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-400/10 border border-teal-400/20">
+              <Shield className="h-6 w-6 text-teal-400" />
             </div>
-
-            <div className="mb-8 rounded-2xl bg-gray-50 p-6">
-              <div className="mb-1 flex items-end gap-1">
-                <span className="text-4xl font-black text-gray-900">9 دولار</span>
-                <span className="mb-1 font-medium text-gray-500">/ شهريًا</span>
-              </div>
-              <div className="text-sm text-gray-400">التفعيل والمتابعة يدويين حاليًا</div>
+            <div>
+              <h2 className="text-xl font-black text-white">الخطة الشخصية</h2>
+              <p className="text-xs text-slate-400">كل اللي محتاجه عشان تستعيد نفسك</p>
             </div>
-
-            <ul className="mb-10 flex-1 space-y-4 text-gray-700">
-              <li className="flex items-start gap-3">
-                <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--soft-teal)]" />
-                <span className="leading-relaxed">
-                  <strong>خريطة أوضح للعلاقات</strong> بدل التخمين واللف
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--soft-teal)]" />
-                <span className="leading-relaxed">
-                  <strong>متابعة منتظمة</strong> للحالة والتقدم
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Check className="mt-0.5 h-5 w-5 shrink-0 text-[var(--soft-teal)]" />
-                <span className="leading-relaxed">
-                  <strong>دخول أسرع للمميزات الأساسية</strong>
-                </span>
-              </li>
-            </ul>
-
-            <button
-              onClick={() => void handleSubscribe("premium")}
-              disabled={isLoading === "premium"}
-              className="flex w-full items-center justify-center rounded-xl bg-gray-900 py-4 text-lg font-bold text-white shadow-lg shadow-gray-900/20 transition-colors hover:bg-black"
-            >
-              {isLoading === "premium" ? "جاري فتح صفحة التفعيل..." : "ابدأ الخطة الشخصية"}
-            </button>
           </div>
 
-          <div className="relative flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--soft-teal)] via-[var(--soft-teal)] to-[var(--soft-teal)] p-8 shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--soft-teal)] md:p-10">
-            <div className="absolute right-0 top-0 h-64 w-64 -translate-y-1/2 translate-x-1/2 rounded-full bg-white opacity-5 blur-3xl" />
-
-            <div className="absolute left-6 top-6 rounded-full border border-[var(--soft-teal)] bg-[var(--soft-teal)]/30 px-3 py-1 text-xs font-bold text-[var(--soft-teal)] backdrop-blur-sm">
-              للمدربين والمعالجين
+          {/* Price */}
+          <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-5xl font-black text-white">{globalPrice}</span>
+              <span className="mb-1.5 text-sm font-medium text-slate-400">/ لمرة واحدة</span>
             </div>
-
-            <div className="relative z-10 mb-8">
-              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--soft-teal)] bg-[var(--soft-teal)]/20 text-[var(--soft-teal)] backdrop-blur-sm">
-                <Target className="h-6 w-6" />
-              </div>
-              <h2 className="mb-2 text-2xl font-bold leading-tight text-white">خطة العيادة</h2>
-              <p className="h-10 text-sm leading-[1.8] text-[var(--soft-teal)]">
-                للمتابعة المنظمة، وإدارة عدد من الحالات، وتوسيع الاستخدام بشكل أنضف.
-              </p>
-            </div>
-
-            <div className="relative z-10 mb-8 rounded-2xl border border-white/10 bg-white/5 p-6">
-              <div className="mb-1 flex items-end gap-1">
-                <span className="text-4xl font-black text-white">49 دولار</span>
-                <span className="mb-1 font-medium text-[var(--soft-teal)]">/ شهريًا</span>
-              </div>
-              <div className="text-sm text-[var(--soft-teal)]">يشمل أول 10 مقاعد للعملاء</div>
-            </div>
-
-            <ul className="relative z-10 mb-10 flex-1 space-y-4 text-[var(--soft-teal)]">
-              <li className="flex items-start gap-3">
-                <div className="mt-0.5 shrink-0 rounded-full bg-[var(--soft-teal)]/30 p-1">
-                  <Check className="h-3 w-3 text-white" />
-                </div>
-                <span className="leading-relaxed">
-                  <strong>لوحة متابعة أوضح</strong> للحالات والاشتراكات
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="mt-0.5 shrink-0 rounded-full bg-[var(--soft-teal)]/30 p-1">
-                  <Check className="h-3 w-3 text-white" />
-                </div>
-                <span className="leading-relaxed">تنظيم أفضل للتوسع والإدارة</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="mt-0.5 shrink-0 rounded-full bg-[var(--soft-teal)]/30 p-1">
-                  <Check className="h-3 w-3 text-white" />
-                </div>
-                <span className="leading-relaxed">
-                  <strong>مسار تفعيل يدوي مباشر</strong> من غير بوابات وسيطة
-                </span>
-              </li>
-            </ul>
-
-            <button
-              onClick={() => void handleSubscribe("coach")}
-              disabled={isLoading === "coach"}
-              className="relative z-10 flex w-full items-center justify-center rounded-xl bg-white py-4 text-lg font-bold text-[var(--soft-teal)] shadow-lg shadow-white/10 transition-colors hover:bg-[var(--soft-teal)]/10"
-            >
-              {isLoading === "coach" ? "جاري فتح صفحة التفعيل..." : "ابدأ خطة العيادة"}
-            </button>
+            <p className="mt-2 text-xs text-slate-500">أو {localPrice} لمواطني مصر — الدفع يدوي ببياناتك</p>
           </div>
+
+          {/* Features */}
+          <ul className="mb-8 space-y-3">
+            {FEATURES.map((f) => (
+              <li key={f} className="flex items-center gap-3">
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-400/15">
+                  <Check className="h-3 w-3 text-teal-400" />
+                </div>
+                <span className="text-sm text-slate-300">{f}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* CTA */}
+          <button
+            onClick={() => void handleSubscribe()}
+            disabled={isLoading}
+            className="group w-full flex items-center justify-center gap-3 rounded-2xl bg-teal-400 py-4 text-lg font-black text-slate-950 shadow-lg shadow-teal-500/20 transition-all hover:bg-teal-300 hover:shadow-teal-500/30 active:scale-[0.98] disabled:opacity-60"
+          >
+            {isLoading ? (
+              "جاري فتح صفحة التفعيل..."
+            ) : (
+              <>
+                <Zap className="h-5 w-5" />
+                فعّل رحلتك الآن
+                <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+              </>
+            )}
+          </button>
+
+          <p className="mt-4 text-center text-[11px] text-slate-500">
+            الدفع يدوي بالكامل (InstaPay / Vodafone Cash / PayPal). بعد التحويل هنفعّلك في أقل من ساعة.
+          </p>
         </div>
 
-        <div className="mt-14 flex flex-wrap items-center justify-center gap-4 text-center text-sm text-gray-500">
+        {/* Trust */}
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-4 text-center text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            <Lock className="h-4 w-4" />
-            الدفع الحالي يدوي
+            <Shield className="h-3.5 w-3.5" />
+            بياناتك مشفرة ومحمية
           </div>
-          <span className="h-1 w-1 rounded-full bg-gray-300" />
-          <div>التفعيل يتم بعد مراجعة إثبات الدفع</div>
+          <span className="h-1 w-1 rounded-full bg-slate-700" />
+          <div>إلغاء في أي وقت بدون شروط</div>
+          <span className="h-1 w-1 rounded-full bg-slate-700" />
+          <div>التفعيل خلال ساعة من الدفع</div>
         </div>
       </div>
     </div>

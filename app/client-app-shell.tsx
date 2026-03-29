@@ -119,7 +119,6 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
             <Suspense fallback={<AwarenessSkeleton />}>
               <Landing
                 onStartJourney={startRecoveryFromLanding}
-                onNavigate={handleLandingNavigate}
               />
             </Suspense>
           </PWAInstallProvider>

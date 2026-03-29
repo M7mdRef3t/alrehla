@@ -103,7 +103,6 @@ export function AppStartScreens({
         onOpenSurvey={onOpenSurvey}
         ownerInstallRequestNonce={ownerInstallRequestNonce}
         onOwnerInstallRequestHandled={onOwnerInstallRequestHandled}
-        onNavigate={onNavigate}
       />
     );
   }

@@ -1,11 +1,17 @@
-export const MARKETING_LEAD_SOURCE_TYPES = ["website", "meta_instant_form", "manual_import"] as const;
+export const MARKETING_LEAD_SOURCE_TYPES = ["website", "meta_instant_form", "manual_import", "whatsapp"] as const;
 export const MARKETING_LEAD_STATUSES = [
   "new",
-  "contacted",
-  "qualified",
-  "unresponsive",
-  "started",
-  "converted"
+  "engaged",
+  "payment_requested",
+  "hot_checkout_interrupted",
+  "proof_received",
+  "activated",
+  "lost",
+  "contacted",     // legacy
+  "qualified",     // legacy
+  "unresponsive",  // legacy
+  "started",       // legacy
+  "converted"      // legacy
 ] as const;
 
 export type MarketingLeadSourceType = (typeof MARKETING_LEAD_SOURCE_TYPES)[number];
@@ -34,8 +40,10 @@ export interface MarketingLeadPayload {
 
 export interface NormalizedMarketingLeadInput {
   leadId?: string;
-  email: string;
+  email: string | null;
   phone: string | null;
+  phoneNormalized?: string | null;
+  phoneRaw?: string | null;
   name: string | null;
   source: string;
   sourceType: MarketingLeadSourceType;
@@ -48,6 +56,7 @@ export interface NormalizedMarketingLeadInput {
   status: MarketingLeadStatus;
   lastContactedAt: string | null;
   qualifiedAt: string | null;
+  mergeConflict?: boolean;
 }
 
 export interface MarketingLeadImportResult {

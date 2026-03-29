@@ -49,7 +49,7 @@ import Script from "next/script";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const pixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID || "964579425998794";
-  const enableMetaPixel = process.env.NODE_ENV === "production";
+  const enableMetaPixel = process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_ENABLE_META_EVENTS === "true";
 
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>

@@ -2,13 +2,13 @@ import type { FC } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
-  ArrowLeft, MapPin, Mic, Eye, Shield, Zap, Clock, Lock,
-  ChevronDown, Smartphone, Star, Heart, BookOpen, Brain, Sparkles
+  ArrowLeft, Shield, Zap, Clock, Lock,
+  ChevronDown, Smartphone, Star, Heart, Sparkles
 } from "lucide-react";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
 import { getLivePulseCount, shouldTriggerHeartbeat } from "../services/pulseEngagement";
-import { fetchResourceCounts } from "../services/learningService";
+
 import { soundManager } from "../services/soundManager";
 import { LandingSimulation } from "./LandingSimulation";
 
@@ -28,7 +28,6 @@ interface LandingProps {
   onOpenSurvey?: () => void;
   ownerInstallRequestNonce?: number;
   onOwnerInstallRequestHandled?: () => void;
-  onNavigate?: (screen: string) => void;
 }
 
 /* ─── Animation Variants ─────────────────────────────────────────────────────── */
@@ -66,10 +65,7 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } }
 };
 
-const staggerFast = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.07 } }
-};
+
 
 /* ─── Orbit Visualization ───────────────────────────────────────────────────── */
 
@@ -184,71 +180,7 @@ const OrbitViz: FC<{ reduceMotion: boolean | null; mirrorName: string }> = ({ re
   );
 };
 
-/* ─── Product Card ───────────────────────────────────────────────────────────── */
 
-interface ProductCardProps {
-  icon: FC<{ className?: string }>;
-  iconColor: string;
-  iconBg: string;
-  border: string;
-  tag: string;
-  tagColor: string;
-  title: string;
-  subtitle: string;
-  preview: string;
-  onClick?: () => void;
-  cta?: string;
-}
-
-const ProductCard: FC<ProductCardProps> = ({
-  icon: Icon, iconColor, iconBg, border, tag, tagColor,
-  title, subtitle, preview, onClick, cta
-}) => (
-  <motion.div
-    variants={fadeUp}
-          className="group relative flex flex-col rounded-2xl overflow-hidden cursor-default transition-all duration-300"
-    style={{ border: `1px solid ${border}`, background: "rgba(15,15,28,0.6)", backdropFilter: "blur(12px)" }}
-    whileHover={{ y: -4, borderColor: iconColor + "50" }}
-  >
-    {/* Top gradient line */}
-    <div className="h-px w-full" style={{ background: `linear-gradient(90deg, transparent, ${iconColor}60, transparent)` }} />
-
-    <div className="flex flex-col flex-1 p-5 gap-4">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: iconBg }}>
-          <span style={{ color: iconColor, display: "flex" }}><Icon className="w-5 h-5" /></span>
-        </div>
-        <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: tagColor + "18", color: tagColor }}>
-          {tag}
-        </span>
-      </div>
-
-      {/* Text */}
-      <div>
-        <h3 className="text-base font-black text-white mb-1" style={{ fontFamily: "Tajawal, sans-serif" }}>{title}</h3>
-        <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{subtitle}</p>
-      </div>
-
-      {/* Preview chip */}
-      <div className="mt-auto rounded-xl px-3 py-2 text-xs font-semibold" style={{ background: "rgba(255,255,255,0.03)", color: "#475569", border: "1px solid var(--glass-border)" }}>
-        {preview}
-      </div>
-
-      {/* CTA */}
-      {onClick && cta && (
-        <button
-          type="button"
-          onClick={onClick}
-          className="mt-1 w-full rounded-xl py-2.5 text-sm font-bold transition-all duration-200 cursor-pointer"
-          style={{ background: iconColor + "18", color: iconColor, border: `1px solid ${iconColor}30` }}
-        >
-          {cta}
-        </button>
-      )}
-    </div>
-  </motion.div>
-);
 
 /* ─── Typing Text Animation ──────────────────────────────────────────────────── */
 
@@ -307,7 +239,6 @@ export const Landing: FC<LandingProps> = ({
   onOpenSurvey,
   ownerInstallRequestNonce = 0,
   onOwnerInstallRequestHandled,
-  onNavigate,
 }) => {
   const reduceMotion = useReducedMotion();
   const nodesCount = useMapState((s) => s.nodes.length);
@@ -336,8 +267,7 @@ export const Landing: FC<LandingProps> = ({
   const installButtonLabel =
     pwaInstall?.isIOS || pwaInstall?.isAndroid ? "ثبّت على الهاتف" : "ثبّت التطبيق";
 
-  // Always show metrics and testimonials in final product
-  const showLiveMetrics = true;
+  // Always show testimonials in final product
   const showTestimonials = true;
 
   const lastNonceRef = useRef(0);
@@ -359,13 +289,11 @@ export const Landing: FC<LandingProps> = ({
 
   const [mirrorName, setMirrorName] = useState("");
   const [pulseCount, setPulseCount] = useState(getLivePulseCount());
-  const [resourceStats, setResourceStats] = useState({ articles: 45, videos: 12 });
   const [isWarping, setIsWarping] = useState(false);
   const landingViewTrackedRef = useRef(false);
   const startTrackedRef = useRef(false);
 
   useEffect(() => {
-    fetchResourceCounts().then(stats => setResourceStats(stats)).catch(console.error);
 
     const interval = setInterval(() => {
       if (shouldTriggerHeartbeat()) {
@@ -614,230 +542,6 @@ export const Landing: FC<LandingProps> = ({
 
 
 
-
-
-      {/* ══════════════════════════════════════════════
-          SECTION 1.75: LIVE METRICS STRIP
-      ══════════════════════════════════════════════ */}
-      {showLiveMetrics && (
-        <section className="relative py-16 px-5 max-w-5xl mx-auto">
-          <motion.div
-            variants={staggerFast}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-40px" }}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-4"
-          >
-            {[
-              { value: "٣٢٠٠+", label: "مستخدم جرّب المنصة",  color: "#14B8A6", glow: "rgba(20,184,166,0.08)" },
-              { value: "١٢٠٠٠+", label: "جلسة دواير مكتملة",   color: "#7C3AED", glow: "rgba(124,58,237,0.08)" },
-              { value: `${resourceStats.articles}+`,   label: "مقال ودليل معرفي",  color: "#FBBF24", glow: "rgba(251,191,36,0.08)" },
-              { value: `${resourceStats.videos}+`,  label: "مسار وفيديو مرئي", color: "#F472B6", glow: "rgba(244,114,182,0.08)" },
-            ].map((m, i) => (
-              <motion.div
-                key={i}
-                variants={fadeUp}
-                className="rounded-2xl p-6 text-center"
-                style={{
-                  background: m.glow,
-                  border: `1px solid ${m.color}18`,
-                  backdropFilter: "blur(12px)"
-                }}
-              >
-                <p className="text-2xl sm:text-3xl font-black mb-1.5" style={{ color: m.color, fontFamily: "Tajawal, sans-serif" }}>
-                  {m.value}
-                </p>
-                <p className="text-[11px] font-semibold" style={{ color: "var(--text-secondary)" }}>{m.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </section>
-      )}
-
-      {/* ── Section Divider ── */}
-      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
-        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.2), transparent)" }} />
-      </div>
-
-      {/* ══════════════════════════════════════════════
-          SECTION 2: PLATFORM PRODUCTS
-      ══════════════════════════════════════════════ */}
-      <section className="relative py-20 px-5 max-w-6xl mx-auto">
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
-        >
-          {/* Section Header */}
-          <motion.div variants={fadeUp} className="text-center mb-12">
-            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: "#7C3AED" }}>
-              رحلة التعافي
-            </p>
-            <h2 className="text-3xl sm:text-4xl font-black mb-4" style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}>
-              من التشخيص.. وصولاً للحرية.
-            </h2>
-            <p className="text-base max-w-[44ch] mx-auto" style={{ color: "var(--text-secondary)" }}>
-              مش مجرد أدوات — دي منظومة متكاملة متجربة علمياً عشان تخرجك من الاستنزاف وتستعيد نفسك بجد.
-            </p>
-          </motion.div>
-
-          {/* Products Grid — 1-col mobile, 2-col sm, 3-col md */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-            <ProductCard
-              icon={MapPin}
-              iconColor="#14B8A6"
-              iconBg="rgba(20,184,166,0.12)"
-              border="rgba(20,184,166,0.18)"
-              tag="المرحلة الأولى"
-              tagColor="#14B8A6"
-              title="خريطة التشخيص"
-              subtitle="أول خطوة حقيقية. بنحدد فيها الثقوب السوداء في علاقاتك وبنشوف النزيف منين بالظبط."
-              preview="📍 تشخيص بصري فوري"
-              onClick={handleStart}
-              cta="ابدأ التشخيص"
-            />
-            <ProductCard
-              icon={Eye}
-              iconColor="#38BDF8"
-              iconBg="rgba(56,189,248,0.12)"
-              border="rgba(56,189,248,0.18)"
-              tag="المرحلة الثانية"
-              tagColor="#38BDF8"
-              title="تحليل الأنماط"
-              subtitle="إزاي بتوصل لنفس النقطة كل مرة؟ بنحلل القصص اللي بتكررها وبنعرف جرس الإنذار فين."
-              preview="🪞 تحليل الأنماط المتكررة"
-            />
-            <ProductCard
-              icon={Zap}
-              iconColor="#FBBF24"
-              iconBg="rgba(251,191,36,0.12)"
-              border="rgba(251,191,36,0.18)"
-              tag="المرحلة الثالثة"
-              tagColor="#FBBF24"
-              title="خطة العمل"
-              subtitle="مفيش كلام نظري. بتاخد خطة يومية مخصصة ليك، بتقولك بالظبط تعمل إيه مع كل حد."
-              preview="📋 خطة تعافي يومية AI"
-            />
-            <ProductCard
-              icon={Shield}
-              iconColor="#F87171"
-              iconBg="rgba(248,113,113,0.12)"
-              border="rgba(248,113,113,0.18)"
-              tag="أدوات الحماية"
-              tagColor="#F87171"
-              title="العدة الكاملة"
-              subtitle="جمل الرد الجاهزة، تمارين التنفس، وغرفة الطوارئ.. أسلحتك في طريقك للاستقلال."
-              preview="🛡️ مكتبة الحماية الذاتية"
-            />
-            <ProductCard
-              icon={Heart}
-              iconColor="#F472B6"
-              iconBg="rgba(244,114,182,0.12)"
-              border="rgba(244,114,182,0.18)"
-              tag="المتابعة"
-              tagColor="#F472B6"
-              title="النبض اليومي"
-              subtitle="بنفضل معاك. بتسجّل حالتك يومياً وبنشوف مدى التطور اللي بتوصله في قوتك النفسية."
-              preview="💓 تتبع جودة الحياة"
-            />
-            <ProductCard
-              icon={Mic}
-              iconColor="#7C3AED"
-              iconBg="rgba(124,58,237,0.12)"
-              border="rgba(124,58,237,0.18)"
-              tag="دعم حي"
-              tagColor="#7C3AED"
-              title="مساعدك الشخصي"
-              subtitle="تكلم مع ذكاء اصطناعي متخصص في العلاقات. يسمعك، يحلل صوتك، ويوجهك في لحظتها."
-              preview="🎙️ تحليل صوتي فوري"
-            />
-          </div>
-        </motion.div>
-      </section>
-
-      {/* ── Section Divider ── */}
-      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
-        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(248,113,113,0.2), transparent)" }} />
-      </div>
-
-      {/* ══════════════════════════════════════════════
-          QUICK ACCESS SHORTCUTS
-      ══════════════════════════════════════════════ */}
-      {onNavigate && (
-        <section className="relative py-10 px-5 max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.6 }}
-          >
-            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-5 text-center" style={{ color: "#06B6D4" }}>
-              وصول سريع
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                {
-                  icon: BookOpen,
-                  label: "مركز التعلم",
-                  desc: "فيديوهات، تمارين، وجمل خروج — كل ما تحتاجه في مكان واحد",
-                  color: "#06B6D4",
-                  screen: "resources",
-                  emoji: "📚",
-                },
-                {
-                  icon: Brain,
-                  label: "تحليل الأنماط",
-                  desc: "اكتشف سلوكياتك العميقة والمحفزات الخفية",
-                  color: "#A78BFA",
-                  screen: "behavioral-analysis",
-                  emoji: "🧠",
-                },
-                {
-                  icon: Sparkles,
-                  label: "الاختبارات",
-                  desc: "نمط التعلق، رد الفعل العاطفي — تعرف على نفسك",
-                  color: "#F59E0B",
-                  screen: "quizzes",
-                  emoji: "✨",
-                },
-              ].map((item) => (
-                <motion.button
-                  key={item.screen}
-                  type="button"
-                  onClick={() => { trackEvent("landing_shortcut_click" as string, { screen: item.screen }); onNavigate(item.screen); }}
-                  whileHover={{ y: -3, scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex flex-col gap-3 rounded-2xl p-5 text-right cursor-pointer w-full"
-                  style={{
-                    background: `${item.color}08`,
-                    border: `1px solid ${item.color}20`,
-                    backdropFilter: "blur(12px)",
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{item.emoji}</span>
-                    <div
-                      className="w-8 h-8 rounded-xl flex items-center justify-center"
-                      style={{ background: `${item.color}18` }}
-                    >
-                      <item.icon className="w-4 h-4" style={{ color: item.color }} />
-                    </div>
-                    <h3 className="text-sm font-black" style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}>
-                      {item.label}
-                    </h3>
-                  </div>
-                  <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>{item.desc}</p>
-                  <div className="text-xs font-bold self-start" style={{ color: item.color }}>
-                    اذهب إليه ←
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-          </motion.div>
-        </section>
-      )}
-
       {/* ══════════════════════════════════════════════
           SECTION 3: PROBLEM
       ══════════════════════════════════════════════ */}
@@ -860,7 +564,7 @@ export const Landing: FC<LandingProps> = ({
             {landingCopy.problemSection.title}
           </motion.h2>
 
-          <motion.div variants={staggerFast} className="grid sm:grid-cols-3 gap-4 mb-8">
+          <motion.div variants={stagger} className="grid sm:grid-cols-3 gap-4 mb-8">
             {landingCopy.problemSection.points.map((point, i) => (
               <motion.div
                 key={i}
@@ -905,7 +609,7 @@ export const Landing: FC<LandingProps> = ({
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{landingCopy.howItWorks.subtitle}</p>
           </motion.div>
 
-          <motion.div variants={staggerFast} className="grid md:grid-cols-3 gap-5">
+          <motion.div variants={stagger} className="grid md:grid-cols-3 gap-5">
             {landingCopy.howItWorks.steps.map((step, i) => (
               <motion.div
                 key={i}
@@ -1049,7 +753,7 @@ export const Landing: FC<LandingProps> = ({
           </motion.p>
 
           {/* Trust chips */}
-          <motion.div variants={staggerFast} className="flex flex-wrap justify-center gap-2 mb-8">
+          <motion.div variants={stagger} className="flex flex-wrap justify-center gap-2 mb-8">
             {["بدون تسجيل", "بياناتك ليك", "مش بنحكم", "مفيش إشعارات زيادة"].map((t) => (
               <motion.span
                 key={t}

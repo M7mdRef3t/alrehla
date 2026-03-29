@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ArrowLeft, Loader2, BrainCircuit, Target, AlertCircle, Zap } from "lucide-react";
 import { setEmotionalOffer } from "../services/subscriptionManager";
-import { useAppOverlayState } from "../state/appOverlayState";
 
 type Question = {
   id: string;
@@ -45,7 +44,6 @@ export function LandingSimulation() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [dominantCategory, setDominantCategory] = useState<"future" | "relationships" | "progress" | null>(null);
-  const openOverlay = useAppOverlayState((s) => s.openOverlay);
 
   const handleStart = () => setStep("questions");
 
@@ -246,23 +244,25 @@ export function LandingSimulation() {
 
               <div className="space-y-4">
                   <button
-                    onClick={() => openOverlay("premiumBridge")}
+                    onClick={() => {
+                      if (typeof window !== "undefined") window.location.assign("/onboarding");
+                    }}
                     className="group relative w-full overflow-hidden rounded-2xl bg-white px-6 py-4 text-[16px] font-bold text-black transition-transform hover:scale-[1.02] shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                   >
                     <div className="relative flex justify-center items-center gap-2 z-10">
                         <Sparkles className="h-5 w-5 text-amber-500" />
-                        {getResultContent()?.action} (9$ شهرياً)
+                        {getResultContent()?.action}
                     </div>
                   </button>
                   <button
                     onClick={() => {
-                        openOverlay("premiumBridge");
+                      if (typeof window !== "undefined") window.location.assign("/onboarding");
                     }}
                     className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors"
                     style={{ border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)" }}
                   >
                     <Zap className="w-4 h-4" />
-                    إدارة التفعيل والاشتراك
+                    ابدأ رحلتك الآن — مجاناً
                   </button>
               </div>
             </motion.div>
