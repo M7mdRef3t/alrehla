@@ -795,7 +795,7 @@ function WeeklyCapsule({ pulseHistory }: { pulseHistory: PulseEntry[] }) {
                   border: "1px solid rgba(167,139,250,0.2)", borderRadius: 10,
                   padding: "8px 10px", color: "#e2e8f0", fontSize: 11,
                   outline: "none", resize: "none", lineHeight: 1.6,
-                  fontFamily: "Cairo, sans-serif", direction: "rtl", boxSizing: "border-box",
+                  fontFamily: "var(--font-sans)", direction: "rtl", boxSizing: "border-box",
                 }} />
               <button onClick={save} style={{
                 marginTop: 6, background: saved ? "rgba(52,211,153,0.12)" : "rgba(167,139,250,0.12)",
@@ -976,7 +976,7 @@ function RelationshipOrbitMap({ nodes }: { nodes: MapNode[] }) {
           {/* Core */}
           <circle cx={CX} cy={CY} r={ORBITS[0]} fill="url(#core-grd)" />
           <text x={CX} y={CY + 4} textAnchor="middle"
-            fontSize="11" fill="#14B8A6" fontWeight="900" fontFamily="Cairo,sans-serif">
+            fontSize="11" fill="#14B8A6" fontWeight="900" fontFamily="var(--font-sans)">
             أنت
           </text>
 
@@ -990,11 +990,11 @@ function RelationshipOrbitMap({ nodes }: { nodes: MapNode[] }) {
                   animate={{ r: [16, 17.5, 16] }}
                   transition={{ repeat: Infinity, duration: 2 + i * 0.4 }} />
                 <text x={p.x} y={p.y + 4} textAnchor="middle"
-                  fontSize="12" fill={rel.ring} fontFamily="Cairo,sans-serif">
+                  fontSize="12" fill={rel.ring} fontFamily="var(--font-sans)">
                   {rel.emoji}
                 </text>
                 <text x={p.x} y={p.y + 24} textAnchor="middle"
-                  fontSize="7.5" fill="#64748b" fontFamily="Cairo,sans-serif">
+                  fontSize="7.5" fill="#64748b" fontFamily="var(--font-sans)">
                   {rel.label}
                 </text>
               </g>

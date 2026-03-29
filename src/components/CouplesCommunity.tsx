@@ -412,7 +412,7 @@ function NewPostForm({ onPost }: { onPost: (cat: CommunityPost["category"], cont
           width: "100%", background: "rgba(255,255,255,0.03)",
           border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10,
           padding: "10px 12px", color: "#e2e8f0", fontSize: 12, resize: "none",
-          outline: "none", lineHeight: 1.7, fontFamily: "Cairo, sans-serif",
+          outline: "none", lineHeight: 1.7, fontFamily: "var(--font-sans)",
           direction: "rtl", boxSizing: "border-box",
         }} />
 

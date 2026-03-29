@@ -160,7 +160,7 @@ const GoalCard: FC<GoalCardProps> = ({ option, index, isEnabled, isSelected, isR
         <div className="space-y-1">
           <p
             className="text-base font-black"
-            style={{ color: isSelected ? "white" : "#94A3B8", fontFamily: "Tajawal, sans-serif" }}
+            style={{ color: isSelected ? "white" : "#94A3B8" }}
           >
             {option.label}
           </p>
@@ -219,7 +219,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onConti
   return (
     <main
       className="relative w-full min-h-screen flex flex-col items-center"
-      style={{ background: "#0A0A1A", fontFamily: "IBM Plex Sans Arabic, Tajawal, sans-serif" }}
+      style={{ background: "#0A0A1A", fontFamily: "var(--font-sans)" }}
       dir="rtl"
       aria-labelledby="goal-title"
     >
@@ -232,7 +232,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onConti
             transition={{ duration: 3, ease: "easeOut" }}
             className="text-[40vw] font-black text-white whitespace-nowrap"
             style={{ 
-              fontFamily: "Tajawal, sans-serif",
+                fontFamily: "var(--font-sans)",
               filter: "blur(20px)",
               letterSpacing: "-0.05em"
             }}
@@ -288,7 +288,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onConti
           <h1
             id="goal-title"
             className="text-3xl sm:text-4xl font-black text-white mb-3"
-            style={{ fontFamily: "Tajawal, sans-serif", lineHeight: 1.2 }}
+            style={{ fontFamily: "var(--font-display)", lineHeight: 1.2 }}
           >
             {goalPickerCopy.title}
           </h1>
@@ -369,7 +369,7 @@ export const GoalPicker: FC<GoalPickerProps> = ({ initialGoalId, onBack, onConti
             animate={{ opacity: [0, 0.4, 0] }}
             transition={{ duration: 1, delay: 0.2 }}
             className="text-white text-4xl font-black italic tracking-tighter"
-            style={{ fontFamily: "Tajawal" }}
+            style={{ fontFamily: "var(--font-display)" }}
           >
             جاري الانتقال...
           </motion.div>

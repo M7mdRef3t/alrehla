@@ -302,7 +302,7 @@ export function Step1View({
             background: "var(--glass-bg)",
             border: "1px solid var(--glass-border)",
             color: "var(--text-primary)",
-            fontFamily: "Tajawal, sans-serif"
+            fontFamily: "var(--font-sans)"
           }}
         />
       </div>

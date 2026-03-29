@@ -334,7 +334,7 @@ function E2EECard() {
                 </button>
               </div>
               <pre style={{
-                margin: 0, fontFamily: "monospace", fontSize: 9,
+            margin: 0, fontFamily: "var(--font-mono)", fontSize: 9,
                 color: C.purple, lineHeight: 1.7, direction: "ltr", textAlign: "left",
               }}>
                 {fingerprint}
@@ -407,7 +407,7 @@ function TwoFactorSection({ enabled, onChange }: { enabled: boolean; onChange: (
                     flex: 1, background: "rgba(255,255,255,0.04)",
                     border: `1px solid ${C.cyan}25`, borderRadius: 8,
                     padding: "7px 10px", color: "#e2e8f0", fontSize: 14,
-                    outline: "none", fontFamily: "monospace", textAlign: "center", letterSpacing: 4,
+            outline: "none", fontFamily: "var(--font-mono)", textAlign: "center", letterSpacing: 4,
                     direction: "ltr",
                   }}
                 />

@@ -221,11 +221,12 @@ export default function ActivationPage() {
     try {
       recordFlowEvent("activation_page_viewed");
       trackActivationViewed();
-      // Fix: Must send identifier (phone or leadId) with payment_requested
-      // otherwise backend rejects with invalid_input
+      // Only sync if we have a real identifier the backend accepts (phone or email).
+      // storedLeadId goes to metadata as context only — backend doesn't use it as lookup key.
       const storedPhone = marketingLeadService.getStoredLeadPhone();
       const storedLeadId = marketingLeadService.getStoredLeadId();
-      if (storedPhone || storedLeadId) {
+      const hasRealIdentifier = Boolean(storedPhone);
+      if (hasRealIdentifier) {
         marketingLeadService.syncLead({
           phone: storedPhone ?? undefined,
           status: "payment_requested",

@@ -142,6 +142,36 @@ function getWeeklyMoodRecommendation(
   return { mood: top[0], count: top[1] };
 }
 
+function buildPulseNotes(
+  energyReasons: string[],
+  energyConfidence: PulseEnergyConfidence | null,
+  notes: string
+): string {
+  const reasonsLine = energyReasons.length > 0
+    ? `\u0623\u0633\u0628\u0627\u0628 \u0627\u0644\u0637\u0627\u0642\u0629: ${energyReasons.join("\u060c ")}`
+    : "";
+  const confidenceLine = energyConfidence
+    ? `\u062b\u0642\u0629 \u0627\u0644\u0642\u064a\u0627\u0633: ${energyConfidence === "low"
+      ? "\u0645\u0646\u062e\u0641\u0636\u0629"
+      : energyConfidence === "medium"
+        ? "\u0645\u062a\u0648\u0633\u0637\u0629"
+        : "\u0639\u0627\u0644\u064a\u0629"
+    }`
+    : "";
+  return [reasonsLine, confidenceLine, notes.trim()].filter(Boolean).join("\n");
+}
+
+function buildWeeklyDiffLine(
+  weeklyEnergyRecommendation: { value: number } | null,
+  energy: number | null
+): string {
+  if (!weeklyEnergyRecommendation || energy == null) return "";
+  const delta = energy - weeklyEnergyRecommendation.value;
+  if (Math.abs(delta) < 1) return "\u0645\u0644\u0627\u062d\u0638\u0629: \u0637\u0627\u0642\u062a\u0643 \u0642\u0631\u064a\u0628\u0629 \u0645\u0646 \u0645\u062a\u0648\u0633\u0637 \u0627\u0644\u0623\u0633\u0628\u0648\u0639.";
+  if (delta > 0) return `\u0645\u0644\u0627\u062d\u0638\u0629: \u0637\u0627\u0642\u062a\u0643 \u0623\u0639\u0644\u0649 \u0645\u0646 \u0645\u062a\u0648\u0633\u0637 \u0627\u0644\u0623\u0633\u0628\u0648\u0639 \u0628\u0640 ${delta}.`;
+  return `\u0645\u0644\u0627\u062d\u0638\u0629: \u0637\u0627\u0642\u062a\u0643 \u0623\u0642\u0644 \u0645\u0646 \u0645\u062a\u0648\u0633\u0637 \u0627\u0644\u0623\u0633\u0628\u0648\u0639 \u0628\u0640 ${Math.abs(delta)}.`;
+}
+
 const cosmicUp = {
   hidden: { opacity: 0, y: 20, filter: "blur(8px)" },
   visible: (i: number) => ({
@@ -165,7 +195,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const _allowWeekly = isFeatureAllowed("pulse_weekly_recommendation");
   const _allowImmediate = isFeatureAllowed("pulse_immediate_action");
   const _allowGoldenNeedle = isFeatureAllowed("golden_needle_enabled");
-  void _allowWeekly; void _allowImmediate; void _allowGoldenNeedle;
   const allowSkip = true;
 
   // --- Hook-managed Pulse State ---
@@ -202,8 +231,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [phone, setPhone] = useState("");
   const [phoneSyncFailed, setPhoneSyncFailed] = useState(false);
   const [saveToastText, setSaveToastText] = useState("تمام.. حفظنا حالتك");
-  const [keyboardEnergyHint, setKeyboardEnergyHint] = useState<number | null>(null);
-  void keyboardEnergyHint; // prevent SWC tree-shaking of unused destructured variable
+  const [_keyboardEnergyHint, setKeyboardEnergyHint] = useState<number | null>(null);
   const isEnergySelectionUnstableRef = useRef(false);
   const [needsEnergyConfirmation, setNeedsEnergyConfirmation] = useState(false);
   const [energyConfirmPulseActive, setEnergyConfirmPulseActive] = useState(false);
@@ -247,7 +275,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const _energyQuickHint = getEnergyQuickHint(energy);
   const _moodQuickHint = getMoodQuickHint(mood);
   const _focusQuickHint = getFocusQuickHint(focus, isStartRecovery);
-  void _energyQuickHint; void _moodQuickHint; void _focusQuickHint;
   const energyCopyVariant = useMemo(
     () => getEnergyCopyVariant(pulseCopyOverrides.energy),
     [pulseCopyOverrides.energy]
@@ -263,7 +290,6 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
   const _moodVariantSubtitle = getMoodVariantSubtitle(moodCopyVariant);
   const _focusVariantSubtitle = getFocusVariantSubtitle(focusCopyVariant);
-  void _moodVariantSubtitle; void _focusVariantSubtitle;
 
   const weeklyEnergyRecommendation = useMemo(() => getWeeklyEnergyRecommendation(pulseLogs), [pulseLogs]);
   const weeklyMoodRecommendation = useMemo(
@@ -271,16 +297,11 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     [pulseLogs]
   );
   const _showWeeklyMoodSuggestion = weeklyMoodRecommendation != null && (!mood || mood !== weeklyMoodRecommendation.mood);
-  void _showWeeklyMoodSuggestion;
   const _immediateEnergyAction = useMemo(() => getImmediateEnergyAction(energy), [energy]);
-  void _immediateEnergyAction;
   const energySuggestion = useMemo(() => getEnergySuggestion(energy), [energy]);
   const _showWeeklyEnergySuggestion = weeklyEnergyRecommendation != null && (!hasPickedEnergy || energy == null || Math.abs(weeklyEnergyRecommendation.value - energy) >= 2);
-  void _showWeeklyEnergySuggestion;
   const _suggestionState = useMemo(() => { if (!energySuggestion) return ""; const hasSuggestedNote = notes.trim().includes(energySuggestion.note); return hasSuggestedNote ? "ready" : "pending"; }, [energySuggestion, notes]);
-  void _suggestionState;
   const _pulseStats = useMemo(() => { if (pulseLogs.length === 0) return null; const sum = pulseLogs.reduce((acc, item) => acc + item.energy, 0); const avg = Math.round((sum / pulseLogs.length) * 10) / 10; return { avg, count: pulseLogs.length }; }, [pulseLogs]);
-  void _pulseStats;
   const isComplete = hasPickedEnergy && mood !== null && focus !== null;
   const currentStepComplete = isComplete;
 
@@ -292,6 +313,58 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     }
     setEnergyUndoSnapshot(null);
     setEnergyUndoLabel(null);
+  };
+
+  const resetTransientUiState = () => {
+    setShowRequiredHint(false);
+    setHasTrackedNotesUsage(false);
+    setSuggestionApplied(false);
+    setIsSavingPulse(false);
+    setPhone("");
+    setPhoneSyncFailed(false);
+    setSaveToastText("تمام.. حفظنا حالتك");
+    setKeyboardEnergyHint(null);
+    setNeedsEnergyConfirmation(false);
+    isMoodSelectionUnstableRef.current = false;
+    setNeedsMoodConfirmation(false);
+    setEnergyConfirmPulseActive(false);
+    setImmediateActionApplied(false);
+    setIsWarping(false);
+    setTacticalAdvice(null);
+    setIsAnalyzing(false);
+    setNotesChars(0);
+    clearUndoState();
+  };
+
+  const resetSessionState = (restored: boolean) => {
+    if (!restored) {
+      if (typeof lastEnergyValue === "number" && !isStartRecovery) {
+        setEnergy(lastEnergyValue);
+        setPreviousEnergy(lastEnergyValue);
+        setHasPickedEnergy(true);
+        lastFeedbackAnchorRef.current = lastEnergyValue;
+      } else {
+        setEnergy(null);
+        setPreviousEnergy(null);
+        setHasPickedEnergy(false);
+        lastFeedbackAnchorRef.current = null;
+      }
+      setMood(null);
+      setFocus(null);
+      setNotes("");
+      setStep(1);
+    }
+
+    resetTransientUiState();
+    energyAdjustmentsRef.current = [];
+    moodAdjustmentsRef.current = [];
+    lastTrackedEnergyRef.current = null;
+    lastTrackedMoodRef.current = null;
+    energyChangeLastTrackedAtRef.current = 0;
+    moodChangeLastTrackedAtRef.current = 0;
+    unstableEventTrackedRef.current = false;
+    moodUnstableEventTrackedRef.current = false;
+    copyVariantTrackedRef.current = false;
   };
 
   const rememberUndoSnapshot = (
@@ -339,47 +412,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
     // Try loading draft from hook
     const restored = loadDraft();
-
-    if (!restored) {
-      if (typeof lastEnergyValue === "number" && !isStartRecovery) {
-        setEnergy(lastEnergyValue);
-        setPreviousEnergy(lastEnergyValue);
-        setHasPickedEnergy(true);
-        lastFeedbackAnchorRef.current = lastEnergyValue;
-      } else {
-        setEnergy(null);
-        setPreviousEnergy(null);
-        setHasPickedEnergy(false);
-        lastFeedbackAnchorRef.current = null;
-      }
-      setMood(null);
-      setFocus(null);
-      setNotes("");
-      setStep(1);
-    }
-
-    setShowRequiredHint(false);
-    setHasTrackedNotesUsage(false);
-    setSuggestionApplied(false);
-    setIsSavingPulse(false);
-    setSaveToastText("تمام.. حفظنا حالتك");
-    setKeyboardEnergyHint(null);
-    setNeedsEnergyConfirmation(false);
-    isMoodSelectionUnstableRef.current = false;
-    setNeedsMoodConfirmation(false);
-    setEnergyConfirmPulseActive(false);
-    setImmediateActionApplied(false);
-    setNotesChars(0);
-    clearUndoState();
-    energyAdjustmentsRef.current = [];
-    moodAdjustmentsRef.current = [];
-    lastTrackedEnergyRef.current = null;
-    lastTrackedMoodRef.current = null;
-    energyChangeLastTrackedAtRef.current = 0;
-    moodChangeLastTrackedAtRef.current = 0;
-    unstableEventTrackedRef.current = false;
-    moodUnstableEventTrackedRef.current = false;
-    copyVariantTrackedRef.current = false;
+    resetSessionState(restored);
 
     isInitializedRef.current = true;
   }, [isOpen, lastEnergyValue, isStartRecovery, loadDraft, setEnergy, setPreviousEnergy, setHasPickedEnergy, setMood, setFocus, setNotes, setStep]);
@@ -495,25 +528,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     const finalEnergy = hasPickedEnergy ? energy : null;
     const finalMood: PulseMood | null = mood ?? null;
     const finalFocus: PulseFocus | null = focus ?? null;
-    const reasonsLine = energyReasons.length > 0
-      ? `\u0623\u0633\u0628\u0627\u0628 \u0627\u0644\u0637\u0627\u0642\u0629: ${energyReasons.join("\u060c ")}`
-      : "";
-    const confidenceLine = energyConfidence
-      ? `\u062b\u0642\u0629 \u0627\u0644\u0642\u064a\u0627\u0633: ${energyConfidence === "low"
-        ? "\u0645\u0646\u062e\u0641\u0636\u0629"
-        : energyConfidence === "medium"
-          ? "\u0645\u062a\u0648\u0633\u0637\u0629"
-          : "\u0639\u0627\u0644\u064a\u0629"
-      }`
-      : "";
-    const mergedNotes = [reasonsLine, confidenceLine, notes.trim()].filter(Boolean).join("\n");
-    const weeklyDiffLine = (() => {
-      if (!weeklyEnergyRecommendation || energy == null) return "";
-      const delta = energy - weeklyEnergyRecommendation.value;
-      if (Math.abs(delta) < 1) return "\u0645\u0644\u0627\u062d\u0638\u0629: \u0637\u0627\u0642\u062a\u0643 \u0642\u0631\u064a\u0628\u0629 \u0645\u0646 \u0645\u062a\u0648\u0633\u0637 \u0627\u0644\u0623\u0633\u0628\u0648\u0639.";
-      if (delta > 0) return `\u0645\u0644\u0627\u062d\u0638\u0629: \u0637\u0627\u0642\u062a\u0643 \u0623\u0639\u0644\u0649 \u0645\u0646 \u0645\u062a\u0648\u0633\u0637 \u0627\u0644\u0623\u0633\u0628\u0648\u0639 \u0628\u0640 ${delta}.`;
-      return `\u0645\u0644\u0627\u062d\u0638\u0629: \u0637\u0627\u0642\u062a\u0643 \u0623\u0642\u0644 \u0645\u0646 \u0645\u062a\u0648\u0633\u0637 \u0627\u0644\u0623\u0633\u0628\u0648\u0639 \u0628\u0640 ${Math.abs(delta)}.`;
-    })();
+    const mergedNotes = buildPulseNotes(energyReasons, energyConfidence, notes);
+    const weeklyDiffLine = buildWeeklyDiffLine(weeklyEnergyRecommendation, energy);
     setIsSavingPulse(true);
     setSaveToastText(
       finalEnergy == null
@@ -521,19 +537,22 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
         : `${getPostSaveAction(finalEnergy)}${weeklyDiffLine ? ` • ${weeklyDiffLine}` : ""}`
     );
     window.setTimeout(() => {
-      onSubmit({
-        energy: finalEnergy,
-        mood: finalMood,
-        focus: finalFocus,
-        topics: topics.length > 0 ? topics : undefined,
-        notes: mergedNotes || undefined,
-        phone: phone || undefined,
-        energyReasons: energyReasons.length > 0 ? energyReasons : undefined,
-        energyConfidence: energyConfidence ?? undefined
-      });
-      clearDraft();
-      clearUndoState();
-      setIsSavingPulse(false);
+      try {
+        onSubmit({
+          energy: finalEnergy,
+          mood: finalMood,
+          focus: finalFocus,
+          topics: topics.length > 0 ? topics : undefined,
+          notes: mergedNotes || undefined,
+          phone: phone || undefined,
+          energyReasons: energyReasons.length > 0 ? energyReasons : undefined,
+          energyConfidence: energyConfidence ?? undefined
+        });
+        clearDraft();
+        clearUndoState();
+      } finally {
+        setIsSavingPulse(false);
+      }
     }, 220);
   };
 

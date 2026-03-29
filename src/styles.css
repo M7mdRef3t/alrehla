@@ -2,6 +2,8 @@
    Alrehla - Therapeutic Spaceship Dashboard
    ============================================================= */
 
+@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap");
+
 @layer base {
   :root {
     /* Golden ratio system */
@@ -67,8 +69,9 @@
     --text-secondary: #94a3b8;
     --text-muted: rgba(148, 163, 184, 0.5);
     --text-accent: var(--soft-teal);
-    --font-display: "Tajawal", "IBM Plex Sans Arabic", system-ui, sans-serif;
-    --font-sans: "IBM Plex Sans Arabic", "Tajawal", system-ui, sans-serif;
+    --font-display: "Tajawal", "29LT Bukra", "IBM Plex Sans Arabic", system-ui, sans-serif;
+    --font-sans: "Tajawal", "29LT Bukra", "IBM Plex Sans Arabic", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", ui-monospace, monospace;
     --font-en: "Inter", system-ui, sans-serif;
 
     /* --- Brand Color Aliases --- */
@@ -231,6 +234,10 @@
   h4 {
     font-size: clamp(1rem, 0.5vw + 0.9rem, 1.125rem);
     font-weight: 600;
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
   }
 
   /* Custom scrollbar */

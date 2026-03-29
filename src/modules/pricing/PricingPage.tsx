@@ -107,7 +107,7 @@ export default function PricingPage() {
           <p className="mb-4 text-xs font-black uppercase tracking-[0.28em] text-teal-400">
             افتح المسار المتقدم
           </p>
-          <h1 className="mb-4 text-3xl font-black leading-tight text-white md:text-4xl" style={{ fontFamily: "Tajawal, sans-serif" }}>
+            <h1 className="mb-4 text-3xl font-black leading-tight text-white md:text-4xl" style={{ fontFamily: "var(--font-display)" }}>
             خطوة واحدة بينك وبين التعافي
           </h1>
           <p className="text-base leading-[1.8] text-slate-400">

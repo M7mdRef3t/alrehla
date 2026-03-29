@@ -116,7 +116,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
     <main
       className="w-full max-w-2xl py-10 md:py-14"
       dir="rtl"
-      style={{ fontFamily: "IBM Plex Sans Arabic, Tajawal, sans-serif" }}
+        style={{ fontFamily: "var(--font-sans)" }}
     >
       {/* Header */}
       <motion.header

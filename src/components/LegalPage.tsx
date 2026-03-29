@@ -28,7 +28,7 @@ export const LegalPage: FC<LegalPageProps> = ({ type }) => {
         <h1
           id="legal-title"
           className="text-2xl sm:text-3xl font-bold text-white mb-2"
-          style={{ fontFamily: '"IBM Plex Sans Arabic", system-ui, sans-serif' }}
+          style={{ fontFamily: 'var(--font-sans)' }}
         >
           {copy.title}
         </h1>

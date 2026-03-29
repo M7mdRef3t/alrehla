@@ -282,7 +282,7 @@ const DecisionCard: FC<DecisionCardProps> = ({ decision, isSelected, onClick }) 
                   style={{
                     background: "rgba(0,0,0,0.3)",
                     color: "rgba(203,213,225,0.8)",
-                    fontFamily: "monospace",
+                    fontFamily: "var(--font-mono)",
                   }}
                 >
                   {JSON.stringify(decision.payload, null, 2)}

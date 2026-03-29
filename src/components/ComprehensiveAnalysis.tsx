@@ -227,8 +227,8 @@ function AnalysisRadar({ dimensions, scores, size = 240 }: {
         const lblPt = pt(i, r * 1.25);
         const anchor = lblPt.x < cx - 5 ? "end" : lblPt.x > cx + 5 ? "start" : "middle";
         return (
-          <text key={i} x={lblPt.x} y={lblPt.y + 4} textAnchor={anchor}
-            fontSize="11" fill="#94a3b8" fontFamily="Cairo, sans-serif">
+            <text key={i} x={lblPt.x} y={lblPt.y + 4} textAnchor={anchor}
+              fontSize="11" fill="#94a3b8" fontFamily="var(--font-sans)">
             {d.emoji} {d.title}
           </text>
         );

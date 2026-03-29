@@ -30,8 +30,8 @@ export function buildMarketingEmail({
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <title>الرحلة — بداية وعيك</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
-  body { margin: 0; padding: 0; background-color: #0d1117; font-family: 'Cairo', Arial, sans-serif; direction: rtl; }
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+  body { margin: 0; padding: 0; background-color: #0d1117; font-family: 'Tajawal', '29LT Bukra', Arial, sans-serif; direction: rtl; }
   * { box-sizing: border-box; }
   a { color: #2dd4bf; }
   .container { max-width: 580px; margin: 0 auto; }

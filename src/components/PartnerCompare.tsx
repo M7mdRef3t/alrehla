@@ -66,7 +66,7 @@ function DualRadar({ dimensions, scoresA, scoresB, size = 280 }: {
         const anchor = lblPt.x < cx - 5 ? "end" : lblPt.x > cx + 5 ? "start" : "middle";
         return (
           <text key={i} x={lblPt.x} y={lblPt.y + 4} textAnchor={anchor}
-            fontSize="10" fill="#94a3b8" fontFamily="Cairo, sans-serif">
+            fontSize="10" fill="#94a3b8" fontFamily="var(--font-sans)">
             {d.emoji} {d.title}
           </text>
         );
@@ -329,7 +329,7 @@ function WaitingForPartner({ shareCode, onBack }: { shareCode: string; onBack: (
           borderRadius: 16, padding: "18px 20px", marginBottom: 20,
         }}>
           <p style={{ margin: "0 0 6px", fontSize: 11, color: "#14B8A6", fontWeight: 600 }}>كود المشاركة</p>
-          <p style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: "0.2em", color: "#e2e8f0", fontFamily: "monospace" }}>
+          <p style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: "0.2em", color: "#e2e8f0", fontFamily: "var(--font-mono)" }}>
             {shareCode}
           </p>
         </div>

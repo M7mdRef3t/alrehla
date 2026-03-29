@@ -1,7 +1,8 @@
 :root {
-  --font-display: 'Cairo', sans-serif;
-  --font-ui: 'Outfit', 'Noto Sans Arabic', sans-serif;
-  --font-arabic-body: 'Cairo', sans-serif;
+  --font-display: 'Tajawal', '29LT Bukra', 'IBM Plex Sans Arabic', sans-serif;
+  --font-ui: 'Tajawal', '29LT Bukra', 'IBM Plex Sans Arabic', sans-serif;
+  --font-arabic-body: 'Tajawal', '29LT Bukra', 'IBM Plex Sans Arabic', sans-serif;
+  --font-arabic-heading: 'Tajawal', '29LT Bukra', 'IBM Plex Sans Arabic', sans-serif;
 
   --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);

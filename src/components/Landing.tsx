@@ -343,7 +343,7 @@ export const Landing: FC<LandingProps> = ({
   return (
     <div
       className="relative min-h-screen w-full overflow-x-hidden landing-dark-force"
-      style={{ background: "var(--space-void)", fontFamily: "'IBM Plex Sans Arabic', Tajawal, sans-serif" }}
+       style={{ background: "var(--space-void)", fontFamily: "var(--font-sans)" }}
       dir="rtl"
     >
       <style>{LANDING_STYLES}</style>
@@ -405,7 +405,7 @@ export const Landing: FC<LandingProps> = ({
           <motion.h1
             variants={fadeUp}
             className="cosmic-headline text-[1.85rem] sm:text-[2.6rem] lg:text-[3.3rem] font-bold mb-4 sm:mb-5"
-            style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)", lineHeight: 1.25 }}
+            style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)", lineHeight: 1.25 }}
           >
             <span className="block opacity-90">فيه حاجة بتسرق طاقتك.</span>
             <span className="block mt-2 sm:mt-3">
@@ -471,7 +471,7 @@ export const Landing: FC<LandingProps> = ({
                 style={{ background: "linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%)" }}
               />
               <Zap className="relative w-5 h-5 text-white" />
-              <span className="relative text-lg sm:text-xl font-black text-white" style={{ fontFamily: "Tajawal, sans-serif" }}>
+                <span className="relative text-lg sm:text-xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>
                 شوف نفسك بوضوح — مجاناً
               </span>
               <ArrowLeft className="relative w-5 h-5 text-white transition-transform duration-300 group-hover:-translate-x-1" />
@@ -554,7 +554,7 @@ export const Landing: FC<LandingProps> = ({
             <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#14B8A6" }}>
               خطوتين بسيطتين
             </p>
-            <h2 className="text-3xl sm:text-4xl font-black mb-3" style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}>
+              <h2 className="text-3xl sm:text-4xl font-black mb-3" style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)" }}>
               {landingCopy.howItWorks.title}
             </h2>
             <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{landingCopy.howItWorks.subtitle}</p>
@@ -580,7 +580,7 @@ export const Landing: FC<LandingProps> = ({
                 >
                   {["١", "٢", "٣"][i]}
                 </div>
-                <h3 className="text-base font-black" style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}>{step.title}</h3>
+                  <h3 className="text-base font-black" style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)" }}>{step.title}</h3>
                 <p className="text-sm leading-loose" style={{ color: "var(--text-secondary)" }}>{step.body}</p>
               </motion.div>
             ))}
@@ -607,7 +607,7 @@ export const Landing: FC<LandingProps> = ({
             <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: "#7C3AED" }}>
               جرّب بنفسك
             </p>
-            <h2 className="text-2xl sm:text-3xl font-black mb-3" style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}>
+              <h2 className="text-2xl sm:text-3xl font-black mb-3" style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)" }}>
               دقيقتين تكشفلك الحقيقة
             </h2>
             <p className="text-sm max-w-[38ch] mx-auto" style={{ color: "var(--text-secondary)" }}>
@@ -639,7 +639,7 @@ export const Landing: FC<LandingProps> = ({
                 <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: "#7C3AED" }}>
                   فوج التأسيس
                 </p>
-                <h2 className="text-2xl sm:text-3xl font-black " style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}>
+                <h2 className="text-2xl sm:text-3xl font-black " style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)" }}>
                   ناس زيّك بدأوا رحلتهم
                 </h2>
               </motion.div>
@@ -690,7 +690,7 @@ export const Landing: FC<LandingProps> = ({
           <motion.h2
             variants={fadeUp}
             className="text-2xl sm:text-3xl font-black  mb-4"
-            style={{ fontFamily: "Tajawal, sans-serif" }}
+             style={{ fontFamily: "var(--font-display)" }}
           >
             الوضوح موجود — هو بس محتاج خريطة.
           </motion.h2>

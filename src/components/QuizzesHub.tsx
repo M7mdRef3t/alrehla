@@ -120,7 +120,7 @@ function exportQuizReport(history: QuizHistoryEntry[]) {
 
   const html = `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>\u062A\u0642\u0631\u064A\u0631 \u0627\u0644\u0631\u062D\u0644\u0629</title>
     <style>@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap");
-    *{margin:0;padding:0;box-sizing:border-box}body{font-family:"IBM Plex Sans Arabic",sans-serif;background:#080b15;color:#e2e8f0;padding:40px}
+    *{margin:0;padding:0;box-sizing:border-box}body{font-family:"Tajawal","29LT Bukra","IBM Plex Sans Arabic",sans-serif;background:#080b15;color:#e2e8f0;padding:40px}
     @media print{body{background:#fff;color:#0f172a}table{border:1px solid #e2e8f0}td{border-bottom-color:#e2e8f0!important;color:#0f172a!important}
     h1,h2{color:#0f172a}}</style></head><body>
     <div style="max-width:640px;margin:0 auto">
@@ -1556,7 +1556,7 @@ function QuizSearchBar({ search, setSearch, activeTag, setActiveTag, notComplete
           placeholder="ابحث عن اختبار..."
           style={{
             flex: 1, background: "none", border: "none", outline: "none",
-            color: "#e2e8f0", fontSize: 12, fontFamily: "Cairo, sans-serif",
+            color: "#e2e8f0", fontSize: 12, fontFamily: "var(--font-sans)",
             direction: "rtl",
           }}
         />

@@ -234,7 +234,7 @@ export const FaqScreen: FC<FaqScreenProps> = ({ onClose }) => {
             className="text-[11px]"
             style={{
               color: "rgba(45,212,191,0.35)",
-              fontFamily: "'Amiri', 'Scheherazade New', serif",
+              fontFamily: "var(--font-display)",
             }}
           >
             {landingCopy.hook}

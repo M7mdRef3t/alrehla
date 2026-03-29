@@ -79,37 +79,37 @@ export function getRecoveryPlanHtml(data: RecoveryPlanData): string {
         </div>
 
         <div class="hero">
-            <h1>أهلاً بك في أول خطوة للوضوح</h1>
-            <p>"التعافي مش سحر.. هو إنك بقيت شايف خريطتك بوضوح."</p>
+            <h1>أهلاً بك في عالم "الوضوح"</h1>
+            <p>"التعافي مش سحر يا ${userName || "بطل"}.. هو إنك بقيت شايف خريطتك بوضوح ومقرر توقف النزيف."</p>
         </div>
 
         <div class="stat-card">
-            <div style="color: #2dd4bf; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">ملخص الخريطة</div>
+            <div style="color: #2dd4bf; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;">تحليل الوعي اللحظي</div>
             <div class="stat-row">
                 <span class="stat-label">علاقات تم رصدها</span>
                 <span class="stat-value">${relationshipCount}</span>
             </div>
             <div class="stat-row">
-                <span class="stat-label">مستوى الوضوح</span>
-                <span class="stat-value" style="color: #2dd4bf;">عالٍ جداً</span>
+                <span class="stat-label">تشويش المدارات</span>
+                <span class="stat-value" style="color: #fb7185;">محتاج تدخل فوراً</span>
             </div>
         </div>
 
         <div class="prescription">
-            <h2>روشتة "الرحلة" للتعافي</h2>
-            <p><strong>1. تفعيل درع الدواير:</strong> رصدت ${redCount} شخص في الدائرة الحمراء. ابدأ بتقليل الاحتكاك العاطفي اليومي معاهم عشان توقف نزيف طاقتك.</p>
-            <p><strong>2. ركن التفريغ:</strong> ادخل الملاذ الآمن النهاردة وطلع المشاعر اللي حبستها وأنت بترسم الخريطة.. الورقة والقلم (أو شاشة التليفون) مش بيحكموا عليك.</p>
+            <h2>روشتة "الرحلة" للسيادة النفسية</h2>
+            <p><strong>1. "قتل الدجال بالعلم":</strong> أول خطوة هي مواجهة الأوهام. العلاقات اللي حطيتها في المدار الأحمر مش مجرد أشخاص، دي "ثقوب سوداء" بتسحب طاقتك. ابدأ بوضع حدود واضحة (درع الدواير) عشان تحمي مساحتك الشخصية.</p>
+            <p><strong>2. المواجهة لا الهروب:</strong> ادخل الملاذ الآمن النهاردة. خريطة وعيك اللي رسمتها هي سلاحك الجديد. ركز في مدارك الأخضر (الناس اللي بتديك طاقة) وحاول تكبره، ده حصنك الحقيقي.</p>
         </div>
 
         <div class="cta-container">
-            <a href="${magicLink}" class="btn">اكمل رحلتك من هنا</a>
-            <p style="color: #475569; font-size: 11px; margin-top: 20px;">الرابط ده هينقلك مباشرة لملفك الشخصي بدون باسوورد.</p>
+            <a href="${magicLink}" class="btn">استكمل رحلة السيادة</a>
+            <p style="color: #475569; font-size: 11px; margin-top: 24px; line-height: 1.5;">الرابط ده هو مفتاح دخولك الخاص. هيفتح لك "الملاذ الآمن" فوراً عشان تبدأ تنفذ الخطة.</p>
         </div>
 
         <div class="footer">
-            <p>أنت تتلقى هذا الإيميل لأنك بدأت رحلة الوعي في منصة الرحلة.</p>
-            <p>بياناتك مشفرة ومحمية تماماً ولا يطلع عليها أحد.</p>
-            <p>© 2026 الرحلة - منصة التعافي الوجداني</p>
+            <p>أنت بتستلم الإيميل ده لأنك قررت تبدأ "الرحلة" نحو الحقيقة والوعي.</p>
+            <p>بياناتك أمانة، وهي ملكك أنت بس ومشفرة بالكامل.</p>
+            <p>© 2026 الرحلة - السيادة النفسية بمبدأ المبادئ الأولى</p>
         </div>
     </div>
 </body>

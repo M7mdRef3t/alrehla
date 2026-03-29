@@ -51,9 +51,10 @@
   /* C3 Fix: Increased from 0.30 to 0.40 */
 
   /* === Typography === */
-  --font-display: 'Cairo', sans-serif;
-  --font-ui: 'Outfit', 'Noto Sans Arabic', sans-serif;
-  --font-arabic-body: 'Cairo', sans-serif;
+  --font-display: 'Tajawal', '29LT Bukra', 'IBM Plex Sans Arabic', sans-serif;
+  --font-ui: 'Tajawal', '29LT Bukra', 'IBM Plex Sans Arabic', sans-serif;
+  --font-arabic-body: 'Tajawal', '29LT Bukra', 'IBM Plex Sans Arabic', sans-serif;
+  --font-arabic-heading: 'Tajawal', '29LT Bukra', 'IBM Plex Sans Arabic', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   --type-hero-size: clamp(3rem, 8vw, 6rem);

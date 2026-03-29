@@ -82,7 +82,7 @@ function PersonalityRadar({ dims, size = 220 }: { dims: RadarDim[]; size?: numbe
         const anchor = lblPt.x < cx - 5 ? "end" : lblPt.x > cx + 5 ? "start" : "middle";
         return (
           <text key={i} x={lblPt.x} y={lblPt.y + 4} textAnchor={anchor}
-            fontSize="9.5" fill="#94a3b8" fontFamily="Cairo, sans-serif">
+            fontSize="9.5" fill="#94a3b8" fontFamily="var(--font-sans)">
             {d.label}
           </text>
         );
@@ -176,7 +176,7 @@ function EditableBio() {
             border: "1px solid rgba(20,184,166,0.3)", borderRadius: 10,
             padding: "8px 10px", color: "#e2e8f0", fontSize: 11,
             outline: "none", resize: "none", lineHeight: 1.6,
-            fontFamily: "Cairo, sans-serif", direction: "rtl", boxSizing: "border-box",
+            fontFamily: "var(--font-sans)", direction: "rtl", boxSizing: "border-box",
           }} />
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 6, marginTop: 5 }}>
           <button onClick={cancel} style={{ background: "none", border: "none", color: "#475569", cursor: "pointer", fontSize: 11 }}>

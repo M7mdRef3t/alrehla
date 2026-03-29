@@ -88,7 +88,7 @@ function RadarChart({ axes, size = 200 }: { axes: { label: string; value: number
         const p = pt(i, r * 1.22);
         const anchor = p.x < cx - 5 ? "end" : p.x > cx + 5 ? "start" : "middle";
         return (
-          <text key={i} x={p.x} y={p.y + 4} textAnchor={anchor} fontSize="11" fill="#64748b" fontFamily="Cairo, sans-serif">
+          <text key={i} x={p.x} y={p.y + 4} textAnchor={anchor} fontSize="11" fill="#64748b" fontFamily="var(--font-sans)">
             {a.label}
           </text>
         );
