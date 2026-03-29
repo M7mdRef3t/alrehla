@@ -1,32 +1,18 @@
-/* ═══ Brand Fonts — Tajawal (headings) + IBM Plex Arabic (body) + Inter (en) ═══ */
-
-
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸŒŒ Ø§Ù„Ø±Ø­Ù„Ø© â€” THERAPEUTIC SPACESHIP DASHBOARD
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-
-   Visual Design Philosophy:
-   - Deep Cosmic Blue (not black) Ù„Ù„Ø®Ù„ÙÙŠØ©
-   - Warm Amber Ù„Ù„Ø£Ø²Ø±Ø§Ø± Ø§Ù„Ø­ÙŠÙˆÙŠØ© ÙˆØ§Ù„Ø­ÙŠØ§Ø©
-   - Emerald Green Ù„Ø±Ø³Ø§Ø¦Ù„ Ø§Ù„Ø·Ù…Ø£Ù†ÙŠÙ†Ø©
-   - Bento Grid Layout (no traditional lists)
-   - Glassmorphism Cards Ù…Ø¹ Ø´ÙØ§ÙÙŠØ© Ø¹Ø§Ù„ÙŠØ©
-   - Ù…Ø³Ø§Ø­Ø§Øª ØªÙ†ÙØ³ ÙˆØ§Ø³Ø¹Ø© (Breathing Space)
-   - ØªØ³Ù„Ø³Ù„ Ø¨ØµØ±ÙŠ ÙˆØ§Ø¶Ø­ (Big, Bold, Bright)
-
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+﻿/* =============================================================
+   Alrehla - Therapeutic Spaceship Dashboard
+   ============================================================= */
 
 @layer base {
   :root {
-    /* â”€â”€ Golden Ratio System (Ï†) â”€â”€ */
+    /* Golden ratio system */
     --phi: 1.618;
     --phi-inv: 0.618;
     --phi-content-max: min(98.7rem, 94vw);
-    /* 610 * Ï† */
+    /* 610 * phi */
     --phi-content-focus: min(61rem, 92vw);
     --phi-space-base: 1rem;
 
-    /* â”€â”€ ðŸŒŒ Deep Cosmic Blue â€” Therapeutic Background â”€â”€ */
+    /* Deep cosmic blue background */
     --space-void: #0A0A1A;  /* Brand: Deep Space */
     --space-950: #0f1629;
     --space-deep: #131a35;
@@ -34,18 +20,18 @@
     --space-nebula: #212b4f;
     --space-aurora: #2a3560;
 
-    /* â”€â”€ ðŸ”¥ Warm Amber â€” Soul Color â”€â”€ */
+    /* Warm amber accent */
     --warm-amber: #f5a623;
     --warm-amber-soft: rgba(245, 166, 35, 0.12);
     --warm-amber-glow: rgba(245, 166, 35, 0.25);
     --warm-amber-bright: rgba(245, 166, 35, 0.95);
 
-    /* â”€â”€ ðŸŒ¿ Emerald Green â€” Reassurance â”€â”€ */
+    /* Emerald green reassurance */
     --soft-emerald: #10b981;
     --soft-emerald-dim: rgba(16, 185, 129, 0.12);
     --soft-emerald-glow: rgba(16, 185, 129, 0.25);
 
-    /* â”€â”€ ðŸŒŠ Soft Teal â€” Brand Primary â”€â”€ */
+    /* Soft teal brand primary */
     --soft-teal: #14B8A6;   /* Brand: Teal Haven */
     --soft-teal-dim: rgba(20, 184, 166, 0.12);
     --soft-teal-glow: rgba(45, 212, 191, 0.25);
@@ -53,7 +39,7 @@
     --color-primary-soft: rgba(51, 65, 85, 0.92);
     --color-primary-glow: rgba(51, 65, 85, 0.28);
 
-    /* â”€â”€ ðŸ”® Glassmorphism â€” Ø²Ø¬Ø§Ø¬ Ø´ÙØ§Ù Ø«Ù‚ÙŠÙ„ â”€â”€ */
+    /* Glassmorphism surfaces */
     --glass-bg: rgba(15, 23, 42, 0.6);
     --glass-bg-hover: rgba(15, 23, 42, 0.8);
     --glass-border: rgba(255, 255, 255, 0.07);
@@ -61,13 +47,13 @@
     --glass-blur: 20px;
     --glass-blur-xl: 32px;
 
-    /* â”€â”€ ðŸŽ¨ COLOR GOVERNANCE â€” Behavioral Layers â”€â”€ */
+    /* Color governance layers */
     --layer-operational: #10b981;
     --layer-analytical: #f5a623;
     --layer-narrative: #8b5cf6;
     --layer-muted: rgba(148, 163, 184, 0.5);
 
-    /* â”€â”€ Ring Colors (Orbit Zones) â”€â”€ */
+    /* Ring colors (orbit zones) */
     --ring-safe: #2dd4bf;
     --ring-safe-glow: rgba(45, 212, 191, 0.6);
     --ring-caution: #f5a623;
@@ -76,7 +62,7 @@
     --ring-danger-glow: rgba(248, 113, 113, 0.5);
     --ring-detached: #94a3b8;
 
-    /* â”€â”€ âœï¸ Typography â€” ØªØ³Ù„Ø³Ù„ Ø¨ØµØ±ÙŠ ÙˆØ§Ø¶Ø­ â”€â”€ */
+    /* Typography */
     --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
     --text-muted: rgba(148, 163, 184, 0.5);
@@ -85,7 +71,7 @@
     --font-sans: "IBM Plex Sans Arabic", "Tajawal", system-ui, sans-serif;
     --font-en: "Inter", system-ui, sans-serif;
 
-    /* ═══ Brand Color Aliases ═══ */
+    /* --- Brand Color Aliases --- */
     --brand-teal: #14B8A6;       /* Teal Haven — primary */
     --brand-violet: #7C3AED;     /* Sage Violet — wisdom */
     --brand-deep: #0A0A1A;       /* Deep Space — background */
@@ -96,38 +82,38 @@
     --brand-mist: #94A3B8;       /* Mist — secondary text */
     --brand-white: #F8FAFC;      /* Soft White */
 
-    /* â”€â”€ Spacing & Rhythm â”€â”€ */
+    /* Spacing and rhythm */
     --tracking-tight: -0.02em;
     --tracking-normal: 0;
     --tracking-wide: 0.01em;
     --tracking-wider: 0.02em;
 
-    /* â•â• Organic Unity â€” Ù†Ø¸Ø§Ù… Radius Ù…ÙˆØ­Ù‘Ø¯ â•â• */
+    /* Organic unity: unified radius system */
     --radius-pill: 9999px;
     --radius-card: 1.25rem;
     --radius-modal: 1.75rem;
     --radius-sm: 0.5rem;
     --radius-base: 0.75rem;
 
-    /* â•â• Motion Timing â€” Ø¥ÙŠÙ‚Ø§Ø¹ Ø§Ù„Ø­Ø±ÙƒØ© â•â• */
+    /* Motion timing */
     --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
     --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
     --duration-fast: 150ms;
     --duration-base: 250ms;
     --duration-slow: 400ms;
 
-    /* â•â• Breathing Space â€” Ù…Ø³Ø§Ø­Ø© Ø§Ù„ØªÙ†ÙØ³ â•â• */
+    /* Breathing space */
     --space-xs: 8px;
     --space-sm: 16px;
     --space-md: 24px;
     --space-lg: 32px;
     --space-xl: 48px;
 
-    /* ── Autonomous Intervention — UI Friction ── */
+    /* Autonomous intervention - UI friction */
     --ui-friction-multiplier: 1.0;
     --ui-transition-timing: ease;
 
-    /* ── Cosmic Background ── */
+    /* Cosmic background */
     --cosmic-bg: linear-gradient(165deg,
         var(--space-void) 0%,
         var(--space-950) 30%,
@@ -135,29 +121,58 @@
         var(--space-mid) 100%);
   }
 
-  /* ── Light Theme Overrides ── */
+  /* ----------------------------------------------
+     Light theme - Warm clarity system
+     Palette: Cream white + cool slate + teal accent
+     All tokens override the default dark values
+     ---------------------------------------------- */
   :root:not(.dark) {
-    --space-void: #f8fafc;
-    --space-950: #f1f5f9;
-    --space-deep: #e2e8f0;
-    --space-mid: #cbd5e1;
-    --space-nebula: #94a3b8;
-    --space-aurora: #64748b;
+    /* Background scale */
+    --space-void:   #f0f4f8;  /* page bg: cool blue-white */
+    --space-950:    #e8edf4;  /* lightest surface */
+    --space-deep:   #dce3ee;  /* card bg */
+    --space-mid:    #c8d3e2;  /* subtle borders */
+    --space-nebula: #8ea3bf;  /* decorative / muted borders */
+    --space-aurora: #5a7a9e;  /* stronger borders / icons */
 
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: rgba(71, 85, 105, 0.5);
+    /* Typography */
+    --text-primary:   #0f1f36;          /* near-black, warm */
+    --text-secondary: #3d567a;          /* slate-blue for supporting text */
+    --text-muted:     rgba(61, 86, 122, 0.45);
+    --text-accent:    #0d9488;          /* teal — same as dark */
 
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-bg-hover: rgba(255, 255, 255, 0.85);
-    --glass-border: rgba(0, 0, 0, 0.1);
-    --glass-border-hover: rgba(0, 0, 0, 0.2);
+    /* -- Glass / Surface System -- */
+    --glass-bg:           rgba(255, 255, 255, 0.72);
+    --glass-bg-hover:     rgba(255, 255, 255, 0.88);
+    --glass-border:       rgba(14, 50, 100, 0.10);
+    --glass-border-hover: rgba(14, 50, 100, 0.20);
 
-    --cosmic-bg: linear-gradient(165deg,
-        #f8fafc 0%,
-        #f1f5f9 30%,
-        #e2e8f0 60%,
-        #cbd5e1 100%);
+    /* -- Page Background Gradient -- */
+    --cosmic-bg: linear-gradient(160deg,
+        #eef2f8 0%,
+        #e8edf5 35%,
+        #dde4f0 65%,
+        #d4dce8 100%);
+
+    /* -- Card-level surfaces (hardcoded dark overrides) -- */
+    --card-surface:       rgba(255, 255, 255, 0.80);
+    --card-surface-hover: rgba(255, 255, 255, 0.95);
+    --card-border:        rgba(14, 50, 100, 0.10);
+    --card-border-hover:  rgba(14, 50, 100, 0.18);
+
+    /* -- Node glass (map orbs) -- */
+    --node-surface:       rgba(240, 246, 255, 0.85);
+    --node-surface-hover: rgba(225, 236, 255, 0.92);
+    --node-border:        rgba(14, 50, 100, 0.12);
+    --node-border-hover:  rgba(14, 50, 100, 0.22);
+
+    /* -- Warm amber / layer tokens same as dark -- */
+    --warm-amber-soft: rgba(245, 166, 35, 0.10);
+    --warm-amber-glow: rgba(245, 166, 35, 0.20);
+    --soft-emerald-dim: rgba(16, 185, 129, 0.10);
+    --soft-teal-dim:    rgba(20, 184, 166, 0.10);
+    --soft-teal-glow:   rgba(45, 212, 191, 0.20);
+    --layer-muted: rgba(58, 90, 130, 0.35);
   }
 
   html {
@@ -184,7 +199,7 @@
     transition: background 0.3s ease, color 0.3s ease;
   }
 
-  /* â”€â”€ ðŸ“ Typography â€” Ø®Ø· ÙˆØ§Ø­Ø¯ + ØªØ¯Ø±Ø¬ ÙˆØ§Ø¶Ø­ â”€â”€ */
+  /* Typography scale */
   h1,
   h2,
   h3,
@@ -218,7 +233,7 @@
     font-weight: 600;
   }
 
-  /* â”€â”€ Custom Scrollbar â€” Ø´Ø±ÙŠØ· ØªÙ…Ø±ÙŠØ± Ø£Ù†ÙŠÙ‚ â”€â”€ */
+  /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -237,7 +252,16 @@
     background: rgba(255, 255, 255, 0.2);
   }
 
-  /* â”€â”€ Hide scrollbar for specific containers â”€â”€ */
+  /* Section */
+  :root:not(.dark) ::-webkit-scrollbar-thumb {
+    background: rgba(14, 50, 100, 0.15);
+  }
+
+  :root:not(.dark) ::-webkit-scrollbar-thumb:hover {
+    background: rgba(14, 50, 100, 0.28);
+  }
+
+  /* Hide scrollbar for specific containers */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -258,9 +282,7 @@
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸŒŒ NEBULA BACKGROUND â€” Animated Cosmic Canvas
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 
 .nebula-bg {
   position: fixed;
@@ -332,11 +354,9 @@
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸ”® GLASSMORPHISM COMPONENTS â€” Ø´ÙØ§ÙÙŠØ© Ø²Ø¬Ø§Ø¬ÙŠØ© Ù‚ÙˆÙŠØ©
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 
-/* â”€â”€ Ø§Ù„ÙƒØªÙ„Ø© Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ© â€” Glass â”€â”€ */
+/* Main glass card */
 .glass {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
@@ -346,7 +366,7 @@
   transition: all var(--duration-base) var(--ease-spring);
 }
 
-/* â”€â”€ Ù†Ø§ÙØ°Ø© Ø«Ù‚ÙŠÙ„Ø© â€” Glass Heavy â”€â”€ */
+/* Heavy glass surface */
 .glass-heavy {
   background: rgba(10, 14, 35, 0.85);
   backdrop-filter: blur(var(--glass-blur-xl));
@@ -355,7 +375,7 @@
   border-radius: var(--radius-modal);
 }
 
-/* â”€â”€ ðŸ§± Bento Card â€” Ø§Ù„ÙƒØªÙ„Ø© Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§ØªÙŠØ© Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ© â”€â”€ */
+/* Bento card */
 .glass-card {
   background: rgba(12, 17, 40, 0.8);
   backdrop-filter: blur(24px);
@@ -372,7 +392,7 @@
   transform: translateY(-2px);
 }
 
-/* â”€â”€ ðŸ”˜ Glass Button â€” Ø²Ø± Ø´ÙØ§Ù â”€â”€ */
+/* Glass button */
 .glass-button {
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
@@ -397,7 +417,6 @@
   color: var(--soft-teal);
 }
 
-/* â”€â”€ ðŸŒ¿ CTA Success â€” Emerald Green Ù„Ù„Ø·Ù…Ø£Ù†ÙŠÙ†Ø© â”€â”€ */
 .cta-success {
   background: linear-gradient(135deg, var(--soft-emerald) 0%, #059669 100%);
   color: rgba(255, 255, 255, 0.98);
@@ -415,26 +434,24 @@
   transform: translateY(-2px);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸ§± BENTO GRID LAYOUT â€” ÙƒØªÙ„ Ù…Ø¹Ù„ÙˆÙ…Ø§ØªÙŠØ© Ø°ÙƒÙŠØ©
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 
 .bento-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
-  /* gap-6 â€” Ù…Ø³Ø§Ø­Ø© ØªÙ†ÙØ³ */
+  /* gap-6 breathing room */
   width: 100%;
 }
 
 @media (min-width: 640px) {
   .bento-grid {
     gap: 2rem;
-    /* gap-8 Ø¹Ù„Ù‰ Ø§Ù„Ø´Ø§Ø´Ø§Øª Ø§Ù„ÙƒØ¨ÙŠØ±Ø© */
+    /* gap-8 on large screens */
   }
 }
 
-/* â”€â”€ Bento Block â€” Ø§Ù„ÙƒØªÙ„Ø© Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ© â”€â”€ */
+/* Bento block */
 .bento-block {
   background: rgba(12, 17, 40, 0.8);
   backdrop-filter: blur(24px);
@@ -451,7 +468,7 @@
   transform: translateY(-2px);
 }
 
-/* â”€â”€ Bento Block sizes â€” Ø£Ø­Ø¬Ø§Ù… Ù…Ø®ØªÙ„ÙØ© â”€â”€ */
+/* Bento block sizes */
 .bento-sm {
   grid-column: span 1;
   min-height: 140px;
@@ -485,9 +502,7 @@
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸŒ€ BREATHING RINGS â€” Orbital System
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 
 .orbital-ring {
   fill: none;
@@ -569,9 +584,7 @@
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   âœ¨ ME CENTER â€” Cosmic Orb
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 
 .me-orb-pulse {
   animation: meOrbPulse 3s ease-in-out infinite;
@@ -591,19 +604,17 @@
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸ“ LAYOUT SYSTEM â€” APP SHELL & CARDS
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 
 @layer components {
 
-  /* Ø­Ø§ÙˆÙŠØ© Ø£Ø³Ø§Ø³ÙŠØ© Ù„ÙƒÙ„ Ø§Ù„Ø´Ø§Ø´Ø§Øª â€” 8pt grid + max-width */
+  /* Section */
   .app-shell-main {
     @apply w-full mx-auto px-4 md:px-8 py-6 md:py-8;
     max-width: var(--phi-content-max);
   }
 
-  /* Ù„ÙˆØ­Ø© Ø±Ø¦ÙŠØ³ÙŠØ© ÙÙŠ Ø§Ù„Ù…Ù†ØªØµÙ â€” Ù„Ù„Ù…Ø­ØªÙˆÙ‰ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ (Landing / Map / Mission..) */
+  /* Section */
   .app-panel-main {
     @apply w-full mx-auto rounded-3xl bg-slate-900/90 border border-slate-800 px-4 sm:px-8 py-6 sm:py-8;
     max-width: var(--phi-content-focus);
@@ -622,13 +633,13 @@
     row-gap: clamp(var(--space-sm), 1.6vw, var(--space-lg));
   }
 
-  /* ÙƒØ§Ø±Øª Ù…ÙˆØ­Ù‘Ø¯ ØµØºÙŠØ± â€” ÙŠØ³ØªØ®Ø¯Ù… Ù„Ù„ÙƒØ±ÙˆØª Ø§Ù„Ø¹Ø§Ù…Ø© */
+  /* Section */
   .card-unified {
     @apply bg-white/5 border border-white/10 backdrop-blur-md;
     border-radius: var(--radius-card);
   }
 
-  /* Ø³Ø·Ø­ Ù…ÙˆØ­Ù‘Ø¯ Ù„Ù„Ù…ÙˆØ¯Ø§Ù„Ø§Øª Ø§Ù„ÙƒØ¨ÙŠØ±Ø© / Ø§Ù„Ù†ÙˆØ§ÙØ° Ø§Ù„Ø¹Ø§Ø¦Ù…Ø© (Chat, Overlays) */
+  /* Section */
   .modal-surface {
     @apply bg-white/5 border border-white/10 backdrop-blur-md;
     border-radius: var(--radius-modal);
@@ -677,9 +688,7 @@
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸª NODE (Person) â€” Glass Orbs
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 
 .node-glass {
   background: rgba(15, 20, 50, 0.7);
@@ -707,9 +716,7 @@
   border-color: rgba(248, 113, 113, 0.4);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸ«§ STATUS CARDS â€” Mood-Responsive Glass
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 
 .status-card-low {
   background: rgba(100, 116, 139, 0.12);
@@ -731,9 +738,7 @@
   border: 1px solid rgba(139, 92, 246, 0.2);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸŽ¯ CTA BUTTONS â€” Cosmic Gradients
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 
 .cta-primary {
   background: linear-gradient(135deg, var(--soft-teal), #0d9488);
@@ -769,9 +774,7 @@
   color: var(--text-primary);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸ·ï¸ LEGEND PILLS â€” Ring Identity
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 
 .legend-pill {
   background: rgba(255, 255, 255, 0.05);
@@ -811,9 +814,7 @@
   background: rgba(248, 113, 113, 0.1);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸŒ€ MICRO-INTERACTIONS
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 @layer utilities {
   .tap-press {
     transition: transform 0.2s ease;
@@ -885,9 +886,8 @@
   }
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* Section */
    Pulse (Micro Compass) Range Styling
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .pulse-range {
   --pulse-fill: var(--soft-teal);
   -webkit-appearance: none;
@@ -976,7 +976,7 @@
   }
 }
 
-/* Needle range input â€” keyboard accessible, mouse drag handled by JS */
+/* Needle range input - keyboard accessible, mouse drag handled by JS */
 .needle-range-input {
   pointer-events: none;
 }
@@ -985,9 +985,7 @@
   pointer-events: auto;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸ“± No-scrollbar utility (for horizontal scrolls)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -997,9 +995,7 @@
   display: none;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸ›¸ Ù‚Ù…Ø±Ø© Ø§Ù„Ù‚ÙŠØ§Ø¯Ø© â€” Admin Dashboard (ÙˆØ¶Ø¹ ÙØ§ØªØ­)
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 .admin-cockpit {
   background: #e2e8f0;
   position: relative;
@@ -1028,9 +1024,7 @@
   border-right: 1px solid rgba(148, 163, 184, 0.2);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸ§  Flow Mind Map â€” Miro-style infinite canvas
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 .flow-miro-root {
   position: relative;
   width: 100%;
@@ -1041,12 +1035,9 @@
   user-select: none;
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   ðŸ«€ ORGANIC UNITY â€” Ø§Ù„ÙˆØ­Ø¯Ø© Ø§Ù„Ø¹Ø¶ÙˆÙŠØ©
-   Ø®ÙŠØ· Ø®ÙÙŠ ÙŠØ±Ø¨Ø· ÙƒÙ„ Ø¹Ù†Ø§ØµØ± Ø§Ù„Ù…Ù†ØµØ©
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 
-/* â”€â”€ Ø§Ù„Ø§Ø³ØªØ¬Ø§Ø¨Ø© Ø§Ù„ÙÙˆØ±ÙŠØ© â€” ÙŠØ·Ù…Ù† Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø¥Ù†Ù‡ "Ù…Ø³Ù…ÙˆØ¹" â”€â”€ */
+/* Immediate response */
 .organic-tap {
   transition:
     transform var(--duration-fast) var(--ease-spring),
@@ -1058,8 +1049,8 @@
   opacity: 0.85;
 }
 
-/* â”€â”€ Ù†Ø¨Ø¶Ø© Ø§Ù„Ø­ÙŠØ§Ø© â€” Ù„Ù„Ø¹Ù†Ø§ØµØ± Ø§Ù„ØªÙŠ ØªØ­Ù…Ù„ Ø¨ÙŠØ§Ù†Ø§Øª Ø­ÙŠØ© â”€â”€ */
-/* ÙŠØ³ØªØ®Ø¯Ù… --organic-pulse-color Ù„Ù„Ø³Ù…Ø§Ø­ Ù„ÙƒÙ„ ÙˆÙŠØ¯Ø¬Øª Ø¨Ù„ÙˆÙ†Ù‡ Ø§Ù„Ø®Ø§Øµ */
+/* Live pulse */
+/* Uses --organic-pulse-color for each widget */
 @keyframes organicPulse {
 
   0%,
@@ -1078,7 +1069,7 @@
   animation: organicPulse 5s ease-in-out infinite;
 }
 
-/* â”€â”€ Ø§Ù„ØªØ¯ÙÙ‚ Ø§Ù„ØªØµØ§Ø¹Ø¯ÙŠ â€” Ø¸Ù‡ÙˆØ± Ù…Ù† Ø§Ù„Ø£Ø³ÙÙ„ Ø¨Ø´ÙƒÙ„ Ø¹Ø¶ÙˆÙŠ â”€â”€ */
+/* Organic upward flow */
 @keyframes flowUp {
   from {
     opacity: 0;
@@ -1097,7 +1088,7 @@
   animation: flowUp var(--duration-slow) var(--ease-spring) both;
 }
 
-/* â”€â”€ Ø§Ù„ÙƒØªÙ„Ø© Ø§Ù„Ø£Ù… â€” 60% Ø¨ØµØ±ÙŠ â€” ØªÙ…ÙŠÙŠØ² ÙˆØ§Ø¶Ø­ â”€â”€ */
+/* Main block */
 .primary-block {
   position: relative;
 }
@@ -1115,7 +1106,7 @@
   z-index: -1;
 }
 
-/* â”€â”€ Ø§Ù„ÙƒØªÙ„Ø© Ø§Ù„Ø¯Ø§Ø¹Ù…Ø© â€” 30% Ø¨ØµØ±ÙŠ â€” Ø£Ø®Ù Ø­Ø¶ÙˆØ±Ø§Ù‹ â”€â”€ */
+/* Supporting block */
 .support-block {
   opacity: 0.85;
   transition: opacity var(--duration-base) var(--ease-smooth);
@@ -1125,13 +1116,13 @@
   opacity: 1;
 }
 
-/* â”€â”€ Ù…Ø³Ø§Ø­Ø© Ø§Ù„ØªÙ†ÙØ³ â€” 10% â”€â”€ */
+/* Breathing space */
 .breath-space {
   padding-top: var(--space-lg);
   padding-bottom: var(--space-lg);
 }
 
-/* â”€â”€ ØªÙˆØ­ÙŠØ¯ Input Ø¯Ø§Ø®Ù„ Ø§Ù„Ù…Ù†ØµØ© â”€â”€ */
+/* Unified input */
 .organic-input {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1152,9 +1143,7 @@
   color: rgba(148, 163, 184, 0.4);
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-     ðŸ“Ÿ TACTICAL ANIMATIONS â€” Command Center FX
-     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+/* Section */
 @keyframes scan {
   from {
     transform: translateY(-100%);
@@ -1279,9 +1268,9 @@
   }
 }
 
-/* ══════════════════════════════════════════════
-   ✨ PREMIUM HERO V2 — Orbital Center System
-   ══════════════════════════════════════════════ */
+/* ----------------------------------------------
+   ? PREMIUM HERO V2 — Orbital Center System
+   ---------------------------------------------- */
 
 .hero-orbital-center {
   position: relative;
@@ -1353,3 +1342,102 @@
     justify-content: flex-start;
   }
 }
+
+/* ================================================
+   LIGHT MODE Component Overrides
+   Patches all hardcoded dark rgba() colors
+   ================================================ */
+
+
+
+/* Nebula background: soft atmospheric light, no white star dots */
+:root:not(.dark) .nebula-bg {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(99, 54, 181, 0.05) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 20%, rgba(20, 184, 166, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(245, 166, 35, 0.04) 0%, transparent 45%),
+    linear-gradient(160deg, #eef2f8, #e8edf5, #dde4f0);
+}
+:root:not(.dark) .nebula-bg::before {
+  background:
+    radial-gradient(circle at 30% 40%, rgba(99, 54, 181, 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 70% 60%, rgba(20, 184, 166, 0.05) 0%, transparent 35%);
+}
+:root:not(.dark) .nebula-bg::after { display: none; }
+
+/* Glass heavy (modals, drawers) */
+:root:not(.dark) .glass-heavy {
+  background: rgba(255, 255, 255, 0.93);
+  border-color: rgba(14, 50, 100, 0.10);
+}
+
+/* Glass card */
+:root:not(.dark) .glass-card {
+  background: rgba(255, 255, 255, 0.80);
+  border-color: rgba(14, 50, 100, 0.10);
+}
+:root:not(.dark) .glass-card:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(14, 50, 100, 0.18);
+}
+
+/* Glass button */
+:root:not(.dark) .glass-button {
+  background: rgba(14, 50, 100, 0.06);
+  border-color: rgba(14, 50, 100, 0.12);
+}
+:root:not(.dark) .glass-button:hover {
+  background: rgba(14, 50, 100, 0.10);
+  border-color: rgba(14, 50, 100, 0.20);
+}
+
+/* Bento block */
+:root:not(.dark) .bento-block {
+  background: rgba(255, 255, 255, 0.80);
+  border-color: rgba(14, 50, 100, 0.10);
+}
+:root:not(.dark) .bento-block:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(14, 50, 100, 0.18);
+}
+
+/* Node glass (relationship map orbs) */
+:root:not(.dark) .node-glass {
+  background: rgba(240, 246, 255, 0.85);
+  border-color: rgba(14, 50, 100, 0.12);
+}
+:root:not(.dark) .node-glass:hover {
+  background: rgba(225, 236, 255, 0.92);
+  border-color: rgba(14, 50, 100, 0.22);
+}
+
+/* App panel */
+:root:not(.dark) .app-panel-main {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border-color: rgba(14, 50, 100, 0.10) !important;
+}
+
+/* CTA muted */
+:root:not(.dark) .cta-muted {
+  background: rgba(14, 50, 100, 0.06);
+  border-color: rgba(14, 50, 100, 0.12);
+  color: var(--text-secondary);
+}
+:root:not(.dark) .cta-muted:hover {
+  background: rgba(14, 50, 100, 0.10);
+  color: var(--text-primary);
+}
+
+/* Legend pills */
+:root:not(.dark) .legend-pill {
+  background: rgba(14, 50, 100, 0.05);
+  border-color: rgba(14, 50, 100, 0.10);
+}
+:root:not(.dark) .legend-pill:hover {
+  background: rgba(14, 50, 100, 0.09);
+}
+
+
+
+
+

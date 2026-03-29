@@ -118,7 +118,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
       dir="rtl"
       style={{ fontFamily: "IBM Plex Sans Arabic, Tajawal, sans-serif" }}
     >
-      {/* â”€â”€ Header â”€â”€ */}
+      {/* Header */}
       <motion.header
         className="text-center space-y-3 mb-10"
         initial={{ opacity: 0, y: 8 }}
@@ -136,7 +136,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
         </p>
       </motion.header>
 
-      {/* â”€â”€ Tools List â”€â”€ */}
+      {/* Tools list */}
       <motion.section
         className="space-y-3 text-right"
         variants={containerVariants}
@@ -189,7 +189,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
                 </span>
                 {!tool.locked && tool.id !== "dawayir" && (
                   <span className="text-[10px] font-bold rounded-full px-2 py-0.5 whitespace-nowrap"
-                    style={{ background: "rgba(52,211,153,0.12)", color: "#34d399" }}>âœ“</span>
+                    style={{ background: "rgba(52,211,153,0.12)", color: "#34d399" }}>✓</span>
                 )}
               </div>
             </div>
@@ -200,7 +200,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
         ))}
       </motion.section>
 
-      {/* â”€â”€ Protection Tools â”€â”€ */}
+      {/* Protection tools */}
       {(onOpenExitScripts || onOpenGrounding) && (
         <motion.section
           className="mt-6 text-right"
@@ -284,7 +284,7 @@ export const JourneyToolsScreen: FC<JourneyToolsScreenProps> = ({
         </section>
       )}
 
-      {/* â”€â”€ Action Buttons â”€â”€ */}
+      {/* -- Action Buttons -- */}
       <motion.div
         className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3"
         initial={{ opacity: 0, y: 8 }}

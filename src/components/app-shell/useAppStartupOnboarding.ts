@@ -81,9 +81,7 @@ export function useAppStartupOnboarding({
     trackEvent("journey_started_frictionless", { source: "landing" });
     
     if (isRevenueMode) {
-      if (typeof window !== "undefined") {
-        window.location.href = "/checkout";
-      }
+      openOverlay("premiumBridge");
       return;
     }
 

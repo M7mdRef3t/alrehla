@@ -113,7 +113,7 @@ function ensureGtag(): void {
 function ensureMetaPixel(): void {
   const windowRef = getWindowOrNull();
   const pixelId = getMetaPixelId();
-  if (!windowRef || !pixelId || !areMetaEventsEnabled()) return;
+  if (!windowRef || !pixelId || !areMetaEventsEnabled() || !runtimeEnv.isProd) return;
 
   if (!windowRef.fbq) {
     const fbq = ((...args: unknown[]) => {
@@ -153,7 +153,7 @@ function sendMetaEvent(
   options?: { bypassConsent?: boolean }
 ): void {
   const bypassConsent = options?.bypassConsent === true;
-  if (!isClientRuntime() || !areMetaEventsEnabled()) return;
+  if (!isClientRuntime() || !areMetaEventsEnabled() || !runtimeEnv.isProd) return;
   if (!bypassConsent && !isAnalyticsEnabled()) return;
   const safeParams = sanitizeAnalyticsParams(params);
   const windowRef = getWindowOrNull();

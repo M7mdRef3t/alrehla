@@ -17,13 +17,16 @@ import {
   Brain,
   Home,
   ArrowLeftCircle,
+  ShieldCheck,
+  Eye,
 } from "lucide-react";
 import { AlrehlaIcon } from "./logo/AlrehlaIcon";
-import { useAuthState } from "../state/authState";
+import { useAuthState, getEffectiveRoleFromState } from "../state/authState";
 import { useAchievementState } from "../state/achievementState";
 import { useThemeState } from "../state/themeState";
 import { signOut } from "../services/authService";
 import { NotificationsPanel } from "./NotificationsPanel";
+import { isPrivilegedRole } from "../utils/featureFlags";
 
 const NAV_LINKS = [
   { id: "home", label: "الرئيسية", icon: Home },
@@ -45,7 +48,7 @@ const SCREEN_MAP: Record<string, string> = {
   quizzes: "quizzes",
   "behavioral-analysis": "behavioral-analysis",
   resources: "resources",
-  profile: "landing",
+  profile: "settings",
   settings: "settings",
 };
 
@@ -96,6 +99,11 @@ export const PlatformHeader = memo(function PlatformHeader({
   const firstName = useAuthState((s) => s.firstName);
   const displayName = useAuthState((s) => s.displayName);
   const status = useAuthState((s) => s.status);
+  const role = useAuthState(getEffectiveRoleFromState);
+  const roleOverride = useAuthState((s) => s.roleOverride);
+  const setRoleOverride = useAuthState((s) => s.setRoleOverride);
+  const isPrivilegedUser = isPrivilegedRole(role);
+  const isViewingAsUser = roleOverride === "user";
   const isLoggedIn = Boolean(user);
   const avatarInitial = (firstName?.[0] ?? displayName?.[0] ?? "أ").toUpperCase();
   const avatarUrl =
@@ -186,7 +194,7 @@ export const PlatformHeader = memo(function PlatformHeader({
       aria-label="الشريط العلوي"
       animate={{ 
         y: hidden ? "-100%" : "0%",
-        backgroundColor: scrolled ? "var(--glass-bg)" : "transparent" 
+        backgroundColor: scrolled ? "var(--glass-bg)" : "rgba(0, 0, 0, 0)" 
       }}
       className={`
         fixed top-0 right-0 left-0 z-50
@@ -437,6 +445,34 @@ export const PlatformHeader = memo(function PlatformHeader({
                         {label}
                       </button>
                     ))}
+
+                    {/* Owner Switch — only for privileged roles */}
+                    {isPrivilegedUser && (
+                      <div className="border-t border-white/[0.08] mt-1 pt-1">
+                        <button
+                          type="button"
+                          id="header-owner-switch"
+                          onClick={() => {
+                            setRoleOverride(isViewingAsUser ? null : "user");
+                            setUserMenuOpen(false);
+                          }}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full ${
+                            isViewingAsUser
+                              ? "text-amber-400 hover:bg-amber-500/10"
+                              : "text-teal-400 hover:bg-teal-500/10"
+                          }`}
+                          role="menuitem"
+                          aria-label={isViewingAsUser ? "العودة لوضع الأونر" : "تجربة واجهة المستخدم"}
+                        >
+                          {isViewingAsUser ? (
+                            <ShieldCheck className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                          {isViewingAsUser ? "العودة لوضع الأونر" : "تجربة واجهة المستخدم"}
+                        </button>
+                      </div>
+                    )}
 
                     <div className="border-t border-white/[0.08] mt-1 pt-1">
                       <button

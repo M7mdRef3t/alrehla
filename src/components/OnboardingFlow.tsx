@@ -27,13 +27,32 @@ const ONBOARDING_STYLES = `
   pointer-events: none; position: absolute; inset: 0;
 }
 .ob-btn-tap:active { transform: scale(0.97); }
+
+/* Force dark-mode variables inside onboarding regardless of theme */
+.ob-dark-force {
+  --color-primary-soft: rgba(10, 14, 31, 0.95);
+  --glass-bg: rgba(12, 17, 40, 0.78);
+  --glass-bg-hover: rgba(15, 22, 50, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(203, 213, 225, 0.95);
+  --text-muted: rgba(148, 163, 184, 0.7);
+  --text-accent: #2dd4bf;
+  --soft-teal: #2dd4bf;
+  --soft-teal-dim: rgba(45, 212, 191, 0.12);
+  --soft-teal-glow: rgba(45, 212, 191, 0.25);
+}
 `;
 import { useMapState } from "../state/mapState";
 import { setInLocalStorage } from "../services/browserStorage";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { AnalyticsEvents, trackCompleteRegistration, trackEvent, trackLead } from "../services/analytics";
 import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ShieldCheck, Mail, ArrowRight, Sparkles, Layout, Zap } from "lucide-react";
+import { signInWithMagicLink } from "../services/authService";
+import { sendRecoveryPlanEmail } from "../services/emailService";
+import { getStoredLeadAttribution } from "../services/marketingAttribution";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { enableNotificationsWithPrompt, getNotificationPermission } from "../services/pushNotifications";
 
@@ -514,30 +533,39 @@ const StepContactCapture: FC<{ onComplete: (email: string, whatsapp: string) => 
   const [email, setEmail] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (!email && !whatsapp) {
       setError("يا ريت تسيب وسيلة تواصل واحدة على الأقل عشان نبعتلك الخطة.");
       return;
     }
-    onComplete(email, whatsapp);
+    setLoading(true);
+    try {
+      await onComplete(email, whatsapp);
+    } catch (err) {
+      setError("حصلت مشكلة. جرب تاني.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="flex flex-col gap-6 w-full">
       <div className="text-center">
-        <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text-primary)" }}>
-          نبعتلك خطة التعافي فين؟
+        <h2 className="text-xl font-bold mb-2 text-white">
+          احفظ خريطتك وابدأ رحلة التعافي
         </h2>
-        <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          عشان نضمن إن خريطتك وبصيرة النهاردة متضاعش، سجل وسيلة تواصل نبعتلك عليها "روشتة الدواير" والخطوات الجاية.
+        <p className="text-sm leading-relaxed text-slate-400">
+          عشان تحفظ خريطتك وبصيرة النهاردة، سجل وسيلة تواصل نبعتلك عليها "روشتة الدواير" ونحفظ تقدمك.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="space-y-1">
-          <label className="text-[10px] font-bold pr-2" style={{ color: "var(--text-muted)" }}>الإيميل</label>
+          <label className="text-[10px] font-bold pr-2 text-slate-500 uppercase tracking-widest">الإيميل</label>
           <input
             type="email"
             value={email}
@@ -549,7 +577,7 @@ const StepContactCapture: FC<{ onComplete: (email: string, whatsapp: string) => 
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] font-bold pr-2" style={{ color: "var(--text-muted)" }}>رقم الواتساب (اختياري)</label>
+          <label className="text-[10px] font-bold pr-2 text-slate-500 uppercase tracking-widest">رقم الواتساب (اختياري)</label>
           <input
             type="tel"
             value={whatsapp}
@@ -565,21 +593,99 @@ const StepContactCapture: FC<{ onComplete: (email: string, whatsapp: string) => 
 
         <button
           type="submit"
-          className="w-full rounded-2xl py-3.5 text-sm font-black ob-btn-tap"
-          style={{ background: "rgba(45,212,191,0.9)", color: "#0f172a", marginTop: 8 }}
+          disabled={loading}
+          className="w-full rounded-2xl py-3.5 mt-2 text-sm font-bold ob-btn-tap hover:brightness-110 transition-all flex items-center justify-center gap-2"
+          style={{ background: "var(--soft-teal)", color: "#0f172a" }}
         >
-          حفظ وتفعيل الرحلة ←
+          {loading ? (
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 border-2 border-[#0f172a]/30 border-t-[#0f172a] rounded-full animate-spin" />
+              <span>جاري تحضير الروشتة...</span>
+            </div>
+          ) : (
+            <>
+              حفظ وتفعيل الرحلة
+              <ArrowRight className="w-4 h-4" />
+            </>
+          )}
         </button>
       </form>
 
       <button
         type="button"
         onClick={onSkip}
-        className="text-center text-xs transition-colors"
-        style={{ color: "var(--text-muted)" }}
+        className="text-center text-[11px] text-slate-400 hover:text-white transition-colors"
       >
-        تخطي حالياً
+        تخطي للآن (كدخول ضيف)
       </button>
+
+      <div className="flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+        <ShieldCheck className="w-3.5 h-3.5 text-teal-400/70" />
+        <span className="text-[10px] text-slate-400">بياناتك مشفرة ومحمية بالكامل</span>
+      </div>
+    </div>
+  );
+};
+
+/* ── Step 5: Recovery Plan Preview ── */
+const StepRecoveryPlanPreview: FC<{
+  collectedItems: { name: string; category: AdviceCategory }[];
+  onComplete: () => void;
+}> = ({ collectedItems, onComplete }) => {
+  return (
+    <div className="flex flex-col gap-6 w-full py-2">
+      <div className="text-center space-y-2">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-teal-500/10 border border-teal-500/20 mb-2">
+          <Sparkles className="w-6 h-6 text-teal-400" />
+        </div>
+        <h2 className="text-xl font-bold text-white">خطتك الشخصية جاهزة!</h2>
+        <p className="text-sm text-slate-400">
+          تم تحليل خريطتك وبناء "روشتة الدواير" الخاصة بك.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3">
+          <div className="flex items-center gap-2 text-teal-400 text-xs font-bold uppercase tracking-wider">
+            <Layout className="w-3.5 h-3.5" />
+            ملخص بصيرتك
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-400">علاقات تم رصدها</span>
+              <span className="text-white font-mono">{collectedItems.length}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-400">مستوى الوضوح</span>
+              <span className="text-teal-400 font-bold">عالٍ جداً</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-teal-500/10 to-transparent border border-teal-500/20 space-y-3">
+          <div className="flex items-center gap-2 text-teal-400 text-xs font-bold uppercase tracking-wider">
+            <Zap className="w-3.5 h-3.5" />
+            الخطوة الأولى المقترحة
+          </div>
+          <p className="text-sm text-slate-200 leading-relaxed">
+            ابدأ بتفعيل "درع الدواير" للأشخاص في الدائرة الحمراء لتقليل الضجيج العاطفي فوراً.
+          </p>
+        </div>
+      </div>
+
+      <div className="text-center space-y-4 pt-2">
+        <button
+          onClick={onComplete}
+          id="ob-plan-preview-safe-haven"
+          className="w-full rounded-2xl py-4 text-base font-bold ob-btn-tap hover:brightness-110 transition-all shadow-[0_0_20px_rgba(45,212,191,0.2)]"
+          style={{ background: "var(--soft-teal)", color: "#0f172a" }}
+        >
+          دخول الملاذ الآمن ←
+        </button>
+        <p className="text-[10px] text-slate-500 px-4">
+          تم إرسال نسخة مفصلة من الخطوة الأولى إلى بريدك الإلكتروني (تأكد من مجلد Spam).
+        </p>
+      </div>
     </div>
   );
 };
@@ -687,7 +793,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
     }
   }, [collectedItems.length, onComplete]);
 
-  const handleContactCapture = useCallback((email: string, whatsapp: string) => {
+  const handleContactCapture = useCallback(async (email: string, whatsapp: string) => {
     recordFlowEvent("lead_form_submitted", {
       meta: { hasEmail: !!email, hasWhatsapp: !!whatsapp }
     });
@@ -699,21 +805,54 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
       has_whatsapp: !!whatsapp
     });
 
-    // In a real app we'd save this to a backend or state
+    // Calculate metadata for the recovery plan
+    const nodes = useMapState.getState().nodes;
+    const redCount = nodes.filter(n => n.ring === "red").length;
+    const yellowCount = nodes.filter(n => n.ring === "yellow").length;
+    const greenCount = nodes.filter(n => n.ring === "green").length;
+
+    // SILENT SIGNUP / MAGIC LINK
+    if (email.trim()) {
+      try {
+        // First try to sign in/up via magic link
+        await signInWithMagicLink(email.trim());
+        
+        // Then trigger the recovery plan email immediately
+        const sendSuccess = await sendRecoveryPlanEmail(email.trim(), {
+          userName: undefined, // Could fetch from profile if we had it
+          relationshipCount: nodes.length,
+          redCount,
+          yellowCount,
+          greenCount,
+          magicLink: window.location.origin
+        });
+
+        if (sendSuccess) {
+          console.log("[Onboarding] Recovery plan email successfully initiated");
+        } else {
+          console.error("[Onboarding] Recovery plan email failed to send (check EmailService logs)");
+        }
+      } catch (err: any) {
+        console.warn("[Onboarding] Email trigger failed, but continuing flow:", err);
+      }
+    }
+
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem("dawayir-lead-email", email);
       window.sessionStorage.setItem("dawayir-lead-whatsapp", whatsapp);
     }
-    handleComplete();
-  }, [handleComplete]);
+    
+    // GO TO STEP 5 (RECOVERY PLAN PREVIEW)
+    goTo(5);
+  }, [goTo]);
 
 
   /* Progress dots */
-  const dots = [0, 1, 2, 3, 4];
+  const dots = [0, 1, 2, 3, 4, 5];
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 ob-dark-force"
       style={{ background: "var(--color-primary-soft)", backdropFilter: "blur(8px)" }}
       dir="rtl"
     >
@@ -766,7 +905,21 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete }) => 
           )}
           {step === 4 && (
             <div key="contact" className="ob-step-enter">
-              <StepContactCapture onComplete={handleContactCapture} onSkip={handleComplete} />
+              <StepContactCapture
+                onComplete={handleContactCapture}
+                onSkip={() => {
+                  recordFlowEvent("onboarding_contact_skipped");
+                  goTo(5); // Still show the plan preview even if they skip
+                }}
+              />
+            </div>
+          )}
+          {step === 5 && (
+            <div key="plan" className="ob-step-enter">
+              <StepRecoveryPlanPreview
+                collectedItems={collectedItems}
+                onComplete={handleComplete}
+              />
             </div>
           )}
         </div>

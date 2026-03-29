@@ -38,7 +38,8 @@ export type AppOverlayFlag =
   | "journeyGuideChat"
   | "journeyTimeline"
   | "nudgeToast"
-  | "mirrorOverlay";
+  | "mirrorOverlay"
+  | "premiumBridge";
 
 export type AppOverlayFlags = Record<AppOverlayFlag, boolean>;
 
@@ -75,7 +76,8 @@ const defaultOverlayFlags: AppOverlayFlags = {
   journeyGuideChat: false,
   journeyTimeline: false,
   nudgeToast: false,
-  mirrorOverlay: false
+  mirrorOverlay: false,
+  premiumBridge: false
 };
 
 interface AppOverlayState {

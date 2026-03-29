@@ -30,6 +30,7 @@ export const OVERLAY_SEVERITY: Record<AppOverlayFlag | "emergency" | "pulseCheck
   faq: 2,
   feedback: 2,
   achievements: 2,
+  premiumBridge: 4,
   welcomeToast: 1,
   nudgeToast: 1,
   shareStats: 1,

@@ -196,6 +196,7 @@ export default function CheckoutPage() {
   const [totalSeats, setTotalSeats] = useState(50);
   const [source, setSource] = useState("unavailable");
   const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
+  const [paymentNoticeKind, setPaymentNoticeKind] = useState<"info" | "success" | "error">("info");
   const [proofMethod, setProofMethod] = useState<ManualProofMethod>("instapay");
   const [proofReference, setProofReference] = useState("");
   const [proofAmount, setProofAmount] = useState("");
@@ -279,8 +280,10 @@ export default function CheckoutPage() {
     const paymentState = params.get("payment");
     if (paymentState === "success") {
       setPaymentNotice("الدفع تم بنجاح. لو التفعيل لسه ماوصلش، ابعت المرجع أو صورة الدفع تحت.");
+      setPaymentNoticeKind("success");
     } else if (paymentState === "cancelled") {
       setPaymentNotice("العملية ماكملتش. تقدر تجرّب تاني أو تختار وسيلة مختلفة.");
+      setPaymentNoticeKind("error");
     }
   }, []);
 
@@ -340,12 +343,14 @@ export default function CheckoutPage() {
     if (!ALLOWED_PROOF_IMAGE_TYPES.includes(file.type as (typeof ALLOWED_PROOF_IMAGE_TYPES)[number])) {
       setProofImage(null);
       setPaymentNotice("ارفع PNG أو JPG أو WEBP فقط.");
+      setPaymentNoticeKind("error");
       event.target.value = "";
       return;
     }
     if (file.size > MAX_PROOF_IMAGE_BYTES) {
       setProofImage(null);
       setPaymentNotice("الصورة أكبر من المسموح. الحد الأقصى 900KB.");
+      setPaymentNoticeKind("error");
       event.target.value = "";
       return;
     }
@@ -353,9 +358,11 @@ export default function CheckoutPage() {
       const dataUrl = await readFileAsDataUrl(file);
       setProofImage({ name: file.name, type: file.type, bytes: file.size, dataUrl });
       setPaymentNotice("الصورة اترفعت. كمّل إرسال الإثبات.");
+      setPaymentNoticeKind("success");
     } catch (error) {
       setProofImage(null);
       setPaymentNotice(error instanceof Error ? error.message : "تعذر تجهيز صورة الإثبات.");
+      setPaymentNoticeKind("error");
     }
   };
 
@@ -363,6 +370,7 @@ export default function CheckoutPage() {
     event.preventDefault();
     if (!proofReference.trim() && !proofImage) {
       setPaymentNotice("أضف رقم العملية أو ارفع لقطة واضحة قبل الإرسال.");
+      setPaymentNoticeKind("error");
       return;
     }
     setIsSubmittingProof(true);
@@ -392,9 +400,14 @@ export default function CheckoutPage() {
       setProofNote("");
       setProofImage(null);
       setPaymentNotice(data.message || "تم استلام إثبات الدفع. هنراجع التحويل ونفعّل الحساب.");
+      setPaymentNoticeKind("success");
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
       trackManualIntent(`${proofMethod}_proof_form`);
     } catch (error) {
       setPaymentNotice(error instanceof Error ? error.message : "تعذر إرسال إثبات الدفع.");
+      setPaymentNoticeKind("error");
     } finally {
       setIsSubmittingProof(false);
     }
@@ -436,7 +449,15 @@ export default function CheckoutPage() {
     >
       <div className="mx-auto max-w-6xl space-y-6" dir="rtl">
         {paymentNotice ? (
-          <div className="rounded-2xl border border-teal-300/20 bg-teal-400/10 px-4 py-3 text-sm font-medium text-teal-50">
+          <div
+            className={`rounded-2xl px-4 py-3 text-sm font-medium ${
+              paymentNoticeKind === "success"
+                ? "border border-emerald-300/20 bg-emerald-400/10 text-emerald-50"
+                : paymentNoticeKind === "error"
+                  ? "border border-rose-300/20 bg-rose-400/10 text-rose-50"
+                  : "border border-teal-300/20 bg-teal-400/10 text-teal-50"
+            }`}
+          >
             {paymentNotice}
           </div>
         ) : null}
@@ -446,14 +467,13 @@ export default function CheckoutPage() {
             <div className="p-6 md:p-8">
               <p className="text-xs font-black uppercase tracking-[0.28em] text-teal-300">Founding Cohort</p>
               <h1 className="mt-4 max-w-2xl text-3xl font-black leading-tight md:text-5xl">فعل رحلتك من غير لف ودوران</h1>
-              <p className="mt-4 max-w-2xl text-sm leading-8 text-slate-300 md:text-base">
-                دي صفحة التفعيل الفعلية. تختار طريقة الدفع، تحول، تبعت الإثبات، وإحنا نراجع ونعمل التفعيل على نفس الحساب.
-                مفيش وعود زيادة ولا لف حوالين القيمة الحقيقية.
+              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300 md:text-base md:leading-8">
+                اختار طريقة الدفع، ابعت الإثبات، وإحنا نراجع التفعيل يدويًا على نفس الحساب.
               </p>
               <div className="mt-5 inline-flex rounded-2xl border border-teal-300/20 bg-teal-400/10 px-4 py-3 text-sm font-bold text-teal-100">
                 {priceLine}
               </div>
-              <div className="mt-6 grid gap-3 md:grid-cols-3">
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {pricingRows.map((row) => (
                   <div key={row.title} className="rounded-[24px] border border-white/10 bg-slate-950/35 p-4">
                     <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">{row.title}</p>
@@ -472,11 +492,11 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <p className="text-sm font-black text-white">الحجز الحالي</p>
-                    <p className="text-xs text-amber-100/80">المقاعد بتتراجع لحظيًا لما المصدر متاح</p>
+                    <p className="text-xs text-amber-100/80">التحديث حيّ لما المصدر يكون متاح</p>
                   </div>
                 </div>
                 <p className="mt-4 text-3xl font-black text-white">{typeof seatsLeft === "number" ? seatsLeft : "--"}</p>
-                <p className="mt-1 text-sm text-slate-300">{typeof seatsLeft === "number" ? "مقاعد متبقية الآن" : "بيانات المقاعد غير متاحة حاليًا"}</p>
+                <p className="mt-1 text-sm text-slate-300">{typeof seatsLeft === "number" ? "مقاعد متبقية الآن" : "بيانات المقاعد غير متاحة"}</p>
                 <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
                   <div className="h-full rounded-full bg-teal-300 transition-all duration-500" style={{ width: `${scarcityPct}%` }} />
                 </div>
@@ -484,10 +504,10 @@ export default function CheckoutPage() {
               </div>
 
               <div className="mt-4 rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
-                <p className="text-sm font-black text-white">المطلوب منك ببساطة</p>
+                <p className="text-sm font-black text-white">الخطوات</p>
                 <ol className="mt-4 space-y-3">
                   {steps.map((step, index) => (
-                    <li key={step} className="flex items-start gap-3 text-sm leading-7 text-slate-300">
+                    <li key={step} className="flex items-start gap-3 text-sm leading-6 text-slate-300">
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-black text-teal-200">
                         {index + 1}
                       </span>
@@ -524,8 +544,8 @@ export default function CheckoutPage() {
 
           <p className="mt-4 text-sm leading-7 text-slate-300">
             {mode === "local"
-              ? "لو إنت داخل مصر، اختار الطريقة الأسرع ليك وابعت الإثبات فورًا بعد التحويل."
-              : "لو خارج مصر، استخدم PayPal أو التحويل الدولي عبر e& money وبعدها ابعت المرجع هنا."}
+              ? "لو إنت داخل مصر، اختار الأنسب ليك وابعت الإثبات بعد التحويل."
+              : "لو خارج مصر، استخدم PayPal أو المسار الدولي وبعدها ابعت المرجع هنا."}
           </p>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -672,12 +692,12 @@ export default function CheckoutPage() {
           <div className="grid gap-6 lg:grid-cols-[1fr_0.7fr]">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.24em] text-teal-300">Payment Proof</p>
-              <h2 className="mt-3 text-2xl font-black text-white">دفعت بالفعل؟ ابعت المرجع أو الصورة هنا</h2>
+              <h2 className="mt-3 text-2xl font-black text-white">دفعت بالفعل؟ ابعت المرجع أو الصورة</h2>
               <p className="mt-3 text-sm leading-7 text-slate-300">
-                الفورم دي بتوصل مباشرة لفريق التفعيل اليدوي. واتساب يفضل متاح كمسار دعم إضافي، لكن مش هو القناة الوحيدة.
+                الفورم بتوصل مباشرة لفريق التفعيل. واتساب متاح كمسار دعم إضافي، مش القناة الوحيدة.
               </p>
 
-              <form className="mt-6 grid gap-4 md:grid-cols-2" onSubmit={handleProofSubmit}>
+              <form className="mt-6 grid gap-4 sm:grid-cols-2" onSubmit={handleProofSubmit}>
                 <label className="block">
                   <span className="mb-2 block text-sm font-semibold text-slate-200">الإيميل المسجل</span>
                   <input
@@ -728,7 +748,7 @@ export default function CheckoutPage() {
                   />
                 </label>
 
-                <label className="block md:col-span-2">
+                <label className="block sm:col-span-2">
                   <span className="mb-2 block text-sm font-semibold text-slate-200">لقطة شاشة أو إيصال الدفع</span>
                   <input
                     type="file"
@@ -758,7 +778,7 @@ export default function CheckoutPage() {
                 </label>
 
 
-                <label className="block md:col-span-2">
+                <label className="block sm:col-span-2">
                   <span className="mb-2 block text-sm font-semibold text-slate-200">ملاحظات إضافية</span>
                   <textarea
                     rows={4}
@@ -769,7 +789,7 @@ export default function CheckoutPage() {
                   />
                 </label>
 
-                <div className="flex flex-wrap items-center gap-3 md:col-span-2">
+                <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
                   <button
                     type="submit"
                     disabled={isSubmittingProof}
@@ -793,10 +813,10 @@ export default function CheckoutPage() {
               <p className="text-sm font-black text-white">قبل ما تبعت</p>
               <div className="mt-4 space-y-3">
                 {[
-                  "تأكد إن الإيميل هو نفس الإيميل اللي هيتفعل عليه الحساب.",
-                  "لو في صورة، خليه واضح فيها المبلغ وتاريخ العملية إن أمكن.",
-                  "لو استخدمت واتساب للتأكيد، ده ما يغنيش عن رفع الإثبات هنا.",
-                  "أي مشكلة في البيانات هنرد عليك على واتساب أو من خلال التذكرة الداخلية."
+                  "خلي الإيميل هو نفس الإيميل اللي هيتفعل عليه الحساب.",
+                  "لو في صورة، خليه واضح فيها المبلغ وتاريخ العملية.",
+                  "واتساب للتأكيد فقط، مش بديل عن رفع الإثبات.",
+                  "لو في مشكلة، هنرد عليك على واتساب أو من التذكرة."
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-200" />

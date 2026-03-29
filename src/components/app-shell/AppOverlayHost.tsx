@@ -59,6 +59,9 @@ const Achievements = lazy(() => import("../Achievements").then((m) => ({ default
 const RecoveryPlanModal = lazy(() =>
   import("../RecoveryPlanModal").then((m) => ({ default: m.RecoveryPlanModal }))
 );
+const PremiumBridgeModal = lazy(() =>
+  import("../PremiumBridgeModal").then((m) => ({ default: m.PremiumBridgeModal }))
+);
 const AdvancedToolsModal = lazy(() =>
   import("../AdvancedToolsModal").then((m) => ({ default: m.AdvancedToolsModal }))
 );
@@ -167,7 +170,8 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     journeyGuideChat: showJourneyGuideChat,
     journeyTimeline: showJourneyTimeline,
     nudgeToast: showNudgeToast,
-    mirrorOverlay: showMirrorOverlay
+    mirrorOverlay: showMirrorOverlay,
+    premiumBridge: showPremiumBridge
   } = flags;
 
   // Implementation of Layer 3 (Execution): Overlay Mutex & Severity Index
@@ -312,11 +316,9 @@ export const AppOverlayHost = memo(function AppOverlayHost({
       // which calls startRecovery() + navigateToScreen("map") + handleStartupComplete()
       externalOnboardingComplete();
     } else {
-      // Fallback: close overlay and redirect to checkout in diagnostic-to-paid mode
+      // Fallback: close overlay and open the warm bridge (PremiumBridgeModal)
       setOverlay("onboarding", false);
-      if (typeof window !== "undefined") {
-        window.location.href = "/checkout";
-      }
+      setOverlay("premiumBridge", true);
     }
   }, [externalOnboardingComplete, setOverlay]);
 
@@ -487,6 +489,10 @@ export const AppOverlayHost = memo(function AppOverlayHost({
             isOpen={showRecoveryPlan}
             onClose={() => setOverlay("recoveryPlan", false)}
           />
+        )}
+
+        {showPremiumBridge && isVisible("premiumBridge") && (
+          <PremiumBridgeModal />
         )}
 
         {showThemeSettings && isVisible("themeSettings") && (

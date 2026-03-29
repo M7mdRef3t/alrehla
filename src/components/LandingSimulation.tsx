@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ArrowLeft, Loader2, BrainCircuit, Target, AlertCircle } from "lucide-react";
+import { Sparkles, ArrowLeft, Loader2, BrainCircuit, Target, AlertCircle, Zap } from "lucide-react";
 import { setEmotionalOffer } from "../services/subscriptionManager";
+import { useAppOverlayState } from "../state/appOverlayState";
 
 type Question = {
   id: string;
@@ -44,6 +45,7 @@ export function LandingSimulation() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [dominantCategory, setDominantCategory] = useState<"future" | "relationships" | "progress" | null>(null);
+  const openOverlay = useAppOverlayState((s) => s.openOverlay);
 
   const handleStart = () => setStep("questions");
 
@@ -53,7 +55,6 @@ export function LandingSimulation() {
     if (currentQuestionIndex < QUESTIONS.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      // Analyze answers
       const categories = Object.values({ ...answers, [QUESTIONS[currentQuestionIndex].id]: category });
       const counts = categories.reduce((acc, curr) => {
         acc[curr] = (acc[curr] || 0) + 1;
@@ -61,7 +62,7 @@ export function LandingSimulation() {
       }, {} as Record<string, number>);
       
       let maxCount = 0;
-      let dominant = "future"; // default
+      let dominant = "future";
       for (const [cat, count] of Object.entries(counts)) {
         if (count > maxCount) {
           maxCount = count;
@@ -77,11 +78,10 @@ export function LandingSimulation() {
     if (step === "analyzing") {
       const timer = setTimeout(() => {
         setStep("result");
-        // Store emotional offer right before showing result
         if (dominantCategory === "future") {
             setEmotionalOffer({
                title: "عشان تفك اشتباك المستقبل",
-               message: "إنت محتاج خطوتك لبكرة بس، مش خطة لـ 10 سنين قدام. استخدم الخطة الشخصية بـ 9$ عشاب توضح الرؤية ومتتعلّقش في التفكير.",
+               message: "إنت محتاج خطوتك لبكرة بس، مش خطة لـ 10 سنين قدام. استخدم الخطة الشخصية بـ 9$ عشان توضح الرؤية ومتتعلّقش في التفكير.",
                discountPercentage: 0,
                urgencyLevel: "high"
             });
@@ -119,7 +119,7 @@ export function LandingSimulation() {
           title: "إنت مش كسول، إنت بتحارب وهم المقارنة",
           message: "تحليل المشكلة: إنت رابط قيمتك بسرعة نجاح اللي حواليك. كل مرة بتشرد فيها على السوشيال ميديا، بتجلد ذاتك أكتر وبتقول 'أنا متأخر'. الحقيقة إنت واقف في مكانك عشان بتبص لورا.",
           action: "ارسم مسارك إنت، مش مسارهم",
-          icon: <Loader2 className="h-10 w-10 text-amber-400" /> // Using Loader2 as a placeholder for 'waiting/progress'
+          icon: <Loader2 className="h-10 w-10 text-amber-400" />
         };
       case "relationships":
         return {
@@ -138,12 +138,10 @@ export function LandingSimulation() {
     }
   };
 
-
   return (
     <div className="relative mx-auto mt-8 w-full max-w-lg overflow-hidden rounded-3xl border border-white/[0.08] shadow-2xl" id="simulation" dir="rtl"
       style={{ background: "rgba(15, 15, 28, 0.8)", backdropFilter: "blur(20px)" }}>
       
-      {/* Dynamic Background Glow based on Step */}
       <div className={`absolute -inset-20 opacity-20 blur-3xl transition-colors duration-1000 ${
             step === 'analyzing' ? 'bg-indigo-500 animate-pulse' : 
             step === 'result' ? (dominantCategory === 'future' ? 'bg-emerald-500' : dominantCategory === 'progress' ? 'bg-amber-500' : 'bg-red-500') : 
@@ -152,8 +150,6 @@ export function LandingSimulation() {
 
       <div className="relative z-10 min-h-[400px] p-8 sm:p-10 flex flex-col justify-center">
         <AnimatePresence mode="wait">
-          
-          {/* STEP 1: Intro */}
           {step === "intro" && (
             <motion.div
               key="intro"
@@ -179,7 +175,6 @@ export function LandingSimulation() {
             </motion.div>
           )}
 
-          {/* STEP 2: Questions */}
           {step === "questions" && (
             <motion.div
               key="questions"
@@ -213,7 +208,6 @@ export function LandingSimulation() {
             </motion.div>
           )}
 
-          {/* STEP 3: Analyzing */}
           {step === "analyzing" && (
             <motion.div
               key="analyzing"
@@ -228,7 +222,6 @@ export function LandingSimulation() {
             </motion.div>
           )}
 
-          {/* STEP 4: Result (Aha Moment) */}
           {step === "result" && (
             <motion.div
               key="result"
@@ -252,8 +245,8 @@ export function LandingSimulation() {
               </div>
 
               <div className="space-y-4">
-                 <button
-                    onClick={() => window.location.href = '/pricing'}
+                  <button
+                    onClick={() => openOverlay("premiumBridge")}
                     className="group relative w-full overflow-hidden rounded-2xl bg-white px-6 py-4 text-[16px] font-bold text-black transition-transform hover:scale-[1.02] shadow-[0_0_30px_rgba(255,255,255,0.2)]"
                   >
                     <div className="relative flex justify-center items-center gap-2 z-10">
@@ -261,14 +254,19 @@ export function LandingSimulation() {
                         {getResultContent()?.action} (9$ شهرياً)
                     </div>
                   </button>
-                  <p className="text-xs text-gray-500">
-                      ابشر، الإلغاء بضغطة زر لو حسيت إنها مش مفيدة.
-                  </p>
+                  <button
+                    onClick={() => {
+                        openOverlay("premiumBridge");
+                    }}
+                    className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors"
+                    style={{ border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)" }}
+                  >
+                    <Zap className="w-4 h-4" />
+                    إدارة التفعيل والاشتراك
+                  </button>
               </div>
-              
             </motion.div>
           )}
-          
         </AnimatePresence>
       </div>
     </div>

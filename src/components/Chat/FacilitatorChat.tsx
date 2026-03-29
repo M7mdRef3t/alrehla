@@ -7,6 +7,7 @@ import { supabase } from '../../services/supabaseClient';
 import { consumeKineticTelemetryOnce, peekLatestKineticTelemetry } from '../../services/kineticTelemetry';
 import { isPublicPaymentsEnabled } from '../../config/payments';
 import { VoiceInput } from '../VoiceInput';
+import { useAppOverlayState } from '../../state/appOverlayState';
 
 interface FacilitatorChatProps {
     focusedNode: NodeData;
@@ -75,6 +76,7 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
     const [showUpsellOverlay, setShowUpsellOverlay] = useState(false);
     const [keyboardInsetPx, setKeyboardInsetPx] = useState(0);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const openOverlay = useAppOverlayState((s) => s.openOverlay);
 
     const shouldShowUpsell = (status: number, data: AgentResponse) =>
         status === 403 || Number(data.tokens_remaining ?? -1) === 0;
@@ -513,10 +515,10 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         {isPublicPaymentsEnabled && (
                             <button
                                 type="button"
-                                onClick={() => { window.location.href = "/checkout"; }}
+                                onClick={() => { openOverlay("premiumBridge"); }}
                                 className="px-5 py-2.5 rounded-xl bg-teal-500 text-slate-950 font-black hover:bg-teal-400 transition-colors"
                             >
-                                ????? ???? ??????
+                                ابدأ رحلة التعافي
                             </button>
                         )}
                         <button

@@ -7,8 +7,8 @@ import {
     type SubscriptionTier,
 } from "../services/subscriptionManager";
 
-import { supabase } from "../services/supabaseClient";
 import { isPublicPaymentsEnabled } from "../config/payments";
+import { useAppOverlayState } from "../state/appOverlayState";
 
 /* ══════════════════════════════════════════
    PAYWALL GATE — بوابة الاشتراك
@@ -48,15 +48,14 @@ const PREMIUM_FEATURES = [
     "أولوية الدعم",
 ];
 
-export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade: _onUpgrade }) => {
+export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose }) => {
     const copy = REASON_COPY[reason];
+    const openOverlay = useAppOverlayState((s) => s.openOverlay);
 
-    const handleUpgrade = (_tier: 'premium' | 'coach') => {
+    const handleUpgrade = () => {
         if (!isPublicPaymentsEnabled) return;
-        // Always go to checkout — manual payment model
-        if (typeof globalThis !== "undefined" && "location" in globalThis) {
-            globalThis.location.href = "/checkout";
-        }
+        onClose(); // Close the gate first
+        openOverlay("premiumBridge");
     };
 
     return (
@@ -119,7 +118,7 @@ export const PaywallGate: FC<PaywallGateProps> = ({ reason, onClose, onUpgrade: 
                         </div>
 
                         <motion.button
-                            onClick={() => handleUpgrade("premium")}
+                            onClick={handleUpgrade}
                             disabled={!isPublicPaymentsEnabled}
                             className="w-full py-3.5 rounded-xl font-bold text-white flex items-center justify-center gap-2"
                             style={{

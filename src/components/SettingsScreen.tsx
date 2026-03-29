@@ -21,6 +21,8 @@ import { syncSubscription } from "../services/subscriptionManager";
 import { useJourneyState } from "../state/journeyState";
 import { soundManager } from "../services/soundManager";
 import { Volume2, VolumeX } from "lucide-react";
+import { useAppOverlayState } from "../state/appOverlayState";
+
 
 type SettingsSection = "main" | "language" | "b2b" | "referral" | "subscription" | "culture" | "privacy";
 
@@ -31,6 +33,7 @@ interface SettingsScreenProps {
 export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
     const [section, setSection] = useState<SettingsSection>("main");
     const [showPaywall, setShowPaywall] = useState(false);
+    const openOverlay = useAppOverlayState((s) => s.openOverlay);
 
     useEffect(() => { syncSubscription(); }, []);
 
@@ -371,13 +374,13 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                     </div>
                                     <button
                                         onClick={() => {
-                                            window.location.href = "/checkout";
+                                            openOverlay("premiumBridge");
                                         }}
                                         className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors"
                                         style={{ border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.6)" }}
                                     >
-                                        <ExternalLink className="w-4 h-4" />
-                                        إدارة التفعيل والدفع
+                                        <Zap className="w-4 h-4" />
+                                        إدارة التفعيل والاشتراك
                                     </button>
                                 </div>
                             )}

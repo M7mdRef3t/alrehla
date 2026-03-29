@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useKineticSensors } from "../hooks/useKineticSensors";
 import { supabase } from "../services/supabaseClient";
 import { isPublicPaymentsEnabled } from "../config/payments";
+import { useAppOverlayState } from "../state/appOverlayState";
 
 interface GenesisOnboardingProps {
   userId: string;
@@ -64,6 +65,7 @@ export function GenesisOnboarding({ userId, onCompleted }: GenesisOnboardingProp
   const mouseSensor = useSensor(MouseSensor);
   const touchSensor = useSensor(TouchSensor, { activationConstraint: { distance: 5 } });
   const sensors = useSensors(mouseSensor, touchSensor);
+  const openOverlay = useAppOverlayState((s) => s.openOverlay);
 
   const title = useMemo(
     () => (dropped ? "رصدنا الإشارة الأولى." : "قبل أي خريطة.. ابدأ بالحمل."),
@@ -117,7 +119,7 @@ export function GenesisOnboarding({ userId, onCompleted }: GenesisOnboardingProp
 
   const handleCheckout = () => {
     if (!isPublicPaymentsEnabled) return;
-    window.location.href = "/checkout";
+    openOverlay("premiumBridge");
   };
 
   return (
@@ -159,7 +161,7 @@ export function GenesisOnboarding({ userId, onCompleted }: GenesisOnboardingProp
                   onClick={handleCheckout}
                   className="px-6 py-3 rounded-xl bg-teal-500 text-slate-950 font-bold hover:bg-teal-400 transition-colors"
                 >
-                  احجز مقعدك في الفوج الأول (21 يوم)
+                  ابدأ رحلة التعافي
                 </button>
               )}
               <button

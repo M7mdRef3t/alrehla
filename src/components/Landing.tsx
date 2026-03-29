@@ -33,6 +33,22 @@ interface LandingProps {
 
 /* ─── Animation Variants ─────────────────────────────────────────────────────── */
 
+const LANDING_STYLES = `
+  .landing-dark-force {
+    --space-void: #0a0e1f;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(203, 213, 225, 0.95);
+    --text-muted: rgba(148, 163, 184, 0.7);
+    --glass-bg: rgba(12, 17, 40, 0.78);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border-hover: rgba(255, 255, 255, 0.18);
+    --soft-teal: #2dd4bf;
+    --soft-teal-dim: rgba(45, 212, 191, 0.12);
+    --soft-teal-glow: rgba(45, 212, 191, 0.25);
+    color-scheme: dark;
+  }
+`;
+
 const ease = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
 const fadeUp = {
@@ -211,11 +227,11 @@ const ProductCard: FC<ProductCardProps> = ({
       {/* Text */}
       <div>
         <h3 className="text-base font-black text-white mb-1" style={{ fontFamily: "Tajawal, sans-serif" }}>{title}</h3>
-        <p className="text-sm leading-relaxed" style={{ color: "#64748B" }}>{subtitle}</p>
+        <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>{subtitle}</p>
       </div>
 
       {/* Preview chip */}
-      <div className="mt-auto rounded-xl px-3 py-2 text-xs font-semibold" style={{ background: "rgba(255,255,255,0.03)", color: "#475569", border: "1px solid rgba(255,255,255,0.05)" }}>
+      <div className="mt-auto rounded-xl px-3 py-2 text-xs font-semibold" style={{ background: "rgba(255,255,255,0.03)", color: "#475569", border: "1px solid var(--glass-border)" }}>
         {preview}
       </div>
 
@@ -398,10 +414,11 @@ export const Landing: FC<LandingProps> = ({
 
   return (
     <div
-      className="relative min-h-screen w-full overflow-x-hidden"
+      className="relative min-h-screen w-full overflow-x-hidden landing-dark-force"
       style={{ background: "var(--space-void)", fontFamily: "'IBM Plex Sans Arabic', Tajawal, sans-serif" }}
       dir="rtl"
     >
+      <style>{LANDING_STYLES}</style>
 
       {/* ── Global ambient background — light-mode native ── */}
       <div className="fixed inset-0 pointer-events-none" aria-hidden="true">
@@ -444,100 +461,132 @@ export const Landing: FC<LandingProps> = ({
            animate="visible"
            className="relative z-10 w-full max-w-5xl flex flex-col items-center text-center px-6 pt-16 sm:pt-20"
         >
-          {/* Platform Badge */}
-          <motion.div 
-            variants={fadeUp} 
-            className="inline-flex items-center gap-2 mb-8 glass-button text-[10px] sm:text-[11px] tracking-[0.3em] uppercase py-2 px-5 opacity-70 backdrop-blur-3xl"
+          {/* Platform Badge — value, not description */}
+          <motion.div
+            variants={fadeUp}
+            className="inline-flex items-center gap-2 mb-8 glass-button text-[10px] sm:text-[11px] tracking-[0.25em] uppercase py-2 px-5 backdrop-blur-3xl"
             style={{ borderColor: "var(--glass-border)" }}
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.5)]" />
-            الرحلة — منصة الوعي الذاتي
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.5)] animate-pulse" />
+            دلوقتي ٣٢٠٠+ شخص شايفوا نفسهم بوضوح
           </motion.div>
 
-          {/* Headline (V5: Precision Architecture) */}
+          {/* Headline V6: Two complete sentences + TypingWord as subject */}
           <motion.h1
             variants={fadeUp}
-            className="cosmic-headline text-[1.75rem] sm:text-[2.5rem] lg:text-[3.2rem] font-bold mb-5 sm:mb-6"
-            style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}
+            className="cosmic-headline text-[1.85rem] sm:text-[2.6rem] lg:text-[3.3rem] font-bold mb-4 sm:mb-5"
+            style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)", lineHeight: 1.25 }}
           >
-            <span className="block opacity-90">مش محتاج تفهم أكتر...</span>
-            <span className="block mt-2 sm:mt-3 text-transparent bg-clip-text" style={{ backgroundImage: "linear-gradient(135deg, #14b8a6, #06b6d4, #6366f1)" }}>
-              محتاج تشوف نفسك من <TypingWord />
+            <span className="block opacity-90">فيه حاجة بتسرق طاقتك.</span>
+            <span className="block mt-2 sm:mt-3">
+              <span className="text-transparent bg-clip-text" style={{ backgroundImage: "linear-gradient(135deg, #14b8a6, #06b6d4, #6366f1)" }}>
+                <TypingWord />
+              </span>
+              <span className="opacity-85"> — وانت عارف مين.</span>
             </span>
           </motion.h1>
 
           {/* Subtitle */}
           <motion.p
             variants={fadeUp}
-            className="text-base sm:text-lg leading-relaxed mb-10 sm:mb-14 max-w-[42ch] font-normal"
+            className="text-base sm:text-lg leading-relaxed mb-7 sm:mb-9 max-w-[42ch] font-normal"
             style={{ color: "var(--text-secondary)", opacity: 0.8 }}
           >
             {landingCopy.subtitle}
           </motion.p>
 
-          {/* ── Mirror Portal (Input) ── */}
-          <motion.div 
-            variants={fadeUp} 
+          {/* Social Proof — trust before action */}
+          <motion.div
+            variants={fadeUp}
+            className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 mb-8 sm:mb-10"
+          >
+            {/* Objection handler */}
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold"
+              style={{ background: "rgba(20,184,166,0.10)", border: "1px solid rgba(20,184,166,0.25)", color: "#0d9488" }}
+            >
+              <Lock className="w-3 h-3" />
+              مجاناً تماماً — بدون بطاقة
+            </div>
+            {/* Real quote-style testimonial */}
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold italic"
+              style={{ background: "rgba(124,58,237,0.08)", border: "1px solid rgba(124,58,237,0.2)", color: "var(--text-secondary)" }}
+            >
+              <span style={{ color: "#7C3AED", fontStyle: "normal" }}>❝</span>
+              أخيراً حاجة بتشرح اللي بشعر بيه
+              <span style={{ color: "#7C3AED", fontStyle: "normal" }}>❞</span>
+            </div>
+          </motion.div>
+
+          {/* Mirror Portal: Input + Always-Active CTA */}
+          <motion.div
+            variants={fadeUp}
             className="w-full max-w-2xl mx-auto"
           >
-            <div className="premium-glass-portal p-1.5 sm:p-2 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.6),0_0_50px_-15px_rgba(20,184,166,0.1)]">
+            <div className="premium-glass-portal p-1.5 sm:p-2 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.5),0_0_50px_-15px_rgba(20,184,166,0.12)]">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <div className="flex-1 relative">
                   <input
                     type="text"
                     value={mirrorName}
                     onChange={(e) => setMirrorName(e.target.value)}
-                    placeholder="مين شاغل تفكيرك دلوقتي؟"
-                    className="w-full bg-transparent border-none rounded-3xl px-8 py-5 text-lg sm:text-xl outline-none transition-all placeholder:text-slate-500 font-normal"
-                    style={{
-                      color: "var(--text-primary)",
-                      fontFamily: "Tajawal, sans-serif"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleStart();
+                      }
                     }}
+                    placeholder="اكتب اسمه لو حابب — أو ابدأ مباشرة"
+                    className="w-full bg-transparent border-none rounded-3xl px-8 py-5 text-lg sm:text-xl outline-none transition-all font-normal"
+                    style={{ color: "var(--text-primary)", fontFamily: "Tajawal, sans-serif" }}
                   />
                   {!mirrorName && (
-                    <div 
-                      className="absolute left-8 top-1/2 -translate-y-1/2 pointer-events-none opacity-20"
+                    <div
+                      className="absolute left-8 top-1/2 -translate-y-1/2 pointer-events-none opacity-15"
                       style={{ color: "var(--text-muted)" }}
                     >
-                      <Sparkles className="w-6 h-6" />
+                      <Sparkles className="w-5 h-5" />
                     </div>
                   )}
                 </div>
-                
-                <button
+                {/* CTA: always-active gradient — shimmer on hover */}
+                <motion.button
                   type="button"
                   onClick={handleStart}
-                  className="group relative flex items-center justify-center gap-4 px-10 py-5 rounded-3xl overflow-hidden transition-all duration-700 active:scale-[0.97] sm:min-w-[220px] isolate"
-                  style={{ 
-                    background: mirrorName 
-                      ? "linear-gradient(135deg, #14B8A6 0%, #7C3AED 100%)" 
-                      : "rgba(255,255,255,0.06)",
-                    boxShadow: mirrorName ? "0 10px 40px -10px rgba(20,184,166,0.4)" : "none"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="group relative flex items-center justify-center gap-3 px-8 py-5 rounded-3xl overflow-hidden sm:min-w-[210px] isolate"
+                  style={{
+                    background: mirrorName
+                      ? "linear-gradient(135deg, #14B8A6 0%, #7C3AED 100%)"
+                      : "linear-gradient(135deg, #0d9488 0%, #4f46e5 100%)",
+                    boxShadow: mirrorName
+                      ? "0 12px 40px -10px rgba(20,184,166,0.55)"
+                      : "0 8px 28px -10px rgba(13,148,136,0.4)",
+                    transition: "all 0.5s cubic-bezier(0.22,1,0.36,1)"
                   }}
                 >
-                  <span 
-                    className="text-base sm:text-lg font-bold transition-colors duration-500"
-                    style={{ 
-                      fontFamily: "Tajawal, sans-serif",
-                      color: mirrorName ? "#ffffff" : "#64748b"
-                    }}
-                  >
-                    {mirrorName ? "ابدأ الرحلة" : "ابدأ مجاناً"}
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{ background: "linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%)" }}
+                  />
+                  <span className="relative text-base sm:text-lg font-bold text-white" style={{ fontFamily: "Tajawal, sans-serif" }}>
+                    {mirrorName ? "ابدأ رحلتك الآن" : "شوف نفسك بوضوح — مجاناً"}
                   </span>
-                  <ArrowLeft className={`w-5 h-5 transition-transform duration-500 ${mirrorName ? "text-white group-hover:-translate-x-2" : ""}`} style={{ color: mirrorName ? "white" : "var(--text-muted)" }} />
-                </button>
+                  <ArrowLeft className="relative w-5 h-5 text-white transition-transform duration-300 group-hover:-translate-x-1" />
+                </motion.button>
               </div>
             </div>
-            
-            {/* Small subtle value indicators */}
-            <div className="mt-6 flex flex-wrap justify-center gap-6 sm:gap-8 opacity-70">
+            {/* Micro trust indicators */}
+            <div className="mt-5 flex flex-wrap justify-center gap-5 sm:gap-8">
               {[
-                { icon: Lock, label: "بيانات مشفرة" },
-                { icon: Clock, label: "تحليل فوري" },
-                { icon: Star, label: "بدون تسجيل" },
+                { icon: Lock,   label: "بيانات مشفرة" },
+                { icon: Clock,  label: "دقيقتان فقط" },
+                { icon: Shield, label: "بدون تسجيل" },
               ].map(({ icon: Icon, label }) => (
-                <div key={label} className="flex items-center gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-[0.15em]" style={{ color: "var(--text-secondary)" }}>
-                  <Icon className="w-3.5 h-3.5" />
+                <div key={label} className="flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold tracking-wide" style={{ color: "var(--text-muted)" }}>
+                  <Icon className="w-3 h-3 opacity-70" />
                   {label}
                 </div>
               ))}
@@ -553,52 +602,19 @@ export const Landing: FC<LandingProps> = ({
             transition={{ delay: 3, duration: 1 }}
             className="flex flex-col items-center gap-2"
           >
-            <span className="text-[10px] tracking-[0.3em] font-black uppercase text-slate-500">Discover</span>
             <motion.div
               animate={reduceMotion ? {} : { y: [0, 6, 0] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             >
-              <ChevronDown className="w-4 h-4" style={{ color: "var(--text-secondary)" }} />
+              <ChevronDown className="w-4 h-4" style={{ color: "var(--text-secondary)", opacity: 0.4 }} />
             </motion.div>
           </motion.div>
         </div>
       </section>
 
 
-      {/* ── Section Divider ── */}
-      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
-        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.3), transparent)" }} />
-      </div>
 
-      {/* ══════════════════════════════════════════════
-          SECTION 1.5: INTERACTIVE DEMO
-      ══════════════════════════════════════════════ */}
-      <section className="relative py-20 px-4 max-w-3xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.7, ease }}
-        >
-          <div className="text-center mb-8">
-            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: "#7C3AED" }}>
-              جرّب بنفسك
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-black text-white mb-3" style={{ fontFamily: "Tajawal, sans-serif" }}>
-              دقيقتين تكشفلك الحقيقة
-            </h2>
-            <p className="text-sm max-w-[38ch] mx-auto" style={{ color: "#94A3B8" }}>
-              3 أسئلة بسيطة — بدون تفكير — وهتعرف إيه اللي سارق طاقتك فعلاً
-            </p>
-          </div>
-          <LandingSimulation />
-        </motion.div>
-      </section>
 
-      {/* ── Section Divider ── */}
-      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
-        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(20,184,166,0.25), transparent)" }} />
-      </div>
 
       {/* ══════════════════════════════════════════════
           SECTION 1.75: LIVE METRICS STRIP
@@ -631,7 +647,7 @@ export const Landing: FC<LandingProps> = ({
                 <p className="text-2xl sm:text-3xl font-black mb-1.5" style={{ color: m.color, fontFamily: "Tajawal, sans-serif" }}>
                   {m.value}
                 </p>
-                <p className="text-[11px] font-semibold" style={{ color: "#94A3B8" }}>{m.label}</p>
+                <p className="text-[11px] font-semibold" style={{ color: "var(--text-secondary)" }}>{m.label}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -658,10 +674,10 @@ export const Landing: FC<LandingProps> = ({
             <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: "#7C3AED" }}>
               رحلة التعافي
             </p>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mb-4" style={{ fontFamily: "Tajawal, sans-serif" }}>
+            <h2 className="text-3xl sm:text-4xl font-black mb-4" style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}>
               من التشخيص.. وصولاً للحرية.
             </h2>
-            <p className="text-base max-w-[44ch] mx-auto" style={{ color: "#64748B" }}>
+            <p className="text-base max-w-[44ch] mx-auto" style={{ color: "var(--text-secondary)" }}>
               مش مجرد أدوات — دي منظومة متكاملة متجربة علمياً عشان تخرجك من الاستنزاف وتستعيد نفسك بجد.
             </p>
           </motion.div>
@@ -807,11 +823,11 @@ export const Landing: FC<LandingProps> = ({
                     >
                       <item.icon className="w-4 h-4" style={{ color: item.color }} />
                     </div>
-                    <h3 className="text-sm font-black text-white" style={{ fontFamily: "Tajawal, sans-serif" }}>
+                    <h3 className="text-sm font-black" style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}>
                       {item.label}
                     </h3>
                   </div>
-                  <p className="text-xs leading-relaxed" style={{ color: "#64748B" }}>{item.desc}</p>
+                  <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>{item.desc}</p>
                   <div className="text-xs font-bold self-start" style={{ color: item.color }}>
                     اذهب إليه ←
                   </div>
@@ -850,7 +866,7 @@ export const Landing: FC<LandingProps> = ({
                 key={i}
                 variants={fadeUp}
                 className="flex flex-col gap-2 rounded-2xl p-5 text-sm font-semibold text-center"
-                style={{ border: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)", color: "#CBD5E1" }}
+                style={{ border: "1px solid var(--glass-border)", background: "var(--glass-bg)", color: "#CBD5E1" }}
               >
                 <span className="text-2xl">{["😶", "💸", "🤯"][i]}</span>
                 {point}
@@ -883,10 +899,10 @@ export const Landing: FC<LandingProps> = ({
             <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#14B8A6" }}>
               خطوتين بسيطتين
             </p>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mb-3" style={{ fontFamily: "Tajawal, sans-serif" }}>
+            <h2 className="text-3xl sm:text-4xl font-black mb-3" style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}>
               {landingCopy.howItWorks.title}
             </h2>
-            <p className="text-sm" style={{ color: "#64748B" }}>{landingCopy.howItWorks.subtitle}</p>
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{landingCopy.howItWorks.subtitle}</p>
           </motion.div>
 
           <motion.div variants={staggerFast} className="grid md:grid-cols-3 gap-5">
@@ -896,8 +912,8 @@ export const Landing: FC<LandingProps> = ({
                 variants={fadeUp}
                 className="relative flex flex-col gap-4 rounded-2xl p-7"
                 style={{
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  background: "rgba(255,255,255,0.015)"
+                  border: "1px solid var(--glass-border)",
+                  background: "var(--glass-bg)"
                 }}
               >
                 <div
@@ -909,11 +925,41 @@ export const Landing: FC<LandingProps> = ({
                 >
                   {["١", "٢", "٣"][i]}
                 </div>
-                <h3 className="text-base font-black text-white" style={{ fontFamily: "Tajawal, sans-serif" }}>{step.title}</h3>
-                <p className="text-sm leading-loose" style={{ color: "#64748B" }}>{step.body}</p>
+                <h3 className="text-base font-black" style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}>{step.title}</h3>
+                <p className="text-sm leading-loose" style={{ color: "var(--text-secondary)" }}>{step.body}</p>
               </motion.div>
             ))}
           </motion.div>
+        </motion.div>
+      </section>
+
+      {/* ── Section Divider ── */}
+      <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(124,58,237,0.25), transparent)" }} />
+      </div>
+
+      {/* ══════════════════════════════
+          SECTION 4.5: INTERACTIVE DEMO
+      ══════════════════════════════ */}
+      <section className="relative py-20 px-4 max-w-3xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.7, ease }}
+        >
+          <div className="text-center mb-8">
+            <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: "#7C3AED" }}>
+              جرّب بنفسك
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-black mb-3" style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}>
+              دقيقتين تكشفلك الحقيقة
+            </h2>
+            <p className="text-sm max-w-[38ch] mx-auto" style={{ color: "var(--text-secondary)" }}>
+              3 أسئلة بسيطة — بدون تفكير — وهتعرف إيه اللي سارق طاقتك فعلاً
+            </p>
+          </div>
+          <LandingSimulation />
         </motion.div>
       </section>
 
@@ -938,7 +984,7 @@ export const Landing: FC<LandingProps> = ({
                 <p className="text-xs font-bold tracking-[0.25em] uppercase mb-3" style={{ color: "#7C3AED" }}>
                   فوج التأسيس
                 </p>
-                <h2 className="text-2xl sm:text-3xl font-black text-white" style={{ fontFamily: "Tajawal, sans-serif" }}>
+                <h2 className="text-2xl sm:text-3xl font-black " style={{ fontFamily: "Tajawal, sans-serif", color: "var(--text-primary)" }}>
                   ناس زيّك بدأوا رحلتهم
                 </h2>
               </motion.div>
@@ -955,8 +1001,8 @@ export const Landing: FC<LandingProps> = ({
                     }}
                   >
                     <Heart className="w-4 h-4 mb-4" style={{ color: "#7C3AED" }} />
-                    <p className="text-sm leading-loose mb-5" style={{ color: "#CBD5E1" }}>&#x201C;{t.quote}&#x201D;</p>
-                    <p className="text-xs font-bold" style={{ color: "#64748B" }}>— {t.author}</p>
+                    <p className="text-sm leading-loose mb-5" style={{ color: "var(--text-secondary)" }}>&#x201C;{t.quote}&#x201D;</p>
+                    <p className="text-xs font-bold" style={{ color: "var(--text-secondary)" }}>— {t.author}</p>
                   </motion.div>
                 ))}
               </div>
@@ -988,7 +1034,7 @@ export const Landing: FC<LandingProps> = ({
           <motion.div variants={fadeUp} className="text-4xl mb-5">🌟</motion.div>
           <motion.h2
             variants={fadeUp}
-            className="text-2xl sm:text-3xl font-black text-white mb-4"
+            className="text-2xl sm:text-3xl font-black  mb-4"
             style={{ fontFamily: "Tajawal, sans-serif" }}
           >
             الوضوح موجود — هو بس محتاج خريطة.
@@ -996,7 +1042,7 @@ export const Landing: FC<LandingProps> = ({
           <motion.p
             variants={fadeUp}
             className="text-sm leading-loose max-w-[40ch] mx-auto mb-8"
-            style={{ color: "#94A3B8" }}
+            style={{ color: "var(--text-secondary)" }}
           >
             بدون تسجيل. بدون حكم. بدون ضغط.
             بس خطوة واحدة تقول فيها: "جاهز أشوف الحقيقة."

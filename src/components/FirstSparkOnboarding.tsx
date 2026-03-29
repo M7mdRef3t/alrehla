@@ -40,6 +40,11 @@ function seededUnit(index: number, salt: number) {
   return value - Math.floor(value);
 }
 
+function round(value: number, digits = 3) {
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
+}
+
 interface FirstSparkProps {
   onComplete: () => void;
 }
@@ -84,7 +89,7 @@ export const FirstSparkOnboarding: FC<FirstSparkProps> = memo(({ onComplete }) =
             className="h-1 rounded-full transition-all duration-300"
             style={{
               width: i === stage ? 24 : 6,
-              backgroundColor: i === stage ? "rgba(45, 212, 191, 1)" : "rgba(51, 65, 85, 1)"
+              backgroundColor: i === stage ? "rgba(45, 212, 191, 1)" : "rgba(45, 212, 191, 0.15)"
             }}
           />
         ))}
@@ -98,24 +103,22 @@ FirstSparkOnboarding.displayName = "FirstSparkOnboarding";
 const StageChaos: FC<{ onNext: () => void }> = memo(({ onNext }) => {
   const dots = useMemo(() => Array.from({ length: 12 }, (_, i) => ({
     id: i,
-    x: (seededUnit(i, 1) - 0.5) * 280,
-    y: (seededUnit(i, 2) - 0.5) * 280,
-    driftX: (seededUnit(i, 5) - 0.5) * 40,
-    driftY: (seededUnit(i, 6) - 0.5) * 40,
-    duration: 2 + seededUnit(i, 7) * 2,
-    delay: seededUnit(i, 4) * 2,
+    x: round((seededUnit(i, 1) - 0.5) * 280),
+    y: round((seededUnit(i, 2) - 0.5) * 280),
+    driftX: round((seededUnit(i, 5) - 0.5) * 40),
+    driftY: round((seededUnit(i, 6) - 0.5) * 40),
+    duration: round(2 + seededUnit(i, 7) * 2, 2),
+    delay: round(seededUnit(i, 4) * 2, 2),
   })), []);
 
   return (
-    <div
-      className="flex flex-col items-center justify-center flex-1 w-full relative"
-    >
+    <div className="flex flex-col items-center justify-center flex-1 w-full relative">
       {/* Visual: Chaos */}
       <div className="relative w-64 h-64 flex items-center justify-center mb-6">
         {/* The User (Center) - CSS animation instead of Framer Motion repeat:Infinity */}
         <div
           className="w-4 h-4 rounded-full z-10"
-          style={{ 
+          style={{
             animation: "fso-pulse-dot 2s ease-in-out infinite",
             background: "var(--text-primary)",
             boxShadow: "0 0 20px var(--soft-teal)"
@@ -170,9 +173,7 @@ StageChaos.displayName = "StageChaos";
 /* ── Stage 2: Order (The Orbit Strategy) ── */
 const StageOrder: FC<{ onNext: () => void }> = memo(({ onNext }) => {
   return (
-    <div
-      className="flex flex-col items-center justify-center flex-1 w-full relative"
-    >
+    <div className="flex flex-col items-center justify-center flex-1 w-full relative">
       {/* Visual: Orbits Clearing */}
       <div className="relative w-64 h-64 flex items-center justify-center mb-6">
         {/* Orbits - CSS pulse instead of Framer Motion repeat */}
@@ -239,9 +240,7 @@ StageOrder.displayName = "StageOrder";
 /* ── Stage 3: Value (Immediate Action) ── */
 const StageValue: FC<{ onNext: () => void }> = memo(({ onNext }) => {
   return (
-    <div
-      className="flex flex-col items-center justify-center flex-1 w-full relative"
-    >
+    <div className="flex flex-col items-center justify-center flex-1 w-full relative">
       {/* Visual: Action & Alert */}
       <div className="relative w-64 h-64 flex items-center justify-center mb-6">
         {/* Red Orbit only */}
@@ -255,9 +254,10 @@ const StageValue: FC<{ onNext: () => void }> = memo(({ onNext }) => {
           transition={{ delay: 0.2, duration: 0.8, type: "spring" }}
         />
 
-        {/* Jarvis Alert Popup - enter-only */}
+        {/* Jarvis Alert Popup - enter-only, ALWAYS dark regardless of theme */}
         <motion.div
-          className="absolute -bottom-4 bg-slate-900/90 border border-teal-500/30 p-3 rounded-xl backdrop-blur-md shadow-2xl flex items-center gap-3 w-60"
+          className="absolute -bottom-4 border border-teal-500/30 p-3 rounded-xl backdrop-blur-md shadow-2xl flex items-center gap-3 w-60"
+          style={{ background: "rgba(10, 14, 35, 0.95)" }}
           initial={{ y: 10, opacity: 0, scale: 0.9 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
           transition={{ delay: 0.9, type: "spring" }}
@@ -267,7 +267,7 @@ const StageValue: FC<{ onNext: () => void }> = memo(({ onNext }) => {
           </div>
           <div className="text-right flex-1">
             <p className="text-[10px] text-teal-500 font-bold uppercase tracking-wider mb-0.5">نظام التوجيه</p>
-            <p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>لاحظنا علاقة مرهقة.. جاهزين نساعدك تتعامل معاها.</p>
+            <p className="text-xs font-medium text-slate-200">لاحظنا علاقة مرهقة.. جاهزين نساعدك تتعامل معاها.</p>
           </div>
         </motion.div>
       </div>
