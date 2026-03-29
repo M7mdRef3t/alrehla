@@ -11,6 +11,7 @@ import { AnalyticsEvents, trackEvent } from "../../services/analytics";
 import { recordFlowEvent } from "../../services/journeyTracking";
 import type { PulseEnergyConfidence, PulseEntry, PulseFocus, PulseMood } from "../../state/pulseState";
 import { usePulseState } from "../../state/pulseState";
+import { marketingLeadService } from "../../services/marketingLeadService";
 
 type ThemePreference = "light" | "dark" | "system";
 type PulseCloseReason = "backdrop" | "close_button" | "programmatic" | "browser_close";
@@ -21,6 +22,7 @@ type PulseSubmitPayload = {
   focus: PulseFocus | null;
   auto?: boolean;
   notes?: string;
+  phone?: string;
   energyReasons?: string[];
   energyConfidence?: PulseEnergyConfidence;
 };
@@ -31,6 +33,7 @@ type ConcretePulseSubmitPayload = {
   focus: PulseFocus;
   auto?: boolean;
   notes?: string;
+  phone?: string;
   energyReasons?: string[];
   energyConfidence?: PulseEnergyConfidence;
 };
@@ -299,6 +302,14 @@ export function useAppPulseSanctuaryFlow({
     }
 
     closePulseCheck(true, "programmatic");
+
+    // Sync to Marketing CRM if phone is present
+    if (payload.phone) {
+      void marketingLeadService.syncLead({
+        phone: payload.phone,
+        status: "engaged"
+      });
+    }
 
     const isLow = payload.energy != null && payload.energy <= 3;
     const isAngry = payload.mood === "angry";

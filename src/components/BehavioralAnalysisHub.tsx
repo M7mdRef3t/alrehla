@@ -12,13 +12,14 @@ import {
 import { supabase } from "../services/supabaseClient";
 import type { ResourceTab } from "./ResourcesCenter";
 import { usePushNotifications } from "../hooks/usePushNotifications";
+import { UserProfile } from "./UserProfile";
 
 /* ══════════════════════════════════════════
    Types
    ══════════════════════════════════════════ */
 
 type TimeRange = "week" | "month" | "year";
-type SideSection = "home" | "analysis" | "emotional" | "data" | "settings";
+type SideSection = "home" | "analysis" | "emotional" | "data" | "profile" | "settings";
 type BehavioralMode = "containment" | "growth" | "flow";
 type PatternSentiment = "positive" | "negative" | "recurring";
 
@@ -170,6 +171,7 @@ const SIDE_SECTIONS: { id: SideSection; label: string; icon: typeof Home }[] = [
   { id: "analysis",  label: "تحليل الأنماط",      icon: Brain },
   { id: "emotional", label: "الارتباط العاطفي",   icon: Heart },
   { id: "data",      label: "سجل البيانات",        icon: Database },
+  { id: "profile",   label: "الملف الشخصي",       icon: Users },
   { id: "settings",  label: "الإعدادات",           icon: Settings },
 ];
 
@@ -541,6 +543,7 @@ export function BehavioralAnalysisHub({
   const activeAlertMessage = supabaseAlerts.length > 0
     ? supabaseAlerts[0].message
     : SMART_ALERTS[activeAlert];
+  const profileActivePatterns = PATTERNS.length;
 
   const handleSharePattern = useCallback((pattern: BehavioralPattern) => {
     setShareModal(pattern);
@@ -759,6 +762,8 @@ export function BehavioralAnalysisHub({
             })}
           </div>
         </motion.div>
+
+        {activeSection === "profile" && <UserProfile onBack={onBack} />}
 
         {/* Smart Alert Banner */}
         <AnimatePresence>
@@ -1083,3 +1088,7 @@ export function BehavioralAnalysisHub({
     </div>
   );
 }
+
+
+
+

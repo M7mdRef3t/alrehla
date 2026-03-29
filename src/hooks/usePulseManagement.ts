@@ -22,7 +22,7 @@ interface PulseDraft {
   topics: string[];
   energyReasons: string[];
   energyConfidence: PulseEnergyConfidence | null;
-  step: 1 | 2;
+  step: 1 | 2 | 3;
 }
 
 interface UsePulseManagementReturn {
@@ -44,8 +44,8 @@ interface UsePulseManagementReturn {
   setEnergyReasons: Dispatch<SetStateAction<string[]>>;
   energyConfidence: PulseEnergyConfidence | null;
   setEnergyConfidence: Dispatch<SetStateAction<PulseEnergyConfidence | null>>;
-  step: 1 | 2;
-  setStep: Dispatch<SetStateAction<1 | 2>>;
+  step: 1 | 2 | 3;
+  setStep: Dispatch<SetStateAction<1 | 2 | 3>>;
   saveDraft: () => void;
   loadDraft: () => boolean;
   clearDraft: () => void;
@@ -61,7 +61,7 @@ export function usePulseManagement(isOpen: boolean): UsePulseManagementReturn {
   const [topics, setTopics] = useState<string[]>([]);
   const [energyReasons, setEnergyReasons] = useState<string[]>([]);
   const [energyConfidence, setEnergyConfidence] = useState<PulseEnergyConfidence | null>(null);
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   
   const isInitializedRef = useRef(false);
 
@@ -107,7 +107,7 @@ export function usePulseManagement(isOpen: boolean): UsePulseManagementReturn {
       setTopics(Array.isArray(parsed.topics) ? parsed.topics.filter((x): x is string => typeof x === "string") : []);
       setEnergyReasons(Array.isArray(parsed.energyReasons) ? parsed.energyReasons.filter((x): x is string => typeof x === "string") : []);
       setEnergyConfidence(parsed.energyConfidence ?? null);
-      setStep(parsed.step === 2 ? 2 : 1);
+      setStep(parsed.step === 3 ? 3 : parsed.step === 2 ? 2 : 1);
       
       return true;
     } catch {

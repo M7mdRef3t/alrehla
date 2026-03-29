@@ -886,8 +886,7 @@
   }
 }
 
-/* Section */
-   Pulse (Micro Compass) Range Styling
+/* Pulse (Micro Compass) Range Styling */
 .pulse-range {
   --pulse-fill: var(--soft-teal);
   -webkit-appearance: none;

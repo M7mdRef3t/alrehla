@@ -115,6 +115,7 @@ function ensureMetaPixel(): void {
   const pixelId = getMetaPixelId();
   if (!windowRef || !pixelId || !areMetaEventsEnabled()) return;
   if (runtimeEnv.isDev && !areMetaEventsEnabled()) return;
+  if (windowRef.__dawayirMetaPixelScriptLoaded) return;
 
   if (!windowRef.fbq) {
     const fbq = ((...args: unknown[]) => {
@@ -137,6 +138,8 @@ function ensureMetaPixel(): void {
     windowRef.fbq("init", pixelId);
     windowRef.__dawayirMetaPixelInitialized = true;
   }
+
+  windowRef.__dawayirMetaPixelScriptLoaded = true;
 }
 
 function sendGtagEvent(eventName: string, params?: Record<string, AnalyticsValue | null | undefined>): void {
@@ -219,7 +222,7 @@ export function trackLandingView(
   });
 
   trackEvent(AnalyticsEvents.LANDING_VIEW, safeParams);
-  sendMetaEvent("ViewContent", safeParams);
+  sendMetaEvent("ViewContent", safeParams, { bypassConsent: true });
 }
 
 export function trackEvent(
@@ -414,6 +417,7 @@ export function getAnalyticsConsent(): boolean {
 declare global {
   interface Window {
     __dawayirMetaPixelInitialized?: boolean;
+    __dawayirMetaPixelScriptLoaded?: boolean;
     dataLayer: unknown[];
     fbq?: FbqFn;
     gtag?: (...args: unknown[]) => void;

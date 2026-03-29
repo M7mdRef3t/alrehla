@@ -20,6 +20,8 @@ import { energyGradient, getEnergyStateLabel, getEnergyQuickHint, getMoodQuickHi
 import type { TacticalAdvice } from "./PulseCheckModalParts/helpers";
 import { Step1View } from "./PulseCheckModalParts/Step1View";
 import { Step2View } from "./PulseCheckModalParts/Step2View";
+import { PhoneCaptureView } from "./PulseCheckModalParts/PhoneCaptureView";
+import { getStoredLeadPhone } from "../services/marketingLeadService";
 import { AnalysisOverlay } from "./PulseCheckModalParts/AnalysisOverlay";
 import { WarpVelocityEffect } from "./PulseCheckModalParts/WarpVelocityEffect";
 
@@ -33,6 +35,7 @@ interface PulseCheckModalProps {
     topics?: string[];
     auto?: boolean;
     notes?: string;
+    phone?: string;
     energyReasons?: string[];
     energyConfidence?: PulseEnergyConfidence;
   }) => void;
@@ -196,6 +199,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
   const [hasTrackedNotesUsage, setHasTrackedNotesUsage] = useState(false);
   const [suggestionApplied, setSuggestionApplied] = useState(false);
   const [isSavingPulse, setIsSavingPulse] = useState(false);
+  const [phone, setPhone] = useState("");
   const [saveToastText, setSaveToastText] = useState("تمام.. حفظنا حالتك");
   const [keyboardEnergyHint, setKeyboardEnergyHint] = useState<number | null>(null);
   void keyboardEnergyHint; // prevent SWC tree-shaking of unused destructured variable
@@ -448,6 +452,14 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
   const handleTacticalAnalysis = async () => {
     if (energy === null) return;
+
+    // If we don't have a phone number yet, go to phone capture step
+    const storedPhone = getStoredLeadPhone();
+    if (!storedPhone && !phone && !isStartRecovery) {
+      setStep(2);
+      return;
+    }
+
     setIsAnalyzing(true);
 
     // Simulate AI Processing
@@ -459,7 +471,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
     setIsWarping(true);
     window.setTimeout(() => {
-      setStep(2);
+      setStep(3);
       window.setTimeout(() => setIsWarping(false), 500);
     }, 250);
   };
@@ -501,6 +513,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
         focus: finalFocus,
         topics: topics.length > 0 ? topics : undefined,
         notes: mergedNotes || undefined,
+        phone: phone || undefined,
         energyReasons: energyReasons.length > 0 ? energyReasons : undefined,
         energyConfidence: energyConfidence ?? undefined
       });
@@ -512,6 +525,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
   const handleSubmit = () => {
     if (step === 1) {
+      handleTacticalAnalysis();
+    } else if (step === 2) {
       handleTacticalAnalysis();
     } else {
       processFinalSubmit();
@@ -529,6 +544,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
       if (isComplete) {
         handleTacticalAnalysis();
       }
+    } else if (step === 2) {
+      handleTacticalAnalysis();
     }
   };
 
@@ -740,6 +757,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
 
   const stepLabel = step === 1
     ? "قلب في إحساسك"
+    : step === 2
+    ? "أمان الرحلة"
     : "شور الرحلة";
 
   const footerHintText = showRequiredHint && !currentStepComplete
@@ -754,7 +773,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     ? "bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 text-slate-950 shadow-[0_0_28px_rgba(52,211,153,0.48)] hover:shadow-[0_0_38px_rgba(45,212,191,0.62)] border border-emerald-200/30"
     : "bg-white/[0.03] text-white/[0.12] cursor-not-allowed opacity-45 border border-white/10";
 
-  const totalSteps = 2;
+  const totalSteps = 3;
 
   return (
     <AnimatePresence>
@@ -893,7 +912,15 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 />
               )}
 
-              {step === 2 && tacticalAdvice && (
+              {step === 2 && (
+                <PhoneCaptureView
+                  phone={phone}
+                  setPhone={setPhone}
+                  onValidSubmit={() => handleTacticalAnalysis()}
+                />
+              )}
+
+              {step === 3 && tacticalAdvice && (
                 <Step2View tacticalAdvice={tacticalAdvice} />
               )}
 
@@ -905,8 +932,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               <p className="text-center text-[10px] font-bold h-4" style={{ color: footerHintColor }}>
                 {footerHintText}
               </p>
-              <p className={`text-center text-[10px] font-black tracking-[0.14em] uppercase ${isPrimaryEnabled ? "text-emerald-300" : "text-rose-300/70"}`}>
-                {isPrimaryEnabled ? "جاهز للتنفيذ" : "اختار الطاقة + المزاج + اتجاهك الحالي"}
+              <p className={`text-center text-[10px] font-black tracking-[0.14em] uppercase ${(isPrimaryEnabled || (step as any) === 2) ? "text-emerald-300" : "text-rose-300/70"}`}>
+                {(step as any) === 2 ? "رقمك هو مفتاح الرحلة" : isPrimaryEnabled ? "جاهز للتنفيذ" : "اختار الطاقة + المزاج + اتجاهك الحالي"}
               </p>
               <div className="flex gap-3">
                 {step > 1 && (
@@ -918,14 +945,14 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   </button>
                 )}
                 <motion.button
-                  onClick={step === 1 ? handleNextStep : handleSubmit}
-                  disabled={step === 1 && !isComplete}
+                  onClick={step === 3 ? handleSubmit : (step === 1 ? handleNextStep : handleTacticalAnalysis)}
+                  disabled={(step === 1 && !isComplete) || (step === 2 && phone.replace(/\D/g, "").length < 11)}
                   className={`flex-[2] py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${primaryCtaClassName}`}
                   whileTap={!isPrimaryEnabled ? {} : { scale: 0.98 }}
                   animate={!isPrimaryEnabled ? {} : { boxShadow: ["0 0 20px rgba(45,212,191,0.35)", "0 0 36px rgba(16,185,129,0.62)", "0 0 20px rgba(45,212,191,0.35)"] }}
                   transition={!isPrimaryEnabled ? {} : { duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  {step === 1 ? "وريني الشور" : "يلا بينا"}
+                  {step === 1 ? "وريني الشور" : step === 2 ? "تأكيد الرقم" : "يلا بينا"}
                 </motion.button>
               </div>
             </div>

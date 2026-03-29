@@ -13,9 +13,14 @@ import {
   ShieldCheck,
   Wallet
 } from "lucide-react";
-import { trackCheckoutViewed, trackInitiateCheckout } from "../../src/services/analytics";
+import {
+  trackCheckoutViewed,
+  trackCompleteRegistration,
+  trackInitiateCheckout
+} from "../../src/services/analytics";
 import { recordFlowEvent } from "../../src/services/journeyTracking";
 import { safeGetSession } from "../../src/services/supabaseClient";
+import { marketingLeadService } from "../../src/services/marketingLeadService";
 
 type ScarcityResponse = {
   total_seats: number;
@@ -35,7 +40,7 @@ type ProofImageState = {
 };
 
 const CHECKOUT_PUBLIC_ENABLED = process.env.NEXT_PUBLIC_PUBLIC_PAYMENTS_ENABLED === "true";
-const DEFAULT_WHATSAPP_NUMBER = "201023050092";
+const DEFAULT_WHATSAPP_NUMBER = "201123003681";
 const WHATSAPP_NUMBER_RAW = process.env.NEXT_PUBLIC_WHATSAPP_CONTACT_NUMBER || DEFAULT_WHATSAPP_NUMBER;
 const INSTAPAY_ALIAS = String(process.env.NEXT_PUBLIC_PAYMENT_INSTAPAY_ALIAS || "").trim();
 const INSTAPAY_NUMBER = String(process.env.NEXT_PUBLIC_PAYMENT_INSTAPAY_NUMBER || "").trim();
@@ -52,6 +57,7 @@ const FOUNDING_COHORT_PRICE_LABEL = String(process.env.NEXT_PUBLIC_FOUNDING_COHO
 const LOCAL_MONTHLY_PRICE_LABEL = String(process.env.NEXT_PUBLIC_LOCAL_PREMIUM_PRICE_LABEL || "").trim();
 const GLOBAL_MONTHLY_PRICE_LABEL = String(process.env.NEXT_PUBLIC_GLOBAL_PREMIUM_PRICE_LABEL || "").trim();
 const LAST_PAYMENT_MODE_KEY = "checkout.last_payment_mode";
+const COMPLETE_REGISTRATION_SESSION_KEY = "checkout.complete_registration_tracked";
 const ALLOWED_PROOF_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
 const MAX_PROOF_IMAGE_BYTES = 900_000;
 
@@ -211,6 +217,9 @@ export default function CheckoutPage() {
     try {
       recordFlowEvent("checkout_page_viewed");
       trackCheckoutViewed();
+      // Sync lead status to payment_requested on checkout page view
+      marketingLeadService.syncLead({ status: "payment_requested" })
+        .catch(err => console.error("Lead sync error:", err));
     } catch {
       // Never block checkout rendering on analytics issues.
     }
@@ -368,7 +377,12 @@ export default function CheckoutPage() {
 
   const handleProofSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!proofReference.trim() && !proofImage) {
+    const referenceValue = proofReference.trim();
+    const amountValue = proofAmount.trim();
+    const hasProofImage = Boolean(proofImage);
+    const methodValue = proofMethod;
+    const modeValue = mode;
+    if (!referenceValue && !hasProofImage) {
       setPaymentNotice("أضف رقم العملية أو ارفع لقطة واضحة قبل الإرسال.");
       setPaymentNoticeKind("error");
       return;
@@ -384,9 +398,9 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify({
           email,
-          method: proofMethod,
-          reference: proofReference,
-          amount: proofAmount,
+          method: methodValue,
+          reference: referenceValue,
+          amount: amountValue,
           note: proofNote,
           proofImage
         })
@@ -395,6 +409,30 @@ export default function CheckoutPage() {
       if (!response.ok) {
         throw new Error(data.error || "تعذر إرسال إثبات الدفع.");
       }
+      const alreadyTrackedThisSession =
+        typeof window !== "undefined" &&
+        window.sessionStorage.getItem(COMPLETE_REGISTRATION_SESSION_KEY) === "true";
+
+      if (!alreadyTrackedThisSession) {
+        trackCompleteRegistration({
+          flow: "checkout_manual_proof",
+          method: methodValue,
+          payment_mode: modeValue,
+          has_reference: Boolean(referenceValue),
+          has_proof_image: hasProofImage
+        });
+        recordFlowEvent("payment_success", {
+          meta: {
+            source: "checkout_manual_proof",
+            method: methodValue,
+            payment_mode: modeValue
+          }
+        });
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem(COMPLETE_REGISTRATION_SESSION_KEY, "true");
+        }
+      }
+
       setProofReference("");
       setProofAmount("");
       setProofNote("");
@@ -404,7 +442,7 @@ export default function CheckoutPage() {
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
-      trackManualIntent(`${proofMethod}_proof_form`);
+      trackManualIntent(`${methodValue}_proof_form`);
     } catch (error) {
       setPaymentNotice(error instanceof Error ? error.message : "تعذر إرسال إثبات الدفع.");
       setPaymentNoticeKind("error");

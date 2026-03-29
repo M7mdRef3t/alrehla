@@ -13,6 +13,7 @@ import {
   BookOpen,
   Wind,
   AlertCircle,
+  Settings,
   Palette,
   Trophy,
   BarChart3,
@@ -30,7 +31,8 @@ import {
   Crosshair,
   ScrollText,
   Smartphone,
-  Zap
+  Zap,
+  User
 } from "lucide-react";
 import { useJourneyState } from "../state/journeyState";
 import { useNotificationState } from "../state/notificationState";
@@ -672,10 +674,19 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   type="button"
                   onClick={() => setShowDataManagement(true)}
                   className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-all text-right shrink-0 whitespace-nowrap"
-                  title="تصدير/استيراد البيانات"
+                  title="الملف الشخصي والبيانات"
                 >
-                  <Database className="w-5 h-5 shrink-0" />
-                  البيانات
+                  <User className="w-5 h-5 shrink-0" />
+                  الملف الشخصي
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowThemeSettings(true)}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="تخصيص الواجهة"
+                >
+                  <Settings className="w-5 h-5 shrink-0" />
+                  الإعدادات
                 </button>
                 <button
                   type="button"
@@ -1356,8 +1367,19 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                       }}
                       className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-all text-right"
                     >
-                      <Database className="w-6 h-6 shrink-0" />
-                      <span>البيانات</span>
+                      <User className="w-6 h-6 shrink-0" />
+                      <span>الملف الشخصي</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowThemeSettings(true);
+                        handleClose();
+                      }}
+                      className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right"
+                    >
+                      <Settings className="w-6 h-6 shrink-0" />
+                      <span>الإعدادات</span>
                     </button>
                     <button
                       type="button"

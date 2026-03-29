@@ -31,6 +31,28 @@ function shouldBootIntoFullApp(): boolean {
 function registerServiceWorker() {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 
+  // In development, stale SW/caches can serve old chunks and cause _next 404s.
+  if (runtimeEnv.isDev) {
+    void navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => {
+        void registration.unregister();
+      });
+    });
+
+    if ("caches" in window) {
+      void caches.keys().then((cacheKeys) => {
+        cacheKeys.forEach((key) => {
+          void caches.delete(key);
+        });
+      });
+    }
+    return;
+  }
+
+  const isSecureOrigin =
+    window.location.protocol === "https:" || window.location.hostname === "localhost";
+  if (!isSecureOrigin) return;
+
   const installWorker = () => {
     void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
   };

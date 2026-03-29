@@ -11,6 +11,7 @@ import { useGamificationState } from "../services/gamificationEngine";
 import { useAchievementState } from "../state/achievementState";
 import { useQuizHistory } from "../hooks/useQuizHistory";
 import { useMapState } from "../state/mapState";
+import { UserProfile } from "./UserProfile";
 
 
 /* ══════════════════════════════════════════
@@ -817,12 +818,13 @@ function WeeklyCapsule({ pulseHistory }: { pulseHistory: PulseEntry[] }) {
    Sidebar Navigation
    ══════════════════════════════════════════ */
 
-type SidebarTab = "overview" | "map" | "community" | "settings";
+type SidebarTab = "overview" | "map" | "community" | "profile" | "settings";
 
 const SIDEBAR_ITEMS: { id: SidebarTab; emoji: string; label: string }[] = [
   { id: "overview", emoji: "🏠", label: "نظرة عامة" },
   { id: "map", emoji: "🌐", label: "خريطة العلاقات" },
   { id: "community", emoji: "👥", label: "المجتمع" },
+  { id: "profile", emoji: "👤", label: "الملف الشخصي" },
   { id: "settings", emoji: "⚙️", label: "الإعدادات" },
 ];
 
@@ -1139,6 +1141,7 @@ export function InteractiveDashboard({ onBack }: InteractiveDashboardProps) {
 
   const [activeTab, setActiveTab] = useState<SidebarTab>("overview");
   const [pulseHistory, setPulseHistory] = useState<PulseEntry[]>(() => loadPulseHistory());
+  const isProfileTab = activeTab === "profile";
 
   const moodToday = useMemo(
     () => pulseHistory.find((p) => p.date === todayStr()) ?? null,
@@ -1164,6 +1167,8 @@ export function InteractiveDashboard({ onBack }: InteractiveDashboardProps) {
 
           {/* ① Hero */}
           <HeroSection xp={xp} level={level} moodToday={moodToday} />
+
+          {isProfileTab && <UserProfile onBack={onBack} />}
 
           {/* ② KPI Cards */}
           <KPICards history={history} nodes={nodes} unlockedIds={unlockedIds} xp={xp} />
@@ -1197,4 +1202,8 @@ export function InteractiveDashboard({ onBack }: InteractiveDashboardProps) {
     </div>
   );
 }
+
+
+
+
 

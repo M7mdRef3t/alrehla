@@ -54,16 +54,12 @@ describe("meta analytics tracking", () => {
     delete window.gtag;
   });
 
-  it("fires ViewContent for landing only after consent is granted", { timeout: 20000 }, async () => {
+  it("fires ViewContent for landing without requiring consent", { timeout: 20000 }, async () => {
     const fbq = vi.fn();
     window.fbq = fbq;
 
     const { trackLandingView } = await import("./analytics");
 
-    trackLandingView({ entry_variant: "default" });
-    expect(fbq).not.toHaveBeenCalled();
-
-    window.localStorage.setItem("dawayir-analytics-consent", "true");
     trackLandingView({ entry_variant: "default" });
 
     expect(fbq).toHaveBeenCalledWith("track", "ViewContent", {

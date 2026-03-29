@@ -303,6 +303,8 @@ export type FlowStep =
   | "onboarding_completed"
   | "onboarding_skipped"
   | "onboarding_contact_skipped"
+  | "lead_captured"
+  | "pulse_phone_captured"
   | "auth_gate_opened"
   | "auth_login_success"
   | "post_auth_intent_phase_one_map"
