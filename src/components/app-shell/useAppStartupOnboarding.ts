@@ -6,6 +6,7 @@ import { getWindowOrNull } from "../../services/clientRuntime";
 import type { AppScreen } from "../../navigation/navigationMachine";
 import type { AppOverlayFlag } from "../../state/appOverlayState";
 import type { LandingIntent } from "../../state/journeyState";
+import { ensureValidJourneyState } from "../../utils/journeyState";
 
 import { isUserMode } from "../../config/appEnv";
 
@@ -93,6 +94,11 @@ export function useAppStartupOnboarding({
   const handleOnboardingComplete = useCallback((skipped: boolean = false) => {
     setOverlay("onboarding", false);
     if (skipped) {
+      // Skip should still land the user in a valid journey state.
+      // Without a goal, the revenue-mode guard can bounce the app back to landing/goal.
+      const validJourney = ensureValidJourneyState();
+      setGoalId(validJourney.goalId);
+      setCategory(validJourney.category);
       void navigateToScreen("map");
       return;
     }
@@ -107,7 +113,7 @@ export function useAppStartupOnboarding({
       }, 6000);
     }
     startRecovery();
-  }, [clearWelcomeToastTimer, closeOverlay, navigateToScreen, openOverlay, setOverlay, startRecovery]);
+  }, [clearWelcomeToastTimer, closeOverlay, navigateToScreen, openOverlay, setCategory, setGoalId, setOverlay, startRecovery]);
 
   useEffect(() => {
     const windowRef = getWindowOrNull();

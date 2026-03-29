@@ -226,6 +226,14 @@ export function trackLandingView(
 
   trackEvent(AnalyticsEvents.LANDING_VIEW, safeParams);
   sendMetaEvent("ViewContent", safeParams, { bypassConsent: true });
+  if (runtimeEnv.isDev) {
+    console.debug("[Analytics] trackLandingView", {
+      event: "ViewContent",
+      consent: getAnalyticsConsent(),
+      metaEnabled: areMetaEventsEnabled(),
+      params: safeParams
+    });
+  }
 }
 
 export function trackEvent(
@@ -386,6 +394,14 @@ export function trackCompleteRegistration(
   trackEvent(AnalyticsEvents.ONBOARDING_COMPLETED, safeParams);
   sendGtagEvent("sign_up", safeParams);
   sendMetaEvent("CompleteRegistration", safeParams, { bypassConsent: true });
+  if (runtimeEnv.isDev) {
+    console.debug("[Analytics] trackCompleteRegistration", {
+      event: "CompleteRegistration",
+      consent: getAnalyticsConsent(),
+      metaEnabled: areMetaEventsEnabled(),
+      params: safeParams
+    });
+  }
 }
 
 export function trackCheckoutViewed(
@@ -415,6 +431,27 @@ export function setAnalyticsConsent(consent: boolean): void {
 
 export function getAnalyticsConsent(): boolean {
   return getFromLocalStorage("dawayir-analytics-consent") === "true";
+}
+
+export function getAnalyticsDiagnostics(context: string = "analytics") {
+  const windowRef = getWindowOrNull();
+  return {
+    context,
+    userMode: isUserMode,
+    analyticsConsent: getAnalyticsConsent(),
+    metaPixelIdPresent: Boolean(getMetaPixelId()),
+    metaEventsEnabled: areMetaEventsEnabled(),
+    fbqPresent: Boolean(windowRef?.fbq),
+    fbqInitialized: Boolean(windowRef?.__dawayirMetaPixelInitialized),
+    fbqScriptLoaded: Boolean(windowRef?.__dawayirMetaPixelScriptLoaded),
+    gtagPresent: Boolean(windowRef?.gtag)
+  };
+}
+
+export function logAnalyticsDiagnostics(context: string = "analytics"): void {
+  if (!runtimeEnv.isDev || !isClientRuntime()) return;
+  const diagnostics = getAnalyticsDiagnostics(context);
+  console.table(diagnostics);
 }
 
 declare global {

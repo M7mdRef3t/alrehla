@@ -4,11 +4,13 @@ import { useCallback, useEffect, Suspense, useState } from "react";
 import dynamic from "next/dynamic";
 import { AwarenessSkeleton } from "../src/components/AwarenessSkeleton";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
-import { initAnalytics } from "../src/services/analytics";
+import { initAnalytics, logAnalyticsDiagnostics } from "../src/services/analytics";
 import { initMonitoring } from "../src/services/monitoring";
 import { runtimeEnv } from "../src/config/runtimeEnv";
 import { applyDesignSystemTokens } from "../src/services/designSystemTokens";
 import { PWAInstallProvider } from "../src/contexts/PWAInstallContext";
+import { AnalyticsConsentBanner } from "../src/components/AnalyticsConsentBanner";
+import { AnalyticsDiagnosticsOverlay } from "../src/components/AnalyticsDiagnosticsOverlay";
 import { PlatformHeader } from "../src/components/PlatformHeader";
 
 const App = dynamic(() => import("../src/App"), { ssr: false });
@@ -93,6 +95,12 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
           document.body.scrollTo({ top: 0, behavior: "smooth" });
         }
         return;
+      case "profile":
+        openAppScreenFromLanding("profile");
+        return;
+      case "settings":
+        openAppScreenFromLanding("settings");
+        return;
       case "stories":
         window.location.href = "/stories";
         return;
@@ -104,7 +112,6 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
       case "resources":
       case "quizzes":
       case "behavioral-analysis":
-      case "settings":
         openAppScreenFromLanding(screen);
         return;
       default:
@@ -118,6 +125,7 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
     applyDesignSystemTokens();
     onBeforeInit?.();
     initAnalytics();
+    logAnalyticsDiagnostics("client-app-shell");
     initMonitoring();
     registerServiceWorker();
   }, [onBeforeInit]);
@@ -145,6 +153,8 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
             </Suspense>
           </PWAInstallProvider>
         )}
+        <AnalyticsConsentBanner />
+        <AnalyticsDiagnosticsOverlay />
         {runtimeEnv.isProd && (
           <Suspense fallback={<AwarenessSkeleton />}>
             <Analytics />

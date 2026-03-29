@@ -86,6 +86,7 @@ export function buildBreadcrumb(screen: string): BreadcrumbItem[] {
     tools:                "الأدوات",
     stories:              "قصص النجاح",
     about:                "لماذا الرحلة؟",
+    profile:              "الملف الشخصي",
     settings:             "الإعدادات",
     guided:               "الرحلة الموجّهة",
     mission:              "المهمة",

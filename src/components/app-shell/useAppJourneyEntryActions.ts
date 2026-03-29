@@ -5,6 +5,7 @@ import { useMapState } from "../../state/mapState";
 import type { FeatureFlagKey } from "../../config/features";
 import { isPhaseOneUserFlow, isUserMode } from "../../config/appEnv";
 import { getLastGoalMeta } from "../../utils/goalLabel";
+import { ensureValidJourneyState } from "../../utils/journeyState";
 import { requestIdleCallback, cancelIdleCallback } from "../../utils/performanceOptimizations";
 import type { AppShellScreen } from "../../state/appShellNavigationState";
 
@@ -106,9 +107,9 @@ export function useAppJourneyEntryActions({
   }, [goalId, isLockedPhaseOne, setGoalId]);
 
   const openDefaultGoalMap = useCallback(() => {
-    const defaultGoalId = "family";
-    setGoalId(defaultGoalId);
-    setCategory(resolveAdviceCategory(defaultGoalId));
+    const validJourney = ensureValidJourneyState();
+    setGoalId(validJourney.goalId);
+    setCategory(validJourney.category);
     setSelectedNodeId(null);
     void navigateToScreen("map");
   }, [navigateToScreen, setCategory, setGoalId, setSelectedNodeId]);

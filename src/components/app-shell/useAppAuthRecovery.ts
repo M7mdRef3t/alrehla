@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import type { AdviceCategory } from "../../data/adviceScripts";
-import { resolveAdviceCategory } from "../../data/adviceScripts";
 import { recordFlowEvent } from "../../services/journeyTracking";
 import { syncLocalMapOnLogin } from "../../services/mapSync";
 import { syncLocalPulsesOnLogin } from "../../services/pulseSync";
@@ -17,6 +16,7 @@ import type {
 } from "../../state/pulseState";
 import type { AppScreen } from "../../navigation/navigationMachine";
 import { clearPostAuthIntent, getPostAuthIntent, type PostAuthIntent } from "../../utils/postAuthIntent";
+import { ensureValidJourneyState } from "../../utils/journeyState";
 import type { WelcomeSource } from "../OnboardingWelcomeBubble";
 
 type AuthStatus = "loading" | "ready";
@@ -141,9 +141,9 @@ export function useAppAuthRecovery({
 
     setWelcome({ message: buildStartRecoveryWelcome(authFirstName, authToneGender), source: "template" });
     if (isPhaseOneUserFlow) {
-      const defaultGoalId = "family";
-      setGoalId(defaultGoalId);
-      setCategory(resolveAdviceCategory(defaultGoalId));
+      const validJourney = ensureValidJourneyState();
+      setGoalId(validJourney.goalId);
+      setCategory(validJourney.category);
       setSelectedNodeId(null);
       void navigateToScreen("map");
       recordFlowEvent("post_auth_intent_phase_one_map");
