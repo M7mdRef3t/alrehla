@@ -49,6 +49,7 @@ const SCREEN_MAP: Record<string, string> = {
   "behavioral-analysis": "behavioral-analysis",
   resources: "resources",
   settings: "settings",
+  profile: "profile",
 };
 
 const MARKETING_NAV_IDS = new Set<NavLinkId>(["home", "stories", "about"]);

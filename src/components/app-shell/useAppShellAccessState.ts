@@ -48,7 +48,7 @@ export function useAppShellAccessState({
 
   const isPrivilegedUser = isPrivilegedRole(role);
   const normalizedRole = typeof role === "string" ? role.trim().toLowerCase() : "";
-  const isOwnerWatcher = normalizedRole === "owner" || normalizedRole === "superadmin" || adminAccess;
+  const isOwnerWatcher = normalizedRole === "owner" || normalizedRole === "superadmin" || normalizedRole === "admin" || normalizedRole === "developer" || adminAccess;
   const canPollOwnerAlerts = Boolean(authUser) && (normalizedRole === "owner" || normalizedRole === "superadmin");
   const isLockedPhaseOne = isPhaseOneUserFlow && !isOwnerWatcher;
 

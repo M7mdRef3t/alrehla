@@ -57,11 +57,14 @@ export interface MarketingCampaign {
 }
 
 export interface WeeklyAdBudgetConfig {
-  weeklyBudgetUSD: number;
+  /** الميزانية الأسبوعية بالجنيه المصري */
+  weeklyBudgetEGP: number;
   channel: "facebook";
   locale: "ar-EG";
   autoSpendEnabled: boolean;
   realPlatformEnabled: boolean;
+  /** @deprecated استخدم weeklyBudgetEGP */
+  weeklyBudgetUSD?: number;
 }
 
 export interface AdABVariantResult {
@@ -69,14 +72,20 @@ export interface AdABVariantResult {
   headline: string;
   body: string;
   cta: string;
-  allocatedBudgetUSD: number;
+  /** الميزانية المخصصة بالجنيه المصري */
+  allocatedBudgetEGP: number;
   impressions: number;
   clicks: number;
   conversions: number;
-  spendUSD: number;
+  /** الإنفاق الفعلي بالجنيه المصري */
+  spendEGP: number;
   ctr: number;
   cvr: number;
-  cpaUSD: number;
+  /** تكلفة التحويل بالجنيه المصري */
+  cpaEGP: number;
+  /** @deprecated */ allocatedBudgetUSD?: number;
+  /** @deprecated */ spendUSD?: number;
+  /** @deprecated */ cpaUSD?: number;
 }
 
 export interface WeeklyAdABTestReport {
@@ -103,7 +112,7 @@ export class AIMarketingCopywriter {
       const raw = localStorage.getItem(this.weeklyBudgetStorageKey);
       if (!raw) {
         return {
-          weeklyBudgetUSD: 50,
+          weeklyBudgetEGP: 350,
           channel: "facebook",
           locale: "ar-EG",
           autoSpendEnabled: true,
@@ -112,8 +121,10 @@ export class AIMarketingCopywriter {
       }
 
       const parsed = JSON.parse(raw) as Partial<WeeklyAdBudgetConfig>;
+      // Migrate from old USD field if present
+      const budgetFromOld = parsed.weeklyBudgetUSD ? parsed.weeklyBudgetUSD * 50 : undefined;
       return {
-        weeklyBudgetUSD: Math.max(10, Number(parsed.weeklyBudgetUSD ?? 50)),
+        weeklyBudgetEGP: Math.max(350, Number(parsed.weeklyBudgetEGP ?? budgetFromOld ?? 350)),
         channel: "facebook",
         locale: "ar-EG",
         autoSpendEnabled: parsed.autoSpendEnabled !== false,
@@ -121,7 +132,7 @@ export class AIMarketingCopywriter {
       };
     } catch {
       return {
-        weeklyBudgetUSD: 50,
+        weeklyBudgetEGP: 350,
         channel: "facebook",
         locale: "ar-EG",
         autoSpendEnabled: true,
@@ -158,26 +169,27 @@ export class AIMarketingCopywriter {
     }
   }
 
-  private simulateVariantMetrics(allocatedBudgetUSD: number): Omit<AdABVariantResult, "variantId" | "headline" | "body" | "cta"> {
-    const spendUSD = Number((allocatedBudgetUSD * (0.9 + Math.random() * 0.1)).toFixed(2));
-    const impressions = Math.round(spendUSD * (90 + Math.random() * 45));
-    const ctrBase = 0.012 + Math.random() * 0.026; // 1.2% - 3.8%
+  private simulateVariantMetrics(allocatedBudgetEGP: number): Omit<AdABVariantResult, "variantId" | "headline" | "body" | "cta"> {
+    const spendEGP = Number((allocatedBudgetEGP * (0.9 + Math.random() * 0.1)).toFixed(2));
+    // Egyptian market: ~100-180 impressions per EGP (very cheap market)
+    const impressions = Math.round(spendEGP * (100 + Math.random() * 80));
+    const ctrBase = 0.015 + Math.random() * 0.025; // 1.5% - 4.0% (Egypt tends higher)
     const clicks = Math.max(1, Math.round(impressions * ctrBase));
-    const cvrBase = 0.06 + Math.random() * 0.16; // 6% - 22%
+    const cvrBase = 0.08 + Math.random() * 0.17; // 8% - 25%
     const conversions = Math.max(1, Math.round(clicks * cvrBase));
     const ctr = Number((clicks / Math.max(1, impressions)).toFixed(4));
     const cvr = Number((conversions / Math.max(1, clicks)).toFixed(4));
-    const cpaUSD = Number((spendUSD / Math.max(1, conversions)).toFixed(2));
+    const cpaEGP = Number((spendEGP / Math.max(1, conversions)).toFixed(2));
 
     return {
-      allocatedBudgetUSD,
+      allocatedBudgetEGP,
       impressions,
       clicks,
       conversions,
-      spendUSD,
+      spendEGP,
       ctr,
       cvr,
-      cpaUSD
+      cpaEGP
     };
   }
 
@@ -198,7 +210,7 @@ export class AIMarketingCopywriter {
       type: "ad_facebook",
       tone: "conversational",
       targetAudience: audience,
-      context: `اختبار A/B أسبوعي بالمصري للهدف ${goal} - نسخة A: مباشرة وجريئة`,
+      context: `اختبار A/B أسبوعي بالمصري للهدف ${goal} - نسخة A: مباشرة وجريئة — ميزانية ${budget.weeklyBudgetEGP} ج.م`,
       includeVariations: false
     });
 
@@ -206,19 +218,19 @@ export class AIMarketingCopywriter {
       type: "ad_facebook",
       tone: "empathetic",
       targetAudience: audience,
-      context: `اختبار A/B أسبوعي بالمصري للهدف ${goal} - نسخة B: دافئة وعاطفية`,
+      context: `اختبار A/B أسبوعي بالمصري للهدف ${goal} - نسخة B: دافئة وعاطفية — ميزانية ${budget.weeklyBudgetEGP} ج.م`,
       includeVariations: false
     });
 
     if (!variantACopy || !variantBCopy) return null;
 
-    const perVariantBudget = Number((budget.weeklyBudgetUSD / 2).toFixed(2));
+    const perVariantBudget = Number((budget.weeklyBudgetEGP / 2).toFixed(2));
     const aMetrics = this.simulateVariantMetrics(perVariantBudget);
     const bMetrics = this.simulateVariantMetrics(perVariantBudget);
 
     const variantA: AdABVariantResult = {
       variantId: "A",
-      headline: variantACopy.headline ?? "حاسس إنك تايه؟ دواير تقدر تساعدك",
+      headline: variantACopy.headline ?? "حاسس إنك تايه؟ الرحلة تقدر تساعدك",
       body: variantACopy.content,
       cta: variantACopy.cta ?? "ابدأ رحلتك دلوقتي",
       ...aMetrics
@@ -231,7 +243,7 @@ export class AIMarketingCopywriter {
       ...bMetrics
     };
 
-    const winner = variantA.cpaUSD <= variantB.cpaUSD ? "A" : "B";
+    const winner = variantA.cpaEGP <= variantB.cpaEGP ? "A" : "B";
     const startedAt = Date.now();
     const endedAt = startedAt + 6 * 24 * 60 * 60 * 1000;
     const status: WeeklyAdABTestReport["status"] = budget.realPlatformEnabled ? "requires_approval" : "completed";
@@ -246,7 +258,7 @@ export class AIMarketingCopywriter {
       winnerVariantId: winner,
       recommendedNextAction:
         winner === "A"
-          ? "اعتمد النسخة A الأسبوع الجاي وزوّدها 20% من الميزانية."
+          ? "اعتمد النسخة A الأسبوع الجاي وزوّدها ٢٠% من الميزانية."
           : "اعتمد النسخة B الأسبوع الجاي وكرّر نفس الـ hook مع CTA أقوى."
     };
 
@@ -254,9 +266,9 @@ export class AIMarketingCopywriter {
 
     await decisionEngine.execute({
       type: "ab_test_started",
-      reasoning: `Weekly Egyptian A/B ad test started with $${budget.weeklyBudgetUSD} budget`,
+      reasoning: `Weekly Egyptian A/B ad test started with ${budget.weeklyBudgetEGP} EGP budget`,
       timestamp: startedAt,
-      payload: { reportId: report.id, goal, audience, budget: budget.weeklyBudgetUSD },
+      payload: { reportId: report.id, goal, audience, budgetEGP: budget.weeklyBudgetEGP },
       outcome: budget.realPlatformEnabled ? "pending_approval" : "executed",
       approvedBy: budget.realPlatformEnabled ? "system" : "admin"
     });

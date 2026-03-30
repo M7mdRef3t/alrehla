@@ -18,6 +18,7 @@ interface UseAppJourneyEntryActionsParams {
   storedGoalId: string | null | undefined;
   storedCategory: string | null | undefined;
   lastGoalById: Record<string, { category: string; updatedAt: number }> | undefined;
+  authStatus: "loading" | "ready";
   canUseMap: boolean;
   canUseJourneyTools: boolean;
   isLockedPhaseOne: boolean;
@@ -38,6 +39,7 @@ export function useAppJourneyEntryActions({
   storedGoalId,
   storedCategory,
   lastGoalById,
+  authStatus,
   canUseMap,
   canUseJourneyTools,
   isLockedPhaseOne,
@@ -73,18 +75,20 @@ export function useAppJourneyEntryActions({
   }, [screen, setSelectedNodeId]);
 
   useEffect(() => {
+    if (authStatus === "loading") return;
     if (canUseMap || isUserMode) return;
     if (screen === "goal" || screen === "map" || screen === "mission" || screen === "guided") {
       void navigateToScreen("landing");
     }
-  }, [canUseMap, navigateToScreen, screen]);
+  }, [authStatus, canUseMap, navigateToScreen, screen]);
 
   useEffect(() => {
+    if (authStatus === "loading") return;
     if (canUseJourneyTools) return;
     if (screen === "tools") {
       void navigateToScreen("landing");
     }
-  }, [canUseJourneyTools, navigateToScreen, screen]);
+  }, [authStatus, canUseJourneyTools, navigateToScreen, screen]);
 
   useEffect(() => {
     if (!isLockedPhaseOne) return;
@@ -94,7 +98,7 @@ export function useAppJourneyEntryActions({
       return;
     }
 
-    if (screen === "guided" || screen === "mission" || screen === "tools") {
+    if (screen === "guided" || screen === "mission") {
       void navigateToScreen("map");
     }
   }, [isLockedPhaseOne, navigateToScreen, screen]);

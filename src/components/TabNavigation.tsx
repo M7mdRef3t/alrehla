@@ -81,51 +81,46 @@ export const TabNavigation: FC<TabNavigationProps> = ({
         backdropFilter: "blur(12px)",
       }}
     >
-      <div
-        className="flex items-center gap-1 p-1 rounded-full"
-        style={{
-          background: "rgba(255, 255, 255, 0.05)",
-          border: "1px solid rgba(255, 255, 255, 0.08)"
-        }}
-      >
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = tab.isActive;
+          <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 p-1 shadow-2xl backdrop-blur-3xl">
+            <div className="flex items-center gap-1">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = tab.isActive;
 
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={tab.onClick}
-              className="relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all"
-              style={{
-                color: isActive ? "white" : "var(--text-secondary)"
-              }}
-            >
-              {isActive && (
-                <motion.div
-                  className="absolute inset-0 rounded-full"
-                  style={{
-                    background: `linear-gradient(135deg, ${tab.color} 0%, ${tab.color}cc 100%)`,
-                    boxShadow: `0 4px 12px ${tab.color}40`
-                  }}
-                  layoutId="activeTab"
-                  transition={{
-                    type: "spring",
-                    stiffness: 300,
-                    damping: 30
-                  }}
-                />
-              )}
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={tab.onClick}
+                    className="relative flex items-center justify-center min-w-[3.5rem] sm:min-w-[4.5rem] h-12 rounded-full transition-all duration-500 overflow-hidden"
+                    style={{
+                      color: isActive ? "white" : "rgba(255,255,255,0.35)"
+                    }}
+                  >
+                    {isActive && (
+                      <motion.div
+                        className="absolute inset-0 z-0 bg-gradient-to-br from-teal-500/20 via-teal-500/10 to-transparent"
+                        layoutId="activeTabGlow"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
+                    {isActive && (
+                      <motion.div
+                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[2px] bg-teal-400 shadow-[0_0_12px_rgba(45,212,191,0.6)]"
+                        layoutId="activeTabUnderline"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
 
-              <span className="relative z-10 flex items-center gap-2">
-                <Icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
+                    <div className="relative z-10 flex flex-col items-center gap-1">
+                      <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'scale-110' : 'scale-100'}`} />
+                      <span className="hidden sm:block text-[10px] font-black uppercase tracking-widest">{tab.label}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
     </div>
   );
 };

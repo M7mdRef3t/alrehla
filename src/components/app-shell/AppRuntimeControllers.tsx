@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { hasCompletedJourneyOnboarding } from "../OnboardingFlow";
 import { initThemePalette } from "../../services/themePalette";
 import { useAchievementState, getLibraryOpenedAt, getBreathingUsedAt } from "../../state/achievementState";
@@ -27,6 +27,7 @@ import { syncGamificationOnLoad } from "../../services/gamificationSync";
 import { syncSubscription } from "../../services/subscriptionManager";
 import { useGamificationState } from "../../state/gamificationState";
 import { useToastState } from "../../state/toastState";
+import { captureUtmFromCurrentUrl, captureLeadAttributionFromCurrentUrl } from "../../services/marketingAttribution";
 import type { AppShellScreen } from "../../state/appShellNavigationState";
 
 type AgentModule = typeof import("../../agent");
@@ -94,6 +95,16 @@ export function AppRuntimeControllers({
   const notificationSupported = useNotificationState((state) => state.isSupported);
   const authUser = useAuthState((state) => state.user);
   const openOverlay = useAppOverlayState((state) => state.openOverlay);
+
+  // P0: Capture UTM + lead attribution from URL on very first render
+  // This ensures users arriving from ad campaigns are tracked before any navigation
+  const utmCapturedRef = useRef(false);
+  useEffect(() => {
+    if (utmCapturedRef.current || typeof window === "undefined") return;
+    utmCapturedRef.current = true;
+    captureUtmFromCurrentUrl();
+    captureLeadAttributionFromCurrentUrl();
+  }, []);
 
   useEffect(() => {
     void initThemePalette();

@@ -50,7 +50,7 @@ export function resolveNavigation(input: NavigationInput): NavigationResult {
     return { kind: "blocked", feature: "journey_tools" };
   }
 
-  if (isLockedPhaseOne && (target === "guided" || target === "mission" || target === "tools")) {
+  if (isLockedPhaseOne && (target === "guided" || target === "mission")) {
     return { kind: "redirect", screen: "map" };
   }
 

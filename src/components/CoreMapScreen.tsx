@@ -524,15 +524,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   return (
     <motion.main
-      className="flex-1 w-full h-full relative flex flex-col pb-24 md:pb-8"
-      style={{
-        background: [
-          "radial-gradient(ellipse 60% 50% at 15% 10%, rgba(124,58,237,0.08) 0%, transparent 60%)",
-          "radial-gradient(ellipse 50% 40% at 85% 90%, rgba(20,184,166,0.05) 0%, transparent 50%)",
-          "radial-gradient(ellipse 40% 40% at 50% 50%, rgba(20,184,166,0.03) 0%, transparent 60%)",
-          "#0A0A1A"
-        ].join(", ")
-      }}
+      className="flex-1 w-full h-full relative flex flex-col pb-24 md:pb-8 atmospheric-void"
       aria-labelledby="core-map-title"
       onDrop={handleMainDrop}
       initial="hidden"
@@ -568,26 +560,36 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         }}
       />
       {/*  Header  */}
-      <motion.header variants={cosmicFade} className="text-center px-4 sm:px-6 pt-6">
+      <motion.header 
+        variants={staggerContainer}
+        className="relative z-20 text-center px-4 sm:px-6 pt-12 pb-8 flex flex-col items-center gap-4 pointer-events-none"
+      >
         <AnimatePresence>
           {!isSacredIsolation && (
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              variants={cosmicFade}
+              className="flex flex-col items-center"
             >
-              <div className="flex flex-col items-center gap-2 mb-4">
-                <h1
-                  id="core-map-title"
-                  className="text-[clamp(1.5rem,3.5vw,2.5rem)] font-bold leading-[1.12]"
-                  style={{ color: "var(--text-primary)", letterSpacing: "var(--tracking-wider)" }}
-                >
-                  <EditableText id={pageTitleKey} defaultText={pageTitle} page="map" />
-                </h1>
-              </div>
+              <h1
+                id="core-map-title"
+                className="cosmic-editorial font-black text-[2.8rem] sm:text-[4.2rem] lg:text-[5.4rem] tracking-tight leading-tight mb-2 select-none"
+                style={{ color: "var(--text-primary)" }}
+              >
+                <div className="pointer-events-auto">
+                    <EditableText id={pageTitleKey} defaultText={pageTitle} page="map" />
+                </div>
+              </h1>
+              
+              <motion.div 
+                className="h-[1px] w-24 bg-gradient-to-r from-transparent via-teal-500/40 to-transparent mb-6 pointer-events-none"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.5, duration: 1 }}
+              />
+
               <p
-                className="text-sm md:text-base leading-[1.72] max-w-[42ch] mx-auto"
-                style={{ color: "var(--text-muted)", letterSpacing: "var(--tracking-wide)" }}
+                className="text-sm md:text-base leading-relaxed max-w-[45ch] mx-auto opacity-70 font-medium select-none pointer-events-auto"
+                style={{ color: "var(--text-secondary)", letterSpacing: "0.02em" }}
               >
                 <EditableText id={subtitleKey} defaultText={subtitle} page="map" multiline showEditIcon={false} />
               </p>
@@ -630,18 +632,18 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 className="w-full pointer-events-auto space-y-4 pt-12"
               >
                 {/*  Segmented Control: Choose your Lens */}
-                <div className="flex items-center justify-center gap-2 p-1 rounded-full bg-white/[0.03] border border-white/5 mx-auto w-fit mb-8">
+                <div className="flex items-center justify-center gap-2 p-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl mx-auto w-fit mb-12 shadow-2xl">
                   {[
-                    { id: "network", label: "الشبكة" },
-                    { id: "stability", label: "الاستقرار" },
-                    { id: "metrics", label: "المؤشرات" }
+                    { id: "network", label: "الشبكة التكتيكية" },
+                    { id: "stability", label: "ميزان الاستقرار" },
+                    { id: "metrics", label: "مؤشرات الرصد" }
                   ].map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => setSegmentedView(tab.id as "network" | "stability" | "metrics")}
-                      className={`px-6 py-2 rounded-full text-xs font-black transition-all ${segmentedView === tab.id
-                        ? "bg-amber-500 text-black shadow-lg shadow-amber-500/20"
-                        : "text-white/30 hover:text-white/60"
+                      className={`px-6 py-2.5 rounded-full text-[11px] font-black tracking-widest transition-all duration-500 ${segmentedView === tab.id
+                        ? "bg-teal-500/20 text-teal-400 border border-teal-500/30 shadow-[0_0_20px_rgba(45,212,191,0.15)]"
+                        : "text-white/30 hover:text-white/50 border border-transparent"
                         }`}
                     >
                       {tab.label}
@@ -652,8 +654,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 <div className="space-y-6 max-h-[70vh] overflow-y-auto no-scrollbar pb-32">
                   {segmentedView === "metrics" && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                      <div className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 text-right font-black">
-                        <h3 className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-3">مؤشر حِدّة الصدمة (Trauma Entropy)</h3>
+                      <div className="p-8 rounded-[2.5rem] bg-black/20 border border-white/10 backdrop-blur-3xl text-right">
+                        <h3 className="text-[10px] font-black text-amber-500/80 uppercase tracking-[0.25em] mb-6">مؤشر حِدّة الصدمة (Trauma Entropy)</h3>
                         <TEIWidget />
                       </div>
                       <MapInsightPanel />
@@ -756,19 +758,22 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           <button
             type="button"
             onClick={() => setShowDashboard((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-2 rounded-xl text-sm transition-all"
+            className="w-full flex items-center justify-between px-6 py-4 rounded-2xl transition-all duration-500 group"
             style={{
-              background: "rgba(255,255,255,0.02)",
-              border: "1px solid rgba(255,255,255,0.06)",
-              color: "var(--text-muted)"
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              backdropFilter: "blur(20px)"
             }}
           >
-            <span className="text-[11px]" style={{ color: "rgba(148,163,184,0.45)" }}>
-              {showDashboard ? "إخفاء التفاصيل" : "تفاصيل الدوائر"}
-            </span>
-            <span className="text-[11px]">
-              {mapCopy.dashboardMapSummary(activeNodes.length, greenNodes.length, archivedNodes.length)}
-            </span>
+            <div className="flex flex-col items-start">
+              <span className="text-[10px] font-black tracking-widest uppercase text-amber-500/80 mb-1">حالة المنظومة</span>
+              <span className="text-xs text-white/40">
+                {mapCopy.dashboardMapSummary(activeNodes.length, greenNodes.length, archivedNodes.length)}
+              </span>
+            </div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center border border-white/10 transition-transform duration-500 ${showDashboard ? 'rotate-180' : ''}`}>
+               <div className="w-1.5 h-1.5 border-r-2 border-b-2 border-white/30 rotate-45" />
+            </div>
           </button>
 
           <AnimatePresence>

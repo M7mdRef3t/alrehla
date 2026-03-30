@@ -227,6 +227,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     storedGoalId,
     storedCategory,
     lastGoalById,
+    authStatus,
     canUseMap,
     canUseJourneyTools,
     isLockedPhaseOne,

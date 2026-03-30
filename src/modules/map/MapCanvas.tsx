@@ -90,10 +90,10 @@ const getGreyZonePosition = (nodeIndex: number, totalInGrey: number): { x: numbe
 /*  Node Colors (Cosmic)  */
 
 const RING_COLORS = {
-  safe: { stroke: "#FFFFFF", glow: "rgba(255, 255, 255, 0.1)" },
-  caution: { stroke: "#fbbf24", glow: "rgba(251, 191, 36, 0.45)" },
-  danger: { stroke: "#f87171", glow: "rgba(248, 113, 113, 0.5)" },
-  detached: { stroke: "#94A3B8", glow: "rgba(148, 163, 184, 0.2)" }
+  safe: { stroke: "#2DD4BF", glow: "rgba(45, 212, 191, 0.25)" },
+  caution: { stroke: "#FBBF24", glow: "rgba(251, 191, 36, 0.35)" },
+  danger: { stroke: "#F43F5E", glow: "rgba(244, 63, 94, 0.45)" },
+  detached: { stroke: "#94A3B8", glow: "rgba(148, 163, 184, 0.15)" }
 } as const;
 
 const NODE_GLOW_CLASS: Record<Ring, string> = {
@@ -185,11 +185,11 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   const vampireIntensity = Math.min(Math.abs(netEnergy) / 20, 1); // Max intensity at -20
 
   const auraColor = isHighlighted
-    ? (node.ring === "red" ? "rgba(248, 113, 113, 0.25)" : node.ring === "yellow" ? "rgba(251, 191, 36, 0.2)" : "rgba(45, 212, 191, 0.2)")
+    ? (node.ring === "red" ? "rgba(244, 63, 94, 0.3)" : node.ring === "yellow" ? "rgba(251, 191, 36, 0.25)" : "rgba(45, 212, 191, 0.25)")
     : isVampire ? `rgba(185, 28, 28, ${0.1 + vampireIntensity * 0.3})` : "rgba(255, 255, 255, 0.02)";
 
   const auraBorderColor = isHighlighted
-    ? (node.ring === "red" ? "rgba(248, 113, 113, 0.4)" : node.ring === "yellow" ? "rgba(251, 191, 36, 0.35)" : "rgba(45, 212, 191, 0.35)")
+    ? (node.ring === "red" ? "rgba(244, 63, 94, 0.5)" : node.ring === "yellow" ? "rgba(251, 191, 36, 0.4)" : "rgba(45, 212, 191, 0.4)")
     : isVampire ? `rgba(153, 27, 27, ${0.3 + vampireIntensity * 0.5})` : "rgba(255, 255, 255, 0.05)";
 
   return (

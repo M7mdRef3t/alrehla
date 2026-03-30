@@ -1,4 +1,4 @@
-﻿/* =============================================================
+/* =============================================================
    Alrehla - Therapeutic Spaceship Dashboard
    ============================================================= */
 
@@ -1319,17 +1319,17 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 0;
-  opacity: 0.45;
-  filter: blur(10px);
+  opacity: 0.9;
+  filter: none;
   pointer-events: none;
-  mask-image: radial-gradient(circle, black 30%, transparent 70%);
-  -webkit-mask-image: radial-gradient(circle, black 30%, transparent 70%);
+  mask-image: radial-gradient(circle, black 50%, transparent 80%);
+  -webkit-mask-image: radial-gradient(circle, black 50%, transparent 80%);
 }
 
 /* Cosmic Headline */
 .cosmic-headline {
-  letter-spacing: -0.02em;
-  line-height: 1.7;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
   text-shadow: none;
 }
 
@@ -1337,15 +1337,15 @@
 .hero-starfield {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle at center, transparent 0%, var(--space-void) 80%);
+  background-image: radial-gradient(circle at center, transparent 0%, var(--space-void) 85%);
   pointer-events: none;
   z-index: 1;
 }
 
 @media (max-width: 768px) {
   .hero-orbital-center {
-    padding-top: 80px;
-    justify-content: flex-start;
+    padding-top: 60px;
+    justify-content: center;
   }
 }
 
@@ -1447,3 +1447,40 @@
 
 
 
+
+/* 🏛️ PREMIUM GLOBAL DESIGN TOKENS (Al-Rehla Refined) */
+
+.cosmic-editorial-900 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+.glass-premium {
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.atmospheric-void {
+  background: 
+    radial-gradient(circle at 15% 10%, rgba(20, 184, 166, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(124, 58, 237, 0.08) 0%, transparent 40%),
+    #060813;
+}
+
+.premium-card-hover {
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.premium-card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  background-color: rgba(255, 255, 255, 0.07);
+  border-color: rgba(20, 184, 166, 0.3);
+  box-shadow: 
+    0 20px 40px rgba(0,0,0,0.4),
+    0 0 20px rgba(20, 184, 166, 0.1);
+}

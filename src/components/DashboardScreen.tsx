@@ -232,8 +232,8 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
 
   return (
     <motion.div
-      className="w-full min-h-[100dvh] flex flex-col px-4 py-6 gap-6 overflow-y-auto pb-24"
-      style={{ maxWidth: 480, margin: "0 auto" }}
+      className="w-full min-h-[100dvh] flex flex-col px-6 py-10 gap-10 overflow-y-auto pb-32 atmospheric-void"
+      style={{ maxWidth: 520, margin: "0 auto" }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -252,14 +252,14 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.5 }}
       >
-        <div>
-          <p className="text-xs font-medium text-slate-500/80 uppercase tracking-widest">
+        <div className="text-right">
+          <p className="text-[10px] font-black text-teal-500/80 uppercase tracking-[0.25em] mb-3">
             مساحتك الآمنة
           </p>
-          <h1 className="text-xl font-bold leading-snug text-white mt-1">
+          <h1 className="cosmic-editorial-900 text-[clamp(2.5rem,6vw,4rem)] mb-4">
             {greeting}
           </h1>
-          <p className="text-sm text-slate-400">خذ نفساً عميقاً.. نحن هنا لترتيب الفوضى.</p>
+          <p className="text-sm md:text-base text-white/40 leading-relaxed max-w-[30ch]">خذ نفساً عميقاً.. نحن هنا لترتيب الفوضى.</p>
         </div>
         <div className="flex items-center gap-2">
           {/* Streak compact badge */}
@@ -327,31 +327,31 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
       >
         <motion.button
           onClick={() => setShowQuickPath(true)}
-          className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-[var(--soft-teal)] transition-colors"
+          className="flex items-center gap-4 p-5 rounded-3xl glass-premium premium-card-hover"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
         >
-          <div className="w-10 h-10 rounded-xl bg-[var(--soft-teal)]/10 flex items-center justify-center shrink-0">
-            <Zap className="w-5 h-5 text-[var(--soft-teal)]" />
+          <div className="w-12 h-12 rounded-2xl bg-teal-500/10 flex items-center justify-center shrink-0 border border-teal-500/20">
+            <Zap className="w-6 h-6 text-teal-400" />
           </div>
           <div className="text-right">
-            <p className="text-xs text-white">فك الاشتباك</p>
-            <p className="text-[10px] text-slate-400 font-normal">خطوة سريعة للإنجاز</p>
+            <p className="text-sm font-black text-white mb-1">فك الاشتباك</p>
+            <p className="text-[10px] text-white/30 font-bold tracking-wide">خطوة سريعة للإنجاز</p>
           </div>
         </motion.button>
 
         <motion.button
           onClick={() => setShowCommunity(true)}
-          className="flex items-center gap-3 p-3 rounded-2xl font-bold bg-slate-800/40 border border-slate-700/50 hover:border-teal-500/50 transition-colors"
+          className="flex items-center gap-4 p-5 rounded-3xl glass-premium premium-card-hover"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
         >
-          <div className="w-10 h-10 rounded-xl bg-teal-500/10 flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5 text-teal-400" />
+          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0 border border-indigo-500/20">
+            <Users className="w-6 h-6 text-indigo-400" />
           </div>
           <div className="text-right">
-            <p className="text-xs text-white">دوائر الدعم</p>
-            <p className="text-[10px] text-slate-400 font-normal">الناس اللي بتفهمك</p>
+            <p className="text-sm font-black text-white mb-1">دوائر الدعم</p>
+            <p className="text-[10px] text-white/30 font-bold tracking-wide">الناس اللي بتفهمك</p>
           </div>
         </motion.button>
         {/* Referral and Share maps hidden for Lost Youth to reduce clutter */}
@@ -398,7 +398,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
       {/*  Live Map Card (Radar)  */}
       <motion.div
         ref={cardRef}
-        className="relative rounded-3xl overflow-hidden cursor-pointer group"
+        className="relative rounded-[2.5rem] overflow-hidden cursor-pointer group glass-premium premium-card-hover"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.55 }}
@@ -407,7 +407,7 @@ export const DashboardScreen: FC<DashboardScreenProps> = ({
         onClick={onNavigateToMap}
       >
         {/* Background & Grid */}
-        <div className="absolute inset-0 bg-slate-900" />
+        <div className="absolute inset-0 bg-white/5 opacity-40" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(45,212,191,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,0.05)_1px,transparent_1px)] bg-[size:20px_20px]" />
 
         {/* Radar Scan Effect */}

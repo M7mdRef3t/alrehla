@@ -111,18 +111,21 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
 
   // ── Header navigation handlers ──
   const handleHeaderNavigate = useCallback((id: string) => {
+    // #1 - Special screens handled by specific props
     if (id === "profile") {
       mainContentProps.onOpenProfile?.();
       return;
     }
-    if (!isAppScreen(id)) {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn(`[AppExperienceSurface] Unknown nav target: "${id}" — ignoring.`);
-      }
+
+    // #2 - Standard AppScreen navigation
+    if (isAppScreen(id)) {
+      mainContentProps.onNavigate?.(id);
       return;
     }
-    // id is now narrowed to AppScreen — no unsafe cast needed
-    mainContentProps.onNavigate?.(id);
+
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(`[AppExperienceSurface] Unknown nav target: "${id}" — ignoring.`);
+    }
   }, [mainContentProps]);
 
   const handleHeaderLogin = useCallback(() => {

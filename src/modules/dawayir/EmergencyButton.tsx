@@ -8,7 +8,7 @@ export function EmergencyButton() {
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-rose-500 text-white font-black text-sm shadow-xl shadow-rose-500/20"
+        className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-rose-500 text-white font-black text-sm shadow-xl shadow-rose-500/20 z-[60]"
         onClick={() => {
             // Placeholder: This will trigger the "Fix Now" protocol
             alert("emergency protocol triggered");

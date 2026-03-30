@@ -356,11 +356,13 @@ function AttachmentNodePicker({
   onLink: (nodeId: string) => void;
   onSkip: () => void;
 }) {
-  const nodes = useMapState((s) => s.nodes).filter(
-    (n) => !n.isNodeArchived && !n.isDetached
+  const nodes = useMapState((s) => s.nodes);
+  const selectableNodes = useMemo(
+    () => nodes.filter((node) => !node.isNodeArchived && !node.isDetached),
+    [nodes]
   );
 
-  if (nodes.length === 0) return null;
+  if (selectableNodes.length === 0) return null;
 
   return (
     <motion.div
@@ -379,7 +381,7 @@ function AttachmentNodePicker({
         اختر الشخص الذي تصف هذه النتيجة طريقة تعلقك معه وستظهر على بطاقته.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
-        {nodes.slice(0, 5).map((n) => (
+        {selectableNodes.slice(0, 5).map((n) => (
           <motion.button
             key={n.id}
             onClick={() => onLink(n.id)}
