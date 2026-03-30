@@ -127,7 +127,19 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
     NEXT_PUBLIC_DAWAYIR_LIVE_VOICE: process.env.NEXT_PUBLIC_DAWAYIR_LIVE_VOICE
   };
   const value = candidates[key];
-  return typeof value === "string" && value.length > 0 ? value.trim() : undefined;
+  return typeof value === "string" && value.length > 0 ? normalizeEnvValue(value) : undefined;
+}
+
+function normalizeEnvValue(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  const hasMatchingQuotes =
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"));
+
+  const unquoted = hasMatchingQuotes ? trimmed.slice(1, -1).trim() : trimmed;
+  return unquoted || undefined;
 }
 
 function readViteEnvValue(key: RuntimeKey): string | undefined {
@@ -137,7 +149,7 @@ function readViteEnvValue(key: RuntimeKey): string | undefined {
     if (typeof import.meta !== "undefined" && (import.meta as any).env) {
       const viteEnv = (import.meta as any).env;
       const value = viteEnv?.[key];
-      if (typeof value === "string" && value.length > 0) return value.trim();
+      if (typeof value === "string" && value.length > 0) return normalizeEnvValue(value);
     }
   } catch {
     // ignore when import.meta.env is unavailable
@@ -157,11 +169,11 @@ function readEnv(key: RuntimeKey): string | undefined {
 
   const penv = safeProcessEnv();
   const nextVal = penv[nextKey];
-  if (typeof nextVal === "string" && nextVal.length > 0) return nextVal.trim();
+  if (typeof nextVal === "string" && nextVal.length > 0) return normalizeEnvValue(nextVal);
 
   // 3. Try direct key from process.env
   const directVal = penv[key];
-  if (typeof directVal === "string" && directVal.length > 0) return directVal.trim();
+  if (typeof directVal === "string" && directVal.length > 0) return normalizeEnvValue(directVal);
 
   return undefined;
 }
