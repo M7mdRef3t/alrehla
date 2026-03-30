@@ -2,7 +2,6 @@
   "name": "alrehla",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "engines": {
     "node": "20.x"
   },
@@ -20,7 +19,7 @@
     "test:coverage": "vitest run --coverage",
     "test:coverage:scripts": "c8 node scripts/check-arabic-encoding.mjs",
     "check:arabic-encoding": "node scripts/check-arabic-encoding.mjs",
-    "generate-icons": "node scripts/generate-icons.js",
+    "generate-icons": "node scripts/generate-icons.mjs",
     "supabase:apply-setup": "node scripts/apply-supabase-setup.mjs",
     "routing:seed-graph": "node scripts/seed-graph-from-legacy.mjs",
     "routing:seed-events": "node scripts/seed-graph-from-events.mjs",
