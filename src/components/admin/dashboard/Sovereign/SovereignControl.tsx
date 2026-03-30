@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Sparkles, Send, Zap, Wind, AlertCircle, Users, Activity, ShieldAlert, History } from "lucide-react";
 import { supabase, isSupabaseReady } from "../../../../services/supabaseClient";
-import { fetchOverviewStats, fetchAlertIncidents, fetchBroadcasts, type OverviewStats, type AlertIncident, type AdminBroadcast } from "../../../../services/adminApi";
-import { useAdminState } from "../../../../state/adminState";
+import { fetchOverviewStats, fetchAlertIncidents, fetchBroadcasts, type OverviewStats, type AlertIncident } from "../../../../services/adminApi";
+import { useAdminState, type AdminBroadcast } from "../../../../state/adminState";
 
 export const SovereignControl: FC = () => {
   const [harmonyOverride, setHarmonyOverride] = useState<number>(0.8);
@@ -22,8 +22,11 @@ export const SovereignControl: FC = () => {
     if (!isSupabaseReady || !supabase) return;
     
     const refreshData = async () => {
+      const adminClient = supabase;
+      if (!adminClient) return;
+
       const [data, stats, alerts, historicalBroadcasts] = await Promise.all([
-        supabase.from("system_settings").select("value").eq("key", "global_harmony_override").maybeSingle(),
+        adminClient.from("system_settings").select("value").eq("key", "global_harmony_override").maybeSingle(),
         fetchOverviewStats(),
         fetchAlertIncidents(),
         fetchBroadcasts()

@@ -126,6 +126,7 @@ async function enqueueOutreach(
 
   if (rows.length === 0) return;
 
+  const { error } = await supabaseAdmin.from("marketing_outreach_queue").insert(rows);
   if (error) throw error;
 }
 

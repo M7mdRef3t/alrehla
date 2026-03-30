@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { WhatsAppAutomationService, WhatsAppWebhookPayload } from "../../../../services/whatsappAutomationService";
+import { WhatsAppAutomationService, type WhatsAppWebhookPayload } from "@/services/whatsappAutomationService";
 
 export async function POST(req: Request) {
   try {
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
     // Process asynchronously so we can return 200 OK immediately to the gateway
     // This prevents timeouts if the processing (CRM sync) takes too long.
-    void WhatsAppAutomationService.handleInboundMessage(payload).catch((err) => {
+    void WhatsAppAutomationService.handleInboundMessage(payload).catch((err: unknown) => {
       console.error("[WhatsAppWebhook] Async processing error:", err);
     });
 

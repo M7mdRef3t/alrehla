@@ -15,7 +15,7 @@ export interface WhatsAppWebhookPayload {
   body: string;
   type: string;
   timestamp: string;
-  raw: any;
+  raw: unknown;
 }
 
 export class WhatsAppAutomationService {
@@ -47,7 +47,8 @@ export class WhatsAppAutomationService {
 
     // 2. Normalize and identify the lead
     const phoneResult = sanitizePhone(payload.from);
-    if (!phoneResult.normalized) {
+    const normalizedPhone = phoneResult?.normalized ?? null;
+    if (!normalizedPhone) {
       console.error("[WhatsAppService] Invalid phone number:", payload.from);
       return;
     }
@@ -67,7 +68,7 @@ export class WhatsAppAutomationService {
     try {
       const result = await upsertMarketingLead({
         ...leadPayload,
-        phoneNormalized: phoneResult.normalized,
+        phoneNormalized: normalizedPhone,
         phoneRaw: payload.from,
         source: "whatsapp_auto",
         sourceType: "whatsapp",
