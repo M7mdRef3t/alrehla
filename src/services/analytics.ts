@@ -221,6 +221,9 @@ export function trackLandingView(
     ...(params ?? {})
   });
 
+  // P0: Ensure Meta Pixel is initialized before firing ViewContent
+  ensureMetaPixel();
+
   trackEvent(AnalyticsEvents.LANDING_VIEW, safeParams);
   sendMetaEvent("ViewContent", safeParams, { bypassConsent: true });
 }
