@@ -158,9 +158,12 @@ function sendMetaEvent(
 ): void {
   const bypassConsent = options?.bypassConsent === true;
   if (!isClientRuntime() || !areMetaEventsEnabled()) return;
-  if (runtimeEnv.isDev && !areMetaEventsEnabled()) return;
-  if (!bypassConsent && !runtimeEnv.isProd && !isAnalyticsEnabled()) return; // Allow dev if enabled, but check consent if not bypass anyway
+  
+  // P0: Ensure Pixel is initialized before sending ANY event
+  ensureMetaPixel();
+
   if (!bypassConsent && !isAnalyticsEnabled()) return;
+  
   const safeParams = sanitizeAnalyticsParams(params);
   const windowRef = getWindowOrNull();
   if (windowRef?.fbq) {
@@ -170,10 +173,16 @@ function sendMetaEvent(
 
 export function initAnalytics(): void {
   if (!isClientRuntime()) return;
+  
+  // P0: Always ensure Meta Pixel is initialized for basic tracking (PageView/ViewContent)
+  // regardless of full analytics consent, as long as Meta events are enabled.
+  if (areMetaEventsEnabled()) {
+    ensureMetaPixel();
+  }
+
   if (!isUserMode || !isAnalyticsEnabled()) return;
 
   ensureGtag();
-  ensureMetaPixel();
 
   const windowRef = getWindowOrNull();
   if (!windowRef) return;
