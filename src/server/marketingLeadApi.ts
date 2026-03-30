@@ -126,9 +126,6 @@ async function enqueueOutreach(
 
   if (rows.length === 0) return;
 
-  const { error } = await supabaseAdmin
-    .from("marketing_lead_outreach_queue")
-    .upsert(rows, { onConflict: "lead_email,channel,step", ignoreDuplicates: true });
   if (error) throw error;
 }
 
@@ -142,6 +139,100 @@ function enqueueOutreachAsync(
   void enqueueOutreach(email, source, utm, leadId, phone).catch((error) => {
     console.error("[marketing/lead] enqueue_outreach_failed:", error);
   });
+}
+
+export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): Promise<{
+  lead_id: string;
+  email: string | null;
+  phone_normalized: string | null;
+  is_new: boolean;
+  conflict: boolean;
+}> {
+  if (!hasSupabaseConfig()) {
+    throw new Error("missing_supabase_config");
+  }
+
+  // SMART DEDUPLICATION LOGIC
+  // 1. Match by Phone
+  let existingId: string | null = null;
+  let conflictDetected = false;
+
+  if (input.phoneNormalized) {
+    const { data: byPhone } = await supabaseAdmin
+      .from("marketing_leads")
+      .select("id, email")
+      .eq("phone_normalized", input.phoneNormalized)
+      .maybeSingle();
+    
+    if (byPhone) {
+      existingId = byPhone.id;
+      // Check if this phone record has a different email than the input
+      if (input.email && byPhone.email && byPhone.email !== input.email) {
+        conflictDetected = true;
+      }
+    }
+  }
+
+  // 2. Match by Email (if not matched by phone)
+  if (!existingId && input.email) {
+    const { data: byEmail } = await supabaseAdmin
+      .from("marketing_leads")
+      .select("id, phone_normalized")
+      .eq("email", input.email)
+      .maybeSingle();
+    
+    if (byEmail) {
+      existingId = byEmail.id;
+      // Check if this email record has a different phone than the input
+      if (input.phoneNormalized && byEmail.phone_normalized && byEmail.phone_normalized !== input.phoneNormalized) {
+        conflictDetected = true;
+      }
+    }
+  }
+
+  input.mergeConflict = conflictDetected;
+  const row = toLeadRow(input);
+
+  let storedLeadId: string | null = null;
+  let storedEmail: string | null = null;
+  let isNew = !existingId;
+
+  if (existingId) {
+    // Update existing record
+    const { data, error } = await supabaseAdmin
+      .from("marketing_leads")
+      .update(row)
+      .eq("id", existingId)
+      .select("email, lead_id")
+      .single();
+    
+    if (error) throw error;
+    storedLeadId = data.lead_id;
+    storedEmail = data.email;
+  } else {
+    // Insert new record
+    const { data, error } = await supabaseAdmin
+      .from("marketing_leads")
+      .insert(row)
+      .select("email, lead_id")
+      .single();
+    
+    if (error) throw error;
+    storedLeadId = data.lead_id;
+    storedEmail = data.email;
+  }
+
+  if (storedLeadId) {
+    enqueueOutreachAsync(storedEmail || null, input.source, input.utm, storedLeadId, input.phoneNormalized);
+  }
+
+  return {
+    lead_id: storedLeadId!,
+    email: storedEmail,
+    phone_normalized: input.phoneNormalized || null,
+    is_new: isNew,
+    conflict: conflictDetected
+  };
 }
 
 export async function handleMarketingLeadGet(req: Request) {
@@ -193,82 +284,16 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
     }
 
     if (hasSupabaseConfig()) {
-      // SMART DEDUPLICATION LOGIC
-      // 1. Match by Phone
-      let existingLeadId: string | null = null;
-      let conflictDetected = false;
-
-      if (input.phoneNormalized) {
-        const { data: byPhone } = await supabaseAdmin
-          .from("marketing_leads")
-          .select("id, lead_id, email, phone_normalized")
-          .eq("phone_normalized", input.phoneNormalized)
-          .maybeSingle();
-        
-        if (byPhone) {
-          existingLeadId = byPhone.id;
-          // Check if this phone record has a different email than the input
-          if (input.email && byPhone.email && byPhone.email !== input.email) {
-            conflictDetected = true;
-          }
-        }
-      }
-
-      // 2. Match by Email (if not matched by phone)
-      if (!existingLeadId && input.email) {
-        const { data: byEmail } = await supabaseAdmin
-          .from("marketing_leads")
-          .select("id, lead_id, phone_normalized")
-          .eq("email", input.email)
-          .maybeSingle();
-        
-        if (byEmail) {
-          existingLeadId = byEmail.id;
-          // Check if this email record has a different phone than the input
-          if (input.phoneNormalized && byEmail.phone_normalized && byEmail.phone_normalized !== input.phoneNormalized) {
-            conflictDetected = true;
-          }
-        }
-      }
-
-      input.mergeConflict = conflictDetected;
-      const row = toLeadRow(input);
-
-      let storedLeadId: string | null = null;
-      let storedEmail: string | null = null;
-
-      if (existingLeadId) {
-        // Update existing record
-        const { data, error } = await supabaseAdmin
-          .from("marketing_leads")
-          .update(row)
-          .eq("id", existingLeadId)
-          .select("email, lead_id")
-          .single();
-        
-        if (error) throw error;
-        storedLeadId = data.lead_id;
-        storedEmail = data.email;
-      } else {
-        // Insert new record
-        const { data, error } = await supabaseAdmin
-          .from("marketing_leads")
-          .insert(row)
-          .select("email, lead_id")
-          .single();
-        
-        if (error) throw error;
-        storedLeadId = data.lead_id;
-        storedEmail = data.email;
-      }
-
-      if (storedLeadId) {
-        enqueueOutreachAsync(storedEmail || null, input.source, input.utm, storedLeadId, input.phoneNormalized);
-      }
-
+      const result = await upsertMarketingLead(input);
       return NextResponse.json({
         ok: true,
-        lead: { email: storedEmail, phone: input.phoneNormalized, source: input.source, lead_id: storedLeadId, conflict: conflictDetected }
+        lead: { 
+          email: result.email, 
+          phone: result.phone_normalized, 
+          source: input.source, 
+          lead_id: result.lead_id, 
+          conflict: result.conflict 
+        }
       });
     }
 
@@ -322,59 +347,19 @@ export async function handleMarketingLeadImportPost(req: Request) {
     // Process each lead with the same Phone-First logic as handleMarketingLeadPost
     for (const input of deduped) {
       try {
-        let existingId: string | null = null;
-        let conflict = false;
+        const stored = await upsertMarketingLead(input);
+        
+        leadsWithIds.push({
+          email: stored.email,
+          phone: stored.phone_normalized,
+          source: input.source,
+          lead_id: stored.lead_id
+        });
 
-        // 1. Phone Lookup
-        if (input.phoneNormalized) {
-          const { data } = await supabaseAdmin
-            .from("marketing_leads")
-            .select("id, email")
-            .eq("phone_normalized", input.phoneNormalized)
-            .maybeSingle();
-          if (data) {
-            existingId = data.id;
-            if (input.email && data.email && data.email !== input.email) conflict = true;
-          }
-        }
-
-        // 2. Email Lookup (if no phone match)
-        if (!existingId && input.email) {
-          const { data } = await supabaseAdmin
-            .from("marketing_leads")
-            .select("id, phone_normalized")
-            .eq("email", input.email)
-            .maybeSingle();
-          if (data) {
-            existingId = data.id;
-            if (input.phoneNormalized && data.phone_normalized && data.phone_normalized !== input.phoneNormalized) conflict = true;
-          }
-        }
-
-        input.mergeConflict = conflict;
-        const row = toLeadRow(input);
-        let stored: { email: string | null; lead_id: string } | null = null;
-
-        if (existingId) {
-          const { data, error } = await supabaseAdmin.from("marketing_leads").update(row).eq("id", existingId).select("email, lead_id").single();
-          if (error) throw error;
-          stored = data;
-          results.updated++;
-        } else {
-          const { data, error } = await supabaseAdmin.from("marketing_leads").insert(row).select("email, lead_id").single();
-          if (error) throw error;
-          stored = data;
+        if (stored.is_new) {
           results.imported++;
-        }
-
-        if (stored) {
-          leadsWithIds.push({
-            email: stored.email,
-            phone: input.phoneNormalized,
-            source: input.source,
-            lead_id: stored.lead_id
-          });
-          enqueueOutreachAsync(stored.email, input.source, input.utm, stored.lead_id, input.phoneNormalized);
+        } else {
+          results.updated++;
         }
       } catch (err) {
         console.error("[marketing/lead/import] row processing failed:", err);

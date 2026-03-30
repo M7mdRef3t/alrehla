@@ -68,6 +68,7 @@ interface AdminState {
   missions: AdminMission[];
   broadcasts: AdminBroadcast[];
   pulseCopyOverrides: PulseCopyOverrides;
+  hasSovereignAlert: boolean;
   setAdminAccess: (value: boolean) => void;
   toggleContentEditing: (value: boolean) => void;
   setAdminCode: (value: string | null) => void;
@@ -88,6 +89,7 @@ interface AdminState {
   setBroadcasts: (broadcasts: AdminBroadcast[]) => void;
   removeBroadcast: (id: string) => void;
   setPulseCopyOverrides: (overrides: PulseCopyOverrides) => void;
+  setHasSovereignAlert: (value: boolean) => void;
 }
 
 const DEFAULT_PROMPT =
@@ -120,6 +122,7 @@ export const useAdminState = create<AdminState>()(
       missions: [],
       broadcasts: [],
       pulseCopyOverrides: { energy: "auto", mood: "auto", focus: "auto" },
+      hasSovereignAlert: false,
       setAdminAccess: (value) => set({ adminAccess: value }),
       toggleContentEditing: (value) => set({ isContentEditingEnabled: value }),
       setAdminCode: (value) => set({ adminCode: value }),
@@ -158,7 +161,8 @@ export const useAdminState = create<AdminState>()(
       setBroadcasts: (broadcasts) => set({ broadcasts }),
       removeBroadcast: (id) =>
         set((state) => ({ broadcasts: state.broadcasts.filter((b) => b.id !== id) })),
-      setPulseCopyOverrides: (overrides) => set({ pulseCopyOverrides: overrides })
+      setPulseCopyOverrides: (overrides) => set({ pulseCopyOverrides: overrides }),
+      setHasSovereignAlert: (value) => set({ hasSovereignAlert: value })
     }),
     {
       name: "dawayir-admin-state"

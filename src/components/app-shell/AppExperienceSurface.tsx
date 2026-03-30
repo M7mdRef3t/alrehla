@@ -252,7 +252,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                             <button onClick={onOpenConsciousnessArchive} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-teal-400 border border-teal-500/20 rounded-xl hover:bg-teal-500/10 text-right">Archive</button>
                             <button onClick={onOpenAmbientReality} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-rose-400 border border-rose-500/20 rounded-xl hover:bg-rose-500/10 text-right">Ambient</button>
                             <button onClick={onOpenTimeCapsuleVault} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-amber-400 border border-amber-500/20 rounded-xl hover:bg-amber-500/10 text-right">Vault</button>
-                            <button onClick={onOpenOracleDashboard} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-blue-400 border border-blue-500/20 rounded-xl hover:bg-blue-500/10 text-right">Oracle</button>
+                            <button onClick={onOpenOracleDashboard} className="px-3 py-2 text-[9px] font-black uppercase tracking-widest text-blue-400 border border-blue-500/20 rounded-xl hover:bg-blue-500/10 text-right">رادار السيادة</button>
                           </motion.div>
                         )}
                       </AnimatePresence>

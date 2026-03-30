@@ -24,6 +24,8 @@ const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
 function shouldBootIntoFullApp(): boolean {
   if (typeof window === "undefined") return true;
   const { pathname, hash, search } = window.location;
+  const hasBootAction = Boolean(window.sessionStorage.getItem(APP_BOOT_ACTION_KEY));
+  if (hasBootAction) return true;
   if (pathname !== "/") return true;
   if (hash && hash !== "#landing") return true;
   if (search) return true;

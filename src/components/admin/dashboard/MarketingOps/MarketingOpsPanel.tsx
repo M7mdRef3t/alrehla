@@ -20,6 +20,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { ManualLeadEntry } from "./ManualLeadEntry";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -70,6 +71,9 @@ async function fetchStats(): Promise<OpsStats> {
   const res = await fetch("/api/admin/marketing-ops", {
     headers: { authorization: `Bearer ${SECRET}` },
   });
+  if (!res.ok) {
+    throw new Error(`marketing_ops_stats_failed:${res.status}`);
+  }
   return res.json() as Promise<OpsStats>;
 }
 
@@ -79,6 +83,9 @@ async function postAction(action: string, extra?: Record<string, unknown>): Prom
     headers: { "content-type": "application/json", authorization: `Bearer ${SECRET}` },
     body: JSON.stringify({ action, ...extra }),
   });
+  if (!res.ok) {
+    throw new Error(`marketing_ops_action_failed:${res.status}`);
+  }
   return res.json() as Promise<{ ok: boolean; result?: unknown }>;
 }
 
@@ -334,6 +341,15 @@ export function MarketingOpsPanel() {
           تحديث
         </button>
       </div>
+
+      {/* Manual Lead Entry */}
+      <ManualLeadEntry 
+        onSuccess={(msg) => {
+          showToast(msg, true);
+          void load();
+        }} 
+        onError={(msg) => showToast(msg, false)} 
+      />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

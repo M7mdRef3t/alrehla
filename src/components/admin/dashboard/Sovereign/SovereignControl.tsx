@@ -1,27 +1,52 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Sparkles, Send, Zap, Wind, AlertCircle } from "lucide-react";
+import { Shield, Sparkles, Send, Zap, Wind, AlertCircle, Users, Activity, ShieldAlert, History } from "lucide-react";
 import { supabase, isSupabaseReady } from "../../../../services/supabaseClient";
+import { fetchOverviewStats, fetchAlertIncidents, fetchBroadcasts, type OverviewStats, type AlertIncident, type AdminBroadcast } from "../../../../services/adminApi";
+import { useAdminState } from "../../../../state/adminState";
 
 export const SovereignControl: FC = () => {
   const [harmonyOverride, setHarmonyOverride] = useState<number>(0.8);
   const [isSaving, setIsSaving] = useState(false);
   const [broadcastMessage, setBroadcastMessage] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
+  
+  // Sanctuary Pulse State
+  const [liveStats, setLiveStats] = useState<OverviewStats | null>(null);
+  const [incidents, setIncidents] = useState<AlertIncident[] | null>(null);
+  const [history, setHistory] = useState<AdminBroadcast[]>([]);
+  const [isLoadingPulse, setIsLoadingPulse] = useState(true);
 
   useEffect(() => {
     if (!isSupabaseReady || !supabase) return;
-    void supabase
-      .from("system_settings")
-      .select("value")
-      .eq("key", "global_harmony_override")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data && typeof data.value === "number") {
-          setHarmonyOverride(data.value);
-        }
-      });
+    
+    const refreshData = async () => {
+      const [data, stats, alerts, historicalBroadcasts] = await Promise.all([
+        supabase.from("system_settings").select("value").eq("key", "global_harmony_override").maybeSingle(),
+        fetchOverviewStats(),
+        fetchAlertIncidents(),
+        fetchBroadcasts()
+      ]);
+
+      if (data?.data && typeof data.data.value === "number") {
+        setHarmonyOverride(data.data.value);
+      }
+      setLiveStats(stats);
+      setIncidents(alerts);
+      setHistory(historicalBroadcasts ?? []);
+      setIsLoadingPulse(false);
+
+      // Update global alert state for Sidebar pulse
+      const hasCriticalAlert = !!alerts?.some(i => i.severity === 'critical' || i.severity === 'high');
+      if (useAdminState.getState().hasSovereignAlert !== hasCriticalAlert) {
+        useAdminState.getState().setHasSovereignAlert(hasCriticalAlert);
+      }
+    };
+
+    refreshData();
+    const interval = setInterval(refreshData, 60_000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleUpdateHarmony = async (val: number) => {
@@ -55,12 +80,81 @@ export const SovereignControl: FC = () => {
   return (
     <div className="space-y-8 max-w-4xl">
       <header className="flex flex-col gap-2">
-        <div className="flex items-center gap-3 text-teal-400">
+        <div className="flex items-center gap-3 text-amber-500">
           <Shield className="w-6 h-6" />
-          <h1 className="text-3xl font-black uppercase tracking-tighter">Sovereign Control</h1>
+          <h1 className="text-3xl font-black uppercase tracking-tighter">مركز السيادة الإدراكية</h1>
         </div>
         <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">تحكم في طاقة الملاذ ورسائل الروح</p>
       </header>
+
+      {/* Sanctuary Pulse - Real-time Snapshot */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-slate-900/40 border border-white/5 p-5 rounded-2xl backdrop-blur-xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Users className="w-12 h-12 text-teal-400" />
+          </div>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">أرواح متصلة الآن</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black text-white tabular-nums">
+              {isLoadingPulse ? "..." : (liveStats?.activeNow ?? 0).toLocaleString("ar-EG")}
+            </span>
+            <span className="text-[10px] text-teal-500 font-bold animate-pulse">LIVE</span>
+          </div>
+        </div>
+
+        <div className="bg-slate-900/40 border border-white/5 p-5 rounded-2xl backdrop-blur-xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Activity className="w-12 h-12 text-amber-400" />
+          </div>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">مؤشر الصفاء الجماعي</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black text-white tabular-nums">
+              {isLoadingPulse ? "..." : (liveStats?.avgMood ?? 0).toFixed(1)}
+            </span>
+            <span className="text-[10px] text-amber-500 font-bold">HARMONY</span>
+          </div>
+        </div>
+
+        <div className={`bg-slate-900/40 border p-5 rounded-2xl backdrop-blur-xl relative overflow-hidden group transition-colors ${incidents && incidents.length > 0 ? "border-rose-500/30 bg-rose-500/5" : "border-white/5"}`}>
+          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+            <ShieldAlert className={`w-12 h-12 ${incidents && incidents.length > 0 ? "text-rose-400" : "text-emerald-400"}`} />
+          </div>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">حالة استقرار الملاذ</p>
+          <div className="flex items-baseline gap-2">
+            <span className={`text-xl font-black uppercase ${incidents && incidents.length > 0 ? "text-rose-400" : "text-emerald-400"}`}>
+              {isLoadingPulse ? "..." : (incidents && incidents.length > 0 ? "تنبيه حرج" : "مستقر جداً")}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Sovereign Emergency Alert */}
+      {incidents && incidents.some(i => i.severity === 'critical' || i.severity === 'high') && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-amber-500/10 border-2 border-amber-500/30 p-6 rounded-3xl flex flex-col md:flex-row items-center gap-6 shadow-[0_0_30px_rgba(245,158,11,0.1)]"
+        >
+          <div className="bg-amber-500/20 p-4 rounded-2xl">
+            <ShieldAlert className="w-8 h-8 text-amber-500" />
+          </div>
+          <div className="flex-1 text-center md:text-right space-y-1">
+            <h3 className="text-amber-500 font-black uppercase tracking-tight">نداء عاجل للسيادة</h3>
+            <p className="text-amber-200/70 text-sm">تم رصد ضجيج معرفي مرتفع أو خلل في بعض المسارات. ننصح ببث "نداء الحاكم" لتهدئة الأرواح.</p>
+          </div>
+          <button 
+            onClick={() => {
+              const el = document.getElementById('broadcast-area');
+              el?.scrollIntoView({ behavior: 'smooth' });
+              const area = el?.querySelector('textarea');
+              area?.focus();
+            }}
+            className="px-6 py-3 bg-amber-500 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-amber-400 transition-colors"
+          >
+            استجابة فورية
+          </button>
+        </motion.div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Harmony Control */}
@@ -99,7 +193,7 @@ export const SovereignControl: FC = () => {
         </section>
 
         {/* Global Broadcast */}
-        <section className="bg-slate-900/50 border border-white/5 p-6 rounded-3xl space-y-6 backdrop-blur-xl">
+        <section id="broadcast-area" className="bg-slate-900/50 border border-white/5 p-6 rounded-3xl space-y-6 backdrop-blur-xl">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-white font-bold">
               <Sparkles className="w-5 h-5 text-purple-400" />
@@ -139,8 +233,31 @@ export const SovereignControl: FC = () => {
         </section>
       </div>
 
-      <footer className="p-6 bg-rose-500/5 border border-rose-500/10 rounded-3xl">
-        <p className="text-xs text-rose-400/80 leading-relaxed text-center font-bold italic">
+      {/* Sovereign Chronicle (سجل السيادة) */}
+      <section className="bg-slate-900/30 border border-white/5 rounded-3xl overflow-hidden backdrop-blur-sm">
+        <div className="flex items-center gap-2 p-6 border-b border-white/5 bg-white/5">
+          <History className="w-5 h-5 text-slate-400" />
+          <h2 className="text-sm font-black text-white uppercase tracking-widest">سجل السيادة (آخر النداءات)</h2>
+        </div>
+        <div className="divide-y divide-white/5 max-h-[300px] overflow-y-auto custom-scrollbar">
+          {history.length > 0 ? (
+            history.slice(0, 5).map((item) => (
+              <div key={item.id} className="p-5 hover:bg-white/5 transition-colors group">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest">{item.title || "نداء السيادة"}</span>
+                  <span className="text-[10px] text-slate-600 font-mono">{new Date(item.createdAt).toLocaleString("ar-EG")}</span>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed group-hover:text-slate-200 transition-colors">{item.body}</p>
+              </div>
+            ))
+          ) : (
+            <div className="p-10 text-center text-slate-600 text-xs italic">لا توجد سجلات تاريخية بعد.</div>
+          )}
+        </div>
+      </section>
+
+      <footer className="p-6 bg-amber-500/5 border border-amber-500/10 rounded-3xl">
+        <p className="text-xs text-amber-500/80 leading-relaxed text-center font-bold italic">
           "تذكر، هذه السلطة مصممة لنشر السكينة، استخدم نداء الحاكم بحكمة لتعزيز الرحلة المشتركة."
         </p>
       </footer>

@@ -380,21 +380,27 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenJourneyTimeline()}
-                className="w-full flex items-center gap-3 rounded-xl bg-amber-50/80 dark:bg-amber-900/20 text-amber-700 dark:text-amber-200 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-600 hover:bg-amber-100/70 dark:hover:bg-amber-900/30 transition-all text-right shrink-0 whitespace-nowrap"
-                title="سجل العمليات"
-              >
-                <ScrollText className="w-5 h-5 shrink-0" />
-                سجل العمليات
-              </button>
-            )}
-            <button
+                className="w-full flex items-center gap-3 rounded-xl bg-amber-50/80 dark:bg-amber-900/20 text-amber-700 dark:text-amber-200 border border-amber-200 dark:border-amber-700 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-600 hover:bg-amber-100/70 dark:hover:bg-amber-900/30 transition-all text-right s            <button
               type="button"
               onClick={openAdminDashboard}
-              className="w-full flex items-center gap-3 rounded-xl bg-slate-50/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap"
-              title="لوحة التحكم"
+              className="w-full flex items-center gap-3 rounded-xl bg-slate-50/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap group relative"
+              title={isOwnerWatcher ? "مركز السيادة الإدراكية" : "لوحة التحكم"}
             >
-              <ShieldCheck className="w-5 h-5 shrink-0 text-teal-600" />
-              لوحة التحكم
+              <ShieldCheck className={`w-5 h-5 shrink-0 ${isOwnerWatcher ? "text-amber-500" : "text-teal-600"}`} />
+              <span className="flex flex-col items-start leading-tight">
+                <span>{isOwnerWatcher ? "مركز السيادة الإدراكية" : "لوحة التحكم"}</span>
+                {isOwnerWatcher && <span className="text-[9px] opacity-50 font-bold uppercase tracking-widest text-amber-600">Sovereign Focus</span>}
+              </span>
+              {hasSovereignAlert && isOwnerWatcher && (
+                <span className="absolute top-2 right-2 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>
+                </span>
+              )}
+            </button>
+n>{isOwnerWatcher ? "مركز السيادة الإدراكية" : "لوحة التحكم"}</span>
+                {isOwnerWatcher && <span className="text-[9px] opacity-50 font-bold uppercase tracking-widest text-amber-600">Sovereign Focus</span>}
+              </span>
             </button>
             <button
               type="button"
@@ -892,23 +898,6 @@ export const AppSidebar: FC<AppSidebarProps> = ({
 
             <button
               type="button"
-              onClick={() => {
-                soundManager.playClick();
-                setShowInnerCourt(true);
-              }}
-              onMouseEnter={() => soundManager.playHover()}
-              className="w-full flex items-center gap-3 rounded-xl bg-slate-800 text-amber-500 border border-slate-700 px-4 py-3 text-sm font-semibold hover:border-amber-500 hover:bg-slate-900 transition-all text-right shrink-0 whitespace-nowrap group"
-              title="محكمة الضمير"
-            >
-              <Scale className="w-5 h-5 shrink-0 group-hover:text-amber-500 transition-colors" />
-              <span className="flex flex-col items-start leading-tight">
-                <span>محكمة الضمير</span>
-                <span className="text-[10px] opacity-60 font-normal">الحكم والفصل</span>
-              </span>
-            </button>
-
-            <button
-              type="button"
               onClick={() => setShowShieldSelector(true)}
               className="w-full flex items-center gap-3 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-4 py-3 text-sm font-semibold hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-right shrink-0 whitespace-nowrap"
               title="تفعيل الدروع — صد الهجوم"
@@ -920,16 +909,6 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               الجبهة الداخلية (Stealth)
             </div>
 
-            <button
-              type="button"
-              title="محكمة الضمير"
-            >
-              <Scale className="w-5 h-5 shrink-0 group-hover:text-amber-500 transition-colors" />
-              <span className="flex flex-col items-start leading-tight">
-                <span>محكمة الضمير</span>
-                <span className="text-[10px] opacity-60 font-normal">الحكم والفصل</span>
-              </span>
-            </button>
 
             <button
               type="button"
@@ -1075,28 +1054,28 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right"
                   >
                     <Layers className="w-6 h-6 shrink-0" />
-                    <span>الرحلة الموجهة</span>
-                  </button>
-                )}
-                <button
+                    <span>الرحل�                 <button
                   type="button"
                   onClick={() => {
-                    onOpenBaseline();
+                    openAdminDashboard();
                     handleClose();
                   }}
-                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/40 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right"
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right relative"
+                  title={isOwnerWatcher ? "مركز السيادة الإدراكية" : "لوحة التحكم"}
                 >
-                  <ClipboardList className="w-6 h-6 shrink-0" />
-                  <span>رصد الحالة</span>
+                  <ShieldCheck className={`w-6 h-6 shrink-0 ${isOwnerWatcher ? "text-amber-500" : "text-teal-600"}`} />
+                  <span className="flex flex-col items-start leading-tight">
+                    <span>{isOwnerWatcher ? "مركز السيادة الإدراكية" : "لوحة التحكم"}</span>
+                    {isOwnerWatcher && <span className="text-[9px] opacity-50 font-bold uppercase tracking-widest text-amber-600">Sovereign Focus</span>}
+                  </span>
+                  {hasSovereignAlert && isOwnerWatcher && (
+                    <span className="absolute top-2 right-2 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>
+                    </span>
+                  )}
                 </button>
-                {canShowJourneyToolsEntry && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onOpenJourneyTools?.();
-                      handleClose();
-                    }}
-                    className="w-full flex items-center gap-3 rounded-xl bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100/70 dark:hover:bg-teal-900/40 transition-all text-right"
+00 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100/70 dark:hover:bg-teal-900/40 transition-all text-right"
                   >
                     <Compass className="w-6 h-6 shrink-0" />
                     <span>أدوات الرحلة</span>
@@ -1109,10 +1088,13 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                     handleClose();
                   }}
                   className="w-full flex items-center gap-3 rounded-xl bg-slate-50/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right"
-                  title="لوحة التحكم"
+                  title={isOwnerWatcher ? "مركز السيادة الإدراكية" : "لوحة التحكم"}
                 >
-                  <ShieldCheck className="w-6 h-6 shrink-0 text-teal-600" />
-                  <span>لوحة التحكم</span>
+                  <ShieldCheck className={`w-6 h-6 shrink-0 ${isOwnerWatcher ? "text-amber-500" : "text-teal-600"}`} />
+                  <span className="flex flex-col items-start leading-tight">
+                    <span>{isOwnerWatcher ? "مركز السيادة الإدراكية" : "لوحة التحكم"}</span>
+                    {isOwnerWatcher && <span className="text-[9px] opacity-50 font-bold uppercase tracking-widest text-amber-600">Sovereign Focus</span>}
+                  </span>
                 </button>
                 <button
                   type="button"

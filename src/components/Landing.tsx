@@ -371,7 +371,7 @@ export const Landing: FC<LandingProps> = ({
         {/* ── Immersive Atmospheric Visuals ── */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           {/* Main Orbit Background */}
-          <div className="orbit-atmospheric scale-[1.5] sm:scale-[2] contrast-[1.05]">
+          <div className="orbit-atmospheric scale-[1.15] sm:scale-[1.45] contrast-[1.02] opacity-90">
             <OrbitViz reduceMotion={reduceMotion} mirrorName={mirrorName} />
           </div>
           {/* Subtle Glows */}
@@ -387,70 +387,66 @@ export const Landing: FC<LandingProps> = ({
            variants={stagger}
            initial="hidden"
            animate="visible"
-           className="relative z-10 w-full max-w-5xl flex flex-col items-center text-center px-6 pt-16 sm:pt-20"
+         className="relative z-10 w-full max-w-5xl flex flex-col items-center text-center px-6 pt-14 sm:pt-18"
         >
           {/* Platform Badge — real pulseCount */}
           <motion.div
             variants={fadeUp}
-            className="inline-flex items-center gap-2 mb-8 glass-button text-[10px] sm:text-[11px] tracking-[0.25em] uppercase py-2 px-5 backdrop-blur-3xl"
+            className="inline-flex items-center gap-2 mb-6 glass-button text-[10px] sm:text-[11px] tracking-[0.25em] uppercase py-2 px-5 backdrop-blur-3xl"
             style={{ borderColor: "var(--glass-border)" }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.5)] animate-pulse" />
             {pulseCount > 0
-              ? `دلوقتي ${pulseCount.toLocaleString("ar-EG")}+ شخص شايفوا نفسهم بوضوح`
-              : "انضم لآلاف ماشيين في رحلتهم"}
+              ? `دلوقتي ${pulseCount.toLocaleString("ar-EG")}+ شخص شايفين نفسهم بوضوح`
+              : "انضم لناس بدأت تشوف الصورة كاملة"}
           </motion.div>
 
           {/* Headline */}
           <motion.h1
             variants={fadeUp}
-            className="cosmic-headline text-[1.85rem] sm:text-[2.6rem] lg:text-[3.3rem] font-bold mb-4 sm:mb-5"
-            style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)", lineHeight: 1.25 }}
+            className="cosmic-headline text-[1.95rem] sm:text-[2.9rem] lg:text-[3.7rem] font-bold mb-4 sm:mb-5"
+            style={{ fontFamily: "var(--font-display)", color: "var(--text-primary)", lineHeight: 1.08 }}
           >
-            <span className="block opacity-90">فيه حاجة بتسرق طاقتك.</span>
+            <span className="block opacity-90">{landingCopy.titleLine1}</span>
             <span className="block mt-2 sm:mt-3">
               <span className="text-transparent bg-clip-text" style={{ backgroundImage: "linear-gradient(135deg, #14b8a6, #06b6d4, #6366f1)" }}>
                 <TypingWord />
               </span>
-              <span className="opacity-85"> — وانت عارف مين.</span>
+              <span className="opacity-85"> {landingCopy.titleLine2}</span>
             </span>
           </motion.h1>
 
           {/* Subtitle */}
           <motion.p
             variants={fadeUp}
-            className="text-base sm:text-lg leading-relaxed mb-7 sm:mb-8 max-w-[42ch] font-normal"
+            className="text-base sm:text-lg leading-relaxed mb-6 sm:mb-7 max-w-[42ch] font-normal"
             style={{ color: "var(--text-secondary)", opacity: 0.8 }}
           >
             {landingCopy.subtitle}
           </motion.p>
 
-          {/* 3 Problem Pills — above the fold */}
+          {/* Trust + clarity row */}
           <motion.div
             variants={fadeUp}
-            className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8 sm:mb-10"
+            className="mb-8 sm:mb-10 flex flex-wrap items-center justify-center gap-2.5"
           >
-            {landingCopy.problemSection.points.map((point, i) => (
+            {landingCopy.trustPoints.slice(0, 3).map((point, i) => (
               <div
-                key={i}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-full text-[11px] sm:text-xs font-semibold"
+                key={point}
+                className="inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-[11px] sm:text-xs font-semibold"
                 style={{
-                  background: [
-                    "rgba(239,68,68,0.07)",
-                    "rgba(245,158,11,0.07)",
-                    "rgba(99,102,241,0.07)"
-                  ][i],
-                  border: `1px solid ${["rgba(239,68,68,0.2)","rgba(245,158,11,0.2)","rgba(99,102,241,0.2)"][i]}`,
-                  color: ["#FCA5A5","#FCD34D","#A5B4FC"][i]
+                  background: "rgba(255,255,255,0.04)",
+                  borderColor: ["rgba(20,184,166,0.22)", "rgba(124,58,237,0.22)", "rgba(59,130,246,0.22)"][i],
+                  color: ["#99f6e4", "#ddd6fe", "#bfdbfe"][i],
                 }}
               >
-                <span>{["😶","💸","🤯"][i]}</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-current" />
                 {point}
               </div>
             ))}
           </motion.div>
 
-          {/* CTA — full width, no input friction */}
+          {/* CTA — single dominant action */}
           <motion.div
             variants={fadeUp}
             className="w-full max-w-xl mx-auto"
@@ -458,7 +454,7 @@ export const Landing: FC<LandingProps> = ({
             <motion.button
               type="button"
               onClick={handleStart}
-              whileHover={{ scale: 1.03, boxShadow: "0 20px 55px rgba(20,184,166,0.45)" }}
+              whileHover={{ scale: 1.02, boxShadow: "0 20px 55px rgba(20,184,166,0.40)" }}
               whileTap={{ scale: 0.97 }}
               className="group relative w-full flex items-center justify-center gap-3 px-8 py-5 rounded-3xl overflow-hidden isolate"
               style={{
@@ -472,7 +468,7 @@ export const Landing: FC<LandingProps> = ({
               />
               <Zap className="relative w-5 h-5 text-white" />
                 <span className="relative text-lg sm:text-xl font-black text-white" style={{ fontFamily: "var(--font-display)" }}>
-                شوف نفسك بوضوح — مجاناً
+                {landingCopy.ctaJourney}
               </span>
               <ArrowLeft className="relative w-5 h-5 text-white transition-transform duration-300 group-hover:-translate-x-1" />
             </motion.button>
@@ -517,7 +513,7 @@ export const Landing: FC<LandingProps> = ({
         </motion.div>
 
         {/* Scroll hint */}
-        <div className="absolute bottom-10 left-0 right-0 flex flex-col items-center pointer-events-none z-20">
+        <div className="absolute bottom-8 left-0 right-0 flex flex-col items-center pointer-events-none z-20">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.4 }}
