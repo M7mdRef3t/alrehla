@@ -103,6 +103,7 @@ export async function POST(req: NextRequest) {
     .eq("device_token", finalDeviceToken)
     .maybeSingle();
   if (existingError) {
+    console.error("[user-state] Failed to read existing data:", existingError.message);
     return NextResponse.json({ error: "Failed to read existing data" }, { status: 500 });
   }
 
@@ -111,16 +112,34 @@ export async function POST(req: NextRequest) {
     ...updates
   };
 
-  const { error } = await admin.from(TABLE).upsert({
+  // Build the upsert payload — only include owner_id when we actually have one
+  // to avoid violating the unique index on owner_id.
+  const payload: Record<string, unknown> = {
     device_token: finalDeviceToken,
-    owner_id: ownerId ?? null,
     data: merged,
     updated_at: new Date().toISOString()
-  });
+  };
+  if (ownerId) {
+    payload.owner_id = ownerId;
+  }
+
+  const { error } = await admin.from(TABLE).upsert(payload, { onConflict: "device_token" });
   if (error) {
+    // If the error is a unique constraint violation on owner_id, try a plain update instead.
+    if (error.code === "23505" && error.message?.includes("owner")) {
+      const { error: updateError } = await admin
+        .from(TABLE)
+        .update({ data: merged, updated_at: new Date().toISOString() })
+        .eq("device_token", finalDeviceToken);
+      if (updateError) {
+        console.error("[user-state] Fallback update failed:", updateError.message);
+        return NextResponse.json({ error: "Failed to save user state" }, { status: 500 });
+      }
+      return NextResponse.json({ ok: true }, { status: 200 });
+    }
+    console.error("[user-state] Upsert failed:", error.message, error.code);
     return NextResponse.json({ error: "Failed to save user state" }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true }, { status: 200 });
 }
-
