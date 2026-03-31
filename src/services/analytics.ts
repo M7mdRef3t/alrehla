@@ -122,10 +122,14 @@ function ensureMetaPixel(): void {
     // fbevents.js checks for fbq existence on load; if it finds a non-standard stub
     // it emits the "conflicting versions" warning.
     const n = ((...args: unknown[]) => {
-      n.callMethod ? n.callMethod(...args) : n.queue.push(args);
+      if (n.callMethod) {
+        n.callMethod(...args);
+      } else {
+        (n.queue ??= []).push(args);
+      }
     }) as FbqFn;
     n.push = n as unknown as (...args: unknown[]) => number;
-    n.loaded = !0;
+    n.loaded = true;
     n.version = "2.0";
     n.queue = [];
     windowRef.fbq = n;
