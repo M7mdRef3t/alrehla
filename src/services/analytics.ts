@@ -128,7 +128,8 @@ function ensureMetaPixel(): void {
     }) as FbqFn;
     fbq.queue = [];
     fbq.loaded = true;
-    fbq.version = "2.0";
+    // NOTE: Do NOT set fbq.version here — fbevents.js sets its own version on load.
+    // Setting version in the stub causes the "conflicting versions" warning.
     windowRef.fbq = fbq;
   }
 

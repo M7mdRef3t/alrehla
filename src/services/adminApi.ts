@@ -37,7 +37,8 @@ type SystemSettingKey =
 const SETTINGS_TABLE = "system_settings";
 const ADMIN_API_BASE = runtimeEnv.adminApiBase;
 const ADMIN_API_PATH = `${ADMIN_API_BASE}/api/admin`;
-const adminApiBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 20_000 });
+// cooldownMs: 5 min — after a 401/403 auth failure, stop polling for 5 minutes.
+const adminApiBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 300_000 });
 const securityWebhookBreaker = new CircuitBreaker({ failureThreshold: 2, cooldownMs: 60_000 });
 const HOBBY_REMAP_BASES = new Set([
   "daily-report",

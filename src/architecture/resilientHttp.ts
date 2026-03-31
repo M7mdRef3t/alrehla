@@ -11,6 +11,14 @@ function shouldRetryStatus(status: number): boolean {
   return status === 408 || status === 425 || status === 429 || (status >= 500 && status <= 504);
 }
 
+/**
+ * 401 and 403 are permanent auth failures — no point retrying.
+ * Trip the circuit breaker immediately so polling loops stop quickly.
+ */
+function isPermanentAuthFailure(status: number): boolean {
+  return status === 401 || status === 403;
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -33,6 +41,14 @@ export async function fetchJsonWithResilience<T>(
       if (res.ok) {
         if (breaker) breaker.markSuccess();
         return (await res.json()) as T;
+      }
+      // Auth failures are permanent — trip the breaker immediately and stop.
+      if (isPermanentAuthFailure(res.status)) {
+        if (breaker) {
+          breaker.markFailure();
+          breaker.markFailure(); // double-mark to exceed threshold and open circuit fast
+        }
+        return null;
       }
       if (attempt < retries && shouldRetryStatus(res.status)) {
         await sleep(retryDelayMs * (attempt + 1));
@@ -81,6 +97,14 @@ export async function sendJsonWithResilience(
         if (breaker) breaker.markSuccess();
         return true;
       }
+      // Auth failures are permanent — trip the breaker immediately and stop.
+      if (isPermanentAuthFailure(res.status)) {
+        if (breaker) {
+          breaker.markFailure();
+          breaker.markFailure();
+        }
+        return false;
+      }
       if (attempt < retries && shouldRetryStatus(res.status)) {
         await sleep(retryDelayMs * (attempt + 1));
         continue;
@@ -98,4 +122,3 @@ export async function sendJsonWithResilience(
   }
   return false;
 }
-
