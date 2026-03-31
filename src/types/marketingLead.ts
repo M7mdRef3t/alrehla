@@ -36,6 +36,7 @@ export interface MarketingLeadPayload {
   status?: MarketingLeadStatus;
   lastContactedAt?: string;
   qualifiedAt?: string;
+  intent?: string | null;
 }
 
 export interface NormalizedMarketingLeadInput {
@@ -57,6 +58,7 @@ export interface NormalizedMarketingLeadInput {
   lastContactedAt: string | null;
   qualifiedAt: string | null;
   mergeConflict?: boolean;
+  intent: string | null;
 }
 
 export interface MarketingLeadImportResult {

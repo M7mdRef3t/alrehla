@@ -119,7 +119,8 @@ export function normalizeMarketingLeadPayload(
     note: sanitizeText(payload.note, 600),
     status: sanitizeStatus(payload.status),
     lastContactedAt: sanitizeIsoDate(payload.lastContactedAt),
-    qualifiedAt: sanitizeIsoDate(payload.qualifiedAt)
+    qualifiedAt: sanitizeIsoDate(payload.qualifiedAt),
+    intent: sanitizeText(payload.intent, 100)
   };
 }
 

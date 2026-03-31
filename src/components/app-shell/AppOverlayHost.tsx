@@ -328,7 +328,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     setScreen("map");
   }, [setScreen]);
 
-  const showConsentBanner = !runtimeEnv.isDemoMode;
+  const showConsentBanner = !isUserMode && !runtimeEnv.isDemoMode;
 
   return (
     <>

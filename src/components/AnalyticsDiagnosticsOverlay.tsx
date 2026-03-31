@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { getAnalyticsDiagnostics } from "../services/analytics";
+import { isUserMode } from "../config/appEnv";
 import { runtimeEnv } from "../config/runtimeEnv";
 
 export function AnalyticsDiagnosticsOverlay() {
   const [diagnostics, setDiagnostics] = useState(() => getAnalyticsDiagnostics("overlay"));
 
   useEffect(() => {
-    if (!runtimeEnv.isDev) return;
+    if (!runtimeEnv.isDev || isUserMode) return;
 
     const update = () => setDiagnostics(getAnalyticsDiagnostics("overlay"));
     update();
@@ -16,7 +17,7 @@ export function AnalyticsDiagnosticsOverlay() {
     return () => window.clearInterval(timer);
   }, []);
 
-  if (!runtimeEnv.isDev) return null;
+  if (!runtimeEnv.isDev || isUserMode) return null;
 
   const rows = [
     ["userMode", diagnostics.userMode],

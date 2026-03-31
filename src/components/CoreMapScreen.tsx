@@ -562,7 +562,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/*  Header  */}
       <motion.header 
         variants={staggerContainer}
-        className="relative z-20 text-center px-4 sm:px-6 pt-12 pb-8 flex flex-col items-center gap-4 pointer-events-none"
+        className="relative z-20 text-center px-4 sm:px-6 pt-6 pb-2 flex flex-col items-center gap-2 pointer-events-none"
       >
         <AnimatePresence>
           {!isSacredIsolation && (
@@ -570,26 +570,24 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               variants={cosmicFade}
               className="flex flex-col items-center"
             >
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] text-teal-300 shadow-[0_10px_30px_rgba(0,0,0,0.3)] mb-4">
+                <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse shadow-[0_0_12px_rgba(45,212,191,0.8)]" />
+                 Sovereign Radar
+              </div>
+
               <h1
                 id="core-map-title"
-                className="cosmic-editorial font-black text-[2.8rem] sm:text-[4.2rem] lg:text-[5.4rem] tracking-tight leading-tight mb-2 select-none"
+                className="font-black text-2xl sm:text-3xl lg:text-4xl tracking-widest uppercase mb-1 select-none"
                 style={{ color: "var(--text-primary)" }}
               >
                 <div className="pointer-events-auto">
                     <EditableText id={pageTitleKey} defaultText={pageTitle} page="map" />
                 </div>
               </h1>
-              
-              <motion.div 
-                className="h-[1px] w-24 bg-gradient-to-r from-transparent via-teal-500/40 to-transparent mb-6 pointer-events-none"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ delay: 0.5, duration: 1 }}
-              />
 
               <p
-                className="text-sm md:text-base leading-relaxed max-w-[45ch] mx-auto opacity-70 font-medium select-none pointer-events-auto"
-                style={{ color: "var(--text-secondary)", letterSpacing: "0.02em" }}
+                className="text-[11px] md:text-xs tracking-widest max-w-[45ch] mx-auto opacity-50 font-medium select-none pointer-events-auto uppercase"
+                style={{ color: "var(--text-secondary)" }}
               >
                 <EditableText id={subtitleKey} defaultText={subtitle} page="map" multiline showEditIcon={false} />
               </p>
@@ -760,14 +758,15 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             onClick={() => setShowDashboard((v) => !v)}
             className="w-full flex items-center justify-between px-6 py-4 rounded-2xl transition-all duration-500 group"
             style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              backdropFilter: "blur(20px)"
+              background: "linear-gradient(135deg, rgba(15,23,42,0.6), rgba(0,0,0,0.6))",
+              border: "1px solid rgba(45,212,191,0.15)",
+              boxShadow: "0 10px 40px rgba(0,0,0,0.6)",
+              backdropFilter: "blur(24px)"
             }}
           >
-            <div className="flex flex-col items-start">
-              <span className="text-[10px] font-black tracking-widest uppercase text-amber-500/80 mb-1">حالة المنظومة</span>
-              <span className="text-xs text-white/40">
+            <div className="flex flex-col items-start pr-2 border-r-2 border-teal-500/30">
+              <span className="text-[10px] font-black tracking-widest uppercase text-amber-500/80 mb-1 mr-3">حالة المنظومة</span>
+              <span className="text-xs text-white/50 mr-3">
                 {mapCopy.dashboardMapSummary(activeNodes.length, greenNodes.length, archivedNodes.length)}
               </span>
             </div>
@@ -1019,9 +1018,9 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               </motion.div>
             )}
 
-            {/*  Controls Bar  */}
+            {/*  Controls Bar (HUD Right)  */}
             <motion.div
-              className="mt-8 flex items-center justify-center gap-3 flex-wrap"
+              className="absolute z-20 max-w-sm bottom-[12vh] right-4 flex flex-col items-end gap-3 pointer-events-auto"
               variants={cosmicFade}
               style={{
                 order: sectionOrder["controls-bar"],
@@ -1154,10 +1153,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         )
       }
 
-      {/*  Pulse Insight  */}
+      {/*  Pulse Insight (HUD Top Left)  */}
       {
         pulseInsight && (
-          <motion.div className="mt-4 mx-auto max-w-[38rem] card-unified status-card-insight px-4 py-4 text-right" variants={cosmicFade}>
+          <motion.div className="absolute z-20 top-24 left-4 w-64 glass-card bg-slate-950/70 border border-indigo-500/20 shadow-2xl backdrop-blur-md px-3 py-3 text-right pointer-events-auto rounded-lg" variants={cosmicFade}>
             <p className="text-xs font-semibold" style={{ color: "rgba(167, 139, 250, 0.9)" }}>{pulseInsight.title}</p>
             <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(167, 139, 250, 0.6)" }}>{pulseInsight.body}</p>
             <button
@@ -1172,14 +1171,16 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         )
       }
 
-      {/*  Map Canvas Views  */}
+      {/*  Next Step Decision (HUD Bottom Left)  */}
       {
         nextStepDecision && onTakeNextStep && onRefreshNextStep && (
-          <NextStepCard
-            decision={nextStepDecision}
-            onTakeAction={onTakeNextStep}
-            onRefresh={onRefreshNextStep}
-          />
+          <div className="absolute z-20 bottom-[12vh] left-4 w-72 origin-bottom-left scale-95 pointer-events-auto">
+            <NextStepCard
+              decision={nextStepDecision}
+              onTakeAction={onTakeNextStep}
+              onRefresh={onRefreshNextStep}
+            />
+          </div>
         )
       }
 
@@ -1208,7 +1209,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.05 }}
-                  className="min-h-[50vh]"
+                  className="flex-1 min-h-[50vh] w-full relative z-0 flex items-center justify-center pointer-events-none"
                   style={{
                     order: sectionOrder["map-canvas"],
                     transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
@@ -1239,7 +1240,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.05 }}
-                  className="min-h-[50vh]"
+                  className="flex-1 h-full min-h-[55vh] w-full relative z-0 flex flex-col items-center justify-center pointer-events-none"
                   style={{
                     order: sectionOrder["map-canvas"],
                     transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,

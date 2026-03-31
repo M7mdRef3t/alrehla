@@ -292,7 +292,7 @@ export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode }
   };
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-slate-950">
+    <div className="w-full h-full relative overflow-hidden bg-transparent">
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <svg 
           viewBox="0 0 100 100" 

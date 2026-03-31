@@ -56,13 +56,13 @@ export class WhatsAppAutomationService {
     // 3. Intent Detection (Simplified V1)
     const intent = this.detectIntent(payload.body);
     
-    // 4. Sync to CRM
+    // 4. CRM Integration: Sync as Marketing Lead
     const leadPayload: MarketingLeadPayload = {
       phone: payload.from,
       source: "whatsapp_auto",
       sourceType: "whatsapp",
       status: intent === "payment_requested" ? "payment_requested" : "new",
-      note: `Auto-captured from WhatsApp: "${payload.body}"`,
+      note: `[WhatsApp Auto] "${payload.body}" | Intent: ${intent}`,
     };
 
     try {
@@ -74,7 +74,8 @@ export class WhatsAppAutomationService {
         sourceType: "whatsapp",
         utm: {},
         email: null,
-        name: null
+        name: null,
+        intent: intent
       } as any);
 
       // 5. Update event with lead_id and detected intent
@@ -90,31 +91,95 @@ export class WhatsAppAutomationService {
       }
 
       console.log(`[WhatsAppService] Successfully synced lead ${result.lead_id} (Intent: ${intent})`);
+
+      // 6. Send Auto-Reply based on Intent
+      let replyMessage = "";
+      switch (intent) {
+        case "payment_requested":
+          replyMessage = "أهلاً بك في الرحلة! ✨\nلتفعيل حسابك المدفوع، يُرجى تحويل قيمة الاشتراك عبر فودافون كاش أو إنستا باي، ثم إرسال صورة التحويل (سكرين شوت) هنا، وسنقوم بتفعيل حسابك فوراً.";
+          break;
+        case "support_needed":
+          replyMessage = "نحن هنا لمساعدتك! 🛠️\nتم تسجيل طلبك وسيقوم فريق الدعم بمراجعته. هل يمكنك توضيح المشكلة بتفاصيل أكثر لنتمكن من حلها سريعاً؟";
+          break;
+        case "general_inquiry":
+        default:
+          replyMessage = "أهلاً بك في منصة الرحلة! 🧭\nلقد استلمنا رسالتك وسنقوم بالرد عليك في أقرب وقت. إذا كنت ترغب في الاشتراك أو لديك استفسار محدد، تفضل بكتابته.";
+          break;
+      }
+
+      // Send the reply in the background
+      await this.sendReply(payload.from, replyMessage);
+
     } catch (syncError) {
       console.error("[WhatsAppService] CRM Sync failed:", syncError);
     }
   }
 
   /**
-   * Simple keyword-based intent detection.
+   * Send a reply message using UltraMsg API
+   */
+  private static async sendReply(to: string, text: string) {
+    const instanceId = process.env.ULTRAMSG_INSTANCE_ID;
+    const token = process.env.ULTRAMSG_TOKEN;
+
+    if (!instanceId || !token) {
+      console.warn("[WhatsAppService] UltraMsg credentials missing. Skipping auto-reply.");
+      return;
+    }
+
+    try {
+      const url = `https://api.ultramsg.com/${instanceId}/messages/chat`;
+      const data = new URLSearchParams();
+      data.append('token', token);
+      data.append('to', to);
+      data.append('body', text);
+      data.append('priority', '10');
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: data,
+      });
+
+      if (!response.ok) {
+        console.error(`[WhatsAppService] Failed to send reply. Status: ${response.status}`);
+        return;
+      }
+
+      const result = await response.json();
+      console.log(`[WhatsAppService] Sent reply to ${to}:`, result.sent === "true" ? "Success" : result);
+    } catch (error) {
+      console.error("[WhatsAppService] Error sending reply:", error);
+    }
+  }
+
+  /**
+   * Simple keyword-based intent detection for Egyptian market.
    */
   private static detectIntent(body: string): string {
     const text = body.toLowerCase();
     
-    // Keywords for payment/activation requests
+    // Keywords for payment/activation requests (Egyptian Ammiya focus)
     const paymentKeywords = [
-      "فودافون كاش", 
-      "vodafone cash", 
-      "دفع", 
-      "تحويل", 
-      "اشتراك", 
-      "تفعيل",
-      "payment",
-      "activate"
+      "فودافون كاش", "فودافون", "كاش", "vodafone cash", "vodafone",
+      "دفع", "تحويل", "اشتراك", "تفعيل", "بكم", "سعر", "فلوس",
+      "payment", "activate", "price", "how much", "subscribe"
+    ];
+
+    // Keywords for support/technical issues
+    const supportKeywords = [
+      "مشاكل", "عطل", "مش عارف", "مستحيل", "ساعدني", "تواصل",
+      "support", "help", "contact", "issue", "bug"
     ];
 
     if (paymentKeywords.some(k => text.includes(k))) {
       return "payment_requested";
+    }
+
+    if (supportKeywords.some(k => text.includes(k))) {
+      return "support_needed";
     }
 
     return "general_inquiry";

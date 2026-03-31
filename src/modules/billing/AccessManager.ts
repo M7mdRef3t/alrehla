@@ -1,4 +1,13 @@
 import { supabase } from '../../services/supabaseClient';
+import { TIER_LIMITS, type PricingTier } from '../../config/pricing';
+
+interface FeatureFlags {
+    maxMapNodes: number;
+    hasPredictiveEngine: boolean;
+    hasAiOracle: boolean;
+    hasShadowMemory: boolean;
+    hasFacilitatorAssistance: boolean;
+}
 
 export interface SubscriptionInfo {
     planId: string;
@@ -6,38 +15,23 @@ export interface SubscriptionInfo {
     currentPeriodEnd: number | null;
     isPremium: boolean;
     tier: 'free' | 'premium' | 'coach';
-    features: {
-        maxMapNodes: number;
-        hasPredictiveEngine: boolean;
-        hasAiOracle: boolean;
-        hasShadowMemory: boolean;
-        hasFacilitatorAssistance: boolean;
+    features: FeatureFlags;
+}
+
+function tierToFeatures(tier: PricingTier): FeatureFlags {
+    const limits = TIER_LIMITS[tier];
+    return {
+        maxMapNodes: limits.maxMapNodes === -1 ? 999 : limits.maxMapNodes,
+        hasPredictiveEngine: limits.hasPredictiveEngine,
+        hasAiOracle: limits.hasAiOracle,
+        hasShadowMemory: limits.hasShadowMemory,
+        hasFacilitatorAssistance: limits.hasFacilitatorAssistance,
     };
 }
 
-const FREE_TIER_LIMITS = {
-    maxMapNodes: 7,
-    hasPredictiveEngine: false,
-    hasAiOracle: false,
-    hasShadowMemory: false,
-    hasFacilitatorAssistance: false,
-};
-
-const PREMIUM_LIMITS = {
-    maxMapNodes: 50,
-    hasPredictiveEngine: true,
-    hasAiOracle: true,
-    hasShadowMemory: true,
-    hasFacilitatorAssistance: true,
-};
-
-const COACH_LIMITS = {
-    maxMapNodes: 100,
-    hasPredictiveEngine: true,
-    hasAiOracle: true,
-    hasShadowMemory: true,
-    hasFacilitatorAssistance: true,
-};
+const FREE_TIER_LIMITS = tierToFeatures('basic');
+const PREMIUM_LIMITS = tierToFeatures('premium');
+const COACH_LIMITS = tierToFeatures('coach');
 
 /**
  * Access Manager System

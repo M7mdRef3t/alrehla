@@ -1,5 +1,12 @@
 import { supabase } from "./supabaseClient";
 import { hasRecordedOfferConversion, recordEmotionalPricingEvent } from "./emotionalPricingAnalytics";
+import {
+  type PricingTier,
+  type TierLimits,
+  TIER_LIMITS as UNIFIED_TIER_LIMITS,
+  TIER_LABELS as UNIFIED_TIER_LABELS,
+  TIER_PRICES_USD,
+} from "../config/pricing";
 
 /**
  * Subscription Manager — مدير الاشتراكات
@@ -10,7 +17,7 @@ import { hasRecordedOfferConversion, recordEmotionalPricingEvent } from "./emoti
 
 const SUB_KEY = "dawayir-subscription";
 
-export type SubscriptionTier = "basic" | "premium" | "enterprise";
+export type SubscriptionTier = PricingTier;
 
 export interface SubscriptionData {
     tier: SubscriptionTier;
@@ -41,52 +48,16 @@ export interface LegacyEmotionalOfferInput {
     urgencyLevel?: "low" | "medium" | "high";
 }
 
-export interface TierLimits {
-    maxMapNodes: number;         // -1 = لا حد
-    dailyAIMessages: number;     // -1 = لا حد
-    canExportPDF: boolean;
-    canAccessTraining: boolean;
-    canShareMap: boolean;
-    canAccessB2B: boolean;
-}
+export type { TierLimits } from "../config/pricing";
 
-export const TIER_LIMITS: Record<SubscriptionTier, TierLimits> = {
-    basic: {
-        maxMapNodes: 3,
-        dailyAIMessages: 5,
-        canExportPDF: false,
-        canAccessTraining: false,
-        canShareMap: true,
-        canAccessB2B: false,
-    },
-    premium: {
-        maxMapNodes: -1,
-        dailyAIMessages: -1,
-        canExportPDF: true,
-        canAccessTraining: true,
-        canShareMap: true,
-        canAccessB2B: false,
-    },
-    enterprise: {
-        maxMapNodes: -1,
-        dailyAIMessages: -1,
-        canExportPDF: true,
-        canAccessTraining: true,
-        canShareMap: true,
-        canAccessB2B: true,
-    },
-};
+export const TIER_LIMITS = UNIFIED_TIER_LIMITS;
 
-export const TIER_LABELS: Record<SubscriptionTier, string> = {
-    basic: "رحلتي (أساسي)",
-    premium: "رحلتي + مسافتي (قائد) 🎖️",
-    enterprise: "باقة الشركات (PRO) 👑",
-};
+export const TIER_LABELS = UNIFIED_TIER_LABELS;
 
 export const TIER_PRICES: Record<SubscriptionTier, string> = {
-    basic: "$0",
-    premium: "$9/شهر",
-    enterprise: "$49/شهر",
+    basic: TIER_PRICES_USD.basic.label,
+    premium: TIER_PRICES_USD.premium.label,
+    coach: TIER_PRICES_USD.coach.label,
 };
 
 function getTodayStr(): string {
@@ -274,7 +245,7 @@ export async function syncSubscription(): Promise<void> {
         // Map backend role/status to frontend tier
         let newTier: SubscriptionTier = 'basic';
         if (profile.role === 'enterprise_admin') {
-            newTier = 'enterprise';
+            newTier = 'coach'; // enterprise_admin maps to coach (full access)
         } else if (profile.subscription_status === 'active' || profile.subscription_status === 'trialing') {
             newTier = 'premium';
         }

@@ -158,7 +158,8 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
       ? `translate3d(${transform.x}px, ${transform.y}px, 0) translate(-50%, -50%)`
       : "translate(-50%, -50%)",
     zIndex: isDragging ? 999 : 20,
-    touchAction: "none"
+    touchAction: "none",
+    transition: transform ? "transform 0.18s cubic-bezier(0.1, 1, 0.2, 1)" : "top 0.7s ease-out, left 0.7s ease-out, transform 0.7s ease-out"
   };
 
   const handleDelete = useCallback((e: React.MouseEvent) => {
@@ -272,11 +273,10 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         }}
       />
 
-      {/* Main node body  Glass Orb */}
       <motion.div
         ref={setNodeRef}
-        className={`relative z-10 node-glass ${glowClass} select-none flex items-center gap-0.5 pr-1 ${isDragging ? "opacity-90 scale-105" : ""
-          } ${isDetached ? "saturate-50 opacity-60" : ""
+        className={`relative z-10 node-glass ${glowClass} select-none flex items-center gap-0.5 pr-1 transition-all ${isDragging ? "opacity-90 scale-[1.03] shadow-[0_20px_50px_rgba(0,0,0,0.9)]" : ""
+          } ${isDetached ? "saturate-50 opacity-40 blur-[1px] grayscale-[50%]" : ""
           } ${hasMismatch ? "border-amber-500/50!" : ""
           }`}
         animate={!isDragging && !reduceMotion ? {
@@ -929,9 +929,9 @@ export const MapCanvas: FC<MapCanvasProps> = ({
   }, [highlightNodeId, nodes, nodePositions]);
 
   return (
-    <div className="w-full mx-auto mt-6 flex flex-col gap-3">
+    <div className="absolute inset-x-0 top-[10%] bottom-0 sm:inset-0 z-0 pointer-events-none flex flex-col items-center justify-center overflow-visible">
       <div
-        className={`relative w-full min-h-[280px] sm:min-h-[340px] md:min-h-[400px] transition-all duration-700 ${isSimulation ? "scale-[0.85] saturate-[0.8] brightness-125" : ""}`}
+        className={`pointer-events-auto relative aspect-square w-[140vmin] h-[140vmin] max-w-none max-h-none transition-all duration-1000 ease-out opacity-90 mix-blend-lighten ${isSimulation ? "scale-[0.85] saturate-[0.8] brightness-125" : ""}`}
         id="map-canvas"
       >
         {/*  Reveal State Banner */}
@@ -1205,7 +1205,8 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 <motion.g
                   animate={shouldReduceMotion ? undefined : {
                     scale: meStyle.pulseScale,
-                    opacity: battery === "drained" ? [0.6, 0.8, 0.6] : [0.85, 1, 0.85]
+                    opacity: battery === "drained" ? [0.6, 0.8, 0.6] : [0.85, 1, 0.85],
+                    filter: ["brightness(1)", "brightness(1.5)", "brightness(1)"]
                   }}
                   transition={shouldReduceMotion ? undefined : {
                     duration: battery === "charged" ? 2.5 : 3.5,
@@ -1215,6 +1216,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   style={{ transformOrigin: "50px 50px", filter: "none" }}
                 >
                   <circle cx="50" cy="50" r={6} fill={meStyle.fill} />
+                  <circle cx="50" cy="50" r={1.5} fill="#ffffff" style={{ filter: "blur(0.5px)", opacity: 0.9 }} />
                 </motion.g>
                 {/* "أت" label */}
                 <text

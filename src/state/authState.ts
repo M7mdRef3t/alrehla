@@ -275,8 +275,8 @@ async function initSupabaseAuth(): Promise<void> {
     }
     supabaseClient = supabase;
     const session = await safeGetSession();
+    await syncAuthRole(session);
     useAuthState.getState().setSession(session);
-    void syncAuthRole(session);
     supabase.auth.onAuthStateChange((event, nextSession) => {
       const currentSession = nextSession ?? null;
       useAuthState.getState().setSession(currentSession);

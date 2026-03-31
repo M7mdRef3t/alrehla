@@ -7,12 +7,17 @@
 import { decisionEngine } from "./decision-framework";
 import { geminiClient } from "../services/geminiClient";
 import type { AIDecision } from "./decision-framework";
+import {
+  type PricingTier,
+  TIER_PRICES_USD,
+  TIER_LIMITS,
+} from "../config/pricing";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 💰 Revenue Models
 // ═══════════════════════════════════════════════════════════════════════════
 
-export type SubscriptionTier = "free" | "premium" | "coach";
+export type SubscriptionTier = PricingTier;
 
 export interface SubscriptionPlan {
   tier: SubscriptionTier;
@@ -28,58 +33,35 @@ export interface SubscriptionPlan {
     apiAccess: boolean;
   };
   limits: {
-    maxUsersPerAccount?: number; // للـ B2B
+    maxUsersPerAccount?: number;
+  };
+}
+
+function buildPlan(tier: PricingTier): SubscriptionPlan {
+  const limits = TIER_LIMITS[tier];
+  return {
+    tier,
+    priceMonthly: TIER_PRICES_USD[tier].monthly,
+    priceCurrency: "USD",
+    features: {
+      maxNodes: limits.maxMapNodes === -1 ? 1000 : limits.maxMapNodes,
+      aiQuestionsPerMonth: limits.aiQuestionsPerMonth === -1 ? 1000 : limits.aiQuestionsPerMonth,
+      aiInsightsUnlimited: limits.dailyAIMessages === -1,
+      healthCheckFrequency: limits.healthCheckFrequency,
+      prioritySupport: tier !== "basic",
+      customBranding: tier === "coach",
+      apiAccess: tier === "coach",
+    },
+    limits: {
+      ...(tier === "coach" ? { maxUsersPerAccount: 50 } : {}),
+    },
   };
 }
 
 export const PRICING_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
-  free: {
-    tier: "free",
-    priceMonthly: 0,
-    priceCurrency: "USD",
-    features: {
-      maxNodes: 10,
-      aiQuestionsPerMonth: 5,
-      aiInsightsUnlimited: false,
-      healthCheckFrequency: "never",
-      prioritySupport: false,
-      customBranding: false,
-      apiAccess: false,
-    },
-    limits: {},
-  },
-  premium: {
-    tier: "premium",
-    priceMonthly: 4.99,
-    priceCurrency: "USD",
-    features: {
-      maxNodes: 100,
-      aiQuestionsPerMonth: 100,
-      aiInsightsUnlimited: true,
-      healthCheckFrequency: "daily",
-      prioritySupport: true,
-      customBranding: false,
-      apiAccess: false,
-    },
-    limits: {},
-  },
-  coach: {
-    tier: "coach",
-    priceMonthly: 49,
-    priceCurrency: "USD",
-    features: {
-      maxNodes: 1000,
-      aiQuestionsPerMonth: 1000,
-      aiInsightsUnlimited: true,
-      healthCheckFrequency: "hourly",
-      prioritySupport: true,
-      customBranding: true,
-      apiAccess: true,
-    },
-    limits: {
-      maxUsersPerAccount: 50,
-    },
-  },
+  basic: buildPlan("basic"),
+  premium: buildPlan("premium"),
+  coach: buildPlan("coach"),
 };
 
 // ═══════════════════════════════════════════════════════════════════════════

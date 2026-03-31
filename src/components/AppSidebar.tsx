@@ -387,24 +387,28 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 سجل العمليات
               </button>
             )}
-            <button
-              type="button"
-              onClick={openAdminDashboard}
-              className="w-full flex items-center gap-3 rounded-xl bg-slate-50/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap"
-              title="لوحة التحكم"
-            >
-              <ShieldCheck className="w-5 h-5 shrink-0 text-teal-600" />
-              لوحة التحكم
-            </button>
-            <button
-              type="button"
-              onClick={openCoachDashboard}
-              className="w-full flex items-center gap-3 rounded-xl bg-indigo-50/80 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 px-4 py-3 text-sm font-semibold hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all text-right shrink-0 whitespace-nowrap"
-              title="بوابة المعالجين B2B"
-            >
-              <BrainCircuit className="w-5 h-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
-              بوابة المعالجين
-            </button>
+            {isPrivilegedRole(role) && (
+              <>
+                <button
+                  type="button"
+                  onClick={openAdminDashboard}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50/80 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="لوحة التحكم"
+                >
+                  <ShieldCheck className="w-5 h-5 shrink-0 text-teal-600" />
+                  لوحة التحكم
+                </button>
+                <button
+                  type="button"
+                  onClick={openCoachDashboard}
+                  className="w-full flex items-center gap-3 rounded-xl bg-indigo-50/80 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700 px-4 py-3 text-sm font-semibold hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="بوابة المعالجين B2B"
+                >
+                  <BrainCircuit className="w-5 h-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                  بوابة المعالجين
+                </button>
+              </>
+            )}
             {!isRevenueMode && (
               <button
                 onClick={() => {

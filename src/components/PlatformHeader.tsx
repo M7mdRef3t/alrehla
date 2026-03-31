@@ -263,15 +263,17 @@ export const PlatformHeader = memo(function PlatformHeader({
               key={id}
               type="button"
               id={`header-nav-${id}`}
-              onClick={() => handleNav(id)}
+              onClick={(e) => {
+                e.preventDefault();
+                handleNav(id);
+              }}
               className={`
-                relative px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 flex items-center gap-2
+                relative px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-200 flex items-center gap-2 cursor-pointer
                 ${isActive 
-                  ? "opacity-100" 
-                  : "opacity-60 hover:opacity-100"
+                  ? "text-white" 
+                  : "text-slate-400 hover:text-white"
                 }
               `}
-              style={{ color: isActive ? "var(--text-primary)" : "var(--text-secondary)" }}
               aria-current={isActive ? "page" : undefined}
             >
               {isActive && (

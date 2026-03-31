@@ -130,31 +130,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     }
   }, [screen, onExitToLanding]);
 
-  // REVENUE MODE REDIRECTION: Force goal selection for new users in product mode
-  // 2. Goal Guard: In revenue mode, if we are NOT on a special landing/meta screen but don't have a gaol, force goal pick.
-  useEffect(() => {
-    // Whitelist screens that don't REQUIRE a goal to be visible
-    const isWhitelisted = 
-      screen === "landing" || 
-      screen === "goal" || 
-      screen === "tools" || 
-      screen === "insights" || 
-      screen === "stories" || 
-      screen === "about" || 
-      screen === "quizzes" || 
-      screen === "behavioral-analysis" || 
-      screen === "resources" || 
-      screen === "settings";
-
-    if (
-      isRevenueMode && 
-      !isWhitelisted &&
-      !goalId && 
-      !storedGoalId
-    ) {
-      void setScreen("goal");
-    }
-  }, [screen, goalId, storedGoalId, setScreen]);
+  // Goal Guard moved below authStatus declaration to avoid Temporal Dead Zone.
 
   const {
     adminPrompt,
@@ -191,6 +167,28 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     setScreen,
     setLockedFeature
   });
+
+  // REVENUE MODE REDIRECTION: Goal Guard — placed here so authStatus is guaranteed to be initialized.
+  // In revenue mode, if we are NOT on a whitelisted screen and don't have a goal, force goal pick.
+  useEffect(() => {
+    if (authStatus === "loading") return;
+
+    const isWhitelisted =
+      screen === "landing" ||
+      screen === "goal" ||
+      screen === "tools" ||
+      screen === "insights" ||
+      screen === "stories" ||
+      screen === "about" ||
+      screen === "quizzes" ||
+      screen === "behavioral-analysis" ||
+      screen === "resources" ||
+      screen === "settings";
+
+    if (isRevenueMode && !isWhitelisted && !goalId && !storedGoalId) {
+      void setScreen("goal");
+    }
+  }, [screen, goalId, storedGoalId, setScreen, authStatus]);
 
   const {
     activeBroadcast,

@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Compass, Map as MapIcon, ShieldCheck, Sparkles, X } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import { useAppOverlayState } from "../state/appOverlayState";
+import { useEffect } from "react";
+import { trackEvent, AnalyticsEvents } from "../services/analytics";
 
 export const PremiumBridgeModal: FC = () => {
   const isOpen = useAppOverlayState((s) => s.flags.premiumBridge);
@@ -16,6 +18,17 @@ export const PremiumBridgeModal: FC = () => {
     const amber = nodes.filter((n) => n.ring === "yellow").length;
     return { total, red, amber };
   }, [nodes]);
+
+  useEffect(() => {
+    if (isOpen) {
+      trackEvent(AnalyticsEvents.PREMIUM_UPGRADE_VIEWED, {
+        total_nodes: stats.total,
+        red_nodes: stats.red,
+        amber_nodes: stats.amber,
+        bypassConsent: true // Essential P0 marketing event
+      });
+    }
+  }, [isOpen, stats]);
 
   const handleClose = () => {
     setOverlay("premiumBridge", false);

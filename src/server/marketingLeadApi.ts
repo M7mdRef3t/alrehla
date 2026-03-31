@@ -58,7 +58,9 @@ function toLeadRow(input: NormalizedMarketingLeadInput) {
     status: input.status,
     last_contacted_at: input.lastContactedAt,
     qualified_at: input.qualifiedAt,
-    merge_conflict: input.mergeConflict ?? false
+    merge_conflict: input.mergeConflict ?? false,
+    intent: input.intent,
+    last_intent_at: new Date().toISOString()
   };
   if (input.leadId) {
     row.lead_id = input.leadId;
@@ -148,6 +150,7 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
   phone_normalized: string | null;
   is_new: boolean;
   conflict: boolean;
+  intent?: string | null;
 }> {
   if (!hasSupabaseConfig()) {
     throw new Error("missing_supabase_config");
@@ -232,7 +235,8 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
     email: storedEmail,
     phone_normalized: input.phoneNormalized || null,
     is_new: isNew,
-    conflict: conflictDetected
+    conflict: conflictDetected,
+    intent: input.intent || null
   };
 }
 

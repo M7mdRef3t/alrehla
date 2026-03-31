@@ -4,6 +4,8 @@ import { Shield, Sparkles, BrainCircuit, X, Check, Lock, Star, Loader2 } from "l
 import { useAuthState } from "../state/authState";
 import { supabase } from "../services/supabaseClient";
 import { syncSubscription, activateSubscription } from "../services/subscriptionManager";
+import { TIER_PRICES_USD, TIER_LABELS } from "../config/pricing";
+import { PaymentCheckout } from "./PaymentCheckout";
 
 interface UpgradeScreenProps {
   isOpen: boolean;
@@ -13,36 +15,20 @@ interface UpgradeScreenProps {
 export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ isOpen, onClose }) => {
   const { tier } = useAuthState();
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleUpgrade = async () => {
-    if (!supabase) {
-      activateSubscription("premium", 30);
-      setTimeout(() => onClose(), 1500);
-      return;
-    }
+  const handleUpgrade = () => {
+    setShowCheckout(true);
+  };
 
-    setIsUpgrading(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        await supabase.from("profiles").update({
-          subscription_status: "active",
-          subscription_tier: "premium",
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        }).eq("id", session.user.id);
-        await syncSubscription();
-      } else {
-        activateSubscription("premium", 30);
-      }
-    } catch (e) {
-      console.error("Failed to upgrade:", e);
-      activateSubscription("premium", 30);
-    } finally {
-      setIsUpgrading(false);
-      setTimeout(() => onClose(), 500);
-    }
+  const handlePaymentSuccess = async () => {
+    // This will be called when payment is confirmed
+    // For now, the owner manually activates via the dashboard
+    // In the future, webhooks will auto-activate
+    setShowCheckout(false);
+    onClose();
   };
 
   return (
@@ -62,6 +48,18 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ isOpen, onClose })
         className="relative w-full max-w-4xl bg-slate-900 border border-slate-700/50 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row min-h-[500px]"
         dir="rtl"
       >
+        {showCheckout ? (
+          <div className="w-full">
+            <button
+              onClick={() => setShowCheckout(false)}
+              className="absolute top-4 left-4 z-10 p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <PaymentCheckout onClose={() => setShowCheckout(false)} onSuccess={handlePaymentSuccess} />
+          </div>
+        ) : (
+          <>
         <button
           onClick={onClose}
           className="absolute top-4 left-4 z-10 p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 rounded-full transition-colors"
@@ -128,7 +126,7 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ isOpen, onClose })
                 <Sparkles className="w-4 h-4" /> المسار المتقدم
               </h4>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-3xl font-black text-white">$4.99</span>
+                <span className="text-3xl font-black text-white">${TIER_PRICES_USD.premium.monthly}</span>
                 <span className="text-sm text-slate-400">/ شهريًا</span>
               </div>
               <ul className="space-y-3 mb-8">
@@ -167,6 +165,8 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ isOpen, onClose })
             الرسوم، لو ظهرت، بتكون ضمن نفس المنصة. يمكن الإلغاء في أي وقت.
           </p>
         </div>
+          </>
+        )}
       </motion.div>
     </div>
   );

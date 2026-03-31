@@ -162,13 +162,14 @@ function sendMetaEvent(
   params?: Record<string, AnalyticsValue | null | undefined>,
   options?: { bypassConsent?: boolean }
 ): void {
-  const bypassConsent = options?.bypassConsent === true;
-  if (!isClientRuntime() || !areMetaEventsEnabled()) return;
-  
-  // P0: Ensure Pixel is initialized before sending ANY event
+  // P0: Always ensure Meta Pixel is initialized before sending ANY event
   ensureMetaPixel();
 
-  if (!bypassConsent && !isAnalyticsEnabled()) return;
+  // If bypassConsent is true, we allow the event even if the user hasn't explicitly accepted.
+  // This is used for crucial top-of-funnel tracking (ViewContent, Lead) in Meta Ads.
+  if (!options?.bypassConsent && !isAnalyticsEnabled()) {
+    return;
+  }
   
   const safeParams = sanitizeAnalyticsParams(params);
   const windowRef = getWindowOrNull();
@@ -384,9 +385,8 @@ export const AnalyticsEvents = {
   HESITATION: "hesitation",
   HESITATION_HEARTBEAT: "hesitation_heartbeat",
 
-  SURVEY_OPENED: "survey_opened",
-  SURVEY_COMPLETED: "survey_completed",
-  SURVEY_QUESTION_ANSWERED: "survey_question_answered"
+  SURVEY_QUESTION_ANSWERED: "survey_question_answered",
+  PREMIUM_UPGRADE_VIEWED: "premium_upgrade_viewed"
 } as const;
 
 export function trackLead(params?: Record<string, AnalyticsValue | null | undefined>): void {

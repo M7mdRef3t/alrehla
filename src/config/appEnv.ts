@@ -27,8 +27,7 @@ export const isRevenueMode = isUserMode;
 
 /**
  * Phase-1 flow lock:
- * - default ON in user mode
- * - can be explicitly disabled with VITE_PHASE_ONE_USER_FLOW=false
+ * DISABLED — all users now have full access to goals, guided, mission, tools.
+ * Was: isUserMode && phaseOneRaw !== "false"
  */
-const phaseOneRaw = runtimeEnv.phaseOneUserFlow;
-export const isPhaseOneUserFlow = isUserMode && phaseOneRaw !== "false";
+export const isPhaseOneUserFlow = false;

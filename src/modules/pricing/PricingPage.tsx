@@ -8,23 +8,20 @@ import { supabase } from "../../services/supabaseClient";
 import { trackEvent, AnalyticsEvents } from "../../services/analytics";
 import { marketingLeadService } from "../../services/marketingLeadService";
 import { recordFlowEvent } from "../../services/journeyTracking";
+import {
+  TIER_PRICES_USD,
+  TIER_LABELS,
+  PREMIUM_FEATURES_LIST,
+} from "../../config/pricing";
 
-const FEATURES = [
-  "خريطة علاقات لا محدودة",
-  "خطة تعافي يومية مخصصة بالذكاء الاصطناعي",
-  "تحليل الأنماط المتكررة في علاقاتك",
-  "مساعد ذكي (نَواة) بلا حدود",
-  "تقارير PDF شاملة",
-  "أولوية في الدعم والمتابعة",
-];
+const FEATURES = PREMIUM_FEATURES_LIST;
 
 export default function PricingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [offerConsumed, setOfferConsumed] = useState(false);
   const emotionalOffer = useMemo(() => getEmotionalOffer(), []);
-  const foundingPrice = process.env.NEXT_PUBLIC_FOUNDING_COHORT_PRICE_LABEL || "30 USD / 500 EGP";
-  const localPrice = process.env.NEXT_PUBLIC_LOCAL_PREMIUM_PRICE_LABEL || "500 EGP";
-  const globalPrice = process.env.NEXT_PUBLIC_GLOBAL_PREMIUM_PRICE_LABEL || "30 USD";
+  const globalPrice = TIER_PRICES_USD.premium.label;
+  const localPrice = "200 ج.م";
   const viewTrackedRef = useRef(false);
 
   useEffect(() => {
@@ -130,7 +127,7 @@ export default function PricingPage() {
               <Shield className="h-6 w-6 text-teal-400" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-white">الخطة الشخصية</h2>
+              <h2 className="text-xl font-black text-white">{TIER_LABELS.premium}</h2>
               <p className="text-xs text-slate-400">كل اللي محتاجه عشان تستعيد نفسك</p>
             </div>
           </div>
@@ -139,9 +136,8 @@ export default function PricingPage() {
           <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
             <div className="flex items-center justify-center gap-2">
               <span className="text-5xl font-black text-white">{globalPrice}</span>
-              <span className="mb-1.5 text-sm font-medium text-slate-400">/ لمرة واحدة</span>
             </div>
-            <p className="mt-2 text-xs text-slate-500">أو {localPrice} لمواطني مصر — الدفع يدوي ببياناتك</p>
+            <p className="mt-2 text-xs text-slate-500">أو {localPrice} / شهر لمواطني مصر</p>
           </div>
 
           {/* Features */}
