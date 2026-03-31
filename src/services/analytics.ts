@@ -118,19 +118,20 @@ function ensureMetaPixel(): void {
   if (windowRef.__dawayirMetaPixelScriptLoaded) return;
 
   if (!windowRef.fbq) {
-    const fbq = ((...args: unknown[]) => {
-      if (typeof fbq.callMethod === "function") {
-        fbq.callMethod(...args);
-        return;
-      }
-      fbq.queue = fbq.queue || [];
-      fbq.queue.push(args);
+    // Standard Meta Pixel bootstrap stub — must match the official snippet exactly.
+    // fbevents.js checks for fbq existence on load; if it finds a non-standard stub
+    // it emits the "conflicting versions" warning.
+    const n = ((...args: unknown[]) => {
+      n.callMethod ? n.callMethod(...args) : n.queue.push(args);
     }) as FbqFn;
-    fbq.queue = [];
-    fbq.loaded = true;
-    // NOTE: Do NOT set fbq.version here — fbevents.js sets its own version on load.
-    // Setting version in the stub causes the "conflicting versions" warning.
-    windowRef.fbq = fbq;
+    n.push = n as unknown as (...args: unknown[]) => number;
+    n.loaded = !0;
+    n.version = "2.0";
+    n.queue = [];
+    windowRef.fbq = n;
+    if (!(windowRef as unknown as Record<string, unknown>)._fbq) {
+      (windowRef as unknown as Record<string, unknown>)._fbq = n;
+    }
   }
 
   loadScriptOnce("dawayir-meta-pixel-script", "https://connect.facebook.net/en_US/fbevents.js");
@@ -477,6 +478,7 @@ declare global {
 
 type FbqFn = ((...args: unknown[]) => void) & {
   queue?: unknown[][];
+  push?: (...args: unknown[]) => number;
   loaded?: boolean;
   version?: string;
   callMethod?: (...args: unknown[]) => void;
