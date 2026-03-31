@@ -1,4 +1,4 @@
-import type { FC } from "react";
+﻿import type { FC } from "react";
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapCanvas } from "../modules/map/MapCanvas";
@@ -16,12 +16,8 @@ import { GoogleAuthModal } from "./GoogleAuthModal";
 import { DailyJournalArchive } from "./DailyJournalArchive";
 import { UpgradeScreen } from "./UpgradeScreen";
 import { ShadowPulseAlert } from "./ShadowPulseAlert";
-import { TEIWidget } from "./TEIWidget";
 import { FloatingActionMenu } from "./FloatingActionMenu";
 import { InsightsSidebar } from "./InsightsSidebar";
-import { MapInsightPanel } from "./MapInsightPanel";
-import { InfluenceNetwork } from "./InfluenceNetwork";
-import { StabilityHeatmap } from "./StabilityHeatmap";
 import { ShareDialog } from "./ShareDialog";
 import { WeeklyReportWidget } from "./WeeklyReportWidget";
 import { ConsciousnessThread } from "./ConsciousnessThread";
@@ -40,9 +36,6 @@ import { usePulseState } from "../state/pulseState";
 import { useJourneyState } from "../state/journeyState";
 import { PULSE_DAY_NAMES } from "../utils/pulseInsights";
 import { NextStepCard } from "./NextStepCard";
-import { RelationshipWeatherCard } from "./RelationshipWeatherCard";
-import { RelationshipPulse } from "./RelationshipPulse";
-import { ContextAtlasCard } from "./ContextAtlasCard";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { useAdminState } from "../state/adminState";
 import { getEffectiveFeatureAccess } from "../utils/featureFlags";
@@ -61,6 +54,7 @@ import { deriveContextAtlas, type ContextAtlasKey } from "../utils/contextAtlas"
 import { assignUrl } from "../services/navigation";
 import { SoulGeometryOverlay } from "./SoulGeometryOverlay";
 import { ContextNotePanel } from "./ContextNotePanel";
+import { MapAnalyticalPanel, MapOperationalStrip, MapSupportPanel } from "./Map/CoreMapPanels";
 const DawayirCanvas = lazy(() => import("../modules/dawayir/DawayirCanvas").then(m => ({ default: m.DawayirCanvas })));
 const FeelingCheckModal = lazy(() => import("../modules/dawayir/FeelingCheckModal").then(m => ({ default: m.FeelingCheckModal })));
 const EmergencyButton = lazy(() => import("../modules/dawayir/EmergencyButton").then(m => ({ default: m.EmergencyButton })));
@@ -92,7 +86,7 @@ const SovereignBroadcastOverlay: FC<{ message: { message: string; id: string } |
           initial={{ opacity: 0, y: -50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          className="fixed top-8 left-1/2 -translate-x-1/2 z-[300] w-full max-w-sm px-4 pointer-events-none"
+          className="fixed top-[calc(env(safe-area-inset-top)+5.75rem)] md:top-[calc(env(safe-area-inset-top)+6.25rem)] left-1/2 -translate-x-1/2 z-[300] w-full max-w-sm px-4 pointer-events-none"
         >
           <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-black/60 p-4 shadow-2xl backdrop-blur-2xl ring-1 ring-white/5">
             {/* Ambient Glow */}
@@ -178,8 +172,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   onOpenProfile,
   hideBottomDock = false
 }) => {
-  useGraphSync(); // تفعيل ميزة إتاحة الجراف
-  useAdaptiveLayout(); // تفعيل نظام التخطيط التكيّفي
+  useGraphSync(); // ØªÙØ¹ÙŠÙ„ Ù…ÙŠØ²Ø© Ø¥ØªØ§Ø­Ø© Ø§Ù„Ø¬Ø±Ø§Ù
+  useAdaptiveLayout(); // ØªÙØ¹ÙŠÙ„ Ù†Ø¸Ø§Ù… Ø§Ù„ØªØ®Ø·ÙŠØ· Ø§Ù„ØªÙƒÙŠÙ‘ÙÙŠ
 
   const mode = useLayoutState((s) => s.mode);
   const activeTab = useLayoutState((s) => s.activeTab);
@@ -403,7 +397,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
     if (selectedNodeId && showPlacementTooltip) dismissPlacementTooltip();
   }, [selectedNodeId, showPlacementTooltip, dismissPlacementTooltip]);
 
-  // ── 10-Second Mirror Integration ──
+  // â”€â”€ 10-Second Mirror Integration â”€â”€
   useEffect(() => {
     const mirrorName = useJourneyState.getState().mirrorName;
     if (mirrorName && activeNodes.length === 0 && !showOnboarding) {
@@ -530,6 +524,35 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       initial="hidden"
       animate="visible"
     >
+      {/* â”€â”€ Cinematic ambient background â”€â”€ */}
+      <div aria-hidden className="fixed inset-0 pointer-events-none" style={{ zIndex: -1 }}>
+        <div style={{
+          position: "absolute", width: 700, height: 700, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(20,184,166,0.10) 0%, transparent 70%)",
+          top: "-15%", right: "-8%",
+          animation: "av-orb-drift 40s ease-in-out infinite alternate"
+        }} />
+        <div style={{
+          position: "absolute", width: 580, height: 580, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 70%)",
+          bottom: "-18%", left: "-8%",
+          animation: "av-orb-drift 52s ease-in-out infinite alternate-reverse"
+        }} />
+        <div style={{
+          position: "absolute", width: 420, height: 420, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(245,158,11,0.055) 0%, transparent 70%)",
+          top: "35%", left: "28%",
+          animation: "av-orb-drift 44s ease-in-out infinite alternate"
+        }} />
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px)",
+          backgroundSize: "68px 68px",
+          WebkitMaskImage: "radial-gradient(ellipse 85% 80% at 50% 50%, black 20%, transparent 100%)",
+          maskImage: "radial-gradient(ellipse 85% 80% at 50% 50%, black 20%, transparent 100%)",
+          opacity: 0.55
+        }} />
+      </div>
       <SovereignBroadcastOverlay message={sovereignMessage} />
 
       {/* Harmony Indicator: Collective resonance line */}
@@ -562,7 +585,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/*  Header  */}
       <motion.header 
         variants={staggerContainer}
-        className="relative z-20 text-center px-4 sm:px-6 pt-6 pb-2 flex flex-col items-center gap-2 pointer-events-none"
+        className="relative z-20 text-center px-4 sm:px-6 pt-4 pb-1 flex flex-col items-center gap-2 pointer-events-none"
       >
         <AnimatePresence>
           {!isSacredIsolation && (
@@ -570,7 +593,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               variants={cosmicFade}
               className="flex flex-col items-center"
             >
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] text-teal-300 shadow-[0_10px_30px_rgba(0,0,0,0.3)] mb-4">
+              <div className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] mb-4" style={{ borderColor: "rgba(20,184,166,0.3)", background: "rgba(20,184,166,0.08)", color: "#5eead4" }}>
                 <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse shadow-[0_0_12px_rgba(45,212,191,0.8)]" />
                  Sovereign Radar
               </div>
@@ -586,8 +609,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               </h1>
 
               <p
-                className="text-[11px] md:text-xs tracking-widest max-w-[45ch] mx-auto opacity-50 font-medium select-none pointer-events-auto uppercase"
-                style={{ color: "var(--text-secondary)" }}
+                className="text-[11px] md:text-xs tracking-widest max-w-[45ch] mx-auto font-medium select-none pointer-events-auto uppercase" style={{ color: "#8faab8" }}
               >
                 <EditableText id={subtitleKey} defaultText={subtitle} page="map" multiline showEditIcon={false} />
               </p>
@@ -597,14 +619,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       </motion.header>
 
       {/* 
-          المنطقة الأولى — مؤشرات الوضع + سؤال اليوم
-          تظهر دائمًا (60% من الاهتمام البصري)
+          Ø§Ù„Ù…Ù†Ø·Ù‚Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰ â€” Ù…Ø¤Ø´Ø±Ø§Øª Ø§Ù„ÙˆØ¶Ø¹ + Ø³Ø¤Ø§Ù„ Ø§Ù„ÙŠÙˆÙ…
+          ØªØ¸Ù‡Ø± Ø¯Ø§Ø¦Ù…Ù‹Ø§ (60% Ù…Ù† Ø§Ù„Ø§Ù‡ØªÙ…Ø§Ù… Ø§Ù„Ø¨ØµØ±ÙŠ)
            */}
       {!journeyMode && activeNodes.length > 0 && (
         <div className="relative w-full z-30">
-          <div className="max-w-[42rem] mx-auto px-4 py-6 flex flex-col items-center">
+          <div className="max-w-[34rem] mx-auto px-4 pt-2 pb-3 flex flex-col items-center">
 
-            {/* 1️ HUD: OPERATIONAL (Sanctuary Mode) */}
+            {/* 1? HUD: OPERATIONAL (Sanctuary Mode) */}
             {activeTab === "operational" && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -614,77 +636,34 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   y: 0
                 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
-                className="w-full pointer-events-auto flex flex-col items-center gap-10 pt-10"
+                className="w-full pt-2"
               >
-                {/*  Pulse Capsule moved out to float at the bottom */}
-
-
+                <MapOperationalStrip
+                  activeNodesCount={activeNodes.length}
+                  greenNodesCount={greenNodes.length}
+                  archivedNodesCount={archivedNodes.length}
+                  onOpenSupport={() => setShowDashboard(true)}
+                />
               </motion.div>
             )}
 
-            {/* 2️ HUD: ANALYTICAL (Observatory Mode) */}
+            {/* 2? HUD: ANALYTICAL (Observatory Mode) */}
             {activeTab === "analytical" && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full pointer-events-auto space-y-4 pt-12"
-              >
-                {/*  Segmented Control: Choose your Lens */}
-                <div className="flex items-center justify-center gap-2 p-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl mx-auto w-fit mb-12 shadow-2xl">
-                  {[
-                    { id: "network", label: "الشبكة التكتيكية" },
-                    { id: "stability", label: "ميزان الاستقرار" },
-                    { id: "metrics", label: "مؤشرات الرصد" }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setSegmentedView(tab.id as "network" | "stability" | "metrics")}
-                      className={`px-6 py-2.5 rounded-full text-[11px] font-black tracking-widest transition-all duration-500 ${segmentedView === tab.id
-                        ? "bg-teal-500/20 text-teal-400 border border-teal-500/30 shadow-[0_0_20px_rgba(45,212,191,0.15)]"
-                        : "text-white/30 hover:text-white/50 border border-transparent"
-                        }`}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="space-y-6 max-h-[70vh] overflow-y-auto no-scrollbar pb-32">
-                  {segmentedView === "metrics" && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                      <div className="p-8 rounded-[2.5rem] bg-black/20 border border-white/10 backdrop-blur-3xl text-right">
-                        <h3 className="text-[10px] font-black text-amber-500/80 uppercase tracking-[0.25em] mb-6">مؤشر حِدّة الصدمة (Trauma Entropy)</h3>
-                        <TEIWidget />
-                      </div>
-                      <MapInsightPanel />
-                    </motion.div>
-                  )}
-
-                  {segmentedView === "network" && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                      <InfluenceNetwork />
-                    </motion.div>
-                  )}
-
-                  {segmentedView === "stability" && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                      <StabilityHeatmap />
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
+              <MapAnalyticalPanel
+                segmentedView={segmentedView}
+                onSegmentChange={setSegmentedView}
+              />
             )}
-
-            {/* 3️ HUD: NARRATIVE (Chronicle Mode) */}
+            {/* 3ï¸ HUD: NARRATIVE (Chronicle Mode) */}
             {activeTab === "narrative" && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full pointer-events-auto space-y-6 pt-12 max-h-[80vh] overflow-y-auto no-scrollbar pb-32"
+                className="w-full pointer-events-auto space-y-6 pt-6 max-h-[80vh] overflow-y-auto no-scrollbar pb-32"
               >
                 <div className="border-r-2 border-indigo-500/30 pr-4">
-                  <h2 className="text-xl font-black text-white mb-1">المسار</h2>
-                  <p className="text-xs text-white/40">سجل تطوّرك عبر الزمن</p>
+                  <h2 className="text-xl font-black text-white mb-1">Ø§Ù„Ù…Ø³Ø§Ø±</h2>
+                  <p className="text-xs text-white/40">Ø³Ø¬Ù„ ØªØ·ÙˆÙ‘Ø±Ùƒ Ø¹Ø¨Ø± Ø§Ù„Ø²Ù…Ù†</p>
                 </div>
 
                 <WeeklyReportWidget />
@@ -705,19 +684,19 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         </div>
       )}
 
-      {/* ── Sacred Isolation & Soul Geometry Toolbar ── */}
-      <div className="fixed top-6 right-20 z-[70] flex gap-2">
+      {/* â”€â”€ Sacred Isolation & Soul Geometry Toolbar â”€â”€ */}
+      <div className="fixed top-[calc(env(safe-area-inset-top)+6.5rem)] md:top-[calc(env(safe-area-inset-top)+7rem)] right-4 z-[70] flex gap-2">
         <button
           onClick={() => setIsSacredIsolation(!isSacredIsolation)}
           className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isSacredIsolation ? 'bg-teal-500 text-white shadow-[0_0_15px_rgba(45,212,191,0.5)]' : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
-          title={isSacredIsolation ? "إيقاف العزلة المقدسة" : "تفعيل العزلة المقدسة"}
+          title={isSacredIsolation ? "Ø¥ÙŠÙ‚Ø§Ù Ø§Ù„Ø¹Ø²Ù„Ø© Ø§Ù„Ù…Ù‚Ø¯Ø³Ø©" : "ØªÙØ¹ÙŠÙ„ Ø§Ù„Ø¹Ø²Ù„Ø© Ø§Ù„Ù…Ù‚Ø¯Ø³Ø©"}
         >
           <Mic className={`w-5 h-5 ${isSacredIsolation ? 'animate-pulse' : ''}`} />
         </button>
         <button
           onClick={() => setShowSoulGeometry(true)}
           className="w-10 h-10 rounded-full bg-white/5 text-white/40 flex items-center justify-center hover:bg-white/10 transition-all"
-          title="توليد بصمة الروح"
+          title="ØªÙˆÙ„ÙŠØ¯ Ø¨ØµÙ…Ø© Ø§Ù„Ø±ÙˆØ­"
         >
           <Sparkles className="w-5 h-5" />
         </button>
@@ -733,131 +712,40 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       <VoicePresence trigger={voiceTrigger} />
 
       {/* 
-          النبضة التكتيكية: تطفو أسفل الخريطة لسهولة الوصول
+          Ø§Ù„Ù†Ø¨Ø¶Ø© Ø§Ù„ØªÙƒØªÙŠÙƒÙŠØ©: ØªØ·ÙÙˆ Ø£Ø³ÙÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø© Ù„Ø³Ù‡ÙˆÙ„Ø© Ø§Ù„ÙˆØµÙˆÙ„
       */}
       {!isSacredIsolation && !journeyMode && (
-        <div className="relative w-full z-40 flex justify-center my-4">
+        <div className="relative w-full z-30 flex justify-center my-2 md:fixed md:left-1/2 md:bottom-[8.5rem] md:-translate-x-1/2 md:my-0 md:z-40">
           <DailyPulseWidget />
         </div>
       )}
 
       {/* 
-          المنطقة الداعمة — تفاصيل الخريطة ومُلخّص المحطات (30%)
+          Ø§Ù„Ù…Ù†Ø·Ù‚Ø© Ø§Ù„Ø¯Ø§Ø¹Ù…Ø© â€” ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø© ÙˆÙ…ÙÙ„Ø®Ù‘Øµ Ø§Ù„Ù…Ø­Ø·Ø§Øª (30%)
            */}
       {!journeyMode && (
         <motion.div
           variants={cosmicFade}
-          className="w-full max-w-[38rem] mx-auto mb-4"
           style={{
             order: sectionOrder["dashboard-details"],
             transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
           }}
         >
-          <button
-            type="button"
-            onClick={() => setShowDashboard((v) => !v)}
-            className="w-full flex items-center justify-between px-6 py-4 rounded-2xl transition-all duration-500 group"
-            style={{
-              background: "linear-gradient(135deg, rgba(15,23,42,0.6), rgba(0,0,0,0.6))",
-              border: "1px solid rgba(45,212,191,0.15)",
-              boxShadow: "0 10px 40px rgba(0,0,0,0.6)",
-              backdropFilter: "blur(24px)"
-            }}
-          >
-            <div className="flex flex-col items-start pr-2 border-r-2 border-teal-500/30">
-              <span className="text-[10px] font-black tracking-widest uppercase text-amber-500/80 mb-1 mr-3">حالة المنظومة</span>
-              <span className="text-xs text-white/50 mr-3">
-                {mapCopy.dashboardMapSummary(activeNodes.length, greenNodes.length, archivedNodes.length)}
-              </span>
-            </div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center border border-white/10 transition-transform duration-500 ${showDashboard ? 'rotate-180' : ''}`}>
-               <div className="w-1.5 h-1.5 border-r-2 border-b-2 border-white/30 rotate-45" />
-            </div>
-          </button>
-
-          <AnimatePresence>
-            {showDashboard && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden"
-              >
-                <div
-                  className="mt-2 rounded-xl p-4 space-y-4 text-right"
-                  style={{
-                    background: "rgba(15,23,42,0.5)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    backdropFilter: "blur(12px)"
-                  }}
-                >
-                  {/* توازن الدوائر — Mini Gauge */}
-                  {activeNodes.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-semibold mb-2" style={{ color: "var(--text-muted)" }}>
-                        توازن الدوائر
-                      </p>
-                      <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden">
-                        {["green", "yellow", "red"].map((ring) => {
-                          const count = activeNodes.filter((n) => n.ring === ring).length;
-                          if (!count) return null;
-                          const colors = { green: "#34d399", yellow: "#fbbf24", red: "#f87171" };
-                          return (
-                            <div
-                              key={ring}
-                              className="transition-all duration-700"
-                              style={{
-                                width: `${(count / activeNodes.length) * 100}%`,
-                                background: colors[ring as keyof typeof colors]
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-                      {/* أعداد تفصيلية */}
-                      <div className="flex justify-between mt-1.5">
-                        {["green", "yellow", "red"].map((ring) => {
-                          const count = activeNodes.filter((n) => n.ring === ring).length;
-                          if (!count) return null;
-                          const colors = { green: "#34d399", yellow: "#fbbf24", red: "#f87171" };
-                          const labels = { green: "آمن", yellow: "متعب", red: "ضاغط" };
-                          return (
-                            <span key={ring} className="text-[10px]" style={{ color: colors[ring as keyof typeof colors] }}>
-                              {count} {labels[ring as keyof typeof labels]}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Slogan — منطقة التنفّس (10%) */}
-                  {contextAtlas && (
-                    <ContextAtlasCard
-                      snapshot={contextAtlas}
-                      isUnifiedMode={galaxyMode}
-                      selectedContexts={selectedContexts}
-                      onToggleMode={handleToggleUnifiedContexts}
-                      onToggleContext={toggleContext}
-                      onFocusContext={handleFocusContext}
-                      onSelectNode={handleNodeClick}
-                    />
-                  )}
-                  {relationshipWeather && (
-                    <RelationshipWeatherCard
-                      snapshot={relationshipWeather}
-                      onSelectNode={handleNodeClick}
-                    />
-                  )}
-                  <RelationshipPulse />
-                  <p className="text-[11px] text-center pt-1" style={{ color: "rgba(45,212,191,0.35)" }}>
-                    {mapCopy.dashboardSlogan}
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <MapSupportPanel
+            show={showDashboard}
+            onToggle={() => setShowDashboard((v) => !v)}
+            activeNodesCount={activeNodes.length}
+            greenNodesCount={greenNodes.length}
+            archivedNodesCount={archivedNodes.length}
+            contextAtlas={contextAtlas}
+            relationshipWeather={relationshipWeather}
+            isUnifiedMode={galaxyMode}
+            selectedContexts={selectedContexts}
+            onToggleUnifiedContexts={handleToggleUnifiedContexts}
+            onToggleContext={toggleContext}
+            onFocusContext={handleFocusContext}
+            onSelectNode={handleNodeClick}
+          />
         </motion.div>
       )}
 
@@ -877,20 +765,20 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           >
             <div className="flex items-center justify-between mb-3">
               <h2 id="weekday-labels-title" className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-                ربط أيام الأسبوع بنشاط أو شخص
+                Ø±Ø¨Ø· Ø£ÙŠØ§Ù… Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ Ø¨Ù†Ø´Ø§Ø· Ø£Ùˆ Ø´Ø®Øµ
               </h2>
               <button
                 type="button"
                 onClick={() => setShowWeekdayLabelsModal(false)}
                 className="p-1.5 rounded-full transition-colors"
                 style={{ color: "var(--text-muted)" }}
-                aria-label="إغلاق"
+                aria-label="Ø¥ØºÙ„Ø§Ù‚"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             <p className="text-xs mb-3" style={{ color: "var(--text-secondary)" }}>
-              عند ملاحظة نبضات في انخفاض، الربط بنشاط أو شخص يفسّر التكرار ده أكثر.
+              Ø¹Ù†Ø¯ Ù…Ù„Ø§Ø­Ø¸Ø© Ù†Ø¨Ø¶Ø§Øª ÙÙŠ Ø§Ù†Ø®ÙØ§Ø¶ØŒ Ø§Ù„Ø±Ø¨Ø· Ø¨Ù†Ø´Ø§Ø· Ø£Ùˆ Ø´Ø®Øµ ÙŠÙØ³Ù‘Ø± Ø§Ù„ØªÙƒØ±Ø§Ø± Ø¯Ù‡ Ø£ÙƒØ«Ø±.
             </p>
             <div className="space-y-2">
               {PULSE_DAY_NAMES.map((dayName, i) => (
@@ -900,7 +788,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     type="text"
                     value={weekdayLabels[i] ?? ""}
                     onChange={(e) => setWeekdayLabel(i, e.target.value || null)}
-                    placeholder="مثال: اجتماع مع المدير"
+                    placeholder="Ù…Ø«Ø§Ù„: Ø§Ø¬ØªÙ…Ø§Ø¹ Ù…Ø¹ Ø§Ù„Ù…Ø¯ÙŠØ±"
                     className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300/30"
                     style={{
                       background: "rgba(255, 255, 255, 0.05)",
@@ -916,7 +804,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               onClick={() => setShowWeekdayLabelsModal(false)}
               className="mt-4 w-full cta-primary py-2.5 text-sm font-semibold"
             >
-              تمّ
+              ØªÙ…Ù‘
             </button>
           </motion.div>
         </div>
@@ -941,14 +829,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             }}
           >
             <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-              الطاقة منخفضة.. أنت في منطقة ضغط
+              Ø§Ù„Ø·Ø§Ù‚Ø© Ù…Ù†Ø®ÙØ¶Ø©.. Ø£Ù†Øª ÙÙŠ Ù…Ù†Ø·Ù‚Ø© Ø¶ØºØ·
             </p>
             <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
-              نفّذ خطوة صغيرة واحدة بس — من غير أي اشتباك.
+              Ù†ÙÙ‘Ø° Ø®Ø·ÙˆØ© ØµØºÙŠØ±Ø© ÙˆØ§Ø­Ø¯Ø© Ø¨Ø³ â€” Ù…Ù† ØºÙŠØ± Ø£ÙŠ Ø§Ø´ØªØ¨Ø§Ùƒ.
             </p>
             {suppressLowPulseCocoon ? (
               <p className="mt-3 text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
-                تمّ تنفيذ جولة الشحن. خُد بداية هادية مع خطوة بسيطة على الخريطة.
+                ØªÙ…Ù‘ ØªÙ†ÙÙŠØ° Ø¬ÙˆÙ„Ø© Ø§Ù„Ø´Ø­Ù†. Ø®ÙØ¯ Ø¨Ø¯Ø§ÙŠØ© Ù‡Ø§Ø¯ÙŠØ© Ù…Ø¹ Ø®Ø·ÙˆØ© Ø¨Ø³ÙŠØ·Ø© Ø¹Ù„Ù‰ Ø§Ù„Ø®Ø±ÙŠØ·Ø©.
               </p>
             ) : (
               <button
@@ -957,7 +845,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 className="mt-3 w-full cta-muted py-2.5 text-sm font-semibold transition-all hover:bg-white/10"
                 style={{ borderColor: "rgba(148, 163, 184, 0.3)" }}
               >
-                جولة شحن
+                Ø¬ÙˆÙ„Ø© Ø´Ø­Ù†
               </button>
             )}
           </motion.div>
@@ -977,17 +865,17 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 }}
               >
                 <p className="text-sm font-semibold" style={{ color: "var(--ring-danger)" }}>
-                  الرادار يرصد ضجيج عالي.. ثبّت حالك الأول
+                  Ø§Ù„Ø±Ø§Ø¯Ø§Ø± ÙŠØ±ØµØ¯ Ø¶Ø¬ÙŠØ¬ Ø¹Ø§Ù„ÙŠ.. Ø«Ø¨Ù‘Øª Ø­Ø§Ù„Ùƒ Ø§Ù„Ø£ÙˆÙ„
                 </p>
-                <p className="text-xs mt-1" style={{ color: "rgba(248, 113, 113, 0.7)" }}>
-                  قبل أي قرار، افصل المشاعر المشتعلة وارجع تحت السيطرة.
+                <p className="text-xs mt-1" style={{ color: "#fda4af" }}>
+                  Ù‚Ø¨Ù„ Ø£ÙŠ Ù‚Ø±Ø§Ø±ØŒ Ø§ÙØµÙ„ Ø§Ù„Ù…Ø´Ø§Ø¹Ø± Ø§Ù„Ù…Ø´ØªØ¹Ù„Ø© ÙˆØ§Ø±Ø¬Ø¹ ØªØ­Øª Ø§Ù„Ø³ÙŠØ·Ø±Ø©.
                 </p>
                 <button
                   type="button"
                   onClick={onOpenNoise}
                   className="mt-3 w-full cta-danger py-2.5 text-sm font-semibold"
                 >
-                  إسكات الضجيج
+                  Ø¥Ø³ÙƒØ§Øª Ø§Ù„Ø¶Ø¬ÙŠØ¬
                 </button>
               </motion.div>
             )}
@@ -1002,10 +890,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 }}
               >
                 <p className="text-sm font-semibold" style={{ color: "var(--ring-safe)" }}>
-                  الطاقة ممتازة.. وقت تحدّي المسار
+                  Ø§Ù„Ø·Ø§Ù‚Ø© Ù…Ù…ØªØ§Ø²Ø©.. ÙˆÙ‚Øª ØªØ­Ø¯Ù‘ÙŠ Ø§Ù„Ù…Ø³Ø§Ø±
                 </p>
-                <p className="text-xs mt-1" style={{ color: "rgba(45, 212, 191, 0.7)" }}>
-                  {challengeLabel ?? "جاهز للخطوة الواردة"}
+                <p className="text-xs mt-1" style={{ color: "#5eead4" }}>
+                  {challengeLabel ?? "Ø¬Ø§Ù‡Ø² Ù„Ù„Ø®Ø·ÙˆØ© Ø§Ù„ÙˆØ§Ø±Ø¯Ø©"}
                 </p>
                 <button
                   type="button"
@@ -1013,14 +901,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   className="mt-3 w-full cta-primary py-2.5 text-sm font-semibold disabled:opacity-40"
                   disabled={!onOpenChallenge}
                 >
-                  ابدأ التحدي
+                  Ø§Ø¨Ø¯Ø£ Ø§Ù„ØªØ­Ø¯ÙŠ
                 </button>
               </motion.div>
             )}
 
             {/*  Controls Bar (HUD Right)  */}
             <motion.div
-              className="absolute z-20 max-w-sm bottom-[12vh] right-4 flex flex-col items-end gap-3 pointer-events-auto"
+              className="fixed z-20 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-4 right-4 flex flex-col items-stretch gap-3 pointer-events-auto md:left-auto md:right-4 md:max-w-sm md:items-end"
               variants={cosmicFade}
               style={{
                 order: sectionOrder["controls-bar"],
@@ -1034,7 +922,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 onClick={() => setGalaxyMode((v) => !v)}
                 className={`glass-button px-4 py-2.5 text-sm font-semibold ${galaxyMode ? "glass-button-active" : ""
                   }`}
-                title={galaxyMode ? "ارجع للمسار الواحد" : "عرض كل الدوائر"}
+                title={galaxyMode ? "Ø§Ø±Ø¬Ø¹ Ù„Ù„Ù…Ø³Ø§Ø± Ø§Ù„ÙˆØ§Ø­Ø¯" : "Ø¹Ø±Ø¶ ÙƒÙ„ Ø§Ù„Ø¯ÙˆØ§Ø¦Ø±"}
               >
                 {galaxyMode ? (
                   <EditableText id="map_view_single_cta" defaultText={mapCopy.viewSingleCta} page="map" editOnClick={false} />
@@ -1088,10 +976,10 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     onClick={() => setViewMode("map")}
                     className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${viewMode === "map" ? "cta-primary" : ""}`}
                     style={viewMode !== "map" ? { color: "var(--text-secondary)" } : {}}
-                    title="عرض الخريطة"
+                    title="Ø¹Ø±Ø¶ Ø§Ù„Ø®Ø±ÙŠØ·Ø©"
                   >
                     <Map className="w-4 h-4" />
-                    <EditableText id="map_view_mode_map" defaultText="الخريطة" page="map" editOnClick={false} />
+                    <EditableText id="map_view_mode_map" defaultText="Ø§Ù„Ø®Ø±ÙŠØ·Ø©" page="map" editOnClick={false} />
                   </button>
                   <button
                     type="button"
@@ -1101,12 +989,12 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     }}
                     className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${viewMode === "tree" ? "cta-primary" : ""}`}
                     style={viewMode !== "tree" ? { color: canUseFamilyTree ? "var(--text-secondary)" : "var(--text-muted)" } : {}}
-                    title="شجرة العائلة"
+                    title="Ø´Ø¬Ø±Ø© Ø§Ù„Ø¹Ø§Ø¦Ù„Ø©"
                   >
                     <TreeDeciduous className="w-4 h-4" />
                     {canUseFamilyTree
-                      ? <EditableText id="map_view_mode_tree" defaultText="شجرة العائلة" page="map" editOnClick={false} />
-                      : <EditableText id="map_view_mode_tree_locked" defaultText="شجرة العائلة 🔒" page="map" editOnClick={false} />
+                      ? <EditableText id="map_view_mode_tree" defaultText="Ø´Ø¬Ø±Ø© Ø§Ù„Ø¹Ø§Ø¦Ù„Ø©" page="map" editOnClick={false} />
+                      : <EditableText id="map_view_mode_tree_locked" defaultText="Ø´Ø¬Ø±Ø© Ø§Ù„Ø¹Ø§Ø¦Ù„Ø© ðŸ”’" page="map" editOnClick={false} />
                     }
                   </button>
                 </div>
@@ -1123,8 +1011,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 onClick={() => setShowVoicePulse(true)}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                title="تفريغ صوتي"
-                aria-label="تفريغ صوتي"
+                title="ØªÙØ±ÙŠØº ØµÙˆØªÙŠ"
+                aria-label="ØªÙØ±ÙŠØº ØµÙˆØªÙŠ"
               >
                 <Mic size={20} />
               </motion.button>
@@ -1156,7 +1044,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/*  Pulse Insight (HUD Top Left)  */}
       {
         pulseInsight && (
-          <motion.div className="absolute z-20 top-24 left-4 w-64 glass-card bg-slate-950/70 border border-indigo-500/20 shadow-2xl backdrop-blur-md px-3 py-3 text-right pointer-events-auto rounded-lg" variants={cosmicFade}>
+          <motion.div className="absolute z-20 top-[calc(env(safe-area-inset-top)+6.5rem)] md:top-[calc(env(safe-area-inset-top)+7rem)] left-4 w-64 glass-card bg-slate-950/70 border border-indigo-500/20 shadow-2xl backdrop-blur-md px-3 py-3 text-right pointer-events-auto rounded-lg" variants={cosmicFade}>
             <p className="text-xs font-semibold" style={{ color: "rgba(167, 139, 250, 0.9)" }}>{pulseInsight.title}</p>
             <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(167, 139, 250, 0.6)" }}>{pulseInsight.body}</p>
             <button
@@ -1165,7 +1053,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               className="mt-2 text-xs font-medium hover:underline"
               style={{ color: "rgba(167, 139, 250, 0.7)" }}
             >
-               ربط بنشاط أو شخص
+               Ø±Ø¨Ø· Ø¨Ù†Ø´Ø§Ø· Ø£Ùˆ Ø´Ø®Øµ
             </button>
           </motion.div>
         )
@@ -1342,8 +1230,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
             <span>
               {lastAddedNode ? (
                 <>
-                  تم إضافة <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{lastAddedNode.label}</span>{" "}
-                  في{" "}
+                  ØªÙ… Ø¥Ø¶Ø§ÙØ© <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{lastAddedNode.label}</span>{" "}
+                  ÙÙŠ{" "}
                   <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
                     <span
                       style={{
@@ -1363,8 +1251,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                     </span>
                   </span>
                   {canUseBasicDiagnosis
-                    ? ". اضغط عليه للتفاصيل أو اسحبه لو عايز تغيّر مكانه."
-                    : ". التفاصيل مقفلة حالياً — فعّل Feature Flags."}
+                    ? ". Ø§Ø¶ØºØ· Ø¹Ù„ÙŠÙ‡ Ù„Ù„ØªÙØ§ØµÙŠÙ„ Ø£Ùˆ Ø§Ø³Ø­Ø¨Ù‡ Ù„Ùˆ Ø¹Ø§ÙŠØ² ØªØºÙŠÙ‘Ø± Ù…ÙƒØ§Ù†Ù‡."
+                    : ". Ø§Ù„ØªÙØ§ØµÙŠÙ„ Ù…Ù‚ÙÙ„Ø© Ø­Ø§Ù„ÙŠØ§Ù‹ â€” ÙØ¹Ù‘Ù„ Feature Flags."}
                 </>
               ) : (
                 <EditableText id="map_first_placement_tooltip" defaultText={mapCopy.firstPlacementTooltip} page="map" showEditIcon={false} />
@@ -1384,13 +1272,13 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   }}
                   className="rounded-full px-2.5 py-1 text-xs font-semibold border border-white/15 hover:bg-white/5 transition-colors"
                   style={{ color: "var(--text-primary)" }}
-                  title="افتح الشخص"
-                  aria-label="افتح الشخص"
+                  title="Ø§ÙØªØ­ Ø§Ù„Ø´Ø®Øµ"
+                  aria-label="Ø§ÙØªØ­ Ø§Ù„Ø´Ø®Øµ"
                 >
-                  افتح
+                  Ø§ÙØªØ­
                 </button>
               )}
-              <button type="button" onClick={dismissPlacementTooltip} className="rounded-full p-1.5 transition-colors" style={{ color: "var(--text-muted)" }} title="إغلاق" aria-label="إغلاق">
+              <button type="button" onClick={dismissPlacementTooltip} className="rounded-full p-1.5 transition-colors" style={{ color: "var(--text-muted)" }} title="Ø¥ØºÙ„Ø§Ù‚" aria-label="Ø¥ØºÙ„Ø§Ù‚">
 
               </button>
             </div>
@@ -1401,7 +1289,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/*  Ring Legend  */}
       <motion.div
         className="mt-6 flex flex-wrap justify-center gap-3 text-sm"
-        aria-label="علامات دوائر المسافة"
+        aria-label="Ø¹Ù„Ø§Ù…Ø§Øª Ø¯ÙˆØ§Ø¦Ø± Ø§Ù„Ù…Ø³Ø§ÙØ©"
         variants={cosmicFade}
         style={{
           order: sectionOrder["ring-legend"],
@@ -1443,7 +1331,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         <EditableText id="map_threat_level_hint" defaultText={mapCopy.threatLevelHint} page="map" multiline showEditIcon={false} />
       </p>
 
-      {/* ── Context Note Panel ── shows when a node is selected */}
+      {/* â”€â”€ Context Note Panel â”€â”€ shows when a node is selected */}
       <AnimatePresence>
         {selectedNodeId && (
           <div
@@ -1464,11 +1352,11 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         journeyMode && onJourneyComplete && (
           <div className="mt-8 flex flex-col items-center gap-2">
             <button type="button" onClick={onJourneyComplete} disabled={!canCompleteJourneyStep} className="cta-primary px-6 py-3 font-semibold disabled:opacity-40 disabled:cursor-not-allowed">
-              أكمل المرحلة
+              Ø£ÙƒÙ…Ù„ Ø§Ù„Ù…Ø±Ø­Ù„Ø©
             </button>
             {!canCompleteJourneyStep && nodes.length > 0 && (
               <p className="text-sm max-w-xs text-center" style={{ color: "var(--text-muted)" }}>
-                افتح الدائرة وراجع التوجّه ومسار الحالة أو كمّل التدريب، بعدها اضغط "أكمل المرحلة"
+                Ø§ÙØªØ­ Ø§Ù„Ø¯Ø§Ø¦Ø±Ø© ÙˆØ±Ø§Ø¬Ø¹ Ø§Ù„ØªÙˆØ¬Ù‘Ù‡ ÙˆÙ…Ø³Ø§Ø± Ø§Ù„Ø­Ø§Ù„Ø© Ø£Ùˆ ÙƒÙ…Ù‘Ù„ Ø§Ù„ØªØ¯Ø±ÙŠØ¨ØŒ Ø¨Ø¹Ø¯Ù‡Ø§ Ø§Ø¶ØºØ· "Ø£ÙƒÙ…Ù„ Ø§Ù„Ù…Ø±Ø­Ù„Ø©"
               </p>
             )}
           </div>
@@ -1512,20 +1400,20 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         )
       }
 
-      {/*  أرشيف سؤال اليوم  */}
+      {/*  Ø£Ø±Ø´ÙŠÙ Ø³Ø¤Ø§Ù„ Ø§Ù„ÙŠÙˆÙ…  */}
       <DailyJournalArchive
         isOpen={showJournalArchive}
         onClose={() => setShowJournalArchive(false)}
       />
 
-      {/*  نبضة الظل — Shadow Pulse Alert  */}
+      {/*  Ù†Ø¨Ø¶Ø© Ø§Ù„Ø¸Ù„ â€” Shadow Pulse Alert  */}
       {
         !journeyMode && (
           <ShadowPulseAlert onSelectNode={handleNodeClick} />
         )
       }
 
-      {/*  Floating Action Menu — القائمة العائمة  */}
+      {/*  Floating Action Menu â€” Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¹Ø§Ø¦Ù…Ø©  */}
       {
         !journeyMode && mode === "focus" && (
           <FloatingActionMenu
@@ -1542,14 +1430,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         )
       }
 
-      {/*  Insights Sidebar — الشريط الجانبي إحصائيات  */}
+      {/*  Insights Sidebar â€” Ø§Ù„Ø´Ø±ÙŠØ· Ø§Ù„Ø¬Ø§Ù†Ø¨ÙŠ Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª  */}
       {
         !journeyMode && (mode === "insights" || mode === "adaptive") && (
           <InsightsSidebar onOpenArchive={() => setShowJournalArchive(true)} />
         )
       }
 
-      {/*  Tab Navigation — التبويبات (Desktop Only — Mobile uses AppChromeShell nav)  */}
+      {/*  Tab Navigation â€” Ø§Ù„ØªØ¨ÙˆÙŠØ¨Ø§Øª (Desktop Only â€” Mobile uses AppChromeShell nav)  */}
       {
         !journeyMode && (
           <div className="hidden md:block fixed bottom-0 left-0 right-0 z-50">
@@ -1563,7 +1451,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         )
       }
 
-      {/*  Layout Mode Switcher — مُبدّل الأوضاع  */}
+      {/*  Layout Mode Switcher â€” Ù…ÙØ¨Ø¯Ù‘Ù„ Ø§Ù„Ø£ÙˆØ¶Ø§Ø¹  */}
       {
         !journeyMode && !hideBottomDock && (
           <LayoutModeSwitcher />
@@ -1598,3 +1486,5 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       </motion.main >
   );
 };
+
+

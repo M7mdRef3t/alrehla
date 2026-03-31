@@ -353,10 +353,10 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-4 sm:inset-auto sm:top-1/2 sm:-translate-y-1/2 sm:max-w-md w-full mx-auto z-50 overflow-hidden"
+            initial={{ opacity: 0, scale: 0.95, y: -10, x: "-50%" }}
+            animate={{ opacity: 1, scale: 1, y: "-50%", x: "-50%" }}
+            exit={{ opacity: 0, scale: 0.95, y: -10, x: "-50%" }}
+            className="fixed top-1/2 left-1/2 w-[calc(100%-2rem)] max-w-md z-50 overflow-hidden"
           >
             <div className="bg-slate-950 border border-slate-800 rounded-3xl shadow-2xl flex flex-col max-h-[90vh]">
 

@@ -56,7 +56,62 @@ const ONBOARDING_STYLES = `
   --soft-teal-dim: rgba(45, 212, 191, 0.12);
   --soft-teal-glow: rgba(45, 212, 191, 0.25);
 }
+
+/* ── Cinematic background matching hero ── */
+.ob-bg {
+  background: #020408;
+}
+.ob-bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+}
+.ob-orb-1 {
+  width: 650px; height: 650px;
+  background: radial-gradient(circle, rgba(20,184,166,0.12) 0%, transparent 70%);
+  top: -15%; right: -8%;
+  animation: ob-orb-drift1 38s ease-in-out infinite alternate;
+}
+.ob-orb-2 {
+  width: 550px; height: 550px;
+  background: radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 70%);
+  bottom: -20%; left: -10%;
+  animation: ob-orb-drift2 52s ease-in-out infinite alternate;
+}
+.ob-orb-3 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(245,158,11,0.055) 0%, transparent 70%);
+  top: 40%; left: 25%;
+  animation: ob-orb-drift3 44s ease-in-out infinite alternate;
+}
+.ob-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 20%, transparent 100%);
+  opacity: 0.65;
+  pointer-events: none;
+}
+@keyframes ob-orb-drift1 {
+  0%   { transform: translate(0%, 0%)  scale(1);    }
+  50%  { transform: translate(-5%, 7%) scale(1.1);  }
+  100% { transform: translate(4%, -4%) scale(0.93); }
+}
+@keyframes ob-orb-drift2 {
+  0%   { transform: translate(0%, 0%)    scale(1);    }
+  50%  { transform: translate(7%, -9%)  scale(1.07); }
+  100% { transform: translate(-4%, 5%)  scale(0.96); }
+}
+@keyframes ob-orb-drift3 {
+  0%   { transform: translate(0%, 0%)  scale(1);    }
+  100% { transform: translate(4%, -7%) scale(1.14); }
+}
 `;
+
 
 /* ════════════════════════════════════════════════
    ONBOARDING FLOW — رحلة اكتشاف الذات
@@ -603,14 +658,27 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
 
   return (
     <div 
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 ob-dark-force"
-      style={{ background: "rgba(10, 14, 31, 0.96)", backdropFilter: "blur(8px)" }}
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 ob-dark-force ob-bg"
       dir="rtl"
     >
       <style>{ONBOARDING_STYLES}</style>
+
+      {/* ── Cinematic ambient background ── */}
+      <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="ob-bg-orb ob-orb-1" />
+        <div className="ob-bg-orb ob-orb-2" />
+        <div className="ob-bg-orb ob-orb-3" />
+        <div className="ob-grid" />
+        {/* Vignette */}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "radial-gradient(ellipse 85% 80% at 50% 50%, transparent 35%, rgba(2,4,8,0.65) 100%)"
+        }} />
+      </div>
+
       <div 
-        className="relative w-full max-w-sm rounded-[2.5rem] flex flex-col max-h-[90vh] overflow-hidden shadow-2xl border border-white/10"
-        style={{ background: "rgba(12, 17, 40, 0.8)", backdropFilter: "blur(24px)" }}
+        className="relative z-10 w-full max-w-sm rounded-[2.5rem] flex flex-col max-h-[90vh] overflow-hidden shadow-2xl border border-white/10"
+        style={{ background: "rgba(8, 12, 22, 0.82)", backdropFilter: "blur(28px)" }}
       >
         <div className="flex justify-center gap-2 pt-6 pb-2">
           {dots.map((d) => (

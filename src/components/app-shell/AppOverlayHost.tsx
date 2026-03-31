@@ -1,7 +1,7 @@
 import { lazy, memo, Suspense, useCallback, useMemo } from "react";
 import { useAdminState } from "../../state/adminState";
 import { getEffectiveRoleFromState, useAuthState } from "../../state/authState";
-import { getEffectiveFeatureAccess } from "../../utils/featureFlags";
+import { getEffectiveFeatureAccess, isPrivilegedRole } from "../../utils/featureFlags";
 import { isUserMode } from "../../config/appEnv";
 import type { AgentActions, AgentContext } from "../../agent/types";
 import { useAppOverlayState } from "../../state/appOverlayState";
@@ -83,7 +83,7 @@ interface AppOverlayHostProps {
   agentActions?: AgentActions;
   agentSystemPrompt?: string;
   onFeedbackSubmit: (payload: FeedbackSubmission) => Promise<void> | void;
-  onOnboardingComplete?: () => void;
+  onOnboardingComplete?: (skipped?: boolean) => void;
 }
 
 type VisibleOverlayId = AppOverlayFlag | "emergency" | "pulseCheck";
@@ -126,6 +126,9 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   const betaAccess = useAdminState((s) => s.betaAccess);
   const adminAccess = useAdminState((s) => s.adminAccess);
   const role = useAuthState(getEffectiveRoleFromState);
+  const rawRole = useAuthState((s) => s.role);
+  const tier = useAuthState((s) => s.tier);
+  const isOwner = isPrivilegedRole(rawRole) || isPrivilegedRole(role) || adminAccess;
 
   const canUsePulseCheck = useMemo(
     () =>
@@ -310,14 +313,18 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     openShareStats: () => setOverlay("shareStats", true)
   });
 
-  const onOnboardingComplete = useCallback(() => {
+  const onOnboardingComplete = useCallback((skipped: boolean = false) => {
     if (externalOnboardingComplete) {
-      externalOnboardingComplete();
+      externalOnboardingComplete(skipped);
     } else {
       setOverlay("onboarding", false);
-      setScreen("map");
+      if (tier === "free" && !isOwner) {
+        setOverlay("premiumBridge", true);
+      } else {
+        setScreen("map");
+      }
     }
-  }, [externalOnboardingComplete, setOverlay, setScreen]);
+  }, [externalOnboardingComplete, setOverlay, setScreen, tier, isOwner]);
 
   const onJourneyTimelineCardClick = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId);

@@ -7,6 +7,7 @@
 import React, { useMemo } from "react";
 import { Users, Activity, AlertCircle, TrendingDown, Lightbulb, Download } from "lucide-react";
 import { loadEnterpriseData, generateMockMetrics, ENTERPRISE_TYPE_LABELS } from "../../../services/enterpriseAnalytics";
+import { AdminTooltip } from "./Overview/components/AdminTooltip";
 
 export const B2BAnalytics: React.FC = () => {
     const data = useMemo(() => loadEnterpriseData(), []);
@@ -53,6 +54,7 @@ export const B2BAnalytics: React.FC = () => {
                     value={metrics.avgEnergyLevel.toString()}
                     subValue="من 10"
                     trend="+0.2 عن الشهر الماضي"
+                    tooltip="مقياس يعكس حالة النشاط والاندماج للأعضاء. الرقم العالي يعني بيئة صحية."
                 />
                 <StatusCard
                     icon={<AlertCircle className="w-5 h-5 text-rose-400" />}
@@ -60,6 +62,7 @@ export const B2BAnalytics: React.FC = () => {
                     value={metrics.stressIndex.toString()}
                     subValue="تصاعدي"
                     trend="تنبيه: نمو طفيف في القلق"
+                    tooltip="مؤشر يتنبأ باحتمالية الاحتراق الوظيفي أو التوتر بناءً على مسارات التشخيص."
                 />
                 <StatusCard
                     icon={<Users className="w-5 h-5 text-teal-400" />}
@@ -67,6 +70,7 @@ export const B2BAnalytics: React.FC = () => {
                     value={(metrics.weeklyActiveRate * 100).toFixed(0) + "%"}
                     subValue="مشاركة يومية"
                     trend="استقرار في النشاط"
+                    tooltip="نسبة الأعضاء اللي بيفتحوا التطبيق أو بيكملوا المهام والتشخيصات أسبوعياً."
                 />
             </div>
 
@@ -76,17 +80,23 @@ export const B2BAnalytics: React.FC = () => {
                     <Lightbulb className="w-5 h-5 text-indigo-400" />
                 </div>
                 <div>
-                    <h4 className="text-sm font-bold text-indigo-300 mb-1">توصية جارفيس الاستراتيجية</h4>
+                    <div className="flex items-center gap-2 mb-1">
+                        <h4 className="text-sm font-bold text-indigo-300">توصية جارفيس الاستراتيجية</h4>
+                        <AdminTooltip content="نصيحة تلقائية مبنية على تحليل سلوك الفريق للتوجيه نحو أفضل إجراء يمكن للإدارة اتخاذه الآن." position="top" />
+                    </div>
                     <p className="text-xs text-slate-400 leading-relaxed">{metrics.recommendation}</p>
                 </div>
             </div>
 
             {/* Top Boundary Patterns */}
             <div className="admin-glass-card p-6">
-                <h3 className="text-sm font-bold text-white mb-6 flex items-center gap-2">
-                    <TrendingDown className="w-4 h-4 text-emerald-400" />
-                    أبرز تحديات الحدود (أصوات مجمّعة)
-                </h3>
+                <div className="flex items-center gap-2 mb-6">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <TrendingDown className="w-4 h-4 text-emerald-400" />
+                        أبرز تحديات الحدود (أصوات مجمّعة)
+                    </h3>
+                    <AdminTooltip content="أكثر الأنماط النفسية تكراراً التي يعاني منها الموظفون/الأعضاء (مثل فقدان الشغف، صعوبة قول لا). البيانات مجهّلة لحفظ الخصوصية." position="top" />
+                </div>
                 <div className="flex flex-wrap gap-3">
                     {metrics.topBoundaryPatterns.map((pattern: string, i: number) => (
                         <div key={i} className="px-4 py-2 rounded-xl bg-slate-900 border border-white/5 text-xs text-slate-300">
@@ -102,7 +112,7 @@ export const B2BAnalytics: React.FC = () => {
     );
 };
 
-const StatusCard: React.FC<{ icon: React.ReactNode; label: string; value: string; subValue: string; trend: string }> = ({ icon, label, value, subValue, trend }) => (
+const StatusCard: React.FC<{ icon: React.ReactNode; label: string; value: string; subValue: string; trend: string; tooltip?: string }> = ({ icon, label, value, subValue, trend, tooltip }) => (
     <div className="admin-glass-card p-6 group">
         <div className="flex items-center justify-between mb-4">
             <div className="p-2 rounded-lg bg-white/5 font-bold group-hover:bg-white/10 transition-colors">
@@ -114,7 +124,10 @@ const StatusCard: React.FC<{ icon: React.ReactNode; label: string; value: string
             <span className="text-3xl font-black text-white">{value}</span>
         </div>
         <div>
-            <h4 className="text-xs font-bold text-slate-400">{label}</h4>
+            <div className="flex items-center gap-2">
+                <h4 className="text-xs font-bold text-slate-400">{label}</h4>
+                {tooltip && <AdminTooltip content={tooltip} position="bottom" />}
+            </div>
             <p className="text-[10px] text-emerald-500/80 mt-1">{trend}</p>
         </div>
     </div>

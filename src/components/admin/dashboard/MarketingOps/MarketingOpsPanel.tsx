@@ -21,6 +21,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { ManualLeadEntry } from "./ManualLeadEntry";
+import { StatCard } from "../Executive/components/StatCard";
+import { AdminTooltip } from "../Overview/components/AdminTooltip";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -112,24 +114,7 @@ function buildEmailBody(lead: QuickSendLead): string {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function StatCard({
-  label, value, icon, accent,
-}: {
-  label: string; value: number | string; icon: React.ReactNode; accent: string;
-}) {
-  return (
-    <div className={`relative rounded-2xl border bg-slate-900/60 backdrop-blur p-5 flex flex-col gap-3 overflow-hidden border-white/5 transition-all`}>
-      <div className={`w-10 h-10 rounded-xl bg-${accent}-500/10 flex items-center justify-center text-${accent}-400`}>
-        {icon}
-      </div>
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</p>
-        <p className="text-3xl font-black text-white mt-1">{value}</p>
-      </div>
-      <div className={`absolute right-0 top-0 w-24 h-24 rounded-full bg-${accent}-500/5 blur-2xl`} />
-    </div>
-  );
-}
+
 
 function ActionButton({
   label, icon, onClick, loading, variant,
@@ -351,12 +336,11 @@ export function MarketingOpsPanel() {
         onError={(msg) => showToast(msg, false)} 
       />
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="تم الإرسال" value={sent} icon={<CheckCircle2 className="w-5 h-5" />} accent="emerald" />
-        <StatCard label="في الانتظار" value={pending} icon={<Clock className="w-5 h-5" />} accent="amber" />
-        <StatCard label="فشل" value={failed} icon={<AlertCircle className="w-5 h-5" />} accent="rose" />
-        <StatCard label="بدأ Onboarding" value={realStarts} icon={<TrendingUp className="w-5 h-5" />} accent="indigo" />
+        <StatCard title="تم الإرسال" value={sent} icon={<CheckCircle2 className="w-5 h-5" />} glowColor="teal" tooltip="إجمالي الرسائل التسويقية أو التلقائية التي تم توصيلها بنجاح للجمهور عبر كل القنوات المتاحة." />
+        <StatCard title="في الانتظار" value={pending} icon={<Clock className="w-5 h-5" />} glowColor="amber" tooltip="العملاء في قائمة الانتظار (Queue) لجدولة الإرسال التلقائي تدريجياً لتفادي الحظر." />
+        <StatCard title="فشل التوصيل" value={failed} icon={<AlertCircle className="w-5 h-5" />} glowColor="rose" tooltip="الـ Leads اللي واجهوا مشكلة في الإرسال (غالباً بسبب انتهاء باقة الإيميل أو بريد غير صالح)." />
+        <StatCard title="بدأ Onboarding" value={realStarts} icon={<TrendingUp className="w-5 h-5" />} glowColor="indigo" tooltip="العدد الفعلي للمستخدمين اللي ضغطوا على الرابط المرسل وبدأوا عملية التشخيص في منصة الرحلة." />
       </div>
 
       {/* ── Email Engagement Analytics ─────────────────────────────────── */}
@@ -367,8 +351,11 @@ export function MarketingOpsPanel() {
               <Mail className="w-4 h-4 text-sky-400" />
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Email Analytics</p>
-              <p className="text-xs text-slate-400">بيانات حقيقية من الـ Webhook</p>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Email Analytics</p>
+                <AdminTooltip content="تحليلات تفاعل الجمهور مع حملات البريد الإلكتروني. البيانات تُحدث لحظياً بمجرد فتح الإيميل أو النقر على الرابط عبر الـ Webhook." position="bottom" />
+              </div>
+              <p className="text-xs text-slate-400 mt-1">بيانات حقيقية من الـ Webhook</p>
             </div>
           </div>
 
@@ -438,7 +425,10 @@ export function MarketingOpsPanel() {
 
       {/* Auto Actions */}
       <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 space-y-4 backdrop-blur">
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">إجراءات تلقائية</p>
+        <div className="flex items-center gap-2">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">إجراءات تلقائية</p>
+          <AdminTooltip content="أوامر للتحكم اليدوي في الطوابير (Queues). التفعيل الفوري بيتخطى الجدول الزمني، والـ Reset بيرجع الداتا للحالة الابتدائية للتجربة تاني." position="top" />
+        </div>
         <div className="flex flex-wrap gap-3">
           <ActionButton label="إرسال الدفعة الآن" icon={<Send className="w-4 h-4" />}
             onClick={() => handleAction("trigger_batch", "إرسال الدفعة")}
@@ -463,7 +453,10 @@ export function MarketingOpsPanel() {
             <span className="text-[11px] text-slate-500">{availableLeads.length} lead متاح</span>
           </div>
           <div>
-            <p className="text-sm font-black text-indigo-300">📱 إرسال يدوي سريع</p>
+            <div className="flex items-center justify-end gap-2">
+              <AdminTooltip content="لوحة الدعم السريع، تسمح للمالك بإرسال روابط مخصصة بشكل فردي للمستخدمين عن طريق قنوات التواصل المباشرة خارج حصة الإيميلات (Quota)." position="right" />
+              <p className="text-sm font-black text-indigo-300">📱 إرسال يدوي سريع</p>
+            </div>
             <p className="text-[11px] text-slate-500">واتساب · تيليجرام · SMS · إيميل يدوي — مجاناً تماماً</p>
           </div>
         </button>

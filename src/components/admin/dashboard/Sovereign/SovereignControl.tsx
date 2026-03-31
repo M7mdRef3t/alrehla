@@ -2,6 +2,7 @@ import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Sparkles, Send, Zap, Wind, AlertCircle, Users, Activity, ShieldAlert, History } from "lucide-react";
+import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { supabase, isSupabaseReady } from "../../../../services/supabaseClient";
 import { fetchOverviewStats, fetchAlertIncidents, fetchBroadcasts, type OverviewStats, type AlertIncident } from "../../../../services/adminApi";
 import { useAdminState, type AdminBroadcast } from "../../../../state/adminState";
@@ -85,7 +86,10 @@ export const SovereignControl: FC = () => {
       <header className="flex flex-col gap-2">
         <div className="flex items-center gap-3 text-amber-500">
           <Shield className="w-6 h-6" />
-          <h1 className="text-3xl font-black uppercase tracking-tighter">مركز السيادة الإدراكية</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-black uppercase tracking-tighter">مركز السيادة الإدراكية</h1>
+            <AdminTooltip content="لوحة التحكم الفوقية (God Mode) للتواصل المباشر مع عقول كل الموجودين في الملاذ أو تعديل ترددات الوعي للمنصة بالكامل." position="bottom" />
+          </div>
         </div>
         <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">تحكم في طاقة الملاذ ورسائل الروح</p>
       </header>
@@ -96,7 +100,10 @@ export const SovereignControl: FC = () => {
           <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <Users className="w-12 h-12 text-teal-400" />
           </div>
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">أرواح متصلة الآن</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">أرواح متصلة الآن</p>
+            <AdminTooltip content="عدد كل الزوار والمستخدمين النشطين داخل الملاذ في اللحظة دي." position="bottom" />
+          </div>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-black text-white tabular-nums">
               {isLoadingPulse ? "..." : (liveStats?.activeNow ?? 0).toLocaleString("ar-EG")}
@@ -109,7 +116,10 @@ export const SovereignControl: FC = () => {
           <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <Activity className="w-12 h-12 text-amber-400" />
           </div>
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">مؤشر الصفاء الجماعي</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">مؤشر الصفاء الجماعي</p>
+            <AdminTooltip content="متوسط تقييم المزاج لكل المستخدمين دلوقتي. مؤشر حي على صحة المجتمع ككل." position="bottom" />
+          </div>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-black text-white tabular-nums">
               {isLoadingPulse ? "..." : (liveStats?.avgMood ?? 0).toFixed(1)}
@@ -122,7 +132,10 @@ export const SovereignControl: FC = () => {
           <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
             <ShieldAlert className={`w-12 h-12 ${incidents && incidents.length > 0 ? "text-rose-400" : "text-emerald-400"}`} />
           </div>
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">حالة استقرار الملاذ</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">حالة استقرار الملاذ</p>
+            <AdminTooltip content="لو تم الكشف عن طفرات سلبية حادة أو محاولات تخريب للمجتمع، هتتحول لإنذار أحمر طارئ هنا فوراً." position="bottom" />
+          </div>
           <div className="flex items-baseline gap-2">
             <span className={`text-xl font-black uppercase ${incidents && incidents.length > 0 ? "text-rose-400" : "text-emerald-400"}`}>
               {isLoadingPulse ? "..." : (incidents && incidents.length > 0 ? "تنبيه حرج" : "مستقر جداً")}
@@ -166,6 +179,7 @@ export const SovereignControl: FC = () => {
             <h2 className="flex items-center gap-2 text-white font-bold">
               <Wind className="w-5 h-5 text-teal-400" />
               توازن التناغم العالمي
+              <AdminTooltip content="تعديل مباشر على تردد أنفاس المنصة لكل المستخدمين النشطين. إجباري لنشر السكينة." position="top" />
             </h2>
             <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${isSaving ? "bg-teal-500/20 text-teal-400 animate-pulse" : "bg-white/5 text-slate-500"}`}>
               {isSaving ? "Syncing..." : "Fixed State"}
@@ -201,6 +215,7 @@ export const SovereignControl: FC = () => {
             <h2 className="flex items-center gap-2 text-white font-bold">
               <Sparkles className="w-5 h-5 text-purple-400" />
               نداء الحاكم
+              <AdminTooltip content="إرسال رسالة توجيهية (Notification) تظهر فوراً لكل الأرواح في الملاذ على شاشاتهم." position="top" />
             </h2>
           </div>
 

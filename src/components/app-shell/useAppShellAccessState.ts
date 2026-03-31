@@ -45,11 +45,16 @@ export function useAppShellAccessState({
   const authFirstName = useAuthState((s) => s.firstName);
   const authToneGender = useAuthState((s) => s.toneGender);
   const role = useAuthState(getEffectiveRoleFromState);
+  const rawRole = useAuthState((s) => s.role);
 
-  const isPrivilegedUser = isPrivilegedRole(role);
+  // Always check the raw (database) role for owner-level privileges
+  // so that the owner's admin UI isn't blocked when previewing as a user
+  const isPrivilegedUser = isPrivilegedRole(rawRole) || isPrivilegedRole(role);
   const normalizedRole = typeof role === "string" ? role.trim().toLowerCase() : "";
-  const isOwnerWatcher = normalizedRole === "owner" || normalizedRole === "superadmin" || normalizedRole === "admin" || normalizedRole === "developer" || adminAccess;
-  const canPollOwnerAlerts = Boolean(authUser) && (normalizedRole === "owner" || normalizedRole === "superadmin");
+  const normalizedRawRole = typeof rawRole === "string" ? rawRole.trim().toLowerCase() : "";
+  const isOwnerWatcher = normalizedRole === "owner" || normalizedRole === "superadmin" || normalizedRole === "admin" || normalizedRole === "developer" ||
+    normalizedRawRole === "owner" || normalizedRawRole === "superadmin" || normalizedRawRole === "admin" || normalizedRawRole === "developer" || adminAccess;
+  const canPollOwnerAlerts = Boolean(authUser) && (normalizedRole === "owner" || normalizedRole === "superadmin" || normalizedRawRole === "owner" || normalizedRawRole === "superadmin");
   const isLockedPhaseOne = isPhaseOneUserFlow && !isOwnerWatcher;
 
   const availableFeatures = useMemo(

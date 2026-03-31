@@ -272,7 +272,10 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const betaAccess = useAdminState((s) => s.betaAccess);
   const adminAccess = useAdminState((s) => s.adminAccess);
   const role = useAuthState(getEffectiveRoleFromState);
-  const canShowJourneyToolsEntry = Boolean(onOpenJourneyTools) && isPrivilegedRole(role);
+  const rawRole = useAuthState((s) => s.role);
+  // Use rawRole for privilege checks so admin UI remains visible even when owner is viewing as user
+  const isOwner = isPrivilegedRole(rawRole) || isPrivilegedRole(role);
+  const canShowJourneyToolsEntry = Boolean(onOpenJourneyTools) && isOwner;
   const availableFeatures = useMemo(
     () =>
       getEffectiveFeatureAccess({
@@ -387,7 +390,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 سجل العمليات
               </button>
             )}
-            {isPrivilegedRole(role) && (
+            {isOwner && (
               <>
                 <button
                   type="button"

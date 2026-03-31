@@ -48,7 +48,7 @@ export const EmergencyOverlay: FC<EmergencyOverlayProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-red-950/90 px-4 backdrop-blur-lg"
+      className="fixed inset-0 z-[500] flex items-center justify-center bg-red-950/90 px-4 backdrop-blur-lg"
       onClick={close}
       aria-labelledby="emergency-title"
       role="dialog"

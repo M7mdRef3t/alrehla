@@ -1,0 +1,29 @@
+<svg width="360" height="96" viewBox="0 0 360 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cp-main" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#2DD4BF"/>
+    </linearGradient>
+    <filter id="cp-glow" x="-45%" y="-45%" width="190%" height="190%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g transform="translate(282,8)" filter="url(#cp-glow)">
+    <circle cx="44" cy="40" r="31" stroke="#22D3EE" stroke-width="1.8" opacity="0.45"/>
+    <path d="M17 61 Q27 70 42 70 Q61 70 71 54" stroke="#2DD4BF" stroke-width="2.4" stroke-linecap="round" opacity="0.75"/>
+    <circle cx="17" cy="61" r="3.8" fill="#99F6E4"/>
+    <circle cx="70" cy="54" r="2.8" fill="#67E8F9"/>
+    <path d="M44 15 L50 33 L69 40 L50 47 L44 65 L38 47 L19 40 L38 33 Z" fill="url(#cp-main)" opacity="0.88"/>
+    <circle cx="44" cy="40" r="7.6" fill="#07111F" stroke="#E0F2FE" stroke-width="2"/>
+    <path d="M44 26 V52" stroke="#F8FAFC" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M44 52 L56 58" stroke="#CFFAFE" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+
+  <text x="10" y="58" font-family="Cairo, 'Segoe UI', Arial, sans-serif" font-size="50" font-weight="800" fill="#F8FAFC">الرحلة</text>
+  <text x="14" y="82" font-family="Cairo, 'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#5EEAD4" letter-spacing="0.3">اتجاه واضح.. وحركة محسوبة</text>
+</svg>

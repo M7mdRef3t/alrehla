@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { Users, Loader2, X } from "lucide-react";
+import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { isSupabaseReady } from "../../../../services/supabaseClient";
 import {
   fetchVisitorSessions,
@@ -72,10 +73,13 @@ export const UsersPanel: FC = () => {
   return (
     <div className="space-y-6 text-slate-200">
       <div className="admin-glass-card p-5 space-y-3">
-        <h3 className="text-sm font-semibold flex items-center gap-2">
-          <Users className="w-4 h-4" />
-          ???? ?????????
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            إدارة المستخدمين والجلسات
+          </h3>
+          <AdminTooltip content="مراقبة حية لسلوكيات الزوار وتحليل مساراتهم داخل التطبيق قبل وبعد التسجيل عبر God View." position="bottom" />
+        </div>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}

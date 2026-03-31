@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { isPhaseOneUserFlow, isUserMode, isRevenueMode } from "../../config/appEnv";
+import { useAuthState } from "../../state/authState";
 import {
   getHash,
   getSearch,
@@ -109,19 +110,17 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     const action = window.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
     if (!action) return;
 
-    // Clear intent immediately after reading
-    window.sessionStorage.removeItem(APP_BOOT_ACTION_KEY);
-
-    if (action === "start_recovery") {
-      // If "Sign In" was clicked on landing, show the auth modal
-      setAuthIntent({ kind: "login", createdAt: Date.now() });
-      setShowAuthModal(true);
-    } else if (action.startsWith(APP_SCREEN_BOOT_ACTION_PREFIX)) {
+    // IMPORTANT:
+    // `start_recovery` is consumed by `useAppStartupOnboarding` to route into map flow.
+    // Do not consume it here, otherwise onboarding skip/complete can fall back to landing.
+    if (action.startsWith(APP_SCREEN_BOOT_ACTION_PREFIX)) {
+      // Clear intent immediately after reading (screen intents are handled in this effect)
+      window.sessionStorage.removeItem(APP_BOOT_ACTION_KEY);
       const targetScreen = action.replace(APP_SCREEN_BOOT_ACTION_PREFIX, "");
       // Navigate to the requested screen (e.g., tools, insights)
       setScreen(targetScreen as any);
     }
-  }, [setScreen, setShowAuthModal, setAuthIntent]);
+  }, [setScreen]);
 
   // ── EXIT TO LANDING ──
   useEffect(() => {
@@ -129,6 +128,8 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       onExitToLanding();
     }
   }, [screen, onExitToLanding]);
+
+  const tier = useAuthState((s) => s.tier);
 
   // Goal Guard moved below authStatus declaration to avoid Temporal Dead Zone.
 
@@ -189,6 +190,16 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       void setScreen("goal");
     }
   }, [screen, goalId, storedGoalId, setScreen, authStatus]);
+
+  // STRICT CHECKOUT GATE: Guard map access for free tier
+  useEffect(() => {
+    if (authStatus !== "ready" || !authUser || tier !== "free" || isOwnerWatcher) return;
+    
+    // If user tries to access map or guided flow while being free, show the mandatory checkout
+    if (screen === "map" || screen === "guided") {
+      setAppOverlay("premiumBridge", true);
+    }
+  }, [authStatus, authUser, tier, screen, setAppOverlay, isOwnerWatcher]);
 
   const {
     activeBroadcast,

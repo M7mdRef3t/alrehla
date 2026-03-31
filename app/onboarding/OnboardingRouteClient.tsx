@@ -23,9 +23,9 @@ export default function OnboardingRouteClient() {
     <OnboardingFlow
       initialMirrorName={mirrorName}
       onComplete={() => {
-        // Return the user into the app shell and land them on the map flow.
+        // Send user directly to sanctuary map instead of landing page.
         window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
-        window.location.href = "/";
+        window.location.href = "/dawayir";
       }}
     />
   );

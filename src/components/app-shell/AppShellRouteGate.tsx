@@ -1,4 +1,4 @@
-import { Suspense, lazy, type ReactNode } from "react";
+import { Suspense, lazy, type ReactNode } from "react"; // Cache buster to clear stale LogoLab.tsx import
 import { AwarenessSkeleton } from "../AwarenessSkeleton";
 import { getHref, getPathname, pushUrl } from "../../services/navigation";
 
@@ -9,6 +9,7 @@ const AdminOverviewPanel = lazy(() =>
   import("../admin/dashboard/Overview/OverviewPanel").then((m) => ({ default: m.OverviewPanel }))
 );
 const DawayirApp = lazy(() => import("../../modules/dawayir/DawayirApp").then((m) => ({ default: m.default })));
+const DebugLogoLab = lazy(() => import("../debug/DebugLogoLab"));
 
 interface AppShellRouteGateProps {
   isAdminRoute: boolean;
@@ -39,6 +40,14 @@ export function AppShellRouteGate({
 
   if (pathname === "/privacy" || pathname === "/terms") {
     return <LegalPage type={pathname === "/privacy" ? "privacy" : "terms"} />;
+  }
+
+  if (pathname === "/debug-logo-lab") {
+    return (
+      <Suspense fallback={<div style={{ minHeight: "100vh", background: "#050A14" }} />}>
+        <DebugLogoLab />
+      </Suspense>
+    );
   }
 
   if (isDawayirRoute) {

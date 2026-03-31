@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -222,7 +222,8 @@ export default function DawayirApp() {
 
     return (
         <div
-            className="h-screen w-full bg-slate-950 text-slate-200 font-sans overflow-hidden relative"
+            className="h-screen w-full text-slate-200 font-sans overflow-hidden relative"
+            style={{ background: "#020408", colorScheme: "dark" }}
             {...gestureHandlers}
         >
             {/* Sanctuary Overlay - Zero UI Dimming */}
@@ -258,15 +259,16 @@ export default function DawayirApp() {
                 )}
             </AnimatePresence>
 
-            {/* Cosmic Background Elements */}
+            {/* Cinematic ambient background */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(20,184,166,0.05)_0%,transparent_70%)]" />
-                <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-teal-500/5 blur-[120px] rounded-full" />
-                <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-[var(--soft-teal)]/5 blur-[120px] rounded-full" />
+                <div style={{ position:"absolute", width:700, height:700, borderRadius:"50%", background:"radial-gradient(circle, rgba(20,184,166,0.11) 0%, transparent 70%)", top:"-15%", right:"-8%", animation:"av-orb-drift 38s ease-in-out infinite alternate" }} />
+                <div style={{ position:"absolute", width:560, height:560, borderRadius:"50%", background:"radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 70%)", bottom:"-18%", left:"-10%", animation:"av-orb-drift 52s ease-in-out infinite alternate-reverse" }} />
+                <div style={{ position:"absolute", width:400, height:400, borderRadius:"50%", background:"radial-gradient(circle, rgba(245,158,11,0.055) 0%, transparent 70%)", top:"40%", left:"30%", animation:"av-orb-drift 44s ease-in-out infinite alternate" }} />
+                <div style={{ position:"absolute", inset:0, backgroundImage:"linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px)", backgroundSize:"68px 68px", WebkitMaskImage:"radial-gradient(ellipse 85% 80% at 50% 50%, black 20%, transparent 100%)", maskImage:"radial-gradient(ellipse 85% 80% at 50% 50%, black 20%, transparent 100%)", opacity:0.55 }} />
             </div>
 
-            {/* Navbar Minimalist - Tactical Style */}
-            <div className="absolute top-0 left-0 w-full px-4 sm:px-6 pt-[max(env(safe-area-inset-top),0.75rem)] pb-3 flex justify-between items-center bg-slate-950/20 backdrop-blur-md border-b border-white/5 z-40 pointer-events-auto">
+            {/* Navbar — fixed 60px */}
+            <div className="absolute top-0 left-0 w-full h-[60px] px-4 sm:px-6 flex justify-between items-center z-40 pointer-events-auto" style={{ background:"rgba(2,4,8,0.88)", backdropFilter:"blur(20px)", borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg bg-teal-500/20 border border-teal-500/30 flex items-center justify-center">
                         <Activity className="w-4 h-4 text-teal-400" />
@@ -292,7 +294,8 @@ export default function DawayirApp() {
                 </div>
             </div>
 
-            <div className="w-full h-screen overflow-hidden relative m-0 p-0">
+            {/* Content area — below navbar */}
+            <div className="w-full flex flex-col overflow-hidden relative" style={{ height:"calc(100vh - 60px)", marginTop:"60px" }}>
                 {shouldBlockForGenesis && user?.id && (
                     <GenesisOnboarding
                         userId={user.id}
@@ -310,38 +313,38 @@ export default function DawayirApp() {
                     </div>
                 )}
                 {!shouldBlockForGenesis && isOnboardingStateLoading && (
-                    <div className="glass px-5 py-3 border-white/10">
+                    <div className="px-5 py-3 rounded-2xl" style={{ background:"rgba(6,10,22,0.8)", border:"1px solid rgba(255,255,255,0.08)" }}>
                         <span className="text-xs text-slate-400 tracking-wide">جاري تجهيز ملفك الشخصي...</span>
                     </div>
                 )}
 
                 {/* Phase 1: The Chat Hook */}
                 {!shouldBlockForGenesis && !isOnboardingStateLoading && !data && (
-                    <div className="w-full flex-grow flex items-center justify-center animate-in fade-in zoom-in duration-500 relative z-10">
-                        <div className="w-full max-w-2xl">
-                            <div className="text-center mb-10">
+                    <div className="flex-1 w-full flex items-center justify-center px-4 py-8 animate-in fade-in zoom-in duration-500 relative z-10">
+                        <div className="w-full max-w-xl">
+                            <div className="text-center mb-6">
                                 {sourceStory === 'story-1' ? (
                                     <>
-                                        <h2 className="text-3xl sm:text-4xl font-black text-white mb-4 leading-tight">
+                                        <h2 className="text-3xl sm:text-4xl font-black text-white mb-3 leading-tight">
                                             مرحباً بك في مساحة السيادة
                                         </h2>
-                                        <p className="text-slate-400 font-medium max-w-lg mx-auto">
+                                        <p className="font-medium max-w-lg mx-auto" style={{ color:"#8faab8" }}>
                                             استلهاماً من رحلة استعادة السيطرة، دعنا نرصد مواطن النزيف في مجالك...
                                         </p>
                                     </>
                                 ) : (
                                     <>
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-teal-500/20 bg-teal-500/5 mb-6">
-                                            <Zap className="w-3 h-3 text-teal-400" />
-                                            <span className="text-[10px] font-black text-teal-300 tracking-[0.12em]">بدء القراءة</span>
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border mb-5" style={{ borderColor:"rgba(20,184,166,0.3)", background:"rgba(20,184,166,0.08)", color:"#5eead4" }}>
+                                            <Zap className="w-3 h-3" />
+                                            <span className="text-[10px] font-black tracking-[0.18em] uppercase">تشخيص سريع</span>
                                         </div>
-                                        <h2 className="text-3xl sm:text-4xl font-black text-white mb-4 leading-tight">اكتشف ثغرات طاقتك في 60 ثانية</h2>
-                                        <p className="text-slate-400 font-medium">خذ وقتك. لا توجد إجابة صح أو غلط.</p>
+                                        <h2 className="text-3xl sm:text-4xl font-black text-white mb-3 leading-tight">اكتشف ثغرات طاقتك في 60 ثانية</h2>
+                                        <p className="font-medium" style={{ color:"#8faab8" }}>خذ وقتك. لا توجد إجابة صح أو غلط.</p>
                                     </>
                                 )}
                             </div>
-                            <div className="glass rounded-[2rem] p-1 border-white/5 relative group overflow-hidden">
-                                <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-teal-500/20 to-transparent top-0 animate-scan" />
+                            <div className="rounded-[2rem] p-1 relative group overflow-hidden" style={{ border:"1px solid rgba(255,255,255,0.09)", background:"rgba(8,12,22,0.88)", backdropFilter:"blur(28px)" }}>
+                                <div className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-teal-500/25 to-transparent top-0 animate-scan" />
                                 <ChatInterface
                                     onAnalyze={(answers) => analyzeAnswers(answers, subInfo?.features.maxMapNodes || 7)}
                                     isLoading={isLoading}
@@ -355,13 +358,14 @@ export default function DawayirApp() {
                 {!shouldBlockForGenesis && !isOnboardingStateLoading && data && (
                     <div className="w-full h-full flex flex-col relative animate-in slide-in-from-bottom-8 fade-in duration-700">
 
-                        <div className="absolute z-20 top-4 left-1/2 -translate-x-1/2 glass px-8 py-5 border-teal-500/20 max-w-2xl text-center shadow-2xl relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-teal-500/50" />
-                            <div className="absolute top-0 right-0 w-1 h-full bg-teal-500/50" />
-                            <div className="flex items-start gap-4 text-right" dir="rtl">
+                        {/* Insight Card — dark glass */}
+                        <div className="absolute z-20 top-4 left-1/2 -translate-x-1/2 max-w-2xl w-[calc(100%-2rem)] shadow-2xl overflow-hidden rounded-2xl" style={{ background:"rgba(6,10,22,0.88)", border:"1px solid rgba(20,184,166,0.2)", backdropFilter:"blur(24px)" }}>
+                            <div className="absolute top-0 left-0 w-1 h-full bg-teal-500/40" />
+                            <div className="absolute top-0 right-0 w-1 h-full bg-teal-500/40" />
+                            <div className="flex items-start gap-4 text-right px-6 py-4" dir="rtl">
                                 <Activity className="w-5 h-5 text-teal-400 mt-1 shrink-0 animate-pulse" />
                                 <div className="space-y-1">
-                                    <span className="text-[10px] font-black text-teal-500/50 tracking-[0.12em] block mb-1">تم استخلاص البصيرة</span>
+                                    <span className="text-[10px] font-black tracking-[0.12em] block mb-1" style={{ color:"#5eead4" }}>تم استخلاص البصيرة</span>
                                     <p className="text-white font-bold leading-relaxed text-sm">
                                         <Typewriter text={data.insight_message} speed={40} />
                                     </p>
@@ -369,9 +373,9 @@ export default function DawayirApp() {
                             </div>
                         </div>
 
-                        {/* Tactical HUD Left */}
-                        <div className="absolute z-20 left-6 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4">
-                            <div className="glass p-4 border-white/5 space-y-4 w-48">
+                        {/* Tactical HUD Left — dark glass */}
+                        <div className="absolute z-20 left-4 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4">
+                            <div className="p-4 space-y-4 w-44 rounded-2xl" style={{ background:"rgba(6,10,22,0.82)", border:"1px solid rgba(255,255,255,0.07)", backdropFilter:"blur(20px)" }}>
                                 <div className="space-y-1">
                                     <span className="text-[9px] font-black text-slate-500 tracking-wide">مستوى التشتت</span>
                                     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
@@ -496,7 +500,7 @@ export default function DawayirApp() {
                 {/* Phase 3: The Paywall Modal (Minimalist) */}
                 {showPaywall && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
-                        <div className="glass-heavy p-8 max-w-md w-full relative text-center border-teal-500/20">
+                        <div className="p-8 max-w-md w-full relative text-center rounded-3xl" style={{ background:"rgba(6,10,22,0.92)", border:"1px solid rgba(20,184,166,0.2)", backdropFilter:"blur(32px)" }}>
                             <button
                                 onClick={() => setShowPaywall(false)}
                                 className="absolute top-4 right-4 text-slate-400 hover:text-white"
@@ -526,7 +530,7 @@ export default function DawayirApp() {
             {/* Oracle Loading Overlay */}
             {isOracleLoading && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 backdrop-blur-xl p-4 animate-in fade-in duration-200" dir="rtl">
-                    <div className="glass-heavy p-10 max-w-sm w-full border-teal-500/30 flex flex-col items-center justify-center text-center">
+                    <div className="p-10 max-w-sm w-full flex flex-col items-center justify-center text-center rounded-3xl" style={{ background:"rgba(6,10,22,0.92)", border:"1px solid rgba(20,184,166,0.25)", backdropFilter:"blur(32px)" }}>
                         <div className="w-24 h-24 rounded-full flex items-center justify-center mb-8 relative">
                             <div className="absolute inset-0 bg-teal-500/20 rounded-full animate-ping opacity-30"></div>
                             <div className="absolute inset-0 border-2 border-teal-500/20 rounded-full animate-spin duration-[3s]" />
@@ -541,7 +545,7 @@ export default function DawayirApp() {
             {/* Predictive Oracle Modal (Smart Notifications) */}
             {showOracleModal && oraclePrediction && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 animate-in fade-in duration-200" dir="rtl">
-                    <div className="glass-heavy p-8 max-w-lg w-full relative overflow-hidden border-teal-500/20">
+                    <div className="p-8 max-w-lg w-full relative overflow-hidden rounded-3xl" style={{ background:"rgba(6,10,22,0.92)", border:"1px solid rgba(20,184,166,0.2)", backdropFilter:"blur(32px)" }}>
 
                         {/* Status Header based on Calibration */}
                         {oraclePrediction.needsMoreData ? (
@@ -557,7 +561,7 @@ export default function DawayirApp() {
                                 <div className="p-5 bg-rose-500/5 rounded-2xl border border-rose-500/20 mb-6 text-right w-full">
                                     <p className="text-rose-200/80 text-sm leading-[1.8] font-bold">{oraclePrediction.trajectory_summary}</p>
                                 </div>
-                                <div className="w-full text-right p-6 glass border-white/5 shadow-inner">
+                                <div className="w-full text-right p-6 rounded-2xl shadow-inner" style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)" }}>
                                     <h4 className="font-black text-teal-400 mb-3 flex items-center gap-2 text-xs uppercase tracking-widest font-mono">
                                         <Terminal className="w-4 h-4" /> خطوة وقائية:
                                     </h4>
@@ -602,7 +606,7 @@ export default function DawayirApp() {
             {
                 showSimulation && data?.detected_symptoms && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xl p-4 animate-in fade-in duration-300" dir="rtl">
-                        <div className="glass-heavy max-w-2xl w-full relative overflow-hidden border-[var(--soft-teal)] shadow-2xl shadow-[var(--soft-teal)]">
+                        <div className="max-w-2xl w-full relative overflow-hidden rounded-3xl" style={{ background:"rgba(6,10,22,0.92)", border:"1px solid rgba(20,184,166,0.3)", backdropFilter:"blur(32px)", boxShadow:"0 0 40px rgba(20,184,166,0.12)" }}>
                             <SymptomSimulation
                                 detectedSymptoms={data.detected_symptoms}
                                 onClose={() => setShowSimulation(false)}

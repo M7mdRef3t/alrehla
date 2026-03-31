@@ -36,6 +36,7 @@ import type {
   AIRecommendation,
   TopAd,
 } from './adAnalyticsData';
+import { AdminTooltip } from '../Overview/components/AdminTooltip';
 import {
   mockKPIs,
   mockDailyPerformance,
@@ -119,7 +120,8 @@ const KPICard: React.FC<{
   invertChange?: boolean;
   accentColor: string;
   delay?: number;
-}> = ({ icon, label, value, change, invertChange = false, accentColor, delay = 0 }) => (
+  tooltip?: string;
+}> = ({ icon, label, value, change, invertChange = false, accentColor, delay = 0, tooltip }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
@@ -137,7 +139,10 @@ const KPICard: React.FC<{
       <div className="mb-1">
         <span className="text-3xl font-black text-white tracking-tight">{value}</span>
       </div>
-      <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</h4>
+      <div className="flex items-center gap-2 mb-1">
+        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</h4>
+        {tooltip && <AdminTooltip content={tooltip} position="bottom" />}
+      </div>
     </div>
   </motion.div>
 );
@@ -185,6 +190,7 @@ const PerformanceChart: React.FC = () => {
           <h3 className="text-sm font-black text-white flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-teal-400" />
             Performance Trend
+            <AdminTooltip content="تحليل لحركة أداء المؤشرات المختارة على مدار الأيام لفهم توجه السلوك." position="right" />
           </h3>
           <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">آخر 14 يوم</p>
         </div>
@@ -258,10 +264,13 @@ const PlatformTable: React.FC = () => (
     transition={{ delay: 0.4, duration: 0.4 }}
     className="bg-slate-900/40 border border-white/5 rounded-3xl p-6 col-span-full"
   >
-    <h3 className="text-sm font-black text-white flex items-center gap-2 mb-6">
-      <BarChart3 className="w-4 h-4 text-indigo-400" />
-      Platform Performance Breakdown
-    </h3>
+    <div className="flex items-center gap-2 mb-6">
+      <h3 className="text-sm font-black text-white flex items-center gap-2">
+        <BarChart3 className="w-4 h-4 text-indigo-400" />
+        Platform Performance Breakdown
+      </h3>
+      <AdminTooltip content="تفصيل لأداء كل منصة إعلانية (ميتا، جوجل، إلخ) لمعرفة الأفضل في جلب التحويلات الموثوقة." position="left" />
+    </div>
 
     <div className="overflow-x-auto">
       <table className="w-full text-left">
@@ -306,11 +315,14 @@ const CACAnalysisSection: React.FC = () => (
     transition={{ delay: 0.5, duration: 0.4 }}
     className="bg-slate-900/40 border border-white/5 rounded-3xl p-6"
   >
-    <h3 className="text-sm font-black text-white flex items-center gap-2 mb-6">
-      <BrainCircuit className="w-4 h-4 text-amber-400" />
-      CAC Root Cause Analysis
-      <span className="text-[9px] text-slate-500 font-mono ml-auto">AI-powered</span>
-    </h3>
+    <div className="flex items-center justify-between mb-6">
+      <h3 className="text-sm font-black text-white flex items-center gap-2">
+        <BrainCircuit className="w-4 h-4 text-amber-400" />
+        CAC Root Cause Analysis
+        <AdminTooltip content="تحليل يعتمد على الذكاء الاصطناعي لفهم التغيرات في تكلفة اكتساب العميل (CAC)." position="right" />
+      </h3>
+      <span className="text-[9px] text-slate-500 font-mono">AI-powered</span>
+    </div>
 
     <div className="space-y-4">
       {mockCACAnalysis.map((item: CACAnalysis, i: number) => (
@@ -347,13 +359,16 @@ const RecommendationsSection: React.FC = () => {
       transition={{ delay: 0.5, duration: 0.4 }}
       className="bg-slate-900/40 border border-white/5 rounded-3xl p-6"
     >
-      <h3 className="text-sm font-black text-white flex items-center gap-2 mb-6">
-        <Lightbulb className="w-4 h-4 text-teal-400" />
-        AI Smart Recommendations
-        <span className="px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 text-[9px] font-black border border-teal-500/20 ml-2">
+      <div className="flex items-center justify-between gap-2 mb-6">
+        <h3 className="text-sm font-black text-white flex items-center gap-2">
+          <Lightbulb className="w-4 h-4 text-teal-400" />
+          AI Smart Recommendations
+          <AdminTooltip content="توصيات آلية مبنية على البيانات لتقليل التكلفة وزيادة النمو في المنصات الإعلانية." position="right" />
+        </h3>
+        <span className="px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 text-[9px] font-black border border-teal-500/20">
           {mockRecommendations.length} actions
         </span>
-      </h3>
+      </div>
 
       <div className="space-y-3">
         {mockRecommendations.map((rec: AIRecommendation) => {
@@ -415,11 +430,14 @@ const TopAdsSection: React.FC = () => (
     transition={{ delay: 0.6, duration: 0.4 }}
     className="bg-slate-900/40 border border-white/5 rounded-3xl p-6 col-span-full"
   >
-    <h3 className="text-sm font-black text-white flex items-center gap-2 mb-6">
-      <Target className="w-4 h-4 text-rose-400" />
-      Top Ads This Week
-      <span className="text-[9px] text-slate-500 font-mono ml-auto">Analyze & Iterate</span>
-    </h3>
+    <div className="flex items-center justify-between mb-6">
+      <h3 className="text-sm font-black text-white flex items-center gap-2">
+        <Target className="w-4 h-4 text-rose-400" />
+        Top Ads This Week
+        <AdminTooltip content="أعلى الإعلانات أداءً لمعرفة المضمون (Creative) الذي يتردد صداه مع الجمهور الآن." position="right" />
+      </h3>
+      <span className="text-[9px] text-slate-500 font-mono">Analyze & Iterate</span>
+    </div>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {mockTopAds.map((ad: TopAd) => (
@@ -554,6 +572,7 @@ export const AdAnalyticsDashboard: React.FC = () => {
           change={mockKPIs.totalSpendChange}
           accentColor="#2DD4BF"
           delay={0}
+          tooltip="حجم الإنفاق الإعلاني الإجمالي عبر جميع المنصات المربوطة."
         />
         <KPICard
           icon={<Users className="w-5 h-5" />}
@@ -563,6 +582,7 @@ export const AdAnalyticsDashboard: React.FC = () => {
           invertChange
           accentColor="#FB923C"
           delay={0.05}
+          tooltip="تكلفة اكتساب العميل المدمجة (Customer Acquisition Cost) لكل المنصات. الأقل أفضل."
         />
         <KPICard
           icon={<TrendingUp className="w-5 h-5" />}
@@ -571,6 +591,7 @@ export const AdAnalyticsDashboard: React.FC = () => {
           change={mockKPIs.roasChange}
           accentColor="#34D399"
           delay={0.1}
+          tooltip="العائد على الإنفاق الإعلاني (Return on Ad Spend). الرقم يعكس كل دولار أنفقته جاب كام مكانه."
         />
         <KPICard
           icon={<Target className="w-5 h-5" />}
@@ -579,6 +600,7 @@ export const AdAnalyticsDashboard: React.FC = () => {
           change={mockKPIs.conversionsChange}
           accentColor="#818CF8"
           delay={0.15}
+          tooltip="إجمالي التحويلات المؤكدة (تسجيلات/دفع) المنسوبة للإعلانات."
         />
       </div>
 

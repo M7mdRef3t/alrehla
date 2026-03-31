@@ -386,7 +386,22 @@ export const AnalyticsEvents = {
   HESITATION_HEARTBEAT: "hesitation_heartbeat",
 
   SURVEY_QUESTION_ANSWERED: "survey_question_answered",
-  PREMIUM_UPGRADE_VIEWED: "premium_upgrade_viewed"
+  PREMIUM_UPGRADE_VIEWED: "premium_upgrade_viewed",
+
+  // --- Weather Forecast Funnel (Viral Loop V2) ---
+  WEATHER_LANDING_VIEW: "weather_landing_view",
+  WEATHER_START_CLICKED: "weather_start_clicked",
+  WEATHER_Q1_VIEW: "weather_q1_view",
+  WEATHER_Q1_ANSWERED: "weather_q1_answered",
+  WEATHER_Q2_VIEW: "weather_q2_view",
+  WEATHER_Q2_ANSWERED: "weather_q2_answered",
+  WEATHER_Q3_VIEW: "weather_q3_view",
+  WEATHER_Q3_ANSWERED: "weather_q3_answered",
+  WEATHER_RESULT_VIEW: "weather_result_view",
+  WEATHER_SHARE_CLICKED: "weather_share_clicked",
+  WEATHER_SHARE_COMPLETED: "weather_share_completed",
+  WEATHER_ONBOARDING_CLICKED: "weather_onboarding_clicked",
+  WEATHER_WHATSAPP_CLICKED: "weather_whatsapp_clicked",
 } as const;
 
 export function trackLead(params?: Record<string, AnalyticsValue | null | undefined>): void {

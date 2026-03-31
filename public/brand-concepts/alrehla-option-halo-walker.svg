@@ -1,0 +1,31 @@
+<svg width="360" height="96" viewBox="0 0 360 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hw-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#14B8A6"/>
+    </linearGradient>
+    <filter id="hw-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.6" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g transform="translate(292,6) scale(0.42)" filter="url(#hw-glow)">
+    <path d="M56 86 A44 44 0 0 0 144 86" stroke="#38BDF8" stroke-width="2.6" stroke-linecap="round" opacity="0.75"/>
+    <path d="M38 86 A62 62 0 0 0 162 86" stroke="#14B8A6" stroke-width="1.7" stroke-linecap="round" opacity="0.42"/>
+    <path d="M20 86 A80 80 0 0 0 180 86" stroke="#22D3EE" stroke-width="1.1" stroke-linecap="round" opacity="0.25"/>
+    <path d="M38 176 Q100 168 162 176" stroke="#14B8A6" stroke-width="1.5" stroke-dasharray="5 4" stroke-linecap="round" opacity="0.3"/>
+    <circle cx="100" cy="52" r="16" fill="url(#hw-body)"/>
+    <rect x="88" y="70" width="24" height="32" rx="8" fill="url(#hw-body)" opacity="0.95"/>
+    <line x1="88" y1="79" x2="63" y2="95" stroke="url(#hw-body)" stroke-width="8" stroke-linecap="round"/>
+    <line x1="112" y1="79" x2="137" y2="93" stroke="url(#hw-body)" stroke-width="8" stroke-linecap="round"/>
+    <path d="M93 102 L79 140 L66 159" stroke="url(#hw-body)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M107 102 L120 138 L134 155" stroke="url(#hw-body)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <text x="12" y="58" font-family="Cairo, 'Segoe UI', Arial, sans-serif" font-size="50" font-weight="800" fill="#F8FAFC">الرحلة</text>
+  <text x="14" y="82" font-family="Cairo, 'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#67E8F9" letter-spacing="0.4">وعي يتحرك معاك</text>
+</svg>

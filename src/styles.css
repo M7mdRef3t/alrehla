@@ -2,8 +2,6 @@
    Alrehla - Therapeutic Spaceship Dashboard
    ============================================================= */
 
-@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap");
-
 @layer base {
   :root {
     /* Golden ratio system */
@@ -75,14 +73,14 @@
     --font-en: "Inter", system-ui, sans-serif;
 
     /* --- Brand Color Aliases --- */
-    --brand-teal: #14B8A6;       /* Teal Haven — primary */
-    --brand-violet: #7C3AED;     /* Sage Violet — wisdom */
-    --brand-deep: #0A0A1A;       /* Deep Space — background */
-    --brand-orbit-safe: #34D399; /* Orbit Safe — green ring */
-    --brand-orbit-mixed: #FBBF24;/* Orbit Mixed — yellow ring */
-    --brand-orbit-strain: #F87171;/* Orbit Strain — red ring */
+    --brand-teal: #14B8A6;       /* Teal Haven â€” primary */
+    --brand-violet: #7C3AED;     /* Sage Violet â€” wisdom */
+    --brand-deep: #0A0A1A;       /* Deep Space â€” background */
+    --brand-orbit-safe: #34D399; /* Orbit Safe â€” green ring */
+    --brand-orbit-mixed: #FBBF24;/* Orbit Mixed â€” yellow ring */
+    --brand-orbit-strain: #F87171;/* Orbit Strain â€” red ring */
     --brand-sky: #38BDF8;        /* Sky Accent */
-    --brand-mist: #94A3B8;       /* Mist — secondary text */
+    --brand-mist: #94A3B8;       /* Mist â€” secondary text */
     --brand-white: #F8FAFC;      /* Soft White */
 
     /* Spacing and rhythm */
@@ -125,62 +123,13 @@
   }
 
   /* ----------------------------------------------
-     Light theme - Warm clarity system
-     Palette: Cream white + cool slate + teal accent
-     All tokens override the default dark values
+     Permanently Enforcing Cinematic Dark Void Theme
+     Light theme overrides have been deprecated.
      ---------------------------------------------- */
-  :root:not(.dark) {
-    /* Background scale */
-    --space-void:   #f0f4f8;  /* page bg: cool blue-white */
-    --space-950:    #e8edf4;  /* lightest surface */
-    --space-deep:   #dce3ee;  /* card bg */
-    --space-mid:    #c8d3e2;  /* subtle borders */
-    --space-nebula: #8ea3bf;  /* decorative / muted borders */
-    --space-aurora: #5a7a9e;  /* stronger borders / icons */
-
-    /* Typography */
-    --text-primary:   #0f1f36;          /* near-black, warm */
-    --text-secondary: #3d567a;          /* slate-blue for supporting text */
-    --text-muted:     rgba(61, 86, 122, 0.45);
-    --text-accent:    #0d9488;          /* teal — same as dark */
-
-    /* -- Glass / Surface System -- */
-    --glass-bg:           rgba(255, 255, 255, 0.72);
-    --glass-bg-hover:     rgba(255, 255, 255, 0.88);
-    --glass-border:       rgba(14, 50, 100, 0.10);
-    --glass-border-hover: rgba(14, 50, 100, 0.20);
-
-    /* -- Page Background Gradient -- */
-    --cosmic-bg: linear-gradient(160deg,
-        #eef2f8 0%,
-        #e8edf5 35%,
-        #dde4f0 65%,
-        #d4dce8 100%);
-
-    /* -- Card-level surfaces (hardcoded dark overrides) -- */
-    --card-surface:       rgba(255, 255, 255, 0.80);
-    --card-surface-hover: rgba(255, 255, 255, 0.95);
-    --card-border:        rgba(14, 50, 100, 0.10);
-    --card-border-hover:  rgba(14, 50, 100, 0.18);
-
-    /* -- Node glass (map orbs) -- */
-    --node-surface:       rgba(240, 246, 255, 0.85);
-    --node-surface-hover: rgba(225, 236, 255, 0.92);
-    --node-border:        rgba(14, 50, 100, 0.12);
-    --node-border-hover:  rgba(14, 50, 100, 0.22);
-
-    /* -- Warm amber / layer tokens same as dark -- */
-    --warm-amber-soft: rgba(245, 166, 35, 0.10);
-    --warm-amber-glow: rgba(245, 166, 35, 0.20);
-    --soft-emerald-dim: rgba(16, 185, 129, 0.10);
-    --soft-teal-dim:    rgba(20, 184, 166, 0.10);
-    --soft-teal-glow:   rgba(45, 212, 191, 0.20);
-    --layer-muted: rgba(58, 90, 130, 0.35);
-  }
 
   html {
     background: var(--space-void);
-    color-scheme: light dark;
+    color-scheme: dark;
     scroll-behavior: smooth;
     transition: background-color 0.3s ease;
   }
@@ -296,21 +245,19 @@
   inset: 0;
   z-index: -1;
   overflow: hidden;
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(99, 54, 181, 0.15) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 20%, rgba(45, 212, 191, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(245, 166, 35, 0.06) 0%, transparent 45%),
-    linear-gradient(170deg, var(--space-void), var(--space-deep), var(--space-mid));
+  background: #020408;
 }
 
 .nebula-bg::before {
   content: '';
   position: absolute;
-  inset: -50%;
+  inset: 0;
   background:
-    radial-gradient(circle at 30% 40%, rgba(139, 92, 246, 0.12) 0%, transparent 40%),
-    radial-gradient(circle at 70% 60%, rgba(45, 212, 191, 0.08) 0%, transparent 35%);
-  animation: nebulaFloat 25s ease-in-out infinite;
+    radial-gradient(ellipse 70% 60% at 15% 10%,  rgba(20,184,166,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 85% 80%,  rgba(99,102,241,0.09) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 50%,  rgba(245,158,11,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 35% at 80% 20%,  rgba(45,212,191,0.07) 0%, transparent 45%);
+  animation: nebulaFloat 32s ease-in-out infinite;
 }
 
 .nebula-bg::after {
@@ -318,48 +265,20 @@
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
-    radial-gradient(1px 1px at 30% 60%, rgba(255, 255, 255, 0.25) 0%, transparent 100%),
-    radial-gradient(1px 1px at 50% 40%, rgba(255, 255, 255, 0.35) 0%, transparent 100%),
-    radial-gradient(1px 1px at 70% 80%, rgba(255, 255, 255, 0.2) 0%, transparent 100%),
-    radial-gradient(1px 1px at 90% 30%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
-    radial-gradient(1px 1px at 20% 90%, rgba(255, 255, 255, 0.15) 0%, transparent 100%),
-    radial-gradient(1px 1px at 60% 10%, rgba(255, 255, 255, 0.25) 0%, transparent 100%),
-    radial-gradient(1px 1px at 80% 50%, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
-  animation: starsTwinkle 8s ease-in-out infinite;
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 80% 75% at 50% 50%, black 20%, transparent 100%);
+  opacity: 0.6;
 }
 
 @keyframes nebulaFloat {
-
-  0%,
-  100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-
-  25% {
-    transform: translate(2%, -1%) rotate(0.5deg);
-  }
-
-  50% {
-    transform: translate(-1%, 2%) rotate(-0.3deg);
-  }
-
-  75% {
-    transform: translate(-2%, -1%) rotate(0.2deg);
-  }
+  0%,  100% { transform: translate(0, 0)      scale(1);    }
+  25%        { transform: translate(2%, -1.5%) scale(1.04); }
+  50%        { transform: translate(-1.5%, 2%) scale(0.97); }
+  75%        { transform: translate(-2%, -1%)  scale(1.02); }
 }
 
-@keyframes starsTwinkle {
-
-  0%,
-  100% {
-    opacity: 0.6;
-  }
-
-  50% {
-    opacity: 1;
-  }
-}
 
 /* Section */
 
@@ -1003,26 +922,33 @@
 
 /* Section */
 .admin-cockpit {
-  background: #e2e8f0;
+  background: #030712; /* Deep Void */
   position: relative;
   overflow: hidden;
 }
 
 .admin-glass {
-  background: #fff;
-  border: 1px solid #94a3b8;
-  border-radius: 0.75rem;
+  background: rgba(11, 15, 25, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  color: #f1f5f9;
 }
 
 .admin-glass-card {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 0.75rem;
-  color: #334155;
+  background: rgba(11, 15, 25, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  color: #f1f5f9;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .admin-glass-card:hover {
-  border-color: #94a3b8;
+  border-color: rgba(20, 184, 166, 0.2);
+  background: rgba(15, 23, 42, 0.8);
 }
 
 .admin-sidebar {
@@ -1275,7 +1201,7 @@
 }
 
 /* ----------------------------------------------
-   ? PREMIUM HERO V2 — Orbital Center System
+   ? PREMIUM HERO V2 â€” Orbital Center System
    ---------------------------------------------- */
 
 .hero-orbital-center {
@@ -1358,11 +1284,11 @@
 
 /* Nebula background: soft atmospheric light, no white star dots */
 :root:not(.dark) .nebula-bg {
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(99, 54, 181, 0.05) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 20%, rgba(20, 184, 166, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(245, 166, 35, 0.04) 0%, transparent 45%),
-    linear-gradient(160deg, #eef2f8, #e8edf5, #dde4f0);
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: #020408;
 }
 :root:not(.dark) .nebula-bg::before {
   background:
@@ -1448,7 +1374,7 @@
 
 
 
-/* 🏛️ PREMIUM GLOBAL DESIGN TOKENS (Al-Rehla Refined) */
+/* ðŸ›ï¸ PREMIUM GLOBAL DESIGN TOKENS (Al-Rehla Refined) */
 
 .cosmic-editorial-900 {
   font-family: var(--font-display);
@@ -1466,11 +1392,48 @@
 }
 
 .atmospheric-void {
-  background: 
-    radial-gradient(circle at 15% 10%, rgba(20, 184, 166, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 85% 90%, rgba(124, 58, 237, 0.08) 0%, transparent 40%),
-    #060813;
+  background: #020408;
+  position: relative;
 }
+
+/* Ambient orbs — layered on top via pseudo-elements */
+.atmospheric-void::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 65% 55% at 12% 8%,   rgba(20,184,166,0.11) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 88% 85%,  rgba(99,102,241,0.09) 0%, transparent 50%),
+    radial-gradient(ellipse 45% 38% at 55% 52%,  rgba(245,158,11,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 38% 32% at 82% 18%,  rgba(45,212,191,0.07) 0%, transparent 45%);
+  animation: av-orb-drift 40s ease-in-out infinite alternate;
+}
+
+/* Grid mesh */
+.atmospheric-void::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px);
+  background-size: 68px 68px;
+  mask-image: radial-gradient(ellipse 85% 80% at 50% 50%, black 20%, transparent 100%);
+  opacity: 0.55;
+}
+
+@keyframes av-orb-drift {
+  0%   { transform: translate(0%, 0%)    scale(1);    }
+  30%  { transform: translate(-2%, 3%)   scale(1.04); }
+  60%  { transform: translate(2%, -2%)   scale(0.97); }
+  100% { transform: translate(-1%, 2%)   scale(1.02); }
+}
+
+
 
 .premium-card-hover {
   transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
@@ -1484,3 +1447,4 @@
     0 20px 40px rgba(0,0,0,0.4),
     0 0 20px rgba(20, 184, 166, 0.1);
 }
+

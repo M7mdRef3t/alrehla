@@ -1,9 +1,10 @@
 import type { FC } from "react";
 import { useState } from "react";
-import { AlertTriangle, RefreshCw, TrendingUp } from "lucide-react";
+import { AlertTriangle, RefreshCw, TrendingUp, Zap, Target } from "lucide-react";
 import { runCronReport } from "../../../../../services/adminApi";
 import { computeConsciousRevenueMetrics } from "../../../../../services/consciousRevenueLink";
 import type { WeeklyReport } from "../../../../../types/admin.types";
+import { AdminTooltip } from "./AdminTooltip";
 
 interface RevenueEngineCardProps {
   data: WeeklyReport | null;
@@ -13,17 +14,25 @@ interface RevenueEngineCardProps {
   onRefresh?: (days?: 7 | 14 | 30) => Promise<void> | void;
 }
 
-const Metric: FC<{ label: string; value: string | number; tone?: "default" | "good" | "warn" }> = ({
+const Metric: FC<{ label: string; value: string | number; tone?: "default" | "good" | "warn"; hint?: string }> = ({
   label,
   value,
-  tone = "default"
+  tone = "default",
+  hint
 }) => {
   const toneClass =
-    tone === "good" ? "text-emerald-300" : tone === "warn" ? "text-rose-300" : "text-white";
+    tone === "good" ? "text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" 
+    : tone === "warn" ? "text-rose-400 drop-shadow-[0_0_8px_rgba(251,113,133,0.5)]" 
+    : "text-white drop-shadow-md";
+
   return (
-    <div className="rounded-xl border border-white/5 bg-slate-900/40 p-3">
-      <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
-      <p className={`mt-1 text-lg font-bold tabular-nums ${toneClass}`}>{value}</p>
+    <div className="rounded-xl border border-white/5 bg-slate-900/60 p-4 transition-all hover:bg-slate-900/80 hover:-translate-y-0.5 shadow-inner group/metric relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-20 h-20 bg-white/5 blur-xl rounded-full opacity-0 group-hover/metric:opacity-100 transition-opacity" />
+        <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] uppercase font-black tracking-widest text-slate-500 opacity-80">{label}</p>
+            {hint && <AdminTooltip content={hint} position="bottom" />}
+        </div>
+        <p className={`text-2xl font-black tabular-nums transition-transform group-hover/metric:scale-105 origin-left ${toneClass}`}>{value}</p>
     </div>
   );
 };
@@ -41,13 +50,14 @@ export const RevenueEngineCard: FC<RevenueEngineCardProps> = ({
 
   if (loading) {
     return (
-      <div className="rounded-2xl border border-white/5 bg-slate-950/30 p-6 animate-pulse">
-        <div className="h-6 w-48 rounded bg-slate-800/40" />
-        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
-          <div className="h-16 rounded bg-slate-800/30" />
-          <div className="h-16 rounded bg-slate-800/30" />
-          <div className="h-16 rounded bg-slate-800/30" />
-          <div className="h-16 rounded bg-slate-800/30" />
+      <div className="admin-glass-card rounded-2xl p-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-slate-950/50 animate-pulse pointer-events-none" />
+        <div className="h-6 w-48 rounded bg-slate-800/80 mb-6 relative z-10" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4 relative z-10">
+          <div className="h-24 rounded-xl bg-slate-800/50" />
+          <div className="h-24 rounded-xl bg-slate-800/50" />
+          <div className="h-24 rounded-xl bg-slate-800/50" />
+          <div className="h-24 rounded-xl bg-slate-800/50" />
         </div>
       </div>
     );
@@ -63,12 +73,6 @@ export const RevenueEngineCard: FC<RevenueEngineCardProps> = ({
   const gate7Critical = data.gate7?.status === "critical";
   const gate7InsufficientTraffic = data.gate7?.code === "gate7_insufficient_traffic";
   const consciousMetrics = data.consciousRevenue ?? computeConsciousRevenueMetrics(data);
-  const alignmentTone =
-    consciousMetrics?.status === "strong"
-      ? "text-emerald-300 border-emerald-500/20 bg-emerald-500/10"
-      : consciousMetrics?.status === "watch"
-      ? "text-amber-200 border-amber-500/20 bg-amber-500/10"
-      : "text-rose-200 border-rose-500/20 bg-rose-500/10";
 
   const handleRefreshWeekly = async () => {
     if (syncing) return;
@@ -92,23 +96,46 @@ export const RevenueEngineCard: FC<RevenueEngineCardProps> = ({
   };
 
   return (
-    <div className="rounded-2xl border border-white/5 bg-slate-950/30 p-6 backdrop-blur-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-bold uppercase tracking-widest text-slate-200">Revenue Engine</h3>
-        <div className="flex items-center gap-2">
-          <div className="hidden md:flex items-center gap-1 rounded-lg border border-white/10 bg-slate-900/40 p-1">
+    <div className="admin-glass-card rounded-3xl p-6 shadow-2xl border-indigo-500/10 relative overflow-hidden group">
+      {/* Cinematic Ambient */}
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none opacity-50 transition-opacity duration-1000 group-hover:opacity-80" />
+      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-cyan-500/5 blur-[100px] rounded-full pointer-events-none opacity-50 transition-opacity duration-1000" />
+
+      <div className="relative z-10 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+        <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-slate-900 rounded-xl border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.15)] ring-1 ring-white/5">
+                <TrendingUp className="w-5 h-5 text-indigo-400" />
+            </div>
+            <div>
+                <h3 className="text-sm font-black uppercase tracking-widest text-white leading-none mb-1 flex items-center gap-2">
+                    Revenue Engine
+                    <AdminTooltip
+                        content="محرك الربحية: يراقب تدفق الزيارات من الروابط الإعلانية (Affiliate) ويقيس مدى صحة تحويل الزوار إلى مستخدمين واعين."
+                        position="left"
+                    />
+                </h3>
+                <span className="text-[10px] text-slate-500 font-mono tracking-wider">
+                    {lastGeneratedAt
+                    ? new Date(lastGeneratedAt).toLocaleString("ar-EG")
+                    : new Date(data.to).toLocaleDateString("ar-EG")}
+                </span>
+            </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-slate-900/60 p-1 shadow-inner">
             {[7, 14, 30].map((days) => (
               <button
                 key={days}
                 type="button"
                 onClick={() => onWindowChange?.(days as 7 | 14 | 30)}
-                className={`rounded-md px-2 py-1 text-[10px] font-bold transition-colors ${
+                className={`rounded-lg px-3 py-1.5 text-[10px] font-black uppercase tracking-wider transition-all ${
                   windowDays === days
-                    ? "bg-indigo-500/30 text-indigo-100"
-                    : "text-slate-400 hover:text-slate-200"
+                    ? "bg-indigo-500 text-white shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
                 }`}
               >
-                {days}d
+                {days} DAYS
               </button>
             ))}
           </div>
@@ -116,122 +143,122 @@ export const RevenueEngineCard: FC<RevenueEngineCardProps> = ({
             type="button"
             onClick={handleRefreshWeekly}
             disabled={syncing}
-            className="inline-flex items-center gap-2 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-[11px] font-bold text-indigo-200 transition-colors hover:bg-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-[11px] font-black text-indigo-300 transition-all hover:bg-indigo-500/20 hover:border-indigo-400/50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "جاري التحديث..." : "تحديث التقرير"}
+            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin text-indigo-400" : ""}`} />
+            {syncing ? "SYNCING..." : "SYNC"}
           </button>
-          <span className="text-[10px] text-slate-500">
-            {lastGeneratedAt
-              ? new Date(lastGeneratedAt).toLocaleString("ar-EG")
-              : new Date(data.to).toLocaleDateString("ar-EG")}
-          </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <Metric label="affiliate_exposed" value={exposed} />
-        <Metric label="affiliate_clicked" value={clicked} />
-        <Metric label="affiliate_ctr" value={`${ctr}%`} tone={ctr > 0 ? "good" : "default"} />
+      <div className="relative z-10 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <Metric 
+            label="Exposed" 
+            value={exposed} 
+            hint="عدد مرات ظهور رابط التسجيل للمستخدمين (Impressions)." 
+        />
+        <Metric 
+            label="Clicked" 
+            value={clicked} 
+            hint="عدد مرات الضغط الفعلي على الرابط والدخول للانطلاق." 
+        />
+        <Metric 
+            label="CTR" 
+            value={`${ctr}%`} 
+            tone={ctr > 0 ? "good" : "default"} 
+            hint="نسبة النقر للظهور (Click-Through Rate). كلما زادت، زادت جودة الإعلان أو المحتوى." 
+        />
         <Metric
-          label="gate_7_status"
+          label="GATE-7"
           value={gate7Critical ? "CRITICAL" : "OK"}
           tone={gate7Critical ? "warn" : "good"}
+          hint="بوابة اليوم السابع: مقياس يقيم استمرارية الترافيك الجديد. إذا كانت حرجة، فهذا يعني انقطاع الزيارات."
         />
       </div>
 
-      {variants.length > 0 && (
-        <div className="mt-4 rounded-xl border border-white/5 bg-slate-900/30 p-3" dir="rtl">
-          <p className="text-[11px] font-bold tracking-wide text-slate-300 mb-2">A/B Affiliate CTR</p>
-          <div className="flex flex-wrap gap-2">
-            {variants.map((variant) => (
-              <span
-                key={variant.variant}
-                className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-[11px] text-indigo-200"
-              >
-                {variant.variant.toUpperCase()}: {variant.ctr}% ({variant.clicked}/{variant.exposed})
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {topMissions.length > 0 && (
-        <div className="mt-4 rounded-xl border border-white/5 bg-slate-900/30 p-3" dir="rtl">
-          <p className="text-[11px] font-bold tracking-wide text-slate-300 mb-2">أفضل 3 مهام (CTR)</p>
-          <div className="space-y-2">
-            {topMissions.map((mission) => (
-              <div key={mission.missionKey} className="flex items-center justify-between rounded-lg border border-white/5 bg-slate-950/40 px-3 py-2">
-                <span className="text-[11px] text-slate-200 truncate pl-2">
-                  {mission.missionLabel} <span className="text-slate-500">({mission.ring})</span>
-                </span>
-                <span className="text-[11px] text-indigo-200 font-semibold">
-                  {mission.ctr}% ({mission.clicked}/{mission.exposed})
-                </span>
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          {/* Top Missions */}
+          {topMissions.length > 0 && (
+            <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm" dir="rtl">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                    <Target className="w-4 h-4 text-cyan-400" />
+                    أعلى مسارات جذب
+                </p>
+                <AdminTooltip content="هنا بنشوف أكتر (مهام/محتوى) جابت ضغطات فعلية مقارنة بمرات الظهور، عشان نركّز على اللي بيجيب نتيجة." position="bottom" />
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {gate7Critical && (
-        <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-rose-100" dir="rtl">
-          <div className="mb-1 flex items-center justify-between">
-            <span className="text-xs font-bold tracking-wide">Gate-7 إنذار</span>
-            <AlertTriangle className="h-4 w-4 text-rose-300" />
-          </div>
-          <p className="text-xs">
-            لم يتم تسجيل أي <span className="font-bold">path_started</span> خلال آخر{" "}
-            <span className="font-bold">{data.gate7?.windowHours ?? 48}</span> ساعة.
-          </p>
-        </div>
-      )}
-
-      {!gate7Critical && (
-        <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-emerald-100" dir="rtl">
-          <div className="mb-1 flex items-center justify-between">
-            <span className="text-xs font-bold tracking-wide">Gate-7 مستقر</span>
-            <TrendingUp className="h-4 w-4 text-emerald-300" />
-          </div>
-          {gate7InsufficientTraffic ? (
-            <p className="text-xs">
-              الترافيك أقل من baseline المطلوب. أحداث 48 ساعة:{" "}
-              <span className="font-bold">{Number(data.gate7?.trafficEvents48h ?? 0)}</span> | جلسات:{" "}
-              <span className="font-bold">{Number(data.gate7?.trafficSessions48h ?? 0)}</span>
-              {" "} (الحد الأدنى: {Number(data.gate7?.minEvents48h ?? 20)} حدث / {Number(data.gate7?.minSessions48h ?? 8)} جلسات)
-            </p>
-          ) : (
-            <p className="text-xs">
-              path_started خلال 48 ساعة:{" "}
-              <span className="font-bold">{Number(data.gate7?.pathStarted48h ?? 0)}</span>
-            </p>
+              <div className="space-y-2">
+                {topMissions.map((mission) => (
+                  <div key={mission.missionKey} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/60 p-3 hover:bg-slate-900 transition-colors">
+                    <span className="text-[11px] text-slate-300 font-medium truncate pl-2">
+                      {mission.missionLabel} <span className="text-slate-600 font-mono ml-1">[{mission.ring}]</span>
+                    </span>
+                    <span className="text-xs font-black font-mono text-cyan-400 flex items-center gap-2">
+                        {mission.ctr}%
+                        <span className="text-[10px] text-slate-500 font-normal">({mission.clicked})</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
-        </div>
-      )}
+
+          <div className="space-y-4">
+            {/* Gate-7 Status Block */}
+            <div className={`rounded-2xl border p-5 relative overflow-hidden flex flex-col justify-center h-full min-h-[120px] ${gate7Critical ? 'bg-rose-500/10 border-rose-500/20 text-rose-100' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-100'}`} dir="rtl">
+                <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-white/5 to-transparent pointer-events-none" />
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                        {gate7Critical ? <AlertTriangle className="h-4 w-4 text-rose-400" /> : <TrendingUp className="h-4 w-4 text-emerald-400" />}
+                        <span className="text-xs font-black uppercase tracking-wider">حالة ضخ الزوار (Gate-7)</span>
+                    </div>
+                </div>
+                {gate7Critical ? (
+                    <p className="text-[11px] leading-relaxed opacity-90 font-medium">
+                        لم يتم تسجيل أي <span className="text-rose-300 font-mono">path_started</span> استهلال للمسار خلال <span className="text-rose-300 font-mono">{data.gate7?.windowHours ?? 48}h</span> الماضية. (خطر التوقف).
+                    </p>
+                ) : gate7InsufficientTraffic ? (
+                    <p className="text-[11px] leading-relaxed opacity-90 font-medium">
+                        التدفق منخفض: أحداث 48 ساعة المقاسة <span className="text-emerald-300 font-mono">({Number(data.gate7?.trafficEvents48h ?? 0)})</span>، الحد الأدنى المطلوب هو <span className="font-mono">{Number(data.gate7?.minEvents48h ?? 20)}</span>.
+                    </p>
+                ) : (
+                    <p className="text-[11px] leading-relaxed opacity-90 font-medium flex items-center gap-2">
+                        استهلال المسار (48 ساعة): <span className="text-2xl font-black text-emerald-300 font-mono tracking-tighter">{Number(data.gate7?.pathStarted48h ?? 0)}</span>
+                    </p>
+                )}
+            </div>
+          </div>
+      </div>
 
       {consciousMetrics && (
-        <div className={`mt-4 rounded-xl border p-3 ${alignmentTone}`} dir="rtl">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-bold tracking-wide">وعي الرحلة قبل العائد</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider">
-              {consciousMetrics.status === "strong"
-                ? "STRONG ALIGNMENT"
-                : consciousMetrics.status === "watch"
-                ? "WATCH"
-                : "CRITICAL"}
-            </span>
-          </div>
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-            <Metric label="avg_consciousness_level" value={`${consciousMetrics.averageConsciousnessLevel}%`} tone={consciousMetrics.averageConsciousnessLevel >= 60 ? "good" : "default"} />
-            <Metric label="revenue_signal" value={`${consciousMetrics.revenueSignal}%`} tone={consciousMetrics.revenueSignal >= 40 ? "good" : "default"} />
-            <Metric label="conscious_revenue_alignment" value={`${consciousMetrics.alignmentScore}%`} tone={consciousMetrics.alignmentScore >= 70 ? "good" : consciousMetrics.alignmentScore < 45 ? "warn" : "default"} />
-          </div>
-          <p className="mt-3 text-xs leading-relaxed">{consciousMetrics.note}</p>
+        <div className={`relative z-10 mt-4 rounded-2xl border p-5 transition-all outline-none ${
+          consciousMetrics.status === "strong" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-50 shadow-[0_0_20px_rgba(16,185,129,0.05)]" :
+          consciousMetrics.status === "watch" ? "bg-amber-500/10 border-amber-500/30 text-amber-50 shadow-[0_0_20px_rgba(245,158,11,0.05)]" :
+          "bg-rose-500/10 border-rose-500/30 text-rose-50 shadow-[0_0_20px_rgba(244,63,94,0.05)]"
+        }`} dir="rtl">
+           <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10">
+               <div className="flex items-center gap-2">
+                    <Zap className="w-5 h-5 opacity-80" />
+                    <span className="text-xs font-black uppercase tracking-widest">تأثير الوعي على العائد المردود</span>
+                    <AdminTooltip content="مؤشر يربط بين (مستوى الوعي) الذي يحققه أداة التشخيص وبين (إشارة الربحية/القرارات الشرائية). إستقرار هذا المؤشر يعني أن التوعية تعود بربح." position="bottom" />
+               </div>
+               <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] px-3 py-1 bg-black/30 rounded-lg drop-shadow-md">
+                   {consciousMetrics.status}
+               </span>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <Metric label="M-Consciousness" value={`${consciousMetrics.averageConsciousnessLevel}%`} tone={consciousMetrics.averageConsciousnessLevel >= 60 ? "good" : "default"} hint="متوسط وصول المستخدمين لنقاط الوعي داخل خرائطهم." />
+                <Metric label="Rev-Signal" value={`${consciousMetrics.revenueSignal}%`} tone={consciousMetrics.revenueSignal >= 40 ? "good" : "default"} hint="إشارة الاستجابات والقرارات الشرائية المسجلة." />
+                <Metric label="Alignment" value={`${consciousMetrics.alignmentScore}%`} tone={consciousMetrics.alignmentScore >= 70 ? "good" : consciousMetrics.alignmentScore < 45 ? "warn" : "default"} hint="التوافق النهائي للصحة الربحية لتجربة الوعي." />
+           </div>
+           
+           <p className="text-[11px] md:text-xs leading-relaxed opacity-90 font-medium bg-black/20 p-3 rounded-xl border border-white/5">{consciousMetrics.note}</p>
         </div>
       )}
 
       {syncMessage && (
-        <div className="mt-3 rounded-lg border border-white/5 bg-slate-900/40 px-3 py-2 text-xs text-slate-300" dir="rtl">
+        <div className="relative z-10 mt-4 rounded-xl border border-white/10 bg-slate-900/80 p-3 text-xs text-slate-300 text-center font-bold tracking-wide" dir="rtl">
           {syncMessage}
         </div>
       )}

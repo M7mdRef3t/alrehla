@@ -27,6 +27,7 @@ import { useThemeState } from "../state/themeState";
 import { signOut } from "../services/authService";
 import { NotificationsPanel } from "./NotificationsPanel";
 import { isPrivilegedRole } from "../utils/featureFlags";
+import { assignUrl } from "../services/navigation";
 
 const NAV_LINKS = [
   { id: "home", label: "الرئيسية", icon: Home },
@@ -100,9 +101,13 @@ export const PlatformHeader = memo(function PlatformHeader({
   const displayName = useAuthState((s) => s.displayName);
   const status = useAuthState((s) => s.status);
   const role = useAuthState(getEffectiveRoleFromState);
+  const rawRole = useAuthState((s) => s.role);
   const roleOverride = useAuthState((s) => s.roleOverride);
   const setRoleOverride = useAuthState((s) => s.setRoleOverride);
-  const isPrivilegedUser = isPrivilegedRole(role);
+  
+  // They can see the switch if their base role is privileged (so they can switch back)
+  // or if they currently have a privileged effective role.
+  const isPrivilegedUser = isPrivilegedRole(rawRole) || isPrivilegedRole(role);
   const isViewingAsUser = roleOverride === "user";
   const isLoggedIn = Boolean(user);
   const avatarInitial = (firstName?.[0] ?? displayName?.[0] ?? "أ").toUpperCase();
@@ -179,6 +184,22 @@ export const PlatformHeader = memo(function PlatformHeader({
   }, []);
 
   // ── Landing CTA — FIX: if logged in → enter app, not show login ──
+  const openOwnerDashboard = useCallback(() => {
+    try {
+      assignUrl("/admin");
+    } catch {
+      assignUrl("/admin");
+    }
+  }, []);
+
+  const enterOwnerDashboard = useCallback(() => {
+    if (isViewingAsUser) {
+      setRoleOverride(null);
+    }
+    setUserMenuOpen(false);
+    openOwnerDashboard();
+  }, [isViewingAsUser, openOwnerDashboard, setRoleOverride]);
+
   const handleLandingCta = useCallback(() => {
     if (isLoggedIn) {
       onNavigate?.("tools");
@@ -478,10 +499,29 @@ export const PlatformHeader = memo(function PlatformHeader({
                       <div className="border-t border-white/[0.08] mt-1 pt-1">
                         <button
                           type="button"
+                          id="header-owner-dashboard"
+                          onClick={enterOwnerDashboard}
+                          className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full text-indigo-300 hover:bg-indigo-500/10 hover:text-indigo-200"
+                          role="menuitem"
+                          aria-label="فتح لوحة الأونر"
+                        >
+                          <ShieldCheck className="w-4 h-4" />
+                          لوحة الأونر
+                        </button>
+                      </div>
+                    )}
+
+                    {isPrivilegedUser && (
+                      <div className="border-t border-white/[0.08] mt-1 pt-1">
+                        <button
+                          type="button"
                           id="header-owner-switch"
                           onClick={() => {
                             setRoleOverride(isViewingAsUser ? null : "user");
                             setUserMenuOpen(false);
+                            if (isViewingAsUser) {
+                              openOwnerDashboard();
+                            }
                           }}
                           className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full ${
                             isViewingAsUser
@@ -489,14 +529,14 @@ export const PlatformHeader = memo(function PlatformHeader({
                               : "text-teal-400 hover:bg-teal-500/10"
                           }`}
                           role="menuitem"
-                          aria-label={isViewingAsUser ? "العودة لوضع الأونر" : "تجربة واجهة المستخدم"}
+                          aria-label={isViewingAsUser ? "العودة للوحة الأونر" : "معاينة المستخدم"}
                         >
                           {isViewingAsUser ? (
                             <ShieldCheck className="w-4 h-4" />
                           ) : (
                             <Eye className="w-4 h-4" />
                           )}
-                          {isViewingAsUser ? "العودة لوضع الأونر" : "تجربة واجهة المستخدم"}
+                          {isViewingAsUser ? "العودة للوحة الأونر" : "معاينة المستخدم"}
                         </button>
                       </div>
                     )}

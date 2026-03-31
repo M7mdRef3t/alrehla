@@ -10,6 +10,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../services/supabaseClient";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 export type PushPermission = "default" | "granted" | "denied" | "unsupported";
 
@@ -18,6 +19,18 @@ interface PushState {
   permission: PushPermission;
   isSubscribed: boolean;
   isLoading: boolean;
+}
+
+function readPublicEnv(key: string): string | undefined {
+  try {
+    if (typeof process !== "undefined" && process.env) {
+      const value = process.env[key];
+      if (typeof value === "string" && value.trim()) return value.trim();
+    }
+  } catch {
+    // Ignore unavailable process.env in browser-like contexts.
+  }
+  return undefined;
 }
 
 // Convert VAPID base64 key to Uint8Array
@@ -54,12 +67,22 @@ export function usePushNotifications() {
     isLoading: false,
   });
 
-  const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
+  const vapidKey =
+    readPublicEnv("NEXT_PUBLIC_VAPID_PUBLIC_KEY") ??
+    readPublicEnv("VITE_VAPID_PUBLIC_KEY");
+  const pushFunctionsBaseUrl = runtimeEnv.supabaseUrl;
+  const isPushConfigured = Boolean(vapidKey && pushFunctionsBaseUrl);
 
   useEffect(() => {
-    const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    const browserSupportsPush =
+      "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    const supported = browserSupportsPush && isPushConfigured;
     const perm = supported ? (Notification.permission as PushPermission) : "unsupported";
     setState((prev) => ({ ...prev, isSupported: supported, permission: perm }));
+
+    if (browserSupportsPush && !isPushConfigured && runtimeEnv.isDev) {
+      console.warn("[push] Push notifications disabled: missing VAPID public key or Supabase URL.");
+    }
 
     if (!supported) return;
 
@@ -99,7 +122,7 @@ export function usePushNotifications() {
       // Trigger first alert generation
       try {
         const { data: { session } } = await supabase!.auth.getSession();
-        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-behavioral-alerts`, {
+        await fetch(`${pushFunctionsBaseUrl}/functions/v1/generate-behavioral-alerts`, {
           method: "POST",
           headers: { Authorization: `Bearer ${session?.access_token}` },
         });
@@ -112,7 +135,7 @@ export function usePushNotifications() {
       setState((prev) => ({ ...prev, isLoading: false }));
       return false;
     }
-  }, [state.isSupported, vapidKey]);
+  }, [state.isSupported, vapidKey, pushFunctionsBaseUrl]);
 
   const unsubscribe = useCallback(async (): Promise<void> => {
     setState((prev) => ({ ...prev, isLoading: true }));

@@ -7,6 +7,7 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { AdminTooltip } from "./dashboard/Overview/components/AdminTooltip";
 import {
   Brain,
   CheckCircle,
@@ -64,6 +65,7 @@ export const AIDecisionLog: FC<AIDecisionLogProps> = ({ maxDecisions = 50 }) => 
           <h2 className="text-lg font-bold" style={{ color: "rgba(226,232,240,0.95)" }}>
             سجل قرارات الـ AI
           </h2>
+          <AdminTooltip content="مراقبة حية لكل القرارات التي يتخذها الذكاء الاصطناعي في المنصة (مثل تعديل تسعير، فلترة مجتمع، أو اقتراحات)." position="bottom" />
           <span
             className="px-2 py-0.5 rounded-full text-xs font-bold"
             style={{ background: "rgba(139,92,246,0.15)", color: "#a78bfa" }}
@@ -95,6 +97,7 @@ export const AIDecisionLog: FC<AIDecisionLogProps> = ({ maxDecisions = 50 }) => 
           color="#34d399"
           active={filter === "executed"}
           onClick={() => setFilter(filter === "executed" ? "all" : "executed")}
+          tooltip="القرارات اللي السيستم أخدها ونفذها بشكل آلي بناءً على المعايير بدون تدخل بشري."
         />
         <StatCard
           label="قيد المراجعة"
@@ -103,6 +106,7 @@ export const AIDecisionLog: FC<AIDecisionLogProps> = ({ maxDecisions = 50 }) => 
           color="#fbbf24"
           active={filter === "pending"}
           onClick={() => setFilter(filter === "pending" ? "all" : "pending")}
+          tooltip="قرارات حساسة تتطلب موافقة المالك (Owner) قبل التنفيذ النهائي (مثل تغيير تسعير جذري)."
         />
         <StatCard
           label="مرفوض"
@@ -111,6 +115,7 @@ export const AIDecisionLog: FC<AIDecisionLogProps> = ({ maxDecisions = 50 }) => 
           color="#f87171"
           active={filter === "rejected"}
           onClick={() => setFilter(filter === "rejected" ? "all" : "rejected")}
+          tooltip="قرارات تم رفضها يدوياً من المالك وتم إلغاء تنفيذها."
         />
         <StatCard
           label="ممنوع"
@@ -119,6 +124,7 @@ export const AIDecisionLog: FC<AIDecisionLogProps> = ({ maxDecisions = 50 }) => 
           color="#ef4444"
           active={filter === "all"}
           onClick={() => setFilter("all")}
+          tooltip="قرارات حاول الذكاء الاصطناعي اتخاذها ولكنها محظورة وفقاً لقواعد الحماية الأساسية للمنصة."
         />
       </div>
 
@@ -164,9 +170,10 @@ interface StatCardProps {
   color: string;
   active: boolean;
   onClick: () => void;
+  tooltip?: string;
 }
 
-const StatCard: FC<StatCardProps> = ({ label, count, icon, color, active, onClick }) => {
+const StatCard: FC<StatCardProps> = ({ label, count, icon, color, active, onClick, tooltip }) => {
   return (
     <motion.button
       type="button"
@@ -185,9 +192,12 @@ const StatCard: FC<StatCardProps> = ({ label, count, icon, color, active, onClic
         </span>
         <div style={{ color }}>{icon}</div>
       </div>
-      <p className="text-xs" style={{ color: "rgba(148,163,184,0.7)" }}>
-        {label}
-      </p>
+      <div className="flex items-center justify-between mt-1">
+        <p className="text-xs" style={{ color: "rgba(148,163,184,0.7)" }}>
+          {label}
+        </p>
+        {tooltip && <AdminTooltip content={tooltip} position="bottom" />}
+      </div>
     </motion.button>
   );
 };

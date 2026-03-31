@@ -1,0 +1,19 @@
+<svg width="360" height="96" viewBox="0 0 360 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="po-main" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#2DD4BF"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(284,8)">
+    <circle cx="42" cy="40" r="30" stroke="#1D4ED8" stroke-width="1.6" opacity="0.35"/>
+    <circle cx="42" cy="40" r="21" stroke="#0EA5E9" stroke-width="1.6" opacity="0.5"/>
+    <circle cx="42" cy="40" r="12" fill="#0C4A6E" stroke="#22D3EE" stroke-width="1.8"/>
+    <path d="M8 40 H24 L30 33 L37 49 L44 25 L52 45 L57 40 H76" stroke="url(#po-main)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="42" cy="40" r="3.3" fill="#A5F3FC"/>
+  </g>
+
+  <text x="10" y="58" font-family="Cairo, 'Segoe UI', Arial, sans-serif" font-size="50" font-weight="800" fill="#F8FAFC">الرحلة</text>
+  <text x="14" y="82" font-family="Cairo, 'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#2DD4BF" letter-spacing="0.4">نبضك مفهوم.. ومسارك أوضح</text>
+</svg>

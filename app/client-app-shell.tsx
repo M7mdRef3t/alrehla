@@ -73,6 +73,13 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
   const [mounted, setMounted] = useState(false);
   const [shouldLoadFullApp, setShouldLoadFullApp] = useState(true);
 
+  const handleExitToLanding = useCallback(() => {
+    if (typeof window !== "undefined" && window.location.pathname !== "/") {
+      return;
+    }
+    setShouldLoadFullApp(false);
+  }, []);
+
   const startRecoveryFromLanding = useCallback(() => {
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
@@ -139,7 +146,7 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
       <ErrorBoundary>
         {shouldLoadFullApp ? (
           <Suspense fallback={<AwarenessSkeleton />}>
-            <App onExitToLanding={() => setShouldLoadFullApp(false)} />
+            <App onExitToLanding={handleExitToLanding} />
           </Suspense>
         ) : (
           <PWAInstallProvider>

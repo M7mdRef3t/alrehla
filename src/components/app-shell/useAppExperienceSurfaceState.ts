@@ -60,7 +60,7 @@ interface UseAppExperienceSurfaceStateParams {
   overlaySurface: SurfaceOverlayPropsParams & {
     onDismissBroadcast: SurfaceOverlayPropsParams["onDismissBroadcast"];
   };
-  onOnboardingComplete?: () => void;
+  onOnboardingComplete?: (skipped?: boolean) => void;
 }
 
 export function useAppExperienceSurfaceState({

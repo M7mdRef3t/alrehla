@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Terminal, RefreshCcw, ArrowRight, ShieldAlert, Zap, Cpu } from 'lucide-react';
 import { orchestrator, OrchestrationResult } from '../../../../ai/orchestrator/Core';
+import { AdminTooltip } from '../Overview/components/AdminTooltip';
 import { SystemSnapshot } from '../../../../ai/orchestrator/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -58,19 +59,28 @@ export const AISimulatorPanel: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button onClick={() => runTest('contradiction')} className="p-6 rounded-2xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 transition-all text-right group">
                     <div className="flex items-center justify-between mb-2"><ShieldAlert className="w-6 h-6 text-rose-400" /><span className="text-[10px] font-black text-rose-500/50 uppercase tracking-widest">Scenario A</span></div>
-                    <h3 className="text-lg font-bold text-rose-100">اختبار التناقض المعرفي</h3>
+                    <div className="flex items-center gap-2 justify-end">
+                        <AdminTooltip content="يختبر النظام عند إدخال المستخدم لبيانات مزاج عالية جداً لكن مؤشر الأداء (TEI) الخاص به متدهور، ليرى كيف سيوازن جارفيس بينهما." position="top" />
+                        <h3 className="text-lg font-bold text-rose-100">اختبار التناقض المعرفي</h3>
+                    </div>
                     <p className="text-xs text-rose-400/70 mt-1">حقن بيانات متضاربة بين المزاج والأداء</p>
                 </button>
 
                 <button onClick={() => runTest('poisoning')} className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-all text-right group">
                     <div className="flex items-center justify-between mb-2"><Zap className="w-6 h-6 text-amber-400" /><span className="text-[10px] font-black text-amber-500/50 uppercase tracking-widest">Scenario B</span></div>
-                    <h3 className="text-lg font-bold text-amber-100">تسمم التغذية الراجعة</h3>
+                    <div className="flex items-center gap-2 justify-end">
+                        <AdminTooltip content="محاكاة لسيناريو يقوم فيه وكيل ذكاء اصطناعي آخر بإعطاء إشارات خاطئة لنرى هل سيرصد جارفيس التسمم أم لا." position="top" />
+                        <h3 className="text-lg font-bold text-amber-100">تسمم التغذية الراجعة</h3>
+                    </div>
                     <p className="text-xs text-amber-400/70 mt-1">محاكاة بوت يعطي إشارات إيجابية مضللة</p>
                 </button>
 
                 <button onClick={() => runTest('cascade')} className="p-6 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all text-right group">
                     <div className="flex items-center justify-between mb-2"><Cpu className="w-6 h-6 text-indigo-400" /><span className="text-[10px] font-black text-indigo-500/50 uppercase tracking-widest">Scenario C</span></div>
-                    <h3 className="text-lg font-bold text-indigo-100">اختناق البروتوكولات</h3>
+                    <div className="flex items-center gap-2 justify-end">
+                        <AdminTooltip content="ضرب النظام بـ 5 أزمات نفسية في نفس اللحظة لاختبار نظام الطواريء (Concurrency) وترتيب الأولويات." position="top" />
+                        <h3 className="text-lg font-bold text-indigo-100">اختناق البروتوكولات</h3>
+                    </div>
                     <p className="text-xs text-indigo-400/70 mt-1">اختبار الـ Concurrency وإدارة الطوارئ</p>
                 </button>
 
@@ -79,7 +89,10 @@ export const AISimulatorPanel: React.FC = () => {
                     className="p-6 rounded-2xl bg-slate-800/50 border border-white/10 hover:bg-slate-700 transition-all text-right group"
                 >
                     <div className="flex items-center justify-between mb-2"><ShieldAlert className="w-6 h-6 text-slate-400" /><span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Global Action</span></div>
-                    <h3 className="text-lg font-bold text-white">تفعيل وضع السكون (Kill Switch)</h3>
+                    <div className="flex items-center gap-2 justify-end">
+                        <AdminTooltip content="إغلاق فوري لكل تدخلات الذكاء الاصطناعي وإلغاء صلاحياته كإجراء طوارئ أمني كلي." position="top" />
+                        <h3 className="text-lg font-bold text-white">تفعيل وضع السكون (Kill Switch)</h3>
+                    </div>
                     <p className="text-xs text-slate-500 mt-1">اختبار العقوبة الكبرى للأوزان (Penalty)</p>
                 </button>
 
@@ -88,7 +101,10 @@ export const AISimulatorPanel: React.FC = () => {
                     className="p-6 rounded-2xl bg-teal-500/10 border border-teal-500/20 hover:bg-teal-500/20 transition-all text-right group"
                 >
                     <div className="flex items-center justify-between mb-2"><RefreshCcw className="w-6 h-6 text-teal-400" /><span className="text-[10px] font-black text-teal-500 uppercase tracking-widest">Global Action</span></div>
-                    <h3 className="text-lg font-bold text-teal-100">إيقاف وضع السكون</h3>
+                    <div className="flex items-center gap-2 justify-end">
+                        <AdminTooltip content="إعادة الذكاء الاصطناعي لحالة المراقبة والعمل الطبيعية." position="top" />
+                        <h3 className="text-lg font-bold text-teal-100">إيقاف وضع السكون</h3>
+                    </div>
                     <p className="text-xs text-teal-400/70 mt-1">العودة لوضع المراقبة والتحسس</p>
                 </button>
             </div>

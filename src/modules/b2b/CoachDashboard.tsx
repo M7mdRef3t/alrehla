@@ -82,25 +82,7 @@ export default function CoachDashboard() {
     };
 
     if (isLoading) {
-        return <div className="min-h-screen bg-white flex items-center justify-center font-bold text-slate-400">  ...</div>;
-    }
-
-    if (subInfo?.tier !== 'coach') {
-        return (
-            <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-6 text-center" dir="rtl">
-                <div className="w-20 h-20 bg-[var(--soft-teal)]/10 text-[var(--soft-teal)] rounded-3xl flex items-center justify-center mb-6 border border-[var(--soft-teal)] shadow-sm">
-                    <ShieldAlert className="w-10 h-10" />
-                </div>
-                <h1 className="text-3xl font-black text-gray-900 mb-4">    </h1>
-                <p className="text-gray-600 max-w-md leading-relaxed mb-8">
-                      ""         .
-                </p>
-                <div className="flex gap-4">
-                    <a href="/" className="px-8 py-4 bg-white text-gray-900 border border-gray-200 rounded-2xl font-bold hover:bg-gray-50 transition"> </a>
-                    <a href="/pricing" className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-black transition shadow-lg shadow-gray-900/20">  </a>
-                </div>
-            </div>
-        );
+        return <div className="min-h-screen bg-white flex items-center justify-center font-bold text-slate-400">جاري تحميل لوحة التحكم...</div>;
     }
 
     const handleLogout = async () => {
@@ -110,14 +92,6 @@ export default function CoachDashboard() {
     };
 
     const filteredClients = clients.filter(c => c.name.includes(searchQuery));
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <div className="animate-spin w-10 h-10 border-4 border-[var(--soft-teal)] border-t-transparent rounded-full" />
-            </div>
-        );
-    }
 
     const handleSelectClient = async (client: any) => {
         setSelectedClient(client);
@@ -140,16 +114,42 @@ export default function CoachDashboard() {
                     <div className="w-16 h-16 bg-[var(--soft-teal)]/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                         <Activity className="w-8 h-8 text-[var(--soft-teal)]" />
                     </div>
-                    <h2 className="text-2xl font-black text-slate-900 mb-2"> </h2>
-                    <p className="text-slate-500 mb-8 leading-relaxed">            .</p>
+                    <h2 className="text-2xl font-black text-slate-900 mb-2">سجّل دخولك كمدرب</h2>
+                    <p className="text-slate-500 mb-8 leading-relaxed">لوحة الكوتش متاحة بعد تسجيل الدخول فقط.</p>
                     <button
                         onClick={() => {
                             void signInWithGoogleAtPath('/coach');
                         }}
                         className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition shadow-lg shadow-slate-900/20"
                     >
-                          Google
+                        تسجيل الدخول بـ Google
                     </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!subInfo) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="animate-spin w-10 h-10 border-4 border-[var(--soft-teal)] border-t-transparent rounded-full" />
+            </div>
+        );
+    }
+
+    if (subInfo.tier !== 'coach') {
+        return (
+            <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-6 text-center" dir="rtl">
+                <div className="w-20 h-20 bg-[var(--soft-teal)]/10 text-[var(--soft-teal)] rounded-3xl flex items-center justify-center mb-6 border border-[var(--soft-teal)] shadow-sm">
+                    <ShieldAlert className="w-10 h-10" />
+                </div>
+                <h1 className="text-3xl font-black text-gray-900 mb-4">الوصول للمدربين فقط</h1>
+                <p className="text-gray-600 max-w-md leading-relaxed mb-8">
+                    حسابك الحالي لا يحتوي على باقة الكوتش. فعّل باقة المدرب لفتح لوحة التحكم وإدارة العملاء.
+                </p>
+                <div className="flex gap-4">
+                    <a href="/" className="px-8 py-4 bg-white text-gray-900 border border-gray-200 rounded-2xl font-bold hover:bg-gray-50 transition">الرجوع للرئيسية</a>
+                    <a href="/pricing" className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-black transition shadow-lg shadow-gray-900/20">ترقية الباقة</a>
                 </div>
             </div>
         );

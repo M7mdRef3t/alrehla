@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getLiveAdminAnalytics } from "../api";
 import type { LiveAdminAnalytics } from "../types";
+import { AdminTooltip } from "../../../components/admin/dashboard/Overview/components/AdminTooltip";
 
 export default function LiveAdminPanel() {
   const [analytics, setAnalytics] = useState<LiveAdminAnalytics | null>(null);
@@ -26,13 +27,16 @@ export default function LiveAdminPanel() {
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-4">
         {[
-          ["Total Sessions", analytics.totalSessions],
-          ["Completed", analytics.completedSessions],
-          ["Active", analytics.activeSessions],
-          ["Shared", analytics.sharedSessions],
-        ].map(([label, value]) => (
-          <div key={String(label)} className="rounded-[2rem] border border-white/10 bg-white/5 p-5">
-            <p className="text-xs uppercase tracking-[0.28em] text-slate-400">{label}</p>
+          ["إجمالي الجلسات", analytics.totalSessions, "Live Sessions", "إجمالي الجلسات التفاعلية اللي اتفتحت على الموديول اللايف حتى الآن."],
+          ["مكتملة", analytics.completedSessions, "Completed", "جلسات اللايف اللي اكتملت لحد النهاية وطلعت نتايج/روشتات الوعي للمستخدم."],
+          ["نشطة الآن", analytics.activeSessions, "Active", "المستخدمين اللي فاتحين اللايف ناو وبيعملوا الجلسة في اللحظة دي."],
+          ["تمت المشاركة", analytics.sharedSessions, "Shared", "عدد الجلسات اللي اليوزرز عملولها شير على السوشيال ميديا كنوع من الـ Viral Loop."],
+        ].map(([title, value, key, tooltip]) => (
+          <div key={String(key)} className="rounded-[2rem] border border-white/10 bg-white/5 p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400 font-bold">{title}</p>
+              <AdminTooltip content={String(tooltip)} position="bottom" />
+            </div>
             <p className="mt-3 text-3xl font-black text-white">{value}</p>
           </div>
         ))}

@@ -45,7 +45,8 @@ export const MapInsightPanel: FC = () => {
 
     const fetchHistory = async () => {
         try {
-            const { data: { session } } = await supabase!.auth.getSession();
+            if (!supabase) return;
+            const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
             if (!token) return;
 
@@ -70,7 +71,8 @@ export const MapInsightPanel: FC = () => {
 
     const togglePin = async (id: string, currentStatus: boolean) => {
         try {
-            const { data: { session } } = await supabase!.auth.getSession();
+            if (!supabase) return;
+            const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
             if (!token) return;
 
@@ -106,7 +108,7 @@ export const MapInsightPanel: FC = () => {
                 missionCompleted: n.missionProgress?.isCompleted
             }));
 
-            const { data: { session } } = await supabase!.auth.getSession();
+            const session = supabase ? (await supabase.auth.getSession()).data.session : null;
             const token = session?.access_token;
 
             const res = await fetch('/api/insight', {
@@ -199,7 +201,7 @@ export const MapInsightPanel: FC = () => {
                                 ) : (
                                     <div className="py-8 text-center text-slate-500">
                                         <Sparkles className="w-6 h-6 mx-auto mb-2 opacity-20" />
-                        <p className="text-xs">اضغط "تح جدد" لاستكشاف أنماط العلاقات في خريطتك.</p>
+                        <p className="text-xs">اضغط "تحديث" عشان تكشف أنماط العلاقات في خريطتك.</p>
                                     </div>
                                 )}
                             </motion.div>

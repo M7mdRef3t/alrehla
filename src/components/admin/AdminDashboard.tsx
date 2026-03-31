@@ -17,11 +17,15 @@ import {
   Pencil,
   Terminal,
   Target,
+  Menu,
+  X,
   Flame,
   Rocket,
   Briefcase,
   BarChart3,
-  ClipboardList
+  ClipboardList,
+  TrendingUp,
+  MapPin
 } from "lucide-react";
 import { runtimeEnv } from "../../config/runtimeEnv";
 import { AwarenessSkeleton } from "../AwarenessSkeleton";
@@ -36,6 +40,7 @@ import {
 } from "../../services/adminApi";
 import { LiveFreezePill } from "./LiveFreezePill";
 import { isSupabaseReady, supabase } from "../../services/supabaseClient";
+import { AdminTooltip } from "./dashboard/Overview/components/AdminTooltip";
 import {
   createCurrentUrl,
   getSearch,
@@ -44,7 +49,11 @@ import {
 } from "../../services/navigation";
 
 // Extracted Panels (Lazy Loaded for performance and dependency stability)
-const OverviewPanel = lazy(() => import("./dashboard/Overview/OverviewPanel").then(m => ({ default: m.OverviewPanel })));
+const ExecutiveDashboard = lazy(() => import("./dashboard/Executive/ExecutiveDashboard").then(m => ({ default: m.ExecutiveDashboard })));
+const GrowthRevenueDashboard = lazy(() => import("./dashboard/Executive/GrowthRevenueDashboard").then(m => ({ default: m.GrowthRevenueDashboard })));
+const SecurityOpsDashboard = lazy(() => import("./dashboard/Executive/SecurityOpsDashboard").then(m => ({ default: m.SecurityOpsDashboard })));
+const ConsciousnessAtlasDashboard = lazy(() => import("./dashboard/Executive/ConsciousnessAtlasDashboard").then(m => ({ default: m.ConsciousnessAtlasDashboard })));
+const FlowDynamicsDashboard = lazy(() => import("./dashboard/Executive/FlowDynamicsDashboard").then(m => ({ default: m.FlowDynamicsDashboard })));
 const FlowMapPanel = lazy(() => import("./dashboard/Flow/FlowMapPanel").then(m => ({ default: m.FlowMapPanel })));
 const FeedbackPanel = lazy(() => import("./dashboard/Support/FeedbackPanel").then(m => ({ default: m.FeedbackPanel })));
 const FeatureFlagsPanel = lazy(() => import("./dashboard/Features/FeatureFlagsPanel").then(m => ({ default: m.FeatureFlagsPanel })));
@@ -73,49 +82,97 @@ const AdAnalyticsDashboard = lazy(() => import("./dashboard/AdAnalytics/AdAnalyt
 const SurveyResultsPanel = lazy(() => import("./dashboard/Data/SurveyResultsPanel").then(m => ({ default: m.SurveyResultsPanel })));
 const MarketingOpsPanel = lazy(() => import("./dashboard/MarketingOps/MarketingOpsPanel").then(m => ({ default: m.MarketingOpsPanel })));
 const SovereignPanel = lazy(() => import("./dashboard/Sovereign/SovereignControl").then(m => ({ default: m.SovereignControl })));
+const MapRegistryPanel = lazy(() => import("./dashboard/Content/MapRegistryPanel").then(m => ({ default: m.MapRegistryPanel })));
 
-type AdminTab = "sovereign" | "entity" | "overview" | "flow-map" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "sales-enablement" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo" | "repo-intel" | "war-room" | "dawayir-live" | "ad-analytics" | "survey-results" | "marketing-ops";
+type AdminTab = "sovereign" | "entity" | "exec-overview" | "growth-revenue" | "security-ops" | "consciousness-atlas" | "flow-dynamics" | "flow-map" | "map-registry" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "sales-enablement" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo" | "repo-intel" | "war-room" | "dawayir-live" | "ad-analytics" | "survey-results" | "marketing-ops";
 
 const DataManagementModal = lazy(() =>
   import("../DataManagement").then((m) => ({ default: m.DataManagement }))
 );
 
-const NAV_ITEMS: Array<{ id: AdminTab; label: string; icon: ReactNode }> = [
-  { id: "sovereign", label: "مركز السيادة الإدراكية", icon: <ShieldCheck className="w-4 h-4 text-amber-500" /> },
-  { id: "entity", label: "كيان الرحلة (DNA)", icon: <Brain className="w-4 h-4 text-teal-400" /> },
-  { id: "overview", label: "نظرة عامة على المسارات", icon: <Activity className="w-4 h-4" /> },
-  { id: "war-room", label: "غرفة العمليات (War Room)", icon: <ShieldCheck className="w-4 h-4 text-red-500" /> },
-  { id: "flow-map", label: "خريطة التدفق", icon: <Compass className="w-4 h-4" /> },
-  { id: "feedback", label: "أصوات المسافرين", icon: <MessageSquare className="w-4 h-4" /> },
-  { id: "feature-flags", label: "مفاتيح النظام", icon: <Flag className="w-4 h-4" /> },
-  { id: "ai-studio", label: "مختبر الذكاء", icon: <Brain className="w-4 h-4" /> },
-  { id: "ai-decisions", label: "قرارات الوعي", icon: <Sparkles className="w-4 h-4 text-purple-400" /> },
-  { id: "health-monitor", label: "مراقب النبض", icon: <Activity className="w-4 h-4 text-cyan-400" /> },
-  { id: "content", label: "مخزن المحتوى", icon: <Database className="w-4 h-4" /> },
-  { id: "users", label: "سجلات السيادة (الأعضاء)", icon: <Users className="w-4 h-4" /> },
-  { id: "user-state", label: "بيانات الحالة", icon: <Database className="w-4 h-4" /> },
-  { id: "consciousness", label: "أرشيف الوعي", icon: <History className="w-4 h-4" /> },
-  { id: "consciousness-map", label: "خريطة الإدراك", icon: <Workflow className="w-4 h-4" /> },
-  { id: "b2b-analytics", label: "تحليلات B2B", icon: <ShieldCheck className="w-4 h-4" /> },
-  { id: "ai-simulator", label: "محاكي الذكاء", icon: <Terminal className="w-4 h-4 text-rose-400" /> },
-  { id: "ai-marketing", label: "تسويق الوعي", icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
-  { id: "sales-enablement", label: "تمكين النمو", icon: <Briefcase className="w-4 h-4 text-emerald-400" /> },
-  { id: "seo-geo", label: "SEO / GEO", icon: <Target className="w-4 h-4 text-emerald-400" /> },
-  { id: "crucible", label: "المختبر (Testing)", icon: <Flame className="w-4 h-4 text-rose-500" /> },
-  { id: "dreams-matrix", label: "مصفوفة الأهداف", icon: <Target className="w-4 h-4 text-teal-400" /> },
-  { id: "digital-twin", label: "التوأم الرقمي", icon: <User className="w-4 h-4 text-indigo-400" /> },
-  { id: "fleet", label: "الأسطول (Fleet)", icon: <Rocket className="w-4 h-4 text-indigo-500" /> },
-  { id: "repo-intel", label: "ذكاء المستودع", icon: <Terminal className="w-4 h-4 text-teal-300" /> },
-  { id: "dawayir-live", label: "دواير لايف", icon: <Sparkles className="w-4 h-4 text-teal-300" /> },
-  { id: "ad-analytics", label: "تحليلات الإعلانات", icon: <BarChart3 className="w-4 h-4 text-cyan-400" /> },
-  { id: "survey-results", label: "نتائج الاستبيان", icon: <ClipboardList className="w-4 h-4 text-teal-400" /> },
-  { id: "marketing-ops", label: "إدارة الانتشار الدولي", icon: <Rocket className="w-4 h-4 text-rose-400" /> }
+type NavGroup = {
+  title: string;
+  items: Array<{ id: AdminTab; label: string; icon: ReactNode }>;
+};
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    title: "القيادة الإستراتيجية",
+    items: [
+      { id: "sovereign", label: "مركز السيادة الإدراكية", icon: <ShieldCheck className="w-4 h-4 text-amber-500" /> },
+      { id: "entity", label: "كيان الرحلة (DNA)", icon: <Brain className="w-4 h-4 text-teal-400" /> },
+      { id: "exec-overview", label: "المركز التنفيذي", icon: <Activity className="w-4 h-4 text-emerald-400" /> },
+      { id: "growth-revenue", label: "محرك النمو والمبيعات", icon: <TrendingUp className="w-4 h-4 text-amber-400" /> },
+      { id: "war-room", label: "غرفة العمليات", icon: <ShieldCheck className="w-4 h-4 text-red-500" /> },
+    ]
+  },
+  {
+    title: "أمن النظام وإدارته",
+    items: [
+      { id: "security-ops", label: "أمن النظام", icon: <ShieldCheck className="w-4 h-4 text-indigo-400" /> },
+      { id: "flow-dynamics", label: "ديناميكية المسار", icon: <Compass className="w-4 h-4 text-cyan-400" /> },
+      { id: "health-monitor", label: "مراقب النبض", icon: <Activity className="w-4 h-4 text-cyan-400" /> },
+      { id: "feature-flags", label: "مفاتيح النظام", icon: <Flag className="w-4 h-4" /> },
+      { id: "fleet", label: "الأسطول", icon: <Rocket className="w-4 h-4 text-indigo-500" /> },
+    ]
+  },
+  {
+    title: "الذكاء الاصطناعي والوعي",
+    items: [
+      { id: "consciousness-atlas", label: "رادار الوعي", icon: <Workflow className="w-4 h-4 text-teal-400" /> },
+      { id: "consciousness-map", label: "خريطة الإدراك", icon: <Workflow className="w-4 h-4" /> },
+      { id: "ai-studio", label: "مختبر الذكاء", icon: <Brain className="w-4 h-4" /> },
+      { id: "ai-decisions", label: "قرارات الوعي", icon: <Sparkles className="w-4 h-4 text-purple-400" /> },
+      { id: "ai-simulator", label: "محاكي الذكاء", icon: <Terminal className="w-4 h-4 text-rose-400" /> },
+      { id: "consciousness", label: "أرشيف الوعي", icon: <History className="w-4 h-4" /> },
+    ]
+  },
+  {
+    title: "المحتوى والمسارات",
+    items: [
+      { id: "flow-map", label: "خريطة الدواير", icon: <MapPin className="w-4 h-4" /> },
+      { id: "map-registry", label: "دليل الخرائط", icon: <Compass className="w-4 h-4 text-emerald-400" /> },
+      { id: "content", label: "مخزن المحتوى", icon: <Database className="w-4 h-4" /> },
+      { id: "dreams-matrix", label: "مصفوفة الأهداف", icon: <Target className="w-4 h-4 text-teal-400" /> },
+      { id: "crucible", label: "المختبر", icon: <Flame className="w-4 h-4 text-rose-500" /> },
+    ]
+  },
+  {
+    title: "مجتمع المسافرين",
+    items: [
+      { id: "users", label: "سجلات السيادة", icon: <Users className="w-4 h-4" /> },
+      { id: "user-state", label: "بيانات الحالة", icon: <Database className="w-4 h-4" /> },
+      { id: "digital-twin", label: "التوأم الرقمي", icon: <User className="w-4 h-4 text-indigo-400" /> },
+      { id: "feedback", label: "أصوات المسافرين", icon: <MessageSquare className="w-4 h-4" /> },
+      { id: "dawayir-live", label: "دواير لايف", icon: <Sparkles className="w-4 h-4 text-teal-300" /> },
+      { id: "survey-results", label: "نتائج الاستبيان", icon: <ClipboardList className="w-4 h-4 text-teal-400" /> },
+    ]
+  },
+  {
+    title: "التوسع التجاري",
+    items: [
+      { id: "b2b-analytics", label: "تحليلات B2B", icon: <ShieldCheck className="w-4 h-4" /> },
+      { id: "sales-enablement", label: "تمكين النمو", icon: <Briefcase className="w-4 h-4 text-emerald-400" /> },
+      { id: "marketing-ops", label: "إدارة الانتشار", icon: <Rocket className="w-4 h-4 text-rose-400" /> },
+      { id: "ai-marketing", label: "تسويق الوعي", icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
+      { id: "ad-analytics", label: "تحليلات الإعلانات", icon: <BarChart3 className="w-4 h-4 text-cyan-400" /> },
+      { id: "seo-geo", label: "SEO / GEO", icon: <Target className="w-4 h-4 text-emerald-400" /> },
+      { id: "repo-intel", label: "ذكاء المستودع", icon: <Terminal className="w-4 h-4 text-teal-300" /> },
+    ]
+  }
 ];
+
+const NAV_ITEMS = NAV_GROUPS.flatMap(g => g.items);
 const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   entity: "كيان الرحلة (DNA)",
-  overview: "نظرة عامة",
+  "exec-overview": "المركز التنفيذي",
+  "growth-revenue": "محرك النمو والمبيعات",
+  "security-ops": "أمن النظام",
+  "consciousness-atlas": "رادار الوعي",
+  "flow-dynamics": "ديناميكية المسار",
   "war-room": "غرفة العمليات",
   "flow-map": "خريطة التدفق",
+  "map-registry": "دليل الخرائط",
   feedback: "أصوات المسافرين",
   "feature-flags": "مفاتيح النظام",
   "ai-studio": "مختبر الذكاء",
@@ -142,8 +199,44 @@ const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "marketing-ops": "إدارة الانتشار",
   sovereign: "مركز السيادة الإدراكية"
 };
-
 const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
+
+const NAV_TOOLTIPS: Record<AdminTab, string> = {
+  sovereign: "المركز السيادي: نظرة شاملة وعلوية على حيوية النظام والعمليات الحساسة.",
+  entity: "كيان الرحلة: استكشاف بصمة وأهداف المنصة والرسالة الأساسية.",
+  "exec-overview": "المركز التنفيذي: نبض المنصة ومتابعة سريعة لأهم أرقام تفاعل المستخدمين.",
+  "growth-revenue": "محرك النمو: دورة المبيعات، الارتقاء بالعملاء، وتتبع العوائد المالية.",
+  "security-ops": "أمن النظام: حائط الصد، تتبع الهجمات، وتأمين البيانات ضد السلبيات.",
+  "consciousness-atlas": "رادار الوعي: خريطة شاملة لمسارات وعي المستخدمين وتوزيعهم النفسي.",
+  "flow-dynamics": "ديناميكية المسار: تتبع تدفق الزيارات والاحتكاك في خطوات التسجيل والدفع.",
+  "war-room": "غرفة العمليات: الإنذارات الحرجة والمشاكل التي تتطلب تدخلاً طارئاً.",
+  "flow-map": "خريطة التدفق: الرؤية البصرية لشجرة المنصة ومسارات الذكاء الاصطناعي بالكامل.",
+  "map-registry": "دليل الخرائط: شاشة تعرض المعمارية التقنية والتخطيطية لجميع الخرائط داخل المنصة بمساراتها الكلية.",
+  feedback: "أصوات المسافرين: رسائل، استغاثات، وآراء الزوار والمستخدمين لحظة بلحظة.",
+  "feature-flags": "مفاتيح النظام: التحكم اللحظي في تفعيل وإغلاق ميزات المنصة (Feature Flags).",
+  "ai-studio": "مختبر الذكاء: تلقين وتوجيه عقل الذكاء الاصطناعي وتعديل الـ Prompts.",
+  "ai-decisions": "قرارات الوعي: مراقبة وتحليل القرارات الخوارزمية مع المستخدمين.",
+  "health-monitor": "مراقب النبض: متابعة أداء السيرفرات وسرعة استجابة المنصة فنياً.",
+  content: "مخزن المحتوى: إدارة نصوص ومحتوى التطبيق التوضيحي بشكل مركزي.",
+  users: "سجلات الأعضاء: قائمة المشتركين، صلاحياتهم، وبياناتهم الشخصية وتواريخ الدخول.",
+  "user-state": "بيانات الحالة: رؤية حالة المتغيرات والأرقام الديناميكية الخاصة بكل مستخدم.",
+  consciousness: "أرشيف الوعي: سجل تاريخي لكل محادثات الذكاء الاصطناعي والمواقف.",
+  "consciousness-map": "خريطة الإدراك: الرؤية الهندسية لترابط المفاهيم المتقدمة داخل النظام.",
+  "b2b-analytics": "تحليلات B2B: تحليل أداء الشركات والمؤسسات المشتركة كباقات.",
+  "ai-simulator": "محاكي الذكاء: اختبار الـ Prompts في بيئة معزولة لتجربة ردود الأفعال المستندة.",
+  "ai-marketing": "تسويق الوعي: صناعة محتوى تسويقي وإعلانات بضغطة زر باستخدام الذكاء التوليدي.",
+  "sales-enablement": "تمكين النمو: أدوات ومقترحات استخراج مبيعات من قواعد البيانات الحالية.",
+  "dreams-matrix": "مصفوفة الأهداف: بنك الأحلام والطموحات التي يسعى المستخدمون للوصول إليها.",
+  crucible: "المختبر: بيئة تجارب (A/B Testing) وابتكار للمحتوى الجديد والتقييم الداخلي.",
+  "digital-twin": "التوأم الرقمي: خلق ونسخ رقمية تحليلية من المستخدم وتوقع خطواته القادمة.",
+  fleet: "الأسطول: إدارة حاويات السيرفرات والبنية التحتية البرمجية.",
+  "seo-geo": "الوصول العالمي: تتبع الحضور العضوي في محركات البحث والمناطق الجغرافية.",
+  "repo-intel": "ذكاء المستودع: نظرة مكشوفة لكود المنصة والتغيرات البرمجية من داخل اللوحة مباشرة.",
+  "dawayir-live": "دواير لايف: مراقبة النشاط المباشر والتفاعل اللحظي واللقاءات الحية للزوار.",
+  "ad-analytics": "تحليلات الإعلانات: حساب العائد من الإنفاق المباشر ونسب التحويل المؤكدة.",
+  "survey-results": "نتائج الاستبيان: مخرجات المعايير واستبيانات ما قبل الدفع.",
+  "marketing-ops": "إدارة الانتشار: حملات البريد الإلكتروني، إدارة الإشعارات، والرسائل الترويجية."
+};
 
 const getTabFromLocation = (): AdminTab => {
   const params = new URLSearchParams(getSearch());
@@ -244,14 +337,24 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   if (adminAccess) return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 flex items-center justify-center p-6">
-      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900/50 p-6 space-y-4 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <ShieldCheck className="w-6 h-6 text-teal-400" />
-          <h1 className="text-xl font-bold">بابة اإدارة</h1>
+    <div className="min-h-screen bg-[#030712] text-slate-200 flex items-center justify-center p-6 relative isolate overflow-hidden">
+      {/* Cinematic Background effect */}
+      <div className="absolute inset-0 z-0 bg-cover bg-center opacity-20 nebula-bg pointer-events-none" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#030712] via-[#030712]/90 to-transparent pointer-events-none" />
+      
+      <div className="w-full max-w-md rounded-3xl border border-teal-500/30 bg-[#0B0F19] p-8 space-y-8 relative z-10 shadow-[0_0_80px_rgba(20,184,166,0.2)] ring-1 ring-white/5">
+        <div className="flex flex-col items-center justify-center gap-4 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500/20 to-indigo-500/20 border border-teal-500/40 flex items-center justify-center shadow-[0_0_30px_rgba(20,184,166,0.3)]">
+            <ShieldCheck className="w-8 h-8 text-teal-400" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-white tracking-widest uppercase">الوصول السيادي</h1>
+            <p className="text-sm text-teal-400/80 tracking-wider font-bold mt-1">مركز القيادة المتقدم</p>
+          </div>
         </div>
+        
         <form
-          className="space-y-2"
+          className="space-y-4"
           onSubmit={(event) => {
             event.preventDefault();
             void handleLogin();
@@ -266,21 +369,25 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
             aria-hidden="true"
             className="hidden"
           />
-          <input
-            type="password"
-            autoComplete="new-password"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="د ادر"
-            className="w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-200"
-          />
-          {error && <p className="text-xs text-rose-400">{error}</p>}
+          <div className="space-y-2 cursor-text text-right" onClick={(e) => (e.currentTarget.lastChild as HTMLInputElement)?.focus()}>
+            <label className="text-xs uppercase tracking-widest font-black text-slate-400 px-1">رمز العبور</label>
+            <input
+              type="password"
+              autoComplete="new-password"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="••••••••••••••••"
+              className="w-full rounded-xl bg-[#111827] border border-slate-700/80 px-4 py-4 text-base text-teal-300 placeholder-slate-600 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all text-center tracking-[0.3em] font-mono shadow-inner"
+              dir="ltr"
+            />
+          </div>
+          {error && <p className="text-sm text-rose-400 font-bold text-center mt-2">{error}</p>}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-xl bg-teal-600 hover:bg-teal-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 font-bold py-2 transition-colors"
+            className="w-full rounded-xl bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-500 hover:to-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed font-black uppercase tracking-wider py-4 transition-all shadow-[0_0_20px_rgba(20,184,166,0.3)] hover:shadow-[0_0_30px_rgba(20,184,166,0.5)] border border-teal-400/50"
           >
-            {isSubmitting ? "جارٍ اتح..." : "دخ"}
+            {isSubmitting ? "جاري المصادقة..." : "بدء الاتصال"}
           </button>
         </form>
       </div>
@@ -291,6 +398,7 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
 export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const [tab, setTab] = useState<AdminTab>(getTabFromLocation);
   const [showAccount, setShowAccount] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const authUser = useAuthState((s) => s.user);
   const adminAccess = useAdminState((s) => s.adminAccess);
   const setAdminAccess = useAdminState((s) => s.setAdminAccess);
@@ -338,67 +446,109 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const baseRole = useAuthState((s) => s.role);
   const canSeeAdvancedTabs = isPrivilegedRole(baseRole) || adminAccess;
 
-  const visibleNavItems = canSeeAdvancedTabs
-    ? NAV_ITEMS
-    : NAV_ITEMS.filter((item) => !DEVELOPER_PLUS_TABS.includes(item.id));
-
   const effectiveTab: AdminTab =
     !canSeeAdvancedTabs && DEVELOPER_PLUS_TABS.includes(tab) ? "entity" : tab;
 
   const handleTabChange = (next: AdminTab) => {
     setTab(next);
     updateTabInUrl(next);
+    setIsSidebarOpen(false);
   };
 
   const activeTabItem = NAV_ITEMS.find((item) => item.id === effectiveTab);
 
   return (
     <AdminGate>
-      <div className="admin-cockpit min-h-screen bg-[#05060f] text-slate-200 flex relative isolate selection:bg-teal-500/30 font-sans">
-        <aside className="admin-sidebar sticky top-0 h-screen w-72 flex-shrink-0 border-r border-white/5 bg-slate-950/40 backdrop-blur-3xl flex flex-col z-20 overflow-hidden select-none">
-          <div className="p-8 border-b border-white/5 relative group">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-indigo-600 flex items-center justify-center shadow-[0_0_20px_rgba(45,212,191,0.3)] group-hover:shadow-[0_0_30px_rgba(45,212,191,0.5)] transition-all">
+      <div className="admin-cockpit min-h-screen bg-[#030712] text-slate-200 flex relative isolate selection:bg-teal-500/30 font-sans overflow-hidden">
+        {/* Mobile Sidebar Overlay */}
+        <div
+          className={`fixed inset-0 z-40 bg-[#030712]/80 backdrop-blur-sm lg:hidden transition-opacity duration-300 ${
+            isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+          onClick={() => setIsSidebarOpen(false)}
+          aria-hidden="true"
+        />
+
+        <aside
+          className={`
+            admin-sidebar fixed lg:sticky top-0 right-0 h-screen w-72 flex-shrink-0 border-l border-slate-800/80 
+            bg-[#0B0F19] flex flex-col z-50 overflow-hidden select-none
+            transform transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] shadow-2xl
+            ${isSidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
+          `}
+        >
+          <div className="p-6 lg:p-8 border-b border-slate-800/80 relative group flex items-center justify-between bg-[#080B14]">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-indigo-600 flex items-center justify-center shadow-[0_0_20px_rgba(20,184,166,0.3)] ring-1 ring-white/10">
                 <Workflow className="w-6 h-6 text-white" />
               </div>
               <div className="flex flex-col">
-                <h1 className="text-lg font-black tracking-tighter text-white leading-none mb-1">COMMAND</h1>
-                <p className="text-[10px] font-black text-teal-400/80 uppercase tracking-widest leading-none">Center Alpha</p>
+                <h1 className="text-xl font-black tracking-tighter text-white leading-none mb-1">القيادة</h1>
+                <p className="text-xs font-bold text-teal-400/80 uppercase tracking-widest leading-none">مركز ألفا</p>
               </div>
             </div>
+            <button
+              className="lg:hidden p-2 bg-slate-800/50 rounded-lg text-slate-300 hover:text-white transition-colors border border-slate-700/50"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          <nav className="flex-1 overflow-y-auto p-4 py-8 space-y-2 custom-scrollbar">
-            {visibleNavItems.map((item) => {
-              const isActive = effectiveTab === item.id;
+          <nav className="flex-1 overflow-y-auto p-4 py-8 space-y-8 custom-scrollbar">
+            {NAV_GROUPS.map((group) => {
+              const visibleItemsInGroup = canSeeAdvancedTabs
+                ? group.items
+                : group.items.filter((item) => !DEVELOPER_PLUS_TABS.includes(item.id));
+              
+              if (visibleItemsInGroup.length === 0) return null;
+
               return (
-                <button
-                  key={item.id}
-                  onClick={() => handleTabChange(item.id)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 group ${isActive
-                    ? "bg-white/10 text-white shadow-[inset_0_0_1px_rgba(255,255,255,0.2)]"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
-                    }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-xl transition-colors ${isActive ? "text-teal-400 bg-teal-400/10" : "text-slate-500 group-hover:text-slate-300"}`}>
-                      {item.icon}
-                    </div>
-                    <span className={`text-[11px] font-bold uppercase tracking-wider transition-all ${isActive ? "translate-x-1" : "group-hover:translate-x-0.5"}`}>{CLEAN_NAV_LABELS[item.id] ?? item.label}</span>
+                <div key={group.title} className="space-y-1">
+                  <h3 className="px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest mb-3">
+                    {group.title}
+                  </h3>
+                  <div className="space-y-1.5">
+                    {visibleItemsInGroup.map((item) => {
+                      const isActive = effectiveTab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => handleTabChange(item.id)}
+                          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group ${
+                            isActive
+                            ? "bg-slate-800/80 border-l border-teal-500/50 text-white shadow-md shadow-slate-900/50"
+                            : "border-transparent text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
+                            }`}
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`p-2 rounded-lg transition-colors shadow-sm ${isActive ? "text-teal-400 bg-teal-500/20 ring-1 ring-teal-500/30" : "text-slate-500 group-hover:text-slate-300 bg-slate-900/50 shadow-inner border border-white/5"}`}>
+                              {item.icon}
+                            </div>
+                            <span className={`text-[13px] font-bold tracking-wide transition-all ${isActive ? "text-white" : "group-hover:-translate-x-0.5"}`}>
+                              {CLEAN_NAV_LABELS[item.id] ?? item.label}
+                            </span>
+                          </div>
+                          <div className={`mr-auto transition-opacity duration-300 flex items-center z-10 ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} onClick={(e) => e.stopPropagation()}>
+                            <AdminTooltip content={NAV_TOOLTIPS[item.id] || "القسم مخصص للإدارة المركزية"} position="bottom" />
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
-                </button>
+                </div>
               );
             })}
           </nav>
 
-          <footer className="p-4 border-t border-white/5 space-y-3 bg-slate-950/20">
-            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/5 border border-white/5">
-              <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/20 text-indigo-400">
-                <User className="w-4 h-4" />
+          <footer className="p-5 border-t border-slate-800/80 space-y-3 bg-[#080B14]">
+            <div className="flex items-center gap-4 px-4 py-3 rounded-2xl bg-[#0B0F19] border border-slate-800 shadow-inner">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-indigo-500/30 text-indigo-400">
+                <User className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold text-white truncate uppercase tracking-tight">{authUser?.email?.split('@')[0] || "OPERATOR"}</p>
-                <p className="text-[9px] text-indigo-400 font-black uppercase tracking-widest">{authRole}</p>
+                <p className="text-xs font-black text-white truncate uppercase tracking-tight">{authUser?.email?.split('@')[0] || "مُشغِّل"}</p>
+                <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest">{authRole}</p>
               </div>
             </div>
             <button
@@ -407,56 +557,82 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 setAdminCode(null);
                 onExit?.();
               }}
-              className="w-full flex items-center gap-3 px-4 py-2 text-[10px] font-bold text-slate-500 hover:text-rose-400 transition-colors uppercase tracking-widest group"
+              className="w-full flex items-center gap-3 justify-center bg-slate-900 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-900/50 rounded-xl px-4 py-3 text-xs font-black text-slate-400 hover:text-rose-400 transition-all uppercase tracking-widest group shadow-sm"
             >
-              <LogOut className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
-              <span>Detach Interface</span>
+              <LogOut className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              <span>قطع الاتصال</span>
             </button>
           </footer>
         </aside>
 
         <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
-          <header className="h-24 border-b border-white/5 bg-slate-950/20 backdrop-blur-3xl flex items-center justify-between px-10 flex-shrink-0 z-10">
-            <div className="flex items-center gap-6">
+          <header className="h-20 lg:h-28 border-b border-slate-800/80 bg-[#0B0F19] flex items-center justify-between px-6 lg:px-12 flex-shrink-0 z-10 transition-all shadow-md">
+            <div className="flex items-center gap-4 lg:gap-8">
+              <button
+                type="button"
+                className="lg:hidden p-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-all shadow-sm"
+                onClick={() => setIsSidebarOpen(true)}
+              >
+                <Menu className="w-6 h-6" />
+              </button>
               <div className="flex flex-col">
-                <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">
-                  <span>SYSTEM</span>
-                  <span className="w-1 h-1 rounded-full bg-slate-700" />
-                  <span>{activeTabItem?.id || "ROOT"}</span>
+                <div className="flex items-center gap-2 lg:gap-2.5 text-[10px] lg:text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1 lg:mb-1.5">
+                  <span>النظام</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.8)] animate-pulse" />
+                  <span className="text-teal-400">{activeTabItem?.id || "أساسي"}</span>
                 </div>
-                <h2 className="text-2xl font-black text-white tracking-tighter uppercase">
+                <h2 className="text-xl lg:text-3xl font-black text-white tracking-tight uppercase whitespace-nowrap overflow-hidden text-ellipsis max-w-[180px] sm:max-w-[300px] md:max-w-none text-shadow-sm">
                   {activeTabItem ? (CLEAN_NAV_LABELS[activeTabItem.id] ?? activeTabItem.label) : ""}
                 </h2>
               </div>
             </div>
-            <div className="flex items-center gap-6">
-              <LiveFreezePill />
-              <button
-                onClick={() => toggleContentEditing(!isContentEditingEnabled)}
-                className={`p-3 rounded-2xl border transition-all active:scale-95 group shadow-lg ${isContentEditingEnabled
-                  ? "bg-teal-500/20 border-teal-500/50 text-teal-300"
-                  : "bg-white/5 border-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/10"
-                  }`}
-              >
-                <Pencil className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
-              </button>
-              <button
-                onClick={() => setShowAccount(true)}
-                className="p-3 rounded-2xl bg-white/5 border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all active:scale-95 group shadow-lg"
-              >
-                <Database className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-              </button>
+              <div className="flex items-center gap-3 lg:gap-6">
+              <div className="hidden sm:block">
+                <LiveFreezePill />
+              </div>
+              
+              <AdminTooltip content="وضع تعديل المحتوى (Content Editing): بيفتحلك المنصة في Tab جديد، تقدر من هناك تضغط على أي نص وتعدله مباشرة للمستخدمين! ملهاش دور جوة لوحة الإدارة نفسها." position="bottom">
+                <button
+                  onClick={() => {
+                    const newValue = !isContentEditingEnabled;
+                    toggleContentEditing(newValue);
+                    if (newValue) {
+                      window.open("/", "_blank");
+                    }
+                  }}
+                  className={`p-3 lg:p-4 rounded-xl lg:rounded-2xl border transition-all active:scale-95 group shadow-lg ${isContentEditingEnabled
+                    ? "bg-teal-500/20 border-teal-500/50 text-teal-300 ring-1 ring-teal-500/30"
+                    : "bg-[#111827] border-slate-700/80 text-slate-300 hover:text-white hover:bg-slate-800 hover:border-slate-600"
+                    }`}
+                >
+                  <Pencil className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
+                </button>
+              </AdminTooltip>
+
+              <AdminTooltip content="إدارة بيانات النظام (Data Management): لوحة لعمل نسخ احتياطية (JSON/PDF)، ومزامنة البيانات محلياً أو سحابياً، أو تصفير مسار المستخدم للتدخل السريع." position="bottom">
+                <button
+                  onClick={() => setShowAccount(true)}
+                  className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-[#111827] border border-slate-700/80 text-slate-300 hover:text-white hover:bg-slate-800 hover:border-slate-600 transition-all active:scale-95 group shadow-lg"
+                >
+                  <Database className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                </button>
+              </AdminTooltip>
             </div>
           </header>
 
-          <div className="flex-1 overflow-y-auto p-10 custom-scrollbar relative bg-[#05060f]/20">
+          <div className="flex-1 overflow-y-auto p-6 lg:p-12 custom-scrollbar relative bg-[#030712] inset-shadow-sm">
             <div className="max-w-7xl mx-auto pb-20">
               <Suspense fallback={<div>Loading...</div>}>
                 {effectiveTab === "sovereign" && <SovereignPanel />}
                 {effectiveTab === "entity" && <EntityDashboard />}
-                {effectiveTab === "overview" && <OverviewPanel />}
+                {effectiveTab === "exec-overview" && <ExecutiveDashboard />}
+                {effectiveTab === "growth-revenue" && <GrowthRevenueDashboard />}
+                {effectiveTab === "security-ops" && <SecurityOpsDashboard />}
+                {effectiveTab === "consciousness-atlas" && <ConsciousnessAtlasDashboard />}
+                {effectiveTab === "flow-dynamics" && <FlowDynamicsDashboard />}
                 {effectiveTab === "war-room" && <AlertsPanel />}
                 {effectiveTab === "flow-map" && <FlowMapPanel />}
+                {effectiveTab === "map-registry" && <MapRegistryPanel />}
                 {effectiveTab === "feedback" && <FeedbackPanel />}
                 {effectiveTab === "feature-flags" && <FeatureFlagsPanel />}
                 {effectiveTab === "ai-studio" && <AIStudioPanel />}
@@ -487,7 +663,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
         </main>
 
         <Suspense fallback={<AwarenessSkeleton />}>
-          <DataManagementModal isOpen={showAccount} onClose={() => setShowAccount(false)} accountOnly />
+          <DataManagementModal isOpen={showAccount} onClose={() => setShowAccount(false)} accountOnly={false} />
         </Suspense>
       </div>
     </AdminGate>

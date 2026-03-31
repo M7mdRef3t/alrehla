@@ -18,7 +18,8 @@ export const StabilityHeatmap: FC = () => {
 
     const fetchHeatmap = async () => {
         try {
-            const { data: { session } } = await supabase!.auth.getSession();
+            if (!supabase) return;
+            const { data: { session } } = await supabase.auth.getSession();
             const res = await fetch('/api/stability-heatmap', {
                 headers: { 'Authorization': `Bearer ${session?.access_token}` }
             });
@@ -41,7 +42,17 @@ export const StabilityHeatmap: FC = () => {
         return { label: 'مسار مستقر', color: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500', icon: <ShieldAlert className="w-3 h-3" /> };
     };
 
-    if (nodes.length === 0) return null;
+    if (nodes.length === 0) {
+        return (
+            <div className="w-full max-w-[38rem] mx-auto mt-6 rounded-[2rem] border border-white/8 bg-slate-950/20 p-6 text-right backdrop-blur-xl">
+                <p className="text-[10px] font-black tracking-[0.24em] text-red-200/70">رادار الاستقرار</p>
+                <h3 className="mt-2 text-sm font-black text-white">لسه مفيش بيانات كفاية</h3>
+                <p className="mt-2 text-xs leading-6 text-slate-400">
+                    أول ما يبقى فيه سجل كفاية على الخريطة، هنقدر نرسم التذبذب هنا بدل الفراغ ده.
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full max-w-[38rem] mx-auto mt-6 p-6 rounded-[2.5rem] bg-slate-950/20 border border-white/5 relative overflow-hidden backdrop-blur-xl">

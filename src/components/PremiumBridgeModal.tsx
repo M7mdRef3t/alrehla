@@ -1,16 +1,18 @@
 import type { FC } from "react";
 import { useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, Compass, Map as MapIcon, ShieldCheck, Sparkles, X } from "lucide-react";
+import { ChevronRight, Compass, Map as MapIcon, ShieldCheck, Sparkles, X, Lock } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import { useAppOverlayState } from "../state/appOverlayState";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
+import { PaymentCheckout } from "./PaymentCheckout";
 
 export const PremiumBridgeModal: FC = () => {
   const isOpen = useAppOverlayState((s) => s.flags.premiumBridge);
   const setOverlay = useAppOverlayState((s) => s.setOverlay);
   const nodes = useMapState((s) => s.nodes);
+  const [showCheckout, setShowCheckout] = useState(false);
 
   const stats = useMemo(() => {
     const total = nodes.length;
@@ -31,18 +33,15 @@ export const PremiumBridgeModal: FC = () => {
   }, [isOpen, stats]);
 
   const handleClose = () => {
-    setOverlay("premiumBridge", false);
-  };
-
-  const handleStartRecovery = () => {
+    // If strict wall, we shouldn't allow simple text close, but we provide it just to go back to landing maybe?
+    // Actually, user wants a strict funnel but maybe they want to reload to landing.
     if (typeof window !== "undefined") {
-      window.sessionStorage.setItem("dawayir-app-boot-action", "start_recovery");
       window.location.href = "/";
     }
   };
 
-  const handleExplore = () => {
-    setOverlay("premiumBridge", false);
+  const handleStartRecovery = () => {
+    setShowCheckout(true);
   };
 
   if (!isOpen) return null;
@@ -54,7 +53,6 @@ export const PremiumBridgeModal: FC = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={handleClose}
           className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl"
         />
 
@@ -70,14 +68,10 @@ export const PremiumBridgeModal: FC = () => {
         >
           <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-teal-400/40 to-transparent" />
 
-          <button
-            onClick={handleClose}
-            className="absolute top-6 left-6 p-2 rounded-full border border-white/5 bg-white/5 hover:bg-white/10 transition-colors z-10"
-          >
-            <X className="w-4 h-4 text-slate-400" />
-          </button>
-
-          <div className="p-8 pt-10">
+          {showCheckout ? (
+            <PaymentCheckout onClose={() => setShowCheckout(false)} onSuccess={() => setOverlay("premiumBridge", false)} />
+          ) : (
+            <div className="p-8 pt-10">
             <div className="flex flex-col items-center text-center">
               <div className="relative mb-6">
                 <div className="absolute inset-0 bg-teal-400/20 blur-2xl rounded-full" />
@@ -128,30 +122,22 @@ export const PremiumBridgeModal: FC = () => {
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-slate-950/10 flex items-center justify-center">
-                    <Compass className="w-6 h-6 text-slate-950" />
+                    <Lock className="w-6 h-6 text-slate-950" />
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-black text-slate-950">ارجع للخريطة وكمّل من جوه</p>
-                    <p className="text-xs text-slate-800/70 font-bold">الرحلة متاحة داخل المنصة من غير قفزات خارجية</p>
+                    <p className="text-lg font-black text-slate-950">افتح الملاذ الآمن الآن 🚀</p>
+                    <p className="text-xs text-slate-800/70 font-bold">باقة المسار المتقدم لتعافي كامل وعميق</p>
                   </div>
                 </div>
                 <ChevronRight className="w-6 h-6 text-slate-950/40 group-hover:translate-x-[-4px] transition-transform" />
               </button>
-
-              <button
-                onClick={handleExplore}
-                className="w-full flex items-center justify-center gap-3 p-5 rounded-[2rem] border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-slate-300 hover:text-white font-black text-sm"
-              >
-                <MapIcon className="w-4 h-4" />
-                استكشف الخريطة وحدك أولًا
-              </button>
             </div>
 
             <p className="mt-6 text-center text-[11px] text-slate-500 leading-relaxed px-6">
-              * لو فيه ترقية، هتظهر من جوه المنصة في الوقت المناسب. <br />
-              مفيش تحويل إجباري بعد الأونبوردينج.
+              بإتمام الدفع، هيتم رفع حظر الدخول فوراً وفتح تحليلات "المعالج الذكي" لتفكيك شفرات خريطتك.
             </p>
           </div>
+          )}
         </motion.div>
       </div>
     </AnimatePresence>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Check, Shield, Sparkles, ArrowLeft, Zap } from "lucide-react";
 import { signInWithGoogleAtPath } from "../../services/authService";
 import { consumeEmotionalOffer, getEmotionalOffer } from "../../services/subscriptionManager";
@@ -19,10 +19,14 @@ const FEATURES = PREMIUM_FEATURES_LIST;
 export default function PricingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [offerConsumed, setOfferConsumed] = useState(false);
-  const emotionalOffer = useMemo(() => getEmotionalOffer(), []);
+  const [emotionalOffer, setEmotionalOffer] = useState(() => null as ReturnType<typeof getEmotionalOffer>);
   const globalPrice = TIER_PRICES_USD.premium.label;
   const localPrice = "200 ج.م";
   const viewTrackedRef = useRef(false);
+
+  useEffect(() => {
+    setEmotionalOffer(getEmotionalOffer());
+  }, []);
 
   useEffect(() => {
     if (viewTrackedRef.current) return;

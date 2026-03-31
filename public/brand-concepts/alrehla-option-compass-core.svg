@@ -1,0 +1,27 @@
+<svg width="360" height="96" viewBox="0 0 360 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cc-main" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22D3EE"/>
+      <stop offset="100%" stop-color="#14B8A6"/>
+    </linearGradient>
+    <filter id="cc-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.8" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g transform="translate(286,8)" filter="url(#cc-glow)">
+    <circle cx="40" cy="40" r="34" stroke="#22D3EE" stroke-width="2" opacity="0.55"/>
+    <circle cx="40" cy="40" r="24" stroke="#14B8A6" stroke-width="2" opacity="0.55"/>
+    <path d="M40 10 L46 34 L70 40 L46 46 L40 70 L34 46 L10 40 L34 34 Z" fill="url(#cc-main)" opacity="0.8"/>
+    <circle cx="40" cy="40" r="8" fill="#0F172A" stroke="#67E8F9" stroke-width="2"/>
+    <path d="M40 31 L40 49" stroke="#E2E8F0" stroke-width="3.4" stroke-linecap="round"/>
+    <circle cx="40" cy="25" r="4.5" fill="#22D3EE"/>
+  </g>
+
+  <text x="10" y="58" font-family="Cairo, 'Segoe UI', Arial, sans-serif" font-size="50" font-weight="800" fill="#F8FAFC">الرحلة</text>
+  <text x="14" y="82" font-family="Cairo, 'Segoe UI', Arial, sans-serif" font-size="13" font-weight="600" fill="#22D3EE" letter-spacing="0.4">بوصلة وعيك الداخلي</text>
+</svg>

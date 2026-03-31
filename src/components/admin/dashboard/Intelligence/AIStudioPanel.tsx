@@ -20,6 +20,7 @@ import {
     ExternalLink,
     CheckCircle
 } from "lucide-react";
+import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { julesService, JulesSession, JulesSource } from "../../../../services/julesService";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -184,7 +185,10 @@ export const AIStudioPanel: FC = () => {
                         <Brain className="w-6 h-6 text-indigo-400" />
                     </div>
                     <div>
-                        <h3 className="text-2xl font-black text-white tracking-tight">مختبر الذكاء</h3>
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-2xl font-black text-white tracking-tight">مختبر الذكاء</h3>
+                            <AdminTooltip content="غرفة تحكم مركزية للذكاء الاصطناعي لتجربة نماذج Gemini وتعديل سلوك الـ System Prompt ومراجعة الـ Logs الخاصة به." position="bottom" />
+                        </div>
                         <div className="flex items-center gap-2 mt-1">
                             <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)] animate-pulse" />
                             <p className="text-[10px] text-slate-500 font-bold">المحرك العصبي متصل • Gemini Pro</p>
@@ -236,6 +240,7 @@ export const AIStudioPanel: FC = () => {
                                         <h3 className="text-sm font-bold text-white flex items-center gap-2">
                                             <Terminal className="w-4 h-4 text-indigo-400" />
                                             محرر التوجيه النظامي (System Prompt)
+                                            <AdminTooltip content="هنا بنكتب الأوامر والنوايا العميقة اللي بتحدد شخصية وسلوك وأهداف جارفيس في كل التفاعلات." position="top" />
                                         </h3>
                                         <div className="flex gap-2">
                                             <button
@@ -280,6 +285,7 @@ export const AIStudioPanel: FC = () => {
                                     <h3 className="text-sm font-bold text-white flex items-center gap-2">
                                         <Sparkles className="w-4 h-4 text-teal-400" />
                                         ساحة المحاكاة الحية
+                                        <AdminTooltip content="اختبار النظام قبل اعتماده. كلم جارفيس هنا وهو هيتصرف بناءً على الـ System Prompt الجديد." position="top" />
                                     </h3>
                                     <button
                                         onClick={() => setPlayMessages([])}
@@ -427,6 +433,7 @@ export const AIStudioPanel: FC = () => {
                                     <h3 className="font-bold text-white flex items-center gap-2">
                                         <Zap className="w-5 h-5 text-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]" />
                                         مركز عمليات Jules
+                                        <AdminTooltip content="أداة أتمتة قوية بتخلي الذكاء الاصطناعي يدخل يعدل الكود ويعمل PR أوتوماتيك لخدمة أهداف المنصة." position="top" />
                                     </h3>
                                     <div className="flex gap-2">
                                         <button
@@ -593,6 +600,7 @@ export const AIStudioPanel: FC = () => {
                         <div className="flex items-center gap-2 pb-4 border-b border-white/5">
                             <Activity className="w-5 h-5 text-amber-500" />
                             <h3 className="text-sm font-bold text-white">معادلة قياس الوعي</h3>
+                            <AdminTooltip content="تحديد أوزان السلوكيات والحدود القصوى (Thresholds) اللي بتحدد معدل وعي أو إرهاق المستخدمين على النظام." position="top" />
                         </div>
 
                         <div className="space-y-4">

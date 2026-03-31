@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { WhatsAppAutomationService, type WhatsAppWebhookPayload } from "@/services/whatsappAutomationService";
 
-export const runtime = "edge"; // Edge function for fast webhook response
-
 /**
  * ============================================================================
  * GET: Webhook Verification (Specifically for Meta Cloud API)
@@ -69,9 +67,8 @@ export async function POST(request: Request) {
                 raw: body,
               };
 
-              // Async processing: Do NOT `await` to return 200 OK immediately to WhatsApp
-              // Meta expects a 2xx response within 20 seconds, edge functions shouldn't block.
-              // We use Context.waitUntil in a real Edge deployment, or just fire-and-forget here.
+              // Async processing: Do NOT `await` to return 200 OK immediately to WhatsApp.
+              // Meta expects a 2xx response within 20 seconds, so we keep the response path lean.
               Promise.resolve(WhatsAppAutomationService.handleInboundMessage(payload)).catch(err => {
                 console.error("[WhatsApp Webhook] Background processing error:", err);
               });

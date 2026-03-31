@@ -22,12 +22,12 @@ export const NextStepCard: FC<NextStepCardProps> = ({ decision, onTakeAction, on
       className="mt-4 mx-auto max-w-md rounded-2xl border px-4 py-4 text-right"
       style={{
         background: riskColors[decision.riskBand],
-        borderColor: "rgba(255,255,255,0.18)",
-        backdropFilter: "blur(10px)"
+        borderColor: "rgba(255,255,255,0.14)",
+        backdropFilter: "blur(16px)"
       }}
     >
       <div className="flex items-center justify-between gap-2 mb-2">
-        <p className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
+        <p className="text-xs font-semibold" style={{ color: "#6b8fa8" }}>
           الخطوة التالية الآن
         </p>
         <span className="text-[10px] rounded-full px-2 py-0.5 bg-slate-900/50 text-slate-200">
@@ -43,7 +43,7 @@ export const NextStepCard: FC<NextStepCardProps> = ({ decision, onTakeAction, on
       </p>
 
       <div className="mt-3 rounded-xl border border-dashed border-white/20 px-3 py-2">
-        <p className="text-[11px] font-semibold mb-1" style={{ color: "var(--text-muted)" }}>
+        <p className="text-[11px] font-semibold mb-1" style={{ color: "#6b8fa8" }}>
           لماذا الآن؟
         </p>
         <p className="text-xs font-medium" style={{ color: "var(--text-primary)" }}>
