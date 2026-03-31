@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
   const finalDeviceToken = deviceToken ?? (ownerId ? `user_${ownerId}` : null);
   const { data: existing, error: existingError } = await admin
     .from(TABLE)
-    .select("data, device_token, id")
+    .select("data, device_token")
     .or(ownerId ? `owner_id.eq.${ownerId},device_token.eq.${finalDeviceToken}` : `device_token.eq.${finalDeviceToken}`)
     .order("updated_at", { ascending: false })
     .limit(1)
@@ -115,10 +115,7 @@ export async function POST(req: NextRequest) {
     ...updates
   };
 
-  // Build the upsert payload — only include owner_id when we actually have one
-  // to avoid violating the unique index on owner_id.
   const payload: Record<string, unknown> = {
-    device_token: finalDeviceToken,
     data: merged,
     updated_at: new Date().toISOString()
   };
@@ -126,27 +123,25 @@ export async function POST(req: NextRequest) {
     payload.owner_id = ownerId;
   }
 
-  const { error } = await admin.from(TABLE).upsert(payload, { 
-    onConflict: ownerId ? "owner_id" : "device_token" 
-  });
+  if (existing?.device_token) {
+    const { error: updateError } = await admin
+      .from(TABLE)
+      .update(payload)
+      .eq("device_token", existing.device_token);
 
-  if (error) {
-    console.error("[user-state] Upsert failed:", error.message, error.code);
-    
-    // Fallback: If upsert failed (e.g. unique constraint on device_token while targeting owner_id),
-    // we perform a targeted update on the primary record we identified.
-    const targetId = existing?.id;
-    if (targetId) {
-      const { error: fallbackError } = await admin
-        .from(TABLE)
-        .update({ ...payload, updated_at: new Date().toISOString() })
-        .eq("id", targetId);
-        
-      if (fallbackError) {
-        return NextResponse.json({ error: "Failed to save user state" }, { status: 500 });
-      }
-    } else {
-      return NextResponse.json({ error: "No matching record for fallback" }, { status: 500 });
+    if (updateError) {
+      console.error("[user-state] Update failed:", updateError.message);
+      return NextResponse.json({ error: "Failed to save user state" }, { status: 500 });
+    }
+  } else {
+    payload.device_token = finalDeviceToken;
+    const { error: insertError } = await admin
+      .from(TABLE)
+      .insert(payload);
+
+    if (insertError) {
+      console.error("[user-state] Insert failed:", insertError.message);
+      return NextResponse.json({ error: "Failed to save user state" }, { status: 500 });
     }
   }
 

@@ -524,7 +524,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   return (
     <motion.main
-      className="flex-1 w-full h-full relative flex flex-col pb-24 md:pb-8 atmospheric-void"
+      className="flex-1 w-full h-full relative flex flex-col pb-24 md:pb-8 atmospheric-void overflow-hidden"
       aria-labelledby="core-map-title"
       onDrop={handleMainDrop}
       initial="hidden"
@@ -1209,7 +1209,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.05 }}
-                  className="flex-1 min-h-[50vh] w-full relative z-0 flex items-center justify-center pointer-events-none"
+                  className="absolute inset-0 w-full h-full z-0 flex flex-col items-center justify-center pointer-events-none"
                   style={{
                     order: sectionOrder["map-canvas"],
                     transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
@@ -1240,7 +1240,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.05 }}
-                  className="flex-1 h-full min-h-[55vh] w-full relative z-0 flex flex-col items-center justify-center pointer-events-none"
+                  className="absolute inset-0 w-full h-full z-0 flex flex-col items-center justify-center pointer-events-none"
                   style={{
                     order: sectionOrder["map-canvas"],
                     transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
