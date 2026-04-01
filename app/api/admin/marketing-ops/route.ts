@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { verifyAdmin, type AdminRequest, type AdminResponse } from "../../../../server/admin/_shared";
+import { GET as runMarketingCron } from "../../cron/marketing-outreach/route";
 
 export const dynamic = "force-dynamic";
 
@@ -11,16 +13,27 @@ function buildClient() {
   );
 }
 
-function isAuthorized(req: Request): boolean {
+async function checkAuth(req: Request): Promise<boolean> {
   const secret = process.env.CRON_SECRET || process.env.MARKETING_DEBUG_KEY;
   if (!secret) return true;
   const auth = req.headers.get("authorization");
-  return auth === `Bearer ${secret}`;
+  if (auth === `Bearer ${secret}`) return true;
+
+  const mockReq: AdminRequest = {
+    method: req.method,
+    url: req.url,
+    headers: Object.fromEntries(req.headers.entries()),
+  };
+  const mockRes: AdminResponse = {
+    status: () => mockRes,
+    json: () => mockRes,
+  };
+  return await verifyAdmin(mockReq, mockRes);
 }
 
 // ─── GET — stats + quick-send leads ─────────────────────────────────────────
 export async function GET(req: Request) {
-  if (!isAuthorized(req)) {
+  if (!(await checkAuth(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -86,12 +99,13 @@ export async function GET(req: Request) {
     phone: string | null;
     name: string | null;
     personalLink: string;
+    emailSent: boolean;
   }> = [];
 
   if (emails.length > 0) {
     const { data: leadsData } = await supabase
       .from("marketing_leads")
-      .select("email, phone, first_name, name, full_name")
+      .select("id, email, phone, first_name, name, full_name")
       .in("email", emails.slice(0, 50));
 
     const leadMap = new Map<string, Record<string, unknown>>();
@@ -99,9 +113,23 @@ export async function GET(req: Request) {
       leadMap.set(l.email as string, l as Record<string, unknown>);
     }
 
+    // Now let's check the status of the automated email directly
+    const { data: emailRows } = await supabase
+      .from("marketing_lead_outreach_queue")
+      .select("lead_email, status, last_error")
+      .in("lead_email", emails.slice(0, 50))
+      .eq("channel", "email");
+      
+    const emailStatusMap = new Map<string, boolean>();
+    for (const row of emailRows ?? []) {
+      if (row.status === "sent" || row.last_error === "MANUAL_EMAIL_SENT") {
+        emailStatusMap.set(row.lead_email as string, true);
+      }
+    }
+
     quickSendLeads = emails.map((email) => {
-      const leadId = uniqueLeads.get(email) ?? null;
       const lead = leadMap.get(email);
+      const leadId = (lead?.id as string) ?? uniqueLeads.get(email) ?? null;
       const rawName = ((lead?.first_name ?? lead?.name ?? lead?.full_name ?? "") as string).trim();
       const phone = (lead?.phone as string | undefined)?.trim() || null;
       const personalLink = leadId
@@ -114,6 +142,7 @@ export async function GET(req: Request) {
         phone: phone ? normalizeEgyptianPhone(phone) : null,
         name: rawName || null,
         personalLink,
+        emailSent: emailStatusMap.get(email) ?? false,
       };
     });
   }
@@ -173,7 +202,7 @@ function normalizeEgyptianPhone(phone: string): string {
 
 // ─── POST — actions ───────────────────────────────────────────────────────────
 export async function POST(req: Request) {
-  if (!isAuthorized(req)) {
+  if (!(await checkAuth(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -198,13 +227,23 @@ export async function POST(req: Request) {
   }
 
   if (body.action === "trigger_batch") {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    // Calling the Cron handler directly in memory (Direct Invocation)
+    // This avoids Network Latency, DNS loops, and Vercel Proxy issues.
     const cronSecret = process.env.CRON_SECRET || "";
-    const response = await fetch(`${baseUrl}/api/cron/marketing-outreach`, {
-      headers: { authorization: `Bearer ${cronSecret}` },
+    
+    // Construct an artificial Request just to pass the Cron's internal auth gate
+    const internalReq = new Request("http://localhost/internal/cron", {
+      method: "GET",
+      headers: { authorization: `Bearer ${cronSecret}` }
     });
-    const data = (await response.json().catch(() => ({ ok: false }))) as Record<string, unknown>;
-    return NextResponse.json({ ok: true, action: "trigger_batch", result: data });
+
+    try {
+      const response = await runMarketingCron(internalReq);
+      const data = (await response.json().catch(() => ({ ok: false }))) as Record<string, unknown>;
+      return NextResponse.json({ ok: true, action: "trigger_batch", result: data });
+    } catch (err) {
+      return NextResponse.json({ ok: false, error: err instanceof Error ? err.message : "internal_fail" }, { status: 500 });
+    }
   }
 
   if (body.action === "mark_contacted" && body.leadEmail) {
@@ -215,6 +254,16 @@ export async function POST(req: Request) {
       .eq("lead_email", body.leadEmail)
       .in("status", ["pending", "simulated"]);
     return NextResponse.json({ ok: true, action: "mark_contacted" });
+  }
+
+  if (body.action === "mark_email_manual_sent" && body.leadEmail) {
+    const supabase = buildClient();
+    await supabase
+      .from("marketing_lead_outreach_queue")
+      .update({ status: "simulated", last_error: "MANUAL_EMAIL_SENT" })
+      .eq("lead_email", body.leadEmail)
+      .in("status", ["pending", "simulated"]);
+    return NextResponse.json({ ok: true, action: "mark_email_manual_sent" });
   }
 
   return NextResponse.json({ ok: false, error: "unknown_action" }, { status: 400 });

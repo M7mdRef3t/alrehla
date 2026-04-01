@@ -12,6 +12,7 @@ import {
   Shield,
   ChevronDown,
 } from "lucide-react";
+import html2canvas from "html2canvas";
 import { trackEvent, trackPageView } from "../../src/services/analytics";
 import { captureUtmFromCurrentUrl, captureLeadAttributionFromCurrentUrl } from "../../src/services/marketingAttribution";
 
@@ -261,35 +262,79 @@ export default function WeatherForecastClient() {
     [answers, qIdx]
   );
 
+  const [isCapturing, setIsCapturing] = useState(false);
+
   const handleShare = useCallback(async () => {
-    if (!result) return;
-    const canNativeShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
+    if (!result || !resultRef.current || isCapturing) return;
+    
+    setIsCapturing(true);
     trackEvent("weather_share_clicked", {
       weather_level: result.weatherLevel,
-      method: canNativeShare ? "native_share" : "clipboard",
+      method: "image_share",
     });
     
-    if (canNativeShare) {
-      try {
-        await navigator.share({ text: result.shareText });
-        trackEvent("weather_share_completed", { method: "native_share" });
-      } catch {
-        // user cancelled
-      }
-    } else {
-      await navigator.clipboard.writeText(result.shareText);
-      alert("تم نسخ النشرة! تقدر تعملها لصق و تشاركها مع صحابك 📸");
-      trackEvent("weather_share_completed", { method: "clipboard" });
+    try {
+      const canvas = await html2canvas(resultRef.current, {
+        backgroundColor: "#060A16",
+        scale: 2,
+        useCORS: true,
+      });
+      
+      canvas.toBlob(async (blob) => {
+        setIsCapturing(false);
+        if (!blob) return;
+        
+        const file = new File([blob], "alrehla-weather.png", { type: "image/png" });
+        const canNativeShare = typeof navigator !== "undefined" && typeof navigator.share === "function" && navigator.canShare && navigator.canShare({ files: [file] });
+        
+        if (canNativeShare) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: "نشرة طقس العلاقات",
+              text: result.shareText,
+            });
+            trackEvent("weather_share_completed", { method: "native_image_share" });
+          } catch (e) {
+            console.error("Native share failed or user cancelled", e);
+          }
+        } else {
+            // Fallback: Download the image and copy text
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "alrehla-weather.png";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            try {
+              await navigator.clipboard.writeText(result.shareText);
+              alert("تم تحميل الصورة ونسخ التقرير عشان تشاركه براحتك 📸");
+            } catch (e) {
+              alert("تم تحميل الصورة بنجاح! 📸");
+            }
+            trackEvent("weather_share_completed", { method: "download_fallback" });
+        }
+      }, "image/png");
+      
+    } catch (error) {
+       console.error("Failed to generate image", error);
+       setIsCapturing(false);
+       trackEvent("weather_share_failed", { reason: "html2canvas_error" });
     }
-  }, [result]);
+
+  }, [result, isCapturing]);
 
   const handleCTA = useCallback(() => {
     trackEvent("weather_onboarding_clicked", {
       weather_level: result?.weatherLevel,
-      destination: "onboarding",
+      destination: "dawayir_ai",
     });
     if (typeof window !== "undefined") {
-      window.location.assign("/?utm_source=weather_tool_v2&utm_medium=organic&utm_campaign=viral_weather_v2");
+      window.sessionStorage.setItem('weather_context', JSON.stringify(result));
+      window.location.assign("/dawayir?surface=weather-funnel&utm_source=weather_tool_v2&utm_medium=organic&utm_campaign=viral_weather_v2");
     }
   }, [result]);
 
@@ -476,16 +521,14 @@ export default function WeatherForecastClient() {
                     <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
                   </motion.button>
 
-                  <motion.button
-                    type="button" onClick={handleShare}
-                    whileHover={{ scale: 1.02, background: "rgba(255, 255, 255, 0.08)" }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full flex items-center justify-center gap-3 rounded-2xl border px-6 py-4 text-sm font-bold text-white transition-colors"
-                    style={{ borderColor: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)" }}
+                  <button
+                    onClick={handleShare}
+                    disabled={isCapturing}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-black text-[13px] uppercase tracking-widest text-slate-800 transition-all active:scale-95"
+                    style={{ background: LEVEL_PALETTE[result.weatherLevel].border, boxShadow: `0 0 20px ${LEVEL_PALETTE[result.weatherLevel].glow}` }}
                   >
-                    <Share2 className="w-4 h-4 opacity-70" />
-                    شارك النتيجة (ممكن تاخد سكرين شوت 📸)
-                  </motion.button>
+                    {isCapturing ? "جاري التجهيز..." : "تجهيز السكرين شوت 📸"}
+                  </button>
                   
                   <button type="button" onClick={handleRestart} className="w-full mt-4 py-2 text-[11px] font-semibold text-gray-500 hover:text-gray-300">
                      إعادة التحليل ←

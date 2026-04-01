@@ -37,27 +37,25 @@ interface RingProps {
   breatheDuration: number;
 }
 
-const OrbitalRing: FC<RingProps> = memo(({ label, radius, color, glowColor, breatheDuration }) => {
+const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor, breatheDuration }) => {
   const safeRadius = Number.isFinite(radius) ? radius : 0;
-  // Sanctuary Neutral: Overriding ring colors to be barely visible grey normally.
-  const neutralColor = "rgba(255, 255, 255, 0.05)";
-  const neutralGlow = "rgba(255, 255, 255, 0.01)";
+  const filterId = ring === "red" ? "neonGlowRed" : ring === "yellow" ? "neonGlowWarning" : "neonGlowSafe";
 
   return (
-    <g aria-label={label}>
+    <g aria-label={label} filter={`url(#${filterId})`}>
       {/* Ambient glow layer */}
       <motion.g
-        animate={{ opacity: [0.05, 0.1, 0.05] }}
+        animate={{ opacity: [0.2, 0.5, 0.2] }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       >
-        <circle cx="50" cy="50" r={safeRadius} fill="none" stroke={neutralGlow} strokeWidth={4} opacity={0.1} />
+        <circle cx="50" cy="50" r={safeRadius} fill="none" stroke={color} strokeWidth={radius > 30 ? 0.4 : 0.6} opacity={0.3} />
       </motion.g>
-      {/* Main breathing ring (Neutral by default) */}
+      {/* Main breathing ring */}
       <motion.g
-        animate={{ strokeWidth: [0.5, 0.8, 0.5], opacity: [0.2, 0.4, 0.2] }}
+        animate={{ strokeWidth: [0.8, 1.5, 0.8], opacity: [0.5, 0.9, 0.5] }}
         transition={{ duration: breatheDuration * 2, repeat: Infinity, ease: "easeInOut" }}
       >
-        <circle cx="50" cy="50" r={safeRadius} fill="none" stroke={neutralColor} className="orbital-ring" />
+        <circle cx="50" cy="50" r={safeRadius} fill="none" stroke={color} className="orbital-ring" />
       </motion.g>
     </g>
   );
@@ -65,9 +63,18 @@ const OrbitalRing: FC<RingProps> = memo(({ label, radius, color, glowColor, brea
 
 /*  Node Position Calculations  */
 
+// Golden angle offsets per ring — stagger start positions so nodes
+// in different rings don't stack on top of each other visually.
+const RING_ANGLE_OFFSETS: Record<Ring, number> = {
+  green: Math.PI * 0.15,     // Start at ~1:30 (upper-right)
+  yellow: Math.PI * 1.25,    // Start at ~7:30 (lower-left)  
+  red: Math.PI * 0.7,        // Start at ~5:00 (lower-right)
+};
+
 const getRingPosition = (ring: Ring, nodeIndex: number, totalInRing: number): { x: number; y: number } => {
   const angleStep = (2 * Math.PI) / Math.max(totalInRing, 1);
-  const angle = nodeIndex * angleStep - Math.PI / 2;
+  const offset = RING_ANGLE_OFFSETS[ring] ?? 0;
+  const angle = nodeIndex * angleStep + offset - Math.PI / 2;
   let radius: number;
   if (ring === "green") radius = 15;
   else if (ring === "yellow") radius = 27;
@@ -193,6 +200,9 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     ? (node.ring === "red" ? "rgba(244, 63, 94, 0.5)" : node.ring === "yellow" ? "rgba(251, 191, 36, 0.4)" : "rgba(45, 212, 191, 0.4)")
     : isVampire ? `rgba(153, 27, 27, ${0.3 + vampireIntensity * 0.5})` : "rgba(255, 255, 255, 0.05)";
 
+  const ringBorderColor = node.ring === "red" ? "rgba(244, 63, 94, 0.4)" : node.ring === "yellow" ? "rgba(251, 191, 36, 0.4)" : "rgba(45, 212, 191, 0.4)";
+  const ringBgColor = node.ring === "red" ? "rgba(244, 63, 94, 0.1)" : node.ring === "yellow" ? "rgba(251, 191, 36, 0.1)" : "rgba(45, 212, 191, 0.1)";
+
   return (
     <motion.div
       style={style}
@@ -236,7 +246,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         </motion.div>
       )}
 
-      {/* Breathing aura ring  بضة أ عد اتحدد  اسج */}
+      {/* Breathing aura ring */}
       <motion.div
         className="absolute -inset-2 rounded-full pointer-events-none"
         style={{
@@ -256,7 +266,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
             : isVampire && !isHighlighted
               ? {
                 opacity: [0.3, 0.6, 0.3],
-                scale: [1, 0.85, 1], // Pulls inward like gravity
+                scale: [1, 0.85, 1],
               }
               : {
                 opacity: [0.4, 0.8, 0.4],
@@ -275,13 +285,17 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
 
       <motion.div
         ref={setNodeRef}
-        className={`relative z-10 node-glass ${glowClass} select-none flex items-center gap-0.5 pr-1 transition-all ${isDragging ? "opacity-90 scale-[1.03] shadow-[0_20px_50px_rgba(0,0,0,0.9)]" : ""
-          } ${isDetached ? "saturate-50 opacity-40 blur-[1px] grayscale-[50%]" : ""
-          } ${hasMismatch ? "border-amber-500/50!" : ""
-          }`}
+        className={`relative z-10 select-none flex items-center gap-0.5 pr-1 transition-all rounded-full overflow-hidden backdrop-blur-md ${
+          isDragging ? "opacity-90 scale-[1.03] shadow-[0_20px_50px_rgba(0,0,0,0.9)]" : ""
+        } ${isDetached ? "saturate-50 opacity-40 blur-[1px] grayscale-[50%]" : ""} ${hasMismatch ? "border-amber-500/50!" : ""}`}
+        style={{
+           background: isVampire ? `linear-gradient(135deg, rgba(153,27,27,${0.2 + vampireIntensity * 0.4}), rgba(0,0,0,0.6))` : `linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.9)), ${ringBgColor}`,
+           border: `1px solid ${isVampire ? 'rgba(153,27,27,0.5)' : ringBorderColor}`,
+           boxShadow: isVampire ? `inset 0 0 15px rgba(153,27,27,0.3)` : `inset 0 0 8px ${ringBgColor}`,
+        }}
         animate={!isDragging && !reduceMotion ? {
-          y: [0, -4, 2, -1, 0],
-          x: [0, 2, -3, 1, 0],
+          y: [0, -2, 1, 0],
+          x: [0, 1, -1, 0],
           rotate: [0, 1, -1, 0.5, 0]
         } : {}}
         transition={reduceMotion ? undefined : {
@@ -929,7 +943,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
   }, [highlightNodeId, nodes, nodePositions]);
 
   return (
-    <div className="absolute inset-x-0 top-[10%] bottom-0 sm:inset-0 z-0 pointer-events-none flex flex-col items-center justify-center overflow-visible">
+    <div className="absolute inset-0 z-0 pointer-events-none flex flex-col items-center justify-center overflow-visible">
       <div
         className={`pointer-events-auto relative aspect-square w-[140vmin] h-[140vmin] max-w-none max-h-none transition-all duration-1000 ease-out opacity-90 mix-blend-lighten ${isSimulation ? "scale-[0.85] saturate-[0.8] brightness-125" : ""}`}
         id="map-canvas"
@@ -960,7 +974,8 @@ export const MapCanvas: FC<MapCanvasProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
-        {!isSimulation && (
+        {/* Phoenix Score — HIDDEN for clean map */}
+        {false && !isSimulation && (
           <div className="absolute top-2 right-2 z-[90] rounded-xl bg-slate-900/80 border border-teal-500/30 px-3 py-2 text-[11px] text-right backdrop-blur-md">
             <div className="font-bold text-teal-200 flex items-center gap-1 justify-end">
               <span>Phoenix Score:</span>
@@ -984,8 +999,9 @@ export const MapCanvas: FC<MapCanvasProps> = ({
             </div>
           </div>
         )}
-        {/* Simulation Controls (Phase 22) */}
-        {!isSimulation ? (
+        {/* Simulation Controls — HIDDEN for clean map */}
+        {false && (
+          !isSimulation ? (
           <button
             onClick={() => {
               setSimulatedNodes([...allNodes]);
@@ -994,14 +1010,14 @@ export const MapCanvas: FC<MapCanvasProps> = ({
             className="absolute top-2 left-2 z-[60] flex items-center gap-2 px-3 py-1.5 rounded-xl bg-teal-500/10 border border-teal-500/30 text-teal-200 text-xs font-bold backdrop-blur-md hover:bg-teal-500/20 transition-all shadow-lg"
           >
             <Telescope className="w-4 h-4" />
-            وضع احااة (What-If)
+            وضع المحاكاة (What-If)
           </button>
         ) : (
           <FutureSimulator nodes={simulatedNodes} onExitSimulation={() => setIsSimulation(false)} />
-        )}
+        ))}
         <DndContext onDragStart={onKineticDragStart} onDragMove={onKineticDragMove} onDragEnd={handleDragEnd} sensors={sensors}>
           <div className="absolute inset-0">
-            {shouldUseLightweightRendering && (
+            {false && shouldUseLightweightRendering && (
               <div className="absolute top-2 right-2 z-[70] rounded-xl bg-slate-900/80 border border-slate-700 px-2.5 py-1.5 text-[10px] text-slate-300">
                 ت تفع ضع اأداء اعا عرض خفف
               </div>
@@ -1078,14 +1094,48 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   <stop offset="50%" stopColor="#2dd4bf" />
                   <stop offset="100%" stopColor="#0f766e" />
                 </radialGradient>
-                {/* Cosmic glow filter */}
+                {/* Deep void space center core gradient */}
+                <radialGradient id="soulCore" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#0F766E" />
+                  <stop offset="60%" stopColor="#042F2E" />
+                  <stop offset="100%" stopColor="transparent" />
+                </radialGradient>
+                {/* Neon Glow Rings Filters */}
+                <filter id="neonGlowRed" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                  <feFlood floodColor="#E11D48" floodOpacity="0.6" result="glowColor" />
+                  <feComposite in="glowColor" in2="coloredBlur" operator="in" result="glow" />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <filter id="neonGlowWarning" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+                  <feFlood floodColor="#F59E0B" floodOpacity="0.5" result="glowColor" />
+                  <feComposite in="glowColor" in2="coloredBlur" operator="in" result="glow" />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <filter id="neonGlowSafe" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                  <feFlood floodColor="#0D9488" floodOpacity="0.75" result="glowColor" />
+                  <feComposite in="glowColor" in2="coloredBlur" operator="in" result="glow" />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                {/* Universal soft glow */}
                 <filter id="cosmicGlow" x="-50%" y="-50%" width="200%" height="200%">
                   <feGaussianBlur stdDeviation="2" result="blur" />
                   <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
               </defs>
 
-              {/*  Connection Threads  */}
+              {/*  Connection Threads (Data Lasers)  */}
               {connectionThreads.map((line) => (
                 <motion.line
                   key={line.id}
@@ -1094,11 +1144,19 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   x2={line.x2}
                   y2={line.y2}
                   stroke={line.color}
-                  strokeWidth={0.4}
-                  strokeDasharray="1 2"
-                  initial={shouldReduceMotion ? false : { pathLength: 0, opacity: 0 }}
-                  animate={shouldReduceMotion ? { opacity: 0.9 } : { pathLength: 1, opacity: 1 }}
-                  transition={shouldReduceMotion ? { duration: 0.2 } : { duration: 1.5, ease: "easeInOut" }}
+                  strokeWidth={0.6}
+                  strokeDasharray="2 4"
+                  filter="url(#cosmicGlow)"
+                  initial={shouldReduceMotion ? false : { opacity: 0, strokeDashoffset: 10 }}
+                  animate={shouldReduceMotion ? { opacity: 0.6 } : { 
+                    opacity: [0.3, 0.8, 0.3],
+                    strokeDashoffset: [10, 0] 
+                  }}
+                  transition={{ 
+                    duration: 3 + Math.random() * 2, 
+                    repeat: Infinity, 
+                    ease: "linear" 
+                  }}
                 />
               ))}
 
@@ -1181,44 +1239,44 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               </motion.g>
 
               {/*  Center "Me"  Cosmic Orb  */}
-              <g filter="url(#cosmicGlow)">
-                {/*  Reveal Halo (The Light of Awareness) */}
-                {isRevealState && (
-                  <motion.g
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    style={{ transformOrigin: "50% 50%" }}
-                  >
-                    <circle cx="50" cy="50" r={14} fill="none" stroke="rgba(45, 212, 191, 0.15)" strokeWidth={0.5} />
-                  </motion.g>
+              <g aria-label="أنت" className="me-node">
+                {/* Deep background pulsing core */}
+                <circle cx="50" cy="50" r={16} fill="url(#soulCore)" opacity={0.8} />
+                
+                {/* Expanding heartbeat waves */}
+                {!shouldReduceMotion && (
+                  <>
+                    <motion.circle
+                      cx="50" cy="50" r={8} stroke="#0D9488" strokeWidth={0.5} fill="none"
+                      animate={{ r: [8, 18], opacity: [0.8, 0] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeOut" }}
+                    />
+                    <motion.circle
+                      cx="50" cy="50" r={8} stroke="#0D9488" strokeWidth={0.3} fill="none"
+                      animate={{ r: [8, 22], opacity: [0.5, 0] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "easeOut", delay: 1 }}
+                    />
+                  </>
                 )}
-                {/* Outer aura */}
-                <motion.g
-                  animate={shouldReduceMotion ? { opacity: 0.35 } : { opacity: [0.3, 0.15, 0.3] }}
-                  transition={shouldReduceMotion ? { duration: 0.2 } : { duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <circle cx="50" cy="50" r={9} fill="none"
-                    stroke={battery === "drained" ? "rgba(148, 163, 184, 0.1)" : "rgba(45, 212, 191, 0.12)"}
-                    strokeWidth="0.5" />
-                </motion.g>
-                {/* Main orb */}
+                
+                {/* Main Orb */}
                 <motion.g
                   animate={shouldReduceMotion ? undefined : {
                     scale: meStyle.pulseScale,
-                    opacity: battery === "drained" ? [0.6, 0.8, 0.6] : [0.85, 1, 0.85],
-                    filter: ["brightness(1)", "brightness(1.5)", "brightness(1)"]
+                    opacity: battery === "drained" ? [0.6, 0.8, 0.6] : [0.85, 1, 0.85]
                   }}
                   transition={shouldReduceMotion ? undefined : {
                     duration: battery === "charged" ? 2.5 : 3.5,
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
-                  style={{ transformOrigin: "50px 50px", filter: "none" }}
+                  style={{ transformOrigin: "50px 50px" }}
                 >
-                  <circle cx="50" cy="50" r={6} fill={meStyle.fill} />
-                  <circle cx="50" cy="50" r={1.5} fill="#ffffff" style={{ filter: "blur(0.5px)", opacity: 0.9 }} />
+                  <circle cx="50" cy="50" r={7.5} fill={meStyle.fill} filter="url(#cosmicGlow)" />
+                  <circle cx="50" cy="50" r={2.5} fill="#ffffff" style={{ filter: "blur(0.8px)", opacity: 0.95 }} />
                 </motion.g>
-                {/* "أت" label */}
+
+                {/* "أنا" label */}
                 <text
                   x="50"
                   y="50"
@@ -1226,13 +1284,14 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   dominantBaseline="middle"
                   className="select-none pointer-events-none"
                   style={{
-                    fontSize: "3px",
-                    fontWeight: 700,
-                    fill: "white",
-                    letterSpacing: "0.08em"
+                    fontSize: "3.2px",
+                    fontWeight: 800,
+                    fill: "#fff",
+                    letterSpacing: "0.1em",
+                    filter: "drop-shadow(0 0 2px rgba(0,0,0,0.8))"
                   }}
                 >
-                  أت
+                  أنا
                 </text>
               </g>
 

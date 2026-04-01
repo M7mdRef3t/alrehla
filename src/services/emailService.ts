@@ -29,7 +29,7 @@ export async function sendRecoveryPlanEmail(email: string, data: RecoveryPlanDat
         to: email.trim(),
         subject,
         html,
-        text: `أهلاً بك في أول خطوة للوضوح. رصدت ${data.relationshipCount} علاقة في خريطتك. تفقد بريدك لرؤية الروشتة كاملة.`
+        text: `أهلاً بيك في المواجهة والحقيقة. رصدت ${data.relationshipCount} علاقة في أشعة وعيك المقطعية. تفقد بريدك لرؤية روشتة استعادة طاقتك.`
       }
     });
 

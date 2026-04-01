@@ -12,6 +12,7 @@ import type {
   MarketingLeadSourceType,
   NormalizedMarketingLeadInput
 } from "../types/marketingLead";
+import { sendMetaCapiEvent } from "./metaCapi";
 
 type OutreachQueueStatus = "pending" | "sent" | "failed" | "simulated";
 
@@ -290,6 +291,42 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
 
     if (hasSupabaseConfig()) {
       const result = await upsertMarketingLead(input);
+
+      // --- META CAPI Tracking Data Extraction ---
+      const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || null;
+      const clientUserAgent = req.headers.get("user-agent") || null;
+      const refUrl = req.headers.get("referer") || "https://www.alrehla.app";
+      const cookieHeader = req.headers.get("cookie");
+      
+      let fbcData: string | null = null;
+      let fbpData: string | null = null;
+
+      if (cookieHeader) {
+        const cookies = Object.fromEntries(
+          cookieHeader.split("; ").map((c) => {
+            const parts = c.split("=");
+            return [parts[0], decodeURIComponent(parts.slice(1).join("="))];
+          })
+        );
+        fbcData = cookies["_fbc"] || null;
+        fbpData = cookies["_fbp"] || null;
+      }
+
+      // Fire and forget Meta CAPI Event
+      void sendMetaCapiEvent({
+        eventName: "Lead",
+        eventId: result.lead_id,
+        sourceUrl: refUrl,
+        userData: {
+          email: input.email,
+          phone: input.phoneRaw, // Use raw since CAPI hasher will strip symbols
+          fbc: fbcData,
+          fbp: fbpData,
+          clientIpAddress: ip,
+          clientUserAgent
+        }
+      });
+
       return NextResponse.json({
         ok: true,
         lead: { 

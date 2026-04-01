@@ -142,6 +142,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     [featureFlags, betaAccess, role, adminAccess]
   );
   const goalId = useJourneyState((s) => s.goalId);
+  const storedMirrorName = useJourneyState((s) => s.mirrorName);
 
   const {
     gym: showGym,
@@ -431,7 +432,10 @@ export const AppOverlayHost = memo(function AppOverlayHost({
           <GoogleAuthModal
             isOpen={showAuthModal}
             intent={postAuthIntent}
-            onClose={() => setAuthIntent(null)}
+            onClose={() => {
+              setOverlay("authModal", false);
+              setAuthIntent(null);
+            }}
             onNotNow={handleAuthModalNotNow}
           />
         )}
@@ -541,7 +545,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
 
         {showTimeCapsuleVault && isVisible("timeCapsuleVault") && <TimeCapsuleVault onClose={() => setOverlay("timeCapsuleVault", false)} />}
 
-        {showOnboarding && isVisible("onboarding") && <OnboardingFlow onComplete={onOnboardingComplete} />}
+        {showOnboarding && isVisible("onboarding") && <OnboardingFlow onComplete={onOnboardingComplete} initialMirrorName={storedMirrorName} />}
 
         {showFaq && isVisible("faq") && <FaqScreen onClose={() => setOverlay("faq", false)} />}
 

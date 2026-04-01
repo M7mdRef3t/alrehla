@@ -16,7 +16,7 @@ export function buildMarketingEmail({
   name,
   personalLink,
   previewText = "خريطة علاقاتك جاهزة — ابدأ الرحلة الآن",
-  senderName = "محمد",
+  senderName = "فريق عمل",
   unsubLink,
 }: EmailTemplateOptions): string {
   const greeting = name ? `أهلاً ${name}،` : "أهلاً،";
@@ -95,7 +95,7 @@ export function buildMarketingEmail({
               ${greeting}
             </p>
             <p style="color:#94a3b8; font-size:15px; line-height:1.9; margin:0 0 24px;">
-              أنا ${senderName} من الرحلة. شكراً لاهتمامك — نحن بنينا شيئاً مختلفاً تماماً.
+              معك ${senderName} الرحلة. شكراً لاهتمامك — نحن بنينا شيئاً مختلفاً تماماً.
             </p>
 
             <!-- Highlight box -->

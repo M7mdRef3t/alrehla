@@ -70,6 +70,7 @@ interface AppExperienceSurfaceProps {
   onOpenTimeCapsuleVault: () => void;
   onOpenOracleDashboard: () => void;
   onNavigateToMap: () => void;
+  onOpenLogin: () => void;
 }
 
 export const AppExperienceSurface = memo(function AppExperienceSurface({
@@ -94,7 +95,8 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   onOpenAmbientReality,
   onOpenTimeCapsuleVault,
   onOpenOracleDashboard,
-  onNavigateToMap
+  onNavigateToMap,
+  onOpenLogin
 }: AppExperienceSurfaceProps) {
   const isLivePage = typeof window !== "undefined" && window.location.pathname.includes("dawayir-live");
   const actuallyShowingPulse = showPulseCheck && !isLivePage;
@@ -129,8 +131,8 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   }, [mainContentProps]);
 
   const handleHeaderLogin = useCallback(() => {
-    mainContentProps.onStartJourney?.();
-  }, [mainContentProps]);
+    onOpenLogin();
+  }, [onOpenLogin]);
 
   const handleLogout = useCallback(async () => {
     await signOut(); // centralised — errors swallowed inside signOut()
@@ -140,22 +142,28 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
   return (
     <>
       {/* ── Global platform header (desktop) ── */}
-      <PlatformHeader
-        activeScreen={screen}
-        onNavigate={handleHeaderNavigate}
-        onLogin={handleHeaderLogin}
-        onLogout={handleLogout}
-      />
+      {screen !== "map" && (
+        <PlatformHeader
+          activeScreen={screen}
+          onNavigate={handleHeaderNavigate}
+          onLogin={handleHeaderLogin}
+          onLogout={handleLogout}
+        />
+      )}
       {/* ── Mobile bottom tab bar ── */}
-      <PlatformTabBar
-        activeScreen={screen}
-        onNavigate={handleHeaderNavigate}
-        onLogin={handleHeaderLogin}
-      />
+      {screen !== "map" && (
+        <PlatformTabBar
+          activeScreen={screen}
+          onNavigate={handleHeaderNavigate}
+          onLogin={handleHeaderLogin}
+        />
+      )}
       {/* ── Push Notification prompt (floating pill) ── */}
-      <Suspense fallback={null}>
-        <NotificationEnableButton />
-      </Suspense>
+      {screen !== "map" && (
+        <Suspense fallback={null}>
+          <NotificationEnableButton />
+        </Suspense>
+      )}
       {/* ── Breadcrumb: only on inner screens (not landing) ── */}
       {screen !== "landing" && (
         <>
@@ -203,8 +211,8 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
         <AppTransientChromeHost {...transientChromeProps} />
         <AppChromeShell {...chromeShellProps}>
           <main
-            className={`flex-1 min-w-0 flex flex-col pb-14 md:pb-0 ${
-              screen !== "landing" ? "pt-[110px] md:pt-[140px]" : ""
+            className={`flex-1 min-w-0 flex flex-col ${screen === "map" ? "pb-0" : "pb-14 md:pb-0"} ${
+              screen !== "landing" && screen !== "map" ? "pt-[110px] md:pt-[140px]" : ""
             } ${actuallyShowingPulse ? "opacity-0 pointer-events-none select-none" : ""} overflow-visible`}
             aria-hidden={actuallyShowingPulse}
           >
@@ -242,7 +250,7 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
                 <div
                   className={`min-w-0 flex transition-all duration-300 ease-in-out ${isLandingScreen ? "flex-col" : "flex-1 flex-col w-full h-full"}`}
                 >
-                  {showSystemOverclockControls && (
+                  {screen !== "map" && showSystemOverclockControls && (
                     <div className="fixed bottom-24 right-6 z-[60] flex flex-col items-end gap-3 pointer-events-auto">
                       <AnimatePresence>
                         {showSystemOverclockPanel && (

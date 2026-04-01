@@ -252,6 +252,17 @@ export function trackLandingView(
   }
 }
 
+function getAnonymousSessionId(): string {
+  if (!isClientRuntime()) return "";
+  let sessionId = getFromLocalStorage("dawayir-anon-session");
+  if (!sessionId) {
+    const isCrypto = typeof crypto !== 'undefined' && crypto.randomUUID;
+    sessionId = isCrypto ? "anon_" + crypto.randomUUID() : "anon_" + Math.random().toString(36).substring(2, 15);
+    setInLocalStorage("dawayir-anon-session", sessionId);
+  }
+  return sessionId;
+}
+
 export function trackEvent(
   eventName: string,
   params?: Record<string, AnalyticsValue | null | undefined>
@@ -282,7 +293,7 @@ export function trackEvent(
     }
   }
 
-  if (isSupabaseReady && supabase && supabaseTrackingEnabled) {
+  if (supabaseTrackingEnabled) {
     const windowRef = getWindowOrNull();
     const isMobile = windowRef ? windowRef.matchMedia("(max-width: 768px)").matches : false;
     const deviceContext = {
@@ -292,35 +303,37 @@ export function trackEvent(
     };
 
     safeGetSession().then((session) => {
-      if (!session) {
-        return; // GUARD: If no session, we cannot track routing events in Supabase due to RLS.
-      }
-      
-      supabase!
-        .from("routing_events")
-        .insert({
-          event_type: eventName,
-          user_id: session?.user?.id || null,
-          lead_id: leadAttr?.lead_id || null,
-          lead_source: leadAttr?.lead_source || null,
-          utm_source: utm?.utm_source || null,
-          utm_medium: utm?.utm_medium || null,
-          utm_campaign: utm?.utm_campaign || null,
-          payload: { ...deviceContext, ...(safeParams || {}) },
-          occurred_at: new Date().toISOString()
-        })
-        .then(({ error }) => {
-          if (error && !isSupabaseAbortError(error)) {
-            // RLS or permission errors → disable for rest of session to stop console spam
-            const status = (error as any).status;
-            if (error.code === "42501" || error.code === "42P01" || status === 401) {
-              supabaseTrackingEnabled = false;
+      const telemetryPayload = {
+        event_type: eventName,
+        user_id: session?.user?.id || null,
+        session_id: getAnonymousSessionId(),
+        lead_id: leadAttr?.lead_id || null,
+        lead_source: leadAttr?.lead_source || null,
+        utm_source: utm?.utm_source || null,
+        utm_medium: utm?.utm_medium || null,
+        utm_campaign: utm?.utm_campaign || null,
+        payload: { ...deviceContext, ...(safeParams || {}) },
+        occurred_at: new Date().toISOString()
+      };
+
+      fetch('/api/analytics', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify(telemetryPayload)
+      }).then(async (res) => {
+         if (!res.ok) {
+            if (res.status === 401 || res.status === 403) {
+               supabaseTrackingEnabled = false;
             }
             if (runtimeEnv.isDev) {
-              console.warn(`[Analytics] Internal track failed: ${eventName}`, error);
+              console.warn(`[Analytics] Ingestion POST failed: ${eventName}`, await res.text());
             }
-          }
-        });
+         }
+      }).catch(err => {
+         if (runtimeEnv.isDev) {
+            console.warn(`[Analytics] Ingestion Fetch failed for ${eventName}`, err);
+         }
+      });
     }).catch((err: unknown) => {
       if (!isSupabaseAbortError(err) && runtimeEnv.isDev) {
         console.warn(`[Analytics] getSession failed for ${eventName}`, err);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { isPhaseOneUserFlow, isUserMode, isRevenueMode } from "../../config/appEnv";
 import { useAuthState } from "../../state/authState";
 import {
@@ -6,6 +6,7 @@ import {
   getSearch,
   pushUrl,
 } from "../../services/navigation";
+import { recordFlowEvent } from "../../services/journeyTracking";
 import { initLanguage } from "../../services/i18n";
 import { AppRuntimeControllers } from "./AppRuntimeControllers";
 import { AppShellRouteGate } from "./AppShellRouteGate";
@@ -52,6 +53,8 @@ interface AppExperienceShellProps {
 }
 
 export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps) {
+  const skipExitToLandingOnceRef = useRef(false);
+
   const {
     screen,
     setScreen,
@@ -106,9 +109,11 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     
     const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
     const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
+    const APP_LOGIN_BOOT_ACTION = "open_login";
     
     const action = window.sessionStorage.getItem(APP_BOOT_ACTION_KEY);
     if (!action) return;
+    skipExitToLandingOnceRef.current = true;
 
     // IMPORTANT:
     // `start_recovery` is consumed by `useAppStartupOnboarding` to route into map flow.
@@ -119,15 +124,27 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       const targetScreen = action.replace(APP_SCREEN_BOOT_ACTION_PREFIX, "");
       // Navigate to the requested screen (e.g., tools, insights)
       setScreen(targetScreen as any);
+      return;
     }
-  }, [setScreen]);
+
+    if (action === APP_LOGIN_BOOT_ACTION) {
+      window.sessionStorage.removeItem(APP_BOOT_ACTION_KEY);
+      recordFlowEvent("auth_gate_opened", { meta: { mode: "login_landing_header" } });
+      setAuthIntent({ kind: "login", createdAt: Date.now() });
+      setShowAuthModal(true);
+    }
+  }, [setAuthIntent, setScreen, setShowAuthModal]);
 
   // ── EXIT TO LANDING ──
   useEffect(() => {
-    if (screen === "landing" && onExitToLanding) {
-      onExitToLanding();
+    if (screen !== "landing" || !onExitToLanding) return;
+    if (showAuthModal) return;
+    if (skipExitToLandingOnceRef.current) {
+      skipExitToLandingOnceRef.current = false;
+      return;
     }
-  }, [screen, onExitToLanding]);
+    onExitToLanding();
+  }, [screen, onExitToLanding, showAuthModal]);
 
   const tier = useAuthState((s) => s.tier);
 
@@ -327,6 +344,24 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     }
   });
 
+  const queueStartRecoveryAuthIntent = useCallback((payload: {
+    energy: number;
+    mood: Parameters<typeof setStartRecoveryIntent>[0]["mood"];
+    focus: Parameters<typeof setStartRecoveryIntent>[0]["focus"];
+    auto?: boolean;
+    notes?: string;
+    energyReasons?: string[];
+    energyConfidence?: Parameters<typeof setStartRecoveryIntent>[0]["energyConfidence"];
+  }) => {
+    setAuthIntent({ kind: "start_recovery", pulse: payload, createdAt: Date.now() });
+    setStartRecoveryIntent(payload);
+  }, [setAuthIntent, setStartRecoveryIntent]);
+
+  const queueLoginAuthIntent = useCallback(() => {
+    setAuthIntent({ kind: "login", createdAt: Date.now() });
+    setLoginIntent();
+  }, [setAuthIntent, setLoginIntent]);
+
   const {
     openCocoonModal,
     openRegularPulseCheck,
@@ -357,8 +392,8 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     openDefaultGoalMap,
     openDawayirSetup,
     goToGoals,
-    setStartRecoveryIntent,
-    setLoginIntent,
+    setStartRecoveryIntent: queueStartRecoveryAuthIntent,
+    setLoginIntent: queueLoginAuthIntent,
     setShowAuthModal,
     clearPostAuthState,
     showNoiseSessionToast,
@@ -440,7 +475,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     setShowBreathing,
     setShowPulseCheck,
     setPulseCheckContext,
-    setLoginIntent,
+    setLoginIntent: queueLoginAuthIntent,
     setShowAuthModal,
     setShowSystemOverclockPanel,
     setLockedFeature,
@@ -462,7 +497,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     setShowBreathing,
     setShowPulseCheck,
     setPulseCheckContext,
-    setLoginIntent,
+    queueLoginAuthIntent,
     setShowAuthModal,
     setShowSystemOverclockPanel,
     setLockedFeature,
@@ -646,6 +681,22 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     pushUrl("/");
     setIsAdminRoute(false);
   }, [setIsAdminRoute]);
+
+  const handleHeaderLogin = useCallback(() => {
+    setPulseCheckContext("regular");
+    setShowPulseCheck(false);
+    clearWelcome();
+    recordFlowEvent("auth_gate_opened", { meta: { mode: "login_header" } });
+    queueLoginAuthIntent();
+    setShowAuthModal(true);
+  }, [
+    clearWelcome,
+    queueLoginAuthIntent,
+    setPulseCheckContext,
+    setShowAuthModal,
+    setShowPulseCheck
+  ]);
+
   return (
     <AppShellRouteGate
       isAdminRoute={isAdminRoute}
@@ -688,6 +739,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
           onOpenTimeCapsuleVault={openTimeCapsuleVault}
           onOpenOracleDashboard={openOracleDashboard}
           onNavigateToMap={navigateToMap}
+          onOpenLogin={handleHeaderLogin}
         />
       </>
     </AppShellRouteGate>

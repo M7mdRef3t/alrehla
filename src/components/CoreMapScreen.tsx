@@ -1,4 +1,4 @@
-﻿import type { FC } from "react";
+import type { FC } from "react";
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapCanvas } from "../modules/map/MapCanvas";
@@ -518,39 +518,41 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
   return (
     <motion.main
-      className="flex-1 w-full h-full relative flex flex-col pb-24 md:pb-8 atmospheric-void overflow-hidden"
+      className="flex-1 w-full h-full relative flex flex-col pb-0 atmospheric-void overflow-hidden"
       aria-labelledby="core-map-title"
       onDrop={handleMainDrop}
       initial="hidden"
       animate="visible"
     >
-      {/* â”€â”€ Cinematic ambient background â”€â”€ */}
-      <div aria-hidden className="fixed inset-0 pointer-events-none" style={{ zIndex: -1 }}>
+      {/* ── Cinematic ambient background ── */}
+      <div aria-hidden className="fixed inset-0 pointer-events-none bg-[#030712] overflow-hidden" style={{ zIndex: -1 }}>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-teal-900/15 via-[#030712] to-[#030712]" />
+        
         <div style={{
-          position: "absolute", width: 700, height: 700, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(20,184,166,0.10) 0%, transparent 70%)",
-          top: "-15%", right: "-8%",
-          animation: "av-orb-drift 40s ease-in-out infinite alternate"
+          position: "absolute", width: "150vw", height: "150vh", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(13, 148, 136, 0.06) 0%, transparent 60%)",
+          top: "-50%", right: "-20%",
+          animation: "av-orb-drift 60s ease-in-out infinite alternate"
         }} />
         <div style={{
-          position: "absolute", width: 580, height: 580, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 70%)",
-          bottom: "-18%", left: "-8%",
-          animation: "av-orb-drift 52s ease-in-out infinite alternate-reverse"
+          position: "absolute", width: "120vw", height: "120vh", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(234, 179, 8, 0.03) 0%, transparent 60%)",
+          bottom: "-30%", left: "-30%",
+          animation: "av-orb-drift 75s ease-in-out infinite alternate-reverse"
         }} />
         <div style={{
-          position: "absolute", width: 420, height: 420, borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(245,158,11,0.055) 0%, transparent 70%)",
-          top: "35%", left: "28%",
-          animation: "av-orb-drift 44s ease-in-out infinite alternate"
+          position: "absolute", width: "100vw", height: "100vh", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(225, 29, 72, 0.03) 0%, transparent 60%)",
+          top: "20%", left: "10%",
+          animation: "av-orb-drift 50s ease-in-out infinite alternate"
         }} />
         <div style={{
           position: "absolute", inset: 0,
-          backgroundImage: "linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px)",
-          backgroundSize: "68px 68px",
-          WebkitMaskImage: "radial-gradient(ellipse 85% 80% at 50% 50%, black 20%, transparent 100%)",
-          maskImage: "radial-gradient(ellipse 85% 80% at 50% 50%, black 20%, transparent 100%)",
-          opacity: 0.55
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)",
+          backgroundSize: "50px 50px",
+          WebkitMaskImage: "radial-gradient(ellipse 100% 100% at 50% 50%, black 10%, transparent 80%)",
+          maskImage: "radial-gradient(ellipse 100% 100% at 50% 50%, black 10%, transparent 80%)",
+          opacity: 0.25
         }} />
       </div>
       <SovereignBroadcastOverlay message={sovereignMessage} />
@@ -588,7 +590,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         className="relative z-20 text-center px-4 sm:px-6 pt-4 pb-1 flex flex-col items-center gap-2 pointer-events-none"
       >
         <AnimatePresence>
-          {!isSacredIsolation && (
+          {/* HIDDEN */ false && !isSacredIsolation && (
             <motion.div
               variants={cosmicFade}
               className="flex flex-col items-center"
@@ -622,12 +624,12 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           Ø§Ù„Ù…Ù†Ø·Ù‚Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰ â€” Ù…Ø¤Ø´Ø±Ø§Øª Ø§Ù„ÙˆØ¶Ø¹ + Ø³Ø¤Ø§Ù„ Ø§Ù„ÙŠÙˆÙ…
           ØªØ¸Ù‡Ø± Ø¯Ø§Ø¦Ù…Ù‹Ø§ (60% Ù…Ù† Ø§Ù„Ø§Ù‡ØªÙ…Ø§Ù… Ø§Ù„Ø¨ØµØ±ÙŠ)
            */}
-      {!journeyMode && activeNodes.length > 0 && (
+      {/* HIDDEN: full HUD area */ false && !journeyMode && activeNodes.length > 0 && (
         <div className="relative w-full z-30">
           <div className="max-w-[34rem] mx-auto px-4 pt-2 pb-3 flex flex-col items-center">
 
             {/* 1? HUD: OPERATIONAL (Sanctuary Mode) */}
-            {activeTab === "operational" && (
+            {/* HIDDEN */ false && activeTab === "operational" && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{
@@ -685,7 +687,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       )}
 
       {/* â”€â”€ Sacred Isolation & Soul Geometry Toolbar â”€â”€ */}
-      <div className="fixed top-[calc(env(safe-area-inset-top)+6.5rem)] md:top-[calc(env(safe-area-inset-top)+7rem)] right-4 z-[70] flex gap-2">
+      <div className="fixed top-[calc(env(safe-area-inset-top)+6.5rem)] md:top-[calc(env(safe-area-inset-top)+7rem)] right-4 z-[70] flex gap-2" style={{ display: 'none' }}>
         <button
           onClick={() => setIsSacredIsolation(!isSacredIsolation)}
           className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isSacredIsolation ? 'bg-teal-500 text-white shadow-[0_0_15px_rgba(45,212,191,0.5)]' : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
@@ -714,7 +716,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/* 
           Ø§Ù„Ù†Ø¨Ø¶Ø© Ø§Ù„ØªÙƒØªÙŠÙƒÙŠØ©: ØªØ·ÙÙˆ Ø£Ø³ÙÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø© Ù„Ø³Ù‡ÙˆÙ„Ø© Ø§Ù„ÙˆØµÙˆÙ„
       */}
-      {!isSacredIsolation && !journeyMode && (
+      {/* HIDDEN */ false && !isSacredIsolation && !journeyMode && (
         <div className="relative w-full z-30 flex justify-center my-2 md:fixed md:left-1/2 md:bottom-[8.5rem] md:-translate-x-1/2 md:my-0 md:z-40">
           <DailyPulseWidget />
         </div>
@@ -723,7 +725,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/* 
           Ø§Ù„Ù…Ù†Ø·Ù‚Ø© Ø§Ù„Ø¯Ø§Ø¹Ù…Ø© â€” ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø© ÙˆÙ…ÙÙ„Ø®Ù‘Øµ Ø§Ù„Ù…Ø­Ø·Ø§Øª (30%)
            */}
-      {!journeyMode && (
+      {/* HIDDEN */ false && !journeyMode && (
         <motion.div
           variants={cosmicFade}
           style={{
@@ -819,7 +821,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {/*  Status Cards (Pulse Modes)  */}
       {
-        pulseMode === "low" && (
+        false && pulseMode === "low" && (
           <motion.div
             className="mt-5 mx-auto max-w-[38rem] card-unified status-card-low px-4 py-4 text-right"
             variants={cosmicFade}
@@ -853,7 +855,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       }
 
       {
-        pulseMode === "low" ? null : (
+        false && (pulseMode === "low" ? null : (
           <>
             {pulseMode === "angry" && (
               <motion.div
@@ -911,7 +913,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               className="fixed z-20 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-4 right-4 flex flex-col items-stretch gap-3 pointer-events-auto md:left-auto md:right-4 md:max-w-sm md:items-end"
               variants={cosmicFade}
               style={{
-                order: sectionOrder["controls-bar"],
+                display: 'none', order: sectionOrder["controls-bar"],
                 transition: `order ${adaptiveLayout.transitions.duration}ms ${adaptiveLayout.transitions.easing}`,
               }}
             >
@@ -1038,15 +1040,15 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               </motion.button>
             </motion.div>
           </>
-        )
+        ))
       }
 
       {/*  Pulse Insight (HUD Top Left)  */}
       {
-        pulseInsight && (
+        false ? null : pulseInsight ? (
           <motion.div className="absolute z-20 top-[calc(env(safe-area-inset-top)+6.5rem)] md:top-[calc(env(safe-area-inset-top)+7rem)] left-4 w-64 glass-card bg-slate-950/70 border border-indigo-500/20 shadow-2xl backdrop-blur-md px-3 py-3 text-right pointer-events-auto rounded-lg" variants={cosmicFade}>
-            <p className="text-xs font-semibold" style={{ color: "rgba(167, 139, 250, 0.9)" }}>{pulseInsight.title}</p>
-            <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(167, 139, 250, 0.6)" }}>{pulseInsight.body}</p>
+            <p className="text-xs font-semibold" style={{ color: "rgba(167, 139, 250, 0.9)" }}>{pulseInsight?.title}</p>
+            <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(167, 139, 250, 0.6)" }}>{pulseInsight?.body}</p>
             <button
               type="button"
               onClick={() => setShowWeekdayLabelsModal(true)}
@@ -1056,12 +1058,12 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                Ø±Ø¨Ø· Ø¨Ù†Ø´Ø§Ø· Ø£Ùˆ Ø´Ø®Øµ
             </button>
           </motion.div>
-        )
+        ) : null
       }
 
       {/*  Next Step Decision (HUD Bottom Left)  */}
       {
-        nextStepDecision && onTakeNextStep && onRefreshNextStep && (
+        false ? null : (nextStepDecision && onTakeNextStep && onRefreshNextStep) ? (
           <div className="absolute z-20 bottom-[12vh] left-4 w-72 origin-bottom-left scale-95 pointer-events-auto">
             <NextStepCard
               decision={nextStepDecision}
@@ -1069,7 +1071,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
               onRefresh={onRefreshNextStep}
             />
           </div>
-        )
+        ) : null
       }
 
       {/*  Operational Visuals  */}
@@ -1160,7 +1162,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                         }}
                       />
                     )}
-                    {mapType === "masafaty" && (
+                    {/* HIDDEN */ false && mapType === "masafaty" && (
                       <>
                         <EmergencyButton />
                         <ActionToolkit />
@@ -1408,14 +1410,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {/*  Ù†Ø¨Ø¶Ø© Ø§Ù„Ø¸Ù„ â€” Shadow Pulse Alert  */}
       {
-        !journeyMode && (
+        false && !journeyMode && (
           <ShadowPulseAlert onSelectNode={handleNodeClick} />
         )
       }
 
       {/*  Floating Action Menu â€” Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¹Ø§Ø¦Ù…Ø©  */}
       {
-        !journeyMode && mode === "focus" && (
+        false && !journeyMode && mode === "focus" && (
           <FloatingActionMenu
             onAddPerson={() => {
               onSelectNode(null);
@@ -1432,14 +1434,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {/*  Insights Sidebar â€” Ø§Ù„Ø´Ø±ÙŠØ· Ø§Ù„Ø¬Ø§Ù†Ø¨ÙŠ Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª  */}
       {
-        !journeyMode && (mode === "insights" || mode === "adaptive") && (
+        false && !journeyMode && (mode === "insights" || mode === "adaptive") && (
           <InsightsSidebar onOpenArchive={() => setShowJournalArchive(true)} />
         )
       }
 
       {/*  Tab Navigation â€” Ø§Ù„ØªØ¨ÙˆÙŠØ¨Ø§Øª (Desktop Only â€” Mobile uses AppChromeShell nav)  */}
       {
-        !journeyMode && (
+        false && !journeyMode && (
           <div className="hidden md:block fixed bottom-0 left-0 right-0 z-50">
             <TabNavigation
               hidden={hideBottomDock}
@@ -1453,7 +1455,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {/*  Layout Mode Switcher â€” Ù…ÙØ¨Ø¯Ù‘Ù„ Ø§Ù„Ø£ÙˆØ¶Ø§Ø¹  */}
       {
-        !journeyMode && !hideBottomDock && (
+        false && !journeyMode && !hideBottomDock && (
           <LayoutModeSwitcher />
         )
       }

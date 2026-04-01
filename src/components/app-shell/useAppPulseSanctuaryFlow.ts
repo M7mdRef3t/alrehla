@@ -405,8 +405,7 @@ export function useAppPulseSanctuaryFlow({
     breathingFromCocoonRef.current = false;
     setShowCocoon(false);
     suppressCocoonFor(4000);
-    goToGoals();
-  }, [goToGoals, setShowCocoon, suppressCocoonFor]);
+  }, [setShowCocoon, suppressCocoonFor]);
 
   const handleCocoonClose = useCallback(() => {
     breathingFromCocoonRef.current = false;

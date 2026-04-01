@@ -23,26 +23,24 @@ export function sanitizePhone(value: unknown): { raw: string; normalized: string
   let digits = text.replace(/\D/g, "");
   if (!digits) return null;
 
-  // 2. Normalize and check Egyptian prefixes
+  // 2. Normalize Egyptian prefixes specifically to fix local entry
   // If user typed 01... (11 digits), remove the 0 -> becomes 1...
   if (digits.startsWith("0") && digits.length === 11) {
     digits = digits.slice(1);
   }
 
-  // International format (20...) - must be 12 digits
-  if (digits.startsWith("20") && digits.length === 12) {
-    const mobilePrefix = digits.slice(2, 4); // The "10", "11", etc.
-    if (["10", "11", "12", "15"].includes(mobilePrefix)) {
-      return { raw: text, normalized: digits };
-    }
-  }
-
-  // Local format after dropping 0 (1...) - must be 10 digits
+  // If after dropping 0 it's 10 digits starting with 10,11,12,15 -> Local Egyptian -> Prepend 20
   if (digits.length === 10 && ["10", "11", "12", "15"].includes(digits.slice(0, 2))) {
     return { raw: text, normalized: `20${digits}` };
   }
 
-  // Final Strict Rejection: No loose fallbacks.
+  // 3. For all other numbers (GCC, International, etc.)
+  // We accept any digit string between 10 and 15 digits (standard E.164 length without +)
+  if (digits.length >= 10 && digits.length <= 15) {
+    return { raw: text, normalized: digits };
+  }
+
+  // Final Strict Rejection: Doesn't look like a valid phone number length
   return null;
 }
 

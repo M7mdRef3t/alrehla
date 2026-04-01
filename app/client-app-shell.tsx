@@ -12,9 +12,13 @@ import { PWAInstallProvider } from "../src/contexts/PWAInstallContext";
 import { AnalyticsConsentBanner } from "../src/components/AnalyticsConsentBanner";
 import { AnalyticsDiagnosticsOverlay } from "../src/components/AnalyticsDiagnosticsOverlay";
 import { PlatformHeader } from "../src/components/PlatformHeader";
+import type { PostAuthIntent } from "../src/utils/postAuthIntent";
 
 const App = dynamic(() => import("../src/App"), { ssr: false });
 const Landing = dynamic(() => import("../src/components/Landing").then((m) => m.Landing), { ssr: false }) as typeof import("../src/components/Landing").Landing;
+const GoogleAuthModal = dynamic(() => import("../src/components/GoogleAuthModal").then((m) => m.GoogleAuthModal), {
+  ssr: false
+}) as typeof import("../src/components/GoogleAuthModal").GoogleAuthModal;
 const Analytics = dynamic(() => import("@vercel/analytics/react").then((m) => m.Analytics), { ssr: false });
 const SpeedInsights = dynamic(() => import("@vercel/speed-insights/react").then((m) => m.SpeedInsights), { ssr: false });
 
@@ -72,25 +76,36 @@ interface ClientAppShellProps {
 export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
   const [mounted, setMounted] = useState(false);
   const [shouldLoadFullApp, setShouldLoadFullApp] = useState(true);
+  const [lockFullAppMode, setLockFullAppMode] = useState(false);
+  const [landingAuthIntent, setLandingAuthIntent] = useState<PostAuthIntent | null>(null);
 
   const handleExitToLanding = useCallback(() => {
     if (typeof window !== "undefined" && window.location.pathname !== "/") {
       return;
     }
+    if (lockFullAppMode) {
+      return;
+    }
     setShouldLoadFullApp(false);
-  }, []);
+  }, [lockFullAppMode]);
 
   const startRecoveryFromLanding = useCallback(() => {
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
     }
+    setLockFullAppMode(true);
     setShouldLoadFullApp(true);
+  }, []);
+
+  const openLoginFromLanding = useCallback(() => {
+    setLandingAuthIntent({ kind: "login", createdAt: Date.now() });
   }, []);
 
   const openAppScreenFromLanding = useCallback((screen: string) => {
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, `${APP_SCREEN_BOOT_ACTION_PREFIX}${screen}`);
     }
+    setLockFullAppMode(true);
     setShouldLoadFullApp(true);
   }, []);
 
@@ -130,7 +145,11 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
 
   useEffect(() => {
     setMounted(true);
-    setShouldLoadFullApp(shouldBootIntoFullApp());
+    const bootIntoFullApp = shouldBootIntoFullApp();
+    setShouldLoadFullApp(bootIntoFullApp);
+    if (bootIntoFullApp) {
+      setLockFullAppMode(true);
+    }
     applyDesignSystemTokens();
     onBeforeInit?.();
     initAnalytics();
@@ -152,7 +171,7 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
           <PWAInstallProvider>
             <PlatformHeader
               activeScreen="landing"
-              onLogin={startRecoveryFromLanding}
+              onLogin={openLoginFromLanding}
               onNavigate={handleLandingNavigate}
             />
             <Suspense fallback={<AwarenessSkeleton />}>
@@ -160,6 +179,14 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
                 onStartJourney={startRecoveryFromLanding}
               />
             </Suspense>
+            {landingAuthIntent && (
+              <GoogleAuthModal
+                isOpen
+                intent={landingAuthIntent}
+                onClose={() => setLandingAuthIntent(null)}
+                onNotNow={() => setLandingAuthIntent(null)}
+              />
+            )}
           </PWAInstallProvider>
         )}
         <AnalyticsConsentBanner />

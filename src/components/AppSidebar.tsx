@@ -1002,14 +1002,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         </button>
       )}
 
-      {/* Mobile Menu Button */}
+      {/* Mobile Menu Button (Subtle Glassmorphic) */}
       <button
         type="button"
         onClick={handleOpen}
-        className="fixed top-[max(env(safe-area-inset-top),1rem)] right-4 z-40 md:hidden w-12 h-12 flex items-center justify-center bg-teal-600 text-white rounded-full active:scale-95 transition-transform"
+        className="fixed top-[max(env(safe-area-inset-top),1rem)] right-4 z-40 md:hidden w-11 h-11 flex items-center justify-center rounded-full active:scale-95 transition-all duration-300 bg-slate-900/40 backdrop-blur-md border border-white/10 text-slate-400 hover:bg-white/10 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]"
         title="افتح محطة الانطلاق"
       >
-        <PanelRightOpen className="w-6 h-6" />
+        <PanelRightOpen className="w-5 h-5 pointer-events-none" />
       </button>
 
       {/* Mobile Sidebar */}

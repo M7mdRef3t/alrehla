@@ -60,6 +60,40 @@ export default function DawayirApp() {
                 setSourceStory(source);
             }
         }
+    }, []);
+
+    // Hook-to-Convo Bridge (Weather -> Dawayir)
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        
+        const searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.get('surface') === 'weather-funnel') {
+            const weatherContextRaw = window.sessionStorage.getItem('weather_context');
+            if (weatherContextRaw) {
+                try {
+                    const weatherCtx = JSON.parse(weatherContextRaw);
+                    if (weatherCtx && weatherCtx.weatherLevel) {
+                        // Prevent infinite loop on remount
+                        window.sessionStorage.removeItem('weather_context');
+                        
+                        const aiAnswers = [
+                            `المجالات التي تشغل تفكيري: ${weatherCtx.dominantSource} (تحديداً العلاقات المستنزفة)`,
+                            `مستوى الاستنزاف: حالة ${weatherCtx.weatherLevel} - ${weatherCtx.overallHeadline}`,
+                            `الحاجة التي أتجنبها: ${weatherCtx.behavioralExplanation}`
+                        ];
+                        
+                        // Fire analysis automatically, acting as if the user completed the chat
+                            analyzeAnswers(aiAnswers, subInfo?.features.maxMapNodes || 7);
+                    }
+                } catch (e) {
+                    console.error("Failed to parse weather context", e);
+                }
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [analyzeAnswers, subInfo]);
+
+    useEffect(() => {
         if (supabase) {
             const client = supabase;
             const loadOnboardingState = async (userId: string) => {
@@ -226,33 +260,66 @@ export default function DawayirApp() {
             style={{ background: "#020408", colorScheme: "dark" }}
             {...gestureHandlers}
         >
-            {/* Sanctuary Overlay - Zero UI Dimming */}
+            {/* Sanctuary Overlay — Cinematic Void */}
             <AnimatePresence>
                 {isSanctuary && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-[100] bg-slate-950/80 backdrop-blur-xl flex flex-col items-center justify-center transition-all cursor-pointer"
+                        transition={{ duration: 0.8 }}
+                        className="absolute inset-0 z-[100] flex flex-col items-center justify-center"
+                        style={{ background: "rgba(1,2,7,0.95)", backdropFilter: "blur(28px)" }}
                         onClick={exitSanctuary}
+                        dir="rtl"
                     >
+                        {/* Ambient teal orb */}
+                        <div aria-hidden style={{ position:"absolute", width:480, height:480, borderRadius:"50%", background:"radial-gradient(circle, rgba(45,212,191,0.06) 0%, transparent 65%)", top:"50%", left:"50%", transform:"translate(-50%,-50%)", pointerEvents:"none" }} />
+
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="text-center space-y-6 p-8"
+                            initial={{ scale: 0.85, opacity: 0, filter: "blur(8px)" }}
+                            animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
+                            transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                            className="text-center space-y-6 p-8 max-w-xs"
+                            onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="w-20 h-20 rounded-full border border-teal-500/20 bg-teal-500/5 mx-auto flex items-center justify-center">
-                                <div className="w-3 h-3 rounded-full bg-teal-400 animate-pulse shadow-[0_0_15px_rgba(45,212,191,0.8)]" />
+                            {/* Pulse rings */}
+                            <div className="relative flex items-center justify-center mx-auto" style={{ width: 96, height: 96 }}>
+                                <motion.div
+                                    className="absolute rounded-full"
+                                    style={{ width: 96, height: 96, border: "1px solid rgba(45,212,191,0.12)" }}
+                                    animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.15, 0.5] }}
+                                    transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+                                />
+                                <motion.div
+                                    className="absolute rounded-full"
+                                    style={{ width: 66, height: 66, border: "1px solid rgba(45,212,191,0.22)" }}
+                                    animate={{ scale: [1, 1.1, 1], opacity: [0.7, 0.3, 0.7] }}
+                                    transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+                                />
+                                <div
+                                    className="relative z-10 rounded-full flex items-center justify-center"
+                                    style={{ width: 42, height: 42, background: "rgba(45,212,191,0.08)", border: "1px solid rgba(45,212,191,0.28)", boxShadow: "0 0 24px rgba(45,212,191,0.18)" }}
+                                >
+                                    <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "#2dd4bf", boxShadow: "0 0 14px rgba(45,212,191,0.9)" }} />
+                                </div>
                             </div>
-                            <div className="space-y-2">
-                                <h2 className="text-2xl font-black text-white tracking-tight">مساحة السكون</h2>
-                                <p className="text-slate-400 text-sm font-medium">خذ نفسًا عميقًا. كل شيء متوقف الآن حتى تستعيد هدوءك.</p>
+
+                            <div className="space-y-3">
+                                <h2 className="text-2xl font-black text-white tracking-tight">الكون واقف معاك</h2>
+                                <p className="text-sm leading-relaxed font-medium" style={{ color: "rgba(148,163,184,0.65)" }}>
+                                    كل حاجة متوقفة دلوقتي. خذ نفسًا وارجع لما تكون جاهز.
+                                </p>
                             </div>
+
                             <button
                                 onClick={exitSanctuary}
-                                className="text-[10px] font-black text-teal-400/50 uppercase tracking-[0.3em] hover:text-teal-400 transition-all mt-10"
+                                className="text-[11px] font-black uppercase tracking-[0.28em] transition-colors"
+                                style={{ color: "rgba(45,212,191,0.4)" }}
+                                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(45,212,191,0.85)"; }}
+                                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(45,212,191,0.4)"; }}
                             >
-                                انقر للعودة إلى الرحلة
+                                الضغط للعودة
                             </button>
                         </motion.div>
                     </motion.div>

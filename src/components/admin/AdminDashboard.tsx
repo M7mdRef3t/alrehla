@@ -395,6 +395,64 @@ const AdminGate: FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
+const CollapsibleSidebarGroup: FC<{
+  group: NavGroup;
+  visibleItemsInGroup: Array<{ id: AdminTab; label: string; icon: ReactNode }>;
+  effectiveTab: AdminTab;
+  handleTabChange: (next: AdminTab) => void;
+}> = ({ group, visibleItemsInGroup, effectiveTab, handleTabChange }) => {
+  // Auto-expand if the active tab is inside this group
+  const isActiveGroup = visibleItemsInGroup.some(item => item.id === effectiveTab);
+  const [expanded, setExpanded] = useState(isActiveGroup);
+
+  return (
+    <div className="space-y-1">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between px-4 py-2 hover:bg-slate-800/40 rounded-xl transition-colors focus:outline-none group"
+      >
+        <span className="text-[11px] font-black text-slate-500 group-hover:text-slate-300 uppercase tracking-widest transition-colors">
+          {group.title}
+        </span>
+        <span className="text-slate-600 group-hover:text-slate-400 transition-transform">
+          {expanded ? <X className="w-3 h-3 opacity-50" /> : <Menu className="w-3 h-3 opacity-50 scale-x-125" />}
+        </span>
+      </button>
+      
+      {expanded && (
+        <div className="space-y-1.5 pt-1 animate-in slide-in-from-top-2 fade-in duration-200">
+          {visibleItemsInGroup.map((item) => {
+            const isActive = effectiveTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleTabChange(item.id)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group/item ${
+                  isActive
+                    ? "bg-slate-800/80 border-l border-teal-500/50 text-white shadow-md shadow-slate-900/50"
+                    : "border-transparent text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`p-2 rounded-lg transition-colors shadow-sm ${isActive ? "text-teal-400 bg-teal-500/20 ring-1 ring-teal-500/30" : "text-slate-500 group-hover/item:text-slate-300 bg-slate-900/50 shadow-inner border border-white/5"}`}>
+                    {item.icon}
+                  </div>
+                  <span className={`text-[13px] font-bold tracking-wide transition-all ${isActive ? "text-white" : "group-hover/item:-translate-x-0.5"}`}>
+                    {CLEAN_NAV_LABELS[item.id] ?? item.label}
+                  </span>
+                </div>
+                <div className={`mr-auto transition-opacity duration-300 flex items-center z-10 ${isActive ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'}`} onClick={(e) => e.stopPropagation()}>
+                  <AdminTooltip content={NAV_TOOLTIPS[item.id] || "القسم مخصص للإدارة المركزية"} position="bottom" />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
   const [tab, setTab] = useState<AdminTab>(getTabFromLocation);
   const [showAccount, setShowAccount] = useState(false);
@@ -504,39 +562,13 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
               if (visibleItemsInGroup.length === 0) return null;
 
               return (
-                <div key={group.title} className="space-y-1">
-                  <h3 className="px-4 text-[11px] font-black text-slate-500 uppercase tracking-widest mb-3">
-                    {group.title}
-                  </h3>
-                  <div className="space-y-1.5">
-                    {visibleItemsInGroup.map((item) => {
-                      const isActive = effectiveTab === item.id;
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => handleTabChange(item.id)}
-                          className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group ${
-                            isActive
-                            ? "bg-slate-800/80 border-l border-teal-500/50 text-white shadow-md shadow-slate-900/50"
-                            : "border-transparent text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
-                            }`}
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={`p-2 rounded-lg transition-colors shadow-sm ${isActive ? "text-teal-400 bg-teal-500/20 ring-1 ring-teal-500/30" : "text-slate-500 group-hover:text-slate-300 bg-slate-900/50 shadow-inner border border-white/5"}`}>
-                              {item.icon}
-                            </div>
-                            <span className={`text-[13px] font-bold tracking-wide transition-all ${isActive ? "text-white" : "group-hover:-translate-x-0.5"}`}>
-                              {CLEAN_NAV_LABELS[item.id] ?? item.label}
-                            </span>
-                          </div>
-                          <div className={`mr-auto transition-opacity duration-300 flex items-center z-10 ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} onClick={(e) => e.stopPropagation()}>
-                            <AdminTooltip content={NAV_TOOLTIPS[item.id] || "القسم مخصص للإدارة المركزية"} position="bottom" />
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                <CollapsibleSidebarGroup
+                  key={group.title}
+                  group={group}
+                  visibleItemsInGroup={visibleItemsInGroup}
+                  effectiveTab={effectiveTab}
+                  handleTabChange={handleTabChange}
+                />
               );
             })}
           </nav>

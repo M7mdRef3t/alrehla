@@ -20,7 +20,7 @@ describe("normalizeMarketingLeadPayload", () => {
 
     expect(normalized).toMatchObject({
       email: "test@example.com",
-      phone: "+201002003000",
+      phone: "201002003000",
       name: "Mohamed",
       source: "meta_form",
       sourceType: "manual_import",
@@ -33,6 +33,28 @@ describe("normalizeMarketingLeadPayload", () => {
 
   it("rejects invalid emails", () => {
     expect(normalizeMarketingLeadPayload({ email: "bad-email" }, "website")).toBeNull();
+  });
+
+  it("accepts phone-only leads", () => {
+    const normalized = normalizeMarketingLeadPayload(
+      {
+        phone: "01002003000",
+        source: "onboarding",
+        sourceType: "website",
+        status: "engaged"
+      },
+      "website"
+    );
+
+    expect(normalized).toMatchObject({
+      email: null,
+      phone: "201002003000",
+      phoneNormalized: "201002003000",
+      phoneRaw: "01002003000",
+      source: "onboarding",
+      sourceType: "website",
+      status: "engaged"
+    });
   });
 });
 

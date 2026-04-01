@@ -89,7 +89,7 @@ function buildStep1Html(opts: { firstName: string; personalLink: string; unsubLi
     name: opts.firstName || undefined,
     personalLink: opts.personalLink,
     previewText: "خريطة علاقاتك جاهزة — ابدأ الرحلة الآن",
-    senderName: "محمد",
+    senderName: "فريق عمل",
     unsubLink: opts.unsubLink,
   });
 }
@@ -99,7 +99,7 @@ function buildStep2Html(opts: { firstName: string; personalLink: string; unsubLi
     name: opts.firstName || undefined,
     personalLink: opts.personalLink,
     previewText: "الخريطة لسه مستنياك — مكانك محجوز",
-    senderName: "محمد",
+    senderName: "فريق عمل",
     unsubLink: opts.unsubLink,
   });
 }
@@ -109,7 +109,7 @@ function buildStep3Html(opts: { firstName: string; personalLink: string; unsubLi
     name: opts.firstName || undefined,
     personalLink: opts.personalLink,
     previewText: "رسالة أخيرة — اللينك ده هيوصلك لخريطتك في أي وقت",
-    senderName: "محمد",
+    senderName: "فريق عمل",
     unsubLink: opts.unsubLink,
   });
 }
@@ -237,7 +237,7 @@ export async function GET(request: Request) {
         const buildHtml = htmlBuilders[currentStep] ?? buildStep1Html;
         const html = buildHtml({ firstName, personalLink, unsubLink });
 
-        const replyTo = (row.payload?.reply_to as string | undefined) || "MohamedRefatMohamed@gmail.com";
+        const replyTo = (row.payload?.reply_to as string | undefined) || "hello@alrehla.app";
         outcome = await sendEmail(row.lead_email, subject, html, replyTo);
 
         // 5. Schedule next drip step (if not last step and lead hasn't started onboarding)
