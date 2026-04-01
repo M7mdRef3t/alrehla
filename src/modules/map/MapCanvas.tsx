@@ -26,6 +26,10 @@ import { soundManager } from "../../services/soundManager";
     COSMIC MAP CANVAS  Digital Sanctuary
     */
 
+function isLegacyMapUiEnabled(): boolean {
+  return false;
+}
+
 /*  Orbital Ring (Breathing)  */
 
 interface RingProps {
@@ -975,7 +979,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
           )}
         </AnimatePresence>
         {/* Phoenix Score — HIDDEN for clean map */}
-        {false && !isSimulation && (
+        {isLegacyMapUiEnabled() && !isSimulation && (
           <div className="absolute top-2 right-2 z-[90] rounded-xl bg-slate-900/80 border border-teal-500/30 px-3 py-2 text-[11px] text-right backdrop-blur-md">
             <div className="font-bold text-teal-200 flex items-center gap-1 justify-end">
               <span>Phoenix Score:</span>
@@ -1000,7 +1004,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
           </div>
         )}
         {/* Simulation Controls — HIDDEN for clean map */}
-        {false && (
+        {isLegacyMapUiEnabled() && (
           !isSimulation ? (
           <button
             onClick={() => {
@@ -1017,7 +1021,7 @@ export const MapCanvas: FC<MapCanvasProps> = ({
         ))}
         <DndContext onDragStart={onKineticDragStart} onDragMove={onKineticDragMove} onDragEnd={handleDragEnd} sensors={sensors}>
           <div className="absolute inset-0">
-            {false && shouldUseLightweightRendering && (
+            {isLegacyMapUiEnabled() && shouldUseLightweightRendering && (
               <div className="absolute top-2 right-2 z-[70] rounded-xl bg-slate-900/80 border border-slate-700 px-2.5 py-1.5 text-[10px] text-slate-300">
                 ت تفع ضع اأداء اعا عرض خفف
               </div>

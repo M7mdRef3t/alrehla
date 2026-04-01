@@ -117,6 +117,10 @@ const staggerContainer = {
   visible: { transition: { staggerChildren: 0.12 } }
 };
 
+function isLegacyUiEnabled(): boolean {
+  return false;
+}
+
 interface CoreMapScreenProps {
   category: AdviceCategory;
   goalId: string;
@@ -590,7 +594,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         className="relative z-20 text-center px-4 sm:px-6 pt-4 pb-1 flex flex-col items-center gap-2 pointer-events-none"
       >
         <AnimatePresence>
-          {/* HIDDEN */ false && !isSacredIsolation && (
+          {/* HIDDEN */ isLegacyUiEnabled() && !isSacredIsolation && (
             <motion.div
               variants={cosmicFade}
               className="flex flex-col items-center"
@@ -624,12 +628,12 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           Ø§Ù„Ù…Ù†Ø·Ù‚Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰ â€” Ù…Ø¤Ø´Ø±Ø§Øª Ø§Ù„ÙˆØ¶Ø¹ + Ø³Ø¤Ø§Ù„ Ø§Ù„ÙŠÙˆÙ…
           ØªØ¸Ù‡Ø± Ø¯Ø§Ø¦Ù…Ù‹Ø§ (60% Ù…Ù† Ø§Ù„Ø§Ù‡ØªÙ…Ø§Ù… Ø§Ù„Ø¨ØµØ±ÙŠ)
            */}
-      {/* HIDDEN: full HUD area */ false && !journeyMode && activeNodes.length > 0 && (
+      {/* HIDDEN: full HUD area */ isLegacyUiEnabled() && !journeyMode && activeNodes.length > 0 && (
         <div className="relative w-full z-30">
           <div className="max-w-[34rem] mx-auto px-4 pt-2 pb-3 flex flex-col items-center">
 
             {/* 1? HUD: OPERATIONAL (Sanctuary Mode) */}
-            {/* HIDDEN */ false && activeTab === "operational" && (
+            {/* HIDDEN */ isLegacyUiEnabled() && activeTab === "operational" && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{
@@ -716,7 +720,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/* 
           Ø§Ù„Ù†Ø¨Ø¶Ø© Ø§Ù„ØªÙƒØªÙŠÙƒÙŠØ©: ØªØ·ÙÙˆ Ø£Ø³ÙÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø© Ù„Ø³Ù‡ÙˆÙ„Ø© Ø§Ù„ÙˆØµÙˆÙ„
       */}
-      {/* HIDDEN */ false && !isSacredIsolation && !journeyMode && (
+      {/* HIDDEN */ isLegacyUiEnabled() && !isSacredIsolation && !journeyMode && (
         <div className="relative w-full z-30 flex justify-center my-2 md:fixed md:left-1/2 md:bottom-[8.5rem] md:-translate-x-1/2 md:my-0 md:z-40">
           <DailyPulseWidget />
         </div>
@@ -725,7 +729,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       {/* 
           Ø§Ù„Ù…Ù†Ø·Ù‚Ø© Ø§Ù„Ø¯Ø§Ø¹Ù…Ø© â€” ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø®Ø±ÙŠØ·Ø© ÙˆÙ…ÙÙ„Ø®Ù‘Øµ Ø§Ù„Ù…Ø­Ø·Ø§Øª (30%)
            */}
-      {/* HIDDEN */ false && !journeyMode && (
+      {/* HIDDEN */ isLegacyUiEnabled() && !journeyMode && (
         <motion.div
           variants={cosmicFade}
           style={{
@@ -821,7 +825,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {/*  Status Cards (Pulse Modes)  */}
       {
-        false && pulseMode === "low" && (
+        isLegacyUiEnabled() && pulseMode === "low" && (
           <motion.div
             className="mt-5 mx-auto max-w-[38rem] card-unified status-card-low px-4 py-4 text-right"
             variants={cosmicFade}
@@ -855,7 +859,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
       }
 
       {
-        false && (pulseMode === "low" ? null : (
+        isLegacyUiEnabled() && (pulseMode === "low" ? null : (
           <>
             {pulseMode === "angry" && (
               <motion.div
@@ -1045,7 +1049,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {/*  Pulse Insight (HUD Top Left)  */}
       {
-        false ? null : pulseInsight ? (
+        isLegacyUiEnabled() ? null : pulseInsight ? (
           <motion.div className="absolute z-20 top-[calc(env(safe-area-inset-top)+6.5rem)] md:top-[calc(env(safe-area-inset-top)+7rem)] left-4 w-64 glass-card bg-slate-950/70 border border-indigo-500/20 shadow-2xl backdrop-blur-md px-3 py-3 text-right pointer-events-auto rounded-lg" variants={cosmicFade}>
             <p className="text-xs font-semibold" style={{ color: "rgba(167, 139, 250, 0.9)" }}>{pulseInsight?.title}</p>
             <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(167, 139, 250, 0.6)" }}>{pulseInsight?.body}</p>
@@ -1063,7 +1067,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {/*  Next Step Decision (HUD Bottom Left)  */}
       {
-        false ? null : (nextStepDecision && onTakeNextStep && onRefreshNextStep) ? (
+        isLegacyUiEnabled() ? null : (nextStepDecision && onTakeNextStep && onRefreshNextStep) ? (
           <div className="absolute z-20 bottom-[12vh] left-4 w-72 origin-bottom-left scale-95 pointer-events-auto">
             <NextStepCard
               decision={nextStepDecision}
@@ -1162,7 +1166,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                         }}
                       />
                     )}
-                    {/* HIDDEN */ false && mapType === "masafaty" && (
+                    {/* HIDDEN */ isLegacyUiEnabled() && mapType === "masafaty" && (
                       <>
                         <EmergencyButton />
                         <ActionToolkit />
@@ -1410,14 +1414,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {/*  Ù†Ø¨Ø¶Ø© Ø§Ù„Ø¸Ù„ â€” Shadow Pulse Alert  */}
       {
-        false && !journeyMode && (
+        isLegacyUiEnabled() && !journeyMode && (
           <ShadowPulseAlert onSelectNode={handleNodeClick} />
         )
       }
 
       {/*  Floating Action Menu â€” Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¹Ø§Ø¦Ù…Ø©  */}
       {
-        false && !journeyMode && mode === "focus" && (
+        isLegacyUiEnabled() && !journeyMode && mode === "focus" && (
           <FloatingActionMenu
             onAddPerson={() => {
               onSelectNode(null);
@@ -1434,14 +1438,14 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {/*  Insights Sidebar â€” Ø§Ù„Ø´Ø±ÙŠØ· Ø§Ù„Ø¬Ø§Ù†Ø¨ÙŠ Ø¥Ø­ØµØ§Ø¦ÙŠØ§Øª  */}
       {
-        false && !journeyMode && (mode === "insights" || mode === "adaptive") && (
+        isLegacyUiEnabled() && !journeyMode && (mode === "insights" || mode === "adaptive") && (
           <InsightsSidebar onOpenArchive={() => setShowJournalArchive(true)} />
         )
       }
 
       {/*  Tab Navigation â€” Ø§Ù„ØªØ¨ÙˆÙŠØ¨Ø§Øª (Desktop Only â€” Mobile uses AppChromeShell nav)  */}
       {
-        false && !journeyMode && (
+        isLegacyUiEnabled() && !journeyMode && (
           <div className="hidden md:block fixed bottom-0 left-0 right-0 z-50">
             <TabNavigation
               hidden={hideBottomDock}
@@ -1455,7 +1459,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
 
       {/*  Layout Mode Switcher â€” Ù…ÙØ¨Ø¯Ù‘Ù„ Ø§Ù„Ø£ÙˆØ¶Ø§Ø¹  */}
       {
-        false && !journeyMode && !hideBottomDock && (
+        isLegacyUiEnabled() && !journeyMode && !hideBottomDock && (
           <LayoutModeSwitcher />
         )
       }
