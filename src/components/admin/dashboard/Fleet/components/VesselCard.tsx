@@ -70,7 +70,7 @@ export const VesselCard: React.FC<VesselCardProps> = ({ vessel, isActive, onClic
                             className={`h-full ${vessel.energyLevel > 0.7 ? 'bg-teal-500' : 'bg-slate-600'}`}
                         />
                     </div>
-                    <span className="text-[9px] font-black text-slate-500 uppercase">Fuel</span>
+                    <span className="text-[9px] font-black text-slate-500 uppercase">طاقة الوقود (Fuel)</span>
                 </div>
             </div>
 

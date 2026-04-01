@@ -81,11 +81,11 @@ export default function AlertsPanel() {
         if (ok) {
             setFeedback({
                 type: 'success',
-                message: newStatus === 'ack' ? 'Incident acknowledged.' : 'Incident resolved.'
+                message: newStatus === 'ack' ? 'تم استلام الإنذار بنجاح.' : 'تم تسجيل العطل كمحلول.'
             });
             void fetchIncidents();
         } else {
-            setFeedback({ type: 'error', message: 'Failed to update incident. Try again.' });
+            setFeedback({ type: 'error', message: 'فشل في التحديث. حاول تاني.' });
         }
         setActionIncidentId(null);
     }
@@ -96,10 +96,10 @@ export default function AlertsPanel() {
         const ok = await resetAlertIncidents();
         if (ok) {
             setExpandedId(null);
-            setFeedback({ type: 'success', message: 'All active alerts were reset.' });
+            setFeedback({ type: 'success', message: 'تم تصفير كل الإنذارات النشطة.' });
             void fetchIncidents();
         } else {
-            setFeedback({ type: 'error', message: 'Reset failed. Check admin permissions.' });
+            setFeedback({ type: 'error', message: 'فشل التصفير. راجع صلاحيات الأدمن.' });
         }
         setResetting(false);
     }
@@ -133,8 +133,8 @@ export default function AlertsPanel() {
                         <ShieldAlert className="w-5 h-5 text-red-500" />
                     </div>
                     <div>
-                        <h2 className="text-white font-medium">Alert Radar (War Room)</h2>
-                        <p className="text-sm text-gray-500">Active Signals & Incidents</p>
+                        <h2 className="text-white font-medium">رادار الطوارئ (غرفة العمليات)</h2>
+                        <p className="text-sm text-gray-500">الإشارات النشطة والأعطال (Incidents)</p>
                     </div>
                 </div>
 
@@ -142,7 +142,7 @@ export default function AlertsPanel() {
                     {incidents.length > 0 && (
                         <div className="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full">
                             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                            <span className="text-sm text-red-500 font-medium">{incidents.length} Active</span>
+                            <span className="text-sm text-red-500 font-medium">{incidents.length} نشط</span>
                         </div>
                     )}
                     <button
@@ -150,7 +150,7 @@ export default function AlertsPanel() {
                         disabled={loading || resetting || incidents.length === 0}
                         className="px-3 py-1.5 text-xs text-orange-300 bg-orange-500/10 border border-orange-500/20 rounded-lg hover:bg-orange-500/15 disabled:opacity-40 disabled:cursor-not-allowed transition"
                     >
-                        {resetting ? 'Resetting...' : 'Reset Mock Alerts'}
+                        {resetting ? 'جاري التصفير...' : 'تصفير (Reset Mock Alerts)'}
                     </button>
                     <button
                         onClick={fetchIncidents}
@@ -177,15 +177,15 @@ export default function AlertsPanel() {
                 {loading && incidents.length === 0 ? (
                     <div className="flex flex-col items-center justify-center p-12 text-gray-500 space-y-4">
                         <RefreshCw className="w-6 h-6 animate-spin opacity-50" />
-                        <p className="text-sm">Scanning signals...</p>
+                        <p className="text-sm">جاري فحص الإشارات...</p>
                     </div>
                 ) : incidents.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center text-gray-500">
                         <div className="w-16 h-16 rounded-full bg-[#1A1A1A] border border-white/5 flex items-center justify-center mb-4">
                             <CheckCircle className="w-8 h-8 text-green-500/50" />
                         </div>
-                        <p className="font-medium text-white mb-1">Systems Normal</p>
-                        <p className="text-sm">No active incidents detected by the radar.</p>
+                        <p className="font-medium text-white mb-1">النظام طبيعي ومستقر</p>
+                        <p className="text-sm">الرادار لم يرصد أي أعطال أو إشارات نشطة حالياً.</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -216,16 +216,16 @@ export default function AlertsPanel() {
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <span className="text-white font-medium">{inc.rule_key}</span>
                                                     <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded border ${getSeverityColor(inc.severity)}`}>
-                                                        {inc.severity}
+                                                        {inc.severity === 'critical' ? 'حرج' : inc.severity === 'high' ? 'عالي' : inc.severity === 'medium' ? 'متوسط' : inc.severity === 'low' ? 'منخفض' : inc.severity}
                                                     </span>
                                                     {inc.status === 'ack' && (
                                                         <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded border bg-blue-500/10 border-blue-500/20 text-blue-500">
-                                                            Acknowledged
+                                                            قيد التحقيق (Ack)
                                                         </span>
                                                     )}
                                                 </div>
                                                 <div className="text-sm text-gray-400 flex items-center gap-2">
-                                                    <span>Segment: <span className="text-gray-300">{inc.segment}</span></span>
+                                                    <span>المستوى: <span className="text-gray-300">{inc.segment}</span></span>
                                                     <span className="w-1 h-1 rounded-full bg-gray-700" />
                                                     <span className="flex items-center gap-1">
                                                         <Clock className="w-3 h-3" />
@@ -243,26 +243,26 @@ export default function AlertsPanel() {
                                             {/* Context & Signal */}
                                             <div className="grid grid-cols-2 gap-4 mb-6">
                                                 <div className="p-3 bg-[#111] rounded-lg border border-white/5">
-                                                    <h4 className="text-xs text-gray-500 uppercase font-bold mb-2">Signal Evidence</h4>
+                                                    <h4 className="text-xs text-gray-500 uppercase font-bold mb-2">دليل الإشارة (Evidence)</h4>
                                                     <div className="flex justify-between items-end">
                                                         <div>
                                                             <div className="text-2xl text-white font-medium">
                                                                 {currentValue}
                                                             </div>
-                                                            <div className="text-xs text-gray-500">Current Value</div>
+                                                            <div className="text-xs text-gray-500">القيمة الحالية</div>
                                                         </div>
                                                         <div className="text-right">
                                                             <div className="text-sm text-red-400 font-medium">
-                                                                Threshold: {thresholdValue}
+                                                                الحد الأقصى: {thresholdValue}
                                                             </div>
-                                                            <div className="text-xs text-gray-500">Samples: {samplesValue}</div>
+                                                            <div className="text-xs text-gray-500">العينات: {samplesValue}</div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div className="p-3 bg-[#111] rounded-lg border border-white/5">
-                                                    <h4 className="text-xs text-gray-500 uppercase font-bold mb-2">AI Summary</h4>
+                                                    <h4 className="text-xs text-gray-500 uppercase font-bold mb-2">تشخيص جارفيس (AI)</h4>
                                                     <p className="text-sm text-gray-300 leading-relaxed">
-                                                        {inc.action_hint || "No specific hint provided."}
+                                                        {inc.action_hint || "لا يوجد تلميحات إضافية مطروحة للحل الذاتي."}
                                                     </p>
                                                 </div>
                                             </div>
@@ -271,7 +271,7 @@ export default function AlertsPanel() {
                                             <div className="mb-6">
                                                 <h4 className="text-sm text-white font-medium flex items-center gap-2 mb-3">
                                                     <ListChecks className="w-4 h-4 text-emerald-500" />
-                                                    Recommended Playbook
+                                                    خطة التدخل المقترحة (Playbook)
                                                 </h4>
                                                 {checklistItems.length > 0 ? (
                                                     <div className="space-y-2">
@@ -288,12 +288,12 @@ export default function AlertsPanel() {
                                                         ))}
                                                     </div>
                                                 ) : (
-                                                    <div className="text-sm text-gray-500 italic">No specific playbook defined for this rule.</div>
+                                                    <div className="text-sm text-gray-500 italic">لا توجد خطة تدخل محددة (Playbook) لهذا الإنذار.</div>
                                                 )}
                                                 {inc.expected_impact && (
                                                     <div className="mt-4 text-xs inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
                                                         <TrendingDown className="w-3 h-3" />
-                                                        Expected Impact: <span className="font-bold">{inc.expected_impact}</span>
+                                                        التأثير المتوقع: <span className="font-bold">{inc.expected_impact}</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -306,7 +306,7 @@ export default function AlertsPanel() {
                                                         disabled={Boolean(actionIncidentId)}
                                                         className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed transition"
                                                     >
-                                                        {actionIncidentId === inc.id ? 'Updating...' : 'Acknowledge (Investigating)'}
+                                                        {actionIncidentId === inc.id ? 'جاري التحديث...' : 'استلام للتحقيق (Acknowledge)'}
                                                     </button>
                                                 )}
                                                 <button
@@ -314,7 +314,7 @@ export default function AlertsPanel() {
                                                     disabled={Boolean(actionIncidentId)}
                                                     className="px-4 py-2 bg-[#222] hover:bg-[#333] text-white text-sm font-medium rounded-lg border border-white/10 disabled:opacity-60 disabled:cursor-not-allowed transition"
                                                 >
-                                                    {actionIncidentId === inc.id ? 'Updating...' : 'Mark as Resolved'}
+                                                    {actionIncidentId === inc.id ? 'جاري التحديث...' : 'علامة كمحلول (Resolved)'}
                                                 </button>
                                             </div>
 

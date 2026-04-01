@@ -189,7 +189,7 @@ const PerformanceChart: React.FC = () => {
         <div>
           <h3 className="text-sm font-black text-white flex items-center gap-2">
             <BarChart3 className="w-4 h-4 text-teal-400" />
-            Performance Trend
+            مؤشر الأداء (Performance Trend)
             <AdminTooltip content="تحليل لحركة أداء المؤشرات المختارة على مدار الأيام لفهم توجه السلوك." position="right" />
           </h3>
           <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">آخر 14 يوم</p>
@@ -267,7 +267,7 @@ const PlatformTable: React.FC = () => (
     <div className="flex items-center gap-2 mb-6">
       <h3 className="text-sm font-black text-white flex items-center gap-2">
         <BarChart3 className="w-4 h-4 text-indigo-400" />
-        Platform Performance Breakdown
+        أداء المنصات (Platform Breakdown)
       </h3>
       <AdminTooltip content="تفصيل لأداء كل منصة إعلانية (ميتا، جوجل، إلخ) لمعرفة الأفضل في جلب التحويلات الموثوقة." position="left" />
     </div>
@@ -318,7 +318,7 @@ const CACAnalysisSection: React.FC = () => (
     <div className="flex items-center justify-between mb-6">
       <h3 className="text-sm font-black text-white flex items-center gap-2">
         <BrainCircuit className="w-4 h-4 text-amber-400" />
-        CAC Root Cause Analysis
+        تحليل أسباب التكلفة (CAC Root Cause)
         <AdminTooltip content="تحليل يعتمد على الذكاء الاصطناعي لفهم التغيرات في تكلفة اكتساب العميل (CAC)." position="right" />
       </h3>
       <span className="text-[9px] text-slate-500 font-mono">AI-powered</span>
@@ -362,7 +362,7 @@ const RecommendationsSection: React.FC = () => {
       <div className="flex items-center justify-between gap-2 mb-6">
         <h3 className="text-sm font-black text-white flex items-center gap-2">
           <Lightbulb className="w-4 h-4 text-teal-400" />
-          AI Smart Recommendations
+          توصيات جارفيس الذكية (AI Recommendations)
           <AdminTooltip content="توصيات آلية مبنية على البيانات لتقليل التكلفة وزيادة النمو في المنصات الإعلانية." position="right" />
         </h3>
         <span className="px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 text-[9px] font-black border border-teal-500/20">
@@ -433,7 +433,7 @@ const TopAdsSection: React.FC = () => (
     <div className="flex items-center justify-between mb-6">
       <h3 className="text-sm font-black text-white flex items-center gap-2">
         <Target className="w-4 h-4 text-rose-400" />
-        Top Ads This Week
+        أفضل الإعلانات هذا الأسبوع (Top Ads)
         <AdminTooltip content="أعلى الإعلانات أداءً لمعرفة المضمون (Creative) الذي يتردد صداه مع الجمهور الآن." position="right" />
       </h3>
       <span className="text-[9px] text-slate-500 font-mono">Analyze & Iterate</span>
@@ -538,10 +538,11 @@ export const AdAnalyticsDashboard: React.FC = () => {
         <div>
           <h2 className="text-2xl font-black text-white flex items-center gap-3 mb-2">
             <BarChart3 className="w-7 h-7 text-teal-400" />
-            Ad Analytics
+            تحليلات الإعلانات (Ad Analytics)
+            <AdminTooltip content="مركز متابعة كفاءة الحملات الإعلانية المتقاطعة (Cross-Platform) لمراقبة العائد على الاستثمار للملاذ المالي." position="bottom" />
           </h2>
           <p className="text-[10px] text-slate-500 uppercase tracking-widest font-mono mb-4">
-            Cross-Platform Campaign Intelligence • AI-Powered Insights
+            ذكاء الحملات الإعلانية • رؤى مدعومة من جارفيس
           </p>
           <ConnectedAccountsBar />
         </div>

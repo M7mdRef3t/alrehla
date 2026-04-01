@@ -93,7 +93,7 @@ export const FunnelAndEmergency: FC<FunnelAndEmergencyProps> = ({ funnelData, em
                             </div>
                             <span className="text-[10px] text-slate-500 font-mono tracking-wider flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-                                MEASUREMENT: ACTIVE
+                                القياس: نشط (ACTIVE)
                             </span>
                         </div>
                     </div>
@@ -138,7 +138,7 @@ export const FunnelAndEmergency: FC<FunnelAndEmergencyProps> = ({ funnelData, em
                                 </h3>
                                 <span className="text-[10px] text-rose-500 font-mono tracking-wider flex items-center gap-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
-                                    EMERGENCY RADAR (LATEST 5)
+                                    رادار الطوارئ (آخر 5)
                                 </span>
                             </div>
                         </div>

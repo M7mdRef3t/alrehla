@@ -108,7 +108,7 @@ export const RevenueEngineCard: FC<RevenueEngineCardProps> = ({
             </div>
             <div>
                 <h3 className="text-sm font-black uppercase tracking-widest text-white leading-none mb-1 flex items-center gap-2">
-                    Revenue Engine
+                    محرك الربحية (Revenue Engine)
                     <AdminTooltip
                         content="محرك الربحية: يراقب تدفق الزيارات من الروابط الإعلانية (Affiliate) ويقيس مدى صحة تحويل الزوار إلى مستخدمين واعين."
                         position="left"
@@ -135,7 +135,7 @@ export const RevenueEngineCard: FC<RevenueEngineCardProps> = ({
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
                 }`}
               >
-                {days} DAYS
+                {days} أيام
               </button>
             ))}
           </div>
@@ -146,33 +146,33 @@ export const RevenueEngineCard: FC<RevenueEngineCardProps> = ({
             className="inline-flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-[11px] font-black text-indigo-300 transition-all hover:bg-indigo-500/20 hover:border-indigo-400/50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin text-indigo-400" : ""}`} />
-            {syncing ? "SYNCING..." : "SYNC"}
+            {syncing ? "جاري المزامنة..." : "تحديث البيانات"}
           </button>
         </div>
       </div>
 
       <div className="relative z-10 grid grid-cols-2 gap-4 md:grid-cols-4">
         <Metric 
-            label="Exposed" 
+            label="مرات الظهور" 
             value={exposed} 
             hint="عدد مرات ظهور رابط التسجيل للمستخدمين (Impressions)." 
         />
         <Metric 
-            label="Clicked" 
+            label="النقرات الفعلية" 
             value={clicked} 
             hint="عدد مرات الضغط الفعلي على الرابط والدخول للانطلاق." 
         />
         <Metric 
-            label="CTR" 
+            label="معدل النقر (CTR)" 
             value={`${ctr}%`} 
             tone={ctr > 0 ? "good" : "default"} 
             hint="نسبة النقر للظهور (Click-Through Rate). كلما زادت، زادت جودة الإعلان أو المحتوى." 
         />
         <Metric
-          label="GATE-7"
-          value={gate7Critical ? "CRITICAL" : "OK"}
+          label="بوابة 7 (العمر الافتراضي)"
+          value={gate7Critical ? "وضع حرج" : "مستقر"}
           tone={gate7Critical ? "warn" : "good"}
-          hint="بوابة اليوم السابع: مقياس يقيم استمرارية الترافيك الجديد. إذا كانت حرجة، فهذا يعني انقطاع الزيارات."
+          hint="مقياس يقيم استمرارية الترافيك الجديد. إذا كانت حرجة، فهذا يعني انقطاع الزيارات."
         />
       </div>
 
@@ -243,14 +243,14 @@ export const RevenueEngineCard: FC<RevenueEngineCardProps> = ({
                     <AdminTooltip content="مؤشر يربط بين (مستوى الوعي) الذي يحققه أداة التشخيص وبين (إشارة الربحية/القرارات الشرائية). إستقرار هذا المؤشر يعني أن التوعية تعود بربح." position="bottom" />
                </div>
                <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] px-3 py-1 bg-black/30 rounded-lg drop-shadow-md">
-                   {consciousMetrics.status}
+                   {consciousMetrics.status === "strong" ? "ممتاز" : consciousMetrics.status === "watch" ? "تحت المراقبة" : "مستوى حرج"}
                </span>
            </div>
            
            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <Metric label="M-Consciousness" value={`${consciousMetrics.averageConsciousnessLevel}%`} tone={consciousMetrics.averageConsciousnessLevel >= 60 ? "good" : "default"} hint="متوسط وصول المستخدمين لنقاط الوعي داخل خرائطهم." />
-                <Metric label="Rev-Signal" value={`${consciousMetrics.revenueSignal}%`} tone={consciousMetrics.revenueSignal >= 40 ? "good" : "default"} hint="إشارة الاستجابات والقرارات الشرائية المسجلة." />
-                <Metric label="Alignment" value={`${consciousMetrics.alignmentScore}%`} tone={consciousMetrics.alignmentScore >= 70 ? "good" : consciousMetrics.alignmentScore < 45 ? "warn" : "default"} hint="التوافق النهائي للصحة الربحية لتجربة الوعي." />
+                <Metric label="مؤشر الوعي" value={`${consciousMetrics.averageConsciousnessLevel}%`} tone={consciousMetrics.averageConsciousnessLevel >= 60 ? "good" : "default"} hint="متوسط وصول المستخدمين لنقاط الوعي داخل خرائطهم." />
+                <Metric label="إشارة الأرباح" value={`${consciousMetrics.revenueSignal}%`} tone={consciousMetrics.revenueSignal >= 40 ? "good" : "default"} hint="إشارة الاستجابات والقرارات الشرائية المسجلة." />
+                <Metric label="مدى التوافق" value={`${consciousMetrics.alignmentScore}%`} tone={consciousMetrics.alignmentScore >= 70 ? "good" : consciousMetrics.alignmentScore < 45 ? "warn" : "default"} hint="التوافق النهائي للصحة الربحية لتجربة الوعي." />
            </div>
            
            <p className="text-[11px] md:text-xs leading-relaxed opacity-90 font-medium bg-black/20 p-3 rounded-xl border border-white/5">{consciousMetrics.note}</p>

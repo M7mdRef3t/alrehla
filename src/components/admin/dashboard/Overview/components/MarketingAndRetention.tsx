@@ -59,7 +59,7 @@ export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreak
                                 <AdminTooltip content="تحليل لـ (utm_source). لو بتبعت ترافيك من تيك توك، جوجل، أو انستجرام، هنا هتتأكد بيكملوا لحد جوا ولا لأ وتشوف العدد الكلي." position="bottom" />
                             </h3>
                             <p className="text-[10px] text-slate-500 font-mono tracking-wider flex items-center gap-2">
-                                TRAFFIC ORIGINS ANALYSIS
+                                تحليل منشأ الزيارات (TRAFFIC ORIGINS)
                             </p>
                         </div>
                     </div>
@@ -75,7 +75,7 @@ export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreak
                             <div key={idx} className={`relative flex justify-between items-center px-4 rounded-xl bg-slate-900/60 border border-white/5 hover:bg-slate-900/80 transition-all overflow-hidden group/source ${sourcesGene.detail === "compact" ? "py-2.5" : "py-3"}`}>
                                 <div className="absolute left-0 top-0 h-full w-1 bg-teal-500 opacity-0 group-hover/source:opacity-100 transition-opacity" />
                                 <div className="flex-1">
-                                    <span className="text-sm font-bold text-slate-200 block tracking-wide">{src.key || "Direct / Unknown"}</span>
+                                    <span className="text-sm font-bold text-slate-200 block tracking-wide">{src.key || "مباشر / غير محدد"}</span>
                                     <div className="w-full bg-slate-950 mt-2 rounded-full overflow-hidden h-1 border border-white/5">
                                         <div className="h-full bg-teal-400 group-hover/source:shadow-[0_0_10px_rgba(45,212,191,0.5)] transition-all" style={{ width: `${sources[0]?.count ? (src.count / sources[0].count) * 100 : 0}%` }} />
                                     </div>
@@ -103,7 +103,7 @@ export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreak
                             </h3>
                             <p className="text-[10px] text-slate-500 font-mono tracking-wider flex items-center gap-2">
                                 <Zap className="w-3 h-3 text-amber-500/70" />
-                                POST-ACQUISITION RETENTION (30D)
+                                الاستبقاء بعد الاستحواذ (30 يوم)
                             </p>
                         </div>
                     </div>
@@ -118,12 +118,12 @@ export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreak
                         <table className="w-full text-right text-[11px] font-mono border-collapse" dir="ltr">
                             <thead>
                                 <tr className="text-slate-500 border-b border-white/5">
-                                    <th className="p-3 font-bold uppercase tracking-widest text-left">Date</th>
-                                    <th className="p-3 font-bold uppercase tracking-widest text-center border-r border-white/5">Users</th>
-                                    <th className="p-3 font-bold uppercase tracking-widest text-center">Day 1</th>
-                                    <th className="p-3 font-bold uppercase tracking-widest text-center">Day 3</th>
-                                    <th className="p-3 font-bold uppercase tracking-widest text-center">Day 7</th>
-                                    <th className="p-3 font-bold uppercase tracking-widest text-center">Day 30</th>
+                                    <th className="p-3 font-bold uppercase tracking-widest text-left">التاريخ</th>
+                                    <th className="p-3 font-bold uppercase tracking-widest text-center border-r border-white/5">المستخدمين</th>
+                                    <th className="p-3 font-bold uppercase tracking-widest text-center">يوم 1</th>
+                                    <th className="p-3 font-bold uppercase tracking-widest text-center">يوم 3</th>
+                                    <th className="p-3 font-bold uppercase tracking-widest text-center">يوم 7</th>
+                                    <th className="p-3 font-bold uppercase tracking-widest text-center">يوم 30</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -145,7 +145,7 @@ export const MarketingAndRetention: FC<MarketingAndRetentionProps> = ({ utmBreak
                                 <div key={row.cohortDate} className="rounded-2xl border border-white/5 bg-slate-900/60 px-4 py-3 shadow-inner hover:bg-slate-900/80 transition-colors">
                                     <div className="mb-2 flex items-center justify-between border-b border-white/5 pb-2">
                                         <span className="text-xs font-black text-slate-200">{row.cohortDate}</span>
-                                        <span className="text-[10px] text-slate-400 font-mono tracking-wider px-2 py-0.5 bg-black/30 rounded-lg">Users: <span className="text-white font-bold">{row.cohortSize}</span></span>
+                                        <span className="text-[10px] text-slate-400 font-mono tracking-wider px-2 py-0.5 bg-black/30 rounded-lg">المستخدمين: <span className="text-white font-bold">{row.cohortSize}</span></span>
                                     </div>
                                     <div className="grid grid-cols-4 gap-2 text-xs font-mono text-center">
                                         <div className="flex flex-col gap-1"><span className="text-[9px] text-slate-500 uppercase">D1</span><span className={getColor(row.d1Pct)}>{fmtPct(row.d1Pct)}</span></div>

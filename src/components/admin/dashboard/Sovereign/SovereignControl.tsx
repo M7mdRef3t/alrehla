@@ -256,6 +256,7 @@ export const SovereignControl: FC = () => {
         <div className="flex items-center gap-2 p-6 border-b border-white/5 bg-white/5">
           <History className="w-5 h-5 text-slate-400" />
           <h2 className="text-sm font-black text-white uppercase tracking-widest">سجل السيادة (آخر النداءات)</h2>
+          <AdminTooltip content="أرشيف بكل الرسائل والنداءات (Broadcasts) اللي تم إرسالها من الحاكم (Sovereign) لكل الأعضاء، للسيطرة والمراجعة." position="top" />
         </div>
         <div className="divide-y divide-white/5 max-h-[300px] overflow-y-auto custom-scrollbar">
           {history.length > 0 ? (

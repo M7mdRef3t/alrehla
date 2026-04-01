@@ -64,14 +64,14 @@ export const EmotionalPricingCard: FC<EmotionalPricingCardProps> = ({ loading })
             </div>
             <div>
                 <h3 className="text-sm font-black uppercase tracking-widest text-white leading-none mb-1 flex items-center gap-2">
-                    Emotional Pricing
+                    التسعير العاطفي (Emotional Pricing)
                     <AdminTooltip 
                         content="نظام التسعير العاطفي: يقرأ حالة المستخدم ومستوى وعيه الحرج وقت الدفع (Friction) ويقدم له عروض إنقاذ (خصومات/هدايا) لمنع تسربه من الرحلة." 
                         position="left" 
                     />
                 </h3>
                 <span className="text-[10px] text-slate-500 font-mono tracking-wider">
-                    DYNAMIC RESCUE SYSTEM
+                    نظام الإنقاذ الديناميكي (DYNAMIC RESCUE SYSTEM)
                 </span>
             </div>
         </div>
@@ -79,19 +79,19 @@ export const EmotionalPricingCard: FC<EmotionalPricingCardProps> = ({ loading })
 
       <div className="relative z-10 grid grid-cols-1 gap-4 md:grid-cols-3">
         <Kpi 
-            title="Gifts" 
-            value={stats.giftsGrantedCount.toLocaleString("en-US")} 
+            title="بطاقات مجانية" 
+            value={stats.giftsGrantedCount.toLocaleString("ar-EG")} 
             icon={Gift} 
             hint="عدد المرات التي استنجد فيها النظام بمنح بطاقات مجانية (Gifts) لإنقاذ أشخاص في حالة حزن/غضب شديد ولم يقدروا على الدفع."
         />
         <Kpi
-          title="Discounts"
-          value={stats.discountOffersCount.toLocaleString("en-US")}
+          title="خصومات ذكية"
+          value={stats.discountOffersCount.toLocaleString("ar-EG")}
           icon={PercentCircle}
           hint="عدد الخصومات الديناميكية (Dynamic Discounts) التي ظهرت لمن واجهوا عقبة مالية بسيطة وظهرت عليهم علامات التردد."
         />
         <Kpi 
-            title="Conversion" 
+            title="نسبة التحويل" 
             value={`${stats.conversionRatePercent}%`} 
             icon={TrendingUp} 
             hint="معدل نجاح العروض العاطفية في تحويل المترددين إلى دافعين/مسجلين فعليين بالرحلة."

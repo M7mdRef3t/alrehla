@@ -315,9 +315,12 @@ export function MarketingOpsPanel() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-black tracking-tight">Marketing Ops</h2>
+          <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
+            إدارة الانتشار (Marketing Ops)
+            <AdminTooltip content="مركز تحكم شامل لإدارة التوزيع، وحملات إعادة الاستهداف، والمتابعة التلقائية أو اليدوية لتوسيع دائرة الرحلة." position="bottom" />
+          </h2>
           <p className="text-slate-500 text-xs mt-1">مركز التحكم في حملات الـ Outreach</p>
         </div>
         <button onClick={load} disabled={loading}
@@ -352,7 +355,7 @@ export function MarketingOpsPanel() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Email Analytics</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">تحليلات البريد (Email Analytics)</p>
                 <AdminTooltip content="تحليلات تفاعل الجمهور مع حملات البريد الإلكتروني. البيانات تُحدث لحظياً بمجرد فتح الإيميل أو النقر على الرابط عبر الـ Webhook." position="bottom" />
               </div>
               <p className="text-xs text-slate-400 mt-1">بيانات حقيقية من الـ Webhook</p>
@@ -450,7 +453,7 @@ export function MarketingOpsPanel() {
         >
           <div className="flex items-center gap-2">
             {showQuickSend ? <ChevronUp className="w-4 h-4 text-indigo-400" /> : <ChevronDown className="w-4 h-4 text-indigo-400" />}
-            <span className="text-[11px] text-slate-500">{availableLeads.length} lead متاح</span>
+            <span className="text-[11px] text-slate-500">{availableLeads.length} جهة متاحة (Lead)</span>
           </div>
           <div>
             <div className="flex items-center justify-end gap-2">

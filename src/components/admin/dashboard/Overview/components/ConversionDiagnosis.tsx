@@ -71,7 +71,7 @@ export const ConversionDiagnosis: FC<ConversionDiagnosisProps> = ({ data, loadin
                             )}
                         </div>
                         <span className="text-[10px] text-slate-500 font-mono tracking-wider flex items-center gap-2">
-                            DIAGNOSTICS: RUNNING
+                            التشخيص: قيد العمل (DIAGNOSTICS: RUNNING)
                         </span>
                     </div>
                 </div>

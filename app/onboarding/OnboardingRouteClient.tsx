@@ -25,7 +25,7 @@ export default function OnboardingRouteClient() {
       onComplete={() => {
         // Send user directly to sanctuary map instead of landing page.
         window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
-        window.location.href = "/dawayir";
+        window.location.href = "/";
       }}
     />
   );

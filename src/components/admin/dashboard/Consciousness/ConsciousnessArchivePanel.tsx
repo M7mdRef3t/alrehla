@@ -14,8 +14,8 @@ import {
     Activity
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-// Ensure correct import path based on previous file content
 import { type MemoryMatch } from "../../../../services/consciousnessService";
+import { AdminTooltip } from "../Overview/components/AdminTooltip";
 
 // Mock service if not fully implemented, or use existing
 // Logic: reusing the existing fetch logic but enhancing UI
@@ -91,7 +91,10 @@ export const ConsciousnessArchivePanel: FC = () => {
                                 <Brain className="w-6 h-6 text-purple-300" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-black text-white tracking-tight">أرشيف الوعي</h2>
+                                <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                                    أرشيف الوعي
+                                    <AdminTooltip content="سجل دائم ومحرك بحث دلالي (Semantic Search) بيوصل لكل اللحظات، النبضات، والمحادثات المخزنة في ذاكرة النظام للاستدلال السريع." position="bottom" />
+                                </h2>
                                 <p className="text-xs font-mono text-purple-300/80 mt-1">Consciousness Archive v1.0</p>
                             </div>
                         </div>
@@ -141,7 +144,7 @@ export const ConsciousnessArchivePanel: FC = () => {
                     <input
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="بحث في الذاكرة (semantic search)..."
+                        placeholder="بحث في الذاكرة (Semantic Search)..."
                         className="w-full bg-slate-900 border border-slate-700 rounded-xl pr-10 pl-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors"
                     />
                 </div>
@@ -152,7 +155,7 @@ export const ConsciousnessArchivePanel: FC = () => {
                 {loading ? (
                     <div className="col-span-full flex flex-col items-center justify-center pt-20">
                         <div className="w-12 h-12 rounded-full border-4 border-purple-500/20 border-t-purple-500 animate-spin mb-4" />
-                        <p className="text-xs font-mono text-purple-400 animate-pulse">Retrieving Neural Patterns...</p>
+                        <p className="text-xs font-mono text-purple-400 animate-pulse">جاري استرجاع الأنماط العصبية...</p>
                     </div>
                 ) : filteredItems.length === 0 ? (
                     <div className="col-span-full flex flex-col items-center justify-center pt-20 text-slate-500 text-center">
@@ -252,14 +255,14 @@ export const ConsciousnessArchivePanel: FC = () => {
                                     <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800">
                                         <h5 className="text-[10px] text-slate-500 uppercase mb-2">المصدر</h5>
                                         <div className="text-sm font-bold text-white capitalize flex items-center gap-2">
-                                            {selectedMemory.source || "Unknown"}
+                                            {selectedMemory.source || "غير معروف"}
                                         </div>
                                     </div>
                                     <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800">
                                         <h5 className="text-[10px] text-slate-500 uppercase mb-2">الحالة الشعورية (Mood)</h5>
                                         <div className="text-sm font-bold text-white capitalize">
                                             {/* Mood logic removed as it's not in MemoryMatch */}
-                                            N/A
+                                            غير متوفر
                                         </div>
                                     </div>
                                 </div>

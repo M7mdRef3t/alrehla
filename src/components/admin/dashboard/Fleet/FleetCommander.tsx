@@ -5,6 +5,7 @@ import { Rocket, Shield, Zap, Search, LayoutGrid, ListFilter, Radar } from 'luci
 import { useFleetState } from '../../../../state/fleetState';
 import { FleetEngine } from '../../../../services/fleet/FleetEngine';
 import { VesselCard } from './components/VesselCard';
+import { AdminTooltip } from '../Overview/components/AdminTooltip';
 
 export const FleetCommander: React.FC = () => {
     const { vessels, activeVesselId, routingDirective, setActiveVessel, isSandboxEnforced } = useFleetState();
@@ -33,7 +34,10 @@ export const FleetCommander: React.FC = () => {
                     <div className="space-y-2">
                         <div className="flex items-center gap-3">
                             <Rocket className="w-7 h-7 text-indigo-400" />
-                            <h3 className="text-3xl font-black text-white tracking-tighter">قائد الأسطول (Fleet Commander)</h3>
+                            <h3 className="text-3xl font-black text-white tracking-tighter flex items-center gap-3">
+                                قائد الأسطول (Fleet Commander)
+                                <AdminTooltip content="مركز تحكم الأسطول: يتيح توجيه حالتك الذهنية وتعيين المركبة الأنسب للمهام الحالية." position="bottom" />
+                            </h3>
                         </div>
                         <p className="text-sm text-slate-400 max-w-xl">
                             إدارة المشاريع بناءً على بصمتك الطاقية. النظام بيعيد توجيهك للسفينة الأنسب لحالتك الذهنية الحالية.
@@ -43,7 +47,10 @@ export const FleetCommander: React.FC = () => {
                     <div className="bg-slate-950/50 p-4 rounded-2xl border border-white/5 flex flex-col items-center min-w-[200px]">
                         <div className="flex items-center gap-2 mb-1">
                             <Radar className="w-4 h-4 text-teal-400 animate-pulse" />
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Routing Directive</span>
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                                مسار التوجيه (Routing Directive)
+                                <AdminTooltip content="التوجيه التلقائي للمركبات بناءً على خوارزميات الاستقرار والنبض." position="bottom" />
+                            </span>
                         </div>
                         <p className="text-xs font-bold text-teal-400 text-center uppercase">{routingDirective}</p>
                     </div>
@@ -55,7 +62,10 @@ export const FleetCommander: React.FC = () => {
                 {/* Vessels Sidebar */}
                 <div className="lg:col-span-3 space-y-6">
                     <div className="flex justify-between items-center px-2">
-                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em]">Active Fleet Vessels</h4>
+                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
+                            مركبات الأسطول النشطة
+                            <AdminTooltip content="المركبات الجاهزة للاستخدام للقيام بمهام بتركيز عالي." position="left" />
+                        </h4>
                         <div className="flex gap-2">
                             <button className="p-2 bg-white/5 rounded-lg border border-white/5 text-slate-500 hover:text-white transition-all">
                                 <Search className="w-4 h-4" />
@@ -83,7 +93,10 @@ export const FleetCommander: React.FC = () => {
                     <div className="admin-glass-card p-6 border-rose-500/20 bg-rose-500/5 rounded-3xl">
                         <div className="flex items-center gap-3 mb-4">
                             <Shield className={`w-5 h-5 ${isSandboxEnforced ? 'text-rose-500 animate-pulse' : 'text-slate-600'}`} />
-                            <h5 className="font-bold text-sm text-white uppercase">Sandbox Protocol</h5>
+                            <h5 className="font-bold text-sm text-white uppercase flex items-center gap-2">
+                                بروتوكول العزل (Sandbox)
+                                <AdminTooltip content="وضع العزل التام: يمنع التشتت الخارجي للتركيز العميق." position="left" />
+                            </h5>
                         </div>
                         <p className="text-[11px] text-slate-400 leading-relaxed mb-6">
                             تفعيل العزل التام للمهام الحساسة. عند تفعيل الـ Sandbox، بيتم منع أي تداخل بيانات خارجي وتكثيف رادار الوعي على السفينة الحالية بس.
@@ -91,7 +104,7 @@ export const FleetCommander: React.FC = () => {
                         <div className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${isSandboxEnforced ? 'bg-rose-500/10 border-rose-500/30' : 'bg-white/5 border-white/5'
                             }`}>
                             <span className={`text-[10px] font-black uppercase tracking-widest ${isSandboxEnforced ? 'text-rose-400' : 'text-slate-500'}`}>
-                                {isSandboxEnforced ? 'Protocol Active' : 'Protocol Idle'}
+                                {isSandboxEnforced ? 'البروتوكول نشط' : 'البروتوكول متوقف'}
                             </span>
                         </div>
                     </div>
@@ -99,7 +112,10 @@ export const FleetCommander: React.FC = () => {
                     <div className="admin-glass-card p-6 border-indigo-500/20 bg-indigo-500/5 rounded-3xl">
                         <div className="flex items-center gap-3 mb-4">
                             <Zap className="w-5 h-5 text-indigo-400" />
-                            <h5 className="font-bold text-sm text-white uppercase">Fleet Intelligence</h5>
+                            <h5 className="font-bold text-sm text-white uppercase flex items-center gap-2">
+                                ذكاء الأسطول (Fleet Intelligence)
+                                <AdminTooltip content="استنتاجات وتوصيات لتيسير وإدارة مركباتك وطاقتك." position="left" />
+                            </h5>
                         </div>
                         <ul className="space-y-4">
                             <li className="flex gap-3">

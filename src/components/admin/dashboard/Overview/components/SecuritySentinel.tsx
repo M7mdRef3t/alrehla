@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, ShieldAlert, ShieldCheck, LockConfig, Shield } from "lucide-react";
+import { AlertTriangle, ShieldAlert, ShieldCheck, Siren, Shield } from "lucide-react";
 import {
   sendOwnerSecurityWebhook,
   type SecuritySignalsReport

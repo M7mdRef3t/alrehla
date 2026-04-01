@@ -185,9 +185,9 @@ function PulseDashboard() {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            <StatCard title="سرعة النمو" value="+12%" trend="up" subtitle="مقارنة بالأسبوع الماضي" color="emerald" />
-            <StatCard title="القادة النشطون" value="1,240" trend="up" subtitle="+84 جدد هذا الشهر" color="teal" />
-            <StatCard title="نقاط التطور الكلية" value={totalXp?.toLocaleString() ?? "0"} subtitle="محاربة عشوائية النظام" color="violet" />
+            <StatCard title="سرعة النمو" value="+12%" trend="up" subtitle="مقارنة بالأسبوع الماضي" color="emerald" tooltip="معدل زيادة المستخدمين وإتمام الجلسات (مؤشر تسارع انتشار الوعي)." />
+            <StatCard title="القادة النشطون" value="1,240" trend="up" subtitle="+84 جدد هذا الشهر" color="teal" tooltip="المستخدمين اللي وصلوا لمراحل متقدمة في الملاذ وبيجذبوا أرواح تانية للنظام." />
+            <StatCard title="نقاط التطور الكلية" value={totalXp?.toLocaleString() ?? "0"} subtitle="محاربة عشوائية النظام" color="violet" tooltip="إجمالي الطاقة والتطور (XP) لكل النظام. كل ما زاد المجموع، قلت نسبة النزيف الطاقي." />
 
             <div className="col-span-1 md:col-span-2 bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 h-[400px] flex items-center justify-center relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent" />
@@ -199,10 +199,13 @@ function PulseDashboard() {
             </div>
 
             <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
-                <h3 className="text-slate-300 font-bold mb-4 flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-emerald-500" />
-                    الانتصارات الأخيرة
-                </h3>
+                <div className="flex items-center gap-2 mb-4">
+                    <h3 className="text-slate-300 font-bold flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-emerald-500" />
+                        الانتصارات الأخيرة
+                    </h3>
+                    <AdminTooltip content="سجل مباشر بالأشخاص اللي تمكنوا من كسر حلقة النزيف الخفي وتغيير مسار وعيهم بنجاح داخل الملاذ." position="bottom" />
+                </div>
                 <div className="space-y-4">
                     {[1, 2, 3].map(i => (
                         <div key={i} className="flex gap-3 items-start p-3 rounded-lg bg-slate-800/80 border border-slate-700/50">
@@ -232,7 +235,10 @@ function StructureDashboard() {
         <div className="max-w-4xl mx-auto">
             <div className="mb-6 flex justify-between items-center">
                 <div>
-                    <h3 className="text-xl font-bold text-white">الهيكل المعماري للنظام</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-xl font-bold text-white">الهيكل المعماري للنظام</h3>
+                        <AdminTooltip content="هنا بنتابع المهام التشغيلية الحية للنظام. الـ Agent بيقترح تحسينات الكود (Auto-Optimization) ويصلح نفسه منها." position="bottom" />
+                    </div>
                     <p className="text-slate-400 text-sm">مزامنة حية من ملف `task.md`.</p>
                 </div>
                 <div className="flex gap-3">
@@ -280,7 +286,10 @@ function ExperienceDashboard() {
     return (
         <div className="max-w-4xl mx-auto text-center py-20">
             <Users className="w-24 h-24 text-slate-700 mx-auto mb-6" />
-            <h3 className="text-2xl font-bold text-slate-300 mb-2">خريطة الحرارة وعوائق المسار (Pain Points)</h3>
+            <div className="flex items-center justify-center gap-2 mb-2">
+                <h3 className="text-2xl font-bold text-slate-300">خريطة الحرارة وعوائق المسار (Pain Points)</h3>
+                <AdminTooltip content="أداة بتعمل (Heatmap) وتراقب سلوك المستخدم: فين الماوس بيتحرك، إمتى بيقفوا في القراءة، وفين بيخرجوا من الموقع بسرعة." position="bottom" />
+            </div>
             <p className="text-slate-500 max-w-md mx-auto">
                 يقوم الكيان الإدراكي حالياً بجمع البيانات لإنشاء خريطة الاحتكاك الخاصة بالمستخدمين.
             </p>
@@ -297,9 +306,10 @@ interface StatCardProps {
     trend?: "up" | "down";
     subtitle?: string;
     color?: "emerald" | "teal" | "violet";
+    tooltip?: string;
 }
 
-function StatCard({ title, value, trend, subtitle, color }: StatCardProps) {
+function StatCard({ title, value, trend, subtitle, color, tooltip }: StatCardProps) {
     const colors: Record<string, string> = {
         emerald: "text-emerald-400",
         teal: "text-teal-400",
@@ -309,7 +319,10 @@ function StatCard({ title, value, trend, subtitle, color }: StatCardProps) {
 
     return (
         <div className="bg-slate-800/50 border border-slate-700/50 p-6 rounded-xl relative overflow-hidden group hover:border-slate-600 transition-all">
-            <h4 className="text-slate-400 text-xs uppercase tracking-wider font-semibold mb-2">{title}</h4>
+            <div className="flex items-center gap-2 mb-2">
+                <h4 className="text-slate-400 text-xs uppercase tracking-wider font-semibold">{title}</h4>
+                {tooltip && <AdminTooltip content={tooltip} position="bottom" />}
+            </div>
             <div className="flex items-end gap-3 mb-1">
                 <span className={`text-3xl font-bold ${activeColor} font-mono`}>{value}</span>
                 {trend && (

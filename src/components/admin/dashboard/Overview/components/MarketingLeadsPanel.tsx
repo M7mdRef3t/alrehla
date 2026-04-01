@@ -88,10 +88,10 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
             </div>
             <div>
                  <h3 className="text-sm font-black text-white uppercase tracking-widest leading-none mb-1 flex items-center gap-2">
-                     Leads Engine
+                     محرك العملاء (Leads Engine)
                      <AdminTooltip content="محرك العملاء: يحلل من أين يأتي الزوار الجدد (Social, Direct, Organic) والشرائح الخاصة بهم." position="right" />
                  </h3>
-                 <span className="text-[10px] text-slate-500 font-mono tracking-wider">ACQUISITION FUNNEL</span>
+                 <span className="text-[10px] text-slate-500 font-mono tracking-wider">مسار الاستحواذ (ACQUISITION FUNNEL)</span>
             </div>
           </div>
         </div>
@@ -99,14 +99,14 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
         <div className="relative z-10 mb-6 grid grid-cols-2 gap-4">
           <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-4 relative overflow-hidden">
             <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] uppercase tracking-widest text-slate-500 font-black">Total Matrix</p>
+                <p className="text-[10px] uppercase tracking-widest text-slate-500 font-black">إجمالي الزيارات</p>
                 <AdminTooltip content="كل الزوار اللي قدرنا نرصدهم كـ (Leads) محتملين لحد دلوقتي." position="bottom" />
             </div>
             <p className="text-3xl font-black text-white tabular-nums drop-shadow-md">{data.total.toLocaleString("ar-EG")}</p>
           </div>
           <div className="rounded-2xl border border-teal-500/20 bg-teal-500/5 p-4 relative overflow-hidden shadow-inner">
             <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] uppercase tracking-widest text-teal-500 font-black">Pulse (24h)</p>
+                <p className="text-[10px] uppercase tracking-widest text-teal-500 font-black">النبض (آخر 24 ساعة)</p>
                 <AdminTooltip content="زخم الـ 24 ساعة اللي فاتت، لو الرقم قل فجأة يبقى فيه هبوط في الترافيك." position="bottom" />
             </div>
             <p className="text-3xl font-black text-teal-400 drop-shadow-[0_0_12px_rgba(45,212,191,0.5)] tabular-nums">{data.last24h.toLocaleString("ar-EG")}</p>
@@ -116,18 +116,18 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
         <div className="relative z-10 grid grid-cols-1 gap-4 mt-6 border-t border-white/5 pt-4">
             <div className="grid grid-cols-1 gap-2">
               <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-600" /> Top Sources</p>
+                  <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-600" /> أبرز المصادر</p>
                   <AdminTooltip content="أعلى منصات جابت تواصل (مثلا تيك توك، انستجرام، جوجل)." position="left" />
               </div>
-              <BreakdownList items={topSources} emptyLabel="NO SOURCES" valueClassName="text-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.3)]" fallbackKey="direct" />
+              <BreakdownList items={topSources} emptyLabel="لا يوجد مصادر" valueClassName="text-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.3)]" fallbackKey="direct" />
             </div>
 
             <div className="mt-2 grid grid-cols-1 gap-2">
               <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-600" /> Source Types</p>
+                  <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-600" /> أنواع المصادر</p>
                   <AdminTooltip content="تصنيف المصادر (Social, Organic Search, Referral). بيسهل نعرف جهدنا رايح فين." position="left" />
               </div>
-              <BreakdownList items={topSourceTypes} emptyLabel="NO TYPES" valueClassName="text-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.3)]" fallbackKey="website" />
+              <BreakdownList items={topSourceTypes} emptyLabel="لا يوجد أنواع" valueClassName="text-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.3)]" fallbackKey="website" />
             </div>
         </div>
       </div>
@@ -143,10 +143,10 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
             </div>
             <div>
                  <h3 className="text-sm font-black text-white uppercase tracking-widest leading-none mb-1 flex items-center gap-2">
-                     Conversion Nexus
+                     شبكة التحويل (Conversion Nexus)
                      <AdminTooltip content="جودة التحويل: هل الزوار الجداد بيخشوا الرحلة بجد، ولا مجرد كليك وبيمشوا؟" position="left" />
                  </h3>
-                 <span className="text-[10px] text-slate-500 font-mono tracking-wider">LEAD TRAJECTORY</span>
+                 <span className="text-[10px] text-slate-500 font-mono tracking-wider">مسار العميل (LEAD TRAJECTORY)</span>
             </div>
           </div>
         </div>
@@ -155,7 +155,7 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
           <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-3 flex flex-col items-center justify-center relative overflow-hidden group/box">
             <div className="absolute top-0 w-full h-px bg-gradient-to-r from-transparent via-slate-400 to-transparent opacity-50" />
             <p className="text-[10px] sm:text-xs font-black uppercase text-slate-500 mb-1 flex items-center gap-1">
-                Start Rate
+                معدل البدء
                 <AdminTooltip content="نسبة الزوار اللي ضغطوا (انطلق) من إجمالي الزيارات." position="bottom" />
             </p>
             <p className="text-xl sm:text-2xl font-black text-white tabular-nums">{fmtPct(data.conversion.startClickRatePct)}</p>
@@ -163,7 +163,7 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
           <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-3 flex flex-col items-center justify-center relative overflow-hidden group/box">
             <div className="absolute top-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50" />
             <p className="text-[10px] sm:text-xs font-black uppercase text-cyan-500/70 mb-1 flex items-center gap-1">
-                Pulse Rate
+                معدل النبض
                 <AdminTooltip content="نسبة الزوار اللي خلصوا (فحص النبض) بنجاح والمزاج بتاعهم اتحدد." position="bottom" />
             </p>
             <p className="text-xl sm:text-2xl font-black text-cyan-400 tabular-nums drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">{fmtPct(data.conversion.pulseCompletedRatePct)}</p>
@@ -171,7 +171,7 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
           <div className="rounded-2xl border border-white/5 bg-slate-900/60 p-3 flex flex-col items-center justify-center relative overflow-hidden group/box">
             <div className="absolute top-0 w-full h-px bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-50" />
             <p className="text-[10px] sm:text-xs font-black uppercase text-emerald-500/70 mb-1 flex items-center gap-1">
-                Map Rate
+                معدل خريطة الرحلة
                 <AdminTooltip content="نسبة اللي قدروا يوصلوا لمراحل متقدمة ويكوّنوا عيلتهم او يضيفوا شخص." position="bottom" />
             </p>
             <p className="text-xl sm:text-2xl font-black text-emerald-400 tabular-nums drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{fmtPct(data.conversion.mapCreatedRatePct)}</p>
@@ -182,7 +182,7 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
           <div className="flex items-center justify-between mb-4">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
-                  Daily Trend (14D)
+                  مؤشر التفاعل اليومي (14 يوم)
               </p>
               <AdminTooltip content="مؤشر لتذبذب دخول الـ Leads اليومي لآخر أسبوعين. العمود الأعلى يعني يوم حققنا فيه Viral Peak." position="left" />
           </div>
@@ -205,18 +205,18 @@ export const MarketingLeadsPanel: FC<MarketingLeadsPanelProps> = ({ data, loadin
         <div className="relative z-10 grid grid-cols-1 gap-4 border-t border-white/5 pt-4">
             <div className="grid grid-cols-1 gap-2">
               <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-600" /> Top Campaigns</p>
+                  <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-600" /> أبرز الحملات</p>
                   <AdminTooltip content="الحملات المربوطة بـ UTM Links (لو إنت عامل كامبين إعلاني متسمية، هتظهر نتايجها هنا)." position="left" />
               </div>
-              <BreakdownList items={topCampaigns} emptyLabel="NO CAMPAIGNS" valueClassName="text-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.3)]" fallbackKey="unknown" />
+              <BreakdownList items={topCampaigns} emptyLabel="لا يوجد حملات" valueClassName="text-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.3)]" fallbackKey="unknown" />
             </div>
 
             <div className="mt-2 grid grid-cols-1 gap-2">
               <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-600" /> Lead Status</p>
+                  <p className="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-600" /> حالة الزوار (Lead Status)</p>
                   <AdminTooltip content="تصنيف الـ CRM الداخلي لمراحل الشراء (سخن، متردد، جديد)." position="left" />
               </div>
-              <BreakdownList items={topStatuses} emptyLabel="NO STATUS" valueClassName="text-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.3)]" fallbackKey="new" />
+              <BreakdownList items={topStatuses} emptyLabel="لا يوجد حالات" valueClassName="text-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.3)]" fallbackKey="new" />
             </div>
         </div>
       </div>
