@@ -2,9 +2,13 @@ name: CI
 
 on:
   push:
-    branches: ["main", "develop"]
+    branches: ["develop"]
   pull_request:
     branches: ["main", "develop"]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:
@@ -18,7 +22,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: npm
 
       - name: Install
