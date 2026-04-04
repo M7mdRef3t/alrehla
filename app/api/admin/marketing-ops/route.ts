@@ -40,16 +40,87 @@ export async function GET(req: Request) {
   const supabase = buildClient();
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.alrehla.app").replace(/\/$/, "");
 
-  // Queue breakdown by status
   const { data: queueStats } = await supabase
     .from("marketing_lead_outreach_queue")
-    .select("status, channel");
+    .select("status, channel, lead_email, opened_at, clicked_at, bounced, complained, sent_at");
 
   const counts: Record<string, number> = {};
+  const channelBreakdown: Record<string, number> = {};
+  const uniqueEntitiesSet = new Set<string>();
   let totalLeads = 0;
+
   for (const row of queueStats ?? []) {
-    counts[row.status as string] = (counts[row.status as string] ?? 0) + 1;
+    const status = (row.status as string) || "unknown";
+    const channel = (row.channel as string) || "unknown";
+    const email = (row.lead_email as string) || "";
+
+    counts[status] = (counts[status] ?? 0) + 1;
+    
+    if (status === "sent" || status === "simulated") {
+      if (email) uniqueEntitiesSet.add(email);
+      channelBreakdown[channel] = (channelBreakdown[channel] ?? 0) + 1;
+    }
+    
     totalLeads++;
+  }
+  const uniqueEntitiesReached = uniqueEntitiesSet.size;
+
+  // ─── Lead Acquisition & Attribution ─────────────────────────────────────────
+  const { data: dbLeads, count: dbLeadsCount } = await supabase
+    .from("marketing_leads")
+    .select("id, name, email, phone_normalized, source_type, campaign, status, created_at, unsubscribed", { count: "exact" });
+
+  const totalDatabaseLeads = dbLeadsCount ?? 0;
+  const leadsBySource: Record<string, number> = {};
+  const leadsByCampaign: Record<string, number> = {};
+
+  const rawLeads = dbLeads ?? [];
+
+  // ─── Email Outreach Engagement Mapping ─────────────────────────────────────
+  const emailEngagementMap: Record<string, any> = {};
+  if (queueStats) {
+    for (const qs of queueStats) {
+      if (qs.channel !== 'email' || !qs.lead_email) continue;
+      const email = (qs.lead_email as string).toLowerCase().trim();
+      
+      if (!emailEngagementMap[email]) {
+        emailEngagementMap[email] = {
+          sent: false, opened: false, clicked: false, bounced: false, pending: false
+        };
+      }
+      
+      const stats = emailEngagementMap[email];
+      if (qs.status === 'sent') stats.sent = true;
+      if (qs.status === 'pending') stats.pending = true;
+      if (qs.opened_at) stats.opened = true;
+      if (qs.clicked_at) stats.clicked = true;
+      if (qs.bounced || qs.complained || qs.status === 'failed') stats.bounced = true;
+    }
+  }
+
+  for (const lead of rawLeads) {
+    const s = (lead.source_type as string) || "unknown";
+    const c = (lead.campaign as string) || "unattributed";
+    leadsBySource[s] = (leadsBySource[s] ?? 0) + 1;
+    leadsByCampaign[c] = (leadsByCampaign[c] ?? 0) + 1;
+    
+    // Attach email engagement status
+    let emailStatus = "none";
+    if (lead.unsubscribed) {
+      emailStatus = "unsubscribed";
+    } else if (lead.email) {
+      const normalizedEmail = String(lead.email).toLowerCase().trim();
+      const eng = emailEngagementMap[normalizedEmail];
+      if (eng) {
+        if (eng.bounced) emailStatus = "bounced";
+        else if (eng.clicked) emailStatus = "clicked";
+        else if (eng.opened) emailStatus = "opened";
+        else if (eng.sent) emailStatus = "sent";
+        else if (eng.pending) emailStatus = "pending";
+      }
+    }
+    
+    (lead as any).email_status = emailStatus;
   }
 
   // Real onboarding starts (leads who clicked personalized link)
@@ -169,14 +240,34 @@ export async function GET(req: Request) {
     .select("*", { count: "exact", head: true })
     .eq("unsubscribed", true);
 
+  // ─── Simulated Ripple Effect Tracker Data ─────────────────────────────────────
+  const rippleTree = [
+    { id: "root", label: "الشرارة الأولى", status: "active", parentId: null },
+    { id: "n1", label: "أحمد ج.", status: "active", parentId: "root" },
+    { id: "n2", label: "عمر س.", status: "active", parentId: "root" },
+    { id: "n3", label: "مها و.", status: "faded", parentId: "root" },
+    { id: "n4", label: "محمود ع.", status: "pending", parentId: "n1" },
+    { id: "n5", label: "ياسين أ.", status: "active", parentId: "n1" },
+    { id: "n6", label: "فرح ب.", status: "active", parentId: "n2" },
+    { id: "n7", label: "سارة م.", status: "pending", parentId: "n2" },
+    { id: "n8", label: "نور ي.", status: "faded", parentId: "n6" }
+  ];
+
   return NextResponse.json({
     ok: true,
-    totalLeads,
+    totalLeads, // queue count
     counts,
+    uniqueEntitiesReached,
+    channelBreakdown,
+    totalDatabaseLeads,
+    leadsBySource,
+    leadsByCampaign,
+    rawLeads,
     realStarts: realStarts ?? 0,
     recentErrors: recentErrors ?? [],
     recentSent: recentSent ?? [],
     quickSendLeads,
+    rippleTree,
     emailMetrics: {
       sent: emailSent,
       opened: emailOpened,

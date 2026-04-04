@@ -134,7 +134,7 @@ export const B2BPortal: FC = () => {
             setJoinMessage({ text: "تم ربط الحساب بنجاح!", type: "success" });
             setInviteCode("");
             setTimeout(() => setView("landing"), 2000);
-        } catch (e) {
+        } catch {
             setJoinMessage({ text: "حدث خطأ غير متوقع", type: "error" });
         } finally {
             setIsJoining(false);

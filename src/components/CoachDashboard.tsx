@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Activity, Users, Link2, KeyRound, BrainCircuit, X, Flame, LogOut, Loader2 } from "lucide-react";
+import { Activity, Users, Link2, KeyRound, BrainCircuit, X, Flame, Loader2 } from "lucide-react";
 import { supabase } from "../services/supabaseClient";
 import { useEffect, useCallback } from "react";
 

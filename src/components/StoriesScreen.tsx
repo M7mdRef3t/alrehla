@@ -1,6 +1,6 @@
-import { memo, useState } from "react";
-import { motion, AnimatePresence, Variants } from "framer-motion";
-import { Star, Quote, ArrowLeft, TrendingUp, Users, Target, CheckCircle2 } from "lucide-react";
+import { memo } from "react";
+import { motion, Variants } from "framer-motion";
+import { Star, Quote, ArrowLeft, TrendingUp, Users, Target } from "lucide-react";
 
 // ── بيانات قصص النجاح ──
 const STORIES = [

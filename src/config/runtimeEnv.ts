@@ -146,8 +146,9 @@ function readViteEnvValue(key: RuntimeKey): string | undefined {
   try {
     // Keep access in property form for Next/Webpack compatibility.
     // Use a guarded check to prevent 'import.meta' syntax errors in environments that don't support it.
-    if (typeof import.meta !== "undefined" && (import.meta as any).env) {
-      const viteEnv = (import.meta as any).env;
+    const meta = import.meta as unknown as { env?: Record<string, unknown> };
+    if (typeof import.meta !== "undefined" && meta.env) {
+      const viteEnv = meta.env;
       const value = viteEnv?.[key];
       if (typeof value === "string" && value.length > 0) return normalizeEnvValue(value);
     }

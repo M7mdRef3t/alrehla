@@ -12,8 +12,6 @@ import {
   type RecentTelemetrySignalV1
 } from "../../modules/recommendation";
 import type { AppScreen } from "../../navigation/navigationMachine";
-import { useMapState } from "../../state/mapState";
-import { usePulseState } from "../../state/pulseState";
 
 export interface ActiveInterventionState {
   decisionId: string;

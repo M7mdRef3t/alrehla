@@ -1,12 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+function getSupabaseAdmin() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!supabaseUrl || !serviceRoleKey) return null;
+    return createClient(supabaseUrl, serviceRoleKey);
+}
 
 export async function processContextualInsights(userId: string) {
     try {
+        const supabaseAdmin = getSupabaseAdmin();
+        if (!supabaseAdmin) return;
         // 2. Fetch last 30 days of data for both Map and Insights
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -83,6 +87,9 @@ export async function processContextualInsights(userId: string) {
 }
 
 async function generateInfluenceSnapshot(userId: string, pulses: any[], actions: any[]) {
+    const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) return;
+
     // Nodes: Circles + Mood + Energy
     const circles = Array.from(new Set(actions.map(a => a.metadata?.nodeLabel).filter(Boolean)));
     const nodes = [

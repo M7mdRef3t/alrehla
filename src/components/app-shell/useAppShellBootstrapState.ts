@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNotificationState } from "../../state/notificationState";
 import { useEmergencyState } from "../../state/emergencyState";
-import { useMapState } from "../../state/mapState";
 import { useJourneyState } from "../../state/journeyState";
 import { useAchievementState } from "../../state/achievementState";
 import { useThemeState } from "../../state/themeState";

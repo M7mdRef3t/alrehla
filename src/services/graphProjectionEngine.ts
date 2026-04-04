@@ -8,6 +8,7 @@
 import { MapNode } from "../modules/map/mapTypes";
 import { consciousnessService } from "./consciousnessService";
 import { supabase } from "./supabaseClient";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 export type RelationType = "ORBITS" | "EXHIBITS" | "TRIGGERS" | "REMEDIES" | "REINFORCES";
 
@@ -17,6 +18,7 @@ export class GraphProjectionEngine {
      */
     static async projectMapToGraph(userId: string, nodes: MapNode[]): Promise<void> {
         if (!supabase) return;
+        if (runtimeEnv.isDev) return;
 
         console.log(`🧠 [Graph Engine] Projecting map for user ${userId} to Consciousness Graph...`);
 

@@ -90,7 +90,7 @@ export default function DawayirApp() {
                 }
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [analyzeAnswers, subInfo]);
 
     useEffect(() => {

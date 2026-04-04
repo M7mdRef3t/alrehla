@@ -8,7 +8,6 @@ import {
   PanelRightOpen,
   X,
   Bell,
-  Database,
   Share2,
   BookOpen,
   Wind,
@@ -31,11 +30,21 @@ import {
   Crosshair,
   ScrollText,
   Smartphone,
-  Zap,
-  User
+  User,
+  Network,
+  Heart,
+  History,
+  Store,
+  HeartPulse,
+  Activity,
+  LineChart,
+  HeartHandshake,
+  CalendarDays,
+  Library
 } from "lucide-react";
 import { useJourneyState } from "../state/journeyState";
 import { useNotificationState } from "../state/notificationState";
+import { useAppOverlayState } from "../state/appOverlayState";
 import { useEmergencyState } from "../state/emergencyState";
 import { BreathingOverlay } from "./BreathingOverlay";
 import { useAchievementState } from "../state/achievementState";
@@ -111,6 +120,33 @@ import { soundManager } from "../services/soundManager";
 const AtlasDashboard = lazy(() =>
   import("./AtlasDashboard").then((m) => ({ default: m.AtlasDashboard }))
 );
+const InsightsLibrary = lazy(() =>
+  import("./InsightsLibrary").then((m) => ({ default: m.InsightsLibrary }))
+);
+const Goals2025Dashboard = lazy(() =>
+  import("./Goals2025Dashboard").then((m) => ({ default: m.Goals2025Dashboard }))
+);
+const PersonalProgressDashboard = lazy(() =>
+  import("./PersonalProgressDashboard").then((m) => ({ default: m.PersonalProgressDashboard }))
+);
+const WeeklyActionPlanModal = lazy(() =>
+  import("./WeeklyActionPlanModal").then((m) => ({ default: m.WeeklyActionPlanModal }))
+);
+const MonthlyReadingPlanModal = lazy(() =>
+  import("./MonthlyReadingPlanModal").then((m) => ({ default: m.MonthlyReadingPlanModal }))
+);
+const AwarenessGrowthDashboard = lazy(() =>
+  import("./AwarenessGrowthDashboard").then((m) => ({ default: m.AwarenessGrowthDashboard }))
+);
+const CommunityImpactDashboard = lazy(() =>
+  import("./CommunityImpactDashboard").then((m) => ({ default: m.CommunityImpactDashboard }))
+);
+const RelationshipAnalysisModal = lazy(() =>
+  import("./RelationshipAnalysisModal").then((m) => ({ default: m.RelationshipAnalysisModal }))
+);
+const CircleGrowthDashboard = lazy(() =>
+  import("./CircleGrowthDashboard").then((m) => ({ default: m.CircleGrowthDashboard }))
+);
 const AdvancedToolsModal = lazy(() =>
   import("./AdvancedToolsModal").then((m) => ({ default: m.AdvancedToolsModal }))
 );
@@ -123,7 +159,6 @@ const ManualPlacementModal = lazy(() =>
 const FeedbackModal = lazy(() =>
   import("./FeedbackModal").then((m) => ({ default: m.FeedbackModal }))
 );
-import { ShareableCard } from "./ShareableCard";
 
 const DEFAULT_WHATSAPP_CONTACT = "0201023050092";
 
@@ -174,11 +209,22 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   viewingNodeId = null,
   onNoiseSessionComplete
 }) => {
+  // ... legacy states
+  const setOverlay = useAppOverlayState((state) => state.setOverlay);
   const [isOpen, setIsOpen] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showDataManagement, setShowDataManagement] = useState(false);
   const [showShareStats, setShowShareStats] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
+  const [showInsightsLibrary, setShowInsightsLibrary] = useState(false);
+  const [showGoals2025, setShowGoals2025] = useState(false);
+  const [showPersonalProgress, setShowPersonalProgress] = useState(false);
+  const [showWeeklyActionPlan, setShowWeeklyActionPlan] = useState(false);
+  const [showReadingPlan, setShowReadingPlan] = useState(false);
+  const [showAwarenessGrowth, setShowAwarenessGrowth] = useState(false);
+  const [showCommunityImpact, setShowCommunityImpact] = useState(false);
+  const [showRelationshipAnalysis, setShowRelationshipAnalysis] = useState(false);
+  const [showCircleGrowth, setShowCircleGrowth] = useState(false);
   const [showBreathing, setShowBreathing] = useState(false);
   const [showThemeSettings, setShowThemeSettings] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -191,7 +237,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
   const [showThoughtSniper, setShowThoughtSniper] = useState(false);
   const [showFastingCapsule, setShowFastingCapsule] = useState(false);
   const [showInnerCourt, setShowInnerCourt] = useState(false);
-  const [showGlobalMissions, setShowGlobalMissions] = useState(false);
+  const [, setShowGlobalMissions] = useState(false);
   const [showAtlasDashboard, setShowAtlasDashboard] = useState(false);
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [showClassicRecovery, setShowClassicRecovery] = useState(false);
@@ -390,6 +436,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 سجل العمليات
               </button>
             )}
+            
             {isOwner && (
               <>
                 <button
@@ -412,6 +459,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 </button>
               </>
             )}
+
             {!isRevenueMode && (
               <button
                 onClick={() => {
@@ -425,6 +473,38 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 <span className="relative z-10 mr-auto flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] text-slate-900 font-black">!</span>
               </button>
             )}
+
+            {/* Sovereign Sanctuary Options */}
+            <div className="w-full h-px bg-slate-200 dark:bg-slate-700 my-2" />
+            <button
+              type="button"
+              onClick={() => setOverlay("wisdomMatrix", true)}
+              className="w-full flex items-center gap-3 rounded-xl bg-slate-50/80 dark:bg-slate-700/50 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all text-right shrink-0 whitespace-nowrap"
+              title="مصفوفة الحكمة"
+            >
+              <Library className="w-5 h-5 shrink-0 text-blue-500" />
+              مصفوفة الحكمة
+            </button>
+            <button
+              type="button"
+              onClick={() => setOverlay("immersionPath", true)}
+              className="w-full flex items-center gap-3 rounded-xl bg-slate-50/80 dark:bg-slate-700/50 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-all text-right shrink-0 whitespace-nowrap"
+              title="مسار الغوص التفصيلي"
+            >
+              <Layers className="w-5 h-5 shrink-0 text-amber-500" />
+              مسار الديتوكس
+            </button>
+            <button
+              type="button"
+              onClick={() => setOverlay("vanguardCollective", true)}
+              className="w-full flex items-center gap-3 rounded-xl bg-slate-50/80 dark:bg-slate-700/50 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-purple-400 dark:hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-all text-right shrink-0 whitespace-nowrap"
+              title="الطليعة - المزامنة الثنائية"
+            >
+              <Network className="w-5 h-5 shrink-0 text-purple-500" />
+              مجتمع الثنائي
+            </button>
+            <div className="w-full h-px bg-slate-200 dark:bg-slate-700 my-2" />
+
             <button
               type="button"
               onClick={() => onOpenDawayir?.()}
@@ -432,8 +512,8 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               title="مركز القيادة"
             >
               <Compass className="w-5 h-5 shrink-0 text-teal-600" />
-              <span className="flex flex-col items-start">
-                مركز القيادة
+              <span className="flex flex-col items-start leading-tight">
+                <span>مركز القيادة</span>
                 {lastGoalLabel && (
                   <span
                     className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${lastGoalMeta?.badgeClasses ?? fallbackBadgeClasses} ${badgePulseClass}`}
@@ -444,6 +524,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 )}
               </span>
             </button>
+
             {availableFeatures.dawayir_map && (
               <button
                 type="button"
@@ -735,17 +816,195 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               <BookOpen className="w-5 h-5 shrink-0" />
               المكتبة
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowInsightsLibrary(true);
+              }}
+              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-300 transition-all text-right shrink-0 whitespace-nowrap"
+              title="مكتبة الاستبصارات الخاصة بك"
+            >
+              <ScrollText className="w-5 h-5 shrink-0" />
+              مكتبة الاستبصارات
+            </button>
             {!isRevenueMode && (
               <button
                 type="button"
-                onClick={() => setShowSymptomsOverview(true)}
-                className="w-full flex items-center gap-3 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 px-4 py-3 text-sm font-semibold hover:border-purple-400 hover:bg-purple-50 hover:text-purple-700 transition-all text-right shrink-0 whitespace-nowrap"
-                title="شوف الأعراض لكل علاقة"
+                onClick={() => {
+                  setShowSymptomsOverview(true);
+                }}
+                className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-300 transition-all text-right shrink-0 whitespace-nowrap"
+                title="لوحة تتبع نمو الوعي (نموذج محوسب)"
               >
-                <ClipboardList className="w-5 h-5 shrink-0" />
-                الأعراض
+                <Activity className="w-5 h-5 shrink-0" />
+                تحليل الأعراض
               </button>
             )}
+
+            {/* Analytics & Insights Category */}
+            <div className="mb-6 border-t border-slate-200 dark:border-slate-800 pt-6">
+              <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 px-2 flex items-center gap-2">
+                <LineChart className="w-4 h-4" /> التحليلات والإحصائيات
+              </h3>
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAwarenessGrowth(true);
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="خريطة الوعي الذاتي التراكمية"
+                >
+                  <BrainCircuit className="w-5 h-5 shrink-0" />
+                  نمو الوعي
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCommunityImpact(true);
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-orange-400 dark:hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/30 hover:text-orange-700 dark:hover:text-orange-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="إحصائيات التأثير المجتمعي الشاملة"
+                >
+                  <Globe className="w-5 h-5 shrink-0" />
+                  التأثير المجتمعي
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRelationshipAnalysis(true);
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-rose-400 dark:hover:border-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-700 dark:hover:text-rose-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="نتائج وإحصائيات تحليل العلاقات الشامل"
+                >
+                  <HeartHandshake className="w-5 h-5 shrink-0" />
+                  تحليل العلاقات
+                </button>
+              </div>
+            </div>
+
+            {/* Social & Circles */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 px-3 mb-2">
+                <Network className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                <h3 className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                  التفاعل والمجتمع
+                </h3>
+              </div>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCircleGrowth(true);
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="تحديات الدائرة الخاصة / نمو الدائرة"
+                >
+                  <Network className="w-5 h-5 shrink-0" />
+                  نمو الدائرة
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOverlay("recoveryPathways", true);
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="مسار التغيير السلوكي"
+                >
+                  <Compass className="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  مسارات التعافي
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOverlay("duoCommunity", true);
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-rose-400 dark:hover:border-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-700 dark:hover:text-rose-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="مجتمع الثنائي / الغرفة النقاشية"
+                >
+                  <Heart className="w-5 h-5 shrink-0 text-rose-600 dark:text-rose-400" />
+                  مجتمع الثنائي
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOverlay("pastSessionsLog", true);
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="سجل الجلسات السابقة والمراجعات"
+                >
+                  <History className="w-5 h-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                  سجل الجلسات
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOverlay("rewardStore", true);
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-amber-400 dark:hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="متجر المكافآت"
+                >
+                  <Store className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" />
+                  متجر المكافآت
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOverlay("nudgeToast", true);
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-sky-400 dark:hover:border-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/30 hover:text-sky-700 dark:hover:text-sky-300 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="تنبيهات التقدم والتشجيع"
+                >
+                  <HeartPulse className="w-5 h-5 shrink-0 text-sky-600 dark:text-sky-400" />
+                  تنبيه تشجيعي
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowGoals2025(true);
+              }}
+              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-all text-right shrink-0 whitespace-nowrap"
+              title="لوحة الأهداف عام 2025"
+            >
+              <Target className="w-5 h-5 shrink-0" />
+              أهداف 2025
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowPersonalProgress(true);
+              }}
+              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-300 transition-all text-right shrink-0 whitespace-nowrap"
+              title="تتبع التقدم الشهري والسنوي"
+            >
+              <LineChart className="w-5 h-5 shrink-0" />
+              نظرة التقدم
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowWeeklyActionPlan(true);
+              }}
+              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/30 hover:text-violet-700 dark:hover:text-violet-300 transition-all text-right shrink-0 whitespace-nowrap"
+              title="خطة العمل الأسبوعية والتحدي"
+            >
+              <CalendarDays className="w-5 h-5 shrink-0" />
+              الخطة الأسبوعية
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowReadingPlan(true);
+              }}
+              className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold hover:border-sky-400 dark:hover:border-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/30 hover:text-sky-700 dark:hover:text-sky-300 transition-all text-right shrink-0 whitespace-nowrap"
+              title="خطة القراءة الشهرية"
+            >
+              <Library className="w-5 h-5 shrink-0" />
+              خطة القراءة
+            </button>
             <button
               type="button"
               onClick={() => { setInitialRecoveryOptions(null); setShowRecoveryPlan(true); }}
@@ -1413,6 +1672,61 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   <BookOpen className="w-6 h-6 shrink-0" />
                   <span>المكتبة</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowInsightsLibrary(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-700 dark:hover:text-indigo-300 transition-all text-right"
+                >
+                  <ScrollText className="w-6 h-6 shrink-0" />
+                  <span>مكتبة الاستبصارات</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowGoals2025(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-all text-right"
+                >
+                  <Target className="w-6 h-6 shrink-0" />
+                  <span>أهداف 2025</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPersonalProgress(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-300 transition-all text-right"
+                >
+                  <LineChart className="w-6 h-6 shrink-0" />
+                  <span>نظرة التقدم</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowWeeklyActionPlan(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-violet-400 dark:hover:border-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/30 hover:text-violet-700 dark:hover:text-violet-300 transition-all text-right"
+                >
+                  <CalendarDays className="w-6 h-6 shrink-0" />
+                  <span>الخطة الأسبوعية</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowReadingPlan(true);
+                    handleClose();
+                  }}
+                  className="w-full flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 px-4 py-3 text-sm font-semibold active:scale-95 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-sky-50 dark:hover:bg-sky-900/30 hover:text-sky-700 dark:hover:text-sky-300 transition-all text-right"
+                >
+                  <Library className="w-6 h-6 shrink-0" />
+                  <span>خطة القراءة</span>
+                </button>
                 {!isRevenueMode && (
                   <button
                     type="button"
@@ -1642,6 +1956,96 @@ export const AppSidebar: FC<AppSidebarProps> = ({
           <EducationalLibrary
             isOpen={showLibrary}
             onClose={() => setShowLibrary(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Insights Library Modal */}
+      {showInsightsLibrary && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <InsightsLibrary
+            isOpen={showInsightsLibrary}
+            onClose={() => setShowInsightsLibrary(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Goals 2025 Dashboard Modal */}
+      {showGoals2025 && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <Goals2025Dashboard
+            isOpen={showGoals2025}
+            onClose={() => setShowGoals2025(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Personal Progress Dashboard Modal */}
+      {showPersonalProgress && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <PersonalProgressDashboard
+            isOpen={showPersonalProgress}
+            onClose={() => setShowPersonalProgress(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Weekly Action Plan Modal */}
+      {showWeeklyActionPlan && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <WeeklyActionPlanModal
+            isOpen={showWeeklyActionPlan}
+            onClose={() => setShowWeeklyActionPlan(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Monthly Reading Plan Modal */}
+      {showReadingPlan && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <MonthlyReadingPlanModal
+            isOpen={showReadingPlan}
+            onClose={() => setShowReadingPlan(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Awareness Growth Dashboard Modal */}
+      {showAwarenessGrowth && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <AwarenessGrowthDashboard
+            isOpen={showAwarenessGrowth}
+            onClose={() => setShowAwarenessGrowth(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Community Impact Dashboard Modal */}
+      {showCommunityImpact && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <CommunityImpactDashboard
+            isOpen={showCommunityImpact}
+            onClose={() => setShowCommunityImpact(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Relationship Analysis Modal */}
+      {showRelationshipAnalysis && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <RelationshipAnalysisModal
+            isOpen={showRelationshipAnalysis}
+            onClose={() => setShowRelationshipAnalysis(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* Circle Growth Dashboard */}
+      {showCircleGrowth && (
+        <Suspense fallback={<AwarenessSkeleton />}>
+          <CircleGrowthDashboard
+            isOpen={showCircleGrowth}
+            onClose={() => setShowCircleGrowth(false)}
           />
         </Suspense>
       )}

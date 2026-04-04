@@ -25,6 +25,10 @@ export class ShadowMemory {
                     entropy_score: insight.entropyScore,
                     state: insight.state,
                     primary_factor: insight.primaryFactor,
+                    metadata: {
+                        unstable_nodes: insight.unstableNodesData || [],
+                        pulse_volatility: insight.pulseVolatility
+                    },
                     timestamp: new Date().toISOString()
                 });
 

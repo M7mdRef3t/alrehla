@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Activity, LayoutDashboard, Target, Bot } from "lucide-react";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { CollapsibleSection } from "../../ui/CollapsibleSection";
+import { TimelineOfSouls } from "./components/TimelineOfSouls";
 
 import { StatCard, formatNumber } from "./components/StatCard";
 import { PhaseOneGoal } from "../Overview/components/PhaseOneGoal";
@@ -138,95 +139,104 @@ export const ExecutiveDashboard: FC = () => {
                 </div>
             </header>
 
-            {/* Quick Stats Grid */}
-            <CollapsibleSection
-              title="نظرة عامة سريعة"
-              icon={<LayoutDashboard className="w-4 h-4" />}
-              subtitle="إحصائيات شاملة في الوقت الفعلي"
-              defaultExpanded={true}
-              headerColors="border-indigo-500/20 bg-indigo-500/5 text-indigo-400"
-            >
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
-                  <StatCard title="إجمالي المسافرين" value={formatNumber(totalUsers)} hint="مزامنة موثقة" tooltip="إجمالي عدد المستخدمين المسجلين في المنصة من البداية وحتى اللحظة." />
-                  <StatCard title="نشط الآن" value={formatNumber(activeNowValue)} hint="حضور مداري" tooltip="عدد الأعضاء الموجودين أونلاين وبيستخدموا المنصة حالياً." />
-                  <StatCard title="متوسط الطاقة" value={avgMoodValue !== null ? avgMoodValue.toFixed(1) : "—"} hint="تدفق المزاج" glowColor="indigo" tooltip="متوسط الحالة المزاجية أو الصفاء لكل الزوار النشطين." />
-                  <StatCard title="عمليات الذكاء" value={formatNumber(aiTokensUsed)} hint="احتمال التفكير الاصطناعي" glowColor="indigo" tooltip="حجم الأوامر أو الكلمات (Tokens) اللي جارفيس استهلكها في مساعدة المستخدمين النهارده." />
-              </div>
-            </CollapsibleSection>
+            <div className="flex flex-col xl:flex-row gap-6">
+                <div className="flex-1 space-y-6 min-w-0">
+                    {/* Quick Stats Grid */}
+                    <CollapsibleSection
+                        title="نظرة عامة سريعة"
+                        icon={<LayoutDashboard className="w-4 h-4" />}
+                        subtitle="إحصائيات شاملة في الوقت الفعلي"
+                        defaultExpanded={true}
+                        headerColors="border-indigo-500/20 bg-indigo-500/5 text-indigo-400"
+                    >
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+                            <StatCard title="إجمالي المسافرين" value={formatNumber(totalUsers)} hint="مزامنة موثقة" tooltip="إجمالي عدد المستخدمين المسجلين في المنصة من البداية وحتى اللحظة." />
+                            <StatCard title="نشط الآن" value={formatNumber(activeNowValue)} hint="حضور مداري" tooltip="عدد الأعضاء الموجودين أونلاين وبيستخدموا المنصة حالياً." />
+                            <StatCard title="متوسط الطاقة" value={avgMoodValue !== null ? avgMoodValue.toFixed(1) : "—"} hint="تدفق المزاج" glowColor="indigo" tooltip="متوسط الحالة المزاجية أو الصفاء لكل الزوار النشطين." />
+                            <StatCard title="عمليات الذكاء" value={formatNumber(aiTokensUsed)} hint="احتمال التفكير الاصطناعي" glowColor="indigo" tooltip="حجم الأوامر أو الكلمات (Tokens) اللي جارفيس استهلكها في مساعدة المستخدمين النهارده." />
+                        </div>
+                    </CollapsibleSection>
 
-            {/* Executive Success */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                 <CollapsibleSection
-                   title="مؤشر نجاح المرحلة (Phase One)"
-                   icon={<Target className="w-4 h-4" />}
-                   subtitle="قياس وتقييم الفرضيات"
-                   defaultExpanded={true}
-                   headerColors="border-amber-500/20 bg-amber-500/5 text-amber-500"
-                 >
-                   <div className="pt-2">
-                     <SuccessIndexCard
-                        successIndex={successIndex}
-                        successSampleSize={successSampleSize}
-                        hasReliableSample={hasReliableSample}
-                        successDecisionLabel={successDecisionLabel}
-                        successDecisionClass={successDecisionClass}
-                        startClickRate={startClickRate}
-                        pulseCompletionRate={pulseCompletionRate}
-                        authSuccessRateFromPulse={authSuccessRateFromPulse}
-                        addPersonCompletionRatio={0}
-                        retention7d={retention7d}
-                        successRecommendations={[]}
-                        onCommitDecision={handleCommitDecision}
-                        decisionSaving={decisionSaving}
-                        decisionMessage={decisionMessage}
-                        weeklyDecisionLoading={weeklyDecisionLoading}
-                        weeklyDecisionEntries={weeklyDecisionLogs.map((l) => {
-                        const payload = (l.payload ?? {}) as {
-                            successIndex?: number;
-                            successDecisionLabel?: string;
-                            sampleSize?: number;
-                        };
-                        return ({
-                            id: l.id,
-                            createdAt: l.createdAt,
-                            score: payload.successIndex ?? null,
-                            decisionLabel: payload.successDecisionLabel || "سجل قرار",
-                            sampleSize: payload.sampleSize ?? null
-                        });
-                        })}
-                     />
-                   </div>
-                 </CollapsibleSection>
+                    {/* Executive Success */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <CollapsibleSection
+                            title="مؤشر نجاح المرحلة (Phase One)"
+                            icon={<Target className="w-4 h-4" />}
+                            subtitle="قياس وتقييم الفرضيات"
+                            defaultExpanded={true}
+                            headerColors="border-amber-500/20 bg-amber-500/5 text-amber-500"
+                        >
+                            <div className="pt-2">
+                                <SuccessIndexCard
+                                    successIndex={successIndex}
+                                    successSampleSize={successSampleSize}
+                                    hasReliableSample={hasReliableSample}
+                                    successDecisionLabel={successDecisionLabel}
+                                    successDecisionClass={successDecisionClass}
+                                    startClickRate={startClickRate}
+                                    pulseCompletionRate={pulseCompletionRate}
+                                    authSuccessRateFromPulse={authSuccessRateFromPulse}
+                                    addPersonCompletionRatio={0}
+                                    retention7d={retention7d}
+                                    successRecommendations={[]}
+                                    onCommitDecision={handleCommitDecision}
+                                    decisionSaving={decisionSaving}
+                                    decisionMessage={decisionMessage}
+                                    weeklyDecisionLoading={weeklyDecisionLoading}
+                                    weeklyDecisionEntries={weeklyDecisionLogs.map((l) => {
+                                        const payload = (l.payload ?? {}) as {
+                                            successIndex?: number;
+                                            successDecisionLabel?: string;
+                                            sampleSize?: number;
+                                        };
+                                        return ({
+                                            id: l.id,
+                                            createdAt: l.createdAt,
+                                            score: payload.successIndex ?? null,
+                                            decisionLabel: payload.successDecisionLabel || "سجل قرار",
+                                            sampleSize: payload.sampleSize ?? null
+                                        });
+                                    })}
+                                />
+                            </div>
+                        </CollapsibleSection>
 
-                 <CollapsibleSection
-                   title="أهداف الرحلة الحالية"
-                   icon={<Activity className="w-4 h-4" />}
-                   subtitle="مؤشرات الأداء"
-                   defaultExpanded={true}
-                   headerColors="border-emerald-500/20 bg-emerald-500/5 text-emerald-400"
-                 >
-                   <div className="pt-2">
-                     <PhaseOneGoal
-                         data={remoteStats?.phaseOneGoal ?? null} loading={initialLoading}
-                     />
-                   </div>
-                 </CollapsibleSection>
-            </div>
+                        <CollapsibleSection
+                            title="أهداف الرحلة الحالية"
+                            icon={<Activity className="w-4 h-4" />}
+                            subtitle="مؤشرات الأداء"
+                            defaultExpanded={true}
+                            headerColors="border-emerald-500/20 bg-emerald-500/5 text-emerald-400"
+                        >
+                            <div className="pt-2">
+                                <PhaseOneGoal
+                                    data={remoteStats?.phaseOneGoal ?? null} loading={initialLoading}
+                                />
+                            </div>
+                        </CollapsibleSection>
+                    </div>
 
-            {/* AI Executive Report */}
-            {executiveReport && (
-              <CollapsibleSection
-                title="التقييم التنفيذي للذكاء الاصطناعي"
-                icon={<Bot className="w-4 h-4" />}
-                subtitle="تقرير آلي لتحليل حالة المنصة"
-                defaultExpanded={false}
-                headerColors="border-purple-500/20 bg-purple-500/5 text-purple-400"
-              >
-                <div className="pt-2">
-                  <ExecutiveReport data={executiveReport} loading={initialLoading} />
+                    {/* AI Executive Report */}
+                    {executiveReport && (
+                        <CollapsibleSection
+                            title="التقييم التنفيذي للذكاء الاصطناعي"
+                            icon={<Bot className="w-4 h-4" />}
+                            subtitle="تقرير آلي لتحليل حالة المنصة"
+                            defaultExpanded={false}
+                            headerColors="border-purple-500/20 bg-purple-500/5 text-purple-400"
+                        >
+                            <div className="pt-2">
+                                <ExecutiveReport data={executiveReport} loading={initialLoading} />
+                            </div>
+                        </CollapsibleSection>
+                    )}
                 </div>
-              </CollapsibleSection>
-            )}
+
+                {/* The Timeline of Souls Sidebar */}
+                <div className="w-full xl:w-[350px] shrink-0 xl:h-[calc(100vh-200px)] xl:sticky top-6">
+                    <TimelineOfSouls />
+                </div>
+            </div>
         </div>
     );
 };

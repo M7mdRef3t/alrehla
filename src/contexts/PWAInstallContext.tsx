@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { runtimeEnv } from "../config/runtimeEnv";
 import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
 import { getWindowOrNull } from "../services/clientRuntime";
 
@@ -120,6 +121,7 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
   }, []);
 
   useEffect(() => {
+    if (runtimeEnv.isDev) return;
     const windowRef = getWindowOrNull();
     if (!windowRef) return;
 
@@ -135,6 +137,7 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
   }, []);
 
   useEffect(() => {
+    if (runtimeEnv.isDev) return;
     const windowRef = getWindowOrNull();
     if (!windowRef) return;
     if (!isTouchDevice && !windowRef.matchMedia("(max-width: 768px)").matches) return;
@@ -159,10 +162,12 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
 
   const triggerInstall = useCallback(async () => {
     if (!installEvent) {
-      setDismissed(false);
-      setForceShowHint(true);
-      setIsVisible(true);
-      showInstallInstructions({ isAndroid, isIOS, isInAppBrowser });
+      if (!runtimeEnv.isDev) {
+        setDismissed(false);
+        setForceShowHint(true);
+        setIsVisible(true);
+        showInstallInstructions({ isAndroid, isIOS, isInAppBrowser });
+      }
       return;
     }
 
@@ -176,6 +181,7 @@ export function PWAInstallProvider({ children }: PWAInstallProviderProps) {
   }, [installEvent, isAndroid, isIOS, isInAppBrowser]);
 
   const showInstallHint = useCallback(() => {
+    if (runtimeEnv.isDev) return;
     setDismissed(false);
     setForceShowHint(true);
     setIsVisible(true);

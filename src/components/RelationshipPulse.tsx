@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp } from "lucide-react";
 import { useMapState } from "../state/mapState";
-import type { Ring, OrbitHistoryEntry } from "../modules/map/mapTypes";
+import type { Ring } from "../modules/map/mapTypes";
 
 /* ══════════════════════════════════════════
    RELATIONSHIP PULSE — نبض العلاقات

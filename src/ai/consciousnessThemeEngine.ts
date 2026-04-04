@@ -125,9 +125,15 @@ export class ConsciousnessThemeEngine {
     const root = document.documentElement;
     const smooth = options?.smooth ?? true;
 
-    // إضافة transition للـ root (2s fade)
+    // إضافة transition للـ root (فقط للخصائص المتغيرة لتجنب الـ UI Freeze)
     if (smooth) {
-      root.style.transition = "all 2s cubic-bezier(0.4, 0, 0.2, 1)";
+      root.style.transition = `
+        background-color 2s cubic-bezier(0.4, 0, 0.2, 1),
+        color 2s cubic-bezier(0.4, 0, 0.2, 1),
+        border-radius 2s cubic-bezier(0.4, 0, 0.2, 1),
+        filter 2s cubic-bezier(0.4, 0, 0.2, 1),
+        backdrop-filter 2s cubic-bezier(0.4, 0, 0.2, 1)
+      `.trim();
     }
 
     // استخدام requestAnimationFrame للـ Performance

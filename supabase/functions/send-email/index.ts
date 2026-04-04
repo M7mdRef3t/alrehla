@@ -23,7 +23,7 @@ serve(async (req) => {
       throw new Error('Missing required fields: to, subject, html')
     }
 
-    console.log(`[SendEmail] Attempting to send email to: ${to}`)
+    console.warn(`[SendEmail] Attempting to send email to: ${to}`)
 
     const { data, error } = await resend.emails.send({
       from,
@@ -38,15 +38,16 @@ serve(async (req) => {
       throw error
     }
 
-    console.log(`[SendEmail] Success: ${data?.id}`)
+    console.warn(`[SendEmail] Success: ${data?.id}`)
 
     return new Response(JSON.stringify({ ok: true, id: data?.id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
-  } catch (error: any) {
-    console.error(`[SendEmail] Catch-all error: ${error.message}`)
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    console.error(`[SendEmail] Catch-all error: ${message}`)
+    return new Response(JSON.stringify({ error: message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     })

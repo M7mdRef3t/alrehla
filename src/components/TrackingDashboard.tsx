@@ -12,8 +12,6 @@ import {
   type TrackingMode as Mode
 } from "../services/journeyTracking";
 import { isSupabaseReady } from "../services/supabaseClient";
-import { AIContentStudioWidget } from "./AIContentStudioWidget";
-import { WeeklyWrapModal } from "./WeeklyWrapModal";
 import { AggressiveBurnoutModal } from "./AggressiveBurnoutModal";
 import { useAppContentString } from "../hooks/useAppContentString";
 import { isUserMode } from "../config/appEnv";

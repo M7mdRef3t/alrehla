@@ -7,14 +7,14 @@ import { VideoPlayer } from "./VideoPlayer";
 import {
   X, CheckCircle, Circle, Bookmark, BookmarkCheck,
   Clock, Star, Users, RotateCcw, Share2, Trophy, ChevronDown,
-  ChevronRight, ChevronUp, MessageCircle, FileText, BarChart2,
-  Download, Wifi, WifiOff, Lock, Zap, Brain, Send,
+  ChevronUp, MessageCircle, FileText, BarChart2,
+  Download, Wifi, Lock, Brain, Send,
   AlertCircle, Sparkles, GraduationCap, Play, Award,
 } from "lucide-react";
 import {
   fetchCourse, fetchModules, fetchUnits, fetchUserProgress, markUnitComplete,
   fetchUserProgressStats, hasActiveSession, fetchUserProgressDetail, saveVideoProgress,
-  type DBCourse, type DBModule, type DBUnit, type UserProgressStats,
+  type DBCourse, type DBModule, type DBUnit, type UserProgress, type UserProgressStats,
 } from "../services/learningService";
 
 /* ══════════════════════════════════════════
@@ -26,7 +26,7 @@ export interface CourseUnit {
   title: string;
   duration: string;
   videoUrl?: string;
-  chapters?: any[]; // For VideoPlayer
+  chapters?: Array<Record<string, unknown>>; // For VideoPlayer
   isCompleted?: boolean;
   isLocked?: boolean;
   isRecommended?: boolean; // Behavioral badge
@@ -243,7 +243,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
           title: u.title,
           duration: u.duration,
           videoUrl: u.video_url || undefined,
-          chapters: (u.metadata?.chapters as any[]) || undefined,
+          chapters: (u.metadata?.chapters as Array<Record<string, unknown>>) || undefined,
           isCompleted: dbProgress.has(u.id),
           isLocked: u.is_locked,
         })),
@@ -274,7 +274,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
   const [completedUnits, setCompletedUnits] = useState<Set<string>>(() =>
     new Set(getLS(`${courseId}_completed`, []) as string[])
   );
-  const [detailedProgress, setDetailedProgress] = useState<Record<string, any>>({});
+  const [detailedProgress, setDetailedProgress] = useState<Record<string, UserProgress>>({});
   const [offlineUnits, setOfflineUnits] = useState<Set<string>>(() =>
     new Set(getLS(`${courseId}_offline`, []) as string[])
   );
@@ -286,21 +286,29 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
   useEffect(() => {
     if (!resolvedCourseId) return;
     fetchUserProgressDetail(resolvedCourseId).then(data => {
-      const detail: Record<string, any> = {};
-      const completed = new Set<string>(completedUnits);
+      const detail: Record<string, UserProgress> = {};
       data.forEach(r => {
-        detail[r.unit_id] = r;
-        if (r.completed_at) completed.add(r.unit_id);
+        const row = r as UserProgress;
+        detail[row.unit_id] = row;
       });
       setDetailedProgress(detail);
-      setCompletedUnits(completed);
+      setCompletedUnits((prev) => {
+        const next = new Set(prev);
+        data.forEach((r) => {
+          const row = r as UserProgress;
+          if (row.completed_at) next.add(row.unit_id);
+        });
+        return next;
+      });
     }).catch(console.error);
+  }, [resolvedCourseId]);
 
+  useEffect(() => {
     if (!dbLoading && course.modules.length > 0 && !expandedModule) {
       setExpandedModule(course.modules[0]?.id ?? null);
       setActiveUnitId(course.modules[0]?.units[0]?.id ?? "");
     }
-  }, [resolvedCourseId, dbLoading]);
+  }, [dbLoading, course.modules, expandedModule]);
 
   // Derived
   const allUnits = course.modules.flatMap(m => m.units);
@@ -646,6 +654,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
   );
 
   // ── MAIN CONTENT ──
+  void SidebarContent;
   const MainContent = () => (
     <div style={{ flex: 1, overflowY: "auto", padding: isDesktop ? "0 0 40px" : "0 0 90px" }}>
       {/* Hero */}

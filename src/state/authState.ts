@@ -34,6 +34,7 @@ const LEGACY_ROLE_OVERRIDE_QUERY_KEY = "asRole";
 const hasSupabaseEnv = Boolean(runtimeEnv.supabaseUrl && runtimeEnv.supabaseAnonKey);
 let supabaseClient: SupabaseClient | null = null;
 let supabaseAuthInitialized = false;
+let supabaseAuthInitPromise: Promise<void> | null = null;
 
 function normalizeToneGender(raw: unknown): UserToneGender {
   if (raw === "male" || raw === "female" || raw === "neutral") return raw;
@@ -258,38 +259,46 @@ async function syncAuthRole(session: Session | null): Promise<void> {
 }
 
 async function initSupabaseAuth(): Promise<void> {
-  if (supabaseAuthInitialized) return;
-  supabaseAuthInitialized = true;
+  if (supabaseAuthInitPromise) return supabaseAuthInitPromise;
 
-  if (!hasSupabaseEnv) {
-    useAuthState.getState().setSession(null);
-    useAuthState.getState().setRole(null);
-    return;
-  }
+  supabaseAuthInitPromise = (async () => {
+    if (supabaseAuthInitialized) return;
+    supabaseAuthInitialized = true;
 
-  try {
-    if (!supabase) {
+    if (!hasSupabaseEnv) {
       useAuthState.getState().setSession(null);
       useAuthState.getState().setRole(null);
       return;
     }
-    supabaseClient = supabase;
-    const session = await safeGetSession();
-    await syncAuthRole(session);
-    useAuthState.getState().setSession(session);
-    supabase.auth.onAuthStateChange((event, nextSession) => {
-      const currentSession = nextSession ?? null;
-      useAuthState.getState().setSession(currentSession);
-      void syncAuthRole(currentSession);
 
-      if (event === "SIGNED_IN") {
-        trackEvent(AnalyticsEvents.AUTH_COMPLETED);
+    try {
+      if (!supabase) {
+        useAuthState.getState().setSession(null);
+        useAuthState.getState().setRole(null);
+        return;
       }
-    });
-  } catch {
-    useAuthState.getState().setSession(null);
-    useAuthState.getState().setRole(null);
-  }
+      supabaseClient = supabase;
+      const session = await safeGetSession();
+      await syncAuthRole(session);
+      useAuthState.getState().setSession(session);
+      supabase.auth.onAuthStateChange((event, nextSession) => {
+        const currentSession = nextSession ?? null;
+        useAuthState.getState().setSession(currentSession);
+        void syncAuthRole(currentSession);
+
+        if (event === "SIGNED_IN") {
+          trackEvent(AnalyticsEvents.AUTH_COMPLETED);
+        }
+      });
+    } catch {
+      useAuthState.getState().setSession(null);
+      useAuthState.getState().setRole(null);
+    }
+  })().finally(() => {
+    supabaseAuthInitPromise = null;
+  });
+
+  return supabaseAuthInitPromise;
 }
 
 if (typeof window !== "undefined") {

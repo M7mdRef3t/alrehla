@@ -1,14 +1,18 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+function getSupabaseAdmin() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!supabaseUrl || !serviceRoleKey) return null;
+    return createClient(supabaseUrl, serviceRoleKey);
+}
 
 export type MilestoneType = 'shadow_breakthrough' | 'behavioral_diversity' | 'stability_recovery';
 
 export async function processMilestones(userId: string) {
     try {
+        const supabaseAdmin = getSupabaseAdmin();
+        if (!supabaseAdmin) return;
         // 1. Fetch unacknowledged shadow signals
         const { data: shadowSignals } = await supabaseAdmin
             .from('shadow_signals')
@@ -78,6 +82,9 @@ export async function processMilestones(userId: string) {
 }
 
 async function unlockMilestone(userId: string, type: MilestoneType, label: string, metadata: any) {
+    const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) return;
+
     // Check for existence of this milestone type in the last 30 days to avoid repeats
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const { count } = await supabaseAdmin

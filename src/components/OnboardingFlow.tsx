@@ -9,10 +9,9 @@ import { setInLocalStorage } from "../services/browserStorage";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { AnalyticsEvents, trackCompleteRegistration, trackEvent, trackLead } from "../services/analytics";
 import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
-import { AlertTriangle, CheckCircle2, ShieldCheck, Mail, ArrowRight, Sparkles, Layout, Zap, Smartphone, User, Lock } from "lucide-react";
+import { AlertTriangle, Mail, ArrowRight, Sparkles, Zap, Smartphone, User, Lock } from "lucide-react";
 import { signInWithMagicLink } from "../services/authService";
 import { sendRecoveryPlanEmail } from "../services/emailService";
-import { getStoredLeadAttribution } from "../services/marketingAttribution";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { enableNotificationsWithPrompt, getNotificationPermission } from "../services/pushNotifications";
 import { marketingLeadService } from "../services/marketingLeadService";
@@ -118,7 +117,6 @@ const ONBOARDING_STYLES = `
    ════════════════════════════════════════════════ */
 
 const ONBOARDING_KEY = "dawayir-journey-onboarding-done";
-const ONBOARDING_COMPLETION_SESSION_KEY = "dawayir-onboarding-completed-session";
 
 /* eslint-disable react-refresh/only-export-components */
 export function markJourneyOnboardingDone(): void {
@@ -599,7 +597,7 @@ const StepRecoveryPlanPreview: FC<{
   userName?: string;
   collectedItems: { name: string; category: AdviceCategory }[]; 
   onComplete: () => void; 
-}> = ({ userName, collectedItems, onComplete }) => {
+}> = ({ userName, collectedItems: _collectedItems, onComplete }) => {
   const displayName = userName ? `يا ${userName}` : "";
   return (
     <div className="flex flex-col gap-6 w-full py-2 text-center">
@@ -631,6 +629,8 @@ const StepRecoveryPlanPreview: FC<{
 };
 
 interface NameCard { name: string; category: AdviceCategory; ring: Ring | null; placed: boolean }
+const onboardingRingPalette = RING_COLORS;
+void onboardingRingPalette;
 
 /* ── Main OnboardingFlow Component ── */
 export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initialMirrorName }) => {
@@ -638,7 +638,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   const setMirrorName = useJourneyState((s) => s.setMirrorName);
   
   const [step, setStep] = useState(0);
-  const [prevStep, setPrevStep] = useState(-1);
+  const [, setPrevStep] = useState(-1);
   const [name, setName] = useState((initialMirrorName ?? "").trim());
   const [collectedItems, setCollectedItems] = useState<{ name: string; category: AdviceCategory }[]>([]);
   
@@ -795,4 +795,4 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   );
 });
 
-(OnboardingFlow as any).displayName = "OnboardingFlow";
+OnboardingFlow.displayName = "OnboardingFlow";

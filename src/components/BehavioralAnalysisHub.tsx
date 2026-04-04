@@ -3,11 +3,11 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Brain, Activity, ShieldAlert, TrendingUp, Target,
-  Zap, Eye, Network, Lightbulb, Heart, Clock, AlertCircle,
-  Share2, Download, Bell, BellOff, ChevronRight, Users,
+  ArrowLeft, Brain,
+  Zap, Heart, AlertCircle,
+  Share2, Download, Bell, BellOff, Users,
   Home, Settings, Database, Sun, Moon, Lock, Unlock, X,
-  BarChart3, Sparkles, Link2, BookOpen
+  Sparkles, Link2, BookOpen
 } from "lucide-react";
 import { supabase } from "../services/supabaseClient";
 import type { ResourceTab } from "./ResourcesCenter";
@@ -20,7 +20,6 @@ import { UserProfile } from "./UserProfile";
 
 type TimeRange = "week" | "month" | "year";
 type SideSection = "home" | "analysis" | "emotional" | "data" | "profile" | "settings";
-type BehavioralMode = "containment" | "growth" | "flow";
 type PatternSentiment = "positive" | "negative" | "recurring";
 
 interface TimelinePoint {
@@ -525,7 +524,7 @@ export function BehavioralAnalysisHub({
           .order("created_at", { ascending: false })
           .limit(5);
         if (data && data.length > 0) setSupabaseAlerts(data as SupabaseAlert[]);
-      } catch (_) { /* graceful fallback to local alerts */ }
+      } catch { /* graceful fallback to local alerts */ }
     };
     fetchAlerts();
   }, []);
@@ -536,15 +535,13 @@ export function BehavioralAnalysisHub({
     try {
       if (!supabase) return;
       await supabase.from("behavioral_alerts").update({ is_read: true }).eq("id", alertId);
-    } catch (_) { /* ignore */ }
+    } catch { /* ignore */ }
   }, []);
 
   // Active alert message (Supabase first, then local)
   const activeAlertMessage = supabaseAlerts.length > 0
     ? supabaseAlerts[0].message
     : SMART_ALERTS[activeAlert];
-  const profileActivePatterns = PATTERNS.length;
-
   const handleSharePattern = useCallback((pattern: BehavioralPattern) => {
     setShareModal(pattern);
   }, []);

@@ -7,13 +7,22 @@
 import { GoogleGenAI } from '@google/genai';
 import { createClient } from '@supabase/supabase-js';
 
-// Setup Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Setup Supabase lazily so the module can load without env configuration.
+let supabase: ReturnType<typeof createClient> | null = null;
+
+function getSupabase() {
+  if (supabase) return supabase;
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  if (!supabaseUrl || !supabaseKey) return null;
+
+  supabase = createClient(supabaseUrl, supabaseKey);
+  return supabase;
+}
 
 // Setup Gemini
-let ai: any = null;
+let ai: GoogleGenAI | null = null;
 
 function ensureInit() {
   if (!ai) {
@@ -45,6 +54,8 @@ const SYSTEM_PROMPT = `
  * Fetch chat history for a given chatId from Supabase
  */
 async function getChatHistory(chatId: string) {
+  const supabase = getSupabase();
+  if (!supabase) return [];
   try {
     const { data, error } = await supabase
       .from('telegram_chat_history')
@@ -59,9 +70,10 @@ async function getChatHistory(chatId: string) {
     }
     
     // Reverse to get chronological order for Gemini
-    return (data || []).reverse().map(msg => ({
-      role: msg.role === 'model' ? 'model' : 'user', // Ensure strictly 'user' or 'model'
-      parts: [{ text: msg.content }]
+    const rows = (data || []) as Array<{ role?: string; content?: string }>;
+    return rows.reverse().map((msg) => ({
+      role: msg.role === 'model' ? 'model' : 'user',
+      parts: [{ text: msg.content || '' }]
     }));
   } catch (err) {
     console.error('Failed to get chat history:', err);
@@ -73,6 +85,8 @@ async function getChatHistory(chatId: string) {
  * Save a message to Supabase chat history
  */
 async function saveMessage(chatId: string, role: 'user' | 'model', content: string) {
+  const supabase = getSupabase();
+  if (!supabase) return;
   try {
     await supabase.from('telegram_chat_history').insert({
       chat_id: chatId.toString(),
@@ -91,26 +105,30 @@ export interface TelegramResponse {
 
 export async function processTelegramMessage(chatId: string, messageText: string, username?: string, contactPhoneNumber?: string): Promise<TelegramResponse> {
   ensureInit();
+  const supabase = getSupabase();
+  if (!supabase) {
+    return { text: "الخدمة مش متصلة بقاعدة البيانات حالياً." };
+  }
   
   // 1. Check Identity Resolution
-  let { data: profile } = await supabase.from('profiles').select('id, full_name').eq('telegram_chat_id', chatId).single();
+  let profile = (await supabase.from('profiles').select('id, full_name').eq('telegram_chat_id', chatId).single()).data as { id: string; full_name?: string | null } | null;
 
   // If user is not known yet
   if (!profile) {
     if (contactPhoneNumber) {
        // Clean up the phone number (e.g. ensure starts with + if missing, etc. Telegram typically sends international format)
-       let phone = contactPhoneNumber.startsWith('+') ? contactPhoneNumber : '+' + contactPhoneNumber;
+       const phone = contactPhoneNumber.startsWith('+') ? contactPhoneNumber : '+' + contactPhoneNumber;
        
        // Try to match with profiles
-       const { data: matchedProfile } = await supabase.from('profiles').select('id, full_name').eq('phone', phone).single();
-       if (matchedProfile) {
-          // Link them!
-          await supabase.from('profiles').update({ telegram_chat_id: chatId }).eq('id', matchedProfile.id);
-          profile = matchedProfile;
-       } else {
-          // Check marketing leads as a fallback
-          const { data: lead } = await supabase.from('marketing_leads').select('phone, status').eq('phone', phone).single();
-          if (lead) {
+        const matchedProfileData = (await supabase.from('profiles').select('id, full_name').eq('phone', phone).single()).data as { id: string; full_name?: string | null } | null;
+        if (matchedProfileData) {
+           // Link them!
+          await supabase.from('profiles').update({ telegram_chat_id: chatId }).eq('id', matchedProfileData.id);
+          profile = matchedProfileData;
+        } else {
+           // Check marketing leads as a fallback
+          const leadData = (await supabase.from('marketing_leads').select('phone, status').eq('phone', phone).single()).data as { phone?: string | null; status?: string | null } | null;
+          if (leadData) {
             return { text: "لقيت رقمك متسجل معانا كعميل فعلاً، بس حسابك الكامل لسه متحددش. افتح المنصة وكمل تسجيل عشان أقدر أتابع معاك شخصياً!" };
           }
           return { text: "للأسف ملقيتش الرقم ده متسجل عندنا في المنصة خالص يا هندسة. ممكن تدخل تبدأ رحلتك الأول على الموقع وتعمل حساب بنفس الرقم؟" };
@@ -131,7 +149,8 @@ export async function processTelegramMessage(chatId: string, messageText: string
 
   // 2. We have a linked profile, continue with normal GenAI Chat
   const history = await getChatHistory(chatId);
-  const newPrompt = `[من المستخدم: ${profile.full_name || username || 'Anonymous'}]: ${messageText}`;
+  const profileName = profile?.full_name || username || 'Anonymous';
+  const newPrompt = `[من المستخدم: ${profileName}]: ${messageText}`;
   
   const contents = [
     ...history,

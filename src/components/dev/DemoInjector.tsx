@@ -1,6 +1,5 @@
 import type { FC } from "react";
 import { useState } from "react";
-import { supabase } from "../../services/supabaseClient";
 import { useMapState } from "../../state/mapState";
 import { usePulseState } from "../../state/pulseState";
 import { DatabaseZap, Loader2, CheckCircle2 } from "lucide-react";
@@ -39,10 +38,10 @@ export const DemoInjector: FC = () => {
                     x,
                     y,
                     goalId: n.category,
-                    categoryId: n.category as any,
+                    categoryId: n.category as unknown as string,
                     stagnationDays: n.id === "demo-4" ? 14 : 0, // Make Amr stagnant for visual effect
                     zone: 'active' // Ensure they show up
-                } as any);
+                } as unknown as never);
 
                 // Initial energy balance mock
                 useMapState.getState().addEnergyTransaction(addedId, n.energyDelta, "رصيد ديمو");
@@ -74,7 +73,7 @@ export const DemoInjector: FC = () => {
                     focus: 'work',
                     notes: index === energies.length - 1 ? "استنزاف شديد اليوم" : undefined,
                     timestamp
-                } as any); // using as any to force timestamp since the type omits it, or we can use the store directly if needed
+                } as unknown as never);
             });
 
             setStatus("success");

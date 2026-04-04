@@ -40,13 +40,13 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
 
   const customTitlePlaceholder = useAppContentString(
     "add_person_custom_title_placeholder",
-    "???? ?????...",
+    "أدخل مسمى مخصص...",
     { page: "add_person" }
   );
 
   const namePlaceholder = useAppContentString(
     "add_person_name_placeholder",
-    "????: ????? ????? ????...",
+    "مثلاً: فلان الفلاني (اختياري)...",
     { page: "add_person" }
   );
 
@@ -56,14 +56,14 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
         <EditableText id="map_add_person_title" defaultText={mapCopy.addPersonTitle} page="map" />
       </h2>
 
-      {/* Step 1: Select Title — ??? ?? ???????? ?? ??????? ?????? ????? ???? ???? ????? */}
+      {/* Step 1: Select Title — اختر من الاقتراحات أو المسميات العامة لوصف هذا الكيان */}
       <div className="flex flex-col min-h-0 flex-auto overflow-hidden mb-6">
         <label className="block text-sm font-semibold text-slate-300 mb-3 shrink-0">
           <EditableText id="add_person_select_label" defaultText="نوع العلاقة" page="add_person" showEditIcon={false} />{" "}
           <span className="text-rose-500">*</span>
         </label>
         <div
-          className="grid grid-cols-3 gap-2 items-stretch min-h-0 flex-1 overflow-hidden"
+          className="grid grid-cols-2 sm:grid-cols-3 gap-2 items-stretch min-h-0 flex-1 overflow-y-auto pr-1 pb-2 scrollbar-none"
           style={{ gridAutoRows: "minmax(0, 1fr)" }}
         >
           {suggestions.map((suggestion: SuggestionCard) => {
@@ -78,7 +78,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
                     ? "bg-teal-500/20 border-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.15)]"
                     : "bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10"
                   }`}
-                title={`???? "${suggestion.label}"`}
+                title={`اختيار "${suggestion.label}"`}
                 whileHover={{ scale: isSelected ? 1 : 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -104,7 +104,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
                 ? "bg-white/10 border-white/30"
                 : "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
               }`}
-            title="???? ??? ??????"
+            title="إضافة مسمى مخصص"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -112,7 +112,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
               <span className="text-slate-400 text-lg font-bold leading-none">+</span>
             </div>
             <div className="min-h-9 flex items-center justify-center text-center text-xs sm:text-sm font-bold text-slate-400 leading-tight">
-              <EditableText id="add_person_select_other" defaultText="?? ????" page="add_person" showEditIcon={false} />
+              <EditableText id="add_person_select_other" defaultText="مسمى آخر" page="add_person" showEditIcon={false} />
             </div>
           </motion.button>
         </div>

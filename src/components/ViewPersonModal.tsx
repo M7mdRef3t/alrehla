@@ -1,7 +1,6 @@
-import type { FC, MouseEvent } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FC, type MouseEvent as ReactMouseEvent } from "react";
 import { motion } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Share2, Target, ClipboardList } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { ResultScreen } from "./AddPersonModal/ResultScreen";
@@ -19,7 +18,6 @@ import { deriveOrbitDriftReplay } from "../utils/orbitDriftReplay";
 import { OrbitDriftReplayCard } from "./OrbitDriftReplayCard";
 import { PersonalizedTraining } from "./PersonalizedTraining";
 import { SymptomsChecklist } from "./SymptomsChecklist";
-import { Target, ClipboardList } from "lucide-react";
 
 interface ViewPersonModalProps {
   nodeId: string;
@@ -42,7 +40,6 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   const [isBoundaryModalOpen, setIsBoundaryModalOpen] = useState(false);
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [isGhostSimOpen, setIsGhostSimOpen] = useState(false);
-  const [showReturnAlarm, setShowReturnAlarm] = useState(false);
   const [showShareCard, setShowShareCard] = useState<{
     title: string;
     desc: string;
@@ -50,6 +47,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   } | null>(null);
   const [showTraining, setShowTraining] = useState(false);
   const openEmergency = useEmergencyState((state) => state.open);
+  
   const returnAlarm = useMemo(
     () => (node ? deriveRedReturnAlarm(node, node.label) : null),
     [node]
@@ -68,47 +66,26 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
         recordClose(nodeId, openedAtRef.current, false);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeId]);
-
-  useEffect(() => {
-    setShowReturnAlarm(false);
-  }, [nodeId]);
-
-  useEffect(() => {
-    if (!node?.isNodeArchived) {
-      setShowReturnAlarm(false);
-    }
-  }, [node?.isNodeArchived]);
+  }, [nodeId, recordOpen, recordClose]);
 
   if (!node || !node.analysis) {
     return (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
-        onClick={onClose}
-      >
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-3xl bg-slate-950/60">
         <motion.div
-          className="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white px-8 py-8"
-          onClick={(event) => event.stopPropagation()}
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative w-full max-w-md rounded-3xl bg-slate-900/40 p-8 border border-white/10 shadow-2xl"
+          dir="rtl"
         >
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute left-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-gray-100 hover:text-slate-700"
-            aria-label="إغلاق"
-          >
-            <X className="h-5 w-5" />
+          <button onClick={onClose} className="absolute left-4 top-4 text-slate-400 hover:text-white">
+            <X className="w-5 h-5" />
           </button>
-
           <div className="py-6 text-center">
-            <h3 className="mb-2 text-xl font-bold text-slate-900">الشخص غير متاح الآن</h3>
-            <p className="mb-6 text-gray-500">لا توجد قراءة كاملة محفوظة لهذا الشخص حاليًا.</p>
+            <h3 className="mb-2 text-xl font-black text-white">الشخص غير متاح الآن</h3>
+            <p className="mb-6 text-slate-400">لا توجد قراءة كاملة محفوظة لهذا الشخص حاليًا.</p>
             <button
-              type="button"
-              onClick={onClose}
-              className="w-full rounded-full bg-teal-600 px-8 py-4 text-base font-semibold text-white transition-all duration-200 hover:bg-teal-700 active:scale-[0.98]"
+               onClick={onClose}
+               className="w-full rounded-2xl py-4 bg-teal-500 text-white font-black shadow-lg shadow-teal-500/20 active:scale-95 transition-all"
             >
               إغلاق
             </button>
@@ -125,23 +102,17 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
 
   const handleRestoreFromArchive = () => {
     useMapState.getState().unarchiveNode(node.id);
-    setShowReturnAlarm(false);
   };
 
-  const handleArchiveToggle = (event: MouseEvent<HTMLButtonElement>) => {
+  const handleArchiveToggle = (event: ReactMouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
-
     if (node.isNodeArchived) {
       if (returnAlarm) {
-        setShowReturnAlarm(true);
         return;
       }
-
       handleRestoreFromArchive();
       return;
     }
-
-    setShowReturnAlarm(false);
     useMapState.getState().archiveNode(node.id);
     setShowShareCard({
       title: "حررت مساحتي الخاصة!",
@@ -151,273 +122,138 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 backdrop-blur-3xl bg-slate-950/60" onClick={onClose}>
       <motion.div
-        className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-gray-200 bg-white px-8 py-8"
-        onClick={(event) => event.stopPropagation()}
-        initial={{ scale: 0.95, opacity: 0, y: 10 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 10 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
+        initial={{ opacity: 0, scale: 0.9, y: 40 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-[2.5rem] border border-white/10 bg-slate-950/40 p-6 sm:p-10 shadow-[0_0_100px_rgba(0,0,0,0.5)] transition-all duration-500 custom-scrollbar"
+        dir="rtl"
+        onClick={(e) => e.stopPropagation()}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute left-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-gray-100 hover:text-slate-700"
-          aria-label="إغلاق"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        {/* Ambient background glow */}
+        <div className="pointer-events-none absolute -top-24 -right-24 w-96 h-96 bg-teal-500/10 blur-[120px] rounded-full" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 w-96 h-96 bg-purple-500/10 blur-[120px] rounded-full" />
 
-        <div className="relative mb-6 overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 p-5 text-white shadow-xl">
-          <div
-            className={`pointer-events-none absolute -inset-20 blur-3xl opacity-20 transition-colors duration-1000 ${
-              (node.energyBalance?.netEnergy ?? 0) > 0
-                ? "bg-emerald-500"
-                : (node.energyBalance?.netEnergy ?? 0) < 0
-                  ? "bg-rose-500"
-                  : "bg-teal-500"
-            }`}
-          />
+        <div className="sticky top-0 z-20 mb-10 flex items-center justify-between -mx-2 -mt-2 bg-slate-950/20 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/5">
+          <div className="flex items-center gap-6">
+            <div className="relative group">
+               <div className="absolute inset-0 bg-teal-400 opacity-20 blur-xl group-hover:opacity-40 transition-opacity" />
+               <button
+                 type="button"
+                 onClick={() => onClose()}
+                 className="relative h-12 w-12 rounded-2xl bg-white/5 text-slate-300 transition-all hover:bg-white/10 hover:text-white border border-white/10 flex items-center justify-center shadow-xl active:scale-95"
+               >
+                 <X className="w-6 h-6" />
+               </button>
+            </div>
+            <div>
+              <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+                {node.label}
+              </h2>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-teal-400 shadow-[0_0_8px_#2dd4bf]" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                  {category === "work" ? "مدار عمل" : category === "family" ? "مدار عائلي" : "مدار عام"}
+                </span>
+              </div>
+            </div>
+          </div>
 
-          <div className="relative z-10">
-            <div className="mb-4 flex items-center justify-between">
-              <h4 className="text-sm font-bold text-slate-300">كشف حساب الطاقة</h4>
+          <div className="flex items-center gap-3">
+             {node.ring === "red" && (
+              <div className="mr-2 rounded-full bg-rose-500/20 px-4 py-1.5 border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]">
+                <span className="text-[10px] font-black uppercase tracking-widest text-rose-300">DANGER ZONE</span>
+              </div>
+            )}
+            <button
+               type="button"
+               onClick={() => setShowShareCard({ title: `تبصرة مدار ${node.label}`, desc: "رؤية شاملة للمدار وتأثيره الطاقي", type: "achievement" })}
+               className="h-12 w-12 rounded-2xl bg-teal-500/10 text-teal-400 transition-all hover:bg-teal-500/20 border border-teal-500/20 flex items-center justify-center shadow-lg active:scale-95"
+            >
+               <Share2 className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content Sections */}
+        <div className="space-y-6">
+          <div className="relative mb-5 overflow-hidden rounded-3xl p-5"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: `1px solid ${
+                (node.energyBalance?.netEnergy ?? 0) > 0 ? "rgba(45,212,191,0.2)" :
+                (node.energyBalance?.netEnergy ?? 0) < 0 ? "rgba(244,63,94,0.2)" :
+                "rgba(255,255,255,0.08)"
+              }`,
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <div className="pointer-events-none absolute -inset-10 opacity-20"
+              style={{
+                background: `radial-gradient(circle, ${
+                  (node.energyBalance?.netEnergy ?? 0) > 0 ? "#2dd4bf" :
+                  (node.energyBalance?.netEnergy ?? 0) < 0 ? "#f43f5e" : "#2dd4bf"
+                } 0%, transparent 70%)`,
+                filter: "blur(30px)",
+              }}
+            />
+            <div className="relative z-10 flex items-center justify-between mb-4">
+              <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">كشف حساب الطاقة</h4>
               <div className="text-right">
-                <p className="text-xs text-slate-400">الصافي</p>
-                <p
-                  className={`text-xl font-black ${
-                    (node.energyBalance?.netEnergy ?? 0) > 0
-                      ? "text-emerald-400"
-                      : (node.energyBalance?.netEnergy ?? 0) < 0
-                        ? "text-rose-400"
-                        : "text-slate-300"
-                  }`}
-                >
-                  {(node.energyBalance?.netEnergy ?? 0) > 0 ? "+" : ""}
-                  {node.energyBalance?.netEnergy ?? 0}
+                <p className="text-[10px] font-bold uppercase tracking-tighter text-slate-500">الصافي</p>
+                <p className="text-3xl font-black tabular-nums" style={{ color: (node.energyBalance?.netEnergy ?? 0) > 0 ? "#2dd4bf" : (node.energyBalance?.netEnergy ?? 0) < 0 ? "#f43f5e" : "#64748b" }}>
+                  {(node.energyBalance?.netEnergy ?? 0) > 0 ? "+" : ""}{node.energyBalance?.netEnergy ?? 0}
                 </p>
               </div>
             </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  useMapState.getState().addEnergyTransaction(node.id, 5, "شحن طاقي");
-                }}
-                className="flex-1 rounded-xl border border-emerald-500/50 bg-emerald-500/20 py-3 text-sm font-bold text-emerald-300 transition-all hover:bg-emerald-500/40 active:scale-95"
-              >
-                شحن (+5)
-              </button>
-
-              <div className="h-8 w-px bg-slate-700" />
-
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  useMapState.getState().addEnergyTransaction(node.id, -5, "استنزاف طاقي");
-                }}
-                className="flex-1 rounded-xl border border-rose-500/50 bg-rose-500/20 py-3 text-sm font-bold text-rose-300 transition-all hover:bg-rose-500/40 active:scale-95"
-              >
-                استنزاف (-5)
-              </button>
+            <div className="relative z-10 flex gap-3">
+              <button onClick={() => useMapState.getState().addEnergyTransaction(node.id, 5, "شحن طاقي")} className="flex-1 rounded-2xl py-3 text-sm font-black transition-all bg-teal-500/10 border border-teal-500/20 text-teal-400">شحن (+5)</button>
+              <button onClick={() => useMapState.getState().addEnergyTransaction(node.id, -5, "استنزاف طاقي")} className="flex-1 rounded-2xl py-3 text-sm font-black transition-all bg-rose-500/10 border border-rose-500/20 text-rose-400">استنزاف (-5)</button>
             </div>
           </div>
-        </div>
 
-        {node.ring === "green" && (
-          <div className="mb-6">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                useMapState.getState().togglePowerBank(node.id);
-              }}
-              className={`w-full rounded-2xl p-4 transition-all duration-300 ${
-                node.isPowerBank
-                  ? "border border-teal-500 bg-teal-600 text-white shadow-[0_0_20px_rgba(20,184,166,0.4)]"
-                  : "border border-slate-200 bg-slate-100 text-slate-700 hover:bg-teal-50"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-4">
+          {node.ring === "green" && (
+            <button onClick={() => useMapState.getState().togglePowerBank(node.id)} className={`w-full rounded-2xl p-5 border transition-all backdrop-blur-md ${node.isPowerBank ? "border-teal-500/50 bg-teal-600/20 text-white shadow-[0_0_30px_rgba(20,184,166,0.3)]" : "border-white/10 bg-white/5 text-slate-300"}`}>
+              <div className="flex items-center justify-between">
                 <div className="text-right">
-                  <span className="block text-base font-bold">
-                    {node.isPowerBank ? "🔋 بطارية طوارئ نشطة" : "🔋 تعيين كبطارية طوارئ"}
-                  </span>
-                  <span
-                    className={`mt-1 block text-xs leading-relaxed ${
-                      node.isPowerBank ? "text-teal-100" : "text-slate-500"
-                    }`}
-                  >
-                    {node.isPowerBank
-                      ? "هذا الشخص سيظهر لك في غرفة الطوارئ لشحن طاقتك."
-                      : "أضف هذا الشخص لغرفة الطوارئ لتلجأ إليه وقت النزيف الطاقي."}
-                  </span>
+                  <span className="block text-base font-black">{node.isPowerBank ? "🔋 بطارية طوارئ نشطة" : "🔋 تعيين كبطارية طوارئ"}</span>
+                  <span className="text-xs text-slate-400">للوصول السريع وقت النزيف الطاقي.</span>
                 </div>
-
-                <div
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
-                    node.isPowerBank ? "border-white bg-teal-500" : "border-slate-300"
-                  }`}
-                >
-                  {node.isPowerBank ? <div className="h-2.5 w-2.5 rounded-full bg-white" /> : null}
-                </div>
+                <div className={`h-6 w-6 rounded-full border-2 transition-all ${node.isPowerBank ? "border-teal-400 bg-teal-500 shadow-[0_0_10px_#2dd4bf]" : "border-slate-600"}`} />
               </div>
             </button>
-          </div>
-        )}
+          )}
 
-        <div className="mb-6">
-          <button
-            type="button"
-            onClick={handleArchiveToggle}
-            className={`w-full rounded-2xl border p-4 transition-all duration-300 ${
-              node.isNodeArchived
-                ? "border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700"
-                : "border-orange-500/30 bg-orange-500/10 text-orange-600 hover:bg-orange-500/20"
-            }`}
-          >
-            <div className="flex items-center justify-between gap-4">
+          <button onClick={handleArchiveToggle} className={`w-full rounded-2xl border p-5 transition-all backdrop-blur-md ${node.isNodeArchived ? "border-slate-700/50 bg-slate-800/40 text-slate-300" : "border-orange-500/20 bg-orange-500/5 text-orange-400"}`}>
+            <div className="flex items-center justify-between">
               <div className="text-right">
-                <span className="block text-base font-bold">
-                  {node.isNodeArchived ? "↩️ استعادة من الأرشيف" : "📥 أرشفة العلاقة مؤقتًا"}
-                </span>
-                <span
-                  className={`mt-1 block text-xs leading-relaxed ${
-                    node.isNodeArchived ? "text-slate-400" : "text-orange-500/80"
-                  }`}
-                >
-                  {node.isNodeArchived
-                    ? "العلاقة معلقة الآن ومحفوظة في الأرشيف الحي."
-                    : "انقل العلاقة إلى الأرشيف لوقف الاستنزاف دون حذف البيانات."}
-                </span>
+                <span className="block text-base font-black">{node.isNodeArchived ? "↩️ استعادة من الأرشيف" : "📥 أرشفة العلاقة مؤقتًا"}</span>
+                <span className="text-xs text-slate-500">وقف الاستنزاف دون حذف البيانات.</span>
               </div>
-
-              <div
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                  node.isNodeArchived
-                    ? "bg-slate-700 text-slate-400"
-                    : "bg-orange-500/20 text-orange-600"
-                }`}
-              >
-                {node.isNodeArchived ? "⚪" : "📦"}
-              </div>
+              <div className="h-10 w-10 flex items-center justify-center rounded-2xl border border-white/5 bg-white/5">{node.isNodeArchived ? "⚪" : "📦"}</div>
             </div>
           </button>
-        </div>
 
-        {showReturnAlarm && returnAlarm ? (
-          <div
-            className={`mb-6 rounded-2xl border p-4 text-right ${
-              returnAlarm.tone === "danger"
-                ? "border-rose-200 bg-rose-50"
-                : "border-amber-200 bg-amber-50"
-            }`}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <span
-                className={`rounded-full px-3 py-1 text-[11px] font-bold ${
-                  returnAlarm.tone === "danger"
-                    ? "bg-rose-600 text-white"
-                    : "bg-amber-500 text-white"
-                }`}
-              >
-                {returnAlarm.title}
-              </span>
-              <span className="text-xs font-semibold text-slate-600">فك الأرشفة يحتاج تأكيدًا واعيًا</span>
-            </div>
+          {orbitReplay && <OrbitDriftReplayCard snapshot={orbitReplay} />}
 
-            <p className="mt-3 text-sm leading-relaxed text-slate-800">{returnAlarm.summary}</p>
-
-            <ul className="mt-4 space-y-2">
-              {returnAlarm.reasons.map((reason) => (
-                <li
-                  key={reason}
-                  className={`rounded-xl border px-3 py-2 text-sm leading-relaxed text-slate-800 ${
-                    returnAlarm.tone === "danger"
-                      ? "border-rose-200 bg-white/90"
-                      : "border-amber-200 bg-white/90"
-                  }`}
-                >
-                  {reason}
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  handleRestoreFromArchive();
-                }}
-                className={`rounded-full px-4 py-3 text-sm font-bold text-white ${
-                  returnAlarm.tone === "danger"
-                    ? "bg-rose-600 hover:bg-rose-700"
-                    : "bg-amber-500 hover:bg-amber-600"
-                }`}
-              >
-                {returnAlarm.confirmLabel}
-              </button>
-
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setShowReturnAlarm(false);
-                }}
-                className="rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50"
-              >
-                {returnAlarm.keepArchivedLabel}
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {orbitReplay ? <OrbitDriftReplayCard snapshot={orbitReplay} /> : null}
-
-        {(node.isEmergency || node.ring === "red" || (node.energyBalance?.netEnergy ?? 0) < 0) && (
-          <div className="mb-6">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                openEmergency(buildEmergencyContextFromNode(node));
-              }}
-              className="w-full rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.15)] transition-all duration-300 hover:bg-rose-500/20"
-            >
-              <div className="flex items-center justify-between gap-4">
+          {(node.isEmergency || node.ring === "red" || (node.energyBalance?.netEnergy ?? 0) < 0) && (
+            <button onClick={() => openEmergency(buildEmergencyContextFromNode(node))} className="w-full rounded-2xl border border-rose-500/40 bg-rose-500/10 p-5 text-rose-400 shadow-[0_0_30px_rgba(244,63,94,0.2)] transition-all hover:bg-rose-500/20 backdrop-blur-md group relative overflow-hidden">
+              <div className="flex items-center justify-between relative z-10">
                 <div className="text-right">
-                  <span className="block text-base font-bold text-rose-300">
-                    غرفة الطوارئ لـ {node.label}
-                  </span>
-                  <span className="mt-1 block text-xs leading-relaxed text-rose-400/80">
-                    افتح بروتوكول تهدئة سريع مرتبط بهذه العلاقة قبل أي رد أو رجوع لنفس الحلقة.
-                  </span>
+                  <span className="block text-base font-black text-rose-200">🚑 غرفة الطوارئ لـ {node.label}</span>
+                  <span className="text-xs text-rose-300/60 uppercase tracking-tight font-medium">بروتوكول تهدئة سريع لوقف النزيف الطاقي.</span>
                 </div>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-500/20 text-rose-300">
-                  !
-                </div>
+                <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-rose-500 text-white font-black shadow-[0_0_15px_#f43f5e]">!</div>
               </div>
             </button>
-          </div>
-        )}
+          )}
 
-        {node && (
-          <div className="mb-8 p-5 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="flex items-center gap-3 mb-4">
-               <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                 <ClipboardList className="w-6 h-6 text-purple-600" />
-               </div>
+          <div className="p-6 bg-slate-900/40 rounded-3xl border border-white/10 backdrop-blur-xl shadow-2xl">
+            <div className="flex items-center gap-4 mb-6">
+               <div className="w-12 h-12 bg-purple-500/20 rounded-2xl flex items-center justify-center border border-purple-500/30 font-black text-purple-400"><ClipboardList strokeWidth={3} /></div>
                <div className="text-right">
-                 <h4 className="text-sm font-bold text-slate-900">أعراض مسجلة مع {node.label}</h4>
-                 <p className="text-[10px] text-slate-500">مراجعة وتحديث الإشارات اللي بتظهر معاك</p>
+                 <h4 className="text-base font-black text-white">أعراض مسجلة مع {node.label}</h4>
+                 <p className="text-xs text-slate-400">مراجعة وتحديث الإشارات</p>
                </div>
             </div>
             <SymptomsChecklist
@@ -427,143 +263,73 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
               onSymptomsChange={(ids) => useMapState.getState().updateNodeSymptoms(node.id, ids)}
             />
           </div>
-        )}
 
-        {/* التدريب المخصص */}
-        {node && (node.analysis?.selectedSymptoms?.length ?? 0) > 0 && (
-          <div className="mb-6">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                setShowTraining(true);
-              }}
-              className="w-full rounded-2xl border border-teal-500/30 bg-linear-to-br from-teal-500/10 to-cyan-500/10 p-4 text-teal-600 shadow-md transition-all duration-300 hover:bg-teal-500/20"
-            >
-              <div className="flex items-center justify-between gap-4">
+          {node && (node.analysis?.selectedSymptoms?.length ?? 0) > 0 && (
+            <button onClick={() => setShowTraining(true)} className="w-full rounded-2xl border border-teal-500/30 bg-white/[0.03] p-5 text-teal-400 shadow-xl transition-all hover:bg-teal-500/10 backdrop-blur-md">
+              <div className="flex items-center justify-between">
                 <div className="text-right">
-                  <span className="block text-base font-bold text-teal-700">
-                    🎯 ابدأ تدريب مخصص لـ {node.label}
-                  </span>
-                  <span className="mt-1 block text-xs leading-relaxed text-teal-600/80">
-                    تدرب على التعامل مع {node.analysis?.selectedSymptoms?.length ?? 0} أعراض رصدناها في علاقتك.
-                  </span>
+                  <span className="block text-base font-black text-white">🎯 تدريب مخصص: {node.label}</span>
+                  <span className="text-xs text-slate-400">تجاوز {node.analysis?.selectedSymptoms?.length ?? 0} أعراض.</span>
                 </div>
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500 text-white shadow-lg">
-                  <Target className="w-6 h-6" />
-                </div>
+                <Target className="w-8 h-8 text-teal-500" />
               </div>
             </button>
-          </div>
-        )}
+          )}
 
-        {(node.energyBalance?.netEnergy ?? 0) < 0 && (
-          <div className="mb-6">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                setIsBoundaryModalOpen(true);
-              }}
-              className="w-full rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-4 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.15)] transition-all duration-300 hover:bg-indigo-500/20"
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div className="text-right">
-                  <span className="block text-base font-bold text-indigo-300">
-                    🛡️ توليد درع الحماية الذكي
-                  </span>
-                  <span className="mt-1 block text-xs leading-relaxed text-indigo-400/80">
-                    استخدم الذكاء الاصطناعي لإنشاء رسالة وضع حدود أو اعتذار مخصصة بناءً على بيانات الاستنزاف الحالية.
-                  </span>
+          {(node.energyBalance?.netEnergy ?? 0) < 0 && (
+            <div className="grid grid-cols-2 gap-4">
+              <button onClick={() => setIsBoundaryModalOpen(true)} className="rounded-3xl border border-indigo-500/20 bg-indigo-500/5 p-5 transition-all hover:bg-indigo-500/10">
+                <div className="text-center font-black">
+                  <span className="block text-2xl mb-1">🛡️</span>
+                  <span className="text-white text-xs block">درع الحماية</span>
                 </div>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-400">
-                  ✨
+              </button>
+              <button onClick={() => {
+                const sub = loadSubscription();
+                if (sub.tier === "basic") setIsUpgradeOpen(true);
+                else setIsGhostSimOpen(true);
+              }} className="rounded-3xl border border-emerald-500/20 bg-emerald-500/5 p-5 transition-all hover:bg-emerald-500/10">
+                <div className="text-center font-black">
+                  <span className="block text-2xl mb-1">👻</span>
+                  <span className="text-white text-xs block">انسحاب تكتيكي</span>
                 </div>
-              </div>
-            </button>
-          </div>
-        )}
+              </button>
+            </div>
+          )}
 
-        {(node.energyBalance?.netEnergy ?? 0) < 0 && (
-          <div className="mb-6">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                const subscription = loadSubscription();
-                if (subscription.tier === "basic") {
-                  setIsUpgradeOpen(true);
-                } else {
-                  setIsGhostSimOpen(true);
-                }
-              }}
-              className="w-full rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all duration-300 hover:bg-emerald-500/20"
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div className="text-right">
-                  <span className="block text-base font-bold text-emerald-300">
-                    👻 محاكاة الانسحاب التكتيكي
-                  </span>
-                  <span className="mt-1 block text-xs leading-relaxed text-emerald-400/80">
-                    احسب كمية الطاقة التي ستوفرها وتستردها إذا قررت تجنب هذا الشخص لمدة أسبوع كامل.
-                  </span>
-                </div>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-                  ⚡
-                </div>
-              </div>
-            </button>
-          </div>
-        )}
-
-        <ResultScreen
-          personLabel={node.label}
-          personTitle={node.label}
-          score={node.analysis.score}
-          feelingAnswers={node.analysis.answers}
-          realityAnswers={node.realityAnswers}
-          isEmergency={node.isEmergency}
-          safetyAnswer={node.safetyAnswer as QuickAnswer2 | undefined}
-          summaryOnly
-          addedNodeId={node.id}
-          onOpenMission={handleOpenMission}
-          onClose={() => onClose()}
-          category={category}
-        />
+          <ResultScreen
+            personLabel={node.label}
+            personTitle={node.label}
+            score={node.analysis.score}
+            feelingAnswers={node.analysis.answers}
+            realityAnswers={node.realityAnswers}
+            isEmergency={node.isEmergency}
+            safetyAnswer={node.safetyAnswer as QuickAnswer2 | undefined}
+            summaryOnly
+            addedNodeId={node.id}
+            onOpenMission={handleOpenMission}
+            onClose={() => onClose()}
+            category={category}
+          />
+        </div>
       </motion.div>
 
-      <BoundaryGeneratorModal
-        isOpen={isBoundaryModalOpen}
-        onClose={() => setIsBoundaryModalOpen(false)}
-        personId={node.id}
-      />
-      <GhostingSimulatorModal
-        isOpen={isGhostSimOpen}
-        onClose={() => setIsGhostSimOpen(false)}
-        personId={node.id}
-      />
+      <BoundaryGeneratorModal isOpen={isBoundaryModalOpen} onClose={() => setIsBoundaryModalOpen(false)} personId={node.id} />
+      <GhostingSimulatorModal isOpen={isGhostSimOpen} onClose={() => setIsGhostSimOpen(false)} personId={node.id} />
       <UpgradeScreen isOpen={isUpgradeOpen} onClose={() => setIsUpgradeOpen(false)} />
 
-      {showShareCard ? (
+      {showShareCard && (
         <ShareableCard
           title={showShareCard.title}
           description={showShareCard.desc}
           type={showShareCard.type}
           metrics={[
-            {
-              label: "نوع العلاقة",
-              value:
-                node.ring === "red"
-                  ? "مستنزفة"
-                  : node.ring === "yellow"
-                    ? "محايدة"
-                    : "مشحونة"
-            },
+            { label: "نوع العلاقة", value: node.ring === "red" ? "مستنزفة" : node.ring === "yellow" ? "محايدة" : "مشحونة" },
             { label: "صافي الطاقة", value: node.energyBalance?.netEnergy || 0 }
           ]}
           onClose={() => setShowShareCard(null)}
         />
-      ) : null}
+      )}
 
       {showTraining && node && (
         <PersonalizedTraining

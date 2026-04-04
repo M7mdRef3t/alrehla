@@ -37,7 +37,7 @@ interface InsightsSidebarProps {
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-export const InsightsSidebar: FC<InsightsSidebarProps> = ({ onOpenArchive }) => {
+export const InsightsSidebar: FC<InsightsSidebarProps> = ({ onOpenArchive: _onOpenArchive }) => {
   const sidebarExpanded = useLayoutState((s) => s.sidebarExpanded);
   const sidebarPosition = useLayoutState((s) => s.sidebarPosition);
   const toggleSidebar = useLayoutState((s) => s.toggleSidebar);

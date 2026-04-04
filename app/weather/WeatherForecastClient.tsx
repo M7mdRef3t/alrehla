@@ -7,10 +7,8 @@ import {
   Wind,
   Sun,
   ArrowLeft,
-  Share2,
   Zap,
   Shield,
-  ChevronDown,
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { trackEvent, trackPageView } from "../../src/services/analytics";
@@ -19,8 +17,6 @@ import { captureUtmFromCurrentUrl, captureLeadAttributionFromCurrentUrl } from "
 /* ═══════════════════════════════════════════════════════════════════════
    Types & Data
    ═══════════════════════════════════════════════════════════════════════ */
-
-type WeatherTone = "storm" | "windy" | "clear";
 
 interface WeatherQuestion {
   id: string;
@@ -87,7 +83,7 @@ function deriveResult(answers: Record<string, { weight: number; zone: string }>)
   let dominantScore = -1;
   let dominantZoneId = "mixed";
   
-  for (const [qId, ans] of Object.entries(answers)) {
+  for (const ans of Object.values(answers)) {
     totalWeight += ans.weight;
     if (ans.weight >= dominantScore && ans.zone !== "mixed") {
       dominantScore = ans.weight;
@@ -295,8 +291,8 @@ export default function WeatherForecastClient() {
               text: result.shareText,
             });
             trackEvent("weather_share_completed", { method: "native_image_share" });
-          } catch (e) {
-            console.error("Native share failed or user cancelled", e);
+          } catch {
+            console.error("Native share failed or user cancelled");
           }
         } else {
             // Fallback: Download the image and copy text
@@ -312,7 +308,7 @@ export default function WeatherForecastClient() {
             try {
               await navigator.clipboard.writeText(result.shareText);
               alert("تم تحميل الصورة ونسخ التقرير عشان تشاركه براحتك 📸");
-            } catch (e) {
+            } catch {
               alert("تم تحميل الصورة بنجاح! 📸");
             }
             trackEvent("weather_share_completed", { method: "download_fallback" });

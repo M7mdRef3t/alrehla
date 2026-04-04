@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { LayoutTemplate, Info, Target, ClipboardList, BookOpen, Sparkles, ShieldAlert } from "lucide-react";
+import { Info, Target, BookOpen, Sparkles, ShieldAlert } from "lucide-react";
 import type { FeelingAnswers } from "../FeelingCheck";
 import type { RealityAnswers } from "../RealityCheck";
 import type { QuickAnswer2 } from "../../utils/suggestInitialRing";
@@ -11,6 +11,7 @@ import { realityScoreToRing } from "../../utils/realityScore";
 import { useMapState } from "../../state/mapState";
 import { trackEvent, AnalyticsEvents } from "../../services/analytics";
 import type { AdviceCategory } from "../../data/adviceScripts";
+import type { AdviceZone } from "../../data/adviceScripts";
 import { emergencyCopy } from "../../copy/emergency";
 import { recordFlowEvent, recordPathStartedOnce } from "../../services/journeyTracking";
 import { useSyncState } from "../../state/syncState";
@@ -239,21 +240,63 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   }, [personGender]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="max-w-3xl mx-auto space-y-8 pb-12"
-    >
+    <div className="fixed inset-0 z-[60] flex flex-col items-center justify-start overflow-y-auto px-4 py-12 md:py-20 bg-slate-950/90 backdrop-blur-2xl">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="w-full max-w-3xl space-y-8"
+      >
+        {/* التشخيص (Snapshot) هو أول شيء يظهر */}
+        <div ref={shareCardRef} className="p-8 rounded-3xl bg-slate-950 border border-white/10 mb-8 text-center relative overflow-hidden shadow-2xl">
+          <div className="absolute inset-0 bg-radial-gradient(circle_at_center,rgba(255,255,255,0.03),transparent) pointer-events-none" />
+          
+          <h2 className="text-3xl font-black text-white mb-6 flex items-center justify-center gap-4">
+            <span className="tracking-tight">
+              {isEmotionalPrisoner ? `تشخيص المدار: ${result.state_label}` : result.title}
+            </span>
+            <span
+              className="inline-flex items-center justify-center rounded-lg bg-teal-500/20 px-3 py-1 text-[9px] font-black text-teal-400 tracking-[0.2em] uppercase border border-teal-500/30 shadow-inner"
+              title="نسخة ثابتة"
+            >
+              SNAPSHOT
+            </span>
+          </h2>
+          {isEmotionalPrisoner && (
+            <p className="mb-8 text-base text-slate-300 leading-relaxed text-center font-medium max-w-2xl mx-auto opacity-90">
+              جسمك حر.. بس عقلك لسه متعلق. أنت دلوقتي مش في نفس المكان، لكن التفكير لسه ماسكك. بتصحى وتنام وأنت {singularReferenceText} في خيالك وبتدافع عن نفسك في محاكمات جوه دماغك.
+            </p>
+          )}
+          <div className="flex flex-col items-center gap-5 text-center relative z-10">
+            {isEmotionalPrisoner ? (
+              <p className="text-xs font-black text-amber-400 uppercase tracking-[0.15em] bg-amber-400/10 px-4 py-1.5 rounded-full border border-amber-400/20">
+                التركيز الآن: <span className="text-white ml-1">{result.goal_label}</span>
+              </p>
+            ) : (
+              <p className="text-xs font-black text-teal-400 uppercase tracking-[0.15em] bg-teal-400/10 px-4 py-1.5 rounded-full border border-teal-400/20">
+                الحالة: <span className="text-white ml-1">{result.state_label}</span>
+              </p>
+            )}
+            <p className="max-w-xl text-base text-slate-400 leading-relaxed font-medium italic opacity-80 border-r-2 border-white/10 pr-6 py-2">
+              "{shortPromiseBody}"
+            </p>
+            <div className="mt-6 px-8 py-4 rounded-2xl bg-white/[0.03] border border-white/10 text-base font-black text-white shadow-2xl backdrop-blur-md">
+              <span className="opacity-50 text-xs uppercase tracking-widest ml-2">{result.mission_label}</span>
+              <span className="mx-2 text-slate-600">|</span>
+              <span className="text-teal-400">{result.mission_goal}</span>
+            </div>
+          </div>
+        </div>
+
         {isEmotionalPrisoner && !summaryOnly && (
-          <div className="rounded-3xl bg-linear-to-b from-indigo-950/30 to-purple-950/20 border border-indigo-500/20 p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden group">
-             <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 blur-[80px] rounded-full group-hover:bg-indigo-500/20 transition-all duration-700" />
-             <div className="flex items-center gap-5 mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30 shadow-inner">
-                   <ShieldAlert className="w-8 h-8 text-indigo-400" />
+          <div className="rounded-3xl bg-slate-900/40 border border-white/10 p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden group">
+             <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/5 blur-[80px] rounded-full group-hover:bg-indigo-500/10 transition-all duration-700" />
+             <div className="flex items-center gap-5 mb-8 relative z-10">
+                <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30 shadow-inner">
+                   <ShieldAlert className="w-9 h-9 text-indigo-400" />
                 </div>
                 <div className="text-right">
-                  <h4 className="text-lg font-black text-white">أعراض بتحصل معاك مع {displayName}؟</h4>
-                  <p className="text-xs text-slate-400 font-medium mt-1">اختار كل اللي ينطبق عليك للوصول لأدق خطة تعافي</p>
+                  <h4 className="text-xl font-black text-white">أعراض بتحصل معاك مع {displayName}؟</h4>
+                  <p className="text-sm text-slate-400 font-medium mt-1">اختار كل اللي ينطبق عليك للوصول لأدق خطة تعافي</p>
                 </div>
              </div>
             <SymptomsChecklist
@@ -340,50 +383,13 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           <BoundaryEvidenceCard evidence={boundaryEvidence} />
         )}
         {summaryOnly && generationalEcho && (
-          <GenerationalEchoCard
-            snapshot={generationalEcho}
-            onOpenRecoveryPath={handleOpenTraumaRecoveryPath}
-          />
-        )}
-
-        <div ref={shareCardRef} className="p-8 rounded-3xl bg-linear-to-b from-white/[0.03] to-white/[0.01] border border-white/10 backdrop-blur-xl mb-8 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-radial-gradient(circle_at_center,rgba(255,255,255,0.03),transparent) pointer-events-none" />
-          
-          <h2 className="text-3xl font-black text-white mb-4 flex items-center justify-center gap-3">
-            <span>
-              {isEmotionalPrisoner ? `تشخيص المدار: ${result.state_label}` : result.title}
-            </span>
-            <span
-              className="inline-flex items-center justify-center rounded-full bg-white/10 px-3 py-1 text-[10px] font-black text-slate-300 tracking-widest uppercase border border-white/5"
-              title="نسخة ثابتة"
-            >
-              SNAPSHOT
-            </span>
-          </h2>
-          {isEmotionalPrisoner && (
-            <p className="mb-6 text-base text-slate-300 leading-relaxed text-center font-medium">
-              جسمك حر.. بس عقلك لسه متعلق. أنت دلوقتي مش في نفس المكان، لكن التفكير لسه ماسكك. بتصحى وتنام وأنت {singularReferenceText} في خيالك وبتدافع عن نفسك في محاكمات جوه دماغك.
-            </p>
-          )}
-          <div className="flex flex-col items-center gap-4 text-center">
-            {isEmotionalPrisoner ? (
-              <p className="text-sm font-black text-amber-400 uppercase tracking-wider">
-                التركيز الآن: <span className="text-white ml-1">{result.goal_label}</span>
-              </p>
-            ) : (
-              <p className="text-sm font-black text-emerald-400 uppercase tracking-wider">
-                الحالة: <span className="text-white ml-1">{result.state_label}</span>
-              </p>
-            )}
-            <p className="max-w-xl text-sm text-slate-400 leading-relaxed font-medium italic">
-              "{shortPromiseBody}"
-            </p>
-            <div className="mt-4 px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm font-black text-white shadow-inner">
-              {result.mission_label} —{" "}
-              <span className="text-emerald-400">{result.mission_goal}</span>
-            </div>
+          <div className="p-1 rounded-3xl bg-white/[0.02] border border-white/5 backdrop-blur-sm">
+            <GenerationalEchoCard
+              snapshot={generationalEcho}
+              onOpenRecoveryPath={handleOpenTraumaRecoveryPath}
+            />
           </div>
-        </div>
+        )}
 
         {!summaryOnly && (
           <>
@@ -405,21 +411,21 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               <p className="text-base text-slate-300 leading-relaxed font-medium">{result.explanation_body}</p>
             </div>
 
-            <div className="p-8 rounded-3xl bg-amber-950/20 border border-amber-500/20 backdrop-blur-xl text-right mb-8 shadow-2xl relative overflow-hidden transition-all hover:bg-amber-950/30">
-               <div className="absolute top-0 left-0 w-24 h-24 bg-amber-500/5 blur-3xl rounded-full" />
-              <h3 className="text-lg font-black text-amber-300 mb-5 flex items-center gap-3">
-                <span className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-xl">🎒</span> 
+            <div className="p-8 rounded-3xl bg-amber-950/10 border border-amber-500/20 backdrop-blur-xl text-right mb-8 shadow-2xl relative overflow-hidden group">
+               <div className="absolute top-0 left-0 w-32 h-32 bg-amber-500/5 blur-3xl rounded-full group-hover:bg-amber-500/10 transition-all duration-700" />
+              <h3 className="text-xl font-black text-amber-400 mb-6 flex items-center gap-4 relative z-10">
+                <span className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-xl shadow-inner border border-amber-500/30">🎒</span> 
                 أدواتك المطلوبة
               </h3>
-              <ul className="space-y-3 text-base text-slate-200">
+              <ul className="space-y-4 text-base text-slate-200 relative z-10">
                 {result.requirements.map((item, index) => {
                   const isReality = item.title.includes("ملف القضية") || item.title.includes("قائمة الواقع");
                   const isDopamine = item.title.includes("بديل الدوبامين");
                   return (
-                    <li key={`${item.title}-${index}`} className="group rounded-2xl bg-white/[0.03] px-5 py-4 border border-white/5 flex items-start justify-between gap-4 transition-colors hover:bg-white/[0.06]">
+                    <li key={`${item.title}-${index}`} className="group rounded-2xl bg-white/[0.02] px-6 py-5 border border-white/5 flex items-start justify-between gap-5 transition-all hover:bg-white/[0.05] hover:border-white/10">
                       <span className="font-medium leading-relaxed">
-                        <span className="font-black text-amber-400 block mb-1">{item.title}</span>{" "}
-                        {item.detail}
+                        <span className="font-black text-amber-400 block mb-1.5 text-lg">{item.title}</span>{" "}
+                        <span className="opacity-80">{item.detail}</span>
                       </span>
                       {(isReality || isDopamine) && (
                         <button
@@ -428,10 +434,10 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                             if (isReality) setShowRealityPopup((v) => !v);
                             else setShowDopaminePopup((v) => !v);
                           }}
-                          className="shrink-0 rounded-xl p-2 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-all border border-amber-500/20"
+                          className="shrink-0 rounded-xl p-2.5 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-all border border-amber-500/20 shadow-lg active:scale-90"
                           title={isReality ? "قائمة الواقع" : "بديل الدوبامين"}
                         >
-                          <Info className="w-5 h-5" />
+                          <Info className="w-6 h-6" />
                         </button>
                       )}
                     </li>
@@ -692,14 +698,14 @@ export const ResultScreen: FC<ResultScreenProps> = ({
             افتح رحلة {displayName}
           </button>
           {isForcedCtaMode ? (
-            <p className="text-xs text-slate-500 text-center mt-2 font-medium">الخطوة التالية المطلوبة: ابدأ المسار الآن.</p>
+            <p className="text-xs text-slate-500 text-center mt-2 font-black tracking-widest uppercase">
+              الخطوة التالية الإلزامية: ابدأ المسار الآن.
+            </p>
           ) : (
             <button
               type="button"
-              data-variant="secondary"
-              data-size="lg"
               onClick={() => onClose(addedNodeId)}
-              className="ds-button w-full"
+              className="w-full rounded-2xl border border-white/10 bg-white/5 py-4 text-sm font-black text-slate-300 hover:bg-white/10 hover:text-white transition-all shadow-xl active:scale-[0.98]"
             >
               ضيف على الخريطة
             </button>
@@ -724,11 +730,12 @@ export const ResultScreen: FC<ResultScreenProps> = ({
         <BoundaryScriptsLibrary
           isOpen={showScripts}
           onClose={() => setShowScripts(false)}
-          ring={activeRing as any}
+          ring={activeRing as AdviceZone}
           category={category}
           personLabel={displayName}
         />
       )}
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };

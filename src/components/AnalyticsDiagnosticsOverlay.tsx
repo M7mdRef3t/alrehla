@@ -2,22 +2,41 @@
 
 import { useEffect, useState } from "react";
 import { getAnalyticsDiagnostics } from "../services/analytics";
-import { isUserMode } from "../config/appEnv";
 import { runtimeEnv } from "../config/runtimeEnv";
+import { getWindowOrNull } from "../services/clientRuntime";
+
+const ANALYTICS_DEBUG_FLAG = "dawayir-analytics-debug";
+
+function isDebugEnabled(): boolean {
+  const windowRef = getWindowOrNull();
+  if (!windowRef) return false;
+
+  const fromQuery = windowRef.location.search.includes("analyticsDebug=1");
+  const fromStorage = windowRef.localStorage.getItem(ANALYTICS_DEBUG_FLAG) === "true";
+
+  return fromQuery || fromStorage;
+}
 
 export function AnalyticsDiagnosticsOverlay() {
   const [diagnostics, setDiagnostics] = useState(() => getAnalyticsDiagnostics("overlay"));
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    if (!runtimeEnv.isDev || isUserMode) return;
+    if (!runtimeEnv.isDev) return;
+
+    setEnabled(isDebugEnabled());
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
 
     const update = () => setDiagnostics(getAnalyticsDiagnostics("overlay"));
     update();
-    const timer = window.setInterval(update, 1000);
+    const timer = window.setInterval(update, 5000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [enabled]);
 
-  if (!runtimeEnv.isDev || isUserMode) return null;
+  if (!runtimeEnv.isDev || !enabled) return null;
 
   const rows = [
     ["userMode", diagnostics.userMode],

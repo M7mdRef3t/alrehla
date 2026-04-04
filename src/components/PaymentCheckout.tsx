@@ -7,7 +7,7 @@
 
 import type { FC } from "react";
 import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Smartphone,
   CreditCard,
@@ -90,7 +90,7 @@ async function getUserInfo() {
 // Component
 // ═══════════════════════════════════════════════════════════════════
 
-export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess }) => {
+export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: _onSuccess }) => {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
@@ -344,7 +344,6 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess }
   // ═══════════════════════════════════════════════════════════════════
 
   const isVodafone = selectedMethod === "vodafone_cash";
-  const displayNumber = isVodafone ? VODAFONE_CASH_NUMBER : INSTAPAY_NUMBER;
   const displayAlias  = isVodafone ? VODAFONE_CASH_NUMBER : INSTAPAY_ALIAS;
 
   return (

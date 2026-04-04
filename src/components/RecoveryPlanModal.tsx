@@ -7,6 +7,7 @@ import { DynamicRecoveryPlan } from "./DynamicRecoveryPlan";
 import { RelapsePrevention } from "./RelapsePrevention";
 import { ShieldAlert } from "lucide-react";
 import { resolveAdviceCategory } from "../data/adviceScripts";
+import type { PathId } from "../modules/pathEngine/pathTypes";
 
 interface RecoveryPlanModalProps {
   isOpen: boolean;
@@ -199,7 +200,7 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
                               ruminationCount={selectedNode.recoveryProgress?.ruminationLogCount ?? 0}
                               onIncrementRumination={() => incrementRuminationLog(selectedNode.id)}
                               nodeId={selectedNode.id}
-                              pathId={selectedNode.recoveryProgress?.pathId as any}
+                              pathId={selectedNode.recoveryProgress?.pathId as PathId | undefined}
                               recoveryPathSnapshot={selectedNode.recoveryProgress?.recoveryPathSnapshot}
                               onUpdateRecoveryPathSnapshot={(snapshot) =>
                                 updateRecoveryPathSnapshot(selectedNode.id, snapshot)

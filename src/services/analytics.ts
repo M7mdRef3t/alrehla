@@ -302,7 +302,9 @@ export function trackEvent(
       platform: windowRef?.navigator?.platform
     };
 
-    safeGetSession().then((session) => {
+    Promise.resolve()
+      .then(() => safeGetSession())
+      .then((session) => {
       const telemetryPayload = {
         event_type: eventName,
         user_id: session?.user?.id || null,
@@ -316,29 +318,30 @@ export function trackEvent(
         occurred_at: new Date().toISOString()
       };
 
-      fetch('/api/analytics', {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(telemetryPayload)
-      }).then(async (res) => {
-         if (!res.ok) {
+        fetch('/api/analytics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(telemetryPayload)
+        }).then(async (res) => {
+          if (!res.ok) {
             if (res.status === 401 || res.status === 403) {
-               supabaseTrackingEnabled = false;
+              supabaseTrackingEnabled = false;
             }
             if (runtimeEnv.isDev) {
               console.warn(`[Analytics] Ingestion POST failed: ${eventName}`, await res.text());
             }
-         }
-      }).catch(err => {
-         if (runtimeEnv.isDev) {
+          }
+        }).catch(err => {
+          if (runtimeEnv.isDev) {
             console.warn(`[Analytics] Ingestion Fetch failed for ${eventName}`, err);
-         }
-      });
-    }).catch((err: unknown) => {
+          }
+        });
+      })
+      .catch((err: unknown) => {
       if (!isSupabaseAbortError(err) && runtimeEnv.isDev) {
         console.warn(`[Analytics] getSession failed for ${eventName}`, err);
       }
-    });
+      });
   }
 }
 
@@ -493,6 +496,7 @@ export function getAnalyticsDiagnostics(context: string = "analytics") {
 
 export function logAnalyticsDiagnostics(context: string = "analytics"): void {
   if (!runtimeEnv.isDev || !isClientRuntime()) return;
+  if (!runtimeEnv.supabaseUrl || !runtimeEnv.supabaseAnonKey) return;
   const diagnostics = getAnalyticsDiagnostics(context);
   console.table(diagnostics);
 }

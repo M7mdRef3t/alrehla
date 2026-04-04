@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Mail,
   MessageCircle,
@@ -19,6 +20,12 @@ import {
   CheckCheck,
   ChevronDown,
   ChevronUp,
+  Radio,
+  Orbit,
+  Crosshair,
+  Radar,
+  Ghost,
+  GitMerge
 } from "lucide-react";
 import { ManualLeadEntry } from "./ManualLeadEntry";
 import { StatCard } from "../Executive/components/StatCard";
@@ -47,15 +54,29 @@ interface EmailMetrics {
   bounceRate: number;
 }
 
+interface RippleNode {
+  id: string;
+  label: string;
+  status: string;
+  parentId: string | null;
+}
+
 interface OpsStats {
   ok: boolean;
   totalLeads: number;
   counts: Record<string, number>;
+  uniqueEntitiesReached: number;
+  channelBreakdown: Record<string, number>;
+  totalDatabaseLeads: number;
+  leadsBySource: Record<string, number>;
+  leadsByCampaign: Record<string, number>;
   realStarts: number;
   recentErrors: Array<{ lead_email: string; channel: string; last_error: string; updated_at: string }>;
   recentSent: Array<{ lead_email: string; channel: string; sent_at: string }>;
   quickSendLeads: QuickSendLead[];
+  rippleTree?: RippleNode[];
   emailMetrics?: EmailMetrics;
+  rawLeads?: any[];
 }
 
 // --- Constants ---
@@ -66,6 +87,7 @@ const OWNER_EMAIL = "hello@alrehla.app";
 
 import { getAuthToken } from "../../../../state/authState";
 import { useAdminState } from "../../../../state/adminState";
+import { CampaignLeadsModal } from "./CampaignLeadsModal";
 
 function getBearerToken(): string {
   return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
@@ -102,15 +124,25 @@ function timeSince(iso: string): string {
   return `${Math.floor(hrs / 24)}\u064A`;
 }
 
-function buildMessage(lead: QuickSendLead): string {
+function buildMessage(lead: QuickSendLead, isGhostMode: boolean = false): string {
   const greeting = lead.name ? `\u0623\u0647\u0644\u0627\u064B ${lead.name}\u060C` : "\u0623\u0647\u0644\u0627\u064B\u060C";
-  return `${greeting} \u0645\u0639\u0643 \u0641\u0631\u064A\u0642 \u0639\u0645\u0644 \u0627\u0644\u0631\u062D\u0644\u0629 \u{1F319}\n\u0634\u0643\u0631\u0627\u064B \u0644\u0627\u0647\u062A\u0645\u0627\u0645\u0643 \u2014 \u062E\u0631\u064A\u0637\u0629 \u0639\u0644\u0627\u0642\u0627\u062A\u0643 \u062C\u0627\u0647\u0632\u0629 \u0641\u064A \u062F\u0642\u064A\u0642\u062A\u064A\u0646.\n\u0627\u0628\u062F\u0623 \u0645\u0646 \u0647\u0646\u0627: ${lead.personalLink}`;
+  const link = isGhostMode ? `${lead.personalLink}&ghost=1` : lead.personalLink;
+  if (isGhostMode) {
+    return `${greeting}\n\nتم فتح خريطة علاقاتك الآن بواسطة إحدى أرواح الرحلة.\nللحفاظ على طاقة المنصة، ستتلاشى هذه الدعوة ذاتياً بعد 12 ساعة.\n\nاستخدم مفتاحك من هنا قبل نفاذ الوقت: ${link}`;
+  }
+  return `${greeting} \u0645\u0639\u0643 \u0641\u0631\u064A\u0642 \u0639\u0645\u0644 \u0627\u0644\u0631\u062D\u0644\u0629 \u{1F319}\n\u0634\u0643\u0631\u0627\u064B \u0644\u0627\u0647\u062A\u0645\u0627\u0645\u0643 \u2014 \u062E\u0631\u064A\u0637\u0629 \u0639\u0644\u0627\u0642\u0627\u062A\u0643 \u062C\u0627\u0647\u0632\u0629 \u0641\u064A \u062F\u0642\u064A\u0642\u062A\u064A\u0646.\n\u0627\u0628\u062F\u0623 \u0645\u0646 \u0647\u0646\u0627: ${link}`;
 }
 
-function buildEmailBody(lead: QuickSendLead): string {
+function buildEmailBody(lead: QuickSendLead, isGhostMode: boolean = false): string {
   const greeting = lead.name ? `\u0623\u0647\u0644\u0627\u064B ${lead.name}\u060C` : "\u0623\u0647\u0644\u0627\u064B\u060C";
+  const link = isGhostMode ? `${lead.personalLink}&ghost=1` : lead.personalLink;
+  if (isGhostMode) {
+    return encodeURIComponent(
+      `${greeting}\n\nتم توليد خريطة علاقاتك حصرياً بواسطة صديق من داخل الرحلة.\nهذه الإشارة تتلف ذاتياً خلال 12 ساعة للحفاظ على ندرة وطاقة المنصة.\n\nاستخدم الرابط الآتي قبل التلاشي: ${link}\n\nننتظرك في الجانب الآخر 🌑`
+    );
+  }
   return encodeURIComponent(
-    `${greeting}\n\n\u0645\u0639\u0643 \u0641\u0631\u064A\u0642 \u0639\u0645\u0644 \u0627\u0644\u0631\u062D\u0644\u0629.\n\u0634\u0643\u0631\u0627\u064B \u0644\u0627\u0647\u062A\u0645\u0627\u0645\u0643 \u0628\u0627\u0644\u0645\u0646\u0635\u0629 \u2014 \u062E\u0631\u064A\u0637\u0629 \u0639\u0644\u0627\u0642\u0627\u062A\u0643 \u0627\u0644\u0623\u0648\u0644\u0649 \u062C\u0627\u0647\u0632\u0629 \u0641\u064A \u062F\u0642\u064A\u0642\u062A\u064A\u0646 \u0641\u0642\u0637.\n\n\u0627\u0628\u062F\u0623 \u0645\u0646 \u0647\u0646\u0627: ${lead.personalLink}\n\n\u0627\u0644\u0644\u064A\u0646\u0643 \u062F\u0647 \u062E\u0627\u0635 \u0628\u064A\u0643.\n\n\u0628\u0627\u0644\u062A\u0648\u0641\u064A\u0642 \u{1F49C}\n\u0641\u0631\u064A\u0642 \u0627\u0644\u0631\u062D\u0644\u0629`
+    `${greeting}\n\n\u0645\u0639\u0643 \u0641\u0631\u064A\u0642 \u0639\u0645\u0644 \u0627\u0644\u0631\u062D\u0644\u0629.\n\u0634\u0643\u0631\u0627\u064B \u0644\u0627\u0647\u062A\u0645\u0627\u0645\u0643 \u0628\u0627\u0644\u0645\u0646\u0635\u0629 \u2014 \u062E\u0631\u064A\u0637\u0629 \u0639\u0644\u0627\u0642\u0627\u062A\u0643 \u0627\u0644\u0623\u0648\u0644\u0649 \u062C\u0627\u0647\u0632\u0629 \u0641\u064A \u062F\u0642\u064A\u0642\u062A\u064A\u0646 \u0641\u0642\u0637.\n\n\u0627\u0628\u062F\u0623 \u0645\u0646 \u0647\u0646\u0627: ${link}\n\n\u0627\u0644\u0644\u064A\u0646\u0643 \u062F\u0647 \u062E\u0627\u0635 \u0628\u064A\u0643.\n\n\u0628\u0627\u0644\u062A\u0648\u0641\u064A\u0642 \u{1F49C}\n\u0641\u0631\u064A\u0642 \u0627\u0644\u0631\u062D\u0644\u0629`
   );
 }
 
@@ -144,7 +176,7 @@ function CollapsibleSection({
   defaultExpanded = false,
   badge,
   children,
-  headerColors = "border-white/10 bg-white/5 text-slate-300",
+  headerColors = "border-white/5 bg-white/[0.02] text-slate-300",
 }: {
   title: string;
   icon?: React.ReactNode;
@@ -158,7 +190,10 @@ function CollapsibleSection({
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   return (
-    <div className={`rounded-2xl border overflow-hidden transition-all duration-300 ${headerColors}`}>
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+      className={`rounded-3xl border backdrop-blur-xl overflow-hidden transition-all duration-300 ${headerColors} shadow-[0_0_15px_rgba(0,0,0,0.5)]`}
+    >
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-between p-5 text-right hover:bg-white/5 transition-all"
@@ -170,13 +205,24 @@ function CollapsibleSection({
         <div>
           <div className="flex items-center justify-end gap-2">
             {tooltip && <AdminTooltip content={tooltip} position="right" />}
-            <p className="text-sm font-black flex items-center gap-1.5">{title} {icon}</p>
+            <p className="text-sm font-black flex items-center gap-2 uppercase tracking-widest">{title} {icon}</p>
           </div>
-          {subtitle && <p className="text-[11px] text-white/50 mt-0.5">{subtitle}</p>}
+          {subtitle && <p className="text-[11px] text-white/40 mt-1 uppercase tracking-widest">{subtitle}</p>}
         </div>
       </button>
-      {expanded && <div className="p-5 overflow-hidden animation-fade-in border-t border-white/5">{children}</div>}
-    </div>
+      <AnimatePresence>
+      {expanded && (
+        <motion.div 
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          className="p-5 overflow-hidden border-t border-white/5 bg-black/20"
+        >
+          {children}
+        </motion.div>
+      )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
@@ -184,18 +230,21 @@ function CollapsibleSection({
 function QuickSendRow({
   lead,
   onMarkContacted,
+  isGhostMode = false,
 }: {
   lead: QuickSendLead;
   onMarkContacted: (email: string) => void;
+  isGhostMode?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const [marked, setMarked] = useState(false);
   // Track manual clicks to dim buttons individually without hiding the row
   const [clickedChannels, setClickedChannels] = useState<Set<string>>(new Set());
 
-  const msg = buildMessage(lead);
+  const msg = buildMessage(lead, isGhostMode);
   const encodedMsg = encodeURIComponent(msg);
   const phone = lead.phone ?? OWNER_PHONE;
+  const emailHref = `https://mail.google.com/mail/u/0/?view=cm&fs=1&to=${encodeURIComponent(lead.email)}&su=${encodeURIComponent(isGhostMode ? "نداء الاستيقاظ ✦" : "نداء الاستيقاظ لرحلتك ✦")}&body=${buildEmailBody(lead, isGhostMode)}`;
 
   const handleCopy = () => {
     void navigator.clipboard.writeText(msg).then(() => {
@@ -254,7 +303,6 @@ function QuickSendRow({
           title="\u0625\u062E\u0641\u0627\u0621 \u0647\u0630\u0627 \u0627\u0644\u0639\u0645\u064A\u0644 \u0645\u0646 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0646\u0647\u0627\u0626\u064A\u0627\u064B \u0628\u0639\u062F \u0625\u0646\u0647\u0627\u0621 \u0627\u0644\u0639\u0645\u0644 \u0645\u0639\u0647"
         >
           <CheckCheck className="w-3 h-3" />
-          {"\u0625\u0646\u0647\u0627\u0621 \u0627\u0644\u0639\u0645\u0644 (\u0623\u0631\u0634\u0641\u0629)"}
         </button>
       </div>
 
@@ -265,15 +313,15 @@ function QuickSendRow({
           href={`https://wa.me/${phone.replace(/\+/, "")}?text=${encodedMsg}`}
           target="_blank" rel="noopener noreferrer"
           onClick={() => handleChannelClick('whatsapp')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black tracking-widest transition-all shadow-lg ${
             clickedChannels.has('whatsapp')
               ? "bg-slate-800 text-slate-500/50 border border-slate-800"
-              : "bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 hover:bg-[#25D366]/20"
+              : "bg-[#25D366]/20 text-[#25D366] border border-[#25D366]/30 hover:bg-[#25D366]/30 hover:scale-105"
           }`}
 
         >
-          <MessageCircle className="w-3.5 h-3.5" />
-          {"\u0648\u0627\u062A\u0633\u0627\u0628"}
+          <MessageCircle className="w-4 h-4" />
+          SIGNAL: WHATSAPP
         </a>
 
         {/* Telegram by phone */}
@@ -281,47 +329,47 @@ function QuickSendRow({
           href={`https://t.me/${phone}`}
           target="_blank" rel="noopener noreferrer"
           onClick={() => handleChannelClick('telegram')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black tracking-widest transition-all shadow-lg ${
             clickedChannels.has('telegram')
               ? "bg-slate-800 text-slate-500/50 border border-slate-800"
-              : "bg-[#0088cc]/10 text-[#0088cc] border border-[#0088cc]/20 hover:bg-[#0088cc]/20"
+              : "bg-[#0088cc]/20 text-[#0088cc] border border-[#0088cc]/30 hover:bg-[#0088cc]/30 hover:scale-105"
           }`}
         >
-          <Send className="w-3.5 h-3.5" />
-          {"\u062A\u064A\u0644\u064A\u062C\u0631\u0627\u0645"}
+          <Send className="w-4 h-4" />
+          SIGNAL: TELEGRAM
         </a>
 
         {/* SMS */}
         <a
           href={`sms:${phone}?body=${encodedMsg}`}
           onClick={() => handleChannelClick('sms')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black tracking-widest transition-all shadow-lg ${
             clickedChannels.has('sms')
                ? "bg-slate-800 text-slate-500/50 border border-slate-800"
-               : "bg-slate-500/10 text-slate-300 border border-slate-500/20 hover:bg-slate-500/20"
+               : "bg-slate-500/20 text-slate-300 border border-slate-500/30 hover:bg-slate-500/30 hover:scale-105"
           }`}
         >
-          <Phone className="w-3.5 h-3.5" />
-          SMS
+          <Phone className="w-4 h-4" />
+          SIGNAL: SMS
         </a>
 
         {/* Email (Gmail Web Fallback) */}
         <a
-          href={`https://mail.google.com/mail/u/0/?view=cm&fs=1&to=${encodeURIComponent(lead.email)}&su=${encodeURIComponent("\u062E\u0637\u0648\u062A\u0643 \u0627\u0644\u0623\u0648\u0644\u0649 \u0641\u064A \u0627\u0644\u0631\u062D\u0644\u0629 \u062A\u0646\u062A\u0638\u0631\u0643 \u2726")}&body=${buildEmailBody(lead)}`}
+          href={emailHref}
           target="_blank" rel="noopener noreferrer"
-          title={isEmailDone ? "\u062A\u0645 \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0625\u064A\u0645\u064A\u0644 \u0628\u0627\u0644\u0641\u0639\u0644\u060C \u062A\u062C\u0646\u0628 \u0627\u0644\u0625\u0632\u0639\u0627\u062C!" : ""}
+          title={isEmailDone ? "تم بث النداء، لا تقم بتوليد ضجيج زائد." : ""}
           onClick={(e) => {
             if (isEmailDone) e.preventDefault();
             else handleChannelClick('email');
           }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black tracking-widest transition-all shadow-lg ${
             isEmailDone
               ? "bg-slate-800 text-slate-500/50 cursor-not-allowed border border-slate-800"
-              : "bg-sky-500/10 text-sky-400 border border-sky-500/20 hover:bg-sky-500/20"
+              : "bg-sky-500/20 text-sky-400 border border-sky-500/30 hover:bg-sky-500/30 hover:scale-105"
           }`}
         >
-          <Mail className="w-3.5 h-3.5" />
-          {"Gmail"}
+          <Mail className="w-4 h-4" />
+          SIGNAL: EMAIL
         </a>
 
         {/* Copy Message */}
@@ -342,6 +390,40 @@ function QuickSendRow({
   );
 }
 
+// --- Ripple Effect Component ---
+function RippleEffectGraph({ nodes }: { nodes: RippleNode[] }) {
+  if (!nodes || nodes.length === 0) return <div className="text-center text-xs text-slate-500 py-8">لا توجد بيانات للأثر بعد</div>;
+
+  const roots = nodes.filter(n => !n.parentId);
+  
+  const renderNode = (node: RippleNode, depth = 0) => {
+    const children = nodes.filter(n => n.parentId === node.id);
+    const color = node.status === 'active' ? 'text-teal-400 bg-teal-400/10 border-teal-400/30 shadow-[0_0_8px_rgba(45,212,191,0.3)]' : 
+                  node.status === 'pending' ? 'text-amber-400 bg-amber-400/10 border-amber-400/30' : 
+                  'text-slate-500 bg-slate-800 border-slate-700 opacity-60';
+
+    return (
+      <div key={node.id} className="relative">
+        <div className={`flex items-center gap-2 my-2 w-max px-3 py-1.5 rounded-full border text-[10px] font-black tracking-widest ${color}`} style={{ marginRight: `${depth * 24}px` }}>
+          <div className={`w-2 h-2 shrink-0 rounded-full ${node.status === 'active' ? 'bg-teal-400 animate-pulse' : node.status === 'pending' ? 'bg-amber-400' : 'bg-slate-500'}`} />
+          <span>{node.label}</span>
+        </div>
+        {children.length > 0 && (
+          <div className="border-r border-white/10 mr-[11px] pr-3 py-1">
+            {children.map(c => renderNode(c, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="p-5 bg-black/20 rounded-2xl border border-white/5 overflow-x-auto min-h-[150px]" dir="rtl">
+      {roots.map(r => renderNode(r, 0))}
+    </div>
+  );
+}
+
 // --- Main Panel ---
 
 export function MarketingOpsPanel() {
@@ -350,6 +432,8 @@ export function MarketingOpsPanel() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [contacted, setContacted] = useState<Set<string>>(new Set());
+  const [ghostMode, setGhostMode] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<{ type: "campaign" | "source"; value: string } | null>(null);
   const toastRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = (msg: string, ok: boolean) => {
@@ -395,11 +479,14 @@ export function MarketingOpsPanel() {
   };
 
   const c = stats?.counts ?? {};
+  const channelBreakdown = stats?.channelBreakdown ?? {};
+  const uniqueEntities = stats?.uniqueEntitiesReached ?? 0;
   const sent = (c["sent"] ?? 0) + (c["simulated"] ?? 0);
   const pending = c["pending"] ?? 0;
   const failed = (c["failed"] ?? 0);
   const realStarts = stats?.realStarts ?? 0;
-  const convRate = sent > 0 ? `${Math.round((realStarts / sent) * 100)}%` : "\u2014";
+  // Convert based on Unique contacts rather than total signals for better accuracy
+  const convRate = uniqueEntities > 0 ? `${Math.round((realStarts / uniqueEntities) * 100)}%` : "\u2014";
 
   const availableLeads = (stats?.quickSendLeads ?? []).filter((l) => !contacted.has(l.email));
 
@@ -422,36 +509,141 @@ ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.na
 
 
   return (
-    <div className="space-y-6 text-slate-200" dir="rtl">
+    <div className="space-y-6 text-slate-200 max-w-5xl mx-auto" dir="rtl">
       {/* Toast */}
+      <AnimatePresence>
       {toast && (
-        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl font-bold text-sm shadow-2xl transition-all ${toast.ok ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"}`}>
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+          className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 px-6 py-4 rounded-2xl font-black text-sm shadow-[0_0_30px_rgba(0,0,0,0.5)] transition-all flex items-center gap-3 uppercase tracking-widest backdrop-blur-xl border ${toast.ok ? "bg-emerald-900/50 text-emerald-400 border-emerald-500/20" : "bg-rose-900/50 text-rose-400 border-rose-500/20"}`}>
+          {toast.ok ? <Orbit className="w-5 h-5 animate-spin-slow" /> : <AlertCircle className="w-5 h-5" />}
           {toast.msg}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl font-black tracking-tight flex items-center gap-2">
-            {"\u0625\u062F\u0627\u0631\u0629 \u0627\u0644\u0627\u0646\u062A\u0634\u0627\u0631 (Marketing Ops)"}
-            <AdminTooltip content={"\u0645\u0631\u0643\u0632 \u062A\u062D\u0643\u0645 \u0634\u0627\u0645\u0644 \u0644\u0625\u062F\u0627\u0631\u0629 \u0627\u0644\u062A\u0648\u0632\u064A\u0639\u060C \u0648\u062D\u0645\u0644\u0627\u062A \u0625\u0639\u0627\u062F\u0629 \u0627\u0644\u0627\u0633\u062A\u0647\u062F\u0627\u0641\u060C \u0648\u0627\u0644\u0645\u062A\u0627\u0628\u0639\u0629 \u0627\u0644\u062A\u0644\u0642\u0627\u0626\u064A\u0629 \u0623\u0648 \u0627\u0644\u064A\u062F\u0648\u064A\u0629 \u0644\u062A\u0648\u0633\u064A\u0639 \u062F\u0627\u0626\u0631\u0629 \u0627\u0644\u0631\u062D\u0644\u0629."} position="bottom" />
-          </h2>
-          <p className="text-slate-500 text-xs mt-1">{"\u0645\u0631\u0643\u0632 \u0627\u0644\u062A\u062D\u0643\u0645 \u0641\u064A \u062D\u0645\u0644\u0627\u062A \u0627\u0644\u0640 Outreach"}</p>
+      <header className="flex flex-col md:flex-row items-center justify-between mb-8 bg-slate-900/30 p-6 rounded-3xl border border-indigo-500/10 shadow-[0_0_40px_rgba(99,102,241,0.05)] relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[80px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full pointer-events-none" />
+        
+        <div className="relative z-10 flex items-center gap-4 w-full md:w-auto mb-4 md:mb-0">
+          <div className="p-4 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+            <Radio className="w-8 h-8 text-indigo-400" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-black tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-l from-indigo-400 to-purple-400 flex items-center gap-2">
+              {"مصفوفة الامتداد والنداء"}
+              <AdminTooltip content={"مركز القيادة الفوقي لإطلاق نداء الملاذ للأرواح المدعوة خارج النظام. يمكنك بث الترددات الحيوية من هنا، ومراقبة الـ Resonance."} position="bottom" />
+            </h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+              <p className="text-indigo-400/80 text-xs font-bold uppercase tracking-widest">{"محطة النشر وتوجيه السبل"}</p>
+            </div>
+          </div>
         </div>
+
         <button onClick={load} disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 text-sm font-bold hover:bg-white/10 transition-all active:scale-95 disabled:opacity-50">
+          className="relative z-10 flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-black uppercase tracking-widest hover:bg-indigo-500/20 hover:text-indigo-200 transition-all active:scale-95 disabled:opacity-50 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
           <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          {"\u062A\u062D\u062F\u064A\u062B"}
+          {"تحديث الرادار"}
         </button>
-      </div>
+      </header>
+
+      {/* Acquisition Sources */}
+      <CollapsibleSection
+        title={"بوابات العبور (Acquisition Sources)"}
+        icon={<TrendingUp className="w-5 h-5 text-emerald-400" />}
+        subtitle={"تحليل مصادر وتدفق الأرواح המُكتسبة إلى قاعدة بيانات الملاذ."}
+        defaultExpanded={true}
+        headerColors="border-emerald-500/20 bg-emerald-500/5 text-emerald-300"
+      >
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCard 
+              title={"إجمالي الأرواح المكتسبة"} 
+              value={stats?.totalDatabaseLeads ?? 0} 
+              icon={<Radar className="w-5 h-5" />} 
+              glowColor="emerald" 
+              tooltip={"إجمالي التسجيلات وقواعد البيانات المحفوظة (Leads) في الملاذ من جميع المصادر."} 
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* By Campaign */}
+            <div className="rounded-2xl bg-white/[0.02] p-5 border border-white/5">
+              <h3 className="text-xs font-black uppercase tracking-widest text-emerald-500/80 mb-4">التدفق عبر الحملات الإعلانية (Campaign)</h3>
+              <div className="space-y-3">
+                {Object.entries(stats?.leadsByCampaign ?? {}).sort((a,b) => b[1] - a[1]).map(([campaign, count]) => {
+                  const label = campaign === "undefined" || campaign === "unattributed" ? "بدون حملة" : campaign;
+                  return (
+                  <button 
+                    key={campaign} 
+                    onClick={() => setSelectedFilter({ type: "campaign", value: campaign })}
+                    className="w-full flex items-center justify-between hover:bg-white/[0.05] p-2 -mx-2 rounded-lg transition-colors cursor-pointer group"
+                  >
+                    <span className="text-sm text-slate-300 truncate max-w-[70%] group-hover:text-emerald-300 transition-colors" title={label}>{label}</span>
+                    <span className="text-sm font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full group-hover:bg-emerald-500/20 transition-colors">{count}</span>
+                  </button>
+                )})}
+                {Object.keys(stats?.leadsByCampaign ?? {}).length === 0 && (
+                   <span className="text-xs text-slate-500">لا توجد بيانات متاحة</span>
+                )}
+              </div>
+            </div>
+
+            {/* By Source */}
+            <div className="rounded-2xl bg-white/[0.02] p-5 border border-white/5">
+              <h3 className="text-xs font-black uppercase tracking-widest text-emerald-500/80 mb-4">التدفق عبر القنوات (Source)</h3>
+              <div className="space-y-3">
+                {Object.entries(stats?.leadsBySource ?? {}).sort((a,b) => b[1] - a[1]).map(([source, count]) => {
+                  const label = source === "undefined" || source === "unknown" ? "غير معروف" : source;
+                  return (
+                  <button 
+                    key={source} 
+                    onClick={() => setSelectedFilter({ type: "source", value: source })}
+                    className="w-full flex items-center justify-between hover:bg-white/[0.05] p-2 -mx-2 rounded-lg transition-colors cursor-pointer group"
+                  >
+                    <span className="text-sm text-slate-300 capitalize group-hover:text-amber-300 transition-colors">{label}</span>
+                    <span className="text-sm font-bold text-slate-300 group-hover:text-amber-400 bg-white/5 group-hover:bg-amber-400/10 px-3 py-1 rounded-full transition-colors">{count}</span>
+                  </button>
+                )})}
+                 {Object.keys(stats?.leadsBySource ?? {}).length === 0 && (
+                   <span className="text-xs text-slate-500">لا توجد بيانات متاحة</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </CollapsibleSection>
+
+      <CampaignLeadsModal 
+        isOpen={!!selectedFilter}
+        onClose={() => setSelectedFilter(null)}
+        title={
+          selectedFilter 
+            ? (selectedFilter.value === "undefined" || selectedFilter.value === "unattributed" || selectedFilter.value === "unknown" 
+                ? (selectedFilter.type === "campaign" ? "بدون حملة" : "غير معروف") 
+                : selectedFilter.value)
+            : ""
+        }
+        leads={
+          (stats?.rawLeads || []).filter(lead => {
+            if (!selectedFilter) return false;
+            const val = selectedFilter.type === "campaign" ? lead.campaign : lead.source_type;
+            return String(val) === String(selectedFilter.value);
+          })
+        }
+        onLeadUpdated={() => void load()}
+      />
 
       {/* Manual Lead Entry */}
       <CollapsibleSection
-        title={"\u0625\u0636\u0627\u0641\u0629 1 Lead \u064A\u062F\u0648\u064A\u0627\u064B"}
-        icon={<Phone className="w-4 h-4" />}
-        subtitle={"\u0625\u062F\u062E\u0627\u0644 \u0633\u0631\u064A\u0639 \u0644\u0639\u0645\u064A\u0644 \u0645\u062D\u062A\u0645\u0644"}
+        title={"توجيه إشارة لروح منفردة (Manual Entity Link)"}
+        icon={<Crosshair className="w-5 h-5 text-sky-400" />}
+        subtitle={"توليد مسار إتصال مباشر لمن لم يتم رصدهم."}
         defaultExpanded={false}
+        headerColors="border-sky-500/20 bg-sky-500/5 text-sky-300"
       >
         <ManualLeadEntry 
           onSuccess={(msg) => {
@@ -464,18 +656,18 @@ ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.na
 
       {/* Stats Summary */}
       <CollapsibleSection
-        title={"\u0645\u0624\u0634\u0631\u0627\u062A \u0627\u0644\u0623\u062F\u0627\u0621 \u0627\u0644\u0633\u0631\u064A\u0639\u0629"}
-        icon={<Activity className="w-4 h-4" />}
-        subtitle={"\u0646\u0638\u0631\u0629 \u0639\u0627\u0645\u0629 \u0639\u0644\u0649 \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0648\u0627\u0644\u062A\u062D\u0648\u064A\u0644\u0627\u062A"}
+        title={"مصفوفة استجابة الملاذ (Resonance Matrix)"}
+        icon={<Radar className="w-5 h-5" />}
+        subtitle={"رصد وتتبع انبعاثات الإشعاع ونسب التجاوب في محيط الإطلاق."}
         defaultExpanded={true}
-        headerColors="border-indigo-500/20 bg-indigo-500/5 text-indigo-300"
+        headerColors="border-purple-500/20 bg-purple-500/5 text-purple-300"
       >
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard title={"\u062A\u0645 \u0627\u0644\u0625\u0631\u0633\u0627\u0644"} value={sent} icon={<CheckCircle2 className="w-5 h-5" />} glowColor="teal" tooltip={"\u0625\u062C\u0645\u0627\u0644\u064A \u0627\u0644\u0631\u0633\u0627\u0626\u0644 \u0627\u0644\u062A\u0633\u0648\u064A\u0642\u064A\u0629 \u0623\u0648 \u0627\u0644\u062A\u0644\u0642\u0627\u0626\u064A\u0629 \u0627\u0644\u062A\u064A \u062A\u0645 \u062A\u0648\u0635\u064A\u0644\u0647\u0627 \u0628\u0646\u062C\u0627\u062D \u0644\u0644\u062C\u0645\u0647\u0648\u0631 \u0639\u0628\u0631 \u0643\u0644 \u0627\u0644\u0642\u0646\u0648\u0627\u062A \u0627\u0644\u0645\u062A\u0627\u062D\u0629."} />
-            <StatCard title={"\u0641\u064A \u0627\u0644\u0627\u0646\u062A\u0638\u0627\u0631"} value={pending} icon={<Clock className="w-5 h-5" />} glowColor="amber" tooltip={"\u0627\u0644\u0639\u0645\u0644\u0627\u0621 \u0641\u064A \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0627\u0646\u062A\u0638\u0627\u0631 (Queue) \u0644\u062C\u062F\u0648\u0644\u0629 \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062A\u0644\u0642\u0627\u0626\u064A \u062A\u062F\u0631\u064A\u062C\u064A\u0627\u064B \u0644\u062A\u0641\u0627\u062F\u064A \u0627\u0644\u062D\u0638\u0631."} />
-            <StatCard title={"\u0641\u0634\u0644 \u0627\u0644\u062A\u0648\u0635\u064A\u0644"} value={failed} icon={<AlertCircle className="w-5 h-5" />} glowColor="rose" tooltip={"\u0627\u0644\u0640 Leads \u0627\u0644\u0644\u064A \u0648\u0627\u062C\u0647\u0648\u0627 \u0645\u0634\u0643\u0644\u0629 \u0641\u064A \u0627\u0644\u0625\u0631\u0633\u0627\u0644 (\u063A\u0627\u0644\u0628\u0627\u064B \u0628\u0633\u0628\u0628 \u0627\u0646\u062A\u0647\u0627\u0621 \u0628\u0627\u0642\u0629 \u0627\u0644\u0625\u064A\u0645\u064A\u0644 \u0623\u0648 \u0628\u0631\u064A\u062F \u063A\u064A\u0631 \u0635\u0627\u0644\u062D)."} />
-            <StatCard title={"\u0628\u062F\u0623 Onboarding"} value={realStarts} icon={<TrendingUp className="w-5 h-5" />} glowColor="indigo" tooltip={"\u0627\u0644\u0639\u062F\u062F \u0627\u0644\u0641\u0639\u0644\u064A \u0644\u0644\u0645\u0633\u062A\u062E\u062F\u0645\u064A\u0646 \u0627\u0644\u0644\u064A \u0636\u063A\u0637\u0648\u0627 \u0639\u0644\u0649 \u0627\u0644\u0631\u0627\u0628\u0637 \u0627\u0644\u0645\u0631\u0633\u0644 \u0648\u0628\u062F\u0623\u0648\u0627 \u0639\u0645\u0644\u064A\u0629 \u0627\u0644\u062A\u0634\u062E\u064A\u0635 \u0641\u064A \u0645\u0646\u0635\u0629 \u0627\u0644\u0631\u062D\u0644\u0629."} />
+            <StatCard title={"إجمالي الإشارات"} value={sent} icon={<Radio className="w-5 h-5" />} glowColor="indigo" tooltip={"إجمالي حجم الرسائل التي انطلقت عبر جميع القنوات."} />
+            <StatCard title={"أرواح مستهدفة (Unique)"} value={uniqueEntities} icon={<CheckCircle2 className="w-5 h-5" />} glowColor="teal" tooltip={"عدد الكيانات الفعلية (Unique Leads) التي وصلتها إشارة."} />
+            <StatCard title={"طاقة قيد التوجيه"} value={pending} icon={<Clock className="w-5 h-5" />} glowColor="amber" tooltip={"الكيانات في قائمة الانتظار، جاري تحضير تردد الإرسال."} />
+            <StatCard title={"استجابة حقيقية (Resonance)"} value={realStarts} icon={<TrendingUp className="w-5 h-5" />} glowColor="fuchsia" tooltip={"الأرواح التي استجابت وفتحت محطة التشخيص بالفعل (محسوبة من ضمن الأرواح المستهدفة)."} />
           </div>
 
           <div className="rounded-2xl bg-white/[0.02] p-5 flex items-center justify-between">
@@ -486,20 +678,31 @@ ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.na
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{"\u0645\u0639\u062F\u0644 \u0627\u0644\u062A\u062D\u0648\u064A\u0644 \u0627\u0644\u0641\u0639\u0644\u064A"}</p>
                 <p className="text-4xl font-black text-white mt-1">{convRate}</p>
-                <p className="text-[11px] text-slate-500 mt-1">{realStarts} {"\u0628\u062F\u0627\u064A\u0629 \u062D\u0642\u064A\u0642\u064A\u0629 \u0645\u0646"} {sent} {"\u0625\u0631\u0633\u0627\u0644"}</p>
+                <p className="text-[11px] text-slate-500 mt-1">{realStarts} {"\u0628\u062F\u0627\u064A\u0629 \u062D\u0642\u064A\u0642\u064A\u0629 \u0645\u0646 أصل"} {uniqueEntities} {"روح فريدة"}</p>
               </div>
             </div>
             <div className="text-right">
               <div className="text-[10px] font-black uppercase text-slate-500 mb-2">{"\u062A\u0648\u0632\u064A\u0639 \u0627\u0644\u0642\u0646\u0627\u0629"}</div>
               <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-end gap-2 text-xs">
-                  <span className="text-slate-400">{c["sent"] ?? 0} {"\u0625\u064A\u0645\u064A\u0644"}</span>
-                  <Mail className="w-3.5 h-3.5 text-sky-400" />
-                </div>
-                <div className="flex items-center justify-end gap-2 text-xs">
-                  <span className="text-slate-400">{c["simulated"] ?? 0} {"\u0648\u0627\u062A\u0633\u0627\u0628 (\u0645\u062D\u0627\u0643\u0627\u0629)"}</span>
-                  <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-                </div>
+                {Object.entries(channelBreakdown).map(([channel, count]) => {
+                  let icon = <Radio className="w-3.5 h-3.5 text-slate-400" />;
+                  let color = "text-slate-400";
+                  let label = channel;
+                  if (channel === "email") { icon = <Mail className="w-3.5 h-3.5 text-sky-400" />; color = "text-sky-400"; label = "إيميل"; }
+                  if (channel === "whatsapp") { icon = <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />; color = "text-emerald-400"; label = "واتساب"; }
+                  if (channel === "sms") { icon = <Phone className="w-3.5 h-3.5 text-purple-400" />; color = "text-purple-400"; label = "رسائل نصية"; }
+                  if (channel === "telegram") { icon = <Send className="w-3.5 h-3.5 text-blue-400" />; color = "text-blue-400"; label = "تيليجرام"; }
+                  
+                  return (
+                    <div key={channel} className="flex items-center justify-end gap-2 text-xs">
+                      <span className="text-slate-400 font-bold">{count} {label}</span>
+                      {icon}
+                    </div>
+                  );
+                })}
+                {Object.keys(channelBreakdown).length === 0 && (
+                   <span className="text-xs text-slate-600">—</span>
+                )}
               </div>
             </div>
           </div>
@@ -509,9 +712,9 @@ ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.na
       {/* Email Engagement Analytics */}
       {stats?.emailMetrics && (
         <CollapsibleSection
-          title={"\u062A\u062D\u0644\u064A\u0644\u0627\u062A \u0627\u0644\u0628\u0631\u064A\u062F (Email Analytics)"}
-          icon={<Mail className="w-4 h-4" />}
-          subtitle={"\u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0640 Webhook \u0627\u0644\u0644\u062D\u0638\u064A\u0629 \u0644\u0644\u0640 Open Rate \u0648\u0627\u0644\u0640 Clicks"}
+          title={"مؤشرات الترددات (Frequency Analytics)"}
+          icon={<Mail className="w-5 h-5 text-sky-400" />}
+          subtitle={"بيانات لحظية لمعدل التجاوب (Open & Clicks) للنداءات."}
           defaultExpanded={false}
           headerColors="border-sky-500/20 bg-sky-500/5 text-sky-300"
         >
@@ -555,44 +758,63 @@ ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.na
 
       {/* Auto Actions */}
       <CollapsibleSection
-        title={"\u0625\u062C\u0631\u0627\u0621\u0627\u062A \u062A\u0644\u0642\u0627\u0626\u064A\u0629"}
-        icon={<Zap className="w-4 h-4" />}
-        subtitle={"\u00AB\u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062F\u0641\u0639\u0629 \u0627\u0644\u0622\u0646\u00BB \u00B7 \u00AB\u0625\u0639\u0627\u062F\u0629 \u0627\u0644\u0645\u0631\u0641\u0648\u0636\u0629\u00BB"}
-        tooltip={"\u0623\u0648\u0627\u0645\u0631 \u0644\u0644\u062A\u062D\u0643\u0645 \u0627\u0644\u064A\u062F\u0648\u064A \u0641\u064A \u0627\u0644\u0637\u0648\u0627\u0628\u064A\u0631 (Queues). \u0627\u0644\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u0641\u0648\u0631\u064A \u0628\u064A\u062A\u062E\u0637\u0649 \u0627\u0644\u062C\u062F\u0648\u0644 \u0627\u0644\u0632\u0645\u0646\u064A\u060C \u0648\u0627\u0644\u0640 Reset \u0628\u064A\u0631\u062C\u0639 \u0627\u0644\u062F\u0627\u062A\u0627 \u0644\u0644\u062D\u0627\u0644\u0629 \u0627\u0644\u0627\u0628\u062A\u062F\u0627\u0626\u064A\u0629 \u0644\u0644\u062A\u062C\u0631\u0628\u0629 \u062A\u0627\u0646\u064A."}
+        title={"وحدة إصدار الأوامر الآلية (Automated Directives)"}
+        icon={<Zap className="w-5 h-5 text-amber-400" />}
+        subtitle={"التحكم المباشر في قنوات التوجيه وتفعيل المحاكاة للإرسال التلقائي."}
+        tooltip={"وحدة أوامر تتخطى خط الزمن الحالي للإرسال أو تعيد برمجة المطرودين للانتظار مجدداً."}
         defaultExpanded={false}
         headerColors="border-amber-500/20 bg-amber-500/5 text-amber-300"
       >
         <div className="space-y-4">
           <div className="flex flex-wrap gap-3">
-            <ActionButton label={"\u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062F\u0641\u0639\u0629 \u0627\u0644\u0622\u0646"} icon={<Send className="w-4 h-4" />}
-              onClick={() => handleAction("trigger_batch", "\u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062F\u0641\u0639\u0629")}
+            <ActionButton label={"إرسال النبضة القادمة الآن"} icon={<Send className="w-4 h-4" />}
+              onClick={() => handleAction("trigger_batch", "إطلاق نبضة الإرسال")}
               loading={actionLoading === "trigger_batch"} variant="primary" />
-            <ActionButton label={"\u0625\u0639\u0627\u062F\u0629 \u0627\u0644\u0645\u0631\u0641\u0648\u0636\u0629 \u0644\u0644\u0627\u0646\u062A\u0638\u0627\u0631"} icon={<RotateCcw className="w-4 h-4" />}
-              onClick={() => handleAction("reset_failed", "\u0625\u0639\u0627\u062F\u0629 \u0627\u0644\u0641\u0627\u0634\u0644")}
+            <ActionButton label={"إعادة الضبط للمحجوبين"} icon={<RotateCcw className="w-4 h-4" />}
+              onClick={() => handleAction("reset_failed", "إعادة دمج الأخطاء")}
               loading={actionLoading === "reset_failed"} variant="warning" />
           </div>
-          <p className="text-[10px] text-amber-200/50">
-            {"\u00AB\u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u062F\u0641\u0639\u0629\u00BB \u064A\u0634\u063A\u0651\u0644 \u0627\u0644\u0640 Cron \u0641\u0648\u0631\u0627\u064B \u2014 \u064A\u062E\u0636\u0639 \u0644\u062D\u062F Resend \u0627\u0644\u064A\u0648\u0645\u064A (100 \u0625\u064A\u0645\u064A\u0644/\u064A\u0648\u0645 \u0639\u0644\u0649 \u0627\u0644\u062E\u0637\u0629 \u0627\u0644\u0645\u062C\u0627\u0646\u064A\u0629)."}
-          </p>
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs leading-relaxed text-amber-300/80">
+            <strong>ملاحظة السيادة:</strong> إرسال النبضة يتجاهل الجدولة ويطلق الحصة المتبقية فوراً.
+          </div>
         </div>
       </CollapsibleSection>
 
       {/* Quick Send Panel */}
       <CollapsibleSection
-        title={"\u0625\u0631\u0633\u0627\u0644 \u064A\u062F\u0648\u064A \u0633\u0631\u064A\u0639"}
-        icon={<span>{"\u{1F4F1}"}</span>}
-        subtitle={"\u0648\u0627\u062A\u0633\u0627\u0628 \u00B7 \u062A\u064A\u0644\u064A\u062C\u0631\u0627\u0645 \u00B7 SMS \u00B7 \u0625\u064A\u0645\u064A\u0644 \u064A\u062F\u0648\u064A \u2014 \u0645\u062C\u0627\u0646\u0627\u064B \u062A\u0645\u0627\u0645\u0627\u064B"}
-        tooltip={"\u0644\u0648\u062D\u0629 \u0627\u0644\u062F\u0639\u0645 \u0627\u0644\u0633\u0631\u064A\u0639\u060C \u062A\u0633\u0645\u062D \u0644\u0644\u0645\u0627\u0644\u0643 \u0628\u0625\u0631\u0633\u0627\u0644 \u0631\u0648\u0627\u0628\u0637 \u0645\u062E\u0635\u0635\u0629 \u0628\u0634\u0643\u0644 \u0641\u0631\u062F\u064A \u0644\u0644\u0645\u0633\u062A\u062E\u062F\u0645\u064A\u0646 \u0639\u0646 \u0637\u0631\u064A\u0642 \u0642\u0646\u0648\u0627\u062A \u0627\u0644\u062A\u0648\u0627\u0635\u0644 \u0627\u0644\u0645\u0628\u0627\u0634\u0631\u0629 \u062E\u0627\u0631\u062C \u062D\u0635\u0629 \u0627\u0644\u0625\u064A\u0645\u064A\u0644\u0627\u062A (Quota)."}
-        badge={<span className="text-[11px] text-emerald-400 font-black">{availableLeads.length} {"\u062C\u0647\u0629 \u0645\u062A\u0627\u062D\u0629"}</span>}
+        title={"منصة الإطلاق المتفردة (Sovereign Summoning Hub)"}
+        icon={<Orbit className="w-5 h-5 text-emerald-400" />}
+        subtitle={"توجيه النداء بشكل خاص وحصري للأفراد الجدد."}
+        tooltip={"بطاقات أثيرية تعزز قدرتك على دعوة الأرواح بشكل منفصل خارج حصة النظام التلقائية."}
+        badge={<span className="text-[11px] bg-emerald-500/20 px-2 py-0.5 rounded-full text-emerald-400 font-black border border-emerald-500/30 shadow-[0_0_8px_rgba(52,211,153,0.3)]">{availableLeads.length} كيانات متاحة للنداء</span>}
         defaultExpanded={true}
         headerColors="border-emerald-500/20 bg-emerald-500/5 text-emerald-300"
       >
-        <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+        <div className="space-y-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2 pb-4">
           {/* Info Banner & Actions */}
-          <div className="flex items-center justify-between gap-3 mb-2">
-            <div className="flex-1 rounded-xl border border-emerald-500/10 bg-emerald-500/5 p-3 text-right text-[11px] text-emerald-200/70">
-              <strong className="text-emerald-400">{"\u0643\u064A\u0641 \u064A\u0634\u062A\u063A\u0644:"}</strong> {"\u0643\u0644 \u0632\u0631\u0627\u0631 \u0628\u064A\u0641\u062A\u062D\u0644\u0643 \u0627\u0644\u062A\u0637\u0628\u064A\u0642 \u0648\u0641\u064A\u0647 \u0627\u0644\u0631\u0633\u0627\u0644\u0629 \u062C\u0627\u0647\u0632\u0629 \u0628\u0627\u0644\u0627\u0633\u0645 + \u0627\u0644\u0644\u064A\u0646\u0643 \u0627\u0644\u0634\u062E\u0635\u064A. \u0627\u0644\u0625\u064A\u0645\u064A\u0644 \u0627\u0644\u064A\u062F\u0648\u064A \u0628\u064A\u0641\u062A\u062D Gmail/Outlook \u0645\u0646 \u063A\u064A\u0631 \u0645\u0627 \u062A\u0633\u062A\u0647\u0644\u0643 \u0643\u0648\u062A\u0629 Resend."}
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div className={`flex-1 rounded-2xl border p-4 text-right text-xs leading-relaxed transition-all shadow-[inset_0_0_20px_rgba(0,0,0,0.1)] ${
+              ghostMode 
+               ? "border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-200/90" 
+               : "border-emerald-500/20 bg-emerald-500/10 text-emerald-200/80"
+            }`}>
+               {ghostMode 
+                ? "تأثير الندرة الموقوت فعال. أزرار الإرسال ستولد روابط تتلف ذاتياً مع رسالة غامضة ومقتضبة للحفاظ على طاقة الملاذ." 
+                : "توليد رسالة النداء يتم آلياً لكل كيان. استخدم هذه المنصة لدعوة المقربين بشكل شخصي عن طريق القنوات المجانية السريعة."}
             </div>
+
+            <button
+              onClick={() => setGhostMode(!ghostMode)}
+              className={`flex flex-col items-center justify-center shrink-0 w-[100px] h-[60px] rounded-xl border transition-all font-bold text-[10px] gap-1 ${
+                ghostMode 
+                  ? "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40 shadow-[0_0_15px_-3px_rgba(217,70,239,0.3)] scale-105" 
+                  : "bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700"
+              }`}
+            >
+              <Ghost className={`w-4 h-4 ${ghostMode ? "animate-pulse" : ""}`} />
+              <span>Ghost Mode</span>
+            </button>
+
             {availableLeads.length > 0 && (
               <button
                 onClick={handleExportForGemini}
@@ -616,6 +838,7 @@ ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.na
                 key={lead.email}
                 lead={lead}
                 onMarkContacted={handleMarkContacted}
+                isGhostMode={ghostMode}
               />
             ))
           )}
@@ -624,9 +847,9 @@ ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.na
 
       {/* Two-col: Recent Sent + Errors */}
       <CollapsibleSection
-        title={"\u0633\u062C\u0644\u0627\u062A \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0648\u0627\u0644\u0623\u062E\u0637\u0627\u0621"}
-        icon={<Clock className="w-4 h-4" />}
-        subtitle={"\u0645\u0631\u0627\u0642\u0628\u0629 \u0627\u0644\u0639\u0645\u0644\u064A\u0627\u062A \u0627\u0644\u0623\u062E\u064A\u0631\u0629"}
+        title={"سجل بث النداء (Broadcast Chronicle)"}
+        icon={<Clock className="w-5 h-5 text-slate-400" />}
+        subtitle={"مراقبة تاريخية للإشارات المنبعثة والفشل في الوصول"}
         defaultExpanded={false}
         headerColors="border-slate-500/20 bg-slate-500/5 text-slate-300"
       >
@@ -686,6 +909,17 @@ ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.na
           </div>
         </div>
       )}
+
+      {/* Ripple Effect Tracker */}
+      <CollapsibleSection
+        title={"مرصد تمدد الأثر (Ripple Effect Tracker)"}
+        icon={<GitMerge className="w-5 h-5 text-fuchsia-400" />}
+        subtitle={"مراقبة حية لتسلسل الدعوات العنقودي بين الكيانات داخل المنصة."}
+        defaultExpanded={true}
+        headerColors="border-fuchsia-500/20 bg-fuchsia-500/5 text-fuchsia-300 shadow-[0_0_20px_rgba(217,70,239,0.05)] mt-4"
+      >
+        <RippleEffectGraph nodes={stats?.rippleTree || []} />
+      </CollapsibleSection>
 
       {/* Total */}
       <div className="text-center text-[11px] text-slate-600 flex items-center justify-center gap-2 pt-6">

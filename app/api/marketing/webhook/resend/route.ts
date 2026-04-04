@@ -51,13 +51,15 @@ export async function POST(req: Request) {
     }
 
     const resendMsgId = data.email_id as string;
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-      process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-      { auth: { persistSession: false } }
-    );
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!supabaseUrl || !serviceRoleKey) {
+      return NextResponse.json({ ok: false, error: "missing_supabase_config" }, { status: 503 });
+    }
 
-    console.log(`[Resend Webhook] ✓ Event: ${type} | MsgId: ${resendMsgId}`);
+    const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+
+    console.warn(`[Resend Webhook] ✓ Event: ${type} | MsgId: ${resendMsgId}`);
 
     // ── Update Outreach Queue ──────────────────────────────────────────────────
     if (type === "email.opened") {

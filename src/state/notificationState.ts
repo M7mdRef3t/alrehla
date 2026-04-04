@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { runtimeEnv } from "../config/runtimeEnv";
 import {
   isNotificationSupported,
   getNotificationPermission,
@@ -106,8 +107,12 @@ export const useNotificationState = create<NotificationState>((set, get) => ({
 
 // تهيئة الـ state عند تحميل الملف
 if (typeof window !== "undefined") {
+  if (runtimeEnv.isDev) {
+    useNotificationState.getState().initialize();
+  } else {
   // تأخير التهيئة لما الـ DOM يكون جاهز
   setTimeout(() => {
     useNotificationState.getState().initialize();
   }, 0);
+  }
 }

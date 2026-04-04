@@ -6,7 +6,6 @@ import {
   X, Play, Pause, CheckCircle, Circle,
   Bookmark, BookmarkCheck, Clock, Star, RotateCcw,
   Share2, Trophy,
-  Flame,
 } from "lucide-react";
 import { VideoPlayer } from "./VideoPlayer";
 

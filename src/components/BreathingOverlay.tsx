@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useAchievementState } from "../state/achievementState";
@@ -13,8 +13,6 @@ interface BreathingOverlayProps {
 const INHALE_MS = 4000;
 const HOLD_MS   = 2000;
 const EXHALE_MS = 6000;
-const CYCLE_MS  = INHALE_MS + HOLD_MS + EXHALE_MS; // 12 000ms
-
 const DEFAULT_CYCLES = 4;
 
 type Phase = "inhale" | "hold" | "exhale";

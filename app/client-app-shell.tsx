@@ -25,6 +25,50 @@ const SpeedInsights = dynamic(() => import("@vercel/speed-insights/react").then(
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
 
+function shouldSilenceAiLog(args: unknown[]): boolean {
+  if (!runtimeEnv.isDev) return false;
+
+  const text = args
+    .map((item) => {
+      if (typeof item === "string") return item;
+      if (item instanceof Error) return `${item.name}: ${item.message}\n${item.stack ?? ""}`;
+      try {
+        return JSON.stringify(item);
+      } catch {
+        return String(item);
+      }
+    })
+    .join(" ");
+
+  return (
+    text.includes("Auto Health Check") ||
+    text.includes("Weekly Revenue Analysis") ||
+    text.includes("Emotional Pricing") ||
+    text.includes("Telegram Bot not configured") ||
+    text.includes("[Telegram Bot Disabled]") ||
+    text.includes("[STRESS TEST]") ||
+    text.includes("Sovereign Override") ||
+    text.includes("Subscription synced with server") ||
+    text.includes("[Mock Inngest]") ||
+    text.includes("[Mock Pinecone]") ||
+    text.includes("[Sync Hook]") ||
+    text.includes("[Graph Engine]") ||
+    text.includes("[Background Job]") ||
+    text.includes("Running health check") ||
+    text.includes("Health check complete") ||
+    text.includes("Running weekly revenue analysis") ||
+    text.includes("Running daily emotional check") ||
+    text.includes("Requesting pricing optimization from AI") ||
+    text.includes("Pricing recommendation generated") ||
+    text.includes("Generated question failed quality check") ||
+    text.includes("Content packet failed quality check") ||
+    text.includes("[ORCHESTRATOR] SANCTUARY_MODE_ACTIVATED") ||
+    text.includes("[ORCHESTRATOR] Sanctuary Mode deactivated") ||
+    text.includes("[Decision]") ||
+    text.includes("Question generation requires approval")
+  );
+}
+
 function shouldBootIntoFullApp(): boolean {
   if (typeof window === "undefined") return true;
   const { pathname, hash, search } = window.location;
@@ -78,6 +122,26 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
   const [shouldLoadFullApp, setShouldLoadFullApp] = useState(true);
   const [lockFullAppMode, setLockFullAppMode] = useState(false);
   const [landingAuthIntent, setLandingAuthIntent] = useState<PostAuthIntent | null>(null);
+
+  useEffect(() => {
+    if (!runtimeEnv.isDev || typeof window === "undefined") return;
+
+    const originalWarn = console.warn.bind(console);
+    const originalError = console.error.bind(console);
+
+    console.warn = (...args: unknown[]) => {
+      if (!shouldSilenceAiLog(args)) originalWarn(...args);
+    };
+
+    console.error = (...args: unknown[]) => {
+      if (!shouldSilenceAiLog(args)) originalError(...args);
+    };
+
+    return () => {
+      console.warn = originalWarn;
+      console.error = originalError;
+    };
+  }, []);
 
   const handleExitToLanding = useCallback(() => {
     if (typeof window !== "undefined" && window.location.pathname !== "/") {
@@ -152,9 +216,11 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
     }
     applyDesignSystemTokens();
     onBeforeInit?.();
-    initAnalytics();
-    logAnalyticsDiagnostics("client-app-shell");
-    initMonitoring();
+    if (!runtimeEnv.isDev) {
+      initAnalytics();
+      logAnalyticsDiagnostics("client-app-shell");
+      initMonitoring();
+    }
     registerServiceWorker();
   }, [onBeforeInit]);
 
@@ -183,6 +249,11 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
               <GoogleAuthModal
                 isOpen
                 intent={landingAuthIntent}
+                onGuestMode={() => {
+                  setLandingAuthIntent(null);
+                  setLockFullAppMode(true);
+                  setShouldLoadFullApp(true);
+                }}
                 onClose={() => setLandingAuthIntent(null)}
                 onNotNow={() => setLandingAuthIntent(null)}
               />

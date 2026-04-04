@@ -92,7 +92,7 @@ export function usePushNotifications() {
         setState((prev) => ({ ...prev, isSubscribed: Boolean(sub) }));
       });
     });
-  }, []);
+  }, [isPushConfigured]);
 
   const subscribe = useCallback(async (): Promise<boolean> => {
     if (!state.isSupported || !vapidKey) return false;

@@ -1,9 +1,9 @@
-import type { FC } from "react";
+import type { FC, CSSProperties, MouseEvent } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Globe, Briefcase, Crown, ChevronRight,
-    Zap, Star, Gift, Brain, ExternalLink, Shield
+    Zap, Star, Gift, Brain, Shield, Palette
 } from "lucide-react";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { B2BPortal } from "./B2BPortal";
@@ -11,12 +11,12 @@ import { ReferralPanel } from "./ReferralPanel";
 import { PaywallGate } from "./PaywallGate";
 import { DemoInjector } from "./dev/DemoInjector";
 import { PrivacySecuritySettings } from "./PrivacySecuritySettings";
+import { ProfileAppearanceSettings } from "./ProfileAppearanceSettings";
 import { getCurrentTier, TIER_LABELS, TIER_PRICES } from "../services/subscriptionManager";
 import { loadStreak } from "../services/streakSystem";
 import { loadUserMemory } from "../services/userMemory";
 import { getLanguage, LANGUAGE_OPTIONS } from "../services/i18n";
 import { getCulturalContext, saveCulturalContext, PROFILES, type CulturalContext } from "../services/culturalAdapter";
-import { supabase } from "../services/supabaseClient";
 import { syncSubscription } from "../services/subscriptionManager";
 import { useJourneyState } from "../state/journeyState";
 import { soundManager } from "../services/soundManager";
@@ -24,7 +24,29 @@ import { Volume2, VolumeX } from "lucide-react";
 import { useAppOverlayState } from "../state/appOverlayState";
 
 
-type SettingsSection = "main" | "language" | "b2b" | "referral" | "subscription" | "culture" | "privacy";
+type SettingsSection = "main" | "language" | "b2b" | "referral" | "subscription" | "culture" | "privacy" | "appearance";
+type ToggleSettingId = "sound" | "sensory";
+
+type BaseMenuItem = {
+    icon: FC<{ className?: string; style?: CSSProperties }>;
+    label: string;
+    value: string;
+    color: string;
+    badge?: string;
+};
+
+type SectionMenuItem = BaseMenuItem & {
+    id: SettingsSection;
+    isToggle?: false;
+};
+
+type ToggleMenuItem = BaseMenuItem & {
+    id: ToggleSettingId;
+    isToggle: true;
+    onAction: (e: MouseEvent) => void;
+};
+
+type SettingsMenuItem = SectionMenuItem | ToggleMenuItem;
 
 interface SettingsScreenProps {
     onClose?: () => void;
@@ -50,21 +72,21 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
         soundManager.toggleSensory(isSensoryDepthEnabled ?? true);
     }, [isSensoryDepthEnabled]);
 
-    const handleToggleSound = (e: React.MouseEvent) => {
+    const handleToggleSound = (e: MouseEvent) => {
         e.stopPropagation();
         const next = !isSoundEnabled;
         setSoundEnabled(next);
         if (next) soundManager.playClick();
     };
 
-    const handleToggleSensory = (e: React.MouseEvent) => {
+    const handleToggleSensory = (e: MouseEvent) => {
         e.stopPropagation();
         const next = !isSensoryDepthEnabled;
         setSensoryDepthEnabled(next);
         if (next) soundManager.playEffect('cosmic_pulse');
     };
 
-    const menuItems = [
+    const menuItems: SettingsMenuItem[] = [
         {
             id: "subscription" as SettingsSection,
             icon: Crown,
@@ -74,6 +96,13 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
             badge: tier === "basic" ? "ارقَ" : undefined,
         },
         {
+            id: "appearance" as SettingsSection,
+            icon: Palette,
+            label: "الهوية والمظهر",
+            value: "تخصيص الواجهة والملف السيادي",
+            color: "#e879f9",
+        },
+        {
             id: "referral" as SettingsSection,
             icon: Gift,
             label: "ادعُ صديقاً",
@@ -81,7 +110,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
             color: "#818cf8",
         },
         {
-            id: "sound" as any,
+            id: "sound",
             icon: isSoundEnabled ? Volume2 : VolumeX,
             label: "المؤثرات الصوتية",
             value: isSoundEnabled ? "مفعّلة" : "صامتة",
@@ -90,7 +119,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
             onAction: handleToggleSound
         },
         {
-            id: "sensory" as any,
+            id: "sensory",
             icon: Zap,
             label: "العمق الحسي",
             value: isSensoryDepthEnabled ? "تجربة كاملة" : "أساسية",
@@ -248,7 +277,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                 {menuItems.map((item) => (
                                     <motion.button
                                         key={item.id}
-                                        onClick={() => (item as any).isToggle ? (item as any).onAction?.() : setSection(item.id)}
+                                        onClick={(e) => (item.isToggle ? item.onAction(e) : setSection(item.id))}
                                         className="w-full flex items-center gap-3 p-4 rounded-2xl text-right"
                                         style={{
                                             background: "rgba(255,255,255,0.03)",
@@ -267,18 +296,18 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                             <p className="text-sm font-bold text-white">{item.label}</p>
                                             <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{item.value}</p>
                                         </div>
-                                        {(item as any).isToggle ? (
+                                        {item.isToggle ? (
                                             <div 
                                                 className={`w-10 h-6 rounded-full p-1 transition-all ${
-                                                    (item as any).id === 'sound' 
+                                                    item.id === 'sound' 
                                                         ? (isSoundEnabled ? 'bg-amber-500/40' : 'bg-slate-700')
                                                         : (isSensoryDepthEnabled ? 'bg-indigo-500/40' : 'bg-slate-700')
                                                 }`}
-                                                onClick={(item as any).onAction}
+                                                onClick={item.onAction}
                                             >
                                                 <motion.div 
                                                     className="w-4 h-4 rounded-full bg-white shadow-sm"
-                                                    animate={{ x: ((item as any).id === 'sound' ? isSoundEnabled : isSensoryDepthEnabled) ? -16 : 0 }}
+                                                    animate={{ x: (item.id === 'sound' ? isSoundEnabled : isSensoryDepthEnabled) ? -16 : 0 }}
                                                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                                                 />
                                             </div>
@@ -428,6 +457,13 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                     {section === "privacy" && (
                         <motion.div key="privacy" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="mt-4">
                             <PrivacySecuritySettings onBack={() => setSection("main")} />
+                        </motion.div>
+                    )}
+
+                    {/* ── Appearance & Identity ── */}
+                    {section === "appearance" && (
+                        <motion.div key="appearance" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="mt-4">
+                            <ProfileAppearanceSettings />
                         </motion.div>
                     )}
 

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, Send, CheckCircle2, ClipboardList } from "lucide-react";
 import { surveyCopy, type SurveyQuestion, type SurveyAnswers } from "../copy/survey";
 import { supabase, isSupabaseReady } from "../services/supabaseClient";
-import { trackEvent, AnalyticsEvents } from "../services/analytics";
+import { trackEvent } from "../services/analytics";
 import { Button, Card } from "./UI";
 
 /* ═══════════════════════════════

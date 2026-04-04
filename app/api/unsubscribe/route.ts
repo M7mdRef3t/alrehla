@@ -14,11 +14,13 @@ export async function GET(req: Request) {
   }
 
   // Get lead email to verify the token
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-    { auth: { persistSession: false } }
-  );
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!supabaseUrl || !serviceRoleKey) {
+    return unsubPage("⚠️ Supabase is not configured on this environment", false);
+  }
+
+  const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 
   const { data: lead, error } = await supabase
     .from("marketing_leads")

@@ -1,7 +1,7 @@
 import type { FC } from "react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Star, ChevronUp, Shield, Zap, Search } from "lucide-react";
+import { Trophy, ChevronUp } from "lucide-react";
 import { useGamificationState } from "../state/gamificationState";
 import { useMapState } from "../state/mapState";
 

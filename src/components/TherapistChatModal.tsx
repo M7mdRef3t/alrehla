@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BrainCircuit, X, Send, Loader2, Sparkles, AlertTriangle } from "lucide-react";
+import { BrainCircuit, X, Send, Loader2, AlertTriangle } from "lucide-react";
 import { geminiClient } from "../services/geminiClient";
 import { useMapState } from "../state/mapState";
 

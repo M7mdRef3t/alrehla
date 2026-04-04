@@ -43,10 +43,12 @@ export interface TelegramMessage {
 
 export class TelegramBotService {
   private isEnabled: boolean;
+  private static warnedDisabled = false;
 
   constructor() {
     this.isEnabled = Boolean(TELEGRAM_CONFIG.botToken && TELEGRAM_CONFIG.chatId);
-    if (!this.isEnabled && runtimeEnv.isDev) {
+    if (!this.isEnabled && runtimeEnv.isDev && !TelegramBotService.warnedDisabled) {
+      TelegramBotService.warnedDisabled = true;
       console.warn("⚠️ Telegram Bot not configured. Set VITE_TELEGRAM_BOT_TOKEN and VITE_TELEGRAM_CHAT_ID in .env");
     }
   }
@@ -62,7 +64,9 @@ export class TelegramBotService {
    */
   async sendMessage(message: TelegramMessage): Promise<boolean> {
     if (!this.isEnabled) {
-      console.warn("📱 [Telegram Bot Disabled] Would send:", message.text);
+      if (!runtimeEnv.isDev) {
+        console.warn("📱 [Telegram Bot Disabled] Would send:", message.text);
+      }
       return false;
     }
 

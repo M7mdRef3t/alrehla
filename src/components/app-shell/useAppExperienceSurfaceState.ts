@@ -108,21 +108,18 @@ export function useAppExperienceSurfaceState({
 
   const { transientChromeProps } = useAppSurfaceOverlayProps(overlaySurface);
 
-  // Build the 5 props AppOverlayHost still needs (agent experience + feedback)
-  const overlayHostProps: OverlayHostProps = {
-    canShowAIChatbot,
-    agentContext,
-    agentActions,
-    agentSystemPrompt,
-    onFeedbackSubmit: actions.handleFeedbackSubmit,
-    onOnboardingComplete
-  };
-
   return useMemo(() => ({
     chromeShellProps,
     mainContentProps,
     transientChromeProps,
-    overlayHostProps,
+    overlayHostProps: {
+      canShowAIChatbot,
+      agentContext,
+      agentActions,
+      agentSystemPrompt,
+      onFeedbackSubmit: actions.handleFeedbackSubmit,
+      onOnboardingComplete
+    } as OverlayHostProps,
     openConsciousnessArchive: actions.openConsciousnessArchive,
     openTimeCapsuleVault: actions.openTimeCapsuleVault,
     navigateToMap: actions.navigateToMap,
@@ -133,9 +130,14 @@ export function useAppExperienceSurfaceState({
     chromeShellProps,
     mainContentProps,
     transientChromeProps,
-    overlayHostProps,
+    canShowAIChatbot,
+    agentContext,
+    agentActions,
+    agentSystemPrompt,
+    onOnboardingComplete,
     actions.openConsciousnessArchive,
     actions.openTimeCapsuleVault,
+    actions.handleFeedbackSubmit,
     actions.navigateToMap,
     actions.toggleSystemOverclockPanel,
     actions.openAmbientReality,

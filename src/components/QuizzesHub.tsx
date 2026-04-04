@@ -350,7 +350,7 @@ function HubFirstOpenModal({ onClose }: { onClose: () => void }) {
    ══════════════════════════════════════════ */
 
 function AttachmentNodePicker({
-  band, onLink, onSkip,
+  band: _band, onLink, onSkip,
 }: {
   band: { title: string; color: string };
   onLink: (nodeId: string) => void;
@@ -1630,7 +1630,7 @@ interface QuizzesHubProps {
 export function QuizzesHub({ onBack }: QuizzesHubProps) {
   const [state, setState] = useState<QuizView>({ view: "hub" });
   const { history, addResult, getAttempts, totalCompleted, completedQuizIds } = useQuizHistory();
-  const { streak, weeklyCount, weeklyDays, pendingCount } = useQuizStats();
+  const { streak, pendingCount } = useQuizStats();
   const { quizReminders } = useDailyPulse();
   const [search, setSearch] = useState("");
   const [activeTag, setActiveTag] = useState<QuizTag | null>(null);
@@ -1664,7 +1664,7 @@ export function QuizzesHub({ onBack }: QuizzesHubProps) {
       if (unique >= 4) unlock("quiz_half");
       if (unique >= 7) unlock("quiz_master");
     } catch { /* silent */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   const completed = completedQuizIds();

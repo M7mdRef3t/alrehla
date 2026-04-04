@@ -58,12 +58,12 @@ export async function POST(request: Request) {
             // Only process text messages for now in Auto-Reply V1
             if (message.type === "text") {
               const payload: WhatsAppWebhookPayload = {
-                message_id: message.id,
-                from: message.from,
+                message_id: message.id || "",
+                from: message.from || "",
                 to: value.metadata?.display_phone_number || "unknown", // Our business number
                 body: message.text?.body || "",
-                type: message.type,
-                timestamp: new Date(parseInt(message.timestamp) * 1000).toISOString(),
+                type: message.type || "text",
+                timestamp: message.timestamp ? new Date(parseInt(message.timestamp) * 1000).toISOString() : new Date().toISOString(),
                 raw: body,
               };
 

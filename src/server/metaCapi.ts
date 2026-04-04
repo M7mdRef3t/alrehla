@@ -14,6 +14,18 @@ export interface MetaCapiEventData {
   };
 }
 
+type MetaPayload = {
+  data: Array<{
+    event_name: MetaCapiEventData["eventName"];
+    event_time: number;
+    event_id: string;
+    event_source_url: string;
+    action_source: "website";
+    user_data: Record<string, string | undefined>;
+    test_event_code?: string;
+  }>;
+};
+
 function hashData(value: string | null | undefined): string | undefined {
   if (!value) return undefined;
   const normalized = value.trim().toLowerCase().replace(/\s+/g, "");
@@ -35,7 +47,7 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
   // Wait for variables to be present
   if (!pixelId || !token) {
     if (process.env.NODE_ENV === "development") {
-      console.log(`[Meta CAPI] Skipped ${params.eventName} (missing config PIXEL_ID or CAPI_TOKEN)`);
+      console.warn(`[Meta CAPI] Skipped ${params.eventName} (missing config PIXEL_ID or CAPI_TOKEN)`);
     }
     return false;
   }
@@ -59,7 +71,7 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
     }
   }
 
-  const payload = {
+  const payload: MetaPayload = {
     data: [
       {
         event_name: eventName,
@@ -74,7 +86,7 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
 
   // Add Test Event Code if defined in environment variables
   if (process.env.META_TEST_EVENT_CODE) {
-    (payload.data[0] as any).test_event_code = process.env.META_TEST_EVENT_CODE;
+    payload.data[0].test_event_code = process.env.META_TEST_EVENT_CODE;
   }
 
   try {
@@ -91,7 +103,7 @@ export async function sendMetaCapiEvent(params: MetaCapiEventData): Promise<bool
     }
 
     if (process.env.NODE_ENV === "development") {
-      console.log(`[Meta CAPI] Success: ${eventName} for ${eventId}`);
+      console.warn(`[Meta CAPI] Success: ${eventName} for ${eventId}`);
     }
     return true;
   } catch (err) {

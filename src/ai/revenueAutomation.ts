@@ -179,7 +179,7 @@ export class RevenueAutomationEngine {
     }>(prompt);
 
     if (!recommendation) {
-      console.warn("❌ Failed to get pricing recommendation");
+      console.warn("❌ Failed to get pricing recommendation. This could be due to API limits or malformed JSON.");
       return null;
     }
 
@@ -352,7 +352,7 @@ export class RevenueAutomationEngine {
     }>(prompt);
 
     if (!analysis) {
-      console.warn("❌ Failed to analyze churn");
+      console.warn("❌ Failed to analyze churn. Gemini did not return a valid analysis.");
       return null;
     }
 

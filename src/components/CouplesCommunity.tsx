@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Heart, Send, Sparkles, TrendingUp, Users, BarChart3,
-  MessageCircle, Award, BookOpen, Loader2, Calendar, ChevronDown,
-  Star, Clock, ExternalLink, Globe, Flame,
+  MessageCircle, Award, BookOpen, Loader2, ChevronDown,
+  Star, Clock, ExternalLink, Globe,
 } from "lucide-react";
 import {
   fetchPosts, createPost, reactToPost, fetchCommunityStats,

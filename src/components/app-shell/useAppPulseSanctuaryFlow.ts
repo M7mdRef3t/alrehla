@@ -115,7 +115,7 @@ export function useAppPulseSanctuaryFlow({
   navigateToScreen,
   openDefaultGoalMap,
   openDawayirSetup,
-  goToGoals,
+  goToGoals: _goToGoals,
   setStartRecoveryIntent,
   setLoginIntent,
   setShowAuthModal,

@@ -61,9 +61,16 @@ function toErrorMessage(error: unknown): string {
 }
 
 function buildSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return null;
+  }
+
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    supabaseUrl,
+    serviceRoleKey,
     { auth: { persistSession: false } }
   );
 }
@@ -83,6 +90,7 @@ function emailFooter(unsubLink: string): string {
     <p style="margin:8px 0 0;font-size:10px;color:#1e293b;">لا تريد تلقي رسائلنا؟ <a href="${unsubLink}" style="color:#475569;text-decoration:underline;">إلغاء الاشتراك</a></p>
   </td></tr>`;
 }
+void emailFooter;
 
 function buildStep1Html(opts: { firstName: string; personalLink: string; unsubLink: string }): string {
   return buildMarketingEmail({
@@ -167,10 +175,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ ok: false, error: "missing_supabase_config" }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "missing_supabase_config" }, { status: 503 });
   }
 
   const supabase = buildSupabaseClient();
+  if (!supabase) {
+    return NextResponse.json({ ok: false, error: "missing_supabase_config" }, { status: 503 });
+  }
   const nowIso = new Date().toISOString();
   const { data, error } = await supabase
     .from("marketing_lead_outreach_queue")

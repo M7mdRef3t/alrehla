@@ -355,19 +355,60 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   const mouseY = useMotionValue(0);
   const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
   const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (reduceMotion) return;
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
-    mouseX.set((e.clientX - cx) / 90);
-    mouseY.set((e.clientY - cy) / 90);
-  }, [reduceMotion, mouseX, mouseY]);
+  const [isInteractiveMotionEnabled, setIsInteractiveMotionEnabled] = useState(false);
+  const animationFrameRef = useRef<number | null>(null);
+  const latestPointerRef = useRef<{ clientX: number; clientY: number } | null>(null);
 
   useEffect(() => {
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, [handleMouseMove]);
+    if (reduceMotion) {
+      setIsInteractiveMotionEnabled(false);
+      return;
+    }
+
+    const windowRef = window;
+    const mediaQuery = windowRef.matchMedia("(pointer: fine)");
+    const evaluate = () => {
+      setIsInteractiveMotionEnabled(mediaQuery.matches && windowRef.innerWidth >= 1024);
+    };
+
+    evaluate();
+    mediaQuery.addEventListener?.("change", evaluate);
+    windowRef.addEventListener("resize", evaluate, { passive: true });
+
+    return () => {
+      mediaQuery.removeEventListener?.("change", evaluate);
+      windowRef.removeEventListener("resize", evaluate);
+    };
+  }, [reduceMotion]);
+
+  useEffect(() => {
+    if (!isInteractiveMotionEnabled || reduceMotion) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      latestPointerRef.current = { clientX: e.clientX, clientY: e.clientY };
+      if (animationFrameRef.current != null) return;
+
+      animationFrameRef.current = window.requestAnimationFrame(() => {
+        animationFrameRef.current = null;
+        const latest = latestPointerRef.current;
+        if (!latest) return;
+
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        mouseX.set((latest.clientX - cx) / 120);
+        mouseY.set((latest.clientY - cy) / 120);
+      });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (animationFrameRef.current != null) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
+  }, [isInteractiveMotionEnabled, reduceMotion, mouseX, mouseY]);
 
   const rings = [
     { r: 68,  stroke: "rgba(45,212,191,0.3)",  dash: "none", dur: 22 },
@@ -445,14 +486,19 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
             key={i}
             onMouseEnter={() => setHovered(i)}
             onMouseLeave={() => setHovered(null)}
-            animate={reduceMotion ? {} : {
-              x: springX.get() * node.w,
-              y: springY.get() * node.w,
-              opacity: hovered === i ? 1 : [0.7, 1, 0.7],
+            initial={{ opacity: 0.86, scale: 1 }}
+            animate={{
+              opacity: hovered === i ? 1 : 0.86,
+              scale: reduceMotion || !isInteractiveMotionEnabled ? 1 : hovered === i ? 1.03 : 1,
             }}
-            transition={{
-              opacity: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 },
-            }}
+            transition={
+              reduceMotion || !isInteractiveMotionEnabled
+                ? { duration: 0 }
+                : {
+                    opacity: { duration: 0.25, ease: "easeOut" },
+                    scale: { duration: 0.2, ease: "easeOut" },
+                  }
+            }
             style={{ transformOrigin: `${node.cx}px ${node.cy}px`, cursor: "pointer" }}
           >
             {/* Pulse ring */}
@@ -513,7 +559,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
 
         {/* Center core */}
         <motion.g
-          animate={reduceMotion ? {} : { scale: [1, 1.18, 1], opacity: [0.9, 1, 0.9] }}
+          animate={reduceMotion ? {} : { scale: [1, 1.08, 1], opacity: [0.92, 1, 0.92] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
           style={{ transformOrigin: "190px 190px" }}
         >

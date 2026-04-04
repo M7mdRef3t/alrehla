@@ -24,9 +24,8 @@ import { useAppBiometricCrisisMonitor } from "./useAppBiometricCrisisMonitor";
 import { useAppShellAccessState } from "./useAppShellAccessState";
 import { useAppShellBootstrapState } from "./useAppShellBootstrapState";
 import { useAppExperienceSurfaceState } from "./useAppExperienceSurfaceState";
-
-// Initialize language on app start
-initLanguage();
+import { SanctuaryLockdownExperience } from "../SanctuaryLockdownExperience";
+import type { AppShellScreen } from "../../state/appShellNavigationState";
 
 function hasOAuthCallbackParams(): boolean {
   const search = new URLSearchParams(getSearch());
@@ -54,6 +53,12 @@ interface AppExperienceShellProps {
 
 export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps) {
   const skipExitToLandingOnceRef = useRef(false);
+
+  useEffect(() => {
+    // Keep language initialization inside the client lifecycle so importing this
+    // module stays side-effect free during the first route render.
+    initLanguage();
+  }, []);
 
   const {
     screen,
@@ -123,7 +128,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
       window.sessionStorage.removeItem(APP_BOOT_ACTION_KEY);
       const targetScreen = action.replace(APP_SCREEN_BOOT_ACTION_PREFIX, "");
       // Navigate to the requested screen (e.g., tools, insights)
-      setScreen(targetScreen as any);
+      setScreen(targetScreen as AppShellScreen);
       return;
     }
 
@@ -741,6 +746,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
           onNavigateToMap={navigateToMap}
           onOpenLogin={handleHeaderLogin}
         />
+        <SanctuaryLockdownExperience />
       </>
     </AppShellRouteGate>
   );

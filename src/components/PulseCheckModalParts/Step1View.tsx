@@ -17,7 +17,7 @@ interface Step1ViewProps {
   energy: number | null;
   setEnergyValue: (val: number, options?: { skipHaptic?: boolean }) => void;
   energyStateLabel: string;
-  handleEnergyKeyUp: (e: React.KeyboardEvent<any>) => void;
+  handleEnergyKeyUp: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   mood: PulseMood | null;
   setMoodValue: (mood: PulseMood) => void;
   focus: PulseFocus | null;
@@ -39,7 +39,7 @@ export function Step1View({
   setMoodValue,
   focus,
   setFocusValue,
-  isStartRecovery,
+  isStartRecovery: _isStartRecovery,
   topics,
   setTopics,
   notes,

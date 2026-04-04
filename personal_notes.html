@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>مكتبة الملاحظات الشخصية | Ethereal Insight</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#3d08c1",
+                    "surface-container-high": "#16212a",
+                    "on-tertiary-fixed": "#1d424e",
+                    "error": "#ff716c",
+                    "secondary-fixed": "#e5deff",
+                    "surface-container-lowest": "#000000",
+                    "outline": "#6b7784",
+                    "on-secondary": "#3e0bc2",
+                    "surface-tint": "#c3feff",
+                    "surface-container-highest": "#1b2732",
+                    "secondary": "#c9bfff",
+                    "inverse-surface": "#f7f9ff",
+                    "on-tertiary-container": "#315561",
+                    "on-primary-fixed-variant": "#006264",
+                    "error-container": "#8a1a1e",
+                    "tertiary-container": "#c0e6f4",
+                    "on-error": "#490006",
+                    "primary": "#c3feff",
+                    "secondary-fixed-dim": "#d7ceff",
+                    "inverse-primary": "#006a6c",
+                    "surface-variant": "#1b2732",
+                    "primary-dim": "#3de4e7",
+                    "primary-container": "#5dfbfe",
+                    "error-dim": "#c94947",
+                    "on-surface-variant": "#a0acbb",
+                    "on-surface": "#dae7f6",
+                    "on-primary-container": "#005d5f",
+                    "on-primary-fixed": "#004344",
+                    "surface-bright": "#202d3a",
+                    "secondary-container": "#24007f",
+                    "background": "#090f15",
+                    "surface-container-low": "#0d141b",
+                    "tertiary-dim": "#b2d7e6",
+                    "tertiary-fixed": "#c0e6f4",
+                    "surface": "#090f15",
+                    "inverse-on-surface": "#50565d",
+                    "on-primary": "#006668",
+                    "on-tertiary-fixed-variant": "#3b5f6b",
+                    "on-secondary-container": "#a596ff",
+                    "primary-fixed": "#52f2f5",
+                    "tertiary-fixed-dim": "#b2d7e6",
+                    "on-secondary-fixed-variant": "#5a3bdd",
+                    "on-error-container": "#ff9993",
+                    "surface-dim": "#090f15",
+                    "on-tertiary": "#3a5d6a",
+                    "on-background": "#dae7f6",
+                    "primary-fixed-dim": "#3de4e7",
+                    "outline-variant": "#3d4956",
+                    "secondary-dim": "#7459f7",
+                    "tertiary": "#d4f3ff",
+                    "surface-container": "#121a23"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "1rem",
+                    "xl": "1.5rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans", "sans-serif"],
+                    "body": ["Manrope", "sans-serif"],
+                    "label": ["Manrope", "sans-serif"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; background-color: #090f15; color: #dae7f6; }
+        .headline-font { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-card {
+            background: rgba(27, 39, 50, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(195, 254, 255, 0.1);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-primary {
+            box-shadow: 0 0 15px rgba(195, 254, 255, 0.2);
+        }
+        .arabic-leading { line-height: 1.8; }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-screen w-64 border-l border-[#c3feff]/10 bg-[#090f15] py-8 sticky top-0">
+<div class="px-6 mb-10">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center glow-primary">
+<span class="material-symbols-outlined text-background font-bold">psychology</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xl font-bold text-[#c3feff] headline-font leading-none">Ethereal</span>
+<span class="text-[10px] uppercase tracking-widest text-secondary opacity-70 headline-font">Insight</span>
+</div>
+</div>
+<div class="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low mb-6">
+<img alt="Profile" class="w-10 h-10 rounded-full border border-primary/20" data-alt="Portrait of a sophisticated digital analyst with glowing teal highlights on their face, professional and contemplative mood" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZjh27ksQOlm_hmtDkVVubQpQBv0tHlq7ysDddDjf48cMkoRBjteUjpKmO4t0xHv_kOWacNymtEmPsQiT8o9i799FSpjdcRrsgEiT3HS33JkhbQnAH1FrjaJVWfPL8fcZb5TNOMJzeFwbj5s0VHG7Z3DPUfrH9FszJr_1mcNrdJE1mjQAqmn9WMqcZvxmkYGQLq2nZ5ehw04306DCxIP70v3ixJuIRKQTbhol5NrTD4Alq0iQganSdXaAMOUyDuzjKA8A_5LqcHCG2"/>
+<div class="overflow-hidden">
+<p class="text-sm font-bold text-[#c3feff] truncate">المحلل الأثيري</p>
+<p class="text-[10px] text-on-surface-variant truncate">مستكشف الأفكار</p>
+</div>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-[#dae7f6]/40 hover:text-[#dae7f6] hover:bg-[#c9bfff]/5 transition-all duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-medium">الرئيسية</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#c3feff]/10 to-transparent text-[#c3feff] border-r-4 border-[#c3feff] rounded-r-sm transition-all duration-200" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-medium">كتبي</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#dae7f6]/40 hover:text-[#dae7f6] hover:bg-[#c9bfff]/5 transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">psychology</span>
+<span class="font-medium">الاستبصارات</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#dae7f6]/40 hover:text-[#dae7f6] hover:bg-[#c9bfff]/5 transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-medium">المفضلة</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto px-6 space-y-4">
+<button class="w-full py-3 px-4 bg-primary/10 border border-primary/20 text-primary rounded-xl text-sm font-bold hover:bg-primary/20 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">add</span>
+<span>إضافة ملاحظة جديدة</span>
+</button>
+<div class="pt-4 border-t border-outline-variant/20 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-[#dae7f6]/40 hover:text-[#dae7f6] text-sm" href="#">
+<span class="material-symbols-outlined text-lg">settings</span>
+<span>الإعدادات</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-error/60 hover:text-error text-sm" href="#">
+<span class="material-symbols-outlined text-lg">logout</span>
+<span>تسجيل الخروج</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 min-w-0 overflow-y-auto">
+<!-- TopNavBar -->
+<header class="bg-[#090f15]/80 backdrop-blur-xl sticky top-0 z-50 border-b border-[#c3feff]/15">
+<div class="flex justify-between items-center w-full px-6 py-4 max-w-screen-2xl mx-auto">
+<h1 class="text-2xl font-bold tracking-tighter text-[#c3feff] drop-shadow-[0_0_8px_rgba(195,254,255,0.5)] headline-font">مكتبة الاستبصارات</h1>
+<div class="hidden lg:flex items-center gap-8">
+<a class="text-[#c3feff] border-b-2 border-[#c3feff] pb-1 font-medium transition-all duration-300" href="#">المكتبة</a>
+<a class="text-[#dae7f6]/60 hover:text-[#c3feff] hover:bg-[#c3feff]/5 px-2 py-1 rounded transition-all duration-300" href="#">الاستبصارات</a>
+<a class="text-[#dae7f6]/60 hover:text-[#c3feff] hover:bg-[#c3feff]/5 px-2 py-1 rounded transition-all duration-300" href="#">المؤلفون</a>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<input class="bg-surface-container-highest/50 border-none rounded-full py-2 pr-10 pl-4 text-sm focus:ring-1 focus:ring-primary/50 w-64 placeholder:text-on-surface-variant/50" placeholder="بحث في الملاحظات..." type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+</div>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</div>
+</header>
+<div class="p-6 lg:p-10 max-w-screen-2xl mx-auto">
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+<div class="glass-card rounded-xl p-6 flex items-center justify-between group hover:border-primary/30 transition-all">
+<div>
+<p class="text-on-surface-variant text-sm mb-1">إجمالي الاستبصارات</p>
+<h3 class="text-3xl font-extrabold text-primary headline-font">١٢٨</h3>
+</div>
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl">auto_graph</span>
+</div>
+</div>
+<div class="glass-card rounded-xl p-6 flex items-center justify-between group hover:border-secondary/30 transition-all">
+<div>
+<p class="text-on-surface-variant text-sm mb-1">أكثر الكتب إلهاماً</p>
+<h3 class="text-xl font-bold text-secondary headline-font">فن الوجود العميق</h3>
+</div>
+<div class="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl">menu_book</span>
+</div>
+</div>
+<div class="glass-card rounded-xl p-6 flex items-center justify-between group hover:border-tertiary/30 transition-all">
+<div>
+<p class="text-on-surface-variant text-sm mb-1">سلسلة التدوين</p>
+<h3 class="text-3xl font-extrabold text-tertiary headline-font">١٥ يوماً</h3>
+</div>
+<div class="w-12 h-12 rounded-lg bg-tertiary/10 flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+</div>
+</div>
+<!-- Filters -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+<div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto">
+<button class="px-4 py-2 rounded-full bg-primary text-background font-bold text-sm whitespace-nowrap">الكل</button>
+<button class="px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors text-sm whitespace-nowrap border border-outline-variant/10">فلسفة</button>
+<button class="px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors text-sm whitespace-nowrap border border-outline-variant/10">علم نفس</button>
+<button class="px-4 py-2 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors text-sm whitespace-nowrap border border-outline-variant/10">تطوير الذات</button>
+</div>
+<div class="flex items-center gap-3 w-full sm:w-auto">
+<span class="text-sm text-on-surface-variant">ترتيب حسب:</span>
+<select class="bg-surface-container border-none text-sm rounded-lg py-2 pr-8 pl-4 focus:ring-1 focus:ring-primary/50">
+<option>الأحدث أولاً</option>
+<option>الأقدم أولاً</option>
+<option>حسب الكتاب</option>
+</select>
+</div>
+</div>
+<!-- Bento Grid Insights -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Insight Card 1 -->
+<div class="glass-card rounded-xl p-6 flex flex-col h-full hover:shadow-[0_0_30px_rgba(195,254,255,0.1)] transition-all group border-r-2 border-r-primary">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-[10px] font-bold text-primary headline-font uppercase tracking-wider">استبصار عميق</span>
+</div>
+<span class="text-[10px] text-on-surface-variant">١٢ أكتوبر ٢٠٢٣</span>
+</div>
+<p class="text-lg font-medium italic mb-4 arabic-leading opacity-90">"الوعي ليس مجرد التفكير في الأشياء، بل هو الفضاء الذي تظهر فيه كل الأشياء."</p>
+<div class="bg-primary/5 p-4 rounded-lg mb-6 border-r border-primary/20">
+<p class="text-sm text-on-surface/80 arabic-leading">تعليقي: هذه المقولة غيرت نظرتي للتأمل الصباحي. لا أحاول إيقاف الأفكار، بل مراقبة المساحة خلفها.</p>
+</div>
+<div class="mt-auto pt-4 flex justify-between items-center border-t border-outline-variant/10">
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant">الكتاب:</span>
+<span class="text-sm font-bold text-secondary">طريق اليقظة - الفصل الثالث</span>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined text-lg">share</span>
+</button>
+<button class="p-2 rounded-lg hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined text-lg">download</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Insight Card 2 (Image Background Variant) -->
+<div class="relative rounded-xl overflow-hidden group min-h-[350px] flex flex-col justify-end p-6 border border-[#c9bfff]/20">
+<div class="absolute inset-0 z-0">
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent"></div>
+<img alt="Nebula" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Dreamy abstract space nebula with soft purple and teal gas clouds and distant stars, ethereal and peaceful mood" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwoWgV78nyhuaVwLxTBH_CyzDtC361_KFbu6el45lxsVFPdBx6x0Yeq95EI2ceLO2CHp1f_gG-gm6RW2FmgQB3Mp6Y82Rg5YLCbZz_dCrNfumRooGbjnOe0uPqNApwBSlo2-wOW5h5K7gxJFkMCYalNJGwQ_GcgRmzJ6UBFafyZnCX2YysHSF25kVeJeWLjHDK2DLmO0x0yN0KScdbtdY_1TNV2_Fk-GLyNhqSJwtQPJsu_4rY170AAtM-pdWT1j2H36ZPHbtiMsE0"/>
+</div>
+<div class="relative z-10">
+<span class="inline-block px-2 py-1 rounded bg-secondary/20 text-secondary text-[10px] font-bold mb-3">ملاحظة ملهمة</span>
+<p class="text-xl font-bold mb-4 headline-font text-white drop-shadow-md">"الحرية الحقيقية تبدأ من الداخل عندما نتوقف عن الركض خلف القبول الخارجي."</p>
+<div class="flex items-center gap-2 mb-4">
+<img alt="Avatar" class="w-6 h-6 rounded-full" data-alt="Close up of a creative person with artistic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBa2dbUIQJo5VDpO7z3Vk25ugSvrzlFXWgkbEERqOA3rEyQdRokvU9GI4O0ThW18ic_sjKBEPHIw-XNwlp_zaRTEAMHNztExKjwqD3X1BpejpbxoY-aOZSAmi_Pv-l1GLd5BW438686DLSgwxvAY8nhkTy2YY07QNl1XWJKqjNT05L0p_ZKQnGeG2nvDuiBJqZZI9LE9dBcCSYRVEjKgmf7zx3zc620-onF6C929CdVvu1hAXOQ6HTA77VBZ-snJ_VVqHfYFfcrHB72"/>
+<span class="text-xs text-secondary-fixed">من كتاب: سيكولوجية الذات</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-[10px] text-white/50">٠٨ أكتوبر ٢٠٢٣</span>
+<button class="bg-white/10 hover:bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">auto_awesome</span>
+<span>تحويل لصورة جمالية</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Insight Card 3 -->
+<div class="glass-card rounded-xl p-6 flex flex-col h-full hover:shadow-[0_0_30px_rgba(201,191,255,0.1)] transition-all group border-r-2 border-r-secondary">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-[10px] font-bold text-secondary headline-font uppercase tracking-wider">تحليل علاقات</span>
+</div>
+<span class="text-[10px] text-on-surface-variant">٠٥ أكتوبر ٢٠٢٣</span>
+</div>
+<p class="text-lg font-medium italic mb-4 arabic-leading opacity-90">"لا توجد علاقة مثالية، بل هناك فقط شخصان قررا أن قيمة البقاء معاً أكبر من الصعوبات."</p>
+<div class="bg-secondary/5 p-4 rounded-lg mb-6 border-r border-secondary/20">
+<p class="text-sm text-on-surface/80 arabic-leading">تعليقي: تذكير مهم للتركيز على الجهد المبذول بدلاً من انتظار التناغم التلقائي.</p>
+</div>
+<div class="mt-auto pt-4 flex justify-between items-center border-t border-outline-variant/10">
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant">الكتاب:</span>
+<span class="text-sm font-bold text-secondary">خرائط الحب - الفصل التاسع</span>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg hover:bg-secondary/10 text-on-surface-variant hover:text-secondary transition-all">
+<span class="material-symbols-outlined text-lg">share</span>
+</button>
+<button class="p-2 rounded-lg hover:bg-secondary/10 text-on-surface-variant hover:text-secondary transition-all">
+<span class="material-symbols-outlined text-lg">favorite</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Insight Card 4 -->
+<div class="glass-card rounded-xl p-6 flex flex-col h-full hover:shadow-[0_0_30px_rgba(195,254,255,0.1)] transition-all border-r-2 border-r-primary">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-[10px] font-bold text-primary headline-font uppercase tracking-wider">نمو شخصي</span>
+</div>
+<span class="text-[10px] text-on-surface-variant">٠١ أكتوبر ٢٠٢٣</span>
+</div>
+<p class="text-lg font-medium italic mb-4 arabic-leading opacity-90">"الفشل هو ببساطة فرصة للبدء من جديد، ولكن هذه المرة بذكاء أكبر."</p>
+<div class="mt-auto pt-4 flex justify-between items-center border-t border-outline-variant/10">
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant">الكتاب:</span>
+<span class="text-sm font-bold text-primary">إعادة البرمجة - الفصل ١</span>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-all">
+<span class="material-symbols-outlined text-lg">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Empty State Suggestion (Optional) -->
+<div class="mt-16 text-center border border-dashed border-outline-variant/30 rounded-2xl p-12">
+<span class="material-symbols-outlined text-5xl text-primary/30 mb-4">lightbulb</span>
+<h4 class="text-lg font-bold mb-2">استمر في رحلة الاستكشاف</h4>
+<p class="text-on-surface-variant text-sm mb-6 max-w-md mx-auto">لم تسجل أي استبصارات من فصل "الذكاء العاطفي" بعد. هل ترغب في العودة للقراءة؟</p>
+<button class="px-8 py-3 bg-gradient-to-r from-primary to-primary-dim text-background font-bold rounded-xl hover:scale-105 transition-transform glow-primary">
+                        العودة للقراءة الآن
+                    </button>
+</div>
+</div>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-4 md:hidden bg-[#090f15]/90 backdrop-blur-2xl border-t border-[#c3feff]/10 rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+<a class="flex flex-col items-center justify-center text-[#dae7f6]/50" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="text-[10px] font-medium font-['Manrope']">المكتبة</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#dae7f6]/50" href="#">
+<span class="material-symbols-outlined">search</span>
+<span class="text-[10px] font-medium font-['Manrope']">البحث</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#c3feff]/10 text-[#c3feff] rounded-2xl px-5 py-2 shadow-[0_0_15px_rgba(195,254,255,0.2)]" href="#">
+<span class="material-symbols-outlined">import_contacts</span>
+<span class="text-[10px] font-medium font-['Manrope']">الفصول</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#dae7f6]/50" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-medium font-['Manrope']">الإعدادات</span>
+</a>
+</nav>
+<!-- Contextual FAB (Only for Home/Dashboard context as per shell rules) -->
+<button class="fixed bottom-24 left-6 md:hidden w-14 h-14 bg-primary text-background rounded-full shadow-lg flex items-center justify-center glow-primary z-40 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</button>
+</body></html>

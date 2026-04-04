@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
-  RotateCcw, SkipBack, SkipForward, Settings, FileText,
+  RotateCcw, SkipForward, FileText,
   PictureInPicture, Bookmark, ChevronDown, AlertCircle,
 } from "lucide-react";
 
@@ -86,6 +86,7 @@ export function VideoPlayer({
   const [hoverX, setHoverX] = useState(0);
   const [isPiP, setIsPiP] = useState(false);
   const [buffered, setBuffered] = useState(0);
+  void title;
 
   // Restore saved position
   useEffect(() => {

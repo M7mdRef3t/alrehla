@@ -51,6 +51,39 @@ const ShareStats = lazy(() => import("../ShareStats").then((m) => ({ default: m.
 const EducationalLibrary = lazy(() =>
   import("../EducationalLibrary").then((m) => ({ default: m.EducationalLibrary }))
 );
+const InsightsLibrary = lazy(() =>
+  import("../InsightsLibrary").then((m) => ({ default: m.InsightsLibrary }))
+);
+const Goals2025Dashboard = lazy(() =>
+  import("../Goals2025Dashboard").then((m) => ({ default: m.Goals2025Dashboard }))
+);
+const PersonalProgressDashboard = lazy(() =>
+  import("../PersonalProgressDashboard").then((m) => ({ default: m.PersonalProgressDashboard }))
+);
+const WeeklyActionPlanModal = lazy(() =>
+  import("../WeeklyActionPlanModal").then((m) => ({ default: m.WeeklyActionPlanModal }))
+);
+const MonthlyReadingPlanModal = lazy(() =>
+  import("../MonthlyReadingPlanModal").then((m) => ({ default: m.MonthlyReadingPlanModal }))
+);
+const AwarenessGrowthDashboard = lazy(() =>
+  import("../AwarenessGrowthDashboard").then((m) => ({ default: m.AwarenessGrowthDashboard }))
+);
+const CommunityImpactDashboard = lazy(() =>
+  import("../CommunityImpactDashboard").then((m) => ({ default: m.CommunityImpactDashboard }))
+);
+const RelationshipAnalysisModal = lazy(() =>
+  import("../RelationshipAnalysisModal").then((m) => ({ default: m.RelationshipAnalysisModal }))
+);
+const CircleGrowthDashboard = lazy(() =>
+  import("../CircleGrowthDashboard").then((m) => ({ default: m.CircleGrowthDashboard }))
+);
+const RecoveryPathwaysModal = lazy(() => import("../RecoveryPathwaysModal").then(m => ({ default: m.RecoveryPathwaysModal })));
+const PrivateCircleInvitationModal = lazy(() => import("../PrivateCircleInvitationModal").then(m => ({ default: m.PrivateCircleInvitationModal })));
+const DuoCommunityDashboard = lazy(() => import("../DuoCommunityDashboard").then(m => ({ default: m.DuoCommunityDashboard })));
+const PastSessionsLogModal = lazy(() => import("../PastSessionsLogModal").then(m => ({ default: m.PastSessionsLogModal })));
+const RewardStoreModal = lazy(() => import("../RewardStoreDashboard").then(m => ({ default: m.RewardStoreModal })));
+const GamificationNudgeToast = lazy(() => import("../GamificationNudgeToast").then(m => ({ default: m.GamificationNudgeToast })));
 const SymptomsOverviewModal = lazy(() =>
   import("../SymptomsOverviewModal").then((m) => ({ default: m.SymptomsOverviewModal }))
 );
@@ -76,6 +109,10 @@ const AmbientRealityMode = lazy(() => import("../AmbientRealityMode").then((m) =
 const TimeCapsuleVault = lazy(() => import("../TimeCapsuleVault").then((m) => ({ default: m.TimeCapsuleVault })));
 const OnboardingFlow = lazy(() => import("../OnboardingFlow").then((m) => ({ default: m.OnboardingFlow })));
 const JourneyToast = lazy(() => import("../JourneyToast").then((m) => ({ default: m.JourneyToast })));
+const BlindCapsuleOpener = lazy(() => import("../BlindCapsuleOpener").then((m) => ({ default: m.BlindCapsuleOpener })));
+const WisdomMatrixHub = lazy(() => import("../WisdomMatrixHub").then(m => ({ default: m.WisdomMatrixHub })));
+const ImmersionPathDetails = lazy(() => import("../ImmersionPathDetails").then(m => ({ default: m.ImmersionPathDetails })));
+const VanguardCollective = lazy(() => import("../VanguardCollective").then(m => ({ default: m.VanguardCollective })));
 
 interface AppOverlayHostProps {
   canShowAIChatbot: boolean;
@@ -98,6 +135,7 @@ export const AppOverlayHost = memo(function AppOverlayHost({
   onOnboardingComplete: externalOnboardingComplete
 }: AppOverlayHostProps) {
   const flags = useAppOverlayState((state) => state.flags);
+  const circleGrowthOpen = useAppOverlayState((state) => state.flags.circleGrowth);
   const lockedFeature = useAppOverlayState((state) => state.lockedFeature);
   const setLockedFeature = useAppOverlayState((state) => state.setLockedFeature);
   const postAuthIntent = useAppOverlayState((state) => state.postAuthIntent);
@@ -160,6 +198,15 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     atlasDashboard: showAtlasDashboard,
     shareStats: showShareStats,
     library: showLibrary,
+    insightsLibrary: showInsightsLibrary,
+    goals2025: showGoals2025,
+    personalProgress: showPersonalProgress,
+    weeklyActionPlan: showWeeklyActionPlan,
+    readingPlan: showReadingPlan,
+    awarenessGrowth: showAwarenessGrowth,
+    communityImpact: showCommunityImpact,
+    relationshipAnalysis: showRelationshipAnalysis,
+    circleGrowth: showCircleGrowth,
     symptomsOverview: showSymptomsOverview,
     recoveryPlan: showRecoveryPlan,
     themeSettings: showThemeSettings,
@@ -175,7 +222,15 @@ export const AppOverlayHost = memo(function AppOverlayHost({
     journeyTimeline: showJourneyTimeline,
     nudgeToast: showNudgeToast,
     mirrorOverlay: showMirrorOverlay,
-    premiumBridge: showPremiumBridge
+    premiumBridge: showPremiumBridge,
+    recoveryPathways: showRecoveryPathways,
+    privateCircleInvitation: showPrivateCircleInvitation,
+    duoCommunity: showDuoCommunity,
+    pastSessionsLog: showPastSessionsLog,
+    rewardStore: showRewardStore,
+    wisdomMatrix: showWisdomMatrix,
+    immersionPath: showImmersionPath,
+    vanguardCollective: showVanguardCollective,
   } = flags;
 
   // Implementation of Layer 3 (Execution): Overlay Mutex & Severity Index
@@ -217,6 +272,10 @@ export const AppOverlayHost = memo(function AppOverlayHost({
 
   const closeNoiseOverlay = useCallback(() => {
     setOverlay("noiseSilencingPulse", false);
+  }, [setOverlay]);
+
+  const closeOverlay = useCallback((id: AppOverlayFlag) => {
+    setOverlay(id, false);
   }, [setOverlay]);
 
   const openMindSignalOverlay = useCallback((overlay: MindSignalOverlay) => {
@@ -340,13 +399,13 @@ export const AppOverlayHost = memo(function AppOverlayHost({
 
   return (
     <>
-      {screen === "map" && (
+      {screen === "map" ? (
         <JourneyTimeline
           isOpen={showJourneyTimeline}
           onClose={() => setOverlay("journeyTimeline", false)}
           onCardClick={onJourneyTimelineCardClick}
         />
-      )}
+      ) : null}
 
       <Suspense fallback={<AwarenessSkeleton />}>
         {showGym && isVisible("gym") && (
@@ -428,6 +487,12 @@ export const AppOverlayHost = memo(function AppOverlayHost({
           />
         )}
 
+        {flags.blindCapsuleOpener && (
+          <Suspense fallback={null}>
+            <BlindCapsuleOpener />
+          </Suspense>
+        )}
+
         {postAuthIntent && isVisible("authModal") && (
           <GoogleAuthModal
             isOpen={showAuthModal}
@@ -485,12 +550,101 @@ export const AppOverlayHost = memo(function AppOverlayHost({
           <EducationalLibrary isOpen={showLibrary} onClose={() => setOverlay("library", false)} />
         )}
 
+        {showInsightsLibrary && isVisible("insightsLibrary") && (
+          <InsightsLibrary isOpen={showInsightsLibrary} onClose={() => setOverlay("insightsLibrary", false)} />
+        )}
+
+        {showGoals2025 && isVisible("goals2025") && (
+          <Goals2025Dashboard isOpen={showGoals2025} onClose={() => setOverlay("goals2025", false)} />
+        )}
+
+        {showPersonalProgress && isVisible("personalProgress") && (
+          <PersonalProgressDashboard isOpen={showPersonalProgress} onClose={() => setOverlay("personalProgress", false)} />
+        )}
+
+        {showWeeklyActionPlan && isVisible("weeklyActionPlan") && (
+          <WeeklyActionPlanModal isOpen={showWeeklyActionPlan} onClose={() => setOverlay("weeklyActionPlan", false)} />
+        )}
+
+        {showReadingPlan && isVisible("readingPlan") && (
+          <MonthlyReadingPlanModal isOpen={showReadingPlan} onClose={() => setOverlay("readingPlan", false)} />
+        )}
+
+        {showAwarenessGrowth && isVisible("awarenessGrowth") && (
+          <AwarenessGrowthDashboard isOpen={showAwarenessGrowth} onClose={() => setOverlay("awarenessGrowth", false)} />
+        )}
+
+        {showCommunityImpact && isVisible("communityImpact") && (
+          <CommunityImpactDashboard isOpen={showCommunityImpact} onClose={() => setOverlay("communityImpact", false)} />
+        )}
+
+        {showRelationshipAnalysis && isVisible("relationshipAnalysis") && (
+          <RelationshipAnalysisModal isOpen={showRelationshipAnalysis} onClose={() => setOverlay("relationshipAnalysis", false)} />
+        )}
+
+        {showCircleGrowth && isVisible("circleGrowth") && (
+          <CircleGrowthDashboard 
+            isOpen={circleGrowthOpen}
+            onClose={() => closeOverlay("circleGrowth")}
+          />
+        )}
+        
+        {showRecoveryPathways && isVisible("recoveryPathways") && (
+          <RecoveryPathwaysModal 
+            isOpen={showRecoveryPathways}
+            onClose={() => closeOverlay("recoveryPathways")}
+          />
+        )}
+
+        {showPrivateCircleInvitation && isVisible("privateCircleInvitation") && (
+          <PrivateCircleInvitationModal 
+            isOpen={showPrivateCircleInvitation}
+            onClose={() => closeOverlay("privateCircleInvitation")}
+          />
+        )}
+
+        {showDuoCommunity && isVisible("duoCommunity") && (
+          <DuoCommunityDashboard 
+            isOpen={showDuoCommunity}
+            onClose={() => closeOverlay("duoCommunity")}
+          />
+        )}
+
+        {showWisdomMatrix && isVisible("wisdomMatrix") && (
+          <WisdomMatrixHub />
+        )}
+
+        {showImmersionPath && isVisible("immersionPath") && (
+          <ImmersionPathDetails />
+        )}
+
+        {showVanguardCollective && isVisible("vanguardCollective") && (
+          <VanguardCollective />
+        )}
+
+        {showPastSessionsLog && isVisible("pastSessionsLog") && (
+          <PastSessionsLogModal 
+            isOpen={showPastSessionsLog}
+            onClose={() => closeOverlay("pastSessionsLog")}
+          />
+        )}
+
+        {showRewardStore && isVisible("rewardStore") && (
+          <RewardStoreModal 
+            isOpen={showRewardStore}
+            onClose={() => closeOverlay("rewardStore")}
+          />
+        )}
+
         {showSymptomsOverview && isVisible("symptomsOverview") && (
           <SymptomsOverviewModal
             isOpen={showSymptomsOverview}
-            onClose={() => setOverlay("symptomsOverview", false)}
+            onClose={() => closeOverlay("symptomsOverview")}
           />
         )}
+        
+        {/* Global Gamification Nudges Overlay */}
+        <GamificationNudgeToast />
 
         {showRecoveryPlan && isVisible("recoveryPlan") && (
           <RecoveryPlanModal
