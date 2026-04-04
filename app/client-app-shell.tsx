@@ -4,7 +4,7 @@ import { useCallback, useEffect, Suspense, useState } from "react";
 import dynamic from "next/dynamic";
 import { AwarenessSkeleton } from "../src/components/AwarenessSkeleton";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
-import { initAnalytics, logAnalyticsDiagnostics } from "../src/services/analytics";
+import { initAnalytics } from "../src/services/analytics";
 import { initMonitoring } from "../src/services/monitoring";
 import { runtimeEnv } from "../src/config/runtimeEnv";
 import { applyDesignSystemTokens } from "../src/services/designSystemTokens";
@@ -41,6 +41,7 @@ function shouldSilenceAiLog(args: unknown[]): boolean {
     .join(" ");
 
   return (
+    text.includes("Download the React DevTools for a better development experience") ||
     text.includes("Auto Health Check") ||
     text.includes("Weekly Revenue Analysis") ||
     text.includes("Emotional Pricing") ||
@@ -128,6 +129,7 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
 
     const originalWarn = console.warn.bind(console);
     const originalError = console.error.bind(console);
+    const originalInfo = console.info.bind(console);
 
     console.warn = (...args: unknown[]) => {
       if (!shouldSilenceAiLog(args)) originalWarn(...args);
@@ -137,9 +139,14 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
       if (!shouldSilenceAiLog(args)) originalError(...args);
     };
 
+    console.info = (...args: unknown[]) => {
+      if (!shouldSilenceAiLog(args)) originalInfo(...args);
+    };
+
     return () => {
       console.warn = originalWarn;
       console.error = originalError;
+      console.info = originalInfo;
     };
   }, []);
 
@@ -218,7 +225,6 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
     onBeforeInit?.();
     if (!runtimeEnv.isDev) {
       initAnalytics();
-      logAnalyticsDiagnostics("client-app-shell");
       initMonitoring();
     }
     registerServiceWorker();

@@ -785,7 +785,7 @@ function WeeklyCapsule({ pulseHistory }: { pulseHistory: PulseEntry[] }) {
               </div>
 
               {/* Reflection input */}
-              <textarea value={reflection} onChange={(e) => setReflection(e.target.value)}
+              <textarea id="dashboard-reflection" name="dashboardReflection" value={reflection} onChange={(e) => setReflection(e.target.value)}
                 placeholder="اكتب تأملك الأسبوعي هنا... ما الذي تعلمته؟"
                 rows={3}
                 style={{

@@ -87,8 +87,9 @@ async function getChatHistory(chatId: string) {
 async function saveMessage(chatId: string, role: 'user' | 'model', content: string) {
   const supabase = getSupabase();
   if (!supabase) return;
+  const db = supabase as any;
   try {
-    await supabase.from('telegram_chat_history').insert({
+    await db.from('telegram_chat_history').insert({
       chat_id: chatId.toString(),
       role,
       content
@@ -111,7 +112,7 @@ export async function processTelegramMessage(chatId: string, messageText: string
   }
   
   // 1. Check Identity Resolution
-  let profile = (await supabase.from('profiles').select('id, full_name').eq('telegram_chat_id', chatId).single()).data as { id: string; full_name?: string | null } | null;
+  let profile = (await (supabase as any).from('profiles').select('id, full_name').eq('telegram_chat_id', chatId).single()).data as { id: string; full_name?: string | null } | null;
 
   // If user is not known yet
   if (!profile) {
@@ -120,14 +121,14 @@ export async function processTelegramMessage(chatId: string, messageText: string
        const phone = contactPhoneNumber.startsWith('+') ? contactPhoneNumber : '+' + contactPhoneNumber;
        
        // Try to match with profiles
-        const matchedProfileData = (await supabase.from('profiles').select('id, full_name').eq('phone', phone).single()).data as { id: string; full_name?: string | null } | null;
+        const matchedProfileData = (await (supabase as any).from('profiles').select('id, full_name').eq('phone', phone).single()).data as { id: string; full_name?: string | null } | null;
         if (matchedProfileData) {
            // Link them!
-          await supabase.from('profiles').update({ telegram_chat_id: chatId }).eq('id', matchedProfileData.id);
+          await (supabase as any).from('profiles').update({ telegram_chat_id: chatId }).eq('id', matchedProfileData.id);
           profile = matchedProfileData;
         } else {
            // Check marketing leads as a fallback
-          const leadData = (await supabase.from('marketing_leads').select('phone, status').eq('phone', phone).single()).data as { phone?: string | null; status?: string | null } | null;
+          const leadData = (await (supabase as any).from('marketing_leads').select('phone, status').eq('phone', phone).single()).data as { phone?: string | null; status?: string | null } | null;
           if (leadData) {
             return { text: "لقيت رقمك متسجل معانا كعميل فعلاً، بس حسابك الكامل لسه متحددش. افتح المنصة وكمل تسجيل عشان أقدر أتابع معاك شخصياً!" };
           }
@@ -158,6 +159,9 @@ export async function processTelegramMessage(chatId: string, messageText: string
   ];
 
   const model = process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash';
+  if (!ai) {
+    throw new Error('Gemini client not initialized');
+  }
   
   try {
     // Save user message

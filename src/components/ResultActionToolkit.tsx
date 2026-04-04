@@ -326,8 +326,9 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
                   isCompleted ? 'bg-teal-100 border-teal-400' : 'bg-white'
                 }`}>
                   <input
+                    id={`result-action-radio-${stepId}-${index}`}
+                    name={`resultActionRadio${stepId}${index}`}
                     type="radio"
-                    name="firstStep"
                     checked={isExpanded}
                     onChange={() => setExpandedStep(stepId)}
                     disabled={!isInteractive}
@@ -461,6 +462,8 @@ export const ResultActionToolkit: FC<ResultActionToolkitProps> = ({
                             {step.inputCount && step.inputCount > 1 ? `${inputIndex + 1}.` : ''} اكتب هنا أو عدّل الجاهز:
                           </label>
                           <textarea
+                            id={`result-action-textarea-${stepId}-${inputIndex}`}
+                            name={`resultActionTextarea${stepId}${inputIndex}`}
                             value={currentInput}
                             onChange={(e) => {
                               const newInputs = [...currentInputs];

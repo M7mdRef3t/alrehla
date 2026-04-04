@@ -123,6 +123,8 @@ export const RecoveryPlanModal: FC<RecoveryPlanModalProps> = ({
                         اختَر المدار
                       </label>
                       <select
+                        id="recovery-plan-person"
+                        name="recoveryPlanPerson"
                         value={effectiveSelectedId ?? ""}
                         onChange={(e) => setSelectedNodeId(e.target.value)}
                         className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-right bg-white focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent"

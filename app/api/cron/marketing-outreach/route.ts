@@ -135,16 +135,27 @@ async function sendEmail(
     return { status: "simulated", providerResponse: { reason: "missing_resend_config" } };
   }
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to: leadEmail, subject, html, reply_to: replyTo }),
-  });
-  const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-  if (!response.ok) {
-    throw new Error(`resend_failed:${response.status}:${JSON.stringify(body)}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: leadEmail, subject, html, reply_to: replyTo }),
+      signal: controller.signal
+    });
+    const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!response.ok) {
+      throw new Error(`resend_failed:${response.status}:${JSON.stringify(body)}`);
+    }
+    return { status: "sent", providerResponse: body };
+  } catch (error: any) {
+    if (error.name === 'AbortError') throw new Error(`resend_timeout: API didn't respond in 8 seconds`);
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  return { status: "sent", providerResponse: body };
 }
 
 // ─── Send WhatsApp ──────────────────────────────────────────────────────────
@@ -182,12 +193,26 @@ export async function GET(request: Request) {
   if (!supabase) {
     return NextResponse.json({ ok: false, error: "missing_supabase_config" }, { status: 503 });
   }
+  const { searchParams } = new URL(request.url);
+  const force = searchParams.get("force") === "true";
+  const targetLeadId = searchParams.get("lead_id");
+
   const nowIso = new Date().toISOString();
-  const { data, error } = await supabase
+  
+  let query = supabase
     .from("marketing_lead_outreach_queue")
     .select("id,lead_email,channel,attempts,payload,lead_id,step")
-    .eq("status", "pending")
-    .lte("scheduled_at", nowIso)
+    .eq("status", "pending");
+
+  if (targetLeadId) {
+    query = query.eq("lead_id", targetLeadId);
+  }
+
+  if (!force) {
+    query = query.lte("scheduled_at", nowIso);
+  }
+
+  const { data, error } = await query
     .order("scheduled_at", { ascending: true })
     .limit(100);
 

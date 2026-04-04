@@ -282,16 +282,24 @@ export async function handleMarketingLeadGet(req: Request) {
 
 export async function handleMarketingLeadPost(req: Request, fallbackSourceType: MarketingLeadSourceType = "website") {
   try {
-    let body = (await req.json()) as Record<string, any>;
+    let body = (await req.json()) as Record<string, any> | Record<string, any>[];
     
     // Zapier/Make resilience: if body is an array, take the first element
     if (Array.isArray(body) && body.length > 0) {
       body = body[0];
     }
-    
+
+    const bodyRecord = (body && typeof body === "object" && !Array.isArray(body)) ? body : {};
+
     // Sometimes Make wraps data inside a "data" object or "body" object if passed raw
-    if (body.data && typeof body.data === "object" && !body.email && !body.phone) {
-      body = body.data;
+    if (
+      bodyRecord.data &&
+      typeof bodyRecord.data === "object" &&
+      !Array.isArray(bodyRecord.data) &&
+      !bodyRecord.email &&
+      !bodyRecord.phone
+    ) {
+      body = bodyRecord.data as Record<string, any>;
     }
 
     const payload = body as MarketingLeadPayload;

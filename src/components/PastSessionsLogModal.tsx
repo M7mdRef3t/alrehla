@@ -77,7 +77,9 @@ export const PastSessionsLogModal: FC<PastSessionsLogModalProps> = ({ isOpen, on
             {/* Sidebar Filters */}
             <div className="w-full md:w-64 bg-slate-800/30 border-l border-slate-800 p-6 shrink-0 flex flex-col gap-6 overflow-y-auto custom-scrollbar hidden md:flex">
               <div className="relative">
-                <input 
+                <input
+                  id="past-sessions-search"
+                  name="pastSessionsSearch"
                   type="text" 
                   placeholder="ابحث في الجلسات..." 
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 pl-10 text-sm text-slate-200 outline-none focus:border-indigo-500 transition"

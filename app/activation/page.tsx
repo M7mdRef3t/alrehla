@@ -812,6 +812,8 @@ export default function ActivationPage() {
                 <label className="block">
                   <span className="mb-2 block text-sm font-semibold text-slate-200">الإيميل المسجل <span className="text-slate-500 font-normal">(اختياري)</span></span>
                   <input
+                    id="activation-email"
+                    name="activationEmail"
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
@@ -823,6 +825,8 @@ export default function ActivationPage() {
                 <label className="block">
                   <span className="mb-2 block text-sm font-semibold text-slate-200">وسيلة الدفع</span>
                   <select
+                    id="activation-proof-method"
+                    name="activationProofMethod"
                     value={proofMethod}
                     onChange={(event) => setProofMethod(event.target.value as ManualProofMethod)}
                     className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-sm text-white outline-none transition focus:border-teal-400/50"
@@ -838,6 +842,8 @@ export default function ActivationPage() {
                 <label className="block">
                   <span className="mb-2 block text-sm font-semibold text-slate-200">رقم العملية أو المرجع</span>
                   <input
+                    id="activation-proof-ref"
+                    name="activationProofRef"
                     type="text"
                     value={proofReference}
                     onChange={(event) => setProofReference(event.target.value)}
@@ -850,6 +856,8 @@ export default function ActivationPage() {
                 <label className="block">
                   <span className="mb-2 block text-sm font-semibold text-slate-200">المبلغ المحول</span>
                   <input
+                    id="activation-proof-amount"
+                    name="activationProofAmount"
                     type="text"
                     value={proofAmount}
                     onChange={(event) => setProofAmount(event.target.value)}
@@ -861,6 +869,8 @@ export default function ActivationPage() {
                 <label className="block sm:col-span-2">
                   <span className="mb-2 block text-sm font-semibold text-slate-200">لقطة شاشة أو إيصال الدفع</span>
                   <input
+                    id="activation-proof-file"
+                    name="activationProofFile"
                     type="file"
                     accept="image/png,image/jpeg,image/webp"
                     onChange={handleProofImageChange}
@@ -891,6 +901,8 @@ export default function ActivationPage() {
                 <label className="block sm:col-span-2">
                   <span className="mb-2 block text-sm font-semibold text-slate-200">ملاحظات إضافية</span>
                   <textarea
+                    id="activation-proof-note"
+                    name="activationProofNote"
                     rows={4}
                     value={proofNote}
                     onChange={(event) => setProofNote(event.target.value)}

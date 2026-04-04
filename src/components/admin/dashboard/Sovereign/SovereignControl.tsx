@@ -7,11 +7,14 @@ import { supabase, isSupabaseReady } from "../../../../services/supabaseClient";
 import { fetchOverviewStats, fetchAlertIncidents, fetchBroadcasts, type OverviewStats, type AlertIncident } from "../../../../services/adminApi";
 import { useAdminState, type AdminBroadcast } from "../../../../state/adminState";
 import { CollapsibleSection } from "../../ui/CollapsibleSection";
+import { IllusionRadar } from "./IllusionRadar";
 
 export const SovereignControl: FC = () => {
   const [harmonyOverride, setHarmonyOverride] = useState<number>(0.8);
   const [isSaving, setIsSaving] = useState(false);
   const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [broadcastAudienceType, setBroadcastAudienceType] = useState<"all" | "low_mood" | "scenario">("all");
+  const [broadcastScenarioValue, setBroadcastScenarioValue] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
   
   // Sanctuary Pulse State
@@ -23,9 +26,30 @@ export const SovereignControl: FC = () => {
   useEffect(() => {
     if (!isSupabaseReady || !supabase) return;
     
-    const refreshData = async () => {
+    let subscription: ReturnType<typeof supabase.channel> | null = null;
+
+    const refreshData = async (force = false) => {
       const adminClient = supabase;
       if (!adminClient) return;
+
+      const state = useAdminState.getState();
+      const cache = state.liveStatsCache;
+      const now = Date.now();
+      
+      if (!force && cache && now - cache.timestamp < 30_000) {
+        if (cache.data.harmonyOverride !== undefined) {
+          setHarmonyOverride(cache.data.harmonyOverride);
+        }
+        setLiveStats(cache.data.stats);
+        setIncidents(cache.data.alerts);
+        setHistory(cache.data.historicalBroadcasts);
+        setIsLoadingPulse(false);
+        const hasAlerts = !!cache.data.alerts?.some((i: any) => i.severity === 'critical' || i.severity === 'high');
+        if (state.hasSovereignAlert !== hasAlerts) {
+          state.setHasSovereignAlert(hasAlerts);
+        }
+        return;
+      }
 
       const [data, stats, alerts, historicalBroadcasts] = await Promise.all([
         adminClient.from("system_settings").select("value").eq("key", "global_harmony_override").maybeSingle(),
@@ -34,24 +58,74 @@ export const SovereignControl: FC = () => {
         fetchBroadcasts()
       ]);
 
-      if (data?.data && typeof data.data.value === "number") {
-        setHarmonyOverride(data.data.value);
-      }
+      const newHarmony = data?.data?.value ?? 0.8;
+      setHarmonyOverride(newHarmony);
       setLiveStats(stats);
       setIncidents(alerts);
       setHistory(historicalBroadcasts ?? []);
       setIsLoadingPulse(false);
 
-      // Update global alert state for Sidebar pulse
       const hasCriticalAlert = !!alerts?.some(i => i.severity === 'critical' || i.severity === 'high');
-      if (useAdminState.getState().hasSovereignAlert !== hasCriticalAlert) {
-        useAdminState.getState().setHasSovereignAlert(hasCriticalAlert);
+      if (state.hasSovereignAlert !== hasCriticalAlert) {
+        state.setHasSovereignAlert(hasCriticalAlert);
       }
+
+      // ⚡ Automated Tactical Intervention (Rules Engine)
+      const currentHistory = historicalBroadcasts ?? [];
+      const timeSinceLastBroadcast = currentHistory.length > 0 
+        ? Date.now() - currentHistory[0].createdAt 
+        : Infinity;
+        
+      // إذا انهار التناغم أسفل 0.35 ولم يتم إرسال أي بث لتهدئة الأوضاع خلال 15 دقيقة
+      if (adminClient && newHarmony < 0.35 && timeSinceLastBroadcast > 15 * 60 * 1000) {
+        console.warn("⚡ [Rules Engine] التناغم الحرج تم رصده! يتم إطلاق نداء حاكم تلقائي لتهدئة الاستقرار...");
+        
+        await adminClient.from("system_settings").upsert({
+          key: "sovereign_broadcast",
+          value: {
+            message: "يبدو أن الكثير منا يشعر بالفوضى الآن. توقف للحظة.. خذ نفساً عميقاً، أنت لست وحدك في هذا الظلام.",
+            timestamp: Date.now(),
+            id: 'auto-' + Math.random().toString(36).substr(2, 9),
+            audience: {
+              type: "low_mood"
+            }
+          }
+        });
+        
+        // أضف سجل محلي لتنبيه مدير النظام
+        setBroadcastMessage("تم تدشين تدخل علاجي آلي عبر Rules Engine نظراً لانهيار التناغم.");
+        setTimeout(() => setBroadcastMessage(""), 10000);
+      }
+
+      state.setLiveStatsCache({
+        harmonyOverride: newHarmony,
+        stats,
+        alerts,
+        historicalBroadcasts: historicalBroadcasts ?? []
+      });
     };
 
     refreshData();
-    const interval = setInterval(refreshData, 60_000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => refreshData(true), 60_000);
+
+    // Setup Supabase Real-time Channels
+    subscription = supabase.channel('sovereign_live_pulse')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, () => {
+         refreshData(true);
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'journey_events' }, () => {
+         // Optionally, add a slight debounce if journey_events are heavily spammed, 
+         // but for owner panel we want it live.
+         refreshData(true);
+      })
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      if (subscription) {
+        supabase?.removeChannel(subscription);
+      }
+    };
   }, []);
 
   const handleUpdateHarmony = async (val: number) => {
@@ -73,10 +147,15 @@ export const SovereignControl: FC = () => {
       value: {
         message: broadcastMessage,
         timestamp: Date.now(),
-        id: Math.random().toString(36).substr(2, 9)
+        id: Math.random().toString(36).substr(2, 9),
+        audience: {
+          type: broadcastAudienceType,
+          value: broadcastAudienceType === "scenario" ? broadcastScenarioValue : undefined
+        }
       }
     });
     setBroadcastMessage("");
+    setBroadcastScenarioValue("");
     setIsSaving(false);
     setShowConfirm(true);
     setTimeout(() => setShowConfirm(false), 3000);
@@ -184,6 +263,9 @@ export const SovereignControl: FC = () => {
         </div>
       </CollapsibleSection>
 
+      {/* Illusion & Dissonance Radar */}
+      <IllusionRadar scenarios={liveStats?.topScenarios ?? null} isLoading={isLoadingPulse} />
+
       {/* Harmony Control */}
       <CollapsibleSection
         title="توازن التناغم العالمي"
@@ -234,9 +316,35 @@ export const SovereignControl: FC = () => {
               placeholder="اكتب رسالة نورانية تظهر للجميع..."
               className="w-full h-32 bg-slate-800/50 border border-white/5 rounded-2xl p-4 text-sm text-white placeholder:text-slate-600 outline-none focus:border-purple-500/50 transition-all resize-none"
             />
+            
+            <div className="flex flex-col md:flex-row gap-3">
+              <select
+                value={broadcastAudienceType}
+                onChange={(e) => setBroadcastAudienceType(e.target.value as any)}
+                className="bg-slate-800/50 border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-purple-500/50 flex-1"
+              >
+                <option value="all">الأثير الكامل (لكل الأرواح)</option>
+                <option value="low_mood">حالة الطوارئ (الصفاء أقل من 3.0)</option>
+                <option value="scenario">توجيه مخصص لوهم معين (Illusion Specific)</option>
+              </select>
+
+              {broadcastAudienceType === "scenario" && (
+                <select
+                  value={broadcastScenarioValue}
+                  onChange={(e) => setBroadcastScenarioValue(e.target.value)}
+                  className="bg-slate-800/50 border border-purple-500/30 rounded-xl px-4 py-3 text-sm text-purple-200 outline-none focus:border-purple-500/70 flex-1"
+                >
+                  <option value="" disabled>اختر الوهم المستهدف...</option>
+                  {liveStats?.topScenarios?.map(s => (
+                    <option key={s.key} value={s.label}>{s.label}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+
             <button
               onClick={handleSendBroadcast}
-              disabled={!broadcastMessage.trim() || isSaving}
+              disabled={!broadcastMessage.trim() || isSaving || (broadcastAudienceType === "scenario" && !broadcastScenarioValue)}
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 py-3 rounded-2xl text-white font-bold text-sm shadow-lg shadow-purple-900/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100"
             >
               <Send className="w-4 h-4" />

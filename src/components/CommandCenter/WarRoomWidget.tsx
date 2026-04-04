@@ -60,6 +60,8 @@ export const WarRoomWidget: React.FC = () => {
                             </h2>
 
                             <textarea
+                                id="war-room-answer"
+                                name="warRoomAnswer"
                                 value={answer}
                                 onChange={(e) => setAnswer(e.target.value)}
                                 placeholder="اكتب تقريرك الميداني هنا..."

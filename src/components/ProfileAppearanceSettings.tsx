@@ -75,7 +75,9 @@ export const ProfileAppearanceSettings: React.FC = () => {
                     <div className="flex-1 w-full space-y-4">
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest px-1">اسم العرض</label>
-                            <input 
+                            <input
+                                id="profile-display-name"
+                                name="profileDisplayName"
                                 className="w-full bg-slate-950/50 border-0 border-b-2 border-teal-500/20 focus:border-teal-400 focus:ring-0 text-white rounded-t-lg px-4 py-2.5 text-sm transition-colors outline-none" 
                                 type="text" 
                                 value={displayName}
@@ -84,7 +86,9 @@ export const ProfileAppearanceSettings: React.FC = () => {
                         </div>
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-teal-400 uppercase tracking-widest px-1">النبذة العميقة (Deep Bio)</label>
-                            <textarea 
+                            <textarea
+                                id="profile-bio"
+                                name="profileBio"
                                 className="w-full bg-slate-950/50 border-0 border-b-2 border-teal-500/20 focus:border-teal-400 focus:ring-0 text-white rounded-t-lg px-4 py-2.5 text-sm min-h-[80px] outline-none resize-none transition-colors"
                                 value={bio}
                                 onChange={(e) => setBio(e.target.value)}

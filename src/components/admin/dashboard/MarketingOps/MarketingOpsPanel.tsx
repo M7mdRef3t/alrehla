@@ -70,6 +70,8 @@ interface OpsStats {
   totalDatabaseLeads: number;
   leadsBySource: Record<string, number>;
   leadsByCampaign: Record<string, number>;
+  conversionsByCampaign?: Record<string, number>;
+  conversionsBySource?: Record<string, number>;
   realStarts: number;
   recentErrors: Array<{ lead_email: string; channel: string; last_error: string; updated_at: string }>;
   recentSent: Array<{ lead_email: string; channel: string; sent_at: string }>;
@@ -77,6 +79,19 @@ interface OpsStats {
   rippleTree?: RippleNode[];
   emailMetrics?: EmailMetrics;
   rawLeads?: any[];
+  flowStats?: {
+    byStep: Record<string, number>;
+    avgTimeToActionMs: number | null;
+    addPersonCompletionRate: number | null;
+    pulseAbandonedByReason?: Record<string, number>;
+  } | null;
+  conversionHealth?: {
+    pathStarted24h: number;
+    mapsGenerated24h: number;
+    addPersonOpened24h: number;
+    addPersonDone24h: number;
+    journeyMapsTotal: number;
+  } | null;
 }
 
 // --- Constants ---
@@ -94,13 +109,22 @@ function getBearerToken(): string {
 }
 
 async function fetchStats(): Promise<OpsStats> {
+  const state = useAdminState.getState();
+  const cache = state.opsStatsCache;
+  const now = Date.now();
+  if (cache && now - cache.timestamp < 60_000) {
+    return cache.data;
+  }
+
   const res = await fetch("/api/admin/marketing-ops", {
     headers: { authorization: `Bearer ${getBearerToken()}` },
   });
   if (!res.ok) {
     throw new Error(`marketing_ops_stats_failed:${res.status}`);
   }
-  return res.json() as Promise<OpsStats>;
+  const data = await res.json() as OpsStats;
+  state.setOpsStatsCache(data);
+  return data;
 }
 
 async function postAction(action: string, extra?: Record<string, unknown>): Promise<{ ok: boolean; result?: unknown }> {
@@ -196,18 +220,18 @@ function CollapsibleSection({
     >
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-5 text-right hover:bg-white/5 transition-all"
+        className="w-full flex items-center justify-between p-5 text-right hover:bg-white/5 transition-all text-right"
       >
-        <div className="flex items-center gap-3">
-          {expanded ? <ChevronUp className="w-4 h-4 opacity-70" /> : <ChevronDown className="w-4 h-4 opacity-70" />}
-          {badge}
-        </div>
-        <div>
-          <div className="flex items-center justify-end gap-2">
-            {tooltip && <AdminTooltip content={tooltip} position="right" />}
-            <p className="text-sm font-black flex items-center gap-2 uppercase tracking-widest">{title} {icon}</p>
+        <div className="text-right">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-black flex items-center gap-2 uppercase tracking-widest">{icon} {title}</p>
+            {tooltip && <AdminTooltip content={tooltip} position="bottom" />}
           </div>
           {subtitle && <p className="text-[11px] text-white/40 mt-1 uppercase tracking-widest">{subtitle}</p>}
+        </div>
+        <div className="flex items-center gap-3">
+          {badge}
+          {expanded ? <ChevronUp className="w-4 h-4 opacity-70" /> : <ChevronDown className="w-4 h-4 opacity-70" />}
         </div>
       </button>
       <AnimatePresence>
@@ -434,6 +458,8 @@ export function MarketingOpsPanel() {
   const [contacted, setContacted] = useState<Set<string>>(new Set());
   const [ghostMode, setGhostMode] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<{ type: "campaign" | "source"; value: string } | null>(null);
+  const [repairLoading, setRepairLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const toastRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = (msg: string, ok: boolean) => {
@@ -453,6 +479,29 @@ export function MarketingOpsPanel() {
       setLoading(false);
     }
   }, []);
+
+  const handleRepair = async () => {
+    setRepairLoading(true);
+    try {
+      const res = await fetch("/api/admin/marketing-ops/repair", {
+        method: "POST",
+        headers: { authorization: `Bearer ${getBearerToken()}` }
+      });
+      const data = await res.json();
+      if (data.ok) {
+        showToast(`تم تصحيح ${data.metaCount} ليد فيسبوك و ${data.waCount} واتساب ✅`, true);
+        // Clear the cache so fetchStats forces a fresh fetch from server
+        useAdminState.setState({ opsStatsCache: null });
+        await load();
+      } else {
+        showToast("\u0641\u0634\u0644 \u0625\u0635\u0644\u0627\u0622 \u0627\u0644\u062A\u062A\u0628\u0639", false);
+      }
+    } catch {
+      showToast("\u062E\u0637\u0623 \u0641\u064A \u0627\u0644\u0627\u062A\u0635\u0627\u0644", false);
+    } finally {
+      setRepairLoading(false);
+    }
+  };
 
   useEffect(() => { void load(); }, [load]);
 
@@ -488,17 +537,26 @@ export function MarketingOpsPanel() {
   // Convert based on Unique contacts rather than total signals for better accuracy
   const convRate = uniqueEntities > 0 ? `${Math.round((realStarts / uniqueEntities) * 100)}%` : "\u2014";
 
-  const availableLeads = (stats?.quickSendLeads ?? []).filter((l) => !contacted.has(l.email));
+  const availableLeads = (stats?.quickSendLeads ?? []).filter((l) => {
+    const isNotContacted = !contacted.has(l.email);
+    if (!searchQuery) return isNotContacted;
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = 
+      l.name?.toLowerCase().includes(q) || 
+      l.email.toLowerCase().includes(q) || 
+      l.phone?.includes(q);
+    return isNotContacted && matchesSearch;
+  });
 
   const handleExportForGemini = () => {
     if (availableLeads.length === 0) {
-      showToast("\u0644\u0627 \u064A\u0648\u062C\u062F Leads \u0645\u062A\u0627\u062D\u0629 \u0644\u0644\u0646\u0633\u062E", false);
+      showToast("\u0644\u0627 \u0644\u0627 \u064A\u0648\u062C\u062F Leads \u0645\u062A\u0627\u062D\u0629 \u0644\u0644\u0646\u0633\u062E", false);
       return;
     }
     const prompt = `\u0623\u0637\u0644\u0628 \u0645\u0646\u0643 \u0625\u0631\u0633\u0627\u0644 \u0628\u0631\u064A\u062F \u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A \u0641\u0631\u062F\u064A \u0645\u0646\u0641\u0635\u0644 \u0644\u0643\u0644 \u0634\u062E\u0635 \u0645\u0646 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u062A\u0627\u0644\u064A\u0629.
 \u064A\u062C\u0628 \u0623\u0646 \u064A\u0643\u0648\u0646 \u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0645\u0631\u0633\u0644: \u0641\u0631\u064A\u0642 \u0639\u0645\u0644 \u0627\u0644\u0631\u062D\u0644\u0629 <hello@alrehla.app> (\u0625\u0630\u0627 \u0623\u0645\u0643\u0646).
 \u0645\u0648\u0636\u0648\u0639 \u0627\u0644\u0631\u0633\u0627\u0644\u0629: \u062E\u0631\u064A\u0637\u0629 \u0639\u0644\u0627\u0642\u0627\u062A\u0643 \u0627\u0644\u0645\u062E\u0635\u0635\u0629 \u0645\u0646 \u0627\u0644\u0631\u062D\u0644\u0629 \u{1F9ED}
-\u0646\u0635 \u0627\u0644\u0631\u0633\u0627\u0644\u0629: (\u0627\u0643\u062A\u0628 \u0631\u0633\u0627\u0644\u0629 \u062A\u0631\u062D\u064A\u0628\u064A\u0629 \u0642\u0635\u064A\u0631\u0629 \u0648\u062C\u0630\u0627\u0628\u0629 \u0628\u0627\u0644\u0644\u0647\u062C\u0629 \u0627\u0644\u0645\u0635\u0631\u064A\u0629 \u062A\u062F\u0639\u0648\u0647 \u0644\u0625\u0643\u0645\u0627\u0644 \u062E\u0631\u064A\u0637\u062A\u0647\u060C \u062B\u0645 \u0636\u0639 \u0627\u0644\u0631\u0627\u0628\u0637 \u0627\u0644\u0645\u062E\u0635\u0635 \u0627\u0644\u062E\u0627\u0635 \u0628\u0647).
+\u0646\u0635 \u0627\u0644\u0631\u0633\u0627\u0644\u0629: (\u0627\u0643\u062A\u0628 \u0631\u0633\u0627\u0644\u0629 \u062A\u0631\u062D\u064A\u0628\u064A\u0629 \u0642\u0635\u064A\u0631\u0629 \u0648\u062C\u0630\u0627\u0628\u0629 \u0628\u0627\u0644\u0644\u0644\u0647\u062C\u0629 \u0627\u0644\u0645\u0635\u0631\u064A\u0629 \u062A\u062F\u0639\u0648\u0647 \u0644\u0625\u0643\u0645\u0627\u0644 \u062E\u0631\u064A\u0637\u062A\u0647\u060C \u062B\u0645 \u0636\u0639 \u0627\u0644\u0631\u0627\u0628\u0637 \u0627\u0644\u0645\u062E\u0635\u0635 \u0627\u0644\u062E\u0627\u0635 \u0628\u0647).
 
 \u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0623\u0634\u062E\u0627\u0635 (\u0645\u0646 \u0641\u0636\u0644\u0643 \u0623\u0631\u0633\u0644 \u0643\u0644 \u0631\u0633\u0627\u0644\u0629 \u0639\u0644\u0649 \u062D\u062F\u0629):
 ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.name || "بدون اسم"} | \u0627\u0644\u0625\u064A\u0645\u064A\u0644: ${l.email} | \u0627\u0644\u0631\u0627\u0628\u0637: ${l.personalLink}`).join('\n')}`;
@@ -543,18 +601,54 @@ ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.na
           </div>
         </div>
 
-        <button onClick={load} disabled={loading}
-          className="relative z-10 flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-black uppercase tracking-widest hover:bg-indigo-500/20 hover:text-indigo-200 transition-all active:scale-95 disabled:opacity-50 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          {"تحديث الرادار"}
-        </button>
-      </header>
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 w-full md:w-auto">
+          {/* Search Box */}
+          <div className="relative group w-full md:w-64">
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-indigo-400/50 group-focus-within:text-indigo-400 transition-colors">
+              <Crosshair className="w-4 h-4" />
+            </div>
+            <input
+              type="text"
+              placeholder="ابحث عن روح (الاسم، الإيميل، الهاتف)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-black/40 border border-white/10 rounded-2xl py-3 pr-10 pl-4 text-xs font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery("")}
+                className="absolute inset-y-0 left-3 flex items-center text-slate-500 hover:text-white transition-colors"
+              >
+                <RotateCcw className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <button 
+            onClick={handleRepair} 
+            disabled={repairLoading || loading}
+            className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all active:scale-95 disabled:opacity-50"
+            title="إصلاح تتبع المصادر لليدز القديمة"
+          >
+            <Zap className={`w-3.5 h-3.5 ${repairLoading ? "animate-pulse" : ""}`} />
+            {repairLoading ? "جاري التعميد..." : "تعميد البيانات القديمة"}
+          </button>
+
+          <button onClick={load} disabled={loading}
+            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-black uppercase tracking-widest hover:bg-indigo-500/20 hover:text-indigo-200 transition-all active:scale-95 disabled:opacity-50 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            {"تحديث الرادار"}
+          </button>
+        </div>
+      </div>
+    </header>
 
       {/* Acquisition Sources */}
       <CollapsibleSection
-        title={"بوابات العبور (Acquisition Sources)"}
+        title={"بوابات العبور"}
         icon={<TrendingUp className="w-5 h-5 text-emerald-400" />}
-        subtitle={"تحليل مصادر وتدفق الأرواح המُكتسبة إلى قاعدة بيانات الملاذ."}
+        subtitle={"تحليل مصادر وتدفق الأرواح المكتسبة إلى قاعدة بيانات الملاذ."}
         defaultExpanded={true}
         headerColors="border-emerald-500/20 bg-emerald-500/5 text-emerald-300"
       >
@@ -572,18 +666,30 @@ ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.na
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* By Campaign */}
             <div className="rounded-2xl bg-white/[0.02] p-5 border border-white/5">
-              <h3 className="text-xs font-black uppercase tracking-widest text-emerald-500/80 mb-4">التدفق عبر الحملات الإعلانية (Campaign)</h3>
-              <div className="space-y-3">
+              <h3 className="text-xs font-black uppercase tracking-widest text-emerald-500/80 mb-4">التدفق عبر الحملات الإعلانية</h3>
+              <div className="space-y-3 relative z-10">
                 {Object.entries(stats?.leadsByCampaign ?? {}).sort((a,b) => b[1] - a[1]).map(([campaign, count]) => {
                   const label = campaign === "undefined" || campaign === "unattributed" ? "بدون حملة" : campaign;
+                  const maxCount = Math.max(...Object.values(stats?.leadsByCampaign ?? {}), 1);
+                  const percentage = (count / maxCount) * 100;
+                  const conversions = stats?.conversionsByCampaign?.[campaign] ?? 0;
+                  const cr = count > 0 ? Math.round((conversions / count) * 100) : 0;
                   return (
                   <button 
                     key={campaign} 
                     onClick={() => setSelectedFilter({ type: "campaign", value: campaign })}
-                    className="w-full flex items-center justify-between hover:bg-white/[0.05] p-2 -mx-2 rounded-lg transition-colors cursor-pointer group"
+                    className="relative w-full flex items-center justify-between hover:bg-white/[0.05] p-2 -mx-2 rounded-lg transition-colors cursor-pointer group overflow-hidden text-right"
                   >
-                    <span className="text-sm text-slate-300 truncate max-w-[70%] group-hover:text-emerald-300 transition-colors" title={label}>{label}</span>
-                    <span className="text-sm font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full group-hover:bg-emerald-500/20 transition-colors">{count}</span>
+                    <div className="absolute top-0 right-0 h-full bg-emerald-500/10 rounded-lg transition-all duration-500 ease-out z-0" style={{ width: `${percentage}%` }} />
+                    <div className="relative z-10 flex items-center gap-2">
+                       <span className="text-sm font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full group-hover:bg-emerald-500/20 shadow-sm transition-colors">{count}</span>
+                       {(conversions > 0) && (
+                         <span className="text-[10px] font-bold text-fuchsia-400 bg-fuchsia-500/10 px-2 py-1 rounded-full" title="تحويلات فعلية (نسبة مئوية)">
+                           {cr}% نسبة التحويل
+                         </span>
+                       )}
+                    </div>
+                    <span className="relative z-10 text-sm text-slate-300 truncate max-w-[50%] group-hover:text-emerald-300 transition-colors" title={label}>{label}</span>
                   </button>
                 )})}
                 {Object.keys(stats?.leadsByCampaign ?? {}).length === 0 && (
@@ -593,19 +699,31 @@ ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.na
             </div>
 
             {/* By Source */}
-            <div className="rounded-2xl bg-white/[0.02] p-5 border border-white/5">
-              <h3 className="text-xs font-black uppercase tracking-widest text-emerald-500/80 mb-4">التدفق عبر القنوات (Source)</h3>
-              <div className="space-y-3">
+            <div className="rounded-2xl bg-white/[0.02] p-5 border border-white/5 relative overflow-hidden">
+              <h3 className="text-xs font-black uppercase tracking-widest text-amber-500/80 mb-4 relative z-10">التدفق عبر القنوات</h3>
+              <div className="space-y-3 relative z-10">
                 {Object.entries(stats?.leadsBySource ?? {}).sort((a,b) => b[1] - a[1]).map(([source, count]) => {
                   const label = source === "undefined" || source === "unknown" ? "غير معروف" : source;
+                  const maxCount = Math.max(...Object.values(stats?.leadsBySource ?? {}), 1);
+                  const percentage = (count / maxCount) * 100;
+                  const conversions = stats?.conversionsBySource?.[source] ?? 0;
+                  const cr = count > 0 ? Math.round((conversions / count) * 100) : 0;
                   return (
                   <button 
                     key={source} 
                     onClick={() => setSelectedFilter({ type: "source", value: source })}
-                    className="w-full flex items-center justify-between hover:bg-white/[0.05] p-2 -mx-2 rounded-lg transition-colors cursor-pointer group"
+                    className="relative w-full flex items-center justify-between hover:bg-white/[0.05] p-2 -mx-2 rounded-lg transition-colors cursor-pointer group overflow-hidden text-right"
                   >
-                    <span className="text-sm text-slate-300 capitalize group-hover:text-amber-300 transition-colors">{label}</span>
-                    <span className="text-sm font-bold text-slate-300 group-hover:text-amber-400 bg-white/5 group-hover:bg-amber-400/10 px-3 py-1 rounded-full transition-colors">{count}</span>
+                    <div className="absolute top-0 right-0 h-full bg-amber-500/10 rounded-lg transition-all duration-500 ease-out z-0" style={{ width: `${percentage}%` }} />
+                    <div className="relative z-10 flex items-center gap-2">
+                       <span className="relative z-10 text-sm font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full group-hover:bg-amber-500/20 shadow-sm transition-colors">{count}</span>
+                       {conversions > 0 && (
+                         <span className="text-[10px] font-bold text-fuchsia-400 bg-fuchsia-500/10 px-2 py-1 rounded-full" title="تحويلات فعلية (نسبة مئوية)">
+                           {cr}% تحويل
+                         </span>
+                       )}
+                    </div>
+                    <span className="relative z-10 text-sm text-slate-300 capitalize group-hover:text-amber-300 transition-colors">{label}</span>
                   </button>
                 )})}
                  {Object.keys(stats?.leadsBySource ?? {}).length === 0 && (
@@ -616,6 +734,127 @@ ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.na
           </div>
         </div>
       </CollapsibleSection>
+
+      {/* Awareness Funnel (مسار الوعي) */}
+      {(stats?.flowStats || stats?.conversionHealth) && (
+        <CollapsibleSection
+          title={"مسار الوعي"}
+          icon={<Ghost className="w-5 h-5 text-indigo-400" />}
+          subtitle={"رصد نقاط الاحتكاك ومعدلات هروب الأرواح في رحلة التعافي داخل الملاذ."}
+          defaultExpanded={true}
+          headerColors="border-indigo-500/20 bg-indigo-500/5 text-indigo-300"
+        >
+          <div className="space-y-8">
+            {/* Pressure Gauge Funnel Visualizer */}
+            <div className="relative p-6 rounded-[2.5rem] bg-slate-950/40 border border-white/5 overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_rgba(99,102,241,0.03)_0%,_transparent_70%)] pointer-events-none" />
+              
+              <div className="flex flex-col md:flex-row items-stretch justify-between gap-4 relative z-10">
+                {[
+                  { label: "بدء الرحلة (24س)", value: stats.conversionHealth?.pathStarted24h ?? 0, color: "indigo" },
+                  { label: "خرائط مولدة (24س)", value: stats.conversionHealth?.mapsGenerated24h ?? 0, color: "teal" },
+                  { label: "شروع في الإضافة (24س)", value: stats.conversionHealth?.addPersonOpened24h ?? 0, color: "amber" },
+                  { label: "إتمام وعرض (24س)", value: stats.conversionHealth?.addPersonDone24h ?? 0, color: "fuchsia" },
+                ].map((step, idx, arr) => {
+                  const prev = arr[idx - 1];
+                  const dropoff = prev && prev.value > 0 ? Math.round((step.value / prev.value) * 100) : null;
+                  const friction = dropoff !== null ? 100 - dropoff : 0;
+                  const isHighPressure = friction > 60;
+
+                  return (
+                    <div key={step.label} className="flex-1 flex flex-col items-center">
+                      {/* Connection & Gauge */}
+                      {idx > 0 && (
+                        <div className="h-8 md:h-auto md:w-full flex md:flex-row flex-col items-center justify-center relative">
+                          <div className="h-full w-px md:h-px md:w-full bg-white/10" />
+                          <div className="absolute flex items-center justify-center">
+                            <motion.div 
+                              animate={isHighPressure ? { scale: [1, 1.1, 1], opacity: [0.7, 1, 0.7] } : {}}
+                              transition={{ repeat: Infinity, duration: 2 }}
+                              className={`px-3 py-1 rounded-full text-[9px] font-black tracking-widest border backdrop-blur-md shadow-xl ${
+                                friction > 70 ? "bg-rose-500/20 text-rose-400 border-rose-500/30" : 
+                                friction > 40 ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : 
+                                "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                              }`}
+                            >
+                              الضغط: {friction}%
+                            </motion.div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Step Card */}
+                      <div className={`w-full p-4 rounded-3xl border transition-all duration-500 ${
+                        idx === 0 ? "bg-indigo-500/5 border-indigo-500/20" : "bg-white/[0.02] border-white/10"
+                      }`}>
+                        <div className="flex flex-col items-center text-center gap-2">
+                           <div className={`text-[10px] font-black uppercase tracking-widest opacity-40`}>{step.label}</div>
+                           <div className="text-2xl font-black text-white tabular-nums drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">{step.value}</div>
+                           
+                           {/* Small Progress Bar */}
+                           {dropoff !== null && (
+                             <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mt-1">
+                               <motion.div 
+                                 initial={{ width: 0 }}
+                                 animate={{ width: `${dropoff}%` }}
+                                 className={`h-full ${
+                                   dropoff < 30 ? "bg-rose-500" : dropoff < 60 ? "bg-amber-500" : "bg-emerald-500"
+                                 }`}
+                               />
+                             </div>
+                           )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Additional Global Stats Card */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+               <div className="p-4 rounded-2xl bg-teal-500/5 border border-teal-500/10 flex items-center justify-between">
+                 <div className="flex items-center gap-3">
+                   <Orbit className="w-5 h-5 text-teal-400" />
+                   <span className="text-xs font-bold text-teal-300/60 uppercase">إجمالي الخرائط</span>
+                 </div>
+                 <span className="text-xl font-black text-white">{stats.conversionHealth?.journeyMapsTotal ?? 0}</span>
+               </div>
+            </div>
+
+            {stats.flowStats?.addPersonCompletionRate !== undefined && stats.flowStats?.addPersonCompletionRate !== null && (
+              <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                    <GitMerge className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-indigo-300 uppercase tracking-widest">معدل الانصهار والتجاوز</h4>
+                    <p className="text-xs text-indigo-400/60 mt-1">نسبة الذين تجاوزوا ألم الفضفضة الخافتة وقاموا بإتمام إدخال شخص.</p>
+                  </div>
+                </div>
+                <div className="text-3xl font-black text-white px-6">
+                  {stats.flowStats.addPersonCompletionRate}%
+                </div>
+              </div>
+            )}
+            
+            {stats.flowStats?.pulseAbandonedByReason && Object.keys(stats.flowStats.pulseAbandonedByReason).length > 0 && (
+              <div className="rounded-2xl bg-white/[0.02] border border-white/5 p-5 mt-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">أسباب هروب النبضة (Pulse Abandonment Friction)</h4>
+                <div className="flex flex-col gap-2">
+                  {Object.entries(stats.flowStats.pulseAbandonedByReason).map(([reason, count]) => (
+                    <div key={reason} className="flex items-center justify-between text-xs p-2 rounded-lg bg-black/20 hover:bg-black/40 transition-colors">
+                      <span className="text-rose-400 font-bold capitalize">{reason.replace(/_/g, " ")}</span>
+                      <span className="text-slate-500">{count} هروب</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </CollapsibleSection>
+      )}
 
       <CampaignLeadsModal 
         isOpen={!!selectedFilter}
@@ -630,11 +869,22 @@ ${availableLeads.map((l, i) => `${i + 1}. \u0627\u0644\u0627\u0633\u0645: ${l.na
         leads={
           (stats?.rawLeads || []).filter(lead => {
             if (!selectedFilter) return false;
+            
+            // Search filter
+            if (searchQuery) {
+              const q = searchQuery.toLowerCase();
+              const matchesSearch = 
+                lead.name?.toLowerCase().includes(q) || 
+                lead.email.toLowerCase().includes(q) || 
+                lead.phone?.includes(q);
+              if (!matchesSearch) return false;
+            }
+
             const val = selectedFilter.type === "campaign" ? lead.campaign : lead.source_type;
             return String(val) === String(selectedFilter.value);
           })
         }
-        onLeadUpdated={() => void load()}
+        onLeadUpdated={() => { useAdminState.setState({ opsStatsCache: null }); void load(); }}
       />
 
       {/* Manual Lead Entry */}

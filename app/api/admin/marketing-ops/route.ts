@@ -68,7 +68,7 @@ export async function GET(req: Request) {
   // ─── Lead Acquisition & Attribution ─────────────────────────────────────────
   const { data: dbLeads, count: dbLeadsCount } = await supabase
     .from("marketing_leads")
-    .select("id, name, email, phone_normalized, source_type, campaign, status, created_at, unsubscribed", { count: "exact" });
+    .select("id, name, email, phone_normalized, source_type, campaign, adset, ad, status, created_at, unsubscribed, utm, note", { count: "exact" });
 
   const totalDatabaseLeads = dbLeadsCount ?? 0;
   const leadsBySource: Record<string, number> = {};
@@ -124,12 +124,29 @@ export async function GET(req: Request) {
   }
 
   // Real onboarding starts (leads who clicked personalized link)
-  const { count: realStarts } = await supabase
+  const { data: routingEventsData } = await supabase
     .from("routing_events")
-    .select("*", { count: "exact", head: true })
+    .select("lead_id")
     .not("lead_id", "is", null);
-
-  // Last 5 errors
+    
+  const convertedLeadIds = new Set((routingEventsData || []).map(r => String(r.lead_id)));
+  const realStarts = convertedLeadIds.size;
+  
+  const conversionsByCampaign: Record<string, number> = {};
+  const conversionsBySource: Record<string, number> = {};
+  
+  for (const lead of rawLeads) {
+    const c = (lead.campaign as string) || "unattributed";
+    const s = (lead.source_type as string) || "unknown";
+    const converted = convertedLeadIds.has(String(lead.id));
+    
+    (lead as any).has_converted = converted; // Added for per-lead status
+    
+    if (converted) {
+      conversionsByCampaign[c] = (conversionsByCampaign[c] ?? 0) + 1;
+      conversionsBySource[s] = (conversionsBySource[s] ?? 0) + 1;
+    }
+  }
   const { data: recentErrors } = await supabase
     .from("marketing_lead_outreach_queue")
     .select("lead_email, channel, last_error, updated_at")
@@ -253,6 +270,66 @@ export async function GET(req: Request) {
     { id: "n8", label: "نور ي.", status: "faded", parentId: "n6" }
   ];
 
+  // ─── Awareness Funnel (Flow Stats & Conversion Health) ──────────────────────
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  
+  const { data: funnel24h } = await supabase
+    .from("journey_events")
+    .select("payload->step")
+    .eq("type", "flow_event")
+    .gte("created_at", twentyFourHoursAgo);
+
+  let pathStarted24h = 0;
+  let mapsGenerated24h = 0;
+  let addPersonOpened24h = 0;
+  let addPersonDone24h = 0;
+
+  if (funnel24h) {
+    for (const ev of funnel24h) {
+      const step = (ev.step as string) || "";
+      if (["pulse_opened", "onboarding_opened", "landing_viewed"].includes(step)) pathStarted24h++;
+      if (step === "map_generated") mapsGenerated24h++;
+      if (step === "add_person_opened") addPersonOpened24h++;
+      if (step === "add_person_done_show_on_map") addPersonDone24h++;
+    }
+  }
+
+  const { count: journeyMapsTotal } = await supabase
+    .from("journey_maps")
+    .select("*", { count: "exact", head: true });
+
+  const { data: pulseAbandonEvents } = await supabase
+    .from("journey_events")
+    .select("payload")
+    .eq("type", "flow_event")
+    .eq("payload->>step", "pulse_abandoned");
+
+  const pulseAbandonedByReason: Record<string, number> = {};
+  if (pulseAbandonEvents) {
+    for (const row of pulseAbandonEvents) {
+      const payload = row.payload as any;
+      const reason = (payload?.extra?.closeReason as string) || "unknown";
+      pulseAbandonedByReason[reason] = (pulseAbandonedByReason[reason] || 0) + 1;
+    }
+  }
+
+  const addPersonCompletionRate24h = addPersonOpened24h > 0 ? Math.round((addPersonDone24h / addPersonOpened24h) * 100) : 0;
+
+  const conversionHealth = {
+    pathStarted24h,
+    mapsGenerated24h,
+    addPersonOpened24h,
+    addPersonDone24h,
+    journeyMapsTotal: journeyMapsTotal ?? 0
+  };
+
+  const flowStats = {
+    byStep: {},
+    avgTimeToActionMs: null,
+    addPersonCompletionRate: addPersonCompletionRate24h,
+    pulseAbandonedByReason
+  };
+
   return NextResponse.json({
     ok: true,
     totalLeads, // queue count
@@ -262,6 +339,8 @@ export async function GET(req: Request) {
     totalDatabaseLeads,
     leadsBySource,
     leadsByCampaign,
+    conversionsByCampaign,
+    conversionsBySource,
     rawLeads,
     realStarts: realStarts ?? 0,
     recentErrors: recentErrors ?? [],
@@ -279,6 +358,8 @@ export async function GET(req: Request) {
       clickRate,
       bounceRate,
     },
+    conversionHealth,
+    flowStats
   });
 }
 
@@ -300,6 +381,7 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as {
     action?: string;
     leadEmail?: string;
+    leadId?: string;
   };
 
   if (body.action === "reset_failed") {
@@ -323,7 +405,11 @@ export async function POST(req: Request) {
     const cronSecret = process.env.CRON_SECRET || "";
     
     // Construct an artificial Request just to pass the Cron's internal auth gate
-    const internalReq = new Request("http://localhost/internal/cron", {
+    let cronUrl = "http://localhost/internal/cron?force=true";
+    if (body.leadId) {
+      cronUrl += `&lead_id=${encodeURIComponent(body.leadId)}`;
+    }
+    const internalReq = new Request(cronUrl, {
       method: "GET",
       headers: { authorization: `Bearer ${cronSecret}` }
     });
@@ -349,11 +435,42 @@ export async function POST(req: Request) {
 
   if (body.action === "mark_email_manual_sent" && body.leadEmail) {
     const supabase = buildClient();
-    await supabase
+    const normalizedEmail = body.leadEmail.toLowerCase().trim();
+    const sentAt = new Date().toISOString();
+    
+    // Check if queue entry exists
+    const { data: existing } = await supabase
       .from("marketing_lead_outreach_queue")
-      .update({ status: "simulated", last_error: "MANUAL_EMAIL_SENT" })
-      .eq("lead_email", body.leadEmail)
-      .in("status", ["pending", "simulated"]);
+      .select("id")
+      .ilike("lead_email", normalizedEmail)
+      .eq("channel", "email")
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from("marketing_lead_outreach_queue")
+        .update({ status: "sent", sent_at: sentAt, last_error: "MANUAL_EMAIL_SENT", resend_message_id: 'manual_gmail' })
+        .eq("id", existing.id);
+    } else {
+      // No queue entry exists yet — create one
+      const { data: leadRow } = await supabase
+        .from("marketing_leads")
+        .select("id")
+        .ilike("email", normalizedEmail)
+        .maybeSingle();
+      
+      await supabase.from("marketing_lead_outreach_queue").insert({
+        lead_email: normalizedEmail,
+        lead_id: leadRow?.id ?? null,
+        channel: "email",
+        status: "sent",
+        step: 1,
+        attempts: 1,
+        sent_at: sentAt,
+        last_error: "MANUAL_EMAIL_SENT",
+        resend_message_id: 'manual_gmail'
+      });
+    }
     return NextResponse.json({ ok: true, action: "mark_email_manual_sent" });
   }
 

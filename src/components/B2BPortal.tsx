@@ -245,6 +245,8 @@ export const B2BPortal: FC = () => {
                             <div>
                                 <label className="text-xs text-slate-400 mb-1.5 block">اس</label>
                                 <input
+                                    id="b2b-coach-name"
+                                    name="b2bCoachName"
                                     value={coachName}
                                     onChange={(e) => setCoachName(e.target.value)}
                                     placeholder="د. أحد حد"
@@ -279,6 +281,8 @@ export const B2BPortal: FC = () => {
                             <div>
                                 <label className="text-xs text-slate-400 mb-1.5 block">تخصص (اختار)</label>
                                 <input
+                                    id="b2b-coach-spec"
+                                    name="b2bCoachSpec"
                                     value={coachSpec}
                                     onChange={(e) => setCoachSpec(e.target.value)}
                                     placeholder="عاات  تطر ذات..."
@@ -336,6 +340,8 @@ export const B2BPortal: FC = () => {
                             </p>
                             <div className="space-y-2">
                                 <input
+                                    id="b2b-client-code"
+                                    name="b2bClientCode"
                                     value={clientCode}
                                     onChange={(e) => setClientCode(e.target.value)}
                                     placeholder="د اع (B2B-XXXXXX)"
@@ -346,6 +352,8 @@ export const B2BPortal: FC = () => {
                                     }}
                                 />
                                 <input
+                                    id="b2b-client-alias"
+                                    name="b2bClientAlias"
                                     value={clientAlias}
                                     onChange={(e) => setClientAlias(e.target.value)}
                                     placeholder="اس ستعار (خصصة)"

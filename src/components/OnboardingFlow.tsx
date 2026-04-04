@@ -225,6 +225,8 @@ const StepInventory: FC<{
           >
             <input
               type="text"
+              id={`inventory-person-${i + 1}`}
+              name={`inventoryPerson${i + 1}`}
               ref={(el) => { inputRefs.current[i] = el; }}
               defaultValue=""
               onInput={syncHasText}
@@ -276,7 +278,7 @@ const StepInventory: FC<{
         يلا نكمل →
       </button>
 
-      <button onClick={onSkip} className="text-center text-xs text-slate-500 hover:text-slate-300 transition-colors">تخطي</button>
+      <button onClick={onSkip} className="text-center text-xs text-slate-500 hover:text-slate-300 transition-colors">ادخل الملاذ الآمن</button>
     </div>
   );
 });
@@ -399,7 +401,7 @@ const StepMapping: FC<{
             شوف النتيجة <ArrowRight className="w-4 h-4 rotate-180" />
           </span>
         </button>
-        <button onClick={onSkip} className="text-xs text-slate-500 mt-4 hover:text-slate-300">تخطي</button>
+        <button onClick={onSkip} className="text-xs text-slate-500 mt-4 hover:text-slate-300">ادخل الملاذ الآمن</button>
       </div>
     </div>
   );
@@ -447,7 +449,7 @@ const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onC
         كَمّل لخطتك ←
       </button>
 
-      <button onClick={onSkip} className="text-xs text-slate-500">مش دلوقتي</button>
+      <button onClick={onSkip} className="text-xs text-slate-500">ادخل الملاذ الآمن</button>
     </div>
   );
 };
@@ -504,6 +506,8 @@ const StepContactCapture: FC<{
           <div className="relative">
              <input
                type="text"
+               id="contact-name"
+               name="contactName"
                value={name}
                onChange={(e) => setName(e.target.value)}
                placeholder="اسمك الأول أو لقبك.."
@@ -526,6 +530,8 @@ const StepContactCapture: FC<{
              </div>
              <input
                type="tel"
+               id="contact-whatsapp"
+               name="contactWhatsapp"
                value={whatsapp}
                onChange={(e) => setWhatsapp(e.target.value)}
                placeholder="10xxxxxxxx"
@@ -544,6 +550,8 @@ const StepContactCapture: FC<{
           <div className="relative">
              <input
                type="email"
+               id="contact-email"
+               name="contactEmail"
                value={email}
                onChange={(e) => setEmail(e.target.value)}
                placeholder="name@email.com"
@@ -586,7 +594,7 @@ const StepContactCapture: FC<{
       </form>
 
       <button onClick={onSkip} className="text-[10px] text-slate-500 mt-2 hover:text-slate-300 transition-colors uppercase font-bold tracking-widest inline-flex items-center justify-center gap-1 mx-auto">
-        تخطي للدخول السريع <ArrowRight className="w-3 h-3 rotate-180"/>
+        ادخل الملاذ الآمن <ArrowRight className="w-3 h-3 rotate-180"/>
       </button>
     </div>
   );

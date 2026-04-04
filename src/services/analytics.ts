@@ -114,7 +114,7 @@ function ensureMetaPixel(): void {
   const windowRef = getWindowOrNull();
   const pixelId = getMetaPixelId();
   if (!windowRef || !pixelId || !areMetaEventsEnabled()) return;
-  if (runtimeEnv.isDev && !areMetaEventsEnabled()) return;
+  if (runtimeEnv.isDev) return;
   if (windowRef.__dawayirMetaPixelScriptLoaded) return;
 
   if (!windowRef.fbq) {
@@ -242,14 +242,6 @@ export function trackLandingView(
 
   trackEvent(AnalyticsEvents.LANDING_VIEW, safeParams);
   sendMetaEvent("ViewContent", safeParams, { bypassConsent: true });
-  if (runtimeEnv.isDev) {
-    console.debug("[Analytics] trackLandingView", {
-      event: "ViewContent",
-      consent: getAnalyticsConsent(),
-      metaEnabled: areMetaEventsEnabled(),
-      params: safeParams
-    });
-  }
 }
 
 function getAnonymousSessionId(): string {
@@ -327,20 +319,13 @@ export function trackEvent(
             if (res.status === 401 || res.status === 403) {
               supabaseTrackingEnabled = false;
             }
-            if (runtimeEnv.isDev) {
-              console.warn(`[Analytics] Ingestion POST failed: ${eventName}`, await res.text());
-            }
           }
-        }).catch(err => {
-          if (runtimeEnv.isDev) {
-            console.warn(`[Analytics] Ingestion Fetch failed for ${eventName}`, err);
-          }
+        }).catch(() => {
+          // Intentionally silent in dev: analytics ingestion must never block the app shell.
         });
       })
       .catch((err: unknown) => {
-      if (!isSupabaseAbortError(err) && runtimeEnv.isDev) {
-        console.warn(`[Analytics] getSession failed for ${eventName}`, err);
-      }
+        if (isSupabaseAbortError(err)) return;
       });
   }
 }
@@ -440,14 +425,6 @@ export function trackCompleteRegistration(
   trackEvent(AnalyticsEvents.ONBOARDING_COMPLETED, safeParams);
   sendGtagEvent("sign_up", safeParams);
   sendMetaEvent("CompleteRegistration", safeParams, { bypassConsent: true });
-  if (runtimeEnv.isDev) {
-    console.debug("[Analytics] trackCompleteRegistration", {
-      event: "CompleteRegistration",
-      consent: getAnalyticsConsent(),
-      metaEnabled: areMetaEventsEnabled(),
-      params: safeParams
-    });
-  }
 }
 
 export function trackCheckoutViewed(

@@ -26,6 +26,7 @@ import { useAppShellBootstrapState } from "./useAppShellBootstrapState";
 import { useAppExperienceSurfaceState } from "./useAppExperienceSurfaceState";
 import { SanctuaryLockdownExperience } from "../SanctuaryLockdownExperience";
 import type { AppShellScreen } from "../../state/appShellNavigationState";
+import { usePersonalizedBiometrics } from "../../hooks/usePersonalizedBiometrics";
 
 function hasOAuthCallbackParams(): boolean {
   const search = new URLSearchParams(getSearch());
@@ -53,6 +54,9 @@ interface AppExperienceShellProps {
 
 export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps) {
   const skipExitToLandingOnceRef = useRef(false);
+
+  // تفعيل التدخل الفيزيائي
+  usePersonalizedBiometrics();
 
   useEffect(() => {
     // Keep language initialization inside the client lifecycle so importing this
@@ -286,10 +290,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     pulseMode,
     challengeTarget,
     challengeLabel,
-    showStartup,
-    handleStartupComplete,
     startRecovery,
-    handleOnboardingComplete,
     setStartRecoveryIntent,
     setLoginIntent,
     welcome,
@@ -661,8 +662,7 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
     surfaceActions,
     agentExperience,
     mainSurface,
-    overlaySurface,
-    onOnboardingComplete: handleOnboardingComplete
+    overlaySurface
   });
   
   // PAGE VIEW TRACKING
@@ -725,8 +725,6 @@ export function AppExperienceShell({ onExitToLanding }: AppExperienceShellProps)
           screen={screen}
           isLandingScreen={isLandingScreen}
           showPulseCheck={showPulseCheck}
-          showStartup={showStartup}
-          onStartupComplete={handleStartupComplete}
           isFeaturePreviewSession={isFeaturePreviewSession}
           previewedFeature={previewedFeature}
           onBackToFeatureFlags={goBackToFeatureFlags}

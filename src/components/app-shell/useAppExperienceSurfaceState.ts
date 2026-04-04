@@ -60,7 +60,6 @@ interface UseAppExperienceSurfaceStateParams {
   overlaySurface: SurfaceOverlayPropsParams & {
     onDismissBroadcast: SurfaceOverlayPropsParams["onDismissBroadcast"];
   };
-  onOnboardingComplete?: (skipped?: boolean) => void;
 }
 
 export function useAppExperienceSurfaceState({
@@ -68,8 +67,7 @@ export function useAppExperienceSurfaceState({
   agentExperience,
   canShowAIChatbot,
   mainSurface,
-  overlaySurface,
-  onOnboardingComplete
+  overlaySurface
 }: UseAppExperienceSurfaceStateParams) {
   const actions = useAppSurfaceActions(surfaceActions);
   const { agentContext, agentSystemPrompt, agentActions } = useAppAgentExperience(agentExperience);
@@ -118,7 +116,7 @@ export function useAppExperienceSurfaceState({
       agentActions,
       agentSystemPrompt,
       onFeedbackSubmit: actions.handleFeedbackSubmit,
-      onOnboardingComplete
+      onOnboardingComplete: undefined
     } as OverlayHostProps,
     openConsciousnessArchive: actions.openConsciousnessArchive,
     openTimeCapsuleVault: actions.openTimeCapsuleVault,
@@ -130,11 +128,9 @@ export function useAppExperienceSurfaceState({
     chromeShellProps,
     mainContentProps,
     transientChromeProps,
-    canShowAIChatbot,
     agentContext,
     agentActions,
     agentSystemPrompt,
-    onOnboardingComplete,
     actions.openConsciousnessArchive,
     actions.openTimeCapsuleVault,
     actions.handleFeedbackSubmit,

@@ -1,7 +1,6 @@
-
 /**
- * Recovery Plan Email Template (Arabic/Egyptian)
- * High-fidelity HTML template for the "Al-Dawayir" (Alrehla) onboarding experience.
+ * Recovery Plan Email Template (Arabic/Egyptian Direct Response)
+ * High-fidelity HTML template for the "Al-Dawayir" onboarding experience.
  */
 
 export interface RecoveryPlanData {
@@ -15,7 +14,7 @@ export interface RecoveryPlanData {
 
 export function getRecoveryPlanHtml(data: RecoveryPlanData): string {
   const { userName, relationshipCount, magicLink } = data;
-  const displayName = userName ? `يا ${userName}` : "يا بطل";
+  const displayName = userName ? userName : "يا بطل";
 
   return `
 <!DOCTYPE html>
@@ -52,11 +51,11 @@ export function getRecoveryPlanHtml(data: RecoveryPlanData): string {
         .stat-value { color: #2dd4bf; font-weight: 800; font-size: 16px; }
         
         .prescription {
-            border-right: 4px solid #2dd4bf; padding-right: 16px; margin-bottom: 35px;
-            background: linear-gradient(90deg, transparent, rgba(45,212,191,0.03));
+            border-right: 4px solid #f43f5e; padding-right: 16px; margin-bottom: 35px;
+            background: linear-gradient(90deg, transparent, rgba(244,63,94,0.03));
             padding-top: 10px; padding-bottom: 10px; border-radius: 8px 0 0 8px;
         }
-        .prescription h2 { font-size: 18px; color: #2dd4bf; margin-bottom: 15px; margin-top: 0;}
+        .prescription h2 { font-size: 18px; color: #f43f5e; margin-bottom: 15px; margin-top: 0;}
         .p-block { margin-bottom: 16px; }
         .p-title { font-weight: 800; display: inline-block; margin-bottom: 4px; }
         .p-red { color: #f43f5e; }
@@ -69,67 +68,70 @@ export function getRecoveryPlanHtml(data: RecoveryPlanData): string {
             display: inline-block; padding: 18px 40px; background-color: #2dd4bf;
             color: #020408; text-decoration: none; border-radius: 16px;
             font-weight: 800; font-size: 16px;
-            box-shadow: 0 8px 25px rgba(45,212,191,0.3); transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(45,212,191,0.3); transition: all 0.3s; width: 80%; max-width: 300px;
         }
+        .btn:hover { background-color: #14b8a6; box-shadow: 0 8px 30px rgba(45,212,191,0.4); transform: translateY(-2px); }
 
         .footer { text-align: center; margin-top: 40px; color: #475569; font-size: 11px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; }
         .footer p { margin-bottom: 6px; }
 
         @media (max-width: 600px) {
             .container { padding: 30px 20px; margin: 0; border-radius: 0; border: none; }
+            .btn { width: 100%; padding: 18px 20px; box-sizing: border-box; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">دوايـــر</div>
+            <div class="logo">الملاذ السيادي</div>
         </div>
 
         <div class="hero">
-            <h1>أهلاً بيك في المواجهة ${displayName}</h1>
-            <p>"التعافي بيبدأ لما ترسم واقعك بصدق وتشوف مين بيطمنك ومين بيستنزفك."</p>
+            <h1>أهلاً بيك يا ${displayName}، المواجهة بدأت بجد</h1>
+            <p>"إنت أخدت الخطوة الأصعب ورسمت الحقيقة. روشتتك هنا، وفيها ناس بتسحبك لتحت من غير ما تحس."</p>
         </div>
 
         <div class="stat-card">
-            <div style="color: #2dd4bf; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">أشعة مقطعية لوعيك</div>
+            <div style="color: #2dd4bf; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">مؤشرات الوعي اللحظية</div>
             <div class="stat-row">
-                <span class="stat-label">علاقات تم تحليل تأثيرها الطاقي</span>
+                <span class="stat-label">العلاقات على الرادار</span>
                 <span class="stat-value">${relationshipCount}</span>
             </div>
             <div class="stat-row" style="margin-bottom: 0;">
                 <span class="stat-label">تشخيص الخريطة</span>
-                <span class="stat-value" style="color: #fb7185;">نزيف طاقة محتاج يتوقف</span>
+                <span class="stat-value" style="color: #f43f5e;">نزيف طاقة قيد الفحص</span>
             </div>
         </div>
 
         <div class="prescription">
-            <h2>روشتة "الدواير" المبدئية</h2>
+            <h2>روشتة التعافي (تحذيرات سيادية)</h2>
             
             <div class="p-block">
-                <span class="p-title p-red">🔴 المدار الخارجي (مستنزِف):</span>
-                <p>الناس اللي حطيتهم هنا هما "ثقوب سوداء" بتشفط طاقتك. الحل من المبادئ الأولى: تقليل الاحتكاك للصفر أو فرض حدود صارمة فوراً عشان نوقف النزيف.</p>
+                <span class="p-title p-red">🔴 المدار الخارجي (نزيف حرفي):</span>
+                <p>الناس اللي هنا عبارة عن "ثقوب سوداء" بتشفط مجهودك. الحل الوحيد: قلل الاحتكاك للصفر أو حط حدود صارمة. مفيش وقت للنزيف ده.</p>
             </div>
             
             <div class="p-block">
-                <span class="p-title p-yellow">🟡 المدار الأوسط (متقلب):</span>
-                <p>مفيش استقرار هنا، يوم حلو ويوم متعب. متديش أمان كامل ولا تهاجم.. راقب نمطهم واديهم مساحتك من غير ما تتأثر بيهم.</p>
+                <span class="p-title p-yellow">🟡 المدار الأوسط (مراوغة):</span>
+                <p>متقلبين، يوم بيرفعوك وعشرة بيتعبوك. متديش أمان كامل وراقب نمطهم. اديهم مساحتك بس من غير ما تشاركهم تفاصيلك اللي ممكن تضربك بعدين.</p>
             </div>
             
             <div class="p-block" style="margin-bottom: 0;">
-                <span class="p-title p-green">🟢 النواة (مطمن):</span>
-                <p>دول الشاحن بتاعك في الرحلة دي وحصنك الحقيقي. استثمر طاقتك معاهم عشان تعوض الاستنزاف اللي بيحصل برا.</p>
+                <span class="p-title p-green">🟢 النواة (حصنك الحصين):</span>
+                <p>دول الشاحن بتاعك وعمودك الفقري في المعركة اللي جاية. استثمر معاهم عشان تعوض الخسارة اللي بتحصل بره المدار.</p>
             </div>
         </div>
 
         <div class="cta-container">
-            <a href="${magicLink}" class="btn">ادخل الملاذ الآمن وابدأ التنفيذ</a>
-            <p style="color: #64748b; font-size: 11px; margin-top: 16px; font-weight: bold;">الرابط ده هو مفتاح دخولك المشفّر. هيفتح خريطتك فوراً.</p>
+            <h3 style="color: #ffffff; font-size: 15px; margin-bottom: 16px;">مستعد تحرر مساحتك؟</h3>
+            <a href="${magicLink}" class="btn">افتح خريطتك وابدأ التنفيذ</a>
+            <p style="color: #64748b; font-size: 11px; margin-top: 16px; font-weight: bold;">اضغط فوق للدخول الفوري. الرابط مشفر لملاذك الخاص.</p>
         </div>
 
         <div class="footer">
-            <p>أنت بتستلم الإيميل ده لأنك قررت تواجه وترسم خريطتك بصدق للتعافي.</p>
-            <p>بياناتك أمانة ومشفرة تماماً في ملاذنا السيادي.</p>
+            <p>أنت بتستلم الإيميل ده لأنك قررت تدور على راحتك وتواجه المشتتات.</p>
+            <p>بياناتك أمانة ومشفرة تماماً.</p>
             <p>قتل الدجال بالعلم © 2026</p>
         </div>
     </div>

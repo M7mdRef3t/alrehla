@@ -378,13 +378,13 @@ export const AppOverlayHost = memo(function AppOverlayHost({
       externalOnboardingComplete(skipped);
     } else {
       setOverlay("onboarding", false);
-      if (tier === "free" && !isOwner) {
-        setOverlay("premiumBridge", true);
-      } else {
-        setScreen("map");
+      const journeyState = useJourneyState.getState();
+      if (!journeyState.goalId) {
+        journeyState.setLastGoal("unknown", "general");
       }
+      setScreen("map");
     }
-  }, [externalOnboardingComplete, setOverlay, setScreen, tier, isOwner]);
+  }, [externalOnboardingComplete, setOverlay, setScreen]);
 
   const onJourneyTimelineCardClick = useCallback((nodeId: string) => {
     setSelectedNodeId(nodeId);

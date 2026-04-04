@@ -399,10 +399,10 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         className="fixed top-0 right-0 z-40 h-full hidden md:flex flex-row-reverse group/sidebar"
         aria-label="القائمة الرئيسية"
       >
-        {/* المحتوى — يظهر عند تحريك الماوس على التاب أو الشريط؛ wrapper يمنع ظهور أي جزء عند الإغلاق */}
-        <div className="h-full w-0 group-hover/sidebar:w-56 shrink-0 overflow-hidden transition-[width] duration-200 ease-out">
+        {/* المحتوى — يظهر بشكل دائم مؤقتاً للتأكد من رؤية المستخدم للزراير */}
+        <div className="h-full w-56 shrink-0 overflow-hidden transition-[width] duration-200 ease-out">
           <aside
-            className="h-full w-56 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 flex flex-col gap-3 py-6 px-4 min-w-0 invisible group-hover/sidebar:visible"
+            className="h-full w-56 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 flex flex-col gap-3 py-6 px-4 min-w-0 visible"
           >
             {viewingNode?.analysis && (
               <div className="shrink-0 space-y-1 mb-1">
@@ -439,6 +439,37 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             
             {isOwner && (
               <>
+                <div className="w-full h-px bg-slate-200 dark:bg-slate-700 my-2" />
+                <p className="text-[10px] uppercase font-bold tracking-widest text-[#f43f5e] mb-1 px-2">معاينة شاشات النتائج</p>
+                <button
+                  type="button"
+                  onClick={() => setShowRelationshipAnalysis(true)}
+                  className="w-full flex items-center gap-3 rounded-xl bg-rose-50/80 dark:bg-rose-900/30 text-rose-700 dark:text-rose-200 border border-rose-200 dark:border-rose-600 px-4 py-3 text-sm font-semibold hover:border-rose-400 dark:hover:border-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="Relationship Analysis Modal"
+                >
+                  <Activity className="w-5 h-5 shrink-0 text-[#f43f5e]" />
+                  شاشة Relationship
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedTools(true)}
+                  className="w-full flex items-center gap-3 rounded-xl bg-rose-50/80 dark:bg-rose-900/30 text-rose-700 dark:text-rose-200 border border-rose-200 dark:border-rose-600 px-4 py-3 text-sm font-semibold hover:border-rose-400 dark:hover:border-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="Comprehensive Analysis (in Quizzes Hub)"
+                >
+                  <Scale className="w-5 h-5 shrink-0 text-[#f43f5e]" />
+                  شاشة Comprehensive
+                </button>
+                <button
+                  type="button"
+                  onClick={() => assignUrl('/weather')}
+                  className="w-full flex items-center gap-3 rounded-xl bg-rose-50/80 dark:bg-rose-900/30 text-rose-700 dark:text-rose-200 border border-rose-200 dark:border-rose-600 px-4 py-3 text-sm font-semibold hover:border-rose-400 dark:hover:border-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all text-right shrink-0 whitespace-nowrap"
+                  title="Weather Forecast Client"
+                >
+                  <Wind className="w-5 h-5 shrink-0 text-[#f43f5e]" />
+                  شاشة Weather
+                </button>
+                <div className="w-full h-px bg-slate-200 dark:bg-slate-700 my-2" />
+
                 <button
                   type="button"
                   onClick={openAdminDashboard}

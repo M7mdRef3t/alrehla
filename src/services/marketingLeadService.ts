@@ -27,6 +27,16 @@ type CaptureMarketingLeadInput = {
 
 function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayload {
   const utm = getStoredUtmParams();
+  const utmSource = (utm?.utm_source || "").toLowerCase();
+  const utmMedium = (utm?.utm_medium || "").toLowerCase();
+
+  // Smart Inference (consistent with server-side)
+  let inferredSourceType = input.sourceType || "website";
+  if (inferredSourceType === "website") {
+    const isMeta = ["facebook", "meta", "fb", "instagram", "ig", "fbad"].includes(utmSource) || utmMedium === "paidsocial";
+    if (isMeta) inferredSourceType = "meta_instant_form";
+    else if (["whatsapp", "wa"].includes(utmSource) || utmMedium === "whatsapp") inferredSourceType = "whatsapp";
+  }
   
   return {
     ...input,
@@ -35,7 +45,7 @@ function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayloa
     note: input.note?.trim() || undefined,
     status: input.status || "engaged",
     source: input.source || "landing",
-    sourceType: input.sourceType || "website",
+    sourceType: inferredSourceType as any,
     utm: utm ?? undefined,
     campaign: utm?.utm_campaign,
     metadata: {

@@ -122,8 +122,10 @@ export const RecoveryPlanView: FC<RecoveryPlanViewProps> = ({
                             : "bg-gray-50 border border-gray-200 hover:border-teal-300"
                           }`}
                       >
-                        <input
-                          type="checkbox"
+                      <input
+                        id={`recovery-step-${step.id}`}
+                        name={`recoveryStep${step.id}`}
+                        type="checkbox"
                           checked={isCompleted}
                           onChange={() => onToggleStep(step.id)}
                           className="w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 focus:ring-offset-0 cursor-pointer mt-0.5 flex-shrink-0"

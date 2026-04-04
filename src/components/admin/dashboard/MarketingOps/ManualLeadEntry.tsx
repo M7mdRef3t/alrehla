@@ -84,11 +84,11 @@ export function ManualLeadEntry({ onSuccess, onError }: ManualLeadEntryProps) {
       const data = await response.json();
 
       if (data.ok) {
-        onSuccess("تم تسجيل الـ Lead بنجاح ✅ — الحالة: طلب دفع");
+        onSuccess("تم تسجيل المهتم بنجاح ✅ — الحالة: طلب دفع");
         setPhone("");
         setNote("");
       } else {
-        onError(data.error || "فشل تسجيل الـ Lead");
+        onError(data.error || "فشل تسجيل المهتم");
       }
     } catch (err) {
       onError("خطأ في الاتصال بالسيرفر");
@@ -104,7 +104,7 @@ export function ManualLeadEntry({ onSuccess, onError }: ManualLeadEntryProps) {
           <PlusCircle className="w-7 h-7" />
         </div>
         <div>
-          <h3 className="text-lg font-black text-white">إضافة Lead يدويًا</h3>
+          <h3 className="text-lg font-black text-white">إضافة مهتم يدويًا</h3>
           <p className="text-[11px] text-slate-500 mt-0.5 font-medium">سجل رقم واتساب فوراً وخليه في وضع "طلب دفع"</p>
         </div>
       </div>
@@ -147,7 +147,7 @@ export function ManualLeadEntry({ onSuccess, onError }: ManualLeadEntryProps) {
           ) : (
             <UserPlus className="w-5 h-5" />
           )}
-          <span>تسجيل الـ Lead الآن</span>
+          <span>تسجيل المهتم الآن</span>
         </button>
       </form>
 
@@ -168,7 +168,7 @@ export function ManualLeadEntry({ onSuccess, onError }: ManualLeadEntryProps) {
                 <ExternalLink className="w-4 h-4" />
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                <strong className="text-white">أداة الـ Bookmark:</strong> زرار بتضيفه في متصفحك، وأنت فاتح واتساب بتدوس عليه بيسجل الرقم فوراً في السيستم عندك من غير ما تفتح الـ Dashboard.
+                <strong className="text-white">أداة الـ Bookmark:</strong> زرار بتضيفه في متصفحك، وأنت فاتح واتساب بتدوس عليه بيسجل الرقم فوراً في السيستم عندك من غير ما تفتح لوحة التحكم.
               </p>
             </div>
 

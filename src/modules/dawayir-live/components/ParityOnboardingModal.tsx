@@ -76,7 +76,7 @@ export default function ParityOnboardingModal({
               {isLast ? (language === "ar" ? "يلا نبدأ" : "Let's Go") : language === "ar" ? "التالي" : "Next"}
             </button>
             <button className="onboarding-btn-skip" onClick={onSkip} type="button">
-              {language === "ar" ? "تخطي" : "Skip"}
+        {language === "ar" ? "ادخل الملاذ الآمن" : "Enter Sanctuary"}
             </button>
           </div>
         </div>

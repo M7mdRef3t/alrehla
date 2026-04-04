@@ -184,7 +184,9 @@ export const DuoCommunityDashboard: FC<DuoCommunityDashboardProps> = ({ isOpen, 
                     <div className="space-y-6">
                       {/* Search */}
                       <div className="relative">
-                        <input 
+                        <input
+                          id="community-search"
+                          name="communitySearch"
                           type="text" 
                           placeholder="ابحث في المجتمع..." 
                           className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 pl-10 text-sm text-slate-200 outline-none focus:border-indigo-500 transition"
@@ -312,7 +314,9 @@ export const DuoCommunityDashboard: FC<DuoCommunityDashboardProps> = ({ isOpen, 
                           أنت
                         </div>
                         <div className="flex-1 relative">
-                          <textarea 
+                          <textarea
+                            id="discussion-reply"
+                            name="discussionReply"
                             placeholder="شارك برأيك في الغرفة النقاشية..."
                             className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-200 outline-none focus:border-indigo-500 transition resize-none h-24 custom-scrollbar"
                           ></textarea>

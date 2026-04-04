@@ -125,6 +125,8 @@ const OpenInput: FC<{
   return (
     <div className="w-full max-w-md mx-auto">
       <textarea
+        id={`survey-answer-${question.id}`}
+        name={`surveyAnswer${question.id}`}
         dir="rtl"
         rows={3}
         value={value ?? ""}

@@ -15,7 +15,16 @@ interface HeroSectionProps {
 }
 
 /* ─── Constants ──────────────────────────────────────────────────────────────── */
-const ROTATING_WORDS = ["مُنتهك الحدود", "تنزف طاقتك ببطء", "مُثقل بنبض الآخرين", "في مسار مشتت"];
+const ROTATING_WORDS = [
+  "حدودك مُستباحة",
+  "شايل شيلة مش شيلتك",
+  "تايه في دواير غيرك",
+  "نبضك مربوط بغيرك",
+  "سايب بابك موارب",
+  "بتدور في ساقية مش بتاعتك",
+  "مراية لزعل اللي حواليك",
+  "خايف تقول لأ"
+];
 
 /* ─── Styles ─────────────────────────────────────────────────────────────────── */
 const HERO_STYLES = `
@@ -124,10 +133,11 @@ const HERO_STYLES = `
   .headline-static {
     font-family: 'Tajawal', sans-serif;
     font-weight: 900;
-    line-height: 1.0;
-    letter-spacing: -0.035em;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
     color: var(--text-hero);
     text-shadow: 0 0 80px rgba(45, 212, 191, 0.08);
+    text-align: right;
   }
 
   .headline-accent {
@@ -136,13 +146,19 @@ const HERO_STYLES = `
     -webkit-text-fill-color: transparent;
     background-clip: text;
     filter: drop-shadow(0 0 24px rgba(45,212,191,0.28));
-    display: inline-block;
+    display: block;
+    width: 100%;
   }
 
   /* ── Rotating word ── */
   .rotating-word-wrapper {
     position: relative;
-    display: inline-block;
+    display: block;
+    width: 100%;
+    min-height: 1.2em;
+    padding: 0.25em 0;
+    overflow: visible;
+    text-align: right;
   }
 
   /* ── Body copy ── */
@@ -322,14 +338,14 @@ const RotatingWord: FC = () => {
         setIndex(i => (i + 1) % ROTATING_WORDS.length);
         setShow(true);
       }, 450);
-    }, 3200);
+    }, 5000);
     return () => clearInterval(id);
   }, []);
 
   return (
     <span className="rotating-word-wrapper">
-      <span className="invisible select-none whitespace-nowrap block" aria-hidden>
-        {ROTATING_WORDS[2]}
+      <span className="invisible select-none block" aria-hidden>
+        {ROTATING_WORDS[5]}
       </span>
       <AnimatePresence mode="wait">
         {show && (
@@ -339,7 +355,7 @@ const RotatingWord: FC = () => {
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -16, filter: "blur(6px)" }}
             transition={{ duration: 0.45, ease }}
-            className="absolute inset-0 flex items-center justify-end headline-accent"
+            className="absolute inset-0 flex items-center headline-accent"
           >
             {ROTATING_WORDS[index]}
           </motion.span>
@@ -355,60 +371,19 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
   const mouseY = useMotionValue(0);
   const springX = useSpring(mouseX, { stiffness: 40, damping: 20 });
   const springY = useSpring(mouseY, { stiffness: 40, damping: 20 });
-  const [isInteractiveMotionEnabled, setIsInteractiveMotionEnabled] = useState(false);
-  const animationFrameRef = useRef<number | null>(null);
-  const latestPointerRef = useRef<{ clientX: number; clientY: number } | null>(null);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (reduceMotion) return;
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    mouseX.set((e.clientX - cx) / 90);
+    mouseY.set((e.clientY - cy) / 90);
+  }, [reduceMotion, mouseX, mouseY]);
 
   useEffect(() => {
-    if (reduceMotion) {
-      setIsInteractiveMotionEnabled(false);
-      return;
-    }
-
-    const windowRef = window;
-    const mediaQuery = windowRef.matchMedia("(pointer: fine)");
-    const evaluate = () => {
-      setIsInteractiveMotionEnabled(mediaQuery.matches && windowRef.innerWidth >= 1024);
-    };
-
-    evaluate();
-    mediaQuery.addEventListener?.("change", evaluate);
-    windowRef.addEventListener("resize", evaluate, { passive: true });
-
-    return () => {
-      mediaQuery.removeEventListener?.("change", evaluate);
-      windowRef.removeEventListener("resize", evaluate);
-    };
-  }, [reduceMotion]);
-
-  useEffect(() => {
-    if (!isInteractiveMotionEnabled || reduceMotion) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      latestPointerRef.current = { clientX: e.clientX, clientY: e.clientY };
-      if (animationFrameRef.current != null) return;
-
-      animationFrameRef.current = window.requestAnimationFrame(() => {
-        animationFrameRef.current = null;
-        const latest = latestPointerRef.current;
-        if (!latest) return;
-
-        const cx = window.innerWidth / 2;
-        const cy = window.innerHeight / 2;
-        mouseX.set((latest.clientX - cx) / 120);
-        mouseY.set((latest.clientY - cy) / 120);
-      });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      if (animationFrameRef.current != null) {
-        window.cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
-    };
-  }, [isInteractiveMotionEnabled, reduceMotion, mouseX, mouseY]);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [handleMouseMove]);
 
   const rings = [
     { r: 68,  stroke: "rgba(45,212,191,0.3)",  dash: "none", dur: 22 },
@@ -486,19 +461,14 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
             key={i}
             onMouseEnter={() => setHovered(i)}
             onMouseLeave={() => setHovered(null)}
-            initial={{ opacity: 0.86, scale: 1 }}
-            animate={{
-              opacity: hovered === i ? 1 : 0.86,
-              scale: reduceMotion || !isInteractiveMotionEnabled ? 1 : hovered === i ? 1.03 : 1,
+            animate={reduceMotion ? {} : {
+              x: springX.get() * node.w,
+              y: springY.get() * node.w,
+              opacity: hovered === i ? 1 : [0.7, 1, 0.7],
             }}
-            transition={
-              reduceMotion || !isInteractiveMotionEnabled
-                ? { duration: 0 }
-                : {
-                    opacity: { duration: 0.25, ease: "easeOut" },
-                    scale: { duration: 0.2, ease: "easeOut" },
-                  }
-            }
+            transition={{
+              opacity: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 },
+            }}
             style={{ transformOrigin: `${node.cx}px ${node.cy}px`, cursor: "pointer" }}
           >
             {/* Pulse ring */}
@@ -559,7 +529,7 @@ const SovereignMap: FC<{ reduceMotion: boolean | null }> = ({ reduceMotion }) =>
 
         {/* Center core */}
         <motion.g
-          animate={reduceMotion ? {} : { scale: [1, 1.08, 1], opacity: [0.92, 1, 0.92] }}
+          animate={reduceMotion ? {} : { scale: [1, 1.18, 1], opacity: [0.9, 1, 0.9] }}
           transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
           style={{ transformOrigin: "190px 190px" }}
         >
@@ -762,14 +732,12 @@ export const HeroSection: FC<HeroSectionProps> = ({
               className="headline-static"
               style={{
                 fontSize: "clamp(2.4rem, 5.5vw, 4.4rem)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-end",
-                gap: "0.2em",
+                display: "block",
+                textAlign: "right",
               }}
             >
-              <span>أنت لست مرهقاً</span>
-              <span style={{ color: "#8faab8", fontSize: "0.78em", fontWeight: 600 }}>
+              <span style={{ display: "block", marginBottom: "0.1em" }}>أنت لست مرهقاً</span>
+              <span style={{ display: "block", color: "#8faab8", fontSize: "0.78em", fontWeight: 600, marginBottom: "0.1em" }}>
                 أنت فقط
               </span>
               <RotatingWord />
@@ -806,6 +774,8 @@ export const HeroSection: FC<HeroSectionProps> = ({
               }}>
                 <input
                   type="text"
+                  id="mirror-name"
+                  name="mirrorName"
                   placeholder="اسمك (اختياري)"
                   value={mirrorName}
                   onChange={e => setMirrorName(e.target.value)}

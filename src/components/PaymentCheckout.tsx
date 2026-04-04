@@ -36,13 +36,6 @@ function getEnv(key: string): string {
     const val = process.env[key];
     if (val) return val;
   }
-  // Try import.meta.env (Vite)
-  try {
-    if (typeof import.meta !== "undefined" && (import.meta as unknown as Record<string, unknown>).env) {
-      const val = ((import.meta as unknown as Record<string, unknown>).env as Record<string, unknown>)[key];
-      if (typeof val === "string") return val;
-    }
-  } catch { /* noop */ }
   return "";
 }
 

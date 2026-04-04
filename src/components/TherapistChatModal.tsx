@@ -170,6 +170,8 @@ export const TherapistChatModal: React.FC<TherapistChatModalProps> = ({ isOpen, 
                         <div className="p-4 bg-slate-900 border-t border-white/5">
                             <form onSubmit={handleSend} className="relative flex items-center gap-2">
                                 <input
+                                    id="therapist-chat-input"
+                                    name="therapistChatInput"
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}

@@ -12,6 +12,8 @@ import {
   type RecentTelemetrySignalV1
 } from "../../modules/recommendation";
 import type { AppScreen } from "../../navigation/navigationMachine";
+import { useMapState } from "../../state/mapState";
+
 
 export interface ActiveInterventionState {
   decisionId: string;
@@ -133,15 +135,35 @@ export function useNextStepRouting({
         setShowBreathing(true);
         break;
       case "open_map":
-        void navigateToScreen("map");
+        if (screen === "map" && useMapState.getState().nodes.length === 0) {
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("dawayir-open-add-person"));
+          }
+        } else {
+          void navigateToScreen("map");
+        }
         break;
       case "open_tools":
         openJourneyTools();
         break;
       case "open_mission":
-        if (nodeIdFromPayload) openMissionScreen(nodeIdFromPayload);
-        else if (selectedNodeId) openMissionScreen(selectedNodeId);
-        else void navigateToScreen("map");
+        if (nodeIdFromPayload) {
+          openMissionScreen(nodeIdFromPayload);
+        } else if (selectedNodeId) {
+          openMissionScreen(selectedNodeId);
+        } else {
+          const nodes = useMapState.getState().nodes;
+          let targetNode = nodes.find(n => n.missionProgress?.startedAt && !n.missionProgress.isCompleted);
+          if (!targetNode) {
+            targetNode = nodes.find(n => n.analysis);
+          }
+          if (targetNode) {
+            openMissionScreen(targetNode.id);
+          } else {
+            void navigateToScreen("map");
+            if (nodes[0]) setSelectedNodeId(nodes[0].id);
+          }
+        }
         break;
       case "review_red_node":
       case "log_situation":

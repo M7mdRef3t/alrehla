@@ -1025,7 +1025,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
                 onClick={() => {
                   onSelectNode(null);
                   const sub = loadSubscription();
-                  if (sub.tier === "basic" && nodes.length >= 3) {
+                  if (sub.tier === "basic" && activeNodes.length >= 3) {
                     setIsUpgradeOpen(true);
                   } else {
                     setShowAddPerson(true);
@@ -1440,7 +1440,7 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
           onClick={() => {
             onSelectNode(null);
             const sub = loadSubscription();
-            if (sub.tier === "basic" && nodes.length >= 3) {
+            if (sub.tier === "basic" && activeNodes.length >= 3) {
               setIsUpgradeOpen(true);
             } else {
               setShowAddPerson(true);

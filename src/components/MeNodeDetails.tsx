@@ -194,6 +194,8 @@ export const MeNodeDetails: FC<MeNodeDetailsProps> = ({ onClose, onStartBreathin
           >
             <h4 className="text-sm font-bold text-slate-900 mb-2">فضفضة حرة</h4>
             <textarea
+              id="me-node-journal"
+              name="meNodeJournal"
               value={journalInput}
               onChange={(e) => setJournalInput(e.target.value)}
               placeholder={journalPlaceholder}

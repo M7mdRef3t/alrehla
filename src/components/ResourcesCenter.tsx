@@ -129,7 +129,7 @@ interface Exercise {
   steps: string[];
 }
 
-type DBMeta = Record<string, unknown>;
+type DBMeta = Record<string, any>;
 
 type DBVideoCourse = {
   id: string | number;
@@ -604,6 +604,8 @@ export function ResourcesCenter({
           <div style={{ position: "relative", marginBottom: 12 }}>
             <Search size={14} color="#334155" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }} />
             <input
+              id="resources-center-search"
+              name="resourcesCenterSearch"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="ابحث في المقالات والفيديوهات والتمارين..."
@@ -846,10 +848,15 @@ export function ResourcesCenter({
                               <div style={{ flex: 1 }}>
                                 <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "#e2e8f0" }}>{String(v.title)}</p>
                                 <p style={{ margin: "3px 0 6px", fontSize: 10, color: "#64748B", lineHeight: 1.5 }}>{String(meta.summary ?? "")}</p>
+                                {(() => {
+                                  const views = Number(meta.views ?? 0);
+                                  return (
                                 <div style={{ display: "flex", gap: 8 }}>
                                   <span style={{ fontSize: 8, color: "#475569", display: "flex", alignItems: "center", gap: 3 }}><Clock size={8} /> {String(meta.duration ?? v.estimated_minutes + " دقيقة")}</span>
-                                  {meta.views && <span style={{ fontSize: 8, color: "#334155" }}>{Number(meta.views).toLocaleString("ar")} مشاهدة</span>}
+                                  {views > 0 && <span style={{ fontSize: 8, color: "#334155" }}>{views.toLocaleString("ar")} مشاهدة</span>}
                                 </div>
+                                  );
+                                })()}
                               </div>
                               <Play size={14} color="#F43F5E" style={{ flexShrink: 0 }} />
                             </div>
@@ -901,13 +908,19 @@ export function ResourcesCenter({
                               <div style={{ flex: 1 }}>
                                 <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "#e2e8f0" }}>{String(a.title)}</p>
                                 <p style={{ margin: "4px 0 6px", fontSize: 10, color: "#64748B", lineHeight: 1.6 }}>{String(meta.summary ?? "")}</p>
-                                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                                  <span style={{ fontSize: 8, color: "#475569", display: "flex", alignItems: "center", gap: 3 }}>
-                                    <Clock size={8} /> {String(a.estimated_minutes ?? 0)} دقيقة
-                                  </span>
-                                  {meta.author && <span style={{ fontSize: 8, color: "#475569" }}>{String(meta.author)}</span>}
-                                  {meta.reads && <span style={{ fontSize: 8, color: "#334155" }}>{Number(meta.reads).toLocaleString("ar")} قراءة</span>}
-                                </div>
+                                {(() => {
+                                  const author = typeof meta.author === "string" ? meta.author : "";
+                                  const reads = Number(meta.reads ?? 0);
+                                  return (
+                                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                      <span style={{ fontSize: 8, color: "#475569", display: "flex", alignItems: "center", gap: 3 }}>
+                                        <Clock size={8} /> {String(a.estimated_minutes ?? 0)} دقيقة
+                                      </span>
+                                      {author ? <span style={{ fontSize: 8, color: "#475569" }}>{author}</span> : null}
+                                      {reads > 0 ? <span style={{ fontSize: 8, color: "#334155" }}>{reads.toLocaleString("ar")} قراءة</span> : null}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                               <button onClick={(e) => { e.stopPropagation(); toggleBookmark(aid); }}
                                 style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4 }}>

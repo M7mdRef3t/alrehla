@@ -415,7 +415,7 @@ function AttachmentNodePicker({
         background: "none", border: "none", color: "#334155",
         fontSize: 10, cursor: "pointer", width: "100%",
       }}>
-        تخطي — لا أريد ربط الآن
+        تجاوز الربط الآن
       </button>
     </motion.div>
   );

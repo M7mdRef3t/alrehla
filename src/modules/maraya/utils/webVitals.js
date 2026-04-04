@@ -1,4 +1,5 @@
 import { onCLS, onINP, onLCP } from 'web-vitals';
+import { runtimeEnv } from '../../../config/runtimeEnv';
 
 function report(metric) {
   const payload = {
@@ -9,7 +10,7 @@ function report(metric) {
     ts: Date.now(),
   };
 
-  const endpoint = import.meta.env.VITE_WEB_VITALS_ENDPOINT || (import.meta.env.PROD ? '/telemetry/client' : '');
+  const endpoint = runtimeEnv.webVitalsEndpoint || (runtimeEnv.isProd ? '/telemetry/client' : '');
   if (endpoint) {
     const body = JSON.stringify(payload);
     if (navigator.sendBeacon) {

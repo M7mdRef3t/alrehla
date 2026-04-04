@@ -22,13 +22,16 @@ import { buildEmergencyContextFromNode } from "../utils/emergencyContext";
 import type { PersonGender } from "../utils/resultScreenAI";
 import { FeelingStep } from "./AddPersonModal/FeelingStep";
 import { ResultScreen } from "./AddPersonModal/ResultScreen";
+import { ScientificDiagnosticHUD } from "./AddPersonModal/ScientificDiagnosticHUD";
 import { triggerBackgroundAnalysis } from "../services/backgroundAnalysis";
+import { soundManager } from "../services/soundManager";
 
 type AddPersonStep =
   | "select"
   | "quickQuestions"
   | "feeling"
   | "position"
+  | "diagnostic"
   | "result";
 
 function inferPersonGender(title?: string): PersonGender {
@@ -105,6 +108,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
   const handleContinue = (event: React.FormEvent) => {
     event.preventDefault();
     if (selectedTitle) {
+      soundManager.playEffect("cosmic_pulse");
       const finalLabel = customName.trim() || selectedTitle;
       const nodeId = addNode(
         finalLabel,
@@ -127,6 +131,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
 
   const handleQuickQuestionsDone = (e: React.FormEvent) => {
     e.preventDefault();
+    soundManager.playEffect("warp");
     if (quickAnswer1 == null || quickAnswer2 == null) return;
     if (addedNodeId) {
       useMapState.getState().updateNode(addedNodeId, {
@@ -138,6 +143,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
   };
 
   const handleFeelingDone = (healthAnswers: FeelingAnswers) => {
+    soundManager.playEffect("harmony");
     const score = feelingScore(healthAnswers);
     setHealthScore(score);
     setLastFeelingAnswers(healthAnswers);
@@ -148,6 +154,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
 
   const handleRealityDone = (answers: Parameters<typeof realityScoreToRing>[0]) => {
     if (!pendingPlacement || !addedNodeId) return;
+    soundManager.playEffect(isEmergency ? "tension" : "gavel");
     const ring = isEmergency ? "red" : realityScoreToRing(answers);
     setLastRealityAnswers(answers);
     const { finalLabel, score, healthAnswers } = pendingPlacement;
@@ -182,7 +189,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
       trackEvent(AnalyticsEvents.BASELINE_COMPLETED, { goal_id: goalId });
     }
     setPendingPlacement(null);
-    setStep("result");
+    setStep("diagnostic");
   };
 
   useEffect(() => {
@@ -219,6 +226,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
       });
       return;
     }
+    soundManager.playEffect("warp");
     handleClose();
   };
 
@@ -233,23 +241,30 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
     setSelectedTitle(title);
   };
 
+  const dynamicBorder = isEmergency ? "rgba(244,63,94,0.4)" : "rgba(45,212,191,0.2)";
+  const dynamicGlow = isEmergency ? "rgba(244,63,94,0.15)" : "rgba(45,212,191,0.06)";
+  
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
-      style={{ background: "rgba(3,7,18,0.75)", backdropFilter: "blur(20px)" }}
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
+      style={{ background: "rgba(2,6,23,0.85)", backdropFilter: "blur(30px)" }}
       onClick={() => handleCloseAttempt("backdrop")}
       aria-labelledby="add-person-title"
       role="dialog"
       aria-modal="true"
     >
       <motion.div
-        className="relative w-full max-w-md min-h-0 flex flex-col overflow-hidden text-slate-100 rounded-3xl px-6 py-6"
+        className="relative w-full max-w-2xl min-h-0 flex flex-col overflow-hidden text-slate-100 rounded-3xl px-6 py-8"
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
         style={{
-          height: "min(90vh, fit-content)",
-          maxHeight: "90vh",
-          background: "linear-gradient(160deg, rgba(15,23,42,0.98) 0%, rgba(3,7,18,0.99) 100%)",
-          border: "1px solid rgba(45,212,191,0.15)",
-          boxShadow: "0 40px 100px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 60px rgba(45,212,191,0.04)",
+          height: "min(92vh, fit-content)",
+          maxHeight: "92vh",
+          background: "linear-gradient(160deg, rgba(15,23,42,0.95) 0%, rgba(2,6,23,0.99) 100%)",
+          border: `1px solid ${dynamicBorder}`,
+          boxShadow: `0 40px 100px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 80px ${dynamicGlow}`,
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -328,6 +343,8 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
                             <option value="صلة أخرى" className="bg-slate-900">صلة أخرى</option>
                           </select>
                           <input
+                            id="custom-relation-label"
+                            name="customRelationLabel"
                             value={customRelationLabel}
                             onChange={(e) => setCustomRelationLabel(e.target.value)}
                             placeholder="أو اكتب صلة مخصصة (اختياري)"
@@ -370,6 +387,15 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
                 onDone={handleRealityDone}
                 onBack={() => setStep("feeling")}
               />
+            ) : step === "diagnostic" ? (
+              <ScientificDiagnosticHUD
+                personName={customName.trim() || selectedTitle}
+                orbId={lastRealityAnswers ? (isEmergency ? "red" : realityScoreToRing(lastRealityAnswers)) : "yellow"}
+                answers={lastRealityAnswers ?? {}}
+                onComplete={() => {
+                  setStep("result");
+                }}
+              />
             ) : step === "result" ? (
               <ResultScreen
                 personLabel={customName.trim() || selectedTitle}
@@ -404,8 +430,8 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
 
         {/* Top accent line */}
         <div
-          className="absolute top-0 left-8 right-8 h-[1px] rounded-full"
-          style={{ background: "linear-gradient(90deg, transparent, rgba(45,212,191,0.4), transparent)" }}
+          className="absolute top-0 left-8 right-8 h-[2px] rounded-full transition-colors duration-500"
+          style={{ background: `linear-gradient(90deg, transparent, ${dynamicBorder}, transparent)` }}
         />
 
         {!isForcedResultGate && (

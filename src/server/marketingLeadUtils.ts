@@ -83,6 +83,42 @@ export function isValidMarketingLeadEmail(value: string): boolean {
   return /^[a-zA-Z0-9.\-_]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,10}$/.test(value);
 }
 
+function inferSourceType(payload: MarketingLeadPayload, currentSourceType: MarketingLeadSourceType | null): MarketingLeadSourceType | null {
+  // If explicitly provided a valid type, keep it
+  if (currentSourceType && currentSourceType !== "website") return currentSourceType;
+
+  const utm = sanitizeUtm(payload.utm);
+  const utmSource = (utm?.utm_source || "").toLowerCase();
+  const utmMedium = (utm?.utm_medium || "").toLowerCase();
+  const campaign = (payload.campaign || payload.campaign_name || "");
+  const campaignLower = (typeof campaign === 'string' ? campaign : '').toLowerCase();
+
+  // 1. Meta (Facebook/Instagram) Detection
+  const metaKeywords = ["facebook", "meta", "fb", "instagram", "ig", "fbad"];
+  const isMeta = 
+    metaKeywords.some(k => utmSource === k || utmMedium === k) ||
+    metaKeywords.some(k => campaignLower.includes(k)) ||
+    utmMedium === "paidsocial" ||
+    !!payload.leadgen_id || 
+    !!payload.ad_id ||
+    !!(payload as any).platform?.toLowerCase()?.includes('facebook') ||
+    !!(payload as any).platform?.toLowerCase()?.includes('instagram') ||
+    !!utm?.fbclid ||
+    !!(payload as any).fbclid;
+
+  if (isMeta) return "meta_instant_form";
+
+  // 2. WhatsApp Detection
+  const waKeywords = ["whatsapp", "wa"];
+  const isWhatsApp = waKeywords.some(k => utmSource === k || utmMedium === k) || campaignLower.includes('whatsapp');
+  if (isWhatsApp) return "whatsapp";
+
+  // 3. Manual / Import Detection (usually has specific source tag)
+  if (payload.source === "manual_import" || payload.source === "import") return "manual_import";
+
+  return currentSourceType;
+}
+
 export function normalizeMarketingLeadPayload(
   payload: MarketingLeadPayload & Record<string, unknown>,
   fallbackSourceType: MarketingLeadSourceType = "website"
@@ -101,6 +137,10 @@ export function normalizeMarketingLeadPayload(
   const adset = sanitizeText(payload.adset || payload.adset_name, 160);
   const ad = sanitizeText(payload.ad || payload.ad_name, 160);
 
+  // Smart Inference
+  const providedSourceType = sanitizeSourceType(payload.sourceType, null as any);
+  const finalSourceType = inferSourceType(payload, providedSourceType) || fallbackSourceType;
+
   return {
     email: hasValidEmail ? email : null,
     phone: phoneResult?.normalized ?? null,
@@ -108,7 +148,7 @@ export function normalizeMarketingLeadPayload(
     phoneRaw: phoneResult?.raw ?? null,
     name,
     source: sanitizeSource(payload.source),
-    sourceType: sanitizeSourceType(payload.sourceType, fallbackSourceType),
+    sourceType: finalSourceType,
     utm: sanitizeUtm(payload.utm),
     campaign,
     adset,

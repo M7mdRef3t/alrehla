@@ -65,6 +65,8 @@ export const BlindCapsuleCreator: FC<BlindCapsuleCreatorProps> = ({ isOpen, onCl
                   </p>
 
                   <textarea
+                     id="blind-capsule-message"
+                     name="blindCapsuleMessage"
                      value={message}
                      onChange={(e) => setMessage(e.target.value)}
                      placeholder="ذكر نفسك بحقيقتك المنسية وقت الخوف..."

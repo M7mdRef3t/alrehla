@@ -47,6 +47,19 @@ import {
   pushUrl,
   subscribePopstate
 } from "../../services/navigation";
+import {
+  NAV_GROUPS,
+  NAV_ITEMS,
+  CLEAN_NAV_LABELS,
+  DEVELOPER_PLUS_TABS,
+  NAV_TOOLTIPS,
+  type AdminTab,
+  type NavGroup
+} from "./adminNavigation";
+import { AdminOmniSearch } from "./ui/AdminOmniSearch";
+import { AdminCopilotModal } from "./dashboard/Intelligence/AdminCopilotModal";
+import { DataManagement } from "../DataManagement";
+import { Bot, Wind } from "lucide-react";
 
 // Extracted Panels (Lazy Loaded for performance and dependency stability)
 const ExecutiveDashboard = lazy(() => import("./dashboard/Executive/ExecutiveDashboard").then(m => ({ default: m.ExecutiveDashboard })));
@@ -84,159 +97,7 @@ const MarketingOpsPanel = lazy(() => import("./dashboard/MarketingOps/MarketingO
 const SovereignPanel = lazy(() => import("./dashboard/Sovereign/SovereignControl").then(m => ({ default: m.SovereignControl })));
 const MapRegistryPanel = lazy(() => import("./dashboard/Content/MapRegistryPanel").then(m => ({ default: m.MapRegistryPanel })));
 
-type AdminTab = "sovereign" | "entity" | "exec-overview" | "growth-revenue" | "security-ops" | "consciousness-atlas" | "flow-dynamics" | "flow-map" | "map-registry" | "feedback" | "feature-flags" | "ai-studio" | "ai-decisions" | "health-monitor" | "content" | "users" | "user-state" | "consciousness" | "consciousness-map" | "b2b-analytics" | "ai-simulator" | "ai-marketing" | "sales-enablement" | "dreams-matrix" | "crucible" | "digital-twin" | "fleet" | "seo-geo" | "repo-intel" | "war-room" | "dawayir-live" | "ad-analytics" | "survey-results" | "marketing-ops";
-
-const DataManagementModal = lazy(() =>
-  import("../DataManagement").then((m) => ({ default: m.DataManagement }))
-);
-
-type NavGroup = {
-  title: string;
-  items: Array<{ id: AdminTab; label: string; icon: ReactNode }>;
-};
-
-const NAV_GROUPS: NavGroup[] = [
-  {
-    title: "القيادة الإستراتيجية",
-    items: [
-      { id: "sovereign", label: "مركز السيادة الإدراكية", icon: <ShieldCheck className="w-4 h-4 text-amber-500" /> },
-      { id: "entity", label: "كيان الرحلة (DNA)", icon: <Brain className="w-4 h-4 text-teal-400" /> },
-      { id: "exec-overview", label: "المركز التنفيذي", icon: <Activity className="w-4 h-4 text-emerald-400" /> },
-      { id: "growth-revenue", label: "محرك النمو والمبيعات", icon: <TrendingUp className="w-4 h-4 text-amber-400" /> },
-      { id: "war-room", label: "غرفة العمليات", icon: <ShieldCheck className="w-4 h-4 text-red-500" /> },
-    ]
-  },
-  {
-    title: "أمن النظام وإدارته",
-    items: [
-      { id: "security-ops", label: "أمن النظام", icon: <ShieldCheck className="w-4 h-4 text-indigo-400" /> },
-      { id: "flow-dynamics", label: "ديناميكية المسار", icon: <Compass className="w-4 h-4 text-cyan-400" /> },
-      { id: "health-monitor", label: "مراقب النبض", icon: <Activity className="w-4 h-4 text-cyan-400" /> },
-      { id: "feature-flags", label: "مفاتيح النظام", icon: <Flag className="w-4 h-4" /> },
-      { id: "fleet", label: "الأسطول", icon: <Rocket className="w-4 h-4 text-indigo-500" /> },
-    ]
-  },
-  {
-    title: "الذكاء الاصطناعي والوعي",
-    items: [
-      { id: "consciousness-atlas", label: "رادار الوعي", icon: <Workflow className="w-4 h-4 text-teal-400" /> },
-      { id: "consciousness-map", label: "خريطة الإدراك", icon: <Workflow className="w-4 h-4" /> },
-      { id: "ai-studio", label: "مختبر الذكاء", icon: <Brain className="w-4 h-4" /> },
-      { id: "ai-decisions", label: "قرارات الوعي", icon: <Sparkles className="w-4 h-4 text-purple-400" /> },
-      { id: "ai-simulator", label: "محاكي الذكاء", icon: <Terminal className="w-4 h-4 text-rose-400" /> },
-      { id: "consciousness", label: "أرشيف الوعي", icon: <History className="w-4 h-4" /> },
-    ]
-  },
-  {
-    title: "المحتوى والمسارات",
-    items: [
-      { id: "flow-map", label: "خريطة الدواير", icon: <MapPin className="w-4 h-4" /> },
-      { id: "map-registry", label: "دليل الخرائط", icon: <Compass className="w-4 h-4 text-emerald-400" /> },
-      { id: "content", label: "مخزن المحتوى", icon: <Database className="w-4 h-4" /> },
-      { id: "dreams-matrix", label: "مصفوفة الأهداف", icon: <Target className="w-4 h-4 text-teal-400" /> },
-      { id: "crucible", label: "المختبر", icon: <Flame className="w-4 h-4 text-rose-500" /> },
-    ]
-  },
-  {
-    title: "مجتمع المسافرين",
-    items: [
-      { id: "users", label: "سجلات السيادة", icon: <Users className="w-4 h-4" /> },
-      { id: "user-state", label: "بيانات الحالة", icon: <Database className="w-4 h-4" /> },
-      { id: "digital-twin", label: "التوأم الرقمي", icon: <User className="w-4 h-4 text-indigo-400" /> },
-      { id: "feedback", label: "أصوات المسافرين", icon: <MessageSquare className="w-4 h-4" /> },
-      { id: "dawayir-live", label: "دواير لايف", icon: <Sparkles className="w-4 h-4 text-teal-300" /> },
-      { id: "survey-results", label: "نتائج الاستبيان", icon: <ClipboardList className="w-4 h-4 text-teal-400" /> },
-    ]
-  },
-  {
-    title: "التوسع التجاري",
-    items: [
-      { id: "b2b-analytics", label: "تحليلات B2B", icon: <ShieldCheck className="w-4 h-4" /> },
-      { id: "sales-enablement", label: "تمكين النمو", icon: <Briefcase className="w-4 h-4 text-emerald-400" /> },
-      { id: "marketing-ops", label: "إدارة الانتشار", icon: <Rocket className="w-4 h-4 text-rose-400" /> },
-      { id: "ai-marketing", label: "تسويق الوعي", icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
-      { id: "ad-analytics", label: "تحليلات الإعلانات", icon: <BarChart3 className="w-4 h-4 text-cyan-400" /> },
-      { id: "seo-geo", label: "SEO / GEO", icon: <Target className="w-4 h-4 text-emerald-400" /> },
-      { id: "repo-intel", label: "ذكاء المستودع", icon: <Terminal className="w-4 h-4 text-teal-300" /> },
-    ]
-  }
-];
-
-const NAV_ITEMS = NAV_GROUPS.flatMap(g => g.items);
-const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
-  entity: "كيان الرحلة (DNA)",
-  "exec-overview": "المركز التنفيذي",
-  "growth-revenue": "محرك النمو والمبيعات",
-  "security-ops": "أمن النظام",
-  "consciousness-atlas": "رادار الوعي",
-  "flow-dynamics": "ديناميكية المسار",
-  "war-room": "غرفة العمليات",
-  "flow-map": "خريطة التدفق",
-  "map-registry": "دليل الخرائط",
-  feedback: "أصوات المسافرين",
-  "feature-flags": "مفاتيح النظام",
-  "ai-studio": "مختبر الذكاء",
-  "ai-decisions": "قرارات الوعي",
-  "health-monitor": "مراقب النبض",
-  content: "مخزن المحتوى",
-  users: "سجلات الأعضاء",
-  "user-state": "بيانات الحالة",
-  consciousness: "أرشيف الوعي",
-  "consciousness-map": "خريطة الإدراك",
-  "b2b-analytics": "تحليلات B2B",
-  "ai-simulator": "محاكي الذكاء",
-  "ai-marketing": "تسويق الوعي",
-  "sales-enablement": "تمكين النمو",
-  "dreams-matrix": "مصفوفة الأهداف",
-  crucible: "المختبر (Testing)",
-  "digital-twin": "التوأم الرقمي",
-  fleet: "الأسطول",
-  "seo-geo": "SEO / GEO",
-  "repo-intel": "ذكاء المستودع",
-  "dawayir-live": "دواير لايف",
-  "ad-analytics": "تحليلات الإعلانات",
-  "survey-results": "نتائج الاستبيان",
-  "marketing-ops": "إدارة الانتشار",
-  sovereign: "مركز السيادة الإدراكية"
-};
-const DEVELOPER_PLUS_TABS: AdminTab[] = ["feature-flags", "ai-studio", "user-state"];
-
-const NAV_TOOLTIPS: Record<AdminTab, string> = {
-  sovereign: "المركز السيادي: نظرة شاملة وعلوية على حيوية النظام والعمليات الحساسة.",
-  entity: "كيان الرحلة: استكشاف بصمة وأهداف المنصة والرسالة الأساسية.",
-  "exec-overview": "المركز التنفيذي: نبض المنصة ومتابعة سريعة لأهم أرقام تفاعل المستخدمين.",
-  "growth-revenue": "محرك النمو: دورة المبيعات، الارتقاء بالعملاء، وتتبع العوائد المالية.",
-  "security-ops": "أمن النظام: حائط الصد، تتبع الهجمات، وتأمين البيانات ضد السلبيات.",
-  "consciousness-atlas": "رادار الوعي: خريطة شاملة لمسارات وعي المستخدمين وتوزيعهم النفسي.",
-  "flow-dynamics": "ديناميكية المسار: تتبع تدفق الزيارات والاحتكاك في خطوات التسجيل والدفع.",
-  "war-room": "غرفة العمليات: الإنذارات الحرجة والمشاكل التي تتطلب تدخلاً طارئاً.",
-  "flow-map": "خريطة التدفق: الرؤية البصرية لشجرة المنصة ومسارات الذكاء الاصطناعي بالكامل.",
-  "map-registry": "دليل الخرائط: شاشة تعرض المعمارية التقنية والتخطيطية لجميع الخرائط داخل المنصة بمساراتها الكلية.",
-  feedback: "أصوات المسافرين: رسائل، استغاثات، وآراء الزوار والمستخدمين لحظة بلحظة.",
-  "feature-flags": "مفاتيح النظام: التحكم اللحظي في تفعيل وإغلاق ميزات المنصة (Feature Flags).",
-  "ai-studio": "مختبر الذكاء: تلقين وتوجيه عقل الذكاء الاصطناعي وتعديل الـ Prompts.",
-  "ai-decisions": "قرارات الوعي: مراقبة وتحليل القرارات الخوارزمية مع المستخدمين.",
-  "health-monitor": "مراقب النبض: متابعة أداء السيرفرات وسرعة استجابة المنصة فنياً.",
-  content: "مخزن المحتوى: إدارة نصوص ومحتوى التطبيق التوضيحي بشكل مركزي.",
-  users: "سجلات الأعضاء: قائمة المشتركين، صلاحياتهم، وبياناتهم الشخصية وتواريخ الدخول.",
-  "user-state": "بيانات الحالة: رؤية حالة المتغيرات والأرقام الديناميكية الخاصة بكل مستخدم.",
-  consciousness: "أرشيف الوعي: سجل تاريخي لكل محادثات الذكاء الاصطناعي والمواقف.",
-  "consciousness-map": "خريطة الإدراك: الرؤية الهندسية لترابط المفاهيم المتقدمة داخل النظام.",
-  "b2b-analytics": "تحليلات B2B: تحليل أداء الشركات والمؤسسات المشتركة كباقات.",
-  "ai-simulator": "محاكي الذكاء: اختبار الـ Prompts في بيئة معزولة لتجربة ردود الأفعال المستندة.",
-  "ai-marketing": "تسويق الوعي: صناعة محتوى تسويقي وإعلانات بضغطة زر باستخدام الذكاء التوليدي.",
-  "sales-enablement": "تمكين النمو: أدوات ومقترحات استخراج مبيعات من قواعد البيانات الحالية.",
-  "dreams-matrix": "مصفوفة الأهداف: بنك الأحلام والطموحات التي يسعى المستخدمون للوصول إليها.",
-  crucible: "المختبر: بيئة تجارب (A/B Testing) وابتكار للمحتوى الجديد والتقييم الداخلي.",
-  "digital-twin": "التوأم الرقمي: خلق ونسخ رقمية تحليلية من المستخدم وتوقع خطواته القادمة.",
-  fleet: "الأسطول: إدارة حاويات السيرفرات والبنية التحتية البرمجية.",
-  "seo-geo": "الوصول العالمي: تتبع الحضور العضوي في محركات البحث والمناطق الجغرافية.",
-  "repo-intel": "ذكاء المستودع: نظرة مكشوفة لكود المنصة والتغيرات البرمجية من داخل اللوحة مباشرة.",
-  "dawayir-live": "دواير لايف: مراقبة النشاط المباشر والتفاعل اللحظي واللقاءات الحية للزوار.",
-  "ad-analytics": "تحليلات الإعلانات: حساب العائد من الإنفاق المباشر ونسب التحويل المؤكدة.",
-  "survey-results": "نتائج الاستبيان: مخرجات المعايير واستبيانات ما قبل الدفع.",
-  "marketing-ops": "إدارة الانتشار: حملات البريد الإلكتروني، إدارة الإشعارات، والرسائل الترويجية."
-};
+const DataManagementModal = lazy(() => Promise.resolve({ default: DataManagement }));
 
 const getTabFromLocation = (): AdminTab => {
   const params = new URLSearchParams(getSearch());
@@ -517,7 +378,22 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
 
   return (
     <AdminGate>
-      <div className="admin-cockpit min-h-screen bg-[#030712] text-slate-200 flex relative isolate selection:bg-teal-500/30 font-sans overflow-hidden">
+      <AdminOmniSearch />
+      <AdminCopilotModal />
+      <div className="admin-cockpit min-h-screen bg-[#030712] text-slate-200 flex flex-col lg:flex-row relative isolate selection:bg-teal-500/30 font-sans overflow-hidden">
+        
+        {/* Mobile Top Stats Bar */}
+        <div className="lg:hidden w-full flex justify-between items-center bg-slate-900 border-b border-slate-800 p-2 px-4 shadow-sm text-[10px] font-black uppercase text-slate-400 tracking-widest z-10 shrink-0">
+          <div className="flex items-center gap-2">
+             <Activity className="w-3 h-3 text-teal-400" />
+             <span>نبض متصل</span> 
+          </div>
+          <div className="flex items-center gap-2">
+             <Wind className="w-3 h-3 text-amber-400" />
+             <span>استقرار</span>
+          </div>
+        </div>
+
         {/* Mobile Sidebar Overlay */}
         <div
           className={`fixed inset-0 z-40 bg-[#030712]/80 backdrop-blur-sm lg:hidden transition-opacity duration-300 ${
@@ -641,6 +517,15 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 </button>
               </AdminTooltip>
 
+              <AdminTooltip content="المساعد الإداري (Copilot): استعلم سريعاً عن حالة المنصة. الأرقام والشكاوي." position="bottom">
+                <button
+                  onClick={() => useAdminState.getState().setCopilotOpen(true)}
+                  className="p-3 lg:p-4 rounded-xl lg:rounded-2xl bg-[#111827] border border-slate-700/80 text-teal-400 hover:text-teal-300 hover:bg-slate-800 hover:border-teal-500/50 transition-all active:scale-95 group shadow-lg"
+                >
+                  <Bot className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                </button>
+              </AdminTooltip>
+
               <AdminTooltip content="إدارة بيانات النظام (Data Management): لوحة لعمل نسخ احتياطية (JSON/PDF)، ومزامنة البيانات محلياً أو سحابياً، أو تصفير مسار المستخدم للتدخل السريع." position="bottom">
                 <button
                   onClick={() => setShowAccount(true)}
@@ -665,14 +550,17 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "war-room" && <AlertsPanel />}
                 {effectiveTab === "flow-map" && <FlowMapPanel />}
                 {effectiveTab === "map-registry" && <MapRegistryPanel />}
-                {effectiveTab === "feedback" && <FeedbackPanel />}
                 {effectiveTab === "feature-flags" && <FeatureFlagsPanel />}
                 {effectiveTab === "ai-studio" && <AIStudioPanel />}
                 {effectiveTab === "ai-decisions" && <AIDecisionLogPanel maxDecisions={100} />}
                 {effectiveTab === "health-monitor" && <HealthMonitorPanel />}
                 {effectiveTab === "content" && <ContentPanel />}
-                {effectiveTab === "users" && <UsersPanel />}
-                {effectiveTab === "user-state" && <UserStatePanel />}
+                {effectiveTab === "users-state" && (
+                  <div className="space-y-8">
+                    <UsersPanel />
+                    <UserStatePanel />
+                  </div>
+                )}
                 {effectiveTab === "consciousness" && <ConsciousnessArchivePanel />}
                 {effectiveTab === "consciousness-map" && <ConsciousnessMap />}
                 {effectiveTab === "b2b-analytics" && <B2BAnalytics />}
@@ -687,7 +575,12 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 {effectiveTab === "repo-intel" && <RepoIntelPanel />}
                 {effectiveTab === "dawayir-live" && <LiveAdminPanel />}
                 {effectiveTab === "ad-analytics" && <AdAnalyticsDashboard />}
-                {effectiveTab === "survey-results" && <SurveyResultsPanel />}
+                {effectiveTab === "feedback-survey" && (
+                  <div className="space-y-8">
+                    <FeedbackPanel />
+                    <SurveyResultsPanel />
+                  </div>
+                )}
                 {effectiveTab === "marketing-ops" && <MarketingOpsPanel />}
               </Suspense>
             </div>

@@ -406,7 +406,7 @@ function NewPostForm({ onPost }: { onPost: (cat: CommunityPost["category"], cont
         ))}
       </div>
 
-      <textarea value={content} onChange={(e) => setContent(e.target.value)}
+      <textarea id="couples-community-content" name="couplesCommunityContent" value={content} onChange={(e) => setContent(e.target.value)}
         placeholder="شارك قصتك... (مجهول تماماً)" rows={3}
         style={{
           width: "100%", background: "rgba(255,255,255,0.03)",

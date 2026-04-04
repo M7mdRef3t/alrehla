@@ -63,7 +63,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           <span className="text-rose-500">*</span>
         </label>
         <div
-          className="grid grid-cols-2 sm:grid-cols-3 gap-2 items-stretch min-h-0 flex-1 overflow-y-auto pr-1 pb-2 scrollbar-none"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-stretch min-h-0 flex-1 overflow-y-auto pr-1 pb-4 scrollbar-none"
           style={{ gridAutoRows: "minmax(0, 1fr)" }}
         >
           {suggestions.map((suggestion: SuggestionCard) => {
@@ -73,23 +73,40 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
               <motion.button
                 key={suggestion.label}
                 type="button"
-                onClick={() => onTitleSelect(suggestion.label)}
-                className={`w-full h-full min-h-0 flex flex-col items-center justify-center gap-2 rounded-2xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50 p-3 ${isSelected
-                    ? "bg-teal-500/20 border-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.15)]"
-                    : "bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10"
+                onClick={() => {
+                  import("../../services/soundManager").then(m => m.soundManager.playEffect("cosmic_pulse"));
+                  onTitleSelect(suggestion.label);
+                }}
+                className={`group relative w-full h-full min-h-0 flex flex-col items-center justify-center gap-3 rounded-xl border transition-all duration-300 focus-visible:outline-none p-4 overflow-hidden ${isSelected
+                    ? "bg-teal-500/10 border-teal-400 shadow-[0_0_30px_rgba(45,212,191,0.2)]"
+                    : "bg-slate-900/60 border-slate-700/50 hover:border-slate-500 hover:bg-slate-800"
                   }`}
                 title={`اختيار "${suggestion.label}"`}
-                whileHover={{ scale: isSelected ? 1 : 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: isSelected ? 1 : 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
+                {/* HUD Corners */}
+                <div className={`absolute top-0 left-0 w-2 h-2 border-t border-l rounded-tl transition-colors ${isSelected ? "border-teal-400" : "border-slate-600 group-hover:border-slate-400"}`} />
+                <div className={`absolute top-0 right-0 w-2 h-2 border-t border-r rounded-tr transition-colors ${isSelected ? "border-teal-400" : "border-slate-600 group-hover:border-slate-400"}`} />
+                <div className={`absolute bottom-0 left-0 w-2 h-2 border-b border-l rounded-bl transition-colors ${isSelected ? "border-teal-400" : "border-slate-600 group-hover:border-slate-400"}`} />
+                <div className={`absolute bottom-0 right-0 w-2 h-2 border-b border-r rounded-br transition-colors ${isSelected ? "border-teal-400" : "border-slate-600 group-hover:border-slate-400"}`} />
+
+                {isSelected && (
+                  <motion.div 
+                    className="absolute inset-0 bg-teal-400/5 pointer-events-none"
+                    animate={{ opacity: [0.1, 0.3, 0.1] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                  />
+                )}
+
                 <div
-                  className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-colors ${isSelected ? "bg-teal-500/30" : "bg-white/5"
+                  className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center transition-all ${isSelected ? "bg-teal-400/20 shadow-[0_0_15px_rgba(45,212,191,0.4)]" : "bg-slate-800 group-hover:bg-slate-700"
                     }`}
                 >
-                  <Icon className={`${isSelected ? "text-teal-400" : "text-slate-400"} w-5 h-5`} strokeWidth={2} />
+                  <Icon className={`${isSelected ? "text-teal-300" : "text-slate-400 group-hover:text-slate-300"} w-6 h-6`} strokeWidth={1.5} />
                 </div>
                 <div
-                  className={`min-h-9 flex items-center justify-center text-center font-bold leading-tight ${isSelected ? "text-teal-100" : "text-slate-300"
+                  className={`min-h-9 flex items-center justify-center text-center font-bold tracking-wide ${isSelected ? "text-teal-300 drop-shadow-md" : "text-slate-400 group-hover:text-slate-200"
                     } text-xs sm:text-sm line-clamp-2`}
                 >
                   {suggestion.label}
@@ -100,18 +117,18 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           <motion.button
             type="button"
             onClick={() => onTitleSelect("__custom__")}
-            className={`w-full h-full min-h-0 flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 p-3 ${showCustomTitleInput && customTitleInput.trim()
-                ? "bg-white/10 border-white/30"
-                : "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
+            className={`group relative w-full h-full min-h-0 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed transition-all duration-300 focus-visible:outline-none p-4 overflow-hidden ${showCustomTitleInput && customTitleInput.trim()
+                ? "bg-slate-800/80 border-slate-500"
+                : "bg-slate-900/40 border-slate-700 hover:border-slate-500"
               }`}
             title="إضافة مسمى مخصص"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <div className="w-10 h-10 shrink-0 rounded-xl bg-white/5 flex items-center justify-center">
-              <span className="text-slate-400 text-lg font-bold leading-none">+</span>
+            <div className="w-12 h-12 shrink-0 rounded-full bg-slate-800 group-hover:bg-slate-700 flex items-center justify-center transition-colors">
+              <span className="text-slate-400 group-hover:text-slate-200 text-2xl font-light leading-none">+</span>
             </div>
-            <div className="min-h-9 flex items-center justify-center text-center text-xs sm:text-sm font-bold text-slate-400 leading-tight">
+            <div className="min-h-9 flex items-center justify-center text-center text-xs sm:text-sm font-bold text-slate-500 group-hover:text-slate-300 tracking-wide transition-colors">
               <EditableText id="add_person_select_other" defaultText="مسمى آخر" page="add_person" showEditIcon={false} />
             </div>
           </motion.button>
@@ -119,6 +136,8 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
         {showCustomTitleInput && (
           <div className="mt-2 shrink-0">
             <input
+              id="custom-title-input"
+              name="customTitle"
               type="text"
               value={customTitleInput}
               onChange={(e) => onCustomTitleChange(e.target.value)}

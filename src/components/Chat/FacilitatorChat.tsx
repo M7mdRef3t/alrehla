@@ -492,6 +492,8 @@ export default function FacilitatorChat({ focusedNode, fullMap, onClose, onUpdat
                         />
                     </div>
                     <input
+                        id="chat-message-input"
+                        name="chatMessage"
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}

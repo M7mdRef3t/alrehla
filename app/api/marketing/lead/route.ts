@@ -5,5 +5,5 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  return handleMarketingLeadPost(req, "website");
+  return handleMarketingLeadPost(req);
 }

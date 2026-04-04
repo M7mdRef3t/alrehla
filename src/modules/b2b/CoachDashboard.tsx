@@ -340,8 +340,10 @@ export default function CoachDashboard() {
                                     <div className="absolute inset-y-0 right-0 pl-3 flex items-center bg-white rounded-xl border border-slate-200 px-3 pointer-events-none">
                                         <Search className="h-5 w-5 text-slate-400" />
                                     </div>
-                                    <input
-                                        type="text"
+                                <input
+                                    id="coach-dashboard-query"
+                                    name="coachDashboardQuery"
+                                    type="text"
                                         placeholder="   ..."
                                         className="pl-4 pr-10 py-3 block w-72 rounded-xl border-slate-200 bg-white font-medium focus:ring-[var(--soft-teal)] focus:border-[var(--soft-teal)] shadow-sm"
                                         value={searchQuery}

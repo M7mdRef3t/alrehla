@@ -121,6 +121,8 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
                   تقرير الموقف <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="situation-logger-situation"
+                  name="situationLoggerSituation"
                   type="text"
                   value={newLog.situation}
                   onChange={(e) => setNewLog({ ...newLog, situation: e.target.value })}
@@ -135,6 +137,8 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
                   قراءة الرادار <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="situation-logger-feeling"
+                  name="situationLoggerFeeling"
                   type="text"
                   value={newLog.feeling}
                   onChange={(e) => setNewLog({ ...newLog, feeling: e.target.value })}
@@ -149,6 +153,8 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
                   المناورة اللي اتنفذت
                 </label>
                 <input
+                  id="situation-logger-response"
+                  name="situationLoggerResponse"
                   type="text"
                   value={newLog.response}
                   onChange={(e) => setNewLog({ ...newLog, response: e.target.value })}
@@ -163,6 +169,8 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
                   نتيجة المناورة
                 </label>
                 <input
+                  id="situation-logger-outcome"
+                  name="situationLoggerOutcome"
                   type="text"
                   value={newLog.outcome}
                   onChange={(e) => setNewLog({ ...newLog, outcome: e.target.value })}
@@ -177,6 +185,8 @@ export const SituationLogger: FC<SituationLoggerProps> = ({
                   قاعدة جديدة
                 </label>
                 <input
+                  id="situation-logger-lesson"
+                  name="situationLoggerLesson"
                   type="text"
                   value={newLog.lesson}
                   onChange={(e) => setNewLog({ ...newLog, lesson: e.target.value })}

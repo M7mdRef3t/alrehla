@@ -166,7 +166,7 @@ export const InsightsLibrary: FC<InsightsLibraryProps> = ({ isOpen, onClose }) =
                             </button>
                         </div>
                         <span className="text-sm text-slate-400">ترتيب حسب:</span>
-                        <select className="bg-slate-800/50 outline-none border border-white/5 text-sm rounded-lg py-2 pl-4 pr-3 focus:ring-1 focus:ring-teal-400/50">
+                        <select id="insights-sort" name="insightsSort" className="bg-slate-800/50 outline-none border border-white/5 text-sm rounded-lg py-2 pl-4 pr-3 focus:ring-1 focus:ring-teal-400/50">
                             <option>الأحدث أولاً</option>
                             <option>الأقدم أولاً</option>
                         </select>

@@ -53,11 +53,11 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
         <EditableText id="add_person_quick_title" defaultText={title} page="add_person" />
       </h2>
       <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-5 mb-6">
-        <div>
-          <p className="text-sm font-semibold text-slate-300 mb-3">
+        <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-4 transition-all">
+          <p className="text-sm font-semibold text-slate-300 mb-4 tracking-wide border-b border-slate-800 pb-2">
             <EditableText id="add_person_quick_q1" defaultText={question1} page="add_person" showEditIcon={false} />
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {options1.map((opt) => {
               const tier = getTier1(opt.value);
               return (
@@ -65,7 +65,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
                   key={opt.value}
                   type="button"
                   onClick={() => onSelectQuick1(opt.value)}
-                  className={getOptionButtonClass(tier, quickAnswer1 === opt.value)}
+                  className={`flex items-center justify-center text-center p-3 text-xs sm:text-sm font-bold transition-all rounded-xl border ${quickAnswer1 === opt.value ? 'bg-indigo-500/20 border-indigo-500 text-indigo-300 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500 hover:bg-slate-700'}`}
                 >
                   {opt.label}
                 </button>
@@ -73,11 +73,11 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
             })}
           </div>
         </div>
-        <div>
-          <p className="text-sm font-semibold text-slate-300 mb-3">
+        <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-4 transition-all mt-4">
+          <p className="text-sm font-semibold text-slate-300 mb-4 tracking-wide border-b border-slate-800 pb-2">
             <EditableText id="add_person_quick_q2" defaultText={question2} page="add_person" showEditIcon={false} />
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {options2.map((opt) => {
               const tier = getTier2(opt.value);
               return (
@@ -85,7 +85,7 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
                   key={opt.value}
                   type="button"
                   onClick={() => onSelectQuick2(opt.value)}
-                  className={getOptionButtonClass(tier, quickAnswer2 === opt.value)}
+                  className={`flex items-center justify-center text-center p-3 text-xs sm:text-sm font-bold transition-all rounded-xl border ${quickAnswer2 === opt.value ? 'bg-indigo-500/20 border-indigo-500 text-indigo-300 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-500 hover:bg-slate-700'}`}
                 >
                   {opt.label}
                 </button>
@@ -93,31 +93,41 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
             })}
           </div>
         </div>
-        <div>
-            <p className="text-sm font-semibold text-slate-300 mb-3">
-              <EditableText
-                id="add_person_emergency_q"
-                defaultText="هل الوضع طوارئ؟ (إيذاء بدني، ابتزاز خطير)"
-                page="add_person"
-                showEditIcon={false}
-              />
-            </p>
-            <div className="flex flex-wrap gap-2">
+        
+        <div className={`mt-6 rounded-2xl transition-all duration-500 overflow-hidden border ${isEmergency ? 'bg-rose-950/40 border-rose-500/50 shadow-[0_0_40px_rgba(225,29,72,0.15)]' : 'bg-slate-900/30 border-slate-800'}`}>
+            <div className={`p-4 border-b ${isEmergency ? 'border-rose-900' : 'border-slate-800'} flex items-center justify-between`}>
+              <div className={`text-sm font-black tracking-wide ${isEmergency ? 'text-rose-400 drop-shadow-[0_0_8px_rgba(225,29,72,0.5)]' : 'text-slate-400'}`}>
+                <EditableText
+                  id="add_person_emergency_q"
+                  defaultText="هل الوضع طوارئ؟ (إيذاء بدني، ابتزاز خطير)"
+                  page="add_person"
+                  showEditIcon={false}
+                />
+              </div>
+              {isEmergency && <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />}
+            </div>
+            <div className="p-4 flex gap-3">
               <button
                 type="button"
-                onClick={() => onSelectEmergency(false)}
-                className={getOptionButtonClass("green", !isEmergency)}
+                onClick={() => {
+                  import("../../services/soundManager").then(m => m.soundManager.playEffect("cosmic_pulse"));
+                  onSelectEmergency(false);
+                }}
+                className={`flex-1 flex items-center justify-center text-center p-3 text-xs sm:text-sm font-bold transition-all rounded-xl border ${!isEmergency ? 'bg-teal-500/20 border-teal-500 text-teal-300 shadow-[0_0_15px_rgba(20,184,166,0.2)]' : 'bg-slate-800/50 border-slate-700 text-slate-500 hover:border-slate-600 hover:bg-slate-800'}`}
               >
-                <EditableText id="add_person_emergency_no" defaultText="لا" page="add_person" editOnClick={false} />
+                <EditableText id="add_person_emergency_no" defaultText="آمن" page="add_person" editOnClick={false} />
               </button>
               <button
                 type="button"
-                onClick={() => onSelectEmergency(true)}
-                className={getOptionButtonClass("red", isEmergency)}
+                onClick={() => {
+                  import("../../services/soundManager").then(m => m.soundManager.playEffect("tension"));
+                  onSelectEmergency(true);
+                }}
+                className={`flex-1 flex items-center justify-center text-center p-3 text-xs sm:text-sm font-black tracking-widest uppercase transition-all rounded-xl border ${isEmergency ? 'bg-rose-500/20 border-rose-500 text-rose-300 shadow-[0_0_30px_rgba(225,29,72,0.3)]' : 'bg-slate-800/50 border-slate-700 text-slate-500 hover:border-rose-900/50 hover:bg-rose-950/20 hover:text-rose-400'}`}
               >
                 <EditableText
                   id="add_person_emergency_yes"
-                  defaultText="نعم — طوارئ"
+                  defaultText="طوارئ ⚠️"
                   page="add_person"
                   editOnClick={false}
                 />

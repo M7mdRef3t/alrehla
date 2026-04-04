@@ -16,6 +16,7 @@ import { analyzeMapInterference } from "../../services/socialSync";
 import { AINode } from "./AINode";
 import { useCognitiveDebounce } from "../../hooks/useCognitiveDebounce";
 import { useAuthState } from "../../state/authState";
+import { useAdminState } from "../../state/adminState";
 import { useOptimisticPhoenixSync } from "../../hooks/useOptimisticPhoenixSync";
 import { useKineticSensors } from "../../hooks/useKineticSensors";
 import { useDailyPulse } from "../../hooks/useDailyPulse";
@@ -23,6 +24,9 @@ import { useDailyQuestion } from "../../hooks/useDailyQuestion";
 import { soundManager } from "../../services/soundManager";
 import { BatteryStateModal } from "../../components/BatteryStateModal";
 import { useLongPress } from "../../hooks/useLongPress";
+import { usePulseState } from "../../state/pulseState";
+import { useGamificationState } from "../../state/gamificationState";
+import { Zap, Flame } from "lucide-react";
 
 /* 
     COSMIC MAP CANVAS  Digital Sanctuary
@@ -176,6 +180,85 @@ const getGreyZonePosition = (nodeIndex: number, totalInGrey: number): { x: numbe
   const y = 50 + GREY_ZONE_RADIUS * Math.sin(angle);
   return { x, y };
 };
+
+/* ── Illusion Entity View (Dark Asteroids) ── */
+const IllusionEntityView: FC<{ scenario: any; index: number; total: number; onDismantle: (key: string) => void }> = memo(({ scenario, index, total, onDismantle }) => {
+  const [isDismantling, setIsDismantling] = useState(false);
+  const addXP = useGamificationState((s) => s.addXP);
+
+  // Orbit in the deep edges of the map (r=55)
+  const radius = 55;
+  const initialAngle = (index * (2 * Math.PI) / Math.max(total, 1)) - Math.PI / 2;
+  const cx = 50 + radius * Math.cos(initialAngle);
+  const cy = 50 + radius * Math.sin(initialAngle);
+
+  const handleDismantle = useCallback((e: React.MouseEvent | any) => {
+    if (e?.stopPropagation) e.stopPropagation();
+    setIsDismantling(true);
+    soundManager.playSniperShot();
+    addXP(15, "تفكيك تأثير جمعي");
+    setTimeout(() => onDismantle(scenario.key), 800);
+  }, [addXP, onDismantle, scenario.key]);
+
+  if (isDismantling) {
+    return (
+      <motion.g
+        initial={{ opacity: 1 }}
+        animate={{ opacity: 0, scale: 2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="pointer-events-none"
+      >
+        <circle cx={cx} cy={cy} r={6} fill="rgba(244,63,94, 0.4)" style={{ filter: "blur(2px)" }} />
+        <circle cx={cx} cy={cy} r={2} fill="#fff" />
+      </motion.g>
+    );
+  }
+
+  return (
+    <motion.g
+      style={{ transformOrigin: "50px 50px" }}
+      animate={{ rotate: 360 }}
+      transition={{ duration: 180 + index * 10, repeat: Infinity, ease: "linear" }}
+    >
+      <motion.g
+        onTap={handleDismantle}
+        className="cursor-pointer group"
+        whileHover={{ scale: 1.15 }}
+      >
+        {/* Core dark asteroid body */}
+        <circle cx={cx} cy={cy} r={2.5} fill="#0f172a" stroke="#4c1d95" strokeWidth={0.6} />
+        
+        {/* Breathing toxic glow */}
+        <motion.circle
+          cx={cx} cy={cy} r={4.5}
+          fill="none" stroke="rgba(192,132,252,0.6)" strokeWidth={1}
+          animate={{ opacity: [0.1, 0.5, 0.1], scale: [0.9, 1.1, 0.9] }}
+          transition={{ duration: 4 + (index % 3), repeat: Infinity, ease: "easeInOut" }}
+        />
+        
+        {/* Scenario Label - keep upright by reversing rotation approximately */}
+        <g style={{ transformOrigin: `${cx}px ${cy}px` }}>
+          <text
+            x={cx}
+            y={cy + 5.5}
+            textAnchor="middle"
+            dominantBaseline="hanging"
+            className="pointer-events-none select-none opacity-60 group-hover:opacity-100 transition-opacity"
+            style={{
+              fontSize: "1.8px",
+              fill: "#d8b4fe",
+              fontWeight: 600,
+              letterSpacing: "0.05em",
+              filter: "drop-shadow(0px 1px 2px rgba(0,0,0,0.8))"
+            }}
+          >
+            {scenario.label}
+          </text>
+        </g>
+      </motion.g>
+    </motion.g>
+  );
+});
 
 /*  Node Colors (Cosmic)  */
 
@@ -622,6 +705,107 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   );
 });
 
+/* ── Illusion Embodiment (Shadow Asteroids) ── */
+
+interface IllusionEntityProps {
+  id: string;
+  label: string;
+  type: string;
+  orbitAngle: number;
+  onDestroyed: (id: string) => void;
+}
+
+const IllusionEntity: FC<IllusionEntityProps> = memo(({ id, label, type, orbitAngle, onDestroyed }) => {
+  const [isDismantling, setIsDismantling] = useState(false);
+  const addXP = useGamificationState(s => s.addXP);
+
+  // حساب موضع الكويكب في المدار الخارجي (radius = 48)
+  const x = 50 + 49 * Math.cos(orbitAngle);
+  const y = 50 + 49 * Math.sin(orbitAngle);
+
+  const handleDismantleStart = () => {
+    setIsDismantling(true);
+    soundManager.playEffect("cosmic_pulse");
+  };
+
+  const confirmDismantle = () => {
+    soundManager.playEffect("celebration");
+    addXP(100, "تفكيك صنم إدراكي");
+    onDestroyed(id);
+  };
+
+  return (
+    <motion.div
+      className="absolute z-40 pointer-events-auto"
+      style={{ left: `${x}%`, top: `${y}%`, transform: "translate(-50%, -50%)" }}
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0, opacity: 0, filter: "brightness(2) blur(10px)" }}
+    >
+      <div className="relative group">
+        <motion.button
+          type="button"
+          onClick={handleDismantleStart}
+          className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-indigo-500/50 relative overflow-hidden"
+          style={{
+            background: "radial-gradient(circle, #312e81 0%, #0f172a 100%)",
+            boxShadow: "0 0 15px rgba(79, 70, 229, 0.4)",
+          }}
+          animate={{
+            boxShadow: ["0 0 15px rgba(79,70,229,0.4)", "0 0 30px rgba(124,58,237,0.7)", "0 0 15px rgba(79,70,229,0.4)"],
+            y: [-2, 2, -2],
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay" />
+          <Flame className="w-5 h-5 text-indigo-300 opacity-80" />
+        </motion.button>
+        
+        {/* التسمية */}
+        <div className="absolute top-12 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="text-[10px] font-bold text-indigo-300 bg-indigo-950/80 px-2 py-1 rounded-md border border-indigo-500/30">
+            {label} ⚡
+          </span>
+        </div>
+
+        {/* قائمة التفكيك */}
+        <AnimatePresence>
+          {isDismantling && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-[220px] bg-slate-900/95 backdrop-blur-xl border border-indigo-500/50 rounded-2xl p-4 shadow-[0_0_40px_rgba(79,70,229,0.3)] z-50 flex flex-col items-center text-center gap-3"
+            >
+              <h4 className="text-white text-sm font-bold">تفكيك {label}</h4>
+              <p className="text-xs text-indigo-200/80 leading-relaxed">
+                أنِزل هذا الصنم من عقلك. انحره بقوة الوعي والمواجهة الآن!
+              </p>
+              <div className="flex gap-2 w-full pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsDismantling(false)}
+                  className="flex-1 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700 transition"
+                >
+                  تراجع
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDismantle}
+                  className="flex-1 py-1.5 rounded-lg bg-gradient-to-r from-rose-500 to-indigo-600 text-white text-xs font-bold hover:shadow-[0_0_15px_rgba(244,63,94,0.5)] transition flex items-center justify-center gap-1"
+                >
+                  <Zap className="w-3 h-3" />
+                  أنا أفككك!
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+});
+
 /*  Ring Labels  */
 
 const RING_LABELS: Record<Ring, string> = {
@@ -748,6 +932,58 @@ export const MapCanvas: FC<MapCanvasProps> = ({
 
   const lastAddedNodeId = useMapState((s) => s.lastAddedNodeId);
   const activeNodes = isSimulation ? simulatedNodes : allNodes;
+
+  // ── Active Illusion Logic ──
+  const topScenarios = useAdminState((s) => s.liveStatsCache?.data?.stats?.topScenarios ?? []);
+  const [destroyedIllusions, setDestroyedIllusions] = useState<Set<string>>(new Set());
+
+  // ── Bio-Feedback Engine ──
+  const lastPulse = usePulseState((s) => s.lastPulse);
+  
+  const { speedScale, vignetteGradient } = useMemo(() => {
+    if (!lastPulse) return { speedScale: 1, vignetteGradient: "transparent" };
+    const { energy, mood } = lastPulse;
+    
+    // Scale breathing rhythm based on energy (1-10) -> Lower energy = slower rhythm (higher duration x scale)
+    const normalizedEnergy = Number.isFinite(energy) ? energy : 5;
+    const speedScale = 1 + (5 - normalizedEnergy) * 0.15; 
+    
+    let vignetteGradient = "transparent";
+    if (mood === "anxious" || mood === "tense" || mood === "angry") {
+      vignetteGradient = "radial-gradient(circle, transparent 50%, rgba(244,63,94,0.15) 100%)";
+    } else if (mood === "sad" || mood === "overwhelmed") {
+      vignetteGradient = "radial-gradient(circle, transparent 40%, rgba(99,102,241,0.2) 100%)";
+    } else if (mood === "calm" || mood === "bright" || mood === "hopeful") {
+      vignetteGradient = "radial-gradient(circle, transparent 60%, rgba(45,212,191,0.08) 100%)";
+    }
+    
+    return { speedScale: Math.max(0.5, Math.min(2, speedScale)), vignetteGradient };
+  }, [lastPulse]);
+
+  useEffect(() => {
+    if (lastPulse && (lastPulse.mood === "anxious" || lastPulse.mood === "tense")) {
+       const interval = setInterval(() => {
+          if (Math.random() > 0.8) soundManager.playEffect("tension");
+       }, 20000);
+       return () => clearInterval(interval);
+    }
+  }, [lastPulse]);
+
+  const activeIllusions = useMemo(() => {
+    let scenarios = topScenarios;
+    if (scenarios.length === 0) {
+      scenarios = [
+        { key: "illusion_anx", label: "وهم السيطرة", percent: 45, count: 120 },
+        { key: "illusion_sad", label: "وهم التعلق", percent: 30, count: 80 },
+        { key: "illusion_ang", label: "صنم الأنا", percent: 25, count: 40 }
+      ] as any;
+    }
+    return scenarios.filter((s: any) => !destroyedIllusions.has(s.key));
+  }, [topScenarios, destroyedIllusions]);
+
+  const handleDestroyIllusion = useCallback((id: string) => {
+    setDestroyedIllusions(prev => new Set(prev).add(id));
+  }, []);
 
   const nodes = useMemo(
     () => filterNodesByContext(activeNodes, goalIdFilter, galaxyGoalIds).filter((n) => !n.isNodeArchived),
@@ -1483,30 +1719,30 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 </g>
               ))}
 
-              {/*  Orbital Rings (Breathing)  */}
+              {/*  Orbital Rings (Breathing with Bio-Feedback)  */}
               {!shouldReduceMotion && <OrbitalRing
                 ring="red"
-                label="دائرة اخطر ااستزاف"
+                label="دائرة الخطر"
                 radius={40}
                 color={RING_COLORS.danger.stroke}
                 glowColor={RING_COLORS.danger.glow}
-                breatheDuration={5}
+                breatheDuration={5 * speedScale}
               />}
               {!shouldReduceMotion && <OrbitalRing
                 ring="yellow"
-                label="دائرة ارب اشرط"
+                label="دائرة الحذر"
                 radius={29}
                 color={RING_COLORS.caution.stroke}
                 glowColor={RING_COLORS.caution.glow}
-                breatheDuration={4.5}
+                breatheDuration={4.5 * speedScale}
               />}
               {!shouldReduceMotion && <OrbitalRing
                 ring="green"
-                label="دائرة ارب اصح"
+                label="دائرة الأمان"
                 radius={18}
                 color={RING_COLORS.safe.stroke}
                 glowColor={RING_COLORS.safe.glow}
-                breatheDuration={4}
+                breatheDuration={4 * speedScale}
               />}
 
               {/* Halo around Center during Reveal State */}
@@ -1773,6 +2009,19 @@ export const MapCanvas: FC<MapCanvasProps> = ({
             <DroppableRing id="yellow" sizePct={58} zIndex={11} />
             <DroppableRing id="green" sizePct={36} zIndex={12} />
 
+            {/*  Illusion Embodiment (Shadow Asteroids)  */}
+            <AnimatePresence>
+              {activeIllusions.map((scenario: any, index: number) => (
+                <IllusionEntityView
+                  key={scenario.key}
+                  scenario={scenario}
+                  index={index}
+                  total={activeIllusions.length}
+                  onDismantle={handleDestroyIllusion}
+                />
+              ))}
+            </AnimatePresence>
+
             {/*  Me click zone — tap = profile, long-press = Battery State  */}
             {onMeClick ? (
               <button
@@ -1805,6 +2054,13 @@ export const MapCanvas: FC<MapCanvasProps> = ({
             )}
           </div>
         </DndContext>
+
+        {/* ── Personalized Bio-Feedback Vignette ── */}
+        <motion.div 
+          className="absolute inset-0 pointer-events-none mix-blend-screen z-20"
+          animate={{ background: vignetteGradient }}
+          transition={{ duration: 4 }}
+        />
 
         {/*  Pending Move Confirmation (Glass)  */}
         {pendingMove && (

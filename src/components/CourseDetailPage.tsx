@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CourseQuiz } from "./CourseQuiz";
 import { VideoPlayer } from "./VideoPlayer";
+import type { Chapter } from "./VideoPlayer";
 import {
   X, CheckCircle, Circle, Bookmark, BookmarkCheck,
   Clock, Star, Users, RotateCcw, Share2, Trophy, ChevronDown,
@@ -26,7 +27,7 @@ export interface CourseUnit {
   title: string;
   duration: string;
   videoUrl?: string;
-  chapters?: Array<Record<string, unknown>>; // For VideoPlayer
+  chapters?: Chapter[];
   isCompleted?: boolean;
   isLocked?: boolean;
   isRecommended?: boolean; // Behavioral badge
@@ -243,7 +244,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
           title: u.title,
           duration: u.duration,
           videoUrl: u.video_url || undefined,
-          chapters: (u.metadata?.chapters as Array<Record<string, unknown>>) || undefined,
+          chapters: (u.metadata?.chapters as Chapter[] | undefined) || undefined,
           isCompleted: dbProgress.has(u.id),
           isLocked: u.is_locked,
         })),
@@ -494,6 +495,8 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
             <motion.div key="notes" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ padding: "8px 12px" }}>
               <p style={{ margin: "0 0 6px", fontSize: 9, color: "#64748B" }}>ملاحظاتك الخاصة — تُحفظ تلقائياً</p>
               <textarea
+                id="course-detail-notes"
+                name="courseDetailNotes"
                 value={notes}
                 onChange={e => { setNotes(e.target.value); setLS(`${courseId}_notes`, e.target.value); }}
                 placeholder="اكتب أفكارك، أسئلتك، أو insights هنا..."
@@ -526,7 +529,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
                 </div>
               ))}
               <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                <input placeholder="شارك فكرة أو سؤالاً..." style={{
+                <input id="course-detail-comment" name="courseDetailComment" placeholder="شارك فكرة أو سؤالاً..." style={{
                   flex: 1, padding: "8px 10px", borderRadius: 10,
                   background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
                   color: "#e2e8f0", fontSize: 10, direction: "rtl",
@@ -769,7 +772,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
               chapters={activeUnit.chapters}
               title={activeUnit.title}
               color={color}
-              savedTime={detailedProgress[activeUnit.id]?.last_position}
+              savedTime={detailedProgress[activeUnit.id]?.last_position ?? undefined}
               nextUnitTitle={allUnits[allUnits.findIndex(u => u.id === activeUnit.id) + 1]?.title}
               onEnded={() => handleVideoEnded(activeUnit.id)}
               onTimeUpdate={handleTimeUpdate}
@@ -892,7 +895,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
                   chapters={activeUnit.chapters}
                   title={activeUnit.title}
                   color={color}
-                  savedTime={detailedProgress[activeUnit.id]?.last_position}
+                  savedTime={detailedProgress[activeUnit.id]?.last_position ?? undefined}
                   nextUnitTitle={allUnits[allUnits.findIndex(u => u.id === activeUnit.id) + 1]?.title}
                   onEnded={() => handleVideoEnded(activeUnit.id)}
                   onTimeUpdate={handleTimeUpdate}
@@ -986,6 +989,8 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
                       borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 10,
                     }}>
                       <textarea
+                        id="course-detail-notes-secondary"
+                        name="courseDetailNotesSecondary"
                         value={notes}
                         onChange={e => { setNotes(e.target.value); setLS(`${courseId}_notes`, e.target.value); }}
                         placeholder="ابدأ بكتابة ملاحظاتك هنا..."
@@ -1098,7 +1103,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
                     ))}
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <input placeholder="شارك فكرة أو سؤالاً..." style={{
+                    <input id="course-detail-comment-secondary" name="courseDetailCommentSecondary" placeholder="شارك فكرة أو سؤالاً..." style={{
                       flex: 1, padding: "10px 14px", borderRadius: 12,
                       background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
                       color: "#e2e8f0", fontSize: 11, direction: "rtl", outline: "none",
