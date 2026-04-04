@@ -179,6 +179,8 @@ export const QuickPathModal: FC<QuickPathModalProps> = ({ onClose }) => {
                                     في تفاصيل تساعدني أكون أدق؟ <span className="text-slate-500">(اختياري)</span>
                                 </p>
                                 <textarea
+                                    id="quick-path-context"
+                                    name="quickPathContext"
                                     value={context}
                                     onChange={(e) => setContext(e.target.value)}
                                     placeholder="مثلاً: ماما بتطلب مني حاجة مش قادر أرفضها..."

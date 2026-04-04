@@ -10,6 +10,7 @@ type RuntimeKey =
   | "VITE_ADMIN_CODE"
   | "VITE_ADMIN_API_BASE"
   | "VITE_GA_MEASUREMENT_ID"
+  | "VITE_WEB_VITALS_ENDPOINT"
   | "VITE_META_PIXEL_ID"
   | "VITE_GOOGLE_ADS_ID"
   | "VITE_GOOGLE_ADS_LABEL"
@@ -47,6 +48,7 @@ type NextPublicKey =
   | "NEXT_PUBLIC_ADMIN_CODE"
   | "NEXT_PUBLIC_ADMIN_API_BASE"
   | "NEXT_PUBLIC_GA_MEASUREMENT_ID"
+  | "NEXT_PUBLIC_WEB_VITALS_ENDPOINT"
   | "NEXT_PUBLIC_META_PIXEL_ID"
   | "NEXT_PUBLIC_GOOGLE_ADS_ID"
   | "NEXT_PUBLIC_GOOGLE_ADS_LABEL"
@@ -101,6 +103,7 @@ function readNextPublicStatic(key: NextPublicKey): string | undefined {
     NEXT_PUBLIC_ADMIN_CODE: process.env.NEXT_PUBLIC_ADMIN_CODE,
     NEXT_PUBLIC_ADMIN_API_BASE: process.env.NEXT_PUBLIC_ADMIN_API_BASE,
     NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
+    NEXT_PUBLIC_WEB_VITALS_ENDPOINT: process.env.NEXT_PUBLIC_WEB_VITALS_ENDPOINT,
     NEXT_PUBLIC_META_PIXEL_ID: process.env.NEXT_PUBLIC_META_PIXEL_ID,
     NEXT_PUBLIC_GOOGLE_ADS_ID: process.env.NEXT_PUBLIC_GOOGLE_ADS_ID,
     NEXT_PUBLIC_GOOGLE_ADS_LABEL: process.env.NEXT_PUBLIC_GOOGLE_ADS_LABEL,
@@ -142,27 +145,8 @@ function normalizeEnvValue(value: string): string | undefined {
   return unquoted || undefined;
 }
 
-function readViteEnvValue(key: RuntimeKey): string | undefined {
-  try {
-    // Keep access in property form for Next/Webpack compatibility.
-    // Use a guarded check to prevent 'import.meta' syntax errors in environments that don't support it.
-    if (typeof import.meta !== "undefined" && (import.meta as any).env) {
-      const viteEnv = (import.meta as any).env;
-      const value = viteEnv?.[key];
-      if (typeof value === "string" && value.length > 0) return normalizeEnvValue(value);
-    }
-  } catch {
-    // ignore when import.meta.env is unavailable
-  }
-  return undefined;
-}
-
 function readEnv(key: RuntimeKey): string | undefined {
-  // 1. Try Vite's import.meta.env first (for backward compatibility if needed)
-  const viteVal = readViteEnvValue(key);
-  if (viteVal) return viteVal;
-
-  // 2. Try Next.js public env/runtime fallback via the safe process accessor.
+  // 1. Try Next.js public env/runtime fallback via the safe process accessor.
   const nextKey = toNextPublicKey(key);
   const staticNextVal = readNextPublicStatic(nextKey);
   if (staticNextVal) return staticNextVal;
@@ -171,7 +155,7 @@ function readEnv(key: RuntimeKey): string | undefined {
   const nextVal = penv[nextKey];
   if (typeof nextVal === "string" && nextVal.length > 0) return normalizeEnvValue(nextVal);
 
-  // 3. Try direct key from process.env
+  // 2. Try direct key from process.env
   const directVal = penv[key];
   if (typeof directVal === "string" && directVal.length > 0) return normalizeEnvValue(directVal);
 
@@ -195,6 +179,7 @@ export const runtimeEnv = {
   adminCode: readEnv("VITE_ADMIN_CODE"),
   adminApiBase: readEnv("VITE_ADMIN_API_BASE") ?? "",
   gaMeasurementId: readEnv("VITE_GA_MEASUREMENT_ID"),
+  webVitalsEndpoint: readEnv("VITE_WEB_VITALS_ENDPOINT"),
   metaPixelId: readEnv("VITE_META_PIXEL_ID"),
   googleAdsId: readEnv("VITE_GOOGLE_ADS_ID"),
   googleAdsLabel: readEnv("VITE_GOOGLE_ADS_LABEL"),

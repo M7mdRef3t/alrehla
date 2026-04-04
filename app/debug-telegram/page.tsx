@@ -109,6 +109,8 @@ export default function DebugTelegramPage() {
               <label className="flex flex-col gap-2 text-sm text-slate-200">
                 <span>اسم المستخدم</span>
                 <input
+                  id="debug-telegram-name"
+                  name="debugTelegramName"
                   value={firstName}
                   onChange={(event) => setFirstName(event.target.value)}
                   className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-teal-400"
@@ -119,6 +121,8 @@ export default function DebugTelegramPage() {
               <label className="flex flex-col gap-2 text-sm text-slate-200">
                 <span>Chat ID تجريبي</span>
                 <input
+                  id="debug-telegram-chat-id"
+                  name="debugTelegramChatId"
                   value={chatId}
                   onChange={(event) => setChatId(event.target.value)}
                   className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-teal-400"
@@ -130,6 +134,8 @@ export default function DebugTelegramPage() {
             <label className="mt-4 flex flex-col gap-2 text-sm text-slate-200">
               <span>الرسالة</span>
               <textarea
+                id="debug-telegram-message"
+                name="debugTelegramMessage"
                 value={messageText}
                 onChange={(event) => setMessageText(event.target.value)}
                 rows={7}
@@ -141,6 +147,8 @@ export default function DebugTelegramPage() {
             <label className="mt-4 flex flex-col gap-2 text-sm text-slate-200">
               <span>رقم تليفون تجريبي لو عايز تحاكي مشاركة contact</span>
               <input
+                id="debug-telegram-phone"
+                name="debugTelegramPhone"
                 value={phoneNumber}
                 onChange={(event) => setPhoneNumber(event.target.value)}
                 className="rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white outline-none transition focus:border-teal-400"

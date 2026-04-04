@@ -6,9 +6,9 @@ import {
   ArrowLeft, BookOpen, Video, HelpCircle, MessageSquare,
   Search, Tag, Play, Copy, Check, ChevronDown, ChevronUp,
   Bookmark, BookmarkCheck, Star, Clock, Sparkles,
-  Heart, Brain, Dumbbell, ExternalLink, Flame, Plus, ListVideo,
-  Wifi, WifiOff, Calendar, Zap, GraduationCap, Users, Trophy, ChevronRight,
-  Activity, TrendingUp, Award, CheckCircle2, BarChart3, PieChart
+  Heart, Dumbbell, ExternalLink, Flame, ListVideo,
+  Calendar, GraduationCap, Users, Trophy, ChevronRight,
+  Activity, TrendingUp, Award, CheckCircle2, BarChart3
 } from "lucide-react";
 import {
   videos as rawVideos,
@@ -24,7 +24,7 @@ import { trackAffiliateLinkClicked, trackAffiliateLinkExposed } from "../modules
 import { useAchievementState } from "../state/achievementState";
 import { ContentDetailSheet, type ContentDetailType } from "./ContentDetailSheet";
 import { CourseDetailPage } from "./CourseDetailPage";
-import { fetchContentItems, fetchDBArticles, fetchDBVideoCourses } from "../services/learningService";
+import { fetchContentItems, fetchDBArticles, fetchDBVideoCourses, type UserProgressStats } from "../services/learningService";
 
 /* ══════════════════════════════════════════
    Types & Config
@@ -128,6 +128,22 @@ interface Exercise {
   icon: string;
   steps: string[];
 }
+
+type DBMeta = Record<string, any>;
+
+type DBVideoCourse = {
+  id: string | number;
+  title?: string;
+  estimated_minutes?: number;
+  metadata?: DBMeta | null;
+};
+
+type DBArticle = {
+  id: string | number;
+  title?: string;
+  estimated_minutes?: number;
+  metadata?: DBMeta | null;
+};
 
 const TAB_CONFIG: { id: ResourceTab; label: string; icon: typeof BookOpen; color: string }[] = [
   { id: "videos",       label: "فيديوهات",    icon: Video,          color: "#F43F5E" },
@@ -357,7 +373,7 @@ export function ResourcesCenter({
   const [recentlyViewed, setRecentlyViewed] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("alrehla_recent") ?? "[]"); } catch { return []; }
   });
-  const [offlineSaved, setOfflineSaved] = useState<Set<string>>(() => {
+  const [offlineSaved] = useState<Set<string>>(() => {
     try {
       const s = localStorage.getItem("alrehla_offline");
       return s ? new Set(JSON.parse(s)) : new Set();
@@ -366,9 +382,9 @@ export function ResourcesCenter({
   const heroTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Supabase: fetch DB articles ──
-  const [dbArticles, setDbArticles] = useState<Record<string, unknown>[]>([]);
-  const [dbVideos, setDbVideos] = useState<Record<string, unknown>[]>([]);
-  const [globalStats, setGlobalStats] = useState<any>(null);
+  const [dbArticles, setDbArticles] = useState<DBArticle[]>([]);
+  const [dbVideos, setDbVideos] = useState<DBVideoCourse[]>([]);
+  const [globalStats, setGlobalStats] = useState<UserProgressStats | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
 
   useEffect(() => {
@@ -439,20 +455,6 @@ export function ResourcesCenter({
     setQueue((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
   }, []);
 
-  const toggleOffline = useCallback((id: string, text: string) => {
-    setOfflineSaved((prev) => {
-      const n = new Set(prev);
-      if (n.has(id)) {
-        n.delete(id);
-        localStorage.removeItem(`alrehla_offline_${id}`);
-      } else {
-        n.add(id);
-        localStorage.setItem(`alrehla_offline_${id}`, text);
-      }
-      return n;
-    });
-  }, []);
-
   const markViewed = useCallback((id: string) => {
     setRecentlyViewed((prev) => {
       const filtered = prev.filter((x) => x !== id);
@@ -514,7 +516,7 @@ export function ResourcesCenter({
     bookmarked: bookmarks.size,
     videos: rawVideos.length,
     stories: successStories.length,
-  }), [bookmarks.size]);
+  }), [bookmarks.size, mergedExercises.length]);
 
   return (
     <div dir="rtl" style={{
@@ -602,6 +604,8 @@ export function ResourcesCenter({
           <div style={{ position: "relative", marginBottom: 12 }}>
             <Search size={14} color="#334155" style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)" }} />
             <input
+              id="resources-center-search"
+              name="resourcesCenterSearch"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="ابحث في المقالات والفيديوهات والتمارين..."
@@ -828,8 +832,8 @@ export function ResourcesCenter({
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {dbVideos
                       .filter(v => String(v.title ?? "").toLowerCase().includes(search.toLowerCase()))
-                      .map((v: any, i) => {
-                        const meta = (v.metadata ?? {}) as Record<string, any>;
+                      .map((v, i) => {
+                        const meta = (v.metadata ?? {}) as DBMeta;
                         const vid = String(v.id);
                         return (
                           <motion.div key={vid} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
@@ -844,10 +848,15 @@ export function ResourcesCenter({
                               <div style={{ flex: 1 }}>
                                 <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "#e2e8f0" }}>{String(v.title)}</p>
                                 <p style={{ margin: "3px 0 6px", fontSize: 10, color: "#64748B", lineHeight: 1.5 }}>{String(meta.summary ?? "")}</p>
+                                {(() => {
+                                  const views = Number(meta.views ?? 0);
+                                  return (
                                 <div style={{ display: "flex", gap: 8 }}>
                                   <span style={{ fontSize: 8, color: "#475569", display: "flex", alignItems: "center", gap: 3 }}><Clock size={8} /> {String(meta.duration ?? v.estimated_minutes + " دقيقة")}</span>
-                                  {meta.views && <span style={{ fontSize: 8, color: "#334155" }}>{Number(meta.views).toLocaleString("ar")} مشاهدة</span>}
+                                  {views > 0 && <span style={{ fontSize: 8, color: "#334155" }}>{views.toLocaleString("ar")} مشاهدة</span>}
                                 </div>
+                                  );
+                                })()}
                               </div>
                               <Play size={14} color="#F43F5E" style={{ flexShrink: 0 }} />
                             </div>
@@ -884,8 +893,8 @@ export function ResourcesCenter({
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {dbArticles
                       .filter(a => String(a.title ?? "").toLowerCase().includes(search.toLowerCase()))
-                      .map((a: any, i) => {
-                        const meta = (a.metadata ?? {}) as Record<string, any>;
+                      .map((a, i) => {
+                        const meta = (a.metadata ?? {}) as DBMeta;
                         const aid = String(a.id);
                         return (
                           <motion.div key={aid} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
@@ -899,13 +908,19 @@ export function ResourcesCenter({
                               <div style={{ flex: 1 }}>
                                 <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "#e2e8f0" }}>{String(a.title)}</p>
                                 <p style={{ margin: "4px 0 6px", fontSize: 10, color: "#64748B", lineHeight: 1.6 }}>{String(meta.summary ?? "")}</p>
-                                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                                  <span style={{ fontSize: 8, color: "#475569", display: "flex", alignItems: "center", gap: 3 }}>
-                                    <Clock size={8} /> {String(a.estimated_minutes ?? 0)} دقيقة
-                                  </span>
-                                  {meta.author && <span style={{ fontSize: 8, color: "#475569" }}>{String(meta.author)}</span>}
-                                  {meta.reads && <span style={{ fontSize: 8, color: "#334155" }}>{Number(meta.reads).toLocaleString("ar")} قراءة</span>}
-                                </div>
+                                {(() => {
+                                  const author = typeof meta.author === "string" ? meta.author : "";
+                                  const reads = Number(meta.reads ?? 0);
+                                  return (
+                                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                      <span style={{ fontSize: 8, color: "#475569", display: "flex", alignItems: "center", gap: 3 }}>
+                                        <Clock size={8} /> {String(a.estimated_minutes ?? 0)} دقيقة
+                                      </span>
+                                      {author ? <span style={{ fontSize: 8, color: "#475569" }}>{author}</span> : null}
+                                      {reads > 0 ? <span style={{ fontSize: 8, color: "#334155" }}>{reads.toLocaleString("ar")} قراءة</span> : null}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                               <button onClick={(e) => { e.stopPropagation(); toggleBookmark(aid); }}
                                 style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4 }}>
@@ -1396,7 +1411,7 @@ function FAQCard({ faq, idx, expanded, onToggle }: {
   );
 }
 
-function ProgressDashboard({ stats, loading }: { stats: any; loading: boolean }) {
+function ProgressDashboard({ stats, loading }: { stats: UserProgressStats | null; loading: boolean }) {
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "48px 0" }}>

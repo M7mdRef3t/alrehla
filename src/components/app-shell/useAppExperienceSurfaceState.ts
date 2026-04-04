@@ -60,7 +60,6 @@ interface UseAppExperienceSurfaceStateParams {
   overlaySurface: SurfaceOverlayPropsParams & {
     onDismissBroadcast: SurfaceOverlayPropsParams["onDismissBroadcast"];
   };
-  onOnboardingComplete?: (skipped?: boolean) => void;
 }
 
 export function useAppExperienceSurfaceState({
@@ -68,8 +67,7 @@ export function useAppExperienceSurfaceState({
   agentExperience,
   canShowAIChatbot,
   mainSurface,
-  overlaySurface,
-  onOnboardingComplete
+  overlaySurface
 }: UseAppExperienceSurfaceStateParams) {
   const actions = useAppSurfaceActions(surfaceActions);
   const { agentContext, agentSystemPrompt, agentActions } = useAppAgentExperience(agentExperience);
@@ -108,21 +106,18 @@ export function useAppExperienceSurfaceState({
 
   const { transientChromeProps } = useAppSurfaceOverlayProps(overlaySurface);
 
-  // Build the 5 props AppOverlayHost still needs (agent experience + feedback)
-  const overlayHostProps: OverlayHostProps = {
-    canShowAIChatbot,
-    agentContext,
-    agentActions,
-    agentSystemPrompt,
-    onFeedbackSubmit: actions.handleFeedbackSubmit,
-    onOnboardingComplete
-  };
-
   return useMemo(() => ({
     chromeShellProps,
     mainContentProps,
     transientChromeProps,
-    overlayHostProps,
+    overlayHostProps: {
+      canShowAIChatbot,
+      agentContext,
+      agentActions,
+      agentSystemPrompt,
+      onFeedbackSubmit: actions.handleFeedbackSubmit,
+      onOnboardingComplete: undefined
+    } as OverlayHostProps,
     openConsciousnessArchive: actions.openConsciousnessArchive,
     openTimeCapsuleVault: actions.openTimeCapsuleVault,
     navigateToMap: actions.navigateToMap,
@@ -133,9 +128,12 @@ export function useAppExperienceSurfaceState({
     chromeShellProps,
     mainContentProps,
     transientChromeProps,
-    overlayHostProps,
+    agentContext,
+    agentActions,
+    agentSystemPrompt,
     actions.openConsciousnessArchive,
     actions.openTimeCapsuleVault,
+    actions.handleFeedbackSubmit,
     actions.navigateToMap,
     actions.toggleSystemOverclockPanel,
     actions.openAmbientReality,

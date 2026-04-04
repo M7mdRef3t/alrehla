@@ -111,10 +111,19 @@ export async function POST(req: NextRequest, { params }: { params: { action: str
   let statusCode = 200;
   let responseBody: unknown = null;
 
+  type LegacyRequest = {
+    method: string;
+    body: unknown;
+  };
+  type LegacyResponse = {
+    status: (code: number) => LegacyResponse;
+    json: (body: unknown) => void;
+  };
+
   const fakeReq = {
     method: "POST",
-    body: parsedBody as any
-  };
+    body: parsedBody
+  } as LegacyRequest;
 
   const fakeRes = {
     status(code: number) {
@@ -124,12 +133,18 @@ export async function POST(req: NextRequest, { params }: { params: { action: str
     json(body: unknown) {
       responseBody = body;
     }
-  };
+  } as LegacyResponse;
 
   if (action === "next-step") {
-    await nextStepHandlerV2(fakeReq, fakeRes);
+    await nextStepHandlerV2(
+      fakeReq as unknown as Parameters<typeof nextStepHandlerV2>[0],
+      fakeRes as unknown as Parameters<typeof nextStepHandlerV2>[1]
+    );
   } else if (action === "outcome") {
-    await outcomeHandlerV2(fakeReq, fakeRes);
+    await outcomeHandlerV2(
+      fakeReq as unknown as Parameters<typeof outcomeHandlerV2>[0],
+      fakeRes as unknown as Parameters<typeof outcomeHandlerV2>[1]
+    );
   } else {
     return NextResponse.json({ error: `Action ${action} not supported via POST` }, { status: 405 });
   }

@@ -190,6 +190,8 @@ export const NotificationSettings: FC<NotificationSettingsProps> = ({
                         <label className="flex items-center gap-2 text-sm text-slate-600">
                           <span>خطوة التذكير:</span>
                           <select
+                            id="mission-reminder-strategy"
+                            name="missionReminderStrategy"
                             value={settings.missionReminderStrategy}
                             onChange={(e) => updateSettings({ missionReminderStrategy: e.target.value as typeof settings.missionReminderStrategy })}
                             className="px-2 py-1 border border-slate-200 rounded-lg text-sm bg-white"
@@ -212,6 +214,8 @@ export const NotificationSettings: FC<NotificationSettingsProps> = ({
                         <label className="flex items-center gap-2 text-sm text-slate-600">
                           <span>وقت التذكير:</span>
                           <input
+                            id="daily-reminder-time"
+                            name="dailyReminderTime"
                             type="time"
                             value={settings.dailyReminderTime}
                             onChange={(e) => updateSettings({ dailyReminderTime: e.target.value })}

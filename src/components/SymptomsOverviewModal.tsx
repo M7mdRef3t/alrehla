@@ -98,6 +98,8 @@ export const SymptomsOverviewModal: FC<SymptomsOverviewModalProps> = ({
                         اختر الشخص
                       </label>
                       <select
+                        id="symptoms-overview-person"
+                        name="symptomsOverviewPerson"
                         value={effectiveSelectedId ?? ""}
                         onChange={(e) => setSelectedNodeId(e.target.value)}
                         className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-right bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
@@ -142,4 +144,3 @@ export const SymptomsOverviewModal: FC<SymptomsOverviewModalProps> = ({
     </AnimatePresence>
   );
 }
-

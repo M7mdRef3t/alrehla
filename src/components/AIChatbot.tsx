@@ -19,6 +19,7 @@ import { ConsciousnessArchiveModal } from "./ConsciousnessArchiveModal";
 import { canSendAIMessage, recordAIMessage, getRemainingAIMessages } from "../services/subscriptionManager";
 import { PaywallGate } from "./PaywallGate";
 import { AnimatePresence } from "framer-motion";
+import { runtimeEnv } from "../config/runtimeEnv";
 import { useGamificationState } from "../services/gamificationEngine";
 import { scanForVampires } from "../services/propheticEngine";
 import { useEventHistoryStore } from "../state/eventHistoryStore";
@@ -419,7 +420,7 @@ ${conversationHistory ? `**سجل العمليات السابق:**\n${conversati
         consciousnessService.addToMemory(`المساعد: ${assistantContent} `);
       }
     } catch (error) {
-      if (typeof import.meta !== "undefined" && (import.meta as { env?: { DEV?: boolean } }).env?.DEV) {
+      if (runtimeEnv.isDev) {
         console.error("Error in chatbot:", error);
       }
       setMessages((prev) => [
@@ -687,6 +688,8 @@ ${conversationHistory ? `**سجل العمليات السابق:**\n${conversati
             )}
             <div className="flex items-end gap-2">
               <textarea
+                id="ai-chatbot-input"
+                name="aiChatbotInput"
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}

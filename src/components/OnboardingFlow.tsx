@@ -2,17 +2,16 @@
 
 import type { FC } from "react";
 import { useState, useCallback, useEffect, useRef, memo, useTransition } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useMapState } from "../state/mapState";
 import { useJourneyState } from "../state/journeyState";
 import { setInLocalStorage } from "../services/browserStorage";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { AnalyticsEvents, trackCompleteRegistration, trackEvent, trackLead } from "../services/analytics";
 import { FirstSparkOnboarding } from "./FirstSparkOnboarding";
-import { AlertTriangle, CheckCircle2, ShieldCheck, Mail, ArrowRight, Sparkles, Layout, Zap } from "lucide-react";
+import { AlertTriangle, Mail, ArrowRight, Sparkles, Zap, Smartphone, User, Lock } from "lucide-react";
 import { signInWithMagicLink } from "../services/authService";
 import { sendRecoveryPlanEmail } from "../services/emailService";
-import { getStoredLeadAttribution } from "../services/marketingAttribution";
 import type { AdviceCategory } from "../data/adviceScripts";
 import { enableNotificationsWithPrompt, getNotificationPermission } from "../services/pushNotifications";
 import { marketingLeadService } from "../services/marketingLeadService";
@@ -118,7 +117,6 @@ const ONBOARDING_STYLES = `
    ════════════════════════════════════════════════ */
 
 const ONBOARDING_KEY = "dawayir-journey-onboarding-done";
-const ONBOARDING_COMPLETION_SESSION_KEY = "dawayir-onboarding-completed-session";
 
 /* eslint-disable react-refresh/only-export-components */
 export function markJourneyOnboardingDone(): void {
@@ -227,6 +225,8 @@ const StepInventory: FC<{
           >
             <input
               type="text"
+              id={`inventory-person-${i + 1}`}
+              name={`inventoryPerson${i + 1}`}
               ref={(el) => { inputRefs.current[i] = el; }}
               defaultValue=""
               onInput={syncHasText}
@@ -278,7 +278,7 @@ const StepInventory: FC<{
         يلا نكمل →
       </button>
 
-      <button onClick={onSkip} className="text-center text-xs text-slate-500 hover:text-slate-300 transition-colors">تخطي</button>
+      <button onClick={onSkip} className="text-center text-xs text-slate-500 hover:text-slate-300 transition-colors">ادخل الملاذ الآمن</button>
     </div>
   );
 });
@@ -292,7 +292,6 @@ const StepMapping: FC<{
   const [cards, setCards] = useState<NameCard[]>(
     items.map((item) => ({ ...item, ring: null, placed: false }))
   );
-  const [dragging, setDragging] = useState<number | null>(null);
 
   const handleRingClick = (cardIdx: number, ring: Ring) => {
     setCards((prev) =>
@@ -303,68 +302,107 @@ const StepMapping: FC<{
   const allPlaced = cards.every((c) => c.placed);
 
   return (
-    <div className="flex flex-col gap-5 w-full text-center">
-      <h2 className="text-lg font-bold text-white">حط كل حد في مكانه</h2>
-      <p className="text-sm text-slate-300">
-        اختار لكل اسم مداره.. القريب للقلب في النص، والبعيد في المدارات الخارجية.
-      </p>
+    <div className="flex flex-col gap-4 w-full text-center">
+      <div className="space-y-1 mb-2">
+        <h2 className="text-[18px] font-extrabold text-white tracking-wide">ارسم الواقع بصدق</h2>
+        <p className="text-[11px] text-slate-300 leading-relaxed px-1">
+          حط كل شخص في المكان اللي يمثل <span className="text-teal-400 font-bold">تأثيره على طاقتك دلوقتي</span>، مش المكان اللي بتتمناه. الخريطة دي عشان تشوف الحقيقة، مش عشان تجمّلها.
+        </p>
+      </div>
 
-      <div className="flex flex-col gap-2">
-        {(["green", "yellow", "red"] as Ring[]).map((ring) => {
-          const conf = RING_COLORS[ring];
-          const placedHere = cards.filter((c) => c.ring === ring);
-          return (
-            <div
-              key={ring}
-              className="rounded-2xl px-4 py-3 flex items-center gap-3 border transition-all"
-              style={{ background: conf.bg, borderColor: conf.border, minHeight: 56 }}
-            >
-              <span className="text-xs font-semibold w-16 text-right shrink-0" style={{ color: conf.border }}>
-                {conf.labelAr}
-              </span>
-              <div className="flex gap-2 flex-wrap">
-                {placedHere.map((c) => (
-                  <span key={c.name} className="text-xs font-bold px-3 py-1 rounded-full text-zinc-900" style={{ background: conf.border }}>
+      {/* Concentric Radar Area */}
+      <div className="relative w-full h-[260px] bg-[#020408]/60 rounded-[2rem] border border-white/5 overflow-hidden flex justify-center shadow-inner">
+        {/* Core Point (Center is X: 50%, Y: 85px) */}
+        <div className="absolute top-[85px] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[6px] h-[6px] rounded-full bg-teal-300 shadow-[0_0_12px_#2dd4bf] z-40" />
+
+        {/* Red Ring (Outer) */}
+        <div className="absolute top-[85px] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] rounded-full border border-rose-500/20 bg-rose-500/[0.015] z-10 pointer-events-none">
+           <div className="absolute bottom-[28px] left-1/2 -translate-x-1/2 w-[70%] pointer-events-auto flex flex-wrap gap-2 justify-center z-50">
+             <AnimatePresence>
+               {cards.map((c, i) => c.placed && c.ring === "red" && (
+                  <motion.span layoutId={`card-${i}-layout`} key={c.name} initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 25 }} className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 shadow-sm backdrop-blur-md">
                     {c.name}
-                  </span>
-                ))}
+                  </motion.span>
+               ))}
+             </AnimatePresence>
+           </div>
+           <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-rose-500/50 text-[8px] font-bold mt-2 uppercase tracking-widest whitespace-nowrap">المدار الخارجي (مستنزِف)</span>
+        </div>
+
+        {/* Yellow Ring (Middle) */}
+        <div className="absolute top-[85px] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[220px] rounded-full border border-amber-500/30 bg-amber-500/[0.03] z-20 pointer-events-none">
+           <div className="absolute bottom-[24px] left-1/2 -translate-x-1/2 w-[85%] pointer-events-auto flex flex-wrap gap-2 justify-center z-50">
+             <AnimatePresence>
+               {cards.map((c, i) => c.placed && c.ring === "yellow" && (
+                  <motion.span layoutId={`card-${i}-layout`} key={c.name} initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 25 }} className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 shadow-sm backdrop-blur-md">
+                    {c.name}
+                  </motion.span>
+               ))}
+             </AnimatePresence>
+           </div>
+           <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-amber-500/60 text-[8px] font-bold mt-1 uppercase tracking-widest whitespace-nowrap">المدار الأوسط (مُتعب / متقلب)</span>
+        </div>
+
+        {/* Green Ring (Core) */}
+        <div className="absolute top-[85px] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110px] h-[110px] rounded-full border-[1.5px] border-teal-500/50 bg-teal-500/10 z-30 shadow-[0_0_30px_rgba(45,212,191,0.15)] pointer-events-none">
+           <div className="absolute bottom-[20px] left-1/2 -translate-x-1/2 w-[90%] pointer-events-auto flex flex-wrap gap-1 justify-center z-50">
+             <AnimatePresence>
+               {cards.map((c, i) => c.placed && c.ring === "green" && (
+                  <motion.span layoutId={`card-${i}-layout`} key={c.name} initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 25 }} className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-[#18f1d7] border border-[#2dd4bf] text-slate-900 shadow-[0_2px_10px_rgba(45,212,191,0.4)]">
+                    {c.name}
+                  </motion.span>
+               ))}
+             </AnimatePresence>
+           </div>
+           <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 text-teal-400/80 text-[8px] font-bold uppercase tracking-widest whitespace-nowrap">النواة (مطمن)</span>
+        </div>
+      </div>
+
+      <div className="space-y-3 min-h-[140px] pt-1">
+        <AnimatePresence>
+          {cards.map((c, i) => !c.placed && (
+            <motion.div 
+              layoutId={`card-container-${i}`} 
+              key={`unplaced-${c.name}-${i}`}
+              initial={{ opacity: 0, y: 15 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }} 
+              className="flex items-center justify-between bg-white/[0.03] border border-white/10 rounded-2xl p-2 pl-3 shadow-sm hover:bg-white/[0.05] transition-colors"
+            >
+              <div className="flex items-center gap-2 max-w-[30%]">
+                 <motion.span layoutId={`card-${i}-layout`} className="text-sm font-bold text-white tracking-wide truncate">
+                   {c.name}
+                 </motion.span>
               </div>
-            </div>
-          );
-        })}
+              
+              <div className="flex items-center gap-1 shrink-0">
+                <button onClick={() => handleRingClick(i, "green")} className="text-[10px] font-bold px-2 py-2 rounded-xl border border-teal-500/30 text-teal-400 hover:bg-teal-500/20 active:scale-95 transition-all bg-[#0a1128]/50">مطمن</button>
+                <button onClick={() => handleRingClick(i, "yellow")} className="text-[10px] font-bold px-2 py-2 rounded-xl border border-amber-500/30 text-amber-500 hover:bg-amber-500/20 active:scale-95 transition-all bg-[#1a1408]/50">متقلب</button>
+                <button onClick={() => handleRingClick(i, "red")} className="text-[10px] font-bold px-2 py-2 rounded-xl border border-rose-500/30 text-rose-500 hover:bg-rose-500/20 active:scale-95 transition-all bg-[#1a080c]/50">مستنزِف</button>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
 
-      <div className="space-y-3">
-        {cards.map((c, i) => !c.placed && (
-          <div key={c.name} className="flex items-center gap-2 justify-center py-1">
-            <span className="text-sm font-semibold text-white">{c.name}:</span>
-            {(["green", "yellow", "red"] as Ring[]).map((ring) => (
-              <button
-                key={ring}
-                onClick={() => handleRingClick(i, ring)}
-                className="text-[10px] font-bold px-3 py-1 rounded-full border transition-all"
-                style={{ background: RING_COLORS[ring].bg, borderColor: RING_COLORS[ring].border, color: RING_COLORS[ring].border }}
-              >
-                {RING_COLORS[ring].labelAr}
-              </button>
-            ))}
-          </div>
-        ))}
+      <div className="pt-2">
+        <button
+          onClick={() => onNext(cards)}
+          disabled={!allPlaced}
+          className="w-full rounded-2xl py-4 text-[15px] font-extrabold transition-all ob-btn-tap relative overflow-hidden group"
+          style={{
+            background: allPlaced ? "#2dd4bf" : "rgba(255,255,255,0.05)",
+            color: allPlaced ? "#0f172a" : "rgba(255,255,255,0.2)",
+            boxShadow: allPlaced ? "0 4px 20px rgba(45,212,191,0.3)" : "none"
+          }}
+        >
+          {allPlaced && <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />}
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            شوف النتيجة <ArrowRight className="w-4 h-4 rotate-180" />
+          </span>
+        </button>
+        <button onClick={onSkip} className="text-xs text-slate-500 mt-4 hover:text-slate-300">ادخل الملاذ الآمن</button>
       </div>
-
-      <button
-        onClick={() => onNext(cards)}
-        disabled={!allPlaced}
-        className="w-full rounded-2xl py-3.5 text-sm font-bold transition-all ob-btn-tap"
-        style={{
-          background: allPlaced ? "#2dd4bf" : "rgba(255,255,255,0.05)",
-          color: allPlaced ? "#0f172a" : "rgba(255,255,255,0.2)",
-        }}
-      >
-        شوف النتيجة →
-      </button>
-
-      <button onClick={onSkip} className="text-xs text-slate-500">تخطي</button>
     </div>
   );
 };
@@ -411,7 +449,7 @@ const StepInsight: FC<{ items: { name: string; category: AdviceCategory }[]; onC
         كَمّل لخطتك ←
       </button>
 
-      <button onClick={onSkip} className="text-xs text-slate-500">مش دلوقتي</button>
+      <button onClick={onSkip} className="text-xs text-slate-500">ادخل الملاذ الآمن</button>
     </div>
   );
 };
@@ -432,76 +470,132 @@ const StepContactCapture: FC<{
     e.preventDefault();
     setError("");
     if (!whatsapp.trim()) {
-      setError("حط رقم الواتساب عشان نوصلك بخطتك.");
+      setError("حط رقم الواتساب عشان نقدر نبعتلك خطة التعافي.");
       return;
     }
     setLoading(true);
     try {
       await onComplete(name, email, whatsapp);
     } catch {
-      setError("حصلت مشكلة. جرب تاني.");
+      setError("حصلت مشكلة في الاتصال المشفّر. جرب تاني.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-5 w-full text-center">
-      <div className="mx-auto w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center mb-1">
-        <span className="text-2xl">📲</span>
+    <div className="flex flex-col gap-4 w-full text-center px-1">
+      <div className="mx-auto relative w-16 h-16 rounded-full bg-[#0a1128] border border-teal-500/30 flex items-center justify-center mb-1 shadow-[0_0_30px_rgba(45,212,191,0.15)]">
+         <div className="absolute inset-0 rounded-full border border-teal-400/30 animate-ping opacity-20"></div>
+         <Smartphone className="w-7 h-7 text-teal-400 relative z-10" />
       </div>
-      <h2 className="text-lg font-bold text-white">طريقك للوضوح بدأ</h2>
-      <p className="text-xs text-slate-400 mb-2 leading-relaxed">سيب اسمك ورقم الواتساب وهنبعتلك "روشتة الدواير" وصورة خريطتك فوراً.</p>
+      
+      <div className="space-y-1.5 mb-2">
+        <h2 className="text-[20px] font-extrabold text-white tracking-wide">روشتة الدواير جاهزة</h2>
+        <p className="text-[11px] text-slate-300 leading-relaxed font-medium px-2">
+          سيب بياناتك عشان نبعتلك <span className="text-teal-400 font-bold">خريطة وعيك المصورة</span> وتفاصيل أول خطوة في التعافي فوراً على الواتساب.
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-right">
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold text-slate-500 mr-2 uppercase tracking-widest">الاسم (هيظهر على الخريطة)</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="اسمك أو لقبك.."
-            className="w-full rounded-xl px-4 py-3.5 text-sm bg-white/5 border border-white/10 text-white focus:border-teal-400/50 outline-none transition-all"
-            dir="rtl"
-          />
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 text-right w-full">
+        {/* Name Input */}
+        <div className="space-y-1.5 group">
+          <label className="text-[10px] font-bold text-teal-400/80 mr-1 flex items-center gap-1.5 justify-end">
+            الاسم (عشان روشتة التعافي תطلع باسمك) <User className="w-3 h-3"/>
+          </label>
+          <div className="relative">
+             <input
+               type="text"
+               id="contact-name"
+               name="contactName"
+               value={name}
+               onChange={(e) => setName(e.target.value)}
+               placeholder="اسمك الأول أو لقبك.."
+               className="w-full rounded-2xl px-4 py-3.5 text-sm bg-[#020408]/50 border border-white/10 text-white focus:border-teal-400 focus:bg-[#0a1128]/80 outline-none transition-all shadow-inner placeholder:text-slate-600"
+               dir="rtl"
+             />
+          </div>
         </div>
 
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold text-teal-400 tracking-widest mr-2 uppercase">واتساب (أساسي)</label>
-          <input
-            type="tel"
-            value={whatsapp}
-            onChange={(e) => setWhatsapp(e.target.value)}
-            placeholder="01xxxxxxxxx"
-            autoFocus
-            dir="ltr"
-            className="w-full rounded-xl px-4 py-3.5 text-sm bg-white/5 border border-white/10 text-white focus:border-teal-400/50 outline-none transition-all"
-          />
+        {/* WhatsApp Input */}
+        <div className="space-y-1.5 group">
+          <label className="text-[10px] font-bold text-teal-400 mr-1 flex items-center gap-1.5 justify-end">
+            واتساب الأساسي (مهم جداً) <Smartphone className="w-3 h-3"/>
+          </label>
+          <div className="relative">
+             {/* Country Code Prefix Fake */}
+             <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 opacity-60">
+               <span className="text-[13px] font-bold text-teal-400 tracking-widest">+20</span>
+               <div className="w-px h-5 bg-teal-500/30"></div>
+             </div>
+             <input
+               type="tel"
+               id="contact-whatsapp"
+               name="contactWhatsapp"
+               value={whatsapp}
+               onChange={(e) => setWhatsapp(e.target.value)}
+               placeholder="10xxxxxxxx"
+               autoFocus
+               dir="ltr"
+               className="w-full rounded-2xl pl-16 pr-4 py-3.5 text-[15px] font-bold tracking-widest bg-[#020408]/50 border border-teal-500/40 text-white focus:border-teal-400 focus:bg-[#0a1128]/80 outline-none transition-all shadow-[0_0_15px_rgba(45,212,191,0.1)] focus:shadow-[0_0_25px_rgba(45,212,191,0.25)] placeholder:text-slate-600 placeholder:font-normal placeholder:text-sm placeholder:tracking-normal text-left"
+             />
+          </div>
         </div>
 
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold text-slate-500 mr-2 uppercase tracking-widest">الإيميل (اختياري)</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="name@email.com"
-            className="w-full rounded-xl px-4 py-3.5 text-sm bg-white/5 border border-white/10 text-white outline-none"
-          />
+        {/* Email Input */}
+        <div className="space-y-1.5 group mt-1">
+          <label className="text-[10px] font-bold text-slate-500 mr-1 flex items-center gap-1.5 justify-end">
+            الإيميل (اختياري كنسخة احتياطية) <Mail className="w-3 h-3"/>
+          </label>
+          <div className="relative">
+             <input
+               type="email"
+               id="contact-email"
+               name="contactEmail"
+               value={email}
+               onChange={(e) => setEmail(e.target.value)}
+               placeholder="name@email.com"
+               className="w-full rounded-2xl px-4 py-3.5 text-sm bg-white/[0.02] border border-white/5 text-slate-300 focus:border-white/20 focus:bg-white/[0.05] outline-none transition-all placeholder:text-slate-600 text-left"
+               dir="ltr"
+             />
+          </div>
         </div>
 
-        {error && <p className="text-xs text-rose-400 font-bold">{error}</p>}
+        {/* Error State */}
+        <div className="h-6 flex items-center justify-center">
+          <AnimatePresence>
+            {error && (
+              <motion.div initial={{ opacity: 0, y: -5, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -5, scale: 0.95 }} className="flex items-center gap-2 text-rose-400">
+                 <AlertTriangle className="w-3 h-3" />
+                 <p className="text-[10px] font-bold">{error}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
+        {/* Trust Badge */}
+        <div className="flex items-center justify-center gap-1.5 opacity-70">
+           <Lock className="w-3 h-3 text-slate-400" />
+           <span className="text-[9px] text-slate-400 font-semibold tracking-wide">بياناتك مشفرة بالكامل ومعزولة في الملاذ الآمن</span>
+        </div>
+
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-2xl py-4 bg-teal-400 text-zinc-900 font-bold ob-btn-tap transition-all shadow-lg"
+          className="w-full relative overflow-hidden group rounded-2xl py-4 bg-teal-400 text-slate-950 font-extrabold ob-btn-tap transition-all shadow-[0_0_20px_rgba(45,212,191,0.3)] hover:shadow-[0_0_30px_rgba(45,212,191,0.5)] disabled:opacity-50 mt-1"
         >
-          {loading ? "جاري التجهيز..." : "استلم خطة التعافي"}
+          <div className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transform -translate-x-[150%] transition-transform duration-1000 group-hover:translate-x-[50%] skew-x-12"></div>
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            {loading ? "جاري الإرسال المشفّر..." : "استلم خطة التعافي دلوقتي"}
+            {!loading && <Sparkles className="w-4 h-4 text-[#064e3b]" />}
+          </span>
         </button>
       </form>
 
-      <button onClick={onSkip} className="text-xs text-slate-500 mt-2">تخطي، دخلني الملاذ الآمن</button>
+      <button onClick={onSkip} className="text-[10px] text-slate-500 mt-2 hover:text-slate-300 transition-colors uppercase font-bold tracking-widest inline-flex items-center justify-center gap-1 mx-auto">
+        ادخل الملاذ الآمن <ArrowRight className="w-3 h-3 rotate-180"/>
+      </button>
     </div>
   );
 };
@@ -511,7 +605,7 @@ const StepRecoveryPlanPreview: FC<{
   userName?: string;
   collectedItems: { name: string; category: AdviceCategory }[]; 
   onComplete: () => void; 
-}> = ({ userName, collectedItems, onComplete }) => {
+}> = ({ userName, collectedItems: _collectedItems, onComplete }) => {
   const displayName = userName ? `يا ${userName}` : "";
   return (
     <div className="flex flex-col gap-6 w-full py-2 text-center">
@@ -543,6 +637,8 @@ const StepRecoveryPlanPreview: FC<{
 };
 
 interface NameCard { name: string; category: AdviceCategory; ring: Ring | null; placed: boolean }
+const onboardingRingPalette = RING_COLORS;
+void onboardingRingPalette;
 
 /* ── Main OnboardingFlow Component ── */
 export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initialMirrorName }) => {
@@ -550,7 +646,7 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   const setMirrorName = useJourneyState((s) => s.setMirrorName);
   
   const [step, setStep] = useState(0);
-  const [prevStep, setPrevStep] = useState(-1);
+  const [, setPrevStep] = useState(-1);
   const [name, setName] = useState((initialMirrorName ?? "").trim());
   const [collectedItems, setCollectedItems] = useState<{ name: string; category: AdviceCategory }[]>([]);
   
@@ -707,4 +803,4 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   );
 });
 
-(OnboardingFlow as any).displayName = "OnboardingFlow";
+OnboardingFlow.displayName = "OnboardingFlow";

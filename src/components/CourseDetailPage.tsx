@@ -4,17 +4,18 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CourseQuiz } from "./CourseQuiz";
 import { VideoPlayer } from "./VideoPlayer";
+import type { Chapter } from "./VideoPlayer";
 import {
   X, CheckCircle, Circle, Bookmark, BookmarkCheck,
   Clock, Star, Users, RotateCcw, Share2, Trophy, ChevronDown,
-  ChevronRight, ChevronUp, MessageCircle, FileText, BarChart2,
-  Download, Wifi, WifiOff, Lock, Zap, Brain, Send,
+  ChevronUp, MessageCircle, FileText, BarChart2,
+  Download, Wifi, Lock, Brain, Send,
   AlertCircle, Sparkles, GraduationCap, Play, Award,
 } from "lucide-react";
 import {
   fetchCourse, fetchModules, fetchUnits, fetchUserProgress, markUnitComplete,
   fetchUserProgressStats, hasActiveSession, fetchUserProgressDetail, saveVideoProgress,
-  type DBCourse, type DBModule, type DBUnit, type UserProgressStats,
+  type DBCourse, type DBModule, type DBUnit, type UserProgress, type UserProgressStats,
 } from "../services/learningService";
 
 /* ══════════════════════════════════════════
@@ -26,7 +27,7 @@ export interface CourseUnit {
   title: string;
   duration: string;
   videoUrl?: string;
-  chapters?: any[]; // For VideoPlayer
+  chapters?: Chapter[];
   isCompleted?: boolean;
   isLocked?: boolean;
   isRecommended?: boolean; // Behavioral badge
@@ -243,7 +244,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
           title: u.title,
           duration: u.duration,
           videoUrl: u.video_url || undefined,
-          chapters: (u.metadata?.chapters as any[]) || undefined,
+          chapters: (u.metadata?.chapters as Chapter[] | undefined) || undefined,
           isCompleted: dbProgress.has(u.id),
           isLocked: u.is_locked,
         })),
@@ -274,7 +275,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
   const [completedUnits, setCompletedUnits] = useState<Set<string>>(() =>
     new Set(getLS(`${courseId}_completed`, []) as string[])
   );
-  const [detailedProgress, setDetailedProgress] = useState<Record<string, any>>({});
+  const [detailedProgress, setDetailedProgress] = useState<Record<string, UserProgress>>({});
   const [offlineUnits, setOfflineUnits] = useState<Set<string>>(() =>
     new Set(getLS(`${courseId}_offline`, []) as string[])
   );
@@ -286,21 +287,29 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
   useEffect(() => {
     if (!resolvedCourseId) return;
     fetchUserProgressDetail(resolvedCourseId).then(data => {
-      const detail: Record<string, any> = {};
-      const completed = new Set<string>(completedUnits);
+      const detail: Record<string, UserProgress> = {};
       data.forEach(r => {
-        detail[r.unit_id] = r;
-        if (r.completed_at) completed.add(r.unit_id);
+        const row = r as UserProgress;
+        detail[row.unit_id] = row;
       });
       setDetailedProgress(detail);
-      setCompletedUnits(completed);
+      setCompletedUnits((prev) => {
+        const next = new Set(prev);
+        data.forEach((r) => {
+          const row = r as UserProgress;
+          if (row.completed_at) next.add(row.unit_id);
+        });
+        return next;
+      });
     }).catch(console.error);
+  }, [resolvedCourseId]);
 
+  useEffect(() => {
     if (!dbLoading && course.modules.length > 0 && !expandedModule) {
       setExpandedModule(course.modules[0]?.id ?? null);
       setActiveUnitId(course.modules[0]?.units[0]?.id ?? "");
     }
-  }, [resolvedCourseId, dbLoading]);
+  }, [dbLoading, course.modules, expandedModule]);
 
   // Derived
   const allUnits = course.modules.flatMap(m => m.units);
@@ -486,6 +495,8 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
             <motion.div key="notes" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ padding: "8px 12px" }}>
               <p style={{ margin: "0 0 6px", fontSize: 9, color: "#64748B" }}>ملاحظاتك الخاصة — تُحفظ تلقائياً</p>
               <textarea
+                id="course-detail-notes"
+                name="courseDetailNotes"
                 value={notes}
                 onChange={e => { setNotes(e.target.value); setLS(`${courseId}_notes`, e.target.value); }}
                 placeholder="اكتب أفكارك، أسئلتك، أو insights هنا..."
@@ -518,7 +529,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
                 </div>
               ))}
               <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                <input placeholder="شارك فكرة أو سؤالاً..." style={{
+                <input id="course-detail-comment" name="courseDetailComment" placeholder="شارك فكرة أو سؤالاً..." style={{
                   flex: 1, padding: "8px 10px", borderRadius: 10,
                   background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
                   color: "#e2e8f0", fontSize: 10, direction: "rtl",
@@ -646,6 +657,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
   );
 
   // ── MAIN CONTENT ──
+  void SidebarContent;
   const MainContent = () => (
     <div style={{ flex: 1, overflowY: "auto", padding: isDesktop ? "0 0 40px" : "0 0 90px" }}>
       {/* Hero */}
@@ -760,7 +772,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
               chapters={activeUnit.chapters}
               title={activeUnit.title}
               color={color}
-              savedTime={detailedProgress[activeUnit.id]?.last_position}
+              savedTime={detailedProgress[activeUnit.id]?.last_position ?? undefined}
               nextUnitTitle={allUnits[allUnits.findIndex(u => u.id === activeUnit.id) + 1]?.title}
               onEnded={() => handleVideoEnded(activeUnit.id)}
               onTimeUpdate={handleTimeUpdate}
@@ -883,7 +895,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
                   chapters={activeUnit.chapters}
                   title={activeUnit.title}
                   color={color}
-                  savedTime={detailedProgress[activeUnit.id]?.last_position}
+                  savedTime={detailedProgress[activeUnit.id]?.last_position ?? undefined}
                   nextUnitTitle={allUnits[allUnits.findIndex(u => u.id === activeUnit.id) + 1]?.title}
                   onEnded={() => handleVideoEnded(activeUnit.id)}
                   onTimeUpdate={handleTimeUpdate}
@@ -977,6 +989,8 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
                       borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 10,
                     }}>
                       <textarea
+                        id="course-detail-notes-secondary"
+                        name="courseDetailNotesSecondary"
                         value={notes}
                         onChange={e => { setNotes(e.target.value); setLS(`${courseId}_notes`, e.target.value); }}
                         placeholder="ابدأ بكتابة ملاحظاتك هنا..."
@@ -1089,7 +1103,7 @@ export function CourseDetailPage({ isOpen, onClose, courseId = "eq-mastery", boo
                     ))}
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <input placeholder="شارك فكرة أو سؤالاً..." style={{
+                    <input id="course-detail-comment-secondary" name="courseDetailCommentSecondary" placeholder="شارك فكرة أو سؤالاً..." style={{
                       flex: 1, padding: "10px 14px", borderRadius: 12,
                       background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
                       color: "#e2e8f0", fontSize: 11, direction: "rtl", outline: "none",

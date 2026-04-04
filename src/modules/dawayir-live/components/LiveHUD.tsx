@@ -275,6 +275,8 @@ export default function LiveHUD({
           </div>
           <form className="command-input-form" onSubmit={handleSubmit}>
             <input
+              id="live-hud-composer"
+              name="liveHudComposer"
               type="text"
               className="command-input"
               value={composer}

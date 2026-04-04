@@ -9,7 +9,7 @@ interface RelapsePreventionProps {
 
 export const RelapsePrevention: FC<RelapsePreventionProps> = ({
   displayName,
-  category
+  category: _category
 }) => {
   const warningSigns = [
     {

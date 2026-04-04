@@ -91,6 +91,8 @@ export const FeedbackModal: FC<FeedbackModalProps> = ({ isOpen, onClose, onSubmi
         </div>
 
         <textarea
+          id="feedback-message"
+          name="feedbackMessage"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={5}

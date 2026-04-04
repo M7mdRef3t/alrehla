@@ -1,5 +1,5 @@
 /**
- * AIDecisionLog — عرض سجل قرارات الـ AI في Admin Dashboard
+ * AIDecisionLog — عرض سجل قرارات الـ AI في Admin Dashboard (Supreme Court Hologram)
  * =============================================================
  * يعرض آخر 100 قرار اتخذهم الـ AI، مع إمكانية الموافقة/الرفض
  */
@@ -14,11 +14,11 @@ import {
   XCircle,
   Clock,
   AlertTriangle,
-  Eye,
-  ThumbsUp,
-  ThumbsDown,
   ChevronDown,
   ChevronUp,
+  Gavel,
+  ShieldAlert,
+  Zap,
 } from "lucide-react";
 import { decisionEngine } from "../../ai/decision-framework";
 import type { AIDecision, DecisionType } from "../../ai/decision-framework";
@@ -32,7 +32,6 @@ export const AIDecisionLog: FC<AIDecisionLogProps> = ({ maxDecisions = 50 }) => 
   const [selectedDecision, setSelectedDecision] = useState<AIDecision | null>(null);
   const [filter, setFilter] = useState<"all" | "executed" | "pending" | "rejected">("all");
 
-  // تحميل القرارات من localStorage
   useEffect(() => {
     loadDecisions();
   }, []);
@@ -42,13 +41,11 @@ export const AIDecisionLog: FC<AIDecisionLogProps> = ({ maxDecisions = 50 }) => 
     setDecisions(recent);
   };
 
-  // فلترة القرارات
   const filteredDecisions = decisions.filter((d) => {
     if (filter === "all") return true;
     return d.outcome === filter;
   });
 
-  // عدد كل نوع
   const counts = {
     executed: decisions.filter((d) => d.outcome === "executed").length,
     pending: decisions.filter((d) => d.outcome === "pending_approval").length,
@@ -57,102 +54,103 @@ export const AIDecisionLog: FC<AIDecisionLogProps> = ({ maxDecisions = 50 }) => 
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 relative rounded-3xl p-6 md:p-8 overflow-hidden bg-[#02040A] border border-slate-800/80 shadow-2xl group min-h-[600px]">
+      {/* Hologram Background */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.1),transparent_50%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('https://transparenttextures.com/patterns/cyber-grid.png')] opacity-10 pointer-events-none" />
+      
       {/* ── Header ── */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Brain className="w-5 h-5" style={{ color: "#a78bfa" }} />
-          <h2 className="text-lg font-bold" style={{ color: "rgba(226,232,240,0.95)" }}>
-            سجل قرارات الـ AI
-          </h2>
-          <AdminTooltip content="مراقبة حية لكل القرارات التي يتخذها الذكاء الاصطناعي في المنصة (مثل تعديل تسعير، فلترة مجتمع، أو اقتراحات)." position="bottom" />
-          <span
-            className="px-2 py-0.5 rounded-full text-xs font-bold"
-            style={{ background: "rgba(139,92,246,0.15)", color: "#a78bfa" }}
-          >
-            {decisions.length} قرار
-          </span>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10 border-b border-white/5 pb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.3)]">
+            <Gavel className="w-7 h-7 text-purple-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black text-white tracking-widest uppercase flex items-center gap-3">
+              المحكمة العليا للذكاء
+              <AdminTooltip content="هنا تقف لتحاسب، تراقب، وتقر قرارات الذكاء الاصطناعي التي تعمل كمراقب على السيادة." position="bottom" />
+            </h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+              <p className="text-xs font-bold text-purple-400/80 uppercase tracking-widest">
+                God Mode Hologram
+              </p>
+            </div>
+          </div>
         </div>
 
         <button
           type="button"
           onClick={loadDecisions}
-          className="organic-tap text-xs px-3 py-1.5 rounded-lg"
-          style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "rgba(148,163,184,0.9)",
-          }}
+          className="organic-tap text-xs font-black uppercase tracking-widest px-6 py-3 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:text-white transition-all shadow-lg hover:shadow-[0_0_20px_rgba(168,85,247,0.4)]"
         >
-          تحديث
+          طلب سجلات حديثة
         </button>
       </div>
 
       {/* ── Stats Bar ── */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
         <StatCard
-          label="تم التنفيذ"
+          label="حُكم نافذ"
           count={counts.executed}
-          icon={<CheckCircle className="w-4 h-4" />}
+          icon={<CheckCircle className="w-5 h-5" />}
           color="#34d399"
           active={filter === "executed"}
           onClick={() => setFilter(filter === "executed" ? "all" : "executed")}
-          tooltip="القرارات اللي السيستم أخدها ونفذها بشكل آلي بناءً على المعايير بدون تدخل بشري."
         />
         <StatCard
-          label="قيد المراجعة"
+          label="استئناف القرار"
           count={counts.pending}
-          icon={<Clock className="w-4 h-4" />}
+          icon={<Clock className="w-5 h-5" />}
           color="#fbbf24"
           active={filter === "pending"}
           onClick={() => setFilter(filter === "pending" ? "all" : "pending")}
-          tooltip="قرارات حساسة تتطلب موافقة المالك (Owner) قبل التنفيذ النهائي (مثل تغيير تسعير جذري)."
         />
         <StatCard
-          label="مرفوض"
+          label="حكم مرفوض"
           count={counts.rejected}
-          icon={<XCircle className="w-4 h-4" />}
+          icon={<XCircle className="w-5 h-5" />}
           color="#f87171"
           active={filter === "rejected"}
           onClick={() => setFilter(filter === "rejected" ? "all" : "rejected")}
-          tooltip="قرارات تم رفضها يدوياً من المالك وتم إلغاء تنفيذها."
         />
         <StatCard
-          label="ممنوع"
+          label="محظور دستورياً"
           count={counts.forbidden}
-          icon={<AlertTriangle className="w-4 h-4" />}
+          icon={<ShieldAlert className="w-5 h-5" />}
           color="#ef4444"
           active={filter === "all"}
           onClick={() => setFilter("all")}
-          tooltip="قرارات حاول الذكاء الاصطناعي اتخاذها ولكنها محظورة وفقاً لقواعد الحماية الأساسية للمنصة."
         />
       </div>
 
       {/* ── Decision List ── */}
-      <div className="space-y-2">
+      <div className="space-y-3 relative z-10">
         {filteredDecisions.length === 0 ? (
-          <div
-            className="text-center py-12 rounded-xl"
-            style={{
-              background: "rgba(255,255,255,0.02)",
-              border: "1px dashed rgba(255,255,255,0.08)",
-            }}
-          >
-            <Brain className="w-12 h-12 mx-auto mb-3" style={{ color: "rgba(148,163,184,0.3)" }} />
-            <p style={{ color: "rgba(148,163,184,0.6)" }}>
-              لا توجد قرارات بعد
+          <div className="text-center py-20 rounded-3xl bg-slate-900/30 border border-dashed border-slate-800">
+            <div className="w-20 h-20 mx-auto bg-slate-900 rounded-full flex items-center justify-center border border-slate-800 mb-4 shadow-inner">
+              <Zap className="w-8 h-8 text-slate-600 opacity-50" />
+            </div>
+            <p className="text-slate-500 font-bold tracking-widest uppercase">
+              لا توجد قضايا مطروحة حالياً
             </p>
           </div>
         ) : (
-          filteredDecisions.map((decision) => (
-            <DecisionCard
+          filteredDecisions.map((decision, index) => (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
               key={`${decision.type}-${decision.timestamp}`}
-              decision={decision}
-              isSelected={selectedDecision === decision}
-              onClick={() =>
-                setSelectedDecision(selectedDecision === decision ? null : decision)
-              }
-            />
+            >
+              <DecisionCard
+                decision={decision}
+                isSelected={selectedDecision === decision}
+                onClick={() =>
+                  setSelectedDecision(selectedDecision === decision ? null : decision)
+                }
+              />
+            </motion.div>
           ))
         )}
       </div>
@@ -161,7 +159,7 @@ export const AIDecisionLog: FC<AIDecisionLogProps> = ({ maxDecisions = 50 }) => 
 };
 
 /**
- * Stat Card — كارت إحصائية
+ * Stat Card — كارت إحصائية هولوجرامي
  */
 interface StatCardProps {
   label: string;
@@ -170,40 +168,40 @@ interface StatCardProps {
   color: string;
   active: boolean;
   onClick: () => void;
-  tooltip?: string;
 }
 
-const StatCard: FC<StatCardProps> = ({ label, count, icon, color, active, onClick, tooltip }) => {
+const StatCard: FC<StatCardProps> = ({ label, count, icon, color, active, onClick }) => {
   return (
     <motion.button
       type="button"
       onClick={onClick}
-      className="organic-tap text-right p-3 rounded-xl transition-all"
+      className={`relative organic-tap text-right p-4 rounded-2xl transition-all overflow-hidden border ${active ? 'shadow-lg' : ''}`}
       style={{
-        background: active ? `${color}15` : "rgba(255,255,255,0.03)",
-        border: `1px solid ${active ? `${color}30` : "rgba(255,255,255,0.06)"}`,
+        background: active ? `${color}15` : "rgba(15,23,42,0.6)",
+        border: `1px solid ${active ? `${color}50` : "rgba(255,255,255,0.05)"}`,
+        boxShadow: active ? `0 0 20px ${color}30` : "none"
       }}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ y: -2 }}
       whileTap={{ scale: 0.98 }}
     >
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-2xl font-bold" style={{ color }}>
+      {active && <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />}
+      <div className="flex items-center justify-between mb-2 relative z-10">
+        <span className="text-3xl font-black font-mono tracking-tighter" style={{ color: active ? '#fff' : color }}>
           {count}
         </span>
-        <div style={{ color }}>{icon}</div>
+        <div className="p-2 rounded-xl bg-black/20 backdrop-blur-sm" style={{ color }}>{icon}</div>
       </div>
-      <div className="flex items-center justify-between mt-1">
-        <p className="text-xs" style={{ color: "rgba(148,163,184,0.7)" }}>
+      <div className="relative z-10">
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: active ? color : "rgba(148,163,184,0.7)" }}>
           {label}
         </p>
-        {tooltip && <AdminTooltip content={tooltip} position="bottom" />}
       </div>
     </motion.button>
   );
 };
 
 /**
- * Decision Card — كارت قرار واحد
+ * Decision Card — ملف القضية
  */
 interface DecisionCardProps {
   decision: AIDecision;
@@ -217,114 +215,125 @@ const DecisionCard: FC<DecisionCardProps> = ({ decision, isSelected, onClick }) 
   return (
     <motion.div
       layout
-      className="rounded-xl overflow-hidden"
+      className={`rounded-2xl overflow-hidden transition-all duration-300 backdrop-blur-md ${isSelected ? "shadow-2xl translate-x-[-4px]" : "hover:translate-x-[-2px]"}`}
       style={{
-        background: isSelected ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)",
-        border: `1px solid ${outcomeConfig.borderColor}`,
+        background: isSelected ? "rgba(15,23,42,0.9)" : "rgba(11,15,25,0.8)",
+        border: `1px solid ${isSelected ? outcomeConfig.color : "rgba(255,255,255,0.05)"}`,
+        borderRightWidth: "4px",
+        borderRightColor: outcomeConfig.color,
       }}
     >
-      {/* ── Header ── */}
       <button
         type="button"
         onClick={onClick}
-        className="w-full text-right p-4 flex items-start justify-between gap-3 organic-tap"
+        className="w-full text-right p-5 flex items-start justify-between gap-4 organic-tap relative overflow-hidden"
       >
-        <div className="flex-1">
-          {/* Type */}
-          <div className="flex items-center gap-2 mb-1.5">
-            <DecisionTypeLabel type={decision.type} />
+        {isSelected && <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/5 pointer-events-none" />}
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 mb-2 flex-wrap">
             <span
-              className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-              style={{
-                background: outcomeConfig.bgColor,
-                color: outcomeConfig.color,
-              }}
+              className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm"
+              style={{ background: outcomeConfig.bgColor, color: outcomeConfig.color, border: `1px solid ${outcomeConfig.borderColor}` }}
             >
               {outcomeConfig.label}
             </span>
+            <DecisionTypeLabel type={decision.type} />
           </div>
 
-          {/* Reasoning */}
-          <p className="text-xs leading-relaxed" style={{ color: "rgba(203,213,225,0.75)" }}>
+          <p className="text-sm font-medium leading-relaxed truncate text-slate-300">
             {decision.reasoning}
           </p>
 
-          {/* Timestamp */}
-          <p className="text-[10px] mt-2" style={{ color: "rgba(148,163,184,0.5)" }}>
-            {new Date(decision.timestamp).toLocaleString("ar-EG")}
-          </p>
+          <div className="flex items-center gap-2 mt-3 text-[10px] uppercase font-bold text-slate-500 tracking-widest">
+            <Clock className="w-3 h-3" />
+            <span>{new Date(decision.timestamp).toLocaleString("ar-EG")}</span>
+          </div>
         </div>
 
-        {/* Icon */}
         <motion.div
           animate={{ rotate: isSelected ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
+          className="p-2 rounded-xl bg-slate-800/50 border border-slate-700 mt-2 shrink-0"
         >
-          {isSelected ? (
-            <ChevronUp className="w-4 h-4" style={{ color: "rgba(148,163,184,0.6)" }} />
-          ) : (
-            <ChevronDown className="w-4 h-4" style={{ color: "rgba(148,163,184,0.6)" }} />
-          )}
+          <ChevronDown className="w-5 h-5 text-slate-400" />
         </motion.div>
       </button>
 
-      {/* ── Expanded Details ── */}
       <AnimatePresence>
         {isSelected && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.3 }}
             style={{
-              borderTop: "1px solid rgba(255,255,255,0.06)",
-              background: "rgba(0,0,0,0.2)",
+              borderTop: "1px solid rgba(255,255,255,0.05)",
+              background: "rgba(0,0,0,0.4)",
             }}
           >
-            <div className="p-4 space-y-3">
-              {/* Payload */}
-              <div>
-                <p className="text-xs font-bold mb-2" style={{ color: "rgba(148,163,184,0.7)" }}>
-                  البيانات:
+            <div className="p-6 space-y-5">
+              
+              {/* Reasoning Expanded */}
+              <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-800/80">
+                <p className="text-[11px] font-black text-purple-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                  <Brain className="w-3.5 h-3.5" />
+                  حجة الذكاء الاصطناعي (Reasoning)
                 </p>
-                <pre
-                  className="text-[11px] leading-relaxed p-3 rounded-lg overflow-x-auto"
-                  style={{
-                    background: "rgba(0,0,0,0.3)",
-                    color: "rgba(203,213,225,0.8)",
-                    fontFamily: "var(--font-mono)",
-                  }}
-                >
-                  {JSON.stringify(decision.payload, null, 2)}
-                </pre>
+                <p className="text-sm text-slate-300 leading-relaxed font-medium">
+                  {decision.reasoning}
+                </p>
               </div>
 
-              {/* Actions (لو pending) */}
+              {/* Payload Data */}
+              <div>
+                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                  الحمولة البيانية (Payload)
+                </p>
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-teal-500/10 blur opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                  <pre
+                    className="text-[11px] leading-relaxed p-4 rounded-xl overflow-x-auto relative z-10 shadow-inner"
+                    style={{
+                      background: "#030712",
+                      color: "#94a3b8",
+                      fontFamily: "var(--font-mono)",
+                      border: "1px solid rgba(255,255,255,0.05)"
+                    }}
+                  >
+                    {JSON.stringify(decision.payload, null, 2)}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Override Actions */}
               {decision.outcome === "pending_approval" && (
-                <div className="flex gap-2">
+                <div className="flex gap-4 pt-2">
                   <button
                     type="button"
-                    className="organic-tap flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold"
+                    className="organic-tap flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-xl border-2 transition-all group"
                     style={{
-                      background: "rgba(52,211,153,0.15)",
-                      border: "1px solid rgba(52,211,153,0.3)",
-                      color: "#34d399",
+                      background: "rgba(16,185,129,0.05)",
+                      borderColor: "rgba(16,185,129,0.2)",
                     }}
                   >
-                    <ThumbsUp className="w-3.5 h-3.5" />
-                    موافقة
+                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                      <CheckCircle className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11px] font-black uppercase tracking-widest text-emerald-400">التصديق على القرار</span>
                   </button>
+                  
                   <button
                     type="button"
-                    className="organic-tap flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold"
+                    className="organic-tap flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-xl border-2 transition-all group"
                     style={{
-                      background: "rgba(248,113,113,0.15)",
-                      border: "1px solid rgba(248,113,113,0.3)",
-                      color: "#f87171",
+                      background: "rgba(225,29,72,0.05)",
+                      borderColor: "rgba(225,29,72,0.2)",
                     }}
                   >
-                    <ThumbsDown className="w-3.5 h-3.5" />
-                    رفض
+                    <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-400 group-hover:scale-110 transition-transform">
+                      <XCircle className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11px] font-black uppercase tracking-widest text-rose-400">نقض (Override)</span>
                   </button>
                 </div>
               )}
@@ -336,95 +345,65 @@ const DecisionCard: FC<DecisionCardProps> = ({ decision, isSelected, onClick }) 
   );
 };
 
-/**
- * Decision Type Label
- */
 const DecisionTypeLabel: FC<{ type: DecisionType }> = ({ type }) => {
   const labels: Record<DecisionType, string> = {
-    generate_daily_question: "توليد سؤال يومي",
+    generate_daily_question: "سؤال يومي",
     generate_content_packet: "توليد محتوى",
-    generate_recovery_script: "توليد نص تعافي",
-    filter_community_content: "فلترة محتوى المجتمع",
+    generate_recovery_script: "نص تعافي",
+    filter_community_content: "فلترة مجتمع",
     content_generated: "توليد محتوى",
-    campaign_created: "إنشاء حملة",
-    analyze_user_state: "تحليل حالة المستخدم",
-    calculate_tei: "حساب TEI",
-    detect_shadow_pulse: "كشف Shadow Pulse",
+    campaign_created: "حملة تسويق",
+    analyze_user_state: "تحليل سيكولوجي",
+    calculate_tei: "حساب وعي TEI",
+    detect_shadow_pulse: "استشعار الظل",
     recommend_action: "اقتراح إجراء",
-    add_node: "إضافة شخص",
-    move_node_to_ring: "نقل شخص لدائرة",
-    archive_node: "أرشفة شخص",
-    delete_node: "حذف شخص",
-    update_insights: "تحديث Insights",
-    send_notification: "إرسال تنبيه",
-    trigger_breathing_exercise: "تفعيل تمرين تنفس",
-    escalate_crisis: "تصعيد أزمة",
-    adjust_pricing: "تعديل السعر",
-    pricing_change: "تغيير السعر",
-    ab_test_started: "بدء اختبار A/B",
-    ab_test_ended: "إنهاء اختبار A/B",
-    emotional_pricing_triggered: "تفعيل التسعير العاطفي",
-    send_marketing_email: "إرسال email تسويقي",
-    process_payment: "معالجة دفع",
-    grant_discount: "منح خصم",
-    subscription_activated: "تفعيل اشتراك",
-    subscription_cancelled: "إلغاء اشتراك",
-    optimize_performance: "تحسين الأداء",
-    fix_bug: "إصلاح bug",
-    a_b_test_ui: "اختبار A/B للواجهة",
-    update_dependency: "تحديث dependency",
-    change_core_principles: "تغيير المبادئ الأساسية",
-    pivot_business_model: "تغيير نموذج العمل",
-    remove_major_feature: "إزالة feature رئيسية",
-    legal_decision: "قرار قانوني",
+    add_node: "إضافة كيان",
+    move_node_to_ring: "تحريك طبقة",
+    archive_node: "أرشفة صدمة",
+    delete_node: "حذف نهائي",
+    update_insights: "تحديث رؤى",
+    send_notification: "تنبيه مداري",
+    trigger_breathing_exercise: "تدخل تنفسي",
+    escalate_crisis: "إعلان طوارئ",
+    adjust_pricing: "تسعير ديناميكي",
+    pricing_change: "تحديث سعر",
+    ab_test_started: "اختبار A/B مباشر",
+    ab_test_ended: "ختام A/B test",
+    emotional_pricing_triggered: "خصم عاطفي",
+    send_marketing_email: "بث تسويقي",
+    process_payment: "حركة مالية",
+    grant_discount: "منحة تسعيرية",
+    subscription_activated: "تجديد سيادة",
+    subscription_cancelled: "إلغاء سيادة",
+    optimize_performance: "تحسين مداري",
+    fix_bug: "ترميم تقني",
+    a_b_test_ui: "تحليل واجهة",
+    update_dependency: "تحديث جذر",
+    change_core_principles: "تعديل مبدأ جوهري",
+    pivot_business_model: "مناورة عمل",
+    remove_major_feature: "أسقاط ميزة",
+    legal_decision: "تدخل قانوني",
   };
 
   return (
-    <span className="text-xs font-bold" style={{ color: "rgba(226,232,240,0.9)" }}>
+    <span className="text-[11px] font-black uppercase tracking-widest text-slate-300">
       {labels[type] || type}
     </span>
   );
 };
 
-/**
- * Outcome Config
- */
 function getOutcomeConfig(outcome?: AIDecision["outcome"]) {
   switch (outcome) {
     case "executed":
-      return {
-        label: "تم التنفيذ",
-        color: "#34d399",
-        bgColor: "rgba(52,211,153,0.15)",
-        borderColor: "rgba(52,211,153,0.2)",
-      };
+      return { label: "حكم نافذ", color: "#34d399", bgColor: "rgba(52,211,153,0.1)", borderColor: "rgba(52,211,153,0.3)" };
     case "pending_approval":
-      return {
-        label: "قيد المراجعة",
-        color: "#fbbf24",
-        bgColor: "rgba(251,191,36,0.15)",
-        borderColor: "rgba(251,191,36,0.2)",
-      };
+      return { label: "مطلوب تصديق", color: "#fbbf24", bgColor: "rgba(251,191,36,0.1)", borderColor: "rgba(251,191,36,0.3)" };
     case "rejected":
-      return {
-        label: "مرفوض",
-        color: "#f87171",
-        bgColor: "rgba(248,113,113,0.15)",
-        borderColor: "rgba(248,113,113,0.2)",
-      };
+      return { label: "تم النقض", color: "#f87171", bgColor: "rgba(248,113,113,0.1)", borderColor: "rgba(248,113,113,0.3)" };
     case "forbidden":
-      return {
-        label: "ممنوع",
-        color: "#ef4444",
-        bgColor: "rgba(239,68,68,0.15)",
-        borderColor: "rgba(239,68,68,0.2)",
-      };
+      return { label: "محظور دستورياً", color: "#ef4444", bgColor: "rgba(239,68,68,0.1)", borderColor: "rgba(239,68,68,0.3)" };
     default:
-      return {
-        label: "غير معروف",
-        color: "rgba(148,163,184,0.7)",
-        bgColor: "rgba(255,255,255,0.05)",
-        borderColor: "rgba(255,255,255,0.1)",
-      };
+      return { label: "غامض", color: "#64748b", bgColor: "rgba(100,116,139,0.1)", borderColor: "rgba(100,116,139,0.3)" };
   }
 }
+

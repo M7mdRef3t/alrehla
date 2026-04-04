@@ -6,11 +6,11 @@
  * الهدف: منح المستخدم "AHA Moment" — يرى تقدمه الحقيقي.
  */
 
+/* eslint-disable react-refresh/only-export-components */
 import { type FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Flame, Users, Heart, Trophy } from "lucide-react";
 import { useMapState } from "../state/mapState";
-import { usePulseState } from "../state/pulseState";
 import { loadStreak } from "../services/streakSystem";
 
 const WEEKLY_SHOWN_KEY = "dawayir-weekly-summary-shown";
@@ -60,7 +60,6 @@ export const WeeklyJourneySummary: FC<WeeklyJourneySummaryProps> = ({
   onShare,
 }) => {
   const nodes = useMapState((s) => s.nodes);
-  const lastPulse = usePulseState((s) => s.lastPulse);
   const streak = loadStreak();
 
   const activeNodes = nodes.filter((n) => !n.isNodeArchived);

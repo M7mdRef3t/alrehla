@@ -23,11 +23,11 @@ interface ResendWebhookEvent {
 }
 
 function buildClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
-    { auth: { persistSession: false } }
-  );
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!supabaseUrl || !serviceRoleKey) return null;
+
+  return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 }
 
 // Verify Resend webhook signature (optional but recommended)
@@ -59,7 +59,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  const supabase = buildClient();
+    const supabase = buildClient();
+    if (!supabase) {
+      return NextResponse.json({ ok: false, error: "missing_supabase_config" }, { status: 503 });
+    }
   const emailId = event.data?.email_id;
   const recipientEmail = event.data?.to?.[0];
   const eventTime = event.created_at ?? new Date().toISOString();

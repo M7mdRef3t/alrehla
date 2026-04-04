@@ -4,6 +4,18 @@ import { processTelegramMessage } from '@/lib/maraya/telegramAgent';
 // Force dynamic since it depends on incoming request bodies
 export const dynamic = 'force-dynamic';
 
+type TelegramReplyPayload = {
+  chat_id: number;
+  text: string;
+  parse_mode: 'Markdown';
+  reply_markup?: {
+    keyboard?: Array<Array<{ text: string; request_contact?: boolean }>>;
+    one_time_keyboard?: boolean;
+    resize_keyboard?: boolean;
+    remove_keyboard?: boolean;
+  };
+};
+
 function isAuthorizedDryRun(req: Request) {
   const url = new URL(req.url);
   const wantsDryRun = url.searchParams.get('dryRun') === '1' || req.headers.get('x-telegram-dry-run') === '1';
@@ -41,7 +53,7 @@ export async function POST(req: Request) {
     const agentResponse = await processTelegramMessage(chatId.toString(), text, username, contactPhoneNumber);
 
     // Prepare payload
-    const replyPayload: any = {
+    const replyPayload: TelegramReplyPayload = {
       chat_id: chatId,
       text: agentResponse.text,
       parse_mode: 'Markdown'

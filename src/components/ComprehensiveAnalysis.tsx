@@ -4,10 +4,10 @@ import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ChevronLeft, ChevronRight, RotateCcw,
-  Sparkles, AlertTriangle, CheckCircle, ArrowUp,
+  Sparkles, CheckCircle,
   Clock, Save, CheckCheck, Users,
 } from "lucide-react";
-import { CA_DIMENSIONS, generateRecommendations, type CADimension } from "../data/comprehensiveAssessmentData";
+import { CA_DIMENSIONS, type CADimension } from "../data/comprehensiveAssessmentData";
 import { PartnerCompare } from "./PartnerCompare";
 import { saveAnalysisResult, generateShareCode } from "../services/partnerCompareService";
 import { useQuizHistory } from "../hooks/useQuizHistory";
@@ -97,8 +97,6 @@ function SectionSidebar({ activeDimIndex, answers }: {
         const dimAnswers = answers[dim.id] ?? [];
         const isCompleted = dimAnswers.length >= dim.questions.length;
         const isActive = idx === activeDimIndex;
-        const isUpcoming = idx > activeDimIndex && !isCompleted;
-
         return (
           <div key={dim.id} style={{
             padding: "12px 18px",

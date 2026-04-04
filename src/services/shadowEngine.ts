@@ -1,12 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+function getSupabaseAdmin() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!supabaseUrl || !serviceRoleKey) return null;
+    return createClient(supabaseUrl, serviceRoleKey);
+}
 
 export async function processShadowSignals(userId: string) {
     try {
+        const supabaseAdmin = getSupabaseAdmin();
+        if (!supabaseAdmin) return;
         // 1. Context Check (Mood Safety)
         const { data: pulses } = await supabaseAdmin
             .from('daily_pulse_logs')

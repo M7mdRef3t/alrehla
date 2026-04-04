@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Heart, TrendingUp, AlertTriangle, Copy,
+  ArrowLeft, TrendingUp, AlertTriangle, Copy,
   ChevronRight, ChevronDown, Loader2, Sparkles, MapPin,
 } from "lucide-react";
 import { CA_DIMENSIONS, type CADimension } from "../data/comprehensiveAssessmentData";
@@ -339,7 +339,7 @@ function WaitingForPartner({ shareCode, onBack }: { shareCode: string; onBack: (
           borderRadius: 12, padding: "10px 14px", marginBottom: 20,
           display: "flex", alignItems: "center", gap: 8,
         }}>
-          <input readOnly value={shareUrl} style={{ flex: 1, background: "none", border: "none", color: "#94a3b8", fontSize: 12, outline: "none", direction: "ltr" }} />
+          <input id="partner-compare-share-url" name="partnerCompareShareUrl" readOnly value={shareUrl} style={{ flex: 1, background: "none", border: "none", color: "#94a3b8", fontSize: 12, outline: "none", direction: "ltr" }} />
           <button onClick={handleCopy} style={{
             background: copied ? "rgba(52,211,153,0.2)" : "rgba(20,184,166,0.15)",
             border: "none", borderRadius: 8, padding: "6px 12px",

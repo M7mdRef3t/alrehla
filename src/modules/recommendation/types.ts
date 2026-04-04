@@ -33,6 +33,7 @@ export interface FeatureVectorV1 {
   sessionHesitation: number;
   dominantRing: "green" | "yellow" | "red" | "mixed";
   focusNodeId?: string;
+  hasMissionReadyNode?: boolean;
 }
 
 export type RiskBandV1 = "high" | "medium" | "low";

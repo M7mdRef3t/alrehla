@@ -52,6 +52,7 @@ tmp/
 supabase/.temp/
 .vercel
 .next/
+.next-dev/
 tsconfig.tsbuildinfo
 tsconfig.typecheck.tsbuildinfo
 # Next.js

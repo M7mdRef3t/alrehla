@@ -35,6 +35,16 @@ export interface MarketingCopy {
   voiceScore: number; // مدى توافق النص مع صوت محمد (0-100)
 }
 
+export interface TikTokScriptGeneration {
+  hook: string;
+  visualConcept: string;
+  scriptBlocks: Array<{
+    text: string;
+    cue: string;
+  }>;
+  caption: string;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // 🎯 Campaign Types
 // ═══════════════════════════════════════════════════════════════════════════
@@ -668,6 +678,64 @@ ${params.context ? `# السياق الإضافي\n${params.context}\n` : ""}
     } catch (error) {
       console.error("❌ Failed to save campaign:", error);
     }
+  }
+
+
+  /**
+   * ─────────────────────────────────────────────────────────────────
+   * مساعد صناعة المحتوى الذكي (AI Content Co-Pilot) لتفكيك الأوهام
+   * ─────────────────────────────────────────────────────────────────
+   */
+  async generateIllusionDismantlingScript(params: {
+    illusionName: string;
+    description?: string;
+  }): Promise<TikTokScriptGeneration | null> {
+    console.warn("🛡️ Generating Illusion Dismantling Script...", params);
+
+    const prompt = `
+أنت معماري أنظمة وعالم نفس طبي إسلامي، مهمتك "قتل الدجال بالعلم" عبر منصة دواير.
+صاغ فيديوهات تيك توك لتفكيك الأوهام السائدة.
+
+# الوهم الحالي المستهدف
+"${params.illusionName}"
+${params.description ? `(تفاصيل: ${params.description})` : ""}
+
+# القواعد الصارمة (First Principles)
+1. **اللغة:** عامية مصرية، صارمة، مباشرة، كاريزمية. بدون مقدمات مملة.
+2. **المنهجية العلمية والقرآنية:** اربط بين العلم الحديث وعلم النفس و حقيقة قرآنية صافية مباشرة (بدون موروث تقليدي).
+3. **الدعوة (CTA):** وجه المشاهد لبدء رحلته في "الملاذ الآمن" على "دواير alrehla.app".
+
+# الهيكلة المطلوبة (للـ JSON المتوافق للاستوديو)
+- hook: جملة الهوك القاتلة لأول 3 ثواني.
+- visualConcept: فكرة الإضاءة ولغة الجسد (بطابع سيبربانك/نيون إذا لزم).
+- scriptBlocks: مصفوفة تتكون من أجزاء السكريبت القصيرة (القابلة للقراءة في Teleprompter) مقسمتين لـ (text) و (cue للكاميرا أو الصوت).
+- caption: الكابشن مع الهاشتاجات المخصصة للمنافسة.
+
+# الرد (JSON فقط)
+\`\`\`json
+{
+  "hook": "...",
+  "visualConcept": "إضاءة نيون حمراء تدل على الخطر، النظرة مباشرة وحادة للكاميرا",
+  "scriptBlocks": [
+    {
+      "text": "انت مفكر انك كده مسيطر؟",
+      "cue": "زوم إن سريع"
+    }
+  ],
+  "caption": "دمر الوهم دلوقتي #دواير #الوعي"
+}
+\`\`\`
+`;
+
+    const result = await geminiClient.generateJSON<TikTokScriptGeneration>(prompt);
+
+    if (!result || !result.scriptBlocks) {
+      console.warn("❌ Failed to generate dismantling script");
+      return null;
+    }
+
+    console.warn("✅ Dismantling script generated:", result);
+    return result;
   }
 
   /**

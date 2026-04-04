@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { resolveAdviceCategory, type AdviceCategory } from "../../data/adviceScripts";
+import { type AdviceCategory } from "../../data/adviceScripts";
 import { recordFlowEvent } from "../../services/journeyTracking";
 import { useMapState } from "../../state/mapState";
 import type { FeatureFlagKey } from "../../config/features";
@@ -136,7 +136,7 @@ export function useAppJourneyEntryActions({
     }
 
     navigateToScreen("goal");
-  }, [canUseMap, navigateToScreen, setLockedFeature, skipNextPulseCheck]);
+  }, [canUseMap, navigateToScreen, openDefaultGoalMap, setLockedFeature, skipNextPulseCheck]);
 
   const openMissionScreen = useCallback((nodeId: string) => {
     if (isLockedPhaseOne) return;
@@ -232,7 +232,7 @@ export function useAppJourneyEntryActions({
     }
 
     void navigateToScreen("goal");
-  }, [canUseMap, navigateToScreen, openDefaultGoalMap, setLockedFeature, skipNextPulseCheck]);
+  }, [canUseMap, navigateToScreen, setLockedFeature, skipNextPulseCheck]);
 
   return {
     openDefaultGoalMap,

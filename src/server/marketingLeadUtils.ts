@@ -23,26 +23,24 @@ export function sanitizePhone(value: unknown): { raw: string; normalized: string
   let digits = text.replace(/\D/g, "");
   if (!digits) return null;
 
-  // 2. Normalize and check Egyptian prefixes
+  // 2. Normalize Egyptian prefixes specifically to fix local entry
   // If user typed 01... (11 digits), remove the 0 -> becomes 1...
   if (digits.startsWith("0") && digits.length === 11) {
     digits = digits.slice(1);
   }
 
-  // International format (20...) - must be 12 digits
-  if (digits.startsWith("20") && digits.length === 12) {
-    const mobilePrefix = digits.slice(2, 4); // The "10", "11", etc.
-    if (["10", "11", "12", "15"].includes(mobilePrefix)) {
-      return { raw: text, normalized: digits };
-    }
-  }
-
-  // Local format after dropping 0 (1...) - must be 10 digits
+  // If after dropping 0 it's 10 digits starting with 10,11,12,15 -> Local Egyptian -> Prepend 20
   if (digits.length === 10 && ["10", "11", "12", "15"].includes(digits.slice(0, 2))) {
     return { raw: text, normalized: `20${digits}` };
   }
 
-  // Final Strict Rejection: No loose fallbacks.
+  // 3. For all other numbers (GCC, International, etc.)
+  // We accept any digit string between 10 and 15 digits (standard E.164 length without +)
+  if (digits.length >= 10 && digits.length <= 15) {
+    return { raw: text, normalized: digits };
+  }
+
+  // Final Strict Rejection: Doesn't look like a valid phone number length
   return null;
 }
 
@@ -85,6 +83,42 @@ export function isValidMarketingLeadEmail(value: string): boolean {
   return /^[a-zA-Z0-9.\-_]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,10}$/.test(value);
 }
 
+function inferSourceType(payload: MarketingLeadPayload, currentSourceType: MarketingLeadSourceType | null): MarketingLeadSourceType | null {
+  // If explicitly provided a valid type, keep it
+  if (currentSourceType && currentSourceType !== "website") return currentSourceType;
+
+  const utm = sanitizeUtm(payload.utm);
+  const utmSource = (utm?.utm_source || "").toLowerCase();
+  const utmMedium = (utm?.utm_medium || "").toLowerCase();
+  const campaign = (payload.campaign || payload.campaign_name || "");
+  const campaignLower = (typeof campaign === 'string' ? campaign : '').toLowerCase();
+
+  // 1. Meta (Facebook/Instagram) Detection
+  const metaKeywords = ["facebook", "meta", "fb", "instagram", "ig", "fbad"];
+  const isMeta = 
+    metaKeywords.some(k => utmSource === k || utmMedium === k) ||
+    metaKeywords.some(k => campaignLower.includes(k)) ||
+    utmMedium === "paidsocial" ||
+    !!payload.leadgen_id || 
+    !!payload.ad_id ||
+    !!(payload as any).platform?.toLowerCase()?.includes('facebook') ||
+    !!(payload as any).platform?.toLowerCase()?.includes('instagram') ||
+    !!utm?.fbclid ||
+    !!(payload as any).fbclid;
+
+  if (isMeta) return "meta_instant_form";
+
+  // 2. WhatsApp Detection
+  const waKeywords = ["whatsapp", "wa"];
+  const isWhatsApp = waKeywords.some(k => utmSource === k || utmMedium === k) || campaignLower.includes('whatsapp');
+  if (isWhatsApp) return "whatsapp";
+
+  // 3. Manual / Import Detection (usually has specific source tag)
+  if (payload.source === "manual_import" || payload.source === "import") return "manual_import";
+
+  return currentSourceType;
+}
+
 export function normalizeMarketingLeadPayload(
   payload: MarketingLeadPayload & Record<string, unknown>,
   fallbackSourceType: MarketingLeadSourceType = "website"
@@ -103,6 +137,10 @@ export function normalizeMarketingLeadPayload(
   const adset = sanitizeText(payload.adset || payload.adset_name, 160);
   const ad = sanitizeText(payload.ad || payload.ad_name, 160);
 
+  // Smart Inference
+  const providedSourceType = sanitizeSourceType(payload.sourceType, null as any);
+  const finalSourceType = inferSourceType(payload, providedSourceType) || fallbackSourceType;
+
   return {
     email: hasValidEmail ? email : null,
     phone: phoneResult?.normalized ?? null,
@@ -110,7 +148,7 @@ export function normalizeMarketingLeadPayload(
     phoneRaw: phoneResult?.raw ?? null,
     name,
     source: sanitizeSource(payload.source),
-    sourceType: sanitizeSourceType(payload.sourceType, fallbackSourceType),
+    sourceType: finalSourceType,
     utm: sanitizeUtm(payload.utm),
     campaign,
     adset,

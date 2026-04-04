@@ -1,32 +1,11 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+export { useGamificationState } from '../state/gamificationState';
+export type { Rank } from '../state/gamificationState';
 
 /**
  * Gamification Engine — محرك التلعيب 🎮
  * ==========================================
  * يحول السلوكيات الإيجابية (الصدق، الانضباط) إلى نقاط خبرة (XP) ورتب عسكرية.
  */
-
-export type Rank =
-    | "مستطلع جَدِيد"      // Scout
-    | "كشاف ميداني"       // Vanguard
-    | "ملازم تعافي"       // Lieutenant
-    | "نقيب حدود"         // Captain
-    | "رائد استقرار"       // Major
-    | "عقيد حكمة"         // Colonel
-    | "عميد سلام"         // Brigadier
-    | "مارشال الدواير";     // Marshal
-
-export interface GamificationState {
-    xp: number;
-    level: number;
-    rank: Rank;
-    badges: string[];
-    addXP: (amount: number, reason: string) => void;
-    getLevelProgress: () => { progress: number; nextLevelXP: number; xpInCurrent: number };
-}
-
-const XP_PER_LEVEL = 200;
 
 export const XP_ACTIONS = {
     MIRROR_CONFRONT: 50,
@@ -35,76 +14,6 @@ export const XP_ACTIONS = {
     WISDOM_SHARED: 40,
     PULSE_COMPLETED: 30
 } as const;
-
-const RANKS: Rank[] = [
-    "مستطلع جَدِيد",
-    "كشاف ميداني",
-    "ملازم تعافي",
-    "نقيب حدود",
-    "رائد استقرار",
-    "عقيد حكمة",
-    "عميد سلام",
-    "مارشال الدواير"
-];
-
-const getRankByLevel = (level: number): Rank => {
-    const rankIndex = Math.min(Math.floor((level - 1) / 2), RANKS.length - 1);
-    return RANKS[rankIndex];
-};
-
-export const useGamificationState = create<GamificationState>()(
-    persist(
-        (set, get) => ({
-            xp: 0,
-            level: 1,
-            rank: "مستطلع جَدِيد",
-            badges: [],
-
-            addXP: (amount, reason) => {
-                set((state) => {
-                    const newXP = state.xp + amount;
-                    const newLevel = Math.floor(newXP / XP_PER_LEVEL) + 1;
-                    const newRank = getRankByLevel(newLevel);
-
-                    // Check for automatic badges
-                    const newBadges = [...state.badges];
-                    if (reason === "mirror_confront" && !newBadges.includes("درع الحقيقة")) {
-                        newBadges.push("درع الحقيقة");
-                    }
-                    if (reason === "map_shared" && !newBadges.includes("القناص")) {
-                        newBadges.push("القناص");
-                    }
-                    if (reason === "pulse_completed" && !newBadges.includes("الكاتم")) {
-                        newBadges.push("الكاتم");
-                    }
-
-                    return {
-                        xp: newXP,
-                        level: newLevel,
-                        rank: newRank,
-                        badges: newBadges
-                    };
-                });
-            },
-
-            getLevelProgress: () => {
-                const { xp, level } = get();
-                const currentLevelStartXP = (level - 1) * XP_PER_LEVEL;
-                const xpInCurrent = xp - currentLevelStartXP;
-                const progress = (xpInCurrent / XP_PER_LEVEL) * 100;
-
-                return {
-                    progress: Math.min(99, Math.max(0, progress)),
-                    nextLevelXP: XP_PER_LEVEL - xpInCurrent,
-                    xpInCurrent
-                };
-            }
-        }),
-        {
-            name: "dawayir-gamification-v2"
-        }
-    )
-);
 
 /**
  * المهام اليومية (Daily Quests)
@@ -118,33 +27,65 @@ export interface DailyQuest {
     actionKey: string;
 }
 
-export function getDailyQuests(completedKeys: string[] = []): DailyQuest[] {
-    return [
-        {
-            id: "dq_checkin",
-            title: "تسجيل حضور",
-            description: "ادخل للمنصة وسجل دخولك اليومي",
-            xpReward: 20,
-            isCompleted: completedKeys.includes("dq_checkin"),
-            actionKey: "daily_visit"
-        },
-        {
-            id: "dq_map_share",
-            title: "قائد ملهم",
-            description: "شارك خريطتك اليوم لتوعية الآخرين",
-            xpReward: 50,
-            isCompleted: completedKeys.includes("dq_map_share"),
-            actionKey: "map_shared"
-        },
-        {
-            id: "dq_wisdom",
-            title: "نبع حكمة",
-            description: "شارك حكمة واحدة في مجتمع الدعم",
+export function getDailyQuests(nodes: any[] = [], completedKeys: string[] = []): DailyQuest[] {
+    const quests: DailyQuest[] = [];
+    
+    // 1. Mandatory Core Quest
+    quests.push({
+        id: "dq_checkin",
+        title: "تسجيل حضور",
+        description: "ادخل للمنصة وسجل دخولك اليومي",
+        xpReward: 20,
+        isCompleted: completedKeys.includes("dq_checkin"),
+        actionKey: "daily_visit"
+    });
+
+    // 2. Dynamic Relational Quest
+    const redNodes = nodes.filter(n => !n.isNodeArchived && n.ring === 'red');
+    const yellowNodes = nodes.filter(n => !n.isNodeArchived && n.ring === 'yellow');
+
+    if (redNodes.length > 0) {
+        const target = redNodes[0];
+        quests.push({
+            id: "dq_neutralize",
+            title: "تكتيك التحييد",
+            description: `قم بكتم أو أرشفة "${target.label}" لتقليل الضغط الرقمي`,
+            xpReward: 60,
+            isCompleted: completedKeys.includes("dq_neutralize"),
+            actionKey: "node_muted_or_archived"
+        });
+    } else if (yellowNodes.length > 0) {
+        const target = yellowNodes[0];
+        quests.push({
+            id: "dq_inspect",
+            title: "جلسة تفتيش",
+            description: `افحص حالة "${target.label}" وتأكد من ثبات الحدود`,
             xpReward: 40,
-            isCompleted: completedKeys.includes("dq_wisdom"),
-            actionKey: "wisdom_shared"
-        }
-    ];
+            isCompleted: completedKeys.includes("dq_inspect"),
+            actionKey: "node_inspected"
+        });
+    } else if (nodes.length < 5) {
+        quests.push({
+            id: "dq_expand",
+            title: "بناء الرادار",
+            description: "أضف شخصاً جديداً لخريطة السيادة الخاصة بك",
+            xpReward: 50,
+            isCompleted: completedKeys.includes("dq_expand"),
+            actionKey: "node_added"
+        });
+    }
+
+    // 3. Social/Wisdom Quest (Static for now)
+    quests.push({
+        id: "dq_wisdom",
+        title: "نبع حكمة",
+        description: "شارك حكمة واحدة في مجتمع الدعم",
+        xpReward: 40,
+        isCompleted: completedKeys.includes("dq_wisdom"),
+        actionKey: "wisdom_shared"
+    });
+
+    return quests;
 }
 
 

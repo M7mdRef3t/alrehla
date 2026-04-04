@@ -3,6 +3,8 @@
  * Simulates event-driven background job processing.
  */
 
+import { runtimeEnv } from "../config/runtimeEnv";
+
 export interface InngestEvent {
   name: string;
   data: unknown;
@@ -16,6 +18,7 @@ class MockInngest {
   private listeners: Map<string, InngestHandler[]> = new Map();
 
   async send(event: InngestEvent) {
+    if (runtimeEnv.isDev) return { ids: [] };
     console.log(`[Mock Inngest] Sending event: ${event.name}`, event.data);
     
     // Simulate background processing time

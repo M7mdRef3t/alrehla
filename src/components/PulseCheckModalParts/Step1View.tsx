@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { Tag } from "lucide-react";
 
 import type { PulseMood, PulseFocus } from "../../state/pulseState";
@@ -17,7 +17,7 @@ interface Step1ViewProps {
   energy: number | null;
   setEnergyValue: (val: number, options?: { skipHaptic?: boolean }) => void;
   energyStateLabel: string;
-  handleEnergyKeyUp: (e: React.KeyboardEvent<any>) => void;
+  handleEnergyKeyUp: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   mood: PulseMood | null;
   setMoodValue: (mood: PulseMood) => void;
   focus: PulseFocus | null;
@@ -39,7 +39,7 @@ export function Step1View({
   setMoodValue,
   focus,
   setFocusValue,
-  isStartRecovery,
+  isStartRecovery: _isStartRecovery,
   topics,
   setTopics,
   notes,
@@ -50,6 +50,15 @@ export function Step1View({
   const cosmicUp = {
     hidden: { opacity: 0, y: 15 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, staggerChildren: 0.08 } }
+  };
+
+  const showMood = energy !== null;
+  const showFocusAndBeyond = showMood && mood !== null;
+
+  const revealVariants: Variants = {
+    hidden: { opacity: 0, height: 0, overflow: "hidden", marginTop: 0 },
+    visible: { opacity: 1, height: "auto", overflow: "visible", marginTop: 12, transition: { duration: 0.4 } },
+    exit: { opacity: 0, height: 0, overflow: "hidden", marginTop: 0, transition: { duration: 0.3 } }
   };
 
   return (
@@ -122,6 +131,8 @@ export function Step1View({
             </div>
 
             <input
+              id="energy-slider"
+              name="energyLevel"
               type="range"
               min={0}
               max={10}
@@ -182,130 +193,155 @@ export function Step1View({
       </div>
 
       {/* 2. Mood Picker */}
-      <div className="flex flex-col gap-3">
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-          مودك إيه دلوقتي؟
-        </label>
-        <div className="grid grid-cols-4 gap-2.5 p-3 rounded-3xl" style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}>
-          {MOODS.map((m) => {
-            const isSelected = mood === m.id;
-            const mStyle = MOOD_COSMIC[m.id];
-            return (
-              <button
-                key={m.id} 
-                type="button" 
-                onClick={() => setMoodValue(m.id)}
-                className="flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all"
-                style={{ background: isSelected ? `${mStyle.text}22` : 'transparent' }}
-              >
-                <span className="text-2xl" style={{ filter: isSelected ? 'none' : 'grayscale(1) opacity(0.3)' }}>
-                  {m.emoji}
-                </span>
-                <span className={`text-[9px] font-bold whitespace-nowrap ${isSelected ? 'opacity-100' : 'opacity-40'}`} style={{ color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
-                  {m.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <AnimatePresence>
+        {showMood && (
+          <motion.div 
+            variants={revealVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="flex flex-col gap-3"
+          >
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              مودك إيه دلوقتي؟
+            </label>
+            <div className="grid grid-cols-4 gap-2.5 p-3 rounded-3xl" style={{ background: "var(--glass-bg)", border: "1px solid var(--glass-border)" }}>
+              {MOODS.map((m) => {
+                const isSelected = mood === m.id;
+                const mStyle = MOOD_COSMIC[m.id];
+                return (
+                  <button
+                    key={m.id} 
+                    type="button" 
+                    onClick={() => setMoodValue(m.id)}
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-2xl transition-all"
+                    style={{ background: isSelected ? `${mStyle.text}22` : 'transparent' }}
+                  >
+                    <span className="text-2xl" style={{ filter: isSelected ? 'none' : 'grayscale(1) opacity(0.3)' }}>
+                      {m.emoji}
+                    </span>
+                    <span className={`text-[9px] font-bold whitespace-nowrap ${isSelected ? 'opacity-100' : 'opacity-40'}`} style={{ color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                      {m.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* 3. Focus Picker */}
-      <div className="flex flex-col gap-3">
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-          ناوي تركز على إيه؟
-        </label>
-        <div className="grid grid-cols-2 gap-3 pb-2">
-          {FOCUS_OPTIONS.map((f) => {
-            const isSelected = focus === f.id;
-            const label = f.id === "none" ? FOCUS_LABELS["none_new"] : FOCUS_LABELS[f.labelKey];
-            const fStyle = FOCUS_COSMIC[f.id];
-            return (
-              <button
-                key={f.id} 
-                type="button" 
-                onClick={() => setFocusValue(f.id)}
-                className="relative flex flex-col items-center justify-center p-4 rounded-2xl border text-[10px] font-black transition-all"
-                style={{
-                  background: isSelected ? `${fStyle.bg}44` : 'var(--glass-bg)',
-                  borderColor: isSelected ? fStyle.border : 'var(--glass-border)',
-                  color: isSelected ? 'var(--text-primary)' : 'var(--text-muted)',
-                }}
-              >
-                {isSelected && (
-                  <motion.div 
-                    layoutId="f-dot" 
-                    className="absolute top-2 right-2 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_white]" 
-                  />
-                )}
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 3.5. Topics */}
-      <div className="flex flex-col gap-3">
-        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-          إيه اللي في دماغك؟ (اختياري)
-        </label>
-        <div className="flex flex-wrap gap-2 pb-2">
-          {TOPIC_OPTIONS.map((t) => {
-            const isSelected = topics.includes(t.id);
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => {
-                  setTopics((prev) =>
-                    isSelected ? prev.filter((id) => id !== t.id) : [...prev, t.id]
+      {/* 3. Focus Picker & 4. Notes */}
+      <AnimatePresence>
+        {showFocusAndBeyond && (
+          <motion.div
+            variants={revealVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="flex flex-col gap-8"
+          >
+            {/* 3. Focus Picker */}
+            <div className="flex flex-col gap-3">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                ناوي تركز على إيه؟
+              </label>
+              <div className="grid grid-cols-2 gap-3 pb-2">
+                {FOCUS_OPTIONS.map((f) => {
+                  const isSelected = focus === f.id;
+                  const label = f.id === "none" ? FOCUS_LABELS["none_new"] : FOCUS_LABELS[f.labelKey];
+                  const fStyle = FOCUS_COSMIC[f.id];
+                  return (
+                    <button
+                      key={f.id} 
+                      type="button" 
+                      onClick={() => setFocusValue(f.id)}
+                      className="relative flex flex-col items-center justify-center p-4 rounded-2xl border text-[10px] font-black transition-all"
+                      style={{
+                        background: isSelected ? `${fStyle.bg}44` : 'var(--glass-bg)',
+                        borderColor: isSelected ? fStyle.border : 'var(--glass-border)',
+                        color: isSelected ? 'var(--text-primary)' : 'var(--text-muted)',
+                      }}
+                    >
+                      {isSelected && (
+                        <motion.div 
+                          layoutId="f-dot" 
+                          className="absolute top-2 right-2 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_white]" 
+                        />
+                      )}
+                      {label}
+                    </button>
                   );
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all"
-                style={{
-                  background: isSelected ? 'rgba(99, 102, 241, 0.15)' : 'var(--glass-bg)',
-                  borderColor: isSelected ? 'rgba(99, 102, 241, 0.4)' : 'var(--glass-border)',
-                  color: isSelected ? '#818cf8' : 'var(--text-muted)',
-                }}
-              >
-                <Tag className="w-3 h-3" />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+                })}
+              </div>
+            </div>
 
-      {/* 4. Notes */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
-            لو حبب تفتح قلبك وتفضفض
-          </label>
-          <VoiceInput 
-            onTranscript={(text) => {
-              setNotes(prev => prev ? `${prev} ${text}` : text);
-            }}
-          />
-        </div>
-        <textarea
-          ref={notesRef} 
-          value={notes} 
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="اكتب اللي في بالك هنا.. فضفض براحتك."
-          className="w-full h-24 p-4 rounded-2xl outline-none transition-all resize-none shadow-inner"
-          style={{
-            background: "var(--glass-bg)",
-            border: "1px solid var(--glass-border)",
-            color: "var(--text-primary)",
-            fontFamily: "var(--font-sans)"
-          }}
-        />
-      </div>
+            {/* 3.5. Topics */}
+            <div className="flex flex-col gap-3">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                إيه اللي في دماغك؟ (اختياري)
+              </label>
+              <div className="flex flex-wrap gap-2 pb-2">
+                {TOPIC_OPTIONS.map((t) => {
+                  const isSelected = topics.includes(t.id);
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => {
+                        setTopics((prev) =>
+                          isSelected ? prev.filter((id) => id !== t.id) : [...prev, t.id]
+                        );
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all"
+                      style={{
+                        background: isSelected ? 'rgba(99, 102, 241, 0.15)' : 'var(--glass-bg)',
+                        borderColor: isSelected ? 'rgba(99, 102, 241, 0.4)' : 'var(--glass-border)',
+                        color: isSelected ? '#818cf8' : 'var(--text-muted)',
+                      }}
+                    >
+                      <Tag className="w-3 h-3" />
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 4. Notes */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
+                  لو حابب تفتح قلبك وتفضفض
+                </label>
+                <VoiceInput 
+                  onTranscript={(text) => {
+                    setNotes(prev => prev ? `${prev} ${text}` : text);
+                  }}
+                />
+              </div>
+              <textarea
+                id="pulse-notes"
+                name="pulseNotes"
+                ref={notesRef} 
+                value={notes} 
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="اكتب اللي في بالك هنا.. فضفض براحتك."
+                className="w-full h-24 p-4 rounded-2xl outline-none transition-all resize-none shadow-inner"
+                style={{
+                  background: "var(--glass-bg)",
+                  border: "1px solid var(--glass-border)",
+                  color: "var(--text-primary)",
+                  fontFamily: "var(--font-sans)"
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

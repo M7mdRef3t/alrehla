@@ -28,7 +28,7 @@ export const SecurityOpsDashboard: FC = () => {
                 .then(async ([overviewData, ownerOps, opsData]) => {
                     if (!mounted) return;
                     let healthData = ownerOps?.systemHealth ?? null;
-                    let securityData = ownerOps?.securitySignals ?? null;
+                    const securityData = ownerOps?.securitySignals ?? null;
 
                     if (!healthData || !securityData) {
                         const legacyHealth = await fetchSystemHealth();

@@ -3,10 +3,12 @@ import { upsertMarketingLead } from "../server/marketingLeadApi";
 import { sanitizePhone } from "../server/marketingLeadUtils";
 import type { MarketingLeadPayload } from "../types/marketingLead";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!supabaseUrl || !serviceRoleKey) return null;
+  return createClient(supabaseUrl, serviceRoleKey);
+}
 
 export interface WhatsAppWebhookPayload {
   message_id: string;
@@ -24,6 +26,11 @@ export class WhatsAppAutomationService {
    */
   static async handleInboundMessage(payload: WhatsAppWebhookPayload) {
     console.log(`[WhatsAppService] Processing message from ${payload.from}`);
+    const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      console.warn("[WhatsAppService] Supabase not configured. Skipping inbound persistence.");
+      return;
+    }
 
     // 1. Log the event to the database
     const { data: event, error: logError } = await supabaseAdmin

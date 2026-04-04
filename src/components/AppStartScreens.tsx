@@ -2,10 +2,8 @@ import { Suspense, lazy, type ComponentProps } from "react";
 import { Landing } from "./Landing";
 import { GoalPicker } from "./GoalPicker";
 import { OnboardingWelcomeBubble } from "./OnboardingWelcomeBubble";
-import { ErrorBoundary, MapErrorFallback } from "./ErrorBoundary";
 import { useJourneyState } from "../state/journeyState";
 import { recordFlowEvent } from "../services/journeyTracking";
-import { AwarenessSkeleton } from "./AwarenessSkeleton";
 import { type AdviceCategory } from "../data/adviceScripts";
 import { type FeatureFlagKey } from "../config/features";
 import { type WelcomeSource } from "./OnboardingWelcomeBubble";
@@ -94,7 +92,7 @@ export function AppStartScreens({
   onOpenPulse,
   onOpenLibrary,
   onOpenProfile,
-  onNavigate
+  onNavigate: _onNavigate
 }: AppStartScreensProps) {
   if (screen === "landing") {
     return (

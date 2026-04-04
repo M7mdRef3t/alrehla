@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Share2, Download, CheckCircle2, Sparkles, X } from 'lucide-react';
-import { trackEvent, AnalyticsEvents } from '../services/analytics';
+import { Share2, CheckCircle2, Sparkles, X } from 'lucide-react';
+import { trackEvent } from '../services/analytics';
 import { soundManager } from '../services/soundManager';
 
 export interface ShareableCardProps {
@@ -58,7 +58,7 @@ export const ShareableCard: React.FC<ShareableCardProps> = ({ title, description
     const trackShareSuccess = () => {
         setIsShared(true);
         soundManager.playSuccess();
-        trackEvent('achievement_shared' as any, { achievement_type: type });
+        trackEvent('achievement_shared', { achievement_type: type });
         setTimeout(() => setIsShared(false), 3000);
     };
 

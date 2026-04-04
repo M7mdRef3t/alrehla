@@ -114,6 +114,8 @@ export const ThoughtSniper: FC<ThoughtSniperProps> = ({ isOpen, onClose }) => {
                             {/* Input Area (Spawn Mechanism) */}
                             <div className="pointer-events-auto w-full max-w-md flex gap-2">
                                 <input
+                                    id="thought-sniper-input"
+                                    name="thoughtSniperInput"
                                     type="text"
                                     value={inputText}
                                     onChange={(e) => setInputText(e.target.value)}

@@ -138,6 +138,13 @@ export function useAppUiStatePersistence({
   const patchAppOverlays = useAppOverlayState((state) => state.patchOverlays);
   const restoredLastScreenForUserRef = useRef<string | null>(null);
   const hasHydratedUiStateRef = useRef(false);
+  const hasBootActionRef = useRef<boolean>(false);
+
+  if (typeof window !== "undefined" && !hasBootActionRef.current) {
+    if (window.sessionStorage.getItem("dawayir-app-boot-action")) {
+      hasBootActionRef.current = true;
+    }
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -155,7 +162,7 @@ export function useAppUiStatePersistence({
         const parsed = JSON.parse(savedUiState) as Partial<PersistedUiState>;
         const restoredScreen = normalizeRestorableScreen(typeof parsed.screen === "string" ? parsed.screen : null);
         const restoredModals = normalizePersistedModals(parsed.modals);
-        if (restoredScreen) setScreen(restoredScreen);
+        if (restoredScreen && !hasBootActionRef.current) setScreen(restoredScreen);
         patchAppOverlays(toPersistedModalOverlayPatch(restoredModals));
         hasHydratedUiStateRef.current = true;
         return;
@@ -166,7 +173,7 @@ export function useAppUiStatePersistence({
 
     const legacySavedScreen = getFromLocalStorage(getUserLastScreenStorageKey(userId));
     const restored = normalizeRestorableScreen(legacySavedScreen);
-    if (restored) setScreen(restored);
+    if (restored && !hasBootActionRef.current) setScreen(restored);
     hasHydratedUiStateRef.current = true;
   }, [authStatus, patchAppOverlays, setScreen, userId]);
 

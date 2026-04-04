@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, Sparkles, BrainCircuit, X, Check, Lock, Star, Loader2 } from "lucide-react";
 import { useAuthState } from "../state/authState";
-import { supabase } from "../services/supabaseClient";
-import { syncSubscription, activateSubscription } from "../services/subscriptionManager";
-import { TIER_PRICES_USD, TIER_LABELS } from "../config/pricing";
+import { TIER_PRICES_USD } from "../config/pricing";
 import { PaymentCheckout } from "./PaymentCheckout";
 
 interface UpgradeScreenProps {
@@ -14,7 +12,7 @@ interface UpgradeScreenProps {
 
 export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ isOpen, onClose }) => {
   const { tier } = useAuthState();
-  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [isUpgrading] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
 
   if (!isOpen) return null;

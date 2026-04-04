@@ -99,9 +99,10 @@
     /* Motion timing */
     --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
     --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
-    --duration-fast: 150ms;
-    --duration-base: 250ms;
-    --duration-slow: 400ms;
+    --personal-speed-mod: 1.0;
+    --duration-fast: calc(150ms * var(--ui-speed, 1) * var(--personal-speed-mod, 1));
+    --duration-base: calc(250ms * var(--ui-speed, 1) * var(--personal-speed-mod, 1));
+    --duration-slow: calc(400ms * var(--ui-speed, 1) * var(--personal-speed-mod, 1));
 
     /* Breathing space */
     --space-xs: 8px;
@@ -112,6 +113,7 @@
 
     /* Autonomous intervention - UI friction */
     --ui-friction-multiplier: 1.0;
+    --ui-speed: 1.0;
     --ui-transition-timing: ease;
 
     /* Cosmic background */
@@ -253,10 +255,10 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 60% at 15% 10%,  rgba(20,184,166,0.12) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 85% 80%,  rgba(99,102,241,0.09) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 50% 50%,  rgba(245,158,11,0.05) 0%, transparent 55%),
-    radial-gradient(ellipse 40% 35% at 80% 20%,  rgba(45,212,191,0.07) 0%, transparent 45%);
+    radial-gradient(circle at 15% 10%, rgba(20,184,166,0.12) 0%, transparent 55%),
+    radial-gradient(circle at 85% 80%, rgba(99,102,241,0.09) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(245,158,11,0.05) 0%, transparent 55%),
+    radial-gradient(circle at 80% 20%, rgba(45,212,191,0.07) 0%, transparent 45%);
   animation: nebulaFloat 32s ease-in-out infinite;
 }
 
@@ -268,7 +270,7 @@
     linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
   background-size: 72px 72px;
-  mask-image: radial-gradient(ellipse 80% 75% at 50% 50%, black 20%, transparent 100%);
+  mask-image: radial-gradient(circle at center, black 20%, transparent 100%);
   opacity: 0.6;
 }
 
@@ -1248,8 +1250,8 @@
   opacity: 0.9;
   filter: none;
   pointer-events: none;
-  mask-image: radial-gradient(circle, black 50%, transparent 80%);
-  -webkit-mask-image: radial-gradient(circle, black 50%, transparent 80%);
+  mask-image: radial-gradient(circle at center, black 50%, transparent 80%);
+  -webkit-mask-image: radial-gradient(circle at center, black 50%, transparent 80%);
 }
 
 /* Cosmic Headline */
@@ -1404,10 +1406,10 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 65% 55% at 12% 8%,   rgba(20,184,166,0.11) 0%, transparent 55%),
-    radial-gradient(ellipse 55% 45% at 88% 85%,  rgba(99,102,241,0.09) 0%, transparent 50%),
-    radial-gradient(ellipse 45% 38% at 55% 52%,  rgba(245,158,11,0.05) 0%, transparent 55%),
-    radial-gradient(ellipse 38% 32% at 82% 18%,  rgba(45,212,191,0.07) 0%, transparent 45%);
+    radial-gradient(circle at 12% 8%, rgba(20,184,166,0.11) 0%, transparent 55%),
+    radial-gradient(circle at 88% 85%, rgba(99,102,241,0.09) 0%, transparent 50%),
+    radial-gradient(circle at 55% 52%, rgba(245,158,11,0.05) 0%, transparent 55%),
+    radial-gradient(circle at 82% 18%, rgba(45,212,191,0.07) 0%, transparent 45%);
   animation: av-orb-drift 40s ease-in-out infinite alternate;
 }
 
@@ -1422,7 +1424,7 @@
     linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px);
   background-size: 68px 68px;
-  mask-image: radial-gradient(ellipse 85% 80% at 50% 50%, black 20%, transparent 100%);
+  mask-image: radial-gradient(circle at center, black 20%, transparent 100%);
   opacity: 0.55;
 }
 
@@ -1447,4 +1449,5 @@
     0 20px 40px rgba(0,0,0,0.4),
     0 0 20px rgba(20, 184, 166, 0.1);
 }
+
 

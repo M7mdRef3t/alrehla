@@ -1,12 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+function getSupabaseAdmin() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!supabaseUrl || !serviceRoleKey) return null;
+    return createClient(supabaseUrl, serviceRoleKey);
+}
 
 export async function processActionImpacts(userId: string, currentMood: number, currentEnergy: number) {
     try {
+        const supabaseAdmin = getSupabaseAdmin();
+        if (!supabaseAdmin) return;
         // Find micro_actions created in the last 48 hours that don't have a followup yet
         const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 

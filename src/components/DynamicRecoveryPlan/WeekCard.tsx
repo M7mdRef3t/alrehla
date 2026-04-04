@@ -120,6 +120,8 @@ export const WeekCard: FC<WeekCardProps> = ({
                 {currentAction.requiresInput && (
                   <div className="space-y-2">
                     <input
+                      id={`week-card-input-${currentAction.id}`}
+                      name={`weekCardInput${currentAction.id}`}
                       type="text"
                       placeholder="اكتب موقفك..."
                       value={stepInputs[currentAction.id] || ""}

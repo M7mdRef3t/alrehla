@@ -893,9 +893,9 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   onClick={requestSkipClose}
                   className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer"
                   style={{ color: "var(--text-muted)", background: "rgba(255, 255, 255, 0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
-                  aria-label={"فوت النهاردة"}
+                  aria-label={"تجاوز فحص النهاردة"}
                 >
-                  {"فوت النهاردة"}
+                  {"تجاوز فحص النهاردة"}
                 </button>
               )}
             </div>
@@ -919,7 +919,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                     className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
                     style={{ color: "var(--text-primary)", background: "rgba(248,113,113,0.18)", border: "1px solid rgba(248,113,113,0.42)" }}
                   >
-                    أيوه، تخطي
+                    أيوه، تجاوز
                   </button>
                 </div>
               </div>

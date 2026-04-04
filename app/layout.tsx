@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -49,6 +50,32 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
+        {process.env.NODE_ENV !== "production" && (
+          <Script
+            id="silence-react-devtools-info"
+            strategy="beforeInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                (function () {
+                  try {
+                    var originalInfo = console.info ? console.info.bind(console) : null;
+                    if (!originalInfo) return;
+                    console.info = function () {
+                      var text = Array.prototype.map.call(arguments, function (item) {
+                        if (typeof item === "string") return item;
+                        try { return JSON.stringify(item); } catch (_) { return String(item); }
+                      }).join(" ");
+                      if (text.indexOf("Download the React DevTools for a better development experience") !== -1) {
+                        return;
+                      }
+                      return originalInfo.apply(console, arguments);
+                    };
+                  } catch (_) {}
+                })();
+              `
+            }}
+          />
+        )}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="facebook-domain-verification" content="kpz27jh9kfbty91d4ob1g1r3jtfyzo" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -114,7 +114,7 @@ function ensureMetaPixel(): void {
   const windowRef = getWindowOrNull();
   const pixelId = getMetaPixelId();
   if (!windowRef || !pixelId || !areMetaEventsEnabled()) return;
-  if (runtimeEnv.isDev && !areMetaEventsEnabled()) return;
+  if (runtimeEnv.isDev) return;
   if (windowRef.__dawayirMetaPixelScriptLoaded) return;
 
   if (!windowRef.fbq) {
@@ -242,14 +242,17 @@ export function trackLandingView(
 
   trackEvent(AnalyticsEvents.LANDING_VIEW, safeParams);
   sendMetaEvent("ViewContent", safeParams, { bypassConsent: true });
-  if (runtimeEnv.isDev) {
-    console.debug("[Analytics] trackLandingView", {
-      event: "ViewContent",
-      consent: getAnalyticsConsent(),
-      metaEnabled: areMetaEventsEnabled(),
-      params: safeParams
-    });
+}
+
+function getAnonymousSessionId(): string {
+  if (!isClientRuntime()) return "";
+  let sessionId = getFromLocalStorage("dawayir-anon-session");
+  if (!sessionId) {
+    const isCrypto = typeof crypto !== 'undefined' && crypto.randomUUID;
+    sessionId = isCrypto ? "anon_" + crypto.randomUUID() : "anon_" + Math.random().toString(36).substring(2, 15);
+    setInLocalStorage("dawayir-anon-session", sessionId);
   }
+  return sessionId;
 }
 
 export function trackEvent(
@@ -282,7 +285,7 @@ export function trackEvent(
     }
   }
 
-  if (isSupabaseReady && supabase && supabaseTrackingEnabled) {
+  if (supabaseTrackingEnabled) {
     const windowRef = getWindowOrNull();
     const isMobile = windowRef ? windowRef.matchMedia("(max-width: 768px)").matches : false;
     const deviceContext = {
@@ -291,41 +294,39 @@ export function trackEvent(
       platform: windowRef?.navigator?.platform
     };
 
-    safeGetSession().then((session) => {
-      if (!session) {
-        return; // GUARD: If no session, we cannot track routing events in Supabase due to RLS.
-      }
-      
-      supabase!
-        .from("routing_events")
-        .insert({
-          event_type: eventName,
-          user_id: session?.user?.id || null,
-          lead_id: leadAttr?.lead_id || null,
-          lead_source: leadAttr?.lead_source || null,
-          utm_source: utm?.utm_source || null,
-          utm_medium: utm?.utm_medium || null,
-          utm_campaign: utm?.utm_campaign || null,
-          payload: { ...deviceContext, ...(safeParams || {}) },
-          occurred_at: new Date().toISOString()
-        })
-        .then(({ error }) => {
-          if (error && !isSupabaseAbortError(error)) {
-            // RLS or permission errors → disable for rest of session to stop console spam
-            const status = (error as any).status;
-            if (error.code === "42501" || error.code === "42P01" || status === 401) {
+    Promise.resolve()
+      .then(() => safeGetSession())
+      .then((session) => {
+      const telemetryPayload = {
+        event_type: eventName,
+        user_id: session?.user?.id || null,
+        session_id: getAnonymousSessionId(),
+        lead_id: leadAttr?.lead_id || null,
+        lead_source: leadAttr?.lead_source || null,
+        utm_source: utm?.utm_source || null,
+        utm_medium: utm?.utm_medium || null,
+        utm_campaign: utm?.utm_campaign || null,
+        payload: { ...deviceContext, ...(safeParams || {}) },
+        occurred_at: new Date().toISOString()
+      };
+
+        fetch('/api/analytics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(telemetryPayload)
+        }).then(async (res) => {
+          if (!res.ok) {
+            if (res.status === 401 || res.status === 403) {
               supabaseTrackingEnabled = false;
             }
-            if (runtimeEnv.isDev) {
-              console.warn(`[Analytics] Internal track failed: ${eventName}`, error);
-            }
           }
+        }).catch(() => {
+          // Intentionally silent in dev: analytics ingestion must never block the app shell.
         });
-    }).catch((err: unknown) => {
-      if (!isSupabaseAbortError(err) && runtimeEnv.isDev) {
-        console.warn(`[Analytics] getSession failed for ${eventName}`, err);
-      }
-    });
+      })
+      .catch((err: unknown) => {
+        if (isSupabaseAbortError(err)) return;
+      });
   }
 }
 
@@ -424,14 +425,6 @@ export function trackCompleteRegistration(
   trackEvent(AnalyticsEvents.ONBOARDING_COMPLETED, safeParams);
   sendGtagEvent("sign_up", safeParams);
   sendMetaEvent("CompleteRegistration", safeParams, { bypassConsent: true });
-  if (runtimeEnv.isDev) {
-    console.debug("[Analytics] trackCompleteRegistration", {
-      event: "CompleteRegistration",
-      consent: getAnalyticsConsent(),
-      metaEnabled: areMetaEventsEnabled(),
-      params: safeParams
-    });
-  }
 }
 
 export function trackCheckoutViewed(
@@ -480,6 +473,7 @@ export function getAnalyticsDiagnostics(context: string = "analytics") {
 
 export function logAnalyticsDiagnostics(context: string = "analytics"): void {
   if (!runtimeEnv.isDev || !isClientRuntime()) return;
+  if (!runtimeEnv.supabaseUrl || !runtimeEnv.supabaseAnonKey) return;
   const diagnostics = getAnalyticsDiagnostics(context);
   console.table(diagnostics);
 }

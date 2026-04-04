@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, Minus, Users, Zap, Target, AlertTriangle, ArrowLeft, ArrowRight, BarChart2, Sparkles } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Users, Target, AlertTriangle, ArrowLeft, BarChart2 } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import type { MapNode, Ring } from "../modules/map/mapTypes";
 
@@ -268,7 +268,7 @@ interface RelationshipInsightsDashboardProps {
   onGoToQuizzes?: () => void;
 }
 
-export function RelationshipInsightsDashboard({ onBack, onGoToQuizzes }: RelationshipInsightsDashboardProps) {
+export function RelationshipInsightsDashboard({ onBack, onGoToQuizzes: _onGoToQuizzes }: RelationshipInsightsDashboardProps) {
   const nodes = useMapState((s) => s.nodes);
   const ins = useV2Insights(nodes);
 
@@ -399,7 +399,7 @@ export function RelationshipInsightsDashboard({ onBack, onGoToQuizzes }: Relatio
                   <p style={{ color: "#334155", fontSize: 12 }}>لا توجد أحداث بعد</p>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    {ins.events.map((e, i) => (
+                    {ins.events.map((e) => (
                       <div key={e.id} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                         <div style={{
                           width: 8, height: 8, borderRadius: "50%", background: e.color,

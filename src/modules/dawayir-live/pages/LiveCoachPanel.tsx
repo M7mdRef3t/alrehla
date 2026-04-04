@@ -157,6 +157,8 @@ export default function LiveCoachPanel() {
           <label className="memory-bank-search">
             <Search className="h-4 w-4" />
             <input
+              id="live-coach-search"
+              name="liveCoachSearch"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="ابحث بالعنوان أو الحالة أو الـ headline"

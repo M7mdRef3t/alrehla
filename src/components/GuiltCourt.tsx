@@ -77,6 +77,8 @@ export const GuiltCourt: React.FC<GuiltCourtProps> = ({ onBack }) => {
                   اكتب بحرية — المحكمة آمنة وسرية تماماً.
                 </p>
                 <textarea
+                  id="guilt-court-charge"
+                  name="guiltCourtCharge"
                   className="w-full h-32 rounded-2xl p-4 text-right text-lg outline-none resize-none transition-all"
                   style={{
                     background: "rgba(0,0,0,0.3)",

@@ -31,6 +31,14 @@ export function useAppNavigation({
 
     if (result.kind === "blocked") {
       setLockedFeature(result.feature);
+      
+      // ✅ God-Mode Navigation Security: Store intended screen & Redirect to Premium Paywall
+      if (result.feature === "journey_tools") {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem("dawayir-app-boot-action", `navigate:${target}`);
+          window.location.href = "/pricing";
+        }
+      }
       return false;
     }
 

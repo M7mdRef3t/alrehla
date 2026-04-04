@@ -56,8 +56,6 @@ export default function PricingPage() {
       return;
     }
 
-    // Sync CRM: user clicked "open advanced track" — status is engaged (not payment_requested)
-    // since the flow is now coach-first, not direct payment.
     const storedPhone = marketingLeadService.getStoredLeadPhone();
     const storedLeadId = marketingLeadService.getStoredLeadId();
     if (storedPhone || storedLeadId) {
@@ -84,7 +82,7 @@ export default function PricingPage() {
         background: "radial-gradient(circle at top, rgba(20,184,166,0.12), transparent 40%), linear-gradient(180deg, #060f15 0%, #0a1a24 50%, #060f15 100%)"
       }}
     >
-      <div className="mx-auto flex w-full max-w-xl flex-col items-center">
+      <div className="mx-auto flex w-full max-w-xl md:max-w-4xl flex-col items-center">
         {/* Emotional offer banner */}
         {emotionalOffer && !offerConsumed ? (
           <div className="mb-8 w-full rounded-2xl border border-teal-400/20 bg-teal-400/10 px-5 py-4 text-right">
@@ -105,77 +103,131 @@ export default function PricingPage() {
 
         {/* Header */}
         <div className="mb-10 max-w-lg text-center">
-          <p className="mb-4 text-xs font-black uppercase tracking-[0.28em] text-teal-400">
-            افتح المسار المتقدم
+          <p className="mb-4 text-[10px] font-black uppercase tracking-[0.28em] text-teal-400">
+            مساحات الملاذ الآمن
           </p>
-            <h1 className="mb-4 text-3xl font-black leading-tight text-white md:text-4xl" style={{ fontFamily: "var(--font-display)" }}>
+            <h1 className="mb-4 text-3xl font-black leading-tight text-white md:text-3xl" style={{ fontFamily: "var(--font-display)" }}>
             خطوة واحدة بينك وبين التعافي
           </h1>
-          <p className="text-base leading-[1.8] text-slate-400">
-            اكتشفت الخريطة. شوفت الحقيقة. دلوقتي افتح المسار المتقدم لو عايز سعة أعمق وتجربة أوسع.
+          <p className="text-sm leading-[1.8] text-slate-400">
+            أنت الآن في أمان.. يمكنك البقاء في الملاذ المبدئي للتحليل، أو فتح المسار الأكثر خطورة وعمقاً.
           </p>
         </div>
 
-        {/* Single Plan Card */}
-        <div
-          className="relative w-full overflow-hidden rounded-[2rem] border border-white/10 p-8 md:p-10"
-          style={{
-            background: "radial-gradient(circle at top right, rgba(20,184,166,0.12), transparent 50%), rgba(15,23,42,0.85)",
-            backdropFilter: "blur(20px)"
-          }}
-        >
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-400/50 to-transparent" />
-
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-400/10 border border-teal-400/20">
-              <Shield className="h-6 w-6 text-teal-400" />
-            </div>
-            <div>
-              <h2 className="text-xl font-black text-white">{TIER_LABELS.premium}</h2>
-              <p className="text-xs text-slate-400">كل اللي محتاجه عشان تستعيد نفسك</p>
-            </div>
-          </div>
-
-          {/* Price */}
-          <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-5xl font-black text-white">{globalPrice}</span>
-            </div>
-            <p className="mt-2 text-xs text-slate-500">أو {localPrice} / شهر لمواطني مصر</p>
-          </div>
-
-          {/* Features */}
-          <ul className="mb-8 space-y-3">
-            {FEATURES.map((f) => (
-              <li key={f} className="flex items-center gap-3">
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-400/15">
-                  <Check className="h-3 w-3 text-teal-400" />
-                </div>
-                <span className="text-sm text-slate-300">{f}</span>
-              </li>
-            ))}
-          </ul>
-
-          {/* CTA */}
-          <button
-            onClick={() => void handleSubscribe()}
-            disabled={isLoading}
-            className="group w-full flex items-center justify-center gap-3 rounded-2xl bg-teal-400 py-4 text-lg font-black text-slate-950 shadow-lg shadow-teal-500/20 transition-all hover:bg-teal-300 hover:shadow-teal-500/30 active:scale-[0.98] disabled:opacity-60"
+        {/* A/B Pricing Cards */}
+        <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 md:max-w-4xl max-w-xl mx-auto">
+          {/* Free Tier Card */}
+          <div
+            className="relative flex flex-col overflow-hidden rounded-[2rem] border border-white/5 p-8 md:p-10 transition-all opacity-80 hover:opacity-100"
+            style={{
+              background: "rgba(10,15,30,0.6)",
+              backdropFilter: "blur(20px)"
+            }}
           >
-            {isLoading ? (
-              "جاري فتح المسار المتقدم..."
-            ) : (
-              <>
-                <Zap className="h-5 w-5" />
-                افتح المسار المتقدم الآن
-                <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
-              </>
-            )}
-          </button>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-800 border border-slate-700">
+                <Shield className="h-6 w-6 text-slate-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-white">الملاذ المبدئي</h2>
+                <p className="text-xs text-slate-400">مساحة آمنة لاكتشاف خريطتك</p>
+              </div>
+            </div>
 
-          <p className="mt-4 text-center text-[11px] text-slate-500">
-            لو محتاج سعة أعلى، هتدخل من نفس المنصة أو تتواصل معنا مباشرة. بدون قفزات خارجية.
-          </p>
+            {/* Price */}
+            <div className="mb-8 rounded-2xl border border-white/5 bg-white/[0.02] p-6 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-4xl font-black text-white">مجاناً</span>
+              </div>
+              <p className="mt-2 text-[10px] text-slate-500 uppercase tracking-widest">متاح دائماً</p>
+            </div>
+
+            {/* Features */}
+            <ul className="mb-8 space-y-3 flex-1">
+              {[
+                "تشخيص الوعي وخريطة العلاقات",
+                "روشتة تعافي مبدئية",
+                "نبضات يومية للحالة المزاجية",
+                "نصائح الذكاء الاصطناعي الأساسية"
+              ].map((f) => (
+                <li key={f} className="flex items-center gap-3">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-800">
+                    <Check className="h-3 w-3 text-slate-400" />
+                  </div>
+                  <span className="text-sm text-slate-400">{f}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* CTA */}
+            <button
+              onClick={() => { window.location.href = "/"; }}
+              className="mt-auto w-full py-4 text-sm font-bold text-slate-400 border border-slate-700 rounded-2xl hover:bg-slate-800 hover:text-white transition-colors"
+            >
+              استمر في الملاذ
+            </button>
+          </div>
+
+          {/* Premium Tier Card */}
+          <div
+            className="relative flex flex-col overflow-hidden rounded-[2rem] border border-teal-500/30 p-8 md:p-10 shadow-[0_0_50px_rgba(45,212,191,0.1)]"
+            style={{
+              background: "radial-gradient(circle at top right, rgba(20,184,166,0.15), transparent 50%), rgba(15,23,42,0.9)",
+              backdropFilter: "blur(20px)"
+            }}
+          >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-400/80 to-transparent" />
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-teal-500 text-[#020408] text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_0_15px_rgba(45,212,191,0.5)]">
+              المسار الأكثر طلباً
+            </div>
+
+            <div className="flex items-center gap-3 mb-6 mt-2">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-400/10 border border-teal-400/30">
+                <Sparkles className="h-6 w-6 text-teal-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-white">{TIER_LABELS.premium}</h2>
+                <p className="text-xs text-teal-400/80">التعافي العميق بأدوات سيادية</p>
+              </div>
+            </div>
+
+            {/* Price */}
+            <div className="mb-8 rounded-2xl border border-teal-400/20 bg-teal-400/[0.03] p-6 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-5xl font-black text-white">{globalPrice}</span>
+              </div>
+              <p className="mt-2 text-xs text-slate-400">أو <span className="text-teal-400 font-bold">{localPrice}</span> / شهر للمصريين</p>
+            </div>
+
+            {/* Features */}
+            <ul className="mb-8 space-y-3 flex-1">
+              {FEATURES.map((f) => (
+                <li key={f} className="flex items-center gap-3">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-400/20">
+                    <Check className="h-3 w-3 text-teal-400" />
+                  </div>
+                  <span className="text-sm font-medium text-white">{f}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* CTA */}
+            <button
+              onClick={() => void handleSubscribe()}
+              disabled={isLoading}
+              className="group w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-400 py-4 text-lg font-black text-slate-950 shadow-[0_0_20px_rgba(45,212,191,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:hover:scale-100"
+            >
+              {isLoading ? (
+                "جاري التجهيز..."
+              ) : (
+                <>
+                  <Zap className="h-5 w-5" />
+                  افتح المسار المتقدم
+                  <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Trust */}

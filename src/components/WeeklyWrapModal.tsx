@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Share2, TrendingDown, TrendingUp, Zap, Sparkles, Battery } from "lucide-react";
-import { usePulseState, type PulseEntry } from "../state/pulseState";
+import { usePulseState } from "../state/pulseState";
 
 interface WeeklyWrapModalProps {
     isOpen: boolean;

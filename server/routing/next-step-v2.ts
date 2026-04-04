@@ -111,12 +111,12 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     },
     why: {
       headline: isExploration
-        ? "نختبر خطوة جديدة مناسبة لرفع جودة التوجيه"
-        : "تم اختيار أعلى خطوة تأثيرًا مع مراعاة الحمل الإدراكي",
+        ? "بنختبر خطوة جديدة هتنفعك في رحلتك"
+        : "دي أنسب حركة لتركيزك وطاقتك دلوقتي",
       reasons: [
-        { code: "policy_score", label: "بناءً على إشارات الحالة الحالية" },
-        { code: "swarm_score", label: "ومؤشرات نجاح التجارب السابقة (مع decay)" },
-        { code: "cognitive_capacity", label: "ومواءمة الطاقة الإدراكية الحالية" }
+        { code: "policy_score", label: "بناءً على حالتك وتقييمك النهاردة" },
+        { code: "swarm_score", label: "وعلى أساس اللي نفع معاك قبل كدة" },
+        { code: "cognitive_capacity", label: "وعشان طاقتك تسمح بالخطوة دي" }
       ]
     },
     confidence,

@@ -4,12 +4,30 @@ import { runtimeEnv } from "../config/runtimeEnv";
 const supabaseUrl = runtimeEnv.supabaseUrl;
 const supabaseAnonKey = runtimeEnv.supabaseAnonKey;
 
-export const supabase: SupabaseClient | null =
-  supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: { persistSession: true, autoRefreshToken: true }
-    })
-    : null;
+declare global {
+  // Keep a single Supabase client across Fast Refresh / repeated module evaluation.
+  // This avoids duplicate auth-lock traffic and session churn in dev.
+   
+  var __dawayirSupabaseClient: SupabaseClient | undefined;
+}
+
+export const supabase: SupabaseClient | null = (() => {
+  if (!supabaseUrl || !supabaseAnonKey) return null;
+
+  if (typeof window !== "undefined" && globalThis.__dawayirSupabaseClient) {
+    return globalThis.__dawayirSupabaseClient;
+  }
+
+  const client = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: true, autoRefreshToken: true }
+  });
+
+  if (typeof window !== "undefined") {
+    globalThis.__dawayirSupabaseClient = client;
+  }
+
+  return client;
+})();
 
 export const isSupabaseReady = Boolean(supabase);
 
@@ -51,18 +69,6 @@ export async function safeGetSession(): Promise<Session | null> {
   }
 }
 
-// Debug logging for production
-if (typeof window !== 'undefined' && !isSupabaseReady) {
-  console.error('=== Supabase Debug ===');
-  console.error('supabaseUrl:', supabaseUrl);
-  console.error('supabaseAnonKey:', supabaseAnonKey ? 'SET' : 'UNDEFINED');
-  console.error('runtimeEnv check:', {
-    hasUrl: !!runtimeEnv.supabaseUrl,
-    hasKey: !!runtimeEnv.supabaseAnonKey,
-    isDev: runtimeEnv.isDev
-  });
-  console.error('====================');
-}
 // Tactical Helpers
 
 import { CommanderStats, Rank } from "../types/tactical";

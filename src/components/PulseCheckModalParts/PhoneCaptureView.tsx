@@ -99,6 +99,8 @@ export function PhoneCaptureView({
           <Phone className={`w-6 h-6 transition-colors ${isValid ? "text-teal-400" : "text-slate-500 opacity-50"}`} />
 
           <input
+            id="phone-capture-input"
+            name="phoneNumber"
             autoFocus={autoFocus}
             type="tel"
             value={phone}

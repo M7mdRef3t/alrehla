@@ -3,6 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CloudLightning, ArrowLeft, Loader2, Target, Wind } from "lucide-react";
 import { setEmotionalOffer } from "../services/subscriptionManager";
 
+declare global {
+  interface Window {
+    trackEvent?: (eventName: string, payload?: Record<string, string>) => void;
+  }
+}
+
 type WeatherScore = "storm" | "windy" | "clear";
 
 type Question = {
@@ -54,10 +60,12 @@ export function RelationshipWeatherSimulation() {
 
   const trackEvent = (name: string) => {
     try {
-      if (typeof window !== "undefined" && (window as any).trackEvent) {
-         (window as any).trackEvent("CTA_CLICK", { source: "landing_weather_hook", cta_name: name });
+      if (typeof window !== "undefined" && window.trackEvent) {
+        window.trackEvent("CTA_CLICK", { source: "landing_weather_hook", cta_name: name });
       }
-    } catch (e) {}
+    } catch {
+      // Analytics should never block the quiz flow.
+    }
   };
 
   const handleAnswer = (score: number) => {

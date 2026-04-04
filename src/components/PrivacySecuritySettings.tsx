@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Shield, Lock, Eye, EyeOff, Download, Trash2, Smartphone,
+  Shield, Lock, Eye, Download, Trash2,
   UserX, Share2, LogOut, Key, ArrowLeft, CheckCircle2,
-  AlertTriangle, Fingerprint, Clock, Monitor, FileText,
-  RefreshCw, Copy, Check,
+  AlertTriangle, Fingerprint, Clock,
+  Copy, Check, Skull
 } from "lucide-react";
 import { supabase } from "../services/supabaseClient";
+import { useAppOverlayState } from "../state/appOverlayState";
 
 /* ══════════════════════════════════════════
    Types & Storage
@@ -247,7 +248,7 @@ function E2EECard() {
 
   // Generate a deterministic "key fingerprint"
   const fingerprint = useMemo(() => {
-    const segments = Array.from({ length: 8 }, (_, i) => {
+    const segments = Array.from({ length: 8 }, () => {
       const n = Math.floor(Math.random() * 65536);
       return n.toString(16).padStart(4, "0").toUpperCase();
     });
@@ -727,6 +728,7 @@ interface PrivacySecuritySettingsProps { onBack?: () => void; }
 
 export function PrivacySecuritySettings({ onBack }: PrivacySecuritySettingsProps) {
   const [prefs, setPrefs] = useState<PrivacyPrefs>(loadPrefs);
+  const openOverlay = useAppOverlayState((s) => s.openOverlay);
 
   const updatePref = useCallback(<K extends keyof PrivacyPrefs>(key: K, value: PrivacyPrefs[K]) => {
     setPrefs((prev) => { const next = { ...prev, [key]: value }; savePrefs(next); return next; });
@@ -869,6 +871,16 @@ export function PrivacySecuritySettings({ onBack }: PrivacySecuritySettingsProps
             <DangerButton label="مسح جميع البيانات المحلية"
               confirmLabel="⚠️ اضغط مرة أخرى — لا يمكن التراجع!"
               onConfirm={handleDeleteAll} icon={<Trash2 size={11} />} />
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <button onClick={() => openOverlay("egoDeath")} style={{
+              width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              padding: "10px 14px", borderRadius: 12, cursor: "pointer",
+              background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)",
+              color: C.red, fontSize: 11, fontWeight: 700, transition: "all 0.2s",
+            }}>
+               <Skull size={11} color={C.red} /> حفل التخلي والجحيم (Hard Delete)
+            </button>
           </div>
         </GlassCard>
 

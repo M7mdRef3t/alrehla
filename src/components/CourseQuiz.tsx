@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronRight, ChevronLeft, Flag, Trophy, RotateCcw, Clock, BarChart2, Sparkles, AlertCircle, CheckCircle, XCircle, Award, Brain } from "lucide-react";
+import { X, ChevronRight, ChevronLeft, Flag, Trophy, RotateCcw, Clock, BarChart2, Sparkles, CheckCircle, XCircle, Award, Brain } from "lucide-react";
 import { fetchQuizQuestions, saveQuizSession, type DBQuizQuestion } from "../services/learningService";
 
 /* ═══════ Types ═══════ */
@@ -327,7 +327,7 @@ export function CourseQuiz({ isOpen, onClose, courseId, courseTitle="إتقان 
             const isFlag = flagged.has(question.id);
             const isCur = i===currentIdx;
             const correct = isAns && a===question.correctIndex;
-            let bg = isCur ? color : isAns ? (correct?"#10B981":"#F43F5E") : isFlag?"rgba(245,158,11,0.3)":"rgba(255,255,255,0.06)";
+            const bg = isCur ? color : isAns ? (correct?"#10B981":"#F43F5E") : isFlag?"rgba(245,158,11,0.3)":"rgba(255,255,255,0.06)";
             return (
               <button key={i} onClick={()=>{setCurrentIdx(i);setShowExplanation(isAns);setSidebarOpen(false);}} style={{
                 width:"100%", aspectRatio:"1", borderRadius:6, border:`1px solid ${isCur?color:"transparent"}`,

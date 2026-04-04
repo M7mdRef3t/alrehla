@@ -55,7 +55,7 @@ export const TopicTaxWidget: FC = () => {
             </p>
 
             <div className="space-y-3 mt-4">
-                {topicStats.map((topic, index) => {
+                {topicStats.map((topic) => {
                     // Normalize average energy from 0-10 to a percentage for the bar
                     const fillPercentage = Math.max(0, Math.min(100, (topic.avgEnergy / 10) * 100));
                     const isDanger = topic.avgEnergy <= 4;

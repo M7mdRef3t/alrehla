@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronRight, Compass, Map as MapIcon, ShieldCheck, Sparkles, X, Lock } from "lucide-react";
+import { ChevronRight, ShieldCheck, Sparkles, Lock } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import { useAppOverlayState } from "../state/appOverlayState";
 import { useEffect, useState } from "react";
@@ -31,14 +31,6 @@ export const PremiumBridgeModal: FC = () => {
       });
     }
   }, [isOpen, stats]);
-
-  const handleClose = () => {
-    // If strict wall, we shouldn't allow simple text close, but we provide it just to go back to landing maybe?
-    // Actually, user wants a strict funnel but maybe they want to reload to landing.
-    if (typeof window !== "undefined") {
-      window.location.href = "/";
-    }
-  };
 
   const handleStartRecovery = () => {
     setShowCheckout(true);

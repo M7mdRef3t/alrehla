@@ -12,8 +12,8 @@ export function DraggablePersonChip({ personLabel }: DraggablePersonChipProps) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`rounded-full bg-white border-2 border-teal-500 px-6 py-3 text-sm font-semibold text-slate-900 cursor-grab active:cursor-grabbing select-none ${
-        isDragging ? "opacity-90 scale-105" : ""
+      className={`rounded-full bg-teal-500/20 border-2 border-teal-500 px-8 py-3.5 text-sm font-black text-teal-50 cursor-grab active:cursor-grabbing select-none shadow-[0_0_20px_rgba(20,184,166,0.2)] backdrop-blur-md ${
+        isDragging ? "opacity-90" : "opacity-100"
       }`}
     >
       {personLabel}

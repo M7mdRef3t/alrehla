@@ -4,7 +4,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { generateScenes, type MarayaScene } from '@/lib/maraya/gemini';
-import { buildStorytellerPrompt, normalizeOutputMode, detectSecretEnding, getStorySceneLimit } from '@/lib/maraya/storytellerPrompts';
+import { buildStorytellerPrompt, normalizeOutputMode, getStorySceneLimit } from '@/lib/maraya/storytellerPrompts';
 import { buildFallbackScenes } from '@/lib/maraya/storyFallback';
 import { validateEmotion } from '@/lib/maraya/validators';
 import { inferEmotionFromWhisper } from '@/lib/maraya/whisperEmotion';
