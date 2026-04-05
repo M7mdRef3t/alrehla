@@ -202,7 +202,9 @@ export async function POST(req: Request) {
       try {
         const { buildUnsubLink } = await import("@/lib/marketing/unsubToken");
         if (leadId) unsubLink = buildUnsubLink(appUrl, leadId, email);
-      } catch {}
+      } catch (error) {
+        console.warn("[marketing-ops/lead] Failed to build unsubscribe link, using fallback.", error);
+      }
 
       const subject = `خطوتك الأولى في الرحلة تنتظرك ✦`;
       let html = "";
