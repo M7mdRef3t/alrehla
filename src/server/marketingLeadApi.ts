@@ -162,89 +162,45 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
   }
   const supabaseAdmin = getRequiredSupabaseAdminClient();
 
-  // SMART DEDUPLICATION LOGIC
-  // 1. Match by Phone
-  let existingId: string | null = null;
-  let conflictDetected = false;
+  // ATOMIC UPSERT VIA RPC (Hardening V2)
+  const { data, error } = await supabaseAdmin.rpc("upsert_marketing_lead_v2", {
+    p_email: input.email || null,
+    p_phone_normalized: input.phoneNormalized || null,
+    p_phone_raw: input.phoneRaw || null,
+    p_name: input.name || null,
+    p_source: input.source || "landing",
+    p_source_type: input.sourceType || "website",
+    p_utm: input.utm || {},
+    p_note: input.note || "",
+    p_status: input.status || "new",
+    p_intent: input.intent || null,
+    p_anonymous_id: input.anonymousId || null
+  });
 
-  if (input.phoneNormalized) {
-    const { data: byPhone } = await supabaseAdmin
-      .from("marketing_leads")
-      .select("id, email")
-      .eq("phone_normalized", input.phoneNormalized)
-      .maybeSingle();
-    
-    if (byPhone) {
-      existingId = byPhone.id;
-      // Check if this phone record has a different email than the input
-      if (input.email && byPhone.email && byPhone.email !== input.email) {
-        conflictDetected = true;
-      }
-    }
+  if (error) {
+    console.error("[marketing/lead] upsert_rpc_failed:", error);
+    throw error;
   }
 
-  // 2. Match by Email (if not matched by phone)
-  if (!existingId && input.email) {
-    const { data: byEmail } = await supabaseAdmin
-      .from("marketing_leads")
-      .select("id, phone_normalized")
-      .eq("email", input.email)
-      .maybeSingle();
-    
-    if (byEmail) {
-      existingId = byEmail.id;
-      // Check if this email record has a different phone than the input
-      if (input.phoneNormalized && byEmail.phone_normalized && byEmail.phone_normalized !== input.phoneNormalized) {
-        conflictDetected = true;
-      }
-    }
-  }
-
-  input.mergeConflict = conflictDetected;
-  const row = toLeadRow(input);
-
-  let storedLeadId: string | null = null;
-  let storedEmail: string | null = null;
-  let isNew = !existingId;
-
-  if (existingId) {
-    // Update existing record
-    const { data, error } = await supabaseAdmin
-      .from("marketing_leads")
-      .update(row)
-      .eq("id", existingId)
-      .select("email, lead_id")
-      .single();
-    
-    if (error) throw error;
-    storedLeadId = data.lead_id;
-    storedEmail = data.email;
-  } else {
-    // Insert new record
-    const { data, error } = await supabaseAdmin
-      .from("marketing_leads")
-      .insert(row)
-      .select("email, lead_id")
-      .single();
-    
-    if (error) throw error;
-    storedLeadId = data.lead_id;
-    storedEmail = data.email;
-  }
+  const result = Array.isArray(data) ? data[0] : (data as any);
+  const storedLeadId = result.lead_id;
+  const isNew = result.is_new;
+  const conflictDetected = result.conflict;
 
   if (storedLeadId) {
-    enqueueOutreachAsync(storedEmail || null, input.source, input.utm, storedLeadId, input.phoneNormalized);
+    enqueueOutreachAsync(input.email || null, input.source, input.utm, storedLeadId, input.phoneNormalized);
   }
 
   return {
     lead_id: storedLeadId!,
-    email: storedEmail,
+    email: input.email || null,
     phone_normalized: input.phoneNormalized || null,
     is_new: isNew,
     conflict: conflictDetected,
     intent: input.intent || null
   };
 }
+
 
 export async function handleMarketingLeadGet(req: Request) {
   if (!isDebugAuthorized(req)) {

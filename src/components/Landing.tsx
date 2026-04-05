@@ -61,6 +61,7 @@ export const Landing: FC<LandingPropsExtended> = ({
   ownerInstallRequestNonce = 0,
   onOwnerInstallRequestHandled,
 }) => {
+  const storedMirrorName = useJourneyState((s) => s.mirrorName);
   const nodesCount = useMapState((s) => s.nodes.length);
   const baselineCompletedAt = useJourneyState((s) => s.baselineCompletedAt);
   const lastGoalId = useJourneyState((s) => s.goalId);
@@ -107,10 +108,25 @@ export const Landing: FC<LandingPropsExtended> = ({
     handleInstall();
   }
 
-  const [mirrorName, setMirrorName] = useState("");
+  const [mirrorName, setMirrorName] = useState((storedMirrorName ?? "").trim());
   const [pulseCount, setPulseCount] = useState(getLivePulseCount());
   const landingViewTrackedRef = useRef(false);
   const startTrackedRef = useRef(false);
+
+  useEffect(() => {
+    const trimmedName = mirrorName.trim();
+    if (!trimmedName) return;
+    if (useJourneyState.getState().mirrorName !== trimmedName) {
+      useJourneyState.getState().setMirrorName(trimmedName);
+    }
+  }, [mirrorName]);
+
+  useEffect(() => {
+    const nextName = (storedMirrorName ?? "").trim();
+    if (nextName && nextName !== mirrorName) {
+      setMirrorName(nextName);
+    }
+  }, [storedMirrorName, mirrorName]);
 
   useEffect(() => {
     let timeoutId: number | null = null;
@@ -153,10 +169,6 @@ export const Landing: FC<LandingPropsExtended> = ({
       intent: mirrorName ? "mirror_named" : "default"
     });
     
-    if (mirrorName) {
-      useJourneyState.getState().setMirrorName(mirrorName);
-    }
-
     soundManager.playEffect("cosmic_pulse");
     
     setTimeout(() => {

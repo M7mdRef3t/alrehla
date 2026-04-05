@@ -1,14 +1,10 @@
+import { trackEvent } from "./analytics";
+import { supabase } from "./supabaseClient";
+
 export type EmotionalPricingEventType =
   | "gift_granted"
   | "discount_offer_created"
   | "offer_converted_to_premium";
-
-export interface EmotionalPricingEvent {
-  id: string;
-  type: EmotionalPricingEventType;
-  offerId?: string;
-  timestamp: number;
-}
 
 export interface EmotionalPricingStats {
   giftsGrantedCount: number;
@@ -16,65 +12,81 @@ export interface EmotionalPricingStats {
   conversionRatePercent: number;
 }
 
-const EVENTS_KEY = "dawayir-emotional-pricing-events";
-
-function readEvents(): EmotionalPricingEvent[] {
-  try {
-    const raw = localStorage.getItem(EVENTS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as EmotionalPricingEvent[];
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((event) => typeof event?.type === "string" && typeof event?.timestamp === "number");
-  } catch {
-    return [];
-  }
-}
-
-function writeEvents(events: EmotionalPricingEvent[]): void {
-  try {
-    localStorage.setItem(EVENTS_KEY, JSON.stringify(events.slice(-500)));
-  } catch {
-    // noop
-  }
-}
+const RECORDED_CONVERSIONS_KEY = "dawayir-recorded-conversions";
 
 export function recordEmotionalPricingEvent(
   type: EmotionalPricingEventType,
   opts?: { offerId?: string }
 ): void {
-  const events = readEvents();
-  const event: EmotionalPricingEvent = {
-    id: `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    type,
-    offerId: opts?.offerId,
-    timestamp: Date.now(),
-  };
-  events.push(event);
-  writeEvents(events);
-}
+  if (type === "offer_converted_to_premium" && opts?.offerId) {
+    markOfferConversionRecorded(opts.offerId);
+  }
 
-export function getEmotionalPricingEvents(): EmotionalPricingEvent[] {
-  return readEvents();
+  trackEvent("emotional_pricing_triggered", {
+    action: type,
+    offerId: opts?.offerId,
+  });
 }
 
 export function hasRecordedOfferConversion(offerId: string): boolean {
-  return readEvents().some(
-    (event) => event.type === "offer_converted_to_premium" && event.offerId === offerId
-  );
+  try {
+    const raw = localStorage.getItem(RECORDED_CONVERSIONS_KEY);
+    if (!raw) return false;
+    const ids = JSON.parse(raw) as string[];
+    return ids.includes(offerId);
+  } catch {
+    return false;
+  }
 }
 
-export function getEmotionalPricingStats(): EmotionalPricingStats {
-  const events = readEvents();
-  const giftsGrantedCount = events.filter((event) => event.type === "gift_granted").length;
-  const discountOffersCount = events.filter((event) => event.type === "discount_offer_created").length;
-  const convertedCount = events.filter((event) => event.type === "offer_converted_to_premium").length;
+function markOfferConversionRecorded(offerId: string): void {
+  try {
+    const raw = localStorage.getItem(RECORDED_CONVERSIONS_KEY);
+    const ids = raw ? (JSON.parse(raw) as string[]) : [];
+    if (!ids.includes(offerId)) {
+      ids.push(offerId);
+      localStorage.setItem(RECORDED_CONVERSIONS_KEY, JSON.stringify(ids));
+    }
+  } catch {
+    // noop
+  }
+}
 
-  const conversionRatePercent =
-    discountOffersCount > 0 ? Math.round((convertedCount / discountOffersCount) * 100) : 0;
+// NOTE: This must be queried from actual telemetry, so we made it async!
+export async function getEmotionalPricingStats(): Promise<EmotionalPricingStats> {
+  if (!supabase) return { giftsGrantedCount: 0, discountOffersCount: 0, conversionRatePercent: 0 };
+  
+  try {
+    const { data: events, error } = await supabase
+      .from("telemetry_events")
+      .select("payload")
+      .eq("event_type", "emotional_pricing_triggered");
 
-  return {
-    giftsGrantedCount,
-    discountOffersCount,
-    conversionRatePercent,
-  };
+    if (error || !events) {
+      return { giftsGrantedCount: 0, discountOffersCount: 0, conversionRatePercent: 0 };
+    }
+
+    let giftsGrantedCount = 0;
+    let discountOffersCount = 0;
+    let convertedCount = 0;
+
+    events.forEach(e => {
+        const action = e.payload?.action;
+        if (action === "gift_granted") giftsGrantedCount++;
+        if (action === "discount_offer_created") discountOffersCount++;
+        if (action === "offer_converted_to_premium") convertedCount++;
+    });
+
+    const conversionRatePercent =
+      discountOffersCount > 0 ? Math.round((convertedCount / discountOffersCount) * 100) : 0;
+
+    return {
+      giftsGrantedCount,
+      discountOffersCount,
+      conversionRatePercent,
+    };
+  } catch (error) {
+    console.error("[EmotionalPricing] Failed to fetch stats", error);
+    return { giftsGrantedCount: 0, discountOffersCount: 0, conversionRatePercent: 0 };
+  }
 }

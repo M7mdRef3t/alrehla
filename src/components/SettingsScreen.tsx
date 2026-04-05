@@ -19,6 +19,7 @@ import { getLanguage, LANGUAGE_OPTIONS } from "../services/i18n";
 import { getCulturalContext, saveCulturalContext, PROFILES, type CulturalContext } from "../services/culturalAdapter";
 import { syncSubscription } from "../services/subscriptionManager";
 import { useJourneyState } from "../state/journeyState";
+import { resolveDisplayName } from "../services/userMemory";
 import { soundManager } from "../services/soundManager";
 import { Volume2, VolumeX } from "lucide-react";
 import { useAppOverlayState } from "../state/appOverlayState";
@@ -61,7 +62,8 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
 
     const tier = getCurrentTier();
     const streak = loadStreak();
-    const memory = loadUserMemory();
+  const memory = loadUserMemory();
+  const displayName = resolveDisplayName();
     const { isSoundEnabled, setSoundEnabled, isSensoryDepthEnabled, setSensoryDepthEnabled } = useJourneyState();
 
     useEffect(() => {
@@ -255,7 +257,7 @@ export const SettingsScreen: FC<SettingsScreenProps> = ({ onClose }) => {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-white font-bold">
-                                            {memory.preferredName ? `مرحباً ${memory.preferredName}` : "مرحباً بك"}
+                                              {displayName ? `مرحباً ${displayName}` : "مرحباً بك"}
                                         </p>
                                         <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>
                                             {memory.totalSessions} جلسة · {streak.currentStreak} يوم متواصل

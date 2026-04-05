@@ -105,19 +105,40 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
     const gmailUrl = `https://mail.google.com/mail/u/0/?view=cm&fs=1&to=${encodeURIComponent(lead.email)}&su=${encodeURIComponent("خطوتك الأولى في الرحلة تنتظرك ✦")}&body=${encodeURIComponent(body)}`;
     window.open(gmailUrl, "_blank");
 
-    // 3. Update queue status via the WORKING admin endpoint (uses checkAuth, not requireLiveAuth)
-    fetch("/api/admin/marketing-ops", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
-      body: JSON.stringify({ action: "mark_email_manual_sent", leadEmail: lead.email.toLowerCase().trim() })
-    }).then((r) => {
-      if (!r.ok) throw new Error("API failed");
-      showMsg(lead.id, "✅ تم فتح Gmail — اضغط Ctrl+V لملء التصميم");
-      onLeadUpdated();
-    }).catch((err) => {
-      console.warn("Manual send log failed, but Gmail opened:", err);
-      showMsg(lead.id, "✅ تم فتح Gmail (تحديث الحالة فشل)");
-    });
+    // 3. Update queue + lead status via admin API
+    try {
+      const token = getBearerToken();
+      console.log("[ManualGmail] Sending mark_email_manual_sent for ID:", lead.id);
+      
+      // OPTIMISTIC UPDATE: Update local state immediately for instant feedback
+      lead.status = "engaged";
+      lead.email_status = "sent";
+      lead.sent_at = new Date().toISOString();
+
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["authorization"] = `Bearer ${token}`;
+
+      const res = await fetch("/api/admin/marketing-ops", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ action: "mark_email_manual_sent", leadId: lead.id })
+      });
+      
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => "unknown");
+        console.error("[ManualGmail] API failed:", res.status, errorText);
+        showMsg(lead.id, `⚠️ Gmail فتح، لكن تسجيل الحالة فشل (${res.status})`, true);
+      } else {
+        showMsg(lead.id, "✅ تم إرسال يدوي عبر Gmail — الحالة اتحدثت");
+        // Give DB a moment to settle before global refresh
+        setTimeout(() => {
+           onLeadUpdated();
+        }, 500);
+      }
+    } catch (err) {
+      console.error("[ManualGmail] Network error:", err);
+      showMsg(lead.id, "⚠️ Gmail فتح، لكن فيه مشكلة في تسجيل الحالة", true);
+    }
   };
 
   const handleTriggerBatch = async (lead: any) => {

@@ -247,7 +247,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
   return (
     <div
       className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
-      style={{ background: "rgba(2,6,23,0.85)", backdropFilter: "blur(30px)" }}
+      style={{ background: "rgba(2,6,23,0.92)", backdropFilter: "blur(40px)" }}
       onClick={() => handleCloseAttempt("backdrop")}
       aria-labelledby="add-person-title"
       role="dialog"
@@ -255,16 +255,16 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
     >
       <motion.div
         className="relative w-full max-w-2xl min-h-0 flex flex-col overflow-hidden text-slate-100 rounded-3xl px-6 py-8"
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 10 }}
+        transition={{ type: "spring", damping: 30, stiffness: 100, mass: 1.2 }}
         style={{
           height: "min(92vh, fit-content)",
           maxHeight: "92vh",
-          background: "linear-gradient(160deg, rgba(15,23,42,0.95) 0%, rgba(2,6,23,0.99) 100%)",
+          background: "linear-gradient(165deg, rgba(15,23,42,0.98) 0%, rgba(2,6,23,1) 100%)",
           border: `1px solid ${dynamicBorder}`,
-          boxShadow: `0 40px 100px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 80px ${dynamicGlow}`,
+          boxShadow: `0 40px 120px rgba(0,0,0,1), 0 0 0 1px rgba(255,255,255,0.02), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 100px ${dynamicGlow}`,
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -272,10 +272,10 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
           <motion.div
             key={step}
             className="flex-auto min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-teal-500/20 scrollbar-track-transparent flex flex-col pt-1 pr-1"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, x: 30, filter: "blur(10px)" }}
+            animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+            exit={{ opacity: 0, x: -30, filter: "blur(10px)" }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
             {step === "select" ? (
               <SelectPersonStep

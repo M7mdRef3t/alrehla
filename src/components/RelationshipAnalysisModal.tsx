@@ -47,14 +47,14 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-5xl h-[85vh] flex flex-col bg-slate-50 dark:bg-slate-900 shadow-2xl rounded-3xl overflow-hidden"
+            className="relative w-full max-w-5xl h-[85vh] flex flex-col bg-app shadow-2xl rounded-3xl overflow-hidden border border-app-border"
             onClick={(e) => e.stopPropagation()}
           >
              {/* Header Panel */}
-             <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-rose-200/50 dark:border-rose-900/30 bg-rose-50/80 dark:bg-rose-950/20 backdrop-blur-md relative z-20">
+             <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-app-border bg-app-surface backdrop-blur-md relative z-20">
                {/* Ambient Glow */}
-               <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/10 dark:bg-rose-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-               <div className="absolute top-0 left-0 w-96 h-96 bg-violet-500/10 dark:bg-violet-600/20 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/4" />
+               <div className="absolute top-0 right-0 w-96 h-96 bg-rose-500/5 dark:bg-rose-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+               <div className="absolute top-0 left-0 w-96 h-96 bg-violet-500/5 dark:bg-violet-600/20 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/4" />
                
                <div className="flex items-center gap-4 relative z-10">
                 <div className="p-3 bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 rounded-2xl shadow-sm border border-rose-100 dark:border-rose-800/50">
@@ -69,7 +69,7 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
                        Relations Analysis Engine
                      </span>
                   </div>
-                  <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
+                  <h2 className="text-xl font-black text-app-primary tracking-tight">
                     {viewMode === "test" ? "اختبار تحليل العلاقات" : "نتائج تحليل العلاقة الشامل"}
                   </h2>
                 </div>
@@ -77,13 +77,13 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
               
               <div className="flex items-center gap-2 relative z-10">
                 {/* View Toggle */}
-                <div className="bg-slate-200/50 dark:bg-slate-800 p-1 flex rounded-xl border border-slate-300/50 dark:border-slate-700 mr-4">
+                <div className="bg-slate-200/40 dark:bg-slate-800/50 p-1 flex rounded-xl border border-app-border mr-4">
                   <button
                     onClick={() => setViewMode("test")}
                     className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
                       viewMode === "test"
                         ? "bg-white dark:bg-slate-700 text-rose-600 dark:text-rose-400 shadow-sm"
-                        : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                        : "text-app-muted hover:text-app-primary"
                     }`}
                   >
                     الاختبار
@@ -93,7 +93,7 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
                     className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
                       viewMode === "results"
                         ? "bg-white dark:bg-slate-700 text-rose-600 dark:text-rose-400 shadow-sm"
-                        : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                        : "text-app-muted hover:text-app-primary"
                     }`}
                   >
                     النتائج
@@ -102,7 +102,7 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
 
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 transition-colors"
+                  className="p-2 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-800 text-app-muted hover:text-app-primary transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -121,13 +121,13 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
                      animate={{ opacity: 1, x: 0 }}
                      exit={{ opacity: 0, x: 20 }}
                      transition={{ duration: 0.2 }}
-                     className="absolute inset-0 p-6 md:p-10 flex flex-col items-center justify-center text-right"
+                     className="absolute inset-0 p-6 md:p-10 flex flex-col items-center justify-center text-right bg-app"
                    >
                       <div className="w-full max-w-2xl mx-auto space-y-8">
                          
                          {/* Progress Bar */}
                          <div className="space-y-3">
-                            <div className="flex justify-between items-center text-sm font-bold text-slate-500 dark:text-slate-400">
+                            <div className="flex justify-between items-center text-sm font-bold text-app-muted">
                                <span>Test Progress</span>
                                <span className="text-rose-500">65% Completed</span>
                             </div>
@@ -137,16 +137,16 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
                          </div>
 
                          {/* Question Container */}
-                         <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 md:p-12 shadow-xl border border-slate-100 dark:border-slate-700 text-center">
-                            <span className="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-4 py-1.5 rounded-full text-xs font-bold mb-6">
+                         <div className="bg-app-surface rounded-3xl p-8 md:p-12 shadow-xl border border-app-border text-center">
+                            <span className="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-700 text-app-muted px-4 py-1.5 rounded-full text-xs font-bold mb-6">
                                <Sparkles className="w-3 h-3 text-violet-500" /> Question 12 of 30
                             </span>
                             
-                            <h1 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-slate-100 leading-normal mb-6 text-center shadow-sm">
+                            <h1 className="text-2xl md:text-3xl font-black text-app-primary leading-normal mb-6 text-center">
                                كيف تصف جودة تواصلك مع شريكك في أوقات الخلاف؟
                             </h1>
                             
-                            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-10 text-center max-w-sm mx-auto leading-relaxed">
+                            <p className="text-app-muted text-sm font-medium mb-10 text-center max-w-sm mx-auto leading-relaxed">
                                إجاباتك تساعد المحلل الذكي في تكوين رؤية شاملة حول ديناميكيات العلاقة. كن صادقاً مع نفسك.
                             </p>
 
@@ -160,7 +160,7 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
                                ].map((option, idx) => (
                                   <button
                                     key={idx}
-                                    className="w-full p-4 border border-slate-200 dark:border-slate-700 hover:border-violet-400 dark:hover:border-violet-500 rounded-2xl text-slate-700 dark:text-slate-300 font-bold text-sm bg-slate-50 dark:bg-slate-800/50 hover:bg-violet-50 dark:hover:bg-violet-900/20 hover:text-violet-700 dark:hover:text-violet-300 transition-all text-right"
+                                    className="w-full p-4 border border-app-border hover:border-violet-400 rounded-2xl text-app-primary font-bold text-sm bg-app-muted/5 hover:bg-violet-50 dark:hover:bg-violet-900/10 hover:text-violet-700 dark:hover:text-violet-300 transition-all text-right shadow-sm"
                                   >
                                     {option}
                                   </button>
@@ -170,7 +170,7 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
 
                          {/* Navigation Buttons */}
                          <div className="flex justify-between items-center px-4">
-                            <button className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
+                            <button className="flex items-center gap-2 text-sm font-bold text-app-muted hover:text-app-primary transition-colors">
                                <ArrowRight className="w-4 h-4" /> السابق
                             </button>
                             <button 
@@ -193,25 +193,25 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
                      animate={{ opacity: 1, x: 0 }}
                      exit={{ opacity: 0, x: -20 }}
                      transition={{ duration: 0.2 }}
-                     className="absolute inset-0 p-6 md:p-8 flex flex-col gap-8 text-right"
+                     className="absolute inset-0 p-6 md:p-8 flex flex-col gap-8 text-right bg-app"
                    >
                       {/* Nav Bar Simulation */}
-                      <div className="flex items-center justify-center gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+                      <div className="flex items-center justify-center gap-4 border-b border-app-border pb-4">
                          {["Analysis", "Growth", "History", "Community"].map((tab, idx) => (
-                            <span key={idx} className={`text-xs font-bold uppercase tracking-wider px-3 py-1 ${idx === 0 ? "text-rose-600 dark:text-rose-400 border-b-2 border-rose-500" : "text-slate-400 cursor-pointer hover:text-slate-600 dark:hover:text-slate-300"}`}>
+                            <span key={idx} className={`text-xs font-bold uppercase tracking-wider px-3 py-1 ${idx === 0 ? "text-rose-600 dark:text-rose-400 border-b-2 border-rose-500" : "text-app-muted cursor-pointer hover:text-app-primary"}`}>
                                {tab}
                             </span>
                          ))}
                       </div>
 
                       {/* Main Summary Banner */}
-                      <div className="bg-gradient-to-r from-violet-900 to-slate-900 rounded-3xl p-8 md:p-10 shadow-xl border border-violet-500/20 text-white relative overflow-hidden flex flex-col items-center text-center">
+                      <div className="bg-gradient-to-br from-violet-600 to-indigo-900 dark:from-violet-900 dark:to-slate-900 rounded-3xl p-8 md:p-10 shadow-xl border border-violet-500/20 text-white relative overflow-hidden flex flex-col items-center text-center">
                          <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                          <div className="absolute bottom-0 left-0 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
                          
                          <Sparkles className="w-8 h-8 text-rose-300 mb-4" />
                          <h1 className="text-3xl md:text-4xl font-black mb-4">تحليل عميق للعلاقة</h1>
-                         <p className="text-lg md:text-xl font-medium text-violet-100 max-w-2xl leading-relaxed">
+                         <p className="text-lg md:text-xl font-medium text-violet-50 max-w-2xl leading-relaxed opacity-90">
                             "أنت وشريكك تظهران انسجاماً استثنائياً في القيم الجوهرية والرؤية المستقبلية. هذا التوزيع يشير إلى علاقة مبنية على أسس متينة من الاحترام المتبادل."
                          </p>
                       </div>
@@ -220,31 +220,31 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
                          
                          {/* AI Insights Card */}
                          <div className="space-y-6">
-                            <h3 className="text-xl font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                            <h3 className="text-xl font-bold flex items-center gap-2 text-app-primary">
                                <BrainCircuit className="w-6 h-6 text-violet-500" /> رؤى الذكاء الاصطناعي
                             </h3>
                             
                             <div className="space-y-4">
                                {/* Insight 1 */}
-                               <div className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm hover:border-violet-300 transition-colors">
-                                  <h4 className="font-bold text-slate-800 dark:text-rose-100 mb-2">ارتباط عاطفي عميق</h4>
-                                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                               <div className="bg-app-surface border border-app-border rounded-2xl p-5 shadow-sm hover:border-violet-300 transition-colors">
+                                  <h4 className="font-bold text-app-primary mb-2">ارتباط عاطفي عميق</h4>
+                                  <p className="text-sm text-app-muted leading-relaxed font-medium">
                                      تمتلكان قدرة فطرية على استشعار احتياجات بعضكما البعض قبل التعبير عنها لفظياً، مما يخلق بيئة من الأمان العاطفي الدائم.
                                   </p>
                                </div>
 
                                {/* Insight 2 */}
-                               <div className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm hover:border-violet-300 transition-colors">
-                                  <h4 className="font-bold text-slate-800 dark:text-rose-100 mb-2">التعبير اللفظي المباشر</h4>
-                                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                               <div className="bg-app-surface border border-app-border rounded-2xl p-5 shadow-sm hover:border-violet-300 transition-colors">
+                                  <h4 className="font-bold text-app-primary mb-2">التعبير اللفظي المباشر</h4>
+                                  <p className="text-sm text-app-muted leading-relaxed font-medium">
                                      بينما الانسجام العاطفي عالٍ، قد يستفيد الطرفان من وضوح أكبر في التعبير عن الاحتياجات المادية واللوجستية لتجنب سوء الفهم.
                                   </p>
                                </div>
 
                                {/* Insight 3 */}
-                               <div className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-5 shadow-sm hover:border-violet-300 transition-colors">
-                                  <h4 className="font-bold text-slate-800 dark:text-rose-100 mb-2">التوازن بين الاستقلال والتبعية</h4>
-                                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                               <div className="bg-app-surface border border-app-border rounded-2xl p-5 shadow-sm hover:border-violet-300 transition-colors">
+                                  <h4 className="font-bold text-app-primary mb-2">التوازن بين الاستقلال والتبعية</h4>
+                                  <p className="text-sm text-app-muted leading-relaxed font-medium">
                                      تحافظان على هويات فردية قوية مع الالتزام بالشراكة، وهو مفتاح طول أمد العلاقات الصحية في العصر الحديث.
                                   </p>
                                </div>
@@ -253,20 +253,20 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
 
                          {/* Action Plan Card */}
                          <div className="space-y-6">
-                            <h3 className="text-xl font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                            <h3 className="text-xl font-bold flex items-center gap-2 text-app-primary">
                                <Target className="w-6 h-6 text-rose-500" /> خطة العمل المقترحة
                             </h3>
 
-                            <div className="bg-rose-50 dark:bg-slate-800/50 border border-rose-200 dark:border-rose-900/30 rounded-3xl p-6 relative">
-                               <ClipboardCheck className="absolute top-4 left-4 w-20 h-20 text-rose-200 dark:text-rose-900/20 -scale-x-100" />
+                            <div className="bg-rose-500/5 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-900/30 rounded-3xl p-6 relative">
+                               <ClipboardCheck className="absolute top-4 left-4 w-20 h-20 text-rose-500/5 dark:text-rose-900/20 -scale-x-100" />
                                
-                               <div className="relative z-10 space-y-6">
+                               <div className="relative z-10 space-y-6 text-right">
                                   {/* Task 1 */}
                                   <div className="flex gap-4 items-start">
                                      <div className="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold shrink-0 mt-1">1</div>
                                      <div>
-                                        <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-1">جلسة "الوضوح الأسبوعية"</h4>
-                                        <p className="text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                                        <h4 className="font-bold text-app-primary mb-1">جلسة "الوضوح الأسبوعية"</h4>
+                                        <p className="text-sm text-app-muted font-medium leading-relaxed">
                                            تخصيص 30 دقيقة كل يوم جمعة لمناقشة المشاعر والاحتياجات دون مقاطعة.
                                         </p>
                                      </div>
@@ -276,8 +276,8 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
                                   <div className="flex gap-4 items-start">
                                      <div className="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold shrink-0 mt-1">2</div>
                                      <div>
-                                        <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-1">لغة تقدير جديدة</h4>
-                                        <p className="text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                                        <h4 className="font-bold text-app-primary mb-1">لغة تقدير جديدة</h4>
+                                        <p className="text-sm text-app-muted font-medium leading-relaxed">
                                            التدرب على التعبير الصريح عن الامتنان لثلاثة أفعال بسيطة يقوم بها الشريك يومياً.
                                         </p>
                                      </div>
@@ -287,8 +287,8 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
                                   <div className="flex gap-4 items-start">
                                      <div className="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold shrink-0 mt-1">3</div>
                                      <div>
-                                        <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-1">مشروع مشترك جديد</h4>
-                                        <p className="text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                                        <h4 className="font-bold text-app-primary mb-1">مشروع مشترك جديد</h4>
+                                        <p className="text-sm text-app-muted font-medium leading-relaxed">
                                            البدء في هواية أو نشاط لم يسبق لأي منكما تجربته لتعزيز روح الفريق والانتماء.
                                         </p>
                                      </div>
@@ -297,14 +297,14 @@ export const RelationshipAnalysisModal: FC<RelationshipAnalysisModalProps> = ({
                             </div>
                             
                             {/* CTA Box */}
-                            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
-                               <div>
-                                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">هل أنت مستعد للمرحلة التالية؟</p>
-                                  <p className="text-xs text-slate-500 dark:text-slate-400">شارك النتائج المبدئية مع شريكك لتعزيز الحوار المفتوح.</p>
-                               </div>
-                               <button className="bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-5 py-2.5 rounded-xl font-bold text-sm w-full md:w-auto shrink-0 hover:scale-105 transition-transform shadow-md">
-                                  تصدير التقرير
-                               </button>
+                            <div className="bg-app-surface border border-app-border rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+                               <div className="text-right">
+                                  <p className="text-sm font-bold text-app-primary">هل أنت مستعد للمرحلة التالية؟</p>
+                                  <p className="text-xs text-app-muted">شارك النتائج المبدئية مع شريكك لتعزيز الحوار المفتوح.</p>
+                                </div>
+                                <button className="bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-5 py-2.5 rounded-xl font-bold text-sm w-full md:w-auto shrink-0 hover:scale-105 transition-transform shadow-md">
+                                   تصدير التقرير
+                                </button>
                             </div>
 
                          </div>

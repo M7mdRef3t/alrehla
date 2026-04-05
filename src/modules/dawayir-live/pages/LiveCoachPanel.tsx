@@ -112,7 +112,7 @@ export default function LiveCoachPanel() {
   const tensions = selectedDetail?.session.summary?.tensions ?? [];
 
   return (
-    <div className="coach-panel-shell min-h-screen px-4 py-10 text-white">
+    <div className="coach-panel-shell min-h-screen px-4 py-10 text-app-foreground">
       <div className="mx-auto max-w-[92rem]">
         <div className="coach-hero">
           <div>

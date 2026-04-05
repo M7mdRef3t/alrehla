@@ -4,7 +4,7 @@ import { useCallback, useEffect, Suspense, useState } from "react";
 import dynamic from "next/dynamic";
 import { AwarenessSkeleton } from "../src/components/AwarenessSkeleton";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
-import { initAnalytics } from "../src/services/analytics";
+import { initAnalytics, trackPageView, trackLandingView } from "../src/services/analytics";
 import { initMonitoring } from "../src/services/monitoring";
 import { runtimeEnv } from "../src/config/runtimeEnv";
 import { applyDesignSystemTokens } from "../src/services/designSystemTokens";
@@ -216,6 +216,22 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
 
   useEffect(() => {
     setMounted(true);
+
+    // ── Handle Query-based Boot Action ──
+    // Useful for server-side redirects that can't set sessionStorage
+    if (typeof window !== "undefined") {
+      const search = new URLSearchParams(window.location.search);
+      const bootActionParam = search.get("boot_action");
+      if (bootActionParam === "start_recovery") {
+        window.sessionStorage.setItem(APP_BOOT_ACTION_KEY, "start_recovery");
+        setLockFullAppMode(true);
+        setShouldLoadFullApp(true);
+        // Clean URL
+        const newUrl = window.location.pathname + (window.location.hash || "");
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+
     const bootIntoFullApp = shouldBootIntoFullApp();
     setShouldLoadFullApp(bootIntoFullApp);
     if (bootIntoFullApp) {
@@ -223,10 +239,17 @@ export function ClientAppShell({ onBeforeInit }: ClientAppShellProps) {
     }
     applyDesignSystemTokens();
     onBeforeInit?.();
-    if (!runtimeEnv.isDev) {
-      initAnalytics();
-      initMonitoring();
+    
+    // P0 Trace: Ensure analytics are initialized to capture first touch
+    initAnalytics();
+    initMonitoring();
+
+    if (bootIntoFullApp) {
+      trackPageView("alrehla_app_root");
+    } else {
+      trackLandingView();
     }
+
     registerServiceWorker();
   }, [onBeforeInit]);
 

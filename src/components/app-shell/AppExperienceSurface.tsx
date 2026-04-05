@@ -1,4 +1,4 @@
-﻿import { lazy, Suspense, memo, useCallback, useMemo, useState, useEffect, type ComponentProps } from "react";
+import { lazy, Suspense, memo, useCallback, useMemo, useState, useEffect, type ComponentProps } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Cpu } from "lucide-react";
 import { ErrorBoundary } from "../ErrorBoundary";
@@ -172,18 +172,13 @@ export const AppExperienceSurface = memo(function AppExperienceSurface({
       <div
         className={`min-h-screen flex flex-col transition-colors relative isolate ${screen !== "landing" ? "overflow-visible" : ""}`}
         dir="rtl"
-        style={{ background: "var(--space-void)" }}
+        style={{ background: "var(--app-bg)" }}
       >
         {isFeaturePreviewSession && (
           <button
             type="button"
             onClick={onBackToFeatureFlags}
-            className="fixed z-50 top-4 left-4 rounded-full border px-4 py-2 text-xs font-semibold transition-colors"
-            style={{
-              borderColor: "var(--soft-teal)",
-              background: "rgba(255, 255, 255, 0.95)",
-              color: "var(--space-deep)",
-            }}
+            className="fixed z-50 top-4 left-4 rounded-full border px-4 py-2 text-xs font-semibold transition-colors bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-teal-500/50"
             title={previewedFeature ? `الرجوع من معاينة: ${previewedFeature}` : "الرجوع إلى Feature Flags"}
           >
             الرجوع إلى Feature Flags

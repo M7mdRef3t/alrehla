@@ -74,9 +74,10 @@ export const EnergyGauge = memo(function EnergyGauge({
           y1={tick.y1}
           x2={tick.x2}
           y2={tick.y2}
-          stroke={tick.isActive ? "rgba(52, 211, 153, 0.7)" : "rgba(255,255,255,0.08)"}
-          strokeWidth={tick.isActive ? "2.5" : "1.5"}
+          stroke={tick.isActive ? "rgba(45, 212, 191, 0.6)" : "var(--app-border)"}
+          strokeWidth={tick.isActive ? "2" : "1"}
           strokeLinecap="round"
+          opacity={tick.isActive ? 1 : 0.25}
         />
       ))}
 
@@ -84,9 +85,10 @@ export const EnergyGauge = memo(function EnergyGauge({
       <path
         d={`M 15,${ARC_CENTER_Y} A ${ARC_CENTER_X - 15},${ARC_CENTER_X - 15} 0 0,1 185,${ARC_CENTER_Y}`}
         fill="none"
-        stroke="rgba(255, 255, 255, 0.04)"
-        strokeWidth="10"
+        stroke="var(--app-muted)"
+        strokeWidth="8"
         strokeLinecap="round"
+        opacity="0.45"
       />
 
       {/* Active Filled Arc */}
@@ -94,13 +96,13 @@ export const EnergyGauge = memo(function EnergyGauge({
         d={`M 15,${ARC_CENTER_Y} A ${ARC_CENTER_X - 15},${ARC_CENTER_X - 15} 0 0,1 185,${ARC_CENTER_Y}`}
         fill="none"
         stroke="url(#needleGrad)"
-        strokeWidth="10"
+        strokeWidth="8"
         strokeLinecap="round"
         strokeDasharray={ARC_STROKE_DASHARRAY}
         initial={{ strokeDashoffset: ARC_STROKE_DASHARRAY }}
         animate={{ strokeDashoffset: ARC_STROKE_DASHARRAY * (1 - energyValue / 10) }}
         transition={TRANSITION_TWEEN}
-        style={{ filter: energyValue > 6 ? `drop-shadow(0 0 12px rgba(52, 211, 153, 0.4))` : "none" }}
+        style={{ filter: energyValue > 6 ? `drop-shadow(0 0 12px rgba(52, 211, 153, 0.25))` : "none" }}
       />
 
       {/* Center Pivot Glow */}
@@ -123,7 +125,7 @@ export const EnergyGauge = memo(function EnergyGauge({
       </motion.g>
 
       {/* Fixed Pivot circles */}
-      <circle cx={ARC_CENTER_X} cy={ARC_CENTER_Y} r="6" fill="#0f172a" stroke={COLORS.needle.primary} strokeWidth="2" />
+      <circle cx={ARC_CENTER_X} cy={ARC_CENTER_Y} r="6" fill="var(--app-bg)" stroke={COLORS.needle.primary} strokeWidth="2" />
       <circle cx={ARC_CENTER_X} cy={ARC_CENTER_Y} r="2" fill={COLORS.needle.primary} />
     </svg>
   );

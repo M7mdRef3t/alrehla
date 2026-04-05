@@ -1,3 +1,6 @@
+﻿import { syncMemoryFromSupabase } from "../../services/userMemory";
+import { syncSubscriptionFromSupabase } from "../../services/subscriptionManager";
+import { syncLiveSessionsFromSupabase } from "../../modules/dawayir-live/utils/sessionHistory";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { isPhaseOneUserFlow, isUserMode, isRevenueMode } from "../../config/appEnv";
 import { useAuthState } from "../../state/authState";

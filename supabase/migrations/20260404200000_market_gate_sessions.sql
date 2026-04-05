@@ -42,6 +42,4 @@ CREATE INDEX idx_gate_sessions_fbclid ON public.gate_sessions(fbclid);
 ALTER TABLE public.gate_sessions ENABLE ROW LEVEL SECURITY;
 
 -- Server rules (Admin) implicitly bypass RLS.
--- Restricting anonymous and authenticated direct DB inserts purely to read.
-CREATE POLICY "Public can strictly read own gate_session" ON public.gate_sessions
-    FOR SELECT USING (true);
+-- RLS strictly closed for public. Only service role can access via APIs.

@@ -196,7 +196,7 @@ export default function LiveReplayPage({ sessionId }: { sessionId: string }) {
   }
 
   if (!detail || !currentFrame) {
-    return <div className="min-h-screen bg-slate-950 p-8 text-white">Loading replay...</div>;
+    return <div className="min-h-screen bg-app p-8 text-app-foreground">Loading replay...</div>;
   }
 
   return (

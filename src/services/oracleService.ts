@@ -1,18 +1,27 @@
 import { geminiClient } from "./geminiClient";
-import { Dream, Knot } from "../types/dreams";
+import { Dream } from "../types/dreams";
 import { useMapState } from "../state/mapState";
+
+export type OracleGrade = 'S' | 'A' | 'B' | 'C' | 'F' | 'Test';
+
+export interface LeadAnalysisVerdict {
+    grade: OracleGrade;
+    intent: string;
+    reasoning: string;
+    recommendedAction: string;
+    isSpam: boolean;
+}
 
 /**
  * 🔮 THE ORACLE (OracleService)
- * Autonomous AI integration for analyzing dreams and detecting "Knots".
- * Implements the system's "Self-Correction" logic.
+ * Autonomous AI integration for analyzing dreams and leads.
+ * Implements the system's "Self-Correction" and "Strategic Intelligence" logic.
  */
 export class OracleService {
     /**
      * Analyzes a dream proposal using Gemini.
      */
     static async analyzeDream(title: string, description: string = ""): Promise<Partial<Dream>> {
-        // 1. Gather Context (Current Knots/Vampires in consciousness graph)
         const nodes = useMapState.getState().nodes;
         const currentKnotsSummary = nodes
             .filter(n => (n.analysis && n.analysis.score > 4) || n.ring === 'red')
@@ -21,54 +30,96 @@ export class OracleService {
 
         const prompt = `
       أنت "الأوراكل" (The Oracle) ومحلل النظم الخبير في منصة الرحلة. 
-      مهمتك هي إجراء "Cross-System Scan" لربط أحلام المستخدم بحالته العلائقية (دواير).
+      مهمتك هي ربط أحلام المستخدم بحالته العلائقية.
 
-      خريطة الوعي الحالية (People/Nodes):
+      الخريطة الحالية:
       ${currentKnotsSummary || 'No high-friction nodes detected.'}
 
-      الحلم المقترح:
-      العنوان: ${title}
-      الوصف: ${description}
+      الحلم: ${title} (${description})
 
-      المطلوب (First Principles Analysis):
-      1. اكتشف الـ "عُقد" (Knots) التي تعيق هذا الحلم.
-      2. حدد إذا كان هناك أشخاص (Nodes) معينين يمثلون "مصاصي طاقة" (Energy Vampires) لهذا الحلم تحديداً بناءً على أسمائهم أو التشخيص المرتبط بهم.
-      3. حدد "درجة التوافق" (Alignment Score) بين 0 و1.
+      المطلوب:
+      1. اكتشف الـ "عُقد" (Knots) المعطلة.
+      2. حدد "مصاصي الطاقة" (Energy Vampires) من الخريطة.
+      3. حدد "درجة التوافق" (0-1).
 
-      رجع الإجابة بتنسيق JSON فقط كالتالي:
+      رجع JSON فقط:
       {
         "alignmentScore": number,
-        "knots": [
-          { "label": string, "severity": number (1-10), "type": "psychological" | "physical", "description": string }
-        ],
-        "relatedNodeIds": string[] (IDs of people from the map that are blocking this dream),
-        "momentumTasks": [
-          { "id": string, "label": string (بالعامية المصرية، مهمة تافهة جداً جداً), "dopamineWeight": number (1-10), "isCompleted": false }
-        ],
-        "analysisSummary": string (بالعامية المصرية، وضح الرابط بين الهدف وبين الشخص المعطل له ببساطة),
-        "status": "DREAMING" | "IN_FLIGHT"
+        "knots": [{ "label": string, "severity": number, "type": string, "description": string }],
+        "relatedNodeIds": string[],
+        "analysisSummary": string (بالعامية المصرية وببساطة),
+        "momentumTasks": [{ "label": string, "dopamineWeight": number }]
       }
     `;
 
         try {
-            const result = await geminiClient.generateJSON<Partial<Dream> & { analysisSummary: string }>(prompt);
-            if (!result) throw new Error("Oracle failed to generate insight");
-
-            // Merge AI insights with default dream structure
+            const result = await geminiClient.generateJSON<any>(prompt);
             return {
                 ...result,
-                metadata: {
-                    oracleInsight: result.analysisSummary,
-                    analyzedAt: new Date().toISOString()
-                }
+                metadata: { oracleInsight: result?.analysisSummary, analyzedAt: new Date().toISOString() }
             };
         } catch (error) {
-            console.error("Oracle Analysis Error:", error);
-            return {
-                alignmentScore: 0.5,
-                knots: [],
-                metadata: { error: "Failed to connect to Oracle" }
-            };
+            console.error("Oracle Dream Analysis Error:", error);
+            return { alignmentScore: 0.5, metadata: { error: "Failed to connect to Oracle" } };
+        }
+    }
+
+    /**
+     * 👁️ SOUL ANALYSIS (Oracle Intelligence)
+     * Grades a batch of leads based on metadata, notes, and activity.
+     */
+    static async analyzeLeadBatch(leads: any[]): Promise<Record<string, LeadAnalysisVerdict>> {
+        const leadData = leads.map(l => ({
+            id: l.id,
+            name: l.name,
+            email: l.email,
+            source: l.source_type,
+            notes: l.note,
+            campaign: l.campaign,
+            activity: {
+                has_converted: l.has_converted,
+                has_deep_converted: l.has_deep_converted,
+                email_status: l.email_status
+            }
+        }));
+
+        const prompt = `
+      بصفتك "The Oracle"، قم بتحليل جودة "الأرواح" (Leads) التالية في منصة الدواير. 
+
+      المعطيات:
+      ${JSON.stringify(leadData, null, 2)}
+
+      قواعد التصنيف (Soul Grading Policies):
+      - S: (Converged) - ولّد خريطة فعلياً (Deep Conversion).
+      - A: (Resonant) - متفاعل جداً، ضغط على لينكات لكن مكملش.
+      - B: (Engaged) - بيفتح رسايل الإيميل بانتظام.
+      - C: (Signal) - ليد جديد لسة نيتهم مش واضحة.
+      - F: (Noise) - ليد وهمي، بيانات عشوائية، أو "تست".
+
+      المطلوب لكل ليد:
+      1. حدد الـ Grade.
+      2. حلل الـ Intent (باحث، معالج، فضولي، إلخ).
+      3. اكتب تبرير (Reasoning) بالعامية المصرية.
+      4. اقترح إجراء (Action).
+
+      رجع الإجابة كـ JSON Objects بمفتاح هو الـ ID:
+      {
+        "LEAD_ID": {
+          "grade": "S" | "A" | "B" | "C" | "F",
+          "intent": string,
+          "reasoning": string,
+          "recommendedAction": string,
+          "isSpam": boolean
+        }
+      }
+    `;
+
+        try {
+            const result = await geminiClient.generateJSON<Record<string, LeadAnalysisVerdict>>(prompt);
+            return result || {};
+        } catch (error) {
+            console.error("Oracle Lead Analysis Error:", error);
+            return {};
         }
     }
 }

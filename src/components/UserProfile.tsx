@@ -19,11 +19,11 @@ import { DailyQuests } from "./Gamification/DailyQuests";
    Design Tokens: Cosmic Glass Aesthetic
    ══════════════════════════════════════════ */
 const cosmicGlassBase = {
-  background: "linear-gradient(160deg, rgba(15,23,42,0.7) 0%, rgba(3,7,18,0.9) 100%)",
+  background: "var(--glass-bg)",
   backdropFilter: "blur(24px)",
   WebkitBackdropFilter: "blur(24px)",
-  border: "1px solid rgba(45,212,191,0.12)",
-  boxShadow: "0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03)",
+  border: "1px solid var(--glass-border)",
+  boxShadow: "var(--app-shadow)",
   borderRadius: "24px",
 };
 
@@ -88,7 +88,7 @@ function PersonalityRadar({ dims, size = 260 }: { dims: RadarDim[]; size?: numbe
         {/* Radar Rings */}
         {rings.map((f, idx) => (
           <polygon key={idx} points={gridPts(f)} fill="none"
-            stroke="rgba(45,212,191,0.1)" strokeWidth={f === 1 ? "1.5" : "0.5"} strokeDasharray={f === 1 ? "none" : "2 4"} />
+            stroke="var(--app-border)" strokeWidth={f === 1 ? "1.5" : "0.5"} strokeDasharray={f === 1 ? "none" : "2 4"} />
         ))}
 
         {/* Spoke Lines */}
@@ -149,15 +149,15 @@ function ProfileAvatar({ rank, level }: { rank: string; level: number }) {
       {/* Background Pulse Glow */}
       <motion.div
         className="absolute inset-0 rounded-full"
-        style={{ background: `radial-gradient(circle, ${cfg.color}40 0%, transparent 70%)`, filter: "blur(15px)" }}
-        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+        style={{ background: `radial-gradient(circle, ${cfg.color}30 0%, transparent 70%)`, filter: "blur(15px)" }}
+        animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.6, 0.4] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       />
       
       {/* SVG Ring Overlays */}
       <svg width={size} height={size} style={{ position: "absolute", transform: "rotate(-90deg)", zIndex: 2 }}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none"
-          stroke="rgba(255,255,255,0.05)" strokeWidth={4} />
+          stroke="var(--app-border)" strokeWidth={4} />
         <motion.circle cx={size / 2} cy={size / 2} r={r} fill="none"
           stroke={cfg.color} strokeWidth={4.5} strokeLinecap="round"
           strokeDasharray={circ}
@@ -231,7 +231,7 @@ function EditableBio() {
         <textarea ref={ref} value={draft} onChange={(e) => setDraft(e.target.value)}
           rows={3} maxLength={160}
           placeholder="دوّن ملاحظة عن رحلتك وملاذك الآمن..."
-          className="w-full bg-slate-900/50 border border-teal-500/30 rounded-xl px-4 py-3 text-sm text-teal-50 outline-none resize-none placeholder:text-slate-500 focus:border-teal-400 focus:ring-1 focus:ring-teal-400/50 transition-all font-sans leading-relaxed text-center"
+          className="w-full bg-app-surface border border-teal-500/30 rounded-xl px-4 py-3 text-sm text-app-primary outline-none resize-none placeholder:text-app-muted focus:border-teal-400 focus:ring-1 focus:ring-teal-400/20 transition-all font-sans leading-relaxed text-center"
         />
         <div className="flex justify-center gap-3 mt-3">
           <button onClick={cancel} className="px-4 py-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors">
@@ -247,7 +247,7 @@ function EditableBio() {
 
   return (
     <div className="mt-4 px-4 flex justify-center group relative cursor-text" onClick={() => setEditing(true)}>
-      <p className="text-sm text-slate-300 leading-relaxed text-center italic opacity-80 group-hover:opacity-100 transition-opacity max-w-[280px]">
+      <p className="text-sm text-app-muted leading-relaxed text-center italic opacity-80 group-hover:opacity-100 transition-opacity max-w-[280px]">
         "{bio || "لم يتم تدوين شيء هنا بعد. اضغط للتدوين في رحلتك المدارية."}"
       </p>
       <div className="absolute -right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -275,13 +275,8 @@ function StatsRow({ xp, achievements, quizCount, level }: {
       {items.map((s, i) => (
         <motion.div key={i} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 + i * 0.05, type: "spring", bounce: 0.4 }}
-          style={{
-            background: "linear-gradient(180deg, rgba(30,41,59,0.5) 0%, rgba(15,23,42,0.8) 100%)",
-            border: `1px solid ${s.color}25`,
-            boxShadow: `inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 12px ${s.color}10`,
-            borderRadius: "20px", padding: "12px 6px", textAlign: "center",
-            display: "flex", flexDirection: "column", alignItems: "center"
-          }}>
+          className="bg-app-surface border border-app-border rounded-2xl py-3 px-1 text-center flex flex-col items-center shadow-sm"
+          style={{ borderTopColor: `${s.color}40` }}>
           <div className="mb-2 p-1.5 rounded-full" style={{ background: `${s.color}15`, color: s.color, filter: `drop-shadow(0 0 5px ${s.color}40)` }}>
             {s.icon}
           </div>
@@ -527,9 +522,9 @@ function TestHistory({ history }: { history: Array<{ quizTitle: string; score: n
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
       className="mb-6 relative overflow-hidden" style={cosmicGlassBase}
     >
-      <div className="p-5 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-white/5 bg-slate-900/30">
-        <h2 className="text-sm font-bold flex items-center gap-2 text-slate-100">
-          <BookOpen size={16} className="text-teal-400" />
+      <div className="p-5 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-app-border bg-app-surface/40 text-right">
+        <h2 className="text-sm font-bold flex items-center gap-2 text-app-primary">
+          <BookOpen size={16} className="text-teal-600 dark:text-teal-400" />
           سجل الملاصقات والتقييمات
         </h2>
       </div>
@@ -586,10 +581,9 @@ export function UserProfile({ onBack }: UserProfileProps) {
   }, [history]);
 
   return (
-    <div dir="rtl" className="min-h-screen relative overflow-hidden" style={{ background: "#030712" }}>
-      {/* Background Star field for extra immersion */}
-      <div className="absolute inset-0 pointer-events-none opacity-40 mix-blend-screen" style={{ backgroundImage: "radial-gradient(1.5px 1.5px at 20px 30px, #ffffff, rgba(0,0,0,0)), radial-gradient(1.5px 1.5px at 60px 80px, #6ee7b7, rgba(0,0,0,0)), radial-gradient(1px 1px at 110px 10px, #93c5fd, rgba(0,0,0,0))", backgroundSize: "140px 140px" }} />
-      <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(circle at 50% -10%, rgba(13,148,136,0.15) 0%, transparent 60%)" }} />
+    <div dir="rtl" className="min-h-screen relative overflow-hidden bg-app text-app-primary">
+      {/* Background Accents for extra immersion */}
+      <div className="absolute inset-0 pointer-events-none opacity-20" style={{ background: "radial-gradient(circle at 50% -10%, var(--soft-teal) 0%, transparent 60%)" }} />
 
       <div className="max-w-xl mx-auto px-4 pt-6 pb-24 relative z-10">
         

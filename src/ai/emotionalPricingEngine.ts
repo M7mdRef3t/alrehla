@@ -13,6 +13,7 @@
  * - نرسل فقط "Signal" (crisis/stable) بدون تفاصيل
  */
 
+import { supabase } from "../services/supabaseClient";
 import { telegramBot } from "../services/telegramBot";
 import { decisionEngine } from "./decision-framework";
 import type { MapNode } from "../modules/map/mapTypes";
@@ -438,8 +439,20 @@ export class EmotionalPricingEngine {
     console.warn("🧠 Running daily emotional pricing check...");
 
     try {
-      // TODO: جلب بيانات كل المستخدمين من Supabase
-      // مؤقتاً: نستخدم البيانات المحلية (localStorage)
+      let userId: string | null = null;
+      
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user) {
+          userId = session.user.id;
+        }
+      }
+
+      // Fallback for local-first/anonymous usage
+      if (!userId) {
+        userId = localStorage.getItem("dawayir-anonymous-id") || `anonymous-${Math.random().toString(36).substring(7)}`;
+        localStorage.setItem("dawayir-anonymous-id", userId);
+      }
 
       const nodes = JSON.parse(localStorage.getItem("dawayir-nodes") || "[]") as MapNode[];
       const journalEntries = JSON.parse(
@@ -453,7 +466,7 @@ export class EmotionalPricingEngine {
       ) as number[];
 
       const state = this.analyzeUserState({
-        userId: "current-user", // TODO: استخدام User ID الفعلي
+        userId,
         nodes,
         journalEntries,
         teiHistory,

@@ -18,45 +18,45 @@ import { marketingLeadService } from "../services/marketingLeadService";
 
 const ONBOARDING_STYLES = `
 @keyframes ob-ring-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.04); }
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.08); opacity: 1; }
 }
 @keyframes ob-center-pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.2); filter: brightness(1.3); }
 }
 @keyframes ob-icon-breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.06); }
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 12px var(--soft-teal-glow)); }
+  50% { transform: scale(1.08); filter: drop-shadow(0 0 24px var(--soft-teal-glow)); }
 }
 .ob-step-enter {
-  opacity: 1; transform: translateX(0);
-  transition: opacity 0.32s ease-out, transform 0.32s ease-out;
+  opacity: 1; transform: translateX(0) scale(1);
+  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .ob-step-exit {
-  opacity: 0; transform: translateX(40px);
-  transition: opacity 0.2s ease-in, transform 0.2s ease-in;
+  opacity: 0; transform: translateX(60px) scale(0.95);
+  transition: opacity 0.25s ease-in, transform 0.25s ease-in;
   pointer-events: none; position: absolute; inset: 0;
 }
-.ob-btn-tap:active { transform: scale(0.97); }
+.ob-btn-tap:active { transform: scale(0.96); transition: transform 0.1s; }
 
-/* Force dark-mode variables inside onboarding regardless of theme */
+/* Force premium variables */
 .ob-dark-force {
-  --color-primary-soft: rgba(10, 14, 31, 0.95);
-  --glass-bg: rgba(12, 17, 40, 0.78);
-  --glass-bg-hover: rgba(15, 22, 50, 0.88);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-border-hover: rgba(255, 255, 255, 0.18);
+  --color-primary-soft: rgba(8, 12, 28, 0.98);
+  --glass-bg: rgba(10, 15, 35, 0.75);
+  --glass-bg-hover: rgba(14, 20, 48, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.15);
   --text-primary: #ffffff;
-  --text-secondary: rgba(203, 213, 225, 0.95);
-  --text-muted: rgba(148, 163, 184, 0.7);
+  --text-secondary: rgba(214, 224, 235, 0.9);
+  --text-muted: rgba(148, 163, 184, 0.65);
   --text-accent: #2dd4bf;
   --soft-teal: #2dd4bf;
-  --soft-teal-dim: rgba(45, 212, 191, 0.12);
-  --soft-teal-glow: rgba(45, 212, 191, 0.25);
+  --soft-teal-dim: rgba(45, 212, 191, 0.1);
+  --soft-teal-glow: rgba(45, 212, 191, 0.3);
 }
 
-/* ── Cinematic background matching hero ── */
+/* ── Cinematic background ── */
 .ob-bg {
   background: #020408;
 }
@@ -65,49 +65,50 @@ const ONBOARDING_STYLES = `
   border-radius: 50%;
   pointer-events: none;
   will-change: transform;
+  filter: blur(80px);
 }
 .ob-orb-1 {
-  width: 650px; height: 650px;
-  background: radial-gradient(circle, rgba(20,184,166,0.12) 0%, transparent 70%);
-  top: -15%; right: -8%;
-  animation: ob-orb-drift1 38s ease-in-out infinite alternate;
+  width: 750px; height: 750px;
+  background: radial-gradient(circle, rgba(20,184,166,0.15) 0%, transparent 75%);
+  top: -20%; right: -12%;
+  animation: ob-orb-drift1 45s ease-in-out infinite alternate;
 }
 .ob-orb-2 {
-  width: 550px; height: 550px;
-  background: radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 70%);
-  bottom: -20%; left: -10%;
-  animation: ob-orb-drift2 52s ease-in-out infinite alternate;
+  width: 620px; height: 620px;
+  background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 75%);
+  bottom: -25%; left: -15%;
+  animation: ob-orb-drift2 60s ease-in-out infinite alternate;
 }
 .ob-orb-3 {
-  width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(245,158,11,0.055) 0%, transparent 70%);
-  top: 40%; left: 25%;
-  animation: ob-orb-drift3 44s ease-in-out infinite alternate;
+  width: 480px; height: 480px;
+  background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 75%);
+  top: 45%; left: 15%;
+  animation: ob-orb-drift3 52s ease-in-out infinite alternate;
 }
 .ob-grid {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 20%, transparent 100%);
-  opacity: 0.65;
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 25%, transparent 100%);
+  opacity: 0.55;
   pointer-events: none;
 }
 @keyframes ob-orb-drift1 {
   0%   { transform: translate(0%, 0%)  scale(1);    }
-  50%  { transform: translate(-5%, 7%) scale(1.1);  }
-  100% { transform: translate(4%, -4%) scale(0.93); }
+  50%  { transform: translate(-8%, 10%) scale(1.15);  }
+  100% { transform: translate(5%, -5%) scale(0.9); }
 }
 @keyframes ob-orb-drift2 {
   0%   { transform: translate(0%, 0%)    scale(1);    }
-  50%  { transform: translate(7%, -9%)  scale(1.07); }
-  100% { transform: translate(-4%, 5%)  scale(0.96); }
+  50%  { transform: translate(10%, -12%) scale(1.1); }
+  100% { transform: translate(-6%, 8%)  scale(0.95); }
 }
 @keyframes ob-orb-drift3 {
   0%   { transform: translate(0%, 0%)  scale(1);    }
-  100% { transform: translate(4%, -7%) scale(1.14); }
+  100% { transform: translate(6%, -10%) scale(1.2); }
 }
 `;
 
@@ -175,6 +176,12 @@ const StepInventory: FC<{
       n[i] = cat;
       return n;
     });
+    // Auto-focus next input for frictionless UI
+    if (i < 2 && inputRefs.current[i + 1]) {
+      setTimeout(() => {
+        inputRefs.current[i + 1]?.focus();
+      }, 50);
+    }
   }, []);
 
   const handleNext = useCallback(() => {
@@ -255,7 +262,7 @@ const StepInventory: FC<{
                       color: categories[i] === cat ? "#2dd4bf" : "rgba(255,255,255,0.4)"
                     }}
                   >
-                    {cat === "family" ? "عيلة" : cat === "work" ? "شغل" : "تاني"}
+                    {cat === "family" ? "عيلة" : cat === "work" ? "شغل" : "صحاب/معارف"}
                   </button>
                 ))}
               </div>
@@ -293,7 +300,28 @@ const StepMapping: FC<{
     items.map((item) => ({ ...item, ring: null, placed: false }))
   );
 
+  const [insightMessage, setInsightMessage] = useState<string | null>(null);
+
   const handleRingClick = (cardIdx: number, ring: Ring) => {
+    // 1. Haptic feedback
+    if (typeof window !== "undefined" && window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(30);
+    }
+
+    // 2. Contextual insight
+    const cardCategory = cards[cardIdx].category;
+    if (ring === "red") {
+      if (cardCategory === "family") {
+        setInsightMessage("أقرب الناس ممكن يكونوا أكبر مصدر للاستنزاف.. إنت مش لوحدك.");
+      } else {
+        setInsightMessage("أول خطوة للتعافي إنك تعترف بالاحتكاك ده.");
+      }
+    } else if (ring === "green") {
+      setInsightMessage("نعمة السند.. الخريطة بتنور بوجودهم.");
+    } else {
+      setInsightMessage("مش كل العلاقات واضحة على طول، وده طبيعي.");
+    }
+
     setCards((prev) =>
       prev.map((c, i) => i === cardIdx ? { ...c, ring, placed: true } : c)
     );
@@ -357,6 +385,21 @@ const StepMapping: FC<{
            <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 text-teal-400/80 text-[8px] font-bold uppercase tracking-widest whitespace-nowrap">النواة (مطمن)</span>
         </div>
       </div>
+
+      {/* Contextual Feedback */}
+      <AnimatePresence mode="wait">
+        {insightMessage && (
+          <motion.div 
+            key={insightMessage}
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="px-4 py-2 mx-auto max-w-[90%] bg-teal-500/10 border border-teal-500/30 rounded-xl"
+          >
+            <p className="text-[11px] text-teal-300 font-bold">{insightMessage}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="space-y-3 min-h-[140px] pt-1">
         <AnimatePresence>
@@ -466,6 +509,13 @@ const StepContactCapture: FC<{
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const nextName = initialName.trim();
+    if (nextName) {
+      setName(nextName);
+    }
+  }, [initialName]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -499,33 +549,40 @@ const StepContactCapture: FC<{
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 text-right w-full">
         {/* Name Input */}
-        <div className="space-y-1.5 group">
-          <label className="text-[10px] font-bold text-teal-400/80 mr-1 flex items-center gap-1.5 justify-end">
-            الاسم (عشان روشتة التعافي תطلع باسمك) <User className="w-3 h-3"/>
-          </label>
-          <div className="relative">
-             <input
-               type="text"
-               id="contact-name"
-               name="contactName"
-               value={name}
-               onChange={(e) => setName(e.target.value)}
-               placeholder="اسمك الأول أو لقبك.."
-               className="w-full rounded-2xl px-4 py-3.5 text-sm bg-[#020408]/50 border border-white/10 text-white focus:border-teal-400 focus:bg-[#0a1128]/80 outline-none transition-all shadow-inner placeholder:text-slate-600"
-               dir="rtl"
-             />
+        {!initialName.trim() ? (
+          <div className="space-y-1.5 group">
+            <label className="text-[10px] font-bold text-teal-400/80 mr-1 flex items-center gap-1.5 justify-start">
+              <User className="w-3 h-3"/> الاسم (عشان روشتة التعافي تطلع باسمك)
+            </label>
+            <div className="relative">
+               <input
+                 type="text"
+                 id="contact-name"
+                 name="contactName"
+                 value={name}
+                 onChange={(e) => setName(e.target.value)}
+                 placeholder="اسمك الأول أو لقبك.."
+                 className="w-full rounded-2xl px-4 py-3.5 text-sm bg-[#020408]/50 border border-white/10 text-white focus:border-teal-400 focus:bg-[#0a1128]/80 outline-none transition-all shadow-inner placeholder:text-slate-600"
+                 dir="rtl"
+               />
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="rounded-2xl px-4 py-3.5 border border-teal-500/20 bg-teal-500/5 text-right">
+            <p className="text-[10px] font-bold text-teal-400/80 mb-1">الاسم اتسحب من الهيرو</p>
+            <p className="text-sm font-bold text-white">{name}</p>
+          </div>
+        )}
 
         {/* WhatsApp Input */}
         <div className="space-y-1.5 group">
-          <label className="text-[10px] font-bold text-teal-400 mr-1 flex items-center gap-1.5 justify-end">
-            واتساب الأساسي (مهم جداً) <Smartphone className="w-3 h-3"/>
+          <label className="text-[10px] font-bold text-teal-400 mr-1 flex items-center gap-1.5 justify-start">
+            <Smartphone className="w-3 h-3"/> واتساب الأساسي (مهم جداً)
           </label>
           <div className="relative">
              {/* Country Code Prefix Fake */}
              <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 opacity-60">
-               <span className="text-[13px] font-bold text-teal-400 tracking-widest">+20</span>
+               <span className="text-[13px] font-bold text-teal-400 tracking-widest" dir="ltr">+20</span>
                <div className="w-px h-5 bg-teal-500/30"></div>
              </div>
              <input
@@ -537,15 +594,15 @@ const StepContactCapture: FC<{
                placeholder="10xxxxxxxx"
                autoFocus
                dir="ltr"
-               className="w-full rounded-2xl pl-16 pr-4 py-3.5 text-[15px] font-bold tracking-widest bg-[#020408]/50 border border-teal-500/40 text-white focus:border-teal-400 focus:bg-[#0a1128]/80 outline-none transition-all shadow-[0_0_15px_rgba(45,212,191,0.1)] focus:shadow-[0_0_25px_rgba(45,212,191,0.25)] placeholder:text-slate-600 placeholder:font-normal placeholder:text-sm placeholder:tracking-normal text-left"
+               className="w-full rounded-2xl pl-16 pr-4 py-3.5 text-[15px] font-bold tracking-widest bg-[#020408]/50 border border-teal-500/40 text-white focus:border-teal-400 focus:bg-[#0a1128]/80 outline-none transition-all shadow-[0_0_15px_rgba(45,212,191,0.1)] focus:shadow-[0_0_25px_rgba(45,212,191,0.25)] placeholder:text-slate-600 placeholder:font-normal placeholder:text-sm placeholder:tracking-normal text-right pr-4"
              />
           </div>
         </div>
 
         {/* Email Input */}
         <div className="space-y-1.5 group mt-1">
-          <label className="text-[10px] font-bold text-slate-500 mr-1 flex items-center gap-1.5 justify-end">
-            الإيميل (اختياري كنسخة احتياطية) <Mail className="w-3 h-3"/>
+          <label className="text-[10px] font-bold text-slate-500 mr-1 flex items-center gap-1.5 justify-start">
+            <Mail className="w-3 h-3"/> الإيميل (اختياري كنسخة احتياطية)
           </label>
           <div className="relative">
              <input
@@ -555,7 +612,7 @@ const StepContactCapture: FC<{
                value={email}
                onChange={(e) => setEmail(e.target.value)}
                placeholder="name@email.com"
-               className="w-full rounded-2xl px-4 py-3.5 text-sm bg-white/[0.02] border border-white/5 text-slate-300 focus:border-white/20 focus:bg-white/[0.05] outline-none transition-all placeholder:text-slate-600 text-left"
+               className="w-full rounded-2xl px-4 py-3.5 text-sm bg-white/[0.02] border border-white/5 text-slate-300 focus:border-white/20 focus:bg-white/[0.05] outline-none transition-all placeholder:text-slate-600 text-right"
                dir="ltr"
              />
           </div>
@@ -655,6 +712,12 @@ export const OnboardingFlow: FC<OnboardingFlowProps> = memo(({ onComplete, initi
   const stepRef = useRef(0);
   
   const seededMirrorName = (initialMirrorName ?? "").trim();
+
+  useEffect(() => {
+    if (seededMirrorName) {
+      setName(seededMirrorName);
+    }
+  }, [seededMirrorName]);
 
   useEffect(() => {
     recordFlowEvent("onboarding_opened");

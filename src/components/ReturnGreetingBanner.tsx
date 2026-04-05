@@ -9,7 +9,7 @@
 import { type FC, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, X } from "lucide-react";
-import { loadUserMemory } from "../services/userMemory";
+import { loadUserMemory, resolveDisplayName } from "../services/userMemory";
 import { usePulseState } from "../state/pulseState";
 
 interface ReturnGreetingBannerProps {
@@ -37,8 +37,9 @@ export const ReturnGreetingBanner: FC<ReturnGreetingBannerProps> = ({ onOpenPuls
 
   if (dismissed) return null;
 
-  const greeting = memory.preferredName
-    ? `أهلاً ${memory.preferredName}، أهلاً بعودتك 💙`
+  const displayName = resolveDisplayName();
+  const greeting = displayName
+    ? `أهلاً ${displayName}، أهلاً بعودتك 💙`
     : "أهلاً بعودتك 💙";
 
   return (

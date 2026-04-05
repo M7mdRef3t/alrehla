@@ -27,6 +27,7 @@ import { useLongPress } from "../../hooks/useLongPress";
 import { usePulseState } from "../../state/pulseState";
 import { useGamificationState } from "../../state/gamificationState";
 import { Zap, Flame } from "lucide-react";
+import { useSynthesisState } from "../../state/synthesisState";
 
 /* 
     COSMIC MAP CANVAS  Digital Sanctuary
@@ -60,6 +61,7 @@ interface RingProps {
 }
 
 const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor, breatheDuration }) => {
+  const { audioIntensity } = useSynthesisState();
   const safeRadius = Number.isFinite(radius) ? radius : 0;
   const filterId = ring === "red" ? "neonGlowRed" : ring === "yellow" ? "neonGlowWarning" : "neonGlowSafe";
   const fillId = ring === "red" ? "ringFillRed" : ring === "yellow" ? "ringFillYellow" : "ringFillGreen";
@@ -75,20 +77,34 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
       <motion.circle
         cx="50" cy="50" r={safeRadius + 1.5}
         fill="none" stroke={color} strokeWidth={2.5} opacity={0.08}
-        animate={{ opacity: [0.05, 0.18, 0.05] }}
+        animate={{ 
+          opacity: [0.05, 0.18 + audioIntensity * 0.1, 0.05],
+          scale: [1, 1 + audioIntensity * 0.02, 1] 
+        }}
         transition={{ duration: breatheDuration * 3, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Main neon ring — thick, glowing */}
-      <motion.g filter={`url(#${filterId})`}>
-        <motion.circle
-          cx="50" cy="50" r={safeRadius}
-          fill="none" stroke={color}
-          animate={{ strokeWidth: [1.4, 2.4, 1.4], opacity: [0.65, 1, 0.65] }}
-          transition={{ duration: breatheDuration * 2, repeat: Infinity, ease: "easeInOut" }}
-          className="orbital-ring"
-        />
-      </motion.g>
+      {/* Main neon ring — thick, glowing, without SVG filter to prevent gray box artifacts */}
+      <motion.circle
+        cx="50" cy="50" r={safeRadius}
+        fill="none" stroke={color}
+        animate={{ 
+          strokeWidth: [3, 5 + audioIntensity * 3, 3], 
+          opacity: [0.15, 0.3 + audioIntensity * 0.2, 0.15] 
+        }}
+        transition={{ duration: breatheDuration * 2, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none"
+      />
+      <motion.circle
+        cx="50" cy="50" r={safeRadius}
+        fill="none" stroke={color}
+        animate={{ 
+          strokeWidth: [1.4, 2.4 + audioIntensity, 1.4], 
+          opacity: [0.65, 1, 0.65] 
+        }}
+        transition={{ duration: breatheDuration * 2, repeat: Infinity, ease: "easeInOut" }}
+        className="orbital-ring"
+      />
 
       {/* Inner dashed shimmer */}
       <motion.circle
@@ -226,7 +242,7 @@ const IllusionEntityView: FC<{ scenario: any; index: number; total: number; onDi
         whileHover={{ scale: 1.15 }}
       >
         {/* Core dark asteroid body */}
-        <circle cx={cx} cy={cy} r={2.5} fill="#0f172a" stroke="#4c1d95" strokeWidth={0.6} />
+        <circle cx={cx} cy={cy} r={2.5} className="fill-slate-900 dark:fill-slate-950" stroke="#4c1d95" strokeWidth={0.6} />
         
         {/* Breathing toxic glow */}
         <motion.circle
@@ -297,6 +313,7 @@ interface NodeProps {
 }
 
 const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, canOpenDetails = true, justDraggedId, justAdded, isHighlighted, isTouchDevice = false, reduceMotion = false, isSovereign = false }) => {
+  const { audioIntensity } = useSynthesisState();
   const [showDelete, setShowDelete] = useState(false);
   const [pulseDone, setPulseDone] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
@@ -382,19 +399,19 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   // Enhanced ring colors with richer palette
   const ringPalette = isDetached
     ? {
-        stroke: "rgba(100,116,139,0.35)",
-        bg: "linear-gradient(135deg,rgba(15,23,42,0.85),rgba(30,41,59,0.9))",
-        glow: "rgba(71,85,105,0.12)",
-        accent: "rgba(148,163,184,0.5)",
-        shadow: "rgba(30,41,59,0.4)"
+        stroke: "var(--app-border)",
+        bg: "var(--glass-bg)",
+        glow: "rgba(148,163,184,0.05)",
+        accent: "var(--text-secondary)",
+        shadow: "rgba(0,0,0,0.05)"
       }
     : isVampire
-      ? { stroke: `rgba(153,27,27,${0.5 + vampireIntensity * 0.4})`, bg: `linear-gradient(135deg,rgba(153,27,27,${0.2+vampireIntensity*0.4}),rgba(0,0,0,0.7))`, glow: `rgba(185,28,28,${0.1+vampireIntensity*0.3})`, accent: "rgba(220,38,38,0.8)", shadow: `rgba(185,28,28,${0.2+vampireIntensity*0.4})` }
+      ? { stroke: "rgba(153,27,27,0.6)", bg: "linear-gradient(135deg, rgba(153,27,27,0.1), rgba(0,0,0,0.4))", glow: "rgba(185,28,28,0.1)", accent: "#ef4444", shadow: "rgba(185,28,28,0.2)" }
       : node.ring === "red"
-        ? { stroke: "rgba(244,63,94,0.55)", bg: "linear-gradient(135deg,rgba(15,23,42,0.55),rgba(28,5,14,0.85))", glow: "rgba(244,63,94,0.22)", accent: "rgba(244,63,94,0.9)", shadow: "rgba(244,63,94,0.25)" }
+        ? { stroke: "rgba(244,63,94,0.55)", bg: "var(--glass-bg)", glow: "rgba(244,63,94,0.1)", accent: "#f43f5e", shadow: "rgba(244,63,94,0.12)" }
         : node.ring === "yellow"
-          ? { stroke: "rgba(251,191,36,0.55)", bg: "linear-gradient(135deg,rgba(15,23,42,0.55),rgba(20,16,5,0.85))", glow: "rgba(251,191,36,0.22)", accent: "rgba(251,191,36,0.9)", shadow: "rgba(251,191,36,0.25)" }
-          : { stroke: "rgba(45,212,191,0.55)", bg: "linear-gradient(135deg,rgba(15,23,42,0.55),rgba(5,20,20,0.85))", glow: "rgba(45,212,191,0.22)", accent: "rgba(45,212,191,0.9)", shadow: "rgba(45,212,191,0.25)" };
+          ? { stroke: "rgba(251,191,36,0.55)", bg: "var(--glass-bg)", glow: "rgba(251,191,36,0.1)", accent: "#f59e0b", shadow: "rgba(251,191,36,0.12)" }
+          : { stroke: "rgba(45,212,191,0.55)", bg: "var(--glass-bg)", glow: "rgba(45,212,191,0.1)", accent: "#14b8a6", shadow: "rgba(45,212,191,0.12)" };
 
   const auraColor = isDetached
     ? "rgba(71,85,105,0.08)"
@@ -434,7 +451,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
             background: isSovereign 
               ? "radial-gradient(circle, rgba(234,179,8,0.2) 0%, rgba(139,92,246,0.1) 40%, transparent 70%)"
               : "radial-gradient(circle, rgba(45,212,191,0.15) 0%, rgba(251,191,36,0.05) 50%, transparent 70%)",
-            filter: isSovereign ? "blur(12px)" : "blur(8px)",
+            boxShadow: isSovereign ? "inset 0 0 20px rgba(234,179,8,0.1)" : "inset 0 0 20px rgba(45,212,191,0.1)",
             border: isSovereign ? "1.5px solid rgba(234,179,8,0.3)" : "1.5px solid rgba(45,212,191,0.2)"
           }}
           animate={{
@@ -468,7 +485,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         style={{
           zIndex: 0,
           border: `1.5px solid ${auraBorderColor}`,
-          boxShadow: `0 0 20px ${auraColor}`
+          boxShadow: `0 0 ${20 + audioIntensity * 30}px ${auraColor}`
         }}
         animate={reduceMotion
           ? undefined
@@ -485,8 +502,8 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
                 scale: [1, 0.85, 1],
               }
               : {
-                opacity: [0.4, 0.8, 0.4],
-                scale: [1, 1.08, 1],
+                opacity: [0.4, 0.8 + audioIntensity * 0.2, 0.4],
+                scale: [1, 1.08 + audioIntensity * 0.05, 1],
                 x: [0, 1.5, -1, 1, 0],
                 y: [0, -1.2, 1.8, -0.8, 0]
               }
@@ -777,7 +794,7 @@ const IllusionEntity: FC<IllusionEntityProps> = memo(({ id, label, type, orbitAn
           onClick={handleDismantleStart}
           className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-indigo-500/50 relative overflow-hidden"
           style={{
-            background: "radial-gradient(circle, #312e81 0%, #0f172a 100%)",
+            background: "var(--app-surface)",
             boxShadow: "0 0 15px rgba(79, 70, 229, 0.4)",
           }}
           animate={{
@@ -1651,8 +1668,8 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 </filter>
               </defs>
 
-              {/* ── Cosmic Star Field ── */}
-              <g className="pointer-events-none">
+              {/* ── Cosmic Star Field (Dark Mode Only) ── */}
+              <g className="pointer-events-none dark-visible hidden dark:block">
                 {STAR_DATA.map((s) => (
                   <motion.circle
                     key={s.id}
@@ -1672,13 +1689,13 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               {connectionThreads.map((line) => {
                 const isGreen = line.color?.includes("45, 212") || line.color?.includes("2dd4") || line.color?.includes("2DD4");
                 const isYellow = line.color?.includes("251, 191") || line.color?.includes("fbbf");
-                const threadColor = line.color ?? "rgba(45,212,191,0.5)";
+                const threadColor = line.color ?? "var(--soft-teal)";
                 const glowColor = isGreen
-                  ? "rgba(45,212,191,0.9)"
+                  ? "rgba(45,212,191,0.6)"
                   : isYellow
-                    ? "rgba(251,191,36,0.9)"
-                    : "rgba(244,63,94,0.9)";
-                const particleColor = isGreen ? "#5eead4" : isYellow ? "#fde68a" : "#fda4af";
+                    ? "rgba(251,191,36,0.6)"
+                    : "rgba(244,63,94,0.6)";
+                const particleColor = isGreen ? "#14b8a6" : isYellow ? "#f59e0b" : "#f43f5e";
 
                 return (
                   <g key={line.id}>
@@ -1947,9 +1964,10 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   style={{
                     fontSize: "3px",
                     fontWeight: 900,
-                    fill: battery === "drained" ? "#94a3b8" : "#5eead4",
+                    fill: "var(--soft-teal)",
+                    opacity: battery === "drained" ? 0.5 : 1,
                     letterSpacing: "0.15em",
-                    filter: "drop-shadow(0 0 3px rgba(45,212,191,0.6))"
+                    filter: "drop-shadow(0 0 3px var(--soft-teal-glow))"
                   }}
                 >
                   ◈ أنا ◈

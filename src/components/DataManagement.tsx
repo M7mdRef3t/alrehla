@@ -99,7 +99,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
 
   const displayNamePlaceholder = useAppContentString(
     "account_display_name_placeholder",
-    "اكتب اسمك",
+    "اكتب اسم العرض",
     { page: "account" }
   );
 
@@ -307,7 +307,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
 
     const normalizedName = displayName.replace(/\s+/g, " ").trim();
     if (displayNameDirty && !normalizedName) {
-      setDisplayNameError("اكتب اسمك.");
+      setDisplayNameError("اكتب اسم العرض.");
       setDisplayNameMessage(null);
       return;
     }
@@ -474,10 +474,10 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                       </div>
 
                       <div className="space-y-3">
-                        <div>
-                          <label className="text-xs text-slate-400 mb-1 block">الاسم الظاهر</label>
-                          <input id="data-management-display-name" name="dataManagementDisplayName" value={displayName} onChange={(e) => { setDisplayName(e.target.value); setDisplayNameDirty(true); }} placeholder={displayNamePlaceholder} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-teal-500 outline-none" />
-                        </div>
+                          <div>
+                            <label className="text-xs text-slate-400 mb-1 block">اسم العرض للحساب</label>
+                            <input id="data-management-display-name" name="dataManagementDisplayName" value={displayName} onChange={(e) => { setDisplayName(e.target.value); setDisplayNameDirty(true); }} placeholder={displayNamePlaceholder} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-teal-500 outline-none" />
+                          </div>
                         <div>
                           <label className="text-xs text-slate-400 mb-1 block">نبرة الخطاب</label>
                           <div className="grid grid-cols-3 gap-2">

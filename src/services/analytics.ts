@@ -3,7 +3,7 @@ import { runtimeEnv } from "../config/runtimeEnv";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 import { getHref } from "./navigation";
 import { getDocumentOrNull, getWindowOrNull, isClientRuntime } from "./clientRuntime";
-import { supabase, isSupabaseReady, isSupabaseAbortError, safeGetSession } from "./supabaseClient";
+import { supabase } from "./supabaseClient";
 import { getStoredLeadAttribution, getStoredUtmParams } from "./marketingAttribution";
 
 type AnalyticsValue = string | number | boolean;
@@ -11,6 +11,14 @@ type AnalyticsParams = Record<string, AnalyticsValue>;
 
 // Circuit breaker: disable Supabase INSERT after first RLS/permission error
 let supabaseTrackingEnabled = true;
+
+// In-memory cache to prevent safeGetSession blocking inside telemetry
+let inMemoryUserId: string | null = null;
+if (isClientRuntime() && supabase) {
+  supabase.auth.onAuthStateChange((_event, session) => {
+    inMemoryUserId = session?.user?.id || null;
+  });
+}
 
 function isAnalyticsEnabled(): boolean {
   return getFromLocalStorage("dawayir-analytics-consent") === "true";
@@ -114,7 +122,7 @@ function ensureMetaPixel(): void {
   const windowRef = getWindowOrNull();
   const pixelId = getMetaPixelId();
   if (!windowRef || !pixelId || !areMetaEventsEnabled()) return;
-  if (runtimeEnv.isDev) return;
+  if (runtimeEnv.isDev && !getMetaPixelId()) return;
   if (windowRef.__dawayirMetaPixelScriptLoaded) return;
 
   if (!windowRef.fbq) {
@@ -160,7 +168,7 @@ function sendGtagEvent(eventName: string, params?: Record<string, AnalyticsValue
 function sendMetaEvent(
   eventName: string,
   params?: Record<string, AnalyticsValue | null | undefined>,
-  options?: { bypassConsent?: boolean }
+  options?: { bypassConsent?: boolean; client_event_id?: string }
 ): void {
   // P0: Always ensure Meta Pixel is initialized before sending ANY event
   ensureMetaPixel();
@@ -174,7 +182,11 @@ function sendMetaEvent(
   const safeParams = sanitizeAnalyticsParams(params);
   const windowRef = getWindowOrNull();
   if (windowRef?.fbq) {
-    windowRef.fbq("track", eventName, safeParams ?? {});
+    const metaParams = {
+      ...(safeParams ?? {}),
+      ...(options?.client_event_id ? { external_id: options.client_event_id, event_id: options.client_event_id } : {})
+    };
+    windowRef.fbq("track", eventName, metaParams);
   }
 }
 
@@ -218,12 +230,18 @@ export function initAnalytics(): void {
 
 export function trackPageView(pageName: string): void {
   if (!isClientRuntime()) return;
-  if (!isAnalyticsEnabled()) return;
 
-  sendGtagEvent("page_view", {
+  void sendInternalAnalytics("page_view", {
     page_title: pageName,
     page_location: getHref()
   });
+
+  if (isAnalyticsEnabled()) {
+    sendGtagEvent("page_view", {
+      page_title: pageName,
+      page_location: getHref()
+    });
+  }
 }
 
 export function trackLandingView(
@@ -240,19 +258,106 @@ export function trackLandingView(
   // P0: Ensure Meta Pixel is initialized before firing ViewContent
   ensureMetaPixel();
 
-  trackEvent(AnalyticsEvents.LANDING_VIEW, safeParams);
-  sendMetaEvent("ViewContent", safeParams, { bypassConsent: true });
+  const client_event_id = generateUUID();
+  trackEvent(AnalyticsEvents.LANDING_VIEW, { ...safeParams, client_event_id });
+  sendMetaEvent("ViewContent", safeParams, { bypassConsent: true, client_event_id });
 }
 
-function getAnonymousSessionId(): string {
-  if (!isClientRuntime()) return "";
-  let sessionId = getFromLocalStorage("dawayir-anon-session");
-  if (!sessionId) {
-    const isCrypto = typeof crypto !== 'undefined' && crypto.randomUUID;
-    sessionId = isCrypto ? "anon_" + crypto.randomUUID() : "anon_" + Math.random().toString(36).substring(2, 15);
-    setInLocalStorage("dawayir-anon-session", sessionId);
+export const ANALYTICS_ANON_KEY = "alrehla_anonymous_id";
+export const ANALYTICS_SESSION_KEY = "alrehla_session_id";
+
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
   }
-  return sessionId;
+  return "anon_" + Math.random().toString(36).substring(2, 15);
+}
+
+export function getOrCreateAnonymousId(): string {
+  if (!isClientRuntime()) return "";
+  let id = getFromLocalStorage(ANALYTICS_ANON_KEY);
+  if (!id) {
+    id = generateUUID();
+    setInLocalStorage(ANALYTICS_ANON_KEY, id);
+  }
+  return id;
+}
+
+export function getOrCreateSessionId(): string {
+  const windowRef = getWindowOrNull();
+  if (!windowRef) return generateUUID();
+
+  let id = windowRef.sessionStorage.getItem(ANALYTICS_SESSION_KEY);
+  if (!id) {
+    id = generateUUID();
+    windowRef.sessionStorage.setItem(ANALYTICS_SESSION_KEY, id);
+  }
+  return id;
+}
+
+async function sendInternalAnalytics(
+  eventName: string,
+  params?: Record<string, AnalyticsValue | null | undefined>
+): Promise<void> {
+  if (!isClientRuntime()) return;
+
+  const windowRef = getWindowOrNull();
+  const documentRef = getDocumentOrNull();
+
+  const leadAttr = getStoredLeadAttribution();
+  const utm = getStoredUtmParams();
+
+  const anonymous_id = getOrCreateAnonymousId();
+  const session_id = getOrCreateSessionId();
+  const client_event_id = generateUUID();
+
+  const isMobile = windowRef ? windowRef.matchMedia("(max-width: 768px)").matches : false;
+  const safeParams = sanitizeAnalyticsParams(params);
+
+  const telemetryPayload = {
+    event_type: eventName,
+    client_event_id,
+    anonymous_id,
+    session_id,
+    user_id: inMemoryUserId || null, // Synchronous enrichment, no blocking config
+    lead_id: leadAttr?.lead_id || null,
+    lead_source: leadAttr?.lead_source || null,
+    utm_source: utm?.utm_source || null,
+    utm_medium: utm?.utm_medium || null,
+    utm_campaign: utm?.utm_campaign || null,
+    occurred_at: new Date().toISOString(),
+    payload: {
+      ...(safeParams || {}),
+      pathname: windowRef?.location?.pathname || null,
+      page_location: getHref(),
+      referrer: documentRef?.referrer || null,
+      device_type: isMobile ? "mobile" : "desktop",
+      screen_width: windowRef?.innerWidth,
+      viewport_height: windowRef?.innerHeight
+    }
+  };
+
+  const body = JSON.stringify(telemetryPayload);
+
+  try {
+    if (navigator.sendBeacon) {
+      const blob = new Blob([body], { type: "application/json" });
+      navigator.sendBeacon("/api/analytics", blob);
+      return;
+    }
+
+    await fetch("/api/analytics", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive: true,
+      credentials: "same-origin"
+    });
+  } catch (error) {
+    if (runtimeEnv.isDev) {
+      console.warn(`[Analytics] Internal send failed: ${eventName}`, error);
+    }
+  }
 }
 
 export function trackEvent(
@@ -261,8 +366,11 @@ export function trackEvent(
 ): void {
   if (!isClientRuntime()) return;
 
-  // P0-3: Auto-inject lead attribution so every event carries lead_id + UTM
-  // getStoredLeadAttribution() reads from localStorage — set when user arrives via personalized URL
+  // 1) Internal telemetry always fires unconstrained by consent
+  const client_event_id = (params?.client_event_id as string) || generateUUID();
+  void sendInternalAnalytics(eventName, { ...params, client_event_id });
+
+  // 2) Third-party only by policy/consent. (We enrich here manually for third-parties)
   const leadAttr = getStoredLeadAttribution();
   const utm = getStoredUtmParams();
   const attributionProps: Record<string, AnalyticsValue> = {};
@@ -284,49 +392,39 @@ export function trackEvent(
       windowRef.gtag("event", eventName, safeParams);
     }
   }
+}
 
-  if (supabaseTrackingEnabled) {
-    const windowRef = getWindowOrNull();
-    const isMobile = windowRef ? windowRef.matchMedia("(max-width: 768px)").matches : false;
-    const deviceContext = {
-      device_type: isMobile ? "mobile" : "desktop",
-      screen_width: windowRef?.innerWidth,
-      platform: windowRef?.navigator?.platform
-    };
+export async function trackIdentityLinked(userId: string): Promise<void> {
+  const anonymous_id = getOrCreateAnonymousId();
+  
+  // 1) Internal Telemetry Link (API)
+  void fetch("/api/analytics", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      event_type: "identity_linked",
+      client_event_id: generateUUID(),
+      anonymous_id,
+      session_id: getOrCreateSessionId(),
+      user_id: userId,
+      occurred_at: new Date().toISOString(),
+      payload: {}
+    }),
+    keepalive: true,
+    credentials: "same-origin"
+  });
 
-    Promise.resolve()
-      .then(() => safeGetSession())
-      .then((session) => {
-      const telemetryPayload = {
-        event_type: eventName,
-        user_id: session?.user?.id || null,
-        session_id: getAnonymousSessionId(),
-        lead_id: leadAttr?.lead_id || null,
-        lead_source: leadAttr?.lead_source || null,
-        utm_source: utm?.utm_source || null,
-        utm_medium: utm?.utm_medium || null,
-        utm_campaign: utm?.utm_campaign || null,
-        payload: { ...deviceContext, ...(safeParams || {}) },
-        occurred_at: new Date().toISOString()
-      };
-
-        fetch('/api/analytics', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(telemetryPayload)
-        }).then(async (res) => {
-          if (!res.ok) {
-            if (res.status === 401 || res.status === 403) {
-              supabaseTrackingEnabled = false;
-            }
-          }
-        }).catch(() => {
-          // Intentionally silent in dev: analytics ingestion must never block the app shell.
-        });
-      })
-      .catch((err: unknown) => {
-        if (isSupabaseAbortError(err)) return;
+  // 2) Database Bridge Link (Supabase RPC)
+  if (supabase) {
+    try {
+      await supabase.rpc("link_anonymous_to_user", {
+        p_anonymous_id: anonymous_id
       });
+    } catch (error) {
+      if (runtimeEnv.isDev) {
+        console.warn("[Analytics] Database identity bridge failed", error);
+      }
+    }
   }
 }
 
@@ -401,6 +499,7 @@ export const AnalyticsEvents = {
   WEATHER_RESULT_VIEW: "weather_result_view",
   WEATHER_SHARE_CLICKED: "weather_share_clicked",
   WEATHER_SHARE_COMPLETED: "weather_share_completed",
+  WEATHER_SHARE_FAILED: "weather_share_failed",
   WEATHER_ONBOARDING_CLICKED: "weather_onboarding_clicked",
   WEATHER_WHATSAPP_CLICKED: "weather_whatsapp_clicked",
 } as const;
@@ -415,7 +514,8 @@ export function trackLead(params?: Record<string, AnalyticsValue | null | undefi
     sendGtagEvent("conversion", { ...(safeParams ?? {}), send_to: googleAdsSendTo });
   }
 
-  sendMetaEvent("Lead", safeParams, { bypassConsent: true });
+  const client_event_id = (params?.client_event_id as string) || generateUUID();
+  sendMetaEvent("Lead", safeParams, { bypassConsent: true, client_event_id });
 }
 
 export function trackCompleteRegistration(

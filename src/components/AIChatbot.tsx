@@ -27,6 +27,26 @@ import { SwarmPersonaSelector } from "./SwarmPersonaSelector";
 import { MemoryStore } from "../services/memoryStore";
 import { semanticCompressor } from "../services/semanticCompressor";
 import { dynamicContextRouter } from "../services/dynamicContextRouter";
+import { getAuthUserId } from "../state/authState";
+import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
+
+const GUEST_MEMORY_ACTOR_KEY = "dawayir_guest_memory_actor_id";
+
+function createGuestMemoryActorId(): string {
+  return `guest_memory_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function resolveMemoryActorId(): string {
+  const authUserId = getAuthUserId();
+  if (authUserId) return authUserId;
+
+  const storedGuestId = getFromLocalStorage(GUEST_MEMORY_ACTOR_KEY);
+  if (storedGuestId) return storedGuestId;
+
+  const nextGuestId = createGuestMemoryActorId();
+  setInLocalStorage(GUEST_MEMORY_ACTOR_KEY, nextGuestId);
+  return nextGuestId;
+}
 
 interface Message {
   id: string;
@@ -207,11 +227,12 @@ export const AIChatbot: FC<AIChatbotProps> = ({
     })();
 
     // استرجاع الذكريات من الذاكرة طويلة المدى (RAG)
-    const ragMemories = await MemoryStore.recallMemories(userMessage.content, "user_id_placeholder", 3);
+    const memoryActorId = resolveMemoryActorId();
+    const ragMemories = await MemoryStore.recallMemories(userMessage.content, memoryActorId, 3);
     const ragContextBlock = MemoryStore.formatMemoriesForPrompt(ragMemories);
 
     // حفظ الرسالة في الذاكرة طويلة المدى
-    void MemoryStore.storeMemory(userMessage.content, "conversation", "user_id_placeholder");
+    void MemoryStore.storeMemory(userMessage.content, "conversation", memoryActorId);
 
     const assistantId = `assistant-${Date.now()}`;
     const useTools = agentActions != null && systemPromptOverride != null;

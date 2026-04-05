@@ -883,18 +883,18 @@ export async function fetchSessionEvents(
   if (!isSupabaseReady || !supabase) return null;
   const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 1000) : 200;
   const { data, error } = await supabase
-    .from("journey_events")
-    .select("id,session_id,type,payload,created_at")
+    .from("routing_events")
+    .select("id,session_id,event_type,payload,occurred_at")
     .eq("session_id", sid)
-    .order("created_at", { ascending: false })
+    .order("occurred_at", { ascending: false })
     .limit(safeLimit);
   if (error || !data) return null;
   return (data as Array<Record<string, unknown>>).map((row) => ({
     id: String(row.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
     sessionId: String(row.session_id ?? sid),
-    type: String(row.type ?? "unknown"),
+    type: String(row.event_type ?? "unknown"),
     payload: (row.payload as Record<string, unknown> | null) ?? null,
-    createdAt: row.created_at ? new Date(String(row.created_at)).getTime() : null
+    createdAt: row.occurred_at ? new Date(String(row.occurred_at)).getTime() : null
   }));
 }
 
@@ -902,10 +902,10 @@ export async function fetchVisitorSessions(limit = 300): Promise<VisitorSessionS
   if (!isSupabaseReady || !supabase) return null;
   const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 1000) : 300;
   const { data, error } = await supabase
-    .from("journey_events")
-    .select("session_id,type,payload,created_at")
+    .from("routing_events")
+    .select("session_id,event_type,payload,occurred_at")
     .not("session_id", "is", null)
-    .order("created_at", { ascending: false })
+    .order("occurred_at", { ascending: false })
     .limit(10000);
   if (error || !data) return null;
 
@@ -1343,21 +1343,21 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
   ] =
     await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
-      supabase.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", fiveMinAgo),
+      supabase.from("routing_events").select("id", { count: "exact", head: true }).gte("occurred_at", fiveMinAgo),
       supabase
-        .from("journey_events")
-        .select("session_id,type,payload,created_at")
-        .gte("created_at", thirtyDaysAgo)
-        .order("created_at", { ascending: true })
+        .from("routing_events")
+        .select("session_id,event_type,payload,occurred_at")
+        .gte("occurred_at", thirtyDaysAgo)
+        .order("occurred_at", { ascending: true })
         .limit(10000),
       supabase.from("admin_ai_logs").select("id", { count: "exact", head: true }),
-      supabase.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "node_added"),
+      supabase.from("routing_events").select("id", { count: "exact", head: true }).eq("event_type", "node_added"),
       supabase.from("journey_maps").select("session_id", { count: "exact", head: true }),
-      supabase.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "path_started").gte("created_at", twentyFourHoursAgo),
+      supabase.from("routing_events").select("id", { count: "exact", head: true }).eq("event_type", "path_started").gte("occurred_at", twentyFourHoursAgo),
       supabase
-        .from("journey_events")
+        .from("routing_events")
         .select("session_id")
-        .eq("type", "flow_event")
+        .eq("event_type", "flow_event")
         .contains("payload", { step: "install_clicked" })
         .not("session_id", "is", null)
         .limit(5000),

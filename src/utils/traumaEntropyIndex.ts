@@ -30,28 +30,8 @@ export interface TEISnapshot {
   savedAt: number;
 }
 
-const TEI_HISTORY_KEY = "dawayir-tei-history";
-
-function getHistory(): TEISnapshot[] {
-  try {
-    const raw = localStorage.getItem(TEI_HISTORY_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveSnapshot(snapshot: TEISnapshot) {
-  try {
-    const history = getHistory();
-    // نحفظ snapshot واحد لكل يوم بس
-    const filtered = history.filter((s) => s.date !== snapshot.date);
-    const updated = [...filtered, snapshot].slice(-90); // آخر 90 يوم
-    localStorage.setItem(TEI_HISTORY_KEY, JSON.stringify(updated));
-  } catch {
-    // ignore
-  }
-}
+import { supabase } from "../services/supabaseClient";
+import { trackEvent } from "../services/analytics";
 
 function getClarityMessage(score: number, disturbedCount: number, totalCount: number): string {
   if (totalCount === 0) return "ابدأ برسم دوايرك لترى مؤشر وعيك";
@@ -142,26 +122,52 @@ export function computeTEI(nodes: MapNode[]): TEIResult {
 }
 
 /** احفظ snapshot للتاريخ */
-export function saveTEISnapshot(tei: TEIResult): void {
+export async function saveTEISnapshot(tei: TEIResult): Promise<void> {
+  if (!supabase) return;
   const today = new Date();
   const date = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  saveSnapshot({
+  
+  const payload = {
     date,
     score: tei.score,
     disturbedCount: tei.disturbedCount,
     totalCount: tei.totalCount,
     savedAt: Date.now(),
-  });
+  };
+
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if(sessionData?.session?.user) {
+      trackEvent("tei_snapshot_saved", payload);
+    }
+  } catch(e) { console.error(e); }
 }
 
 /** رجوع تاريخ الـ TEI */
-export function getTEIHistory(): TEISnapshot[] {
-  return getHistory().sort((a, b) => a.savedAt - b.savedAt);
+export async function getTEIHistory(): Promise<TEISnapshot[]> {
+  if (!supabase) return [];
+  try {
+     const { data: sessionData } = await supabase.auth.getSession();
+     const user = sessionData?.session?.user;
+     if(!user) return [];
+
+     const { data } = await supabase
+       .from("telemetry_events")
+       .select("payload")
+       .eq("user_id", user.id)
+       .eq("event_type", "tei_snapshot_saved")
+       .order("occurred_at", { ascending: true });
+     
+     if(!data) return [];
+     return data.map(d => d.payload as unknown as TEISnapshot);
+  } catch {
+     return [];
+  }
 }
 
 /** مقارنة بين شهرين */
-export function getTEIComparison(): { older: TEISnapshot; newer: TEISnapshot; delta: number } | null {
-  const history = getTEIHistory();
+export async function getTEIComparison(): Promise<{ older: TEISnapshot; newer: TEISnapshot; delta: number } | null> {
+  const history = await getTEIHistory();
   if (history.length < 2) return null;
   const older = history[0];
   const newer = history[history.length - 1];

@@ -17,6 +17,7 @@ type ActivationHeroSectionProps = {
   source: string;
   scarcityPct: number;
   steps: string[];
+  userName?: string | null;
 };
 
 const FUNNEL_STEPS = [
@@ -34,6 +35,7 @@ export function ActivationHeroSection({
   source,
   scarcityPct,
   steps,
+  userName,
 }: ActivationHeroSectionProps) {
   return (
     <>
@@ -75,7 +77,14 @@ export function ActivationHeroSection({
         <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="p-6 md:p-8">
             <p className="text-xs font-black uppercase tracking-[0.28em] text-teal-300">Founding Cohort</p>
-            <h1 className="mt-4 max-w-2xl text-3xl font-black leading-tight md:text-5xl">فعّل رحلتك من غير لف ودوران</h1>
+            <h1 className="mt-4 max-w-2xl text-3xl font-black leading-tight md:text-5xl">
+              {userName ? (
+                <>
+                  <span className="block text-teal-400 mb-2 text-2xl md:text-3xl">أهلاً يا {userName}، نورت الرحلة.</span>
+                </>
+              ) : null}
+              فعّل رحلتك من غير لف ودوران
+            </h1>
             <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300 md:text-base md:leading-8">
               اختار طريقة الدفع، ابعت الإثبات، وإحنا نراجع التفعيل يدويًا على نفس الحساب.
             </p>

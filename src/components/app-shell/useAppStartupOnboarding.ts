@@ -78,7 +78,7 @@ export function useAppStartupOnboarding({
       const validJourney = ensureValidJourneyState();
       setGoalId(validJourney.goalId);
       setCategory(validJourney.category);
-      void navigateToScreen("map");
+      void navigateToScreen("sanctuary");
       return;
     }
 

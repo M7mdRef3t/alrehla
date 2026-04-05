@@ -12,7 +12,7 @@ export const ProfileAppearanceSettings: React.FC = () => {
     const unlockedIds = useAchievementState((s) => s.unlockedIds);
     
     const [displayName, setDisplayName] = useState(memory.preferredName || "المسافر");
-    const [bio, setBio] = useState(localStorage.getItem("alrehla_profile_bio") || "أبحث عن النقاء الإدراكي والسيادة المعرفية في الفضاء الرقمي.");
+    const [bio, setBio] = useState(memory.bio || "أبحث عن النقاء الإدراكي والسيادة المعرفية في الفضاء الرقمي.");
     
     const [activeTheme, setActiveTheme] = useState("nebula");
     const [badges, setBadges] = useState(unlockedIds.slice(0, 2));
@@ -40,10 +40,8 @@ export const ProfileAppearanceSettings: React.FC = () => {
     };
 
     const handleSave = () => {
-        const mem = loadUserMemory();
-        mem.preferredName = displayName;
-        saveUserMemory(mem);
-        localStorage.setItem("alrehla_profile_bio", bio);
+        updatePreferredName(displayName);
+        updateBio(bio);
         alert("تم تحديث هويتك المدارية بنجاح ✔️");
     };
 

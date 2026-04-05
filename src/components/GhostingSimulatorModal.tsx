@@ -1,9 +1,11 @@
 import type { FC } from "react";
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, TrendingUp, Ghost, ShieldAlert } from "lucide-react";
+import { X, TrendingUp, Ghost, ShieldAlert, Loader2 } from "lucide-react";
 import { useMapState } from "../state/mapState";
 import { soundManager } from "../services/soundManager";
+import { geminiClient } from "../services/geminiClient";
+import ReactMarkdown from "react-markdown";
 
 interface GhostingSimulatorModalProps {
     isOpen: boolean;
@@ -13,6 +15,9 @@ interface GhostingSimulatorModalProps {
 
 export const GhostingSimulatorModal: FC<GhostingSimulatorModalProps> = ({ isOpen, onClose, personId }) => {
     const node = useMapState((s) => s.nodes.find((n) => n.id === personId));
+    
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [generatedPlan, setGeneratedPlan] = useState<string | null>(null);
 
     const simData = useMemo(() => {
         if (!node) return { weeklyDrain: 0, monthlyDrain: 0 };
@@ -41,6 +46,26 @@ export const GhostingSimulatorModal: FC<GhostingSimulatorModalProps> = ({ isOpen
             }
         }
     }, [isOpen, node, simData.weeklyDrain]);
+
+    const handleGeneratePlan = async () => {
+        if (!node) return;
+        setIsGenerating(true);
+        try {
+            const prompt = `
+            بصفتك الذكاء الاصطناعي أوراكل ومعالج نفسي في منصة "الرحلة"، المستخدِم يرغب في خطة لتقليل وحجب الاستنزاف الطاقي (انسحاب تكتيكي/Ghosting تكتيكي) مع شخص اسمه "${node.label}" والذي يستنزف طاقته بمقدار ${simData.weeklyDrain} طاقة أسبوعياً، مع وجود أعراض مسجلة قد تصل لدرجة خطر. 
+            المطلوب:
+            اكتب "خطة انسحاب آمنة" (Safe Ghosting Plan) في نقاط سريعة ومختصرة لفك الارتباط الطاقي بشكل تدريجي لمنع الصدمات العكسية.
+            الرسالة يجب أن تتضمن الرد بصيغة مشجعة للمتحدث واستخدام أسلوب الـ Markdown المميز.
+            `;
+            const result = await geminiClient.generate(prompt);
+            setGeneratedPlan(result);
+        } catch (error) {
+            console.error("Failed to generate ghosting plan:", error);
+            setGeneratedPlan("يبدو أن المعالج غير متاح الآن، يرجى المحاولة لاحقاً.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
 
     if (!isOpen || !node) return null;
 
@@ -118,19 +143,34 @@ export const GhostingSimulatorModal: FC<GhostingSimulatorModalProps> = ({ isOpen
                         )}
 
                         <div className="mt-6 flex flex-col gap-3">
-                            {simData.weeklyDrain > 0 && (
+                            {simData.weeklyDrain > 0 && !generatedPlan && (
                                 <button
-                                    onClick={() => {
-                                        onClose();
-                                        // TODO: trigger AI Oracle with plan request
-                                    }}
-                                    className="w-full flex items-center justify-center py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/20 active:scale-[0.98]"
+                                    onClick={handleGeneratePlan}
+                                    disabled={isGenerating}
+                                    className="w-full flex items-center justify-center py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/20 active:scale-[0.98]"
                                 >
-                                    ✨ اطلب خطة انسحاب آمنة من المعالج
+                                    {isGenerating ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 ml-2 animate-spin" aria-hidden="true" />
+                                            جاري توليد الخطة...
+                                        </>
+                                    ) : (
+                                        "✨ اطلب خطة انسحاب آمنة من المعالج"
+                                    )}
                                 </button>
                             )}
+
+                            {generatedPlan && (
+                                <div className="bg-slate-800/80 rounded-xl p-4 border border-indigo-500/30 overflow-y-auto max-h-[350px] custom-scrollbar text-sm text-slate-300 leading-relaxed mb-4 prose prose-invert prose-indigo">
+                                    <ReactMarkdown>{generatedPlan}</ReactMarkdown>
+                                </div>
+                            )}
+
                             <button
-                                onClick={onClose}
+                                onClick={() => {
+                                    onClose();
+                                    setTimeout(() => setGeneratedPlan(null), 300);
+                                }}
                                 className={`w-full flex items-center justify-center py-3 ${simData.weeklyDrain > 0 ? "bg-slate-800 hover:bg-slate-700 text-slate-300" : "bg-slate-800 hover:bg-slate-700 text-white"} rounded-xl text-sm font-bold transition-colors`}
                             >
                                 إغلاق المحاكاة

@@ -400,14 +400,14 @@ export const AppSidebar: FC<AppSidebarProps> = ({
         aria-label="القائمة الرئيسية"
       >
         {/* المحتوى — يظهر بشكل دائم مؤقتاً للتأكد من رؤية المستخدم للزراير */}
-        <div className="h-full w-56 shrink-0 overflow-hidden transition-[width] duration-200 ease-out">
+        <div className="h-full w-56 shrink-0 overflow-hidden transition-[width] duration-200 ease-out border-l border-app-border">
           <aside
-            className="h-full w-56 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 flex flex-col gap-3 py-6 px-4 min-w-0 visible"
+            className="h-full w-56 bg-app flex flex-col gap-3 py-6 px-4 min-w-0 visible"
           >
             {viewingNode?.analysis && (
               <div className="shrink-0 space-y-1 mb-1">
                 <RecoveryProgressBar node={viewingNode} />
-                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 text-center truncate px-1" title={viewingNode.label}>
+                <p className="text-xs font-semibold text-app-primary text-center truncate px-1" title={viewingNode.label}>
                   {viewingNode.label}
                 </p>
               </div>
@@ -418,7 +418,7 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenJourneyTools?.()}
-                className="w-full flex items-center gap-3 rounded-xl bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100/70 dark:hover:bg-teal-900/40 transition-all text-right shrink-0 whitespace-nowrap"
+                className="w-full flex items-center gap-3 rounded-xl bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-teal-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-all text-right shrink-0 whitespace-nowrap shadow-sm"
                 title="الترسانة — معداتك"
               >
                 <Compass className="w-5 h-5 shrink-0" />
@@ -496,12 +496,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                 onClick={() => {
                   setShowGlobalMissions(true);
                 }}
-                className="flex items-center w-full gap-3 px-4 py-3 text-sm font-bold text-amber-300 transition-colors rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 mb-2 relative group"
+                className="flex items-center w-full gap-3 px-4 py-3 text-sm font-bold text-amber-500 dark:text-amber-300 transition-colors rounded-xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/10 dark:hover:bg-amber-500/20 mb-2 relative group"
               >
                 <div className="absolute -inset-0 bg-amber-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <Globe className="w-5 h-5 relative z-10" />
                 <span className="relative z-10">تحديات الوعي الجماعي</span>
-                <span className="relative z-10 mr-auto flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] text-slate-900 font-black">!</span>
+                <span className="relative z-10 mr-auto flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] text-white dark:text-slate-900 font-black">!</span>
               </button>
             )}
 
@@ -539,12 +539,12 @@ export const AppSidebar: FC<AppSidebarProps> = ({
             <button
               type="button"
               onClick={() => onOpenDawayir?.()}
-              className="w-full flex items-center gap-3 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-all text-right shrink-0 whitespace-nowrap"
+              className="w-full flex items-center gap-3 rounded-xl bg-app-surface text-app-primary border border-app-border px-4 py-3 text-sm font-semibold hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/10 transition-all text-right shrink-0 whitespace-nowrap shadow-sm"
               title="مركز القيادة"
             >
               <Compass className="w-5 h-5 shrink-0 text-teal-600" />
               <span className="flex flex-col items-start leading-tight">
-                <span>مركز القيادة</span>
+                <span>مركز القيادة (التشخيص)</span>
                 {lastGoalLabel && (
                   <span
                     className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${lastGoalMeta?.badgeClasses ?? fallbackBadgeClasses} ${badgePulseClass}`}
@@ -554,6 +554,16 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                   </span>
                 )}
               </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => pushUrl("/#sanctuary")}
+              className="w-full flex items-center gap-3 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/30 px-4 py-3 text-sm font-black hover:bg-teal-500/20 transition-all text-right shrink-0 whitespace-nowrap group"
+              title="الملاذ الآمن — منطقتك الخاصة"
+            >
+              <ShieldCheck className="w-5 h-5 shrink-0 text-teal-400 group-hover:animate-pulse" />
+              الملاذ الآمن
             </button>
 
             {availableFeatures.dawayir_map && (
@@ -571,10 +581,10 @@ export const AppSidebar: FC<AppSidebarProps> = ({
               </button>
             )}
             {activeMissions.length > 0 && (
-              <div className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 text-right">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              <div className="w-full rounded-xl border border-app-border bg-app-surface px-3 py-3 text-right shadow-sm">
+                <div className="flex items-center justify-between text-xs font-semibold text-app-primary mb-2">
                   <span>المدارات النشطة</span>
-                  <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5">
+                  <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-app-muted">
                     {activeMissions.length}
                   </span>
                 </div>
@@ -585,11 +595,11 @@ export const AppSidebar: FC<AppSidebarProps> = ({
                       type="button"
                       onClick={() => onOpenMission?.(node.id)}
                       disabled={!onOpenMission}
-                      className="w-full flex items-center justify-between gap-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50/60 dark:hover:bg-teal-900/30 transition-all disabled:opacity-50"
+                      className="w-full flex items-center justify-between gap-3 rounded-lg border border-app-border bg-slate-50 dark:bg-slate-900/40 px-3 py-2 text-xs text-app-primary hover:border-teal-400 dark:hover:border-teal-500 hover:bg-teal-50/60 dark:hover:bg-teal-900/30 transition-all disabled:opacity-50"
                     >
                       <div className="flex flex-col items-start text-right min-w-0">
-                        <span className="font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[9rem]">{node.label}</span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[9rem]">
+                        <span className="font-semibold text-app-primary truncate max-w-[9rem]">{node.label}</span>
+                        <span className="text-[10px] text-app-muted truncate max-w-[9rem]">
                           {summary.missionLabel} — {summary.missionGoal}
                         </span>
                       </div>

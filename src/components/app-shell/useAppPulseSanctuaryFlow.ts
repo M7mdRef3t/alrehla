@@ -4,7 +4,7 @@ import type { PulseCheckContext } from "../../hooks/usePulseCheckLogic";
 import {
   AUTO_COCOON_LAST_SHOWN_DATE_KEY,
   evaluateCocoonOpen
-} from "../../app/orchestration/modalOrchestrator";
+} from "../../orchestration/modalOrchestrator";
 import { getFromLocalStorage, setInLocalStorage } from "../../services/browserStorage";
 import { getWindowOrNull } from "../../services/clientRuntime";
 import { AnalyticsEvents, trackEvent } from "../../services/analytics";

@@ -470,7 +470,7 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
 
   if (error) {
     return (
-      <div className="complete-overlay min-h-screen px-4 py-12 text-white">
+      <div className="complete-overlay min-h-screen px-4 py-12 text-app-foreground">
         <div className="complete-card mx-auto text-center">
           <h1 className="complete-title">{error === "AUTH_REQUIRED" ? copy.authTitle : copy.openFailed}</h1>
           <p className="complete-subtitle">{error === "AUTH_REQUIRED" ? copy.authBody : error}</p>
@@ -485,11 +485,11 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
   }
 
   if (!detail) {
-    return <div className="min-h-screen bg-slate-950 p-8 text-white">{copy.loading}</div>;
+    return <div className="min-h-screen bg-app p-8 text-app-foreground">{copy.loading}</div>;
   }
 
   return (
-    <div className="complete-screen complete-overlay min-h-screen px-4 py-10 text-white">
+    <div className="complete-screen complete-overlay min-h-screen px-4 py-10 text-app-foreground">
       <SandMandala targetRef={printRef} isActive={isReleasing} onComplete={() => assignUrl("/dawayir-live")} />
 
       <div ref={printRef} className={`complete-card mx-auto ${isReleasing ? "complete-card--releasing" : ""}`}>

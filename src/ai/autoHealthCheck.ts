@@ -14,6 +14,8 @@
 
 import { decisionEngine } from "./decision-framework";
 import type { AIDecision } from "./decision-framework";
+import { sendOwnerSecurityWebhook } from "../services/adminApi";
+import { sendNotification } from "../services/notifications";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🏥 Health Check Result
@@ -532,8 +534,31 @@ export class AutoHealthChecker {
   private async notifyAdmin(result: HealthCheckResult): Promise<void> {
     console.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
 
-    // TODO: إرسال notification فعلي (email, SMS, push, etc.)
-    // مؤقتاً: نحفظ في localStorage
+    try {
+      import("../services/adminApi").then((mod) => {
+        mod.sendOwnerSecurityWebhook({
+            type: "health_critical",
+            status: result.status,
+            score: result.score,
+            issuesCount: result.issues.length,
+            timestamp: result.timestamp
+        });
+      }).catch(console.error);
+    } catch (e) {
+      console.error("[HealthCheck] Webhook dispatch failed", e);
+    }
+
+    try {
+      import("../services/notifications").then((mod) => {
+        mod.sendNotification({
+          title: `حالة طوارئ صحية: ${result.status}`,
+          body: `تم رصد عطل استراتيجي. تقييم المنصة: ${result.score}`,
+          tag: `health-${result.timestamp}`
+        });
+      }).catch(console.error);
+    } catch (e) {
+      console.error("[HealthCheck] Native push dispatch failed", e);
+    }
 
     try {
       const alerts = JSON.parse(
@@ -544,7 +569,7 @@ export class AutoHealthChecker {
 
       localStorage.setItem(
         "dawayir-health-alerts",
-        JSON.stringify(alerts.slice(-10)) // آخر 10 تنبيهات
+        JSON.stringify(alerts.slice(-10))
       );
     } catch {
       // ignore

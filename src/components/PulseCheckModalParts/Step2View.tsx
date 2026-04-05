@@ -42,25 +42,25 @@ export function Step2View({ tacticalAdvice }: Step2ViewProps) {
       </div>
       
       <div className="space-y-4">
-        <h3 className="text-3xl font-black tracking-tight text-white drop-shadow-sm">{tacticalAdvice.title}</h3>
-        <p className="text-slate-300 text-base max-w-[320px] leading-relaxed mx-auto font-medium opacity-90">
+        <h3 className="text-3xl font-black tracking-tight text-app-foreground drop-shadow-sm">{tacticalAdvice.title}</h3>
+        <p className="text-app-muted-foreground text-base max-w-[320px] leading-relaxed mx-auto font-medium">
           {tacticalAdvice.message}
         </p>
       </div>
       
       <motion.div 
-        className="w-full p-6 rounded-[2.5rem] bg-white/[0.04] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-md relative overflow-hidden"
+        className="w-full p-6 rounded-[2.5rem] bg-app-muted border border-app-border shadow-xl backdrop-blur-md relative overflow-hidden"
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent" />
         <span className="text-[11px] font-black uppercase tracking-[0.3em] block mb-4"
           style={{ color: colors.text }}
         >
           خطة العمل
         </span>
-        <p className="text-xl font-black text-white leading-tight tracking-tight">{tacticalAdvice.action}</p>
+        <p className="text-xl font-black text-app-foreground leading-tight tracking-tight">{tacticalAdvice.action}</p>
       </motion.div>
     </motion.div>
   );

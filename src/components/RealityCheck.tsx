@@ -58,14 +58,17 @@ export const RealityCheck: FC<RealityCheckProps> = ({
       {/* Interrogation Field Background Layers */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2rem]">
         {/* Subtle grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f766e15_1px,transparent_1px),linear-gradient(to_bottom,#0f766e15_1px,transparent_1px)] bg-[size:40px_40px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000030_1px,transparent_1px),linear-gradient(to_bottom,#00000030_1px,transparent_1px)] bg-[size:40px_40px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f766e15_1px,transparent_1px),linear-gradient(to_bottom,#0f766e15_1px,transparent_1px)] bg-[size:20px_20px] opacity-40" />
+        
         {/* Scan line effect */}
         <motion.div
           animate={{ top: ["0%", "100%", "0%"] }}
-          transition={{ duration: 8, ease: "linear", repeat: Infinity }}
-          className="absolute left-0 right-0 h-[2px] bg-teal-500/20 shadow-[0_0_15px_rgba(20,184,166,0.3)] z-0"
+          transition={{ duration: 12, ease: "linear", repeat: Infinity }}
+          className="absolute left-0 right-0 h-[2px] bg-teal-500/20 shadow-[0_0_20px_rgba(20,184,166,0.4)] z-0"
         />
-        <div className="absolute -top-32 -left-32 w-64 h-64 bg-teal-500/10 blur-[100px] rounded-full" />
+        <div className="absolute -top-32 -left-32 w-80 h-80 bg-teal-500/10 blur-[120px] rounded-full" />
+        <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-emerald-500/5 blur-[120px] rounded-full" />
       </div>
 
       <div className="relative z-10">
@@ -83,16 +86,17 @@ export const RealityCheck: FC<RealityCheckProps> = ({
           </button>
         )}
         
-        <div className="flex flex-col items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-slate-900/50 border border-teal-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(20,184,166,0.1)] relative">
-             <ScanEye className="w-6 h-6 text-teal-400" />
+        <div className="flex flex-col items-center gap-4 mb-8">
+          <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-teal-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(20,184,166,0.1)] relative group">
+             <ScanEye className="w-8 h-8 text-teal-400 transition-transform group-hover:scale-110 duration-700" />
+             <div className="absolute inset-0 rounded-2xl bg-teal-500/5 blur-xl group-hover:bg-teal-500/10 transition-all" />
           </div>
-          <h2 id="reality-title" className="text-2xl font-black text-slate-50 tracking-wide">
+          <h2 id="reality-title" className="text-3xl font-black text-white tracking-tight">
             <EditableText id="reality_title" defaultText={realityCopy.title} page="reality" />
           </h2>
-          <p className="text-sm font-medium text-slate-400 leading-relaxed px-4 max-w-sm mx-auto">
+          <p className="text-sm font-bold text-slate-400 leading-relaxed px-4 max-w-md mx-auto opacity-80">
             <EditableText id="reality_body_prefix" defaultText={realityCopy.bodyPrefix} page="reality" showEditIcon={false} />{" "}
-            <span className="font-bold text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-md">({personLabel})</span>
+            <span className="text-teal-400 border-b border-teal-500/30">({personLabel})</span>
           </p>
         </div>
       </div>
@@ -104,23 +108,23 @@ export const RealityCheck: FC<RealityCheckProps> = ({
         className="list-none flex-1 min-h-0 overflow-y-auto pr-1 space-y-4 text-sm text-slate-200 max-w-md mx-auto w-full relative z-10"
       >
         {(["q1", "q2", "q3"] as const).map((key) => (
-          <motion.li key={key} variants={itemVariant} className="p-5 bg-slate-900/60 border border-white/5 backdrop-blur-xl rounded-2xl text-right hover:border-white/10 transition-colors shadow-xl">
-            <p className="font-bold mb-4 text-slate-100 flex items-start gap-3 leading-relaxed">
-              <Target className="w-4 h-4 mt-0.5 shrink-0 text-slate-500" />
+          <motion.li key={key} variants={itemVariant} className="p-7 bg-white/[0.03] border border-white/5 backdrop-blur-2xl rounded-[2rem] text-right shadow-2xl group transition-all hover:bg-white/[0.05]">
+            <p className="text-sm font-black mb-6 text-slate-100 flex items-start gap-4 leading-relaxed border-r-2 border-slate-700/50 pr-5">
+              <Target className="w-4 h-4 mt-1 shrink-0 text-teal-500/50" />
               <EditableText id={`reality_${key}`} defaultText={realityCopy[key]} page="reality" showEditIcon={false} />
             </p>
             <div className="flex gap-2 items-stretch flex-wrap sm:flex-nowrap">
               {OPTIONS.map((opt) => {
                 const isSelected = answers[key] === opt;
                 const label = realityCopy.options[opt];
-                // Base Sovereign Style
-                let activeStyle = "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10";
+                
+                let activeStyle = "bg-white/5 border-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-300";
                 
                 if (isSelected) {
                    const tier = realityTier[opt] ?? "amber";
-                   if (tier === "green") activeStyle = "bg-teal-500/20 border-teal-500/50 text-teal-100 shadow-[0_0_15px_rgba(20,184,166,0.2)]";
-                   else if (tier === "amber") activeStyle = "bg-amber-500/20 border-amber-500/50 text-amber-100 shadow-[0_0_15px_rgba(245,158,11,0.2)]";
-                   else if (tier === "red") activeStyle = "bg-rose-500/20 border-rose-500/50 text-rose-100 shadow-[0_0_15px_rgba(244,63,94,0.2)]";
+                   if (tier === "green") activeStyle = "bg-teal-500 text-white border-teal-400 shadow-[0_0_20px_rgba(45,212,191,0.3)] scale-[1.02]";
+                   else if (tier === "amber") activeStyle = "bg-amber-500 text-white border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)] scale-[1.02]";
+                   else if (tier === "red") activeStyle = "bg-rose-500 text-white border-rose-400 shadow-[0_0_20px_rgba(244,63,94,0.3)] scale-[1.02]";
                 }
 
                 return (
@@ -128,16 +132,10 @@ export const RealityCheck: FC<RealityCheckProps> = ({
                     key={opt}
                     whileTap={{ scale: 0.95 }}
                     type="button"
-                    className={`flex-1 min-w-[70px] transition-all duration-300 p-2.5 rounded-xl border relative overflow-hidden font-bold text-xs ${activeStyle}`}
+                    className={`flex-1 min-w-[75px] transition-all duration-500 p-4 rounded-2xl border font-black text-[10px] sm:text-xs uppercase tracking-tighter ${activeStyle}`}
                     onClick={() => handleAnswer(key, opt)}
                     title={label}
                   >
-                    {isSelected && (
-                      <motion.div 
-                        layoutId={`glow_${key}`}
-                        className="absolute inset-0 bg-white/5"
-                      />
-                    )}
                     <span className="relative z-10 truncate block text-center">{label}</span>
                   </motion.button>
                 );
@@ -147,13 +145,17 @@ export const RealityCheck: FC<RealityCheckProps> = ({
         ))}
       </motion.ul>
 
-      <div className="mt-6 shrink-0 pb-2 relative z-10">
+      <div className="mt-8 shrink-0 pb-2 relative z-10">
         <motion.button
           whileHover={allAnswered ? { scale: 1.02 } : {}}
           whileTap={allAnswered ? { scale: 0.98 } : {}}
           type="button"
           disabled={!allAnswered}
-          className="w-full sm:w-auto rounded-full bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-12 py-4 text-base font-black hover:shadow-[0_0_30px_rgba(20,184,166,0.3)] disabled:opacity-30 disabled:saturate-0 disabled:cursor-not-allowed transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 border border-teal-400/50"
+          className={`w-full sm:w-auto rounded-[2rem] px-16 py-6 text-base font-black transition-all duration-700 tracking-[0.2em] uppercase border shadow-2xl ${
+            allAnswered 
+              ? "bg-teal-500 text-white border-teal-400/50 shadow-[0_0_40px_rgba(45,212,191,0.3)] hover:shadow-[0_0_60px_rgba(45,212,191,0.5)]" 
+              : "bg-white/5 text-white/20 border-white/5 cursor-not-allowed"
+          }`}
           onClick={() => {
             if (!allAnswered) return;
             onDone({
@@ -164,8 +166,8 @@ export const RealityCheck: FC<RealityCheckProps> = ({
           }}
           title={allAnswered ? realityCopy.cta : "قم باستكمال الفحص"}
         >
-          <div className="flex items-center justify-center gap-2">
-            <ScanEye className={`w-5 h-5 ${allAnswered ? "animate-pulse delay-700" : ""}`} />
+          <div className="flex items-center justify-center gap-3">
+            <ScanEye className={`w-6 h-6 ${allAnswered ? "animate-pulse" : "opacity-30"}`} />
             <EditableText id="reality_cta" defaultText={realityCopy.cta} page="reality" editOnClick={false} />
           </div>
         </motion.button>

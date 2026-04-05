@@ -28,6 +28,7 @@ const PAGE_NAMES: Record<AppScreen, string> = {
   "behavioral-analysis": "Behavioral Analysis",
   resources: "Resources",
   profile: "Profile",
+  sanctuary: "Sanctuary",
 };
 
 const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> = {
@@ -53,6 +54,7 @@ const SEO_BY_SCREEN: Record<AppScreen, { title: string; description: string }> =
   "behavioral-analysis": { title: "Behavioral Analysis | Alrehla", description: "Detect recurring behavioral patterns." },
   resources: { title: "Resources | Alrehla", description: "Videos, stories, and exercises to learn and practice." },
   profile: { title: "Profile | Alrehla", description: "Review your progress, achievements, and personal bio." },
+  sanctuary: { title: "Sanctuary | Alrehla", description: "A private space for reflection and restoration." },
 };
 
 export function useAppPageMetadata(screen: AppScreen) {

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { MessageCircle, User } from "lucide-react";
-import type { LandingChromeVisibility } from "../../app/orchestration/chromeVisibility";
+import type { LandingChromeVisibility } from "../../orchestration/chromeVisibility";
 import type { AppShellScreen } from "../../state/appShellNavigationState";
 import { useMapState } from "../../state/mapState";
 
@@ -79,12 +79,8 @@ export function AppChromeShell({
 
       {chromeVisibility.showMobileBottomNav && (
         <nav
-          className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-200 dark:border-teal-500/15"
           style={{
-            background: "rgba(15,23,42,0.88)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            borderTop: "1px solid rgba(45,212,191,0.15)",
             paddingBottom: "env(safe-area-inset-bottom)",
             height: "calc(60px + env(safe-area-inset-bottom))"
           }}

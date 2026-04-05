@@ -5,7 +5,7 @@ import { safeGetSession, supabase } from "../services/supabaseClient";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
 import { replaceUrl, createCurrentUrl } from "../services/navigation";
 import { runtimeEnv } from "../config/runtimeEnv";
-import { trackEvent, AnalyticsEvents } from "../services/analytics";
+import { trackEvent, AnalyticsEvents, trackIdentityLinked } from "../services/analytics";
 
 export type UserToneGender = "male" | "female" | "neutral";
 export type SubscriptionTier = "free" | "pro";
@@ -281,13 +281,20 @@ async function initSupabaseAuth(): Promise<void> {
       const session = await safeGetSession();
       await syncAuthRole(session);
       useAuthState.getState().setSession(session);
+      
+      // P0: Link initial identity if session exists
+      if (session?.user?.id) {
+        void trackIdentityLinked(session.user.id);
+      }
+
       supabase.auth.onAuthStateChange((event, nextSession) => {
         const currentSession = nextSession ?? null;
         useAuthState.getState().setSession(currentSession);
         void syncAuthRole(currentSession);
 
-        if (event === "SIGNED_IN") {
+        if (event === "SIGNED_IN" && currentSession?.user?.id) {
           trackEvent(AnalyticsEvents.AUTH_COMPLETED);
+          void trackIdentityLinked(currentSession.user.id);
         }
       });
     } catch {

@@ -803,8 +803,8 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
     : "var(--text-muted)";
   const isPrimaryEnabled = step === 2 || isComplete;
   const primaryCtaClassName = isPrimaryEnabled
-    ? "bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 text-slate-950 shadow-[0_0_28px_rgba(52,211,153,0.48)] hover:shadow-[0_0_38px_rgba(45,212,191,0.62)] border border-emerald-200/30"
-    : "bg-white/[0.03] text-white/[0.12] cursor-not-allowed opacity-45 border border-white/10";
+    ? "bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 text-app-foreground shadow-[0_0_28px_rgba(52,211,153,0.3)] hover:shadow-[0_0_38px_rgba(45,212,191,0.4)] border border-white/20"
+    : "bg-app-muted text-app-muted-foreground cursor-not-allowed opacity-45 border border-app-border";
 
   const totalSteps = 3;
 
@@ -822,7 +822,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
           <div
             className="absolute inset-0"
             style={{
-              background: `${energyGradient(energy)}, radial-gradient(ellipse at 20% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(45, 212, 191, 0.1) 0%, transparent 55%), var(--space-void, #03030a)`,
+              background: `${energyGradient(energy)}, radial-gradient(ellipse at 20% 30%, rgba(139, 92, 246, 0.1) 0%, transparent 60%), radial-gradient(ellipse at 80% 70%, rgba(45, 212, 191, 0.08) 0%, transparent 55%), var(--app-bg)`,
               transition: "background 1.2s cubic-bezier(0.22, 1, 0.36, 1)"
             }}
             onClick={() => handleClose("backdrop")}
@@ -892,7 +892,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   type="button"
                   onClick={requestSkipClose}
                   className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer"
-                  style={{ color: "var(--text-muted)", background: "rgba(255, 255, 255, 0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
+                  style={{ color: "var(--text-muted)", background: "var(--app-muted)", border: "1px solid var(--app-border)" }}
                   aria-label={"تجاوز فحص النهاردة"}
                 >
                   {"تجاوز فحص النهاردة"}
@@ -900,24 +900,22 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
               )}
             </div>
             {showSkipConfirm && (
-              <div className="mx-3.5 sm:mx-4 -mt-1 mb-1 rounded-xl px-3 py-2" style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.35)" }} onClick={(e) => e.stopPropagation()}>
-                <p className="text-xs font-semibold text-center" style={{ color: "rgba(255,236,179,0.98)" }}>
+              <div className="mx-3.5 sm:mx-4 -mt-1 mb-1 rounded-xl px-3 py-2 bg-amber-500/10 border border-amber-500/20" onClick={(e) => e.stopPropagation()}>
+                <p className="text-xs font-semibold text-center text-amber-600 dark:text-amber-200">
                   تريد تخطي فحص حالتك النهاردة؟
                 </p>
                 <div className="mt-2 flex items-center justify-center gap-2">
                   <button
                     type="button"
                     onClick={() => setShowSkipConfirm(false)}
-                    className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
-                    style={{ color: "var(--text-secondary)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.14)" }}
+                    className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer text-app-muted-foreground bg-app-muted border border-app-border"
                   >
                     إلغاء
                   </button>
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); confirmSkipClose(); }}
-                    className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer"
-                    style={{ color: "var(--text-primary)", background: "rgba(248,113,113,0.18)", border: "1px solid rgba(248,113,113,0.42)" }}
+                    className="rounded-full px-3 py-1 text-xs font-semibold transition-colors cursor-pointer text-white bg-rose-500/80 border border-rose-500/20"
                   >
                     أيوه، تجاوز
                   </button>
@@ -973,7 +971,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                 {step > 1 && (
                   <button
                     onClick={handlePreviousStep}
-                    className="flex-1 py-4 rounded-2xl bg-white/[0.03] text-white/40 font-black text-[10px] uppercase tracking-widest hover:text-white transition-all border border-white/5"
+                    className="flex-1 py-4 rounded-2xl bg-app-muted text-app-muted-foreground font-black text-[10px] uppercase tracking-widest hover:text-app-foreground transition-all border border-app-border"
                   >
                     رجعني
                   </button>
@@ -983,7 +981,7 @@ export const PulseCheckModal: FC<PulseCheckModalProps> = ({
                   disabled={(step === 1 && !isComplete) || (step === 2 && phone.replace(/\D/g, "").length < 11)}
                   className={`flex-[2] py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${primaryCtaClassName}`}
                   whileTap={!isPrimaryEnabled ? {} : { scale: 0.98 }}
-                  animate={!isPrimaryEnabled ? {} : { boxShadow: ["0 0 20px rgba(45,212,191,0.35)", "0 0 36px rgba(16,185,129,0.62)", "0 0 20px rgba(45,212,191,0.35)"] }}
+                  animate={!isPrimaryEnabled ? {} : { boxShadow: ["0 0 20px rgba(52,211,153,0.2)", "0 0 36px rgba(16,185,129,0.4)", "0 0 20px rgba(52,211,153,0.2)"] }}
                   transition={!isPrimaryEnabled ? {} : { duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
                 >
                   {step === 1 ? "وريني الشور" : step === 2 ? "تأكيد الرقم" : "يلا بينا"}

@@ -15,10 +15,12 @@ function buildClient() {
 
 async function checkAuth(req: Request): Promise<boolean> {
   const secret = process.env.CRON_SECRET || process.env.MARKETING_DEBUG_KEY;
-  if (!secret) return true;
   const auth = req.headers.get("authorization");
-  if (auth === `Bearer ${secret}`) return true;
 
+  // 1. Secret/Cron Auth
+  if (secret && auth === `Bearer ${secret}`) return true;
+
+  // 2. Admin Session Auth
   const mockReq: AdminRequest = {
     method: req.method,
     url: req.url,
@@ -28,7 +30,14 @@ async function checkAuth(req: Request): Promise<boolean> {
     status: () => mockRes,
     json: () => mockRes,
   };
-  return await verifyAdmin(mockReq, mockRes);
+  
+  const isAdmin = await verifyAdmin(mockReq, mockRes);
+  if (isAdmin) return true;
+
+  // 3. Fallback for Manual Local Recording (only if no secret is mandated)
+  if (!secret) return true;
+
+  return false;
 }
 
 // ─── GET — stats + quick-send leads ─────────────────────────────────────────
@@ -42,7 +51,7 @@ export async function GET(req: Request) {
 
   const { data: queueStats } = await supabase
     .from("marketing_lead_outreach_queue")
-    .select("status, channel, lead_email, opened_at, clicked_at, bounced, complained, sent_at");
+    .select("status, channel, lead_email, lead_id, opened_at, clicked_at, bounced, complained, sent_at");
 
   const counts: Record<string, number> = {};
   const channelBreakdown: Record<string, number> = {};
@@ -66,9 +75,13 @@ export async function GET(req: Request) {
   const uniqueEntitiesReached = uniqueEntitiesSet.size;
 
   // ─── Lead Acquisition & Attribution ─────────────────────────────────────────
-  const { data: dbLeads, count: dbLeadsCount } = await supabase
+  const { data: dbLeads, count: dbLeadsCount, error: dbLeadsError } = await supabase
     .from("marketing_leads")
-    .select("id, name, email, phone_normalized, source_type, campaign, adset, ad, status, created_at, unsubscribed, utm, note", { count: "exact" });
+    .select("id, name, email, phone_normalized, source_type, campaign, adset, ad, status, email_status, created_at, unsubscribed, utm, note", { count: "exact" });
+
+  if (dbLeadsError) {
+    console.error("[MarketingOps] marketing_leads fetch error:", dbLeadsError);
+  }
 
   const totalDatabaseLeads = dbLeadsCount ?? 0;
   const leadsBySource: Record<string, number> = {};
@@ -76,25 +89,28 @@ export async function GET(req: Request) {
 
   const rawLeads = dbLeads ?? [];
 
-  // ─── Email Outreach Engagement Mapping ─────────────────────────────────────
+  // ─── Email Outreach Engagement Mapping (by ID or Email) ───────────────────
   const emailEngagementMap: Record<string, any> = {};
+  const idEngagementMap: Record<string, any> = {};
+
   if (queueStats) {
     for (const qs of queueStats) {
-      if (qs.channel !== 'email' || !qs.lead_email) continue;
-      const email = (qs.lead_email as string).toLowerCase().trim();
+      if (qs.channel !== 'email') continue;
       
-      if (!emailEngagementMap[email]) {
-        emailEngagementMap[email] = {
-          sent: false, opened: false, clicked: false, bounced: false, pending: false
-        };
+      const entry = {
+        sent: qs.status === 'sent',
+        pending: qs.status === 'pending',
+        opened: !!qs.opened_at,
+        clicked: !!qs.clicked_at,
+        bounced: !!(qs.bounced || qs.complained || qs.status === 'failed')
+      };
+
+      if (qs.lead_id) {
+        idEngagementMap[String(qs.lead_id)] = entry;
       }
-      
-      const stats = emailEngagementMap[email];
-      if (qs.status === 'sent') stats.sent = true;
-      if (qs.status === 'pending') stats.pending = true;
-      if (qs.opened_at) stats.opened = true;
-      if (qs.clicked_at) stats.clicked = true;
-      if (qs.bounced || qs.complained || qs.status === 'failed') stats.bounced = true;
+      if (qs.lead_email) {
+        emailEngagementMap[qs.lead_email.toLowerCase().trim()] = entry;
+      }
     }
   }
 
@@ -104,13 +120,13 @@ export async function GET(req: Request) {
     leadsBySource[s] = (leadsBySource[s] ?? 0) + 1;
     leadsByCampaign[c] = (leadsByCampaign[c] ?? 0) + 1;
     
-    // Attach email engagement status
-    let emailStatus = "none";
+    // Attach email engagement status (Robust match: ID first, then Email)
+    let emailStatus = (lead.email_status as string) || "none";
+    
     if (lead.unsubscribed) {
       emailStatus = "unsubscribed";
-    } else if (lead.email) {
-      const normalizedEmail = String(lead.email).toLowerCase().trim();
-      const eng = emailEngagementMap[normalizedEmail];
+    } else {
+      const eng = idEngagementMap[String(lead.id)] || (lead.email ? emailEngagementMap[String(lead.email).toLowerCase().trim()] : null);
       if (eng) {
         if (eng.bounced) emailStatus = "bounced";
         else if (eng.clicked) emailStatus = "clicked";
@@ -441,52 +457,100 @@ export async function POST(req: Request) {
 
   if (body.action === "mark_contacted" && body.leadEmail) {
     const supabase = buildClient();
+    const sentAt = new Date().toISOString();
+    
+    // Update queue
     await supabase
       .from("marketing_lead_outreach_queue")
-      .update({ status: "sent", sent_at: new Date().toISOString() })
+      .update({ status: "sent", sent_at: sentAt, last_error: "MANUAL_EMAIL_SENT" })
       .eq("lead_email", body.leadEmail)
-      .in("status", ["pending", "simulated"]);
+      .in("status", ["pending", "simulated", "failed"]);
+
+    // Update main marketing lead table
+    await supabase
+      .from("marketing_leads")
+      .update({ 
+        status: "engaged", 
+        email_status: "sent", 
+        last_contacted_at: sentAt 
+      })
+      .ilike("email", body.leadEmail);
+
     return NextResponse.json({ ok: true, action: "mark_contacted" });
   }
 
-  if (body.action === "mark_email_manual_sent" && body.leadEmail) {
+  if (body.action === "mark_email_manual_sent" && (body.leadId || body.leadEmail)) {
     const supabase = buildClient();
-    const normalizedEmail = body.leadEmail.toLowerCase().trim();
+    const leadId = body.leadId;
+    const leadEmail = body.leadEmail?.toLowerCase().trim();
     const sentAt = new Date().toISOString();
     
-    // Check if queue entry exists
-    const { data: existing } = await supabase
+    // 1. Get the target lead row
+    let query = supabase.from("marketing_leads").select("id, email, status, email_status");
+    if (leadId) query = query.eq("id", leadId);
+    else if (leadEmail) query = query.ilike("email", leadEmail);
+    
+    const { data: leadRow, error: findError } = await query.maybeSingle();
+
+    if (findError) {
+      console.error("[ManualGmail] Query error:", findError);
+    }
+
+    if (!leadRow) {
+      console.error("[ManualGmail] Lead not found for:", body.leadId || body.leadEmail);
+      return NextResponse.json({ ok: false, error: "lead_not_found" }, { status: 404 });
+    }
+
+    const normalizedEmail = leadRow.email?.toLowerCase().trim();
+
+    // 2. Direct Update/Insert for Outreach Queue
+    // We search first to avoid upsert conflict issues if index is missing
+    const { data: existingQueue } = await supabase
       .from("marketing_lead_outreach_queue")
       .select("id")
-      .ilike("lead_email", normalizedEmail)
+      .eq("lead_id", leadRow.id)
       .eq("channel", "email")
       .maybeSingle();
 
-    if (existing) {
-      await supabase
+    if (existingQueue) {
+       await supabase
         .from("marketing_lead_outreach_queue")
-        .update({ status: "sent", sent_at: sentAt, last_error: "MANUAL_EMAIL_SENT", resend_message_id: 'manual_gmail' })
-        .eq("id", existing.id);
+        .update({ 
+          status: "sent", 
+          sent_at: sentAt, 
+          last_error: "MANUAL_EMAIL_SENT", 
+          resend_message_id: 'manual_gmail',
+          lead_email: normalizedEmail // Sync email too
+        })
+        .eq("id", existingQueue.id);
     } else {
-      // No queue entry exists yet — create one
-      const { data: leadRow } = await supabase
-        .from("marketing_leads")
-        .select("id")
-        .ilike("email", normalizedEmail)
-        .maybeSingle();
-      
-      await supabase.from("marketing_lead_outreach_queue").insert({
-        lead_email: normalizedEmail,
-        lead_id: leadRow?.id ?? null,
-        channel: "email",
-        status: "sent",
-        step: 1,
-        attempts: 1,
-        sent_at: sentAt,
-        last_error: "MANUAL_EMAIL_SENT",
-        resend_message_id: 'manual_gmail'
-      });
+       await supabase
+        .from("marketing_lead_outreach_queue")
+        .insert({ 
+          lead_id: leadRow.id,
+          lead_email: normalizedEmail,
+          channel: "email",
+          status: "sent", 
+          sent_at: sentAt, 
+          last_error: "MANUAL_EMAIL_SENT", 
+          resend_message_id: 'manual_gmail'
+        });
     }
+
+    // 3. Update the main marketing_leads table correctly
+    const { error: updateError } = await supabase
+      .from("marketing_leads")
+      .update({ 
+        status: "engaged", 
+        email_status: "sent", 
+        last_contacted_at: sentAt 
+      })
+      .eq("id", leadRow.id);
+
+    if (updateError) {
+      console.error("[ManualGmail] marketing_leads update error:", updateError);
+    }
+
     return NextResponse.json({ ok: true, action: "mark_email_manual_sent" });
   }
 

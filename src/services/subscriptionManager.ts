@@ -1,4 +1,4 @@
-import { safeGetSession, supabase, isSupabaseAbortError } from "./supabaseClient";
+﻿import { safeGetSession, supabase, isSupabaseAbortError } from "./supabaseClient";
 import { hasRecordedOfferConversion, recordEmotionalPricingEvent } from "./emotionalPricingAnalytics";
 import {
   type PricingTier,

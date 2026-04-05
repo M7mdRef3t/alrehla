@@ -8,7 +8,7 @@ import { isPhaseOneUserFlow, isUserMode } from "../../config/appEnv";
 import { runtimeEnv } from "../../config/runtimeEnv";
 import { getEffectiveFeatureAccess, isPrivilegedRole } from "../../utils/featureFlags";
 import { isSupabaseReady } from "../../services/supabaseClient";
-import { resolveLandingChromeVisibility } from "../../app/orchestration/chromeVisibility";
+import { resolveLandingChromeVisibility } from "../../orchestration/chromeVisibility";
 import { useAppRouteSync } from "./useAppRouteSync";
 
 interface UseAppShellAccessStateParams {

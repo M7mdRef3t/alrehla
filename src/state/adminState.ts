@@ -181,8 +181,10 @@ export const useAdminState = create<AdminState>()(
         set((state) => ({ broadcasts: state.broadcasts.filter((b) => b.id !== id) })),
       setPulseCopyOverrides: (overrides) => set({ pulseCopyOverrides: overrides }),
       setHasSovereignAlert: (value) => set({ hasSovereignAlert: value }),
-      setOpsStatsCache: (data) => set({ opsStatsCache: { data, timestamp: Date.now() } }),
-      setLiveStatsCache: (data) => set({ liveStatsCache: { data, timestamp: Date.now() } }),
+      setOpsStatsCache: (data) => 
+        set({ opsStatsCache: data ? { data, timestamp: Date.now() } : null }),
+      setLiveStatsCache: (data) => 
+        set({ liveStatsCache: data ? { data, timestamp: Date.now() } : null }),
       setCopilotOpen: (value) => set({ isCopilotOpen: value })
     }),
     {

@@ -12,7 +12,12 @@ interface BatteryStateModalProps {
 
 export const BatteryStateModal: FC<BatteryStateModalProps> = ({ isOpen, onClose }) => {
   const battery = useMeState((s) => s.battery);
-  const nodes = useMapState((s) => s.nodes.filter(n => !n.isNodeArchived && !n.isDetached));
+  const rawNodes = useMapState((s) => s.nodes);
+
+  const nodes = useMemo(() => 
+    rawNodes.filter(n => !n.isNodeArchived && !n.isDetached),
+    [rawNodes]
+  );
 
   const stats = useMemo(() => {
     let chargers = 0;

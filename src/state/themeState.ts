@@ -7,7 +7,9 @@ type Theme = "light" | "dark" | "system";
 interface ThemeState {
   theme: Theme;
   resolvedTheme: "light" | "dark";
+  liteMode: boolean;
   setTheme: (theme: Theme) => void;
+  setLiteMode: (lite: boolean) => void;
 }
 
 function getSystemTheme(): "light" | "dark" {
@@ -33,11 +35,13 @@ export const useThemeState = create<ThemeState>()(
     (set) => ({
       theme: "system",
       resolvedTheme: getSystemTheme(),
+      liteMode: false,
       setTheme: (theme: Theme) => {
         const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
         applyTheme(resolvedTheme);
         set({ theme, resolvedTheme });
-      }
+      },
+      setLiteMode: (liteMode: boolean) => set({ liteMode })
     }),
     {
       name: "dawayir-theme",

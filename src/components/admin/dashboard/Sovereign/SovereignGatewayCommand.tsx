@@ -1,235 +1,125 @@
 import type { FC } from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Zap, 
-  Globe, 
-  ExternalLink, 
-  Share2, 
-  Radio, 
-  Activity, 
-  Sparkles, 
-  BarChart3, 
-  Brain, 
-  Settings2,
-  Lock,
-  Unlock,
-  AlertTriangle,
-  ChevronRight,
-  TrendingUp,
-  TrendingDown,
-  DollarSign
+  Globe, Radio, Activity, Sparkles, Brain, Orbit, X, Target, Users, TrendingUp 
 } from "lucide-react";
 import { growthEngine, type DiffusionMetrics } from "../../../../services/growthEngine";
-import { AdminTooltip } from "../Overview/components/AdminTooltip";
+import { supabase, isSupabaseReady } from "../../../../services/supabaseClient";
 
-export const SovereignGatewayCommand: FC<{ onFilterSelect: (filter: { type: string, value: string }) => void }> = ({ onFilterSelect }) => {
-  const [metrics, setMetrics] = useState<DiffusionMetrics | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeGateway, setActiveGateway] = useState<string | null>(null);
+export const AVAILABLE_GATEWAYS = [
+  { id: 'meta', name: 'بوابة Meta', icon: Orbit, sourceKeys: ['meta_instant_form', 'meta', 'facebook', 'instagram'] },
+  { id: 'tiktok', name: 'تيك توك', icon: Activity, sourceKeys: ['tiktok'] },
+  { id: 'google', name: 'جوجل / الموقع', icon: Globe, sourceKeys: ['google', 'website', 'google_ads', 'organic'] },
+  { id: 'direct', name: 'نداء مباشر', icon: Radio, sourceKeys: ['direct', 'whatsapp', 'manual_import', 'manual', 'referral', ''] }
+];
 
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      const data = await growthEngine.getDiffusionMetrics();
-      setMetrics(data);
-      setIsLoading(false);
-    };
-    fetchMetrics();
-    const interval = setInterval(fetchMetrics, 30000);
-    return () => clearInterval(interval);
-  }, []);
+function getLeadCount(leadsBySource: any, gatewayId: string): number {
+  if (!leadsBySource) return 0;
+  const gw = AVAILABLE_GATEWAYS.find(g => g.id === gatewayId);
+  return Object.entries(leadsBySource).reduce((sum, [k, c]) => 
+     gw?.sourceKeys.some(sk => k.toLowerCase().includes(sk)) ? sum + (c as number) : sum, 0);
+}
 
-  const gateways = metrics?.gatewayHealth ?? {};
-
+const GatewayCard: FC<{ id: string, data: any, isActive: boolean, stats: any, onClick: () => void }> = ({ id, data, isActive, stats, onClick }) => {
+  const gw = AVAILABLE_GATEWAYS.find(g => g.id === id)!;
+  const count = getLeadCount(stats?.leadsBySource, id);
+  const res = getLeadCount(stats?.conversionsBySource, id);
+  const rate = count > 0 ? Math.round((res/count)*100) : 0;
   return (
-    <div className="space-y-6">
-      {/* Oracle Guidance Banner */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative p-6 rounded-3xl bg-gradient-to-r from-fuchsia-500/10 via-purple-500/5 to-transparent border border-fuchsia-500/20 overflow-hidden group"
-      >
-        <div className="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/10 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-fuchsia-500/20 transition-all duration-1000" />
-        
-        <div className="flex flex-col md:flex-row items-center gap-6 relative z-10">
-          <div className="w-16 h-16 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/20 flex items-center justify-center text-fuchsia-400 group-hover:scale-110 transition-transform">
-             <Brain className="w-8 h-8" />
-          </div>
-          <div className="flex-1 text-right md:text-left">
-             <h4 className="text-xs font-black text-fuchsia-400 uppercase tracking-widest mb-1">رؤية الأوراكل لـ بوابات العبور</h4>
-             <p className="text-sm font-bold text-fuchsia-100 leading-relaxed italic">
-                {activeGateway ? gateways[activeGateway]?.oracleVerdict : "اختر بوابة عبور لترى تحليل الرنين العميق ونبض الأرواح القادمة منها."}
-             </p>
-          </div>
-          <div className="flex items-center gap-2">
-             <div className="px-3 py-1 bg-fuchsia-500/20 rounded-full border border-fuchsia-500/30 text-[10px] font-black text-fuchsia-300 uppercase tracking-tighter animate-pulse">
-                تحليل لحظي
-             </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Gateway Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Object.entries(gateways).map(([key, data]) => (
-          <GatewayCard 
-            key={key}
-            id={key}
-            data={data}
-            isActive={activeGateway === key}
-            onClick={() => setActiveGateway(key)}
-            onFilter={() => onFilterSelect({ type: "source", value: key })}
-          />
-        ))}
+    <motion.div onClick={onClick} className={`p-6 rounded-3xl border cursor-pointer transition-all ${isActive ? "bg-indigo-500/10 border-indigo-500/30 shadow-xl" : "bg-white/[0.02] border-white/5 hover:bg-white/[0.05]"}`}>
+      <div className="flex justify-between items-center mb-4">
+        <gw.icon className={`w-6 h-6 ${isActive ? "text-indigo-400" : "text-slate-500"}`} />
+        <span className="text-[10px] font-black text-slate-500 uppercase">{rate}% Res</span>
       </div>
+      <h4 className="text-sm font-black text-white mb-1">{gw.name}</h4>
+      <p className="text-2xl font-black text-white tabular-nums">{count}</p>
+    </motion.div>
+  );
+};
 
-      {/* Traffic Pulse Stream Visualizer */}
-      <div className="hud-glass p-6 rounded-3xl border-white/5 relative overflow-hidden bg-black/40">
-          <div className="h-24 flex items-end gap-1 px-2">
-            {Array.from({ length: 44 }).map((_, idx) => {
-              const globalIntensity = (metrics?.velocity ?? 10) / 50; 
-              const barIntensity = Math.random() * 0.8 + 0.2;
-              const height = (barIntensity * globalIntensity * 80) + 10;
-              
-              return (
-                <motion.div 
-                  key={idx}
-                  initial={{ height: 10 }}
-                  animate={{ 
-                    height: [
-                      height * 0.8, 
-                      height * 1.2, 
-                      height
-                    ] 
-                  }}
-                  transition={{ 
-                    duration: 1.5 + Math.random(), 
-                    repeat: Infinity, 
-                    delay: idx * 0.03 
-                  }}
-                  className={`flex-1 rounded-t-sm transition-colors duration-500 ${
-                    idx % 11 === 0 ? "bg-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.4)]" : 
-                    idx % 7 === 0 ? "bg-fuchsia-500/40" : "bg-emerald-500/20"
-                  }`}
-                />
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
+export const SovereignGatewayCommand: FC<{ onFilterSelect: (f: any) => void, stats?: any }> = ({ onFilterSelect, stats }) => {
+  const [activeGateway, setActiveGateway] = useState<string | null>(null);
+  const [oracleStats, setOracleStats] = useState<any>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+
+  const fetchOracle = async () => {
+    try { const r = await fetch("/api/admin/intelligence/oracle-leads"); const d = await r.json(); if (d.ok) setOracleStats(d); } catch(e) {}
   };
 
-  const GatewayCard: FC<{ 
-    id: string, 
-    data: any, 
-    isActive: boolean, 
-    onClick: () => void,
-    onFilter: () => void
-  }> = ({ id, data, isActive, onClick, onFilter }) => {
-    const getIcon = (key: string) => {
-      switch (key) {
-        case 'meta': return <div className="w-full h-full bg-blue-600/20 text-blue-400 flex items-center justify-center font-black text-xs">META</div>;
-        case 'tiktok': return <div className="w-full h-full bg-rose-500/20 text-rose-400 flex items-center justify-center font-black text-xs">TT</div>;
-        case 'google': return <Globe className="w-5 h-5 text-emerald-400" />;
-        default: return <Radio className="w-5 h-5 text-indigo-400" />;
-      }
-    };
+  const runOracle = async () => {
+    setAnalyzing(true);
+    await fetch("/api/admin/intelligence/oracle-leads", { method: "POST", body: JSON.stringify({ batchSize: 20 }) });
+    await fetchOracle();
+    setAnalyzing(false);
+  };
 
-    const getLabel = (key: string) => {
-      switch (key) {
-        case 'meta': return "بوابة ميتا (Meta Gateway)";
-        case 'tiktok': return "جسر تيك توك (TikTok Bridge)";
-        case 'google': return "أوراكل جوجل (Google Ads)";
-        case 'direct': return "النداء المباشر (Direct)";
-        default: return key;
-      }
-    };
+  useEffect(() => { fetchOracle(); }, []);
+
+  const gatewayLeads = useMemo(() => {
+    if (!activeGateway) return [];
+    const gw = AVAILABLE_GATEWAYS.find(g => g.id === activeGateway);
+    return (stats?.rawLeads || []).filter((l: any) => gw?.sourceKeys.includes(l.source_type?.toLowerCase())).slice(0, 10);
+  }, [activeGateway, stats]);
 
   return (
-    <motion.div 
-      whileHover={{ y: -5 }}
-      onClick={onClick}
-      className={`relative p-5 rounded-3xl border transition-all duration-500 cursor-pointer overflow-hidden ${
-        isActive ? "bg-white/10 border-white/30 shadow-2xl" : "bg-black/40 border-white/10 hover:border-white/20"
-      }`}
-    >
-      {/* Background Pulse */}
-      {isActive && (
-        <motion.div 
-          animate={{ opacity: [0.05, 0.15, 0.05] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="absolute inset-0 bg-blue-500 shadow-[inset_0_0_40px_rgba(59,130,246,0.2)]"
-        />
-      )}
-
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4">
-           <div className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center overflow-hidden">
-              {getIcon(id)}
-           </div>
-           <div className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase border tracking-tighter ${
-             data.resonance >= 0.8 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-amber-500/20 text-amber-400 border-amber-500/30"
-           }`}>
-              Resonance: {Math.round(data.resonance * 100)}%
-           </div>
+    <div className="space-y-10" dir="rtl">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="hud-glass p-8 rounded-[2.5rem] border-white/5 bg-white/[0.02]">
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">إجمالي الأرواح</p>
+          <h3 className="text-5xl font-black text-white">{(stats?.totalDatabaseLeads || 0).toLocaleString("ar-EG")}</h3>
         </div>
-
-        <h4 className="text-sm font-black text-white uppercase tracking-tight mb-2">{getLabel(id)}</h4>
-        
-        {/* Pulse Gauge */}
-        <div className="space-y-1 mb-4">
-           <div className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
-              <span>Traffic Intensity</span>
-              <span>{data.pulse}%</span>
-           </div>
-           <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${data.pulse}%` }}
-                className={`h-full ${data.pulse > 80 ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]" : "bg-indigo-500"}`}
-              />
-           </div>
+        <div className="hud-glass p-8 rounded-[2.5rem] border-white/5 bg-white/[0.02]">
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">الزوار (٢٤ ساعة)</p>
+          <h3 className="text-5xl font-black text-white">{(oracleStats?.stats?.funnel?.visitors24h || 0).toLocaleString("ar-EG")}</h3>
         </div>
-
-        {/* ROI & Spend HUD */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
-           <div className="p-2 rounded-xl bg-white/[0.03] border border-white/5">
-              <p className="text-[7px] font-black uppercase text-slate-500 tracking-widest mb-1">CMA Spend</p>
-              <div className="flex items-center gap-1">
-                 <DollarSign className="w-2.5 h-2.5 text-slate-400" />
-                 <span className="text-[10px] font-black text-white">${Math.round(data.spend || 0)}</span>
-              </div>
-           </div>
-           <div className={`p-2 rounded-xl border ${
-             (data.roi || 0) > 0 ? "bg-emerald-500/5 border-emerald-500/10" : "bg-rose-500/5 border-rose-500/10"
-           }`}>
-              <p className="text-[7px] font-black uppercase text-slate-500 tracking-widest mb-1">Gateway ROI</p>
-              <div className="flex items-center gap-1">
-                 {(data.roi || 0) > 0 ? <TrendingUp className="w-2.5 h-2.5 text-emerald-400" /> : <TrendingDown className="w-2.5 h-2.5 text-rose-400" />}
-                 <span className={`text-[10px] font-black ${
-                   (data.roi || 0) > 0 ? "text-emerald-400" : "text-rose-400"
-                 }`}>{Math.round(data.roi || 0)}%</span>
-              </div>
-           </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 pt-2 border-t border-white/5">
-           <button 
-             onClick={(e) => { e.stopPropagation(); onFilter(); }}
-             className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-black text-slate-300 uppercase tracking-widest transition-all"
-           >
-              الارتباطات
-           </button>
-           <button className="p-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-slate-400 hover:text-white transition-all">
-              <Settings2 className="w-3.5 h-3.5" />
-           </button>
-           <button className={`p-1.5 border rounded-lg transition-all ${data.status === 'open' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/20 border-rose-500/30 text-rose-400'}`}>
-              {data.status === 'open' ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-           </button>
+        <div className="hud-glass p-8 rounded-[2.5rem] border-indigo-500/10 bg-indigo-500/5">
+          <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">معدل التحويل</p>
+          <h3 className="text-5xl font-black text-white">{(oracleStats?.stats?.funnel?.conversionRate || 0).toFixed(1)}%</h3>
         </div>
       </div>
-    </motion.div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        <div className="xl:col-span-8 hud-glass p-10 rounded-[3.5rem] bg-slate-900/40 border-white/10">
+          <h3 className="text-xl font-black text-white mb-10 flex items-center gap-4"><Orbit className="w-6 h-6 text-indigo-400" /> البوابات السيادية</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {AVAILABLE_GATEWAYS.map(gw => (
+              <GatewayCard key={gw.id} id={gw.id} stats={stats} isActive={activeGateway === gw.id} onClick={() => setActiveGateway(gw.id)} data={null} />
+            ))}
+          </div>
+        </div>
+        <div className="xl:col-span-4 hud-glass p-10 rounded-[3.5rem] bg-indigo-500/[0.02] border-indigo-500/10">
+          <h3 className="text-xl font-black text-white mb-10 flex items-center gap-4"><Sparkles className="w-6 h-6 text-indigo-400" /> Oracle Intelligence</h3>
+          <div className="space-y-6">
+            <div className="p-6 rounded-3xl bg-indigo-500/5 border border-indigo-500/10">
+               <p className="text-[10px] font-black text-slate-500 uppercase mb-2">الحالة</p>
+               <p className="text-sm font-bold text-white">{oracleStats?.stats?.pending || 0} روح تحتاج تحليل.</p>
+            </div>
+            <button onClick={runOracle} disabled={analyzing} className="w-full py-5 rounded-3xl bg-indigo-600 text-white font-black uppercase tracking-widest hover:bg-indigo-500 transition-all flex items-center justify-center gap-3">
+              <Brain className="w-5 h-5" /> {analyzing ? "جاري التحليل..." : "تشغيل الأوراكل"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {activeGateway && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="hud-glass p-10 rounded-[3.5rem] bg-slate-950/60 border-white/5">
+             <div className="flex justify-between items-center mb-10">
+                <h4 className="text-2xl font-black text-white italic">{AVAILABLE_GATEWAYS.find(g => g.id === activeGateway)?.name}</h4>
+                <button onClick={() => setActiveGateway(null)} className="p-3 bg-white/5 rounded-xl text-slate-500 hover:text-white"><X className="w-6 h-6" /></button>
+             </div>
+             <div className="space-y-4">
+                {gatewayLeads.map((l: any) => (
+                   <div key={l.id} className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex justify-between items-center">
+                      <p className="text-sm font-bold text-white">{l.name || "SOUL"}</p>
+                      <button onClick={() => window.open(`https://wa.me/${l.phone?.replace(/\D/g, '')}`)} className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg"><Activity className="w-5 h-5" /></button>
+                   </div>
+                ))}
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };

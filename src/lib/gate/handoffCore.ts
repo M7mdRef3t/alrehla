@@ -8,17 +8,24 @@
  * attached to this user to verify whether the Brutal Rule passes.
  */
 
-export const triggerMapCompletionCheck = async (gateSessionId: string, userId: string): Promise<boolean> => {
-  if (!gateSessionId || !userId) return false;
+import { supabase } from '@/services/supabaseClient';
+
+export const triggerMapCompletionCheck = async (gateSessionId: string): Promise<boolean> => {
+  if (!gateSessionId) return false;
   
   try {
+    if (!supabase) return false;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return false;
+
     const response = await fetch('/api/gate/map-completion', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
       },
-      // WE ONLY SEND THE ID AND THE TARGET IDENTITY. Total Verification is on the Server.
-      body: JSON.stringify({ gateSessionId, userId })
+      // WE ONLY SEND THE GATE ID. Total Verification is on the Server.
+      body: JSON.stringify({ gateSessionId })
     });
     
     return response.ok;

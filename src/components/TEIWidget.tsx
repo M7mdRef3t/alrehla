@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useMapState } from "../state/mapState";
 import { computeTEI, saveTEISnapshot, getTEIComparison } from "../utils/traumaEntropyIndex";
@@ -27,7 +27,15 @@ export const TEIWidget: FC = () => {
   const savedRef = useRef(false);
 
   const tei = useMemo(() => computeTEI(nodes), [nodes]);
-  const comparison = useMemo(() => getTEIComparison(), []);
+  const [comparison, setComparison] = useState<{ older: any; newer: any; delta: number } | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    getTEIComparison().then((data) => {
+        if (mounted) setComparison(data);
+    }).catch(console.error);
+    return () => { mounted = false; };
+  }, []);
 
   /* حفظ snapshot مرة واحدة يومياً */
   useEffect(() => {

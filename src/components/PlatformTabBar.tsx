@@ -100,10 +100,11 @@ export const PlatformTabBar = memo(function PlatformTabBar({
       {/* Glass container */}
       <div
         className="flex items-center justify-around
-                   backdrop-blur-xl bg-slate-900/90
-                   border-t border-white/10
-                   shadow-[0_-4px_24px_rgba(0,0,0,0.5)]
+                   backdrop-blur-xl bg-white/80 dark:bg-slate-900/90
+                   border-t border-slate-200 dark:border-white/10
+                   shadow-lg
                    px-2 pt-2 pb-1"
+        style={{ background: "var(--glass-bg)", borderColor: "var(--glass-border)" }}
       >
         {TAB_ITEMS.map(({ id, label, icon: Icon }) => {
           const isActive = activeTabId === id;
@@ -124,14 +125,14 @@ export const PlatformTabBar = memo(function PlatformTabBar({
               {isActive && (
                 <motion.span
                   layoutId="tab-bar-indicator"
-                  className="absolute inset-0 rounded-xl bg-teal-500/15"
+                  className="absolute inset-0 rounded-xl bg-teal-500/10 dark:bg-teal-500/15"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
               <div className="relative">
                 <Icon
                   className={`w-5 h-5 relative z-10 transition-colors duration-200 ${
-                    isActive ? "text-teal-400" : "text-slate-500"
+                    isActive ? "text-teal-500" : "text-app-muted"
                   }`}
                 />
                 {/* #3 — Real badge dot */}
@@ -142,15 +143,15 @@ export const PlatformTabBar = memo(function PlatformTabBar({
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       exit={{ scale: 0 }}
-                      className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-teal-400
-                                 ring-1 ring-slate-900 animate-pulse"
+                      className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-teal-500
+                                 ring-1 ring-white dark:ring-slate-900 animate-pulse"
                     />
                   )}
                 </AnimatePresence>
               </div>
               <span
                 className={`text-[10px] font-medium relative z-10 transition-colors duration-200 ${
-                  isActive ? "text-teal-400" : "text-slate-500"
+                  isActive ? "text-teal-500" : "text-app-muted"
                 }`}
               >
                 {label}
@@ -175,7 +176,7 @@ export const PlatformTabBar = memo(function PlatformTabBar({
                 animate={{ rotate: 0, opacity: 1 }}
                 exit={{ rotate: 90, opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="w-5 h-5 flex items-center justify-center text-slate-500"
+                className="w-5 h-5 flex items-center justify-center text-app-muted"
               >
                 <Sun className="w-5 h-5" />
               </motion.span>
@@ -186,13 +187,13 @@ export const PlatformTabBar = memo(function PlatformTabBar({
                 animate={{ rotate: 0, opacity: 1 }}
                 exit={{ rotate: -90, opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="w-5 h-5 flex items-center justify-center text-slate-500"
+                className="w-5 h-5 flex items-center justify-center text-app-muted"
               >
                 <Moon className="w-5 h-5" />
               </motion.span>
             )}
           </AnimatePresence>
-          <span className="text-[10px] font-medium text-slate-500">
+          <span className="text-[10px] font-medium text-app-muted">
             {isDark ? "فاتح" : "داكن"}
           </span>
         </button>

@@ -30,8 +30,8 @@ interface AppStartScreensProps {
   category: AdviceCategory;
   goalId: string;
   selectedNodeId: string | null;
-  pulseMode: ComponentProps<typeof CoreMapScreen>["pulseMode"];
-  pulseInsight: ComponentProps<typeof CoreMapScreen>["pulseInsight"];
+  pulseMode?: ComponentProps<typeof CoreMapScreen>["pulseMode"];
+  pulseInsight?: ComponentProps<typeof CoreMapScreen>["pulseInsight"];
   isLowPulseCocoonSuppressed: boolean;
   canUseBasicDiagnosis: boolean;
   challengeTarget: { nodeId: string } | null;

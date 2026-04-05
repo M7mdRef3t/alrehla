@@ -31,7 +31,7 @@ function MarketingGateContent() {
       setState(s => ({ ...s, sessionId: newSessionId }));
       
       // Tracking PageView/ViewContent
-      trackGateEventPixelOnly('ViewContent', { external_id: newSessionId });
+      trackGateEventPixelOnly('ViewContent', { external_id: newSessionId }, `${newSessionId}-view`);
       initialized.current = true;
     }
   }, []);
@@ -51,7 +51,7 @@ function MarketingGateContent() {
     
     if (!gateStartedTracked.current) {
       gateStartedTracked.current = true;
-      trackGateEventPixelOnly('GateStarted', { external_id: state.sessionId });
+      trackGateEventPixelOnly('GateStarted', { external_id: state.sessionId }, `${state.sessionId}-started`);
     }
   };
 
@@ -59,7 +59,7 @@ function MarketingGateContent() {
     if (!state.email || !state.sourceArea) return;
     
     // Pixel Fire
-    const eventId = trackGateEventPixelOnly('Lead', { external_id: state.sessionId });
+    const eventId = trackGateEventPixelOnly('Lead', { external_id: state.sessionId }, `${state.sessionId}-lead`);
     
     // Backend Idempotent Fire & Record
     const response = await fetch('/api/gate/session', {
@@ -77,7 +77,7 @@ function MarketingGateContent() {
 
     if (response.ok) {
       setState(s => ({ ...s, step: 'layer2' }));
-      trackGateEventPixelOnly('QualifierStarted', { external_id: state.sessionId });
+      trackGateEventPixelOnly('QualifierStarted', { external_id: state.sessionId }, `${state.sessionId}-qualifier`);
     }
   };
 
@@ -86,7 +86,7 @@ function MarketingGateContent() {
     const finalState = { ...state, painPoint: q1, intent: q2, commitment: q3, step: 'handoff' as const };
     
     // Pixel Fire
-    const eventId = trackGateEventPixelOnly('CompleteRegistration', { external_id: state.sessionId });
+    const eventId = trackGateEventPixelOnly('CompleteRegistration', { external_id: state.sessionId }, `${state.sessionId}-reg`);
     
     // Backend Idempotent Fire & Record
     const response = await fetch('/api/gate/session', {
@@ -104,8 +104,11 @@ function MarketingGateContent() {
     });
 
     if (response.ok) {
-      // Clean Handoff: The frontend map will rely solely on gateSessionId in the URL
-      router.push(`/?gateSessionId=${finalState.sessionId}`);
+      if (typeof window !== "undefined" && finalState.email) {
+        window.localStorage.setItem("dawayir_lead_email", finalState.email);
+      }
+      // Revenue-first Handoff: Go specifically to activation
+      router.push(`/activation?gateSessionId=${finalState.sessionId}`);
     }
   };
 

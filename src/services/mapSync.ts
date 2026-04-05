@@ -128,9 +128,12 @@ async function flushMapSync(): Promise<void> {
 
       // Check external funnel status. If user originated from a Gate Session,
       // now is the exact moment his Map is "Persisted" Server-Side.
-      const gateSessionId = useJourneyState.getState().gateSessionId;
-      if (gateSessionId) {
-        void triggerMapCompletionCheck(gateSessionId, user.id);
+      const { gateSessionId, isGateConverted, setGateConverted } = useJourneyState.getState();
+      if (gateSessionId && !isGateConverted) {
+        setGateConverted(true);
+        void triggerMapCompletionCheck(gateSessionId).then((success) => {
+          if (!success) setGateConverted(false);
+        });
       }
     } else {
       const errorMsg = error.message || "sync_failed";

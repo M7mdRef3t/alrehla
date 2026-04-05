@@ -68,7 +68,7 @@ export class WhatsAppAutomationService {
       phone: payload.from,
       source: "whatsapp_auto",
       sourceType: "whatsapp",
-      status: intent === "payment_requested" ? "payment_requested" : "new",
+      status: intent === "payment_requested" ? "payment_requested" : "engaged",
       note: `[WhatsApp Auto] "${payload.body}" | Intent: ${intent}`,
     };
 

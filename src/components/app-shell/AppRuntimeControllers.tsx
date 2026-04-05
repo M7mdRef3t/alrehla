@@ -16,7 +16,7 @@ import { getFromLocalStorage, setInLocalStorage } from "../../services/browserSt
 import { useAuthState } from "../../state/authState";
 import { runtimeEnv } from "../../config/runtimeEnv";
 import { requestIdleCallback, cancelIdleCallback } from "../../utils/performanceOptimizations";
-import { startAutonomousStartupJobs } from "../../app/orchestration/startupJobs";
+import { startAutonomousStartupJobs } from "../../orchestration/startupJobs";
 import { isUserMode } from "../../config/appEnv";
 import { initAppContentRealtime } from "../../state/appContentState";
 import { fetchAdminConfig, fetchOwnerAlerts } from "../../services/adminApi";

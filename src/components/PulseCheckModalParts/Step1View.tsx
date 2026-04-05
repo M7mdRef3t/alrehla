@@ -93,14 +93,14 @@ export function Step1View({
           key={energyStateLabel}
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-xs font-black mt-1 uppercase tracking-widest"
+          className="text-xs font-black mt-1 uppercase tracking-widest transition-colors"
           style={{
-            color: energy === null ? "#64748B"
-              : energy <= 2 ? "#f87171"
-              : energy <= 4 ? "#fbbf24"
-              : energy <= 6 ? "#2dd4bf"
-              : energy <= 8 ? "#34d399"
-              : "#14b8a6"
+            color: energy === null ? "var(--text-muted)"
+              : energy <= 2 ? "rgba(248, 113, 113, 0.9)"
+              : energy <= 4 ? "rgba(245, 158, 11, 0.9)"
+              : energy <= 6 ? "rgba(45, 212, 191, 0.9)"
+              : energy <= 8 ? "rgba(52, 211, 153, 0.9)"
+              : "rgba(20, 184, 166, 0.9)"
           }}
         >
           {energyStateLabel}
@@ -110,18 +110,17 @@ export function Step1View({
         <div className="w-full max-w-xs px-2 pt-4 pb-2" dir="ltr">
           <div className="relative">
             <div 
-              className="h-3 rounded-full overflow-hidden"
-              style={{ background: "rgba(255,255,255,0.06)" }}
+              className="h-2 rounded-full overflow-hidden bg-app-muted"
             >
               <motion.div
                 className="h-full rounded-full"
                 style={{
                   background: energy === null ? "transparent"
-                    : energy <= 3 ? "linear-gradient(90deg, #ef4444, #f59e0b)"
-                    : energy <= 6 ? "linear-gradient(90deg, #f59e0b, #2dd4bf)"
-                    : "linear-gradient(90deg, #2dd4bf, #14b8a6)",
+                    : energy <= 3 ? "linear-gradient(90deg, #f87171, #fbbf24)"
+                    : energy <= 6 ? "linear-gradient(90deg, #fbbf24, #2dd4bf)"
+                    : "linear-gradient(90deg, #2dd4bf, #10b981)",
                   boxShadow: energy !== null && energy > 0
-                    ? `0 0 16px ${energy <= 3 ? "rgba(239,68,68,0.3)" : energy <= 6 ? "rgba(251,191,36,0.25)" : "rgba(20,184,166,0.35)"}`
+                    ? `0 0 16px ${energy <= 3 ? "rgba(248,113,113,0.2)" : energy <= 6 ? "rgba(251,191,36,0.15)" : "rgba(16,185,129,0.2)"}`
                     : "none",
                 }}
                 initial={{ width: "0%" }}
@@ -150,16 +149,16 @@ export function Step1View({
             />
 
             <motion.div
-              className="absolute top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-2 border-white z-[5] pointer-events-none"
+              className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 border-white dark:border-slate-400 z-[5] pointer-events-none"
               style={{
-                background: energy === null ? "#475569"
-                  : energy <= 3 ? "#f59e0b"
+                background: energy === null ? "var(--text-muted)"
+                  : energy <= 3 ? "#fbbf24"
                   : energy <= 6 ? "#2dd4bf"
-                  : "#14b8a6",
+                  : "#10b981",
                 boxShadow: `0 0 12px ${energy === null ? "transparent"
-                  : energy <= 3 ? "rgba(245,158,11,0.5)"
-                  : energy <= 6 ? "rgba(45,212,191,0.4)"
-                  : "rgba(20,184,166,0.5)"}`,
+                  : energy <= 3 ? "rgba(251,191,36,0.4)"
+                  : energy <= 6 ? "rgba(45,212,191,0.3)"
+                  : "rgba(16,185,129,0.4)"}`,
               }}
               animate={{ left: `calc(${((energy ?? 0) / 10) * 100}% - 12px)` }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -181,8 +180,9 @@ export function Step1View({
                 className="text-[9px] font-bold transition-all cursor-pointer px-1 py-0.5 rounded"
                 style={{
                   color: energy !== null && Math.abs(energy - anchor.val) <= 1
-                    ? "#fff"
-                    : "rgba(148,163,184,0.5)",
+                    ? "var(--text-primary)"
+                    : "var(--text-muted)",
+                  opacity: energy !== null && Math.abs(energy - anchor.val) <= 1 ? 1 : 0.5
                 }}
               >
                 {anchor.label}
@@ -260,9 +260,10 @@ export function Step1View({
                       onClick={() => setFocusValue(f.id)}
                       className="relative flex flex-col items-center justify-center p-4 rounded-2xl border text-[10px] font-black transition-all"
                       style={{
-                        background: isSelected ? `${fStyle.bg}44` : 'var(--glass-bg)',
+                        background: isSelected ? `${fStyle.bg}22` : 'var(--glass-bg)',
                         borderColor: isSelected ? fStyle.border : 'var(--glass-border)',
                         color: isSelected ? 'var(--text-primary)' : 'var(--text-muted)',
+                        boxShadow: isSelected ? `0 0 20px ${fStyle.bg}15` : 'none'
                       }}
                     >
                       {isSelected && (
@@ -330,11 +331,8 @@ export function Step1View({
                 value={notes} 
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="اكتب اللي في بالك هنا.. فضفض براحتك."
-                className="w-full h-24 p-4 rounded-2xl outline-none transition-all resize-none shadow-inner"
+                className="w-full h-24 p-4 rounded-2xl outline-none transition-all resize-none bg-app-muted border border-app-border text-app-foreground placeholder:text-app-muted-foreground focus:border-teal-500/50"
                 style={{
-                  background: "var(--glass-bg)",
-                  border: "1px solid var(--glass-border)",
-                  color: "var(--text-primary)",
                   fontFamily: "var(--font-sans)"
                 }}
               />

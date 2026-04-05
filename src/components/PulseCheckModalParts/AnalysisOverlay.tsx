@@ -9,7 +9,7 @@ export function AnalysisOverlay({ isAnalyzing }: AnalysisOverlayProps) {
     <AnimatePresence>
       {isAnalyzing && (
         <motion.div 
-          className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/95 backdrop-blur-2xl" 
+          className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-app/95 backdrop-blur-2xl" 
           initial={{ opacity: 0 }} 
           animate={{ opacity: 1 }} 
           exit={{ opacity: 0 }}

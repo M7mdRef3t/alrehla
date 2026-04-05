@@ -241,14 +241,15 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   }, [personGender]);
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col items-center justify-start overflow-y-auto px-4 py-12 md:py-20 bg-slate-950/90 backdrop-blur-2xl">
+    <div className="fixed inset-0 z-[60] flex flex-col items-center justify-start overflow-y-auto px-4 py-12 md:py-20 bg-[#020617]/95 backdrop-blur-3xl">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.9, y: 30, filter: "blur(15px)" }}
+        animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         className="w-full max-w-3xl space-y-8"
       >
         {/* Tabs Header */}
-        <div className="flex bg-white/5 rounded-2xl p-1 mb-8 border border-white/10 shrink-0 shadow-xl">
+        <div className="flex bg-white/[0.03] rounded-3xl p-1.5 mb-8 border border-white/5 shrink-0 shadow-2xl backdrop-blur-xl">
           {[
             { id: "diagnosis", label: "التشخيص", icon: "👁️" },
             { id: "roadmap", label: "الخريطة", icon: "🗺️" },
@@ -258,7 +259,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id as "diagnosis" | "roadmap" | "tools")}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-sm font-black transition-all ${activeTab === tab.id ? "bg-slate-900 border border-white/10 text-white shadow-[0_0_20px_rgba(255,255,255,0.05)]" : "text-slate-500 hover:text-white hover:bg-white/5"}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-4 px-3 rounded-2xl text-xs sm:text-sm font-black transition-all duration-500 uppercase tracking-widest ${activeTab === tab.id ? "bg-white/10 border border-white/10 text-white shadow-[0_0_30px_rgba(255,255,255,0.05)] scale-[1.02]" : "text-slate-500 hover:text-white hover:bg-white/5"}`}
             >
               <span className="text-lg opacity-80">{tab.icon}</span>
               <span>{tab.label}</span>
@@ -268,45 +269,51 @@ export const ResultScreen: FC<ResultScreenProps> = ({
         {/* التشخيص (Snapshot) هو أول شيء يظهر */}
         {activeTab === "diagnosis" && (
 <>
-<div ref={shareCardRef} className="p-8 rounded-3xl bg-slate-950 border border-white/10 mb-8 text-center relative overflow-hidden shadow-2xl">
-          <div className="absolute inset-0 bg-radial-gradient(circle_at_center,rgba(255,255,255,0.03),transparent) pointer-events-none" />
+        {activeTab === "diagnosis" && (
+        <>
+        <div ref={shareCardRef} className="p-10 rounded-[2.5rem] bg-gradient-to-br from-slate-900/60 to-black/80 border border-white/5 mb-8 text-center relative overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.8)] backdrop-blur-2xl">
+          <div className="absolute inset-0 bg-radial-gradient(circle_at_center,rgba(45,212,191,0.03),transparent) pointer-events-none" />
           
-          <h2 className="text-3xl font-black text-white mb-6 flex items-center justify-center gap-4">
-            <span className="tracking-tight">
+          <h2 className="text-3xl font-black text-white mb-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <span className="tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
               {isEmotionalPrisoner ? `تشخيص المدار: ${result.state_label}` : result.title}
             </span>
             <span
-              className="inline-flex items-center justify-center rounded-lg bg-teal-500/20 px-3 py-1 text-[9px] font-black text-teal-400 tracking-[0.2em] uppercase border border-teal-500/30 shadow-inner"
-              title="نسخة ثابتة"
+              className="inline-flex items-center justify-center rounded-full bg-teal-500/20 px-4 py-1 text-[10px] font-black text-teal-400 tracking-[0.3em] uppercase border border-teal-500/30 shadow-[0_0_20px_rgba(45,212,191,0.2)]"
             >
-              SNAPSHOT
+              TACTICAL_SNAPSHOT
             </span>
           </h2>
           {isEmotionalPrisoner && (
-            <p className="mb-8 text-base text-slate-300 leading-relaxed text-center font-medium max-w-2xl mx-auto opacity-90">
+            <p className="mb-10 text-lg text-slate-300 leading-relaxed text-center font-bold max-w-2xl mx-auto opacity-90 border-r-4 border-teal-500/30 pr-8 py-2">
               جسمك حر.. بس عقلك لسه متعلق. أنت دلوقتي مش في نفس المكان، لكن التفكير لسه ماسكك. بتصحى وتنام وأنت {singularReferenceText} في خيالك وبتدافع عن نفسك في محاكمات جوه دماغك.
             </p>
           )}
-          <div className="flex flex-col items-center gap-5 text-center relative z-10">
-            {isEmotionalPrisoner ? (
-              <p className="text-xs font-black text-amber-400 uppercase tracking-[0.15em] bg-amber-400/10 px-4 py-1.5 rounded-full border border-amber-400/20">
-                التركيز الآن: <span className="text-white ml-1">{result.goal_label}</span>
+          <div className="flex flex-col items-center gap-8 text-center relative z-10">
+            <div className="px-6 py-2.5 rounded-full bg-white/[0.03] border border-white/10 flex items-center gap-3">
+              <div className={`w-2.5 h-2.5 rounded-full ${isEmergency ? "bg-rose-500 shadow-[0_0_10px_#f43f5e]" : "bg-teal-500 shadow-[0_0_10px_#14b8a6]"}`} />
+              <p className="text-xs font-black text-white/60 uppercase tracking-[0.2em]">
+                {isEmotionalPrisoner ? "التركيز الحالي" : "حالة الكيان"}: <span className="text-white ml-2">{isEmotionalPrisoner ? result.goal_label : result.state_label}</span>
               </p>
-            ) : (
-              <p className="text-xs font-black text-teal-400 uppercase tracking-[0.15em] bg-teal-400/10 px-4 py-1.5 rounded-full border border-teal-400/20">
-                الحالة: <span className="text-white ml-1">{result.state_label}</span>
-              </p>
-            )}
-            <p className="max-w-xl text-base text-slate-400 leading-relaxed font-medium italic opacity-80 border-r-2 border-white/10 pr-6 py-2">
-              "{shortPromiseBody}"
-            </p>
-            <div className="mt-6 px-8 py-4 rounded-2xl bg-white/[0.03] border border-white/10 text-base font-black text-white shadow-2xl backdrop-blur-md">
-              <span className="opacity-50 text-xs uppercase tracking-widest ml-2">{result.mission_label}</span>
-              <span className="mx-2 text-slate-600">|</span>
-              <span className="text-teal-400">{result.mission_goal}</span>
             </div>
+
+            <p className="max-w-2xl text-xl text-slate-400 leading-relaxed font-black italic opacity-80 py-4 px-8 border-x border-white/5 relative">
+              <span className="absolute top-0 left-0 text-white/10 text-6xl">"</span>
+              {shortPromiseBody}
+              <span className="absolute bottom-0 right-0 text-white/10 text-6xl">"</span>
+            </p>
+
+            <motion.div 
+               whileHover={{ scale: 1.02 }}
+               className="mt-8 px-10 py-6 rounded-[2rem] bg-teal-500/[0.03] border border-teal-500/20 text-lg font-black text-white shadow-2xl backdrop-blur-xl group cursor-default transition-all duration-700"
+            >
+              <span className="opacity-40 text-[10px] uppercase tracking-[0.3em] block mb-2 font-mono group-hover:text-teal-400 transition-colors">{result.mission_label}</span>
+              <span className="text-teal-400 group-hover:text-white transition-colors duration-500">{result.mission_goal}</span>
+            </motion.div>
           </div>
         </div>
+        </>
+        )}
 
         
 </>
@@ -639,58 +646,51 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           </>
         )}
 
-      {summaryOnly && onClose && (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           {!isForcedCtaMode && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   type="button"
                   onClick={() => void handleShareResult()}
-                  data-variant="ghost"
-                  data-size="md"
-                  className="ds-button w-full"
+                  className="px-6 py-5 rounded-3xl bg-white/5 border border-white/10 text-slate-400 font-black tracking-widest uppercase hover:bg-white/10 hover:text-white transition-all duration-700"
                 >
                   مشاركة النتيجة
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleDownloadShareImage()}
-                  data-variant="ghost"
-                  data-size="md"
                   disabled={shareBusy}
-                  className="ds-button w-full"
+                  className="px-6 py-5 rounded-3xl bg-white/5 border border-white/10 text-slate-400 font-black tracking-widest uppercase hover:bg-white/10 hover:text-white transition-all duration-700 disabled:opacity-50"
                 >
-                  {shareBusy ? "جارٍ تجهيز الصورة..." : "تحميل صورة النتيجة"}
+                  {shareBusy ? "جارٍ التجهيز..." : "تحميل التقرير"}
                 </button>
             </div>
           )}
           {shareStatus && (
-            <p className="text-xs text-slate-400 text-center font-medium">{shareStatus}</p>
+            <p className="text-xs text-slate-400 text-center font-bold tracking-wide">{shareStatus}</p>
           )}
-          {ctaStatus && (
-            <p className="text-xs text-amber-400 text-center font-black">{ctaStatus}</p>
-          )}
-          {shouldShowMapSyncBanner && (
-            <p className="text-xs text-amber-400 text-center font-black">{mapSyncBannerText}</p>
-          )}
+          
           {isEmergency && (
-            <div className="rounded-3xl border border-rose-500/30 bg-rose-950/20 p-6 text-right mb-4 backdrop-blur-xl overflow-hidden relative shadow-2xl">
-               <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 blur-2xl" />
-              <p className="text-lg font-black text-rose-300 mb-2 relative z-10">سلامتك أولاً</p>
-              <p className="text-sm text-slate-300 leading-relaxed mb-4 relative z-10">
-                الشخص اتضاف في المدار الأحمر. لو محتاج تتكلم مع حد الآن:
+            <div className="rounded-[2.5rem] border border-rose-500/40 bg-rose-950/20 p-10 text-right mb-4 backdrop-blur-2xl overflow-hidden relative shadow-3xl">
+               <div className="absolute top-0 right-0 w-40 h-40 bg-rose-500/10 blur-[80px]" />
+              <p className="text-2xl font-black text-rose-300 mb-4 relative z-10 flex items-center justify-end gap-3">
+                سلامتك أولاً
+                <ShieldAlert className="w-8 h-8 text-rose-500" />
+              </p>
+              <p className="text-base text-slate-300 leading-relaxed mb-8 relative z-10 font-bold">
+                لقد دخلت مسار الطوارئ. هذا الكيان يشكل خطراً مباشراً على استقرارك. لا تتردد في طلب الدعم.
               </p>
               {emergencyCopy.supportLines.length > 0 && (
-                <ul className="space-y-3 mb-6 relative z-10">
+                <ul className="space-y-4 mb-10 relative z-10">
                   {emergencyCopy.supportLines.map((line) => (
-                    <li key={line.phone} className="flex items-center justify-end gap-3 rounded-xl bg-white/5 py-3 px-4 border border-white/5">
+                    <li key={line.phone} className="flex items-center justify-end gap-5 rounded-2xl bg-white/5 py-4 px-6 border border-white/5 hover:bg-white/10 transition-all">
                       <a
                         href={`tel:${line.phone}`}
-                        className="text-rose-400 font-black hover:text-rose-300 underline underline-offset-4"
+                        className="text-rose-400 font-black text-lg hover:text-rose-300 underline underline-offset-8 decoration-rose-500/30"
                       >
                         {line.phone}
                       </a>
-                      <span className="text-slate-300 text-xs font-bold">{line.name}</span>
+                      <span className="text-slate-100 text-sm font-black tracking-wide uppercase">{line.name}</span>
                     </li>
                   ))}
                 </ul>
@@ -702,17 +702,15 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                     trackEvent(AnalyticsEvents.EMERGENCY_OPENED, { source: "result_screen" });
                     onOpenEmergency();
                   }}
-                  className="w-full rounded-2xl bg-rose-600 text-white px-6 py-4 text-base font-black hover:bg-rose-500 active:scale-[0.98] transition-all shadow-xl shadow-rose-950/40 relative z-10"
+                  className="w-full rounded-2xl bg-rose-600 text-white px-8 py-5 text-lg font-black hover:bg-rose-500 hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 shadow-[0_20px_50px_rgba(244,63,94,0.3)] relative z-10 uppercase tracking-widest"
                 >
-                  غرفة الطوارئ — تنفس ودعم
+                  غرفة الطوارئ السيادية
                 </button>
               )}
             </div>
           )}
           <button
             type="button"
-            data-variant="primary"
-            data-size="lg"
             onClick={() => {
               if (!addedNodeId) {
                 recordFlowEvent("add_person_start_path_blocked_missing_node", {
@@ -725,27 +723,26 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               recordFlowEvent("add_person_start_path_clicked", { meta: { nodeId: addedNodeId } });
               startMissionAndTrack(addedNodeId);
               onOpenMission?.(addedNodeId);
-              onClose();
+              onClose?.();
             }}
-            className="ds-button w-full"
+            className="w-full rounded-3xl bg-teal-500 text-white px-8 py-6 text-xl font-black hover:bg-teal-400 hover:shadow-[0_0_50px_rgba(45,212,191,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-700 shadow-[0_20px_50px_rgba(45,212,191,0.2)] tracking-widest uppercase"
           >
-            افتح رحلة {displayName}
+            تفعيل مسار {displayName}
           </button>
           {isForcedCtaMode ? (
-            <p className="text-xs text-slate-500 text-center mt-2 font-black tracking-widest uppercase">
-              الخطوة التالية الإلزامية: ابدأ المسار الآن.
+            <p className="text-[10px] text-slate-500 text-center mt-3 font-black tracking-[0.3em] uppercase opacity-50">
+              SECURE_PATH_MANDATORY: INITIALIZE_NOW
             </p>
           ) : (
             <button
               type="button"
-              onClick={() => onClose(addedNodeId)}
-              className="w-full rounded-2xl border border-white/10 bg-white/5 py-4 text-sm font-black text-slate-300 hover:bg-white/10 hover:text-white transition-all shadow-xl active:scale-[0.98]"
+              onClick={() => onClose?.(addedNodeId)}
+              className="w-full rounded-3xl border border-white/5 bg-white/[0.02] py-5 text-sm font-black text-slate-400 hover:bg-white/5 hover:text-white transition-all duration-700 uppercase tracking-widest"
             >
-              ضيف على الخريطة
+              متابعة على الخريطة
             </button>
           )}
         </div>
-      )}
 
       {showTraining && addedNode && (
         <PersonalizedTraining

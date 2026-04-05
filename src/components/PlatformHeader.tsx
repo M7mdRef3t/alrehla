@@ -218,10 +218,10 @@ export const PlatformHeader = memo(function PlatformHeader({
         fixed top-0 right-0 left-0 z-50
         hidden md:flex items-center justify-between
         px-6 lg:px-12 h-20
-        transition-[border-color,box-shadow,height] duration-500
+        transition-all duration-500
         ${
           scrolled
-            ? "backdrop-blur-2xl border-b shadow-[0_8px_32px_rgba(0,0,0,0.1)] h-16"
+            ? "backdrop-blur-2xl border-b shadow-sm h-16"
             : "border-b border-transparent h-20"
         }
       `}
@@ -288,8 +288,8 @@ export const PlatformHeader = memo(function PlatformHeader({
               className={`
                 relative px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-200 flex items-center gap-2 cursor-pointer
                 ${isActive 
-                  ? "text-white" 
-                  : "text-slate-400 hover:text-white"
+                  ? "text-app-primary" 
+                  : "text-app-muted hover:text-app-primary"
                 }
               `}
               aria-current={isActive ? "page" : undefined}
@@ -297,8 +297,7 @@ export const PlatformHeader = memo(function PlatformHeader({
               {isActive && (
                 <motion.div
                   layoutId="header-nav-indicator"
-                  className="absolute inset-0 rounded-full bg-white/5 border shadow-[inner_0_0_12px_rgba(255,255,255,0.05)]"
-                  style={{ borderColor: "var(--glass-border)" }}
+                  className="absolute inset-0 rounded-full bg-slate-400/5 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 shadow-sm"
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 />
               )}
@@ -325,7 +324,7 @@ export const PlatformHeader = memo(function PlatformHeader({
           id="header-theme-toggle"
           aria-label={isDark ? "تفعيل الوضع الفاتح" : "تفعيل الوضع الداكن"}
           onClick={handleThemeToggle}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+          className="w-9 h-9 rounded-full flex items-center justify-center text-app-muted hover:text-app-primary hover:bg-slate-400/10 dark:hover:bg-white/10 transition-all"
         >
           <AnimatePresence mode="wait" initial={false}>
             {isDark ? (
@@ -367,8 +366,8 @@ export const PlatformHeader = memo(function PlatformHeader({
                   aria-label={hasUnread ? "لديك إشعارات جديدة" : "الإشعارات"}
                   aria-expanded={notifOpen}
                   onClick={handleBellClick}
-                  className={`w-9 h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all relative ${
-                    notifOpen ? "bg-white/10 text-white" : ""
+                  className={`w-9 h-9 rounded-full flex items-center justify-center text-app-muted hover:text-app-primary hover:bg-slate-400/10 dark:hover:bg-white/10 transition-all relative ${
+                    notifOpen ? "bg-slate-400/10 dark:bg-white/10 text-app-primary" : ""
                   }`}
                 >
                   <Bell className={`w-5 h-5 transition-colors ${hasUnread ? "text-teal-400" : ""}`} />
@@ -405,7 +404,7 @@ export const PlatformHeader = memo(function PlatformHeader({
             <button
               type="button"
               onClick={() => setUserMenuOpen((previous) => !previous)}
-              className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 hover:border-teal-500/40 transition-all text-sm text-slate-200 group"
+              className="flex items-center gap-2 rounded-full px-1 pr-1 pl-3 py-0.5 bg-slate-400/5 dark:bg-white/[0.08] hover:bg-slate-400/10 dark:hover:bg-white/[0.14] border border-slate-200 dark:border-white/10 hover:border-teal-500/40 transition-all text-sm text-app-primary group"
               aria-haspopup="true"
               aria-expanded={userMenuOpen}
             >
@@ -439,11 +438,11 @@ export const PlatformHeader = memo(function PlatformHeader({
                   style={{ background: "var(--glass-bg)", borderColor: "var(--glass-border)" }}
                   role="menu"
                 >
-                  <div className="px-4 py-3 border-b border-white/[0.08]">
-                    <p className="text-sm font-semibold text-white truncate" style={{ color: "var(--text-primary)" }}>
+                  <div className="px-4 py-3 border-b border-app-border">
+                    <p className="text-sm font-semibold text-app-primary truncate">
                       {displayName ?? firstName ?? "المستخدم"}
                     </p>
-                    <p className="text-xs text-slate-400 truncate">{user?.email ?? ""}</p>
+                    <p className="text-xs text-app-muted truncate">{user?.email ?? ""}</p>
                   </div>
                   <div className="p-2 flex flex-col gap-2">
                     <div className="px-2 pt-1">
@@ -461,10 +460,10 @@ export const PlatformHeader = memo(function PlatformHeader({
                     <button
                       type="button"
                       onClick={() => handleNav("settings")}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full text-slate-300 hover:bg-white/[0.08] hover:text-white"
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors text-right w-full text-app-primary hover:bg-slate-400/10 dark:hover:bg-white/[0.08]"
                       role="menuitem"
                     >
-                      <Settings className="w-4 h-4 text-slate-400" />
+                      <Settings className="w-4 h-4 text-app-muted" />
                       الإعدادات
                     </button>
 
@@ -481,10 +480,10 @@ export const PlatformHeader = memo(function PlatformHeader({
                             key={id}
                             type="button"
                             onClick={() => handleNav(id)}
-                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-300 hover:bg-white/[0.08] hover:text-white transition-colors text-right w-full"
+                            className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-app-primary hover:bg-slate-400/10 dark:hover:bg-white/[0.08] transition-colors text-right w-full"
                             role="menuitem"
                           >
-                            <Icon className="w-4 h-4 text-slate-400" />
+                            <Icon className="w-4 h-4 text-app-muted" />
                             {label}
                           </button>
                         ))}
@@ -614,7 +613,7 @@ export const MobileNavBar = memo(function MobileNavBar({
         backdrop-blur-2xl
         border-t
         pb-safe pt-2 px-2
-        shadow-[0_-4px_32px_rgba(0,0,0,0.3)]"
+        shadow-lg"
       style={{ background: "var(--glass-bg)", borderColor: "var(--glass-border)" }}
     >
       {MOBILE_NAV.map(({ id, label, icon: Icon }) => {
@@ -637,12 +636,12 @@ export const MobileNavBar = memo(function MobileNavBar({
             )}
             <Icon
               className={`w-5 h-5 transition-colors ${
-                isActive ? "text-teal-400" : "text-slate-500"
+                isActive ? "text-teal-500" : "text-app-muted"
               }`}
             />
             <span
               className={`text-[10px] font-medium transition-colors ${
-                isActive ? "text-teal-400" : "text-slate-500"
+                isActive ? "text-teal-500" : "text-app-muted"
               }`}
             >
               {label}

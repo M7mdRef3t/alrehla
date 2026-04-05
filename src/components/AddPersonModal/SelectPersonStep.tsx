@@ -77,37 +77,37 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
                   import("../../services/soundManager").then(m => m.soundManager.playEffect("cosmic_pulse"));
                   onTitleSelect(suggestion.label);
                 }}
-                className={`group relative w-full h-full min-h-0 flex flex-col items-center justify-center gap-3 rounded-xl border transition-all duration-300 focus-visible:outline-none p-4 overflow-hidden ${isSelected
-                    ? "bg-teal-500/10 border-teal-400 shadow-[0_0_30px_rgba(45,212,191,0.2)]"
-                    : "bg-slate-900/60 border-slate-700/50 hover:border-slate-500 hover:bg-slate-800"
+                className={`group relative w-full h-full min-h-0 flex flex-col items-center justify-center gap-3 rounded-2xl border transition-all duration-500 focus-visible:outline-none p-4 overflow-hidden ${isSelected
+                    ? "bg-teal-500/10 border-teal-400/50 shadow-[0_0_40px_rgba(45,212,191,0.15)]"
+                    : "bg-slate-900/40 border-white/5 hover:border-slate-500 hover:bg-slate-800/60"
                   }`}
                 title={`اختيار "${suggestion.label}"`}
-                whileHover={{ scale: isSelected ? 1 : 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: isSelected ? 1 : 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
               >
                 {/* HUD Corners */}
-                <div className={`absolute top-0 left-0 w-2 h-2 border-t border-l rounded-tl transition-colors ${isSelected ? "border-teal-400" : "border-slate-600 group-hover:border-slate-400"}`} />
-                <div className={`absolute top-0 right-0 w-2 h-2 border-t border-r rounded-tr transition-colors ${isSelected ? "border-teal-400" : "border-slate-600 group-hover:border-slate-400"}`} />
-                <div className={`absolute bottom-0 left-0 w-2 h-2 border-b border-l rounded-bl transition-colors ${isSelected ? "border-teal-400" : "border-slate-600 group-hover:border-slate-400"}`} />
-                <div className={`absolute bottom-0 right-0 w-2 h-2 border-b border-r rounded-br transition-colors ${isSelected ? "border-teal-400" : "border-slate-600 group-hover:border-slate-400"}`} />
+                <div className={`absolute top-0 left-0 w-3 h-3 border-t border-l rounded-tl-lg transition-colors duration-500 ${isSelected ? "border-teal-400" : "border-white/10 group-hover:border-white/30"}`} />
+                <div className={`absolute top-0 right-0 w-3 h-3 border-t border-r rounded-tr-lg transition-colors duration-500 ${isSelected ? "border-teal-400" : "border-white/10 group-hover:border-white/30"}`} />
+                <div className={`absolute bottom-0 left-0 w-3 h-3 border-b border-l rounded-bl-lg transition-colors duration-500 ${isSelected ? "border-teal-400" : "border-white/10 group-hover:border-white/30"}`} />
+                <div className={`absolute bottom-0 right-0 w-3 h-3 border-b border-r rounded-br-lg transition-colors duration-500 ${isSelected ? "border-teal-400" : "border-white/10 group-hover:border-white/30"}`} />
 
                 {isSelected && (
                   <motion.div 
-                    className="absolute inset-0 bg-teal-400/5 pointer-events-none"
-                    animate={{ opacity: [0.1, 0.3, 0.1] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 bg-teal-400/[0.03] pointer-events-none"
+                    animate={{ opacity: [0.2, 0.5, 0.2] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   />
                 )}
 
                 <div
-                  className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center transition-all ${isSelected ? "bg-teal-400/20 shadow-[0_0_15px_rgba(45,212,191,0.4)]" : "bg-slate-800 group-hover:bg-slate-700"
+                  className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center transition-all duration-500 ${isSelected ? "bg-teal-400/20 shadow-[0_0_20px_rgba(45,212,191,0.3)] rotate-0" : "bg-white/5 group-hover:bg-white/10 rotate-[-5deg] group-hover:rotate-0"
                     }`}
                 >
-                  <Icon className={`${isSelected ? "text-teal-300" : "text-slate-400 group-hover:text-slate-300"} w-6 h-6`} strokeWidth={1.5} />
+                  <Icon className={`${isSelected ? "text-teal-300" : "text-slate-500 group-hover:text-slate-300"} w-7 h-7 transition-colors duration-500`} strokeWidth={1.5} />
                 </div>
                 <div
-                  className={`min-h-9 flex items-center justify-center text-center font-bold tracking-wide ${isSelected ? "text-teal-300 drop-shadow-md" : "text-slate-400 group-hover:text-slate-200"
-                    } text-xs sm:text-sm line-clamp-2`}
+                  className={`min-h-9 flex items-center justify-center text-center font-black tracking-tight ${isSelected ? "text-teal-300 drop-shadow-[0_0_10px_rgba(45,212,191,0.5)]" : "text-slate-400 group-hover:text-slate-200"
+                    } text-xs sm:text-sm line-clamp-2 transition-colors duration-500`}
                 >
                   {suggestion.label}
                 </div>
@@ -134,7 +134,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           </motion.button>
         </div>
         {showCustomTitleInput && (
-          <div className="mt-2 shrink-0">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-2 shrink-0">
             <input
               id="custom-title-input"
               name="customTitle"
@@ -142,10 +142,10 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
               value={customTitleInput}
               onChange={(e) => onCustomTitleChange(e.target.value)}
               placeholder={customTitlePlaceholder}
-              className="ds-input"
+              className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-teal-500/50 transition-all font-bold placeholder:text-white/20"
               autoFocus
             />
-          </div>
+          </motion.div>
         )}
       </div>
 
@@ -168,7 +168,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
             onChange={(event) => onNameChange(event.target.value)}
             placeholder={namePlaceholder}
             title="اكتب اسم الشخص (اختياري)"
-            className="w-full bg-slate-950/40 border-0 border-b-2 border-slate-700/50 text-teal-300 text-lg sm:text-xl font-bold focus:border-teal-500 focus:bg-slate-900/60 focus:ring-0 outline-none placeholder:text-slate-600/50 transition-all py-3 px-4 rounded-t-lg font-mono tracking-wider shadow-[inset_0_-2px_10px_rgba(45,212,191,0.02)] focus:shadow-[inset_0_-2px_15px_rgba(45,212,191,0.1)]"
+            className="w-full bg-white/[0.02] border border-white/5 text-teal-300 text-lg sm:text-xl font-black focus:border-teal-500/50 focus:bg-white/[0.05] focus:ring-0 outline-none placeholder:text-white/10 transition-all duration-700 py-5 px-6 rounded-2xl font-mono tracking-wider shadow-[inset_0_2px_20px_rgba(0,0,0,0.5)]"
           />
           <p className="text-[10px] text-slate-500 mt-3 font-mono tracking-widest">
             <EditableText id="add_person_name_preview_prefix" defaultText="[ TARGET_ID ]: " page="add_person" showEditIcon={false} />
@@ -202,22 +202,22 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
 
       {afterNameContent ? <div className="shrink-0">{afterNameContent}</div> : null}
 
-      <div className="mt-6 shrink-0 flex gap-3">
+      <div className="mt-8 shrink-0 flex gap-4">
         <button
           type="button"
-          data-variant="ghost"
-          data-size="md"
-          className="ds-button flex-1"
+          className="flex-1 px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-slate-400 font-bold hover:bg-white/10 hover:text-white transition-all duration-500"
           onClick={onCancel}
         >
           <EditableText id="add_person_cancel" defaultText="إلغاء الأمر" page="add_person" editOnClick={false} />
         </button>
         <button
           type="submit"
-          data-variant="primary"
-          data-size="md"
           disabled={!selectedTitle}
-          className="ds-button flex-1"
+          className={`flex-1 px-6 py-4 rounded-2xl font-black tracking-widest transition-all duration-700 ${
+            selectedTitle 
+              ? "bg-teal-500 text-white shadow-[0_0_30px_rgba(45,212,191,0.3)] hover:scale-[1.02] hover:shadow-[0_0_50px_rgba(45,212,191,0.5)]" 
+              : "bg-white/5 text-white/20 border border-white/5 cursor-not-allowed"
+          }`}
         >
           <EditableText id="add_person_next" defaultText="استمر" page="add_person" editOnClick={false} />
         </button>

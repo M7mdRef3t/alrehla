@@ -1,9 +1,7 @@
 import React, { type FC, useState } from "react";
-import { Radar, AlertTriangle, TrendingUp, Sparkles, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { AdminTooltip } from "../Overview/components/AdminTooltip";
+import { AlertTriangle, TrendingUp, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 import type { TopScenario } from "../../../../services/adminApi";
-import { CollapsibleSection } from "../../ui/CollapsibleSection";
 import { marketingCopywriter, type TikTokScriptGeneration } from "../../../../ai/aiMarketingCopy";
 import { TikTokTeleprompterModal } from "./TikTokTeleprompterModal";
 
@@ -37,19 +35,12 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
 
   if (isLoading) {
     return (
-      <CollapsibleSection
-        title="رادار الأوهام الجمعي (Illusion Radar)"
-        icon={<Radar className="w-4 h-4" />}
-        subtitle="جاري استشعار تشوهات الوعي الحالية..."
-        defaultExpanded={true}
-        headerColors="border-rose-500/20 bg-rose-500/5 text-rose-400"
-      >
-        <div className="flex items-center justify-center h-24">
-          <div className="text-rose-500/50 text-xs animate-pulse font-mono tracking-widest">
-            SCANNING FREQUENCIES...
-          </div>
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <div className="w-12 h-12 rounded-full border-2 border-rose-500/20 border-t-rose-500 animate-spin" />
+        <div className="text-rose-500/50 text-[10px] font-black animate-pulse font-mono tracking-[0.3em] uppercase">
+          Scanning Frequencies...
         </div>
-      </CollapsibleSection>
+      </div>
     );
   }
 
@@ -57,98 +48,100 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
 
   return (
     <>
-      <CollapsibleSection
-        title="رادار الأوهام الجمعي (Illusion Radar)"
-        icon={<Radar className="w-4 h-4" />}
-        subtitle="أكثر التشوهات والسيناريوهات اللي مسيطرة على عقول الزوار الآن (لصناعة المحتوى)"
-        defaultExpanded={true}
-        headerColors="border-rose-500/20 bg-rose-500/5 text-rose-400"
-      >
-        <div className="pt-2">
-          <div className="flex items-center gap-2 p-3 bg-rose-500/10 rounded-xl border border-rose-500/20 mb-4">
-            <AlertTriangle className="w-5 h-5 text-rose-400" />
-            <p className="text-xs text-rose-200/80 leading-relaxed">
-              **توجيه الحاكم:** استخدم التشوهات المتصدرة دي فوراً كمحتوى (تيك توك/إنستجرام) لضرب الأصنام وتفكيك الوهم بالعلم. ده اللي الناس بتعاني منه حرفياً دلوقتي!
-            </p>
+      <div className="space-y-6">
+        <div className="flex items-center gap-4 p-4 bg-rose-500/5 rounded-3xl border border-rose-500/10 mb-8 max-w-2xl">
+          <div className="p-2 bg-rose-500/20 rounded-xl">
+            <AlertTriangle className="w-5 h-5 text-rose-500" />
           </div>
-
-          <div className="flex flex-wrap gap-3">
-            {safeScenarios.length > 0 ? (
-              safeScenarios.map((scenario, idx) => {
-                const scenarioPercent = scenario.percent ?? scenario.percentage ?? scenario.share ?? 0;
-                const scenarioKey = scenario.key ?? scenario.label;
-                const isHighPriority = scenarioPercent > 30;
-                const isMediumPriority = scenarioPercent > 15 && scenarioPercent <= 30;
-
-                const baseColor = isHighPriority
-                  ? "bg-rose-500/20 border-rose-500/40 text-rose-300"
-                  : isMediumPriority
-                  ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-                  : "bg-slate-800 border-white/10 text-slate-400";
-
-                const iconColor = isHighPriority ? "text-rose-400" : isMediumPriority ? "text-amber-400" : "text-slate-500";
-
-                return (
-                  <motion.div
-                    key={scenarioKey}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className={`flex flex-col gap-1 p-3 rounded-2xl border backdrop-blur-md relative overflow-hidden group min-w-[140px] flex-1 ${baseColor}`}
-                  >
-                    {isHighPriority && (
-                      <motion.div
-                        animate={{ opacity: [0.1, 0.3, 0.1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-rose-500/10 to-transparent"
-                      />
-                    )}
-
-                    <div className="flex items-center justify-between z-10">
-                      <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1 opacity-70">
-                        <TrendingUp className={`w-3 h-3 ${iconColor}`} />
-                        تريند وهمي
-                      </span>
-                      <span className="font-mono text-xs opacity-90">{Math.round(scenarioPercent)}%</span>
-                    </div>
-
-                    <div className="z-10 mt-1 flex justify-between items-end">
-                      <div>
-                        <h4 className="text-sm font-bold shadow-black drop-shadow-md">
-                          {scenario.label}
-                        </h4>
-                        <p className="text-[10px] opacity-60 mt-0.5">
-                          {scenario.count} روح متأثرة
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleDismantle(scenario.label)}
-                        disabled={isGenerating}
-                        className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all disabled:opacity-50 flex items-center gap-1 text-[10px] font-bold"
-                      >
-                        {isGenerating && selectedIllusion === scenario.label ? (
-                          <span className="animate-pulse">⏳ جاري السحب...</span>
-                        ) : (
-                          <>
-                            <Sparkles className="w-3 h-3 text-cyan-300" />
-                            تفكيك
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </motion.div>
-                );
-              })
-            ) : (
-              <div className="w-full py-8 text-center border border-dashed border-white/10 rounded-2xl">
-                <span className="text-slate-500 text-xs">لا يوجد تشوهات أو سيناريوهات متصدرة حالياً (وعي نقي)</span>
-              </div>
-            )}
-          </div>
+          <p className="text-xs text-rose-200/60 leading-relaxed font-bold italic">
+            استخدم التشوهات المتصدرة دي فوراً كمحتوى لتفكيك الوهم بالعلم. ده اللي الناس بتعاني منه حرفياً دلوقتي!
+          </p>
         </div>
-      </CollapsibleSection>
 
-      {/* TikTok Creator Studio Modal */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {safeScenarios.length > 0 ? (
+            safeScenarios.map((scenario, idx) => {
+              const scenarioPercent = scenario.percent ?? scenario.percentage ?? scenario.share ?? 0;
+              const scenarioKey = scenario.key ?? scenario.label;
+              const isHighPriority = scenarioPercent > 30;
+              const isMediumPriority = scenarioPercent > 15 && scenarioPercent <= 30;
+
+              const baseColor = isHighPriority
+                ? "bg-rose-500/10 border-rose-500/20 text-rose-300"
+                : isMediumPriority
+                ? "bg-amber-500/10 border-amber-500/20 text-amber-300"
+                : "bg-white/2 border-white/5 text-slate-400";
+
+              const iconColor = isHighPriority ? "text-rose-400" : isMediumPriority ? "text-amber-400" : "text-slate-500";
+
+              return (
+                <motion.div
+                  key={scenarioKey}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className={`flex flex-col gap-4 p-5 rounded-[28px] border backdrop-blur-md relative overflow-hidden group transition-all hover:scale-[1.02] hover:bg-white/5 ${baseColor}`}
+                >
+                  {isHighPriority && (
+                    <motion.div
+                      animate={{ opacity: [0.1, 0.2, 0.1] }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                      className="absolute inset-0 bg-gradient-to-br from-rose-500/10 via-transparent to-transparent"
+                    />
+                  )}
+
+                  <div className="flex items-center justify-between z-10 relative">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-2 opacity-50">
+                      <TrendingUp className={`w-3 h-3 ${iconColor}`} />
+                      Illusion Node
+                    </span>
+                    <div className="flex flex-col items-end">
+                      <span className="font-mono text-xl font-black drop-shadow-lg">{Math.round(scenarioPercent)}%</span>
+                      <span className="text-[8px] uppercase tracking-widest opacity-40">Frequency</span>
+                    </div>
+                  </div>
+
+                  <div className="z-10 relative space-y-4">
+                    <div>
+                      <h4 className="text-lg font-black leading-tight text-white group-hover:text-rose-500 transition-colors">
+                        {scenario.label}
+                      </h4>
+                      <p className="text-[10px] font-bold opacity-40 mt-1 flex items-center gap-1">
+                         <span className="w-1 h-1 rounded-full bg-current" />
+                         {scenario.count} Souls Affected
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => handleDismantle(scenario.label)}
+                      disabled={isGenerating}
+                      className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest group/btn"
+                    >
+                      {isGenerating && selectedIllusion === scenario.label ? (
+                        <div className="flex items-center gap-2">
+                           <div className="w-3 h-3 rounded-full border border-t-transparent border-white animate-spin" />
+                           <span>Dismantling...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 text-cyan-400 group-hover/btn:rotate-12 transition-transform" />
+                          <span>تفكيك الوهم</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })
+          ) : (
+            <div className="col-span-full py-20 text-center border border-dashed border-white/5 rounded-[40px] bg-white/2">
+              <Sparkles className="w-8 h-8 text-slate-800 mx-auto mb-4" />
+              <span className="text-slate-600 text-xs font-black uppercase tracking-widest italic">The Sea of Consciousness is Pure...</span>
+            </div>
+          )}
+        </div>
+      </div>
+
       <TikTokTeleprompterModal
         isOpen={!!generatedScript || (isGenerating && !!selectedIllusion)}
         onClose={() => { setGeneratedScript(null); setSelectedIllusion(null); }}

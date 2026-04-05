@@ -11,7 +11,7 @@ import { clearPostAuthIntent, setPostAuthIntent, type PostAuthIntent } from "../
 
 interface GoogleAuthModalProps {
   isOpen: boolean;
-  intent: PostAuthIntent;
+  intent?: PostAuthIntent;
   onClose: () => void;
   onGuestMode?: () => void;
   /** يُستدعى عند "مش دلوقتي" — يُمرّر pulse للحفظ المحلي (Guest Mode) */
@@ -70,6 +70,7 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
   onGuestMode,
   onNotNow
 }) => {
+  const resolvedIntent: PostAuthIntent = intent ?? { kind: "login", createdAt: Date.now() };
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -81,8 +82,8 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
     setMessage(null);
     setError(null);
     setIsAgeVerified(false);
-    trackEvent(AnalyticsEvents.AUTH_MODAL_SHOWN, { trigger: intent.kind });
-  }, [isOpen, intent.kind]);
+    trackEvent(AnalyticsEvents.AUTH_MODAL_SHOWN, { trigger: resolvedIntent.kind });
+  }, [isOpen, resolvedIntent.kind]);
 
   const handleGoogle = async () => {
     if (!isAgeVerified) {
@@ -99,17 +100,17 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
     setMessage(null);
     setError(null);
     trackEvent(AnalyticsEvents.AUTH_GOOGLE_CLICKED, {
-      source: intent.kind === "start_recovery" ? "micro_commitment" : "login_icon",
-      ...(intent.kind === "start_recovery"
+      source: resolvedIntent.kind === "start_recovery" ? "micro_commitment" : "login_icon",
+      ...(resolvedIntent.kind === "start_recovery"
         ? {
-          pulse_energy: intent.pulse.energy,
-          pulse_mood: intent.pulse.mood,
-          pulse_focus: intent.pulse.focus,
-          pulse_auto: intent.pulse.auto ?? false
+          pulse_energy: resolvedIntent.pulse.energy,
+          pulse_mood: resolvedIntent.pulse.mood,
+          pulse_focus: resolvedIntent.pulse.focus,
+          pulse_auto: resolvedIntent.pulse.auto ?? false
         }
         : {})
     });
-    setPostAuthIntent(intent);
+    setPostAuthIntent(resolvedIntent);
 
     const { error: signInError } = await signInWithGoogle();
     if (signInError) {
@@ -131,8 +132,8 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
   };
 
   const handleNotNow = () => {
-    if (intent.kind === "start_recovery" && onNotNow) {
-      onNotNow(intent.pulse);
+    if (resolvedIntent.kind === "start_recovery" && onNotNow) {
+      onNotNow(resolvedIntent.pulse);
       return;
     }
     onClose();
@@ -193,13 +194,13 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
                   <div className="flex items-center gap-2 mb-2">
                     <Sparkles className="w-4 h-4" style={{ color: "#2dd4bf" }} />
                     <h2 className="text-lg font-bold text-white">
-                      {getAuthTitle(intent)}
+                      {getAuthTitle(resolvedIntent)}
                     </h2>
                   </div>
                   <p className="text-[13px] leading-relaxed" style={{ color: "rgba(203, 213, 225, 0.8)" }}>
-                    {intent.kind === "start_recovery"
+                    {resolvedIntent.kind === "start_recovery"
                       ? "سجل دخول عشان نحفظها ونكمل رحلتك سوا"
-                      : intent.kind === "ai_focus"
+                      : resolvedIntent.kind === "ai_focus"
                         ? "سجل دخول بحساب جوجل عشان تفعّل ذكاء المدار"
                         : "سجل دخول بحساب جوجل عشان نحفظ تقدمك"}
                   </p>
@@ -239,7 +240,7 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
               </div>
 
               {/* pulse data (recovery intent) */}
-              {intent.kind === "start_recovery" && (
+              {resolvedIntent.kind === "start_recovery" && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -264,9 +265,9 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
                   </div>
                   <div className="space-y-2">
                     {[
-                      { label: "البطارية", value: `${valueToLabel(intent.pulse.energy)} (${intent.pulse.energy}/10)` },
-                      { label: "الطقس", value: MOOD_LABEL[intent.pulse.mood] },
-                      { label: "التركيز", value: getFocusLabel(intent.pulse.focus, intent) },
+                      { label: "البطارية", value: `${valueToLabel(resolvedIntent.pulse.energy)} (${resolvedIntent.pulse.energy}/10)` },
+                      { label: "الطقس", value: MOOD_LABEL[resolvedIntent.pulse.mood] },
+                      { label: "التركيز", value: getFocusLabel(resolvedIntent.pulse.focus, resolvedIntent) },
                     ].map((row, i) => (
                       <div key={i} className="flex justify-between text-[13px]">
                         <span style={{ color: "rgba(148, 163, 184, 0.7)" }}>{row.label}</span>

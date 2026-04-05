@@ -11,6 +11,7 @@ import { BehavioralAnalysisHub } from "../BehavioralAnalysisHub";
 import { ResourcesCenter } from "../ResourcesCenter";
 import type { ResourceTab } from "../ResourcesCenter";
 import { UserProfile } from "../UserProfile";
+import { SanctuaryDashboard } from "../SanctuaryDashboard";
 
 type StartScreensProps = ComponentProps<typeof AppStartScreens>;
 type JourneyScreensProps = ComponentProps<typeof AppJourneyScreens>;
@@ -266,6 +267,15 @@ export const AppMainExperienceContent = memo(function AppMainExperienceContent({
         onBack={() => { setResourceDeepLink(null); onNavigate?.("landing" as AppScreen); }}
         initialTab={link?.tab}
         initialSearch={link?.search}
+      />
+    );
+  }
+
+  if (screen === "sanctuary") {
+    return (
+      <SanctuaryDashboard
+        onNavigate={(s) => onNavigate?.(s as any)}
+        onOpenBreathing={() => onOpenBreathing?.()}
       />
     );
   }

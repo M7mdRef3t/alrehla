@@ -22,6 +22,7 @@ import { Button } from "../../components/UI/Button";
 interface DawayirCanvasProps {
   onNodeClick: (node: MapNodeType) => void;
   onAddNode: () => void;
+  goalIdFilter?: string;
 }
 
 /* ─── Components ───────────────────────────────────────────────────────────── */
@@ -278,8 +279,20 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
   );
 });
 
-export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode }) => {
-  const nodes = useMapState((s) => s.nodes);
+export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode, goalIdFilter }) => {
+  const allNodes = useMapState((s) => s.nodes);
+  
+  const nodes = useMemo(() => {
+    if (!goalIdFilter) return allNodes;
+    if (goalIdFilter === "family") {
+      return allNodes.filter(
+        (n) =>
+          n.goalId === "family" || n.goalId == null || n.treeRelation?.type === "family"
+      );
+    }
+    return allNodes.filter((n) => (n.goalId ?? "general") === goalIdFilter);
+  }, [allNodes, goalIdFilter]);
+
   const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
   const archiveNode = useMapState((s) => s.archiveNode);
 
