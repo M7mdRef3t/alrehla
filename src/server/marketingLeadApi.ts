@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import {
   dedupeMarketingLeadInputs,
   isValidMarketingLeadEmail,
   normalizeMarketingLeadPayload,
   sanitizePhone
 } from "./marketingLeadUtils";
+import { getSupabaseAdminClient } from "../../app/api/_lib/supabaseAdmin";
 import type {
   MarketingLeadImportResult,
   MarketingLeadPayload,
@@ -16,13 +16,16 @@ import { sendMetaCapiEvent } from "./metaCapi";
 
 type OutreachQueueStatus = "pending" | "sent" | "failed" | "simulated";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
-
 function hasSupabaseConfig(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return Boolean(getSupabaseAdminClient());
+}
+
+function getRequiredSupabaseAdminClient() {
+  const client = getSupabaseAdminClient();
+  if (!client) {
+    throw new Error("missing_supabase_config");
+  }
+  return client;
 }
 
 function isDebugAuthorized(request: Request): boolean {
@@ -76,6 +79,7 @@ async function enqueueOutreach(
   leadId: string, // P0-2: required — no generic URLs allowed
   phone?: string | null
 ): Promise<void> {
+  const supabaseAdmin = getRequiredSupabaseAdminClient();
   const now = Date.now();
   const MINUTE = 60 * 1000;
   const DAY = 24 * 60 * 60 * 1000;
@@ -156,6 +160,7 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
   if (!hasSupabaseConfig()) {
     throw new Error("missing_supabase_config");
   }
+  const supabaseAdmin = getRequiredSupabaseAdminClient();
 
   // SMART DEDUPLICATION LOGIC
   // 1. Match by Phone
@@ -248,6 +253,7 @@ export async function handleMarketingLeadGet(req: Request) {
   if (!hasSupabaseConfig()) {
     return NextResponse.json({ ok: false, error: "missing_supabase_config" }, { status: 503 });
   }
+  const supabaseAdmin = getRequiredSupabaseAdminClient();
 
   const url = new URL(req.url);
   const rawEmail = String(url.searchParams.get("email") ?? "").trim().toLowerCase();
