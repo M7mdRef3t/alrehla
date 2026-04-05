@@ -71,7 +71,7 @@ export function SeoGeoAuditorPanel() {
     <section className="space-y-6">
       <div className="rounded-2xl border border-white/10 bg-slate-900/45 p-5">
         <h3 className="text-lg font-black text-white">SEO + GEO Auditor</h3>
-        <p className="mt-1 text-sm text-slate-300">????? ??? ?????? ????? ?????? SEO ???????? ????? ????? ????? ???????.</p>
+        <p className="mt-1 text-sm text-slate-300">أداة متقدمة لفحص وتحليل جودة SEO والروابط والبيانات المهيكلة لضمان جودة الأرشفة.</p>
         <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center">
           <input
             type="url"
@@ -102,7 +102,7 @@ export function SeoGeoAuditorPanel() {
           <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">
             <p className="font-semibold">Auto-fix applied: {autofixResult.appliedCount}</p>
             <ul className="mt-1 space-y-1">
-              {autofixResult.fixes.map((fix) => (
+              {(autofixResult.fixes ?? []).map((fix) => (
                 <li key={fix.key}>{fix.key}: {fix.message}</li>
               ))}
             </ul>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useMemo } from "react";
 
 type TelemetrySession = {
   decisionId: string;
@@ -178,10 +178,10 @@ export function useIdleAwareTelemetry() {
     };
   }, [markInteraction, tick]);
 
-  return {
+  return useMemo(() => ({
     startSession,
     clearSession,
     markInteraction,
     capture
-  };
+  }), [startSession, clearSession, markInteraction, capture]);
 }

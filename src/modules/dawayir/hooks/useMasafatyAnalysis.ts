@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useMapState } from '../../../state/mapState';
 import { geminiClient } from '../../../services/geminiClient';
 import type { MapNode, FeelingCheckResult } from '../../map/mapTypes';
@@ -46,7 +46,7 @@ export const useMasafatyAnalysis = () => {
   }, [nodes, feelingResults, mapType]);
 
   // 2. Fetch AI Maneuvers
-  const fetchManeuvers = async () => {
+  const fetchManeuvers = useCallback(async () => {
     if (nodes.length === 0 || !feelingResults) return;
     setIsLoading(true);
 
@@ -86,14 +86,14 @@ export const useMasafatyAnalysis = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [nodes, feelingResults]);
 
   // Auto-fetch if things change and we have no maneuvers
   useEffect(() => {
     if (maneuvers.length === 0 && nodes.length > 0 && feelingResults) {
       fetchManeuvers();
     }
-  }, [nodes.length, feelingResults]);
+  }, [fetchManeuvers, maneuvers.length, nodes.length, feelingResults]);
 
   return {
     entropyMap,

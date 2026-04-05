@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AIOrchestrator } from '../../../src/services/aiOrchestrator';
 import { getSupabaseAdminClient } from '../_lib/supabaseAdmin';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+import { getClient as getGeminiClient } from '../../../server/gemini/_shared';
 
 export async function POST(req: Request) {
     try {
@@ -21,8 +19,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
         }
 
-        const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-        if (!GEMINI_API_KEY) {
+        const genAI = getGeminiClient();
+        if (!genAI) {
             return NextResponse.json(
                 { error: 'AI prediction unavailable', source: 'not_configured', is_live: false },
                 { status: 503 }

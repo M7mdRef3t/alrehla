@@ -27,6 +27,15 @@ function createSweepClient(url: string, key: string) {
     return createClient(url, key, { auth: { persistSession: false } });
 }
 
+function buildSweepClient(): ReturnType<typeof createSweepClient> | null {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!url || !key) {
+        return null;
+    }
+    return createSweepClient(url, key);
+}
+
 type SweepClient = ReturnType<typeof createSweepClient>;
 
 function toErrorMessage(error: unknown): string {
@@ -45,15 +54,10 @@ function normalizeMetric(input: unknown): MetricPoint {
 export async function GET(request: Request) {
     const startTime = Date.now();
     let sweepDetails: SweepDetails = {};
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseKey) {
-        return NextResponse.json({ error: 'Missing credentials' }, { status: 500 });
+    const supabase = buildSweepClient();
+    if (!supabase) {
+        return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
     }
-
-    const supabase = createSweepClient(supabaseUrl, supabaseKey);
 
     try {
         // 1. Authenticate

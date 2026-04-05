@@ -430,7 +430,7 @@ const PathEngineBlock: FC<{
                           onClick={() => handleMoodSkip(currentTask.id)}
                           className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors uppercase font-bold tracking-widest px-1"
                         >
-                          تخطي القياس
+                          تجاوز القياس مؤقتًا
                         </button>
                       </div>
                     )}

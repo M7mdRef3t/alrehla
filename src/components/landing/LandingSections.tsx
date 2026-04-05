@@ -92,7 +92,7 @@ export const FeatureShowcaseSection: FC<FeatureShowcaseSectionProps> = ({
   onExploreAll: _onExploreAll,
   onOpenRadar,
   onOpenCourt,
-  onOpenPlaybooks
+  onOpenPlaybooks: _onOpenPlaybooks
 }) => (
   <motion.section
     className="phi-section"

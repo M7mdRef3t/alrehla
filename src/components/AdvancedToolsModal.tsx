@@ -94,6 +94,8 @@ export const AdvancedToolsModal: FC<AdvancedToolsModalProps> = ({ isOpen, onClos
                         اختر الشخص
                       </label>
                       <select
+                        id="advanced-tools-target"
+                        name="advancedToolsTarget"
                         value={selectedNodeId ?? ""}
                         onChange={(e) => setSelectedNodeId(e.target.value)}
                         className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-right bg-white focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent"

@@ -33,8 +33,8 @@ function containmentCandidates(features: FeatureVectorV1): NextStepCandidateV1[]
   return [
     {
       id: withId("candidate_containment_breath"),
-      title: "احتواء سريع قبل أي قرار",
-      message: "النبض متذبذب الآن. نثبّت الجهاز العصبي أولًا.",
+      title: "خد نَفَس واهدى قبل ما تقرر",
+      message: "الأعصاب مشدودة شوية دلوقتي.. نهدي الدنيا الأول.",
       cta: "ابدأ تنفّس 60 ثانية",
       actionType: "open_breathing",
       tags: ["containment", "safety"]
@@ -109,16 +109,21 @@ function mediumRiskCandidates(phase: JourneyPhaseV1, features: FeatureVectorV1):
 
 function lowRiskCandidates(phase: JourneyPhaseV1, features: FeatureVectorV1): NextStepCandidateV1[] {
   const focusNodeId = features.focusNodeId;
-  const candidates: NextStepCandidateV1[] = [
-    {
+  const candidates: NextStepCandidateV1[] = [];
+
+  if (features.hasMissionReadyNode !== false) {
+    candidates.push({
       id: withId("candidate_growth_mission"),
-      title: "توسعة واعية محسوبة",
-      message: "الاستقرار الحالي يسمح بخطوة نمو أعمق.",
+      title: "خطوة جديدة.. بس بالهداوة",
+      message: "حالتك مستقرة، ودي فرصة ممتازة تاخد خطوة جادة.",
       cta: "اكمل مهمة اليوم",
       actionType: "open_mission",
       actionPayload: focusNodeId ? { nodeId: focusNodeId } : undefined,
       tags: ["growth", "mission"]
-    },
+    });
+  }
+
+  candidates.push(
     {
       id: withId("candidate_growth_tools"),
       title: "وسّع أدواتك",
@@ -135,14 +140,23 @@ function lowRiskCandidates(phase: JourneyPhaseV1, features: FeatureVectorV1): Ne
       actionType: "journal_reflection",
       tags: ["growth", "reflection"]
     }
-  ];
+  );
 
-  if (phase === "mapping" || phase === "awareness") {
+  if (phase === "lost") {
+    candidates.unshift({
+      id: withId("candidate_add_first_person"),
+      title: "نقطة البداية",
+      message: "الخريطة حالياً فاضية. أول خطوة عشان تبدأ شغل بجد إنك تضيف شخص شاغلك.",
+      cta: "ضيف شخص للخريطة",
+      actionType: "open_map",
+      tags: ["onboarding", "mapping"]
+    });
+  } else if (phase === "mapping" || phase === "awareness") {
     candidates.unshift({
       id: withId("candidate_mapping_review"),
-      title: "أكمل وضوح الخريطة",
-      message: "استكمل رسم دوائر العلاقات قبل أي توسعة.",
-      cta: "افتح الخريطة",
+      title: "أشخاص محتاجين تحليل",
+      message: "فيه دوائر ضفتها بس لسه محتاجة تحليل. اقف على أي شخص مجهول عشان نعرف نحطه في المدار الصح.",
+      cta: "اختار شخص للبدء",
       actionType: "open_map",
       tags: ["mapping", "clarity"]
     });

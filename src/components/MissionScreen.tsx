@@ -1,4 +1,4 @@
-﻿import type { FC } from "react";
+import type { FC } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Info } from "lucide-react";
 import { useMapState } from "../state/mapState";
@@ -204,14 +204,14 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
           رجوع للخريطة
         </button>
         <div className="card-unified bg-white/90 p-6 text-left">
-          <h2 className="text-lg font-bold text-slate-900 mb-2">الخطوة مش جاهزة دلوقتي</h2>
-          <p className="text-sm text-slate-600">يلزم وجود قراءة محفوظة في ملف المدار قبل تشغيل هذه الخطوة.</p>
+          <h2 className="text-lg font-bold text-slate-900 mb-2">المهمة لسه متكونتش</h2>
+          <p className="text-sm text-slate-600">عشان السيستم يجهزلك المهمة الصح، محتاجين نعمل "تحليل العلاقة" للشخص ده على الخريطة الأول.</p>
           <button
             type="button"
-            onClick={() => setFallbackAttempt((value) => value + 1)}
+            onClick={onBack}
             className="mt-4 rounded-full bg-slate-900 text-white px-4 py-2 text-xs font-semibold hover:bg-slate-800"
           >
-            إعادة المحاولة
+            ارجع للخريطة للتحليل
           </button>
         </div>
       </div>
@@ -427,8 +427,10 @@ export const MissionScreen: FC<MissionScreenProps> = ({ nodeId, onBack }) => {
             return (
               <li key={`${step}-${index}`} className="rounded-lg bg-white/70 px-3 py-2 border border-emerald-200">
                 <label className="flex items-start gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
+                      <input
+                          id={`mission-step-${index}`}
+                          name={`missionStep${index}`}
+                          type="checkbox"
                     checked={isChecked}
                     disabled={!missionStarted || missionCompleted}
                     onChange={() => toggleMissionStep(node.id, index)}

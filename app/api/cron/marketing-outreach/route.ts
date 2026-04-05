@@ -61,9 +61,16 @@ function toErrorMessage(error: unknown): string {
 }
 
 function buildSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return null;
+  }
+
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+    supabaseUrl,
+    serviceRoleKey,
     { auth: { persistSession: false } }
   );
 }
@@ -83,13 +90,14 @@ function emailFooter(unsubLink: string): string {
     <p style="margin:8px 0 0;font-size:10px;color:#1e293b;">لا تريد تلقي رسائلنا؟ <a href="${unsubLink}" style="color:#475569;text-decoration:underline;">إلغاء الاشتراك</a></p>
   </td></tr>`;
 }
+void emailFooter;
 
 function buildStep1Html(opts: { firstName: string; personalLink: string; unsubLink: string }): string {
   return buildMarketingEmail({
     name: opts.firstName || undefined,
     personalLink: opts.personalLink,
     previewText: "خريطة علاقاتك جاهزة — ابدأ الرحلة الآن",
-    senderName: "محمد",
+    senderName: "فريق عمل",
     unsubLink: opts.unsubLink,
   });
 }
@@ -99,7 +107,7 @@ function buildStep2Html(opts: { firstName: string; personalLink: string; unsubLi
     name: opts.firstName || undefined,
     personalLink: opts.personalLink,
     previewText: "الخريطة لسه مستنياك — مكانك محجوز",
-    senderName: "محمد",
+    senderName: "فريق عمل",
     unsubLink: opts.unsubLink,
   });
 }
@@ -109,7 +117,7 @@ function buildStep3Html(opts: { firstName: string; personalLink: string; unsubLi
     name: opts.firstName || undefined,
     personalLink: opts.personalLink,
     previewText: "رسالة أخيرة — اللينك ده هيوصلك لخريطتك في أي وقت",
-    senderName: "محمد",
+    senderName: "فريق عمل",
     unsubLink: opts.unsubLink,
   });
 }
@@ -127,16 +135,27 @@ async function sendEmail(
     return { status: "simulated", providerResponse: { reason: "missing_resend_config" } };
   }
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to: leadEmail, subject, html, reply_to: replyTo }),
-  });
-  const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-  if (!response.ok) {
-    throw new Error(`resend_failed:${response.status}:${JSON.stringify(body)}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: leadEmail, subject, html, reply_to: replyTo }),
+      signal: controller.signal
+    });
+    const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!response.ok) {
+      throw new Error(`resend_failed:${response.status}:${JSON.stringify(body)}`);
+    }
+    return { status: "sent", providerResponse: body };
+  } catch (error: any) {
+    if (error.name === 'AbortError') throw new Error(`resend_timeout: API didn't respond in 8 seconds`);
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  return { status: "sent", providerResponse: body };
 }
 
 // ─── Send WhatsApp ──────────────────────────────────────────────────────────
@@ -167,16 +186,33 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return NextResponse.json({ ok: false, error: "missing_supabase_config" }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "missing_supabase_config" }, { status: 503 });
   }
 
   const supabase = buildSupabaseClient();
+  if (!supabase) {
+    return NextResponse.json({ ok: false, error: "missing_supabase_config" }, { status: 503 });
+  }
+  const { searchParams } = new URL(request.url);
+  const force = searchParams.get("force") === "true";
+  const targetLeadId = searchParams.get("lead_id");
+
   const nowIso = new Date().toISOString();
-  const { data, error } = await supabase
+  
+  let query = supabase
     .from("marketing_lead_outreach_queue")
     .select("id,lead_email,channel,attempts,payload,lead_id,step")
-    .eq("status", "pending")
-    .lte("scheduled_at", nowIso)
+    .eq("status", "pending");
+
+  if (targetLeadId) {
+    query = query.eq("lead_id", targetLeadId);
+  }
+
+  if (!force) {
+    query = query.lte("scheduled_at", nowIso);
+  }
+
+  const { data, error } = await query
     .order("scheduled_at", { ascending: true })
     .limit(100);
 
@@ -237,7 +273,7 @@ export async function GET(request: Request) {
         const buildHtml = htmlBuilders[currentStep] ?? buildStep1Html;
         const html = buildHtml({ firstName, personalLink, unsubLink });
 
-        const replyTo = (row.payload?.reply_to as string | undefined) || "MohamedRefatMohamed@gmail.com";
+        const replyTo = (row.payload?.reply_to as string | undefined) || "hello@alrehla.app";
         outcome = await sendEmail(row.lead_email, subject, html, replyTo);
 
         // 5. Schedule next drip step (if not last step and lead hasn't started onboarding)

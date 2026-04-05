@@ -6,6 +6,7 @@ import { useAppStartupOnboarding } from "./useAppStartupOnboarding";
 import { useAppSessionToasts } from "./useAppSessionToasts";
 import { useAppJourneySignals } from "./useAppJourneySignals";
 import { useAppMissionReminderNotifications } from "./useAppMissionReminderNotifications";
+import { useAppGateHandoff } from "./useAppGateHandoff";
 
 interface UseAppExperienceSessionStateParams {
   uiPersistence: Parameters<typeof useAppUiStatePersistence>[0];
@@ -35,12 +36,30 @@ export function useAppExperienceSessionState({
   const authState = useAppAuthRecovery(authRecovery);
   useAppPageMetadata(metadataScreen);
   const previewState = useFeaturePreviewSession(featurePreview);
+  
+  // Gate Handoff Integration
+  const gateState = useAppGateHandoff({
+    navigateToScreen: startupOnboarding.navigateToScreen,
+    setGoalId: startupOnboarding.setGoalId,
+    setCategory: startupOnboarding.setCategory
+  });
+
+  // Merge the Welcome states: prioritize gate welcome if present, else auth welcome.
+  const activeWelcome = gateState.gateWelcome || authState.welcome;
+  
+  // Merge clear welcome logic
+  const clearActiveWelcome = () => {
+    gateState.clearGateWelcome();
+    authState.clearWelcome();
+  };
 
   return {
     ...toastState,
     ...journeyState,
     ...startupState,
     ...authState,
+    welcome: activeWelcome,
+    clearWelcome: clearActiveWelcome,
     ...previewState
   };
 }

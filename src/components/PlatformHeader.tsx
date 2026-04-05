@@ -16,7 +16,6 @@ import {
   Sparkles,
   Brain,
   Home,
-  ArrowLeftCircle,
   ShieldCheck,
   Eye,
 } from "lucide-react";
@@ -52,8 +51,6 @@ const SCREEN_MAP: Record<string, string> = {
   settings: "settings",
   profile: "profile",
 };
-
-const MARKETING_NAV_IDS = new Set<NavLinkId>(["home", "stories", "about"]);
 
 const SCREEN_LABELS: Record<string, string> = {
   tools: "الأدوات",

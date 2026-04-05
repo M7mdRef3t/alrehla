@@ -15,7 +15,16 @@ interface HeroSectionProps {
 }
 
 /* ─── Constants ──────────────────────────────────────────────────────────────── */
-const ROTATING_WORDS = ["مُنتهك الحدود", "تنزف طاقتك ببطء", "مُثقل بنبض الآخرين", "في مسار مشتت"];
+const ROTATING_WORDS = [
+  "حدودك مُستباحة",
+  "شايل شيلة مش شيلتك",
+  "تايه في دواير غيرك",
+  "نبضك مربوط بغيرك",
+  "سايب بابك موارب",
+  "بتدور في ساقية مش بتاعتك",
+  "مراية لزعل اللي حواليك",
+  "خايف تقول لأ"
+];
 
 /* ─── Styles ─────────────────────────────────────────────────────────────────── */
 const HERO_STYLES = `
@@ -124,10 +133,11 @@ const HERO_STYLES = `
   .headline-static {
     font-family: 'Tajawal', sans-serif;
     font-weight: 900;
-    line-height: 1.0;
-    letter-spacing: -0.035em;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
     color: var(--text-hero);
     text-shadow: 0 0 80px rgba(45, 212, 191, 0.08);
+    text-align: right;
   }
 
   .headline-accent {
@@ -136,13 +146,19 @@ const HERO_STYLES = `
     -webkit-text-fill-color: transparent;
     background-clip: text;
     filter: drop-shadow(0 0 24px rgba(45,212,191,0.28));
-    display: inline-block;
+    display: block;
+    width: 100%;
   }
 
   /* ── Rotating word ── */
   .rotating-word-wrapper {
     position: relative;
-    display: inline-block;
+    display: block;
+    width: 100%;
+    min-height: 1.2em;
+    padding: 0.25em 0;
+    overflow: visible;
+    text-align: right;
   }
 
   /* ── Body copy ── */
@@ -322,14 +338,14 @@ const RotatingWord: FC = () => {
         setIndex(i => (i + 1) % ROTATING_WORDS.length);
         setShow(true);
       }, 450);
-    }, 3200);
+    }, 5000);
     return () => clearInterval(id);
   }, []);
 
   return (
     <span className="rotating-word-wrapper">
-      <span className="invisible select-none whitespace-nowrap block" aria-hidden>
-        {ROTATING_WORDS[2]}
+      <span className="invisible select-none block" aria-hidden>
+        {ROTATING_WORDS[5]}
       </span>
       <AnimatePresence mode="wait">
         {show && (
@@ -339,7 +355,7 @@ const RotatingWord: FC = () => {
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -16, filter: "blur(6px)" }}
             transition={{ duration: 0.45, ease }}
-            className="absolute inset-0 flex items-center justify-end headline-accent"
+            className="absolute inset-0 flex items-center headline-accent"
           >
             {ROTATING_WORDS[index]}
           </motion.span>
@@ -716,14 +732,12 @@ export const HeroSection: FC<HeroSectionProps> = ({
               className="headline-static"
               style={{
                 fontSize: "clamp(2.4rem, 5.5vw, 4.4rem)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-end",
-                gap: "0.2em",
+                display: "block",
+                textAlign: "right",
               }}
             >
-              <span>أنت لست مرهقاً</span>
-              <span style={{ color: "#8faab8", fontSize: "0.78em", fontWeight: 600 }}>
+              <span style={{ display: "block", marginBottom: "0.1em" }}>أنت لست مرهقاً</span>
+              <span style={{ display: "block", color: "#8faab8", fontSize: "0.78em", fontWeight: 600, marginBottom: "0.1em" }}>
                 أنت فقط
               </span>
               <RotatingWord />
@@ -760,6 +774,8 @@ export const HeroSection: FC<HeroSectionProps> = ({
               }}>
                 <input
                   type="text"
+                  id="mirror-name"
+                  name="mirrorName"
                   placeholder="اسمك (اختياري)"
                   value={mirrorName}
                   onChange={e => setMirrorName(e.target.value)}

@@ -13,8 +13,7 @@ import type {
   PersonViewInsights,
   OrbitHistoryEntry,
   MapType,
-  FeelingCheckResult,
-  FeelingCheckAsset
+  FeelingCheckResult
 } from "../modules/map/mapTypes";
 import { loadStoredState, saveStoredState } from "../services/localStore";
 import { resolvePathId } from "../modules/pathEngine/pathResolver";

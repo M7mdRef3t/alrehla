@@ -153,8 +153,10 @@ export const ContextNotePanel = memo(function ContextNotePanel({
 
       {/* Textarea */}
       <div className="px-4 pt-3 pb-2">
-        <textarea
-          ref={textareaRef}
+            <textarea
+              id="context-note-panel"
+              name="contextNotePanel"
+              ref={textareaRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}

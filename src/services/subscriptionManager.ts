@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient";
+import { safeGetSession, supabase, isSupabaseAbortError } from "./supabaseClient";
 import { hasRecordedOfferConversion, recordEmotionalPricingEvent } from "./emotionalPricingAnalytics";
 import {
   type PricingTier,
@@ -229,7 +229,7 @@ export async function syncSubscription(): Promise<void> {
     if (!supabase) return;
 
     try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = await safeGetSession();
         if (!session?.user) return;
 
         const { data: profile, error } = await supabase
@@ -269,8 +269,9 @@ export async function syncSubscription(): Promise<void> {
             }
         }
         console.warn("🔄 Subscription synced with server:", newTier);
-    } catch (err) {
-        console.error("Failed to sync subscription:", err);
-    }
+  } catch (err) {
+    if (isSupabaseAbortError(err)) return;
+    console.error("Failed to sync subscription:", err);
+  }
 }
 

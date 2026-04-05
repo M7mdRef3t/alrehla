@@ -137,7 +137,9 @@ export function FeelingCheckModal({ onClose }: Props) {
               </h2>
 
               <div className="space-y-6">
-                <input 
+                <input
+                  id={`feeling-check-${currentQ.id}`}
+                  name={`feelingCheck${currentQ.id}`}
                   type="range"
                   min="0"
                   max="100"

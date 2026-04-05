@@ -58,16 +58,18 @@ export const SUGGESTIONS: Record<string, SuggestionCard[]> = {
     { label: "الجسم", icon: User }
   ],
   unknown: [
+    { label: "العائلة", icon: User },
     { label: "الصديق", icon: Users },
+    { label: "الزميل (عمل)", icon: Briefcase },
     { label: "المعرفة", icon: UserCircle },
-    { label: "الجار", icon: UserCheck },
-    { label: "الزميل", icon: Users }
+    { label: "الجار", icon: UserCheck }
   ],
   general: [
+    { label: "العائلة", icon: User },
     { label: "الصديق", icon: Users },
+    { label: "الزميل (عمل)", icon: Briefcase },
     { label: "المعرفة", icon: UserCircle },
-    { label: "الجار", icon: UserCheck },
-    { label: "الزميل", icon: Users }
+    { label: "الجار", icon: UserCheck }
   ]
 };
 

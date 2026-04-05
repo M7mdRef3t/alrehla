@@ -24,6 +24,15 @@ export type AppOverlayFlag =
   | "atlasDashboard"
   | "shareStats"
   | "library"
+  | "insightsLibrary"
+  | "goals2025"
+  | "personalProgress"
+  | "weeklyActionPlan"
+  | "readingPlan"
+  | "awarenessGrowth"
+  | "communityImpact"
+  | "relationshipAnalysis"
+  | "circleGrowth"
   | "symptomsOverview"
   | "recoveryPlan"
   | "themeSettings"
@@ -39,7 +48,18 @@ export type AppOverlayFlag =
   | "journeyTimeline"
   | "nudgeToast"
   | "mirrorOverlay"
-  | "premiumBridge";
+  | "blindCapsuleOpener"
+  | "premiumBridge"
+  | "recoveryPathways"
+  | "privateCircleInvitation"
+  | "duoCommunity"
+  | "pastSessionsLog"
+  | "rewardStore"
+  | "ruthlessMirror"
+  | "egoDeath"
+  | "wisdomMatrix"
+  | "immersionPath"
+  | "vanguardCollective";
 
 export type AppOverlayFlags = Record<AppOverlayFlag, boolean>;
 
@@ -62,6 +82,15 @@ const defaultOverlayFlags: AppOverlayFlags = {
   atlasDashboard: false,
   shareStats: false,
   library: false,
+  insightsLibrary: false,
+  goals2025: false,
+  personalProgress: false,
+  weeklyActionPlan: false,
+  readingPlan: false,
+  awarenessGrowth: false,
+  communityImpact: false,
+  relationshipAnalysis: false,
+  circleGrowth: false,
   symptomsOverview: false,
   recoveryPlan: false,
   themeSettings: false,
@@ -77,7 +106,18 @@ const defaultOverlayFlags: AppOverlayFlags = {
   journeyTimeline: false,
   nudgeToast: false,
   mirrorOverlay: false,
-  premiumBridge: false
+  blindCapsuleOpener: false,
+  premiumBridge: false,
+  recoveryPathways: false,
+  privateCircleInvitation: false,
+  duoCommunity: false,
+  pastSessionsLog: false,
+  rewardStore: false,
+  ruthlessMirror: false,
+  egoDeath: false,
+  wisdomMatrix: false,
+  immersionPath: false,
+  vanguardCollective: false
 };
 
 interface AppOverlayState {

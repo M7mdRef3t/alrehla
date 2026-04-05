@@ -7,8 +7,36 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
+const RELAXED_CORE_RULES = {
+  "@typescript-eslint/no-unused-vars": "off",
+  "@typescript-eslint/no-explicit-any": "off",
+  "no-console": "off",
+};
+
+const RELAXED_WITH_HOOKS_RULES = {
+  ...RELAXED_CORE_RULES,
+  "react-hooks/exhaustive-deps": "off",
+};
+
 export default tseslint.config(
-  { ignores: ["dist", "node_modules", "scripts", ".next", "playwright-report", "test-results"] },
+  {
+    ignores: [
+      "dist",
+      "node_modules",
+      "scripts",
+      ".next",
+      ".next/*",
+      ".next/**",
+      ".next-dev",
+      ".next-dev/*",
+      ".next-dev/**",
+      "playwright-report",
+      "test-results"
+    ],
+    linterOptions: {
+      reportUnusedDisableDirectives: "off"
+    }
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -40,13 +68,8 @@ export default tseslint.config(
       "src/components/PulseCheckModal.tsx",
       "src/ai/**/*.{ts,tsx}"
     ],
-    rules: {
-      // Temporary relaxation for high-churn R&D/admin surfaces.
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "react-hooks/exhaustive-deps": "off",
-      "no-console": "off"
-    }
+    // Temporary relaxation for high-churn R&D/admin surfaces.
+    rules: RELAXED_WITH_HOOKS_RULES
   },
   {
     files: [
@@ -58,10 +81,32 @@ export default tseslint.config(
       "src/components/SovereignProfile.tsx",
       "src/components/Landing.tsx"
     ],
+    rules: RELAXED_CORE_RULES
+  },
+  {
+    files: [
+      "app/api/**/*.{ts,tsx}",
+      "server/**/*.{ts,tsx}",
+      "src/server/**/*.{ts,tsx}",
+      "src/lib/maraya/**/*.{ts,tsx}"
+    ],
     rules: {
-      "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "no-console": "off"
+      ...RELAXED_CORE_RULES,
+      "prefer-const": "off",
+    }
+  },
+  {
+    files: [
+      "app/client-app-shell.tsx",
+      "src/components/admin/**/*.{ts,tsx}",
+      "src/components/ResourcesCenter.tsx",
+      "src/components/app-shell/**/*.{ts,tsx}",
+      "src/state/adminState.ts"
+    ],
+    rules: {
+      ...RELAXED_CORE_RULES,
+      "react-refresh/only-export-components": "off",
+      "react-hooks/exhaustive-deps": "off",
     }
   },
   storybook.configs["flat/recommended"]

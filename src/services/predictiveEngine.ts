@@ -15,6 +15,7 @@ export interface PredictiveInsight {
   unstableNodes: number;
   pulseVolatility: number;
   lowEnergyRatio: number;
+  unstableNodesData?: string[];
 }
 
 const CHAOS_MOODS = new Set(["anxious", "angry", "sad", "tense", "overwhelmed"]);
@@ -89,7 +90,10 @@ export function calculateEntropy(): PredictiveInsight {
     primaryFactor,
     unstableNodes,
     pulseVolatility: Number(pulseVolatility.toFixed(2)),
-    lowEnergyRatio: Number(lowEnergyRatio.toFixed(2))
+    lowEnergyRatio: Number(lowEnergyRatio.toFixed(2)),
+    unstableNodesData: activeNodes
+      .filter((n) => n.ring === "red" || n.ring === "yellow")
+      .map((n) => n.label)
   };
 }
 

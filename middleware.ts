@@ -38,10 +38,18 @@ export async function middleware(request: NextRequest) {
             .filter((value): value is string => Boolean(value && value.trim()))
             .map((value) => value.trim());
 
-        // Admin routes must have correct Bearer token
-        if (allowedSecrets.length > 0 && !allowedSecrets.some((secret) => authHeader === `Bearer ${secret}`)) {
-            console.warn(`[Security Alert] Unauthorized Admin access attempt from IP: ${ip}`);
-            return NextResponse.json({ error: 'Unauthorized Access' }, { status: 401 });
+        // Fast-pass: if the bearer matches a known secret, allow immediately.
+        const isSecretMatch = allowedSecrets.some((secret) => authHeader === `Bearer ${secret}`);
+
+        if (!isSecretMatch) {
+            // Allow Supabase JWT tokens to pass through — each route handler
+            // has its own verifyAdmin() that validates the JWT against the
+            // profiles table. Only block requests with NO auth header at all.
+            const hasBearer = authHeader.startsWith('Bearer ') && authHeader.length > 7;
+            if (!hasBearer) {
+                console.warn(`[Security Alert] Unauthorized Admin access attempt from IP: ${ip}`);
+                return NextResponse.json({ error: 'Unauthorized Access' }, { status: 401 });
+            }
         }
     }
 

@@ -1,15 +1,19 @@
 import { createClient } from "@supabase/supabase-js";
 import { getRankedActions } from "./actionAdaptation";
 
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+function getSupabaseAdmin() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!supabaseUrl || !serviceRoleKey) return null;
+    return createClient(supabaseUrl, serviceRoleKey);
+}
 
 export type InterventionType = 'low_mood_streak' | 'stress_overload' | 'energy_crash' | 'negative_trajectory';
 
 export async function processInterventions(userId: string) {
     const findings: { type: InterventionType; message: string; severity: string; metadata: any }[] = [];
+    const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) return [];
 
     // 1. Fetch recent pulse data (last 7 days)
     const { data: pulses } = await supabaseAdmin

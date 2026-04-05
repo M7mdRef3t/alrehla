@@ -71,29 +71,43 @@ export const getGlobalHarmony = (): HarmonyPulse => {
   const score = Math.min(1, Math.max(0, baseScore + wave));
 
   // Determine configuration based on score
+  let config = { inhale: 4, hold: 7, exhale: 8, total: 19 };
+  let color = "#2dd4bf"; // Teal
+  let label = "سكينة عالمية (Universal Calm)";
+  let activeUsers = Math.floor(1240 + Math.random() * 200);
+
   if (score > 0.8) {
-    return {
-      score,
-      activeUsers: Math.floor(1240 + Math.random() * 200),
-      label: "سكينة عالمية (Universal Calm)",
-      color: "#2dd4bf", // Teal
-      breathConfig: { inhale: 4, hold: 7, exhale: 8, total: 19 } // 4-7-8 Zen
-    };
+    config = { inhale: 4, hold: 7, exhale: 8, total: 19 }; // 4-7-8 Zen
+    color = "#2dd4bf";
+    label = "سكينة عالمية (Universal Calm)";
+    activeUsers = Math.floor(1240 + Math.random() * 200);
   } else if (score > 0.6) {
-    return {
-      score,
-      activeUsers: Math.floor(4580 + Math.random() * 500),
-      label: "توازن مستقر (Stable Balance)",
-      color: "#14b8a6",
-      breathConfig: { inhale: 5, hold: 5, exhale: 5, total: 15 } // 5-5-5 Box
-    };
+    config = { inhale: 5, hold: 5, exhale: 5, total: 15 }; // 5-5-5 Box
+    color = "#14b8a6";
+    label = "توازن مستقر (Stable Balance)";
+    activeUsers = Math.floor(4580 + Math.random() * 500);
   } else {
-    return {
-      score,
-      activeUsers: Math.floor(8920 + Math.random() * 1000),
-      label: "ضجيج مرتفع (High Resonance)",
-      color: "#f59e0b", // Amber/Gold
-      breathConfig: { inhale: 4, hold: 2, exhale: 4, total: 10 } // Faster breath
-    };
+    config = { inhale: 4, hold: 2, exhale: 4, total: 10 }; // Faster breath
+    color = "#f59e0b";
+    label = "ضجيج مرتفع (High Resonance)";
+    activeUsers = Math.floor(8920 + Math.random() * 1000);
   }
+
+  // Biometric UI Throttling: Inject physics directly to CSS variables
+  if (typeof document !== "undefined") {
+    // Determine a global speed multiplier (lower score = faster animations)
+    // 1.0 score means base speed (e.g., 1x), 0.0 means fast speed (e.g., 0.5x)
+    const speedMultiplier = 0.5 + (score * 0.5); // ranges from 0.5 to 1.0
+    document.documentElement.style.setProperty("--harmony-duration", `${config.total}s`);
+    document.documentElement.style.setProperty("--ui-speed", `${speedMultiplier}`);
+    document.documentElement.style.setProperty("--harmony-color", color);
+  }
+
+  return {
+    score,
+    activeUsers,
+    label,
+    color,
+    breathConfig: config
+  };
 };

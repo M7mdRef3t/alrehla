@@ -160,6 +160,8 @@ export const RadarShield: FC<RadarShieldProps> = ({ isOpen, onClose }) => {
                                                 </span>
                                             </div>
                                             <input
+                                                id="radar-shield-hours"
+                                                name="radarShieldHours"
                                                 type="range"
                                                 min="0"
                                                 max="40"

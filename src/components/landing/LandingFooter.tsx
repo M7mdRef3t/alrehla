@@ -15,13 +15,16 @@ export const LandingFooter: FC<LandingFooterProps> = ({
   onOpenLegal
 }) => (
   <motion.footer
-    className="pb-8 flex flex-col items-center gap-4 text-sm"
+    className="pb-10 flex flex-col items-center gap-5 text-sm"
     variants={stagger}
     initial="hidden"
     whileInView="visible"
     viewport={{ once: true }}
   >
-    <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2" aria-label="روابط قانونية ومعلومات التواصل">
+    <nav
+      className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
+      aria-label="روابط أساسية"
+    >
       <a
         href="/stories"
         className="text-slate-400 hover:text-teal-400 transition-colors underline underline-offset-2"
@@ -32,7 +35,7 @@ export const LandingFooter: FC<LandingFooterProps> = ({
         href="/about"
         className="text-slate-400 hover:text-teal-400 transition-colors underline underline-offset-2"
       >
-        لماذا الرحلة؟
+        عن الرحلة
       </a>
       <a
         href="/privacy"
@@ -55,12 +58,6 @@ export const LandingFooter: FC<LandingFooterProps> = ({
         الخطط والأسعار
       </a>
       <a
-        href="/coach"
-        className="text-teal-300/80 hover:text-teal-200 transition-colors underline underline-offset-2 font-bold"
-      >
-        المسار المتقدم
-      </a>
-      <a
         href="https://wa.me/201023050092"
         target="_blank"
         rel="noopener noreferrer"
@@ -70,8 +67,11 @@ export const LandingFooter: FC<LandingFooterProps> = ({
         <span className="sr-only">(يفتح في نافذة جديدة)</span>
       </a>
     </nav>
-    <div className="flex flex-col items-center gap-3 mb-6 bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">تعهد الأمان</p>
+
+    <div className="flex flex-col items-center gap-3 mb-2 bg-white/[0.02] border border-white/5 rounded-2xl px-4 py-3">
+      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+        ما نعد به
+      </p>
       <div className="flex flex-col items-center gap-1.5">
         {trustPoints.map((point, idx) => (
           <p key={idx} className="text-sm text-slate-500 font-bold flex items-center gap-2">
@@ -81,9 +81,11 @@ export const LandingFooter: FC<LandingFooterProps> = ({
         ))}
       </div>
     </div>
+
     <SocialLinks />
+
     <span className="text-sm text-slate-600 font-mono tracking-widest">
-      الرحلة — منصة الوعي الذاتي
+      الرحلة — مساحة أوضح للعلاقات والحدود
     </span>
   </motion.footer>
 );

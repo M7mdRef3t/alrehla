@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AIOrchestrator } from '../../../../src/services/aiOrchestrator';
 import { supabase } from '../../../../src/services/supabaseClient';
 import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
 import { TrajectoryEngine, type AwarenessVector } from '../../../../src/services/trajectoryEngine';
 import { HiveEngine } from '../../../../src/services/hiveEngine';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+import { getClient as getGeminiClient } from '../../../../server/gemini/_shared';
 const MAX_AGENT_REQUEST_BYTES = 120_000;
 const MAX_AGENT_MESSAGES = 20;
 const MAX_AGENT_MESSAGE_CHARS = 2_000;
@@ -261,6 +259,11 @@ export async function POST(req: Request) {
                 { error: 'يجب تسجيل الدخول لبدء الرحلة.' },
                 { status: 401 }
             );
+        }
+
+        const genAI = getGeminiClient();
+        if (!genAI) {
+            return NextResponse.json({ error: 'AI Engine is offline (Missing API Key).' }, { status: 503 });
         }
 
         const safeMessages = messages as Array<{ role?: unknown; content: string }>;

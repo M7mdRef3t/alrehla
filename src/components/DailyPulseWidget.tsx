@@ -3,7 +3,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BatteryCharging, BatteryWarning, Check, Zap, Share2 } from "lucide-react";
 import { useDailyPulse } from "../hooks/useDailyPulse";
-import { trackEvent, AnalyticsEvents } from "../services/analytics";
+import { trackEvent } from "../services/analytics";
 import { soundManager } from "../services/soundManager";
 import { ShareableCard } from "./ShareableCard";
 
@@ -14,7 +14,7 @@ import { ShareableCard } from "./ShareableCard";
  */
 
 export const DailyPulseWidget: FC = () => {
-  const { todayPulse, history, savePulse, hasAnsweredToday } = useDailyPulse();
+  const { todayPulse, savePulse, hasAnsweredToday } = useDailyPulse();
 
   const [isSaved, setIsSaved] = useState(false);
   const [pulseType, setPulseType] = useState<"charge" | "drain" | null>(null);
@@ -45,7 +45,7 @@ export const DailyPulseWidget: FC = () => {
         focus: 'general'
       });
 
-      trackEvent("pulse_recorded" as any, {
+      trackEvent("pulse_recorded", {
         target: "tactical_pulse",
         val: type
       });
@@ -54,8 +54,8 @@ export const DailyPulseWidget: FC = () => {
 
       setIsSaved(true);
       // Removed the 2000ms timeout for clearing pulseType so we can use it for sharing
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       setPulseType(null);
     }
   };

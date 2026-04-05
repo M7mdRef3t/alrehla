@@ -13,6 +13,7 @@ interface GoogleAuthModalProps {
   isOpen: boolean;
   intent: PostAuthIntent;
   onClose: () => void;
+  onGuestMode?: () => void;
   /** يُستدعى عند "مش دلوقتي" — يُمرّر pulse للحفظ المحلي (Guest Mode) */
   onNotNow?: (pulseToSave?: {
     energy: number;
@@ -66,6 +67,7 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
   isOpen,
   intent,
   onClose,
+  onGuestMode,
   onNotNow
 }) => {
   const [loading, setLoading] = useState(false);
@@ -84,12 +86,12 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
 
   const handleGoogle = async () => {
     if (!isAgeVerified) {
-      setError("أكد أن عمرك +18 للمتابعة.");
+      setError("أكّد أن عمرك +18 للمتابعة.");
       return;
     }
 
     if (!isSupabaseReady) {
-      setError("تسجيل الدخول غير متاح حاليًا.");
+      setError("Google login is currently unavailable. Continue as guest or configure Supabase OAuth.");
       return;
     }
 
@@ -114,10 +116,11 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
       clearPostAuthIntent();
       const raw = (signInError as { message?: unknown })?.message;
       const text = typeof raw === "string" ? raw : "";
-      if (/Unsupported provider/i.test(text) || /provider is not enabled/i.test(text)) {
-        setError("خدمة جوجل مؤقتاً متوقفة. جرب تاني بعد شوية.");
+      const providerUnavailable = /Unsupported provider/i.test(text) || /provider is not enabled/i.test(text);
+      if (providerUnavailable) {
+        setError("خدمة جوجل مؤقتاً متوقفة. جرّب تاني بعد شوية.");
       } else {
-        setError("حصلت مشكلة في الاتصال. جرب تاني.");
+        setError("حصلت مشكلة في الاتصال. جرّب تاني.");
       }
       setLoading(false);
       return;
@@ -321,6 +324,25 @@ export const GoogleAuthModal: FC<GoogleAuthModalProps> = ({
                   </>
                 )}
               </motion.button>
+
+              {!isSupabaseReady && onGuestMode && (
+                <motion.button
+                  type="button"
+                  onClick={onGuestMode}
+                  className="w-full inline-flex items-center justify-center rounded-xl px-6 py-3 text-[14px] font-medium transition-all duration-200"
+                  style={{
+                    background: "rgba(244, 63, 94, 0.08)",
+                    border: "1px solid rgba(244, 63, 94, 0.25)",
+                    color: "rgba(251, 113, 133, 0.95)",
+                  }}
+                  whileHover={{ background: "rgba(244, 63, 94, 0.12)" }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <span style={{ fontSize: "14px", lineHeight: 1.2 }}>
+                    Login is unavailable right now.
+                  </span>
+                </motion.button>
+              )}
 
               {/* privacy note */}
               <div

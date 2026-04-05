@@ -476,7 +476,7 @@ export const DataManagement: FC<DataManagementProps> = ({ isOpen, onClose, accou
                       <div className="space-y-3">
                         <div>
                           <label className="text-xs text-slate-400 mb-1 block">الاسم الظاهر</label>
-                          <input value={displayName} onChange={(e) => { setDisplayName(e.target.value); setDisplayNameDirty(true); }} placeholder={displayNamePlaceholder} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-teal-500 outline-none" />
+                          <input id="data-management-display-name" name="dataManagementDisplayName" value={displayName} onChange={(e) => { setDisplayName(e.target.value); setDisplayNameDirty(true); }} placeholder={displayNamePlaceholder} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:border-teal-500 outline-none" />
                         </div>
                         <div>
                           <label className="text-xs text-slate-400 mb-1 block">نبرة الخطاب</label>

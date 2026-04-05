@@ -67,8 +67,10 @@ export const InnerCourt: FC<InnerCourtProps> = ({ isOpen, onClose }) => {
                                         </p>
                                     </div>
 
-                                    <textarea
-                                        value={accusation}
+                <textarea
+                  id="inner-court-accusation"
+                  name="innerCourtAccusation"
+                  value={accusation}
                                         onChange={(e) => setAccusation(e.target.value)}
                                         placeholder="أشعر بالذنب لأنني..."
                                         className="w-full h-32 bg-slate-800 border-2 border-slate-700 rounded-xl p-4 text-white placeholder:text-slate-600 focus:border-amber-500/50 focus:ring-4 focus:ring-amber-500/10 transition-all resize-none text-lg text-right dir-rtl"

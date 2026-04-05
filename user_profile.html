@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(27, 39, 50, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .glow-border {
+            box-shadow: inset 0 0 0 1px rgba(195, 254, 255, 0.1);
+        }
+        .growth-gradient {
+            background: linear-gradient(135deg, #c3feff 0%, #c9bfff 100%);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "on-primary-container": "#005d5f",
+                "tertiary-fixed": "#c0e6f4",
+                "surface-container-highest": "#1b2732",
+                "error-container": "#8a1a1e",
+                "on-error-container": "#ff9993",
+                "surface-container": "#121a23",
+                "primary-dim": "#3de4e7",
+                "primary": "#c3feff",
+                "error": "#ff716c",
+                "tertiary-dim": "#b2d7e6",
+                "primary-fixed-dim": "#3de4e7",
+                "secondary-container": "#24007f",
+                "secondary-fixed": "#e5deff",
+                "tertiary-fixed-dim": "#b2d7e6",
+                "outline": "#6b7784",
+                "on-tertiary-container": "#315561",
+                "outline-variant": "#3d4956",
+                "tertiary-container": "#c0e6f4",
+                "surface-bright": "#202d3a",
+                "on-background": "#dae7f6",
+                "on-tertiary": "#3a5d6a",
+                "tertiary": "#d4f3ff",
+                "background": "#090f15",
+                "on-surface-variant": "#a0acbb",
+                "surface-dim": "#090f15",
+                "on-secondary-fixed-variant": "#5a3bdd",
+                "secondary": "#c9bfff",
+                "on-primary-fixed-variant": "#006264",
+                "surface": "#090f15",
+                "surface-container-low": "#0d141b",
+                "secondary-fixed-dim": "#d7ceff",
+                "surface-container-lowest": "#000000",
+                "error-dim": "#c94947",
+                "on-tertiary-fixed-variant": "#3b5f6b",
+                "on-secondary-container": "#a596ff",
+                "on-primary": "#006668",
+                "primary-container": "#5dfbfe",
+                "on-error": "#490006",
+                "inverse-surface": "#f7f9ff",
+                "on-tertiary-fixed": "#1d424e",
+                "on-secondary": "#3e0bc2",
+                "inverse-primary": "#006a6c",
+                "on-surface": "#dae7f6",
+                "surface-variant": "#1b2732",
+                "on-primary-fixed": "#004344",
+                "inverse-on-surface": "#50565d",
+                "primary-fixed": "#52f2f5",
+                "surface-tint": "#c3feff",
+                "surface-container-high": "#16212a",
+                "secondary-dim": "#7459f7",
+                "on-secondary-fixed": "#3d08c1"
+              },
+              fontFamily: {
+                "headline": ["Plus Jakarta Sans"],
+                "body": ["Manrope"],
+                "label": ["Manrope"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30 antialiased overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full flex justify-between items-center px-6 h-16 bg-[#090f15]/80 backdrop-blur-xl border-b border-white/10 z-50 shadow-[0_0_20px_rgba(195,254,255,0.05)]">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold bg-gradient-to-r from-cyan-200 to-purple-300 bg-clip-text text-transparent font-headline tracking-tight">Ethereal Analyst</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center gap-8 font-label text-slate-400">
+<a class="hover:text-cyan-200 transition-colors" href="#">لوحة القيادة</a>
+<a class="hover:text-cyan-200 transition-colors" href="#">التحليلات</a>
+<a class="text-cyan-200 border-b-2 border-cyan-200 py-1" href="#">الملف الشخصي</a>
+</div>
+<div class="flex items-center gap-3">
+<button class="material-symbols-outlined text-slate-400 p-2 hover:bg-white/5 rounded-full transition-colors">notifications</button>
+<button class="material-symbols-outlined text-slate-400 p-2 hover:bg-white/5 rounded-full transition-colors">settings</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-primary/20">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="Stylized modern 3D avatar of a young man with glasses and short dark hair, clean minimalist aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWvtO0kFnIr0zT9GOxT9xJGSKvAZAETUnqqN1e3OnVgA6YNLotWiEnSYKiuDppCfQLZB4qm9navNAqTcQ0HPtxuICwIiGuIdjGiJAIuwM2w-2yqm6dLn54vnilOo7bFhVeswVNPiYEBc_LpvZyIEtrYJXjqIiyMYdb9pf8msSDfQ0rGyGudnIAhM5KAkzK1jy1wS4jkYhEXraUXHsdpi2ZqxVdrTRJO5uTYPpoU64zlHD4_0smCLQb1WSV82DUl2upAV8ZQFbvbz7V"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar (Desktop) -->
+<nav class="fixed right-0 top-0 h-full pt-20 pb-8 flex flex-col border-l border-white/5 bg-[#090f15] w-64 hidden md:flex z-40">
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center border border-white/5">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">psychology</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface font-headline">أحمد محمد</p>
+<p class="text-xs text-on-surface-variant font-label">محلل مستوى 12</p>
+</div>
+</div>
+<div class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">grid_view</span>
+<span class="font-medium font-label">لوحة القيادة</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">psychology</span>
+<span class="font-medium font-label">التحليلات</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-l from-cyan-900/20 to-transparent text-cyan-200 border-r-4 border-cyan-200 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-medium font-label">الملف الشخصي</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">groups</span>
+<span class="font-medium font-label">المجتمع</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary">trending_up</span>
+<span class="font-medium font-label">خطة النمو</span>
+</a>
+</div>
+<div class="px-4 mt-auto space-y-1">
+<button class="w-full flex items-center gap-3 px-4 py-3 mb-4 rounded-xl bg-gradient-to-r from-primary-dim to-secondary-dim text-on-secondary font-bold text-sm shadow-lg shadow-primary/10 transition-transform active:scale-95">
+<span class="material-symbols-outlined">add_circle</span>
+<span>تقييم جديد</span>
+</button>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-medium font-label">مركز المساعدة</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-error-dim hover:bg-error-container/10 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-medium font-label">تسجيل الخروج</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-20 px-6 md:mr-64 min-h-screen">
+<div class="max-w-7xl mx-auto space-y-10">
+<!-- User Identity Header -->
+<section class="glass-card rounded-xl p-8 glow-border relative overflow-hidden group">
+<!-- Background Decorative Glow -->
+<div class="absolute -top-24 -left-24 w-64 h-64 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/20 transition-all duration-700"></div>
+<div class="absolute -bottom-24 -right-24 w-64 h-64 bg-secondary/10 blur-[100px] rounded-full group-hover:bg-secondary/20 transition-all duration-700"></div>
+<div class="relative flex flex-col md:flex-row items-center gap-8">
+<div class="relative">
+<div class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-surface-container-highest p-1 bg-gradient-to-br from-primary to-secondary">
+<img alt="User avatar" class="w-full h-full object-cover rounded-full bg-surface-container" data-alt="Clean and minimal 3D character portrait of a professional man with a friendly expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAi2juwllXszjl0IECsdHDc_GChboub8st6ledTI4YPvM4FM4DAoWfbL_IIOXMABg7OdMS4x6WQS3akMU3S6xTbhoNJyFmPtTe5bjv9thc1TOhnwvuFFvtG9t576EE7jPBwkGckxChF3LYLFl3e1jgQt58ZMAF_3xTj84mmP_T69HUdE0mqmxm64svEcz5di61TZ-6K4_5o-e1WehsAesKczF2qgRGQyvg3n6Dd73IHV931Sj4UOvpjiuP-IXag15RkDhvK1FoQoisv"/>
+</div>
+<div class="absolute bottom-2 right-2 bg-primary text-on-primary-container px-3 py-1 rounded-full text-xs font-bold border-2 border-background">LVL 12</div>
+</div>
+<div class="flex-1 text-center md:text-right">
+<div class="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+<h1 class="text-3xl md:text-4xl font-headline font-extrabold text-on-surface tracking-tight">أحمد محمد</h1>
+<div class="flex justify-center md:justify-start gap-2">
+<button class="px-6 py-2 rounded-full bg-surface-container-highest border border-outline-variant/30 text-on-surface text-sm font-semibold hover:bg-surface-bright transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">edit</span>
+                                    تعديل الملف
+                                </button>
+<button class="px-6 py-2 rounded-full bg-primary/10 border border-primary/30 text-primary text-sm font-semibold hover:bg-primary/20 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">share</span>
+                                    مشاركة البروفايل
+                                </button>
+</div>
+</div>
+<p class="text-on-surface-variant max-w-2xl leading-relaxed text-lg italic">
+                            "مستكشف في أعماق الذات، أسعى لفهم الروابط البشرية وبناء جسور من التفاهم والوعي. رحلتي بدأت منذ 3 أشهر وما زلت أكتشف أبعاداً جديدة كل يوم."
+                        </p>
+<div class="flex flex-wrap justify-center md:justify-start gap-6 mt-6">
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant font-label">إجمالي التقييمات</span>
+<span class="text-xl font-bold text-primary">24</span>
+</div>
+<div class="w-px h-10 bg-white/10 hidden md:block"></div>
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant font-label">أيام متتالية</span>
+<span class="text-xl font-bold text-secondary">42</span>
+</div>
+<div class="w-px h-10 bg-white/10 hidden md:block"></div>
+<div class="flex flex-col">
+<span class="text-xs text-on-surface-variant font-label">درجة الوعي</span>
+<span class="text-xl font-bold text-tertiary">88%</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Grid Layout: Growth Metrics & Badges -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Growth Metrics (Radar Chart Visualization Mockup) -->
+<section class="lg:col-span-7 glass-card rounded-xl p-8 glow-border">
+<h2 class="text-xl font-headline font-bold mb-8 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">analytics</span>
+                        تحليل نمو الشخصية
+                    </h2>
+<div class="relative aspect-square md:aspect-video flex items-center justify-center">
+<!-- Radar Chart Mockup -->
+<div class="relative w-full max-w-md h-full flex items-center justify-center">
+<!-- Background Circles -->
+<div class="absolute inset-0 border border-white/5 rounded-full scale-[0.2]"></div>
+<div class="absolute inset-0 border border-white/5 rounded-full scale-[0.4]"></div>
+<div class="absolute inset-0 border border-white/5 rounded-full scale-[0.6]"></div>
+<div class="absolute inset-0 border border-white/5 rounded-full scale-[0.8]"></div>
+<div class="absolute inset-0 border border-white/10 rounded-full scale-[1.0]"></div>
+<!-- Spoke Lines -->
+<div class="absolute h-full w-px bg-white/10 rotate-0"></div>
+<div class="absolute h-full w-px bg-white/10 rotate-90"></div>
+<div class="absolute h-full w-px bg-white/10 rotate-45"></div>
+<div class="absolute h-full w-px bg-white/10 -rotate-45"></div>
+<!-- Growth Shape (Asymmetrical) -->
+<div class="absolute inset-0 flex items-center justify-center">
+<svg class="w-full h-full overflow-visible opacity-80 drop-shadow-[0_0_15px_rgba(195,254,255,0.4)]" viewbox="0 0 100 100">
+<path d="M50 10 L85 30 L90 70 L50 90 L10 70 L15 30 Z" fill="url(#grad1)" stroke="#c3feff" stroke-width="0.5"></path>
+<defs>
+<lineargradient id="grad1" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:rgba(195,254,255,0.4);stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:rgba(201,191,255,0.4);stop-opacity:1"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+<!-- Labels -->
+<span class="absolute -top-6 text-sm font-bold text-primary">الذكاء العاطفي</span>
+<span class="absolute -bottom-6 text-sm font-bold text-secondary">حل النزاعات</span>
+<span class="absolute -right-16 md:-right-24 text-sm font-bold text-tertiary">الوعي الذاتي</span>
+<span class="absolute -left-16 md:-left-24 text-sm font-bold text-on-surface-variant">التعاطف</span>
+</div>
+</div>
+<div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="p-4 rounded-lg bg-surface-container-low border border-white/5 text-center">
+<p class="text-2xl font-bold text-primary">92</p>
+<p class="text-xs text-on-surface-variant">عاطفي</p>
+</div>
+<div class="p-4 rounded-lg bg-surface-container-low border border-white/5 text-center">
+<p class="text-2xl font-bold text-secondary">78</p>
+<p class="text-xs text-on-surface-variant">نزاعات</p>
+</div>
+<div class="p-4 rounded-lg bg-surface-container-low border border-white/5 text-center">
+<p class="text-2xl font-bold text-tertiary">85</p>
+<p class="text-xs text-on-surface-variant">وعي</p>
+</div>
+<div class="p-4 rounded-lg bg-surface-container-low border border-white/5 text-center">
+<p class="text-2xl font-bold text-on-surface">64</p>
+<p class="text-xs text-on-surface-variant">تعاطف</p>
+</div>
+</div>
+</section>
+<!-- Achievement Badges -->
+<section class="lg:col-span-5 glass-card rounded-xl p-8 glow-border">
+<h2 class="text-xl font-headline font-bold mb-8 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+                        الشارات المحققة
+                    </h2>
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-6">
+<!-- Badge Item -->
+<div class="group flex flex-col items-center gap-3">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center border border-primary/20 shadow-[0_0_20px_rgba(195,254,255,0.05)] group-hover:scale-110 transition-transform cursor-pointer relative">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">volunteer_activism</span>
+<div class="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<span class="text-xs font-bold text-center">سيد التعاطف</span>
+</div>
+<div class="group flex flex-col items-center gap-3">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center border border-secondary/20 shadow-[0_0_20px_rgba(201,191,255,0.05)] group-hover:scale-110 transition-transform cursor-pointer relative">
+<span class="material-symbols-outlined text-secondary text-3xl" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+<div class="absolute inset-0 bg-secondary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<span class="text-xs font-bold text-center">30 يوم شكر</span>
+</div>
+<div class="group flex flex-col items-center gap-3">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center border border-tertiary/20 shadow-[0_0_20px_rgba(212,243,255,0.05)] group-hover:scale-110 transition-transform cursor-pointer relative">
+<span class="material-symbols-outlined text-tertiary text-3xl" style="font-variation-settings: 'FILL' 1;">star</span>
+<div class="absolute inset-0 bg-tertiary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+<span class="text-xs font-bold text-center">مساهم مميز</span>
+</div>
+<div class="group flex flex-col items-center gap-3">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center border border-white/10 opacity-40 grayscale">
+<span class="material-symbols-outlined text-slate-400 text-3xl">local_fire_department</span>
+</div>
+<span class="text-xs font-bold text-center text-slate-500">منارة الحكمة</span>
+</div>
+<div class="group flex flex-col items-center gap-3">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center border border-white/10 opacity-40 grayscale">
+<span class="material-symbols-outlined text-slate-400 text-3xl">self_improvement</span>
+</div>
+<span class="text-xs font-bold text-center text-slate-500">سكون تام</span>
+</div>
+<div class="group flex flex-col items-center gap-3">
+<div class="w-16 h-16 rounded-full bg-surface-container-highest flex items-center justify-center border border-white/10 opacity-40 grayscale">
+<span class="material-symbols-outlined text-slate-400 text-3xl">diversity_1</span>
+</div>
+<span class="text-xs font-bold text-center text-slate-500">صلة الرحم</span>
+</div>
+</div>
+<button class="w-full mt-8 py-3 rounded-lg bg-surface-container hover:bg-surface-bright border border-white/5 text-sm font-semibold transition-colors">
+                        عرض جميع الشارات (14)
+                    </button>
+</section>
+</div>
+<!-- Recent Activity / Test History -->
+<section class="glass-card rounded-xl overflow-hidden glow-border">
+<div class="p-8 flex flex-col md:flex-row justify-between items-center gap-4">
+<h2 class="text-xl font-headline font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary">history_edu</span>
+                        سجل الاختبارات والتقييمات
+                    </h2>
+<div class="flex gap-2">
+<button class="p-2 bg-surface-container-highest rounded-lg text-slate-400"><span class="material-symbols-outlined">filter_list</span></button>
+<button class="p-2 bg-surface-container-highest rounded-lg text-slate-400"><span class="material-symbols-outlined">search</span></button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-right border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-y border-white/5">
+<th class="px-8 py-4 font-semibold text-sm text-on-surface-variant">التقييم</th>
+<th class="px-8 py-4 font-semibold text-sm text-on-surface-variant">التاريخ</th>
+<th class="px-8 py-4 font-semibold text-sm text-on-surface-variant">الدرجة</th>
+<th class="px-8 py-4 font-semibold text-sm text-on-surface-variant">الحالة</th>
+<th class="px-8 py-4 font-semibold text-sm text-on-surface-variant text-left">الإجراءات</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5">
+<tr class="hover:bg-white/5 transition-colors cursor-pointer group">
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-sm">psychology</span>
+</div>
+<span class="font-bold text-on-surface">اختبار التوافق العاطفي</span>
+</div>
+</td>
+<td class="px-8 py-6 text-sm text-on-surface-variant">12 أكتوبر 2023</td>
+<td class="px-8 py-6">
+<span class="font-bold text-primary">88/100</span>
+</td>
+<td class="px-8 py-6">
+<span class="px-3 py-1 bg-green-900/30 text-green-400 text-xs rounded-full border border-green-500/20">مكتمل</span>
+</td>
+<td class="px-8 py-6 text-left">
+<a class="text-primary hover:underline text-sm font-semibold flex items-center gap-1 justify-end" href="#">
+                                        تقرير كامل
+                                        <span class="material-symbols-outlined text-sm">arrow_back</span>
+</a>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors cursor-pointer group">
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-secondary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-sm">mediation</span>
+</div>
+<span class="font-bold text-on-surface">إدارة النزاعات الأسرية</span>
+</div>
+</td>
+<td class="px-8 py-6 text-sm text-on-surface-variant">05 أكتوبر 2023</td>
+<td class="px-8 py-6">
+<span class="font-bold text-secondary">74/100</span>
+</td>
+<td class="px-8 py-6">
+<span class="px-3 py-1 bg-green-900/30 text-green-400 text-xs rounded-full border border-green-500/20">مكتمل</span>
+</td>
+<td class="px-8 py-6 text-left">
+<a class="text-primary hover:underline text-sm font-semibold flex items-center gap-1 justify-end" href="#">
+                                        تقرير كامل
+                                        <span class="material-symbols-outlined text-sm">arrow_back</span>
+</a>
+</td>
+</tr>
+<tr class="hover:bg-white/5 transition-colors cursor-pointer group">
+<td class="px-8 py-6">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-tertiary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary text-sm">self_improvement</span>
+</div>
+<span class="font-bold text-on-surface">مقياس الصمود النفسي</span>
+</div>
+</td>
+<td class="px-8 py-6 text-sm text-on-surface-variant">28 سبتمبر 2023</td>
+<td class="px-8 py-6">
+<span class="font-bold text-tertiary">91/100</span>
+</td>
+<td class="px-8 py-6">
+<span class="px-3 py-1 bg-green-900/30 text-green-400 text-xs rounded-full border border-green-500/20">مكتمل</span>
+</td>
+<td class="px-8 py-6 text-left">
+<a class="text-primary hover:underline text-sm font-semibold flex items-center gap-1 justify-end" href="#">
+                                        تقرير كامل
+                                        <span class="material-symbols-outlined text-sm">arrow_back</span>
+</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 bg-surface-container-low text-center">
+<button class="text-slate-400 text-sm hover:text-primary transition-colors">تحميل المزيد من السجلات</button>
+</div>
+</section>
+</div>
+</main>
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full h-16 bg-[#090f15]/95 backdrop-blur-md border-t border-white/5 flex items-center justify-around px-4 z-50">
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="text-[10px] font-label">الرئيسية</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">psychology</span>
+<span class="text-[10px] font-label">تحليل</span>
+</button>
+<button class="w-12 h-12 -mt-10 rounded-full growth-gradient text-on-secondary flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">add</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="text-[10px] font-label font-bold">ملفي</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-slate-400">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-label">الإعدادات</span>
+</button>
+</nav>
+</body></html>

@@ -58,6 +58,15 @@ export interface UserProgress {
   unit_id: string;
   course_id: string;
   completed_at: string | null;
+  last_position?: number | null;
+}
+
+export interface DBContentItem {
+  id: string | number;
+  title?: string;
+  estimated_minutes?: number;
+  difficulty?: number | string | null;
+  metadata?: Record<string, unknown> | null;
 }
 
 /* ══════════ Fetch functions ══════════ */
@@ -194,7 +203,7 @@ export async function saveQuizSession(params: {
 }
 
 /** Fetch all content_items (for ResourcesCenter articles/exercises) */
-export async function fetchContentItems(contentType?: string): Promise<Record<string, unknown>[]> {
+export async function fetchContentItems(contentType?: string): Promise<DBContentItem[]> {
   if (!supabase) return [];
   let query = supabase
     .from("content_items")
@@ -204,16 +213,16 @@ export async function fetchContentItems(contentType?: string): Promise<Record<st
   if (contentType) query = query.eq("content_type", contentType);
   const { data, error } = await query;
   if (error) { console.error("[learningService] fetchContentItems:", error.message); return []; }
-  return (data ?? []) as Record<string, unknown>[];
+  return (data ?? []) as DBContentItem[];
 }
 
 /** Fetch article content_items (for ResourcesCenter articles tab) */
-export async function fetchDBArticles(): Promise<Record<string, unknown>[]> {
+export async function fetchDBArticles(): Promise<DBContentItem[]> {
   return fetchContentItems("article");
 }
 
 /** Fetch video-course content_items (for ResourcesCenter videos tab) */
-export async function fetchDBVideoCourses(): Promise<Record<string, unknown>[]> {
+export async function fetchDBVideoCourses(): Promise<DBContentItem[]> {
   return fetchContentItems("video-course");
 }
 

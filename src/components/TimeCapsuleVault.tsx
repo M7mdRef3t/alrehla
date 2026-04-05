@@ -168,6 +168,8 @@ export function TimeCapsuleVault({ onClose }: TimeCapsuleVaultProps) {
                             <h3 className="text-xl font-bold text-white mb-4">Transmission to the Future</h3>
 
                             <textarea
+                                id="time-capsule-content"
+                                name="timeCapsuleContent"
                                 placeholder="What wisdom have you gained, Commander?"
                                 value={newContent}
                                 onChange={(e) => setNewContent(e.target.value)}
@@ -178,6 +180,8 @@ export function TimeCapsuleVault({ onClose }: TimeCapsuleVaultProps) {
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-400 mb-1.5">Unlock Date (Optional)</label>
                                     <input
+                                        id="time-capsule-unlock-date"
+                                        name="timeCapsuleUnlockDate"
                                         type="date"
                                         value={unlockDate}
                                         onChange={(e) => setUnlockDate(e.target.value)}
@@ -187,6 +191,8 @@ export function TimeCapsuleVault({ onClose }: TimeCapsuleVaultProps) {
                                 <div>
                                     <label className="block text-xs font-semibold text-slate-400 mb-1.5">Min Rank (Optional)</label>
                                     <input
+                                        id="time-capsule-min-rank"
+                                        name="timeCapsuleMinRank"
                                         type="number"
                                         placeholder="e.g. 10"
                                         value={minRank || ""}

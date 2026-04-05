@@ -1,11 +1,14 @@
 import React, { useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { X, Download, Share2, Sparkles } from "lucide-react";
 import { useMapState } from "../state/mapState";
 
 interface SoulGeometryOverlayProps {
     onClose: () => void;
 }
+
+type GeometryPath = { d: string; stroke: string; opacity: number };
+type GeometryCircle = { cx: number; cy: number; r: number; fill: string; opacity: number };
 
 export const SoulGeometryOverlay: React.FC<SoulGeometryOverlayProps> = ({ onClose }) => {
     const nodes = useMapState((s) => s.nodes);
@@ -16,8 +19,8 @@ export const SoulGeometryOverlay: React.FC<SoulGeometryOverlayProps> = ({ onClos
 
     const geometry = useMemo(() => {
         // Generate abstract paths and shapes based on nodes' rings and positions
-        const paths: any[] = [];
-        const circles: any[] = [];
+        const paths: GeometryPath[] = [];
+        const circles: GeometryCircle[] = [];
 
         activeNodes.forEach((node, i) => {
             const seed = node.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);

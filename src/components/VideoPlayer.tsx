@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
-  RotateCcw, SkipBack, SkipForward, Settings, FileText,
+  RotateCcw, SkipForward, FileText,
   PictureInPicture, Bookmark, ChevronDown, AlertCircle,
 } from "lucide-react";
 
@@ -86,6 +86,7 @@ export function VideoPlayer({
   const [hoverX, setHoverX] = useState(0);
   const [isPiP, setIsPiP] = useState(false);
   const [buffered, setBuffered] = useState(0);
+  void title;
 
   // Restore saved position
   useEffect(() => {
@@ -394,7 +395,7 @@ export function VideoPlayer({
                   <button onClick={toggleMute} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}>
                     {muted || volume === 0 ? <VolumeX size={16} color="rgba(255,255,255,0.7)" /> : <Volume2 size={16} color="rgba(255,255,255,0.7)" />}
                   </button>
-                  <input type="range" min={0} max={1} step={0.05} value={muted ? 0 : volume}
+                  <input id="video-player-volume" name="videoPlayerVolume" type="range" min={0} max={1} step={0.05} value={muted ? 0 : volume}
                     onChange={e => setVolumeAndApply(Number(e.target.value))}
                     style={{ width: 60, accentColor: color, cursor: "pointer" }} />
                 </div>
@@ -472,7 +473,7 @@ export function VideoPlayer({
                   style={{ flexShrink: 0, padding: "6px 10px", borderRadius: 10, cursor: "pointer", background: `${color}12`, border: `1px solid ${color}25`, fontSize: 9, fontWeight: 900, color, whiteSpace: "nowrap" }}>
                   <Bookmark size={10} /> {fmt(currentTime)}
                 </button>
-                <input value={noteInput} onChange={e => setNoteInput(e.target.value)}
+                <input id="video-player-note" name="videoPlayerNote" value={noteInput} onChange={e => setNoteInput(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && addNote()}
                   placeholder="اكتب ملاحظة عند هذه اللحظة..."
                   style={{ flex: 1, padding: "6px 10px", borderRadius: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "#e2e8f0", fontSize: 10, direction: "rtl" }} />

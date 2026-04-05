@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Phone, 
   UserPlus, 
@@ -20,29 +20,18 @@ interface ManualLeadEntryProps {
 }
 
 const BOOKMARKLET_CODE = `javascript:(function(){
-  let phone = window.location.href.match(/phone=(\\d+)/);
-  phone = phone ? phone[1] : prompt("اكتب رقم العميل (واتساب):");
-  if(!phone) return;
-  
-  const notes = prompt("ملاحظات (اختياري):", "Lead من واتساب");
-
-  fetch("https://alrehla.app/api/marketing/lead", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      phone: phone,
-      status: "payment_requested",
-      source: "whatsapp_manual",
-      sourceType: "website",
-      notes: notes
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if(data.ok) alert("✅ تم حفظ الـ Lead بنجاح!");
-    else alert("❌ فشل التسجيل: " + (data.error || "خطأ مجهول"));
-  })
-  .catch(err => alert("❌ خطأ في الاتصال بالسيرفر: " + err.message));
+  try {
+    var rawText = document.querySelector('#main header') ? document.querySelector('#main header').innerText : '';
+    var match = rawText.replace(/[\\s-]/g,'').match(/\\+?\\d{10,15}/);
+    var defaultPhone = match ? match[0] : '';
+    var phone = prompt("🧭 تسجيل عميل لـ الرحلة\\nرقم الهاتف:", defaultPhone);
+    if(!phone) return;
+    var notes = prompt("ملاحظات (اختياري):", "Lead من واتساب مباشر");
+    var url = 'https://www.alrehla.app/admin?tab=marketing-ops&add_lead_flag=1&phone=' + encodeURIComponent(phone) + '&note=' + encodeURIComponent(notes || '');
+    window.open(url, '_blank');
+  } catch(e) {
+    alert("افتح شات العميل الأول في واتساب ويب!");
+  }
 })();`.trim();
 
 export function ManualLeadEntry({ onSuccess, onError }: ManualLeadEntryProps) {
@@ -51,6 +40,21 @@ export function ManualLeadEntry({ onSuccess, onError }: ManualLeadEntryProps) {
   const [note, setNote] = useState("");
   const [showBookmarklet, setShowBookmarklet] = useState(false);
   const [copiedBookmarklet, setCopiedBookmarklet] = useState(false);
+
+  // Auto-fill from URL params (from Bookmarklet)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("add_lead_flag") === "1") {
+        const p = params.get("phone");
+        const n = params.get("note");
+        if (p) setPhone(p);
+        if (n) setNote(n);
+        // Clean URL to avoid infinite re-fills
+        window.history.replaceState({}, '', '/admin?tab=marketing-ops');
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,11 +84,11 @@ export function ManualLeadEntry({ onSuccess, onError }: ManualLeadEntryProps) {
       const data = await response.json();
 
       if (data.ok) {
-        onSuccess("تم تسجيل الـ Lead بنجاح ✅ — الحالة: طلب دفع");
+        onSuccess("تم تسجيل المهتم بنجاح ✅ — الحالة: طلب دفع");
         setPhone("");
         setNote("");
       } else {
-        onError(data.error || "فشل تسجيل الـ Lead");
+        onError(data.error || "فشل تسجيل المهتم");
       }
     } catch (err) {
       onError("خطأ في الاتصال بالسيرفر");
@@ -100,7 +104,7 @@ export function ManualLeadEntry({ onSuccess, onError }: ManualLeadEntryProps) {
           <PlusCircle className="w-7 h-7" />
         </div>
         <div>
-          <h3 className="text-lg font-black text-white">إضافة Lead يدويًا</h3>
+          <h3 className="text-lg font-black text-white">إضافة مهتم يدويًا</h3>
           <p className="text-[11px] text-slate-500 mt-0.5 font-medium">سجل رقم واتساب فوراً وخليه في وضع "طلب دفع"</p>
         </div>
       </div>
@@ -143,7 +147,7 @@ export function ManualLeadEntry({ onSuccess, onError }: ManualLeadEntryProps) {
           ) : (
             <UserPlus className="w-5 h-5" />
           )}
-          <span>تسجيل الـ Lead الآن</span>
+          <span>تسجيل المهتم الآن</span>
         </button>
       </form>
 
@@ -164,7 +168,7 @@ export function ManualLeadEntry({ onSuccess, onError }: ManualLeadEntryProps) {
                 <ExternalLink className="w-4 h-4" />
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                <strong className="text-white">أداة الـ Bookmark:</strong> زرار بتضيفه في متصفحك، وأنت فاتح واتساب بتدوس عليه بيسجل الرقم فوراً في السيستم عندك من غير ما تفتح الـ Dashboard.
+                <strong className="text-white">أداة الـ Bookmark:</strong> زرار بتضيفه في متصفحك، وأنت فاتح واتساب بتدوس عليه بيسجل الرقم فوراً في السيستم عندك من غير ما تفتح لوحة التحكم.
               </p>
             </div>
 
@@ -194,9 +198,13 @@ export function ManualLeadEntry({ onSuccess, onError }: ManualLeadEntryProps) {
             </div>
             
             <div className="text-[9px] text-slate-600 space-y-1 pr-1">
-              <p>1. اعمل Bookmark لأي صفحة عندك.</p>
-              <p>2. غير العنوان ليكون: "Save Lead".</p>
-              <p>3. في خانة الـ URL حط الكود اللي نسخته.</p>
+              <p>1. دوس <strong className="text-indigo-400">Ctrl + D</strong> (أو Command + D) وإنت فاتح أي صفحة.</p>
+              <p>2. دوس More (أداة التعديل) عشان تعدل البوك مارك.</p>
+              <p>3. سمّيه <strong className="text-white">"صائد العملاء 🎯"</strong>.</p>
+              <p>4. امسح اللينك اللي مكتوب، واعمل Paste للكود اللي نسخته.</p>
+              <p className="mt-2 text-emerald-400 font-bold text-xs pt-1 border-t border-white/5">
+                دلوقتي وإنت بتكلم أي عميل على <strong className="text-white">واتساب ويب</strong>.. دوس عالزرار من شريط فوق.. هيسحب رقمه ويفتحلك الشاشة دي جاهزة على الحفظ!
+              </p>
             </div>
           </div>
         )}

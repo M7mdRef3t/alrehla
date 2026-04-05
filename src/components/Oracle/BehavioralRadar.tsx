@@ -210,11 +210,11 @@ export const BehavioralRadar: React.FC = () => {
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-bold text-white uppercase tracking-tighter">{ev.event_name.replace(/_/g, ' ')}</p>
-                                            <p className="text-[9px] text-slate-500 uppercase">{ev.params?.device_type ?? 'web'}  {ev.user_id ? 'Auth' : 'Guest'}</p>
+                                            <p className="text-[9px] text-slate-500 uppercase">{String(ev.params?.device_type ?? 'web')}  {ev.user_id ? 'Auth' : 'Guest'}</p>
                                         </div>
                                     </div>
                                     <span className="text-[9px] font-mono text-slate-600 group-hover:text-slate-400 transition-colors">
-                                        {new Date(ev.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                        {new Date(ev.created_at ?? Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                     </span>
                                 </div>
                             ))}

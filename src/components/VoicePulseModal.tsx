@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, Square, Check, X, Orbit, Zap } from 'lucide-react';
+import { Mic, Square, Check, Orbit, Zap } from 'lucide-react';
 import { useMapState } from '../state/mapState';
-import { runtimeEnv } from '../config/runtimeEnv';
 
 interface VoicePulseModalProps {
     onClose: () => void;

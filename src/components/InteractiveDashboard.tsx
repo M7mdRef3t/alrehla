@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Award, Flame, Heart, Sparkles, TrendingUp,
+  ArrowLeft, Flame, Heart, Sparkles, TrendingUp,
   Users, Zap, CheckCircle2, Circle, ChevronRight, RefreshCw,
   Link2, BarChart3,
 } from "lucide-react";
@@ -404,7 +404,7 @@ function MoodChart({ pulseHistory }: { pulseHistory: PulseEntry[] }) {
 
   const path = points
     .filter((p) => p.y !== null)
-    .map((p, i, arr) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
     .join(" ");
 
   const hasMood = points.some((p) => p.y !== null);
@@ -488,7 +488,7 @@ function QuickPulse({ onSave }: { onSave: (e: PulseEntry) => void }) {
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0); // 0=closed, 1..3=steps, 3=done
   const [mood, setMood] = useState<number | null>(null);
   const [reason, setReason] = useState<string | null>(null);
-  const [action, setAction] = useState<string | null>(null);
+  const [, setAction] = useState<string | null>(null);
 
   const reset = () => { setStep(0); setMood(null); setReason(null); setAction(null); };
 
@@ -635,7 +635,7 @@ function QuickPulse({ onSave }: { onSave: (e: PulseEntry) => void }) {
    Daily Tasks
    ══════════════════════════════════════════ */
 
-function DailyTasks({ xp }: { xp: number }) {
+function DailyTasks({ xp: _xp }: { xp: number }) {
   const [done, setDone] = useState<Set<string>>(() => loadDoneTasks());
 
   const toggle = (id: string) => {
@@ -715,8 +715,6 @@ function WeeklyCapsule({ pulseHistory }: { pulseHistory: PulseEntry[] }) {
   const [open, setOpen] = useState(false);
   const [reflection, setReflection] = useState(() => loadWeeklyCapsule());
   const [saved, setSaved] = useState(false);
-  const prevRef = useRef(reflection);
-
   const weekAvg = useMemo(() => {
     const last7 = pulseHistory.filter((p) => {
       const daysAgo = (Date.now() - p.timestamp) / 86400000;
@@ -787,7 +785,7 @@ function WeeklyCapsule({ pulseHistory }: { pulseHistory: PulseEntry[] }) {
               </div>
 
               {/* Reflection input */}
-              <textarea value={reflection} onChange={(e) => setReflection(e.target.value)}
+              <textarea id="dashboard-reflection" name="dashboardReflection" value={reflection} onChange={(e) => setReflection(e.target.value)}
                 placeholder="اكتب تأملك الأسبوعي هنا... ما الذي تعلمته؟"
                 rows={3}
                 style={{

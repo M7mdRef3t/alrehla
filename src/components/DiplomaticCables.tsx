@@ -71,6 +71,8 @@ export const DiplomaticCables: React.FC<DiplomaticCablesProps> = ({ onBack }) =>
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--text-muted)" }} />
             <input
+              id="diplomatic-cables-search"
+              name="diplomaticCablesSearch"
               type="text"
               placeholder="ابحث في الكابلات..."
               className="w-full rounded-xl py-2.5 pr-10 pl-4 text-sm outline-none transition-all text-right"

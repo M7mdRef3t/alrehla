@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Home } from "lucide-react";

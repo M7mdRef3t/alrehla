@@ -55,6 +55,8 @@ export interface PulseCopyOverrides {
   focus: PulseCopyOverrideValue;
 }
 
+export type CacheEntry<T> = { data: T; timestamp: number };
+
 interface AdminState {
   adminAccess: boolean;
   isContentEditingEnabled: boolean;
@@ -69,6 +71,14 @@ interface AdminState {
   broadcasts: AdminBroadcast[];
   pulseCopyOverrides: PulseCopyOverrides;
   hasSovereignAlert: boolean;
+  
+  // Smart Caching Layer
+  opsStatsCache: CacheEntry<any> | null;
+  liveStatsCache: CacheEntry<any> | null;
+  
+  // Co-pilot
+  isCopilotOpen: boolean;
+
   setAdminAccess: (value: boolean) => void;
   toggleContentEditing: (value: boolean) => void;
   setAdminCode: (value: string | null) => void;
@@ -90,6 +100,10 @@ interface AdminState {
   removeBroadcast: (id: string) => void;
   setPulseCopyOverrides: (overrides: PulseCopyOverrides) => void;
   setHasSovereignAlert: (value: boolean) => void;
+  
+  setOpsStatsCache: (data: any) => void;
+  setLiveStatsCache: (data: any) => void;
+  setCopilotOpen: (value: boolean) => void;
 }
 
 const DEFAULT_PROMPT =
@@ -123,6 +137,10 @@ export const useAdminState = create<AdminState>()(
       broadcasts: [],
       pulseCopyOverrides: { energy: "auto", mood: "auto", focus: "auto" },
       hasSovereignAlert: false,
+      opsStatsCache: null,
+      liveStatsCache: null,
+      isCopilotOpen: false,
+
       setAdminAccess: (value) => set({ adminAccess: value }),
       toggleContentEditing: (value) => set({ isContentEditingEnabled: value }),
       setAdminCode: (value) => set({ adminCode: value }),
@@ -162,7 +180,10 @@ export const useAdminState = create<AdminState>()(
       removeBroadcast: (id) =>
         set((state) => ({ broadcasts: state.broadcasts.filter((b) => b.id !== id) })),
       setPulseCopyOverrides: (overrides) => set({ pulseCopyOverrides: overrides }),
-      setHasSovereignAlert: (value) => set({ hasSovereignAlert: value })
+      setHasSovereignAlert: (value) => set({ hasSovereignAlert: value }),
+      setOpsStatsCache: (data) => set({ opsStatsCache: { data, timestamp: Date.now() } }),
+      setLiveStatsCache: (data) => set({ liveStatsCache: { data, timestamp: Date.now() } }),
+      setCopilotOpen: (value) => set({ isCopilotOpen: value })
     }),
     {
       name: "dawayir-admin-state"

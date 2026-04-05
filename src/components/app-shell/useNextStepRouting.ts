@@ -13,7 +13,7 @@ import {
 } from "../../modules/recommendation";
 import type { AppScreen } from "../../navigation/navigationMachine";
 import { useMapState } from "../../state/mapState";
-import { usePulseState } from "../../state/pulseState";
+
 
 export interface ActiveInterventionState {
   decisionId: string;
@@ -135,15 +135,35 @@ export function useNextStepRouting({
         setShowBreathing(true);
         break;
       case "open_map":
-        void navigateToScreen("map");
+        if (screen === "map" && useMapState.getState().nodes.length === 0) {
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("dawayir-open-add-person"));
+          }
+        } else {
+          void navigateToScreen("map");
+        }
         break;
       case "open_tools":
         openJourneyTools();
         break;
       case "open_mission":
-        if (nodeIdFromPayload) openMissionScreen(nodeIdFromPayload);
-        else if (selectedNodeId) openMissionScreen(selectedNodeId);
-        else void navigateToScreen("map");
+        if (nodeIdFromPayload) {
+          openMissionScreen(nodeIdFromPayload);
+        } else if (selectedNodeId) {
+          openMissionScreen(selectedNodeId);
+        } else {
+          const nodes = useMapState.getState().nodes;
+          let targetNode = nodes.find(n => n.missionProgress?.startedAt && !n.missionProgress.isCompleted);
+          if (!targetNode) {
+            targetNode = nodes.find(n => n.analysis);
+          }
+          if (targetNode) {
+            openMissionScreen(targetNode.id);
+          } else {
+            void navigateToScreen("map");
+            if (nodes[0]) setSelectedNodeId(nodes[0].id);
+          }
+        }
         break;
       case "review_red_node":
       case "log_situation":
@@ -238,9 +258,16 @@ export function useNextStepRouting({
           }).then((decision) => {
             if (seq !== nextStepRequestSeqRef.current) return;
             if (decision) {
+              const cogLoad = inferCognitiveLoadFromDecision(decision);
+              // Dynamic Hesitation Threshold (Sovereign OS Calibration)
+              let dynamicHesitation = 120;
+              if (cogLoad <= 1) dynamicHesitation = 45;
+              else if (cogLoad <= 3) dynamicHesitation = 90;
+              else dynamicHesitation = 180;
+
               nextStepTelemetry.startSession(decision.decisionId, decision.createdAt, {
-                cognitiveLoadRequired: inferCognitiveLoadFromDecision(decision),
-                hesitationThresholdSec: 120,
+                cognitiveLoadRequired: cogLoad,
+                hesitationThresholdSec: dynamicHesitation,
                 onIntervention: (snapshot) => handleActiveIntervention(snapshot, decision)
               });
             }

@@ -45,7 +45,28 @@ export const OVERLAY_SEVERITY: Record<AppOverlayFlag | "emergency" | "pulseCheck
   consciousnessArchive: 1,
   journeyTimeline: 1,
   startup: 0,
-  systemOverclockPanel: 0
+  systemOverclockPanel: 0,
+  // Stitch integrated components
+  insightsLibrary: 2,
+  goals2025: 1,
+  personalProgress: 2,
+  weeklyActionPlan: 3,
+  readingPlan: 1,
+  awarenessGrowth: 2,
+  communityImpact: 1,
+  relationshipAnalysis: 3,
+  circleGrowth: 1,
+  recoveryPathways: 3,
+  privateCircleInvitation: 5,
+  duoCommunity: 1,
+  pastSessionsLog: 2,
+  rewardStore: 2,
+  blindCapsuleOpener: 5,
+  ruthlessMirror: 5,
+  egoDeath: 5,
+  wisdomMatrix: 5,
+  immersionPath: 5,
+  vanguardCollective: 5
 };
 
 export const CRITICAL_SEVERITY_THRESHOLD = 9;

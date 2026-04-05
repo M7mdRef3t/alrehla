@@ -13,7 +13,7 @@ import {
 } from "@dnd-kit/core";
 import { useMapState } from "../../state/mapState";
 import { Ring, MapNode as MapNodeType } from "../map/mapTypes";
-import { User, Clock, Zap, Coins, Maximize, GripVertical, Plus, AlertCircle, Info } from "lucide-react";
+import { User, Clock, Zap, Coins, Maximize, GripVertical, Plus, AlertCircle, Info, X } from "lucide-react";
 import { useMasafatyAnalysis, EntropyLevel } from "./hooks/useMasafatyAnalysis";
 import { Button } from "../../components/UI/Button";
 
@@ -158,6 +158,16 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
     id: node.id,
   });
 
+  const archiveNode = useMapState((s) => s.archiveNode);
+
+  const handleDelete = useCallback((e?: any) => {
+    if (e?.preventDefault) e.preventDefault();
+    if (e?.stopPropagation) e.stopPropagation();
+    const ok = typeof window === "undefined" ? true : window.confirm(`تأكيد: خرّج "${node.label}" من المدار؟`);
+    if (!ok) return;
+    archiveNode(node.id);
+  }, [archiveNode, node.id, node.label]);
+
   // Calculate base position if no drag is happening
   const radius = node.ring === "green" ? 15 : node.ring === "yellow" ? 27 : 38;
   const angle = (index / total) * 2 * Math.PI - Math.PI / 2;
@@ -175,13 +185,15 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
   };
 
   return (
-    <g 
+    <motion.g 
       ref={setNodeRef as any} 
       style={style} 
       {...attributes} 
       {...listeners}
       className="cursor-grab active:cursor-grabbing"
-      onClick={() => !isDragging && onClick(node)}
+      onTap={() => {
+        if (!isDragging) onClick(node);
+      }}
     >
       <EntropyGlow x={baseX} y={baseY} level={entropyLevel} />
       
@@ -250,17 +262,30 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
           <text textAnchor="middle" dy="0.5" fontSize="1.2" fill="white" fontWeight="bold">!</text>
         </g>
       )}
-    </g>
+
+      {/* Delete Button */}
+      <motion.g
+        onTap={handleDelete}
+        className="cursor-pointer"
+        initial={{ opacity: 0, scale: 0 }}
+        whileHover={{ scale: 1.2 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        <circle cx={baseX - 4} cy={baseY - 4} r="2" fill="#64748b" stroke="white" strokeWidth="0.2" />
+        <X x={baseX - 5} y={baseY - 5} width={2} height={2} className="text-white" />
+      </motion.g>
+    </motion.g>
   );
 });
 
 export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode }) => {
   const nodes = useMapState((s) => s.nodes);
   const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
+  const archiveNode = useMapState((s) => s.archiveNode);
 
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
+    useSensor(MouseSensor, { activationConstraint: { distance: 15 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 300, tolerance: 8 } })
   );
 
   const handleDragEnd = (event: DragEndEvent) => {

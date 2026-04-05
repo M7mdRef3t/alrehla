@@ -154,7 +154,7 @@ export default function LiveCouplePage() {
               <div className="couple-roster-toolbar">
                 <label className="memory-bank-search">
                   <Search className="h-4 w-4" />
-                  <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ابحث بعنوان أو headline" />
+                  <input id="couple-session-query" name="sessionQuery" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ابحث بعنوان أو headline" />
                 </label>
 
                 <div className="coach-toolbar-filters">
@@ -255,7 +255,7 @@ export default function LiveCouplePage() {
                     </div>
                     <label className="memory-bank-search" style={{ marginTop: "12px" }}>
                       <Link2 className="h-4 w-4" />
-                      <input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="partner@example.com" />
+                      <input id="partner-email" name="partnerEmail" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="partner@example.com" />
                     </label>
                     <button
                       type="button"

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { AnalyticsEvents, trackEvent } from "../../services/analytics";
 import type { AdviceCategory } from "../../data/adviceScripts";
 import { resolveAdviceCategory } from "../../data/adviceScripts";
@@ -8,11 +8,8 @@ import type { AppOverlayFlag } from "../../state/appOverlayState";
 import type { LandingIntent } from "../../state/journeyState";
 import { ensureValidJourneyState } from "../../utils/journeyState";
 
-import { isUserMode } from "../../config/appEnv";
-
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 const APP_SCREEN_BOOT_ACTION_PREFIX = "navigate:";
-const STARTUP_SEEN_KEY = "dawayir-startup-seen";
 const LANDING_BOOT_SCREENS: AppScreen[] = [
   "landing",
   "tools",
@@ -44,14 +41,6 @@ export function useAppStartupOnboarding({
   openOverlay,
   closeOverlay
 }: UseAppStartupOnboardingParams) {
-  // Skip boot sequence in user mode — go straight to platform
-  const [showStartup, setShowStartup] = useState(() => {
-    if (isUserMode) return false;
-    const windowRef = getWindowOrNull();
-    if (!windowRef) return false;
-    const seen = windowRef.sessionStorage.getItem(STARTUP_SEEN_KEY);
-    return !seen;
-  });
   const welcomeToastTimerRef = useRef<number | null>(null);
 
   const clearWelcomeToastTimer = useCallback(() => {
@@ -83,19 +72,9 @@ export function useAppStartupOnboarding({
     void navigateToScreen("map");
   }, [consumeLandingIntent, navigateToScreen, setCategory, setGoalId]);
 
-  const handleStartupComplete = useCallback(() => {
-    const windowRef = getWindowOrNull();
-    if (windowRef) {
-      windowRef.sessionStorage.setItem(STARTUP_SEEN_KEY, "1");
-    }
-    setShowStartup(false);
-  }, []);
-
   const handleOnboardingComplete = useCallback((skipped: boolean = false) => {
     setOverlay("onboarding", false);
     if (skipped) {
-      // Skip should still land the user in a valid journey state.
-      // Without a goal, the revenue-mode guard can bounce the app back to landing/goal.
       const validJourney = ensureValidJourneyState();
       setGoalId(validJourney.goalId);
       setCategory(validJourney.category);
@@ -139,8 +118,6 @@ export function useAppStartupOnboarding({
   useEffect(() => clearWelcomeToastTimer, [clearWelcomeToastTimer]);
 
   return {
-    showStartup,
-    handleStartupComplete,
     startRecovery,
     handleOnboardingComplete
   };

@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { motion, Variants } from "framer-motion";
-import { Brain, Map, Zap, Heart, Shield, ArrowLeft, CheckCircle2, Lightbulb, Sparkles, Compass, MessageCircle } from "lucide-react";
+import { Brain, Map, Zap, Heart, Shield, ArrowLeft, CheckCircle2, Lightbulb, Sparkles, Compass } from "lucide-react";
 
 // ── القيم الجوهرية ──
 const VALUES = [

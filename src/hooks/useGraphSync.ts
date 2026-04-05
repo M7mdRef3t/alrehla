@@ -3,6 +3,7 @@ import { subscribeToDawayirSignals } from "../modules/recommendation/recommendat
 import { useMapState } from "../state/mapState";
 import { GraphProjectionEngine } from "../services/graphProjectionEngine";
 import { supabase } from "../services/supabaseClient";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 /**
  * useGraphSync — خطاف المزامنة الشبكية
@@ -13,6 +14,7 @@ export function useGraphSync() {
     const nodes = useMapState((s) => s.nodes);
 
     useEffect(() => {
+        if (runtimeEnv.isDev) return;
         // ننتظر أي إشارة تدل على تغيير جوهري في الخريطة
         const unsubscribe = subscribeToDawayirSignals(async (event) => {
             if (
@@ -22,7 +24,11 @@ export function useGraphSync() {
                 event.type === "symptoms_updated"
             ) {
                 // استرجاع المستخدم الحالي
-                const { data } = await supabase!.auth.getUser();
+                if (!supabase?.auth) {
+                    console.warn("📡 [Sync Hook] Supabase Auth not available, skipping sync.");
+                    return;
+                }
+                const { data } = await supabase.auth.getUser();
                 const userId = data.user?.id;
 
                 if (userId) {

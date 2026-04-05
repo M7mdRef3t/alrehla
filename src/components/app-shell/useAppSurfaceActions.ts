@@ -194,7 +194,6 @@ export function useAppSurfaceActions({
   }, [
     authUser,
     clearWelcome,
-    openAppOverlay,
     setLoginIntent,
     setPulseCheckContext,
     navigateToScreen,

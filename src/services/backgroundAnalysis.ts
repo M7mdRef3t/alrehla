@@ -2,6 +2,7 @@ import { inngestMock } from "./inngestMock";
 import { pineconeMock } from "./pineconeMock";
 import { useMapState } from "../state/mapState";
 import { geminiClient } from "./geminiClient";
+import { runtimeEnv } from "../config/runtimeEnv";
 
 /**
  * Background Analysis Service
@@ -59,6 +60,7 @@ inngestMock.on("analyze-relationship", async (rawData) => {
 });
 
 export const triggerBackgroundAnalysis = (nodeId: string, context: string) => {
+  if (runtimeEnv.isDev) return;
   inngestMock.send({
     name: "analyze-relationship",
     data: { nodeId, context }

@@ -1,27 +1,31 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import {
   dedupeMarketingLeadInputs,
   isValidMarketingLeadEmail,
   normalizeMarketingLeadPayload,
   sanitizePhone
 } from "./marketingLeadUtils";
+import { getSupabaseAdminClient } from "../../app/api/_lib/supabaseAdmin";
 import type {
   MarketingLeadImportResult,
   MarketingLeadPayload,
   MarketingLeadSourceType,
   NormalizedMarketingLeadInput
 } from "../types/marketingLead";
+import { sendMetaCapiEvent } from "./metaCapi";
 
 type OutreachQueueStatus = "pending" | "sent" | "failed" | "simulated";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
-
 function hasSupabaseConfig(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return Boolean(getSupabaseAdminClient());
+}
+
+function getRequiredSupabaseAdminClient() {
+  const client = getSupabaseAdminClient();
+  if (!client) {
+    throw new Error("missing_supabase_config");
+  }
+  return client;
 }
 
 function isDebugAuthorized(request: Request): boolean {
@@ -75,6 +79,7 @@ async function enqueueOutreach(
   leadId: string, // P0-2: required — no generic URLs allowed
   phone?: string | null
 ): Promise<void> {
+  const supabaseAdmin = getRequiredSupabaseAdminClient();
   const now = Date.now();
   const MINUTE = 60 * 1000;
   const DAY = 24 * 60 * 60 * 1000;
@@ -155,6 +160,7 @@ export async function upsertMarketingLead(input: NormalizedMarketingLeadInput): 
   if (!hasSupabaseConfig()) {
     throw new Error("missing_supabase_config");
   }
+  const supabaseAdmin = getRequiredSupabaseAdminClient();
 
   // SMART DEDUPLICATION LOGIC
   // 1. Match by Phone
@@ -247,6 +253,7 @@ export async function handleMarketingLeadGet(req: Request) {
   if (!hasSupabaseConfig()) {
     return NextResponse.json({ ok: false, error: "missing_supabase_config" }, { status: 503 });
   }
+  const supabaseAdmin = getRequiredSupabaseAdminClient();
 
   const url = new URL(req.url);
   const rawEmail = String(url.searchParams.get("email") ?? "").trim().toLowerCase();
@@ -281,8 +288,28 @@ export async function handleMarketingLeadGet(req: Request) {
 
 export async function handleMarketingLeadPost(req: Request, fallbackSourceType: MarketingLeadSourceType = "website") {
   try {
-    const body = (await req.json()) as MarketingLeadPayload;
-    const input = normalizeMarketingLeadPayload(body, fallbackSourceType);
+    let body = (await req.json()) as Record<string, any> | Record<string, any>[];
+    
+    // Zapier/Make resilience: if body is an array, take the first element
+    if (Array.isArray(body) && body.length > 0) {
+      body = body[0];
+    }
+
+    const bodyRecord = (body && typeof body === "object" && !Array.isArray(body)) ? body : {};
+
+    // Sometimes Make wraps data inside a "data" object or "body" object if passed raw
+    if (
+      bodyRecord.data &&
+      typeof bodyRecord.data === "object" &&
+      !Array.isArray(bodyRecord.data) &&
+      !bodyRecord.email &&
+      !bodyRecord.phone
+    ) {
+      body = bodyRecord.data as Record<string, any>;
+    }
+
+    const payload = body as MarketingLeadPayload;
+    const input = normalizeMarketingLeadPayload(payload, fallbackSourceType);
 
     if (!input) {
       return NextResponse.json({ ok: false, error: "invalid_input" }, { status: 400 });
@@ -290,6 +317,42 @@ export async function handleMarketingLeadPost(req: Request, fallbackSourceType: 
 
     if (hasSupabaseConfig()) {
       const result = await upsertMarketingLead(input);
+
+      // --- META CAPI Tracking Data Extraction ---
+      const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || null;
+      const clientUserAgent = req.headers.get("user-agent") || null;
+      const refUrl = req.headers.get("referer") || "https://www.alrehla.app";
+      const cookieHeader = req.headers.get("cookie");
+      
+      let fbcData: string | null = null;
+      let fbpData: string | null = null;
+
+      if (cookieHeader) {
+        const cookies = Object.fromEntries(
+          cookieHeader.split("; ").map((c) => {
+            const parts = c.split("=");
+            return [parts[0], decodeURIComponent(parts.slice(1).join("="))];
+          })
+        );
+        fbcData = cookies["_fbc"] || null;
+        fbpData = cookies["_fbp"] || null;
+      }
+
+      // Fire and forget Meta CAPI Event
+      void sendMetaCapiEvent({
+        eventName: "Lead",
+        eventId: result.lead_id,
+        sourceUrl: refUrl,
+        userData: {
+          email: input.email,
+          phone: input.phoneRaw, // Use raw since CAPI hasher will strip symbols
+          fbc: fbcData,
+          fbp: fbpData,
+          clientIpAddress: ip,
+          clientUserAgent
+        }
+      });
+
       return NextResponse.json({
         ok: true,
         lead: { 

@@ -164,6 +164,8 @@ export const NoiseSilencingModal: FC<NoiseSilencingModalProps> = ({ isOpen, onCl
                   </p>
 
                   <textarea
+                    id="mute-protocol-signal"
+                    name="muteProtocolSignal"
                     value={signalText}
                     onChange={(e) => setSignalText(e.target.value)}
                     placeholder="اكتب هنا... (لن يتم حفظ هذا الكلام، سيتم حرقه فوراً)"

@@ -509,13 +509,15 @@ export default function LiveHistoryPage() {
               <label className="memory-bank-search">
                 <Search className="h-4 w-4" />
                 <input
+                  id="live-history-search"
+                  name="liveHistorySearch"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder={isArabic ? "ابحث في بنك الذاكرة..." : "Search the memory bank..."}
                 />
               </label>
 
-              <select value={sortBy} onChange={(event) => setSortBy(event.target.value as "recent" | "name")}>
+              <select id="live-history-sort" name="liveHistorySort" value={sortBy} onChange={(event) => setSortBy(event.target.value as "recent" | "name")}>
                 <option value="recent">{isArabic ? "الأحدث" : "Most recent"}</option>
                 <option value="name">{isArabic ? "الاسم" : "Name"}</option>
               </select>

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Shield, Zap, Heart } from "lucide-react";
 import { recordFlowEvent } from "../services/journeyTracking";
 import { usePWAInstall } from "../contexts/PWAInstallContext";
-import { getLivePulseCount, shouldTriggerHeartbeat } from "../services/pulseEngagement";
+import { getLivePulseCount } from "../services/pulseEngagement";
 import { soundManager } from "../services/soundManager";
 import { LandingSimulation } from "./LandingSimulation";
 import { useJourneyState } from "../state/journeyState";
@@ -113,12 +113,25 @@ export const Landing: FC<LandingPropsExtended> = ({
   const startTrackedRef = useRef(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (shouldTriggerHeartbeat()) {
+    let timeoutId: number | null = null;
+
+    const scheduleNextUpdate = () => {
+      const now = new Date();
+      const msUntilNextMinute = Math.max(1000, (60 - now.getSeconds()) * 1000 - now.getMilliseconds());
+
+      timeoutId = window.setTimeout(() => {
         setPulseCount(getLivePulseCount());
+        scheduleNextUpdate();
+      }, msUntilNextMinute);
+    };
+
+    scheduleNextUpdate();
+
+    return () => {
+      if (timeoutId != null) {
+        clearTimeout(timeoutId);
       }
-    }, 5000);
-    return () => clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
@@ -169,6 +182,8 @@ export const Landing: FC<LandingPropsExtended> = ({
         ctaJourney={landingCopy.ctaJourney}
         secondaryCta={landingCopy.secondaryCta}
       />
+
+      <div style={{ contentVisibility: "auto", containIntrinsicSize: "1px 2600px" }}>
 
       <div className="max-w-4xl mx-auto px-8" aria-hidden="true">
         <div style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(20,184,166,0.2), transparent)" }} />
@@ -268,6 +283,8 @@ export const Landing: FC<LandingPropsExtended> = ({
           </motion.div>
         </motion.div>
       </section>
+
+      </div>
 
       {showTestimonials && (
         <>

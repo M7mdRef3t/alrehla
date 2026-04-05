@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import type { FC, ReactNode } from "react";
 import { AdminTooltip } from "../../Overview/components/AdminTooltip";
 

@@ -40,13 +40,13 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
 
   const customTitlePlaceholder = useAppContentString(
     "add_person_custom_title_placeholder",
-    "???? ?????...",
+    "أدخل مسمى مخصص...",
     { page: "add_person" }
   );
 
   const namePlaceholder = useAppContentString(
     "add_person_name_placeholder",
-    "????: ????? ????? ????...",
+    "اكتب اسماً رمزياً لحماية مساحتك (اختياري)...",
     { page: "add_person" }
   );
 
@@ -56,14 +56,14 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
         <EditableText id="map_add_person_title" defaultText={mapCopy.addPersonTitle} page="map" />
       </h2>
 
-      {/* Step 1: Select Title — ??? ?? ???????? ?? ??????? ?????? ????? ???? ???? ????? */}
+      {/* Step 1: Select Title — اختر من الاقتراحات أو المسميات العامة لوصف هذا الكيان */}
       <div className="flex flex-col min-h-0 flex-auto overflow-hidden mb-6">
         <label className="block text-sm font-semibold text-slate-300 mb-3 shrink-0">
           <EditableText id="add_person_select_label" defaultText="نوع العلاقة" page="add_person" showEditIcon={false} />{" "}
           <span className="text-rose-500">*</span>
         </label>
         <div
-          className="grid grid-cols-3 gap-2 items-stretch min-h-0 flex-1 overflow-hidden"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-stretch min-h-0 flex-1 overflow-y-auto pr-1 pb-4 scrollbar-none"
           style={{ gridAutoRows: "minmax(0, 1fr)" }}
         >
           {suggestions.map((suggestion: SuggestionCard) => {
@@ -73,23 +73,40 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
               <motion.button
                 key={suggestion.label}
                 type="button"
-                onClick={() => onTitleSelect(suggestion.label)}
-                className={`w-full h-full min-h-0 flex flex-col items-center justify-center gap-2 rounded-2xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/50 p-3 ${isSelected
-                    ? "bg-teal-500/20 border-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.15)]"
-                    : "bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10"
+                onClick={() => {
+                  import("../../services/soundManager").then(m => m.soundManager.playEffect("cosmic_pulse"));
+                  onTitleSelect(suggestion.label);
+                }}
+                className={`group relative w-full h-full min-h-0 flex flex-col items-center justify-center gap-3 rounded-xl border transition-all duration-300 focus-visible:outline-none p-4 overflow-hidden ${isSelected
+                    ? "bg-teal-500/10 border-teal-400 shadow-[0_0_30px_rgba(45,212,191,0.2)]"
+                    : "bg-slate-900/60 border-slate-700/50 hover:border-slate-500 hover:bg-slate-800"
                   }`}
-                title={`???? "${suggestion.label}"`}
-                whileHover={{ scale: isSelected ? 1 : 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                title={`اختيار "${suggestion.label}"`}
+                whileHover={{ scale: isSelected ? 1 : 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
+                {/* HUD Corners */}
+                <div className={`absolute top-0 left-0 w-2 h-2 border-t border-l rounded-tl transition-colors ${isSelected ? "border-teal-400" : "border-slate-600 group-hover:border-slate-400"}`} />
+                <div className={`absolute top-0 right-0 w-2 h-2 border-t border-r rounded-tr transition-colors ${isSelected ? "border-teal-400" : "border-slate-600 group-hover:border-slate-400"}`} />
+                <div className={`absolute bottom-0 left-0 w-2 h-2 border-b border-l rounded-bl transition-colors ${isSelected ? "border-teal-400" : "border-slate-600 group-hover:border-slate-400"}`} />
+                <div className={`absolute bottom-0 right-0 w-2 h-2 border-b border-r rounded-br transition-colors ${isSelected ? "border-teal-400" : "border-slate-600 group-hover:border-slate-400"}`} />
+
+                {isSelected && (
+                  <motion.div 
+                    className="absolute inset-0 bg-teal-400/5 pointer-events-none"
+                    animate={{ opacity: [0.1, 0.3, 0.1] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                  />
+                )}
+
                 <div
-                  className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-colors ${isSelected ? "bg-teal-500/30" : "bg-white/5"
+                  className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center transition-all ${isSelected ? "bg-teal-400/20 shadow-[0_0_15px_rgba(45,212,191,0.4)]" : "bg-slate-800 group-hover:bg-slate-700"
                     }`}
                 >
-                  <Icon className={`${isSelected ? "text-teal-400" : "text-slate-400"} w-5 h-5`} strokeWidth={2} />
+                  <Icon className={`${isSelected ? "text-teal-300" : "text-slate-400 group-hover:text-slate-300"} w-6 h-6`} strokeWidth={1.5} />
                 </div>
                 <div
-                  className={`min-h-9 flex items-center justify-center text-center font-bold leading-tight ${isSelected ? "text-teal-100" : "text-slate-300"
+                  className={`min-h-9 flex items-center justify-center text-center font-bold tracking-wide ${isSelected ? "text-teal-300 drop-shadow-md" : "text-slate-400 group-hover:text-slate-200"
                     } text-xs sm:text-sm line-clamp-2`}
                 >
                   {suggestion.label}
@@ -100,25 +117,27 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           <motion.button
             type="button"
             onClick={() => onTitleSelect("__custom__")}
-            className={`w-full h-full min-h-0 flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 p-3 ${showCustomTitleInput && customTitleInput.trim()
-                ? "bg-white/10 border-white/30"
-                : "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
+            className={`group relative w-full h-full min-h-0 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed transition-all duration-300 focus-visible:outline-none p-4 overflow-hidden ${showCustomTitleInput && customTitleInput.trim()
+                ? "bg-slate-800/80 border-slate-500"
+                : "bg-slate-900/40 border-slate-700 hover:border-slate-500"
               }`}
-            title="???? ??? ??????"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            title="إضافة مسمى مخصص"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <div className="w-10 h-10 shrink-0 rounded-xl bg-white/5 flex items-center justify-center">
-              <span className="text-slate-400 text-lg font-bold leading-none">+</span>
+            <div className="w-12 h-12 shrink-0 rounded-full bg-slate-800 group-hover:bg-slate-700 flex items-center justify-center transition-colors">
+              <span className="text-slate-400 group-hover:text-slate-200 text-2xl font-light leading-none">+</span>
             </div>
-            <div className="min-h-9 flex items-center justify-center text-center text-xs sm:text-sm font-bold text-slate-400 leading-tight">
-              <EditableText id="add_person_select_other" defaultText="?? ????" page="add_person" showEditIcon={false} />
+            <div className="min-h-9 flex items-center justify-center text-center text-xs sm:text-sm font-bold text-slate-500 group-hover:text-slate-300 tracking-wide transition-colors">
+              <EditableText id="add_person_select_other" defaultText="مسمى آخر" page="add_person" showEditIcon={false} />
             </div>
           </motion.button>
         </div>
         {showCustomTitleInput && (
           <div className="mt-2 shrink-0">
             <input
+              id="custom-title-input"
+              name="customTitle"
               type="text"
               value={customTitleInput}
               onChange={(e) => onCustomTitleChange(e.target.value)}
@@ -138,8 +157,8 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           transition={{ duration: 0.3 }}
           className="shrink-0"
         >
-          <label htmlFor="person-name-input" className="block text-xs font-semibold text-slate-400 mb-2">
-            <EditableText id="add_person_name_label" defaultText="الاسم (اختياري)" page="add_person" showEditIcon={false} />
+          <label htmlFor="person-name-input" className="block text-xs font-semibold text-teal-500/60 mb-2 uppercase tracking-widest">
+            <EditableText id="add_person_name_label" defaultText="معرف الكيان (الاسم الرمزي)" page="add_person" showEditIcon={false} />
           </label>
           <input
             id="person-name-input"
@@ -149,16 +168,17 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
             onChange={(event) => onNameChange(event.target.value)}
             placeholder={namePlaceholder}
             title="اكتب اسم الشخص (اختياري)"
-            className="ds-input"
+            className="w-full bg-slate-950/40 border-0 border-b-2 border-slate-700/50 text-teal-300 text-lg sm:text-xl font-bold focus:border-teal-500 focus:bg-slate-900/60 focus:ring-0 outline-none placeholder:text-slate-600/50 transition-all py-3 px-4 rounded-t-lg font-mono tracking-wider shadow-[inset_0_-2px_10px_rgba(45,212,191,0.02)] focus:shadow-[inset_0_-2px_15px_rgba(45,212,191,0.1)]"
           />
-          <p className="text-xs text-slate-500 mt-2">
-            <EditableText id="add_person_name_preview_prefix" defaultText="سيظهر بـ:" page="add_person" showEditIcon={false} />{" "}
-            <span className="font-bold text-teal-400">
+          <p className="text-[10px] text-slate-500 mt-3 font-mono tracking-widest">
+            <EditableText id="add_person_name_preview_prefix" defaultText="[ TARGET_ID ]: " page="add_person" showEditIcon={false} />
+            <span className="font-bold text-teal-400 ml-1">
+              <span className="animate-pulse mr-1 opacity-50">&gt;</span>
               {customName.trim() || selectedTitle}
             </span>
           </p>
           {contextualHint ? (
-            <p className="text-xs text-[var(--soft-teal)] mt-1 bg-[var(--soft-teal)]/10 rounded-lg px-2 py-1.5 border border-[var(--soft-teal)]">
+            <p className="text-[10px] text-[var(--soft-teal)] mt-1.5 bg-[var(--soft-teal)]/5 rounded-md px-2.5 py-2 border-l-2 border-[var(--soft-teal)] tracking-wide">
               {contextualHint}
             </p>
           ) : null}

@@ -120,6 +120,7 @@ export function AppRuntimeControllers({
   }, []);
 
   useEffect(() => {
+    if (runtimeEnv.isDev) return;
     if (!canShowAIChatbot) return;
     if (screen === "landing") return;
 
@@ -141,6 +142,7 @@ export function AppRuntimeControllers({
   }, [canShowAIChatbot, onAgentModuleLoaded, screen]);
 
   useEffect(() => {
+    if (runtimeEnv.isDev) return;
     if (screen !== "map") return;
 
     const nodes = useMapState.getState().nodes;
@@ -153,18 +155,21 @@ export function AppRuntimeControllers({
   }, [baselineCompletedAt, checkAndUnlock, screen]);
 
   useEffect(() => {
+    if (runtimeEnv.isDev) return;
     if (!openAchievementsRequest) return;
     openOverlay("achievements");
     clearOpenAchievementsRequest();
   }, [clearOpenAchievementsRequest, openAchievementsRequest, openOverlay]);
 
   useEffect(() => {
+    if (runtimeEnv.isDev) return;
     if (screen !== "landing") {
       recordUserActivity();
     }
   }, [recordUserActivity, screen]);
 
   useEffect(() => {
+    if (runtimeEnv.isDev) return;
     if (typeof window === "undefined" || isAdminRoute) return;
     let cancelled = false;
     let initialTimer: ReturnType<typeof setTimeout> | null = null;
@@ -220,6 +225,7 @@ export function AppRuntimeControllers({
   ]);
 
   useEffect(() => {
+    if (runtimeEnv.isDev) return;
     if (screen === "landing") return;
 
     let stop: (() => void) | null = null;
@@ -234,6 +240,7 @@ export function AppRuntimeControllers({
   }, [screen]);
 
   useEffect(() => {
+    if (runtimeEnv.isDev) return;
     if (!hasSupabaseEnv) return;
     if (screen === "landing") return;
 
@@ -264,12 +271,14 @@ export function AppRuntimeControllers({
   }, [screen]);
 
   useEffect(() => {
+    if (runtimeEnv.isDev) return;
     if (screen === "landing" || screen === "enterprise") return;
     if (hasCompletedJourneyOnboarding()) return;
     openOverlay("onboarding");
   }, [openOverlay, screen]);
 
   useEffect(() => {
+    if (runtimeEnv.isDev) return;
     if (typeof window === "undefined") return;
     if (!canPollOwnerAlerts) return;
     let cancelled = false;
@@ -366,6 +375,7 @@ export function AppRuntimeControllers({
   ]);
 
   useEffect(() => {
+    if (runtimeEnv.isDev) return;
     if (!authUser) return;
 
     // Fast local-only operation — run immediately

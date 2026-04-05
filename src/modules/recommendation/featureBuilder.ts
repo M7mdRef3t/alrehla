@@ -133,7 +133,8 @@ export function buildFeatureVectorV1(_: BuildFeatureVectorInput = {}): FeatureVe
     taskCompletion7d: computeTaskCompletion7d(sevenDaysEvents),
     sessionHesitation: computeSessionHesitation(sevenDaysEvents),
     dominantRing: deriveDominantRing(),
-    focusNodeId
+    focusNodeId,
+    hasMissionReadyNode: useMapState.getState().nodes.some(n => n.analysis || (n.missionProgress?.startedAt && !n.missionProgress.isCompleted))
   };
 }
 
