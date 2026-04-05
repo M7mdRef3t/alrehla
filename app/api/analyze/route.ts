@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AIOrchestrator } from '../../../src/services/aiOrchestrator';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+import { getClient as getGeminiClient } from '../../../server/gemini/_shared';
 
 const SYSTEM_PROMPT = `
 أنت "محرك الوعي" (Consciousness Engine) لأداة "دواير". دورك هو تحليل الحالة الذهنية والطاقية للمستخدم بناءً على مدخلاته السريعة، وتحويل هذه الفوضى النفسية إلى **هيكل بيانات بصري (Nodes and Edges)**، مع تقديم بصيرة نفسية قاطعة واكتشاف **الأعراض (Symptoms)** الناتجة عن هذا الاستنزاف.
@@ -122,8 +120,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing answers payload" }, { status: 400 });
     }
 
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-    if (!GEMINI_API_KEY) {
+    const genAI = getGeminiClient();
+    if (!genAI) {
       return NextResponse.json({ ...buildAnalyzeFallback(answers), source: "fallback", is_live: false });
     }
 

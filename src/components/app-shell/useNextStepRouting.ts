@@ -258,9 +258,16 @@ export function useNextStepRouting({
           }).then((decision) => {
             if (seq !== nextStepRequestSeqRef.current) return;
             if (decision) {
+              const cogLoad = inferCognitiveLoadFromDecision(decision);
+              // Dynamic Hesitation Threshold (Sovereign OS Calibration)
+              let dynamicHesitation = 120;
+              if (cogLoad <= 1) dynamicHesitation = 45;
+              else if (cogLoad <= 3) dynamicHesitation = 90;
+              else dynamicHesitation = 180;
+
               nextStepTelemetry.startSession(decision.decisionId, decision.createdAt, {
-                cognitiveLoadRequired: inferCognitiveLoadFromDecision(decision),
-                hesitationThresholdSec: 120,
+                cognitiveLoadRequired: cogLoad,
+                hesitationThresholdSec: dynamicHesitation,
                 onIntervention: (snapshot) => handleActiveIntervention(snapshot, decision)
               });
             }

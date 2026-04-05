@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
-import { Activity, Zap, ShieldAlert } from "lucide-react";
+import { Activity, Zap, ShieldAlert, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 import { RevenueEngineCard } from "../Overview/components/RevenueEngineCard";
 import { EmotionalPricingCard } from "../Overview/components/EmotionalPricingCard";
@@ -80,6 +81,48 @@ export const GrowthRevenueDashboard: FC = () => {
                     </div>
                 </div>
             </header>
+            
+            {/* Business Harmony Index (LTV/CAC Resonance) */}
+            <div className="hud-glass p-6 rounded-3xl border-emerald-500/20 relative overflow-hidden group">
+                <div className="hud-edge-accent top-0 right-0" />
+                <div className="hud-edge-accent bottom-0 left-0" />
+                
+                <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="flex-1 space-y-4">
+                        <div className="flex items-center gap-2 text-emerald-400">
+                            <Activity className="w-5 h-5 animate-pulse" />
+                            <h3 className="text-lg font-black uppercase tracking-tighter">مؤشر تناغم الأعمال (Business Harmony Index)</h3>
+                        </div>
+                        <p className="text-slate-400 text-sm leading-relaxed max-w-xl">
+                            قياس التوازن الحيوي بين تكلفة الاستحواذ (CAC) والقيمة التراكمية (LTV). رنين مرتفع يعني نمو ذاتي مستدام بدون إهدار طاقة.
+                        </p>
+                        <div className="flex gap-6 pt-2">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">كفاءة الاستحواذ</span>
+                                <span className="text-xl font-bold text-white">عالية (High)</span>
+                            </div>
+                            <div className="w-px h-10 bg-white/5" />
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">رنين القيمة (LTV)</span>
+                                <span className="text-xl font-bold text-white">4.2x <span className="text-xs text-emerald-500 font-black">+12%</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center p-6 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 min-w-[200px]">
+                        <div className="relative mb-2">
+                            <motion.div 
+                                animate={{ scale: [1, 1.05, 1], rotate: [0, 5, 0] }}
+                                transition={{ duration: 6, repeat: Infinity }}
+                                className="w-20 h-20 rounded-full border-4 border-emerald-500/30 border-t-emerald-500 flex items-center justify-center"
+                            >
+                                <span className="text-2xl font-black text-emerald-400">92%</span>
+                            </motion.div>
+                        </div>
+                        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] animate-resonance-glow px-4 py-1 rounded-full border border-emerald-500/20">رنين فائق</span>
+                    </div>
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <RevenueEngineCard

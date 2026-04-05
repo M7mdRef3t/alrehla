@@ -75,8 +75,10 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
           <div className="flex flex-wrap gap-3">
             {safeScenarios.length > 0 ? (
               safeScenarios.map((scenario, idx) => {
-                const isHighPriority = scenario.percent > 30;
-                const isMediumPriority = scenario.percent > 15 && scenario.percent <= 30;
+                const scenarioPercent = scenario.percent ?? scenario.percentage ?? scenario.share ?? 0;
+                const scenarioKey = scenario.key ?? scenario.label;
+                const isHighPriority = scenarioPercent > 30;
+                const isMediumPriority = scenarioPercent > 15 && scenarioPercent <= 30;
 
                 const baseColor = isHighPriority
                   ? "bg-rose-500/20 border-rose-500/40 text-rose-300"
@@ -88,7 +90,7 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
 
                 return (
                   <motion.div
-                    key={scenario.key}
+                    key={scenarioKey}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.1 }}
@@ -107,7 +109,7 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
                         <TrendingUp className={`w-3 h-3 ${iconColor}`} />
                         تريند وهمي
                       </span>
-                      <span className="font-mono text-xs opacity-90">{Math.round(scenario.percent)}%</span>
+                      <span className="font-mono text-xs opacity-90">{Math.round(scenarioPercent)}%</span>
                     </div>
 
                     <div className="z-10 mt-1 flex justify-between items-end">

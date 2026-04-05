@@ -132,19 +132,43 @@ export async function GET(req: Request) {
   const convertedLeadIds = new Set((routingEventsData || []).map(r => String(r.lead_id)));
   const realStarts = convertedLeadIds.size;
   
+  // Deep conversions (leads who actually generated a map)
+  const { data: deepConversionEvents } = await supabase
+    .from("journey_events")
+    .select("payload")
+    .eq("type", "flow_event")
+    .in("payload->>step", ["map_generated", "add_person_done_show_on_map"]);
+
+  const deepConvertedLeadIds = new Set<string>();
+  if (deepConversionEvents) {
+    for (const ev of deepConversionEvents) {
+      const payload = ev.payload as any;
+      const leadId = payload?.extra?.lead?.lead_id;
+      if (leadId) deepConvertedLeadIds.add(String(leadId));
+    }
+  }
+
   const conversionsByCampaign: Record<string, number> = {};
   const conversionsBySource: Record<string, number> = {};
+  const deepConversionsByCampaign: Record<string, number> = {};
+  const deepConversionsBySource: Record<string, number> = {};
   
   for (const lead of rawLeads) {
     const c = (lead.campaign as string) || "unattributed";
     const s = (lead.source_type as string) || "unknown";
     const converted = convertedLeadIds.has(String(lead.id));
+    const deepConverted = deepConvertedLeadIds.has(String(lead.id));
     
     (lead as any).has_converted = converted; // Added for per-lead status
+    (lead as any).has_deep_converted = deepConverted; // Added for per-lead status
     
     if (converted) {
       conversionsByCampaign[c] = (conversionsByCampaign[c] ?? 0) + 1;
       conversionsBySource[s] = (conversionsBySource[s] ?? 0) + 1;
+    }
+    if (deepConverted) {
+      deepConversionsByCampaign[c] = (deepConversionsByCampaign[c] ?? 0) + 1;
+      deepConversionsBySource[s] = (deepConversionsBySource[s] ?? 0) + 1;
     }
   }
   const { data: recentErrors } = await supabase
@@ -258,17 +282,7 @@ export async function GET(req: Request) {
     .eq("unsubscribed", true);
 
   // ─── Simulated Ripple Effect Tracker Data ─────────────────────────────────────
-  const rippleTree = [
-    { id: "root", label: "الشرارة الأولى", status: "active", parentId: null },
-    { id: "n1", label: "أحمد ج.", status: "active", parentId: "root" },
-    { id: "n2", label: "عمر س.", status: "active", parentId: "root" },
-    { id: "n3", label: "مها و.", status: "faded", parentId: "root" },
-    { id: "n4", label: "محمود ع.", status: "pending", parentId: "n1" },
-    { id: "n5", label: "ياسين أ.", status: "active", parentId: "n1" },
-    { id: "n6", label: "فرح ب.", status: "active", parentId: "n2" },
-    { id: "n7", label: "سارة م.", status: "pending", parentId: "n2" },
-    { id: "n8", label: "نور ي.", status: "faded", parentId: "n6" }
-  ];
+  const rippleTree: any[] = [];
 
   // ─── Awareness Funnel (Flow Stats & Conversion Health) ──────────────────────
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -341,6 +355,8 @@ export async function GET(req: Request) {
     leadsByCampaign,
     conversionsByCampaign,
     conversionsBySource,
+    deepConversionsByCampaign,
+    deepConversionsBySource,
     rawLeads,
     realStarts: realStarts ?? 0,
     recentErrors: recentErrors ?? [],

@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useEffect, useState } from "react";
-import { Activity, LayoutDashboard, Target, Bot } from "lucide-react";
+import { Activity, LayoutDashboard, Target, Bot, Rocket, ArrowUpRight } from "lucide-react";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { CollapsibleSection } from "../../ui/CollapsibleSection";
 import { TimelineOfSouls } from "./components/TimelineOfSouls";
@@ -13,7 +13,9 @@ import { ExecutiveReport } from "../Overview/components/ExecutiveReport";
 import {
   fetchOverviewStats,
   type OverviewStats,
-  fetchExecutiveReport
+  fetchExecutiveReport,
+  fetchSovereignExecutiveReport,
+  type SovereignExecutiveReport
 } from "../../../../services/adminApi";
 import { fetchFlowAuditLogs, type FlowAuditLogEntry } from "../../../../services/flowAudit";
 import type { ExecutiveReport as ExecutiveReportType } from "../../../../types/admin.types";
@@ -21,6 +23,7 @@ import type { ExecutiveReport as ExecutiveReportType } from "../../../../types/a
 export const ExecutiveDashboard: FC = () => {
     const [remoteStats, setRemoteStats] = useState<OverviewStats | null>(null);
     const [executiveReport, setExecutiveReport] = useState<ExecutiveReportType | null>(null);
+    const [sovereignReport, setSovereignReport] = useState<SovereignExecutiveReport | null>(null);
     const [initialLoading, setInitialLoading] = useState(true);
 
     const [weeklyDecisionLogs, setWeeklyDecisionLogs] = useState<FlowAuditLogEntry[]>([]);
@@ -42,11 +45,16 @@ export const ExecutiveDashboard: FC = () => {
         };
 
         const refresh = () => {
-          Promise.all([fetchOverviewStats(), fetchExecutiveReport()])
-            .then(([overviewData, execData]) => {
+          Promise.all([
+            fetchOverviewStats(), 
+            fetchExecutiveReport(),
+            fetchSovereignExecutiveReport()
+          ])
+            .then(([overviewData, execData, sovData]) => {
               if (!mounted) return;
               setRemoteStats(overviewData ?? null);
               setExecutiveReport(execData ?? null);
+              setSovereignReport(sovData ?? null);
               setInitialLoading(false);
             })
             .catch(() => {
@@ -230,6 +238,44 @@ export const ExecutiveDashboard: FC = () => {
                             </div>
                         </CollapsibleSection>
                     )}
+
+                    {/* Commercial Expansion Summary */}
+                    <CollapsibleSection
+                        title="جائزية التوسع التجاري"
+                        icon={<Rocket className="w-4 h-4" />}
+                        subtitle="تحليل فرصة النمو العالمي"
+                        defaultExpanded={successDecision === "scale"}
+                        headerColors="border-rose-500/20 bg-rose-500/5 text-rose-400"
+                    >
+                        <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-rose-500/5 rounded-3xl border border-rose-500/10">
+                            <div>
+                                <h4 className="text-sm font-black text-white mb-2">حالة السوق القادم</h4>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center font-black text-rose-400">
+                                        {sovereignReport ? Math.round(sovereignReport.revenue.regionalResonance["Riyadh"] * 100) : "92"}%
+                                    </div>
+                                    <p className="text-xs text-slate-400 font-bold">
+                                        رنين مرتفع في <span className="text-rose-300">الرياض</span>. 
+                                        {sovereignReport && `معدل العائد (ARPU) يقترب من $${sovereignReport.revenue.arpu.toFixed(1)}.`}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-end">
+                                <button 
+                                    onClick={() => {
+                                        const url = new URL(window.location.href);
+                                        url.searchParams.set("tab", "expansion-hub");
+                                        window.history.pushState({}, "", url.toString());
+                                        window.dispatchEvent(new PopStateEvent("popstate"));
+                                    }}
+                                    className="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-black transition-all shadow-lg shadow-rose-500/20 flex items-center gap-2"
+                                >
+                                    عرض إستراتيجية التوسع الكاملة
+                                    <ArrowUpRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    </CollapsibleSection>
                 </div>
 
                 {/* The Timeline of Souls Sidebar */}

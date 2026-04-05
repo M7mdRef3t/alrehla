@@ -74,6 +74,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
   const [shareStatus, setShareStatus] = useState<string | null>(null);
   const [shareBusy, setShareBusy] = useState(false);
   const [ctaStatus, setCtaStatus] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"diagnosis" | "roadmap" | "tools">("diagnosis");
 
   const displayName = useMemo(() => {
     const name = personName?.trim();
@@ -246,8 +247,28 @@ export const ResultScreen: FC<ResultScreenProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="w-full max-w-3xl space-y-8"
       >
+        {/* Tabs Header */}
+        <div className="flex bg-white/5 rounded-2xl p-1 mb-8 border border-white/10 shrink-0 shadow-xl">
+          {[
+            { id: "diagnosis", label: "التشخيص", icon: "👁️" },
+            { id: "roadmap", label: "الخريطة", icon: "🗺️" },
+            { id: "tools", label: "المفاهيم والعدة", icon: "🎒" }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id as "diagnosis" | "roadmap" | "tools")}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl text-sm font-black transition-all ${activeTab === tab.id ? "bg-slate-900 border border-white/10 text-white shadow-[0_0_20px_rgba(255,255,255,0.05)]" : "text-slate-500 hover:text-white hover:bg-white/5"}`}
+            >
+              <span className="text-lg opacity-80">{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
         {/* التشخيص (Snapshot) هو أول شيء يظهر */}
-        <div ref={shareCardRef} className="p-8 rounded-3xl bg-slate-950 border border-white/10 mb-8 text-center relative overflow-hidden shadow-2xl">
+        {activeTab === "diagnosis" && (
+<>
+<div ref={shareCardRef} className="p-8 rounded-3xl bg-slate-950 border border-white/10 mb-8 text-center relative overflow-hidden shadow-2xl">
           <div className="absolute inset-0 bg-radial-gradient(circle_at_center,rgba(255,255,255,0.03),transparent) pointer-events-none" />
           
           <h2 className="text-3xl font-black text-white mb-6 flex items-center justify-center gap-4">
@@ -287,7 +308,10 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           </div>
         </div>
 
-        {isEmotionalPrisoner && !summaryOnly && (
+        
+</>
+)}
+{activeTab === "tools" && isEmotionalPrisoner && !summaryOnly && (
           <div className="rounded-3xl bg-slate-900/40 border border-white/10 p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden group">
              <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/5 blur-[80px] rounded-full group-hover:bg-indigo-500/10 transition-all duration-700" />
              <div className="flex items-center gap-5 mb-8 relative z-10">
@@ -308,7 +332,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           </div>
         )}
 
-        {addedNode && (
+        {activeTab === "roadmap" && addedNode && (
           <div className="mb-6">
             <RecoveryRoadmap
               personLabel={displayName}
@@ -323,7 +347,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           </div>
         )}
 
-        {addedNode && (
+        {activeTab === "roadmap" && addedNode && (
           <div className="mb-6">
             <SuggestedPlacement
               currentRing={activeRing}
@@ -334,7 +358,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           </div>
         )}
 
-        {addedNode && (addedNode.analysis?.selectedSymptoms?.length ?? 0) > 0 && (
+        {activeTab === "roadmap" && addedNode && (addedNode.analysis?.selectedSymptoms?.length ?? 0) > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -373,16 +397,16 @@ export const ResultScreen: FC<ResultScreenProps> = ({
           </motion.div>
         )}
 
-        {summaryOnly && sovereigntySnapshot && (
+        {activeTab === "diagnosis" && summaryOnly && sovereigntySnapshot && (
           <SovereigntySnapshotCard snapshot={sovereigntySnapshot} />
         )}
-        {summaryOnly && pressureSentence && (
+        {activeTab === "diagnosis" && summaryOnly && pressureSentence && (
           <PressureSentenceCard snapshot={pressureSentence} />
         )}
-        {summaryOnly && boundaryEvidence && (
+        {activeTab === "diagnosis" && summaryOnly && boundaryEvidence && (
           <BoundaryEvidenceCard evidence={boundaryEvidence} />
         )}
-        {summaryOnly && generationalEcho && (
+        {activeTab === "tools" && summaryOnly && generationalEcho && (
           <div className="p-1 rounded-3xl bg-white/[0.02] border border-white/5 backdrop-blur-sm">
             <GenerationalEchoCard
               snapshot={generationalEcho}
@@ -393,6 +417,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
 
         {!summaryOnly && (
           <>
+            {activeTab === "diagnosis" && (<>
             <div className="p-8 rounded-3xl bg-blue-950/20 border border-blue-500/20 backdrop-blur-xl text-right mb-8 shadow-2xl transition-all hover:bg-blue-950/30">
               <h3 className="text-lg font-black text-blue-300 mb-4 flex items-center gap-3">
                 <span className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-xl">🔍</span> 
@@ -411,6 +436,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               <p className="text-base text-slate-300 leading-relaxed font-medium">{result.explanation_body}</p>
             </div>
 
+            </>)}
+            {activeTab === "tools" && (<>
             <div className="p-8 rounded-3xl bg-amber-950/10 border border-amber-500/20 backdrop-blur-xl text-right mb-8 shadow-2xl relative overflow-hidden group">
                <div className="absolute top-0 left-0 w-32 h-32 bg-amber-500/5 blur-3xl rounded-full group-hover:bg-amber-500/10 transition-all duration-700" />
               <h3 className="text-xl font-black text-amber-400 mb-6 flex items-center gap-4 relative z-10">
@@ -468,6 +495,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               )}
             </div>
 
+            </>)}
+            {activeTab === "roadmap" && (<>
             <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-6 rounded-3xl border border-white/10 bg-white/[0.02] p-8 shadow-2xl backdrop-blur-md relative overflow-hidden transition-all hover:bg-white/[0.04]">
                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl pointer-events-none" />
               <div className="flex flex-col gap-2 text-right">
@@ -525,6 +554,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               </ol>
             </div>
 
+            </>)}
+            {activeTab === "tools" && (<>
             <div className="p-8 rounded-3xl bg-rose-950/20 border border-rose-500/20 backdrop-blur-xl text-right mb-8 shadow-2xl relative overflow-hidden transition-all hover:bg-rose-950/30">
                <div className="absolute bottom-0 right-0 w-24 h-24 bg-rose-500/5 blur-3xl" />
               <h3 className="text-lg font-black text-rose-300 mb-6 flex items-center gap-3">
@@ -584,6 +615,8 @@ export const ResultScreen: FC<ResultScreenProps> = ({
               </ul>
             </div>
 
+            </>)}
+            {activeTab === "diagnosis" && (<>
             <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-xl text-right mb-8 shadow-2xl relative overflow-hidden group transition-all hover:bg-white/[0.04]">
                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl pointer-events-none" />
               <h3 className="text-lg font-black text-indigo-300 mb-4 flex items-center gap-3">
@@ -602,6 +635,7 @@ export const ResultScreen: FC<ResultScreenProps> = ({
                 الموسوعة: جمل جاهزة للرد على {displayName}
               </button>
             </div>
+            </>)}
           </>
         )}
 

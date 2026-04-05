@@ -21,33 +21,13 @@ import {
   Sparkles,
   ChevronDown,
 } from "lucide-react";
+import {
+  normalizeWhatsappNumber,
+  paymentConfig,
+} from "../config/paymentConfig";
 import { TIER_PRICES_USD, TIER_LABELS } from "../config/pricing";
-import { runtimeEnv } from "../config/runtimeEnv";
 import { telegramBot } from "../services/telegramBot";
 import { supabase } from "../services/supabaseClient";
-
-// ═══════════════════════════════════════════════════════════════════
-// Config — مأخوذة من .env.local
-// ═══════════════════════════════════════════════════════════════════
-
-function getEnv(key: string): string {
-  // Try NEXT_PUBLIC_ first (موجودة في .env.local)
-  if (typeof process !== "undefined" && process.env) {
-    const val = process.env[key];
-    if (val) return val;
-  }
-  return "";
-}
-
-const VODAFONE_CASH_NUMBER = getEnv("NEXT_PUBLIC_PAYMENT_VODAFONE_CASH_NUMBER") || "01023050092";
-const INSTAPAY_ALIAS      = getEnv("NEXT_PUBLIC_PAYMENT_INSTAPAY_ALIAS")       || "m7mdref3t@instapay";
-const INSTAPAY_NUMBER     = getEnv("NEXT_PUBLIC_PAYMENT_INSTAPAY_NUMBER")      || "01023050092";
-const PAYPAL_URL          = getEnv("NEXT_PUBLIC_PAYMENT_PAYPAL_URL")           || "https://paypal.me/M7mdRef3t";
-const WHATSAPP_NUMBER     = getEnv("NEXT_PUBLIC_WHATSAPP_CONTACT_NUMBER")      || runtimeEnv.whatsappContactNumber || "201023050092";
-const LOCAL_PRICE_LABEL   = getEnv("NEXT_PUBLIC_LOCAL_PREMIUM_PRICE_LABEL")    || "200 ج.م / شهر";
-
-// Gumroad لينك — عدّله بعد إنشاء الـ product
-const GUMROAD_URL = "https://refat3.gumroad.com/l/kkswqu";
 
 // ═══════════════════════════════════════════════════════════════════
 // Types
@@ -90,6 +70,8 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
   const [requestSent, setRequestSent] = useState(false);
 
   const price = TIER_PRICES_USD.premium;
+  const localPriceLabel = paymentConfig.localMonthlyPriceLabel || "200 ج.م / شهر";
+  const whatsappNumber = normalizeWhatsappNumber(paymentConfig.whatsappNumberRaw);
 
   // ── Copy ──────────────────────────────────────────────────────────
   const copyText = useCallback((text: string, key: string) => {
@@ -126,7 +108,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           `👤 *المستخدم:* ${user.name}`,
           `📧 *الإيميل:* ${user.email}`,
           `💰 *الباقة:* ${TIER_LABELS.premium}`,
-          `💵 *السعر:* ${price.label} (أو ${LOCAL_PRICE_LABEL})`,
+          `💵 *السعر:* ${price.label} (أو ${localPriceLabel})`,
           `📱 *طريقة الدفع:* ${methodLabels[method]}`,
           "",
           `⏰ ${new Date().toLocaleString("ar-EG")}`,
@@ -142,14 +124,14 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
     } finally {
       setIsSending(false);
     }
-  }, [price]);
+  }, [localPriceLabel, price]);
 
   // ── Open WhatsApp ─────────────────────────────────────────────────
   const openWhatsApp = useCallback((extraText = "") => {
     const base = `مرحباً، حابب أفعّل باقة "${TIER_LABELS.premium}" في الرحلة.`;
     const msg = extraText ? `${base}\n${extraText}` : base;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-  }, []);
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`, "_blank");
+  }, [whatsappNumber]);
 
   // ── Success screen ─────────────────────────────────────────────────
   if (requestSent) {
@@ -213,7 +195,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           </div>
           <h3 className="text-lg font-black text-white mb-1">اختر طريقة الدفع</h3>
           <p className="text-xs text-slate-400">
-            {TIER_LABELS.premium} — {LOCAL_PRICE_LABEL} أو ${price.monthly}/شهر
+            {TIER_LABELS.premium} — {localPriceLabel} أو ${price.monthly}/شهر
           </p>
         </div>
 
@@ -224,7 +206,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
             icon={<Smartphone className="w-5 h-5 text-red-400" />}
             iconBg="bg-red-500/15"
             label="فودافون كاش"
-            sub={LOCAL_PRICE_LABEL}
+            sub={localPriceLabel}
             onClick={() => setSelectedMethod("vodafone_cash")}
           />
 
@@ -233,7 +215,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
             icon={<Smartphone className="w-5 h-5 text-blue-400" />}
             iconBg="bg-blue-500/15"
             label="InstaPay"
-            sub={LOCAL_PRICE_LABEL}
+            sub={localPriceLabel}
             onClick={() => setSelectedMethod("instapay")}
           />
 
@@ -271,6 +253,18 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
   // ═══════════════════════════════════════════════════════════════════
 
   if (selectedMethod === "paypal") {
+    if (!paymentConfig.paypalUrl) {
+      return (
+        <FlowWrapper onBack={() => setSelectedMethod(null)}>
+          <div className="text-center mb-6">
+            <CreditCard className="w-10 h-10 text-sky-400 mx-auto mb-3" />
+            <h3 className="text-lg font-black text-white mb-1">PayPal غير متاح الآن</h3>
+            <p className="text-xs text-slate-400">لم يتم ضبط رابط PayPal في إعدادات المنصة بعد.</p>
+          </div>
+        </FlowWrapper>
+      );
+    }
+
     return (
       <FlowWrapper onBack={() => setSelectedMethod(null)}>
         <div className="text-center mb-6">
@@ -280,7 +274,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
         </div>
 
         <a
-          href={PAYPAL_URL}
+          href={paymentConfig.paypalUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-sky-500 hover:bg-sky-400 text-white font-bold transition-all mb-3"
@@ -305,6 +299,18 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
   // ═══════════════════════════════════════════════════════════════════
 
   if (selectedMethod === "gumroad") {
+    if (!paymentConfig.gumroadUrl) {
+      return (
+        <FlowWrapper onBack={() => setSelectedMethod(null)}>
+          <div className="text-center mb-6">
+            <CreditCard className="w-10 h-10 text-purple-400 mx-auto mb-3" />
+            <h3 className="text-lg font-black text-white mb-1">الدفع بالبطاقة غير متاح الآن</h3>
+            <p className="text-xs text-slate-400">لم يتم ضبط رابط الدفع الدولي في إعدادات المنصة بعد.</p>
+          </div>
+        </FlowWrapper>
+      );
+    }
+
     return (
       <FlowWrapper onBack={() => setSelectedMethod(null)}>
         <div className="text-center mb-6">
@@ -314,7 +320,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
         </div>
 
         <a
-          href={GUMROAD_URL}
+          href={paymentConfig.gumroadUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-bold transition-all shadow-lg shadow-purple-900/20"
@@ -337,7 +343,20 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
   // ═══════════════════════════════════════════════════════════════════
 
   const isVodafone = selectedMethod === "vodafone_cash";
-  const displayAlias  = isVodafone ? VODAFONE_CASH_NUMBER : INSTAPAY_ALIAS;
+  const displayAlias  = isVodafone ? paymentConfig.vodafoneCashNumber : paymentConfig.instapayAlias;
+  const localMethodConfigured = Boolean(displayAlias && whatsappNumber);
+
+  if (!localMethodConfigured) {
+    return (
+      <FlowWrapper onBack={() => setSelectedMethod(null)}>
+        <div className="text-center mb-6">
+          <Smartphone className={`w-10 h-10 mx-auto mb-3 ${isVodafone ? "text-red-400" : "text-blue-400"}`} />
+          <h3 className="text-lg font-black text-white mb-1">وسيلة الدفع غير مهيأة بعد</h3>
+          <p className="text-xs text-slate-400">بيانات هذه الوسيلة غير مكتملة في إعدادات المنصة حاليًا.</p>
+        </div>
+      </FlowWrapper>
+    );
+  }
 
   return (
     <FlowWrapper onBack={() => setSelectedMethod(null)}>
@@ -346,7 +365,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
         <h3 className="text-lg font-black text-white mb-1">
           {isVodafone ? "فودافون كاش" : "InstaPay"}
         </h3>
-        <p className="text-xs text-slate-400">حوّل {LOCAL_PRICE_LABEL} ثم ابعتلنا الإيصال</p>
+        <p className="text-xs text-slate-400">حوّل {localPriceLabel} ثم ابعتلنا الإيصال</p>
       </div>
 
       {/* Steps */}
@@ -361,7 +380,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
           />
           {!isVodafone && (
             <CopyField
-              value={INSTAPAY_NUMBER}
+              value={paymentConfig.instapayNumber}
               fieldKey="number"
               copied={copied}
               onCopy={copyText}
@@ -371,7 +390,7 @@ export const PaymentCheckout: FC<PaymentCheckoutProps> = ({ onClose, onSuccess: 
         </Step>
 
         {/* Step 2 */}
-        <Step n="٢" title="المبلغ: 200 ج.م">
+        <Step n="٢" title={`المبلغ: ${localPriceLabel}`}>
           <p className="text-xs text-slate-500">باقة {TIER_LABELS.premium} — شهر واحد</p>
         </Step>
 

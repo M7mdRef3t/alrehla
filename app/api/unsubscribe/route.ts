@@ -33,7 +33,12 @@ export async function GET(req: Request) {
   }
 
   // Verify HMAC token
-  const expectedToken = buildUnsubToken(id, lead.email as string);
+  let expectedToken: string;
+  try {
+    expectedToken = buildUnsubToken(id, lead.email as string);
+  } catch {
+    return unsubPage("⚠️ رابط الإلغاء غير مهيأ في هذه البيئة", false);
+  }
   if (token !== expectedToken) {
     return unsubPage("❌ توقيع الرابط غير صحيح", false);
   }

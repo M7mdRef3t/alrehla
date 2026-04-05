@@ -1,7 +1,19 @@
 import { supabase } from './supabaseClient';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+let genAI: GoogleGenerativeAI | null = null;
+
+function getGenAI(): GoogleGenerativeAI {
+    if (genAI) return genAI;
+
+    const apiKey = process.env.GEMINI_API_KEY || "";
+    if (!apiKey) {
+        throw new Error("GEMINI_API_KEY is not configured");
+    }
+
+    genAI = new GoogleGenerativeAI(apiKey);
+    return genAI;
+}
 
 export class ResonanceMonitor {
     /**
@@ -40,7 +52,7 @@ export class ResonanceMonitor {
         const chatContext = lastChat?.map(c => `${c.role}: ${c.content}`).join('\n') || '';
 
         // 2. Analyze Sentiment (Oracle vs Shadow determination)
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = getGenAI().getGenerativeModel({ model: "gemini-2.5-flash" });
         const analysisPrompt = `
 Analyze the following user chat history and determine if they are in a state of:
 1. STABILITY/GROWTH: Confident, defensive, or exploring.

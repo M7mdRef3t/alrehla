@@ -46,7 +46,7 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
 
   const namePlaceholder = useAppContentString(
     "add_person_name_placeholder",
-    "مثلاً: فلان الفلاني (اختياري)...",
+    "اكتب اسماً رمزياً لحماية مساحتك (اختياري)...",
     { page: "add_person" }
   );
 
@@ -157,8 +157,8 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
           transition={{ duration: 0.3 }}
           className="shrink-0"
         >
-          <label htmlFor="person-name-input" className="block text-xs font-semibold text-slate-400 mb-2">
-            <EditableText id="add_person_name_label" defaultText="الاسم (اختياري)" page="add_person" showEditIcon={false} />
+          <label htmlFor="person-name-input" className="block text-xs font-semibold text-teal-500/60 mb-2 uppercase tracking-widest">
+            <EditableText id="add_person_name_label" defaultText="معرف الكيان (الاسم الرمزي)" page="add_person" showEditIcon={false} />
           </label>
           <input
             id="person-name-input"
@@ -168,16 +168,17 @@ export const SelectPersonStep: FC<SelectPersonStepProps> = ({
             onChange={(event) => onNameChange(event.target.value)}
             placeholder={namePlaceholder}
             title="اكتب اسم الشخص (اختياري)"
-            className="ds-input"
+            className="w-full bg-slate-950/40 border-0 border-b-2 border-slate-700/50 text-teal-300 text-lg sm:text-xl font-bold focus:border-teal-500 focus:bg-slate-900/60 focus:ring-0 outline-none placeholder:text-slate-600/50 transition-all py-3 px-4 rounded-t-lg font-mono tracking-wider shadow-[inset_0_-2px_10px_rgba(45,212,191,0.02)] focus:shadow-[inset_0_-2px_15px_rgba(45,212,191,0.1)]"
           />
-          <p className="text-xs text-slate-500 mt-2">
-            <EditableText id="add_person_name_preview_prefix" defaultText="سيظهر بـ:" page="add_person" showEditIcon={false} />{" "}
-            <span className="font-bold text-teal-400">
+          <p className="text-[10px] text-slate-500 mt-3 font-mono tracking-widest">
+            <EditableText id="add_person_name_preview_prefix" defaultText="[ TARGET_ID ]: " page="add_person" showEditIcon={false} />
+            <span className="font-bold text-teal-400 ml-1">
+              <span className="animate-pulse mr-1 opacity-50">&gt;</span>
               {customName.trim() || selectedTitle}
             </span>
           </p>
           {contextualHint ? (
-            <p className="text-xs text-[var(--soft-teal)] mt-1 bg-[var(--soft-teal)]/10 rounded-lg px-2 py-1.5 border border-[var(--soft-teal)]">
+            <p className="text-[10px] text-[var(--soft-teal)] mt-1.5 bg-[var(--soft-teal)]/5 rounded-md px-2.5 py-2 border-l-2 border-[var(--soft-teal)] tracking-wide">
               {contextualHint}
             </p>
           ) : null}

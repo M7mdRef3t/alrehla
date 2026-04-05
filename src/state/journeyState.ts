@@ -37,6 +37,7 @@ interface StoredJourney {
   mirrorName?: string | null;
   isSoundEnabled?: boolean;
   isSensoryDepthEnabled?: boolean;
+  gateSessionId?: string | null;
 }
 
 async function loadJourney(): Promise<Partial<StoredJourney>> {
@@ -73,6 +74,7 @@ interface JourneyState extends StoredJourney {
   consumeMirrorName: () => string | null;
   setSoundEnabled: (enabled: boolean) => void;
   setSensoryDepthEnabled: (enabled: boolean) => void;
+  setGateSessionId: (id: string | null) => void;
 }
 
 const defaultState: StoredJourney = {
@@ -90,7 +92,8 @@ const defaultState: StoredJourney = {
   landingIntent: null,
   mirrorName: null,
   isSoundEnabled: true,
-  isSensoryDepthEnabled: true
+  isSensoryDepthEnabled: true,
+  gateSessionId: null
 };
 
 export const useJourneyState = create<JourneyState>((set, get) => ({
@@ -255,6 +258,13 @@ export const useJourneyState = create<JourneyState>((set, get) => ({
       saveJourney(next);
       return next;
     });
+  },
+  setGateSessionId(id: string | null) {
+    set((s) => {
+      const next: StoredJourney = { ...s, gateSessionId: id };
+      saveJourney(next);
+      return next;
+    });
   }
 }));
 
@@ -293,7 +303,8 @@ async function hydrateJourneyState() {
     lastGoalById: current.lastGoalById ?? {},
     postStepAnswers: current.postStepAnswers,
     postStepScore: current.postStepScore,
-    journeyStartedAt: current.journeyStartedAt
+    journeyStartedAt: current.journeyStartedAt,
+    gateSessionId: current.gateSessionId
   };
   const hasChanged = JSON.stringify(currentComparable) !== JSON.stringify(next);
   if (hasChanged) {

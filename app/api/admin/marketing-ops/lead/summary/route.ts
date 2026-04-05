@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "../../../../_lib/supabaseAdmin";
 import { requireLiveAuth } from "../../../../../../src/modules/dawayir-live/server/auth";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getClient as getGeminiClient } from "../../../../../../server/gemini/_shared";
 
 export const dynamic = "force-dynamic";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 export async function GET(req: Request) {
   const auth = await requireLiveAuth(req as any);
@@ -25,6 +23,15 @@ export async function GET(req: Request) {
   if (!supabase) return NextResponse.json({ ok: false, error: "no_supabase" }, { status: 503 });
 
   try {
+    const genAI = getGeminiClient();
+    if (!genAI) {
+      return NextResponse.json({
+        ok: true,
+        summary: "محرك التلخيص الذكي غير مهيأ الآن، لكن بيانات العميل ما زالت متاحة للمراجعة اليدوية.",
+        state: "COOLDOWN"
+      });
+    }
+
     // 1. Fetch sessions for this lead
     const { data: routingEvents } = await supabase
       .from("routing_events")

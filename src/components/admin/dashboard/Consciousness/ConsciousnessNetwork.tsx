@@ -14,6 +14,14 @@ interface Node {
     intensity: number;
 }
 
+interface Flow {
+    id: string;
+    from: number;
+    to: number;
+    progress: number;
+    speed: number;
+}
+
 const NODE_LABELS = [
     "شفاء عميق", "تحدي القلق", "جلسة استكشاف", "احتكاك في المسار",
     "صدمة مستدعاة", "تأمل", "اختراق جذري", "بناء جسور",
@@ -26,6 +34,7 @@ interface ConsciousnessNetworkProps {
 
 export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetworkProps) {
     const [nodes, setNodes] = useState<Node[]>([]);
+    const [flows, setFlows] = useState<Flow[]>([]);
     const [hoveredNode, setHoveredNode] = useState<Node | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +62,16 @@ export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetwo
             };
         });
         setNodes(initialNodes);
+
+        // Initialize some flows
+        const initialFlows: Flow[] = Array.from({ length: 8 }).map((_, i) => ({
+            id: `flow-${i}`,
+            from: Math.floor(Math.random() * nodeCount),
+            to: Math.floor(Math.random() * nodeCount),
+            progress: Math.random(),
+            speed: 0.002 + Math.random() * 0.005
+        }));
+        setFlows(initialFlows);
     }, []);
 
     // Animation Loop
@@ -80,12 +99,27 @@ export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetwo
                     return { ...node, x, y, vx, vy, intensity };
                 });
             });
+            setFlows(prevFlows => {
+                return prevFlows.map(flow => {
+                    let nextProgress = flow.progress + flow.speed;
+                    if (nextProgress > 1) {
+                        return {
+                            ...flow,
+                            progress: 0,
+                            from: Math.floor(Math.random() * nodes.length),
+                            to: Math.floor(Math.random() * nodes.length)
+                        };
+                    }
+                    return { ...flow, progress: nextProgress };
+                });
+            });
+
             animationFrameId = requestAnimationFrame(animate);
         };
 
         animationFrameId = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(animationFrameId);
-    }, []);
+    }, [nodes.length]);
 
     // Generate Connections Efficiently
     const connections = useMemo(() => {
@@ -157,15 +191,54 @@ export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetwo
 
             {/* Radar Scanline Effect */}
             <motion.div 
-                className="absolute inset-0 w-full h-full bg-gradient-to-b from-transparent via-teal-400/5 to-transparent pointer-events-none z-0"
+                className="absolute inset-0 w-full h-full bg-gradient-to-b from-transparent via-teal-400/5 to-transparent pointer-events-none z-0 mix-blend-overlay"
                 animate={{ y: ["-100%", "100%"] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
             />
 
-            {/* SVG Layer for Neural Connections */}
+            {/* SVG Layer for Neural Connections & Flows */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+                {/* Connections */}
                 {connections}
+                
+                {/* Animated Energy Flows */}
+                {flows.map(flow => {
+                    const startNode = nodes[flow.from];
+                    const endNode = nodes[flow.to];
+                    if (!startNode || !endNode) return null;
+
+                    const currentX = startNode.x + (endNode.x - startNode.x) * flow.progress;
+                    const currentY = startNode.y + (endNode.y - startNode.y) * flow.progress;
+
+                    return (
+                        <circle
+                            key={flow.id}
+                            cx={`${currentX}%`}
+                            cy={`${currentY}%`}
+                            r="1.5"
+                            fill="white"
+                            className="drop-shadow-[0_0_5px_rgba(255,255,255,1)] opacity-40"
+                        />
+                    );
+                })}
             </svg>
+
+            {/* Density Hotspots (Heat-map Layer) */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+                {nodes.filter(n => n.type === "friction" || n.type === "core").map(node => (
+                    <div 
+                        key={`hotspot-${node.id}`}
+                        className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full blur-[60px]"
+                        style={{
+                            left: `${node.x}%`,
+                            top: `${node.y}%`,
+                            width: 120,
+                            height: 120,
+                            backgroundColor: node.type === "friction" ? "rgba(225,29,72,0.1)" : "rgba(168,85,247,0.1)"
+                        }}
+                    />
+                ))}
+            </div>
 
             {/* Live Nodes Layer */}
             {nodes.map((node) => (
@@ -181,13 +254,14 @@ export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetwo
                         {/* Outer Glow / Ripple for Active states */}
                         {(node.type !== "pulse" || hoveredNode?.id === node.id) && (
                             <div 
-                                className="absolute rounded-full animate-ping"
+                                className="absolute rounded-full animate-pulse"
                                 style={{
-                                    width: node.radius * 4,
-                                    height: node.radius * 4,
+                                    width: node.radius * 6,
+                                    height: node.radius * 6,
                                     backgroundColor: getGlowColor(node.type),
-                                    opacity: 0.2, // ping makes it fade
-                                    animationDuration: node.type === "friction" ? "1s" : "2s"
+                                    opacity: 0.15,
+                                    filter: "blur(8px)",
+                                    animationDuration: node.type === "friction" ? "1s" : "3s"
                                 }}
                             />
                         )}

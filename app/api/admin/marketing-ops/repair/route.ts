@@ -1,10 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+import { getSupabaseAdminClient } from "../../../_lib/supabaseAdmin";
 
 function isOwnerAuthorized(request: Request): boolean {
   // Logic for admin/owner check (usually session based, but we rely on the host's existing middleware if applicable)
@@ -15,6 +10,11 @@ function isOwnerAuthorized(request: Request): boolean {
 
 export async function POST(req: Request) {
   try {
+    const supabaseAdmin = getSupabaseAdminClient();
+    if (!supabaseAdmin) {
+      return NextResponse.json({ ok: false, error: "supabase_not_configured" }, { status: 503 });
+    }
+
     const metaK = ['facebook', 'meta', 'fb', 'instagram', 'ig', 'fbad'];
     const waK = ['whatsapp', 'wa'];
 

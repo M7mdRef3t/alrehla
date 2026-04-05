@@ -7,6 +7,8 @@ import {
 import { runtimeEnv } from "../config/runtimeEnv";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "./browserStorage";
 import { useSyncState } from "../state/syncState";
+import { useJourneyState } from "../state/journeyState";
+import { triggerMapCompletionCheck } from "../lib/gate/handoffCore";
 
 const SUPABASE_MAPS_TABLE = "journey_maps";
 const SYNC_DEBOUNCE_MS = 1200;
@@ -122,6 +124,13 @@ async function flushMapSync(): Promise<void> {
       if (pendingBuffer) {
         pendingBuffer.needsSync = false;
         persistPendingBuffer(pendingBuffer);
+      }
+
+      // Check external funnel status. If user originated from a Gate Session,
+      // now is the exact moment his Map is "Persisted" Server-Side.
+      const gateSessionId = useJourneyState.getState().gateSessionId;
+      if (gateSessionId) {
+        void triggerMapCompletionCheck(gateSessionId, user.id);
       }
     } else {
       const errorMsg = error.message || "sync_failed";

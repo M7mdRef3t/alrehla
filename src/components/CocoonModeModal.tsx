@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 interface CocoonModeModalProps {
   isOpen: boolean;
@@ -11,23 +11,31 @@ interface CocoonModeModalProps {
   onClose: () => void;
 }
 
-function getTimeAwareCopy(): { headline: string; sub: string } {
+function getTimeAwareTheme(): { headline: string; sub: string; color: string; rgb: string } {
   const h = new Date().getHours();
   if (h >= 5 && h < 12) return {
-    headline: "الصبح ده مش لازم تكون جاهز",
-    sub: "كل ما بتحاول تتماسك، بتصرف طاقة محتاجها. خلّي المنصة تحمل الثقل شوية."
+    headline: "الصبح مش مسابقة",
+    sub: "كل ما بتحاول تسبق نفسك، بتحرق طاقة. المنصة هتستنى لما ترجع لمركزك.",
+    color: "#2dd4bf",
+    rgb: "45,212,191"
   };
   if (h >= 12 && h < 18) return {
-    headline: "خليك مع نفسك شوية",
-    sub: "النهار مش هيخلص لو وقفت دقيقتين. الملاذ هنا عشان تشحن مش عشان تهرب."
+    headline: "خُد نفس، مفيش حاجة هتفوتك",
+    sub: "المستنقع اليومي بيسحب طاقتك. الملاذ هنا عشان يفرمل الزحمة، مش عشان تهرب.",
+    color: "#f5a623",
+    rgb: "245,158,11"
   };
   if (h >= 18 && h < 22) return {
-    headline: "المساء ده ملكك",
-    sub: "لا أجندة، لا توقعات. بس أنت وصمتك اللي استاهلته طول النهار."
+    headline: "المساء لك، مش لمهامك",
+    sub: "لا أجندة، لا توقعات. مجرد مساحة صمت تستاهلها.",
+    color: "#818cf8",
+    rgb: "129,140,248"
   };
   return {
-    headline: "الليل ده لك وحدك",
-    sub: "في وقت الهدوء ده، جسمك بيشفي نفسه لو سمحتله. اكوكن شوية."
+    headline: "حقك في السكون",
+    sub: "الليل ده عشان جسمك يشفي نفسه. سلّم القيادة وارتاح.",
+    color: "#60a5fa",
+    rgb: "96,165,250"
   };
 }
 
@@ -38,7 +46,7 @@ export const CocoonModeModal: FC<CocoonModeModalProps> = ({
   canSkip = false,
   onClose
 }) => {
-  const { headline, sub } = useMemo(() => getTimeAwareCopy(), []);
+  const { headline, sub, color, rgb } = useMemo(() => getTimeAwareTheme(), []);
 
   if (!isOpen) return null;
 
@@ -49,138 +57,122 @@ export const CocoonModeModal: FC<CocoonModeModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.6 }}
-        className="fixed inset-0 z-[70] flex items-center justify-center"
-        style={{ background: "#030409", colorScheme: "dark" }}
+        transition={{ duration: 0.8, ease: "easeInOut" }}
+        className="fixed inset-0 z-[70] flex items-center justify-center overflow-hidden"
+        style={{ background: "#010207", colorScheme: "dark" }}
         dir="rtl"
       >
-        {/* Ambient warm orb */}
-        <div
+        {/* Chromotherapy Fluid Orbs */}
+        <motion.div
           aria-hidden
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 2, ease: "easeOut" }}
           style={{
             position: "absolute",
-            width: 600,
-            height: 600,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 65%)",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -55%)",
-            pointerEvents: "none"
-          }}
-        />
-        {/* Second deeper indigo orb */}
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            width: 450,
-            height: 450,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99,102,241,0.07) 0%, transparent 65%)",
-            bottom: "-10%",
-            left: "10%",
+            width: "120vw",
+            height: "120vh",
+            background: `radial-gradient(circle at 50% 40%, rgba(${rgb},0.08) 0%, transparent 60%)`,
             pointerEvents: "none"
           }}
         />
 
-        {/* Main card */}
         <motion.div
           key="cocoon-card"
-          initial={{ opacity: 0, scale: 0.88, filter: "blur(8px)" }}
-          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-          exit={{ opacity: 0, scale: 0.92, filter: "blur(6px)" }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          initial={{ opacity: 0, y: 10, filter: "blur(10px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: -10, filter: "blur(8px)" }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="relative z-10 flex flex-col items-center text-center px-8 py-12 max-w-sm w-full mx-4"
         >
-          {/* Moon icon with pulse rings */}
-          <div className="relative flex items-center justify-center mb-10">
-            {/* Outermost ring */}
+          {/* Abstract Pulsing Core */}
+          <div className="relative flex items-center justify-center mb-10 w-24 h-24">
             <motion.div
-              className="absolute rounded-full border"
-              style={{ width: 120, height: 120, borderColor: "rgba(245,158,11,0.12)" }}
-              animate={{ scale: [1, 1.08, 1], opacity: [0.6, 0.3, 0.6] }}
+              className="absolute rounded-full"
+              style={{ width: "100%", height: "100%", background: `rgba(${rgb},0.08)`, filter: "blur(8px)" }}
+              animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.8, 0.4] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
-            {/* Middle ring */}
             <motion.div
-              className="absolute rounded-full border"
-              style={{ width: 88, height: 88, borderColor: "rgba(245,158,11,0.2)" }}
-              animate={{ scale: [1, 1.06, 1], opacity: [0.8, 0.4, 0.8] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+              className="absolute rounded-full"
+              style={{ width: "60%", height: "60%", background: `rgba(${rgb},0.15)`, filter: "blur(4px)" }}
+              animate={{ scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
             />
-            {/* Core circle */}
             <div
               className="relative z-10 flex items-center justify-center rounded-full"
               style={{
-                width: 64,
-                height: 64,
-                background: "rgba(245,158,11,0.1)",
-                border: "1px solid rgba(245,158,11,0.3)",
-                boxShadow: "0 0 30px rgba(245,158,11,0.15)"
+                width: 56,
+                height: 56,
+                background: `rgba(${rgb},0.1)`,
+                border: `1px solid rgba(${rgb},0.2)`,
+                boxShadow: `0 0 30px rgba(${rgb},0.15), inset 0 0 15px rgba(${rgb},0.1)`
               }}
             >
-              <Moon className="w-7 h-7" style={{ color: "#f5a623" }} />
+              <Sparkles className="w-6 h-6" style={{ color }} />
             </div>
           </div>
 
-          {/* Badge */}
           <div
-            className="mb-5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.3em]"
+            className="mb-6 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.3em]"
             style={{
-              background: "rgba(245,158,11,0.08)",
-              border: "1px solid rgba(245,158,11,0.2)",
-              color: "rgba(245,158,11,0.7)"
+              background: `rgba(${rgb},0.05)`,
+              border: `1px solid rgba(${rgb},0.15)`,
+              color: `rgba(${rgb},0.8)`
             }}
           >
             الملاذ الآمن
           </div>
 
-          {/* Headline */}
           <h2
-            className="text-2xl font-black mb-4 leading-snug"
-            style={{ color: "#f1f5f9", letterSpacing: "-0.02em" }}
+            className="text-3xl font-black mb-4 leading-snug tracking-tight"
+            style={{ color: "#f1f5f9" }}
           >
             {headline}
           </h2>
 
-          {/* Sub-text */}
           <p
-            className="text-sm leading-relaxed mb-10"
-            style={{ color: "rgba(148,163,184,0.75)", maxWidth: 280 }}
+            className="text-sm leading-relaxed mb-10 font-medium"
+            style={{ color: "rgba(148,163,184,0.65)", maxWidth: 280 }}
           >
             {sub}
           </p>
 
-          {/* Primary CTA */}
           <motion.button
             type="button"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onStart}
-            className="w-full rounded-2xl py-4 text-sm font-black tracking-wide mb-4 transition-all"
+            className="w-full rounded-2xl py-4 flex items-center justify-center gap-3 font-extrabold tracking-wide mb-4 transition-all"
             style={{
-              background: "rgba(20,184,166,0.15)",
-              border: "1px solid rgba(20,184,166,0.35)",
-              color: "#2dd4bf",
-              boxShadow: "0 0 24px rgba(20,184,166,0.12)"
+              background: `rgba(${rgb},0.1)`,
+              border: `1px solid rgba(${rgb},0.2)`,
+              color: color,
+              boxShadow: `0 0 40px rgba(${rgb},0.1)`
             }}
           >
-            ادخل الملاذ
+            ادخل للملاذ
+            <motion.div 
+               animate={{ x: [0, 4, 0] }}
+               transition={{ duration: 2, repeat: Infinity }}
+               className="opacity-70"
+            >
+               ←
+            </motion.div>
           </motion.button>
 
-          {/* Skip */}
           {canSkip && (
-            <button
-              type="button"
-              onClick={onSkip ?? onClose}
-              className="text-xs font-medium transition-colors py-2"
-              style={{ color: "rgba(148,163,184,0.4)" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(148,163,184,0.7)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "rgba(148,163,184,0.4)"; }}
-            >
-              مش دلوقتي
-            </button>
+             <motion.button
+               type="button"
+               onClick={onSkip ?? onClose}
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 0.3 }}
+               whileHover={{ opacity: 0.8 }}
+               className="text-xs font-semibold py-3 transition-opacity"
+               style={{ color: "rgba(148,163,184,1)" }}
+             >
+               سأكمل طريقي الآن
+             </motion.button>
           )}
         </motion.div>
       </motion.div>

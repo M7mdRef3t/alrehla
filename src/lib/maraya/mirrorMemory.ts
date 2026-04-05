@@ -10,9 +10,11 @@ let supabase: SupabaseClient | null = null;
 function getSupabase(): SupabaseClient {
   if (!supabase) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
     if (!url || !key) throw new Error('Supabase not configured for Maraya Mirror Memory');
-    supabase = createClient(url, key);
+    supabase = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
   }
   return supabase;
 }

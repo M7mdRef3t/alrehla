@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useAchievementState } from "../state/achievementState";
@@ -9,7 +9,7 @@ interface BreathingOverlayProps {
   autoCloseAfterCycles?: number;
 }
 
-// Scientific 4-2-6 breathing pattern (box breathing variant)
+// Scientific 4-2-6 breathing pattern
 const INHALE_MS = 4000;
 const HOLD_MS   = 2000;
 const EXHALE_MS = 6000;
@@ -36,39 +36,102 @@ const PHASE_LABELS: Record<Phase, string> = {
   exhale: "زفير",
 };
 
-const PHASE_SUBLABELS: Record<Phase, string> = {
-  inhale: "امتلئ",
-  hold:   "احتفظ",
-  exhale: "افرد",
-};
-
-// SVG circle props
-const RADIUS = 80;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-
 export const BreathingOverlay: FC<BreathingOverlayProps> = ({
   onClose,
   autoCloseAfterCycles = DEFAULT_CYCLES,
 }) => {
   const [phase, setPhase]             = useState<Phase>("inhale");
   const [cycleCount, setCycleCount]   = useState(0);
-  const [phaseProgress, setPhaseProgress] = useState(0); // 0→1 during each phase
-  const [showExitHint, setShowExitHint]   = useState(false);
+  const [phaseProgress, setPhaseProgress] = useState(0); 
+  const [isIdle, setIsIdle]               = useState(false);
   const markBreathingUsed = useAchievementState((s) => s.markBreathingUsed);
 
   useEffect(() => { markBreathingUsed(); }, [markBreathingUsed]);
 
-  // Show exit hint after 30 seconds
+  // Idle tracking for Invisible UI
   useEffect(() => {
-    const t = setTimeout(() => setShowExitHint(true), 30_000);
-    return () => clearTimeout(t);
+    let timeout: ReturnType<typeof setTimeout>;
+    const handleActivity = () => {
+      setIsIdle(false);
+      clearTimeout(timeout);
+      timeout = setTimeout(() => setIsIdle(true), 3500); // 3.5s of no mouse movement -> hide UI
+    };
+
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('touchstart', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+
+    timeout = setTimeout(() => setIsIdle(true), 4000);
+
+    return () => {
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('touchstart', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      clearTimeout(timeout);
+    };
   }, []);
 
-  // Phase sequencer
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const masterGainRef = useRef<GainNode | null>(null);
+  const oscLRef = useRef<OscillatorNode | null>(null);
+  const oscRRef = useRef<OscillatorNode | null>(null);
+
+  // Phase sequencer & Audio Engine
   useEffect(() => {
     let startedAt = Date.now();
     let currentPhase: Phase = "inhale";
     let currentCycles = 0;
+
+    // --- Audio Init (Binaural Beats: 174Hz base, 5Hz difference for Theta state) ---
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioContext) {
+      const ctx = new AudioContext();
+      audioCtxRef.current = ctx;
+
+      const mg = ctx.createGain();
+      mg.gain.value = 0;
+      mg.connect(ctx.destination);
+      masterGainRef.current = mg;
+
+      const oscL = ctx.createOscillator();
+      oscL.type = "sine";
+      oscL.frequency.value = 170; // Start low
+
+      const oscR = ctx.createOscillator();
+      oscR.type = "sine";
+      oscR.frequency.value = 175;
+
+      if (ctx.createStereoPanner) {
+        const panL = ctx.createStereoPanner();
+        panL.pan.value = -1;
+        oscL.connect(panL);
+        panL.connect(mg);
+
+        const panR = ctx.createStereoPanner();
+        panR.pan.value = 1;
+        oscR.connect(panR);
+        panR.connect(mg);
+      } else {
+        oscL.connect(mg);
+        oscR.connect(mg);
+      }
+
+      oscL.start();
+      oscR.start();
+      oscLRef.current = oscL;
+      oscRRef.current = oscR;
+
+      // First Inhale Audio Ramp
+      mg.gain.setValueAtTime(0, ctx.currentTime);
+      mg.gain.linearRampToValueAtTime(0.08, ctx.currentTime + (INHALE_MS / 1000));
+      oscL.frequency.linearRampToValueAtTime(174, ctx.currentTime + (INHALE_MS / 1000));
+      oscR.frequency.linearRampToValueAtTime(179, ctx.currentTime + (INHALE_MS / 1000));
+    }
+
+    // Initial haptic feedback
+    if (typeof window !== "undefined" && navigator && navigator.vibrate) {
+      navigator.vibrate([15, 40, 20]);
+    }
 
     const tick = () => {
       const elapsed = Date.now() - startedAt;
@@ -82,17 +145,59 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
 
       if (elapsed >= phaseDuration) {
         startedAt = Date.now();
+        const ctx = audioCtxRef.current;
+        const mg = masterGainRef.current;
+        const oL = oscLRef.current;
+        const oR = oscRRef.current;
+
         if (currentPhase === "inhale") {
           currentPhase = "hold";
+          if (typeof window !== "undefined" && navigator && navigator.vibrate) navigator.vibrate(15);
+          
+          if (ctx && mg) {
+             mg.gain.cancelScheduledValues(ctx.currentTime);
+             mg.gain.setValueAtTime(mg.gain.value, ctx.currentTime);
+             mg.gain.linearRampToValueAtTime(0.08, ctx.currentTime + (HOLD_MS / 1000));
+          }
         } else if (currentPhase === "hold") {
           currentPhase = "exhale";
+          if (typeof window !== "undefined" && navigator && navigator.vibrate) navigator.vibrate([20, 30, 15]);
+          
+          if (ctx && mg && oL && oR) {
+             mg.gain.cancelScheduledValues(ctx.currentTime);
+             mg.gain.setValueAtTime(mg.gain.value, ctx.currentTime);
+             mg.gain.linearRampToValueAtTime(0.02, ctx.currentTime + (EXHALE_MS / 1000));
+             
+             oL.frequency.cancelScheduledValues(ctx.currentTime);
+             oR.frequency.cancelScheduledValues(ctx.currentTime);
+             oL.frequency.setValueAtTime(oL.frequency.value, ctx.currentTime);
+             oR.frequency.setValueAtTime(oR.frequency.value, ctx.currentTime);
+             oL.frequency.linearRampToValueAtTime(170, ctx.currentTime + (EXHALE_MS / 1000));
+             oR.frequency.linearRampToValueAtTime(175, ctx.currentTime + (EXHALE_MS / 1000));
+          }
         } else {
           currentPhase = "inhale";
           currentCycles += 1;
           setCycleCount(currentCycles);
+          
           if (autoCloseAfterCycles > 0 && currentCycles >= autoCloseAfterCycles) {
             onClose();
             return;
+          }
+          
+          if (typeof window !== "undefined" && navigator && navigator.vibrate) navigator.vibrate([15, 40, 20]);
+          
+          if (ctx && mg && oL && oR) {
+             mg.gain.cancelScheduledValues(ctx.currentTime);
+             mg.gain.setValueAtTime(mg.gain.value, ctx.currentTime);
+             mg.gain.linearRampToValueAtTime(0.08, ctx.currentTime + (INHALE_MS / 1000));
+             
+             oL.frequency.cancelScheduledValues(ctx.currentTime);
+             oR.frequency.cancelScheduledValues(ctx.currentTime);
+             oL.frequency.setValueAtTime(oL.frequency.value, ctx.currentTime);
+             oR.frequency.setValueAtTime(oR.frequency.value, ctx.currentTime);
+             oL.frequency.linearRampToValueAtTime(174, ctx.currentTime + (INHALE_MS / 1000));
+             oR.frequency.linearRampToValueAtTime(179, ctx.currentTime + (INHALE_MS / 1000));
           }
         }
         setPhase(currentPhase);
@@ -101,21 +206,33 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
     };
 
     const interval = setInterval(tick, 50);
-    return () => clearInterval(interval);
+    
+    return () => {
+      clearInterval(interval);
+      if (audioCtxRef.current && masterGainRef.current) {
+        const ctx = audioCtxRef.current;
+        masterGainRef.current.gain.cancelScheduledValues(ctx.currentTime);
+        masterGainRef.current.gain.linearRampToValueAtTime(0, ctx.currentTime + 1);
+        setTimeout(() => {
+          if (ctx.state !== "closed") {
+            ctx.close().catch(console.error);
+          }
+        }, 1100);
+      }
+    };
   }, [autoCloseAfterCycles, onClose]);
 
   const accentColor = PHASE_COLORS[phase];
 
-  // SVG stroke-dashoffset drives the ring fill
-  const strokeOffset = CIRCUMFERENCE * (1 - phaseProgress);
-
-  // Scale for the inner orb
+  // Scale for the inner orb (Fluid Geometry)
+  // Inhale expands greatly, Hold holds it, Exhale shrinks it smoothly.
   const orbScale =
-    phase === "inhale" ? 0.75 + phaseProgress * 0.45 :  // 0.75 → 1.20
-    phase === "hold"   ? 1.2 :
-                        1.2 - phaseProgress * 0.45;      // 1.20 → 0.75
+    phase === "inhale" ? 0.8 + phaseProgress * 0.8 :  // 0.8 → 1.6
+    phase === "hold"   ? 1.6 :
+                        1.6 - phaseProgress * 0.8;      // 1.6 → 0.8
 
   const phraseIndex = Math.min(cycleCount, CYCLE_PHRASES.length - 1);
+  const showUI = !isIdle || cycleCount === 0;
 
   return (
     <div
@@ -123,156 +240,143 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
       style={{ background: "#010207", colorScheme: "dark" }}
       role="dialog"
       aria-modal="true"
-      aria-label="تمرين التنفس"
+      aria-label="الملاذ الآمن"
       dir="rtl"
     >
-      {/* Deep ambient orb */}
+      {/* Deep ambient orb - matches accent color */}
       <div
         aria-hidden
         style={{
           position: "absolute",
-          width: 700,
-          height: 700,
-          borderRadius: "50%",
-          background: `radial-gradient(circle, ${accentColor}0d 0%, transparent 65%)`,
+          width: "120vw",
+          height: "120vh",
+          background: `radial-gradient(circle at 50% 50%, ${accentColor}0a 0%, transparent 60%)`,
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          transition: "background 2s ease",
-          pointerEvents: "none"
+          transition: "background 3s ease-in-out",
+          pointerEvents: "none",
+          zIndex: 0
         }}
       />
 
       {/* Top bar */}
-      <div className="w-full flex items-center justify-between px-6 pt-8 pb-4 relative z-10">
+      <motion.div 
+        className="w-full flex items-center justify-between px-6 pt-8 pb-4 relative z-10"
+        animate={{ opacity: showUI ? 1 : 0 }}
+        transition={{ duration: 1.5, ease: "easeInOut" }}
+      >
         <div
-          className="text-xs font-black uppercase tracking-[0.28em]"
-          style={{ color: "rgba(148,163,184,0.4)" }}
+          className="text-[10px] font-black uppercase tracking-[0.3em]"
+          style={{ color: "rgba(148,163,184,0.3)" }}
         >
-          الملاذ الآمن
+          الملاذ
         </div>
-        <AnimatePresence>
-          {showExitHint && (
-            <motion.button
-              type="button"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={onClose}
-              className="flex items-center gap-2 px-4 py-2 rounded-full transition-all"
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                color: "rgba(148,163,184,0.6)"
-              }}
-              aria-label="إغلاق"
-            >
-              <X className="w-4 h-4" />
-              <span className="text-xs font-black tracking-widest uppercase">خروج</span>
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all hover:bg-white/5"
+          style={{
+            border: "1px solid rgba(255,255,255,0.04)",
+            color: "rgba(148,163,184,0.4)"
+          }}
+          aria-label="إغلاق"
+        >
+          <X className="w-3.5 h-3.5" />
+          <span className="text-[10px] font-black tracking-widest uppercase">الخروج</span>
+        </button>
+      </motion.div>
 
       {/* Central breathing engine */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-8 relative z-10 px-6">
+      <div className="flex-1 flex flex-col items-center justify-center relative z-10 px-6 w-full max-w-sm">
 
         {/* Phase label */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={phase}
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="text-center"
-          >
-            <p
-              className="text-4xl font-black tracking-tight mb-1"
-              style={{ color: accentColor, textShadow: `0 0 40px ${accentColor}60` }}
+        <AnimatePresence mode="popLayout">
+          {showUI && (
+            <motion.div
+              key="phase-labels"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10, transition: { duration: 1 } }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="text-center absolute top-20 left-0 right-0"
             >
-              {PHASE_LABELS[phase]}
-            </p>
-            <p
-              className="text-xs font-black uppercase tracking-[0.3em]"
-              style={{ color: `${accentColor}80` }}
-            >
-              {PHASE_SUBLABELS[phase]}
-            </p>
-          </motion.div>
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={phase}
+                  initial={{ opacity: 0, filter: "blur(4px)" }}
+                  animate={{ opacity: 1, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, filter: "blur(4px)" }}
+                  transition={{ duration: 0.6 }}
+                  className="text-4xl font-black tracking-tight mb-1"
+                  style={{ color: accentColor, textShadow: `0 0 30px ${accentColor}50` }}
+                >
+                  {PHASE_LABELS[phase]}
+                </motion.p>
+              </AnimatePresence>
+            </motion.div>
+          )}
         </AnimatePresence>
 
-        {/* SVG Breathing Ring + Inner Orb */}
-        <div className="relative flex items-center justify-center" style={{ width: 220, height: 220 }}>
-          {/* Outer progress ring */}
-          <svg
-            width="220"
-            height="220"
-            viewBox="0 0 220 220"
-            style={{ position: "absolute", transform: "rotate(-90deg)" }}
-          >
-            {/* Track */}
-            <circle
-              cx="110" cy="110" r={RADIUS}
-              fill="none"
-              stroke="rgba(255,255,255,0.05)"
-              strokeWidth="3"
-            />
-            {/* Progress arc */}
-            <motion.circle
-              cx="110" cy="110" r={RADIUS}
-              fill="none"
-              stroke={accentColor}
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeDasharray={CIRCUMFERENCE}
-              strokeDashoffset={strokeOffset}
-              style={{
-                filter: `drop-shadow(0 0 8px ${accentColor}90)`,
-                transition: "stroke 2s ease, stroke-dashoffset 0.05s linear"
-              }}
-            />
-          </svg>
-
-          {/* Middle static ring */}
-          <div
+        {/* Fluid Geometry Orb */}
+        <div className="relative flex items-center justify-center w-[280px] h-[280px]">
+          {/* Base Glow */}
+          <motion.div
+            animate={{ scale: orbScale * 0.9 }}
+            transition={{ duration: 0.05, ease: "linear" }}
             style={{
               position: "absolute",
-              width: 140,
-              height: 140,
+              width: "100%",
+              height: "100%",
               borderRadius: "50%",
-              border: `1px solid ${accentColor}25`,
-              transition: "border-color 2s ease"
+              background: `radial-gradient(circle, ${accentColor}15 0%, transparent 70%)`,
+              filter: "blur(30px)",
+              transition: "background 2s ease"
             }}
           />
-
-          {/* Inner breathing orb */}
+          
+          {/* Core Shape */}
           <motion.div
             animate={{ scale: orbScale }}
             transition={{ duration: 0.05, ease: "linear" }}
             style={{
-              width: 80,
-              height: 80,
+              width: "50%",
+              height: "50%",
               borderRadius: "50%",
-              background: `radial-gradient(circle, ${accentColor}30 0%, transparent 70%)`,
-              border: `1px solid ${accentColor}50`,
-              boxShadow: `0 0 40px ${accentColor}30, inset 0 0 20px ${accentColor}10`,
+              background: `radial-gradient(circle, ${accentColor}30 0%, ${accentColor}00 80%)`,
+              border: `1px solid ${accentColor}20`,
+              boxShadow: `0 0 60px ${accentColor}30, inset 0 0 40px ${accentColor}20`,
               transition: "background 2s ease, border-color 2s ease, box-shadow 2s ease"
+            }}
+          />
+
+          {/* Innermost intense core */}
+          <motion.div
+            animate={{ scale: orbScale * 0.6, opacity: phase === "inhale" ? 0.8 : 0.4 }}
+            transition={{ duration: 0.05, ease: "linear" }}
+            style={{
+              position: "absolute",
+              width: "30%",
+              height: "30%",
+              borderRadius: "50%",
+              background: `radial-gradient(circle, ${accentColor}50 0%, transparent 60%)`,
+              filter: "blur(10px)",
+              transition: "background 2s ease"
             }}
           />
         </div>
 
-        {/* Cycle phrase */}
-        <AnimatePresence mode="wait">
-          {cycleCount > 0 && (
+        {/* Cycle phrase - completely fades when idle */}
+        <AnimatePresence mode="popLayout">
+          {showUI && cycleCount > 0 && (
             <motion.p
               key={phraseIndex}
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-sm font-medium text-center max-w-xs"
-              style={{ color: "rgba(148,163,184,0.55)" }}
+              exit={{ opacity: 0, transition: { duration: 1 } }}
+              transition={{ duration: 1.2 }}
+              className="text-sm font-medium text-center absolute bottom-24 left-0 right-0"
+              style={{ color: "rgba(148,163,184,0.4)" }}
             >
               {CYCLE_PHRASES[phraseIndex]}
             </motion.p>
@@ -280,49 +384,36 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
         </AnimatePresence>
       </div>
 
-      {/* Bottom: cycle dots + end button */}
-      <div className="w-full flex flex-col items-center gap-6 px-6 pb-10 relative z-10">
-        {/* Cycle counter dots */}
-        <div className="flex items-center gap-3">
+      {/* Bottom: cycle dots */}
+      <motion.div 
+        className="w-full flex flex-col items-center px-6 pb-12 relative z-10"
+        animate={{ opacity: showUI ? 1 : 0 }}
+        transition={{ duration: 1.5, ease: "easeInOut" }}
+      >
+        {/* Cycle counter dots - intentionally subtle */}
+        <div className="flex items-center gap-4">
           {Array.from({ length: autoCloseAfterCycles }).map((_, i) => (
             <motion.div
               key={i}
               animate={{
                 background: i < cycleCount
-                  ? accentColor
+                  ? `${accentColor}80`  // completed
                   : i === cycleCount
-                    ? `${accentColor}50`
-                    : "rgba(255,255,255,0.1)",
-                scale: i === cycleCount ? 1.3 : 1
+                    ? `${accentColor}40` // current
+                    : "rgba(255,255,255,0.06)", // pending
+                scale: i === cycleCount ? 1.4 : 1
               }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.8 }}
               style={{
-                width: 8,
-                height: 8,
+                width: 6,
+                height: 6,
                 borderRadius: "50%",
-                boxShadow: i < cycleCount ? `0 0 8px ${accentColor}80` : "none"
+                boxShadow: i < cycleCount ? `0 0 10px ${accentColor}40` : "none"
               }}
             />
           ))}
         </div>
-
-        {/* End button — always visible but subtle initially */}
-        <motion.button
-          type="button"
-          onClick={onClose}
-          initial={{ opacity: 0.3 }}
-          animate={{ opacity: showExitHint ? 0.9 : 0.3 }}
-          whileHover={{ opacity: 1 }}
-          className="px-8 py-3 rounded-2xl text-sm font-black tracking-wider transition-all"
-          style={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            color: "rgba(148,163,184,0.7)"
-          }}
-        >
-          إنهاء التنفس
-        </motion.button>
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -63,6 +63,8 @@ const ActionToolkit = lazy(() => import("../modules/dawayir/ActionToolkit").then
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 import { getGlobalHarmony } from "../services/globalPulse";
 import { supabase, isSupabaseReady } from "../services/supabaseClient";
+import { ViralLoopNudge } from "./growth/ViralLoopNudge";
+import { syncReferralToSupabase } from "../services/referralEngine";
 
 /* 
     CORE MAP SCREEN  Digital Sanctuary
@@ -314,6 +316,18 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
   const [showOnboarding, setShowOnboarding] = useState(() => nodes.length === 0 && !hasSeenOnboarding() && !journeyMode);
   const lastAddedNode = lastAddedNodeId ? nodes.find((node) => node.id === lastAddedNodeId) ?? null : null;
 
+  // --- Viral Loop Integration ---
+  useEffect(() => {
+    if (user?.email) {
+      void syncReferralToSupabase(user.email);
+    }
+  }, [user?.email]);
+
+  const showViralNudge = useMemo(() => {
+    // Show nudge once user has 4+ nodes (milestone reached)
+    return nodes.length >= 4 && !showOnboarding && !journeyMode;
+  }, [nodes.length, showOnboarding, journeyMode]);
+
   /*  Dashboard Widget  */
   const [showDashboard, setShowDashboard] = useState(false);
   const [voiceTrigger, setVoiceTrigger] = useState<{
@@ -555,6 +569,8 @@ export const CoreMapScreen: FC<CoreMapScreenProps> = ({
         }} />
       </div>
       <SovereignBroadcastOverlay message={sovereignMessage} />
+      
+      {showViralNudge && <ViralLoopNudge />}
 
       {/* Harmony Indicator: Collective resonance line */}
       <motion.div

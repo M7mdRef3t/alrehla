@@ -15,6 +15,8 @@ const supabase =
           })
         : null;
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
     try {
         if (!supabase) {

@@ -81,3 +81,25 @@ __*
 dir_out.txt
 netstat_out.txt
 netstat_check.txt
+
+# Local root artifacts
+*.err.log
+*.out.log
+build-*.log
+tsc-check.log
+ts_errors.txt
+lint-report.json
+verification-results.txt
+stress-test-output.txt
+sessions.txt
+extracted_text.txt
+lighthouse-report.html
+advanced_profile.html
+personal_notes.html
+user_profile.html
+hero_from_main.tsx
+apply_hero_redesign.py
+final_hero_upgrade.py
+final_landing_fix.py
+repair_landing.py
+landing-hero-*.png

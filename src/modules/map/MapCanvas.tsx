@@ -299,6 +299,7 @@ interface NodeProps {
 const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, canOpenDetails = true, justDraggedId, justAdded, isHighlighted, isTouchDevice = false, reduceMotion = false, isSovereign = false }) => {
   const [showDelete, setShowDelete] = useState(false);
   const [pulseDone, setPulseDone] = useState(false);
+  const [isExploding, setIsExploding] = useState(false);
   const archiveNode = useMapState((s) => s.archiveNode);
 
   useEffect(() => {
@@ -338,9 +339,28 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   const handleDelete = useCallback((e?: React.MouseEvent | any) => {
     if (e?.preventDefault) e.preventDefault();
     if (e?.stopPropagation) e.stopPropagation();
-    const ok = typeof window === "undefined" ? true : window.confirm(`تأكيد: خرّج "${node.label}" من المدار\nتتحفظ في "أشخاص مشافين" وتقدر ترجعها لو احتجت.`);
-    if (!ok) return;
-    archiveNode(node.id);
+    
+    // إزالة التركيز النشط لتفادي تجميد المتصفح للإطار الأبيض الدخيل عند اللمس/النقر
+    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    // السماح للمتصفح بمسح تأثيرات اللمس (Tap Highlight / Focus) قبل إيقاف الخيط بـ window.confirm
+    setTimeout(() => {
+      const ok = typeof window === "undefined" ? true : window.confirm(`تأكيد: خرّج "${node.label}" من المدار\nتتحفظ في "أشخاص مشافين" وتقدر ترجعها لو احتجت.`);
+      if (!ok) return;
+      
+      setIsExploding(true);
+      if (soundManager.playEffect) {
+        soundManager.playEffect("cosmic_pulse");
+      } else {
+        soundManager.playRadarPing();
+      }
+      
+      setTimeout(() => {
+        archiveNode(node.id);
+      }, 700);
+    }, 10);
   }, [archiveNode, node.id, node.label]);
 
   const blockDeletePointer = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
@@ -393,7 +413,15 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
 
   return (
     <motion.div
-      style={style}
+      className="outline-none focus:outline-none focus-visible:outline-none"
+      style={{
+        ...style,
+        filter: isExploding ? "brightness(3) contrast(2) blur(8px) url(#vampireDistortion)" : isVampire ? "url(#vampireDistortion)" : undefined,
+        pointerEvents: isExploding ? "none" : "auto",
+        WebkitTapHighlightColor: "transparent",
+      }}
+      animate={isExploding ? { scale: 2, opacity: 0 } : undefined}
+      transition={isExploding ? { duration: 0.6, ease: "easeOut" } : undefined}
       onMouseEnter={() => setShowDelete(true)}
       onMouseLeave={() => setShowDelete(false)}
     >
@@ -479,7 +507,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
           // onTap is only triggered if it's not a drag
           handleClick();
         }}
-        className={`relative z-10 select-none flex items-center gap-1 pr-1.5 transition-all rounded-full overflow-hidden cursor-pointer ${
+        className={`relative z-10 select-none flex items-center gap-1 pr-1.5 transition-all rounded-full overflow-hidden cursor-pointer outline-none focus:outline-none focus-visible:outline-none ${
           isDragging ? "opacity-90 scale-[1.04] shadow-[0_24px_60px_rgba(0,0,0,0.95)]" : ""
         } ${isDetached ? "opacity-40 grayscale-[70%] saturate-50" : ""} ${hasMismatch ? "!border-amber-400/60" : ""}`}
         style={{
@@ -663,10 +691,11 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
             type="button"
             onTap={handleDelete}
             onPointerDown={blockDeletePointer}
-            className="absolute -top-3 -right-3 min-w-11 min-h-11 w-11 h-11 rounded-full flex items-center justify-center z-30 pointer-events-auto"
+            className="absolute -top-3 -right-3 min-w-11 min-h-11 w-11 h-11 rounded-full flex items-center justify-center z-30 pointer-events-auto outline-none focus:outline-none focus-visible:outline-none"
             style={{
               background: "linear-gradient(135deg, #94a3b8, #64748b)",
-              boxShadow: "0 0 14px rgba(0, 0, 0, 0.4)"
+              boxShadow: "0 0 14px rgba(0, 0, 0, 0.4)",
+              WebkitTapHighlightColor: "transparent"
             }}
             title="خرّج من المدار (نقل للمشافين)"
             initial={{ scale: 0, opacity: 0 }}
@@ -1551,44 +1580,70 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   <stop offset="0%" stopColor="rgba(45,212,191,0.3)" />
                   <stop offset="100%" stopColor="transparent" />
                 </radialGradient>
-                {/* ── Enhanced Neon Glow Filters ── */}
-                <filter id="neonGlowRed" x="-60%" y="-60%" width="220%" height="220%">
-                  <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                  <feFlood floodColor="#F43F5E" floodOpacity="0.8" result="glowColor" />
+                {/* ── Sovereign Fluid Dynamics & Glitch Filters ── */}
+                
+                {/* Organic Gooey Filter for safe/yellow nodes */}
+                <filter id="organicGoo" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+                  <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
+                  <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+                </filter>
+
+                {/* Vampire Corruption / Distortion Filter */}
+                <filter id="vampireDistortion" x="-200%" y="-200%" width="500%" height="500%">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" result="noise" />
+                  <feColorMatrix type="matrix" values="1 0 0 0 0  0 0.1 0 0 0  0 0.1 0 0 0  0 0 0 1.5 0" in="noise" result="coloredNoise" />
+                  <feDisplacementMap in="SourceGraphic" in2="coloredNoise" scale="12" xChannelSelector="R" yChannelSelector="B" result="displaced" />
+                  <feGaussianBlur stdDeviation="1.5" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+
+                {/* ── Enhanced Organic Neon Glows ── */}
+                <filter id="neonGlowRed" x="-100%" y="-100%" width="300%" height="300%">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" result="smoke" />
+                  <feDisplacementMap in="SourceGraphic" in2="smoke" scale="5" xChannelSelector="R" yChannelSelector="G" result="wobbly" />
+                  <feGaussianBlur stdDeviation="5" result="coloredBlur" />
+                  <feFlood floodColor="#E11D48" floodOpacity="0.8" result="glowColor" />
                   <feComposite in="glowColor" in2="coloredBlur" operator="in" result="glow" />
                   <feMerge>
                     <feMergeNode in="glow" />
-                    <feMergeNode in="SourceGraphic" />
+                    <feMergeNode in="wobbly" />
                   </feMerge>
                 </filter>
-                <filter id="neonGlowWarning" x="-60%" y="-60%" width="220%" height="220%">
-                  <feGaussianBlur stdDeviation="3.5" result="coloredBlur" />
-                  <feFlood floodColor="#FBBF24" floodOpacity="0.7" result="glowColor" />
-                  <feComposite in="glowColor" in2="coloredBlur" operator="in" result="glow" />
-                  <feMerge>
-                    <feMergeNode in="glow" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-                <filter id="neonGlowSafe" x="-60%" y="-60%" width="220%" height="220%">
+                
+                <filter id="neonGlowWarning" x="-100%" y="-100%" width="300%" height="300%">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="2" result="smoke" />
+                  <feDisplacementMap in="SourceGraphic" in2="smoke" scale="3" xChannelSelector="R" yChannelSelector="G" result="wobbly" />
                   <feGaussianBlur stdDeviation="4.5" result="coloredBlur" />
-                  <feFlood floodColor="#2DD4BF" floodOpacity="0.85" result="glowColor" />
+                  <feFlood floodColor="#F59E0B" floodOpacity="0.75" result="glowColor" />
+                  <feComposite in="glowColor" in2="coloredBlur" operator="in" result="glow" />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="wobbly" />
+                  </feMerge>
+                </filter>
+                
+                <filter id="neonGlowSafe" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="coloredBlur" />
+                  <feFlood floodColor="#0D9488" floodOpacity="0.8" result="glowColor" />
                   <feComposite in="glowColor" in2="coloredBlur" operator="in" result="glow" />
                   <feMerge>
                     <feMergeNode in="glow" />
                     <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
+                
                 {/* Center mega glow */}
                 <filter id="centerMegaGlow" x="-100%" y="-100%" width="300%" height="300%">
-                  <feGaussianBlur stdDeviation="5" result="blur" />
-                  <feFlood floodColor="#2DD4BF" floodOpacity="0.5" result="glowColor" />
+                  <feGaussianBlur stdDeviation="6" result="blur" />
+                  <feFlood floodColor="#2DD4BF" floodOpacity="0.6" result="glowColor" />
                   <feComposite in="glowColor" in2="blur" operator="in" result="glow" />
                   <feMerge>
                     <feMergeNode in="glow" />
                     <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
+                
                 {/* Universal soft glow */}
                 <filter id="cosmicGlow" x="-50%" y="-50%" width="200%" height="200%">
                   <feGaussianBlur stdDeviation="2.5" result="blur" />

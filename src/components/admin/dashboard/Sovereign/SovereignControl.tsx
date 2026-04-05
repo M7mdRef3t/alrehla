@@ -1,13 +1,25 @@
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Sparkles, Send, Zap, Wind, AlertCircle, Users, Activity, ShieldAlert, History } from "lucide-react";
+import { Shield, Sparkles, Send, Zap, Wind, AlertCircle, Users, Activity, ShieldAlert, History, Radio, TrendingUp } from "lucide-react";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 import { supabase, isSupabaseReady } from "../../../../services/supabaseClient";
 import { fetchOverviewStats, fetchAlertIncidents, fetchBroadcasts, type OverviewStats, type AlertIncident } from "../../../../services/adminApi";
 import { useAdminState, type AdminBroadcast } from "../../../../state/adminState";
 import { CollapsibleSection } from "../../ui/CollapsibleSection";
 import { IllusionRadar } from "./IllusionRadar";
+import { SovereignSpreadCommand } from "./SovereignSpreadCommand";
+
+const CirclePulseIcon: FC<{ className?: string }> = ({ className }) => (
+  <div className={`relative ${className}`}>
+    <motion.div
+      animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+      transition={{ duration: 2, repeat: Infinity }}
+      className="absolute inset-0 bg-current rounded-full blur-md opacity-20"
+    />
+    <Radio className="relative z-10 w-full h-full" />
+  </div>
+);
 
 export const SovereignControl: FC = () => {
   const [harmonyOverride, setHarmonyOverride] = useState<number>(0.8);
@@ -213,51 +225,113 @@ export const SovereignControl: FC = () => {
         defaultExpanded={true}
         headerColors="border-emerald-500/20 bg-emerald-500/5 text-emerald-400"
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-          <div className="bg-slate-900/40 border border-white/5 p-5 rounded-2xl backdrop-blur-xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Users className="w-12 h-12 text-teal-400" />
+        <div className="flex flex-col lg:flex-row gap-8 pt-2">
+          {/* Main Sovereign Orb */}
+          <div className="lg:w-1/3 flex flex-col items-center justify-center p-8 hud-glass rounded-3xl border-emerald-500/20 transition-all group relative">
+            <div className="hud-edge-accent top-2 right-2" />
+            <div className="hud-edge-accent bottom-2 left-2" />
+            
+            <div className="relative mb-6">
+              <motion.div 
+                animate={{ 
+                  scale: isLoadingPulse ? 0.8 : [1, 1.1, 1],
+                  opacity: isLoadingPulse ? 0.5 : [0.8, 1, 0.8]
+                }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                className={`w-32 h-32 rounded-full blur-2xl absolute inset-0 -z-10 ${
+                  incidents && incidents.length > 0 ? "bg-rose-500/40" : "bg-emerald-500/40"
+                }`}
+              />
+              <div className={`w-32 h-32 rounded-full border-2 flex items-center justify-center relative overflow-hidden backdrop-blur-sm shadow-2xl ${
+                incidents && incidents.length > 0 ? "border-rose-500/50" : "border-emerald-500/50"
+              }`}>
+                <div className={`absolute inset-0 animate-system-pulse ${
+                  incidents && incidents.length > 0 ? "bg-gradient-to-t from-rose-600/20 to-transparent" : "bg-gradient-to-t from-emerald-600/20 to-transparent"
+                }`} />
+                <CirclePulseIcon className={`w-12 h-12 ${incidents && incidents.length > 0 ? "text-rose-400" : "text-emerald-400"}`} />
+              </div>
             </div>
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">أرواح متصلة الآن</p>
-              <AdminTooltip content="عدد كل الزوار والمستخدمين النشطين داخل الملاذ في اللحظة دي." position="bottom" />
+
+            <div className="text-center space-y-1">
+              <h3 className="text-sm font-black text-white uppercase tracking-widest">تردد السيادة</h3>
+              <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${incidents && incidents.length > 0 ? "text-rose-400" : "text-emerald-400"}`}>
+                {incidents && incidents.length > 0 ? "تداخل حرج (Critical)" : "متناغم (Harmonious)"}
+              </p>
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black text-white tabular-nums">
-                {isLoadingPulse ? "..." : (liveStats?.activeNow ?? 0).toLocaleString("ar-EG")}
-              </span>
-              <span className="text-[10px] text-teal-500 font-bold animate-pulse">LIVE</span>
-            </div>
+
+            <button 
+              onClick={() => {
+                setIsLoadingPulse(true);
+                setTimeout(() => setIsLoadingPulse(false), 1500);
+              }}
+              disabled={isLoadingPulse}
+              className="mt-6 w-full py-2.5 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black text-slate-400 hover:text-white hover:bg-emerald-500/20 hover:border-emerald-500/30 transition-all uppercase tracking-widest flex items-center justify-center gap-2 group/btn"
+            >
+              <Zap className="w-3 h-3 group-hover/btn:animate-bounce" />
+              فحص نبض الاستقرار
+            </button>
           </div>
 
-          <div className="bg-slate-900/40 border border-white/5 p-5 rounded-2xl backdrop-blur-xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Activity className="w-12 h-12 text-amber-400" />
+          {/* Stats Grid */}
+          <div className="lg:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="hud-glass p-5 rounded-2xl relative overflow-hidden group border-white/5">
+              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Users className="w-12 h-12 text-teal-400" />
+              </div>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">أرواح متصلة الآن</p>
+                <AdminTooltip content="عدد كل الزوار والمستخدمين النشطين داخل الملاذ في اللحظة دي." position="bottom" />
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-black text-white tabular-nums">
+                  {isLoadingPulse ? "..." : (liveStats?.activeNow ?? 0).toLocaleString("ar-EG")}
+                </span>
+                <span className="text-[10px] text-teal-500 font-bold animate-pulse">LIVE</span>
+              </div>
             </div>
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">مؤشر الصفاء الجماعي</p>
-              <AdminTooltip content="متوسط تقييم المزاج لكل المستخدمين دلوقتي. مؤشر حي على صحة المجتمع ككل." position="bottom" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black text-white tabular-nums">
-                {isLoadingPulse ? "..." : (liveStats?.avgMood ?? 0).toFixed(1)}
-              </span>
-              <span className="text-[10px] text-amber-500 font-bold">HARMONY</span>
-            </div>
-          </div>
 
-          <div className={`bg-slate-900/40 border p-5 rounded-2xl backdrop-blur-xl relative overflow-hidden group transition-colors ${incidents && incidents.length > 0 ? "border-rose-500/30 bg-rose-500/5" : "border-white/5"}`}>
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-              <ShieldAlert className={`w-12 h-12 ${incidents && incidents.length > 0 ? "text-rose-400" : "text-emerald-400"}`} />
+            <div className="hud-glass p-5 rounded-2xl relative overflow-hidden group border-white/5">
+              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Activity className="w-12 h-12 text-amber-400" />
+              </div>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">مؤشر الصفاء الجماعي</p>
+                <AdminTooltip content="متوسط تقييم المزاج لكل المستخدمين دلوقتي. مؤشر حي على صحة المجتمع ككل." position="bottom" />
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-black text-white tabular-nums">
+                  {isLoadingPulse ? "..." : (liveStats?.avgMood ?? 0).toFixed(1)}
+                </span>
+                <span className="text-[10px] text-amber-500 font-bold">HARMONY</span>
+              </div>
             </div>
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">حالة استقرار الملاذ</p>
-              <AdminTooltip content="لو تم الكشف عن طفرات سلبية حادة أو محاولات تخريب للمجتمع، هتتحول لإنذار أحمر طارئ هنا فوراً." position="bottom" />
+
+            <div className={`hud-glass p-5 rounded-2xl relative overflow-hidden group transition-colors border-white/5 ${incidents && incidents.length > 0 ? "border-rose-500/30" : "border-emerald-500/20"}`}>
+              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <ShieldAlert className={`w-12 h-12 ${incidents && incidents.length > 0 ? "text-rose-400" : "text-emerald-400"}`} />
+              </div>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">حالة استقرار الملاذ</p>
+                <AdminTooltip content="لو تم الكشف عن طفرات سلبية حادة أو محاولات تخريب للمجتمع، هتتحول لإنذار أحمر طارئ هنا فوراً." position="bottom" />
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className={`text-xl font-black uppercase ${incidents && incidents.length > 0 ? "text-rose-400" : "text-emerald-400"}`}>
+                  {isLoadingPulse ? "..." : (incidents && incidents.length > 0 ? "تنبيه حرج" : "مستقر جداً")}
+                </span>
+              </div>
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className={`text-xl font-black uppercase ${incidents && incidents.length > 0 ? "text-rose-400" : "text-emerald-400"}`}>
-                {isLoadingPulse ? "..." : (incidents && incidents.length > 0 ? "تنبيه حرج" : "مستقر جداً")}
-              </span>
+
+            <div className="hud-glass p-5 rounded-2xl relative overflow-hidden group border-white/5 bg-indigo-500/5">
+              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Sparkles className="w-12 h-12 text-indigo-400" />
+              </div>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">كفاءة الرنين</p>
+                <AdminTooltip content="مدى اتساق تفاعل المستخدمين مع محتوى الرحلة." position="bottom" />
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xl font-black text-indigo-300 uppercase tracking-tighter">عالي الوضوح</span>
+              </div>
             </div>
           </div>
         </div>
@@ -265,6 +339,17 @@ export const SovereignControl: FC = () => {
 
       {/* Illusion & Dissonance Radar */}
       <IllusionRadar scenarios={liveStats?.topScenarios ?? null} isLoading={isLoadingPulse} />
+
+      {/* Sovereign Spread & Diffusion Control */}
+      <CollapsibleSection
+        title="إدارة الانتشار والنمو (Spread & Diffusion)"
+        icon={<TrendingUp className="w-4 h-4 text-indigo-400" />}
+        subtitle="مراقبة السرعة الفيروسية وحوافز النمو"
+        defaultExpanded={false}
+        headerColors="border-indigo-500/20 bg-indigo-500/5 text-indigo-400"
+      >
+        <SovereignSpreadCommand />
+      </CollapsibleSection>
 
       {/* Harmony Control */}
       <CollapsibleSection

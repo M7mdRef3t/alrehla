@@ -3,7 +3,7 @@ import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Zap, Shield, Heart, Flame, Brain, DoorOpen,
-  ArrowRight, Copy, Check, BookOpen, ChevronLeft, Sparkles
+  ArrowRight, Copy, Check, BookOpen, ChevronLeft, Sparkles, Wind
 } from "lucide-react";
 import {
   SITUATION_LABELS,

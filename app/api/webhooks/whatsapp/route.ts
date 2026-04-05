@@ -13,10 +13,14 @@ export async function GET(request: Request) {
   const token = searchParams.get("hub.verify_token");
   const challenge = searchParams.get("hub.challenge");
 
-  const WEBHOOK_VERIFY_TOKEN = process.env.WHATSAPP_WEBHOOK_SECRET || "alrehla_whatsapp_secret_2024";
+  const webhookVerifyToken = String(process.env.WHATSAPP_WEBHOOK_SECRET || "").trim();
+  if (!webhookVerifyToken) {
+    console.error("[WhatsApp Webhook] Verification secret is not configured.");
+    return NextResponse.json({ error: "Webhook verification is not configured" }, { status: 503 });
+  }
 
   if (mode && token) {
-    if (mode === "subscribe" && token === WEBHOOK_VERIFY_TOKEN) {
+    if (mode === "subscribe" && token === webhookVerifyToken) {
       console.log("[WhatsApp Webhook] Verification successful.");
       return new NextResponse(challenge, { status: 200 });
     } else {

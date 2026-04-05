@@ -1,6 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
 
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_PRO_API_KEY || "" });
+let genAI: GoogleGenAI | null = null;
+
+function getGenAI(): GoogleGenAI {
+    if (genAI) return genAI;
+
+    const apiKey = process.env.GEMINI_PRO_API_KEY || "";
+    if (!apiKey) {
+        throw new Error("GEMINI_PRO_API_KEY is not configured");
+    }
+
+    genAI = new GoogleGenAI({ apiKey });
+    return genAI;
+}
 
 
 export type VoiceEvent = 'shadow_insight' | 'milestone_unlocked' | 'high_impact_action';
@@ -27,7 +39,7 @@ export async function generateVoiceScript(event: VoiceEvent, context: any): Prom
     `;
 
     try {
-    const result = await genAI.models.generateContent({
+    const result = await getGenAI().models.generateContent({
       model: "gemini-1.5-flash",
       contents: prompt,
     });

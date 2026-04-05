@@ -1,9 +1,17 @@
 import { createHmac } from "crypto";
 
-const UNSUB_SECRET = process.env.UNSUB_SECRET || process.env.CRON_SECRET || "default_unsub_secret";
+function getUnsubSecret(): string | null {
+  const secret = process.env.UNSUB_SECRET || "";
+  return secret.trim() || null;
+}
 
 export function buildUnsubToken(leadId: string, email: string): string {
-  return createHmac("sha256", UNSUB_SECRET)
+  const secret = getUnsubSecret();
+  if (!secret) {
+    throw new Error("UNSUB_SECRET is not configured");
+  }
+
+  return createHmac("sha256", secret)
     .update(`${leadId}::${email}`)
     .digest("hex")
     .slice(0, 32);

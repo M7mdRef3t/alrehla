@@ -1,5 +1,6 @@
-import { GoogleGenerativeAI, FunctionDeclaration, SchemaType } from "@google/generative-ai";
+import { FunctionDeclaration, SchemaType } from "@google/generative-ai";
 import { createClient } from "@supabase/supabase-js";
+import { getClient as getGeminiClient } from "../gemini/_shared";
 
 function buildClient() {
   return createClient(
@@ -8,8 +9,6 @@ function buildClient() {
     { auth: { persistSession: false } }
   );
 }
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 const tools: any[] = [{
     functionDeclarations: [
@@ -66,7 +65,8 @@ export async function handleCopilot(req: any, res: any) {
             return res.status(400).json({ error: "Missing or invalid messages array." });
         }
 
-        if (!process.env.GEMINI_API_KEY) {
+        const genAI = getGeminiClient();
+        if (!genAI) {
             return res.status(503).json({ error: "AI Engine is offline (Missing API Key)." });
         }
 

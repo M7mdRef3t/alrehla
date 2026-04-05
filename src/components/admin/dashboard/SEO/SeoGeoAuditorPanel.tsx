@@ -102,7 +102,7 @@ export function SeoGeoAuditorPanel() {
           <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">
             <p className="font-semibold">Auto-fix applied: {autofixResult.appliedCount}</p>
             <ul className="mt-1 space-y-1">
-              {autofixResult.fixes.map((fix) => (
+              {(autofixResult.fixes ?? []).map((fix) => (
                 <li key={fix.key}>{fix.key}: {fix.message}</li>
               ))}
             </ul>

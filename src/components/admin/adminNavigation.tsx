@@ -55,6 +55,7 @@ export type AdminTab =
   | "war-room"
   | "dawayir-live"
   | "ad-analytics"
+  | "expansion-hub"
   | "marketing-ops";
 
 export type NavGroup = {
@@ -117,7 +118,8 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: "التوسع التجاري",
     items: [
-      { id: "b2b-analytics", label: "تحليلات B2B", icon: <ShieldCheck className="w-4 h-4" /> },
+      { id: "expansion-hub", label: "إستراتيجية التوسع", icon: <Rocket className="w-4 h-4 text-rose-400" /> },
+      { id: "b2b-analytics", label: "تحليلات B2B", icon: <ShieldCheck className="w-4 h-4 text-indigo-400" /> },
       { id: "sales-enablement", label: "تمكين النمو", icon: <Briefcase className="w-4 h-4 text-emerald-400" /> },
       { id: "marketing-ops", label: "إدارة الانتشار", icon: <Rocket className="w-4 h-4 text-rose-400" /> },
       { id: "ai-marketing", label: "تسويق الوعي", icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
@@ -162,6 +164,7 @@ export const CLEAN_NAV_LABELS: Record<AdminTab, string> = {
   "dawayir-live": "دواير لايف",
   "ad-analytics": "تحليلات الإعلانات",
   "marketing-ops": "إدارة الانتشار",
+  "expansion-hub": "إستراتيجية التوسع",
   sovereign: "مركز السيادة الإدراكية"
 };
 
@@ -199,5 +202,6 @@ export const NAV_TOOLTIPS: Record<AdminTab, string> = {
   "repo-intel": "ذكاء المستودع: نظرة مكشوفة لكود المنصة والتغيرات البرمجية من داخل اللوحة مباشرة.",
   "dawayir-live": "دواير لايف: مراقبة النشاط المباشر والتفاعل اللحظي واللقاءات الحية للزوار.",
   "ad-analytics": "تحليلات الإعلانات: حساب العائد من الإنفاق المباشر ونسب التحويل المؤكدة.",
-  "marketing-ops": "إدارة الانتشار: حملات البريد الإلكتروني، إدارة الإشعارات، والرسائل الترويجية."
+  "marketing-ops": "إدارة الانتشار: حملات البريد الإلكتروني، إدارة الإشعارات، والرسائل الترويجية.",
+  "expansion-hub": "إستراتيجية التوسع: تحليل القوة الشرائية العالمية مقابل نقاط الألم النفسية لتحديد الأسواق المحتملة."
 };

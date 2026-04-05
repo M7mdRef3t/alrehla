@@ -1,0 +1,139 @@
+"use client";
+
+import React, { Suspense, useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { v4 as uuidv4 } from 'uuid';
+
+import RadarBackground from '@/components/gate/RadarBackground';
+import LayerOneForm from '@/components/gate/LayerOneForm';
+import LayerTwoQualifier from '@/components/gate/LayerTwoQualifier';
+import { trackGateEventPixelOnly } from '@/lib/analytics/eventTracker';
+import type { GateState } from '@/lib/gate/types';
+
+function MarketingGateContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const [state, setState] = useState<GateState>({
+    sessionId: '',
+    step: 'layer1',
+    sourceArea: '',
+    email: '',
+  });
+
+  const initialized = useRef(false);
+  const gateStartedTracked = useRef(false);
+
+  // Initialize Session
+  useEffect(() => {
+    if (!initialized.current) {
+      const newSessionId = uuidv4();
+      setState(s => ({ ...s, sessionId: newSessionId }));
+      
+      // Tracking PageView/ViewContent
+      trackGateEventPixelOnly('ViewContent', { external_id: newSessionId });
+      initialized.current = true;
+    }
+  }, []);
+
+  const getUtmPayload = () => ({
+    utm_source: searchParams?.get('utm_source') ?? null,
+    utm_medium: searchParams?.get('utm_medium') ?? null,
+    utm_campaign: searchParams?.get('utm_campaign') ?? null,
+    utm_content: searchParams?.get('utm_content') ?? null,
+    utm_term: searchParams?.get('utm_term') ?? null,
+    fbclid: searchParams?.get('fbclid') ?? null,
+  });
+
+  // Layer 1 Handlers
+  const handleLayer1Change = (field: string, value: string) => {
+    setState(s => ({ ...s, [field]: value }));
+    
+    if (!gateStartedTracked.current) {
+      gateStartedTracked.current = true;
+      trackGateEventPixelOnly('GateStarted', { external_id: state.sessionId });
+    }
+  };
+
+  const handleLayer1Submit = async () => {
+    if (!state.email || !state.sourceArea) return;
+    
+    // Pixel Fire
+    const eventId = trackGateEventPixelOnly('Lead', { external_id: state.sessionId });
+    
+    // Backend Idempotent Fire & Record
+    const response = await fetch('/api/gate/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        step: 'layer1',
+        sessionId: state.sessionId,
+        eventId,
+        email: state.email,
+        sourceArea: state.sourceArea,
+        ...getUtmPayload()
+      })
+    });
+
+    if (response.ok) {
+      setState(s => ({ ...s, step: 'layer2' }));
+      trackGateEventPixelOnly('QualifierStarted', { external_id: state.sessionId });
+    }
+  };
+
+  // Layer 2 Handlers
+  const handleQualifierComplete = async (q1: string, q2: string, q3: string) => {
+    const finalState = { ...state, painPoint: q1, intent: q2, commitment: q3, step: 'handoff' as const };
+    
+    // Pixel Fire
+    const eventId = trackGateEventPixelOnly('CompleteRegistration', { external_id: state.sessionId });
+    
+    // Backend Idempotent Fire & Record
+    const response = await fetch('/api/gate/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        step: 'layer2',
+        sessionId: finalState.sessionId,
+        eventId,
+        email: finalState.email, // Passing email to persist CAPI parameters server-side
+        painPoint: q1,
+        intent: q2,
+        commitment: q3
+      })
+    });
+
+    if (response.ok) {
+      // Clean Handoff: The frontend map will rely solely on gateSessionId in the URL
+      router.push(`/?gateSessionId=${finalState.sessionId}`);
+    }
+  };
+
+  const isLayer1Valid = !!(state.email && state.email.includes('@') && state.sourceArea);
+
+  return (
+    <main className="relative min-h-screen flex items-center justify-center p-4">
+      <RadarBackground />
+      {state.step === 'layer1' && (
+        <LayerOneForm 
+          sourceArea={state.sourceArea || ''}
+          email={state.email || ''}
+          onChange={handleLayer1Change}
+          onSubmit={handleLayer1Submit}
+          isValid={isLayer1Valid}
+        />
+      )}
+      {state.step === 'layer2' && (
+        <LayerTwoQualifier onComplete={handleQualifierComplete} />
+      )}
+    </main>
+  );
+}
+
+export default function MarketingGate() {
+  return (
+    <Suspense fallback={<main className="relative min-h-screen flex items-center justify-center p-4" />}>
+      <MarketingGateContent />
+    </Suspense>
+  );
+}

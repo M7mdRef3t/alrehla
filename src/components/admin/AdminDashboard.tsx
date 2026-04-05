@@ -95,6 +95,7 @@ const AdAnalyticsDashboard = lazy(() => import("./dashboard/AdAnalytics/AdAnalyt
 const SurveyResultsPanel = lazy(() => import("./dashboard/Data/SurveyResultsPanel").then(m => ({ default: m.SurveyResultsPanel })));
 const MarketingOpsPanel = lazy(() => import("./dashboard/MarketingOps/MarketingOpsPanel").then(m => ({ default: m.MarketingOpsPanel })));
 const SovereignPanel = lazy(() => import("./dashboard/Sovereign/SovereignControl").then(m => ({ default: m.SovereignControl })));
+const SovereignExpansionHub = lazy(() => import("./dashboard/Executive/SovereignExpansionHub").then(m => ({ default: m.SovereignExpansionHub })));
 const MapRegistryPanel = lazy(() => import("./dashboard/Content/MapRegistryPanel").then(m => ({ default: m.MapRegistryPanel })));
 
 const DataManagementModal = lazy(() => Promise.resolve({ default: DataManagement }));
@@ -582,6 +583,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                   </div>
                 )}
                 {effectiveTab === "marketing-ops" && <MarketingOpsPanel />}
+                {effectiveTab === "expansion-hub" && <SovereignExpansionHub />}
               </Suspense>
             </div>
           </div>
