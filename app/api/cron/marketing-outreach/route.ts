@@ -199,6 +199,37 @@ export async function GET(request: Request) {
   if (!supabase) {
     return NextResponse.json({ ok: false, error: "missing_supabase_config" }, { status: 503 });
   }
+
+  // ─── 0. Cleanup: Mark Sent emails as "Ignored" after 48h without interaction ───
+  try {
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+    
+    // 1. Update queue status
+    const { data: ignoredQueue } = await supabase
+      .from("marketing_lead_outreach_queue")
+      .update({ status: "ignored" })
+      .eq("status", "sent")
+      .is("opened_at", null)
+      .is("clicked_at", null)
+      .lte("sent_at", fortyEightHoursAgo)
+      .select("id, lead_id");
+
+    // 2. Update main leads email_status if applicable
+    if (ignoredQueue && ignoredQueue.length > 0) {
+      const leadIds = ignoredQueue.map(r => r.lead_id).filter(Boolean);
+      if (leadIds.length > 0) {
+        await supabase
+          .from("marketing_leads")
+          .update({ email_status: "ignored" })
+          .in("id", leadIds)
+          .eq("email_status", "sent"); // Only upgrade from sent to ignored
+      }
+      console.log(`[MarketingCron] 😴 Marked ${ignoredQueue.length} leads as ignored due to inactivity.`);
+    }
+  } catch (err) {
+    console.error("[MarketingCron] Ignored cleanup error:", err);
+  }
+
   const { searchParams } = new URL(request.url);
   const force = searchParams.get("force") === "true";
   const targetLeadId = searchParams.get("lead_id");

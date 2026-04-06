@@ -129,21 +129,26 @@ export const SovereignControl: FC = () => {
     const interval = setInterval(() => refreshData(true), 60_000);
 
     // Setup Supabase Real-time Channels
+    // Guard flag: prevents React Strict Mode's double-invoke from firing removeChannel
+    // on a subscription that hasn't been established yet (avoids "closed before established" warning).
+    let subscribed = false;
     subscription = supabase.channel('sovereign_live_pulse')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, () => {
-         refreshData(true);
+         if (subscribed) refreshData(true);
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'journey_events' }, () => {
-         // Optionally, add a slight debounce if journey_events are heavily spammed, 
-         // but for owner panel we want it live.
-         refreshData(true);
+         if (subscribed) refreshData(true);
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') subscribed = true;
+      });
 
     return () => {
+      subscribed = false;
       clearInterval(interval);
       if (subscription) {
         supabase?.removeChannel(subscription);
+        subscription = null;
       }
     };
   }, []);

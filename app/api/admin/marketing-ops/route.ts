@@ -554,5 +554,44 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, action: "mark_email_manual_sent" });
   }
 
+  if (body.action === "mark_bounced" && (body.leadId || body.leadEmail)) {
+    const supabase = buildClient();
+    const leadId = body.leadId;
+    const leadEmail = body.leadEmail?.toLowerCase().trim();
+
+    // 1. Get the target lead row
+    let query = supabase.from("marketing_leads").select("id, email, status, email_status");
+    if (leadId) query = query.eq("id", leadId);
+    else if (leadEmail) query = query.ilike("email", leadEmail);
+    
+    const { data: leadRow } = await query.maybeSingle();
+    if (!leadRow) {
+      return NextResponse.json({ ok: false, error: "lead_not_found" }, { status: 404 });
+    }
+
+    // 2. Update outreach queue
+    await supabase
+      .from("marketing_lead_outreach_queue")
+      .update({ 
+        status: "failed", 
+        last_error: "MANUAL_BOUNCE_REPORT", 
+        updated_at: new Date().toISOString() 
+      })
+      .eq("lead_id", leadRow.id)
+      .eq("channel", "email");
+
+    // 3. Update marketing_leads status
+    await supabase
+      .from("marketing_leads")
+      .update({ 
+        email_status: "bounced",
+        status: "bounced"
+      })
+      .eq("id", leadRow.id);
+
+    console.log(`[ManualBounce] 🚫 Lead marked as bounced: ${leadRow.email || leadRow.id}`);
+    return NextResponse.json({ ok: true, action: "mark_bounced" });
+  }
+
   return NextResponse.json({ ok: false, error: "unknown_action" }, { status: 400 });
 }

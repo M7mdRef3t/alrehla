@@ -76,13 +76,13 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
   const [lastFeelingAnswers, setLastFeelingAnswers] = useState<FeelingAnswers | null>(null);
   const [addedNodeId, setAddedNodeId] = useState<string | null>(null);
   const [pendingPlacement, setPendingPlacement] = useState<{ finalLabel: string; score: number; healthAnswers: FeelingAnswers } | null>(null);
-  const [quickAnswer1, setQuickAnswer1] = useState<QuickAnswer1 | null>("medium");
-  const [quickAnswer2, setQuickAnswer2] = useState<QuickAnswer2 | null>("medium");
+  const [quickAnswer1, setQuickAnswer1] = useState<QuickAnswer1 | null>(null);
+  const [quickAnswer2, setQuickAnswer2] = useState<QuickAnswer2 | null>(null);
   const [linkToParentId, setLinkToParentId] = useState<string | null>(null);
   const [linkRelationLabel, setLinkRelationLabel] = useState<string>("");
   const [customRelationLabel, setCustomRelationLabel] = useState<string>("");
   const [lastRealityAnswers, setLastRealityAnswers] = useState<RealityAnswers | null>(null);
-  const [isEmergency, setIsEmergency] = useState(false);
+  const [isEmergency, setIsEmergency] = useState<boolean | null>(null);
   const [showEncouragementHint, setShowEncouragementHint] = useState(false);
   const forcedCtaShownRef = useRef(false);
   const addNode = useMapState((s) => s.addNode);
@@ -132,7 +132,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
   const handleQuickQuestionsDone = (e: React.FormEvent) => {
     e.preventDefault();
     soundManager.playEffect("warp");
-    if (quickAnswer1 == null || quickAnswer2 == null) return;
+    if (quickAnswer1 == null || quickAnswer2 == null || isEmergency == null) return;
     if (addedNodeId) {
       useMapState.getState().updateNode(addedNodeId, {
         isEmergency: isEmergency,
@@ -178,11 +178,11 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
       realityAnswers: answers,
       isAnalyzing: false
     });
-    recordJourneyEvent("node_added", { ring, detachmentMode: detachmentMode ?? false, isEmergency: isEmergency ?? false, personLabel: finalLabel, nodeId: addedNodeId });
+    recordJourneyEvent("node_added", { ring, detachmentMode: detachmentMode ?? false, isEmergency: isEmergency === true, personLabel: finalLabel, nodeId: addedNodeId });
     trackEvent(AnalyticsEvents.PERSON_ADDED, {
       person_label: finalLabel,
       ring: ring,
-      is_emergency: isEmergency ?? false,
+      is_emergency: isEmergency === true,
       goal_id: goalId
     });
     if (nodes.filter(n => !n.isNodeArchived).length >= 2) {
@@ -254,17 +254,23 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
       aria-modal="true"
     >
       <motion.div
-        className="relative w-full max-w-2xl min-h-0 flex flex-col overflow-hidden text-slate-100 rounded-3xl px-6 py-8"
+        className={`relative w-full min-h-0 flex flex-col text-slate-100 ${step === "result" ? "" : "max-w-2xl overflow-hidden rounded-3xl px-6 py-8"}`}
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 10 }}
         transition={{ type: "spring", damping: 30, stiffness: 100, mass: 1.2 }}
         style={{
-          height: "min(92vh, fit-content)",
-          maxHeight: "92vh",
-          background: "linear-gradient(165deg, rgba(15,23,42,0.98) 0%, rgba(2,6,23,1) 100%)",
-          border: `1px solid ${dynamicBorder}`,
-          boxShadow: `0 40px 120px rgba(0,0,0,1), 0 0 0 1px rgba(255,255,255,0.02), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 100px ${dynamicGlow}`,
+          ...(step === "result" ? {
+            maxHeight: "100%",
+            height: "100%",
+            overflow: "hidden"
+          } : {
+            height: "min(92vh, fit-content)",
+            maxHeight: "92vh",
+            background: `linear-gradient(165deg, rgba(15,23,42,0.98) 0%, rgba(2,6,23,1) 100%)`,
+            border: `1px solid ${dynamicBorder}`,
+            boxShadow: `0 40px 120px rgba(0,0,0,1), 0 0 0 1px rgba(255,255,255,0.02), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 100px ${dynamicGlow}`,
+          })
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -419,7 +425,7 @@ export const AddPersonModal: FC<AddPersonModalProps> = ({
                 }
                 realityAnswers={lastRealityAnswers ?? undefined}
                 feelingAnswers={lastFeelingAnswers ?? undefined}
-                isEmergency={isEmergency}
+                isEmergency={isEmergency === true}
                 safetyAnswer={quickAnswer2 ?? undefined}
                 forcedGate={isForcedResultGate}
                 category={resolveAdviceCategory(goalId)}

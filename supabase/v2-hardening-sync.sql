@@ -29,7 +29,9 @@ CREATE INDEX IF NOT EXISTS routing_events_anonymous_id_idx
 ALTER TABLE public.marketing_leads 
   ADD COLUMN IF NOT EXISTS anonymous_id TEXT,
   ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id),
-  ADD COLUMN IF NOT EXISTS last_linked_at TIMESTAMPTZ;
+  ADD COLUMN IF NOT EXISTS last_linked_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS email_status TEXT DEFAULT 'none';
 
 CREATE INDEX IF NOT EXISTS marketing_leads_anonymous_id_idx 
   ON public.marketing_leads (anonymous_id) 
@@ -131,16 +133,8 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.link_anonymous_to_user(p_anonymous_id TEXT)
-RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE
-    v_res RECORD;
-BEGIN
-    IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Authentication required'; END IF;
-    SELECT * INTO v_res FROM public.link_identity_v2(p_anonymous_id, auth.uid());
-    RETURN jsonb_build_object('success', true, 'events_linked', v_res.updated_count, 'lead_linked', v_res.attribution_linked, 'linked_at', now());
-END;
-$$;
+-- NOTE: The graceful version of link_anonymous_to_user is defined below (line ~164).
+-- It returns success:false instead of RAISE EXCEPTION to prevent 400 errors.
 
 CREATE OR REPLACE FUNCTION public.trg_link_lead_identity_logic()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
@@ -158,6 +152,44 @@ $$;
 DROP TRIGGER IF EXISTS trg_link_lead_identity ON public.marketing_leads;
 CREATE TRIGGER trg_link_lead_identity BEFORE INSERT OR UPDATE OF anonymous_id ON public.marketing_leads
 FOR EACH ROW EXECUTE FUNCTION public.trg_link_lead_identity_logic();
+
+create or replace function public.link_anonymous_to_user(
+    p_anonymous_id text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_res record;
+    v_uid uuid;
+begin
+    v_uid := auth.uid();
+
+    -- Graceful exit: no auth session → return success:false, no exception
+    if v_uid is null then
+        return jsonb_build_object('success', false, 'reason', 'no_session');
+    end if;
+
+    -- Graceful exit: no anonymous_id provided
+    if p_anonymous_id is null or trim(p_anonymous_id) = '' then
+        return jsonb_build_object('success', false, 'reason', 'no_anonymous_id');
+    end if;
+
+    select * into v_res from public.link_identity_v2(p_anonymous_id, v_uid);
+
+    return jsonb_build_object(
+        'success', true,
+        'events_linked', v_res.updated_count,
+        'lead_linked', v_res.attribution_linked,
+        'linked_at', now()
+    );
+exception when others then
+    -- If link_identity_v2 fails for any reason, don't crash the client
+    return jsonb_build_object('success', false, 'reason', SQLERRM);
+end;
+$$;
 
 
 -- 4. Comprehensive Security & RLS Hardening (20260405190000)
@@ -281,3 +313,5 @@ SELECT CONCAT(a.path_id, '|', a.task_id), a.path_id, a.task_id, a.task_label, a.
   CASE WHEN a.starts > 0 THEN (a.completes::numeric / a.starts::numeric) ELSE 0::numeric END
 FROM agg_base a LEFT JOIN agg_latency l ON l.path_id = a.path_id AND l.task_id = a.task_id;
 $$;
+
+NOTIFY pgrst, 'reload schema';

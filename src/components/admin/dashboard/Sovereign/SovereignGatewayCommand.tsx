@@ -6,6 +6,12 @@ import {
 } from "lucide-react";
 import { growthEngine, type DiffusionMetrics } from "../../../../services/growthEngine";
 import { supabase, isSupabaseReady } from "../../../../services/supabaseClient";
+import { getAuthToken } from "../../../../state/authState";
+import { useAdminState } from "../../../../state/adminState";
+
+function getBearerToken(): string {
+  return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
+}
 
 export const AVAILABLE_GATEWAYS = [
   { id: 'meta', name: 'بوابة Meta', icon: Orbit, sourceKeys: ['meta_instant_form', 'meta', 'facebook', 'instagram'] },
@@ -44,12 +50,12 @@ export const SovereignGatewayCommand: FC<{ onFilterSelect: (f: any) => void, sta
   const [analyzing, setAnalyzing] = useState(false);
 
   const fetchOracle = async () => {
-    try { const r = await fetch("/api/admin/intelligence/oracle-leads"); const d = await r.json(); if (d.ok) setOracleStats(d); } catch(e) {}
+    try { const r = await fetch("/api/admin/intelligence/oracle-leads", { headers: { authorization: `Bearer ${getBearerToken()}` } }); const d = await r.json(); if (d.ok) setOracleStats(d); } catch(e) {}
   };
 
   const runOracle = async () => {
     setAnalyzing(true);
-    await fetch("/api/admin/intelligence/oracle-leads", { method: "POST", body: JSON.stringify({ batchSize: 20 }) });
+    await fetch("/api/admin/intelligence/oracle-leads", { method: "POST", headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` }, body: JSON.stringify({ batchSize: 20 }) });
     await fetchOracle();
     setAnalyzing(false);
   };
@@ -106,14 +112,29 @@ export const SovereignGatewayCommand: FC<{ onFilterSelect: (f: any) => void, sta
         {activeGateway && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="hud-glass p-10 rounded-[3.5rem] bg-slate-950/60 border-white/5">
              <div className="flex justify-between items-center mb-10">
-                <h4 className="text-2xl font-black text-white italic">{AVAILABLE_GATEWAYS.find(g => g.id === activeGateway)?.name}</h4>
+                <div className="flex items-center gap-4">
+                   <h4 className="text-2xl font-black text-white italic">{AVAILABLE_GATEWAYS.find(g => g.id === activeGateway)?.name}</h4>
+                   <button onClick={() => onFilterSelect({ type: "source", value: activeGateway })} className="px-4 py-2 bg-indigo-500/20 text-indigo-400 hover:bg-indigo-500/30 rounded-xl text-xs font-bold uppercase tracking-widest transition-all">فتح كل الأرواح</button>
+                </div>
                 <button onClick={() => setActiveGateway(null)} className="p-3 bg-white/5 rounded-xl text-slate-500 hover:text-white"><X className="w-6 h-6" /></button>
              </div>
              <div className="space-y-4">
                 {gatewayLeads.map((l: any) => (
-                   <div key={l.id} className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex justify-between items-center">
-                      <p className="text-sm font-bold text-white">{l.name || "SOUL"}</p>
-                      <button onClick={() => window.open(`https://wa.me/${l.phone?.replace(/\D/g, '')}`)} className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg"><Activity className="w-5 h-5" /></button>
+                   <div 
+                      key={l.id} 
+                      onClick={() => onFilterSelect({ type: "source", value: activeGateway, query: l.email || l.name || l.phone_normalized })}
+                      className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex justify-between items-center cursor-pointer hover:bg-white/[0.05] transition-all"
+                   >
+                      <div className="flex items-center gap-4">
+                         <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
+                            <Activity className="w-4 h-4 text-slate-400" />
+                         </div>
+                         <div>
+                            <p className="text-sm font-bold text-white mb-1">{l.name || "SOUL"}</p>
+                            <p className="text-[10px] text-slate-500 font-mono">{l.email || l.phone_normalized}</p>
+                         </div>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${l.phone?.replace(/\D/g, '')}`) }} className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg"><Activity className="w-5 h-5" /></button>
                    </div>
                 ))}
              </div>

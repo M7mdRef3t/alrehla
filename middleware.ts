@@ -73,10 +73,17 @@ export async function middleware(request: NextRequest) {
         const isSecretMatch = allowedSecrets.some((secret) => authHeader === `Bearer ${secret}`);
 
         if (!isSecretMatch) {
-            const hasBearer = authHeader.startsWith('Bearer ') && authHeader.length > 7;
-            if (!hasBearer) {
-                console.warn(`[Security Alert] Unauthorized Admin access attempt from IP: ${ip} on path: ${pathname}`);
-                return NextResponse.json({ error: 'Unauthorized Access' }, { status: 401 });
+            // Fallback: Allow if there's a Supabase auth session cookie (browser-side admin dashboard calls)
+            // The cookie name pattern is `sb-<ref>-auth-token` (can contain local IPs like 127-0-0-1)
+            const cookieHeader = request.headers.get('cookie') || '';
+            const hasSupabaseSession = /sb-[a-z0-9\-]+-auth-token/i.test(cookieHeader);
+
+            if (!hasSupabaseSession) {
+                const hasBearer = authHeader.startsWith('Bearer ') && authHeader.length > 7;
+                if (!hasBearer) {
+                    console.warn(`[Security Alert] Unauthorized Admin access attempt from IP: ${ip} on path: ${pathname}`);
+                    return NextResponse.json({ error: 'Unauthorized Access' }, { status: 401 });
+                }
             }
         }
     }

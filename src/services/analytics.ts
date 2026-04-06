@@ -414,12 +414,17 @@ export async function trackIdentityLinked(userId: string): Promise<void> {
     credentials: "same-origin"
   });
 
-  // 2) Database Bridge Link (Supabase RPC)
+  // 2) Database Bridge Link (Supabase RPC) — only call if session is confirmed active
   if (supabase) {
     try {
-      await supabase.rpc("link_anonymous_to_user", {
-        p_anonymous_id: anonymous_id
-      });
+      // Verify we have an active session before calling SECURITY DEFINER function
+      // to prevent 400 errors when auth.uid() is null due to timing
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.user?.id) {
+        await supabase.rpc("link_anonymous_to_user", {
+          p_anonymous_id: anonymous_id
+        });
+      }
     } catch (error) {
       if (runtimeEnv.isDev) {
         console.warn("[Analytics] Database identity bridge failed", error);

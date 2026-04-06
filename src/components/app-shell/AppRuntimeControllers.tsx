@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { hasCompletedJourneyOnboarding } from "../OnboardingFlow";
+import { hasCompletedJourneyOnboarding, markJourneyOnboardingDone } from "../OnboardingFlow";
 import { initThemePalette } from "../../services/themePalette";
 import { useAchievementState, getLibraryOpenedAt, getBreathingUsedAt } from "../../state/achievementState";
 import { useMapState } from "../../state/mapState";
@@ -95,6 +95,8 @@ export function AppRuntimeControllers({
   const notificationSupported = useNotificationState((state) => state.isSupported);
   const authUser = useAuthState((state) => state.user);
   const openOverlay = useAppOverlayState((state) => state.openOverlay);
+  const isMapHydrated = useMapState((state) => state.isHydrated);
+  const mapNodeCount = useMapState((state) => state.nodes.length);
 
   // P0: Capture UTM + lead attribution from URL on very first render
   // This ensures users arriving from ad campaigns are tracked before any navigation
@@ -274,8 +276,18 @@ export function AppRuntimeControllers({
     if (runtimeEnv.isDev) return;
     if (screen === "landing" || screen === "enterprise") return;
     if (hasCompletedJourneyOnboarding()) return;
+    
+    // Wait until map is hydrated before deciding on onboarding
+    if (!isMapHydrated) return;
+
+    // Suppress onboarding if user already has map nodes
+    if (mapNodeCount > 0) {
+      markJourneyOnboardingDone();
+      return;
+    }
+
     openOverlay("onboarding");
-  }, [openOverlay, screen]);
+  }, [openOverlay, screen, isMapHydrated, mapNodeCount]);
 
   useEffect(() => {
     if (runtimeEnv.isDev) return;

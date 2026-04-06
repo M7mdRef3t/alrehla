@@ -1,4 +1,5 @@
 import React, { FC, memo, useMemo, useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   DndContext, 
@@ -160,14 +161,25 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
   });
 
   const archiveNode = useMapState((s) => s.archiveNode);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const deleteClickedRef = React.useRef(false);
 
-  const handleDelete = useCallback((e?: any) => {
+  const handleDeleteClick = useCallback((e?: any) => {
     if (e?.preventDefault) e.preventDefault();
     if (e?.stopPropagation) e.stopPropagation();
-    const ok = typeof window === "undefined" ? true : window.confirm(`تأكيد: خرّج "${node.label}" من المدار؟`);
-    if (!ok) return;
+    deleteClickedRef.current = true;
+    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setShowConfirmDelete(true);
+    // Reset flag after a tick so normal clicks work again
+    setTimeout(() => { deleteClickedRef.current = false; }, 100);
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    setShowConfirmDelete(false);
     archiveNode(node.id);
-  }, [archiveNode, node.id, node.label]);
+  }, [archiveNode, node.id]);
 
   // Calculate base position if no drag is happening
   const radius = node.ring === "green" ? 15 : node.ring === "yellow" ? 27 : 38;
@@ -186,14 +198,16 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
   };
 
   return (
+    <>
     <motion.g 
       ref={setNodeRef as any} 
-      style={style} 
+      style={{ ...style, outline: "none", WebkitTapHighlightColor: "transparent" } as any}
       {...attributes} 
       {...listeners}
+      tabIndex={-1}
       className="cursor-grab active:cursor-grabbing"
       onTap={() => {
-        if (!isDragging) onClick(node);
+        if (!isDragging && !deleteClickedRef.current && !showConfirmDelete) onClick(node);
       }}
     >
       <EntropyGlow x={baseX} y={baseY} level={entropyLevel} />
@@ -266,7 +280,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
 
       {/* Delete Button */}
       <motion.g
-        onTap={handleDelete}
+        onTap={handleDeleteClick}
         className="cursor-pointer"
         initial={{ opacity: 0, scale: 0 }}
         whileHover={{ scale: 1.2 }}
@@ -276,6 +290,102 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
         <X x={baseX - 5} y={baseY - 5} width={2} height={2} className="text-white" />
       </motion.g>
     </motion.g>
+
+    {/* Custom Delete Confirmation Modal — Portal to body */}
+    {showConfirmDelete && createPortal(
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "rgba(5,8,20,0.75)",
+          backdropFilter: "blur(8px)",
+        }}
+        onClick={() => setShowConfirmDelete(false)}
+      >
+        <div
+          style={{
+            margin: "0 1rem",
+            width: "100%",
+            maxWidth: "20rem",
+            borderRadius: "1rem",
+            padding: "1.25rem",
+            textAlign: "right",
+            background: "linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95))",
+            border: "1px solid rgba(244,63,94,0.25)",
+            boxShadow: "0 0 40px rgba(244,63,94,0.15), 0 20px 60px rgba(0,0,0,0.6)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.75rem" }}>
+            <div
+              style={{
+                width: "3rem",
+                height: "3rem",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(244,63,94,0.12)",
+                border: "1.5px solid rgba(244,63,94,0.3)",
+              }}
+            >
+              <X style={{ width: "1.25rem", height: "1.25rem", color: "#f43f5e" }} />
+            </div>
+          </div>
+          <p style={{ fontSize: "0.875rem", fontWeight: 700, marginBottom: "0.25rem", color: "#e2e8f0" }}>
+            خرّج "{node.label}" من المدار؟
+          </p>
+          <p style={{ fontSize: "0.75rem", marginBottom: "1.25rem", color: "#94a3b8" }}>
+            هيتحفظ في "أشخاص مشافين" وتقدر تعيده لو احتجت.
+          </p>
+          <div style={{ display: "flex", gap: "0.5rem", flexDirection: "row-reverse" }}>
+            <button
+              type="button"
+              onClick={handleConfirmDelete}
+              style={{
+                flex: 1,
+                padding: "0.625rem",
+                borderRadius: "0.75rem",
+                fontSize: "0.875rem",
+                fontWeight: 700,
+                background: "linear-gradient(135deg, #f43f5e, #e11d48)",
+                color: "#fff",
+                border: "none",
+                outline: "none",
+                cursor: "pointer",
+                boxShadow: "0 0 16px rgba(244,63,94,0.3)",
+              }}
+            >
+              موافق
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowConfirmDelete(false)}
+              style={{
+                flex: 1,
+                padding: "0.625rem",
+                borderRadius: "0.75rem",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                background: "rgba(255,255,255,0.06)",
+                color: "#94a3b8",
+                border: "1px solid rgba(255,255,255,0.1)",
+                outline: "none",
+                cursor: "pointer",
+              }}
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 });
 

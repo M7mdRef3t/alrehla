@@ -1,6 +1,6 @@
 import type { FC } from "react";
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { feelingCopy } from "../copy/feeling";
 import { EditableText } from "./EditableText";
 import { getOptionButtonClass, impactTier } from "../utils/optionColors";
@@ -28,13 +28,18 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
   onDone
 }) => {
   const [answers, setAnswers] = React.useState<Partial<FeelingAnswers>>({});
-  
+  const [internalStep, setInternalStep] = useState(0);
+
   // Predictive Engine integration: Check entropy once on mount
   const prediction = React.useMemo(() => calculateEntropy(), []);
   const isChaos = prediction.entropyScore >= 70;
 
-  const handleAnswer = (key: keyof FeelingAnswers, value: FeelingOption) => {
+  const handleAnswer = (key: keyof FeelingAnswers, value: FeelingOption, stepIndex: number) => {
+    import("../services/soundManager").then((m) => m.soundManager.playEffect("cosmic_pulse"));
     setAnswers((prev) => ({ ...prev, [key]: value }));
+    if (stepIndex < 2) {
+      setTimeout(() => setInternalStep(stepIndex + 1), 300);
+    }
   };
 
   const answered = {
@@ -44,6 +49,19 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
   };
 
   const allAnswered = answered.q1 && answered.q2 && answered.q3;
+
+  React.useEffect(() => {
+    if (allAnswered) {
+      const t = setTimeout(() => {
+        onDone({
+          q1: answers.q1 as FeelingOption,
+          q2: answers.q2 as FeelingOption,
+          q3: answers.q3 as FeelingOption
+        });
+      }, 600);
+      return () => clearTimeout(t);
+    }
+  }, [allAnswered, answers, onDone]);
 
   return (
     <section
@@ -76,7 +94,7 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
         </motion.div>
       )}
 
-      <div className="relative z-10 mb-6">
+      <div className="relative z-10 mb-2">
         <h2 id="feeling-title" className="text-2xl font-black text-white mb-2 tracking-tight">
           <EditableText id="feeling_title" defaultText={feelingCopy.title} page="feeling" />
         </h2>
@@ -86,19 +104,39 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
         </p>
       </div>
 
-      <ul className="list-none flex-1 min-h-0 overflow-y-auto pr-1 space-y-5 text-sm text-slate-200 max-w-md mx-auto w-full relative z-10">
-        {(["q1", "q2", "q3"] as const).map((key) => (
-          <li key={key} className="p-6 bg-white/[0.03] border border-white/5 backdrop-blur-xl rounded-[2rem] text-right shadow-2xl transition-all hover:bg-white/[0.05]">
-            <p className="text-sm font-black mb-5 text-slate-200 tracking-wide border-r-2 border-teal-500/30 pr-4">
-              <EditableText id={`feeling_${key}`} defaultText={feelingCopy[key]} page="feeling" showEditIcon={false} />
-            </p>
-            <div className="flex gap-2 items-stretch">
+      {/* Progress Bar */}
+      <div className="flex items-center gap-2 mb-6 relative z-10">
+        {[0, 1, 2].map((idx) => (
+          <div
+            key={idx}
+            className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
+              idx <= internalStep ? "bg-teal-500 shadow-[0_0_10px_#2dd4bf]" : "bg-white/10"
+            }`}
+          />
+        ))}
+      </div>
+
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1 relative z-10 flex flex-col justify-center">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={internalStep}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+            className="flex flex-col h-full justify-center space-y-8"
+          >
+            <h3 className="text-2xl sm:text-3xl font-black text-center tracking-tight leading-relaxed text-white">
+              <EditableText id={`feeling_q${internalStep + 1}`} defaultText={feelingCopy[`q${internalStep + 1}` as keyof typeof feelingCopy] as string} page="feeling" showEditIcon={false} />
+            </h3>
+            
+            <div className="flex flex-col gap-3 max-w-md mx-auto w-full">
               {OPTIONS.map((opt) => {
-                const isSelected = answers[key] === opt;
+                const currentKey = `q${internalStep + 1}` as keyof FeelingAnswers;
+                const isSelected = answers[currentKey] === opt;
                 const label = feelingCopy.options[opt];
                 const tier = impactTier[opt] ?? "amber";
                 
-                let activeStyle = "bg-white/[0.05] border-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-300";
+                let activeStyle = "bg-white/[0.03] border-white/5 text-slate-300 hover:border-white/20 hover:bg-white/10";
                 if (isSelected) {
                    if (tier === "green") activeStyle = "bg-teal-500 text-white border-teal-400 shadow-[0_0_20px_rgba(45,212,191,0.3)] scale-[1.02]";
                    else if (tier === "amber") activeStyle = "bg-amber-500 text-white border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.3)] scale-[1.02]";
@@ -106,46 +144,22 @@ export const FeelingCheck: FC<FeelingCheckProps> = ({
                 }
 
                 return (
-                  <motion.button
+                  <button
                     key={opt}
-                    whileTap={{ scale: 0.95 }}
                     type="button"
-                    className={`flex-1 min-w-0 transition-all duration-500 p-3.5 rounded-2xl border font-black text-[10px] sm:text-xs uppercase tracking-tighter ${activeStyle}`}
-                    onClick={() => handleAnswer(key, opt)}
-                    title={label}
+                    onClick={() => handleAnswer(currentKey, opt, internalStep)}
+                    className={`w-full flex items-center p-5 text-base sm:text-lg font-bold transition-all duration-500 rounded-2xl border ${activeStyle}`}
                   >
-                    <span className="truncate">{label}</span>
-                  </motion.button>
+                    <div className={`w-4 h-4 rounded-full mr-4 rtl:ml-4 rtl:mr-0 border-2 flex items-center justify-center transition-colors ${isSelected ? "border-white" : "border-slate-500"}`}>
+                       {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                    {label}
+                  </button>
                 );
               })}
             </div>
-          </li>
-        ))}
-      </ul>
-
-      <div className="mt-8 shrink-0 pb-2 relative z-10">
-        <motion.button
-          whileHover={allAnswered ? { scale: 1.02 } : {}}
-          whileTap={allAnswered ? { scale: 0.98 } : {}}
-          type="button"
-          disabled={!allAnswered}
-          className={`w-full sm:w-auto rounded-[2rem] px-16 py-5 text-base font-black transition-all duration-700 tracking-[0.2em] uppercase ${
-            allAnswered 
-              ? "bg-teal-500 text-white shadow-[0_0_40px_rgba(45,212,191,0.3)] hover:shadow-[0_0_60px_rgba(45,212,191,0.5)]" 
-              : "bg-white/5 text-white/20 border border-white/5 cursor-not-allowed"
-          }`}
-          onClick={() => {
-            if (!allAnswered) return;
-            onDone({
-              q1: answers.q1 as FeelingOption,
-              q2: answers.q2 as FeelingOption,
-              q3: answers.q3 as FeelingOption
-            });
-          }}
-          title={allAnswered ? "التالي: توازن العلاقة" : "جاوب على كل الأسئلة الأول"}
-        >
-          <EditableText id="feeling_cta" defaultText={feelingCopy.cta} page="feeling" editOnClick={false} />
-        </motion.button>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </section>
   );

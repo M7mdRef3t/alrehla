@@ -184,7 +184,9 @@ create table if not exists marketing_leads (
   merge_conflict boolean default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  last_linked_at timestamptz
+  last_linked_at timestamptz,
+  metadata jsonb default '{}'::jsonb,
+  email_status text default 'none'
 );
 
 create table if not exists user_state (

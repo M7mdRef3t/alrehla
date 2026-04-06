@@ -315,6 +315,7 @@ interface NodeProps {
 const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, canOpenDetails = true, justDraggedId, justAdded, isHighlighted, isTouchDevice = false, reduceMotion = false, isSovereign = false }) => {
   const { audioIntensity } = useSynthesisState();
   const [showDelete, setShowDelete] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [pulseDone, setPulseDone] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
   const archiveNode = useMapState((s) => s.archiveNode);
@@ -353,32 +354,28 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     transition: transform ? "transform 0.18s cubic-bezier(0.1, 1, 0.2, 1)" : "top 0.7s ease-out, left 0.7s ease-out, transform 0.7s ease-out"
   };
 
-  const handleDelete = useCallback((e?: React.MouseEvent | any) => {
+  const handleDeleteClick = useCallback((e?: React.MouseEvent | any) => {
     if (e?.preventDefault) e.preventDefault();
     if (e?.stopPropagation) e.stopPropagation();
-    
-    // إزالة التركيز النشط لتفادي تجميد المتصفح للإطار الأبيض الدخيل عند اللمس/النقر
     if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
+    setShowDelete(false);
+    setShowConfirmDelete(true);
+  }, []);
 
-    // السماح للمتصفح بمسح تأثيرات اللمس (Tap Highlight / Focus) قبل إيقاف الخيط بـ window.confirm
+  const handleConfirmDelete = useCallback(() => {
+    setShowConfirmDelete(false);
+    setIsExploding(true);
+    if (soundManager.playEffect) {
+      soundManager.playEffect("cosmic_pulse");
+    } else {
+      soundManager.playRadarPing();
+    }
     setTimeout(() => {
-      const ok = typeof window === "undefined" ? true : window.confirm(`تأكيد: خرّج "${node.label}" من المدار\nتتحفظ في "أشخاص مشافين" وتقدر ترجعها لو احتجت.`);
-      if (!ok) return;
-      
-      setIsExploding(true);
-      if (soundManager.playEffect) {
-        soundManager.playEffect("cosmic_pulse");
-      } else {
-        soundManager.playRadarPing();
-      }
-      
-      setTimeout(() => {
-        archiveNode(node.id);
-      }, 700);
-    }, 10);
-  }, [archiveNode, node.id, node.label]);
+      archiveNode(node.id);
+    }, 700);
+  }, [archiveNode, node.id]);
 
   const blockDeletePointer = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -520,6 +517,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         ref={setNodeRef}
         {...attributes}
         {...listeners}
+        tabIndex={-1}
         onTap={(e) => {
           // onTap is only triggered if it's not a drag
           handleClick();
@@ -701,27 +699,104 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         </motion.div>
       )}
 
-      {/* Delete button — Show on hover, touch, or active highlight */}
+      {/* Delete X button — hover only */}
       <AnimatePresence>
-        {(showDelete || isTouchDevice || isHighlighted) && (
+        {showDelete && (
           <motion.button
             type="button"
-            onTap={handleDelete}
             onPointerDown={blockDeletePointer}
-            className="absolute -top-3 -right-3 min-w-11 min-h-11 w-11 h-11 rounded-full flex items-center justify-center z-30 pointer-events-auto outline-none focus:outline-none focus-visible:outline-none"
+            onClick={handleDeleteClick}
+            className="absolute -top-3 -right-3 w-7 h-7 rounded-full flex items-center justify-center z-30 pointer-events-auto"
             style={{
-              background: "linear-gradient(135deg, #94a3b8, #64748b)",
-              boxShadow: "0 0 14px rgba(0, 0, 0, 0.4)",
-              WebkitTapHighlightColor: "transparent"
+              background: "linear-gradient(135deg, #64748b, #475569)",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.5)",
+              outline: "none",
+              WebkitTapHighlightColor: "transparent",
+              border: "1.5px solid rgba(255,255,255,0.12)",
             }}
-            title="خرّج من المدار (نقل للمشافين)"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: 0.12 }}
+            tabIndex={-1}
           >
-            <X className="w-4 h-4 text-white" strokeWidth={3} />
+            <X className="w-3.5 h-3.5 text-white/90" strokeWidth={2.5} />
           </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Custom Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmDelete && (
+          <motion.div
+            className="fixed inset-0 z-[200] flex items-center justify-center"
+            style={{ background: "rgba(5,8,20,0.75)", backdropFilter: "blur(8px)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowConfirmDelete(false)}
+          >
+            <motion.div
+              className="relative mx-4 w-full max-w-xs rounded-2xl p-5 text-right"
+              style={{
+                background: "linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95))",
+                border: "1px solid rgba(244,63,94,0.25)",
+                boxShadow: "0 0 40px rgba(244,63,94,0.15), 0 20px 60px rgba(0,0,0,0.6)",
+              }}
+              initial={{ scale: 0.85, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Icon */}
+              <div className="flex justify-center mb-3">
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(244,63,94,0.12)", border: "1.5px solid rgba(244,63,94,0.3)" }}
+                >
+                  <X className="w-5 h-5" style={{ color: "#f43f5e" }} strokeWidth={2.5} />
+                </div>
+              </div>
+              {/* Text */}
+              <p className="text-sm font-bold mb-1" style={{ color: "var(--text-primary)" }}>
+                خرّج "{node.label}" من المدار؟
+              </p>
+              <p className="text-xs mb-5" style={{ color: "var(--text-secondary)" }}>
+                هيتحفظ في "أشخاص مشافين" وتقدر تعيده لو احتجت.
+              </p>
+              {/* Buttons */}
+              <div className="flex gap-2 flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={handleConfirmDelete}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all"
+                  style={{
+                    background: "linear-gradient(135deg, #f43f5e, #e11d48)",
+                    color: "#fff",
+                    boxShadow: "0 0 16px rgba(244,63,94,0.3)",
+                    outline: "none",
+                    border: "none",
+                  }}
+                >
+                  موافق
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmDelete(false)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    color: "var(--text-secondary)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    outline: "none",
+                  }}
+                >
+                  إلغاء
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </motion.div>

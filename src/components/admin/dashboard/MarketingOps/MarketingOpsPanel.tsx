@@ -735,6 +735,9 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
           onFilterSelect={(filter) => {
             if (filter.type === "source" || filter.type === "campaign") {
               setSelectedFilter({ type: filter.type, value: filter.value });
+              if (filter.query) {
+                 setSearchQuery(filter.query);
+              }
               return;
             }
 

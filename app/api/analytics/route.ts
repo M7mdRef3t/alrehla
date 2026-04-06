@@ -64,18 +64,22 @@ export async function POST(req: Request) {
         const finalUserId = verifiedUserId || data.user_id || null;
 
         // 4. Ingestion Idempotency
+        const mergedPayload = {
+            ...(data.payload || {}),
+            lead_id: data.lead_id || null,
+            lead_source: data.lead_source || null,
+            utm_source: data.utm_source || null,
+            utm_medium: data.utm_medium || null,
+            utm_campaign: data.utm_campaign || null,
+        };
+
         const { error } = await supabase.from("routing_events").insert({
             event_type: data.event_type,
             client_event_id: data.client_event_id || null,
             anonymous_id: data.anonymous_id || data.session_id || null,
             session_id: data.session_id || null,
             user_id: finalUserId,
-            lead_id: data.lead_id || null,
-            lead_source: data.lead_source || null,
-            utm_source: data.utm_source || null,
-            utm_medium: data.utm_medium || null,
-            utm_campaign: data.utm_campaign || null,
-            payload: data.payload || {},
+            payload: mergedPayload,
             occurred_at: data.occurred_at || new Date().toISOString()
         });
 

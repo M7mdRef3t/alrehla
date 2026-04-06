@@ -7,6 +7,12 @@ import {
   ChevronDown, Search, Plus, ArrowUpRight, Inbox, Zap,
   TrendingUp
 } from "lucide-react";
+import { getAuthToken } from "../../../../state/authState";
+import { useAdminState } from "../../../../state/adminState";
+
+function getBearerToken(): string {
+  return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
+}
 
 // ═══════════════════════════════════════════════════
 // Types
@@ -274,7 +280,7 @@ function ComposeTab({ templates, onSent }: { templates: EmailTemplate[]; onSent:
 
       const res = await fetch("/api/admin/email/send", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
         body: JSON.stringify(body),
       });
 
@@ -449,7 +455,7 @@ function TemplatesTab({ templates, onRefresh }: { templates: EmailTemplate[]; on
 
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
         body: JSON.stringify(body),
       });
 
@@ -480,7 +486,7 @@ function TemplatesTab({ templates, onRefresh }: { templates: EmailTemplate[]; on
     if (!confirm("هل أنت متأكد من حذف هذا القالب؟")) return;
     await fetch("/api/admin/email/templates", {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
       body: JSON.stringify({ id }),
     });
     onRefresh();
@@ -597,7 +603,7 @@ function LogsTab() {
     try {
       const params = new URLSearchParams({ page: String(page), limit: "20", status: statusFilter });
       if (search) params.set("search", search);
-      const res = await fetch(`/api/admin/email/logs?${params}`);
+      const res = await fetch(`/api/admin/email/logs?${params}`, { headers: { authorization: `Bearer ${getBearerToken()}` } });
       const data = await res.json();
       setLogs(data.logs || []);
       setTotal(data.total || 0);
@@ -753,11 +759,23 @@ export function MailCommandCenter() {
   const fetchStats = useCallback(async () => {
     setIsLoadingStats(true);
     try {
-      const res = await fetch("/api/admin/email/stats?period=30d");
+      const res = await fetch("/api/admin/email/stats?period=30d", { headers: { authorization: `Bearer ${getBearerToken()}` } });
+      if (!res.ok) {
+        console.warn("[MailCommand] Stats fetch returned", res.status);
+        setStats(null);
+        return;
+      }
       const data = await res.json();
-      setStats(data);
+      // Validate shape — API might return error JSON without totals
+      if (data?.totals && data?.rates) {
+        setStats(data);
+      } else {
+        console.warn("[MailCommand] Stats response missing expected shape:", data);
+        setStats(null);
+      }
     } catch (err) {
       console.error("[MailCommand] Stats fetch error:", err);
+      setStats(null);
     } finally {
       setIsLoadingStats(false);
     }
@@ -765,7 +783,7 @@ export function MailCommandCenter() {
 
   const fetchTemplates = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/email/templates");
+      const res = await fetch("/api/admin/email/templates", { headers: { authorization: `Bearer ${getBearerToken()}` } });
       const data = await res.json();
       setTemplates(data.templates || []);
     } catch (err) {

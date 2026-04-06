@@ -36,7 +36,7 @@ const DKIM_DOMAIN = process.env.DKIM_DOMAIN || "alrehla.app";
 
 // ─── Tracking Config ────────────────────────────────────────────────────────
 
-const TRACKING_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://alrehla.app";
+export const TRACKING_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://alrehla.app";
 
 // ─── Transporter (Singleton) ────────────────────────────────────────────────
 
@@ -106,7 +106,7 @@ export interface SendEmailResult {
  * Injects an invisible 1x1 tracking pixel at the end of the HTML body
  * to detect email opens.
  */
-function injectOpenTracker(html: string, trackingId: string): string {
+export function injectOpenTracker(html: string, trackingId: string): string {
   const pixelUrl = `${TRACKING_BASE_URL}/api/email/track?t=open&id=${trackingId}`;
   const pixel = `<img src="${pixelUrl}" width="1" height="1" style="display:block;width:1px;height:1px;border:0;" alt="" />`;
 
@@ -120,7 +120,7 @@ function injectOpenTracker(html: string, trackingId: string): string {
 /**
  * Wraps all <a href="..."> links with click tracking redirects.
  */
-function injectClickTracker(html: string, trackingId: string): string {
+export function injectClickTracker(html: string, trackingId: string): string {
   return html.replace(
     /<a\s([^>]*?)href="(https?:\/\/[^"]+)"([^>]*?)>/gi,
     (_match, before, url, after) => {

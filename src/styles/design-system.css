@@ -11,6 +11,17 @@
   --ds-color-focus: color-mix(in srgb, var(--ds-color-brand-teal-400) 45%, transparent);
 }
 
+/* Kill white focus rectangle on SVG interactive elements (dnd-kit injects tabIndex) */
+svg g[tabindex],
+svg g:focus,
+svg g:focus-visible,
+svg [role="button"]:focus,
+svg [role="button"]:focus-visible {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  box-shadow: none !important;
+}
+
 .dark {
   --ds-theme-text-primary: #f8fafc;
   --ds-theme-text-secondary: #cbd5e1;

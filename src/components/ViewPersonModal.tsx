@@ -126,7 +126,7 @@ export const ViewPersonModal: FC<ViewPersonModalProps> = ({
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 40 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-[2.5rem] border border-white/10 bg-slate-950/40 p-6 sm:p-10 shadow-[0_0_100px_rgba(0,0,0,0.5)] transition-all duration-500 custom-scrollbar"
+        className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto overflow-x-hidden rounded-[2.5rem] border border-white/10 bg-slate-950/40 p-6 sm:p-10 shadow-[0_0_100px_rgba(0,0,0,0.5)] transition-all duration-500 no-scrollbar"
         dir="rtl"
         onClick={(e) => e.stopPropagation()}
       >

@@ -80,8 +80,6 @@ function isCrossOriginDevAdminApi(): boolean {
 }
 
 export async function callAdminApi<T>(path: string, options?: RequestInit): Promise<T | null> {
-  // No admin API configured — nothing to call.
-  if (!ADMIN_API_BASE) return null;
   // In local dev, avoid calling a cross-origin admin API directly from browser
   // to prevent CORS console noise and fallback to local sources gracefully.
   if (isCrossOriginDevAdminApi()) return null;
@@ -100,7 +98,7 @@ export async function callAdminApi<T>(path: string, options?: RequestInit): Prom
         ...(options?.headers ?? {})
       }
     },
-    { retries: 1, breaker: adminApiBreaker }
+    { retries: 1, breaker: adminApiBreaker, timeoutMs: runtimeEnv.isDev ? 25000 : 8000 }
   );
 }
 
@@ -451,7 +449,7 @@ export interface AdminAiLog {
 }
 
 export async function fetchAdminAiLogs(limit = 20): Promise<AdminAiLog[] | null> {
-  const apiData = await callAdminApi<{ logs: Array<Record<string, unknown>> }>(`overview?kind=ai-logs&limit=${limit}`);
+  const apiData = await callAdminApi<{ logs: Array<Record<string, unknown>> }>(`ai-logs?limit=${limit}`);
   if (!apiData?.logs) return null;
   return apiData.logs.map((row) => ({
     id: String(row.id ?? ""),
