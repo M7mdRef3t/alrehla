@@ -1,4 +1,4 @@
-﻿/**
+/**
  * User Memory Service — ذاكرة جارفيس
  * =====================================
  * طبقة ذاكرة مستمرة تجعل جارفيس يتذكر المستخدم عبر الجلسات.
@@ -18,7 +18,6 @@ export interface ConversationSummary {
 export interface UserMemory {
     preferredName?: string;
     bio?: string;
-    recurringGoals: string[];
     /** الأهداف المتكررة التي يذكرها المستخدم */
     recurringGoals: string[];
     /** الأشخاص المذكورون بكثرة (بدون أسماء — أدوار فقط) */
@@ -102,7 +101,7 @@ export function saveUserMemory(memory: UserMemory): void {
     if (supabase) {
         supabase.auth.getSession().then(({ data: sess }) => {
             if (sess?.session?.user) {
-                trackEvent("jarvis_memory_backup", updated);
+                trackEvent("jarvis_memory_backup", updated as any);
             }
         }).catch(() => {});
     }

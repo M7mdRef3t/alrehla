@@ -45,7 +45,8 @@ let _transporter: Transporter<SMTPTransport.SentMessageInfo> | null = null;
 function getTransporter(): Transporter<SMTPTransport.SentMessageInfo> {
   if (_transporter) return _transporter;
 
-  const transportOptions: SMTPTransport.Options = {
+  // We omit explicit typing here to allow 'pool' and connection options that standard @types missing
+  const transportOptions: any = {
     host: SMTP_HOST,
     port: SMTP_PORT,
     secure: SMTP_SECURE,
@@ -72,8 +73,8 @@ function getTransporter(): Transporter<SMTPTransport.SentMessageInfo> {
     };
   }
 
-  _transporter = nodemailer.createTransport(transportOptions);
-  return _transporter;
+  _transporter = nodemailer.createTransport(transportOptions) as any;
+  return _transporter!;
 }
 
 // ─── Types ──────────────────────────────────────────────────────────────────

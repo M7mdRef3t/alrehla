@@ -116,16 +116,12 @@ create table if not exists consciousness_vectors (
   user_id uuid references auth.users (id),
   content text not null,
   embedding vector(768) not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  source text,
+  hidden boolean not null default false,
+  tags text[],
+  manual_notes text
 );
-
-alter table if exists consciousness_vectors
-  add column if not exists source text;
-
-alter table if exists consciousness_vectors
-  add column if not exists hidden boolean not null default false,
-  add column if not exists tags text[],
-  add column if not exists manual_notes text;
 
 create table if not exists journey_events (
   id uuid primary key default gen_random_uuid(),
@@ -148,10 +144,47 @@ create table if not exists daily_pulse_logs (
   created_at timestamptz not null default now()
 );
 
+-- HArdened Tables for v2
 create table if not exists journey_maps (
   session_id text primary key,
-  nodes jsonb not null,
-  updated_at timestamptz not null default now()
+  user_id uuid references auth.users (id) on delete cascade,
+  nodes jsonb not null default '[]'::jsonb,
+  is_public boolean default false,
+  updated_at timestamptz not null default now(),
+  last_sync_at timestamptz default now()
+);
+
+create table if not exists routing_events (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users (id),
+  session_id text,
+  anonymous_id text,
+  event_type text not null,
+  payload jsonb,
+  occurred_at timestamptz not null default now(),
+  client_event_id text,
+  updated_at timestamptz default now()
+);
+
+create table if not exists marketing_leads (
+  id uuid primary key default gen_random_uuid(),
+  email text,
+  phone_normalized text,
+  phone_raw text,
+  name text,
+  source text,
+  source_type text,
+  utm jsonb default '{}'::jsonb,
+  note text,
+  status text default 'new',
+  intent text,
+  last_intent_at timestamptz,
+  anonymous_id text,
+  user_id uuid references auth.users (id),
+  merge_conflict boolean default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  last_linked_at timestamptz
 );
 
 create table if not exists user_state (
@@ -160,8 +193,6 @@ create table if not exists user_state (
   data jsonb not null,
   updated_at timestamptz not null default now()
 );
-
-alter table user_state add column if not exists owner_id uuid;
 
 create table if not exists profiles (
   id text primary key,
@@ -218,6 +249,226 @@ create index if not exists admin_audit_logs_created_at_idx on admin_audit_logs (
 create index if not exists support_tickets_created_at_idx on support_tickets (created_at desc);
 create index if not exists support_tickets_status_idx on support_tickets (status);
 create index if not exists support_tickets_updated_at_idx on support_tickets (updated_at desc);
+
+-- ---------- Email Tracking & Outreach ----------
+create table if not exists email_templates (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  subject text not null,
+  html text not null,
+  preview_text text,
+  category text default 'marketing',
+  variables jsonb default '[]'::jsonb,
+  is_active boolean default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists email_sends (
+  id uuid primary key default gen_random_uuid(),
+  to_email text not null,
+  from_email text not null,
+  subject text not null,
+  status text not null default 'queued',
+  campaign_tag text,
+  template_id uuid references email_templates(id),
+  resend_id text,
+  html_snapshot text,
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists email_events (
+  id uuid primary key default gen_random_uuid(),
+  email_send_id uuid not null references email_sends(id) on delete cascade,
+  event_type text not null, -- 'delivered', 'opened', 'clicked', 'bounced', 'complained'
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists email_templates_name_idx on email_templates (name);
+create index if not exists email_sends_to_email_idx on email_sends (to_email);
+create index if not exists email_sends_status_idx on email_sends (status);
+create index if not exists email_sends_created_at_idx on email_sends (created_at desc);
+create index if not exists email_events_send_id_idx on email_events (email_send_id);
+create index if not exists email_events_type_idx on email_events (event_type);
+
+-- ---------- Identity Linking Bridge ----------
+alter table public.marketing_leads
+  add column if not exists user_id uuid references auth.users(id),
+  add column if not exists last_linked_at timestamptz,
+  add column if not exists anonymous_id text;
+
+create index if not exists marketing_leads_anonymous_id_idx 
+  on public.marketing_leads (anonymous_id) 
+  where anonymous_id is not null;
+
+create or replace function public.link_identity_v2(
+    p_anonymous_id text,
+    p_user_id uuid
+)
+returns table (
+    updated_count integer,
+    attribution_linked boolean
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_updated_rows integer := 0;
+    v_linked boolean := false;
+begin
+    if p_anonymous_id is null or p_user_id is null then
+        return query select 0, false;
+        return;
+    end if;
+
+    -- Update historical routing events
+    update public.routing_events
+    set user_id = p_user_id,
+        updated_at = now()
+    where anonymous_id = p_anonymous_id
+      and user_id is null;
+    
+    get diagnostics v_updated_rows = row_count;
+
+    -- Link in marketing_leads if found
+    update public.marketing_leads
+    set user_id = p_user_id,
+        last_linked_at = now()
+    where anonymous_id = p_anonymous_id
+      and (user_id is null or user_id = p_user_id);
+
+    v_linked := (found);
+
+    return query select v_updated_rows, v_linked;
+end;
+$$;
+
+create or replace function public.link_anonymous_to_user(
+    p_anonymous_id text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_res record;
+begin
+    if auth.uid() is null then
+        raise exception 'Authentication required for identity linking';
+    end if;
+
+    select * into v_res from public.link_identity_v2(p_anonymous_id, auth.uid());
+
+    return jsonb_build_object(
+        'success', true,
+        'events_linked', v_res.updated_count,
+        'lead_linked', v_res.attribution_linked,
+        'linked_at', now()
+    );
+end;
+$$;
+
+-- ---------- Atomic Lead Upsert v2 ----------
+create or replace function public.upsert_marketing_lead_v2(
+    p_email text,
+    p_phone_normalized text,
+    p_phone_raw text,
+    p_name text,
+    p_source text,
+    p_source_type text,
+    p_utm jsonb,
+    p_note text,
+    p_status text,
+    p_intent text,
+    p_anonymous_id text default null
+)
+returns table (
+    lead_id uuid,
+    is_new boolean,
+    conflict boolean
+)
+language plpgsql
+security definer 
+set search_path = public
+as $$
+declare
+    v_existing_id uuid;
+    v_existing_email text;
+    v_existing_phone text;
+    v_conflict boolean := false;
+    v_is_new boolean := false;
+    v_final_id uuid;
+begin
+    IF p_phone_normalized IS NOT NULL THEN
+        SELECT id, email INTO v_existing_id, v_existing_email
+        FROM public.marketing_leads
+        WHERE phone_normalized = p_phone_normalized
+        FOR UPDATE;
+        
+        IF v_existing_id IS NOT NULL AND p_email IS NOT NULL AND v_existing_email IS NOT NULL AND v_existing_email != p_email THEN
+            v_conflict := TRUE;
+        END IF;
+    END IF;
+
+    IF v_existing_id IS NULL AND p_email IS NOT NULL THEN
+        SELECT id, phone_normalized INTO v_existing_id, v_existing_phone
+        FROM public.marketing_leads
+        WHERE email = p_email
+        FOR UPDATE;
+
+        IF v_existing_id IS NOT NULL AND p_phone_normalized IS NOT NULL AND v_existing_phone IS NOT NULL AND v_existing_phone != p_phone_normalized THEN
+            v_conflict := TRUE;
+        END IF;
+    END IF;
+
+    IF v_existing_id IS NOT NULL THEN
+        UPDATE public.marketing_leads
+        SET 
+            email = COALESCE(p_email, email),
+            phone_raw = COALESCE(p_phone_raw, phone_raw),
+            name = COALESCE(p_name, name),
+            source = COALESCE(p_source, source), 
+            source_type = COALESCE(p_source_type, source_type),
+            utm = marketing_leads.utm || p_utm,
+            note = marketing_leads.note || E'\n' || COALESCE(p_note, ''),
+            status = COALESCE(p_status, status),
+            intent = COALESCE(p_intent, intent),
+            anonymous_id = COALESCE(p_anonymous_id, anonymous_id),
+            last_intent_at = CASE WHEN p_intent IS NOT NULL THEN now() ELSE last_intent_at END,
+            merge_conflict = v_conflict OR merge_conflict,
+            updated_at = now()
+        WHERE id = v_existing_id
+        RETURNING id INTO v_final_id;
+    ELSE
+        INSERT INTO public.marketing_leads (
+            email, phone_normalized, phone_raw, name, source, source_type, utm, note, status, intent, last_intent_at, merge_conflict, anonymous_id
+        ) VALUES (
+            p_email, p_phone_normalized, p_phone_raw, p_name, p_source, p_source_type, p_utm, p_note, p_status, p_intent, 
+            CASE WHEN p_intent IS NOT NULL THEN now() ELSE NULL END, v_conflict, p_anonymous_id
+        )
+        RETURNING id INTO v_final_id;
+        v_is_new := TRUE;
+    END IF;
+
+    RETURN QUERY SELECT v_final_id, v_is_new, v_conflict;
+end;
+$$;
+
+drop trigger if exists email_templates_set_updated_at on email_templates;
+create trigger email_templates_set_updated_at
+before update on email_templates
+for each row execute function public.set_updated_at();
+
+drop trigger if exists email_sends_set_updated_at on email_sends;
+create trigger email_sends_set_updated_at
+before update on email_sends
+for each row execute function public.set_updated_at();
+
 create index if not exists consciousness_vectors_embedding_cosine_idx
   on public.consciousness_vectors
   using ivfflat (embedding vector_cosine_ops)
@@ -288,148 +539,107 @@ as $$
   limit limit_count;
 $$;
 
+-- ---------- Security Hardening Helpers ----------
+create or replace function public.is_admin_check(check_user_id uuid)
+returns boolean as $$
+begin
+  return exists (
+    select 1 from public.profiles
+    where id = check_user_id::text
+      and role in ('admin', 'owner', 'superadmin', 'developer')
+  );
+end;
+$$ language plpgsql security definer;
+
 -- ---------- RLS ----------
 alter table system_settings enable row level security;
 drop policy if exists system_settings_service_role on system_settings;
-create policy system_settings_service_role on system_settings for all
-  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-
-alter table admin_ai_logs enable row level security;
-drop policy if exists admin_ai_logs_service_role on admin_ai_logs;
-create policy admin_ai_logs_service_role on admin_ai_logs for all
-  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-
-alter table admin_flow_audit_logs enable row level security;
-drop policy if exists admin_flow_audit_logs_service_role on admin_flow_audit_logs;
-create policy admin_flow_audit_logs_service_role on admin_flow_audit_logs for all
-  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-drop policy if exists admin_flow_audit_logs_owner_select on admin_flow_audit_logs;
-create policy admin_flow_audit_logs_owner_select on admin_flow_audit_logs for select using (
-  exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('admin', 'developer', 'owner', 'superadmin'))
-);
-drop policy if exists admin_flow_audit_logs_owner_insert on admin_flow_audit_logs;
-create policy admin_flow_audit_logs_owner_insert on admin_flow_audit_logs for insert with check (
-  exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('admin', 'developer', 'owner', 'superadmin'))
-);
-
-alter table admin_audit_logs enable row level security;
-drop policy if exists admin_audit_logs_service_role on admin_audit_logs;
-create policy admin_audit_logs_service_role on admin_audit_logs for all
-  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-drop policy if exists admin_audit_logs_owner_select on admin_audit_logs;
-create policy admin_audit_logs_owner_select on admin_audit_logs for select using (
-  exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('owner', 'superadmin'))
-);
-
-alter table support_tickets enable row level security;
-drop policy if exists support_tickets_service_role on support_tickets;
-create policy support_tickets_service_role on support_tickets for all
-  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-drop policy if exists support_tickets_owner_select on support_tickets;
-create policy support_tickets_owner_select on support_tickets for select using (
-  exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('owner', 'superadmin'))
-);
-drop policy if exists support_tickets_owner_update on support_tickets;
-create policy support_tickets_owner_update on support_tickets for update
-  using (
-    exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('owner', 'superadmin'))
-  )
-  with check (
-    exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('owner', 'superadmin'))
-  );
-
-alter table admin_missions enable row level security;
-drop policy if exists admin_missions_service_role on admin_missions;
-create policy admin_missions_service_role on admin_missions for all
-  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-
-alter table admin_broadcasts enable row level security;
-drop policy if exists admin_broadcasts_service_role on admin_broadcasts;
-create policy admin_broadcasts_service_role on admin_broadcasts for all
-  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-
-alter table admin_reports enable row level security;
-drop policy if exists admin_reports_service_role on admin_reports;
-create policy admin_reports_service_role on admin_reports for all
-  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-
-alter table consciousness_vectors enable row level security;
-drop policy if exists consciousness_vectors_service_role on consciousness_vectors;
-create policy consciousness_vectors_service_role on consciousness_vectors for all
-  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-
-alter table journey_events enable row level security;
-drop policy if exists journey_events_insert on journey_events;
-create policy journey_events_insert on journey_events for insert with check (true);
-drop policy if exists journey_events_service_select on journey_events;
-create policy journey_events_service_select on journey_events for select using (auth.role() = 'service_role');
-
-alter table daily_pulse_logs enable row level security;
-drop policy if exists daily_pulse_logs_insert on daily_pulse_logs;
-create policy daily_pulse_logs_insert on daily_pulse_logs for insert with check (true);
-drop policy if exists daily_pulse_logs_service_select on daily_pulse_logs;
-create policy daily_pulse_logs_service_select on daily_pulse_logs for select using (auth.role() = 'service_role');
-
-alter table journey_maps enable row level security;
-drop policy if exists journey_maps_insert on journey_maps;
-create policy journey_maps_insert on journey_maps for insert with check (true);
-drop policy if exists journey_maps_update on journey_maps;
-create policy journey_maps_update on journey_maps for update using (true) with check (true);
-drop policy if exists journey_maps_service_select on journey_maps;
-create policy journey_maps_service_select on journey_maps for select using (auth.role() = 'service_role');
-
-alter table profiles enable row level security;
-drop policy if exists profiles_session_insert on profiles;
-create policy profiles_session_insert on profiles for insert with check (coalesce(role, 'session') = 'session');
-drop policy if exists profiles_session_update on profiles;
-create policy profiles_session_update on profiles for update using (role = 'session') with check (role = 'session');
-drop policy if exists profiles_service_select on profiles;
-create policy profiles_service_select on profiles for select using (auth.role() = 'service_role');
-drop policy if exists profiles_user_select on profiles;
-create policy profiles_user_select on profiles for select using (auth.uid()::text = id);
-drop policy if exists profiles_user_update on profiles;
-
-alter table user_state enable row level security;
-drop policy if exists user_state_service_role on user_state;
-create policy user_state_service_role on user_state for all
-  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+create policy system_settings_service_role on system_settings for all using (auth.role() = 'service_role');
 
 alter table app_content enable row level security;
 drop policy if exists app_content_public_select on app_content;
 create policy app_content_public_select on app_content for select using (true);
-drop policy if exists app_content_service_role on app_content;
-create policy app_content_service_role on app_content for all
-  using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-drop policy if exists app_content_owner_insert on app_content;
-create policy app_content_owner_insert on app_content for insert with check (
-  exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('owner', 'superadmin'))
-);
-drop policy if exists app_content_owner_update on app_content;
-create policy app_content_owner_update on app_content for update
-  using (exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('owner', 'superadmin')))
-  with check (exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('owner', 'superadmin')));
-drop policy if exists app_content_owner_delete on app_content;
-create policy app_content_owner_delete on app_content for delete using (
-  exists (select 1 from profiles p where p.id = auth.uid()::text and p.role in ('owner', 'superadmin'))
-);
+drop policy if exists app_content_owner_all on app_content;
+create policy app_content_owner_all on app_content for all using (public.is_admin_check(auth.uid()));
 
--- ---------- Realtime ----------
--- يضمن أن تغييرات app_content تُبث عبر Supabase Realtime
-do $$
+alter table profiles enable row level security;
+drop policy if exists profiles_self_select on profiles;
+create policy profiles_self_select on profiles for select using (auth.uid()::text = id);
+drop policy if exists profiles_admin_select on profiles;
+create policy profiles_admin_select on profiles for select using (public.is_admin_check(auth.uid()));
+
+alter table routing_events enable row level security;
+drop policy if exists routing_events_insert on routing_events;
+create policy routing_events_insert on routing_events for insert with check (true);
+drop policy if exists routing_events_admin_select on routing_events;
+create policy routing_events_admin_select on routing_events for select using (public.is_admin_check(auth.uid()));
+
+alter table marketing_leads enable row level security;
+drop policy if exists marketing_leads_admin_all on marketing_leads;
+create policy marketing_leads_admin_all on marketing_leads for all using (public.is_admin_check(auth.uid()));
+
+alter table journey_maps enable row level security;
+drop policy if exists journey_maps_owner_select on journey_maps;
+create policy journey_maps_owner_select on journey_maps for select using (auth.uid() = user_id or is_public = true);
+drop policy if exists journey_maps_owner_upsert on journey_maps;
+create policy journey_maps_owner_upsert on journey_maps for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists journey_maps_admin_select on journey_maps;
+create policy journey_maps_admin_select on journey_maps for select using (public.is_admin_check(auth.uid()));
+
+-- ---------- Email RLS ----------
+alter table email_templates enable row level security;
+drop policy if exists email_templates_admin_all on email_templates;
+create policy email_templates_admin_all on email_templates for all using (public.is_admin_check(auth.uid()));
+
+alter table email_sends enable row level security;
+drop policy if exists email_sends_admin_all on email_sends;
+create policy email_sends_admin_all on email_sends for all using (public.is_admin_check(auth.uid()));
+
+alter table email_events enable row level security;
+drop policy if exists email_events_admin_all on email_events;
+create policy email_events_admin_all on email_events for all using (public.is_admin_check(auth.uid()));
+drop policy if exists email_events_public_insert on email_events;
+create policy email_events_public_insert on email_events for insert with check (true);
+
+-- ---------- Triggers for Updated At & Identity ----------
+drop trigger if exists email_templates_set_updated_at on email_templates;
+create trigger email_templates_set_updated_at
+before update on email_templates
+for each row execute function public.set_updated_at();
+
+drop trigger if exists email_sends_set_updated_at on email_sends;
+create trigger email_sends_set_updated_at
+before update on email_sends
+for each row execute function public.set_updated_at();
+
+create or replace function public.trg_link_lead_identity_logic()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    v_target_user_id uuid;
 begin
-  if not exists (
-    select 1
-    from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public'
-      and tablename = 'app_content'
-  ) then
-    alter publication supabase_realtime add table app_content;
-  end if;
-end
+    select id::uuid into v_target_user_id
+    from public.profiles
+    where email = NEW.email
+    limit 1;
+
+    if v_target_user_id is not null and NEW.anonymous_id is not null then
+        perform public.link_identity_v2(NEW.anonymous_id, v_target_user_id);
+        NEW.user_id := v_target_user_id;
+    end if;
+
+    return NEW;
+end;
 $$;
 
--- ---------- ترقية حسابك لـ owner (شغّله مرة واحدة بعد ما تحط الـ id) ----------
--- احصل على الـ id من: Authentication → Users → انسخ User UID
--- ثم شغّل السطر التالي بعد ما تستبدل YOUR_USER_ID بالـ UUID الحقيقي:
+drop trigger if exists trg_link_lead_identity on public.marketing_leads;
+create trigger trg_link_lead_identity
+before insert or update of anonymous_id on public.marketing_leads
+for each row
+execute function public.trg_link_lead_identity_logic();
+
+-- ---------- ترقية حسابك لـ owner ----------
 -- update public.profiles set role = 'owner' where id = 'YOUR_USER_ID';

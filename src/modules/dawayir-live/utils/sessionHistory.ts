@@ -87,7 +87,7 @@ export function saveSessionSummary(entry: Omit<SessionHistoryEntry, "timestamp">
   if (supabase) {
       supabase.auth.getSession().then(({ data: sess }) => {
           if (sess?.session?.user) {
-              trackEvent("live_session_backup", updated);
+              trackEvent("live_session_backup", { entries: updated } as any);
           }
       }).catch(() => {});
   }
