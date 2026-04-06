@@ -11,6 +11,7 @@ export async function POST(req: Request) {
 
     // Meta Webhooks for Lead Gen send changes in an array
     if (body.object === 'page') {
+      const results = [];
       for (const entry of body.entry) {
         for (const change of entry.changes) {
           if (change.field === 'leadgen') {
@@ -19,10 +20,22 @@ export async function POST(req: Request) {
 
             const leadDetails = await metaLeadsService.fetchLeadDetails(leadgenId);
             if (leadDetails) {
-              await metaLeadsService.processAndStoreLead(leadDetails);
+              const result = await metaLeadsService.processAndStoreLead(leadDetails);
+              results.push({ leadgenId, ...result });
+            } else {
+              results.push({ leadgenId, success: false, error: 'Could not fetch lead details from Meta' });
             }
           }
         }
+      }
+      
+      const hasErrors = results.some(r => !r.success);
+      if (hasErrors) {
+        return NextResponse.json({ 
+          success: false, 
+          error: results.map(r => r.error).join('; '),
+          details: results 
+        }, { status: 500 });
       }
     }
 

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Camera, CheckCircle2, Lock, Sparkles, User, Palette, ShieldCheck, Paintbrush } from "lucide-react";
 import { useGamificationState } from "../state/gamificationState";
 import { useAchievementState } from "../state/achievementState";
-import { loadUserMemory, saveUserMemory } from "../services/userMemory";
+import { loadUserMemory, saveUserMemory, updatePreferredName, updateBio } from "../services/userMemory";
 import { ACHIEVEMENTS } from "../data/achievements";
 
 export const ProfileAppearanceSettings: React.FC = () => {

@@ -29,6 +29,16 @@ export const supabase: SupabaseClient | null = (() => {
   return client;
 })();
 
+export const supabaseAdmin: SupabaseClient | null = (() => {
+  if (typeof window !== "undefined") return null;
+  const adminKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !adminKey) return null;
+
+  return createClient(supabaseUrl, adminKey, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+})();
+
 export const isSupabaseReady = Boolean(supabase);
 
 export function isSupabaseAbortError(error: unknown): boolean {

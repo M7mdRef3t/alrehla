@@ -122,39 +122,45 @@ function buildStep3Html(opts: { firstName: string; personalLink: string; unsubLi
   });
 }
 
-// ─── Send Email ─────────────────────────────────────────────────────────────
+// ─── Send Email (Sovereign Mail Engine — Nodemailer) ────────────────────────
 async function sendEmail(
   leadEmail: string,
   subject: string,
   html: string,
   replyTo?: string
 ): Promise<{ status: "sent" | "simulated"; providerResponse: Record<string, unknown> }> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.MARKETING_EMAIL_FROM || process.env.REPORT_EMAIL_FROM;
-  if (!apiKey || !from) {
-    return { status: "simulated", providerResponse: { reason: "missing_resend_config" } };
+  const from = process.env.SMTP_FROM || process.env.MARKETING_EMAIL_FROM || process.env.REPORT_EMAIL_FROM;
+  const smtpHost = process.env.SMTP_HOST;
+
+  if (!smtpHost || !from) {
+    return { status: "simulated", providerResponse: { reason: "missing_smtp_config" } };
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
-
   try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: leadEmail, subject, html, reply_to: replyTo }),
-      signal: controller.signal
+    const { sendEmail: sovereignSend } = await import("../../admin/email/engine");
+    const result = await sovereignSend({
+      to: leadEmail,
+      subject,
+      html,
+      from,
+      replyTo: replyTo || "hello@alrehla.app",
+      enableTracking: true,
     });
-    const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-    if (!response.ok) {
-      throw new Error(`resend_failed:${response.status}:${JSON.stringify(body)}`);
+
+    if (!result.ok) {
+      throw new Error(`smtp_failed: ${result.error}`);
     }
-    return { status: "sent", providerResponse: body };
+
+    return {
+      status: "sent",
+      providerResponse: {
+        id: result.messageId,
+        engine: "sovereign",
+        response: result.response,
+      },
+    };
   } catch (error: any) {
-    if (error.name === 'AbortError') throw new Error(`resend_timeout: API didn't respond in 8 seconds`);
     throw error;
-  } finally {
-    clearTimeout(timeoutId);
   }
 }
 

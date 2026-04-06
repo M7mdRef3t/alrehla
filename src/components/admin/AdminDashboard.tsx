@@ -97,6 +97,7 @@ const MarketingOpsPanel = lazy(() => import("./dashboard/MarketingOps/MarketingO
 const SovereignPanel = lazy(() => import("./dashboard/Sovereign/SovereignControl").then(m => ({ default: m.SovereignControl })));
 const SovereignExpansionHub = lazy(() => import("./dashboard/Executive/SovereignExpansionHub").then(m => ({ default: m.SovereignExpansionHub })));
 const MapRegistryPanel = lazy(() => import("./dashboard/Content/MapRegistryPanel").then(m => ({ default: m.MapRegistryPanel })));
+const MailCommandCenter = lazy(() => import("./dashboard/MailCommand/MailCommandCenter").then(m => ({ default: m.MailCommandCenter })));
 
 const DataManagementModal = lazy(() => Promise.resolve({ default: DataManagement }));
 
@@ -584,6 +585,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 )}
                 {effectiveTab === "marketing-ops" && <MarketingOpsPanel />}
                 {effectiveTab === "expansion-hub" && <SovereignExpansionHub />}
+                {effectiveTab === "mail-command" && <MailCommandCenter />}
               </Suspense>
             </div>
           </div>

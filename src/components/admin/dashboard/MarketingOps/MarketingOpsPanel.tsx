@@ -33,7 +33,8 @@ import {
   Wallet,
   ArrowUpRight,
   ArrowDownRight,
-  Trophy
+  Trophy,
+  Repeat
 } from "lucide-react";
 import { ManualLeadEntry } from "./ManualLeadEntry";
 import { QuickSendRow } from "./QuickSendRow";
@@ -411,6 +412,7 @@ export function MarketingOpsPanel() {
   const [growthMetrics, setGrowthMetrics] = useState<GrowthMetrics | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<{ type: "campaign" | "source"; value: string } | null>(null);
   const [repairLoading, setRepairLoading] = useState(false);
+  const [warmupLoading, setWarmupLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const toastRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -575,6 +577,70 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
           </div>
 
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <button 
+            onClick={async () => {
+              setWarmupLoading(true);
+              try {
+                const response = await fetch('/api/admin/meta-warmup', {
+                  method: 'POST',
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'authorization': `Bearer ${getBearerToken()}`
+                  }
+                });
+                const result = await response.json();
+                if (result.ok) {
+                  showToast("تم تنشيط اتصال Meta API بنجاح! تم استدعاء 5 نقاط اتصال ✅", true);
+                } else {
+                  showToast("فشل التنشيط: " + (result.error || "خطأ غير معروف"), false);
+                }
+              } catch (err) {
+                showToast("خطأ في الاتصال بسيرفر التنشيط", false);
+              } finally {
+                setWarmupLoading(false);
+              }
+            }}
+            disabled={warmupLoading || loading}
+            className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/20 transition-all active:scale-95 disabled:opacity-50"
+          >
+            <Orbit className={`w-3.5 h-3.5 ${warmupLoading ? "animate-spin" : ""}`} />
+            {warmupLoading ? "جاري التنشيط..." : "تنشيط اتصال Meta API"}
+          </button>
+
+          <button 
+            onClick={async () => {
+              try {
+                const response = await fetch('/api/webhooks/meta-leads', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    object: 'page',
+                    entry: [{
+                      id: 'test_page_id',
+                      time: Date.now(),
+                      changes: [{
+                        field: 'leadgen',
+                        value: { leadgen_id: 'test_lead_id_123' }
+                      }]
+                    }]
+                  })
+                });
+                const result = await response.json();
+                if (result.success) {
+                  showToast("تم إرسال إشارة محاكاة بنجاح! راجع الرادار بعد ثوانٍ 📡", true);
+                } else {
+                  showToast("فشلت المحاكاة: " + result.error, false);
+                }
+              } catch (err) {
+                showToast("خطأ في الاتصال بالسيرفر المحاكي", false);
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] font-black uppercase tracking-widest hover:bg-purple-500/20 transition-all active:scale-95"
+          >
+            <Repeat className="w-3.5 h-3.5" />
+            {"محاكاة Lead"}
+          </button>
+
           <button 
             onClick={handleRepair} 
             disabled={repairLoading || loading}

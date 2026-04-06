@@ -212,4 +212,6 @@ class SovereignGrowthEngine {
 }
 
 export const growthEngine = new SovereignGrowthEngine();
+export { SovereignGrowthEngine };
 export const GrowthEngine = growthEngine;
+export default growthEngine;
