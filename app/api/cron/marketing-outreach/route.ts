@@ -136,32 +136,28 @@ async function sendEmail(
     return { status: "simulated", providerResponse: { reason: "missing_smtp_config" } };
   }
 
-  try {
-    const { sendEmail: sovereignSend } = await import("../../admin/email/engine");
-    const result = await sovereignSend({
-      to: leadEmail,
-      subject,
-      html,
-      from,
-      replyTo: replyTo || "hello@alrehla.app",
-      enableTracking: true,
-    });
+  const { sendEmail: sovereignSend } = await import("../../admin/email/engine");
+  const result = await sovereignSend({
+    to: leadEmail,
+    subject,
+    html,
+    from,
+    replyTo: replyTo || "hello@alrehla.app",
+    enableTracking: true,
+  });
 
-    if (!result.ok) {
-      throw new Error(`smtp_failed: ${result.error}`);
-    }
-
-    return {
-      status: "sent",
-      providerResponse: {
-        id: result.messageId,
-        engine: "sovereign",
-        response: result.response,
-      },
-    };
-  } catch (error: any) {
-    throw error;
+  if (!result.ok) {
+    throw new Error(`smtp_failed: ${result.error}`);
   }
+
+  return {
+    status: "sent",
+    providerResponse: {
+      id: result.messageId,
+      engine: "sovereign",
+      response: result.response,
+    },
+  };
 }
 
 // ─── Send WhatsApp ──────────────────────────────────────────────────────────

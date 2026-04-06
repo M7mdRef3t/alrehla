@@ -312,7 +312,9 @@ export class DecisionEngine {
   private saveLogToStorage() {
     try {
       localStorage.setItem("dawayir-ai-decisions", JSON.stringify(this.decisionLog));
-    } catch {}
+    } catch {
+      // Storage unavailable or quota exceeded
+    }
   }
 
   /**

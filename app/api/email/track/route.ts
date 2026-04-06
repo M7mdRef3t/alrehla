@@ -139,7 +139,9 @@ export async function GET(req: NextRequest) {
             ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown",
           },
         });
-      } catch {} // Silently ignore if table doesn't exist
+      } catch {
+        // Silently ignore if table doesn't exist
+      }
 
       // Update email_sends status (only upgrade, never downgrade) — for automated sends
       const { data: current } = await supabase
@@ -184,7 +186,9 @@ export async function GET(req: NextRequest) {
             ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown",
           },
         });
-      } catch {} // Silently ignore if table doesn't exist
+      } catch {
+        // Silently ignore if table doesn't exist
+      }
 
       // Update email_sends status — for automated sends
       const { data: current } = await supabase

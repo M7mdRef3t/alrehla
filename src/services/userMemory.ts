@@ -71,7 +71,11 @@ export async function syncMemoryFromSupabase(): Promise<void> {
         if (data && data.payload) {
             memoryCache = data.payload as unknown as UserMemory;
             memoryLoadedFromDb = true;
-            try { localStorage.setItem(MEMORY_KEY, JSON.stringify(memoryCache)); } catch{}
+            try {
+                localStorage.setItem(MEMORY_KEY, JSON.stringify(memoryCache));
+            } catch {
+                // Silently skip if local storage fails
+            }
         }
     } catch { /* fallback */ }
 }

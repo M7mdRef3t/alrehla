@@ -50,7 +50,15 @@ export const SovereignGatewayCommand: FC<{ onFilterSelect: (f: any) => void, sta
   const [analyzing, setAnalyzing] = useState(false);
 
   const fetchOracle = async () => {
-    try { const r = await fetch("/api/admin/intelligence/oracle-leads", { headers: { authorization: `Bearer ${getBearerToken()}` } }); const d = await r.json(); if (d.ok) setOracleStats(d); } catch(e) {}
+    try {
+      const r = await fetch("/api/admin/intelligence/oracle-leads", {
+        headers: { authorization: `Bearer ${getBearerToken()}` }
+      });
+      const d = await r.json();
+      if (d.ok) setOracleStats(d);
+    } catch {
+      // Sliently skip if oracle fetch fails
+    }
   };
 
   const runOracle = async () => {

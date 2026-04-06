@@ -39,7 +39,11 @@ export async function syncLiveSessionsFromSupabase(): Promise<void> {
         if (data && data.payload) {
             _liveSessionCache = data.payload as unknown as SessionHistoryEntry[];
             _liveSessionLoaded = true;
-            try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(_liveSessionCache)); } catch{}
+            try {
+                window.localStorage.setItem(STORAGE_KEY, JSON.stringify(_liveSessionCache));
+            } catch {
+                // Silently skip if local storage fails
+            }
         }
     } catch { /* fallback */ }
 }
@@ -82,7 +86,9 @@ export function saveSessionSummary(entry: Omit<SessionHistoryEntry, "timestamp">
   _liveSessionCache = updated;
   try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch {}
+  } catch {
+      // Silently skip if local storage fails
+  }
 
   if (supabase) {
       supabase.auth.getSession().then(({ data: sess }) => {
