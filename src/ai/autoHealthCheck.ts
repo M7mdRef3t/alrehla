@@ -15,6 +15,9 @@
 import { decisionEngine } from "./decision-framework";
 import type { AIDecision } from "./decision-framework";
 
+import * as Sentry from "@sentry/react";
+import { runtimeEnv } from "../config/runtimeEnv";
+
 // ═══════════════════════════════════════════════════════════════════════════
 // 🏥 Health Check Result
 // ═══════════════════════════════════════════════════════════════════════════
@@ -139,8 +142,11 @@ export class AutoHealthChecker {
    * ─────────────────────────────────────────────────────────────────
    */
   private checkConsoleErrors(): HealthIssue[] {
-    // TODO: في production، نستخدم error tracking service (مثل Sentry)
-    // مؤقتاً: نفحص localStorage للـ errors المحفوظة
+    if (runtimeEnv.isProd) {
+      // In production, Sentry automatically captures unhandled exceptions and console errors.
+      // No need to poll localStorage for them here.
+      return [];
+    }
 
     const issues: HealthIssue[] = [];
 
@@ -531,6 +537,13 @@ export class AutoHealthChecker {
    */
   private async notifyAdmin(result: HealthCheckResult): Promise<void> {
     console.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
+
+    if (runtimeEnv.isProd) {
+      Sentry.captureMessage(`Critical Health Issue: Score ${result.score}`, {
+        level: "fatal",
+        extra: { healthCheckResult: result },
+      });
+    }
 
     // TODO: إرسال notification فعلي (email, SMS, push, etc.)
     // مؤقتاً: نحفظ في localStorage
