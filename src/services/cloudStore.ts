@@ -59,7 +59,7 @@ function getDeviceToken(): string | null {
     window.crypto.getRandomValues(arr);
     token = `dev_${Array.from(arr).map((b) => b.toString(16).padStart(2, "0")).join("")}`;
   } else {
-    token = `dev_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    throw new Error("Secure random number generation is not supported by this browser.");
   }
   setInLocalStorage(DEVICE_TOKEN_KEY, token);
   return token;
