@@ -16,6 +16,7 @@ export function buildMarketingEmail({
   name,
   personalLink,
   previewText = "خريطة علاقاتك جاهزة — ابدأ الرحلة الآن",
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   senderName = "فريق عمل",
   unsubLink,
 }: EmailTemplateOptions): string {

@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { FC } from "react";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -83,7 +85,7 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
     let currentCycles = 0;
 
     // --- Audio Init (Binaural Beats: 174Hz base, 5Hz difference for Theta state) ---
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    const AudioContext = window.AudioContext || (window as /* eslint-disable-next-line @typescript-eslint/no-explicit-any */ any).webkitAudioContext;
     if (AudioContext) {
       const ctx = new AudioContext();
       audioCtxRef.current = ctx;
