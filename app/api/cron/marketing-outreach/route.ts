@@ -224,20 +224,52 @@ export async function GET(request: Request) {
   const results: Array<Record<string, unknown>> = [];
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.alrehla.app").replace(/\/$/, "");
 
+  // Batch fetch marketing_leads
+  const leadEmails = [...new Set(rows.map(r => r.lead_email).filter(Boolean))];
+  const leadsMap = new Map<string, Record<string, any>>();
+
+  if (leadEmails.length > 0) {
+    const { data: leadsData, error: leadsError } = await supabase
+      .from("marketing_leads")
+      .select("email, first_name, name, full_name, unsubscribed, phone")
+      .in("email", leadEmails);
+
+    if (!leadsError && leadsData) {
+      for (const lead of leadsData) {
+        leadsMap.set(lead.email, lead);
+      }
+    }
+  }
+
+  // Batch fetch routing_events to check if lead has started onboarding
+  const leadIds = [...new Set(rows.map(r => r.lead_id).filter(Boolean))];
+  const startedLeads = new Set<string>();
+
+  if (leadIds.length > 0) {
+    const { data: eventsData, error: eventsError } = await supabase
+      .from("routing_events")
+      .select("lead_id")
+      .in("lead_id", leadIds);
+
+    if (!eventsError && eventsData) {
+      for (const event of eventsData) {
+        if (event.lead_id) {
+          startedLeads.add(event.lead_id);
+        }
+      }
+    }
+  }
+
   for (const row of rows) {
     try {
       let outcome;
       const currentStep = row.step ?? 1;
 
       if (row.channel === "email") {
-        // 0. Check unsubscribed
-        const { data: leadCheck } = await supabase
-          .from("marketing_leads")
-          .select("first_name, name, full_name, unsubscribed")
-          .eq("email", row.lead_email)
-          .maybeSingle();
+        // 0. Check unsubscribed using batched Map
+        const leadCheck = leadsMap.get(row.lead_email);
 
-        if ((leadCheck as Record<string, unknown> | null)?.unsubscribed === true) {
+        if (leadCheck?.unsubscribed === true) {
           await supabase
             .from("marketing_lead_outreach_queue")
             .update({ status: "cancelled", last_error: "unsubscribed" })
@@ -246,10 +278,7 @@ export async function GET(request: Request) {
           continue;
         }
 
-        const rawName = ((leadCheck as Record<string, unknown> | null)?.first_name
-          ?? (leadCheck as Record<string, unknown> | null)?.name
-          ?? (leadCheck as Record<string, unknown> | null)?.full_name
-          ?? "") as string;
+        const rawName = (leadCheck?.first_name ?? leadCheck?.name ?? leadCheck?.full_name ?? "") as string;
         const firstName = rawName.trim().split(/\s+/)[0] ?? "";
 
         // 2. Build personalized link + unsubscribe link
@@ -279,13 +308,10 @@ export async function GET(request: Request) {
         // 5. Schedule next drip step (if not last step and lead hasn't started onboarding)
         const nextStep = currentStep + 1;
         if (nextStep <= 3 && row.lead_id) {
-          // Check if lead already converted
-          const { count: started } = await supabase
-            .from("routing_events")
-            .select("*", { count: "exact", head: true })
-            .eq("lead_id", row.lead_id);
+          // Check if lead already converted using batched Set
+          const hasStarted = startedLeads.has(row.lead_id);
 
-          if (!started || started === 0) {
+          if (!hasStarted) {
             const nextConfig = DRIP_STEPS[nextStep];
             if (nextConfig) {
               const scheduledAt = addDays(new Date(), nextConfig.delayDays);
@@ -304,15 +330,11 @@ export async function GET(request: Request) {
         }
       } else {
         // WhatsApp
-        const { data: lead } = await supabase
-          .from("marketing_leads")
-          .select("phone")
-          .eq("email", row.lead_email)
-          .maybeSingle();
+        const lead = leadsMap.get(row.lead_email);
 
         const payloadWithPhone = {
           ...row.payload,
-          phone: (lead as Record<string, unknown> | null)?.phone ?? null,
+          phone: lead?.phone ?? null,
           lead_id: row.lead_id,
         };
         outcome = await sendWhatsapp(row.lead_email, payloadWithPhone);
