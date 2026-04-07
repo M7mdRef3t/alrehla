@@ -25,7 +25,10 @@ export interface ErrorAnalysisResult {
   };
   suggestedFixes: {
     description: string;
+    filePath?: string;
+    originalCode?: string;
     code?: string;
+    action?: "replace" | "append";
     autoApplicable: boolean;
     estimatedImpact: "low" | "medium" | "high";
   }[];
@@ -70,7 +73,10 @@ export class AIErrorAnalyzer {
       affectedFeatures: string[];
       suggestedFixes: Array<{
         description: string;
+        filePath?: string;
+        originalCode?: string;
         code?: string;
+        action?: "replace" | "append";
         autoApplicable: boolean;
         estimatedImpact: "low" | "medium" | "high";
       }>;
@@ -223,23 +229,43 @@ ${stack ? `\n${stack}` : ""}
    * تطبيق fix واحد
    */
   private async applyFix(fix: ErrorAnalysisResult["suggestedFixes"][0]): Promise<boolean> {
-    // TODO: في المستقبل، ممكن نستخدم AST manipulation
-    // مؤقتاً: نحفظ الـ fix suggestion للمراجعة اليدوية
-
     try {
+      // حفظ في localStorage كـ backup
       const suggestions = JSON.parse(
         localStorage.getItem("dawayir-fix-suggestions") || "[]"
       ) as typeof fix[];
-
       suggestions.push(fix);
-
       localStorage.setItem(
         "dawayir-fix-suggestions",
         JSON.stringify(suggestions.slice(-20))
       );
 
+      if (fix.filePath && fix.code && fix.action) {
+        // نستخدم AST manipulation عن طريق API
+        const response = await fetch("/api/auto-fix", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            filePath: fix.filePath,
+            originalCode: fix.originalCode,
+            code: fix.code,
+            action: fix.action,
+          }),
+        });
+
+        if (response.ok) {
+          return true;
+        } else {
+          console.error("Auto-fix API failed", await response.text());
+          return false;
+        }
+      }
+
       return true;
-    } catch {
+    } catch (err) {
+      console.error("Failed to apply fix:", err);
       return false;
     }
   }
