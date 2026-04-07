@@ -208,7 +208,7 @@ async function flushSupabaseSync(): Promise<void> {
   });
 
   // Session → User stitching: ربط الجلسة بالمستخدم عند تسجيل الدخول
-  const userStitchingMap = new Map<string, any>();
+  const userStitchingMap = new Map<string, Record<string, unknown>>();
   for (const { event } of batch) {
     if (event.type !== "flow_event" || !event.sessionId) continue;
     const payload = event.payload as JourneyEventPayload["flow_event"];
