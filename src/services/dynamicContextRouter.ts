@@ -67,7 +67,7 @@ export class DynamicContextRouter {
 
         // This is where we'd call the actual LLM API with the prompt.
         // For now, we return the prompt for verification (Mocking the AI call).
-        console.log("PROMPT GENERATED FOR LLM:", prompt);
+
 
         return null; // LLM integration will happen in Integration Phase
     }
