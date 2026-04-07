@@ -4,7 +4,6 @@
  * نظام أتمتة كامل للاشتراكات والدفع والتسعير
  */
 
-import { getStripeClient } from "../../app/api/_lib/stripeConfig";
 import { decisionEngine } from "./decision-framework";
 import { geminiClient } from "../services/geminiClient";
 import type { AIDecision } from "./decision-framework";
@@ -292,40 +291,59 @@ export class RevenueAutomationEngine {
 
     // تطبيق التغيير
     try {
-      const { client, config } = getStripeClient();
+      // Run actual Stripe creation only in a secure server environment with the SDK
+      // Using native fetch bypasses Node-specific edge bundling issues for client components
+      if (typeof process !== "undefined" && process.env.STRIPE_SECRET_KEY) {
+        const secretKey = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY_TEST;
+        const premiumPriceId = process.env.STRIPE_PRICE_PREMIUM || process.env.VITE_STRIPE_PRICE_PREMIUM || process.env.NEXT_PUBLIC_STRIPE_PRICE_PREMIUM;
+        const coachPriceId = process.env.STRIPE_PRICE_COACH || process.env.VITE_STRIPE_PRICE_COACH || process.env.NEXT_PUBLIC_STRIPE_PRICE_COACH;
 
-      if (client && config.pricePremium && config.priceCoach) {
-        // Fetch existing prices to extract Product IDs
-        const premiumPrice = await client.prices.retrieve(config.pricePremium);
-        const premiumProductId = typeof premiumPrice.product === "string"
-          ? premiumPrice.product
-          : premiumPrice.product.id;
+        if (secretKey && premiumPriceId && coachPriceId) {
+          const authHeader = { Authorization: `Bearer ${secretKey}`, "Content-Type": "application/x-www-form-urlencoded" };
 
-        // Create new Stripe Price for Premium
-        const newPremiumPrice = await client.prices.create({
-          product: premiumProductId,
-          unit_amount: Math.round(recommendation.suggestedPrices.premium * 100),
-          currency: "usd",
-          recurring: { interval: "month" },
-        });
+          // Helper to fetch product ID from existing price
+          const getProductId = async (priceId: string) => {
+            const res = await fetch(`https://api.stripe.com/v1/prices/${priceId}`, { headers: authHeader });
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data.product;
+          };
 
-        // Fetch existing Coach price for Product ID
-        const coachPrice = await client.prices.retrieve(config.priceCoach);
-        const coachProductId = typeof coachPrice.product === "string"
-          ? coachPrice.product
-          : coachPrice.product.id;
+          // Helper to create a new price
+          const createPrice = async (productId: string, amount: number) => {
+            if (!productId) return null;
+            const params = new URLSearchParams({
+              product: productId,
+              currency: "usd",
+              unit_amount: Math.round(amount * 100).toString(),
+              "recurring[interval]": "month"
+            });
+            const res = await fetch("https://api.stripe.com/v1/prices", {
+              method: "POST",
+              headers: authHeader,
+              body: params
+            });
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data.id;
+          };
 
-        // Create new Stripe Price for Coach
-        const newCoachPrice = await client.prices.create({
-          product: coachProductId,
-          unit_amount: Math.round(recommendation.suggestedPrices.coach * 100),
-          currency: "usd",
-          recurring: { interval: "month" },
-        });
+          const premiumProductId = await getProductId(premiumPriceId);
+          const newPremiumId = await createPrice(premiumProductId, recommendation.suggestedPrices.premium);
 
-        console.warn(`✅ [Stripe] Created new prices. Premium: ${newPremiumPrice.id}, Coach: ${newCoachPrice.id}. Ensure environment variables are updated.`);
+          const coachProductId = await getProductId(coachPriceId);
+          const newCoachId = await createPrice(coachProductId, recommendation.suggestedPrices.coach);
+
+          if (newPremiumId && newCoachId) {
+            console.warn(`✅ [Stripe] Created new prices via REST. Premium: ${newPremiumId}, Coach: ${newCoachId}. Ensure environment variables are updated.`);
+          } else {
+            console.warn("⚠️ Failed to create Stripe prices via REST. Missing product IDs or API error.");
+          }
+        } else {
+          console.warn("⚠️ Stripe IDs missing in environment. Skipping actual Stripe REST price updates.");
+        }
       } else {
-        console.warn("⚠️ Stripe client not configured or missing price IDs. Skipping actual Stripe price updates.");
+        console.warn("⚠️ Not in a secure server environment with Stripe keys. Skipping Stripe actualization.");
       }
 
       // TODO: Update database with new pricing
