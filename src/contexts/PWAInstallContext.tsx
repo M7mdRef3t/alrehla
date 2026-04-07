@@ -4,7 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import { runtimeEnv } from "../config/runtimeEnv";
 import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
 import { getWindowOrNull } from "../services/clientRuntime";
-import { BeforeInstallPromptEvent, isStandaloneDisplay, isLikelyInAppBrowser, showInstallInstructions } from "../utils/pwa";
+import { isStandaloneDisplay, isLikelyInAppBrowser, showInstallInstructions } from "../utils/pwa";
+import type { BeforeInstallPromptEvent } from "../utils/pwa";
 
 export interface PWAInstallContextValue {
   canShowInstallButton: boolean;
