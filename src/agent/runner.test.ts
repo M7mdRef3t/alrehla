@@ -70,7 +70,7 @@ describe("runner", () => {
         });
 
         // Ensure vi.mocked works properly with the destructured import
-        (vi.mocked(useMapState.getState) as any).mockReturnValue({
+        (vi.mocked(useMapState.getState) as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
           addSituationLog: mockAddSituationLog
         });
 
@@ -93,7 +93,7 @@ describe("runner", () => {
           throw "String error";
         });
 
-        (vi.mocked(useMapState.getState) as any).mockReturnValue({
+        (vi.mocked(useMapState.getState) as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
           addSituationLog: mockAddSituationLog
         });
 
