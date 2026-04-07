@@ -20,7 +20,6 @@ export const CreativeDashboard: React.FC = () => {
     const deployPost = (id: string) => {
         setDeployedId(id);
         // هنا نقوم بإرسال إشارة الـ Reward للمحرك (RLHF)
-        console.log(`🚀 [RLHF] Reward Signal Sent for Post: ${id}`);
         setTimeout(() => setDeployedId(null), 3000);
     };
 
