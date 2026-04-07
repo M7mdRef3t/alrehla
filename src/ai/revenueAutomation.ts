@@ -5,6 +5,8 @@
  */
 
 import { decisionEngine } from "./decision-framework";
+import { supabase, isSupabaseReady } from "../services/supabaseClient";
+
 import { geminiClient } from "../services/geminiClient";
 import type { AIDecision } from "./decision-framework";
 import {
@@ -123,37 +125,100 @@ export class RevenueAutomationEngine {
    * تحليل الميتريكس الحالية
    * ─────────────────────────────────────────────────────────────────
    */
-  async analyzeCurrentMetrics(): Promise<RevenueMetrics | null> {
-    // في المستقبل: نجيب البيانات من Supabase
-    // مؤقتاً: نحاكي البيانات
+    async analyzeCurrentMetrics(): Promise<RevenueMetrics | null> {
+    if (!isSupabaseReady || !supabase) {
+      console.warn("⚠️ Supabase is not ready. Returning mock revenue metrics.");
+      return this.getMockMetrics();
+    }
 
     try {
-      // TODO: Replace with actual Supabase query
-      const mockData: RevenueMetrics = {
+      // 1. Get total users
+      const { count: totalUsers, error: totalError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      if (totalError) throw totalError;
+
+      // 2. Get coach users (role = enterprise_admin)
+      const { count: coachUsers, error: coachError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'enterprise_admin');
+
+      if (coachError) throw coachError;
+
+      // 3. Get premium users (subscription_status in ['active', 'trialing'], role != enterprise_admin)
+      const { count: premiumUsers, error: premiumError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .in('subscription_status', ['active', 'trialing'])
+        .neq('role', 'enterprise_admin');
+
+      if (premiumError) throw premiumError;
+
+      const total = totalUsers || 0;
+      const coach = coachUsers || 0;
+      const premium = premiumUsers || 0;
+      const free = Math.max(0, total - coach - premium);
+
+      const premiumPrice = TIER_PRICES_USD.premium.monthly;
+      const coachPrice = TIER_PRICES_USD.coach.monthly;
+
+      const mrr = premium * premiumPrice + coach * coachPrice;
+      const arr = mrr * 12;
+
+      // Churn and conversion rates are difficult to calculate without historical tracking tables.
+      // Using static estimated defaults for now.
+      const churnRate = 0.05;
+      const avgRevenuePerUser = total > 0 ? mrr / total : 0;
+      const lifetimeValue = churnRate > 0 ? (avgRevenuePerUser / churnRate) : 0;
+
+      const metrics: RevenueMetrics = {
         timestamp: Date.now(),
-        totalUsers: 150,
+        totalUsers: total,
         breakdown: {
-          free: 100,
-          premium: 40,
-          coach: 10,
+          free,
+          premium,
+          coach,
         },
-        mrr: 40 * 4.99 + 10 * 49, // $689.6
-        arr: (40 * 4.99 + 10 * 49) * 12, // $8,275.2
-        churnRate: 0.05, // 5%
+        mrr,
+        arr,
+        churnRate,
         conversionRate: {
-          freeToPremium: 0.15, // 15% من Free بيحولوا لـ Premium
-          premiumToCoach: 0.08, // 8% من B2C بيحولوا لـ B2B
+          freeToPremium: 0.15, // Mocked for now
+          premiumToCoach: 0.08, // Mocked for now
         },
-        avgRevenuePerUser: (40 * 4.99 + 10 * 49) / 150,
-        lifetimeValue: ((40 * 4.99 + 10 * 49) / 50) * (1 / 0.05), // LTV = ARPU × (1/churn)
+        avgRevenuePerUser,
+        lifetimeValue,
       };
 
-      console.warn("📊 Revenue metrics analyzed:", mockData);
-      return mockData;
+      console.warn("📊 Revenue metrics analyzed:", metrics);
+      return metrics;
     } catch (error) {
       console.error("❌ Failed to analyze metrics:", error);
       return null;
     }
+  }
+
+  private getMockMetrics(): RevenueMetrics {
+    return {
+      timestamp: Date.now(),
+      totalUsers: 150,
+      breakdown: {
+        free: 100,
+        premium: 40,
+        coach: 10,
+      },
+      mrr: 40 * 4.99 + 10 * 49,
+      arr: (40 * 4.99 + 10 * 49) * 12,
+      churnRate: 0.05,
+      conversionRate: {
+        freeToPremium: 0.15,
+        premiumToCoach: 0.08,
+      },
+      avgRevenuePerUser: (40 * 4.99 + 10 * 49) / 150,
+      lifetimeValue: ((40 * 4.99 + 10 * 49) / 50) * (1 / 0.05),
+    };
   }
 
   /**
