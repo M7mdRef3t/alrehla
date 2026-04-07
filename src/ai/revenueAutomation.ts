@@ -360,7 +360,7 @@ export class RevenueAutomationEngine {
       // TODO: ربط تغيير الأسعار بمصدر التسعير الفعلي عند تفعيله
       // TODO: Update database with new pricing
       // Notify existing users about grandfathering policy
-      void this.notifyGrandfatheredUsers();
+      await this.notifyGrandfatheredUsers();
 
       console.warn("✅ Pricing changed successfully:", recommendation.suggestedPrices);
 
