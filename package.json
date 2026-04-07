@@ -84,6 +84,7 @@
     "@axe-core/playwright": "^4.11.1",
     "@emotion/is-prop-valid": "^1.4.0",
     "@eslint/js": "^9.39.2",
+    "@netlify/plugin-nextjs": "^5.15.9",
     "@playwright/test": "^1.58.2",
     "@storybook/addon-essentials": "8.4.2",
     "@storybook/addon-interactions": "8.4.2",
