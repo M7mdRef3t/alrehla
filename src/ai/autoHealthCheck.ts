@@ -532,8 +532,29 @@ export class AutoHealthChecker {
   private async notifyAdmin(result: HealthCheckResult): Promise<void> {
     console.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
 
-    // TODO: إرسال notification فعلي (email, SMS, push, etc.)
-    // مؤقتاً: نحفظ في localStorage
+    try {
+      // Dynamic import to avoid circular dependency
+      const { telegramBot } = await import("../services/telegramBot");
+
+      const issuesText = result.issues
+        .map((i) => `- ${i.category}: ${i.description} (${i.severity})`)
+        .join("\n");
+
+      const messageText = `🚨 *CRITICAL HEALTH ISSUE DETECTED* 🚨
+*Status:* ${result.status.toUpperCase()}
+*Score:* ${result.score}/100
+
+*Issues:*
+${issuesText}`;
+
+      await telegramBot.sendMessage({
+        type: "critical_error_alert",
+        text: messageText,
+        parseMode: "Markdown",
+      });
+    } catch (e) {
+      console.error("Failed to send telegram notification for health check", e);
+    }
 
     try {
       const alerts = JSON.parse(
