@@ -1,8 +1,8 @@
-import { useFleetState, FleetVessel } from '../../state/fleetState';
-import { useDigitalTwinState } from '../../state/digitalTwinState';
-import { usePredictiveState } from '../../state/predictiveState';
+import { useFleetState, FleetVessel } from '@/state/fleetState';
+import { useDigitalTwinState } from '@/state/digitalTwinState';
+import { usePredictiveState } from '@/state/predictiveState';
 import { fetchDreams } from '../adminApi';
-import { Dream } from '../../types/dreams';
+import { Dream } from '@/types/dreams';
 
 export class FleetEngine {
     /**

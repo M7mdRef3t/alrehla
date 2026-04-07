@@ -1,8 +1,8 @@
 import type { FunctionDeclaration, FunctionDeclarationsTool } from "@google/generative-ai";
 import { SchemaType } from "@google/generative-ai";
-import { symptomsDatabase } from "../data/symptoms";
+import { symptomsDatabase } from "@/data/symptoms";
 import type { AgentActions } from "./types";
-import type { Ring } from "../modules/map/mapTypes";
+import type { Ring } from "@/modules/map/mapTypes";
 
 const ALL_SYMPTOM_IDS = new Set<string>(
   (["red", "yellow", "green"] as Ring[]).flatMap((ring) =>

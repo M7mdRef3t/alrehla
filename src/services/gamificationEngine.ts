@@ -1,5 +1,5 @@
-export { useGamificationState } from '../state/gamificationState';
-export type { Rank } from '../state/gamificationState';
+export { useGamificationState } from '@/state/gamificationState';
+export type { Rank } from '@/state/gamificationState';
 
 /**
  * Gamification Engine — محرك التلعيب 🎮

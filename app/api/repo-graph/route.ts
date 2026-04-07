@@ -6,7 +6,16 @@ const GRAPH_PATH = path.join(process.cwd(), "output", "repo-graph", "graph.json"
 
 export async function GET() {
   if (!fs.existsSync(GRAPH_PATH)) {
-    return NextResponse.json({ error: "Repo graph not generated yet." }, { status: 404 });
+    // Return empty graph instead of 404 to avoid console spam
+    return NextResponse.json(
+      {
+        generatedAt: new Date().toISOString(),
+        stats: { scannedFiles: 0, nodeCount: 0, edgeCount: 0 },
+        nodes: [],
+        edges: [],
+      },
+      { status: 200 }
+    );
   }
 
   try {

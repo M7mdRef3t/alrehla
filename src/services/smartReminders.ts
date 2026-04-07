@@ -1,7 +1,7 @@
 /**
  * تذكيرات مخصصة حسب تقدم المستخدم — تقرأ من الخريطة والرحلة وتعيد عنوان ونص مناسب
  */
-import type { MapNode } from "../modules/map/mapTypes";
+import type { MapNode } from "@/modules/map/mapTypes";
 import { loadStoredState } from "./localStore";
 
 export interface ProgressSnapshot {

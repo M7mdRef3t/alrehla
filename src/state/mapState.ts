@@ -14,11 +14,11 @@ import type {
   OrbitHistoryEntry,
   MapType,
   FeelingCheckResult
-} from "../modules/map/mapTypes";
-import { loadStoredState, saveStoredState } from "../services/localStore";
-import { resolvePathId } from "../modules/pathEngine/pathResolver";
-import type { ContactLevel } from "../modules/pathEngine/pathTypes";
-import { emitDawayirSignal } from "../modules/recommendation/recommendationBus";
+} from "@/modules/map/mapTypes";
+import { loadStoredState, saveStoredState } from "@/services/localStore";
+import { resolvePathId } from "@/modules/pathEngine/pathResolver";
+import type { ContactLevel } from "@/modules/pathEngine/pathTypes";
+import { emitDawayirSignal } from "@/modules/recommendation/recommendationBus";
 import { useGamificationState } from "./gamificationState";
 
 export interface RecoveryPlanOpenWith {
@@ -28,6 +28,7 @@ export interface RecoveryPlanOpenWith {
 
 interface MapState {
   nodes: MapNode[];
+  isHydrated: boolean;
   mapType: MapType;
   feelingResults: FeelingCheckResult | null;
   setMapType: (type: MapType) => void;
@@ -196,6 +197,7 @@ function normalizeNodeOrbitHistory(node: MapNode): MapNode {
 
 export const useMapState = create<MapState>((set, get) => ({
   nodes: [],
+  isHydrated: false,
   mapType: "masafaty",
   feelingResults: null,
   setMapType: (mapType) => {
@@ -1018,7 +1020,9 @@ async function hydrateMapState() {
   const initialNodes: MapNode[] = (initial?.nodes ?? []).map(normalizeNodeOrbitHistory);
   if (initialNodes.length > 0) {
     deriveNextId(initialNodes);
-    useMapState.setState({ nodes: initialNodes });
+    useMapState.setState({ nodes: initialNodes, isHydrated: true });
+  } else {
+    useMapState.setState({ isHydrated: true });
   }
 }
 

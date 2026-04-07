@@ -163,34 +163,7 @@ export async function POST(req: Request) {
         ? `${appUrl}/onboarding?ref=${leadId}&utm_source=email&utm_medium=manual&utm_campaign=admin_send`
         : `${appUrl}/onboarding?utm_source=email&utm_medium=manual&utm_campaign=admin_send`;
 
-      // 2. Send email immediately via Resend
-      const apiKey = process.env.RESEND_API_KEY;
-      const from = process.env.MARKETING_EMAIL_FROM || process.env.REPORT_EMAIL_FROM;
-
-      if (!apiKey || !from) {
-        // Fallback: queue it for cron
-        const { data: existing } = await supabase
-          .from("marketing_lead_outreach_queue")
-          .select("id")
-          .eq("lead_email", email)
-          .eq("channel", "email")
-          .maybeSingle();
-
-        if (existing) {
-          await supabase
-            .from("marketing_lead_outreach_queue")
-            .update({ status: "pending", scheduled_at: new Date().toISOString(), attempts: 0, last_error: null })
-            .eq("id", existing.id);
-        } else {
-          await supabase.from("marketing_lead_outreach_queue").insert({
-            lead_email: email, lead_id: leadId || null, channel: "email",
-            status: "pending", step: 1, attempts: 0, scheduled_at: new Date().toISOString()
-          });
-        }
-        return NextResponse.json({ ok: true, method: "queued" });
-      }
-
-      // Build email HTML using the marketing template
+      // 2. Build email HTML
       let buildMarketingEmail: any;
       try {
         buildMarketingEmail = (await import("@/lib/marketing/emailTemplate")).buildMarketingEmail;
@@ -214,18 +187,48 @@ export async function POST(req: Request) {
         html = `<p>أهلاً ${leadName || "يا بطل"}،</p><p>خريطة علاقاتك جاهزة: <a href="${personalLink}">${personalLink}</a></p>`;
       }
 
-      const response = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from, to: email, subject, html, reply_to: "hello@alrehla.app" }),
-      });
-      const resendBody = await response.json().catch(() => ({}));
+      // 3. Send via Sovereign Mail Engine (Nodemailer SMTP)
+      const from = process.env.SMTP_FROM || process.env.MARKETING_EMAIL_FROM || process.env.REPORT_EMAIL_FROM;
+      const smtpHost = process.env.SMTP_HOST;
 
-      if (!response.ok) {
-        return NextResponse.json({ ok: false, error: `send_failed: ${JSON.stringify(resendBody)}` }, { status: 500 });
+      if (!smtpHost || !from) {
+        // Fallback: queue it for cron
+        const { data: existing } = await supabase
+          .from("marketing_lead_outreach_queue")
+          .select("id")
+          .eq("lead_email", email)
+          .eq("channel", "email")
+          .maybeSingle();
+
+        if (existing) {
+          await supabase
+            .from("marketing_lead_outreach_queue")
+            .update({ status: "pending", scheduled_at: new Date().toISOString(), attempts: 0, last_error: null })
+            .eq("id", existing.id);
+        } else {
+          await supabase.from("marketing_lead_outreach_queue").insert({
+            lead_email: email, lead_id: leadId || null, channel: "email",
+            status: "pending", step: 1, attempts: 0, scheduled_at: new Date().toISOString()
+          });
+        }
+        return NextResponse.json({ ok: true, method: "queued" });
       }
 
-      // 3. Update queue record
+      const { sendEmail: sovereignSend } = await import("../../email/engine");
+      const sendResult = await sovereignSend({
+        to: email,
+        subject,
+        html,
+        from,
+        replyTo: "hello@alrehla.app",
+        enableTracking: true,
+      });
+
+      if (!sendResult.ok) {
+        return NextResponse.json({ ok: false, error: `send_failed: ${sendResult.error}` }, { status: 500 });
+      }
+
+      // 4. Update queue record
       const sentAt = new Date().toISOString();
       const { data: existing } = await supabase
         .from("marketing_lead_outreach_queue")
@@ -237,21 +240,21 @@ export async function POST(req: Request) {
       if (existing) {
         await supabase
           .from("marketing_lead_outreach_queue")
-          .update({ status: "sent", sent_at: sentAt, attempts: 1, last_error: null, resend_message_id: resendBody.id || null })
+          .update({ status: "sent", sent_at: sentAt, attempts: 1, last_error: null, resend_message_id: sendResult.messageId || 'sovereign_smtp' })
           .eq("id", existing.id);
       } else {
         await supabase.from("marketing_lead_outreach_queue").insert({
           lead_email: email, lead_id: leadId || null, channel: "email",
-          status: "sent", step: 1, attempts: 1, sent_at: sentAt, resend_message_id: resendBody.id || null
+          status: "sent", step: 1, attempts: 1, sent_at: sentAt, resend_message_id: sendResult.messageId || 'sovereign_smtp'
         });
       }
 
-      return NextResponse.json({ ok: true, method: "sent_immediately", resendId: resendBody.id });
+      return NextResponse.json({ ok: true, method: "sent_immediately", engine: "sovereign", messageId: sendResult.messageId });
     }
 
     return NextResponse.json({ ok: false, error: "unknown_action" }, { status: 400 });
   } catch (error: any) {
-    console.error("[marketing-ops/lead] Resend error:", error);
+    console.error("[marketing-ops/lead] Send error:", error);
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }

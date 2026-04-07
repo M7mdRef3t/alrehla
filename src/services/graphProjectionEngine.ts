@@ -5,10 +5,10 @@
  * يربط العقد بـ Vectors لتمكين البحث الدلالي مع البنية الشبكية.
  */
 
-import { MapNode } from "../modules/map/mapTypes";
+import { MapNode } from "@/modules/map/mapTypes";
 import { consciousnessService } from "./consciousnessService";
 import { supabase } from "./supabaseClient";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 export type RelationType = "ORBITS" | "EXHIBITS" | "TRIGGERS" | "REMEDIES" | "REINFORCES";
 

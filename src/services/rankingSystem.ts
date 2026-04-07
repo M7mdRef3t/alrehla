@@ -1,4 +1,4 @@
-import { Rank } from "../types/tactical";
+import { Rank } from "@/types/tactical";
 
 export const calculateRank = (missionCount: number): Rank => {
     if (missionCount >= 26) return "Master General";

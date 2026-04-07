@@ -10,9 +10,9 @@
  * 4. استقبال الأوامر (موافق/رفض/إيقاف)
  */
 
-import type { HealthCheckResult, HealthIssue } from "../ai/autoHealthCheck";
-import type { RevenueMetrics, PricingRecommendation } from "../ai/revenueAutomation";
-import { runtimeEnv } from "../config/runtimeEnv";
+import type { HealthCheckResult, HealthIssue } from "@/ai/autoHealthCheck";
+import type { RevenueMetrics, PricingRecommendation } from "@/ai/revenueAutomation";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 const TELEGRAM_CONFIG = {
   botToken: String(runtimeEnv.telegramBotToken ?? "").trim(),
@@ -426,7 +426,7 @@ async function sendDailyHealthReportNow(): Promise<void> {
 async function sendWeeklyRevenueReportNow(): Promise<void> {
   try {
     // Import dynamically to avoid circular dependency
-    const { revenueEngine } = await import("../ai/revenueAutomation");
+    const { revenueEngine } = await import("@/ai/revenueAutomation");
     const metrics = await revenueEngine.analyzeCurrentMetrics();
 
     if (metrics) {

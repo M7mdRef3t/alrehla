@@ -4,8 +4,9 @@
  * يحول العلاقات إلى كتل جاذبية (Gravity Mass) وأنماط صدى (Echo Patterns).
  */
 
-import { useMapState } from "../state/mapState";
-import { type MapNode, type Ring } from "../modules/map/mapTypes";
+import { useMapState } from "@/state/mapState";
+import { useEventHistoryStore } from "@/state/eventHistoryStore";
+import { type MapNode, type Ring } from "@/modules/map/mapTypes";
 
 // 1. Gravity Mass Calculation
 // ------------------------------------------------------------------
@@ -71,32 +72,63 @@ export interface EchoPattern {
 }
 
 /**
- * Detects hidden temporal patterns in the user's graph history.
- * (Mock implementation for prototype - requires historical snapshots in real DB)
+ * Detects hidden temporal patterns in the user's graph history by scanning the Automagic Loop timeline.
  */
 export const detectEchoPatterns = (): EchoPattern[] => {
-    const nodes = useMapState.getState().nodes;
+    const events = useEventHistoryStore.getState().events;
     const patterns: EchoPattern[] = [];
 
-    // Logic 1: The "Red Orbit" Accumulation
-    // If > 50% of nodes are in Red Ring
-    const redNodes = nodes.filter(n => n.ring === "red").length;
-    if (nodes.length > 3 && redNodes / nodes.length > 0.5) {
+    if (events.length < 5) return patterns; // Not enough data
+
+    // Logic 1: The "Decay Cycle"
+    // Identify if there is a massive wave of outward movements in the recent 20 events.
+    const recentEvents = events.slice(0, 20);
+    let driftOutwardCount = 0;
+    
+    recentEvents.forEach(e => {
+        if (e.type === "MAJOR_DETACHMENT" || e.type === "ORBIT_SHIFT_OUTWARD") {
+            driftOutwardCount++;
+        }
+    });
+
+    if (recentEvents.length >= 5 && driftOutwardCount / recentEvents.length > 0.4) {
         patterns.push({
             type: "Decay Cycle",
-            confidence: 0.85,
-            description: "نلاحظ تكرار نمط 'الترحيل للأحمر'. ٥٠٪ من علاقاتك تنتهي في المدار الخارجي."
+            confidence: Math.min(driftOutwardCount / recentEvents.length + 0.3, 0.95),
+            description: "نلاحظ تكرار نمط 'الترحيل الكثيف'. الكثير من العلاقات تبتعد عن مدارك الحيوي بشكل متسارع مؤخراً، هل هذا تنظيف صحي أم استنزاف طاقي متكرر؟"
         });
     }
 
-    // Logic 2: Rapid Shift (Simulation)
-    // If a node has high intensity but is in Green ring (Danger!)
-    const dangerousGreen = nodes.some(n => n.ring === "green" && (n.analysis?.score ?? 0) >= 5);
-    if (dangerousGreen) {
+    // Logic 2: Rapid Orbit Shift
+    // Detect if the same node was moved inward then dragged outward (or vice versa) in a short span.
+    const nodeShifts: Record<string, string[]> = {};
+    recentEvents.forEach(e => {
+        if (!nodeShifts[e.nodeId]) nodeShifts[e.nodeId] = [];
+        nodeShifts[e.nodeId].push(e.type);
+    });
+
+    let detectedUnstableNodes = 0;
+    for (const [nodeId, shifts] of Object.entries(nodeShifts)) {
+        if (shifts.includes("ORBIT_SHIFT_INWARD") && (shifts.includes("ORBIT_SHIFT_OUTWARD") || shifts.includes("MAJOR_DETACHMENT"))) {
+            detectedUnstableNodes++;
+        }
+    }
+
+    if (detectedUnstableNodes > 0) {
         patterns.push({
             type: "Rapid Orbit Shift",
+            confidence: 0.85,
+            description: `هناك ${detectedUnstableNodes > 1 ? 'عدة أشخاص يتأرجحون' : 'شخص يتأرجح'} بين الدخول والخروج من مدارك بسرعة. هذا التردد العنيف يسبب انهياراً مفاجئاً للطاقة (التخبط المداري).`
+        });
+    }
+    
+    // Logic 3: Stable Harmony (Reconciliation + Inward without Outward)
+    const inwardEventsCount = recentEvents.filter(e => e.type === "RECONCILIATION" || e.type === "KEYSTONE_RESOLVED").length;
+    if (inwardEventsCount >= 2 && driftOutwardCount === 0) {
+        patterns.push({
+            type: "Stable Harmony",
             confidence: 0.9,
-            description: "هناك 'ثقب أسود' في مدارك الأخضر. هذا النمط يسبب انهياراً مفاجئاً للطاقة."
+            description: "دوائرك تشهد استقراراً ونمواً صحياً ملحوظاً. أنت تتعافى وتُصلح الروابط الجوهرية (KEYSTONE) بنجاح."
         });
     }
 

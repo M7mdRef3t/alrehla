@@ -214,4 +214,5 @@ export interface MapNode {
   };
   /** النقطة الأولى المختارة من الـ 10-Second Mirror (تستخدم لإضافة Aura بصري مخصص) */
   isMirrorNode?: boolean;
+  isPinned?: boolean;
 }

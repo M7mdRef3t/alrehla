@@ -1,5 +1,5 @@
-import { getAuthToken } from "../state/authState";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { getAuthToken } from "@/state/authState";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { fetchJsonWithResilience, sendJsonWithResilience } from "../architecture/resilientHttp";

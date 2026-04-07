@@ -128,7 +128,7 @@ export async function processTelegramMessage(chatId: string, messageText: string
           profile = matchedProfileData;
         } else {
            // Check marketing leads as a fallback
-          const leadData = (await (supabase as any).from('marketing_leads').select('phone, status').eq('phone', phone).single()).data as { phone?: string | null; status?: string | null } | null;
+          const leadData = (await (supabase as any).from('marketing_leads').select('phone, status').eq('phone', phone).maybeSingle()).data as { phone?: string | null; status?: string | null } | null;
           if (leadData) {
             return { text: "لقيت رقمك متسجل معانا كعميل فعلاً، بس حسابك الكامل لسه متحددش. افتح المنصة وكمل تسجيل عشان أقدر أتابع معاك شخصياً!" };
           }

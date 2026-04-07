@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
-import { usePredictiveState } from '../../../../state/predictiveState';
-import { calculateEntropy } from '../../../../services/predictiveEngine';
+import { usePredictiveState } from '@/state/predictiveState';
+import { calculateEntropy } from '@/services/predictiveEngine';
 import { Shield, Zap, AlertTriangle, TrendingDown, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 

@@ -1,9 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { runtimeEnv } from "../config/runtimeEnv";
-import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
-import { getWindowOrNull } from "../services/clientRuntime";
+import { runtimeEnv } from "@/config/runtimeEnv";
+import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
+import { getWindowOrNull } from "@/services/clientRuntime";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;

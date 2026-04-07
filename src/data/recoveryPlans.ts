@@ -1,4 +1,4 @@
-import type { RecoveryPlan } from "../types/recoveryPlan";
+import type { RecoveryPlan } from "@/types/recoveryPlan";
 
 export const recoveryPlans: Record<"green" | "yellow" | "red", RecoveryPlan> = {
   green: {

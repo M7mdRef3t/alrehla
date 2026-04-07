@@ -1,4 +1,4 @@
-import type { Ring } from "../modules/map/mapTypes";
+import type { Ring } from "@/modules/map/mapTypes";
 
 export type AdviceZone = "green" | "yellow" | "red";
 

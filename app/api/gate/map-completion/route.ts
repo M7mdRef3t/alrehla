@@ -1,32 +1,36 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { sendToCapi } from '@/lib/analytics/metaCapi'; 
 import { v4 as uuidv4 } from 'uuid';
-
-function getGateDb() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Gate completion storage is not configured");
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: { persistSession: false }
-  });
-}
+import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
 
 export async function POST(req: Request) {
   try {
-    const db = getGateDb();
-    const { gateSessionId, userId } = await req.json();
+    const admin = getSupabaseAdminClient();
+    if (!admin) {
+      return NextResponse.json({ error: 'System unconfigured' }, { status: 500 });
+    }
+
+    const { gateSessionId } = await req.json();
+
+    const authHeader = req.headers.get("authorization") || "";
+    const token = authHeader.toLowerCase().startsWith("bearer ") ? authHeader.slice(7).trim() : "";
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { data: { user } } = await admin.auth.getUser(token);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized user' }, { status: 401 });
+    }
+    const userId = user.id;
 
     if (!gateSessionId || !userId) {
       return NextResponse.json({ error: 'Missing gateSessionId or userId' }, { status: 400 });
     }
 
     // 1. Fetch Session to assure it exists and hasn't triggered yet.
-    const { data: existingSession, error: sessionFetchError } = await db
+    const { data: existingSession, error: sessionFetchError } = await admin
       .from('gate_sessions')
       .select('id, email, fbp, fbc, map_completed_at, converted_user_id')
       .eq('id', gateSessionId)
@@ -37,7 +41,7 @@ export async function POST(req: Request) {
 
     // 2. SERVER-SIDE BRUTAL RULE VERIFICATION (`MapCompletedPersisted`)
     // The user MUST have a persisted document in `journey_maps`.
-    const { data: userMap, error: mapFetchError } = await db
+    const { data: userMap, error: mapFetchError } = await admin
       .from('journey_maps')
       .select('nodes')
       .eq('user_id', userId)
@@ -66,7 +70,7 @@ export async function POST(req: Request) {
 
     // 3. Atomically lock & record
     const timestamp = new Date().toISOString();
-    const { error, data: updatedData } = await db
+    const { error, data: updatedData } = await admin
       .from('gate_sessions')
       .update({ 
         map_completed_at: timestamp, 
@@ -76,11 +80,15 @@ export async function POST(req: Request) {
       .eq('id', gateSessionId)
       .is('map_completed_at', null)
       .select('id')
-      .single();
+      .maybeSingle();
 
-    if (error || !updatedData) {
-       console.error('[Gate Completion API] DB Update failed or race condition lost.');
+    if (error) {
+       console.error('[Gate Completion API] DB Update failed', error);
        return NextResponse.json({ error: 'Failed DB insertion' }, { status: 500 });
+    }
+
+    if (!updatedData) {
+       return NextResponse.json({ status: 'already_recorded' });
     }
 
     // 4. FIRE CAPI (ONLY AFTER EXACT DB COMMIT)

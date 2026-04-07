@@ -10,7 +10,7 @@ import { FunnelAndEmergency } from "../Overview/components/FunnelAndEmergency";
 import { ConversionDiagnosis } from "../Overview/components/ConversionDiagnosis";
 import { MarketingAndRetention } from "../Overview/components/MarketingAndRetention";
 
-import { fetchOverviewStats, type OverviewStats, fetchWeeklyReport, type WeeklyReport } from "../../../../services/adminApi";
+import { fetchOverviewStats, type OverviewStats, fetchWeeklyReport, type WeeklyReport } from "@/services/adminApi";
 
 export const GrowthRevenueDashboard: FC = () => {
     const [remoteStats, setRemoteStats] = useState<OverviewStats | null>(null);

@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { AboutScreen } from "../../src/components/AboutScreen";
-import { PlatformFooter } from "../../src/components/PlatformFooter";
+import { AboutScreen } from "@/modules/growth/AboutScreen";
+import { PlatformFooter } from "@/modules/meta/PlatformFooter";
 
 export default function AboutPage() {
   const router = useRouter();

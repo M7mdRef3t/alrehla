@@ -1,5 +1,5 @@
-import { goalPickerCopy } from "../copy/goalPicker";
-import { resolveAdviceCategory } from "../data/adviceScripts";
+import { goalPickerCopy } from "@/copy/goalPicker";
+import { resolveAdviceCategory } from "@/data/adviceScripts";
 
 export function getGoalLabel(goalId?: string | null): string {
   if (!goalId) return "";

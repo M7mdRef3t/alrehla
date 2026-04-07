@@ -1,8 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { ShieldAlert } from "lucide-react";
-import { useEmergencyState } from "../../state/emergencyState";
-import { AnalyticsEvents, trackEvent } from "../../services/analytics";
+import { useEmergencyState } from "@/state/emergencyState";
+import { AnalyticsEvents, trackEvent } from "@/services/analytics";
 
 export function EmergencyButton() {
   const openEmergency = useEmergencyState((state) => state.open);

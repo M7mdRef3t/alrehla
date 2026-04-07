@@ -65,7 +65,7 @@ export async function syncReferralToSupabase(email: string): Promise<ReferralDat
             .from("marketing_leads")
             .select("metadata")
             .eq("email", email)
-            .single();
+            .maybeSingle();
 
         if (lead?.metadata?.referral_code) {
             // Already has a code in DB, use it
@@ -139,7 +139,7 @@ export async function applyReferralCodeAsync(code: string, myEmail: string): Pro
 
     try {
         // 1. Mark in my lead metadata
-        const { data: me } = await supabase.from("marketing_leads").select("metadata").eq("email", myEmail).single();
+        const { data: me } = await supabase.from("marketing_leads").select("metadata").eq("email", myEmail).maybeSingle();
         await supabase.from("marketing_leads").update({
             metadata: { ...(me?.metadata || {}), referred_by: code }
         }).eq("email", myEmail);

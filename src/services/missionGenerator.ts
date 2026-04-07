@@ -105,23 +105,39 @@ export class DDAConstraintEngine {
     }
 }
 
+import { TruthRecord, VaultService } from "./truthVault";
+
+
+// ─── JSON Schema Interface ───────────────────────────────────────
+// (Keep existing interfaces)
+
 // ─── Mission Generator (Prompt Alchemy) ──────────────────────────
 export class MissionGenerator {
     /**
-     * Constructs the Unified System Prompt for the LLM
+     * Constructs the Unified System Prompt for the LLM.
+     * Hardened for 'Data Authenticity' by injecting real user discoveries.
      */
-    static constructPrompt(vector: AwarenessVector, ddaLevel: number): string {
+    static constructPrompt(vector: AwarenessVector, ddaLevel: number, truths: TruthRecord[] = []): string {
         const constraints = DDAConstraintEngine.getConstraints(ddaLevel);
+
+        // Filter for high-priority truths to keep the context dense but readable
+        const relevantTruths = truths
+            .sort((a, b) => b.priority - a.priority)
+            .slice(0, 5)
+            .map(t => `- [${t.category.toUpperCase()}]: ${t.content}`)
+            .join("\n");
 
         return `
 ROLE: You are the 'Reality Hacker' core of the Alrehla OS.
-OBJECTIVE: Geherate a "Reality Hack" to rewire the user's neural pathways based on their Awareness Vector.
+OBJECTIVE: Generate a "Reality Hack" to rewire the user's neural pathways based on their Awareness Vector.
 
-USER CONTEXT:
+USER CONTEXT (Vector Metrics):
 - Relational Symmetry (RS): ${vector.rs.toFixed(2)}
 - Agentic Velocity (AV): ${vector.av.toFixed(2)}
 - Shadow Entropy (SE): ${vector.se.toFixed(2)}
 - Cognitive Bandwidth (CB): ${vector.cb.toFixed(2)}
+
+${relevantTruths.length > 0 ? `CORE DISCOVERIES (Real Data from Truth Vault):\n${relevantTruths}\n` : ""}
 
 DDA CONSTRAINTS (Level ${ddaLevel}):
 - Max Daily Time: ${constraints.timeLimitMinutes} minutes.
@@ -129,6 +145,7 @@ DDA CONSTRAINTS (Level ${ddaLevel}):
 - Complexity: ${constraints.complexity}.
 - GUIDELINE: ${constraints.systemInstructionPatch}
 - NO therapy jargon. Use direct, actionable verbs.
+- FOCUS: Your task MUST directly target one of the CORE DISCOVERIES above if provided.
 
 OUTPUT FORMAT:
 Return ONLY a valid JSON object following this schema:
@@ -146,6 +163,7 @@ Return ONLY a valid JSON object following this schema:
 }
         `.trim();
     }
+
 
     /**
      * Oracle Guardrails: Validates user-customized missions in the Sovereignty Lab.

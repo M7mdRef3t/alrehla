@@ -6,7 +6,7 @@ import {
     resetAlertIncidents,
     updateAlertIncidentStatus,
     type AlertIncident
-} from '../../../services/adminApi';
+} from '@/services/adminApi';
 import {
     AlertTriangle,
     CheckCircle,

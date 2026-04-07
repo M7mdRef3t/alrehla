@@ -1,7 +1,7 @@
 import { useMemo, type FC } from "react";
 import { Users, Target, Zap } from "lucide-react";
-import type { RetentionCohortRow, UtmBreakdownEntry } from "../../../../../services/adminApi";
-import { decideVisualGeneLayout } from "../../../../../services/visualGenes";
+import type { RetentionCohortRow, UtmBreakdownEntry } from "@/services/adminApi";
+import { decideVisualGeneLayout } from "@/services/visualGenes";
 import { AdminTooltip } from "./AdminTooltip";
 
 interface MarketingAndRetentionProps {

@@ -20,8 +20,8 @@ import {
   ShieldAlert,
   Zap,
 } from "lucide-react";
-import { decisionEngine } from "../../ai/decision-framework";
-import type { AIDecision, DecisionType } from "../../ai/decision-framework";
+import { decisionEngine } from "@/ai/decision-framework";
+import type { AIDecision, DecisionType } from "@/ai/decision-framework";
 
 interface AIDecisionLogProps {
   maxDecisions?: number;
@@ -149,6 +149,12 @@ export const AIDecisionLog: FC<AIDecisionLogProps> = ({ maxDecisions = 50 }) => 
                 onClick={() =>
                   setSelectedDecision(selectedDecision === decision ? null : decision)
                 }
+                onResolve={(approved) => {
+                  if (decision.id) {
+                    decisionEngine.resolveApproval(decision.id, approved);
+                    loadDecisions();
+                  }
+                }}
               />
             </motion.div>
           ))
@@ -207,9 +213,10 @@ interface DecisionCardProps {
   decision: AIDecision;
   isSelected: boolean;
   onClick: () => void;
+  onResolve: (approved: boolean) => void;
 }
 
-const DecisionCard: FC<DecisionCardProps> = ({ decision, isSelected, onClick }) => {
+const DecisionCard: FC<DecisionCardProps> = ({ decision, isSelected, onClick, onResolve }) => {
   const outcomeConfig = getOutcomeConfig(decision.outcome);
 
   return (
@@ -310,6 +317,7 @@ const DecisionCard: FC<DecisionCardProps> = ({ decision, isSelected, onClick }) 
                 <div className="flex gap-4 pt-2">
                   <button
                     type="button"
+                    onClick={() => onResolve(true)}
                     className="organic-tap flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-xl border-2 transition-all group"
                     style={{
                       background: "rgba(16,185,129,0.05)",
@@ -324,6 +332,7 @@ const DecisionCard: FC<DecisionCardProps> = ({ decision, isSelected, onClick }) 
                   
                   <button
                     type="button"
+                    onClick={() => onResolve(false)}
                     className="organic-tap flex-1 flex flex-col items-center justify-center gap-2 py-4 rounded-xl border-2 transition-all group"
                     style={{
                       background: "rgba(225,29,72,0.05)",

@@ -6,8 +6,8 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Send, Copy, Info, Search, CheckCircle2, ArrowLeft } from "lucide-react";
-import { getCablesByCategory, type CableCategory } from "../services/diplomacyService";
-import { trackEvent } from "../services/analytics";
+import { getCablesByCategory, type CableCategory } from "@/services/diplomacyService";
+import { trackEvent } from "@/services/analytics";
 
 interface DiplomaticCablesProps {
   onBack?: () => void;

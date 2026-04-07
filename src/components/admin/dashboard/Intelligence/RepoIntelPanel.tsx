@@ -24,6 +24,8 @@ type RepoGraph = {
   edges: GraphEdge[];
 };
 
+let _repoFetching = false;
+
 export default function RepoIntelPanel() {
   const [graph, setGraph] = useState<RepoGraph | null>(null);
   const [query, setQuery] = useState("");
@@ -31,6 +33,9 @@ export default function RepoIntelPanel() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (_repoFetching) return;
+    _repoFetching = true;
+
     let cancelled = false;
     void fetch("/api/repo-graph", { cache: "no-store" })
       .then(async (res) => {
@@ -48,6 +53,9 @@ export default function RepoIntelPanel() {
       .catch((err) => {
         if (cancelled) return;
         setError(String(err?.message || err || "Failed to load repo graph."));
+      })
+      .finally(() => {
+        _repoFetching = false;
       });
 
     return () => {

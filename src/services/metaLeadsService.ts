@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase, supabaseAdmin } from './supabaseClient';
 
 export interface MetaLeadData {
   id: string;
@@ -25,6 +25,31 @@ export const metaLeadsService = {
    */
   async fetchLeadDetails(leadId: string): Promise<MetaLeadData | null> {
     const accessToken = process.env.META_PAGE_ACCESS_TOKEN;
+
+    // Handle simulation/test lead IDs
+    if (leadId === 'test_lead_id_123') {
+      console.log('[MetaLeadsService] Simulation ID detected, returning mock lead data');
+      return {
+        id: 'test_lead_id_123',
+        created_time: new Date().toISOString(),
+        ad_id: 'test_ad_id',
+        ad_name: 'Test Advertisement',
+        adset_id: 'test_adset_id',
+        adset_name: 'Test Ad Set',
+        campaign_id: 'test_campaign_id',
+        campaign_name: 'Simulation Campaign',
+        form_id: 'test_form_id',
+        form_name: 'Test Instant Form',
+        is_organic: false,
+        platform: 'fb',
+        field_data: [
+          { name: 'email', values: ['test_lead@example.com'] },
+          { name: 'full_name', values: ['Test Lead Simulation'] },
+          { name: 'phone_number', values: ['+201111111111'] }
+        ]
+      };
+    }
+
     if (!accessToken) {
       console.error('[MetaLeadsService] Missing META_PAGE_ACCESS_TOKEN');
       return null;
@@ -49,6 +74,44 @@ export const metaLeadsService = {
   },
 
   /**
+   * Performs diagnostic API calls to Meta Graph API to "warm up" the connection.
+   * This is required by Meta (1-call minimum) to move from "Standard" to "Advanced" access.
+   */
+  async warmUpMetaApi() {
+    const accessToken = process.env.META_PAGE_ACCESS_TOKEN;
+    if (!accessToken) {
+      return { success: false, error: 'Missing META_PAGE_ACCESS_TOKEN' };
+    }
+
+    const results: Record<string, any> = {};
+    const endpoints = [
+      { id: 'profile', url: 'https://graph.facebook.com/v19.0/me?fields=id,name,category' },
+      { id: 'ads_access', url: 'https://graph.facebook.com/v19.0/me/adaccounts?fields=id,name,account_status' },
+      { id: 'leads_access', url: 'https://graph.facebook.com/v19.0/me/leadgen_forms?limit=1' },
+      { id: 'insights_access', url: 'https://graph.facebook.com/v19.0/me/insights?metric=page_impressions&period=day' },
+      { id: 'business_access', url: 'https://graph.facebook.com/v19.0/me/businesses' }
+    ];
+
+    for (const endpoint of endpoints) {
+      try {
+        console.log(`[MetaLeadsService] Warming up ${endpoint.id}...`);
+        const response = await fetch(`${endpoint.url}&access_token=${accessToken}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+          results[endpoint.id] = { status: 'success', data: data.data || data };
+        } else {
+          results[endpoint.id] = { status: 'failed', error: data.error?.message || 'API error' };
+        }
+      } catch (error: any) {
+        results[endpoint.id] = { status: 'error', error: error.message };
+      }
+    }
+
+    return { success: true, results };
+  },
+
+  /**
    * Maps Meta lead data to the Alrehla marketing_leads schema and saves it
    */
   async processAndStoreLead(metaData: MetaLeadData) {
@@ -67,43 +130,50 @@ export const metaLeadsService = {
       email,
       name,
       phone,
+      source: metaData.platform || 'facebook',
       source_type: 'meta_instant_form',
-      source_name: metaData.platform || 'facebook',
-      campaign_id: metaData.campaign_id,
-      campaign_name: metaData.campaign_name,
-      ad_id: metaData.ad_id,
-      ad_name: metaData.ad_name,
-      form_id: metaData.form_id,
+      campaign: metaData.campaign_name,
+      adset: metaData.adset_name,
+      ad: metaData.ad_name,
       status: 'new',
       metadata: {
         meta_lead_id: leadId,
+        form_id: metaData.form_id,
         form_name: metaData.form_name,
+        campaign_id: metaData.campaign_id,
+        adset_id: metaData.adset_id,
+        ad_id: metaData.ad_id,
         is_organic: metaData.is_organic,
         raw_fields: fields
       }
     };
 
     try {
-      const client = supabase;
+      const isAdminAvailable = !!supabaseAdmin;
+      const client = supabaseAdmin || supabase;
+      
+      console.log(`[MetaLeadsService] Attempting to store lead. Admin Client: ${isAdminAvailable}, Email: ${email}`);
+      
       if (!client) {
         console.error('[MetaLeadsService] Supabase client not initialized');
         return { success: false, error: 'Supabase client not initialized' };
       }
+
       const { data, error } = await client
         .from('marketing_leads')
         .upsert(leadRecord, { onConflict: 'email' })
         .select();
 
       if (error) {
-        console.error('[MetaLeadsService] Error storing lead:', error);
-        return { success: false, error };
+        console.error('[MetaLeadsService] Supabase Error details:', JSON.stringify(error, null, 2));
+        return { success: false, error: error.message || 'Database error' };
       }
 
       console.log('[MetaLeadsService] Lead stored successfully:', email);
       return { success: true, data };
-    } catch (error) {
+    } catch (error: any) {
       console.error('[MetaLeadsService] Exception storing lead:', error);
-      return { success: false, error };
+      return { success: false, error: error.message || 'Unknown exception' };
     }
   }
 };

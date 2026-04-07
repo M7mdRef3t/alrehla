@@ -1,6 +1,6 @@
-import { useMapState } from "../state/mapState";
-import { useJourneyState } from "../state/journeyState";
-import { usePulseState } from "../state/pulseState";
+import { useMapState } from "@/state/mapState";
+import { useJourneyState } from "@/state/journeyState";
+import { usePulseState } from "@/state/pulseState";
 import { calculateEntropy } from "./predictiveEngine";
 
 export interface DissonanceReport {

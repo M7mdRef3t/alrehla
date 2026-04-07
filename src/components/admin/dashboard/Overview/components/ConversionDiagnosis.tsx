@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { AlertTriangle, Lightbulb, Activity } from "lucide-react";
-import type { OverviewStats } from "../../../../../services/adminApi";
+import type { OverviewStats } from "@/services/adminApi";
 import { AdminTooltip } from "./AdminTooltip";
 
 interface ConversionDiagnosisProps {

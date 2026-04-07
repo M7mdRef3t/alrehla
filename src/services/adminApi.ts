@@ -1,23 +1,25 @@
 import { revenueEngine } from "./revenueEngine";
 import type { RevenueMetricSnapshot, TransactionSummary } from "./revenueEngine";
 import { supabase, isSupabaseReady } from "./supabaseClient";
-import { getAuthToken } from "../state/authState";
-import { useAdminState } from "../state/adminState";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { getAuthToken } from "@/state/authState";
+import { useAdminState } from "@/state/adminState";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { fetchJsonWithResilience, sendJsonWithResilience } from "../architecture/resilientHttp";
-import type { FeatureFlagKey, FeatureFlagMode } from "../config/features";
+import type { FeatureFlagKey, FeatureFlagMode } from "@/config/features";
 import type {
   ScoringWeights,
   ScoringThresholds,
   AiLogEntry,
   AdminMission,
-  AdminBroadcast
-} from "../state/adminState";
-import { getBroadcastAudienceFromId, withBroadcastAudienceId } from "../utils/broadcastAudience";
-import type { MapNode } from "../modules/map/mapTypes";
-import type { PulseCheckMode } from "../state/pulseState";
-import type { PulseCopyOverrides } from "../state/adminState";
+  AdminBroadcast,
+  SovereignInsight,
+  SovereignStats
+} from "@/state/adminState";
+import { getBroadcastAudienceFromId, withBroadcastAudienceId } from "@/utils/broadcastAudience";
+import type { MapNode } from "@/modules/map/mapTypes";
+import type { PulseCheckMode } from "@/state/pulseState";
+import type { PulseCopyOverrides } from "@/state/adminState";
 import type {
   OpsInsights as SharedOpsInsights,
   ExecutiveReport as SharedExecutiveReport,
@@ -25,7 +27,7 @@ import type {
   SecuritySignalsReport as SharedSecuritySignalsReport,
   WeeklyReport as SharedWeeklyReport,
   CronReportResponse as SharedCronReportResponse
-} from "../types/admin.types";
+} from "@/types/admin.types";
 
 type SystemSettingKey =
   | "feature_flags"
@@ -80,8 +82,6 @@ function isCrossOriginDevAdminApi(): boolean {
 }
 
 export async function callAdminApi<T>(path: string, options?: RequestInit): Promise<T | null> {
-  // No admin API configured — nothing to call.
-  if (!ADMIN_API_BASE) return null;
   // In local dev, avoid calling a cross-origin admin API directly from browser
   // to prevent CORS console noise and fallback to local sources gracefully.
   if (isCrossOriginDevAdminApi()) return null;
@@ -100,7 +100,7 @@ export async function callAdminApi<T>(path: string, options?: RequestInit): Prom
         ...(options?.headers ?? {})
       }
     },
-    { retries: 1, breaker: adminApiBreaker }
+    { retries: 1, breaker: adminApiBreaker, timeoutMs: runtimeEnv.isDev ? 25000 : 8000 }
   );
 }
 
@@ -121,6 +121,28 @@ export interface AlertIncident {
 export async function fetchAlertIncidents(): Promise<AlertIncident[] | null> {
   const apiData = await callAdminApi<{ incidents: AlertIncident[] }>("alerts");
   return apiData?.incidents ?? null;
+}
+
+export async function fetchSovereignInsights(): Promise<{
+  insights: SovereignInsight[];
+  stats: SovereignStats | null;
+  error?: string;
+  retryAfterSec?: number;
+} | null> {
+  const apiData = await callAdminApi<{ 
+    insights: SovereignInsight[]; 
+    stats: SovereignStats;
+    error?: string;
+    retryAfterSec?: number;
+  }>("oracle-pulse");
+  
+  if (!apiData) return null;
+  return {
+    insights: apiData.insights || [],
+    stats: apiData.stats || null,
+    error: apiData.error,
+    retryAfterSec: apiData.retryAfterSec
+  };
 }
 
 export async function updateAlertIncidentStatus(
@@ -451,7 +473,7 @@ export interface AdminAiLog {
 }
 
 export async function fetchAdminAiLogs(limit = 20): Promise<AdminAiLog[] | null> {
-  const apiData = await callAdminApi<{ logs: Array<Record<string, unknown>> }>(`overview?kind=ai-logs&limit=${limit}`);
+  const apiData = await callAdminApi<{ logs: Array<Record<string, unknown>> }>(`ai-logs?limit=${limit}`);
   if (!apiData?.logs) return null;
   return apiData.logs.map((row) => ({
     id: String(row.id ?? ""),
@@ -883,18 +905,18 @@ export async function fetchSessionEvents(
   if (!isSupabaseReady || !supabase) return null;
   const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 1000) : 200;
   const { data, error } = await supabase
-    .from("journey_events")
-    .select("id,session_id,type,payload,created_at")
+    .from("routing_events")
+    .select("id,session_id,event_type,payload,occurred_at")
     .eq("session_id", sid)
-    .order("created_at", { ascending: false })
+    .order("occurred_at", { ascending: false })
     .limit(safeLimit);
   if (error || !data) return null;
   return (data as Array<Record<string, unknown>>).map((row) => ({
     id: String(row.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`),
     sessionId: String(row.session_id ?? sid),
-    type: String(row.type ?? "unknown"),
+    type: String(row.event_type ?? "unknown"),
     payload: (row.payload as Record<string, unknown> | null) ?? null,
-    createdAt: row.created_at ? new Date(String(row.created_at)).getTime() : null
+    createdAt: row.occurred_at ? new Date(String(row.occurred_at)).getTime() : null
   }));
 }
 
@@ -902,11 +924,11 @@ export async function fetchVisitorSessions(limit = 300): Promise<VisitorSessionS
   if (!isSupabaseReady || !supabase) return null;
   const safeLimit = Number.isFinite(limit) && limit > 0 ? Math.min(Math.floor(limit), 1000) : 300;
   const { data, error } = await supabase
-    .from("journey_events")
-    .select("session_id,type,payload,created_at")
+    .from("routing_events")
+    .select("session_id,event_type,payload,occurred_at")
     .not("session_id", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(10000);
+    .order("occurred_at", { ascending: false })
+    .limit(safeLimit);
   if (error || !data) return null;
 
   const bySession = new Map<string, VisitorSessionSummary>();
@@ -1343,21 +1365,21 @@ export async function fetchOverviewStats(): Promise<OverviewStats | null> {
   ] =
     await Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
-      supabase.from("journey_events").select("id", { count: "exact", head: true }).gte("created_at", fiveMinAgo),
+      supabase.from("routing_events").select("id", { count: "exact", head: true }).gte("occurred_at", fiveMinAgo),
       supabase
-        .from("journey_events")
-        .select("session_id,type,payload,created_at")
-        .gte("created_at", thirtyDaysAgo)
-        .order("created_at", { ascending: true })
+        .from("routing_events")
+        .select("session_id,event_type,payload,occurred_at")
+        .gte("occurred_at", thirtyDaysAgo)
+        .order("occurred_at", { ascending: true })
         .limit(10000),
       supabase.from("admin_ai_logs").select("id", { count: "exact", head: true }),
-      supabase.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "node_added"),
+      supabase.from("routing_events").select("id", { count: "exact", head: true }).eq("event_type", "node_added"),
       supabase.from("journey_maps").select("session_id", { count: "exact", head: true }),
-      supabase.from("journey_events").select("id", { count: "exact", head: true }).eq("type", "path_started").gte("created_at", twentyFourHoursAgo),
+      supabase.from("routing_events").select("id", { count: "exact", head: true }).eq("event_type", "path_started").gte("occurred_at", twentyFourHoursAgo),
       supabase
-        .from("journey_events")
+        .from("routing_events")
         .select("session_id")
-        .eq("type", "flow_event")
+        .eq("event_type", "flow_event")
         .contains("payload", { step: "install_clicked" })
         .not("session_id", "is", null)
         .limit(5000),

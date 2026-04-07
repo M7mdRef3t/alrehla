@@ -1,6 +1,6 @@
-import { isUserMode } from "../config/appEnv";
+import { isUserMode } from "@/config/appEnv";
 import { safeGetSession, supabase } from "./supabaseClient";
-import { useGamificationState, type Badge } from "../state/gamificationState";
+import { useGamificationState, type Badge } from "@/state/gamificationState";
 
 // User mode stays local-first until the cloud schema for gamification is provisioned.
 // Once we detect the schema is missing, remember it for the session to avoid repeat 400/404 errors.

@@ -14,10 +14,10 @@ import {
     Cpu,
     Filter
 } from "lucide-react";
-import { useAdminState, getScoringWeights, getScoringThresholds } from "../../../../state/adminState";
-import { useAppContentState } from "../../../../state/appContentState";
-import { useFleetState } from "../../../../state/fleetState";
-import { isSupabaseReady } from "../../../../services/supabaseClient";
+import { useAdminState, getScoringWeights, getScoringThresholds } from "@/state/adminState";
+import { useAppContentState } from "@/state/appContentState";
+import { useFleetState } from "@/state/fleetState";
+import { isSupabaseReady } from "@/services/supabaseClient";
 import {
     saveMission,
     deleteMission,
@@ -27,11 +27,11 @@ import {
     saveAppContentEntry,
     deleteAppContentEntry,
     type AdminContentEntry
-} from "../../../../services/adminApi";
-import { buildResultTemplateFromAnswers } from "../../../../utils/resultScreenTemplates";
-import type { PersonGender } from "../../../../utils/resultScreenAI";
-import type { QuickAnswer2 } from "../../../../utils/suggestInitialRing";
-import type { BroadcastAudience } from "../../../../utils/broadcastAudience";
+} from "@/services/adminApi";
+import { buildResultTemplateFromAnswers } from "@/utils/resultScreenTemplates";
+import type { PersonGender } from "@/utils/resultScreenAI";
+import type { QuickAnswer2 } from "@/utils/suggestInitialRing";
+import type { BroadcastAudience } from "@/utils/broadcastAudience";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Types & Constants

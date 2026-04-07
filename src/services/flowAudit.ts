@@ -1,4 +1,4 @@
-import { getAuthRole, getAuthUserId } from "../state/authState";
+import { getAuthRole, getAuthUserId } from "@/state/authState";
 import { isSupabaseReady, supabase } from "./supabaseClient";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
 

@@ -4,29 +4,30 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, GripVertical } from "lucide-react";
 import { DndContext, TouchSensor, MouseSensor, useSensor, useSensors, useDraggable, useDroppable, type DragEndEvent } from "@dnd-kit/core";
 import type { Ring, MapNode as MapNodeType } from "./mapTypes";
-import { useMapState } from "../../state/mapState";
-import { useMeState } from "../../state/meState";
-import { mapCopy } from "../../copy/map";
-import { hasSeenOnboarding } from "../../utils/mapOnboarding";
-import { getMissionProgressSummary } from "../../utils/missionProgress";
-import { JourneyToast } from "../../components/JourneyToast";
-import { FutureSimulator } from "../../components/FutureSimulator";
+import { useMapState } from "@/state/mapState";
+import { useMeState } from "@/state/meState";
+import { mapCopy } from "@/copy/map";
+import { hasSeenOnboarding } from "@/utils/mapOnboarding";
+import { getMissionProgressSummary } from "@/utils/missionProgress";
+import { JourneyToast } from '@/modules/action/JourneyToast';
+import { FutureSimulator } from '@/modules/action/FutureSimulator';
 import { Telescope } from "lucide-react";
-import { analyzeMapInterference } from "../../services/socialSync";
+import { analyzeMapInterference } from "@/services/socialSync";
 import { AINode } from "./AINode";
-import { useCognitiveDebounce } from "../../hooks/useCognitiveDebounce";
-import { useAuthState } from "../../state/authState";
-import { useAdminState } from "../../state/adminState";
-import { useOptimisticPhoenixSync } from "../../hooks/useOptimisticPhoenixSync";
-import { useKineticSensors } from "../../hooks/useKineticSensors";
-import { useDailyPulse } from "../../hooks/useDailyPulse";
-import { useDailyQuestion } from "../../hooks/useDailyQuestion";
-import { soundManager } from "../../services/soundManager";
-import { BatteryStateModal } from "../../components/BatteryStateModal";
-import { useLongPress } from "../../hooks/useLongPress";
-import { usePulseState } from "../../state/pulseState";
-import { useGamificationState } from "../../state/gamificationState";
+import { useCognitiveDebounce } from "@/hooks/useCognitiveDebounce";
+import { useAuthState } from "@/state/authState";
+import { useAdminState } from "@/state/adminState";
+import { useOptimisticPhoenixSync } from "@/hooks/useOptimisticPhoenixSync";
+import { useKineticSensors } from "@/hooks/useKineticSensors";
+import { useDailyPulse } from "@/hooks/useDailyPulse";
+import { useDailyQuestion } from "@/hooks/useDailyQuestion";
+import { soundManager } from "@/services/soundManager";
+import { BatteryStateModal } from '@/modules/action/BatteryStateModal';
+import { useLongPress } from "@/hooks/useLongPress";
+import { usePulseState } from "@/state/pulseState";
+import { useGamificationState } from "@/state/gamificationState";
 import { Zap, Flame } from "lucide-react";
+import { useSynthesisState } from "@/state/synthesisState";
 
 /* 
     COSMIC MAP CANVAS  Digital Sanctuary
@@ -60,6 +61,7 @@ interface RingProps {
 }
 
 const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor, breatheDuration }) => {
+  const { audioIntensity } = useSynthesisState();
   const safeRadius = Number.isFinite(radius) ? radius : 0;
   const filterId = ring === "red" ? "neonGlowRed" : ring === "yellow" ? "neonGlowWarning" : "neonGlowSafe";
   const fillId = ring === "red" ? "ringFillRed" : ring === "yellow" ? "ringFillYellow" : "ringFillGreen";
@@ -75,20 +77,34 @@ const OrbitalRing: FC<RingProps> = memo(({ ring, label, radius, color, glowColor
       <motion.circle
         cx="50" cy="50" r={safeRadius + 1.5}
         fill="none" stroke={color} strokeWidth={2.5} opacity={0.08}
-        animate={{ opacity: [0.05, 0.18, 0.05] }}
+        animate={{ 
+          opacity: [0.05, 0.18 + audioIntensity * 0.1, 0.05],
+          scale: [1, 1 + audioIntensity * 0.02, 1] 
+        }}
         transition={{ duration: breatheDuration * 3, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* Main neon ring — thick, glowing */}
-      <motion.g filter={`url(#${filterId})`}>
-        <motion.circle
-          cx="50" cy="50" r={safeRadius}
-          fill="none" stroke={color}
-          animate={{ strokeWidth: [1.4, 2.4, 1.4], opacity: [0.65, 1, 0.65] }}
-          transition={{ duration: breatheDuration * 2, repeat: Infinity, ease: "easeInOut" }}
-          className="orbital-ring"
-        />
-      </motion.g>
+      {/* Main neon ring — thick, glowing, without SVG filter to prevent gray box artifacts */}
+      <motion.circle
+        cx="50" cy="50" r={safeRadius}
+        fill="none" stroke={color}
+        animate={{ 
+          strokeWidth: [3, 5 + audioIntensity * 3, 3], 
+          opacity: [0.15, 0.3 + audioIntensity * 0.2, 0.15] 
+        }}
+        transition={{ duration: breatheDuration * 2, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none"
+      />
+      <motion.circle
+        cx="50" cy="50" r={safeRadius}
+        fill="none" stroke={color}
+        animate={{ 
+          strokeWidth: [1.4, 2.4 + audioIntensity, 1.4], 
+          opacity: [0.65, 1, 0.65] 
+        }}
+        transition={{ duration: breatheDuration * 2, repeat: Infinity, ease: "easeInOut" }}
+        className="orbital-ring"
+      />
 
       {/* Inner dashed shimmer */}
       <motion.circle
@@ -226,7 +242,7 @@ const IllusionEntityView: FC<{ scenario: any; index: number; total: number; onDi
         whileHover={{ scale: 1.15 }}
       >
         {/* Core dark asteroid body */}
-        <circle cx={cx} cy={cy} r={2.5} fill="#0f172a" stroke="#4c1d95" strokeWidth={0.6} />
+        <circle cx={cx} cy={cy} r={2.5} className="fill-slate-900 dark:fill-slate-950" stroke="#4c1d95" strokeWidth={0.6} />
         
         {/* Breathing toxic glow */}
         <motion.circle
@@ -263,10 +279,10 @@ const IllusionEntityView: FC<{ scenario: any; index: number; total: number; onDi
 /*  Node Colors (Cosmic)  */
 
 const RING_COLORS = {
-  safe: { stroke: "#2DD4BF", glow: "rgba(45, 212, 191, 0.25)" },
-  caution: { stroke: "#FBBF24", glow: "rgba(251, 191, 36, 0.35)" },
-  danger: { stroke: "#F43F5E", glow: "rgba(244, 63, 94, 0.45)" },
-  detached: { stroke: "#94A3B8", glow: "rgba(148, 163, 184, 0.15)" }
+  safe: { stroke: "var(--consciousness-primary)", glow: "var(--ds-color-primary-glow)" },
+  caution: { stroke: "var(--consciousness-accent)", glow: "color-mix(in srgb, var(--consciousness-accent) 35%, transparent)" },
+  danger: { stroke: "var(--consciousness-critical)", glow: "color-mix(in srgb, var(--consciousness-critical) 45%, transparent)" },
+  detached: { stroke: "var(--ds-theme-text-muted)", glow: "rgba(148, 163, 184, 0.15)" }
 } as const;
 
 const NODE_GLOW_CLASS: Record<Ring, string> = {
@@ -297,7 +313,9 @@ interface NodeProps {
 }
 
 const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, position, onClick, canOpenDetails = true, justDraggedId, justAdded, isHighlighted, isTouchDevice = false, reduceMotion = false, isSovereign = false }) => {
+  const { audioIntensity } = useSynthesisState();
   const [showDelete, setShowDelete] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [pulseDone, setPulseDone] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
   const archiveNode = useMapState((s) => s.archiveNode);
@@ -336,32 +354,28 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
     transition: transform ? "transform 0.18s cubic-bezier(0.1, 1, 0.2, 1)" : "top 0.7s ease-out, left 0.7s ease-out, transform 0.7s ease-out"
   };
 
-  const handleDelete = useCallback((e?: React.MouseEvent | any) => {
+  const handleDeleteClick = useCallback((e?: React.MouseEvent | any) => {
     if (e?.preventDefault) e.preventDefault();
     if (e?.stopPropagation) e.stopPropagation();
-    
-    // إزالة التركيز النشط لتفادي تجميد المتصفح للإطار الأبيض الدخيل عند اللمس/النقر
     if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
+    setShowDelete(false);
+    setShowConfirmDelete(true);
+  }, []);
 
-    // السماح للمتصفح بمسح تأثيرات اللمس (Tap Highlight / Focus) قبل إيقاف الخيط بـ window.confirm
+  const handleConfirmDelete = useCallback(() => {
+    setShowConfirmDelete(false);
+    setIsExploding(true);
+    if (soundManager.playEffect) {
+      soundManager.playEffect("cosmic_pulse");
+    } else {
+      soundManager.playRadarPing();
+    }
     setTimeout(() => {
-      const ok = typeof window === "undefined" ? true : window.confirm(`تأكيد: خرّج "${node.label}" من المدار\nتتحفظ في "أشخاص مشافين" وتقدر ترجعها لو احتجت.`);
-      if (!ok) return;
-      
-      setIsExploding(true);
-      if (soundManager.playEffect) {
-        soundManager.playEffect("cosmic_pulse");
-      } else {
-        soundManager.playRadarPing();
-      }
-      
-      setTimeout(() => {
-        archiveNode(node.id);
-      }, 700);
-    }, 10);
-  }, [archiveNode, node.id, node.label]);
+      archiveNode(node.id);
+    }, 700);
+  }, [archiveNode, node.id]);
 
   const blockDeletePointer = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -382,19 +396,19 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
   // Enhanced ring colors with richer palette
   const ringPalette = isDetached
     ? {
-        stroke: "rgba(100,116,139,0.35)",
-        bg: "linear-gradient(135deg,rgba(15,23,42,0.85),rgba(30,41,59,0.9))",
-        glow: "rgba(71,85,105,0.12)",
-        accent: "rgba(148,163,184,0.5)",
-        shadow: "rgba(30,41,59,0.4)"
+        stroke: "var(--app-border)",
+        bg: "var(--glass-bg)",
+        glow: "rgba(148,163,184,0.05)",
+        accent: "var(--text-secondary)",
+        shadow: "rgba(0,0,0,0.05)"
       }
     : isVampire
-      ? { stroke: `rgba(153,27,27,${0.5 + vampireIntensity * 0.4})`, bg: `linear-gradient(135deg,rgba(153,27,27,${0.2+vampireIntensity*0.4}),rgba(0,0,0,0.7))`, glow: `rgba(185,28,28,${0.1+vampireIntensity*0.3})`, accent: "rgba(220,38,38,0.8)", shadow: `rgba(185,28,28,${0.2+vampireIntensity*0.4})` }
+      ? { stroke: "rgba(153,27,27,0.6)", bg: "linear-gradient(135deg, rgba(153,27,27,0.1), rgba(0,0,0,0.4))", glow: "rgba(185,28,28,0.1)", accent: "var(--consciousness-critical)", shadow: "rgba(185,28,28,0.2)" }
       : node.ring === "red"
-        ? { stroke: "rgba(244,63,94,0.55)", bg: "linear-gradient(135deg,rgba(15,23,42,0.55),rgba(28,5,14,0.85))", glow: "rgba(244,63,94,0.22)", accent: "rgba(244,63,94,0.9)", shadow: "rgba(244,63,94,0.25)" }
+        ? { stroke: "rgba(244,63,94,0.55)", bg: "var(--ds-color-glass-default)", glow: "var(--ds-color-primary-glow)", accent: "var(--consciousness-critical)", shadow: "color-mix(in srgb, var(--consciousness-critical) 12%, transparent)" }
         : node.ring === "yellow"
-          ? { stroke: "rgba(251,191,36,0.55)", bg: "linear-gradient(135deg,rgba(15,23,42,0.55),rgba(20,16,5,0.85))", glow: "rgba(251,191,36,0.22)", accent: "rgba(251,191,36,0.9)", shadow: "rgba(251,191,36,0.25)" }
-          : { stroke: "rgba(45,212,191,0.55)", bg: "linear-gradient(135deg,rgba(15,23,42,0.55),rgba(5,20,20,0.85))", glow: "rgba(45,212,191,0.22)", accent: "rgba(45,212,191,0.9)", shadow: "rgba(45,212,191,0.25)" };
+          ? { stroke: "rgba(251,191,36,0.55)", bg: "var(--ds-color-glass-default)", glow: "var(--ds-color-primary-glow)", accent: "var(--consciousness-accent)", shadow: "color-mix(in srgb, var(--consciousness-accent) 12%, transparent)" }
+          : { stroke: "rgba(45,212,191,0.55)", bg: "var(--ds-color-glass-default)", glow: "var(--ds-color-primary-glow)", accent: "var(--consciousness-primary)", shadow: "color-mix(in srgb, var(--consciousness-primary) 12%, transparent)" };
 
   const auraColor = isDetached
     ? "rgba(71,85,105,0.08)"
@@ -434,7 +448,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
             background: isSovereign 
               ? "radial-gradient(circle, rgba(234,179,8,0.2) 0%, rgba(139,92,246,0.1) 40%, transparent 70%)"
               : "radial-gradient(circle, rgba(45,212,191,0.15) 0%, rgba(251,191,36,0.05) 50%, transparent 70%)",
-            filter: isSovereign ? "blur(12px)" : "blur(8px)",
+            boxShadow: isSovereign ? "inset 0 0 20px rgba(234,179,8,0.1)" : "inset 0 0 20px rgba(45,212,191,0.1)",
             border: isSovereign ? "1.5px solid rgba(234,179,8,0.3)" : "1.5px solid rgba(45,212,191,0.2)"
           }}
           animate={{
@@ -468,7 +482,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         style={{
           zIndex: 0,
           border: `1.5px solid ${auraBorderColor}`,
-          boxShadow: `0 0 20px ${auraColor}`
+          boxShadow: `0 0 ${20 + audioIntensity * 30}px ${auraColor}`
         }}
         animate={reduceMotion
           ? undefined
@@ -485,8 +499,8 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
                 scale: [1, 0.85, 1],
               }
               : {
-                opacity: [0.4, 0.8, 0.4],
-                scale: [1, 1.08, 1],
+                opacity: [0.4, 0.8 + audioIntensity * 0.2, 0.4],
+                scale: [1, 1.08 + audioIntensity * 0.05, 1],
                 x: [0, 1.5, -1, 1, 0],
                 y: [0, -1.2, 1.8, -0.8, 0]
               }
@@ -503,6 +517,7 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         ref={setNodeRef}
         {...attributes}
         {...listeners}
+        tabIndex={-1}
         onTap={(e) => {
           // onTap is only triggered if it's not a drag
           handleClick();
@@ -684,27 +699,104 @@ const MapNodeView: FC<NodeProps> = memo(({ node, nodeIndex, totalInRing, positio
         </motion.div>
       )}
 
-      {/* Delete button — Show on hover, touch, or active highlight */}
+      {/* Delete X button — hover only */}
       <AnimatePresence>
-        {(showDelete || isTouchDevice || isHighlighted) && (
+        {showDelete && (
           <motion.button
             type="button"
-            onTap={handleDelete}
             onPointerDown={blockDeletePointer}
-            className="absolute -top-3 -right-3 min-w-11 min-h-11 w-11 h-11 rounded-full flex items-center justify-center z-30 pointer-events-auto outline-none focus:outline-none focus-visible:outline-none"
+            onClick={handleDeleteClick}
+            className="absolute -top-3 -right-3 w-7 h-7 rounded-full flex items-center justify-center z-30 pointer-events-auto"
             style={{
-              background: "linear-gradient(135deg, #94a3b8, #64748b)",
-              boxShadow: "0 0 14px rgba(0, 0, 0, 0.4)",
-              WebkitTapHighlightColor: "transparent"
+              background: "linear-gradient(135deg, #64748b, #475569)",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.5)",
+              outline: "none",
+              WebkitTapHighlightColor: "transparent",
+              border: "1.5px solid rgba(255,255,255,0.12)",
             }}
-            title="خرّج من المدار (نقل للمشافين)"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: 0.12 }}
+            tabIndex={-1}
           >
-            <X className="w-4 h-4 text-white" strokeWidth={3} />
+            <X className="w-3.5 h-3.5 text-white/90" strokeWidth={2.5} />
           </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Custom Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmDelete && (
+          <motion.div
+            className="fixed inset-0 z-[200] flex items-center justify-center"
+            style={{ background: "rgba(5,8,20,0.75)", backdropFilter: "blur(8px)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowConfirmDelete(false)}
+          >
+            <motion.div
+              className="relative mx-4 w-full max-w-xs rounded-2xl p-5 text-right"
+              style={{
+                background: "linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95))",
+                border: "1px solid rgba(244,63,94,0.25)",
+                boxShadow: "0 0 40px rgba(244,63,94,0.15), 0 20px 60px rgba(0,0,0,0.6)",
+              }}
+              initial={{ scale: 0.85, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 20, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Icon */}
+              <div className="flex justify-center mb-3">
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(244,63,94,0.12)", border: "1.5px solid rgba(244,63,94,0.3)" }}
+                >
+                  <X className="w-5 h-5" style={{ color: "#f43f5e" }} strokeWidth={2.5} />
+                </div>
+              </div>
+              {/* Text */}
+              <p className="text-sm font-bold mb-1" style={{ color: "var(--text-primary)" }}>
+                خرّج "{node.label}" من المدار؟
+              </p>
+              <p className="text-xs mb-5" style={{ color: "var(--text-secondary)" }}>
+                هيتحفظ في "أشخاص مشافين" وتقدر تعيده لو احتجت.
+              </p>
+              {/* Buttons */}
+              <div className="flex gap-2 flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={handleConfirmDelete}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all"
+                  style={{
+                    background: "linear-gradient(135deg, #f43f5e, #e11d48)",
+                    color: "#fff",
+                    boxShadow: "0 0 16px rgba(244,63,94,0.3)",
+                    outline: "none",
+                    border: "none",
+                  }}
+                >
+                  موافق
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmDelete(false)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    color: "var(--text-secondary)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    outline: "none",
+                  }}
+                >
+                  إلغاء
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </motion.div>
@@ -777,7 +869,7 @@ const IllusionEntity: FC<IllusionEntityProps> = memo(({ id, label, type, orbitAn
           onClick={handleDismantleStart}
           className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-indigo-500/50 relative overflow-hidden"
           style={{
-            background: "radial-gradient(circle, #312e81 0%, #0f172a 100%)",
+            background: "var(--app-surface)",
             boxShadow: "0 0 15px rgba(79, 70, 229, 0.4)",
           }}
           animate={{
@@ -1651,8 +1743,8 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                 </filter>
               </defs>
 
-              {/* ── Cosmic Star Field ── */}
-              <g className="pointer-events-none">
+              {/* ── Cosmic Star Field (Dark Mode Only) ── */}
+              <g className="pointer-events-none dark-visible hidden dark:block">
                 {STAR_DATA.map((s) => (
                   <motion.circle
                     key={s.id}
@@ -1672,13 +1764,13 @@ export const MapCanvas: FC<MapCanvasProps> = ({
               {connectionThreads.map((line) => {
                 const isGreen = line.color?.includes("45, 212") || line.color?.includes("2dd4") || line.color?.includes("2DD4");
                 const isYellow = line.color?.includes("251, 191") || line.color?.includes("fbbf");
-                const threadColor = line.color ?? "rgba(45,212,191,0.5)";
+                const threadColor = line.color ?? "var(--soft-teal)";
                 const glowColor = isGreen
-                  ? "rgba(45,212,191,0.9)"
+                  ? "rgba(45,212,191,0.6)"
                   : isYellow
-                    ? "rgba(251,191,36,0.9)"
-                    : "rgba(244,63,94,0.9)";
-                const particleColor = isGreen ? "#5eead4" : isYellow ? "#fde68a" : "#fda4af";
+                    ? "rgba(251,191,36,0.6)"
+                    : "rgba(244,63,94,0.6)";
+                const particleColor = isGreen ? "#14b8a6" : isYellow ? "#f59e0b" : "#f43f5e";
 
                 return (
                   <g key={line.id}>
@@ -1947,9 +2039,10 @@ export const MapCanvas: FC<MapCanvasProps> = ({
                   style={{
                     fontSize: "3px",
                     fontWeight: 900,
-                    fill: battery === "drained" ? "#94a3b8" : "#5eead4",
+                    fill: "var(--soft-teal)",
+                    opacity: battery === "drained" ? 0.5 : 1,
                     letterSpacing: "0.15em",
-                    filter: "drop-shadow(0 0 3px rgba(45,212,191,0.6))"
+                    filter: "drop-shadow(0 0 3px var(--soft-teal-glow))"
                   }}
                 >
                   ◈ أنا ◈

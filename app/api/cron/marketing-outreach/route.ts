@@ -122,40 +122,42 @@ function buildStep3Html(opts: { firstName: string; personalLink: string; unsubLi
   });
 }
 
-// ─── Send Email ─────────────────────────────────────────────────────────────
+// ─── Send Email (Sovereign Mail Engine — Nodemailer) ────────────────────────
 async function sendEmail(
   leadEmail: string,
   subject: string,
   html: string,
   replyTo?: string
 ): Promise<{ status: "sent" | "simulated"; providerResponse: Record<string, unknown> }> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.MARKETING_EMAIL_FROM || process.env.REPORT_EMAIL_FROM;
-  if (!apiKey || !from) {
-    return { status: "simulated", providerResponse: { reason: "missing_resend_config" } };
+  const from = process.env.SMTP_FROM || process.env.MARKETING_EMAIL_FROM || process.env.REPORT_EMAIL_FROM;
+  const smtpHost = process.env.SMTP_HOST;
+
+  if (!smtpHost || !from) {
+    return { status: "simulated", providerResponse: { reason: "missing_smtp_config" } };
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const { sendEmail: sovereignSend } = await import("../../admin/email/engine");
+  const result = await sovereignSend({
+    to: leadEmail,
+    subject,
+    html,
+    from,
+    replyTo: replyTo || "hello@alrehla.app",
+    enableTracking: true,
+  });
 
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: leadEmail, subject, html, reply_to: replyTo }),
-      signal: controller.signal
-    });
-    const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
-    if (!response.ok) {
-      throw new Error(`resend_failed:${response.status}:${JSON.stringify(body)}`);
-    }
-    return { status: "sent", providerResponse: body };
-  } catch (error: any) {
-    if (error.name === 'AbortError') throw new Error(`resend_timeout: API didn't respond in 8 seconds`);
-    throw error;
-  } finally {
-    clearTimeout(timeoutId);
+  if (!result.ok) {
+    throw new Error(`smtp_failed: ${result.error}`);
   }
+
+  return {
+    status: "sent",
+    providerResponse: {
+      id: result.messageId,
+      engine: "sovereign",
+      response: result.response,
+    },
+  };
 }
 
 // ─── Send WhatsApp ──────────────────────────────────────────────────────────
@@ -193,6 +195,37 @@ export async function GET(request: Request) {
   if (!supabase) {
     return NextResponse.json({ ok: false, error: "missing_supabase_config" }, { status: 503 });
   }
+
+  // ─── 0. Cleanup: Mark Sent emails as "Ignored" after 48h without interaction ───
+  try {
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+    
+    // 1. Update queue status
+    const { data: ignoredQueue } = await supabase
+      .from("marketing_lead_outreach_queue")
+      .update({ status: "ignored" })
+      .eq("status", "sent")
+      .is("opened_at", null)
+      .is("clicked_at", null)
+      .lte("sent_at", fortyEightHoursAgo)
+      .select("id, lead_id");
+
+    // 2. Update main leads email_status if applicable
+    if (ignoredQueue && ignoredQueue.length > 0) {
+      const leadIds = ignoredQueue.map(r => r.lead_id).filter(Boolean);
+      if (leadIds.length > 0) {
+        await supabase
+          .from("marketing_leads")
+          .update({ email_status: "ignored" })
+          .in("id", leadIds)
+          .eq("email_status", "sent"); // Only upgrade from sent to ignored
+      }
+      console.log(`[MarketingCron] 😴 Marked ${ignoredQueue.length} leads as ignored due to inactivity.`);
+    }
+  } catch (err) {
+    console.error("[MarketingCron] Ignored cleanup error:", err);
+  }
+
   const { searchParams } = new URL(request.url);
   const force = searchParams.get("force") === "true";
   const targetLeadId = searchParams.get("lead_id");

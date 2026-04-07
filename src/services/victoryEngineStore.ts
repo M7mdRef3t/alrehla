@@ -1,4 +1,4 @@
-import { useEventHistoryStore } from "../state/eventHistoryStore";
+import { useEventHistoryStore } from "@/state/eventHistoryStore";
 import { calculateVictoryMetrics, scanForAchievements, type VictoryMetrics, type Achievement } from "./victoryEngine";
 
 export interface VictoryState extends VictoryMetrics {

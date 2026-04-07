@@ -16,7 +16,7 @@ import {
     FunnelStats,
     BehavioralEvent,
     HistogramPoint
-} from '../../services/adminApi';
+} from '@/services/adminApi';
 
 export const BehavioralRadar: React.FC = () => {
     const [funnel, setFunnel] = useState<FunnelStats | null>(null);

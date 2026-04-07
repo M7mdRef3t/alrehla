@@ -6,7 +6,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { GraphEvent } from "../services/automagicLoop";
+import type { GraphEvent } from "@/services/automagicLoop";
 
 interface EventHistoryState {
     events: GraphEvent[];

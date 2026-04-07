@@ -3,10 +3,10 @@
  * للاستخدام: استدعِ من لوحة الأدمن أو من Console عبر window.__seedStressTest
  */
 
-import { useMapState } from "../state/mapState";
-import type { JourneyEvent, JourneyEventPayload } from "../services/journeyTracking";
-import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { useMapState } from "@/state/mapState";
+import type { JourneyEvent, JourneyEventPayload } from "@/services/journeyTracking";
+import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 const KEY_EVENTS = "dawayir-journey-events";
 const MAX_EVENTS = 2000;

@@ -1,5 +1,5 @@
 import type { Content, FunctionCall, Part, Tool } from "@google/generative-ai";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { fetchJsonWithResilience } from "../architecture/resilientHttp";
 import {
@@ -120,7 +120,7 @@ class GeminiClient {
           { retries: 1, breaker: this.generateBreaker }
         ),
         {
-          timeoutMs: 10_000,
+          timeoutMs: 30_000,
           inputChars: 0,
           outputCharsEstimate: 0
         }

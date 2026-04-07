@@ -1,7 +1,7 @@
 "use client";
 
 import { GraduationCap, History, Settings2, Users } from "lucide-react";
-import type { LiveLanguage, LiveMode } from "../types";
+import type { LiveLanguage, LiveMode } from '../types';
 import { PARITY_STRINGS } from "../parityContent";
 
 interface LiveSetupScreenProps {

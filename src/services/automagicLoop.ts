@@ -12,9 +12,9 @@
  *   → يرسل nudge: "الشجاعة مش سهلة.. بس انت اخترت صح."
  */
 
-import { type MapNode, type Ring } from "../modules/map/mapTypes";
+import { type MapNode, type Ring } from "@/modules/map/mapTypes";
 import { useGamificationState } from "./gamificationEngine";
-import { useEventHistoryStore } from "../state/eventHistoryStore";
+import { useEventHistoryStore } from "@/state/eventHistoryStore";
 
 // ─── Event Types ──────────────────────────────────────────────────
 export type GraphEventType =

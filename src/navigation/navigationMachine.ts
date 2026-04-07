@@ -20,7 +20,8 @@ export type AppScreen =
   | "quizzes"
   | "behavioral-analysis"
   | "resources"
-  | "profile";
+  | "profile"
+  | "sanctuary";
 
 export type LockedFeatureKey = "dawayir_map" | "journey_tools";
 

@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import type { ChangeEvent, FormEvent } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CheckCircle2,
   MessageCircle,
@@ -48,8 +48,6 @@ type ScarcityResponse = {
 
 const ACTIVATION_PUBLIC_ENABLED = paymentConfig.activationPublicEnabled;
 
-
-
 export default function ActivationPage() {
   const [mode, setMode] = useState<PaymentMode>("local");
   const [email, setEmail] = useState("");
@@ -68,28 +66,27 @@ export default function ActivationPage() {
   const [proofFormVisible, setProofFormVisible] = useState(false);
   // Track current funnel step for the progress bar (1=choose, 2=transfer, 3=send-proof)
   const [funnelStep, setFunnelStep] = useState(1);
+  const [userName, setUserName] = useState<string | null>(null);
+  const syncAttemptedRef = useRef(false);
 
   const availableProofMethods = getProofMethods(mode);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const nameParam = params.get("name");
+    if (nameParam) setUserName(nameParam);
+    
+    // Also check for email in params to pre-fill
+    const emailParam = params.get("email");
+    if (emailParam) setEmail(emailParam);
+  }, []);
 
   useEffect(() => {
     if (!ACTIVATION_PUBLIC_ENABLED) return;
     try {
       recordFlowEvent("activation_page_viewed");
       trackActivationViewed();
-      // Only sync if we have a real identifier the backend accepts (phone or email).
-      // storedLeadId goes to metadata as context only â€” backend doesn't use it as lookup key.
-      const storedPhone = marketingLeadService.getStoredLeadPhone();
-      const storedLeadId = marketingLeadService.getStoredLeadId();
-      const hasRealIdentifier = Boolean(storedPhone);
-      if (hasRealIdentifier) {
-        marketingLeadService.syncLead({
-          phone: storedPhone ?? undefined,
-          status: "payment_requested",
-          source: "activation_page",
-          sourceType: "website",
-          metadata: { leadId: storedLeadId ?? undefined }
-        }).catch(err => console.error("[activation] Lead sync error:", err));
-      }
     } catch {
       // Never block activation rendering on analytics issues.
     }
@@ -131,14 +128,40 @@ export default function ActivationPage() {
           safeGetSession().then((session) => ({ data: { session } })),
           fetch("/api/public/scarcity", { cache: "no-store" })
         ]);
+        const params = new URLSearchParams(window.location.search);
+        const emailFromUrl = params.get("email");
         const sessionUser = sessionRes?.data?.session?.user ?? null;
+        
+        let resolvedEmail = emailFromUrl || sessionUser?.email || "";
+        if (!resolvedEmail && typeof window !== "undefined") {
+          resolvedEmail = window.localStorage.getItem("dawayir_lead_email") || "";
+        }
+        
         const scarcity = (await scarcityRes.json()) as ScarcityResponse;
         const isLive = scarcity?.is_live === true;
         if (!mounted) return;
-        setEmail(sessionUser?.email || "");
+        
+        setEmail(resolvedEmail);
         setSeatsLeft(isLive && typeof scarcity?.seats_left === "number" ? Number(scarcity.seats_left) : null);
         setTotalSeats(Number(scarcity?.total_seats ?? 50));
         setSource(String(scarcity?.source || (isLive ? "supabase" : "unavailable")));
+
+        if (!syncAttemptedRef.current) {
+          syncAttemptedRef.current = true;
+          const storedPhone = marketingLeadService.getStoredLeadPhone();
+          const storedLeadId = marketingLeadService.getStoredLeadId();
+          const hasRealIdentifier = Boolean(storedPhone || resolvedEmail);
+          if (hasRealIdentifier) {
+            marketingLeadService.syncLead({
+              phone: storedPhone ?? undefined,
+              email: resolvedEmail || undefined,
+              status: "payment_requested",
+              source: "activation_page",
+              sourceType: "website",
+              metadata: { leadId: storedLeadId ?? undefined }
+            }).catch(err => console.error("[activation] Lead sync error:", err));
+          }
+        }
       } catch {
         if (!mounted) return;
         setEmail("");
@@ -158,10 +181,10 @@ export default function ActivationPage() {
     const params = new URLSearchParams(window.location.search);
     const paymentState = params.get("payment");
     if (paymentState === "success") {
-      setPaymentNotice("Ø§Ù„Ø¯ÙØ¹ ØªÙ… Ø¨Ù†Ø¬Ø§Ø­. Ù„Ùˆ Ø§Ù„ØªÙØ¹ÙŠÙ„ Ù„Ø³Ù‡ Ù…Ø§ÙˆØµÙ„Ø´ØŒ Ø§Ø¨Ø¹Øª Ø§Ù„Ù…Ø±Ø¬Ø¹ Ø£Ùˆ ØµÙˆØ±Ø© Ø§Ù„Ø¯ÙØ¹ ØªØ­Øª.");
+      setPaymentNotice("الدفع تم بنجاح. لو التفعيل لسه ماوصلش، ابعت المرجع أو صورة الدفع تحت.");
       setPaymentNoticeKind("success");
     } else if (paymentState === "cancelled") {
-      setPaymentNotice("Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ù…Ø§ÙƒÙ…Ù„ØªØ´. ØªÙ‚Ø¯Ø± ØªØ¬Ø±Ù‘Ø¨ ØªØ§Ù†ÙŠ Ø£Ùˆ ØªØ®ØªØ§Ø± ÙˆØ³ÙŠÙ„Ø© Ù…Ø®ØªÙ„ÙØ©.");
+      setPaymentNotice("العملية ماكملتش. تقدر تجرب تاني أو تختار وسيلة مختلفة.");
       setPaymentNoticeKind("error");
     }
   }, []);
@@ -185,7 +208,7 @@ export default function ActivationPage() {
     .filter(Boolean)
     .join(" | ");
   const paypalHref =
-    paymentConfig.paypalUrl || buildPaymentWhatsappHref({ email, method: "PayPal", note: "Ù…Ø­ØªØ§Ø¬ Ø±Ø§Ø¨Ø· Ø§Ù„Ø¯ÙØ¹ Ø§Ù„Ø¯ÙˆÙ„ÙŠ" });
+    paymentConfig.paypalUrl || buildPaymentWhatsappHref({ email, method: "PayPal", note: "محتاج رابط الدفع الدولي" });
   const priceLine = getFoundingPriceLine();
   const amountPlaceholder = getPaymentAmountPlaceholder(mode);
   const copyPaymentValue = async (value: string) => {
@@ -196,25 +219,25 @@ export default function ActivationPage() {
     {
       title: "Founding Cohort",
       value: paymentConfig.foundingCohortPriceLabel || "30 USD / 500 EGP",
-      note: "Ø±Ø­Ù„Ø© Ù…Ø±ÙƒØ²Ø© 21 ÙŠÙˆÙ… + 100 Awareness Tokens"
+      note: "رحلة مركزة 21 يوم + 100 Awareness Tokens"
     },
     {
-      title: "Ù…ØµØ±",
+      title: "مصر",
       value: paymentConfig.localMonthlyPriceLabel || "500 EGP",
-      note: "Ø§Ù„Ù…Ø³Ø§Ø± Ø§Ù„Ù…Ø­Ù„ÙŠ Ø§Ù„Ø£Ù†Ø³Ø¨ Ù„Ù„Ø¯ÙØ¹ Ù…Ù† Ø¬ÙˆÙ‡ Ù…ØµØ±"
+      note: "المسار المحلي الأنسب للدفع من جوه مصر"
     },
     {
-      title: "Ø¯ÙˆÙ„ÙŠ",
+      title: "دولي",
       value: paymentConfig.globalMonthlyPriceLabel || "30 USD",
-      note: "Ù„Ø£ÙŠ Ù…Ø³ØªØ®Ø¯Ù… Ø¨Ø±Ù‡ Ù…ØµØ± Ø£Ùˆ Ù…Ø­ØªØ§Ø¬ Ø¯ÙØ¹ Ø¯ÙˆÙ„ÙŠ"
+      note: "لأي مستخدم بره مصر أو محتاج دفع دولي"
     }
   ];
 
   const steps = [
-    "Ø§Ø®ØªØ§Ø± ÙˆØ³ÙŠÙ„Ø© Ø§Ù„Ø¯ÙØ¹ Ø§Ù„Ù„ÙŠ ØªÙ†Ø§Ø³Ø¨Ùƒ.",
-    "Ø§Ù†Ø³Ø® Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø£Ùˆ Ø§ÙØªØ­ ÙˆØ§ØªØ³Ø§Ø¨ Ù„Ùˆ Ù…Ø­ØªØ§Ø¬ ØªØ£ÙƒÙŠØ¯ Ø³Ø±ÙŠØ¹.",
-    "Ø¨Ø¹Ø¯ Ø§Ù„ØªØ­ÙˆÙŠÙ„ Ø§Ø¨Ø¹Øª Ø§Ù„Ù…Ø±Ø¬Ø¹ Ø£Ùˆ Ù„Ù‚Ø·Ø© ÙˆØ§Ø¶Ø­Ø© Ù…Ù† Ù†ÙØ³ Ø§Ù„ØµÙØ­Ø©.",
-    "Ø§Ù„ØªÙØ¹ÙŠÙ„ Ø§Ù„ÙŠØ¯ÙˆÙŠ Ø¨ÙŠØ±ÙˆØ­ Ù„Ù„ÙØ±ÙŠÙ‚ Ù…Ø¨Ø§Ø´Ø±Ø©ØŒ ÙˆØ¨Ø¹Ø¯Ù‡Ø§ Ø§Ù„Ø±Ø­Ù„Ø© Ø¨ØªØªÙØ¹Ù„ Ø¹Ù„Ù‰ Ø­Ø³Ø§Ø¨Ùƒ."
+    "اختار وسيلة الدفع اللي تناسبك.",
+    "انسخ البيانات أو افتح واتساب لو محتاج تأكيد سريع.",
+    "بعد التحويل ابعت المرجع أو لقطة واضحة من نفس الصفحة.",
+    "التفعيل اليدوي بيروح للفريق مباشرة، وبعدها الرحلة بتتحفل على حسابك."
   ];
 
   const trackManualIntent = (method: string) => {
@@ -241,14 +264,14 @@ export default function ActivationPage() {
     }
     if (!ALLOWED_PROOF_IMAGE_TYPES.includes(file.type as (typeof ALLOWED_PROOF_IMAGE_TYPES)[number])) {
       setProofImage(null);
-      setPaymentNotice("Ø§Ø±ÙØ¹ PNG Ø£Ùˆ JPG Ø£Ùˆ WEBP ÙÙ‚Ø·.");
+      setPaymentNotice("ارفع PNG أو JPG أو WEBP فقط.");
       setPaymentNoticeKind("error");
       event.target.value = "";
       return;
     }
     if (file.size > MAX_PROOF_IMAGE_BYTES) {
       setProofImage(null);
-      setPaymentNotice("Ø§Ù„ØµÙˆØ±Ø© Ø£ÙƒØ¨Ø± Ù…Ù† Ø§Ù„Ù…Ø³Ù…ÙˆØ­. Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰ 900KB.");
+      setPaymentNotice("الصورة أكبر من المسموح. الحد الأقصى 900KB.");
       setPaymentNoticeKind("error");
       event.target.value = "";
       return;
@@ -256,11 +279,11 @@ export default function ActivationPage() {
     try {
       const dataUrl = await readFileAsDataUrl(file);
       setProofImage({ name: file.name, type: file.type, bytes: file.size, dataUrl });
-      setPaymentNotice("Ø§Ù„ØµÙˆØ±Ø© Ø§ØªØ±ÙØ¹Øª. ÙƒÙ…Ù‘Ù„ Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø¥Ø«Ø¨Ø§Øª.");
+      setPaymentNotice("الصورة اترفعت. كمل إرسال الإثبات.");
       setPaymentNoticeKind("success");
     } catch (error) {
       setProofImage(null);
-      setPaymentNotice(error instanceof Error ? error.message : "ØªØ¹Ø°Ø± ØªØ¬Ù‡ÙŠØ² ØµÙˆØ±Ø© Ø§Ù„Ø¥Ø«Ø¨Ø§Øª.");
+      setPaymentNotice(error instanceof Error ? error.message : "تعذر تجهيز صورة الإثبات.");
       setPaymentNoticeKind("error");
     }
   };
@@ -273,7 +296,7 @@ export default function ActivationPage() {
     const methodValue = proofMethod;
     const modeValue = mode;
     if (!referenceValue && !hasProofImage) {
-      setPaymentNotice("Ø£Ø¶Ù Ø±Ù‚Ù… Ø§Ù„Ø¹Ù…Ù„ÙŠØ© Ø£Ùˆ Ø§Ø±ÙØ¹ Ù„Ù‚Ø·Ø© ÙˆØ§Ø¶Ø­Ø© Ù‚Ø¨Ù„ Ø§Ù„Ø¥Ø±Ø³Ø§Ù„.");
+      setPaymentNotice("أضف رقم العملية أو ارفع لقطة واضحة قبل الإرسال.");
       setPaymentNoticeKind("error");
       return;
     }
@@ -297,7 +320,7 @@ export default function ActivationPage() {
       });
       const data = (await response.json().catch(() => ({}))) as { error?: string; message?: string };
       if (!response.ok) {
-        throw new Error(data.error || "ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹.");
+        throw new Error(data.error || "تعذر إرسال إثبات الدفع.");
       }
       const alreadyTrackedThisSession =
         typeof window !== "undefined" &&
@@ -327,14 +350,14 @@ export default function ActivationPage() {
       setProofAmount("");
       setProofNote("");
       setProofImage(null);
-      setPaymentNotice(data.message || "ØªÙ… Ø§Ø³ØªÙ„Ø§Ù… Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹. Ù‡Ù†Ø±Ø§Ø¬Ø¹ Ø§Ù„ØªØ­ÙˆÙŠÙ„ ÙˆÙ†ÙØ¹Ù‘Ù„ Ø§Ù„Ø­Ø³Ø§Ø¨.");
+      setPaymentNotice(data.message || "تم استلام إثبات الدفع. هنراجع التحويل ونفعل الحساب.");
       setPaymentNoticeKind("success");
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
       trackManualIntent(`${methodValue}_proof_form`);
     } catch (error) {
-      setPaymentNotice(error instanceof Error ? error.message : "ØªØ¹Ø°Ø± Ø¥Ø±Ø³Ø§Ù„ Ø¥Ø«Ø¨Ø§Øª Ø§Ù„Ø¯ÙØ¹.");
+      setPaymentNotice(error instanceof Error ? error.message : "تعذر إرسال إثبات الدفع.");
       setPaymentNoticeKind("error");
     } finally {
       setIsSubmittingProof(false);
@@ -360,8 +383,8 @@ export default function ActivationPage() {
       setProofNote={setProofNote}
       isSubmittingProof={isSubmittingProof}
       handleProofSubmit={handleProofSubmit}
-      proofWhatsappHref={buildPaymentWhatsappHref({ email, method: "Ø¥Ø«Ø¨Ø§Øª Ø¯ÙØ¹", note: "Ù‡Ø¨Ø¹Øª Ø§Ù„Ù…Ø±Ø¬Ø¹ Ø£Ùˆ Ù„Ù‚Ø·Ø© Ø§Ù„Ø´Ø§Ø´Ø©" })}
-      helpWhatsappHref={buildPaymentWhatsappHref({ email, method: "Ø§Ø³ØªÙØ³Ø§Ø± Ù‚Ø¨Ù„ Ø§Ù„Ø¯ÙØ¹" })}
+      proofWhatsappHref={buildPaymentWhatsappHref({ email, method: "إثبات دفع", note: "هبعت المرجع أو لقطة الشاشة" })}
+      helpWhatsappHref={buildPaymentWhatsappHref({ email, method: "استفسار قبل الدفع" })}
     />
   );
 
@@ -370,21 +393,21 @@ export default function ActivationPage() {
       <main className="min-h-screen bg-[#06131a] px-4 py-10 text-white">
         <div className="mx-auto max-w-2xl rounded-[32px] border border-white/10 bg-white/[0.04] p-8 text-center shadow-[0_30px_120px_-60px_rgba(20,184,166,0.45)]">
           <p className="text-xs font-black uppercase tracking-[0.28em] text-amber-300">Activation</p>
-          <h1 className="mt-4 text-3xl font-black">Ø¨ÙˆØ§Ø¨Ø© Ø§Ù„ØªÙØ¹ÙŠÙ„ Ù…Ø´ Ù…ÙØªÙˆØ­Ø© Ø¯Ù„ÙˆÙ‚ØªÙŠ</h1>
+          <h1 className="mt-4 text-3xl font-black">بوابة التفعيل مش مفتوحة دلوقتي</h1>
           <p className="mt-3 text-sm leading-7 text-slate-300">
-            Ø£ÙˆÙ„ Ù…Ø§ Ø§Ù„ØªÙØ¹ÙŠÙ„ Ø§Ù„Ø¹Ø§Ù… ÙŠÙØªØ­ Ù‡ØªÙ„Ø§Ù‚ÙŠ Ø§Ù„ØµÙØ­Ø© Ø¯ÙŠ Ø´ØºØ§Ù„Ø© Ù…Ø¨Ø§Ø´Ø±Ø©. Ù„Ø­Ø¯ ÙˆÙ‚ØªÙ‡Ø§ Ø§Ø±Ø¬Ø¹ Ù„Ù„Ù…Ù†ØµØ© Ø£Ùˆ ÙƒÙ„Ù…Ù†Ø§ Ù„Ùˆ Ø¹Ù†Ø¯Ùƒ Ø­Ø§Ù„Ø© Ø¹Ø§Ø¬Ù„Ø©.
+            أول ما التفعيل العام يفتح هتلاقي الصفحة دي شغالة مباشرة. لحد وقتها ارجع للمنصة أو كلمنا لو عندك حالة عاجلة.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <a href="/" className="rounded-2xl bg-teal-400 px-5 py-3 font-black text-slate-950 transition hover:bg-teal-300">
-              Ø§Ø±Ø¬Ø¹ Ù„Ù„Ù…Ù†ØµØ©
+              ارجع للمنصة
             </a>
             <a
-              href={buildPaymentWhatsappHref({ email: "", method: "Ø§Ø³ØªÙØ³Ø§Ø± Ø¹Ø§Ù…" })}
+              href={buildPaymentWhatsappHref({ email: "", method: "استفسار عام" })}
               target="_blank"
               rel="noreferrer"
               className="rounded-2xl border border-white/15 px-5 py-3 font-bold text-white transition hover:bg-white/10"
             >
-              Ø§ÙØªØ­ ÙˆØ§ØªØ³Ø§Ø¨
+              افتح واتساب
             </a>
           </div>
         </div>
@@ -414,7 +437,7 @@ export default function ActivationPage() {
           </div>
         ) : null}
 
-        {/* â”€â”€â”€ Visual Funnel Progress Bar â”€â”€â”€ */}
+        {/* ─── Visual Funnel Progress Bar ─── */}
         <ActivationHeroSection
           funnelStep={funnelStep}
           priceLine={priceLine}
@@ -424,6 +447,7 @@ export default function ActivationPage() {
           source={source}
           scarcityPct={scarcityPct}
           steps={steps}
+          userName={userName}
         />
 
         <ActivationPaymentMethodsSection
@@ -442,7 +466,7 @@ export default function ActivationPage() {
         {!proofFormVisible && <ActivationNextStepNotice />}
         {proofFormVisible && proofSection}
 
-        {/* â”€â”€â”€ Trust / Social Proof Section â”€â”€â”€ */}
+        {/* ─── Trust / Social Proof Section ─── */}
         <ActivationTrustSection />
 
       </div>

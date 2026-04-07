@@ -2,17 +2,17 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Check, Shield, Sparkles, ArrowLeft, Zap } from "lucide-react";
-import { signInWithGoogleAtPath } from "../../services/authService";
-import { consumeEmotionalOffer, getEmotionalOffer } from "../../services/subscriptionManager";
-import { supabase } from "../../services/supabaseClient";
-import { trackEvent, AnalyticsEvents } from "../../services/analytics";
-import { marketingLeadService } from "../../services/marketingLeadService";
-import { recordFlowEvent } from "../../services/journeyTracking";
+import { signInWithGoogleAtPath } from "@/services/authService";
+import { consumeEmotionalOffer, getEmotionalOffer } from "@/services/subscriptionManager";
+import { supabase } from "@/services/supabaseClient";
+import { trackEvent, AnalyticsEvents } from "@/services/analytics";
+import { marketingLeadService } from "@/services/marketingLeadService";
+import { recordFlowEvent } from "@/services/journeyTracking";
 import {
   TIER_PRICES_USD,
   TIER_LABELS,
   PREMIUM_FEATURES_LIST,
-} from "../../config/pricing";
+} from "@/config/pricing";
 
 const FEATURES = PREMIUM_FEATURES_LIST;
 
@@ -76,10 +76,10 @@ export default function PricingPage() {
 
   return (
     <div
-      className="min-h-screen px-4 py-16 font-sans md:py-24"
+      className="min-h-screen px-4 py-16 font-sans md:py-24 bg-app transition-colors"
       dir="rtl"
       style={{
-        background: "radial-gradient(circle at top, rgba(20,184,166,0.12), transparent 40%), linear-gradient(180deg, #060f15 0%, #0a1a24 50%, #060f15 100%)"
+        background: "radial-gradient(circle at top, rgba(20,184,166,0.08), transparent 50%), var(--app-bg)"
       }}
     >
       <div className="mx-auto flex w-full max-w-xl md:max-w-4xl flex-col items-center">
@@ -94,7 +94,7 @@ export default function PricingPage() {
                 consumeEmotionalOffer();
                 setOfferConsumed(true);
               }}
-              className="mt-3 rounded-lg bg-teal-400 px-4 py-2 text-xs font-bold text-slate-950 transition-colors hover:bg-teal-300"
+              className="mt-3 rounded-lg bg-teal-400 px-4 py-2 text-xs font-bold text-teal-950 transition-colors hover:bg-teal-300"
             >
               تم الاستلام
             </button>
@@ -103,13 +103,13 @@ export default function PricingPage() {
 
         {/* Header */}
         <div className="mb-10 max-w-lg text-center">
-          <p className="mb-4 text-[10px] font-black uppercase tracking-[0.28em] text-teal-400">
+          <p className="mb-4 text-[10px] font-black uppercase tracking-[0.28em] text-teal-500 dark:text-teal-400">
             مساحات الملاذ الآمن
           </p>
-            <h1 className="mb-4 text-3xl font-black leading-tight text-white md:text-3xl" style={{ fontFamily: "var(--font-display)" }}>
+            <h1 className="mb-4 text-3xl font-black leading-tight text-app-foreground md:text-3xl" style={{ fontFamily: "var(--font-display)" }}>
             خطوة واحدة بينك وبين التعافي
           </h1>
-          <p className="text-sm leading-[1.8] text-slate-400">
+          <p className="text-sm leading-[1.8] text-app-muted-foreground">
             أنت الآن في أمان.. يمكنك البقاء في الملاذ المبدئي للتحليل، أو فتح المسار الأكثر خطورة وعمقاً.
           </p>
         </div>
@@ -118,28 +118,24 @@ export default function PricingPage() {
         <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 md:max-w-4xl max-w-xl mx-auto">
           {/* Free Tier Card */}
           <div
-            className="relative flex flex-col overflow-hidden rounded-[2rem] border border-white/5 p-8 md:p-10 transition-all opacity-80 hover:opacity-100"
-            style={{
-              background: "rgba(10,15,30,0.6)",
-              backdropFilter: "blur(20px)"
-            }}
+            className="relative flex flex-col overflow-hidden rounded-[2rem] border border-app-border p-8 md:p-10 transition-all bg-app-surface/60 backdrop-blur-xl"
           >
             <div className="flex items-center gap-3 mb-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-800 border border-slate-700">
-                <Shield className="h-6 w-6 text-slate-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-app-muted border border-app-border">
+                <Shield className="h-6 w-6 text-app-muted-foreground" />
               </div>
               <div>
-                <h2 className="text-xl font-black text-white">الملاذ المبدئي</h2>
-                <p className="text-xs text-slate-400">مساحة آمنة لاكتشاف خريطتك</p>
+                <h2 className="text-xl font-black text-app-foreground">الملاذ المبدئي</h2>
+                <p className="text-xs text-app-muted-foreground">مساحة آمنة لاكتشاف خريطتك</p>
               </div>
             </div>
 
             {/* Price */}
-            <div className="mb-8 rounded-2xl border border-white/5 bg-white/[0.02] p-6 text-center">
+            <div className="mb-8 rounded-2xl border border-app-border bg-app-muted p-6 text-center">
               <div className="flex items-center justify-center gap-2">
-                <span className="text-4xl font-black text-white">مجاناً</span>
+                <span className="text-4xl font-black text-app-foreground">مجاناً</span>
               </div>
-              <p className="mt-2 text-[10px] text-slate-500 uppercase tracking-widest">متاح دائماً</p>
+              <p className="mt-2 text-[10px] text-app-muted-foreground uppercase tracking-widest">متاح دائماً</p>
             </div>
 
             {/* Features */}
@@ -151,10 +147,10 @@ export default function PricingPage() {
                 "نصائح الذكاء الاصطناعي الأساسية"
               ].map((f) => (
                 <li key={f} className="flex items-center gap-3">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-800">
-                    <Check className="h-3 w-3 text-slate-400" />
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-app-muted">
+                    <Check className="h-3 w-3 text-teal-400" />
                   </div>
-                  <span className="text-sm text-slate-400">{f}</span>
+                  <span className="text-sm text-app-muted-foreground">{f}</span>
                 </li>
               ))}
             </ul>
@@ -162,7 +158,7 @@ export default function PricingPage() {
             {/* CTA */}
             <button
               onClick={() => { window.location.href = "/"; }}
-              className="mt-auto w-full py-4 text-sm font-bold text-slate-400 border border-slate-700 rounded-2xl hover:bg-slate-800 hover:text-white transition-colors"
+              className="mt-auto w-full py-4 text-sm font-bold text-app-muted-foreground border border-app-border rounded-2xl hover:bg-app-muted hover:text-app-foreground transition-all"
             >
               استمر في الملاذ
             </button>
@@ -170,43 +166,42 @@ export default function PricingPage() {
 
           {/* Premium Tier Card */}
           <div
-            className="relative flex flex-col overflow-hidden rounded-[2rem] border border-teal-500/30 p-8 md:p-10 shadow-[0_0_50px_rgba(45,212,191,0.1)]"
+            className="relative flex flex-col overflow-hidden rounded-[2rem] border border-teal-500/30 p-8 md:p-10 shadow-xl bg-app-surface/80 backdrop-blur-xl"
             style={{
-              background: "radial-gradient(circle at top right, rgba(20,184,166,0.15), transparent 50%), rgba(15,23,42,0.9)",
-              backdropFilter: "blur(20px)"
+              background: "radial-gradient(circle at top right, rgba(20,184,166,0.12), transparent 50%), var(--app-surface)"
             }}
           >
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-400/80 to-transparent" />
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-teal-500 text-[#020408] text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_0_15px_rgba(45,212,191,0.5)]">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-400/50 to-transparent" />
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-teal-500 text-teal-950 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-[0_0_15px_rgba(45,212,191,0.2)]">
               المسار الأكثر طلباً
             </div>
 
             <div className="flex items-center gap-3 mb-6 mt-2">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-400/10 border border-teal-400/30">
-                <Sparkles className="h-6 w-6 text-teal-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-400/10 border border-teal-400/20">
+                <Sparkles className="h-6 w-6 text-teal-500 dark:text-teal-400" />
               </div>
               <div>
-                <h2 className="text-xl font-black text-white">{TIER_LABELS.premium}</h2>
-                <p className="text-xs text-teal-400/80">التعافي العميق بأدوات سيادية</p>
+                <h2 className="text-xl font-black text-app-foreground">{TIER_LABELS.premium}</h2>
+                <p className="text-xs text-teal-600 dark:text-teal-400/80">التعافي العميق بأدوات سيادية</p>
               </div>
             </div>
 
             {/* Price */}
-            <div className="mb-8 rounded-2xl border border-teal-400/20 bg-teal-400/[0.03] p-6 text-center">
+            <div className="mb-8 rounded-2xl border border-teal-500/10 bg-teal-500/[0.03] p-6 text-center">
               <div className="flex items-center justify-center gap-2">
-                <span className="text-5xl font-black text-white">{globalPrice}</span>
+                <span className="text-5xl font-black text-app-foreground">{globalPrice}</span>
               </div>
-              <p className="mt-2 text-xs text-slate-400">أو <span className="text-teal-400 font-bold">{localPrice}</span> / شهر للمصريين</p>
+              <p className="mt-2 text-xs text-app-muted-foreground">أو <span className="text-teal-600 dark:text-teal-400 font-bold">{localPrice}</span> / شهر للمصريين</p>
             </div>
 
             {/* Features */}
             <ul className="mb-8 space-y-3 flex-1">
               {FEATURES.map((f) => (
                 <li key={f} className="flex items-center gap-3">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-400/20">
-                    <Check className="h-3 w-3 text-teal-400" />
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-500/10 dark:bg-teal-400/20">
+                    <Check className="h-3 w-3 text-teal-600 dark:text-teal-400" />
                   </div>
-                  <span className="text-sm font-medium text-white">{f}</span>
+                  <span className="text-sm font-medium text-app-foreground">{f}</span>
                 </li>
               ))}
             </ul>
@@ -215,7 +210,7 @@ export default function PricingPage() {
             <button
               onClick={() => void handleSubscribe()}
               disabled={isLoading}
-              className="group w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-400 py-4 text-lg font-black text-slate-950 shadow-[0_0_20px_rgba(45,212,191,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:hover:scale-100"
+              className="group w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 dark:from-teal-400 dark:to-emerald-400 py-4 text-lg font-black text-white dark:text-teal-950 shadow-lg dark:shadow-[0_0_20px_rgba(45,212,191,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:hover:scale-100"
             >
               {isLoading ? (
                 "جاري التجهيز..."
@@ -231,14 +226,14 @@ export default function PricingPage() {
         </div>
 
         {/* Trust */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-4 text-center text-xs text-slate-500">
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-4 text-center text-xs text-app-muted-foreground">
           <div className="flex items-center gap-2">
             <Shield className="h-3.5 w-3.5" />
             بياناتك مشفرة ومحمية
           </div>
-          <span className="h-1 w-1 rounded-full bg-slate-700" />
+          <span className="h-1 w-1 rounded-full bg-app-border" />
           <div>إلغاء في أي وقت بدون شروط</div>
-          <span className="h-1 w-1 rounded-full bg-slate-700" />
+          <span className="h-1 w-1 rounded-full bg-app-border" />
           <div>الفتح خلال ساعة من التواصل أو المسار الداخلي</div>
         </div>
       </div>

@@ -14,8 +14,8 @@ import {
   QUALITY_THRESHOLDS,
   DAWAYIR_DNA,
 } from "./CORE_PRINCIPLES";
-import { DAILY_QUESTIONS } from "../data/dailyQuestions";
-import type { DailyQuestion } from "../data/dailyQuestions";
+import { DAILY_QUESTIONS } from "@/data/dailyQuestions";
+import type { DailyQuestion } from "@/data/dailyQuestions";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 📊 نتيجة التقييم

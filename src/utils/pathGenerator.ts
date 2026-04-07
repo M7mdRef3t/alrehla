@@ -3,11 +3,11 @@
  * عند تثبيت التشخيص يُستدعى لاستلام مسار تعافي مخصص (RecoveryPath) وتخزينه.
  */
 
-import { geminiClient } from "../services/geminiClient";
-import type { PathId, SymptomType } from "../modules/pathEngine/pathTypes";
-import type { RecoveryPath } from "../modules/pathEngine/pathTypes";
-import { PATH_NAMES } from "../modules/pathEngine/pathResolver";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { geminiClient } from "@/services/geminiClient";
+import type { PathId, SymptomType } from "@/modules/pathEngine/pathTypes";
+import type { RecoveryPath } from "@/modules/pathEngine/pathTypes";
+import { PATH_NAMES } from "@/modules/pathEngine/pathResolver";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 const PATH_DESCRIPTIONS: Record<PathId, string> = {
   path_protection: "مسرح الحدود الخارجية: المعركة بينك وبين الشخص. السلاح: لا، التجاهل، الوقت، المسافة. استنزاف نشط (احتكاك عالي). الهدف: وقف النزيف، حدود صارمة، فنون الرد البارد — «قول لا للغير».",

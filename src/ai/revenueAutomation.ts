@@ -5,13 +5,14 @@
  */
 
 import { decisionEngine } from "./decision-framework";
-import { geminiClient } from "../services/geminiClient";
+import { geminiClient } from "@/services/geminiClient";
+import { supabase } from "@/services/supabaseClient";
 import type { AIDecision } from "./decision-framework";
 import {
   type PricingTier,
   TIER_PRICES_USD,
   TIER_LIMITS,
-} from "../config/pricing";
+} from "@/config/pricing";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 💰 Revenue Models
@@ -124,32 +125,46 @@ export class RevenueAutomationEngine {
    * ─────────────────────────────────────────────────────────────────
    */
   async analyzeCurrentMetrics(): Promise<RevenueMetrics | null> {
-    // في المستقبل: نجيب البيانات من Supabase
-    // مؤقتاً: نحاكي البيانات
-
     try {
-      // TODO: Replace with actual Supabase query
-      const mockData: RevenueMetrics = {
-        timestamp: Date.now(),
-        totalUsers: 150,
-        breakdown: {
-          free: 100,
-          premium: 40,
-          coach: 10,
-        },
-        mrr: 40 * 4.99 + 10 * 49, // $689.6
-        arr: (40 * 4.99 + 10 * 49) * 12, // $8,275.2
-        churnRate: 0.05, // 5%
-        conversionRate: {
-          freeToPremium: 0.15, // 15% من Free بيحولوا لـ Premium
-          premiumToCoach: 0.08, // 8% من B2C بيحولوا لـ B2B
-        },
-        avgRevenuePerUser: (40 * 4.99 + 10 * 49) / 150,
-        lifetimeValue: ((40 * 4.99 + 10 * 49) / 50) * (1 / 0.05), // LTV = ARPU × (1/churn)
+      if (!supabase) throw new Error("Supabase is not initialized");
+
+      const { data: profiles, error } = await supabase
+        .from("profiles")
+        .select("role, created_at");
+
+      if (error) throw error;
+
+      const totalUsers = profiles ? profiles.length : 0;
+      const breakdown = {
+        free: profiles ? profiles.filter(p => !p.role || p.role === 'user' || p.role === 'free').length : 0,
+        premium: profiles ? profiles.filter(p => p.role === 'premium').length : 0,
+        coach: profiles ? profiles.filter(p => p.role === 'coach').length : 0,
       };
 
-      console.warn("📊 Revenue metrics analyzed:", mockData);
-      return mockData;
+      const mrr = breakdown.premium * 4.99 + breakdown.coach * 49;
+      const arr = mrr * 12;
+      const churnRate = 0.05; // Standard heuristic for now
+      const conversionRate = {
+        freeToPremium: totalUsers > 0 ? breakdown.premium / totalUsers : 0,
+        premiumToCoach: breakdown.premium > 0 ? breakdown.coach / breakdown.premium : 0,
+      };
+      const avgRevenuePerUser = totalUsers > 0 ? mrr / totalUsers : 0;
+      const lifetimeValue = avgRevenuePerUser > 0 ? avgRevenuePerUser * (1 / churnRate) : 0;
+
+      const realData: RevenueMetrics = {
+        timestamp: Date.now(),
+        totalUsers,
+        breakdown,
+        mrr,
+        arr,
+        churnRate,
+        conversionRate,
+        avgRevenuePerUser,
+        lifetimeValue,
+      };
+
+      console.warn("📊 Revenue metrics analyzed (Real Data):", realData);
+      return realData;
     } catch (error) {
       console.error("❌ Failed to analyze metrics:", error);
       return null;
@@ -389,8 +404,8 @@ export class RevenueAutomationEngine {
         console.warn("🔍 Churn analysis:", churnAnalysis);
       }
 
-      // 4. حفظ التقرير في localStorage
-      this.saveWeeklyReport({
+      // 4. حفظ التقرير في Supabase
+      await this.saveWeeklyReport({
         timestamp: Date.now(),
         metrics,
         pricingRecommendation: pricingRec,
@@ -404,9 +419,9 @@ export class RevenueAutomationEngine {
   }
 
   /**
-   * حفظ التقرير الأسبوعي
+   * حفظ التقرير الأسبوعي في قاعدة البيانات
    */
-  private saveWeeklyReport(report: {
+  private async saveWeeklyReport(report: {
     timestamp: number;
     metrics: RevenueMetrics | null;
     pricingRecommendation: PricingRecommendation | null;
@@ -415,27 +430,22 @@ export class RevenueAutomationEngine {
       suggestedActions: string[];
       estimatedChurnReduction: number;
     } | null;
-  }): void {
+  }): Promise<void> {
     try {
-      const existing = JSON.parse(
-        localStorage.getItem("dawayir-revenue-reports") || "[]"
-      ) as typeof report[];
-
-      existing.push(report);
-
-      // احتفظ بآخر 12 تقرير (3 شهور)
-      const trimmed = existing.slice(-12);
-
-      localStorage.setItem("dawayir-revenue-reports", JSON.stringify(trimmed));
-    } catch {
-      // ignore
+      if (!supabase) throw new Error("Supabase is not initialized");
+      await supabase.from("admin_reports").insert({
+        kind: "revenue_report",
+        payload: report as unknown as Record<string, unknown>
+      });
+    } catch (error) {
+      console.error("Failed to save weekly report to Supabase:", error);
     }
   }
 
   /**
    * استرجاع التقارير السابقة
    */
-  getRevenueReports(): Array<{
+  async getRevenueReports(): Promise<Array<{
     timestamp: number;
     metrics: RevenueMetrics | null;
     pricingRecommendation: PricingRecommendation | null;
@@ -444,9 +454,19 @@ export class RevenueAutomationEngine {
       suggestedActions: string[];
       estimatedChurnReduction: number;
     } | null;
-  }> {
+  }>> {
     try {
-      return JSON.parse(localStorage.getItem("dawayir-revenue-reports") || "[]");
+      if (!supabase) return [];
+      const { data, error } = await supabase
+        .from("admin_reports")
+        .select("payload")
+        .eq("kind", "revenue_report")
+        .order("created_at", { ascending: false })
+        .limit(12);
+
+      if (error || !data) return [];
+
+      return data.map(row => row.payload as any);
     } catch {
       return [];
     }

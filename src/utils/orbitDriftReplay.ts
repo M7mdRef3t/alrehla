@@ -1,4 +1,4 @@
-import type { MapNode, OrbitHistoryEntry, Ring } from "../modules/map/mapTypes";
+import type { MapNode, OrbitHistoryEntry, Ring } from "@/modules/map/mapTypes";
 
 type OrbitReplayTone = "green" | "yellow" | "red" | "archived";
 

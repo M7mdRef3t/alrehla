@@ -1,8 +1,8 @@
 import { geminiClient } from "./geminiClient";
-import { useConsciousnessHistory } from "../state/consciousnessHistoryState";
-import { usePredictiveState } from "../state/predictiveState";
-import { useMapState } from "../state/mapState";
-import { usePulseState } from "../state/pulseState";
+import { useConsciousnessHistory } from "@/state/consciousnessHistoryState";
+import { usePredictiveState } from "@/state/predictiveState";
+import { useMapState } from "@/state/mapState";
+import { usePulseState } from "@/state/pulseState";
 import { GrowthEngine } from "./growthEngine";
 import { fetchOverviewStats } from "./adminApi";
 

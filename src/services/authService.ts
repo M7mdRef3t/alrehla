@@ -1,6 +1,6 @@
 import type { AuthOtpResponse, AuthResponse, OAuthResponse } from "@supabase/supabase-js";
 import { safeGetSession, supabase } from "./supabaseClient";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import { getWindowOrNull } from "./clientRuntime";
 
 export type UserToneGender = "male" | "female" | "neutral";

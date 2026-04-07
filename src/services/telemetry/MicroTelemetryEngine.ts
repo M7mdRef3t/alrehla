@@ -1,7 +1,7 @@
-import { useDigitalTwinState } from '../../state/digitalTwinState';
-import { TelemetrySnapshot } from '../../types/digitalTwin';
+import { useDigitalTwinState } from '@/state/digitalTwinState';
+import { TelemetrySnapshot } from '@/types/digitalTwin';
 import { InterventionEngine } from './InterventionEngine';
-import { runtimeEnv } from '../../config/runtimeEnv';
+import { runtimeEnv } from '@/config/runtimeEnv';
 
 export class MicroTelemetryEngine {
     private static lastEventTime: number = 0;

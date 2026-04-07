@@ -1,5 +1,5 @@
-import type { RealityAnswers, RealityOption } from "../components/RealityCheck";
-import { getScoringWeights, getScoringThresholds } from "../state/adminState";
+import type { RealityAnswers, RealityOption } from '@/modules/exploration/RealityCheck';
+import { getScoringWeights, getScoringThresholds } from "@/state/adminState";
 
 /** تواصل: high=3، medium=2، low=1، zero=0. المجموع 6–9 أخضر، 3–5 أصفر، 0–2 أحمر */
 function points(opt: RealityOption): number {

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { EmergencyContext } from "../utils/emergencyContext";
+import type { EmergencyContext } from "@/utils/emergencyContext";
 
 interface EmergencyState {
   isOpen: boolean;

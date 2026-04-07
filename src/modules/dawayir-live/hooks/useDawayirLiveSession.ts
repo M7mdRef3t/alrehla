@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GoogleGenAI, Modality } from "@google/genai";
-import { runtimeEnv } from "../../../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import {
   appendLiveEvents,
   bootstrapLiveSession,
@@ -32,9 +32,9 @@ import type {
   LoopRecall,
   MirrorMomentState,
   VoiceTattooMeta,
-} from "../types";
-import { AudioOutputPlayer, MicCapture, base64ToArrayBuffer, parsePcmSampleRate } from "../utils/audioHelpers";
-import { createVoiceTattooFromChunks, hasVoiceTattoo, readVoiceTattoo, saveVoiceTattoo } from "../utils/voiceTattoo";
+} from '../types';
+import { AudioOutputPlayer, MicCapture, base64ToArrayBuffer, parsePcmSampleRate } from '@/modules/dawayir-live/utils/audioHelpers';
+import { createVoiceTattooFromChunks, hasVoiceTattoo, readVoiceTattoo, saveVoiceTattoo } from '@/modules/dawayir-live/utils/voiceTattoo';
 
 const DEFAULT_CIRCLES: CircleNode[] = [
   { id: 1, label: "وعي", radius: 50, color: "#FFD700", fluidity: 0.5 },

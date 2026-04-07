@@ -13,6 +13,7 @@ import { handleRadarContent } from "../../../server/admin/radar-content";
 import { handleRadarGrants } from "../../../server/admin/radar-grants";
 import { handleAlerts } from "../../../server/admin/alerts";
 import { handleCopilot } from "../../../server/admin/copilot";
+import { handleOraclePulse } from "../../../server/admin/intelligence";
 import { recordAdminAudit, verifyAdmin } from "../../../server/admin/_shared";
 
 export const dynamic = "force-dynamic";
@@ -46,7 +47,8 @@ const ROUTES: Record<string, AdminHandler> = {
     "radar-content": handleRadarContent,
     "radar-grants": handleRadarGrants,
     alerts: handleAlerts,
-    copilot: handleCopilot
+    copilot: handleCopilot,
+    "oracle-pulse": handleOraclePulse
 };
 
 const AUTH_WINDOW_MS = 10 * 60 * 1000;

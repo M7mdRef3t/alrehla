@@ -4,7 +4,7 @@ import { Bot, AlertTriangle, ShieldCheck, Siren, Cpu } from "lucide-react";
 import {
   getAIGuardrailSnapshot,
   subscribeAIGuardrail
-} from "../../../../../services/aiGuardrails";
+} from "@/services/aiGuardrails";
 import { AdminTooltip } from "./AdminTooltip";
 
 export const AIGuardrailCard: FC = () => {

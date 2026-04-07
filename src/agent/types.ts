@@ -1,8 +1,8 @@
-import type { Ring } from "../modules/map/mapTypes";
-import type { PulseEntry } from "../state/pulseState";
-import type { FeatureFlagKey } from "../config/features";
+import type { Ring } from "@/modules/map/mapTypes";
+import type { PulseEntry } from "@/state/pulseState";
+import type { FeatureFlagKey } from "@/config/features";
 import type { PersonaType } from "./personae";
-import type { AppScreen } from "../navigation/navigationMachine";
+import type { AppScreen } from "@/navigation/navigationMachine";
 
 /** سياق القراءة فقط للـ Agent: عُقد الخريطة، الشاشة الحالية، الهدف. */
 export interface AgentContext {

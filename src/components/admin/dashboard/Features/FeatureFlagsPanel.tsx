@@ -19,19 +19,19 @@ import {
     Cpu,
     Eye
 } from "lucide-react";
-import { useAdminState } from "../../../../state/adminState";
-import { AwarenessSkeleton } from "../../../AwarenessSkeleton";
-import { useAuthState, getEffectiveRoleFromState } from "../../../../state/authState";
-import { getEffectiveFeatureAccess, isPrivilegedRole } from "../../../../utils/featureFlags";
-import { runtimeEnv } from "../../../../config/runtimeEnv";
-import { FEATURE_FLAGS, type FeatureFlagKey, type FeatureFlagMode } from "../../../../config/features";
-import { saveFeatureFlags } from "../../../../services/adminApi";
-import { isSupabaseReady } from "../../../../services/supabaseClient";
-import { createCurrentUrl, pushUrl, replaceUrl } from "../../../../services/navigation";
+import { useAdminState } from "@/state/adminState";
+import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
+import { useAuthState, getEffectiveRoleFromState } from "@/state/authState";
+import { getEffectiveFeatureAccess, isPrivilegedRole } from "@/utils/featureFlags";
+import { runtimeEnv } from "@/config/runtimeEnv";
+import { FEATURE_FLAGS, type FeatureFlagKey, type FeatureFlagMode } from "@/config/features";
+import { saveFeatureFlags } from "@/services/adminApi";
+import { isSupabaseReady } from "@/services/supabaseClient";
+import { createCurrentUrl, pushUrl, replaceUrl } from "@/services/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 const DataManagementModal = lazy(() =>
-    import("../../../DataManagement").then((m) => ({ default: m.DataManagement }))
+    import('@/modules/meta/DataManagement').then((m) => ({ default: m.DataManagement }))
 );
 
 export const FeatureFlagsPanel: FC = () => {

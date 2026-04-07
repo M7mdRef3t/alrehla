@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { ArrowRight, Eye, History, Link2, MessageSquareText, Mic, MicOff, Send, Sparkles, X } from "lucide-react";
 import { motion } from "framer-motion";
-import type { CognitiveMetrics, JourneyStage, LiveLanguage, SessionStatus, TruthContract } from "../types";
+import type { CognitiveMetrics, JourneyStage, LiveLanguage, SessionStatus, TruthContract } from '../types';
 
 interface LiveHUDProps {
   language: LiveLanguage;

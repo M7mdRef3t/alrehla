@@ -16,7 +16,7 @@ describe("derivePressureSentence", () => {
     });
 
     expect(snapshot?.tone).toBe("steady");
-    expect(snapshot?.sentence).toContain("تبقى المسافة كما هي");
+    expect(snapshot?.sentence).toContain("أحافظ على المسافة");
   });
 
   it("returns a protective sentence for high-pressure relationships", () => {
@@ -33,7 +33,7 @@ describe("derivePressureSentence", () => {
     });
 
     expect(snapshot?.tone).toBe("danger");
-    expect(snapshot?.copyText).toContain("أحتاج مساحة الآن");
+    expect(snapshot?.copyText).toContain("فاتح مساحة لنفسي");
   });
 
   it("returns null for stable green relationships", () => {

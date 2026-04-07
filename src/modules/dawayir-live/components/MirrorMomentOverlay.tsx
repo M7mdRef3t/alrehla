@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import type { LiveLanguage, MirrorMomentState } from "../types";
+import type { LiveLanguage, MirrorMomentState } from '../types';
 
 interface MirrorMomentOverlayProps {
   moment: MirrorMomentState | null;

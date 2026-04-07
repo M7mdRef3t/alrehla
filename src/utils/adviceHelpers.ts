@@ -1,5 +1,5 @@
-import type { AdviceCategory } from "../data/adviceScripts";
-import { adviceDatabase } from "../data/adviceScripts";
+import type { AdviceCategory } from "@/data/adviceScripts";
+import { adviceDatabase } from "@/data/adviceScripts";
 import type { AdviceZone } from "./scoreHelpers";
 
 export interface Advice {

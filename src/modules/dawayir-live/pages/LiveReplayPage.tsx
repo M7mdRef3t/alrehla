@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Download, Pause, Play, RotateCcw } from "lucide-react";
-import { assignUrl } from "../../../services/navigation";
+import { assignUrl } from "@/services/navigation";
 import { getLiveSession } from "../api";
-import type { CircleNode, LiveLanguage, LiveReplayFrameRecord, LiveSessionDetail } from "../types";
+import type { CircleNode, LiveLanguage, LiveReplayFrameRecord, LiveSessionDetail } from '../types';
 
 const NODE_POSITIONS = {
   1: { x: 24, y: 66 },
@@ -196,7 +196,7 @@ export default function LiveReplayPage({ sessionId }: { sessionId: string }) {
   }
 
   if (!detail || !currentFrame) {
-    return <div className="min-h-screen bg-slate-950 p-8 text-white">Loading replay...</div>;
+    return <div className="min-h-screen bg-app p-8 text-app-foreground">Loading replay...</div>;
   }
 
   return (

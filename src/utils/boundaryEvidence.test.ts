@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { MapNode } from "../modules/map/mapTypes";
+import type { MapNode } from "@/modules/map/mapTypes";
 import { deriveBoundaryEvidence } from "./boundaryEvidence";
 import { buildEmergencyContextFromNode } from "./emergencyContext";
 

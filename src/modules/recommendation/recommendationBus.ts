@@ -1,5 +1,5 @@
 import type { DawayirSignalEventV1 } from "./types";
-import { getFromLocalStorage, setInLocalStorage } from "../../services/browserStorage";
+import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 
 const SIGNAL_STORAGE_KEY = "dawayir-recommendation-signals-v1";
 const MAX_SIGNALS = 2000;

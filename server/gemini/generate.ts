@@ -8,14 +8,14 @@ import {
   markGeminiRequestEnd,
   markGeminiRequestStart,
   withTimeout
-} from "./_shared.js";
+} from "./_shared";
 import {
   applyCodingOutputContractToPrompt,
   buildPromptGuardResponse,
   evaluatePrompt,
   validateCodingCommentContract,
   buildOutputContractViolationResponse
-} from "./_promptGuard.js";
+} from "./_promptGuard";
 
 type ApiRequest = { method?: string; body?: Record<string, unknown> };
 type ApiResponse = {
@@ -40,6 +40,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return;
   }
   markGeminiRequestStart();
+  console.log("[Gemini API] Request started with prompt length:", (req.body?.prompt as string)?.length);
 
   const { prompt, generationConfig, modelOrder } = req.body ?? {};
   if (!prompt || typeof prompt !== "string") {
@@ -65,6 +66,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       try {
         const model = getModel(client, models[i], config);
         const result = await withTimeout(model.generateContent(finalPrompt), 15_000);
+        console.log("[Gemini API] Content generated successfully");
         const response = result.response;
         const text = response.text();
         if (guard.coding) {
@@ -85,6 +87,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         break;
       }
     }
+  } catch (err) {
+    console.error("[Gemini API] Critical error in handler:", err);
+    lastError = err;
   } finally {
     markGeminiRequestEnd();
   }

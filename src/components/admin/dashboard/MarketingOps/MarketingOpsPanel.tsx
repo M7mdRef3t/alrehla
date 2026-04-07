@@ -33,16 +33,17 @@ import {
   Wallet,
   ArrowUpRight,
   ArrowDownRight,
-  Trophy
+  Trophy,
+  Repeat
 } from "lucide-react";
 import { ManualLeadEntry } from "./ManualLeadEntry";
 import { QuickSendRow } from "./QuickSendRow";
-import { SovereignGatewayCommand } from "../Sovereign/SovereignGatewayCommand";
+import { SovereignGatewayCommand, AVAILABLE_GATEWAYS } from "../Sovereign/SovereignGatewayCommand";
 import { StatCard } from "../Executive/components/StatCard";
 import { AdminTooltip } from "../Overview/components/AdminTooltip";
 
-import { adminApi } from "../../../../services/adminApi";
-import { growthEngine, GrowthMetrics } from "../../../../services/growthEngine";
+import { adminApi } from "@/services/adminApi";
+import { growthEngine, GrowthMetrics } from "@/services/growthEngine";
 
 // --- Types ---
 
@@ -115,19 +116,21 @@ const OWNER_EMAIL = "hello@alrehla.app";
 
 // --- Helpers ---
 
-import { getAuthToken } from "../../../../state/authState";
-import { useAdminState } from "../../../../state/adminState";
+import { getAuthToken } from "@/state/authState";
+import { useAdminState } from "@/state/adminState";
 import { CampaignLeadsModal } from "./CampaignLeadsModal";
 
 function getBearerToken(): string {
   return getAuthToken() ?? useAdminState.getState().adminCode ?? "";
 }
 
-async function fetchStats(): Promise<OpsStats> {
+async function fetchStats(force = false): Promise<OpsStats> {
   const state = useAdminState.getState();
   const cache = state.opsStatsCache;
   const now = Date.now();
-  if (cache && now - cache.timestamp < 60_000) {
+  
+  // Cache bypass if not forced and less than 60s old
+  if (!force && cache && now - cache.timestamp < 60_000) {
     return cache.data;
   }
 
@@ -390,7 +393,7 @@ function MarketingSpendConsole({
       <div className="flex items-center gap-2 px-2">
         <AlertCircle className="w-3 h-3 text-indigo-400/50" />
         <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 leading-none">
-          يتم ربط هذا الرقم مع بوابة العوائد لحساب الـ ROI الفعلي بدقة السنت.
+          يتم ربط هذا الرقم مع مركز العوائد لحساب العائد على الاستثمار الفعلي بدقة السنت.
         </p>
       </div>
     </div>
@@ -409,6 +412,7 @@ export function MarketingOpsPanel() {
   const [growthMetrics, setGrowthMetrics] = useState<GrowthMetrics | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<{ type: "campaign" | "source"; value: string } | null>(null);
   const [repairLoading, setRepairLoading] = useState(false);
+  const [warmupLoading, setWarmupLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const toastRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -418,10 +422,10 @@ export function MarketingOpsPanel() {
     toastRef.current = setTimeout(() => setToast(null), 4000);
   };
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     setLoading(true);
     try {
-      const data = await fetchStats();
+      const data = await fetchStats(force);
       setStats(data);
       const metrics = await growthEngine.getGrowthMetrics();
       setGrowthMetrics(metrics);
@@ -442,8 +446,7 @@ export function MarketingOpsPanel() {
       const data = await res.json();
       if (data.ok) {
         showToast(`تم تصحيح ${data.metaCount} ليد فيسبوك و ${data.waCount} واتساب ✅`, true);
-        useAdminState.setState({ opsStatsCache: null });
-        await load();
+        void load(true);
       } else {
         showToast("فشل إصلاح التتبع", false);
       }
@@ -462,7 +465,7 @@ export function MarketingOpsPanel() {
       const res = await postAction(action, extra);
       if (res.ok) {
         showToast(`${label} — تم بنجاح ✅`, true);
-        await load();
+        void load(true);
       } else {
         showToast(`${label} — فشل ❌`, false);
       }
@@ -575,6 +578,70 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
 
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           <button 
+            onClick={async () => {
+              setWarmupLoading(true);
+              try {
+                const response = await fetch('/api/admin/meta-warmup', {
+                  method: 'POST',
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'authorization': `Bearer ${getBearerToken()}`
+                  }
+                });
+                const result = await response.json();
+                if (result.ok) {
+                  showToast("تم تنشيط اتصال Meta API بنجاح! تم استدعاء 5 نقاط اتصال ✅", true);
+                } else {
+                  showToast("فشل التنشيط: " + (result.error || "خطأ غير معروف"), false);
+                }
+              } catch (err) {
+                showToast("خطأ في الاتصال بسيرفر التنشيط", false);
+              } finally {
+                setWarmupLoading(false);
+              }
+            }}
+            disabled={warmupLoading || loading}
+            className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/20 transition-all active:scale-95 disabled:opacity-50"
+          >
+            <Orbit className={`w-3.5 h-3.5 ${warmupLoading ? "animate-spin" : ""}`} />
+            {warmupLoading ? "جاري التنشيط..." : "تنشيط اتصال Meta API"}
+          </button>
+
+          <button 
+            onClick={async () => {
+              try {
+                const response = await fetch('/api/webhooks/meta-leads', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    object: 'page',
+                    entry: [{
+                      id: 'test_page_id',
+                      time: Date.now(),
+                      changes: [{
+                        field: 'leadgen',
+                        value: { leadgen_id: 'test_lead_id_123' }
+                      }]
+                    }]
+                  })
+                });
+                const result = await response.json();
+                if (result.success) {
+                  showToast("تم إرسال إشارة محاكاة بنجاح! راجع الرادار بعد ثوانٍ 📡", true);
+                } else {
+                  showToast("فشلت المحاكاة: " + result.error, false);
+                }
+              } catch (err) {
+                showToast("خطأ في الاتصال بالسيرفر المحاكي", false);
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] font-black uppercase tracking-widest hover:bg-purple-500/20 transition-all active:scale-95"
+          >
+            <Repeat className="w-3.5 h-3.5" />
+            {"محاكاة Lead"}
+          </button>
+
+          <button 
             onClick={handleRepair} 
             disabled={repairLoading || loading}
             className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest hover:bg-amber-500/20 transition-all active:scale-95 disabled:opacity-50"
@@ -584,7 +651,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
             {repairLoading ? "جاري التعميد..." : "تعميد البيانات القديمة"}
           </button>
 
-          <button onClick={load} disabled={loading}
+          <button onClick={() => load(true)} disabled={loading}
             className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-black uppercase tracking-widest hover:bg-indigo-500/20 hover:text-indigo-200 transition-all active:scale-95 disabled:opacity-50 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             {"تحديث الرادار"}
@@ -595,7 +662,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
 
       {/* Financial ROI Dashboard (New) */}
       <CollapsibleSection
-        title={"التحليل المالي والعائد (ROI)"}
+        title={"التحليل المالي والعائد"}
         icon={<DollarSign className="w-5 h-5 text-indigo-400" />}
         subtitle={"الذكاء المالي الفوقي لمراقبة كفاءة الإنفاق والتحويل النقدي."}
         defaultExpanded={true}
@@ -604,21 +671,21 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <StatCard 
-              title={"العائد على الإنفاق (ROI)"} 
+              title={"العائد على الإنفاق"} 
               value={(growthMetrics?.roi ?? 0).toFixed(1) + "%"} 
               icon={growthMetrics && growthMetrics.roi > 0 ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownRight className="w-5 h-5" />} 
               glowColor={growthMetrics && growthMetrics.roi > 0 ? "emerald" : "rose"} 
               tooltip={"نسبة الربح الصافي إلى تكلفة الإنفاق الإعلاني."} 
             />
             <StatCard 
-              title={"تكلفة الاستحواذ (CPA)"} 
+              title={"تكلفة الاستحواذ"} 
               value={"$" + (growthMetrics?.cpa ?? 0).toFixed(2)} 
               icon={<Target className="w-5 h-5" />} 
               glowColor="indigo" 
               tooltip={"متوسط تكلفة تحويل ليد عادي إلى مشترك أو عميل مفعل."} 
             />
             <StatCard 
-              title={"تكلفة الليد (CPL)"} 
+              title={"تكلفة الروح الجديدة"} 
               value={"$" + (growthMetrics?.cpl ?? 0).toFixed(2)} 
               icon={<Users className="w-5 h-5" />} 
               glowColor="sky" 
@@ -647,7 +714,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
                <div className="flex items-center gap-2 mt-4">
                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                  <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400/70">
-                    اتصال حي مع بوابة Sovereign Revenue
+                    اتصال حي مع تدفق الإيرادات
                  </p>
                </div>
             </div>
@@ -655,100 +722,30 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
         </div>
       </CollapsibleSection>
 
-      {/* Sovereign Gateway Command (New Acquisition HUD) */}
-      <SovereignGatewayCommand
-        onFilterSelect={(filter) => {
-          if (filter.type === "source" || filter.type === "campaign") {
-            setSelectedFilter({ type: filter.type, value: filter.value });
-            return;
-          }
-
-          setSelectedFilter(null);
-        }}
-      />
-
-      {/* Legacy/Detailed Acquisition Analysis (Optional) */}
+      {/* Sovereign Gateway Command (Gateways Monitoring) */}
       <CollapsibleSection
-        title={"بوابات العبور"}
-        icon={<TrendingUp className="w-5 h-5 text-emerald-400" />}
-        subtitle={"تحليل مصادر وتدفق الأرواح المكتسبة إلى قاعدة بيانات الملاذ."}
-        defaultExpanded={false}
-        headerColors="border-emerald-500/20 bg-emerald-500/5 text-emerald-300"
+        title={"رحلات العبور ونبض الانتشار"}
+        icon={<Orbit className="w-5 h-5 text-fuchsia-400" />}
+        subtitle={"مراقبة ترددات القنوات الإعلانية (Meta, TikTok, etc) والتحكم في تدفق الأرواح."}
+        defaultExpanded={true}
+        headerColors="border-fuchsia-500/20 bg-fuchsia-500/5 text-fuchsia-300"
       >
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard 
-              title={"إجمالي الأرواح المكتسبة"} 
-              value={stats?.totalDatabaseLeads ?? 0} 
-              icon={<Radar className="w-5 h-5" />} 
-              glowColor="emerald" 
-              tooltip={"إجمالي التسجيلات وقواعد البيانات المحفوظة (Leads) في الملاذ من جميع المصادر."} 
-            />
-            <StatCard 
-              title={"معدل الدخول (استجابوا للنداء)"} 
-              value={stats?.totalDatabaseLeads && stats?.realStarts ? Math.round((stats.realStarts / stats.totalDatabaseLeads) * 100) + '%' : '—'} 
-              icon={<Crosshair className="w-5 h-5" />} 
-              glowColor="indigo" 
-              tooltip={"نسبة من ضغطوا على الرابط المخصص ودخلوا الملاذ من إجمالي الأرواح."} 
-            />
-            <StatCard 
-              title={"التحويل الحقيقي (تم توليد خريطة)"} 
-              value={stats?.totalDatabaseLeads ? Math.round(((stats.deepConversionsByCampaign ? Object.values(stats.deepConversionsByCampaign).reduce((sum, v) => sum + v, 0) : 0) / stats.totalDatabaseLeads) * 100) + '%' : '—'} 
-              icon={<Zap className="w-5 h-5 text-amber-400" />} 
-              glowColor="amber" 
-              tooltip={"نسبة الأرواح التي أتمت مرحلة الاستكشاف وولّدت خريطة علاقات فعلية."} 
-            />
-          </div>
+        <SovereignGatewayCommand
+          stats={stats}
+          onFilterSelect={(filter) => {
+            if (filter.type === "source" || filter.type === "campaign") {
+              setSelectedFilter({ type: filter.type, value: filter.value });
+              if (filter.query) {
+                 setSearchQuery(filter.query);
+              }
+              return;
+            }
 
-          <div className="grid grid-cols-1 gap-6 mt-8 lg:grid-cols-2">
-            {Object.entries(stats?.leadsBySource ?? {}).map(([source, count]) => {
-              const safeSource = source || "unknown";
-              const total = stats?.totalDatabaseLeads ?? 0;
-              const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
-              const conversions = stats?.deepConversionsBySource?.[source] ?? 0;
-              const isSelected = selectedFilter?.type === "source" && String(selectedFilter.value) === String(safeSource);
-
-              return (
-                <button
-                  key={safeSource}
-                  type="button"
-                  onClick={() =>
-                    setSelectedFilter((current) =>
-                      current?.type === "source" && String(current.value) === String(safeSource)
-                        ? null
-                        : { type: "source", value: safeSource }
-                    )
-                  }
-                  className={`rounded-[28px] border p-5 text-right transition-all ${
-                    isSelected
-                      ? "border-emerald-400/30 bg-emerald-500/10 shadow-[0_0_25px_rgba(16,185,129,0.15)]"
-                      : "border-white/8 bg-white/[0.03] hover:bg-white/[0.05]"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="text-left">
-                      <div className="text-2xl font-black text-white">{count}</div>
-                      <div className="mt-1 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">{percentage}%</div>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-black text-white">
-                        {safeSource === "unknown" || safeSource === "unattributed" || safeSource === "undefined"
-                          ? "غير معروف"
-                          : safeSource}
-                      </p>
-                      <p className="mt-2 text-xs leading-6 text-slate-400">
-                        {conversions > 0
-                          ? `${conversions} تحويلات عميقة من هذا المصدر`
-                          : "لا توجد تحويلات عميقة مسجلة من هذا المصدر حتى الآن"}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+            setSelectedFilter(null);
+          }}
+        />
       </CollapsibleSection>
+
 
       {/* Awareness Funnel */}
       {(stats?.flowStats || stats?.conversionHealth) && (
@@ -829,12 +826,16 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
           selectedFilter 
             ? (selectedFilter.value === "undefined" || selectedFilter.value === "unattributed" || selectedFilter.value === "unknown" 
                 ? (selectedFilter.type === "campaign" ? "بدون حملة" : "غير معروف") 
-                : selectedFilter.value)
+                : (selectedFilter.type === "source" 
+                    ? (AVAILABLE_GATEWAYS.find(g => g.id === selectedFilter.value)?.name || selectedFilter.value)
+                    : selectedFilter.value))
             : ""
         }
         leads={
           (stats?.rawLeads || []).filter(lead => {
             if (!selectedFilter) return false;
+            
+            // Search filter
             if (searchQuery) {
               const q = searchQuery.toLowerCase();
               const matchesSearch = 
@@ -843,11 +844,29 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
                 lead.phone?.includes(q);
               if (!matchesSearch) return false;
             }
-            const val = selectedFilter.type === "campaign" ? lead.campaign : lead.source_type;
-            return String(val) === String(selectedFilter.value);
+
+            // Category filter (Source or Campaign)
+            if (selectedFilter.type === "campaign") {
+              return String(lead.campaign) === String(selectedFilter.value);
+            }
+
+            if (selectedFilter.type === "source") {
+              const gw = AVAILABLE_GATEWAYS.find(g => g.id === selectedFilter.value);
+              const leadSource = (lead.source_type || "").toLowerCase();
+              
+              if (gw) {
+                // Check if leadSource matches any of the gateway's mapped keys
+                return gw.sourceKeys.some(sk => leadSource === sk || leadSource.includes(sk));
+              }
+
+              // Fallback to exact match if gateway config not found
+              return String(leadSource) === String(selectedFilter.value);
+            }
+
+            return false;
           })
         }
-        onLeadUpdated={() => { useAdminState.setState({ opsStatsCache: null }); void load(); }}
+        onLeadUpdated={() => load(true)}
       />
 
       {/* Manual Lead Entry */}
@@ -861,7 +880,7 @@ ${availableLeads.map((l, i) => `${i + 1}. الاسم: ${l.name || "بدون اس
         <ManualLeadEntry 
           onSuccess={(msg) => {
             showToast(msg, true);
-            void load();
+            void load(true);
           }} 
           onError={(msg) => showToast(msg, false)} 
         />

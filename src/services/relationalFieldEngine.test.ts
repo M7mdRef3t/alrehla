@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { MapNode } from "../modules/map/mapTypes";
-import type { DawayirSignalEventV1 } from "../modules/recommendation/types";
-import type { PulseEntry } from "../state/pulseState";
+import type { MapNode } from "@/modules/map/mapTypes";
+import type { DawayirSignalEventV1 } from "@/modules/recommendation/types";
+import type { PulseEntry } from "@/state/pulseState";
 import type { FlowStep, JourneyEvent } from "./journeyTracking";
 import { buildRelationalFieldSnapshot } from "./relationalFieldEngine";
 

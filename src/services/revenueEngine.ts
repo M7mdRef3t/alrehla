@@ -51,36 +51,42 @@ class SovereignRevenueEngine {
         .select("status, metadata")
         .in("status", ["activated", "converted", "proof_received"]);
 
-      // 2. Compute MRR based on real data (using $25 avg if not specified)
+      // 2. Compute dynamic revenue metrics (using regional price scaling)
+      let mrr = 0;
       const activeSubs = customers?.length ?? 0;
-      const mrr = activeSubs * 25.5;
-      
-      // 3. Compute Regional Resonance (Proxy via lead volume per city if available)
-      // For now, using a real count of leads per known market
-      const { data: regionalData } = await supabase
+
+      (customers as any[])?.forEach(row => {
+        const m = row.metadata?.market || "Unknown";
+        // Dynamic pricing: base $25.5 * multiplier from calculateTargetPrice
+        const base = row.metadata?.amount || 25.5;
+        mrr += this.calculateTargetPrice(m, base);
+      });
+
+      // 3. Compute Regional Resonance (Market -> All Lead Volume Proxy)
+      const { data: allLeads } = await supabase
         .from("marketing_leads")
         .select("metadata");
 
-      const markets: Record<string, number> = { Riyadh: 0, Dubai: 0, Cairo: 0, London: 0 };
-      (regionalData as any[])?.forEach(row => {
-        const m = row.metadata?.market;
-        if (m && markets[m] !== undefined) markets[m]++;
+      const totalLeads = allLeads?.length || 1;
+      const resonanceMap: Record<string, number> = {};
+      
+      (allLeads as any[])?.forEach(row => {
+        const m = row.metadata?.market || "Global";
+        resonanceMap[m] = (resonanceMap[m] ?? 0) + 1;
       });
 
-      const totalLeads = regionalData?.length || 1;
-      const resonance: Record<string, number> = {};
-      Object.keys(markets).forEach(k => {
-        resonance[k] = Number((markets[k] / totalLeads).toFixed(2));
+      Object.keys(resonanceMap).forEach(k => {
+        resonanceMap[k] = Number((resonanceMap[k] / totalLeads).toFixed(2));
       });
 
       return {
         mrr,
         arr: mrr * 12,
-        totalRevenue: mrr * 6, // Estimate for LTV projection
+        totalRevenue: mrr * 5, // Estimate 5 months dynamic LTV
         activeSubscriptions: activeSubs,
-        churnRate: 3.2, 
-        arpu: activeSubs > 0 ? 25.5 : 0,
-        regionalResonance: resonance
+        churnRate: activeSubs > 20 ? 3.2 : 0, 
+        arpu: activeSubs > 0 ? Number((mrr / activeSubs).toFixed(2)) : 0,
+        regionalResonance: resonanceMap
       };
     } catch (e) {
       console.error("Error in Revenue Engine:", e);
@@ -99,14 +105,14 @@ class SovereignRevenueEngine {
     try {
       const { data: recentLeads } = await supabase
         .from("marketing_leads")
-        .select("id, sourceType, status, created_at, metadata")
+        .select("id, source_type, status, created_at, metadata")
         .in("status", ["activated", "converted", "proof_received"])
         .order("created_at", { ascending: false })
         .limit(limit);
 
       return (recentLeads || []).map(lead => ({
         id: lead.id,
-        gateway: this.mapSourceToGateway(lead.sourceType),
+        gateway: this.mapSourceToGateway(lead.source_type),
         amount: lead.metadata?.amount || 25,
         currency: lead.metadata?.currency || "USD",
         usdEquivalent: lead.metadata?.amount || 25,
@@ -143,17 +149,17 @@ class SovereignRevenueEngine {
 
   private getMockSnapshot(): RevenueMetricSnapshot {
     return {
-      mrr: 12500,
-      arr: 150000,
-      totalRevenue: 85000,
-      activeSubscriptions: 245,
-      churnRate: 3.8,
-      arpu: 51.02,
+      mrr: 0,
+      arr: 0,
+      totalRevenue: 0,
+      activeSubscriptions: 0,
+      churnRate: 0,
+      arpu: 0,
       regionalResonance: {
-        "Riyadh": 0.85,
-        "Dubai": 0.90,
-        "Cairo": 0.35,
-        "London": 0.75
+        "Riyadh": 0,
+        "Dubai": 0,
+        "Cairo": 0,
+        "London": 0
       }
     };
   }

@@ -1,4 +1,4 @@
-import type { AppOverlayFlag } from "../state/appOverlayState";
+import type { AppOverlayFlag } from "@/state/appOverlayState";
 
 /**
  * SeverityIndex (0-10)

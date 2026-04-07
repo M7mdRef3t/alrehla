@@ -5,7 +5,7 @@
  * يدعم PPP (Purchasing Power Parity) للأسواق المختلفة.
  */
 
-export type { PricingTier, LocalizedPrice, TierLimits } from "../config/pricing";
+export type { PricingTier, LocalizedPrice, TierLimits } from "@/config/pricing";
 
 export {
   getLocalizedPricing as getAdjustedPricing,
@@ -15,4 +15,4 @@ export {
   TIER_LABELS,
   TIER_LIMITS,
   REGIONAL_PRICING,
-} from "../config/pricing";
+} from "@/config/pricing";

@@ -3,7 +3,7 @@
  * بيانات التدفق — تعديل هنا يحدّث الخريطة تلقائياً
  */
 
-import type { FlowNode } from "../components/admin/FlowMindMap";
+import type { FlowNode } from "@/components/admin/FlowMindMap";
 
 export interface FlowStepConfig {
   id: string;
@@ -40,10 +40,10 @@ export const VISITOR_FLOW_STEPS: FlowStepConfig[] = [
   { id: "onboarding-phase-noise-v2", scenarioLabel: "تمهيد", title: "إنهاء المرحلة ١", action: "تجاوز الشرارة الأولى", variant: "sub", accent: "amber", eventKey: "onboarding_phase_noise_completed" },
   { id: "onboarding-phase-inventory-v2", scenarioLabel: "تمهيد", title: "إنهاء المرحلة ٢", action: "تجميع الأشخاص المؤثرين", variant: "sub", accent: "amber", eventKey: "onboarding_phase_inventory_completed" },
   { id: "onboarding-phase-mapping-v2", scenarioLabel: "تمهيد", title: "إنهاء المرحلة ٣", action: "توزيع الأشخاص على المدارات", variant: "sub", accent: "amber", eventKey: "onboarding_phase_mapping_completed" },
-  { id: "onboarding-completed-v2", scenarioLabel: "تمهيد (نجاح)", title: "إكمال الأونبوردنج", action: "جاهز لبوابة الدخول", variant: "sub", accent: "teal", eventKey: "onboarding_completed" },
+  { id: "onboarding-completed-v2", scenarioLabel: "تمهيد (نجاح)", title: "إكمال الأونبوردنج", action: "جاهز لرحلة الدخول", variant: "sub", accent: "teal", eventKey: "onboarding_completed" },
   { id: "onboarding-skipped-v2", scenarioLabel: "تمهيد (تخطي)", title: "تخطي الأونبوردنج", action: "الانتقال مباشرة للخريطة", variant: "sub", accent: "amber", eventKey: "onboarding_skipped" },
-  { id: "auth-gate-opened-v2", scenarioLabel: "بوابة", title: "فتح بوابة التسجيل", action: "طلب Google/Magic Link", variant: "sub", accent: "amber", eventKey: "auth_gate_opened" },
-  { id: "auth-success-v2", scenarioLabel: "بوابة (نجاح)", title: "تسجيل دخول ناجح", action: "استرجاع نية ما بعد الدخول", variant: "sub", accent: "teal", eventKey: "auth_login_success" },
+  { id: "auth-gate-opened-v2", scenarioLabel: "رحلة", title: "فتح رحلة التسجيل", action: "طلب Google/Magic Link", variant: "sub", accent: "amber", eventKey: "auth_gate_opened" },
+  { id: "auth-success-v2", scenarioLabel: "رحلة (نجاح)", title: "تسجيل دخول ناجح", action: "استرجاع نية ما بعد الدخول", variant: "sub", accent: "teal", eventKey: "auth_login_success" },
   { id: "post-auth-phase-one-map-v2", scenarioLabel: "ما بعد الدخول", title: "الانتقال للخريطة مباشرة", action: "Phase-1: map + family", variant: "sub", accent: "teal", eventKey: "post_auth_intent_phase_one_map" },
   { id: "post-auth-goal-picker-v2", scenarioLabel: "ما بعد الدخول", title: "الانتقال لاختيار الهدف", action: "البدء من شاشة goal", variant: "sub", accent: "teal", eventKey: "post_auth_intent_goal_picker" },
   { id: "goal-selected-v2", scenarioLabel: "التجربة الأساسية", title: "اختيار الهدف", action: "تحديد goal/category", variant: "sub", accent: "teal", eventKey: "goal_selected" },
@@ -53,7 +53,7 @@ export const VISITOR_FLOW_STEPS: FlowStepConfig[] = [
   { id: "screen-tools-viewed-v2", scenarioLabel: "التجربة الأساسية", title: "دخول شاشة الأدوات", action: "فتح الأدوات التكتيكية", variant: "sub", accent: "teal", eventKey: "screen_tools_viewed" },
   { id: "screen-diplomacy-viewed-v2", scenarioLabel: "التجربة الأساسية", title: "دخول الدبلوماسية", action: "فتح البرقيات الدبلوماسية", variant: "sub", accent: "slate", eventKey: "screen_diplomacy_viewed" },
   { id: "screen-guilt-court-viewed-v2", scenarioLabel: "التجربة الأساسية", title: "دخول محكمة الذنب", action: "فتح مسار التفكيك المعرفي", variant: "sub", accent: "slate", eventKey: "screen_guilt_court_viewed" },
-  { id: "screen-enterprise-viewed-v2", scenarioLabel: "التجربة الأساسية", title: "دخول Enterprise", action: "فتح بوابة المؤسسة", variant: "sub", accent: "slate", eventKey: "screen_enterprise_viewed" },
+  { id: "screen-enterprise-viewed-v2", scenarioLabel: "التجربة الأساسية", title: "دخول Enterprise", action: "فتح رحلة المؤسسة", variant: "sub", accent: "slate", eventKey: "screen_enterprise_viewed" },
   { id: "screen-settings-viewed-v2", scenarioLabel: "التجربة الأساسية", title: "دخول الإعدادات", action: "فتح شاشة إعدادات التطبيق", variant: "sub", accent: "slate", eventKey: "screen_settings_viewed" },
   { id: "screen-oracle-viewed-v2", scenarioLabel: "التجربة الأساسية", title: "دخول لوحة Oracle", action: "عرض لوحة مجلس الحكماء", variant: "sub", accent: "teal", eventKey: "screen_oracle_dashboard_viewed" }
 ];

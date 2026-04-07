@@ -1,16 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   X, User, Mail, Phone, RefreshCw, 
   Edit2, Send, Check, AlertCircle, 
   ShieldCheck, Activity, ExternalLink, Copy,
   MessageCircle, Hash, ChevronDown, ChevronUp,
-  MapPin, Clock, Info, Save, Zap, Brain, Sparkles, Wand2, RotateCcw
+  MapPin, Clock, Info, Save, Zap, Brain, Sparkles, Wand2, RotateCcw, UserX
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { ar } from "date-fns/locale";
-import { useAdminState } from "../../../../state/adminState";
-import { getAuthToken } from "../../../../state/authState";
+import { useAdminState } from "@/state/adminState";
+import { getAuthToken } from "@/state/authState";
 import { buildMarketingEmail } from "../../../../lib/marketing/emailTemplate";
 
 function getBearerToken(): string {
@@ -35,6 +35,28 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
   const [actionMessage, setActionMessage] = useState<{ id: string, msg: string, isError?: boolean } | null>(null);
   const [localSearchQuery, setLocalSearchQuery] = useState("");
   const [aiSummaries, setAiSummaries] = useState<Record<string, { summary: string, state: string, loading: boolean }>>({});
+  const [validationStates, setValidationStates] = useState<Record<string, { valid: boolean, loading: boolean, reason?: string }>>({});
+
+  // Auto-expand if there is exactly 1 lead in the view (e.g., when searching specific lead via Sovereign Gateway)
+  useEffect(() => {
+    if (isOpen && leads.length === 1 && expandedId !== leads[0].id) {
+       // Only trigger expansion logic if not already handling it
+       setExpandedId(leads[0].id);
+       if (!leadHistories[leads[0].id]) {
+          setLeadHistories(prev => ({ ...prev, [leads[0].id]: { history: [], routing: [], loading: true } }));
+          fetch(`/api/admin/marketing-ops/lead?id=${leads[0].id}&email=${leads[0].email || ""}`, {
+            headers: { authorization: `Bearer ${getBearerToken()}` }
+          })
+          .then(r => r.json())
+          .then(data => {
+            if (data.ok) {
+              setLeadHistories(prev => ({ ...prev, [leads[0].id]: { history: data.history, routing: data.routing, loading: false } }));
+            }
+          })
+          .catch(() => setLeadHistories(prev => ({ ...prev, [leads[0].id]: { history: [], routing: [], loading: false } })));
+       }
+    }
+  }, [isOpen, leads, expandedId, leadHistories]);
 
   if (!isOpen) return null;
 
@@ -84,40 +106,97 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
     }
 
     const leadId = lead.id || lead.lead_id;
-    const shortLink = `https://www.alrehla.app/go/${leadId}`;
-    
-    // 1. Copy the Professional Design (HTML) to clipboard AUTOMATICALLY
+    const token = getBearerToken();
+
+    // 1. Call the prepare-tracked-email API to get HTML with tracking pixel + click tracking
+    let trackedHtml: string | null = null;
+    let personalLink = `https://www.alrehla.app/go/${leadId}`;
+
     try {
-      const html = buildMarketingEmail({ name: lead.name, personalLink: shortLink });
+      showMsg(lead.id, "⏳ جاري تحضير التصميم المُتتبع...");
+      
+      const prepareRes = await fetch("/api/admin/marketing-ops/prepare-tracked-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          leadId,
+          name: lead.name || undefined,
+          email: lead.email,
+        }),
+      });
+
+      const prepareData = await prepareRes.json();
+      
+      if (prepareData.ok && prepareData.html) {
+        trackedHtml = prepareData.html;
+        personalLink = prepareData.personalLink || personalLink;
+        console.log("[ManualGmail] ✅ Tracked HTML prepared, trackingId:", prepareData.trackingId);
+      } else {
+        console.warn("[ManualGmail] Prepare API failed, falling back to untracked template:", prepareData.error);
+      }
+    } catch (err) {
+      console.warn("[ManualGmail] Prepare API error, falling back to untracked template:", err);
+    }
+
+    // 2. Copy HTML to clipboard (tracked version if available, fallback to basic)
+    try {
+      const html = trackedHtml || buildMarketingEmail({ name: lead.name, personalLink });
       const blob = new Blob([html], { type: 'text/html' });
-      const textBlob = new Blob([lead.name ? `أهلاً ${lead.name}...\n${shortLink}` : shortLink], { type: 'text/plain' });
+      const textBlob = new Blob([lead.name ? `أهلاً ${lead.name}...\n${personalLink}` : personalLink], { type: 'text/plain' });
       const item = new ClipboardItem({ 'text/html': blob, 'text/plain': textBlob });
       await navigator.clipboard.write([item]);
-      showMsg(lead.id, "✨ التصميم الاحترافي اتنسخ! افتح الجميل ودوس Ctrl+V (بست)", false);
+      
+      if (trackedHtml) {
+        showMsg(lead.id, "✨ التصميم المُتتبع اتنسخ! افتح الجميل ودوس Ctrl+V — الفتح والنقر هيتسجلوا تلقائياً 📡");
+      } else {
+        showMsg(lead.id, "✨ التصميم الاحترافي اتنسخ! افتح الجميل ودوس Ctrl+V (بست)");
+      }
     } catch (err) {
       console.warn("Failed to auto-copy design:", err);
     }
 
-    // 2. Open Gmail with a fallback plaintext body just in case
+    // 3. Open Gmail with a fallback plaintext body
     const greeting = lead.name ? `أهلاً ${lead.name.split(' ')[0]} 🌙،` : "أهلاً بك 🌙،";
-    const body = `${greeting}\n\n(امسح الكلام ده واعمل Ctrl+V عشان تحط التصميم الاحترافي اللي اتنسخ حالا) ✨\n\n${shortLink}`;
+    const body = `${greeting}\n\n(امسح الكلام ده واعمل Ctrl+V عشان تحط التصميم الاحترافي اللي اتنسخ حالا) ✨\n\n${personalLink}`;
     
     const gmailUrl = `https://mail.google.com/mail/u/0/?view=cm&fs=1&to=${encodeURIComponent(lead.email)}&su=${encodeURIComponent("خطوتك الأولى في الرحلة تنتظرك ✦")}&body=${encodeURIComponent(body)}`;
     window.open(gmailUrl, "_blank");
 
-    // 3. Update queue status via the WORKING admin endpoint (uses checkAuth, not requireLiveAuth)
-    fetch("/api/admin/marketing-ops", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
-      body: JSON.stringify({ action: "mark_email_manual_sent", leadEmail: lead.email.toLowerCase().trim() })
-    }).then((r) => {
-      if (!r.ok) throw new Error("API failed");
-      showMsg(lead.id, "✅ تم فتح Gmail — اضغط Ctrl+V لملء التصميم");
-      onLeadUpdated();
-    }).catch((err) => {
-      console.warn("Manual send log failed, but Gmail opened:", err);
-      showMsg(lead.id, "✅ تم فتح Gmail (تحديث الحالة فشل)");
-    });
+    // 4. Optimistic UI update (prepare API already updated the DB)
+    lead.status = "engaged";
+    lead.email_status = "sent";
+    lead.sent_at = new Date().toISOString();
+
+    // If the prepare API succeeded, DB is already updated — just refresh UI
+    if (trackedHtml) {
+      showMsg(lead.id, "✅ تم إرسال يدوي مُتتبع عبر Gmail — Open + Click سيتم رصدهم تلقائياً 📡");
+      setTimeout(() => { onLeadUpdated(); }, 500);
+    } else {
+      // Fallback: call the old mark_email_manual_sent action
+      try {
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (token) headers["authorization"] = `Bearer ${token}`;
+
+        const res = await fetch("/api/admin/marketing-ops", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ action: "mark_email_manual_sent", leadId: lead.id })
+        });
+        
+        if (!res.ok) {
+          showMsg(lead.id, `⚠️ Gmail فتح، لكن تسجيل الحالة فشل (${res.status})`, true);
+        } else {
+          showMsg(lead.id, "✅ تم إرسال يدوي عبر Gmail — الحالة اتحدثت (بدون تتبع فتح)");
+          setTimeout(() => { onLeadUpdated(); }, 500);
+        }
+      } catch (err) {
+        console.error("[ManualGmail] Network error:", err);
+        showMsg(lead.id, "⚠️ Gmail فتح، لكن فيه مشكلة في تسجيل الحالة", true);
+      }
+    }
   };
 
   const handleTriggerBatch = async (lead: any) => {
@@ -157,6 +236,52 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
       }
     } finally {
       setResendingId(null);
+    }
+  };
+
+  const handleMarkBounced = async (lead: any) => {
+    if (!confirm(`هل أنت متأكد أن الإيميل (${lead.email}) مرتد (Bounced)؟`)) return;
+    
+    try {
+      showMsg(lead.id, "⏳ جاري تحديث الحالة...");
+      const res = await fetch("/api/admin/marketing-ops", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
+        body: JSON.stringify({ action: "mark_bounced", leadId: lead.id })
+      });
+      
+      if (res.ok) {
+        showMsg(lead.id, "🚫 تم تسجيل الارتداد بنجاح.");
+        onLeadUpdated();
+      } else {
+        showMsg(lead.id, "⚠️ فشل تسجيل الارتداد.", true);
+      }
+    } catch (err) {
+      showMsg(lead.id, "⚠️ حدث خطأ أثناء الاتصال.", true);
+    }
+  };
+
+  const validateLeadEmail = async (lead: any) => {
+    if (!lead.email) return;
+    setValidationStates(prev => ({ ...prev, [lead.id]: { valid: false, loading: true } }));
+    
+    try {
+      const res = await fetch("/api/admin/marketing-ops/validate-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", authorization: `Bearer ${getBearerToken()}` },
+        body: JSON.stringify({ email: lead.email })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setValidationStates(prev => ({ 
+          ...prev, 
+          [lead.id]: { valid: data.valid, loading: false, reason: data.reason } 
+        }));
+      } else {
+        setValidationStates(prev => ({ ...prev, [lead.id]: { valid: false, loading: false, reason: "api_error" } }));
+      }
+    } catch {
+      setValidationStates(prev => ({ ...prev, [lead.id]: { valid: false, loading: false, reason: "network_error" } }));
     }
   };
 
@@ -381,6 +506,9 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
                     onPulse={() => pulseLead(lead)}
                     onTriggerBatch={() => handleTriggerBatch(lead)}
                     onCopyTemplate={() => copyProfessionalTemplate(lead)}
+                    onMarkBounced={() => handleMarkBounced(lead)}
+                    onValidateEmail={() => validateLeadEmail(lead)}
+                    validationState={validationStates[lead.id]}
                   />
                 ))}
               </div>
@@ -393,7 +521,7 @@ export function CampaignLeadsModal({ isOpen, onClose, title, leads, onLeadUpdate
 }
 
 function LeadCommandCard({ 
-  lead, isEditing, isExpanded, history, editForm, setEditForm, onSave, onCancel, onStartEdit, onToggleExpand, onResend, onStatusChange, onSaveNotes, onLeadUpdated, resending, actionMessage, isSaving, aiSummary, onPulse, onTriggerBatch, onCopyTemplate
+  lead, isEditing, isExpanded, history, editForm, setEditForm, onSave, onCancel, onStartEdit, onToggleExpand, onResend, onStatusChange, onSaveNotes, onLeadUpdated, resending, actionMessage, isSaving, aiSummary, onPulse, onTriggerBatch, onCopyTemplate, onMarkBounced, onValidateEmail, validationState
 }: any) {
 
   const getSourceLabel = (s: string) => {
@@ -502,7 +630,28 @@ function LeadCommandCard({
                       )}
                     </div>
                     <div className="flex flex-wrap items-center gap-3 mt-1.5 opacity-60">
-                      <span className="flex items-center gap-1.5 text-xs text-slate-300 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">{lead.email || "لا يوجد بريد"} <Mail className="w-3.5 h-3.5" /></span>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-xs text-slate-300 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">{lead.email || "لا يوجد بريد"}</span>
+                        <button 
+                          onClick={onValidateEmail}
+                          disabled={validationState?.loading}
+                          className={`p-1 rounded-md transition-all ${
+                            validationState?.valid ? 'text-emerald-400 bg-emerald-500/10' : 
+                            validationState?.reason && !validationState.valid ? 'text-rose-400 bg-rose-500/10' :
+                            'text-slate-500 hover:bg-white/5'
+                          }`}
+                          title={
+                            validationState?.loading ? "جاري التحقق من النطاق (DNS)..." :
+                            validationState?.valid ? "النطاق صالح وموجود (MX Verified) ✅" :
+                            validationState?.reason === 'domain_not_found' ? "النطاق غير موجود أو خطأ في الكتابة ⚠️" :
+                            validationState?.reason === 'no_mx_records' ? "هذا الموقع لا يمكنه استقبال إيميلات ⚠️" :
+                            "تحقق من صحة النطاق تقنياً (Shield Check)"
+                          }
+                        >
+                          {validationState?.loading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
+                        </button>
+                        <Mail className="w-3.5 h-3.5 text-slate-500" />
+                      </div>
                       <span className="w-1 h-1 rounded-full bg-slate-700" />
                       <span className="flex items-center gap-1.5 text-xs text-slate-300 font-medium">{lead.phone_normalized || "لا يوجد رقم"} <Phone className="w-3.5 h-3.5" /></span>
                     </div>
@@ -581,6 +730,9 @@ function LeadCommandCard({
                       <Phone className="w-5 h-5" />
                     </a>
                   )}
+                  <button onClick={onMarkBounced} className="p-2.5 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-all active:scale-90" title="تبليغ عن بريد مرتد (Bounce)">
+                      <UserX className="w-5 h-5" />
+                  </button>
                   <button onClick={onStartEdit} className="p-2.5 rounded-xl text-slate-400 hover:bg-white/10 transition-all active:scale-90" title="تعديل بيانات الروح">
                       <Edit2 className="w-5 h-5" />
                   </button>
@@ -843,6 +995,9 @@ function EngagementMeter({ status }: { status: string }) {
   const currentIdx = steps.indexOf(status);
   
   const getStatusColor = (idx: number) => {
+    if (status === "bounced") return "bg-rose-500/40";
+    if (status === "ignored") return "bg-slate-700/50";
+    
     if (idx < currentIdx) return "bg-emerald-500";
     if (idx === currentIdx) {
         if (status === "clicked") return "bg-fuchsia-500 shadow-[0_0_12px_rgba(217,70,239,0.5)]";
@@ -855,6 +1010,7 @@ function EngagementMeter({ status }: { status: string }) {
   const getLabel = () => {
     if (status === "unsubscribed") return "تم إلغاء الاشتراك";
     if (status === "bounced") return "بريد خاطئ (Bounce)";
+    if (status === "ignored") return "صامت/تجاهل (Ignored) 😴";
     if (status === "clicked") return "تفاعل عالي (Clicked)";
     if (status === "opened") return "مهتم (Opened)";
     if (status === "sent") return "تم الاستدعاء (Sent)";
@@ -863,10 +1019,15 @@ function EngagementMeter({ status }: { status: string }) {
   };
 
   return (
-    <div className="flex flex-col gap-2 min-w-[120px]">
+    <div className={`flex flex-col gap-2 min-w-[120px] ${status === 'ignored' || status === 'bounced' ? 'opacity-40' : ''}`}>
        <div className="flex items-center justify-between">
           <span className="text-[9px] font-black opacity-40 uppercase tracking-widest">تفاعل الروح</span>
-          <span className={`text-[8px] font-black uppercase tracking-tighter ${status === 'clicked' ? 'text-fuchsia-400' : 'text-slate-500'}`}>{getLabel()}</span>
+          <span className={`text-[8px] font-black uppercase tracking-tighter ${
+            status === 'clicked' ? 'text-fuchsia-400' : 
+            status === 'bounced' ? 'text-rose-400' : 
+            status === 'ignored' ? 'text-slate-500' :
+            'text-slate-500'
+          }`}>{getLabel()}</span>
        </div>
        <div className="flex gap-1">
           {[0, 1, 2].map(idx => (

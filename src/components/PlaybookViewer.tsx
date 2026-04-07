@@ -6,13 +6,13 @@
 
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TACTICAL_PLAYBOOKS, type Playbook } from "../data/tacticalPlaybooks";
+import { TACTICAL_PLAYBOOKS, type Playbook } from "@/data/tacticalPlaybooks";
 import { BookOpen, AlertTriangle, ChevronRight, X, CheckCircle2 } from "lucide-react";
-import { useGamificationState, XP_ACTIONS } from "../services/gamificationEngine";
-import { trackEvent } from "../services/analytics";
-import { recordFlowEvent } from "../services/journeyTracking";
-import { calculateEntropy } from "../services/predictiveEngine";
-import { usePulseState } from "../state/pulseState";
+import { useGamificationState, XP_ACTIONS } from "@/services/gamificationEngine";
+import { trackEvent } from "@/services/analytics";
+import { recordFlowEvent } from "@/services/journeyTracking";
+import { calculateEntropy } from "@/services/predictiveEngine";
+import { usePulseState } from "@/state/pulseState";
 
 interface PlaybookExecution {
     count: number;

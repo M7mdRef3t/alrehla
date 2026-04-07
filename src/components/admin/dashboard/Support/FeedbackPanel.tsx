@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect, useMemo } from "react";
 import { MessageSquare, ThumbsUp, ThumbsDown, Search, Filter, Loader2, Calendar, User, Zap, AlertCircle } from "lucide-react";
-import { isSupabaseReady, supabase } from "../../../../services/supabaseClient";
+import { isSupabaseReady, supabase } from "@/services/supabaseClient";
 
 interface FeedbackItem {
     id: string;

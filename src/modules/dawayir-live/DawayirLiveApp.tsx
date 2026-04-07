@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, History } from "lucide-react";
-import { assignUrl } from "../../services/navigation";
-import { runtimeEnv } from "../../config/runtimeEnv";
+import { assignUrl } from "@/services/navigation";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import LiveCanvas from "./components/LiveCanvas";
 import BreathingGuideOverlay from "./components/BreathingGuideOverlay";
 import LiveHUD from "./components/LiveHUD";
@@ -259,25 +259,25 @@ export default function DawayirLiveApp() {
       )}
 
       {session.status === "auth-required" && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950/95 p-6">
-          <div className="w-full max-w-xl rounded-[2rem] border border-white/10 bg-slate-950/75 p-8 text-center shadow-2xl backdrop-blur-xl">
-            <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-amber-300/80">Authentication Required</p>
-            <h2 className="mt-4 text-3xl font-black tracking-tight text-white">ابدأ بعد تسجيل الدخول</h2>
-            <p className="mt-3 text-sm leading-7 text-slate-300">
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-app/95 p-6">
+          <div className="w-full max-w-xl rounded-[2rem] border border-app-border bg-app-surface/75 p-8 text-center shadow-2xl backdrop-blur-xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-amber-500/80">Authentication Required</p>
+            <h2 className="mt-4 text-3xl font-black tracking-tight text-app-foreground">ابدأ بعد تسجيل الدخول</h2>
+            <p className="mt-3 text-sm leading-7 text-app-foreground/70">
               Dawayir Live مرتبط بجلساتك وartifacts وإعادة التشغيل، لذلك يحتاج حساباً فعلياً داخل المنصة.
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <button
                 type="button"
                 onClick={() => assignUrl("/")}
-                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm text-slate-200"
+                className="rounded-2xl border border-app-border bg-app-bg-accent px-5 py-3 text-sm text-app-foreground"
               >
                 الرجوع للرئيسية
               </button>
               <button
                 type="button"
                 onClick={() => assignUrl("/onboarding")}
-                className="rounded-2xl bg-teal-400 px-5 py-3 text-sm font-bold text-slate-950"
+                className="rounded-2xl bg-teal-500 px-5 py-3 text-sm font-bold text-white dark:text-slate-950"
               >
                 الذهاب للحساب
               </button>
@@ -287,25 +287,25 @@ export default function DawayirLiveApp() {
       )}
 
       {session.status === "error" && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950/95 p-6">
-          <div className="w-full max-w-xl rounded-[2rem] border border-white/10 bg-slate-950/75 p-8 text-center shadow-2xl backdrop-blur-xl">
-            <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-rose-300/80">Live Error</p>
-            <h2 className="mt-4 text-3xl font-black tracking-tight text-white">تعذّر بدء الجلسة</h2>
-            <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-300">
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-app/95 p-6">
+          <div className="w-full max-w-xl rounded-[2rem] border border-app-border bg-app-surface/75 p-8 text-center shadow-2xl backdrop-blur-xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-rose-500/80">Live Error</p>
+            <h2 className="mt-4 text-3xl font-black tracking-tight text-app-foreground">تعذّر بدء الجلسة</h2>
+            <p className="mt-3 whitespace-pre-line text-sm leading-7 text-app-foreground/70">
               {session.errorMessage || "حدث خطأ غير متوقع أثناء بدء Dawayir Live."}
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <button
                 type="button"
                 onClick={handleStart}
-                className="rounded-2xl bg-teal-400 px-5 py-3 text-sm font-bold text-slate-950"
+                className="rounded-2xl bg-teal-500 px-5 py-3 text-sm font-bold text-white dark:text-slate-950"
               >
                 حاول مرة أخرى
               </button>
               <button
                 type="button"
                 onClick={() => assignUrl("/dawayir-live/history")}
-                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm text-slate-200"
+                className="rounded-2xl border border-app-border bg-app-bg-accent px-5 py-3 text-sm text-app-foreground"
               >
                 افتح السجل
               </button>
@@ -319,7 +319,7 @@ export default function DawayirLiveApp() {
           <button
             type="button"
             onClick={handleBack}
-            className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/60 px-4 py-2 text-xs font-semibold text-slate-200 backdrop-blur-xl"
+            className="flex items-center gap-2 rounded-full border border-app-border bg-app-surface/60 px-4 py-2 text-xs font-semibold text-app-foreground backdrop-blur-xl"
           >
             <ArrowRight className="h-4 w-4" />
             {appView === "setup" ? "رجوع" : "Back"}
@@ -327,7 +327,7 @@ export default function DawayirLiveApp() {
           <button
             type="button"
             onClick={() => assignUrl("/dawayir-live/history")}
-            className="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/60 px-4 py-2 text-xs font-semibold text-slate-200 backdrop-blur-xl"
+            className="flex items-center gap-2 rounded-full border border-app-border bg-app-surface/60 px-4 py-2 text-xs font-semibold text-app-foreground backdrop-blur-xl"
           >
             <History className="h-4 w-4" />
             History

@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, lazy } from "react";
 import { BadgeCheck, Clock3, Download, Gem, Link2, RotateCcw, Share2, Wind } from "lucide-react";
-import { assignUrl } from "../../../services/navigation";
+import { assignUrl } from "@/services/navigation";
+import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
 import { createLiveShare, getLiveSession } from "../api";
-import CognitiveWeatherSummary from "../components/CognitiveWeatherSummary";
-import JourneyTimeline from "../components/JourneyTimeline";
-import MirrorSentence from "../components/MirrorSentence";
-import SandMandala from "../components/SandMandala";
-import WeeklyPatternCard from "../components/WeeklyPatternCard";
-import type { LiveSessionArtifactRecord, LiveSessionDetail, LiveSessionSummary } from "../types";
-import { saveSessionSummary } from "../utils/sessionHistory";
+import CognitiveWeatherSummary from '@/modules/dawayir-live/components/CognitiveWeatherSummary';
+import JourneyTimeline from '@/modules/dawayir-live/components/JourneyTimeline';
+import MirrorSentence from '@/modules/dawayir-live/components/MirrorSentence';
+import SandMandala from '@/modules/dawayir-live/components/SandMandala';
+import WeeklyPatternCard from '@/modules/dawayir-live/components/WeeklyPatternCard';
+import type { LiveSessionArtifactRecord, LiveSessionDetail, LiveSessionSummary } from '../types';
+import type { AgentActions, AgentContext } from '@/agent/types';
+import { saveSessionSummary } from '@/modules/dawayir-live/utils/sessionHistory';
 
 function findArtifact(artifacts: LiveSessionArtifactRecord[], type: string) {
   return artifacts.find((artifact) => artifact.artifact_type === type);
@@ -391,6 +393,7 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
 
     try {
       // 📦 تحميل ديناميكي
+      const PrivateCircleInvitationModal = lazy(() => import('@/modules/meta/PrivateCircleInvitationModal').then(m => ({ default: m.PrivateCircleInvitationModal })));
       const html2canvas = await import("html2canvas").then((m) => m.default);
 
       const canvas = await html2canvas(printRef.current, {
@@ -470,7 +473,7 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
 
   if (error) {
     return (
-      <div className="complete-overlay min-h-screen px-4 py-12 text-white">
+      <div className="complete-overlay min-h-screen px-4 py-12 text-app-foreground">
         <div className="complete-card mx-auto text-center">
           <h1 className="complete-title">{error === "AUTH_REQUIRED" ? copy.authTitle : copy.openFailed}</h1>
           <p className="complete-subtitle">{error === "AUTH_REQUIRED" ? copy.authBody : error}</p>
@@ -485,11 +488,11 @@ export default function LiveSessionCompletePage({ sessionId }: { sessionId: stri
   }
 
   if (!detail) {
-    return <div className="min-h-screen bg-slate-950 p-8 text-white">{copy.loading}</div>;
+    return <div className="min-h-screen bg-app p-8 text-app-foreground">{copy.loading}</div>;
   }
 
   return (
-    <div className="complete-screen complete-overlay min-h-screen px-4 py-10 text-white">
+    <div className="complete-screen complete-overlay min-h-screen px-4 py-10 text-app-foreground">
       <SandMandala targetRef={printRef} isActive={isReleasing} onComplete={() => assignUrl("/dawayir-live")} />
 
       <div ref={printRef} className={`complete-card mx-auto ${isReleasing ? "complete-card--releasing" : ""}`}>

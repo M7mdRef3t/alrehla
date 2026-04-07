@@ -74,13 +74,17 @@ export function buildMarketingEmail({
                 يا ${name || 'بطل'}، إحنا فريق عمل المنصة. شوفنا إنك كنت عايز تبدأ رحلة اكتشاف علاقاتك بس لسه مخلصتش الخريطة.
               </p>
               
-              <!-- Soul Core Feature -->
-              <div style="background: linear-gradient(180deg, rgba(45,212,191,0.1) 0%, rgba(15,23,42,0) 100%); border-radius: 18px; padding: 25px; margin-bottom: 30px; border-left: 4px solid #2dd4bf;">
-                <p style="color: #2dd4bf; font-weight: 900; font-size: 14px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: 1px;">
-                  ✦ ليه مهم تكمل؟
+              <!-- Reward Card -->
+              <div style="background: linear-gradient(135deg, rgba(250,204,21,0.1), rgba(45,212,191,0.05)); border: 1px solid rgba(250,204,21,0.2); border-radius: 20px; padding: 25px; margin-bottom: 30px; text-align: center;">
+                <p style="color: #facc15; font-weight: 900; font-size: 14px; margin: 0 0 10px; text-transform: uppercase; letter-spacing: 1px;">
+                  🎁 مكافأة البداية
                 </p>
-                <p style="color: #94a3b8; font-size: 14px; line-height: 1.8; margin: 0;">
-                  الخريطة دي بتوريك بوضوح بصري مين الأشخاص اللي "بيشحنوك" طاقة ومين اللي "بيسحبوك" لتحت. الوضوح ده هو أول طريق السيادة على حياتك.
+                <div style="color: #ffffff; font-size: 18px; font-weight: 800; line-height: 1.5;">
+                  أكمل خريطة علاقاتك الآن واكسب <span style="color: #facc15; font-size: 22px;">50</span> <br/>
+                  <span style="color: #2dd4bf; text-shadow: 0 0 10px rgba(45,212,191,0.3);">نقطة وعي (Awareness Points)</span>
+                </div>
+                <p style="color: #94a3b8; font-size: 12px; margin: 10px 0 0;">
+                  تضاف لرصيدك فوراً عند تسجيل الدخول ✦
                 </p>
               </div>
 

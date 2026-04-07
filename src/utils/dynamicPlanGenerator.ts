@@ -1,6 +1,6 @@
-import type { Ring } from "../modules/map/mapTypes";
+import type { Ring } from "@/modules/map/mapTypes";
 import type { DetectedPattern, PatternType } from "./patternAnalyzer";
-import type { SymptomExercise } from "../data/symptomExercises";
+import type { SymptomExercise } from "@/data/symptomExercises";
 
 export interface DynamicAction {
   id: string;

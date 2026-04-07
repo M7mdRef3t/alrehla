@@ -1,8 +1,8 @@
-import { geminiClient } from "../services/geminiClient";
-import type { Ring } from "../modules/map/mapTypes";
+import { geminiClient } from "@/services/geminiClient";
+import type { Ring } from "@/modules/map/mapTypes";
 import type { DetectedPattern, PatternType } from "./patternAnalyzer";
 import type { DynamicRecoveryPlan, DynamicStep } from "./dynamicPlanGenerator";
-import type { SymptomExercise } from "../data/symptomExercises";
+import type { SymptomExercise } from "@/data/symptomExercises";
 
 /**
  * AI-Powered Dynamic Plan Generator using Gemini

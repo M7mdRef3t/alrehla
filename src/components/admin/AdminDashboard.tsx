@@ -27,26 +27,26 @@ import {
   TrendingUp,
   MapPin
 } from "lucide-react";
-import { runtimeEnv } from "../../config/runtimeEnv";
-import { AwarenessSkeleton } from "../AwarenessSkeleton";
-import { useAdminState } from "../../state/adminState";
-import { getEffectiveRoleFromState, useAuthState } from "../../state/authState";
-import { isPrivilegedRole } from "../../utils/featureFlags";
+import { runtimeEnv } from "@/config/runtimeEnv";
+import { AwarenessSkeleton } from '@/modules/meta/AwarenessSkeleton';
+import { useAdminState } from "@/state/adminState";
+import { getEffectiveRoleFromState, useAuthState } from "@/state/authState";
+import { isPrivilegedRole } from "@/utils/featureFlags";
 import {
   fetchAdminConfig,
   fetchAiLogs,
   fetchMissions,
   fetchBroadcasts,
-} from "../../services/adminApi";
+} from "@/services/adminApi";
 import { LiveFreezePill } from "./LiveFreezePill";
-import { isSupabaseReady, supabase } from "../../services/supabaseClient";
+import { isSupabaseReady, supabase } from "@/services/supabaseClient";
 import { AdminTooltip } from "./dashboard/Overview/components/AdminTooltip";
 import {
   createCurrentUrl,
   getSearch,
   pushUrl,
   subscribePopstate
-} from "../../services/navigation";
+} from "@/services/navigation";
 import {
   NAV_GROUPS,
   NAV_ITEMS,
@@ -58,7 +58,7 @@ import {
 } from "./adminNavigation";
 import { AdminOmniSearch } from "./ui/AdminOmniSearch";
 import { AdminCopilotModal } from "./dashboard/Intelligence/AdminCopilotModal";
-import { DataManagement } from "../DataManagement";
+import { DataManagement } from '@/modules/meta/DataManagement';
 import { Bot, Wind } from "lucide-react";
 
 // Extracted Panels (Lazy Loaded for performance and dependency stability)
@@ -90,13 +90,14 @@ const RepoIntelPanel = lazy(() => import("./dashboard/Intelligence/RepoIntelPane
 const FleetCommander = lazy(() => import("./dashboard/Fleet/FleetCommander").then(m => ({ default: m.FleetCommander })));
 const SeoGeoAuditorPanel = lazy(() => import("./dashboard/SEO/SeoGeoAuditorPanel").then(m => ({ default: m.SeoGeoAuditorPanel })));
 const AlertsPanel = lazy(() => import("./WarRoom/AlertsPanel"));
-const LiveAdminPanel = lazy(() => import("../../modules/dawayir-live/pages/LiveAdminPanel").then(m => ({ default: m.default })));
+const LiveAdminPanel = lazy(() => import("@/modules/dawayir-live/pages/LiveAdminPanel").then(m => ({ default: m.default })));
 const AdAnalyticsDashboard = lazy(() => import("./dashboard/AdAnalytics/AdAnalyticsDashboard").then(m => ({ default: m.AdAnalyticsDashboard })));
 const SurveyResultsPanel = lazy(() => import("./dashboard/Data/SurveyResultsPanel").then(m => ({ default: m.SurveyResultsPanel })));
 const MarketingOpsPanel = lazy(() => import("./dashboard/MarketingOps/MarketingOpsPanel").then(m => ({ default: m.MarketingOpsPanel })));
 const SovereignPanel = lazy(() => import("./dashboard/Sovereign/SovereignControl").then(m => ({ default: m.SovereignControl })));
 const SovereignExpansionHub = lazy(() => import("./dashboard/Executive/SovereignExpansionHub").then(m => ({ default: m.SovereignExpansionHub })));
 const MapRegistryPanel = lazy(() => import("./dashboard/Content/MapRegistryPanel").then(m => ({ default: m.MapRegistryPanel })));
+const MailCommandCenter = lazy(() => import("./dashboard/MailCommand/MailCommandCenter").then(m => ({ default: m.MailCommandCenter })));
 
 const DataManagementModal = lazy(() => Promise.resolve({ default: DataManagement }));
 
@@ -584,6 +585,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
                 )}
                 {effectiveTab === "marketing-ops" && <MarketingOpsPanel />}
                 {effectiveTab === "expansion-hub" && <SovereignExpansionHub />}
+                {effectiveTab === "mail-command" && <MailCommandCenter />}
               </Suspense>
             </div>
           </div>

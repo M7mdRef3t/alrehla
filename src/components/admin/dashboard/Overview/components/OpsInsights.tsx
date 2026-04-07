@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { AlertTriangle, Zap, Activity } from "lucide-react";
-import type { OpsInsights as OpsInsightsType } from "../../../../../services/adminApi";
+import type { OpsInsights as OpsInsightsType } from "@/services/adminApi";
 import { AdminTooltip } from "./AdminTooltip";
 
 interface OpsInsightsProps {

@@ -1,4 +1,4 @@
-import type { PulseEntry, WeekdayLabels } from "../state/pulseState";
+import type { PulseEntry, WeekdayLabels } from "@/state/pulseState";
 
 export const PULSE_DAY_NAMES = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 const DAY_NAMES = PULSE_DAY_NAMES;

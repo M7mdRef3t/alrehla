@@ -18,7 +18,7 @@ interface LiveWelcomeProps {
 
 export default function LiveWelcome({ onStartSession, onBack, isConnecting }: LiveWelcomeProps) {
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-app overflow-hidden">
       {/* Ambient background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-teal-500/5 blur-[120px]" />
@@ -30,7 +30,7 @@ export default function LiveWelcome({ onStartSession, onBack, isConnecting }: Li
       {onBack && (
         <button
           onClick={onBack}
-          className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white transition-colors z-10"
+          className="absolute top-6 right-6 p-2 text-app-muted-foreground hover:text-app-foreground transition-colors z-10"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -55,10 +55,10 @@ export default function LiveWelcome({ onStartSession, onBack, isConnecting }: Li
             <div className="absolute inset-0 rounded-full border border-teal-500/10 animate-ping opacity-30" />
           </div>
 
-          <h1 className="text-4xl font-black text-white tracking-tight mb-3" dir="rtl">
+          <h1 className="text-4xl font-black text-app-foreground tracking-tight mb-3" dir="rtl">
             دواير لايف
           </h1>
-          <p className="text-slate-400 text-sm font-medium leading-relaxed" dir="rtl">
+          <p className="text-app-muted-foreground text-sm font-medium leading-relaxed" dir="rtl">
             المرآة المعرفية الحية — اتكلم وشوف عقلك بيتغير قدامك
           </p>
         </motion.div>
@@ -78,7 +78,7 @@ export default function LiveWelcome({ onStartSession, onBack, isConnecting }: Li
           ].map((feat) => (
             <div
               key={feat.text}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-slate-300"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-app-bg-accent border border-app-border text-xs font-bold text-app-foreground"
             >
               <span>{feat.icon}</span>
               <span>{feat.text}</span>
@@ -95,11 +95,11 @@ export default function LiveWelcome({ onStartSession, onBack, isConnecting }: Li
           <button
             onClick={onStartSession}
             disabled={isConnecting}
-            className="group relative px-10 py-4 bg-teal-500 text-slate-950 rounded-2xl font-black text-base shadow-lg shadow-teal-500/20 hover:bg-teal-400 hover:shadow-teal-500/30 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait flex items-center gap-3 mx-auto"
+            className="group relative px-10 py-4 bg-teal-500 text-white dark:text-slate-950 rounded-2xl font-black text-base shadow-lg shadow-teal-500/20 hover:bg-teal-400 hover:shadow-teal-500/30 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait flex items-center gap-3 mx-auto"
           >
             {isConnecting ? (
               <>
-                <div className="w-5 h-5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white dark:border-slate-950/30 dark:border-t-slate-950 rounded-full animate-spin" />
                 <span>جاري الاتصال...</span>
               </>
             ) : (
@@ -111,7 +111,7 @@ export default function LiveWelcome({ onStartSession, onBack, isConnecting }: Li
             )}
           </button>
 
-          <p className="text-[10px] text-slate-500 mt-4 tracking-wider">
+          <p className="text-[10px] text-app-muted-foreground/60 mt-4 tracking-wider">
             يتطلب إذن المايكروفون • الحوار بالعربية المصرية
           </p>
         </motion.div>

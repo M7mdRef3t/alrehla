@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../services/supabaseClient';
+import { supabase } from '@/services/supabaseClient';
 import { Users, Activity, Clock, LogOut, ChevronLeft, AlertTriangle, ShieldAlert, Sparkles, Brain, Search, LayoutDashboard, Settings, Bell } from 'lucide-react';
-import { getClients } from '../../services/b2bService';
+import { getClients } from '@/services/b2bService';
 import { motion, AnimatePresence } from 'framer-motion';
-import { signInWithGoogleAtPath } from '../../services/authService';
+import { signInWithGoogleAtPath } from '@/services/authService';
 
 // Mock AI Insights for the B2B portal
 const MOCK_ORACLE_INSIGHTS = [
@@ -15,10 +15,10 @@ const MOCK_ORACLE_INSIGHTS = [
 ];
 
 import { AccessManager, SubscriptionInfo } from '../billing/AccessManager';
-import { TrajectoryEngine, ClientTrajectory } from '../../services/trajectoryEngine';
-import { ExperienceTrajectory } from '../../components/B2B/ExperienceTrajectory';
-import { DispatcherEngine } from '../../services/dispatcherEngine';
-import { CoachAlertCenter } from '../../components/B2B/CoachAlertCenter';
+import { TrajectoryEngine, ClientTrajectory } from '@/services/trajectoryEngine';
+import { ExperienceTrajectory } from '@/modules/meta/B2B/ExperienceTrajectory';
+import { DispatcherEngine } from '@/services/dispatcherEngine';
+import { CoachAlertCenter } from '@/modules/meta/B2B/CoachAlertCenter';
 
 export default function CoachDashboard() {
     const [coach, setCoach] = useState<any>(null);

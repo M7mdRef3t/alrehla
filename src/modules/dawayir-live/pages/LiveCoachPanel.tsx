@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Eye, PlayCircle, ScanSearch, Search, Share2, ShieldCheck, Sparkles, Users2 } from "lucide-react";
-import { assignUrl } from "../../../services/navigation";
+import { assignUrl } from "@/services/navigation";
 import { createLiveShare, getLiveSession, listCoachLiveSessions } from "../api";
-import type { LiveSessionArtifactRecord, LiveSessionDetail, LiveSessionRecord } from "../types";
+import type { LiveSessionArtifactRecord, LiveSessionDetail, LiveSessionRecord } from '../types';
 
 type StatusFilter = "all" | "completed" | "active";
 
@@ -112,7 +112,7 @@ export default function LiveCoachPanel() {
   const tensions = selectedDetail?.session.summary?.tensions ?? [];
 
   return (
-    <div className="coach-panel-shell min-h-screen px-4 py-10 text-white">
+    <div className="coach-panel-shell min-h-screen px-4 py-10 text-app-foreground">
       <div className="mx-auto max-w-[92rem]">
         <div className="coach-hero">
           <div>

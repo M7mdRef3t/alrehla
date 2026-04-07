@@ -1,5 +1,5 @@
 import { geminiClient } from './geminiClient';
-import { CreativeSeed } from '../state/synthesisState';
+import { CreativeSeed } from '@/state/synthesisState';
 
 export class CreativeSeedEngine {
     /**

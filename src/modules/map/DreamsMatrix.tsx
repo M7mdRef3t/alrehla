@@ -1,25 +1,25 @@
 import type { FC } from "react";
 import { useState, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMapState } from "../../state/mapState";
-import { type MapNode } from "../../modules/map/mapTypes";
+import { useMapState } from "@/state/mapState";
+import { type MapNode } from "@/modules/map/mapTypes";
 import { Sparkles, Activity, ShieldAlert, Target, Lock, AlertTriangle, Zap } from "lucide-react";
-import { DreamNode, AlignmentZone } from "../../types/visualDreams";
-import { AlignmentEngine } from "../../services/alignmentEngine";
-import { fetchOverviewStats, fetchDreams, type OverviewStats } from "../../services/adminApi";
-import { type Dream, type Knot } from "../../types/dreams";
-import { usePredictiveState } from "../../state/predictiveState";
-import { useGrowthState } from "../../state/growthState";
-import { useFlowState } from "../../state/flowState";
+import { DreamNode, AlignmentZone } from "@/types/visualDreams";
+import { AlignmentEngine } from "@/services/alignmentEngine";
+import { fetchOverviewStats, fetchDreams, type OverviewStats } from "@/services/adminApi";
+import { type Dream, type Knot } from "@/types/dreams";
+import { usePredictiveState } from "@/state/predictiveState";
+import { useGrowthState } from "@/state/growthState";
+import { useFlowState } from "@/state/flowState";
 
 /**
  * 🌌 DREAMS MATRIX (THE MATRIX)
  */
 
 const ZONE_CONFIG: Record<AlignmentZone, { radius: number; color: string; label: string; glow: string }> = {
-    action: { radius: 15, color: "#2dd4bf", label: "الواحة (Oasis)", glow: "rgba(45, 212, 191, 0.4)" },
-    planning: { radius: 28, color: "#fbbf24", label: "الأفق (Horizon)", glow: "rgba(251, 191, 36, 0.3)" },
-    dreamland: { radius: 42, color: "#94a3b8", label: "السديم (Nebula)", glow: "rgba(148, 163, 184, 0.2)" }
+    action: { radius: 15, color: "#0d9488", label: "الواحة (Oasis)", glow: "rgba(13, 148, 136, 0.4)" },
+    planning: { radius: 28, color: "#d97706", label: "الأفق (Horizon)", glow: "rgba(217, 119, 6, 0.3)" },
+    dreamland: { radius: 42, color: "#64748b", label: "السديم (Nebula)", glow: "rgba(100, 116, 139, 0.2)" }
 };
 
 interface MatrixNodeProps {
@@ -60,7 +60,7 @@ const MatrixNode: FC<MatrixNodeProps> = memo(({ node, index, total, isLocked }) 
                     width: "48px",
                     height: "48px",
                     borderRadius: "50%",
-                    background: isLocked ? "rgba(30, 41, 59, 0.8)" : "rgba(15, 23, 42, 0.6)",
+                    background: "var(--glass-bg)",
                     border: `1.5px solid ${isLocked ? '#ef4444' : config.color}40`,
                     boxShadow: isLocked ? `0 0 15px rgba(239, 68, 68, 0.3)` : `0 0 15px ${config.glow}`,
                     backdropFilter: "blur(8px)"
@@ -74,71 +74,39 @@ const MatrixNode: FC<MatrixNodeProps> = memo(({ node, index, total, isLocked }) 
 
                 {/* Hover Simulation Overlay */}
                 <div className="absolute top-12 left-1/2 -translate-x-1/2 w-48 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100]">
-                    <div className={`admin-glass-card p-3 space-y-2 ${isLocked ? 'border-rose-500/50 bg-rose-950/20' : 'border-teal-500/30'}`}>
+                    <div className={`p-4 rounded-2xl border backdrop-blur-xl space-y-3 shadow-2xl transition-all duration-300 ${isLocked ? 'bg-rose-500/10 border-rose-500/30' : 'bg-app-surface/90 border-app-border'}`}>
                         <div className="flex justify-between items-start">
-                            <p className="text-xs font-bold text-slate-100">{node.title}</p>
-                            {isLocked && <ShieldAlert className="w-3 h-3 text-rose-500" />}
+                            <p className="text-sm font-black text-app-primary leading-tight">{node.title}</p>
+                            {isLocked && <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />}
                         </div>
 
-                        <div className="flex justify-between items-center text-[10px]">
-                            <span className="text-slate-400">التوافق (S):</span>
-                            <span className={`${isLocked ? 'text-rose-400' : 'text-teal-400'} font-mono`}>{(node.alignmentScore * 100).toFixed(0)}%</span>
+                        <div className="flex justify-between items-center text-[11px] font-bold">
+                            <span className="text-app-muted">التوافق (S):</span>
+                            <span className={`${isLocked ? 'text-rose-500' : 'text-teal-600 dark:text-teal-400'} font-mono`}>{(node.alignmentScore * 100).toFixed(0)}%</span>
                         </div>
 
                         {isLocked && (
-                            <div className="text-[9px] text-rose-300 font-bold bg-rose-500/10 p-1 rounded border border-rose-500/20">
+                            <div className="text-[10px] text-rose-600 dark:text-rose-300 font-bold bg-rose-500/10 p-2 rounded-xl border border-rose-500/20 leading-relaxed">
                                 ⚠️ نظام الحماية مفعل: توافق منخفض أو حالة طوارئ.
                             </div>
                         )}
 
                         {/* Knots Visualization */}
                         {node.knots && node.knots.length > 0 && (
-                            <div className="space-y-1">
-                                <p className="text-[9px] text-rose-400 font-bold uppercase tracking-tighter">العُقد (Knots):</p>
+                            <div className="space-y-1.5">
+                                <p className="text-[10px] text-rose-500 font-black uppercase tracking-widest">العُقد (Knots):</p>
                                 {node.knots.map((k: Knot) => (
-                                    <div key={k.id} className="flex justify-between items-center text-[9px] bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
-                                        <span className="text-rose-300 truncate max-w-[80px]">{k.label}</span>
-                                        <span className="text-rose-500 font-bold">-{k.severity}</span>
+                                    <div key={k.id} className="flex justify-between items-center text-[10px] font-bold bg-rose-500/5 px-2 py-1 rounded-lg border border-rose-500/15">
+                                        <span className="text-rose-700 dark:text-rose-300 truncate max-w-[80px]">{k.label}</span>
+                                        <span className="text-rose-600 font-black">-{k.severity}</span>
                                     </div>
                                 ))}
                             </div>
                         )}
 
-                        {/* Root Causes (RCA) */}
-                        {node.relatedNodeIds && node.relatedNodeIds.length > 0 && (
-                            <div className="space-y-1">
-                                <p className="text-[9px] text-amber-400 font-bold uppercase tracking-tighter">ثقوب الطاقة (RCA):</p>
-                                <div className="flex flex-wrap gap-1">
-                                    {node.relatedNodeIds.map(nodeId => {
-                                        const relatedNode = useMapState.getState().nodes.find((n: MapNode) => n.id === nodeId);
-                                        return (
-                                            <span key={nodeId} className="text-[8px] bg-amber-500/10 text-amber-300 px-1 rounded border border-amber-500/20">
-                                                {relatedNode?.label || 'Unknown'}
-                                            </span>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Momentum Tasks for Locked Goals */}
-                        {isLocked && node.momentumTasks && node.momentumTasks.length > 0 && (
-                            <div className="space-y-1">
-                                <p className="text-[9px] text-teal-400 font-bold uppercase tracking-tighter">مُولد الزخم (مهام سهلة):</p>
-                                <div className="space-y-1">
-                                    {node.momentumTasks.slice(0, 2).map(task => (
-                                        <div key={task.id} className="text-[8px] bg-teal-500/5 text-teal-200 border border-teal-500/10 px-2 py-1 rounded flex justify-between items-center">
-                                            <span>{task.label}</span>
-                                            <Zap className={`w-2.5 h-2.5 ${task.isCompleted ? 'text-teal-400' : 'text-slate-600'}`} />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="w-full bg-slate-800 rounded-full h-1 overflow-hidden">
+                        <div className="w-full bg-app-bg rounded-full h-1.5 overflow-hidden border border-app-border shadow-inner">
                             <div
-                                className={`h-full ${isLocked ? 'bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]' : 'bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.6)]'}`}
+                                className={`h-full ${isLocked ? 'bg-rose-500' : 'bg-teal-500'}`}
                                 style={{ width: `${node.alignmentScore * 100}%` }}
                             />
                         </div>
@@ -197,9 +165,9 @@ export const DreamsMatrix: FC<{ dreams: Dream[]; stats: Partial<OverviewStats> }
     }, [dreams, stats, isSurvivalMode]);
 
     return (
-        <div className={`relative w-full h-[500px] overflow-hidden rounded-3xl bg-slate-950/40 border transition-colors duration-1000 backdrop-blur-xl group ${isCrisis ? 'border-rose-500/30' : 'border-slate-800/50'}`}>
+        <div className={`relative w-full h-[500px] overflow-hidden rounded-[2rem] bg-app-surface border transition-all duration-1000 backdrop-blur-xl group ${isCrisis ? 'border-rose-500/30' : 'border-app-border'}`}>
             {/* Background Starfield/Grid */}
-            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+            <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5 dark:opacity-10" />
             <div className={`absolute inset-0 bg-radial-at-c transition-colors duration-1000 ${isCrisis ? 'from-rose-500/10' : 'from-teal-500/5'} to-transparent`} />
 
             {/* Orbital Rings */}
@@ -234,16 +202,16 @@ export const DreamsMatrix: FC<{ dreams: Dream[]; stats: Partial<OverviewStats> }
             </div>
 
             {/* Matrix Metadata Overlay */}
-            <div className="absolute bottom-4 right-4 flex gap-4">
+            <div className="absolute bottom-6 right-6 flex gap-4">
                 {isCrisis && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-900/60 border border-rose-500/50 backdrop-blur-md animate-pulse">
-                        <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
-                        <span className="text-[10px] text-rose-100 font-bold tracking-widest uppercase">CRISIS VETO ACTIVE</span>
+                    <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-rose-500/10 border border-rose-500/30 backdrop-blur-md animate-pulse">
+                        <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                        <span className="text-[11px] text-rose-700 dark:text-rose-100 font-black tracking-widest uppercase">CRISIS VETO ACTIVE</span>
                     </div>
                 )}
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/60 border border-slate-700/50 backdrop-blur-md ${!isCrisis ? 'opacity-50' : ''}`}>
-                    <Activity className={`w-3.5 h-3.5 ${isCrisis ? 'text-rose-500' : 'text-teal-400'}`} />
-                    <span className="text-[10px] text-slate-300 font-bold tracking-widest uppercase">SYSTEM LIVE</span>
+                <div className={`flex items-center gap-3 px-4 py-2 rounded-2xl bg-app-surface/60 border border-app-border backdrop-blur-md ${!isCrisis ? 'opacity-70' : ''}`}>
+                    <Activity className={`w-4 h-4 ${isCrisis ? 'text-rose-500' : 'text-teal-600 dark:text-teal-400'}`} />
+                    <span className="text-[11px] text-app-primary font-black tracking-widest uppercase">SYSTEM LIVE</span>
                 </div>
             </div>
         </div>

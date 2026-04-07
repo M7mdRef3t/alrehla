@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { subscribeToDawayirSignals } from "../modules/recommendation/recommendationBus";
-import { useMapState } from "../state/mapState";
-import { GraphProjectionEngine } from "../services/graphProjectionEngine";
-import { supabase } from "../services/supabaseClient";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { subscribeToDawayirSignals } from "@/modules/recommendation/recommendationBus";
+import { useMapState } from "@/state/mapState";
+import { GraphProjectionEngine } from "@/services/graphProjectionEngine";
+import { supabase } from "@/services/supabaseClient";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 /**
  * useGraphSync — خطاف المزامنة الشبكية

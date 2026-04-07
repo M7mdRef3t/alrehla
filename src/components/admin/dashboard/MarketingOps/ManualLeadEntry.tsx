@@ -12,7 +12,7 @@ import {
   Copy,
   CheckCheck
 } from "lucide-react";
-import type { MarketingLeadPayload } from "../../../../types/marketingLead";
+import type { MarketingLeadPayload } from "@/types/marketingLead";
 
 interface ManualLeadEntryProps {
   onSuccess: (msg: string) => void;

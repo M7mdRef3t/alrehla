@@ -1,5 +1,5 @@
-import type { FeelingAnswers } from "../components/FeelingCheck";
-import type { RealityAnswers } from "../components/RealityCheck";
+import type { FeelingAnswers } from '@/modules/exploration/FeelingCheck';
+import type { RealityAnswers } from '@/modules/exploration/RealityCheck';
 import type { QuickAnswer2 } from "./suggestInitialRing";
 import type { PersonGender } from "./resultScreenAI";
 import {
@@ -8,8 +8,9 @@ import {
   RESULT_SCREEN_RULES,
   type ResultScoreLevel,
   type ResultScenarioKey
-} from "../data/resultScreenTemplates";
-import { getScoringThresholds, getScoringWeights } from "../state/adminState";
+} from "@/data/resultScreenTemplates";
+export type { ResultScenarioKey };
+import { getScoringThresholds, getScoringWeights } from "@/state/adminState";
 
 type ScoreLevel = ResultScoreLevel;
 

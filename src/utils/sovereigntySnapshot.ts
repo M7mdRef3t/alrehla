@@ -1,4 +1,4 @@
-import type { MapNode, Ring } from "../modules/map/mapTypes";
+import type { MapNode, Ring } from "@/modules/map/mapTypes";
 
 type SnapshotTone = "danger" | "caution" | "safe" | "steady";
 

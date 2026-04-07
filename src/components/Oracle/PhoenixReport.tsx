@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Crown, Shield, TrendingUp, Users, Zap, Clock } from 'lucide-react';
-import { PhoenixEngine, PhoenixEventSummary, PioneerReportCard } from '../../services/phoenixEngine';
+import { PhoenixEngine, PhoenixEventSummary, PioneerReportCard } from '@/services/phoenixEngine';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from 'recharts';
-import { ResonancePair } from '../../services/phoenixEngine';
+import { ResonancePair } from '@/services/phoenixEngine';
 
 export const PhoenixReport: React.FC = () => {
     const [summary, setSummary] = useState<PhoenixEventSummary | null>(null);

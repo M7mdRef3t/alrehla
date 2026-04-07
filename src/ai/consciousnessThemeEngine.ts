@@ -496,7 +496,7 @@ async function sendVisualReportToTelegram(
   emotionalState: UserEmotionalState
 ): Promise<void> {
   try {
-    const { telegramBot } = await import("../services/telegramBot");
+    const { telegramBot } = await import("@/services/telegramBot");
 
     // حساب النسبة المئوية لكل حالة (في المستقبل: من كل المستخدمين)
     const statePercentages = {

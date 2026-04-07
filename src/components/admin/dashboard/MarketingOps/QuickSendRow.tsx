@@ -42,6 +42,9 @@ export function QuickSendRow({ lead, onMarkContacted, isGhostMode }: QuickSendRo
       <div className="mt-3 flex flex-wrap gap-2">
         <a
           href={mailHref}
+          onClick={() => {
+            setTimeout(() => onMarkContacted(lead.email), 500);
+          }}
           className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-slate-200 transition hover:bg-white/10"
         >
           <Mail className="h-3.5 w-3.5" />
@@ -52,6 +55,9 @@ export function QuickSendRow({ lead, onMarkContacted, isGhostMode }: QuickSendRo
             href={whatsappHref}
             target="_blank"
             rel="noreferrer"
+            onClick={() => {
+              setTimeout(() => onMarkContacted(lead.email), 500);
+            }}
             className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-slate-200 transition hover:bg-white/10"
           >
             <MessageCircle className="h-3.5 w-3.5" />

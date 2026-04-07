@@ -6,7 +6,7 @@ import {
   type MarketingLeadStatus,
   type MarketingLeadUtm,
   type NormalizedMarketingLeadInput
-} from "../types/marketingLead";
+} from "@/types/marketingLead";
 
 function sanitizeText(value: unknown, max = 300): string | null {
   if (typeof value !== "string") return null;
@@ -158,7 +158,8 @@ export function normalizeMarketingLeadPayload(
     status: sanitizeStatus(payload.status),
     lastContactedAt: sanitizeIsoDate(payload.lastContactedAt),
     qualifiedAt: sanitizeIsoDate(payload.qualifiedAt),
-    intent: sanitizeText(payload.intent, 100)
+    intent: sanitizeText(payload.intent, 100),
+    anonymousId: sanitizeText(payload.anonymousId || payload.anonymous_id, 128)
   };
 }
 

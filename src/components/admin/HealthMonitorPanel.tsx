@@ -1,7 +1,7 @@
 import { type FC, useEffect, useState } from "react";
 import { Activity, AlertTriangle, CheckCircle, Clock, TrendingUp } from "lucide-react";
-import type { HealthCheckResult, HealthIssue } from "../../ai/autoHealthCheck";
-import type { ErrorAnalysisResult } from "../../ai/aiErrorAnalyzer";
+import type { HealthCheckResult, HealthIssue } from "@/ai/autoHealthCheck";
+import type { ErrorAnalysisResult } from "@/ai/aiErrorAnalyzer";
 
 export const HealthMonitorPanel: FC = () => {
   const [healthHistory, setHealthHistory] = useState<HealthCheckResult[]>([]);

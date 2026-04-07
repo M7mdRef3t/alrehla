@@ -15,7 +15,7 @@ import {
   Sparkles,
   Wand2,
 } from "lucide-react";
-import { assignUrl } from "../../../services/navigation";
+import { assignUrl } from "@/services/navigation";
 import { createLiveShare, getLiveSession, listLiveSessions } from "../api";
 import type {
   CircleNode,
@@ -23,7 +23,7 @@ import type {
   LiveSessionArtifactRecord,
   LiveSessionDetail,
   LiveSessionRecord,
-} from "../types";
+} from '../types';
 
 type TruthContractPayload = {
   promises?: unknown;
@@ -444,7 +444,7 @@ export default function LiveHistoryPage() {
     selectedDetail?.access.map((entry) => entry.access_role).join(" • ") || (isArabic ? "owner" : "owner");
 
   return (
-    <div className="memory-bank-shell min-h-screen text-white">
+    <div className="memory-bank-shell min-h-screen text-app-foreground">
       <div className="mx-auto max-w-[92rem] px-4 py-10">
         <div className="memory-bank-topbar">
           <div className="memory-bank-hero">

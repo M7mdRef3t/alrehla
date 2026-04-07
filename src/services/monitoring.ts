@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/react";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 let initialized = false;
 

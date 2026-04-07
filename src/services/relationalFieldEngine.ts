@@ -1,10 +1,10 @@
-import type { MapNode } from "../modules/map/mapTypes";
-import type { DawayirSignalEventV1 } from "../modules/recommendation/types";
-import { getDawayirSignalHistory } from "../modules/recommendation/recommendationBus";
-import { useMapState } from "../state/mapState";
-import type { PulseEntry } from "../state/pulseState";
-import { usePulseState } from "../state/pulseState";
-import { useShadowPulseState } from "../state/shadowPulseState";
+import type { MapNode } from "@/modules/map/mapTypes";
+import type { DawayirSignalEventV1 } from "@/modules/recommendation/types";
+import { getDawayirSignalHistory } from "@/modules/recommendation/recommendationBus";
+import { useMapState } from "@/state/mapState";
+import type { PulseEntry } from "@/state/pulseState";
+import { usePulseState } from "@/state/pulseState";
+import { useShadowPulseState } from "@/state/shadowPulseState";
 import { calculateEntropy } from "./predictiveEngine";
 import { getRecentJourneyEvents, type JourneyEvent } from "./journeyTracking";
 

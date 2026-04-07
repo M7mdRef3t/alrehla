@@ -1,6 +1,6 @@
 "use client";
 
-import { PulseCheckModal } from "../../src/components/PulseCheckModal";
+import { PulseCheckModal } from "@/modules/exploration/PulseCheckModal";
 import { useState } from "react";
 import { motion } from "framer-motion";
 

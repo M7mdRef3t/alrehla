@@ -1,7 +1,7 @@
-import type { MapNode, MapType, FeelingCheckResult } from "../modules/map/mapTypes";
+import type { MapNode, MapType, FeelingCheckResult } from "@/modules/map/mapTypes";
 import { getJSON, setJSON } from "./secureStore";
 import { queueMapSync } from "./mapSync";
-import { sanitizeMapNodes } from "../utils/mapNodeSchema";
+import { sanitizeMapNodes } from "@/utils/mapNodeSchema";
 
 const STORAGE_KEY = "dawayir-map-nodes";
 
@@ -75,4 +75,4 @@ export const saveStoredState = (state: StoredState) => {
     queueMapSync(safeState.nodes);
   }, 100); // 100ms debounce
 };
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";

@@ -1,4 +1,4 @@
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '@/services/supabaseClient';
 
 export interface AwarenessVector {
     rs: number; // Relational Symmetry (Rate of change)

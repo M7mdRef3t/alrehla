@@ -4,9 +4,9 @@ import { AlertTriangle, ShieldAlert, ShieldCheck, Siren, Shield } from "lucide-r
 import {
   sendOwnerSecurityWebhook,
   type SecuritySignalsReport
-} from "../../../../../services/adminApi";
-import { sendNotification } from "../../../../../services/notifications";
-import { soundManager } from "../../../../../services/soundManager";
+} from "@/services/adminApi";
+import { sendNotification } from "@/services/notifications";
+import { soundManager } from "@/services/soundManager";
 import { AdminTooltip } from "./AdminTooltip";
 
 interface SecuritySentinelProps {

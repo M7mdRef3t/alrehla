@@ -1,13 +1,13 @@
 // mapSync.ts
-import type { MapNode } from "../modules/map/mapTypes";
+import type { MapNode } from "@/modules/map/mapTypes";
 import { isSupabaseReady, supabase } from "./supabaseClient";
 import {
   getTrackingSessionId
 } from "./journeyTracking";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "./browserStorage";
-import { useSyncState } from "../state/syncState";
-import { useJourneyState } from "../state/journeyState";
+import { useSyncState } from "@/state/syncState";
+import { useJourneyState } from "@/state/journeyState";
 import { triggerMapCompletionCheck } from "../lib/gate/handoffCore";
 
 const SUPABASE_MAPS_TABLE = "journey_maps";
@@ -128,9 +128,12 @@ async function flushMapSync(): Promise<void> {
 
       // Check external funnel status. If user originated from a Gate Session,
       // now is the exact moment his Map is "Persisted" Server-Side.
-      const gateSessionId = useJourneyState.getState().gateSessionId;
-      if (gateSessionId) {
-        void triggerMapCompletionCheck(gateSessionId, user.id);
+      const { gateSessionId, isGateConverted, setGateConverted } = useJourneyState.getState();
+      if (gateSessionId && !isGateConverted) {
+        setGateConverted(true);
+        void triggerMapCompletionCheck(gateSessionId).then((success) => {
+          if (!success) setGateConverted(false);
+        });
       }
     } else {
       const errorMsg = error.message || "sync_failed";

@@ -63,6 +63,10 @@ export async function POST(req: Request) {
     }
 
     if (step === 'layer2') {
+      if (!existingSession) {
+         return NextResponse.json({ error: 'Session not found for layer 2' }, { status: 404 });
+      }
+
       if (existingSession?.qualified_at) {
          return NextResponse.json({ status: 'already_recorded', reason: 'idempotency' });
       }
@@ -75,8 +79,21 @@ export async function POST(req: Request) {
         updated_at: timestamp
       };
 
-      const { error } = await db.from('gate_sessions').update(updatePayload).eq('id', sessionId);
-      if (error) console.error('[Gate API] Supabase Layer 2 DB Error', error);
+      const { error, data } = await db.from('gate_sessions')
+        .update(updatePayload)
+        .eq('id', sessionId)
+        .is('qualified_at', null)
+        .select('id')
+        .maybeSingle();
+
+      if (error) {
+        console.error('[Gate API] Supabase Layer 2 DB Error', error);
+        return NextResponse.json({ error: 'Failed DB insertion' }, { status: 500 });
+      }
+
+      if (!data) {
+        return NextResponse.json({ status: 'already_recorded', reason: 'idempotency_lost_race' });
+      }
 
       // Trigger CAPI for layer 2
       await sendToCapi('CompleteRegistration', eventId, 

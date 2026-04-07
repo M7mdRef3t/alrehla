@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { orchestrator } from "../ai/orchestrator/Core";
+import { orchestrator } from "@/ai/orchestrator/Core";
 
 /**
  * useGestureSanctuary — محول الإشارات الفيزيائية إلى أوامر سكون

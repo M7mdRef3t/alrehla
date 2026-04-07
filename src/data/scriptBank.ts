@@ -1,4 +1,4 @@
-import type { ScriptCategory } from "../types/recoveryPlan";
+import type { ScriptCategory } from "@/types/recoveryPlan";
 
 export const scriptBank: ScriptCategory[] = [
   {

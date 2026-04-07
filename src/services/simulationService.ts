@@ -1,6 +1,7 @@
 import { AIOrchestrator } from './aiOrchestrator';
 import { supabase } from './supabaseClient';
-import { Dream } from '../types/dreams';
+import { geminiClient } from './geminiClient';
+import { Dream } from '@/types/dreams';
 
 export interface SimulationResult {
     scenarioName: string;
@@ -26,11 +27,38 @@ export class SimulationService {
         if (!supabase) return null;
 
         try {
-            // 1. Get Current Consciousness Snapshot (Mocked for now, will integrate with state management)
+            // 1. Get Current Consciousness Snapshot (Supabase Source of Truth)
+            const { count: nodesCount } = await supabase
+                .from('map_nodes')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId);
+
+            // Fetch recent telemetry for energetic states
+            const { data: latestEvents } = await supabase
+                .from('routing_events')
+                .select('payload')
+                .eq('user_id', userId)
+                .in('event_type', ['first_pulse_submitted', 'shadow_pulse_snapshot', 'baseline_completed'])
+                .order('occurred_at', { ascending: false })
+                .limit(5);
+
+            let energyLevel = 70; // Honest Zero-State fallback
+            let pulseRating = 85; 
+
+            if (latestEvents && latestEvents.length > 0) {
+                for (const ev of latestEvents) {
+                    if (ev.payload && typeof ev.payload === 'object') {
+                        const dict = ev.payload as Record<string, any>;
+                        if (dict.teiScore !== undefined) energyLevel = 100 - Number(dict.teiScore);
+                        if (dict.shadowScore !== undefined) pulseRating = Number(dict.shadowScore);
+                    }
+                }
+            }
+
             const stateSnapshot = {
-                energy_level: 7,
-                pulse_rating: 85,
-                nodes_count: 12
+                energy_level: energyLevel,
+                pulse_rating: pulseRating,
+                nodes_count: nodesCount || 0
             };
 
             // 2. Resolve AI Route
@@ -44,46 +72,45 @@ export class SimulationService {
         العقد الحالية (Knots): ${JSON.stringify(dream.knots)}
         حالة المستخدم الحالية: ${JSON.stringify(stateSnapshot)}
 
-        المطلوب تحليل السيناريو الأمثل للكفاءة القصوى وتوقع النتائج.
-        الرد يجب أن يكون بتنسيق JSON ويحتوي على: success_probability, estimated_days, energy_drain, impact_analysis, recommendation.
+        المطلوب تحليل السيناريو الأمثل للكفاءة القصوى وتوقع النتائج بناءً على حالة الوعي (Energy & Pulse & Nodes).
+        الرد يجب أن يكون بتنسيق JSON ويحتوي بوضوح على المفاتيح التالية (بدون أي نصوص إضافية):
+        - "scenarioName"
+        - "outcomePrediction" (يحتوي على key: "successProbability", "estimatedDays", "energyDrain")
+        - "impactAnalysis" (يحتوي على key: "onRelationships", "onMentalHealth", "onKafaa")
+        - "coPilotRecommendation"
+        - "criticalWarnings" (مصفوفة نصوص)
       `;
 
-            // 4. Call AI via preferred model (using AIOrchestrator logic)
-            // Note: Actual AI call implementation depends on the gemini/openai client availability
+            // 4. Call AI via Gemini JSON interface
             console.log(`[Simulation] Routing to ${modelId} for dream: ${dream.title}`);
+            const result = await geminiClient.generateJSON<SimulationResult>(prompt);
 
-            // Mocked AI Response for implementation demonstration
-            const mockResult: SimulationResult = {
-                scenarioName: 'Optimal Efficiency Path',
-                outcomePrediction: {
-                    successProbability: 0.85,
-                    estimatedDays: 45,
-                    energyDrain: 3
-                },
-                impactAnalysis: {
-                    onRelationships: 'Strong alignment with core circles.',
-                    onMentalHealth: 'Potential temporary stress, then stabilization.',
-                    onKafaa: 'Significant boost in systemic efficiency.'
-                },
-                coPilotRecommendation: 'ابدأ بخطة التدرج الآمن لتجاوز عقدة الخوف من الفشل.',
-                criticalWarnings: ['Risk of burnout if energy drops below 4.']
-            };
+            if (!result) {
+                console.error("[Simulation] Initial generation failed completely.");
+                return null;
+            }
 
             // 5. Save Simulation to Supabase
-            const { error } = await supabase.from('alrehla_simulations').insert({
-                user_id: userId,
-                dream_id: dream.id,
-                scenario_name: mockResult.scenarioName,
-                state_snapshot: stateSnapshot,
-                outcome_prediction: mockResult.outcomePrediction,
-                impact_analysis: mockResult.impactAnalysis,
-                co_pilot_recommendation: mockResult.coPilotRecommendation,
-                critical_warnings: mockResult.criticalWarnings
+            // Since alrehla_simulations is not built, we adhere to the existing Bounded Context via journey_events
+            const { error } = await supabase.from('journey_events').insert({
+                session_id: userId,
+                event_type: 'simulation_run',
+                payload: {
+                    dream_id: dream.id,
+                    scenario_name: result.scenarioName,
+                    state_snapshot: stateSnapshot,
+                    outcome_prediction: result.outcomePrediction,
+                    impact_analysis: result.impactAnalysis,
+                    co_pilot_recommendation: result.coPilotRecommendation,
+                    critical_warnings: result.criticalWarnings
+                }
             });
 
-            if (error) throw error;
+            if (error) {
+                console.warn("[Simulation] Failed to log journey event:", error);
+            }
 
-            return mockResult;
+            return result;
 
         } catch (e) {
             console.error('[Simulation Service] Error:', e);

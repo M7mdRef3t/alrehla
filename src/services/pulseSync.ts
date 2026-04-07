@@ -1,7 +1,7 @@
-import type { PulseEntry } from "../state/pulseState";
+import type { PulseEntry } from "@/state/pulseState";
 import { isSupabaseReady, supabase } from "./supabaseClient";
 import { getTrackingMode, getTrackingSessionId } from "./journeyTracking";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import { trackEvent, AnalyticsEvents } from "./analytics";
 
 const SUPABASE_PULSE_TABLE = "daily_pulse_logs";

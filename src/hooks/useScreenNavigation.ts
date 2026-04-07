@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import type { AdviceCategory } from "../data/adviceScripts";
-import type { FeatureFlagKey } from "../config/features";
+import type { AdviceCategory } from "@/data/adviceScripts";
+import type { FeatureFlagKey } from "@/config/features";
 
 export type Screen = "landing" | "goal" | "map" | "guided" | "mission" | "tools";
 export type PulseCheckContext = "regular" | "start_recovery";

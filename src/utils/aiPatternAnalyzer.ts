@@ -1,4 +1,4 @@
-import { geminiClient } from "../services/geminiClient";
+import { geminiClient } from "@/services/geminiClient";
 import type { PatternType, DetectedPattern, PatternAnalysisResult } from "./patternAnalyzer";
 
 /**

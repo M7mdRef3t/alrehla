@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Terminal, RefreshCcw, ArrowRight, ShieldAlert, Zap, Cpu } from 'lucide-react';
-import { orchestrator, OrchestrationResult } from '../../../../ai/orchestrator/Core';
+import { orchestrator, OrchestrationResult } from '@/ai/orchestrator/Core';
 import { AdminTooltip } from '../Overview/components/AdminTooltip';
-import { SystemSnapshot } from '../../../../ai/orchestrator/types';
+import { SystemSnapshot } from '@/ai/orchestrator/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const AISimulatorPanel: React.FC = () => {

@@ -3,7 +3,7 @@
  * الهدف: تصغير "البعبع" في الخيال وتحديد الحاجة غير المُلباة.
  */
 
-import { geminiClient } from "../services/geminiClient";
+import { geminiClient } from "@/services/geminiClient";
 
 /**
  * إدخال: نص الاجترار أو ملخص ما يريد المستخدم قوله للشخص.

@@ -9,8 +9,8 @@ import type {
 import { buildFeatureVectorV1, deriveJourneyPhaseV1 } from "./featureBuilder";
 import { generateCandidatesByPolicy } from "./policyEngine";
 import { buildWhyCard } from "./whyCard";
-import { getTrackingSessionId, recordFlowEvent } from "../../services/journeyTracking";
-import { getFromLocalStorage, setInLocalStorage } from "../../services/browserStorage";
+import { getTrackingSessionId, recordFlowEvent } from "@/services/journeyTracking";
+import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
 import { CircuitBreaker } from "../../architecture/circuitBreaker";
 import { fetchJsonWithResilience, sendJsonWithResilience } from "../../architecture/resilientHttp";
 

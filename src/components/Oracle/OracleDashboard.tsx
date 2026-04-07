@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, CheckCircle, AlertTriangle, Eye, TrendingUp, Users, ChevronRight, Gavel, Zap, Activity, BarChart3, Globe, Database, UserPlus, Clock, Brain } from 'lucide-react';
-import { HiveEngine, ProvenPath, SwarmMetrics } from '../../services/hiveEngine';
-import { fetchUsers, AdminUserRow, fetchOverviewStats, OverviewStats } from '../../services/adminApi';
-import { CollectiveRadar } from '../Trajectory/CollectiveRadar';
+import { HiveEngine, ProvenPath, SwarmMetrics } from '@/services/hiveEngine';
+import { fetchUsers, AdminUserRow, fetchOverviewStats, OverviewStats } from '@/services/adminApi';
+import { CollectiveRadar } from '@/modules/exploration/Trajectory/CollectiveRadar';
 import { FirstBloodOverlay } from './FirstBloodOverlay';
 import { BehavioralRadar } from './BehavioralRadar';
 

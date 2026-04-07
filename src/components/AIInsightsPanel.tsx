@@ -7,7 +7,7 @@
 import type { FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Brain, Sparkles, AlertCircle, Target, Map } from "lucide-react";
-import { useAIPersonInsights } from "../hooks/useAIQuestionGenerator";
+import { useAIPersonInsights } from "@/hooks/useAIQuestionGenerator";
 
 interface AIInsightsPanelProps {
   nodeId: string;

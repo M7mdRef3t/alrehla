@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { ArrowLeft, Target, Sparkles, CheckCircle2 } from "lucide-react";
-import type { PhaseOneGoalProgress } from "../../../../../services/adminApi";
+import type { PhaseOneGoalProgress } from "@/services/adminApi";
 
 interface PhaseOneGoalProps {
     data: PhaseOneGoalProgress | null;
@@ -145,7 +145,7 @@ export const PhaseOneGoal: FC<PhaseOneGoalProps> = ({ data, loading }) => {
                 <div className="flex justify-between items-end mb-4 relative z-10">
                     <div>
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-1">إغلاق المسار (Holistic Progress)</span>
-                        <span className="text-[10px] text-slate-500">حالة المسار الكلية لبوابة الرحلة.</span>
+                        <span className="text-[10px] text-slate-500">حالة المسار الكلية للرحلة.</span>
                     </div>
                     <span className="text-2xl font-black font-mono tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-cyan-300 to-emerald-400">
                         {totalProgress.toFixed(0)}%

@@ -1,4 +1,4 @@
-import type { Ring } from "../modules/map/mapTypes";
+import type { Ring } from "@/modules/map/mapTypes";
 
 /**
  * Suggested Placement Logic

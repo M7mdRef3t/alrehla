@@ -1,7 +1,7 @@
-import { useCatalystState } from '../state/catalystState';
-import { useGrowthState } from '../state/growthState';
-import { useFlowState } from '../state/flowState';
-import { type Dream } from '../types/dreams';
+import { useCatalystState } from '@/state/catalystState';
+import { useGrowthState } from '@/state/growthState';
+import { useFlowState } from '@/state/flowState';
+import { type Dream } from '@/types/dreams';
 
 /**
  * ⚡ CATALYST ENGINE

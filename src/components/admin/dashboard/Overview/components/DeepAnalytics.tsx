@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { Activity, Zap, BarChart3, SplitSquareHorizontal, Compass, Clock } from "lucide-react";
 import { BarChart, Bar, XAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from "recharts";
-import type { OverviewStats } from "../../../../../services/adminApi";
+import type { OverviewStats } from "@/services/adminApi";
 import { AdminTooltip } from "./AdminTooltip";
 
 interface DeepAnalyticsProps {
@@ -136,8 +136,8 @@ const WeeklyRhythmCard: FC<{ data: OverviewStats["weeklyRhythm"] }> = ({ data })
                 </div>
             </div>
 
-            <div className="h-56 w-full relative z-10 mt-4" dir="ltr">
-                <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full relative z-10 mt-4" dir="ltr" style={{ width: '100%', height: 224 }}>
+                <ResponsiveContainer width="99%" height={224}>
                     <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <RechartsTooltip
                             cursor={{ fill: 'rgba(255,255,255,0.02)' }}

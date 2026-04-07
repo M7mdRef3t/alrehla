@@ -1,4 +1,4 @@
-import type { DynamicStep } from "../utils/dynamicPlanGenerator";
+import type { DynamicStep } from "@/utils/dynamicPlanGenerator";
 
 // تمارين مخصصة لكل عرض
 export interface SymptomExercise {

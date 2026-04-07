@@ -1,4 +1,4 @@
-import { resolveAdviceCategory, type AdviceCategory } from "../data/adviceScripts";
+import { resolveAdviceCategory, type AdviceCategory } from "@/data/adviceScripts";
 
 const DEFAULT_JOURNEY_GOAL_ID = "family";
 

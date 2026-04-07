@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getWindowOrNull } from "../services/clientRuntime";
+import { getWindowOrNull } from "@/services/clientRuntime";
 
 const AB_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 

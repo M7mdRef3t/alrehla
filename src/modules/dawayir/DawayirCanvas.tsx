@@ -1,4 +1,5 @@
 import React, { FC, memo, useMemo, useState, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   DndContext, 
@@ -11,26 +12,27 @@ import {
   DragOverlay,
   defaultDropAnimationSideEffects
 } from "@dnd-kit/core";
-import { useMapState } from "../../state/mapState";
+import { useMapState } from "@/state/mapState";
 import { Ring, MapNode as MapNodeType } from "../map/mapTypes";
 import { User, Clock, Zap, Coins, Maximize, GripVertical, Plus, AlertCircle, Info, X } from "lucide-react";
 import { useMasafatyAnalysis, EntropyLevel } from "./hooks/useMasafatyAnalysis";
-import { Button } from "../../components/UI/Button";
+import { Button } from '@/modules/meta/UI/Button';
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
 interface DawayirCanvasProps {
   onNodeClick: (node: MapNodeType) => void;
   onAddNode: () => void;
+  goalIdFilter?: string;
 }
 
 /* ─── Components ───────────────────────────────────────────────────────────── */
 
 const OrbitalRing: FC<{ radius: number; label: string; ring: Ring }> = memo(({ radius, label, ring }) => {
   const colors = {
-    green: "rgba(45, 212, 191, 0.15)",
-    yellow: "rgba(251, 191, 36, 0.15)",
-    red: "rgba(244, 63, 94, 0.15)",
+    green: "var(--ring-safe)",
+    yellow: "var(--ring-caution)",
+    red: "var(--ring-danger)",
   };
 
   return (
@@ -38,13 +40,14 @@ const OrbitalRing: FC<{ radius: number; label: string; ring: Ring }> = memo(({ r
       <circle 
         cx="50" cy="50" r={radius} 
         fill="none" 
-        stroke="rgba(255,255,255,0.03)" 
+        stroke="var(--app-border)" 
         strokeWidth="0.5" 
       />
       <motion.circle
         cx="50" cy="50" r={radius}
         fill="none"
         stroke={colors[ring]}
+        strokeOpacity="0.15"
         strokeWidth="0.2"
         strokeDasharray="1 2"
         animate={{ rotate: 360 }}
@@ -58,15 +61,16 @@ const EntropyGlow: FC<{ x: number; y: number; level: EntropyLevel }> = memo(({ x
   if (level === 0) return null;
   
   const colors = {
-    1: "rgba(251, 191, 36, 0.4)", // Yellow
-    2: "rgba(244, 63, 94, 0.4)",  // Red
-    3: "rgba(244, 63, 94, 0.6)",  // Strong Red
+    1: "var(--ring-caution)",
+    2: "var(--ring-danger)",
+    3: "var(--ring-danger)",
   };
 
   return (
     <motion.circle
       cx={x} cy={y} r="6"
       fill={colors[level as 1|2|3]}
+      fillOpacity={level === 3 ? 0.6 : 0.4}
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ 
         scale: [1, 1.3, 1],
@@ -104,14 +108,24 @@ const MeNodeCenter: FC = memo(() => {
       />
       
       {/* Core "Me" */}
-      <circle r="6" fill="#0f172a" stroke="rgba(45, 212, 191, 0.3)" strokeWidth="0.5" />
+      <motion.circle 
+        r="6" 
+        fill="var(--space-950)" 
+        stroke="var(--ring-safe)" 
+        strokeOpacity="0.6"
+        strokeWidth="0.8" 
+        animate={{ scale: [1, 1.05, 1] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+      />
+      
+      {/* Drop-shadow Text Effect */}
       <text 
         textAnchor="middle" 
-        dy="1.5" 
-        fontSize="3" 
+        dy="1.2" 
+        fontSize="2.8" 
         fontWeight="black" 
         fill="white"
-        className="pointer-events-none"
+        className="pointer-events-none drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]"
       >
         أنا
       </text>
@@ -159,14 +173,25 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
   });
 
   const archiveNode = useMapState((s) => s.archiveNode);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const deleteClickedRef = React.useRef(false);
 
-  const handleDelete = useCallback((e?: any) => {
+  const handleDeleteClick = useCallback((e?: any) => {
     if (e?.preventDefault) e.preventDefault();
     if (e?.stopPropagation) e.stopPropagation();
-    const ok = typeof window === "undefined" ? true : window.confirm(`تأكيد: خرّج "${node.label}" من المدار؟`);
-    if (!ok) return;
+    deleteClickedRef.current = true;
+    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setShowConfirmDelete(true);
+    // Reset flag after a tick so normal clicks work again
+    setTimeout(() => { deleteClickedRef.current = false; }, 100);
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    setShowConfirmDelete(false);
     archiveNode(node.id);
-  }, [archiveNode, node.id, node.label]);
+  }, [archiveNode, node.id]);
 
   // Calculate base position if no drag is happening
   const radius = node.ring === "green" ? 15 : node.ring === "yellow" ? 27 : 38;
@@ -179,22 +204,48 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
   } : undefined;
 
   const ringColors = {
-    green: "rgba(45, 212, 191, 1)",
-    yellow: "rgba(251, 191, 36, 1)",
-    red: "rgba(244, 63, 94, 1)",
+    green: "var(--ring-safe)",
+    yellow: "var(--ring-caution)",
+    red: "var(--ring-danger)",
   };
 
   return (
+    <>
     <motion.g 
       ref={setNodeRef as any} 
-      style={style} 
+      style={{ ...style, outline: "none", WebkitTapHighlightColor: "transparent", zIndex: isDragging ? 50 : "auto" } as any}
       {...attributes} 
       {...listeners}
-      className="cursor-grab active:cursor-grabbing"
+      tabIndex={-1}
+      className={`cursor-grab ${isDragging ? "cursor-grabbing" : ""}`}
+      whileHover={{ scale: 1.15, transition: { type: "spring", stiffness: 400, damping: 10 } }}
+      whileTap={{ scale: 0.95 }}
+      animate={isDragging ? { scale: 1.3, filter: "drop-shadow(0 0 15px rgba(45,212,191,0.6))" } : { scale: 1, filter: "drop-shadow(0 0 0px rgba(45,212,191,0))" }}
       onTap={() => {
-        if (!isDragging) onClick(node);
+        if (!isDragging && !deleteClickedRef.current && !showConfirmDelete) onClick(node);
       }}
     >
+      {node.isMirrorNode && (
+        <motion.circle
+          cx={baseX} cy={baseY} r="7"
+          fill="none" stroke="rgba(251,191,36,0.6)" strokeWidth="0.5"
+          strokeDasharray="2 2"
+          animate={{ rotate: 360, scale: [1, 1.15, 1], opacity: [0.3, 0.8, 0.3] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+        />
+      )}
+
+      {node.isPowerBank && (
+        <motion.g 
+          transform={`translate(${baseX - 4}, ${baseY + 4})`}
+          animate={{ y: [0, -1, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <circle r="1.8" fill="#eab308" />
+          <text textAnchor="middle" dy="0.6" fontSize="1.8" fill="#1e293b" fontWeight="black" className="pointer-events-none drop-shadow-[0_0_5px_rgba(234,179,8,0.8)]">⚡</text>
+        </motion.g>
+      )}
+
       <EntropyGlow x={baseX} y={baseY} level={entropyLevel} />
       
       {/* Analyzing Glow */}
@@ -213,8 +264,9 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
 
       <circle 
         cx={baseX} cy={baseY} r="4" 
-        fill="#0f172a" 
-        stroke={node.isAnalyzing ? "rgba(20, 184, 166, 0.4)" : ringColors[node.ring]} 
+        fill="var(--space-950)" 
+        stroke={node.isAnalyzing ? "var(--soft-teal)" : ringColors[node.ring]} 
+        strokeOpacity={node.isAnalyzing ? 0.4 : 1}
         strokeWidth="0.8" 
         className="transition-colors duration-300"
       />
@@ -265,7 +317,7 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
 
       {/* Delete Button */}
       <motion.g
-        onTap={handleDelete}
+        onTap={handleDeleteClick}
         className="cursor-pointer"
         initial={{ opacity: 0, scale: 0 }}
         whileHover={{ scale: 1.2 }}
@@ -275,11 +327,119 @@ const RelationshipNode: FC<DraggableNodeProps> = memo(({ node, onClick, index, t
         <X x={baseX - 5} y={baseY - 5} width={2} height={2} className="text-white" />
       </motion.g>
     </motion.g>
+
+    {/* Custom Delete Confirmation Modal — Portal to body */}
+    {showConfirmDelete && createPortal(
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "rgba(5,8,20,0.75)",
+          backdropFilter: "blur(8px)",
+        }}
+        onClick={() => setShowConfirmDelete(false)}
+      >
+        <div
+          style={{
+            margin: "0 1rem",
+            width: "100%",
+            maxWidth: "20rem",
+            borderRadius: "1rem",
+            padding: "1.25rem",
+            textAlign: "right",
+            background: "linear-gradient(135deg, rgba(15,23,42,0.95), rgba(30,41,59,0.95))",
+            border: "1px solid rgba(244,63,94,0.25)",
+            boxShadow: "0 0 40px rgba(244,63,94,0.15), 0 20px 60px rgba(0,0,0,0.6)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.75rem" }}>
+            <div
+              style={{
+                width: "3rem",
+                height: "3rem",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(244,63,94,0.12)",
+                border: "1.5px solid rgba(244,63,94,0.3)",
+              }}
+            >
+              <X style={{ width: "1.25rem", height: "1.25rem", color: "#f43f5e" }} />
+            </div>
+          </div>
+          <p style={{ fontSize: "0.875rem", fontWeight: 700, marginBottom: "0.25rem", color: "#e2e8f0" }}>
+            خرّج "{node.label}" من المدار؟
+          </p>
+          <p style={{ fontSize: "0.75rem", marginBottom: "1.25rem", color: "#94a3b8" }}>
+            هيتحفظ في "أشخاص مشافين" وتقدر تعيده لو احتجت.
+          </p>
+          <div style={{ display: "flex", gap: "0.5rem", flexDirection: "row-reverse" }}>
+            <button
+              type="button"
+              onClick={handleConfirmDelete}
+              style={{
+                flex: 1,
+                padding: "0.625rem",
+                borderRadius: "0.75rem",
+                fontSize: "0.875rem",
+                fontWeight: 700,
+                background: "linear-gradient(135deg, #f43f5e, #e11d48)",
+                color: "#fff",
+                border: "none",
+                outline: "none",
+                cursor: "pointer",
+                boxShadow: "0 0 16px rgba(244,63,94,0.3)",
+              }}
+            >
+              موافق
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowConfirmDelete(false)}
+              style={{
+                flex: 1,
+                padding: "0.625rem",
+                borderRadius: "0.75rem",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                background: "rgba(255,255,255,0.06)",
+                color: "#94a3b8",
+                border: "1px solid rgba(255,255,255,0.1)",
+                outline: "none",
+                cursor: "pointer",
+              }}
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
+    </>
   );
 });
 
-export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode }) => {
-  const nodes = useMapState((s) => s.nodes);
+export const DawayirCanvas: FC<DawayirCanvasProps> = ({ onNodeClick, onAddNode, goalIdFilter }) => {
+  const allNodes = useMapState((s) => s.nodes);
+  
+  const nodes = useMemo(() => {
+    if (!goalIdFilter) return allNodes;
+    if (goalIdFilter === "family") {
+      return allNodes.filter(
+        (n) =>
+          n.goalId === "family" || n.goalId == null || n.treeRelation?.type === "family"
+      );
+    }
+    return allNodes.filter((n) => (n.goalId ?? "general") === goalIdFilter);
+  }, [allNodes, goalIdFilter]);
+
   const moveNodeToRing = useMapState((s) => s.moveNodeToRing);
   const archiveNode = useMapState((s) => s.archiveNode);
 

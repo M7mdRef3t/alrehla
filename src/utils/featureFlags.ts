@@ -3,8 +3,8 @@ import {
   REVENUE_FIRST_FEATURES,
   type FeatureFlagKey,
   type FeatureFlagMode
-} from "../config/features";
-import { isRevenueMode } from "../config/appEnv";
+} from "@/config/features";
+import { isRevenueMode } from "@/config/appEnv";
 
 const PRIVILEGED_ROLES = new Set(["admin", "owner", "superadmin", "developer"]);
 

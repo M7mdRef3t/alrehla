@@ -8,10 +8,10 @@
  * "الـ AI = Extension of Consciousness، مش Replacement"
  */
 
-import type { MapNode } from "../modules/map/mapTypes";
-import type { DailyQuestion } from "../data/dailyQuestions";
-import { useEmergencyState } from "../state/emergencyState";
-import { useToastState } from "../state/toastState";
+import type { MapNode } from "@/modules/map/mapTypes";
+import type { DailyQuestion } from "@/data/dailyQuestions";
+import { useEmergencyState } from "@/state/emergencyState";
+import { useToastState } from "@/state/toastState";
 
 
 
@@ -141,6 +141,7 @@ export const DECISION_RULES: Record<DecisionType, AutonomyLevel> = {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export interface AIDecision {
+  id?: string;
   type: DecisionType;
   timestamp: number;
   reasoning: string; // ليه الـ AI اتخذ القرار ده؟
@@ -249,35 +250,91 @@ export class DecisionEngine {
     this.logDecision({ ...decision, executedAt: Date.now(), outcome: "executed" });
   }
 
-  /**
-   * طلب موافقة من المستخدم/الأدمن
-   */
-  async requestApproval(decision: AIDecision): Promise<boolean> {
-    // TODO: Integration with Notification System
-    // نبعت notification للمستخدم: "الـ AI بيقترح كذا، موافق؟"
+  private pendingResolvers = new Map<string, (approved: boolean) => void>();
 
+  async requestApproval(decision: AIDecision): Promise<boolean> {
+    const actId = decision.id || `decision-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    decision.id = actId;
     this.logDecision({ ...decision, outcome: "pending_approval" });
 
-    // مؤقتاً: نرفض تلقائياً (عشان ما نعملش حاجة خطيرة)
-    return false;
+    const title = `طلب موافقة سيادية: ${decision.type}`;
+    const body = decision.reasoning;
+
+    try {
+      useToastState.getState().showToast(title, "warning");
+    } catch (e) {
+      console.error(e);
+    }
+
+    try {
+      import("@/services/notifications").then((mod) => {
+        mod.sendNotification({
+          title,
+          body,
+          tag: `approval-${decision.type}-${Date.now()}`,
+          requireInteraction: true
+        });
+      }).catch(console.error);
+    } catch (e) {
+      console.error(e);
+    }
+
+    return new Promise((resolve) => {
+      this.pendingResolvers.set(actId, resolve);
+    });
+  }
+
+  resolveApproval(decisionId: string, approved: boolean): void {
+    const resolver = this.pendingResolvers.get(decisionId);
+    if (!resolver) return;
+
+    const dIdx = this.decisionLog.findIndex(d => d.id === decisionId);
+    if (dIdx >= 0) {
+      this.decisionLog[dIdx] = {
+        ...this.decisionLog[dIdx],
+        outcome: approved ? "executed" : "rejected",
+        approvedBy: "admin",
+        executedAt: approved ? Date.now() : undefined,
+      };
+      this.saveLogToStorage();
+    }
+
+    resolver(approved);
+    this.pendingResolvers.delete(decisionId);
+    
+    if (approved) {
+      useToastState.getState().showToast("تم التصديق وبدء التنفيذ", "success");
+    } else {
+      useToastState.getState().showToast("تم نقض قرار الذكاء الاصطناعي", "error");
+    }
+  }
+
+  private saveLogToStorage() {
+    try {
+      localStorage.setItem("dawayir-ai-decisions", JSON.stringify(this.decisionLog));
+    } catch {
+      // Storage unavailable or quota exceeded
+    }
   }
 
   /**
    * سجل القرار
    */
   private logDecision(decision: AIDecision): void {
-    this.decisionLog.push(decision);
-
-    // حفظ في localStorage للمراجعة
-    try {
-      const existing = JSON.parse(
-        localStorage.getItem("dawayir-ai-decisions") || "[]"
-      ) as AIDecision[];
-      const updated = [...existing, decision].slice(-100); // آخر 100 قرار
-      localStorage.setItem("dawayir-ai-decisions", JSON.stringify(updated));
-    } catch {
-      // ignore
+    if (!decision.id) {
+       decision.id = `decision-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     }
+    const existingIdx = this.decisionLog.findIndex(d => d.id === decision.id);
+    if (existingIdx >= 0) {
+      this.decisionLog[existingIdx] = decision;
+    } else {
+      this.decisionLog.push(decision);
+    }
+    
+    if (this.decisionLog.length > 100) {
+       this.decisionLog = this.decisionLog.slice(-100);
+    }
+    this.saveLogToStorage();
   }
 
   /**

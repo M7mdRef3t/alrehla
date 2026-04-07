@@ -8,14 +8,14 @@ import {
   markGeminiRequestEnd,
   markGeminiRequestStart,
   withTimeout
-} from "./_shared.js";
+} from "./_shared";
 import {
   applyCodingOutputContractToPrompt,
   buildOutputContractViolationResponse,
   buildPromptGuardResponse,
   evaluatePrompt,
   validateCodingCommentContract
-} from "./_promptGuard.js";
+} from "./_promptGuard";
 
 type ApiRequest = {
   method?: string;

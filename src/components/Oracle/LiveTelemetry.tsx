@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, Zap, ShieldAlert, Cpu, BarChart3, Clock } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
+import { supabase } from '@/services/supabaseClient';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 
 interface TelemetryPoint {

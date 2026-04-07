@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scoreToRing, scoreToZone, getRingLabel, analyzeScore } from "../utils/scoreHelpers";
+import { scoreToRing, scoreToZone, getRingLabel, analyzeScore } from "@/utils/scoreHelpers";
 
 describe("scoreHelpers", () => {
   describe("scoreToRing", () => {

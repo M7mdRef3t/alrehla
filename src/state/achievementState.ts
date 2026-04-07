@@ -1,9 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { MapNode } from "../modules/map/mapTypes";
-import { ACHIEVEMENTS } from "../data/achievements";
-import { getFromLocalStorage, setInLocalStorage } from "../services/browserStorage";
-import { loadStreak } from "../services/streakSystem";
+import type { MapNode } from "@/modules/map/mapTypes";
+import { ACHIEVEMENTS } from "@/data/achievements";
+import { getFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
+import { loadStreak } from "@/services/streakSystem";
 
 const STORAGE_KEY = "dawayir-achievements";
 

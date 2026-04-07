@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useAppContentState } from "../state/appContentState";
+import { useAppContentState } from "@/state/appContentState";
 
 interface UseAppContentStringOptions {
   page?: string;

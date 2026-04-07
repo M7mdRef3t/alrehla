@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { RecoveryPath } from '../services/RecoveryEngine';
+import { RecoveryPath } from '@/services/RecoveryEngine';
 
 interface RecoveryState {
     activeInsightId: string | null;

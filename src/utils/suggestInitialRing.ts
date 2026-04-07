@@ -1,5 +1,5 @@
-import type { Ring } from "../modules/map/mapTypes";
-import { addPersonCopy } from "../copy/addPerson";
+import type { Ring } from "@/modules/map/mapTypes";
+import { addPersonCopy } from "@/copy/addPerson";
 
 /** صيغة قياسية: high=دايماً/جداً، medium=أحياناً، low=نادراً، zero=أبداً/لأ */
 export type QuickAnswer1 = "high" | "medium" | "low" | "zero";

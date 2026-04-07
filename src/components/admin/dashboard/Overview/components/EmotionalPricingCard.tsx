@@ -4,7 +4,7 @@ import { Gift, PercentCircle, TrendingUp, Sparkles } from "lucide-react";
 import {
   getEmotionalPricingStats,
   type EmotionalPricingStats,
-} from "../../../../../services/emotionalPricingAnalytics";
+} from "@/services/emotionalPricingAnalytics";
 import { AdminTooltip } from "./AdminTooltip";
 
 interface EmotionalPricingCardProps {
@@ -41,10 +41,17 @@ export const EmotionalPricingCard: FC<EmotionalPricingCardProps> = ({ loading })
   const [stats, setStats] = useState<EmotionalPricingStats>(emptyStats);
 
   useEffect(() => {
-    const refresh = () => setStats(getEmotionalPricingStats());
+    let mounted = true;
+    const refresh = async () => {
+      const liveStats = await getEmotionalPricingStats();
+      if (mounted) setStats(liveStats);
+    };
     refresh();
     const timer = window.setInterval(refresh, 20_000);
-    return () => window.clearInterval(timer);
+    return () => {
+      mounted = false;
+      window.clearInterval(timer);
+    };
   }, []);
 
   if (loading) {

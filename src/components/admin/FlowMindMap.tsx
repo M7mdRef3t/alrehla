@@ -6,8 +6,8 @@ import {
   Undo2, Redo2, Copy, Search, Download, Upload, ArrowRightLeft,
   CheckCircle2, XCircle, Grid3X3, Lock, Unlock
 } from "lucide-react";
-import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "../../services/browserStorage";
-import { downloadBlobFile } from "../../services/clientDom";
+import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "@/services/browserStorage";
+import { downloadBlobFile } from "@/services/clientDom";
 
 /* ═══════════════════════════════════════════════════
    Types

@@ -2,20 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ChatInterface from '../../components/Chat/ChatInterface';
-import CanvasComponent from '../../components/Canvas/CanvasComponent';
-import FacilitatorChat from '../../components/Chat/FacilitatorChat';
-import { useDawayirEngine, NodeData } from '../../hooks/useDawayirEngine';
+import ChatInterface from '@/modules/action/Chat/ChatInterface';
+import CanvasComponent from '@/modules/exploration/Canvas/CanvasComponent';
+import FacilitatorChat from '@/modules/action/Chat/FacilitatorChat';
+import { useDawayirEngine, NodeData } from '@/hooks/useDawayirEngine';
 import { Sparkles, AlertCircle, Heart, ArrowLeft, Loader2, Save, Check, Share2, Activity, Zap, Shield, Clock, Terminal, Brain } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
-import { AutomagicEventPopup } from '../../components/Map/AutomagicEventPopup';
+import { supabase } from '@/services/supabaseClient';
+import { AutomagicEventPopup } from '@/modules/exploration/Map/AutomagicEventPopup';
 import { AccessManager, SubscriptionInfo } from '../billing/AccessManager';
-import { SymptomSimulation } from '../../components/Chat/SymptomSimulation';
-import { Typewriter } from '../../components/UI/Typewriter';
-import { useAIOrchestration } from '../../hooks/useAIOrchestration';
-import { useGestureSanctuary } from '../../hooks/useGestureSanctuary';
-import { GenesisOnboarding } from '../../components/GenesisOnboarding';
-import { signInWithGoogleAtPath } from '../../services/authService';
+import { SymptomSimulation } from '@/modules/action/Chat/SymptomSimulation';
+import { Typewriter } from '@/modules/meta/UI/Typewriter';
+import { useAIOrchestration } from '@/hooks/useAIOrchestration';
+import { useGestureSanctuary } from '@/hooks/useGestureSanctuary';
+import { GenesisOnboarding } from '@/modules/meta/GenesisOnboarding';
+import { signInWithGoogleAtPath } from '@/services/authService';
 
 export default function DawayirApp() {
     useAIOrchestration();

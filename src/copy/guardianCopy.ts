@@ -4,33 +4,34 @@
  */
 export const guardianCopy = {
   /** الصفحة الرئيسية */
-  commandCenter: "محطة الانطلاق",
-  ctaEnter: "ادخل محطة الانطلاق",
+  commandCenter: "بداية الرحلة",
+  ctaEnter: "ادخل لرحلتي",
   ctaMobilize: "خطوة جديدة",
   /** الخطوات والمسار */
-  fieldMissions: "خطوات الرحلة",
+  fieldMissions: "خطوات المشوار",
   defenseProtocol: "مسار الحماية",
-  recoveryPlan: "مسار الحماية",
+  recoveryPlan: "خطوات الراحة",
   /** الأدوات */
   activateShield: "ثبّت مساحتك",
-  signalJamming: "هدوء مؤقت",
-  quarantineZone: "مساحة الراحة",
+  signalJamming: "سكينة مؤقتة",
+  quarantineZone: "مكان الراحة",
   /** العلاقات والمدارات */
-  front: "مدار",
-  internalBreach: "ضغط داخلي",
+  front: "مسافة",
+  internalBreach: "تقل داخلي",
   /** المسارات */
   pathProtection: "مسار الحماية",
   pathDetox: "مساحة الراحة",
   /** نبرة التشجيع */
   holdPosition: "ثبّت مكانك",
-  enemyRetreated: "المسافة اشتغلت",
+  enemyRetreated: "المسافة ظبطت",
   shieldActive: "مساحتك محمية",
   /** الخريطة */
   myTerritory: "مساحتك",
-  noEntryWithoutPermission: "المدار الأول.. بداية الحكاية.",
-  threatLevel: "مستوى التأثير",
+  noEntryWithoutPermission: "أول خطوة.. بداية الحكاية.",
+  threatLevel: "مستوى التعب",
   /** لوحة الرحلة */
-  dashboardTitle: "محطة الانطلاق",
-  whatYouDoHere: "خطواتك في الرحلة",
-  inventory: "أدواتك",
+  dashboardTitle: "بداية الرحلة",
+  whatYouDoHere: "خطواتك في المشوار",
+  inventory: "أدواتي",
 };
+

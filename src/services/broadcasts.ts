@@ -1,5 +1,5 @@
-import type { BroadcastAudience } from "../utils/broadcastAudience";
-import { getBroadcastAudienceFromId } from "../utils/broadcastAudience";
+import type { BroadcastAudience } from "@/utils/broadcastAudience";
+import { getBroadcastAudienceFromId } from "@/utils/broadcastAudience";
 import { getWindowOrNull } from "./clientRuntime";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { fetchJsonWithResilience } from "../architecture/resilientHttp";

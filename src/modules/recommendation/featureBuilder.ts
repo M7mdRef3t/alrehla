@@ -1,8 +1,8 @@
-import { useMapState } from "../../state/mapState";
-import { usePulseState } from "../../state/pulseState";
-import { calculateEntropy } from "../../services/predictiveEngine";
+import { useMapState } from "@/state/mapState";
+import { usePulseState } from "@/state/pulseState";
+import { calculateEntropy } from "@/services/predictiveEngine";
 import { getDawayirSignalHistory } from "./recommendationBus";
-import { getRecentJourneyEvents, type JourneyEvent } from "../../services/journeyTracking";
+import { getRecentJourneyEvents, type JourneyEvent } from "@/services/journeyTracking";
 import type { FeatureVectorV1, JourneyPhaseV1 } from "./types";
 
 const DAY_MS = 24 * 60 * 60 * 1000;

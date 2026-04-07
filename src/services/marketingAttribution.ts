@@ -51,16 +51,20 @@ export function getStoredLeadAttribution(): CapturedLeadAttribution | null {
 export function captureUtmFromCurrentUrl(): CapturedUtmParams | null {
   if (typeof window === "undefined") return null;
   const params = new URLSearchParams(getSearch());
-  const captured: CapturedUtmParams = {};
+  const captured: Record<string, string> = {};
 
-  UTM_KEYS.forEach((key) => {
-    const value = sanitizeValue(params.get(key));
-    if (value) captured[key] = value;
-  });
+  // Dynamic capture: anything starting with utm_
+  for (const [key, value] of params.entries()) {
+    const sValue = sanitizeValue(value);
+    if (sValue && (key.startsWith("utm_") || UTM_KEYS.includes(key as any))) {
+      captured[key] = sValue;
+    }
+  }
 
   if (Object.keys(captured).length === 0) return null;
 
   const alreadyStored = getStoredUtmParams();
+  // We prefer the first-touch attribution within a session/window for UTMs
   if (alreadyStored && Object.keys(alreadyStored).length > 0) {
     return alreadyStored;
   }

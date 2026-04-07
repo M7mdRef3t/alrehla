@@ -186,7 +186,7 @@ class SoundManager {
         });
     }
 
-    public playEffect(type: 'gavel' | 'heartbeat' | 'cosmic_pulse' | 'tension' | 'harmony' | 'celebration' | 'warp') {
+    public playEffect(type: 'gavel' | 'heartbeat' | 'cosmic_pulse' | 'tension' | 'harmony' | 'celebration' | 'warp' | 'radar_ping' | 'scanning') {
         if (!this.audioContext) this.init();
         if (!this.audioContext || !this.masterGain || !this.enabled) return;
 
@@ -197,6 +197,8 @@ class SoundManager {
         else if (type === 'harmony') this.playHarmony(now);
         else if (type === 'celebration') this.playCelebration(now);
         else if (type === 'warp') this.playWarp(now);
+        else if (type === 'radar_ping') this.playRadarPing();
+        else if (type === 'scanning') this.playScanning();
         else if (type === 'cosmic_pulse') {
             const osc = this.audioContext.createOscillator();
             const g = this.audioContext.createGain();
@@ -306,6 +308,57 @@ class SoundManager {
         g.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
         osc.start(now);
         osc.stop(now + 0.5);
+    }
+
+    public playScanning() {
+        if (!this.audioContext || !this.masterGain || !this.enabled) return;
+        const now = this.audioContext.currentTime;
+        const duration = 1.8;
+        
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = "bandpass";
+        filter.Q.value = 10;
+        filter.connect(this.masterGain);
+
+        const playBeep = (time: number, freq: number) => {
+            const osc = this.audioContext!.createOscillator();
+            const g = this.audioContext!.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, time);
+            osc.connect(g);
+            g.connect(filter);
+            g.gain.setValueAtTime(0, time);
+            g.gain.linearRampToValueAtTime(0.05, time + 0.05);
+            g.gain.exponentialRampToValueAtTime(0.001, time + 0.2);
+            osc.start(time);
+            osc.stop(time + 0.2);
+        };
+
+        for(let i = 0; i < 8; i++) {
+            playBeep(now + i * 0.2, 1000 + i * 100);
+            filter.frequency.setValueAtTime(1000 + i * 200, now + i * 0.2);
+        }
+    }
+
+    public playDrone() {
+        if (!this.audioContext || !this.masterGain || !this.enabled) return;
+        const now = this.audioContext.currentTime;
+        const duration = 2.0;
+
+        const osc = this.audioContext.createOscillator();
+        const g = this.audioContext.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(50, now);
+        osc.frequency.linearRampToValueAtTime(55, now + duration);
+        
+        g.connect(this.masterGain);
+        osc.connect(g);
+        g.gain.setValueAtTime(0, now);
+        g.gain.linearRampToValueAtTime(0.1, now + 0.5);
+        g.gain.linearRampToValueAtTime(0, now + duration);
+        
+        osc.start(now);
+        osc.stop(now + duration);
     }
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AlrehlaIcon } from "../src/components/logo/AlrehlaIcon";
+import { AlrehlaIcon } from "@/modules/meta/logo/AlrehlaIcon";
 import { Home, ArrowRight } from "lucide-react";
 
 export default function NotFound() {

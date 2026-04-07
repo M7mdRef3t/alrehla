@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { useMapState } from '../../../state/mapState';
-import { geminiClient } from '../../../services/geminiClient';
+import { useMapState } from '@/state/mapState';
+import { geminiClient } from '@/services/geminiClient';
 import type { MapNode, FeelingCheckResult } from '../../map/mapTypes';
 
 export type EntropyLevel = 0 | 1 | 2 | 3;

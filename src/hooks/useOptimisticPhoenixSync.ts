@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "../services/supabaseClient";
+import { supabase } from "@/services/supabaseClient";
 
 type AwarenessActionType = "CIRCLE_SHIFT" | "MAJOR_DETACHMENT" | "INTENT_SEMANTIC";
 

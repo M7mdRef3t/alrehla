@@ -4,7 +4,7 @@
  * نظام ذكي لتحليل الأسعار واقتراح استراتيجيات تسعير ديناميكية
  */
 
-import { geminiClient } from "../services/geminiClient";
+import { geminiClient } from "@/services/geminiClient";
 import { decisionEngine } from "./decision-framework";
 import {
   revenueEngine,

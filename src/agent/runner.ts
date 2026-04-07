@@ -1,7 +1,7 @@
-import { useMapState } from "../state/mapState";
+import { useMapState } from "@/state/mapState";
 import { isKnownSymptomId } from "./tools";
 import type { AgentActions } from "./types";
-import type { FeatureFlagKey } from "../config/features";
+import type { FeatureFlagKey } from "@/config/features";
 
 const LOCKED_REPLY = "الجزء ده لسه بيتبني. نكمل بالدائرة الحالية الأول.";
 

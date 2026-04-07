@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { AIOrchestrator } from '../../../src/services/aiOrchestrator';
 import { getSupabaseAdminClient } from '../_lib/supabaseAdmin';
-import { getClient as getGeminiClient } from '../../../server/gemini/_shared';
+import { getGeminiClient } from '@/lib/gemini/shared';
 
 export async function POST(req: Request) {
     try {

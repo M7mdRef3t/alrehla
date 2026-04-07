@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { MapNode } from "../modules/map/mapTypes";
+import type { MapNode } from "@/modules/map/mapTypes";
 import { deriveGenerationalEcho } from "./generationalEcho";
 
 function createNode(overrides: Partial<MapNode> = {}): MapNode {

@@ -3,18 +3,19 @@
  */
 
 import { isSupabaseReady, supabase } from "./supabaseClient";
-import { awardPointsForFlowStep, awardPointsForJourneyType } from "../state/achievementState";
-import { isUserMode } from "../config/appEnv";
-import { runtimeEnv } from "../config/runtimeEnv";
+import { awardPointsForFlowStep, awardPointsForJourneyType } from "@/state/achievementState";
+import { isUserMode } from "@/config/appEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 import { getFromLocalStorage, removeFromLocalStorage, setInLocalStorage } from "./browserStorage";
-import { getAuthUserId } from "../state/authState";
+import { getAuthUserId } from "@/state/authState";
 import { CircuitBreaker } from "../architecture/circuitBreaker";
 import { sendJsonWithResilience } from "../architecture/resilientHttp";
 import { getStoredLeadAttribution, getStoredUtmParams } from "./marketingAttribution";
+import { ANALYTICS_SESSION_KEY, getOrCreateSessionId as getUnifiedSessionId } from "./analytics";
 
 const KEY_MODE = "dawayir-tracking-mode";
 const KEY_EVENTS = "dawayir-journey-events";
-const KEY_SESSION_ID = "dawayir-session-id";
+const KEY_SESSION_ID = ANALYTICS_SESSION_KEY;
 const KEY_API_URL = "dawayir-tracking-api-url";
 const MAX_EVENTS = 2000;
 const SUPABASE_EVENTS_TABLE = "journey_events";
@@ -65,13 +66,7 @@ let lastFlowStepName: string | null = null;
 
 /** UTM params reader — مخزنة من main.tsx عند أول زيارة */
 function getOrCreateSessionId(): string {
-  if (!isBrowser) return "";
-  let id = getFromLocalStorage(KEY_SESSION_ID);
-  if (!id) {
-    id = "sess_" + Date.now() + "_" + Math.random().toString(36).slice(2, 11);
-    setInLocalStorage(KEY_SESSION_ID, id);
-  }
-  return id;
+  return getUnifiedSessionId();
 }
 
 function migrateAnonymousEventsToSession(sessionId: string): void {
@@ -164,25 +159,45 @@ async function flushSupabaseSync(): Promise<void> {
   const batch = supabaseQueue.splice(0, supabaseQueue.length);
   if (batch.length === 0) return;
 
+  const { data: { session } } = await supabase.auth.getSession();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (session?.access_token) {
+    headers["Authorization"] = `Bearer ${session.access_token}`;
+  }
+
   const rows = batch.map(({ mode, event }) => ({
+    event_type: event.type,
     session_id: event.sessionId ?? null,
-    mode,
-    type: event.type,
-    payload: event.payload ?? null,
-    created_at: new Date(event.timestamp).toISOString()
+    client_event_id: crypto.randomUUID(), // Ensure idempotency at the source
+    payload: {
+      ...(event.payload ?? {}),
+      mode
+    },
+    occurred_at: new Date(event.timestamp).toISOString()
   }));
 
-  await supabase.from(SUPABASE_EVENTS_TABLE).insert(rows);
+  // Redirect to unified analytics API instead of direct Supabase insertion
+  for (const row of rows) {
+    try {
+      await fetch("/api/analytics", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(row),
+        keepalive: true
+      });
+    } catch (e) {
+      console.warn("[JourneyTracking] Failed to sync to unified analytics", e);
+    }
+  }
 
   // Only sync session profiles for anonymous tracking.
   // Authenticated users' profiles are auto-created by the handle_auth_profile() trigger.
-  const authenticatedUserId = getAuthUserId();
-  if (authenticatedUserId) {
+  const authenticatedUserId = session?.user?.id || getAuthUserId();
+  if (authenticatedUserId && !session?.user?.id) { // If we only have a fallback ID but no session, return
     return;
   }
 
   // In local development, skip profile upserts to avoid noisy RLS/401 warnings.
-  // Event inserts above remain active, so analytics behavior can still be tested.
   if (runtimeEnv.isDev) {
     return;
   }
@@ -197,12 +212,16 @@ async function flushSupabaseSync(): Promise<void> {
   if (sessionIds.length === 0) return;
 
   const now = new Date().toISOString();
+  
+  // Identity Linking & Registration
+  // We keep this bridge here to ensure the Sovereign dashboard has a profile to link to.
   const profileRows = sessionIds.map((id) => ({
     id,
-    full_name: id,
+    full_name: `Session ${id.slice(0, 4)}`,
     role: "session",
     last_seen: now
   }));
+  
   await supabase.from(SUPABASE_PROFILES_TABLE).upsert(profileRows, {
     onConflict: "id"
   });
@@ -215,17 +234,19 @@ async function flushSupabaseSync(): Promise<void> {
     const extra = payload?.extra as Record<string, unknown> | undefined;
     const userId = typeof extra?.userId === "string" ? extra.userId : null;
     const email = typeof extra?.email === "string" ? extra.email : null;
+    
     if (!userId) continue;
+    
     await supabase.from(SUPABASE_PROFILES_TABLE).upsert({
       id: event.sessionId,
-      full_name: event.sessionId,
-      role: "session",
       user_id: userId,
       email: email ?? undefined,
+      role: "session",
       last_seen: now
     }, { onConflict: "id" });
   }
 }
+
 
 function loadEvents(): JourneyEvent[] {
   if (!isBrowser) return [];

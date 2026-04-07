@@ -1,4 +1,4 @@
-import { geminiClient } from "../services/geminiClient";
+import { geminiClient } from "@/services/geminiClient";
 
 /**
  * مولد مناهج فك الارتباط (المنطقة الرمادية) — شخصية معالج نفسي + سردي.

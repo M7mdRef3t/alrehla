@@ -9,7 +9,7 @@
  * - في الاستقرار (Stable): الترتيب الافتراضي
  */
 
-import type { MapNode } from "../modules/map/mapTypes";
+import type { MapNode } from "@/modules/map/mapTypes";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🎨 Layout Types

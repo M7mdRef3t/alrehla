@@ -1,4 +1,4 @@
-import { runtimeEnv } from "../config/runtimeEnv";
+import { runtimeEnv } from "@/config/runtimeEnv";
 
 const JULES_API_BASE = "https://jules.googleapis.com/v1alpha";
 

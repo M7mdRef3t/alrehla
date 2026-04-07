@@ -2,7 +2,7 @@
 
 import { Sparkles } from "lucide-react";
 import { useMemo } from "react";
-import type { LiveLanguage } from "../types";
+import type { LiveLanguage } from '../types';
 
 const MIRROR_TEMPLATES = {
   ar: {

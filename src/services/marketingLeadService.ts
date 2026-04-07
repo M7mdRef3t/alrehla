@@ -1,5 +1,5 @@
-import type { MarketingLeadPayload } from "../types/marketingLead";
-import { trackLead } from "./analytics";
+import type { MarketingLeadPayload } from "@/types/marketingLead";
+import { trackLead, getOrCreateAnonymousId } from "./analytics";
 import { recordFlowEvent } from "./journeyTracking";
 import { getStoredUtmParams } from "./marketingAttribution";
 import { getFromLocalStorage, setInLocalStorage } from "./browserStorage";
@@ -23,6 +23,7 @@ type CaptureMarketingLeadInput = {
   source?: string;
   sourceType?: MarketingLeadPayload["sourceType"];
   metadata?: Record<string, any>;
+  anonymousId?: string;
 };
 
 function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayload {
@@ -48,6 +49,7 @@ function buildLeadPayload(input: CaptureMarketingLeadInput): MarketingLeadPayloa
     sourceType: inferredSourceType as any,
     utm: utm ?? undefined,
     campaign: utm?.utm_campaign,
+    anonymousId: input.anonymousId || getOrCreateAnonymousId(),
     metadata: {
       ...input.metadata,
       capturedAt: new Date().toISOString(),

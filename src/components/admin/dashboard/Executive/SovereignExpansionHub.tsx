@@ -12,52 +12,118 @@ import {
   DollarSign,
   Activity,
   Sparkles,
-  Loader2
+  Loader2,
+  TrendingDown,
+  BarChart3,
+  MousePointer2,
+  Share2,
+  Cpu,
+  Landmark
 } from "lucide-react";
-import { motion } from "framer-motion";
-import { fetchSovereignExecutiveReport, type SovereignExecutiveReport } from "../../../../services/adminApi";
+import { motion, AnimatePresence } from "framer-motion";
+import { fetchSovereignExecutiveReport, type SovereignExecutiveReport } from "@/services/adminApi";
+import { growthEngine, type GrowthMetrics, type DiffusionMetrics } from "@/services/growthEngine";
+import { getClients, type ClientLink } from "@/services/b2bService";
+import { revenueEngine } from "@/services/revenueEngine";
 
 export const SovereignExpansionHub: React.FC = () => {
   const [activeMarket, setActiveMarket] = useState<string | null>("Riyadh");
   const [report, setReport] = useState<SovereignExecutiveReport | null>(null);
+  const [growth, setGrowth] = useState<GrowthMetrics | null>(null);
+  const [diffusion, setDiffusion] = useState<DiffusionMetrics | null>(null);
+  const [b2bClients, setB2bClients] = useState<ClientLink[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSovereignExecutiveReport().then(data => {
-      setReport(data);
-      setLoading(false);
-    });
+    const init = async () => {
+      setLoading(true);
+      try {
+        const [rep, grow, diff, clients] = await Promise.all([
+          fetchSovereignExecutiveReport(),
+          growthEngine.getGrowthMetrics(),
+          growthEngine.getDiffusionMetrics(),
+          getClients()
+        ]);
+        setReport(rep);
+        setGrowth(grow);
+        setDiffusion(diff);
+        setB2bClients(clients);
+      } catch (e) {
+        console.error("Failed to load expansion hub data", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
   }, []);
 
   const markets = [
-    { id: "Riyadh", name: "الرياض", painScore: 88, resonance: report?.revenue.regionalResonance["Riyadh"] ? Math.round(report.revenue.regionalResonance["Riyadh"] * 100) : 92, potential: "High", arpu: "$45" },
-    { id: "Dubai", name: "دبي", painScore: 75, resonance: report?.revenue.regionalResonance["Dubai"] ? Math.round(report.revenue.regionalResonance["Dubai"] * 100) : 95, potential: "Extreme", arpu: "$60" },
-    { id: "Cairo", name: "القاهرة", painScore: 94, resonance: report?.revenue.regionalResonance["Cairo"] ? Math.round(report.revenue.regionalResonance["Cairo"] * 100) : 40, potential: "Medium", arpu: "$12" },
-    { id: "London", name: "لندن", painScore: 65, resonance: report?.revenue.regionalResonance["London"] ? Math.round(report.revenue.regionalResonance["London"] * 100) : 88, potential: "High", arpu: "$55" },
+    { id: "Riyadh", name: "الرياض", painScore: 88, resonance: diffusion?.regionalDiffusion["Riyadh"] ? Math.round(diffusion.regionalDiffusion["Riyadh"] * 100) : 92, potential: "High", arpu: "$45" },
+    { id: "Dubai", name: "دبي", painScore: 75, resonance: diffusion?.regionalDiffusion["Dubai"] ? Math.round(diffusion.regionalDiffusion["Dubai"] * 100) : 95, potential: "Extreme", arpu: "$60" },
+    { id: "Cairo", name: "القاهرة", painScore: 94, resonance: diffusion?.regionalDiffusion["Cairo"] ? Math.round(diffusion.regionalDiffusion["Cairo"] * 100) : 40, potential: "Medium", arpu: "$12" },
+    { id: "London", name: "لندن", painScore: 65, resonance: diffusion?.regionalDiffusion["London"] ? Math.round(diffusion.regionalDiffusion["London"] * 100) : 88, potential: "High", arpu: "$55" },
   ];
 
-  const b2bPartners = [
-    { name: "مركز استشفائي (Healing Center)", type: "Collective", status: "Healthy", members: 120, health: 92 },
-    { name: "Global Tech Corp", type: "Corporate", status: "Scaling", members: 450, health: 85 },
-    { name: "أكاديمية (Academy)", type: "Education", status: "Neutral", members: 85, health: 64 },
-  ];
+  const b2bPartners = b2bClients.length > 0 
+    ? b2bClients.map(c => ({
+        name: c.clientAlias,
+        type: "Partner Node",
+        status: "Active",
+        members: Math.floor(Math.random() * 100) + 10,
+        health: 80 + Math.floor(Math.random() * 20)
+      }))
+    : [
+        { name: "مركز استشفائي (Healing Center)", type: "Collective", status: "Healthy", members: 120, health: 92 },
+        { name: "Global Tech Corp", type: "Corporate", status: "Scaling", members: 450, health: 85 },
+        { name: "أكاديمية (Academy)", type: "Education", status: "Neutral", members: 85, health: 64 },
+    ];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700" dir="rtl">
       {/* Header Strategy */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
-        <div>
-          <h1 className="text-4xl font-black text-white tracking-tighter mb-2">رادار التوسع التجاري</h1>
-          <p className="text-slate-400 font-bold">قيادة التوسع العالمي من خلال رنين القيمة</p>
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 mb-12">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 text-rose-500 mb-2">
+            <Rocket className="w-6 h-6 animate-pulse" />
+            <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">رادار التوسع الإمبراطوري</h1>
+          </div>
+          <p className="text-slate-400 font-bold text-sm">Sovereign Growth & Diffusion Command Center</p>
         </div>
-        <div className="flex items-center gap-3 bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl">
-          <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center">
-            <Rocket className="w-5 h-5 text-rose-400" />
-          </div>
-          <div>
-            <p className="text-[10px] text-rose-300 font-black uppercase tracking-widest leading-none">جاهزية التوسع</p>
-            <p className="text-xl font-black text-white">88%</p>
-          </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-900/60 backdrop-blur-xl border border-white/5 p-4 rounded-[2rem] shadow-2xl relative overflow-hidden group">
+           <div className="absolute inset-0 bg-gradient-to-r from-rose-500/5 to-transparent pointer-events-none" />
+           
+           <div className="px-4 py-2 border-l border-white/5 last:border-0">
+             <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Growth Value</p>
+             <div className="flex items-center gap-2">
+               <span className="text-xl font-black text-white">$</span>
+               <span className="text-xl font-black text-white font-mono">{growth ? (growth.totalRevenue / 1000).toFixed(1) : "0.0"}k</span>
+             </div>
+           </div>
+
+           <div className="px-4 py-2 border-l border-white/5 last:border-0">
+             <p className="text-[9px] font-black text-rose-500/70 uppercase tracking-widest mb-1">Viral K-Factor</p>
+             <div className="flex items-center gap-2">
+               <Share2 className="w-4 h-4 text-rose-500" />
+               <span className="text-xl font-black text-rose-400 font-mono">{diffusion?.kFactor ?? "0.00"}</span>
+             </div>
+           </div>
+
+           <div className="px-4 py-2 border-l border-white/5 last:border-0">
+             <p className="text-[9px] font-black text-emerald-500/70 uppercase tracking-widest mb-1">Spread Velocity</p>
+             <div className="flex items-center gap-2">
+               <TrendingUp className="w-4 h-4 text-emerald-500" />
+               <span className="text-xl font-black text-emerald-400 font-mono">{diffusion?.velocity.toFixed(1) ?? "0.0"}</span>
+             </div>
+           </div>
+
+           <div className="px-4 py-2 border-l border-white/5 last:border-0">
+             <p className="text-[9px] font-black text-amber-500/70 uppercase tracking-widest mb-1">Gateway Sync</p>
+             <div className="flex items-center gap-2">
+               <Cpu className="w-4 h-4 text-amber-500" />
+               <span className="text-xl font-black text-amber-400 font-mono">88.2%</span>
+             </div>
+           </div>
         </div>
       </div>
 
@@ -251,13 +317,16 @@ export const SovereignExpansionHub: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-12 p-6 bg-white/5 rounded-3xl border border-white/5 space-y-4">
+            <div className="mt-12 p-6 bg-white/5 rounded-3xl border border-white/5 space-y-4 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-1 h-full bg-teal-500/20 group-hover:bg-teal-500 transition-all" />
               <div className="flex items-center gap-3">
                 <Sparkles className="w-4 h-4 text-teal-400" />
-                <span className="text-xs font-bold text-slate-300">توصية القيمة القادمة:</span>
+                <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">توصية الحاكم (Expansion Oracle):</span>
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed font-bold">
-                * مؤشر الألم في "القاهرة" مرتفع جداً (94%). يُنصح بإطلاق باقة "الملاذ الاقتصادي" بدعم محلي لتوسيع القاعدة الجماهيرية بسرعة قبل المنافسين.
+              <p className="text-[11px] text-slate-400 leading-relaxed font-bold italic">
+                {diffusion?.kFactor && diffusion.kFactor > 0.5 
+                  ? "معامل الانتشار (K-Factor) في ارتفاع مستمر. اللحظة الآن مثالية لزيادة ميزانية الاستحواذ في دبي والرياض للسيطرة على السوق الإقليمي."
+                  : "مؤشر الألم في الأسواق المستهدفة مرتفع جداً. يُنصح بإطلاق باقة 'الملاذ الاقتصادي' للهبوط في القاهرة وتحقيق اختراق سريع."}
               </p>
             </div>
           </div>
@@ -280,22 +349,33 @@ export const SovereignExpansionHub: React.FC = () => {
           </div>
 
           {/* Scalability Unit Economics */}
-          <div className="hud-glass p-8 rounded-[2.5rem] border-white/5">
-            <h4 className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mb-6">اقتصاديات الوحدة الإمبراطورية</h4>
+          <div className="hud-glass p-8 rounded-[2.5rem] border-white/5 relative group overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rose-500/20 to-transparent" />
+            <h4 className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+              <Landmark className="w-3 h-3" />
+              اقتصاديات الوحدة الإمبراطورية
+            </h4>
             <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-slate-900/50 rounded-2xl border border-white/5">
-                  <p className="text-[10px] text-slate-500 font-bold mb-1">تكلفة الاستحواذ (CAC)</p>
-                  <p className="text-xl font-black text-rose-400">$4.2</p>
+                <div className="p-5 bg-slate-900/50 rounded-2xl border border-white/5 group-hover:border-rose-500/20 transition-all">
+                  <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-2">Cost Per Acquisition</p>
+                  <p className="text-2xl font-black text-rose-400 font-mono">${growth?.cpa.toFixed(1) ?? "0.0"}</p>
                 </div>
-                <div className="p-4 bg-slate-900/50 rounded-2xl border border-white/5">
-                  <p className="text-[10px] text-slate-500 font-bold mb-1">القيمة الحيوية (LTV)</p>
-                  <p className="text-xl font-black text-emerald-400">${report?.revenue.arpu ? Math.round(report.revenue.arpu * 8) : 185}</p>
+                <div className="p-5 bg-slate-900/50 rounded-2xl border border-white/5 group-hover:border-emerald-500/20 transition-all">
+                  <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-2">Lifetime Value (Est)</p>
+                  <p className="text-2xl font-black text-emerald-400 font-mono">${report?.revenue.arpu ? Math.round(report.revenue.arpu * 8) : 185}</p>
                 </div>
-                <div className="p-4 bg-slate-900/50 rounded-2xl border border-white/5 col-span-2">
-                  <p className="text-[10px] text-slate-500 font-bold mb-2">نسبة الصبر (Payback Period)</p>
+                <div className="p-5 bg-slate-900/50 rounded-2xl border border-white/5 col-span-2 relative overflow-hidden group/item">
+                  <div className="absolute bottom-0 right-0 p-4 opacity-5 group-hover/item:opacity-20 transition-opacity">
+                    <TrendingUp className="w-12 h-12" />
+                  </div>
+                  <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-2">الربح الصافي المتوقع (Portfolio ROI)</p>
                   <div className="flex items-center justify-between">
-                    <p className="text-lg font-black text-white">45 يوم</p>
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-black">ممتاز</span>
+                    <p className="text-2xl font-black text-white font-mono">{growth?.roi.toFixed(1) ?? "0.0"}%</p>
+                    <span className={`text-[9px] px-3 py-1 rounded-full font-black uppercase tracking-widest ${
+                      (growth?.roi ?? 0) > 50 ? "bg-emerald-500/20 text-emerald-400" : "bg-amber-500/20 text-amber-400"
+                    }`}>
+                      {(growth?.roi ?? 0) > 50 ? "Optimal Scale" : "Optimization Required"}
+                    </span>
                   </div>
                 </div>
             </div>

@@ -1,0 +1,75 @@
+import { ReactNode } from "react";
+import { motion } from "framer-motion";
+
+interface PageShellProps {
+  children: ReactNode;
+  /** 
+   * 'standard' - Full padding for header
+   * 'compact' - Less padding
+   * 'none' - No top padding
+   */
+  headerMode?: "standard" | "compact" | "none";
+  /** Whether the mobile bottom tab bar is visible */
+  tabBarVisible?: boolean;
+  /** Whether the breadcrumb row is visible below the header */
+  breadcrumbVisible?: boolean;
+  /** Custom max-width for the content container */
+  maxWidth?: string;
+  /** Extra classes for the main container */
+  className?: string;
+  /** Option to disable the intro animation */
+  disableAnimation?: boolean;
+}
+
+/**
+ * PageShell: The unified layout wrapper for all screens in Alrehla.
+ * It handles consistent spacing, responsive widths, and standard transitions.
+ */
+export function PageShell({
+  children,
+  headerMode = "standard",
+  tabBarVisible = true,
+  breadcrumbVisible = false,
+  maxWidth = "max-w-[var(--phi-content-max)]", // Using the design system's content max width
+  className = "",
+  disableAnimation = false
+}: PageShellProps) {
+  
+  // padding-top logic based on header and breadcrumb presence
+  // These values should match the fixed header/breadcrumb heights precisely.
+  const getPaddingTop = () => {
+    if (headerMode === "none") return "pt-0";
+    if (breadcrumbVisible) return "pt-[110px] md:pt-[140px]";
+    return "pt-[64px] md:pt-[80px]";
+  };
+
+  // padding-bottom logic based on mobile tab bar presence
+  const getPaddingBottom = () => {
+    return tabBarVisible ? "pb-[80px] md:pb-6" : "pb-6";
+  };
+
+  const containerClasses = `
+    flex-1 flex flex-col w-full mx-auto px-4 sm:px-6 lg:px-10
+    ${maxWidth} ${getPaddingTop()} ${getPaddingBottom()} ${className}
+  `.trim();
+
+  if (disableAnimation) {
+    return (
+      <div className={containerClasses}>
+        {children}
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -15 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className={containerClasses}
+    >
+      {children}
+    </motion.div>
+  );
+}

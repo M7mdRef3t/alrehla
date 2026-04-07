@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import type { DragEndEvent, DragMoveEvent, DragStartEvent } from "@dnd-kit/core";
-import { writeLatestKineticTelemetry, type KineticTelemetrySnapshot } from "../services/kineticTelemetry";
+import { writeLatestKineticTelemetry, type KineticTelemetrySnapshot } from "@/services/kineticTelemetry";
 
 type Point = { x: number; y: number };
 type ActiveDragSession = {

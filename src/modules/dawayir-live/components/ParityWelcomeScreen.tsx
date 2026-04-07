@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { LiveLanguage, VoiceTattooMeta } from "../types";
+import type { LiveLanguage, VoiceTattooMeta } from '../types';
 import { PARITY_STRINGS } from "../parityContent";
-import { playVoiceTattoo } from "../utils/voiceTattoo";
+import { playVoiceTattoo } from '@/modules/dawayir-live/utils/voiceTattoo';
 
 interface ParityWelcomeScreenProps {
   language: LiveLanguage;
