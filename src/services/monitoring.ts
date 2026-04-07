@@ -17,5 +17,36 @@ export function initMonitoring(): void {
   });
 
   initialized = true;
+
+  // Replace local storage error logging globally:
+  // Catch any unhandled errors and report them to Sentry.
+  if (typeof window !== "undefined") {
+    window.addEventListener("error", (event) => {
+      if (!runtimeEnv.isProd) {
+        // Fallback for dev: you could write to local storage here if needed,
+        // but typically console.error is enough.
+        try {
+          const errorLog = JSON.parse(localStorage.getItem("dawayir-error-log") || "[]");
+          errorLog.push({ message: event.message, timestamp: Date.now() });
+          localStorage.setItem("dawayir-error-log", JSON.stringify(errorLog.slice(-50)));
+        } catch {
+          // Ignore storage errors
+        }
+      }
+      // Sentry automatically captures unhandled errors, so we don't need to manually call Sentry.captureException here unless we want to do something custom.
+    });
+
+    window.addEventListener("unhandledrejection", (event) => {
+      if (!runtimeEnv.isProd) {
+        try {
+          const errorLog = JSON.parse(localStorage.getItem("dawayir-error-log") || "[]");
+          errorLog.push({ message: String(event.reason), timestamp: Date.now() });
+          localStorage.setItem("dawayir-error-log", JSON.stringify(errorLog.slice(-50)));
+        } catch {
+          // Ignore
+        }
+      }
+    });
+  }
 }
 

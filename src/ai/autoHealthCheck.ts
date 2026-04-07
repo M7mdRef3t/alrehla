@@ -14,6 +14,8 @@
 
 import { decisionEngine } from "./decision-framework";
 import type { AIDecision } from "./decision-framework";
+import { runtimeEnv } from "../config/runtimeEnv";
+import * as Sentry from "@sentry/react";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🏥 Health Check Result
@@ -48,6 +50,7 @@ export class AutoHealthChecker {
   private healthHistory: HealthCheckResult[] = [];
   private readonly CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
   private readonly HISTORY_LIMIT = 168; // أسبوع (24×7)
+  private lastReportedSeventId?: string;
 
   /**
    * بدء الفحص التلقائي
@@ -139,10 +142,12 @@ export class AutoHealthChecker {
    * ─────────────────────────────────────────────────────────────────
    */
   private checkConsoleErrors(): HealthIssue[] {
-    // TODO: في production، نستخدم error tracking service (مثل Sentry)
-    // مؤقتاً: نفحص localStorage للـ errors المحفوظة
-
     const issues: HealthIssue[] = [];
+
+    // في الإنتاج، نعتمد على Sentry لجمع الأخطاء بدلاً من التخزين المحلي
+    if (runtimeEnv.isProd) {
+      return issues;
+    }
 
     try {
       const errorLog = localStorage.getItem("dawayir-error-log");
@@ -534,6 +539,13 @@ export class AutoHealthChecker {
 
     // TODO: إرسال notification فعلي (email, SMS, push, etc.)
     // مؤقتاً: نحفظ في localStorage
+
+    if (runtimeEnv.isProd) {
+      Sentry.captureMessage("Critical Health Issue Detected", {
+        level: "fatal",
+        extra: { result },
+      });
+    }
 
     try {
       const alerts = JSON.parse(
