@@ -39,6 +39,7 @@ function buildSweepClient(): ReturnType<typeof createSweepClient> | null {
 type SweepClient = ReturnType<typeof createSweepClient>;
 
 function toErrorMessage(error: unknown): string {
+    if (process.env.NODE_ENV !== 'development') return 'An unexpected error occurred';
     return error instanceof Error ? error.message : String(error || 'unknown_error');
 }
 
