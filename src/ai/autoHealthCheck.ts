@@ -532,22 +532,27 @@ export class AutoHealthChecker {
   private async notifyAdmin(result: HealthCheckResult): Promise<void> {
     console.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
 
-    // TODO: إرسال notification فعلي (email, SMS, push, etc.)
-    // مؤقتاً: نحفظ في localStorage
-
     try {
-      const alerts = JSON.parse(
-        localStorage.getItem("dawayir-health-alerts") || "[]"
-      ) as HealthCheckResult[];
+      // Dynamic import to avoid circular dependencies
+      const { telegramBot } = await import("../services/telegramBot");
 
-      alerts.push(result);
+      const topIssues = result.issues.slice(0, 5);
+      let message = `Health Score: ${result.score}/100\n`;
+      message += topIssues.map(i => `- [${i.category.toUpperCase()}] ${i.description}`).join("\n");
 
-      localStorage.setItem(
-        "dawayir-health-alerts",
-        JSON.stringify(alerts.slice(-10)) // آخر 10 تنبيهات
-      );
-    } catch {
-      // ignore
+      if (result.issues.length > 5) {
+        message += `\n... and ${result.issues.length - 5} more issues.`;
+      }
+
+      const affectedFeatures = Array.from(new Set(result.issues.map(i => i.category)));
+
+      await telegramBot.alertCriticalError({
+        message: message || "Unknown critical health issue detected.",
+        severity: result.status === "critical" ? "critical" : "high",
+        affectedFeatures: affectedFeatures.length > 0 ? affectedFeatures : ["system"],
+      });
+    } catch (error) {
+      console.error("❌ Failed to send Telegram notification:", error);
     }
   }
 
