@@ -291,11 +291,7 @@ export class RevenueAutomationEngine {
 
     // تطبيق التغيير
     try {
-      // TODO: ربط تغيير الأسعار بمصدر التسعير الفعلي عند تفعيله
-      // TODO: Update database with new pricing
-      // TODO: Notify existing users about grandfathering policy
-
-      console.warn("✅ Pricing changed successfully:", recommendation.suggestedPrices);
+      await this.mockUpdateDatabasePricing(recommendation);
 
       await decisionEngine.execute({
         ...decision,
@@ -311,6 +307,19 @@ export class RevenueAutomationEngine {
       console.error("❌ Failed to apply pricing change:", error);
       return { success: false, message: String(error) };
     }
+  }
+
+  /**
+   * ─────────────────────────────────────────────────────────────────
+   * تحديث قاعدة البيانات بالأسعار الجديدة (Mock)
+   * ─────────────────────────────────────────────────────────────────
+   * TODO: ربط تغيير الأسعار بمصدر التسعير الفعلي عند تفعيله
+   * TODO: Update database with new pricing
+   * TODO: Notify existing users about grandfathering policy
+   */
+  private async mockUpdateDatabasePricing(recommendation: PricingRecommendation): Promise<void> {
+    console.warn("✅ [MOCK] Pricing changed successfully in database:", recommendation.suggestedPrices);
+    return Promise.resolve();
   }
 
   /**
