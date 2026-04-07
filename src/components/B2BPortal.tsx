@@ -344,7 +344,7 @@ export const B2BPortal: FC = () => {
                                     name="b2bClientCode"
                                     value={clientCode}
                                     onChange={(e) => setClientCode(e.target.value)}
-                                    placeholder="د اع (B2B-XXXXXX)"
+                                    placeholder="كود العميل (مثال: B2B-123456)"
                                     className="w-full rounded-xl p-2.5 text-sm text-white outline-none font-mono"
                                     style={{
                                         background: "rgba(255,255,255,0.05)",
