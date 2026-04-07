@@ -26,6 +26,8 @@ export interface ErrorAnalysisResult {
   suggestedFixes: {
     description: string;
     code?: string;
+    filePath?: string;
+    replaceTarget?: string;
     autoApplicable: boolean;
     estimatedImpact: "low" | "medium" | "high";
   }[];
@@ -71,6 +73,8 @@ export class AIErrorAnalyzer {
       suggestedFixes: Array<{
         description: string;
         code?: string;
+        filePath?: string;
+        replaceTarget?: string;
         autoApplicable: boolean;
         estimatedImpact: "low" | "medium" | "high";
       }>;
@@ -119,7 +123,7 @@ ${stack ? `\n${stack}` : ""}
 - الهدف: نظام مستقر بنسبة 99.9%
 
 # المطلوب
-حلل الخطأ واقترح حلول. أرجع JSON:
+حلل الخطأ واقترح حلول. حاول استنتاج مسار الملف (filePath) من الـ stack trace والجزء المراد استبداله (replaceTarget). أرجع JSON:
 
 \`\`\`json
 {
@@ -131,6 +135,8 @@ ${stack ? `\n${stack}` : ""}
     {
       "description": "وصف الحل",
       "code": "الكود المقترح (لو applicable)",
+      "filePath": "المسار التقريبي للملف",
+      "replaceTarget": "الكود القديم المراد استبداله",
       "autoApplicable": true/false,
       "estimatedImpact": "low|medium|high"
     }
@@ -223,23 +229,32 @@ ${stack ? `\n${stack}` : ""}
    * تطبيق fix واحد
    */
   private async applyFix(fix: ErrorAnalysisResult["suggestedFixes"][0]): Promise<boolean> {
-    // TODO: في المستقبل، ممكن نستخدم AST manipulation
-    // مؤقتاً: نحفظ الـ fix suggestion للمراجعة اليدوية
+    if (!fix.filePath || !fix.replaceTarget || !fix.code) {
+      console.warn("⚠️ Cannot apply fix: Missing filePath, replaceTarget, or code");
+      return false;
+    }
 
     try {
-      const suggestions = JSON.parse(
-        localStorage.getItem("dawayir-fix-suggestions") || "[]"
-      ) as typeof fix[];
+      const response = await fetch("/api/dev/apply-fix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filePath: fix.filePath,
+          replaceTarget: fix.replaceTarget,
+          code: fix.code,
+        }),
+      });
 
-      suggestions.push(fix);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("❌ Failed to apply AST fix:", errorData.error || response.statusText);
+        return false;
+      }
 
-      localStorage.setItem(
-        "dawayir-fix-suggestions",
-        JSON.stringify(suggestions.slice(-20))
-      );
-
+      console.warn(`✅ Applied AST fix to ${fix.filePath}`);
       return true;
-    } catch {
+    } catch (error) {
+      console.error("❌ Error applying fix via API:", error);
       return false;
     }
   }
