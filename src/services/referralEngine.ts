@@ -160,6 +160,15 @@ export async function applyReferralCodeAsync(code: string, myEmail: string): Pro
                         earned_weeks: (rMeta.earned_weeks || 0) + 1
                     }
                 }).eq("email", referrer.email);
+
+                // Notify referrer via Supabase edge function
+                supabase.functions.invoke("send-email", {
+                    body: {
+                        to: referrer.email,
+                        subject: "شخص جديد استخدم كودك!",
+                        html: "<p>مبروك! شخص جديد انضم للدواير باستخدام كود الإحالة بتاعك.</p>"
+                    }
+                }).catch(err => console.error("Referral Notification Error:", err));
             }
         }
     } catch (e) {
