@@ -17,27 +17,27 @@ describe("determineAutoPersona", () => {
   });
 
   it("should return COMFORTER when mood is angry", () => {
-    const context = createBaseContext({ pulse: { mood: "angry", energy: 5, focus: "scattered", confidence: 5, recordedAt: Date.now() } });
+    const context = createBaseContext({ pulse: { mood: "angry", energy: 5, focus: "event", timestamp: Date.now() } });
     expect(determineAutoPersona(context)).toBe("COMFORTER");
   });
 
   it("should return COMFORTER when mood is overwhelmed", () => {
-    const context = createBaseContext({ pulse: { mood: "overwhelmed", energy: 5, focus: "scattered", confidence: 5, recordedAt: Date.now() } });
+    const context = createBaseContext({ pulse: { mood: "overwhelmed", energy: 5, focus: "event", timestamp: Date.now() } });
     expect(determineAutoPersona(context)).toBe("COMFORTER");
   });
 
   it("should return COMFORTER when energy is 3 or less", () => {
-    const context1 = createBaseContext({ pulse: { mood: "calm", energy: 3, focus: "sharp", confidence: 8, recordedAt: Date.now() } });
+    const context1 = createBaseContext({ pulse: { mood: "calm", energy: 3, focus: "thought", timestamp: Date.now() } });
     expect(determineAutoPersona(context1)).toBe("COMFORTER");
 
-    const context2 = createBaseContext({ pulse: { mood: "bright", energy: 1, focus: "scattered", confidence: 5, recordedAt: Date.now() } });
+    const context2 = createBaseContext({ pulse: { mood: "bright", energy: 1, focus: "event", timestamp: Date.now() } });
     expect(determineAutoPersona(context2)).toBe("COMFORTER");
   });
 
   it("should return TACTICIAN when screen is guilt-court", () => {
     // High energy / calm mood would normally be STOIC, but screen rule should take precedence over default
     // Note: Due to function structure, mood/energy COMFORTER rules run *before* screen rules.
-    const context = createBaseContext({ screen: "guilt-court", pulse: { mood: "calm", energy: 5, focus: "scattered", confidence: 5, recordedAt: Date.now() } });
+    const context = createBaseContext({ screen: "guilt-court", pulse: { mood: "calm", energy: 5, focus: "event", timestamp: Date.now() } });
     expect(determineAutoPersona(context)).toBe("TACTICIAN");
   });
 
@@ -48,23 +48,23 @@ describe("determineAutoPersona", () => {
 
   // Note: Based on the current logic order, COMFORTER overrides TACTICIAN
   it("COMFORTER rules take precedence over TACTICIAN screen rules", () => {
-    const context = createBaseContext({ screen: "diplomacy", pulse: { mood: "angry", energy: 5, focus: "scattered", confidence: 5, recordedAt: Date.now() } });
+    const context = createBaseContext({ screen: "diplomacy", pulse: { mood: "angry", energy: 5, focus: "event", timestamp: Date.now() } });
     expect(determineAutoPersona(context)).toBe("COMFORTER");
   });
 
   it("should return STOIC when mood is bright", () => {
-    const context = createBaseContext({ pulse: { mood: "bright", energy: 5, focus: "scattered", confidence: 5, recordedAt: Date.now() } });
+    const context = createBaseContext({ pulse: { mood: "bright", energy: 5, focus: "event", timestamp: Date.now() } });
     expect(determineAutoPersona(context)).toBe("STOIC");
   });
 
   it("should return STOIC when mood is calm", () => {
-    const context = createBaseContext({ pulse: { mood: "calm", energy: 5, focus: "scattered", confidence: 5, recordedAt: Date.now() } });
+    const context = createBaseContext({ pulse: { mood: "calm", energy: 5, focus: "event", timestamp: Date.now() } });
     expect(determineAutoPersona(context)).toBe("STOIC");
   });
 
   it("should return STOIC when energy is 6 or more", () => {
     // Normal mood, high energy
-    const context = createBaseContext({ pulse: { mood: "neutral", energy: 8, focus: "scattered", confidence: 5, recordedAt: Date.now() } as any });
+    const context = createBaseContext({ pulse: { mood: "neutral", energy: 8, focus: "event", timestamp: Date.now() } as any });
     expect(determineAutoPersona(context)).toBe("STOIC");
   });
 
@@ -74,7 +74,7 @@ describe("determineAutoPersona", () => {
     expect(determineAutoPersona(context1)).toBe("STOIC");
 
     // Pulse exists but doesn't trigger other conditions (energy 4-5, mood not angry/overwhelmed/bright/calm)
-    const context2 = createBaseContext({ pulse: { mood: "neutral", energy: 4, focus: "scattered", confidence: 5, recordedAt: Date.now() } as any });
+    const context2 = createBaseContext({ pulse: { mood: "neutral", energy: 4, focus: "event", timestamp: Date.now() } as any });
     expect(determineAutoPersona(context2)).toBe("STOIC");
   });
 });
