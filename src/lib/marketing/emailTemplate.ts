@@ -16,7 +16,7 @@ export function buildMarketingEmail({
   name,
   personalLink,
   previewText = "خريطة علاقاتك جاهزة — ابدأ الرحلة الآن",
-  senderName = "فريق عمل",
+  senderName: _senderName = "فريق عمل",
   unsubLink,
 }: EmailTemplateOptions): string {
   const greeting = name ? `أهلاً ${name} 🌙،` : "أهلاً بك 🌙،";
