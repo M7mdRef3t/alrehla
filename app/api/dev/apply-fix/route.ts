@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import jscodeshift from "jscodeshift";
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,6 +45,8 @@ export async function POST(req: NextRequest) {
 
     // Since `jscodeshift` needs a parser that handles TypeScript/TSX,
     // we specify it using the api.
+    // Dynamically import jscodeshift to prevent Next.js from bundling it in production
+    const jscodeshift = (await import(/* webpackIgnore: true */ "jscodeshift")).default;
     const j = jscodeshift.withParser(fullPath.endsWith('.tsx') ? 'tsx' : 'ts');
 
     // AST parsing
