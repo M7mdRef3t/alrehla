@@ -90,7 +90,6 @@ export class GraphProjectionEngine {
                 }
             }
 
-            console.log(`✅ [Graph Engine] Projection complete for ${nodes.length} nodes.`);
         } catch (error) {
             console.error("❌ [Graph Engine] Projection failed:", error);
         }
