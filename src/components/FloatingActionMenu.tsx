@@ -1,8 +1,7 @@
 import type { FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, MessageSquare, BarChart3, Settings, X, Sparkles, Activity, Map, Wind } from "lucide-react";
+import { Plus, MessageSquare, BarChart3, Settings, X, Sparkles } from "lucide-react";
 import { useLayoutState } from "../state/layoutState";
-import { useAppOverlayState } from "../state/appOverlayState";
 import { assignUrl } from "../services/navigation";
 
 interface FloatingActionMenuProps {
