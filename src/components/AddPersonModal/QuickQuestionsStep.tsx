@@ -22,8 +22,6 @@ interface QuickQuestionsStepProps {
   onBack: () => void;
   onContinue: (e: React.FormEvent) => void;
   disableSubmit: boolean;
-  getTier1: (value: string) => OptionTier;
-  getTier2: (value: string) => OptionTier;
   nextLabel: string;
 }
 
@@ -42,8 +40,6 @@ export const QuickQuestionsStep: FC<QuickQuestionsStepProps> = ({
   onBack,
   onContinue,
   disableSubmit,
-  getTier1,
-  getTier2,
   nextLabel
 }) => {
   return (
