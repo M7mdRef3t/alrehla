@@ -57,7 +57,10 @@ function pickSubject(step: number, leadId: string | null): string {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error ?? "unknown_error");
+    if (process.env.NODE_ENV === 'development') {
+        return error instanceof Error ? error.message : String(error || 'unknown_error');
+    }
+    return 'An unexpected error occurred.';
 }
 
 function buildSupabaseClient() {

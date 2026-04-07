@@ -39,7 +39,10 @@ function buildSweepClient(): ReturnType<typeof createSweepClient> | null {
 type SweepClient = ReturnType<typeof createSweepClient>;
 
 function toErrorMessage(error: unknown): string {
-    return error instanceof Error ? error.message : String(error || 'unknown_error');
+    if (process.env.NODE_ENV === 'development') {
+        return error instanceof Error ? error.message : String(error || 'unknown_error');
+    }
+    return 'An unexpected error occurred.';
 }
 
 function normalizeMetric(input: unknown): MetricPoint {
