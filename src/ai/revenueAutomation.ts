@@ -6,6 +6,7 @@
 
 import { decisionEngine } from "./decision-framework";
 import { geminiClient } from "../services/geminiClient";
+import { supabase } from "../services/supabaseClient";
 import type { AIDecision } from "./decision-framework";
 import {
   type PricingTier,
@@ -292,7 +293,24 @@ export class RevenueAutomationEngine {
     // تطبيق التغيير
     try {
       // TODO: ربط تغيير الأسعار بمصدر التسعير الفعلي عند تفعيله
-      // TODO: Update database with new pricing
+      if (supabase) {
+        const { error: dbError } = await supabase.from("system_settings").upsert({
+          key: "ai_dynamic_pricing",
+          value: {
+            premium: recommendation.suggestedPrices.premium,
+            coach: recommendation.suggestedPrices.coach,
+            reasoning: recommendation.reasoning,
+            updatedAt: new Date().toISOString()
+          }
+        }, { onConflict: "key" });
+
+        if (dbError) {
+          console.error("❌ Failed to update pricing in database:", dbError);
+          throw new Error(`Database error: ${dbError.message}`);
+        }
+      } else {
+        console.warn("⚠️ Supabase client not available, skipping database update.");
+      }
       // TODO: Notify existing users about grandfathering policy
 
       console.warn("✅ Pricing changed successfully:", recommendation.suggestedPrices);
