@@ -6,7 +6,7 @@ export const pageview = () => {
   }
 };
 
-export const event = (name: string, options: any = {}, eventId?: string) => {
+export const event = (name: string, options: unknown = {}, eventId?: string) => {
   if (typeof window !== 'undefined' && (window as any).fbq) {
     const trackingParams = eventId ? { eventID: eventId } : undefined;
     (window as any).fbq('track', name, options, trackingParams);
@@ -15,7 +15,7 @@ export const event = (name: string, options: any = {}, eventId?: string) => {
   }
 };
 
-export const customEvent = (name: string, options: any = {}, eventId?: string) => {
+export const customEvent = (name: string, options: unknown = {}, eventId?: string) => {
   if (typeof window !== 'undefined' && (window as any).fbq) {
     const trackingParams = eventId ? { eventID: eventId } : undefined;
     (window as any).fbq('trackCustom', name, options, trackingParams);
