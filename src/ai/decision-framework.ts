@@ -12,6 +12,7 @@ import type { MapNode } from "../modules/map/mapTypes";
 import type { DailyQuestion } from "../data/dailyQuestions";
 import { useEmergencyState } from "../state/emergencyState";
 import { useToastState } from "../state/toastState";
+import { isAlignedWithPrinciples } from "./CORE_PRINCIPLES";
 
 
 
@@ -310,11 +311,47 @@ export class DecisionEngine {
    * تحقق من جودة المحتوى المُولّد
    */
   private async validateContentQuality(
-    _decision: Omit<AIDecision, "timestamp">
+    decision: Omit<AIDecision, "timestamp">
   ): Promise<{ passed: boolean; reason?: string }> {
-    // TODO: استخدم isAlignedWithPrinciples() من CORE_PRINCIPLES.ts
+    const payload = decision.payload as any;
+    const contentsToValidate: string[] = [];
 
-    // مؤقتاً: نقبل كل حاجة
+    if (payload?.generatedQuestion?.text) {
+      contentsToValidate.push(payload.generatedQuestion.text);
+    }
+    if (payload?.greeting) {
+      contentsToValidate.push(payload.greeting);
+    }
+    if (payload?.missionDescription) {
+      contentsToValidate.push(payload.missionDescription);
+    }
+    if (payload?.doSay) {
+      contentsToValidate.push(payload.doSay);
+    }
+    if (payload?.dontSay) {
+      contentsToValidate.push(payload.dontSay);
+    }
+
+    const allViolations: string[] = [];
+
+    for (const content of contentsToValidate) {
+      if (typeof content === "string") {
+        const result = isAlignedWithPrinciples(content);
+        if (!result.aligned) {
+          allViolations.push(...result.violations);
+        }
+      }
+    }
+
+    if (allViolations.length > 0) {
+      // Remove duplicates
+      const uniqueViolations = Array.from(new Set(allViolations));
+      return {
+        passed: false,
+        reason: `Content violates core principles: ${uniqueViolations.join(", ")}`,
+      };
+    }
+
     return { passed: true };
   }
 }
