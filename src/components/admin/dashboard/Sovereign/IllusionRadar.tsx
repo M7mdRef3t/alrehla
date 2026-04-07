@@ -1,3 +1,4 @@
+import { logger } from "../../../../services/logger";
 import React, { type FC, useState } from "react";
 import { Radar, AlertTriangle, TrendingUp, Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,7 +30,7 @@ export const IllusionRadar: FC<IllusionRadarProps> = ({ scenarios, isLoading }) 
         setGeneratedScript(result);
       }
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     } finally {
       setIsGenerating(false);
     }

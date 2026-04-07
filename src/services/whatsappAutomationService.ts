@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { createClient } from "@supabase/supabase-js";
 import { upsertMarketingLead } from "../server/marketingLeadApi";
 import { sanitizePhone } from "../server/marketingLeadUtils";
@@ -49,14 +50,14 @@ export class WhatsAppAutomationService {
       .single();
 
     if (logError) {
-      console.error("[WhatsAppService] Failed to log event:", logError);
+      logger.error("[WhatsAppService] Failed to log event:", logError);
     }
 
     // 2. Normalize and identify the lead
     const phoneResult = sanitizePhone(payload.from);
     const normalizedPhone = phoneResult?.normalized ?? null;
     if (!normalizedPhone) {
-      console.error("[WhatsAppService] Invalid phone number:", payload.from);
+      logger.error("[WhatsAppService] Invalid phone number:", payload.from);
       return;
     }
 
@@ -118,7 +119,7 @@ export class WhatsAppAutomationService {
       await this.sendReply(payload.from, replyMessage);
 
     } catch (syncError) {
-      console.error("[WhatsAppService] CRM Sync failed:", syncError);
+      logger.error("[WhatsAppService] CRM Sync failed:", syncError);
     }
   }
 
@@ -151,14 +152,14 @@ export class WhatsAppAutomationService {
       });
 
       if (!response.ok) {
-        console.error(`[WhatsAppService] Failed to send reply. Status: ${response.status}`);
+        logger.error(`[WhatsAppService] Failed to send reply. Status: ${response.status}`);
         return;
       }
 
       const result = await response.json();
       console.log(`[WhatsAppService] Sent reply to ${to}:`, result.sent === "true" ? "Success" : result);
     } catch (error) {
-      console.error("[WhatsAppService] Error sending reply:", error);
+      logger.error("[WhatsAppService] Error sending reply:", error);
     }
   }
 

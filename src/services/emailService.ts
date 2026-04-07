@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 
 import { supabase } from "./supabaseClient";
 import { getRecoveryPlanHtml, type RecoveryPlanData } from "../templates/RecoveryPlanEmail";
@@ -10,7 +11,7 @@ export async function sendRecoveryPlanEmail(email: string, data: RecoveryPlanDat
   const logPrefix = "[EmailService]";
   
   if (!supabase) {
-    console.error(`${logPrefix} Supabase not initialized. Cannot invoke send-email.`);
+    logger.error(`${logPrefix} Supabase not initialized. Cannot invoke send-email.`);
     return false;
   }
 
@@ -34,14 +35,14 @@ export async function sendRecoveryPlanEmail(email: string, data: RecoveryPlanDat
     });
 
     if (error) {
-      console.error(`${logPrefix} Edge function error:`, error);
+      logger.error(`${logPrefix} Edge function error:`, error);
       return false;
     }
 
     console.log(`${logPrefix} Recovery plan sent successfully. ID:`, responseData?.id);
     return true;
   } catch (err: any) {
-    console.error(`${logPrefix} Unexpected failure in email flow:`, err);
+    logger.error(`${logPrefix} Unexpected failure in email flow:`, err);
     return false;
   }
 }

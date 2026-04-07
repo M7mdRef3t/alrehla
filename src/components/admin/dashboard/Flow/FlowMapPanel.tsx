@@ -1,3 +1,4 @@
+import { logger } from "../../../../services/logger";
 import type { FC } from "react";
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { Compass, Zap, Workflow, Loader2, GitGraph, AlertTriangle } from "lucide-react";
@@ -48,7 +49,7 @@ export const FlowMapPanel: FC = () => {
             const data = await fetchOverviewStats();
             setStats(data);
         } catch (error) {
-            console.error("Failed to load flow stats", error);
+            logger.error("Failed to load flow stats", error);
         } finally {
             setLoading(false);
         }

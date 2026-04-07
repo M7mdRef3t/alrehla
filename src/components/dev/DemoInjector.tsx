@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 import type { FC } from "react";
 import { useState } from "react";
 import { useMapState } from "../../state/mapState";
@@ -79,7 +80,7 @@ export const DemoInjector: FC = () => {
             setStatus("success");
             setTimeout(() => setStatus("idle"), 3000);
         } catch (e) {
-            console.error("Demo injection failed", e);
+            logger.error("Demo injection failed", e);
             setStatus("error");
         }
     };

@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { geminiClient } from "./geminiClient";
 import { AICache } from "./geminiEnhancements";
 import { useConsciousnessHistory } from "../state/consciousnessHistoryState";
@@ -43,19 +44,19 @@ class ConsciousnessService {
       });
 
       if (error) {
-        console.error("Embedding Error:", error);
+        logger.error("Embedding Error:", error);
         return null;
       }
 
       const embedding = (data as { embedding?: number[] } | null)?.embedding;
       if (!embedding || !Array.isArray(embedding) || embedding.length === 0) {
-        console.error("Embedding response فارغ أو غير صالح.");
+        logger.error("Embedding response فارغ أو غير صالح.");
         return null;
       }
 
       return embedding;
     } catch (err) {
-      console.error("Failed to invoke gemini_embeddings function:", err);
+      logger.error("Failed to invoke gemini_embeddings function:", err);
       return null;
     }
   }
@@ -89,7 +90,7 @@ class ConsciousnessService {
     const { error } = await supabase.from("consciousness_vectors").insert(payload);
 
     if (error) {
-      console.error("Save consciousness moment error:", error);
+      logger.error("Save consciousness moment error:", error);
       return false;
     }
 
@@ -118,7 +119,7 @@ class ConsciousnessService {
       });
 
       if (error) {
-        console.error("Recall similar moments error:", error);
+        logger.error("Recall similar moments error:", error);
         return [];
       }
 
@@ -129,7 +130,7 @@ class ConsciousnessService {
 
       return matches;
     } catch (err) {
-      console.error("Recall similar moments unexpected error:", err);
+      logger.error("Recall similar moments unexpected error:", err);
       return [];
     }
   }
@@ -147,7 +148,7 @@ class ConsciousnessService {
         limit_count: limit
       });
       if (error) {
-        console.error("Fetch consciousness archive error:", error);
+        logger.error("Fetch consciousness archive error:", error);
         return [];
       }
       let matches = (data as MemoryMatch[]) ?? [];
@@ -158,7 +159,7 @@ class ConsciousnessService {
       }
       return matches;
     } catch (err) {
-      console.error("Fetch consciousness archive unexpected error:", err);
+      logger.error("Fetch consciousness archive unexpected error:", err);
       return [];
     }
   }
@@ -203,7 +204,7 @@ class ConsciousnessService {
       }
       return response;
     } catch (error) {
-      console.error("Consciousness Analysis Error:", error);
+      logger.error("Consciousness Analysis Error:", error);
       return null;
     }
   }

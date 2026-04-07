@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 /**
  * Telegram Agent: Rafeeq El Rehla (رفيق الرحلة)
  * An AI agent running on Gemini that responds to Telegram users in Egyptian Slang,
@@ -28,7 +29,7 @@ function ensureInit() {
   if (!ai) {
     const key = process.env.GEMINI_API_KEY || process.env.GEMINI_PRO_API_KEY;
     if (!key) {
-      console.error('Gemini API key is not set');
+      logger.error('Gemini API key is not set');
       throw new Error('Gemini API key not set');
     }
     ai = new GoogleGenAI({ apiKey: key });
@@ -65,7 +66,7 @@ async function getChatHistory(chatId: string) {
       .limit(15);
       
     if (error) {
-      console.error('Error fetching chat history:', error);
+      logger.error('Error fetching chat history:', error);
       return [];
     }
     
@@ -76,7 +77,7 @@ async function getChatHistory(chatId: string) {
       parts: [{ text: msg.content || '' }]
     }));
   } catch (err) {
-    console.error('Failed to get chat history:', err);
+    logger.error('Failed to get chat history:', err);
     return [];
   }
 }
@@ -95,7 +96,7 @@ async function saveMessage(chatId: string, role: 'user' | 'model', content: stri
       content
     });
   } catch (err) {
-    console.error('Failed to save message to history:', err);
+    logger.error('Failed to save message to history:', err);
   }
 }
 
@@ -184,7 +185,7 @@ export async function processTelegramMessage(chatId: string, messageText: string
     
     return { text: replyText };
   } catch (error) {
-    console.error('Error calling Gemini for Telegram Agent:', error);
+    logger.error('Error calling Gemini for Telegram Agent:', error);
     return { text: "معلش يا هندسة، في عطل فني في الإرسال. دقيقة وارجعلك تاني." };
   }
 }

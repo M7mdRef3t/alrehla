@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { adminApi } from "./adminApi";
 import { revenueEngine, type RevenueMetricSnapshot } from "./revenueEngine";
 
@@ -55,7 +56,7 @@ class SovereignGrowthEngine {
         totalAcquisitions,
       };
     } catch (error) {
-      console.error("Growth Engine Error:", error);
+      logger.error("Growth Engine Error:", error);
       return {
         totalSpend: 0,
         totalRevenue: 0,
@@ -133,7 +134,7 @@ class SovereignGrowthEngine {
         gatewayHealth,
       };
     } catch (error) {
-      console.error("Failed to fetch Diffusion Metrics:", error);
+      logger.error("Failed to fetch Diffusion Metrics:", error);
       return this.getMockDiffusionMetrics();
     }
   }

@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import type { FC } from "react";
 import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -223,7 +224,7 @@ export const ResearchSurvey: FC<ResearchSurveyProps> = ({ onComplete }) => {
 
       setIsDone(true);
     } catch (err) {
-      console.error("[Survey] Submit error:", err);
+      logger.error("[Survey] Submit error:", err);
       // Still show thank you even if save fails
       setIsDone(true);
     } finally {

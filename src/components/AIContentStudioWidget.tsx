@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import type { FC } from "react";
 import { useState } from "react";
 import { Video, Wand2, Sparkles, Copy, RefreshCw, Layers } from "lucide-react";
@@ -57,7 +58,7 @@ export const AIContentStudioWidget: FC = () => {
                 setScript("حدث خطأ أثناء الاتصال بعقل محمد رسول الله الاصطناعي. جرب تاني.");
             }
         } catch (err) {
-            console.error("AI Content Studio Error:", err);
+            logger.error("AI Content Studio Error:", err);
             setScript("حصلت مشكلة في توليد السكريبت. خد نفس وجرب كمان شوية.");
         } finally {
             setIsGenerating(false);

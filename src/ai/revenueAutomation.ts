@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 /**
  * REVENUE_AUTOMATION.ts — محرك الدخل المالي الذاتي
  * =====================================================
@@ -151,7 +152,7 @@ export class RevenueAutomationEngine {
       console.warn("📊 Revenue metrics analyzed:", mockData);
       return mockData;
     } catch (error) {
-      console.error("❌ Failed to analyze metrics:", error);
+      logger.error("❌ Failed to analyze metrics:", error);
       return null;
     }
   }
@@ -308,7 +309,7 @@ export class RevenueAutomationEngine {
         message: `Pricing updated: Premium=$${recommendation.suggestedPrices.premium}, Coach=$${recommendation.suggestedPrices.coach}`,
       };
     } catch (error) {
-      console.error("❌ Failed to apply pricing change:", error);
+      logger.error("❌ Failed to apply pricing change:", error);
       return { success: false, message: String(error) };
     }
   }
@@ -399,7 +400,7 @@ export class RevenueAutomationEngine {
 
       console.warn("✅ Weekly revenue analysis complete");
     } catch (error) {
-      console.error("❌ Weekly revenue analysis failed:", error);
+      logger.error("❌ Weekly revenue analysis failed:", error);
     }
   }
 

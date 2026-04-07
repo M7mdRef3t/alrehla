@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { geminiClient } from './geminiClient';
 import { CreativeSeed } from '../state/synthesisState';
 
@@ -42,7 +43,7 @@ export class CreativeSeedEngine {
                 generatedAt: Date.now()
             };
         } catch (error) {
-            console.error('[CreativeSeedEngine] Error generating seed:', error);
+            logger.error('[CreativeSeedEngine] Error generating seed:', error);
             return null;
         }
     }

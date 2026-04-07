@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 /**
  * DECISION_FRAMEWORK.ts — إطار القرارات للـ AI Autonomy
  * ========================================================
@@ -232,7 +233,7 @@ export class DecisionEngine {
 
     switch (decision.type) {
       case "trigger_breathing_exercise":
-        try { useEmergencyState.getState().open(); } catch (e) { console.error(e); }
+        try { useEmergencyState.getState().open(); } catch (e) { logger.error(e); }
         break;
       case "send_notification":
         try {
@@ -241,7 +242,7 @@ export class DecisionEngine {
           if (p?.message) {
             useToastState.getState().showToast(p.message, "info");
           }
-        } catch (e) { console.error(e); }
+        } catch (e) { logger.error(e); }
         break;
 
     }

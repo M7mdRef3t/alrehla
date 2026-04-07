@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { loadStoredState } from "./localStore";
 import { getJSON, setJSON, getItem } from "./secureStore";
 import {
@@ -70,7 +71,7 @@ export async function exportToJSON(): Promise<void> {
     const data = await buildBackupFromLocal();
     downloadBackupFile(data);
   } catch (error) {
-    console.error("فشل في تصدير البيانات:", error);
+    logger.error("فشل في تصدير البيانات:", error);
     throw new Error("حدث خطأ أثناء تصدير البيانات");
   }
 }
@@ -136,7 +137,7 @@ export async function restoreBackupData(data: BackupData): Promise<void> {
       await setJSON("dawayir-notification-settings", data.notification);
     }
   } catch (error) {
-    console.error("فشل في استعادة البيانات:", error);
+    logger.error("فشل في استعادة البيانات:", error);
     throw new Error("حدث خطأ أثناء استعادة البيانات");
   }
 }

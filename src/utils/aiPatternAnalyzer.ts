@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { geminiClient } from "../services/geminiClient";
 import type { PatternType, DetectedPattern, PatternAnalysisResult } from "./patternAnalyzer";
 
@@ -108,7 +109,7 @@ ${allText}
     };
 
   } catch (error) {
-    console.error('Error in AI pattern analysis:', error);
+    logger.error('Error in AI pattern analysis:', error);
     // Fallback to regex-based analysis
     const { analyzeSituations } = await import('./patternAnalyzer');
     return analyzeSituations(situations);
@@ -162,7 +163,7 @@ export async function quickAIFeedback(text: string): Promise<{
 
     return result;
   } catch (error) {
-    console.error('Error in quick AI feedback:', error);
+    logger.error('Error in quick AI feedback:', error);
     return null;
   }
 }

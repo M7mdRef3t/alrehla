@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { inngestMock } from "./inngestMock";
 import { pineconeMock } from "./pineconeMock";
 import { useMapState } from "../state/mapState";
@@ -17,7 +18,7 @@ inngestMock.on("analyze-relationship", async (rawData) => {
     typeof (rawData as { nodeId?: unknown }).nodeId !== "string" ||
     typeof (rawData as { context?: unknown }).context !== "string"
   ) {
-    console.error("[Background Job] Invalid payload for analyze-relationship", rawData);
+    logger.error("[Background Job] Invalid payload for analyze-relationship", rawData);
     return;
   }
 
@@ -54,7 +55,7 @@ inngestMock.on("analyze-relationship", async (rawData) => {
 
     console.log(`[Background Job] Analysis complete for node: ${data.nodeId}`);
   } catch (error) {
-    console.error("[Background Job] Error during analysis:", error);
+    logger.error("[Background Job] Error during analysis:", error);
     useMapState.getState().updateNode(data.nodeId, { isAnalyzing: false });
   }
 });

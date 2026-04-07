@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { createClient } from "@supabase/supabase-js";
 
 function getSupabaseAdmin() {
@@ -44,6 +45,6 @@ export async function processActionImpacts(userId: string, currentMood: number, 
                 .eq('id', action.id);
         }
     } catch (err) {
-        console.error("Impact Engine Error:", err);
+        logger.error("Impact Engine Error:", err);
     }
 }

@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -62,7 +63,7 @@ export const useAuth = () => {
       await axios.post("/api/auth?action=logout");
       window.location.reload();
     } catch (err) {
-      console.error("Logout failed", err);
+      logger.error("Logout failed", err);
     }
   };
 

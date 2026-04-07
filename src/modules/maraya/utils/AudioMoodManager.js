@@ -1,3 +1,4 @@
+import { logger } from "../../../services/logger";
 /**
  * Audio mood crossfade system.
  * Manages ambient background audio that changes based on story mood.
@@ -30,7 +31,7 @@ export class AudioMoodManager {
         this.context.resume();
       }
     } catch (err) {
-      console.error('[audio] Failed to create AudioContext:', err);
+      logger.error('[audio] Failed to create AudioContext:', err);
     }
   }
 
@@ -230,7 +231,7 @@ export class AudioMoodManager {
         osc.stop(attackTime + 3);
       });
     } catch (e) {
-      console.error('[audio] Duo sync sound failed:', e);
+      logger.error('[audio] Duo sync sound failed:', e);
     }
   }
 

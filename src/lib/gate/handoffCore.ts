@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 /**
  * Gate Handoff Core
  * 
@@ -23,7 +24,7 @@ export const triggerMapCompletionCheck = async (gateSessionId: string, userId: s
     
     return response.ok;
   } catch (e) {
-    console.error('[Gate Handoff] MapCompletion trigger failed', e);
+    logger.error('[Gate Handoff] MapCompletion trigger failed', e);
     return false;
   }
 };

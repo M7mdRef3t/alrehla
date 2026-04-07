@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { supabase } from './supabaseClient';
 
 export interface MetaLeadData {
@@ -26,7 +27,7 @@ export const metaLeadsService = {
   async fetchLeadDetails(leadId: string): Promise<MetaLeadData | null> {
     const accessToken = process.env.META_PAGE_ACCESS_TOKEN;
     if (!accessToken) {
-      console.error('[MetaLeadsService] Missing META_PAGE_ACCESS_TOKEN');
+      logger.error('[MetaLeadsService] Missing META_PAGE_ACCESS_TOKEN');
       return null;
     }
 
@@ -37,13 +38,13 @@ export const metaLeadsService = {
       
       if (!response.ok) {
         const error = await response.json();
-        console.error('[MetaLeadsService] Error fetching lead details:', error);
+        logger.error('[MetaLeadsService] Error fetching lead details:', error);
         return null;
       }
 
       return await response.json();
     } catch (error) {
-      console.error('[MetaLeadsService] Network error fetching lead details:', error);
+      logger.error('[MetaLeadsService] Network error fetching lead details:', error);
       return null;
     }
   },
@@ -86,7 +87,7 @@ export const metaLeadsService = {
     try {
       const client = supabase;
       if (!client) {
-        console.error('[MetaLeadsService] Supabase client not initialized');
+        logger.error('[MetaLeadsService] Supabase client not initialized');
         return { success: false, error: 'Supabase client not initialized' };
       }
       const { data, error } = await client
@@ -95,14 +96,14 @@ export const metaLeadsService = {
         .select();
 
       if (error) {
-        console.error('[MetaLeadsService] Error storing lead:', error);
+        logger.error('[MetaLeadsService] Error storing lead:', error);
         return { success: false, error };
       }
 
       console.log('[MetaLeadsService] Lead stored successfully:', email);
       return { success: true, data };
     } catch (error) {
-      console.error('[MetaLeadsService] Exception storing lead:', error);
+      logger.error('[MetaLeadsService] Exception storing lead:', error);
       return { success: false, error };
     }
   }

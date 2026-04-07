@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 import type { FC, ReactNode } from "react";
 import { useEffect, useState, lazy, Suspense } from "react";
 import {
@@ -356,7 +357,7 @@ export const AdminDashboard: FC<{ onExit?: () => void }> = ({ onExit }) => {
         if (missions) setMissions(missions);
         if (broadcasts) setBroadcasts(broadcasts);
       } catch (err) {
-        console.error("Admin data load error", err);
+        logger.error("Admin data load error", err);
       }
     };
     void loadRemote();

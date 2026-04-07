@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { GoogleGenAI } from "@google/genai";
 
 let genAI: GoogleGenAI | null = null;
@@ -45,7 +46,7 @@ export async function generateVoiceScript(event: VoiceEvent, context: any): Prom
     });
         return (result.text ?? "").trim().replace(/['"]/g, '');
     } catch (err) {
-        console.error("Voice Script Generation Error:", err);
+        logger.error("Voice Script Generation Error:", err);
         return "";
     }
 }

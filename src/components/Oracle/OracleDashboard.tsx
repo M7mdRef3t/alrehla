@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, CheckCircle, AlertTriangle, Eye, TrendingUp, Users, ChevronRight, Gavel, Zap, Activity, BarChart3, Globe, Database, UserPlus, Clock, Brain } from 'lucide-react';
@@ -37,7 +38,7 @@ export const OracleCouncilDashboard: React.FC<{ oracleId: string }> = ({ oracleI
                     setShowFirstBlood(true);
                 }
             } catch (err) {
-                console.error("Oracle Dashboard load error:", err);
+                logger.error("Oracle Dashboard load error:", err);
             } finally {
                 setLoading(false);
             }

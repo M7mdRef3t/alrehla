@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 /**
  * semanticCompressor.ts — طبقة ضغط الوعي 🧠
  * =======================================================
@@ -45,7 +46,7 @@ class SemanticCompressor {
             console.log("✅ [SemanticCompressor] Extracted Shift:", shift);
             return shift;
         } catch (err) {
-            console.error("❌ [SemanticCompressor] Compression failed:", err);
+            logger.error("❌ [SemanticCompressor] Compression failed:", err);
             return null;
         }
     }

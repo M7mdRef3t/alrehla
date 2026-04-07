@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 /**
  * AI_MARKETING_COPY.ts — كاتب النصوص التسويقية بالذكاء الاصطناعي
  * =====================================================
@@ -155,7 +156,7 @@ export class AIMarketingCopywriter {
     try {
       localStorage.setItem(this.weeklyBudgetStorageKey, JSON.stringify(config));
     } catch (error) {
-      console.error("❌ Failed to save weekly budget config:", error);
+      logger.error("❌ Failed to save weekly budget config:", error);
     }
   }
 
@@ -175,7 +176,7 @@ export class AIMarketingCopywriter {
       existing.push(report);
       localStorage.setItem(this.weeklyABReportsStorageKey, JSON.stringify(existing.slice(-52))); // آخر سنة
     } catch (error) {
-      console.error("❌ Failed to save weekly A/B report:", error);
+      logger.error("❌ Failed to save weekly A/B report:", error);
     }
   }
 
@@ -676,7 +677,7 @@ ${params.context ? `# السياق الإضافي\n${params.context}\n` : ""}
       existing.push(campaign);
       localStorage.setItem("dawayir-campaigns", JSON.stringify(existing));
     } catch (error) {
-      console.error("❌ Failed to save campaign:", error);
+      logger.error("❌ Failed to save campaign:", error);
     }
   }
 

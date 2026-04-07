@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import type { MarketingLeadPayload } from "../types/marketingLead";
 import { trackLead } from "./analytics";
 import { recordFlowEvent } from "./journeyTracking";
@@ -123,7 +124,7 @@ export async function captureMarketingLead(
       mergeConflict: resolvedConflict
     };
   } catch (err) {
-    console.error("Marketing Lead capture error:", err);
+    logger.error("Marketing Lead capture error:", err);
     return { success: false, error: "Network error" };
   }
 }

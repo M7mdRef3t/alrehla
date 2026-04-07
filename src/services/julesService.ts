@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { runtimeEnv } from "../config/runtimeEnv";
 
 const JULES_API_BASE = "https://jules.googleapis.com/v1alpha";
@@ -67,7 +68,7 @@ class JulesService {
             const data = await response.json();
             return data.sources || [];
         } catch (error) {
-            console.error("❌ Failed to list Jules sources:", error);
+            logger.error("❌ Failed to list Jules sources:", error);
             return [];
         }
     }
@@ -101,7 +102,7 @@ class JulesService {
             if (!response.ok) throw new Error(`API Error: ${response.status}`);
             return await response.json();
         } catch (error) {
-            console.error("❌ Failed to create Jules session:", error);
+            logger.error("❌ Failed to create Jules session:", error);
             return null;
         }
     }
@@ -118,7 +119,7 @@ class JulesService {
             const data = await response.json();
             return data.sessions || [];
         } catch (error) {
-            console.error("❌ Failed to list Jules sessions:", error);
+            logger.error("❌ Failed to list Jules sessions:", error);
             return [];
         }
     }
@@ -134,7 +135,7 @@ class JulesService {
             });
             return response.ok;
         } catch (error) {
-            console.error("❌ Failed to approve plan:", error);
+            logger.error("❌ Failed to approve plan:", error);
             return false;
         }
     }
@@ -151,7 +152,7 @@ class JulesService {
             });
             return response.ok;
         } catch (error) {
-            console.error("❌ Failed to send message to Jules:", error);
+            logger.error("❌ Failed to send message to Jules:", error);
             return false;
         }
     }
@@ -168,7 +169,7 @@ class JulesService {
             const data = await response.json();
             return data.activities || [];
         } catch (error) {
-            console.error("❌ Failed to list activities:", error);
+            logger.error("❌ Failed to list activities:", error);
             return [];
         }
     }

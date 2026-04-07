@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { geminiClient } from "./geminiClient";
 import { Dream, Knot } from "../types/dreams";
 import { useMapState } from "../state/mapState";
@@ -63,7 +64,7 @@ export class OracleService {
                 }
             };
         } catch (error) {
-            console.error("Oracle Analysis Error:", error);
+            logger.error("Oracle Analysis Error:", error);
             return {
                 alignmentScore: 0.5,
                 knots: [],

@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import type { PulseEntry } from "../state/pulseState";
 import { isSupabaseReady, supabase } from "./supabaseClient";
 import { getTrackingMode, getTrackingSessionId } from "./journeyTracking";
@@ -87,6 +88,6 @@ export async function syncLocalPulsesOnLogin(): Promise<void> {
     trackEvent(AnalyticsEvents.MERGE_SUCCESS, { count: guestPulses.length });
     if (runtimeEnv.isDev) console.log("[PulseSync] Guest pulses merged and cleared.");
   } catch (e) {
-    console.error("[PulseSync] Merge failed:", e);
+    logger.error("[PulseSync] Merge failed:", e);
   }
 }

@@ -1,3 +1,4 @@
+import { logger } from "../../../services/logger";
 import { useRef, useCallback, useEffect } from 'react';
 
 /**
@@ -95,7 +96,7 @@ export default function useNarrationVoice() {
 
       source.start(0);
     } catch (err) {
-      console.error('[voice] Playback failed:', err);
+      logger.error('[voice] Playback failed:', err);
       isPlayingRef.current = false;
       playNextInQueue();
     }

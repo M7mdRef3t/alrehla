@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 export const sendToCapi = async (
   eventName: string,
   eventId: string,
@@ -20,9 +21,9 @@ export const sendToCapi = async (
     });
     
     if (!res.ok) {
-      console.error('[CAPI Client] Error forwarding event', await res.text());
+      logger.error('[CAPI Client] Error forwarding event', await res.text());
     }
   } catch (err) {
-    console.error('[CAPI Client] Network error', err);
+    logger.error('[CAPI Client] Network error', err);
   }
 };

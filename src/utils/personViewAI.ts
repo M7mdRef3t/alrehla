@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { geminiClient } from "../services/geminiClient";
 import type { MapNode, PersonViewInsights } from "../modules/map/mapTypes";
 import type { AdviceCategory } from "../data/adviceScripts";
@@ -140,7 +141,7 @@ ${summary}
     return insights;
   } catch (error) {
     if (runtimeEnv.isDev) {
-      console.error("Error generating AI person view insights:", error);
+      logger.error("Error generating AI person view insights:", error);
     }
     return null;
   }

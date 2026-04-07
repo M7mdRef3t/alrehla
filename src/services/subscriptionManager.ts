@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { safeGetSession, supabase, isSupabaseAbortError } from "./supabaseClient";
 import { hasRecordedOfferConversion, recordEmotionalPricingEvent } from "./emotionalPricingAnalytics";
 import {
@@ -271,7 +272,7 @@ export async function syncSubscription(): Promise<void> {
         console.warn("🔄 Subscription synced with server:", newTier);
   } catch (err) {
     if (isSupabaseAbortError(err)) return;
-    console.error("Failed to sync subscription:", err);
+    logger.error("Failed to sync subscription:", err);
   }
 }
 

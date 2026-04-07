@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 /**
  * Referral Engine — محرك الإحالة
  * ==================================
@@ -95,7 +96,7 @@ export async function syncReferralToSupabase(email: string): Promise<ReferralDat
             .eq("email", email);
 
     } catch (e) {
-        console.error("Referral Sync Error:", e);
+        logger.error("Referral Sync Error:", e);
     }
 
     return local;
@@ -163,7 +164,7 @@ export async function applyReferralCodeAsync(code: string, myEmail: string): Pro
             }
         }
     } catch (e) {
-        console.error("Apply Referral Error:", e);
+        logger.error("Apply Referral Error:", e);
     }
 
     return true;

@@ -1,3 +1,4 @@
+import { logger } from "../../../services/logger";
 "use client";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
@@ -133,7 +134,7 @@ export default function SandMandala({ targetRef, isActive, onComplete }: SandMan
 
         animate();
       } catch (error) {
-        console.error("SandMandala failed", error);
+        logger.error("SandMandala failed", error);
         restoreTarget();
         onComplete?.();
       }

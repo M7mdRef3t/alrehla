@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { supabase } from './supabaseClient';
 
 export interface AIModel {
@@ -69,7 +70,7 @@ export class AIOrchestrator {
             }
 
         } catch (e) {
-            console.error('[AI Router] Resolution error:', e);
+            logger.error('[AI Router] Resolution error:', e);
             return 'gemini-2.5-pro';
         }
     }

@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import React, { useState, useRef, useEffect, type FC } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Share2, X, Sparkles } from "lucide-react";
@@ -93,7 +94,7 @@ export const HealingEchoModal: FC<HealingEchoModalProps> = ({
          "success"
       );
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       useToastState.getState().showToast("عذراً، حدث خطأ أثناء التقاط الصدى.", "error");
     } finally {
       setIsGenerating(false);

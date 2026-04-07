@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "../../services/supabaseClient";
 import { useJourneyState } from "../../state/journeyState";
@@ -70,7 +71,7 @@ export function useAppGateHandoff({
           .single();
 
         if (error || !data) {
-          console.error("[Gate Handoff] Failed to retrieve session.", error);
+          logger.error("[Gate Handoff] Failed to retrieve session.", error);
           if (!cancelled) navigateToScreen("map");
           return;
         }
@@ -97,7 +98,7 @@ export function useAppGateHandoff({
         navigateToScreen("map");
         
       } catch (err) {
-        console.error("[Gate Handoff] Unexpected error", err);
+        logger.error("[Gate Handoff] Unexpected error", err);
         if (!cancelled) navigateToScreen("map");
       }
     })();

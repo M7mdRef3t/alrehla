@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { createClient } from "@supabase/supabase-js";
 
 function getSupabaseAdmin() {
@@ -82,7 +83,7 @@ export async function processContextualInsights(userId: string) {
             }
         }
     } catch (err) {
-        console.error("Context Engine Error:", err);
+        logger.error("Context Engine Error:", err);
     }
 }
 

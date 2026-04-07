@@ -1,3 +1,4 @@
+import { logger } from "../../services/logger";
 import { v4 as uuidv4 } from 'uuid';
 import * as pixel from './metaPixel';
 
@@ -24,7 +25,7 @@ export const trackGateEventPixelOnly = (
       pixel.customEvent(eventName, customData, eventId);
     }
   } catch (error) {
-    console.error('[Event Tracker] Failed to track browser event', error);
+    logger.error('[Event Tracker] Failed to track browser event', error);
   }
   
   return eventId; // IMPORTANT: Must be passed to API route for CAPI tracking!

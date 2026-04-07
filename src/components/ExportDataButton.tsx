@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 /**
  * ExportDataButton Component
  * مكون تصدير البيانات
@@ -23,7 +24,7 @@ export function ExportDataButton() {
       
       offlineService.downloadExport(format);
     } catch (error) {
-      console.error("Export failed:", error);
+      logger.error("Export failed:", error);
     } finally {
       setIsExporting(false);
       setIsOpen(false);

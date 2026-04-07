@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { FC, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, VolumeX } from "lucide-react";
@@ -57,7 +58,7 @@ export const VoicePresence: FC<{
                 }
             }
         } catch (err) {
-            console.error("Voice Trigger Error:", err);
+            logger.error("Voice Trigger Error:", err);
         }
     }, [isOptedIn, trigger]);
 

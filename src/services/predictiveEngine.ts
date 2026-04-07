@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { geminiClient } from "./geminiClient";
 import { useConsciousnessHistory } from "../state/consciousnessHistoryState";
 import { usePredictiveState } from "../state/predictiveState";
@@ -140,7 +141,7 @@ export class PredictiveEngine {
     const history = useConsciousnessHistory.getState().history;
     const stats = await fetchOverviewStats();
     if (!stats) {
-      console.error("Failed to fetch stats for Predictive Engine");
+      logger.error("Failed to fetch stats for Predictive Engine");
       return;
     }
 
@@ -201,7 +202,7 @@ ${JSON.stringify(recentHistory)}
         });
       }
     } catch (error) {
-      console.error("Predictive Engine failed:", error);
+      logger.error("Predictive Engine failed:", error);
     }
   }
 }

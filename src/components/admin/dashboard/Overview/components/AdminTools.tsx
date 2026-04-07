@@ -1,3 +1,4 @@
+import { logger } from "../../../../../services/logger";
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import { FileText, Save, RefreshCw, Sun, Moon, Sunset, Palette, Loader2 } from "lucide-react";
@@ -46,7 +47,7 @@ export const AdminTools: FC<AdminToolsProps> = ({ loading }) => {
         try {
             await runCronReport(type);
         } catch (error) {
-            console.error("Failed to generate report", error);
+            logger.error("Failed to generate report", error);
         } finally {
             if (type === 'daily') setGeneratingDaily(false);
             else setGeneratingWeekly(false);
@@ -67,7 +68,7 @@ export const AdminTools: FC<AdminToolsProps> = ({ loading }) => {
             await saveThemePalette(colors);
             // Optional: Show success toast
         } catch (error) {
-            console.error("Failed to save colors", error);
+            logger.error("Failed to save colors", error);
         } finally {
             setSavingColors(false);
         }

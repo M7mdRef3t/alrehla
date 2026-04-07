@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import type { MapNode, MapType, FeelingCheckResult } from "../modules/map/mapTypes";
 import { getJSON, setJSON } from "./secureStore";
 import { queueMapSync } from "./mapSync";
@@ -52,7 +53,7 @@ export const loadStoredState = async (): Promise<StoredState | null> => {
       feelingResults: parsed.feelingResults
     };
   } catch (error) {
-    if (runtimeEnv.isDev) console.error("Error loading from localStorage:", error);
+    if (runtimeEnv.isDev) logger.error("Error loading from localStorage:", error);
     return null;
   }
 };

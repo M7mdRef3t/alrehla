@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import { AIOrchestrator } from './aiOrchestrator';
 import { supabase } from './supabaseClient';
 import { Dream } from '../types/dreams';
@@ -86,7 +87,7 @@ export class SimulationService {
             return mockResult;
 
         } catch (e) {
-            console.error('[Simulation Service] Error:', e);
+            logger.error('[Simulation Service] Error:', e);
             return null;
         }
     }

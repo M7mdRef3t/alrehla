@@ -1,3 +1,4 @@
+import { logger } from "../services/logger";
 import React, { type FC, useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Sparkles, Loader2, Mic, MicOff, History } from "lucide-react";
 import { geminiClient } from "../services/geminiClient";
@@ -421,7 +422,7 @@ ${conversationHistory ? `**سجل العمليات السابق:**\n${conversati
       }
     } catch (error) {
       if (runtimeEnv.isDev) {
-        console.error("Error in chatbot:", error);
+        logger.error("Error in chatbot:", error);
       }
       setMessages((prev) => [
         ...prev,

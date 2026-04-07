@@ -1,3 +1,4 @@
+import { logger } from "../../../../services/logger";
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -316,7 +317,7 @@ function MarketingSpendConsole({
         const val = await adminApi.fetchMarketingSpend();
         setSpend(val ?? 0);
       } catch (e) {
-        console.error("Failed to fetch spend:", e);
+        logger.error("Failed to fetch spend:", e);
       }
     }
     void load();
