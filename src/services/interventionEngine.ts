@@ -131,7 +131,13 @@ export async function processInterventions(userId: string) {
         const existingTypes = new Set(existingInterventions?.map(i => i.type) || []);
 
         const newInterventions = findings
-            .filter(f => !existingTypes.has(f.type))
+            .filter(f => {
+                if (!existingTypes.has(f.type)) {
+                    existingTypes.add(f.type);
+                    return true;
+                }
+                return false;
+            })
             .map(f => ({
                 user_id: userId,
                 ...f
