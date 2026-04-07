@@ -173,10 +173,14 @@ export const Landing: FC<LandingPropsExtended> = ({
     
     setTimeout(() => {
       if (typeof window !== "undefined") {
-        window.location.assign("/onboarding");
+        if (hasExistingJourney) {
+          _onStartJourney();
+        } else {
+          window.location.assign("/onboarding");
+        }
       }
     }, 1200);
-  }, [mirrorName]);
+  }, [mirrorName, hasExistingJourney, _onStartJourney]);
 
   return (
     <div

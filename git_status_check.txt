@@ -1,0 +1,14 @@
+﻿ M app/(marketing)/gate/page.tsx
+ M app/api/admin/email/engine.ts
+ M app/api/admin/email/send/route.ts
+ M app/api/admin/email/stats/route.ts
+ M app/onboarding/OnboardingRouteClient.tsx
+ M next-env.d.ts
+ M src/components/Landing.tsx
+ M src/services/backgroundAnalysis.ts
+ M src/services/emotionalPricingAnalytics.ts
+ M src/services/growthEngine.ts
+?? git_status.txt
+?? git_status_check.txt
+?? git_status_utf8.txt
+?? git_status_v2.txt

@@ -74,42 +74,59 @@ class SovereignGrowthEngine {
     if (!isSupabaseReady || !supabase) return this.getMockDiffusionMetrics();
 
     try {
-      const { data: leads } = await supabase.from("marketing_leads").select("source_type, status, metadata, created_at");
-      const gateways: Record<string, { count: number; acquisitions: number }> = {
-        meta: { count: 0, acquisitions: 0 },
-        tiktok: { count: 0, acquisitions: 0 },
-        google: { count: 0, acquisitions: 0 },
-        direct: { count: 0, acquisitions: 0 },
-      };
-
-      leads?.forEach((lead: any) => {
-        const src = String(lead?.source_type ?? "direct").toLowerCase();
-        const key = src.includes("meta") || src.includes("facebook")
-          ? "meta"
-          : src.includes("tiktok")
-            ? "tiktok"
-            : src.includes("google")
-              ? "google"
-              : "direct";
-
-        gateways[key].count += 1;
-        if (["activated", "converted", "customer"].includes(String(lead?.status ?? ""))) {
-          gateways[key].acquisitions += 1;
-        }
-      });
-
-      const totalSpend = (await adminApi.fetchMarketingSpend()) ?? 0;
-      const totalLeadsCount = Object.values(gateways).reduce((sum, item) => sum + item.count, 0);
-      const revenueSnapshot = await revenueEngine.getExecutiveRevenueSnapshot();
-      const regions = revenueSnapshot.regionalResonance;
-      
+      // 1. Defined Gateway patterns
       const now = new Date();
       const twentyFourAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-      const leadsLast24h = (leads ?? []).filter((l: any) => l.created_at >= twentyFourAgo).length;
 
+      // 2. Fetch specific counts from DB to avoid Full Table Scan
+      const getCounts = async (patterns: string[]) => {
+        const { count } = await supabase
+          .from("marketing_leads")
+          .select("*", { count: "exact", head: true })
+          .or(`source_type.ilike.%${patterns.join("%,source_type.ilike.%")}%`);
+        
+        const { count: acq } = await supabase
+          .from("marketing_leads")
+          .select("*", { count: "exact", head: true })
+          .or(`source_type.ilike.%${patterns.join("%,source_type.ilike.%")}%`)
+          .in("status", ["activated", "converted", "customer"]);
+
+        return { count: count || 0, acquisitions: acq || 0 };
+      };
+
+      const [meta, tiktok, google, totalCount, leadsLast24h, revenueSnapshot] = await Promise.all([
+        getCounts(["meta", "facebook"]),
+        getCounts(["tiktok"]),
+        getCounts(["google"]),
+        supabase.from("marketing_leads").select("*", { count: "exact", head: true }),
+        supabase.from("marketing_leads").select("*", { count: "exact", head: true }).gte("created_at", twentyFourAgo),
+        revenueEngine.getExecutiveRevenueSnapshot()
+      ]);
+
+      const totalLeadsCount = totalCount.count || 0;
+      const recentLeadsCount = leadsLast24h.count || 0;
+
+      // Calculate 'direct' as remainder
+      const definedCount = meta.count + tiktok.count + google.count;
+      const definedAcq = meta.acquisitions + tiktok.acquisitions + google.acquisitions;
+      const direct = { 
+        count: Math.max(0, totalLeadsCount - definedCount),
+        acquisitions: Math.max(0, (revenueSnapshot.activeSubscriptions || 0) - definedAcq)
+      };
+
+      const gateways: Record<string, { count: number; acquisitions: number }> = {
+        meta,
+        tiktok,
+        google,
+        direct,
+      };
+
+      const totalSpend = (await adminApi.fetchMarketingSpend()) ?? 0;
+      const regions = revenueSnapshot.regionalResonance;
+      
       const topSpreaders = [
-        { name: "Sovereign Elite", count: Math.ceil(leadsLast24h * 0.15), resonance: 0.95 },
-        { name: "Global Pulse", count: Math.ceil(leadsLast24h * 0.08), resonance: 0.82 }
+        { name: "Sovereign Elite", count: Math.ceil(recentLeadsCount * 0.15), resonance: 0.95 },
+        { name: "Global Pulse", count: Math.ceil(recentLeadsCount * 0.08), resonance: 0.82 }
       ];
 
       const gatewayHealth = Object.fromEntries(
@@ -124,7 +141,7 @@ class SovereignGrowthEngine {
               status: "open" as const,
               oracleVerdict: this.generateOracleVerdict(key, resonance),
               spend: allocatedSpend,
-              roi: allocatedSpend > 0 ? ((gateway.acquisitions * revenueSnapshot.arpu - allocatedSpend) / allocatedSpend) * 100 : 0,
+              roi: allocatedSpend > 0 ? ((gateway.acquisitions * (revenueSnapshot.arpu || 100) - allocatedSpend) / allocatedSpend) * 100 : 0,
             },
           ];
         })
@@ -132,7 +149,7 @@ class SovereignGrowthEngine {
 
       return {
         kFactor: totalLeadsCount > 0 ? Number((Object.values(gateways).reduce((sum, item) => sum + item.acquisitions, 0) / totalLeadsCount).toFixed(2)) : 0.42,
-        velocity: leadsLast24h / 24,
+        velocity: recentLeadsCount / 24,
         regionalDiffusion: regions,
         topSpreaders,
         gatewayHealth,

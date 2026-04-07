@@ -8,6 +8,7 @@ import {
   captureLeadAttributionFromCurrentUrl,
   captureUtmFromCurrentUrl
 } from "../../src/services/marketingAttribution";
+import { useMapState } from "../../src/state/mapState";
 
 const APP_BOOT_ACTION_KEY = "dawayir-app-boot-action";
 void APP_BOOT_ACTION_KEY;
@@ -71,6 +72,13 @@ export default function OnboardingRouteClient() {
   useEffect(() => {
     captureUtmFromCurrentUrl();
     captureLeadAttributionFromCurrentUrl();
+
+    const nodesCount = useMapState.getState().nodes.length;
+    const baselineCompletedAt = useJourneyState.getState().baselineCompletedAt;
+    
+    if (typeof window !== "undefined" && (nodesCount > 0 || baselineCompletedAt)) {
+      window.location.replace("/?boot_action=start_recovery");
+    }
   }, []);
 
   const handleComplete = useCallback((skipped = false) => {

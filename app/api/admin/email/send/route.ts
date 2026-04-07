@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
           from_email: from || "Alrehla <team@alrehla.app>",
           subject: finalSubject,
           template_id: templateId || null,
-          html_snapshot: finalHtml.substring(0, 10000),
+          html_snapshot: finalHtml.substring(0, 100000),
           status: "queued",
           campaign_tag: campaignTag || null,
           metadata: { variables: variables || {}, engine: "sovereign" },
@@ -138,12 +138,14 @@ export async function POST(req: NextRequest) {
     }
 
     const successCount = results.filter((r) => r.ok).length;
+    const firstError = results.find((r) => !r.ok)?.error;
 
     return NextResponse.json({
       ok: successCount > 0,
       sent: successCount,
       total: recipients.length,
       engine: "sovereign",
+      error: successCount === 0 ? firstError : undefined,
       results,
     });
   } catch (err: any) {

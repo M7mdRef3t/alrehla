@@ -43,7 +43,7 @@ export async function GET(req: Request) {
     statusCounts[row.status] = (statusCounts[row.status] || 0) + 1;
   });
 
-  const total = totalSent || 0;
+  const total = (statusData || []).filter((r: any) => !["failed", "queued"].includes(r.status)).length;
   const delivered = (statusCounts["delivered"] || 0) + (statusCounts["opened"] || 0) + (statusCounts["clicked"] || 0);
   const opened = (statusCounts["opened"] || 0) + (statusCounts["clicked"] || 0);
   const clicked = statusCounts["clicked"] || 0;

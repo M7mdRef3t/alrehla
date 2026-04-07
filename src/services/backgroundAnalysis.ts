@@ -42,8 +42,8 @@ const analyzeRelationshipAsync = async (nodeId: string, context: string) => {
 export const triggerBackgroundAnalysis = (nodeId: string, context: string) => {
   if (runtimeEnv.isDev) return;
   
-  // Fire and forget to simulate background job behavior
-  analyzeRelationshipAsync(nodeId, context).catch(err => {
+  // Return the promise so specific environments can track it if needed
+  return analyzeRelationshipAsync(nodeId, context).catch(err => {
     console.error("[Background Job Orchestrator] Unhandled rejection:", err);
   });
 };

@@ -57,25 +57,27 @@ export async function getEmotionalPricingStats(): Promise<EmotionalPricingStats>
   if (!supabase) return { giftsGrantedCount: 0, discountOffersCount: 0, conversionRatePercent: 0 };
   
   try {
-    const { data: events, error } = await supabase
-      .from("telemetry_events")
-      .select("payload")
-      .eq("event_type", "emotional_pricing_triggered");
+    const [gifts, discounts, conversions] = await Promise.all([
+      supabase
+        .from("telemetry_events")
+        .select("*", { count: "exact", head: true })
+        .eq("event_type", "emotional_pricing_triggered")
+        .eq("payload->>action", "gift_granted"),
+      supabase
+        .from("telemetry_events")
+        .select("*", { count: "exact", head: true })
+        .eq("event_type", "emotional_pricing_triggered")
+        .eq("payload->>action", "discount_offer_created"),
+      supabase
+        .from("telemetry_events")
+        .select("*", { count: "exact", head: true })
+        .eq("event_type", "emotional_pricing_triggered")
+        .eq("payload->>action", "offer_converted_to_premium"),
+    ]);
 
-    if (error || !events) {
-      return { giftsGrantedCount: 0, discountOffersCount: 0, conversionRatePercent: 0 };
-    }
-
-    let giftsGrantedCount = 0;
-    let discountOffersCount = 0;
-    let convertedCount = 0;
-
-    events.forEach(e => {
-        const action = e.payload?.action;
-        if (action === "gift_granted") giftsGrantedCount++;
-        if (action === "discount_offer_created") discountOffersCount++;
-        if (action === "offer_converted_to_premium") convertedCount++;
-    });
+    const giftsGrantedCount = gifts.count || 0;
+    const discountOffersCount = discounts.count || 0;
+    const convertedCount = conversions.count || 0;
 
     const conversionRatePercent =
       discountOffersCount > 0 ? Math.round((convertedCount / discountOffersCount) * 100) : 0;

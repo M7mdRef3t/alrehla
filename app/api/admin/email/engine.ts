@@ -40,13 +40,12 @@ export const TRACKING_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://al
 
 // ─── Transporter (Singleton) ────────────────────────────────────────────────
 
-let _transporter: Transporter<SMTPTransport.SentMessageInfo> | null = null;
+let _transporter: any = null;
 
-function getTransporter(): Transporter<SMTPTransport.SentMessageInfo> {
+function getTransporter(): any {
   if (_transporter) return _transporter;
 
-  // We omit explicit typing here to allow 'pool' and connection options that standard @types missing
-  const transportOptions: any = {
+  const transportOptions = {
     host: SMTP_HOST,
     port: SMTP_PORT,
     secure: SMTP_SECURE,
@@ -54,15 +53,10 @@ function getTransporter(): Transporter<SMTPTransport.SentMessageInfo> {
       user: SMTP_USER,
       pass: SMTP_PASSWORD,
     },
-    // Connection pool for batch sends
     pool: true,
     maxConnections: 5,
     maxMessages: 100,
-    // Timeouts
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
-    socketTimeout: 30_000,
-  };
+  } as any;
 
   // DKIM signing (if key provided)
   if (DKIM_PRIVATE_KEY) {
@@ -73,8 +67,8 @@ function getTransporter(): Transporter<SMTPTransport.SentMessageInfo> {
     };
   }
 
-  _transporter = nodemailer.createTransport(transportOptions) as any;
-  return _transporter!;
+  _transporter = nodemailer.createTransport(transportOptions);
+  return _transporter;
 }
 
 // ─── Types ──────────────────────────────────────────────────────────────────

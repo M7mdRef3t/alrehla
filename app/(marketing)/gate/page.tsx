@@ -14,6 +14,7 @@ function MarketingGateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
+  const [mounted, setMounted] = useState(false);
   const [state, setState] = useState<GateState>({
     sessionId: '',
     step: 'layer1',
@@ -26,6 +27,7 @@ function MarketingGateContent() {
 
   // Initialize Session
   useEffect(() => {
+    setMounted(true);
     if (!initialized.current) {
       const newSessionId = uuidv4();
       setState(s => ({ ...s, sessionId: newSessionId }));
@@ -113,6 +115,8 @@ function MarketingGateContent() {
   };
 
   const isLayer1Valid = !!(state.email && state.email.includes('@') && state.sourceArea);
+
+  if (!mounted) return null;
 
   return (
     <main className="relative min-h-screen flex items-center justify-center p-4">
