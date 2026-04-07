@@ -126,10 +126,7 @@ function buildKineticContext(input: KineticTelemetryInput | null | undefined): s
 }
 
 function toErrorMessage(error: unknown): string {
-    if (process.env.NODE_ENV === 'development') {
-        return error instanceof Error ? error.message : String(error || 'unknown_error');
-    }
-    return 'An unexpected error occurred.';
+    return error instanceof Error ? error.message : String(error || 'unknown_error');
 }
 
 type MasterPromptInput = {

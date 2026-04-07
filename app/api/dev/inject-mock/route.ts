@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
 
 function toErrorMessage(error: unknown): string {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV !== 'production') {
         return error instanceof Error ? error.message : String(error || 'unknown_error');
     }
     return 'An unexpected error occurred.';

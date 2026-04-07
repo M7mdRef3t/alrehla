@@ -113,10 +113,9 @@ function formatSigned(value: number): string {
 }
 
 function toErrorMessage(error: unknown, fallback: string): string {
-    if (process.env.NODE_ENV === 'development') {
-        return error instanceof Error ? error.message : String(error || fallback);
-    }
-    return fallback || 'An unexpected error occurred.';
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === "string" && error.trim()) return error;
+  return fallback;
 }
 
 function toTimestamp(value: unknown): number | null {
