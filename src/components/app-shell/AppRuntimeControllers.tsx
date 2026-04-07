@@ -293,29 +293,37 @@ export function AppRuntimeControllers({
       const alerts = await fetchOwnerAlerts({ since, phaseTarget: 10 });
       if (!alerts || cancelled) return;
 
-      for (const sessionId of alerts.newVisitors.sessionIds) {
-        await sendOwnerNotification(
-          "زائر جديد دخل المنصة",
-          `Session: ${sessionId.slice(0, 14)}…`,
-          `owner-visitor-${sessionId}`
-        );
-      }
+      const notificationPromises: Promise<void>[] = [];
 
-      for (const sessionId of alerts.logins.sessionIds) {
-        await sendOwnerNotification(
-          "زائر أكمل تسجيل الدخول",
-          `Session: ${sessionId.slice(0, 14)}…`,
-          `owner-login-${sessionId}`
+      alerts.newVisitors.sessionIds.forEach((sessionId) => {
+        notificationPromises.push(
+          sendOwnerNotification(
+            "زائر جديد دخل المنصة",
+            `Session: ${sessionId.slice(0, 14)}…`,
+            `owner-visitor-${sessionId}`
+          )
         );
-      }
+      });
 
-      for (const sessionId of alerts.installs.sessionIds) {
-        await sendOwnerNotification(
-          "زائر ثبّت التطبيق",
-          `Session: ${sessionId.slice(0, 14)}…`,
-          `owner-install-${sessionId}`
+      alerts.logins.sessionIds.forEach((sessionId) => {
+        notificationPromises.push(
+          sendOwnerNotification(
+            "زائر أكمل تسجيل الدخول",
+            `Session: ${sessionId.slice(0, 14)}…`,
+            `owner-login-${sessionId}`
+          )
         );
-      }
+      });
+
+      alerts.installs.sessionIds.forEach((sessionId) => {
+        notificationPromises.push(
+          sendOwnerNotification(
+            "زائر ثبّت التطبيق",
+            `Session: ${sessionId.slice(0, 14)}…`,
+            `owner-install-${sessionId}`
+          )
+        );
+      });
 
       const prevMilestones = loadOwnerMilestonesState();
       const nextMilestones: OwnerMilestonesState = {
@@ -326,33 +334,43 @@ export function AppRuntimeControllers({
       };
 
       if (!prevMilestones.registeredReached && nextMilestones.registeredReached) {
-        await sendOwnerNotification(
-          "تحقق الهدف: 10 تسجيلات",
-          `تم الوصول إلى ${alerts.phaseOne.registeredUsers} مستخدمين مسجلين.`,
-          "owner-goal-registered"
+        notificationPromises.push(
+          sendOwnerNotification(
+            "تحقق الهدف: 10 تسجيلات",
+            `تم الوصول إلى ${alerts.phaseOne.registeredUsers} مستخدمين مسجلين.`,
+            "owner-goal-registered"
+          )
         );
       }
       if (!prevMilestones.installedReached && nextMilestones.installedReached) {
-        await sendOwnerNotification(
-          "تحقق الهدف: 10 تثبيتات",
-          `تم الوصول إلى ${alerts.phaseOne.installedUsers} مستخدمين ثبّتوا التطبيق.`,
-          "owner-goal-installed"
+        notificationPromises.push(
+          sendOwnerNotification(
+            "تحقق الهدف: 10 تثبيتات",
+            `تم الوصول إلى ${alerts.phaseOne.installedUsers} مستخدمين ثبّتوا التطبيق.`,
+            "owner-goal-installed"
+          )
         );
       }
       if (!prevMilestones.addedReached && nextMilestones.addedReached) {
-        await sendOwnerNotification(
-          "تحقق الهدف: 10 أشخاص مضافين",
-          `تم الوصول إلى ${alerts.phaseOne.addedPeople} أشخاص مضافين على الخرائط.`,
-          "owner-goal-added"
+        notificationPromises.push(
+          sendOwnerNotification(
+            "تحقق الهدف: 10 أشخاص مضافين",
+            `تم الوصول إلى ${alerts.phaseOne.addedPeople} أشخاص مضافين على الخرائط.`,
+            "owner-goal-added"
+          )
         );
       }
       if (!prevMilestones.fullyCompleted && nextMilestones.fullyCompleted) {
-        await sendOwnerNotification(
-          "اكتمل هدف المرحلة الأولى",
-          "10 تسجيلات + 10 تثبيتات + 10 أشخاص مضافين تحققوا بالكامل.",
-          "owner-goal-phase-one-complete"
+        notificationPromises.push(
+          sendOwnerNotification(
+            "اكتمل هدف المرحلة الأولى",
+            "10 تسجيلات + 10 تثبيتات + 10 أشخاص مضافين تحققوا بالكامل.",
+            "owner-goal-phase-one-complete"
+          )
         );
       }
+
+      await Promise.all(notificationPromises);
 
       saveOwnerMilestonesState(nextMilestones);
       setInLocalStorage(OWNER_ALERTS_LAST_CHECK_KEY, alerts.generatedAt || new Date().toISOString());
