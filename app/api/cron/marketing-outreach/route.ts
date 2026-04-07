@@ -57,7 +57,7 @@ function pickSubject(step: number, leadId: string | null): string {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function toErrorMessage(error: unknown): string {
-  if (error instanceof Error) console.error(error);
+  console.error(error);
   return 'An internal server error occurred.';
 }
 

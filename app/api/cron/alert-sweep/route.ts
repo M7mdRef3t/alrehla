@@ -39,7 +39,7 @@ function buildSweepClient(): ReturnType<typeof createSweepClient> | null {
 type SweepClient = ReturnType<typeof createSweepClient>;
 
 function toErrorMessage(error: unknown): string {
-    if (error instanceof Error) console.error(error);
+    console.error(error);
     return 'An internal server error occurred.';
 }
 
