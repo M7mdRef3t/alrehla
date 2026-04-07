@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { telegramBot } from "../../../../src/services/telegramBot";
-import type { HealthCheckResult } from "../../../../src/ai/autoHealthCheck";
+import { telegramBot } from "@/services/telegramBot";
+import type { HealthCheckResult } from "@/ai/autoHealthCheck";
 
 export async function POST(req: Request) {
   try {
