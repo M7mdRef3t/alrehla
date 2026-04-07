@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { FC } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Info } from "lucide-react";

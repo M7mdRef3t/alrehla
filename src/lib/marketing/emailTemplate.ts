@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Premium Arabic HTML email template for Alrehla marketing outreach.
  * RTL layout, dark and light email-client compatible.

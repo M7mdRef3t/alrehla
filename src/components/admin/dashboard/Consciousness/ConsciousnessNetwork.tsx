@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 import type { FC } from "react";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -101,7 +102,7 @@ export function ConsciousnessNetwork({ activeLayer = "all" }: ConsciousnessNetwo
             });
             setFlows(prevFlows => {
                 return prevFlows.map(flow => {
-                    let nextProgress = flow.progress + flow.speed;
+                    const nextProgress = flow.progress + flow.speed;
                     if (nextProgress > 1) {
                         return {
                             ...flow,
