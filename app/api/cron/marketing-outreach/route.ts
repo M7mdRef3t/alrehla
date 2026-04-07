@@ -225,12 +225,12 @@ export async function GET(request: Request) {
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.alrehla.app").replace(/\/$/, "");
 
   // Batch fetch all required marketing leads data
-  const uniqueEmails = Array.from(new Set(rows.map(r => r.lead_email)));
-  const { data: leadsData } = uniqueEmails.length > 0
+  const uniqueEmailsList = Array.from(new Set(rows.map(r => r.lead_email)));
+  const { data: leadsData } = uniqueEmailsList.length > 0
     ? await supabase
         .from("marketing_leads")
         .select("email, first_name, name, full_name, unsubscribed, phone")
-        .in("email", uniqueEmails)
+        .in("email", uniqueEmailsList)
     : { data: [] };
 
   const leadsMap = new Map(
