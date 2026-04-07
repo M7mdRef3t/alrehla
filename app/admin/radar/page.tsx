@@ -113,8 +113,7 @@ function formatSigned(value: number): string {
 }
 
 function toErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message) return error.message;
-  if (typeof error === "string" && error.trim()) return error;
+  if (error instanceof Error) console.error(error);
   return fallback;
 }
 

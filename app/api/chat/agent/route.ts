@@ -846,7 +846,7 @@ Language: Sharp Egyptian Slang.
         }
         return NextResponse.json(
             {
-                error: toErrorMessage(err),
+                error: 'An internal server error occurred.',
                 llm_latency_ms: telemetryLatencyMs || (Date.now() - requestStart),
                 ...(debugTelemetryPromptEnabled
                     ? { __debug_system_prompt: debugSystemPrompt, __debug_telemetry_context: debugTelemetryContext }

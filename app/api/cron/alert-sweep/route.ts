@@ -39,7 +39,8 @@ function buildSweepClient(): ReturnType<typeof createSweepClient> | null {
 type SweepClient = ReturnType<typeof createSweepClient>;
 
 function toErrorMessage(error: unknown): string {
-    return error instanceof Error ? error.message : String(error || 'unknown_error');
+    if (error instanceof Error) console.error(error);
+    return 'An internal server error occurred.';
 }
 
 function normalizeMetric(input: unknown): MetricPoint {

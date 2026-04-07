@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdminClient } from '../../_lib/supabaseAdmin';
 
 function toErrorMessage(error: unknown): string {
-    return error instanceof Error ? error.message : String(error || 'unknown_error');
+    if (error instanceof Error) console.error(error);
+    return 'An internal server error occurred.';
 }
 
 export async function POST(req: Request) {
