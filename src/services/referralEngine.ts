@@ -129,6 +129,30 @@ export function applyReferralCode(code: string): boolean {
     data.referredBy = code;
     saveReferralData(data);
 
+    // Notify referrer via Supabase edge function
+    if (isSupabaseReady && supabase) {
+        // Capture supabase to ensure TypeScript knows it is not null in callbacks
+        const sb = supabase;
+        sb.from("marketing_leads")
+            .select("email")
+            .filter("metadata->>referral_code", "eq", code)
+            .maybeSingle()
+            .then(({ data: referrer }) => {
+                if (referrer?.email) {
+                    sb.functions.invoke('send-email', {
+                        body: {
+                            to: referrer.email,
+                            subject: "تهانينا! شخص جديد انضم عن طريقك 🌟",
+                            html: "<div dir='rtl' style='text-align: right; font-family: sans-serif;'><p>أهلاً بك،</p><p>لقد قام شخص جديد بالتسجيل باستخدام كود الإحالة الخاص بك!</p><p>يمكنك الآن الاستمتاع بمكافأتك.</p><p>شكراً لكونك جزءاً من عائلتنا.</p></div>"
+                        }
+                    }).then(({ error }) => {
+                        if (error) console.error("Error from send-email:", error);
+                    }).catch((err: any) => console.error("Failed to invoke send-email:", err));
+                }
+            })
+            .then(undefined, (err: any) => console.error("Failed to find referrer email:", err));
+    }
+
     return true;
 }
 
