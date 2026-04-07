@@ -1,4 +1,5 @@
 import { getStripeClient } from "../../app/api/_lib/stripeConfig";
+import { supabase } from "./supabaseClient";
 
 export async function updateStripePrices(premium: number, coach: number) {
   const { client: stripe, config } = getStripeClient();
@@ -28,7 +29,16 @@ export async function updateStripePrices(premium: number, coach: number) {
         }
       });
       newPrices.premiumPriceId = newPremiumPrice.id;
-      // Ideally, we would update the system config (DB or env var equivalents) with the newPrice ID here.
+      // Save to database so the application can pick up the new stripe price ID
+      if (supabase) await supabase.from("system_settings").upsert({
+        key: "ai_dynamic_pricing_premium",
+        value: {
+          priceId: newPremiumPrice.id,
+          amount: premium,
+          currency: newPremiumPrice.currency,
+          updatedAt: new Date().toISOString()
+        }
+      }, { onConflict: "key" });
     }
 
     // 2. Update Coach Price
@@ -48,6 +58,17 @@ export async function updateStripePrices(premium: number, coach: number) {
         }
       });
       newPrices.coachPriceId = newCoachPrice.id;
+
+      // Save to database so the application can pick up the new stripe price ID
+      if (supabase) await supabase.from("system_settings").upsert({
+        key: "ai_dynamic_pricing_coach",
+        value: {
+          priceId: newCoachPrice.id,
+          amount: coach,
+          currency: newCoachPrice.currency,
+          updatedAt: new Date().toISOString()
+        }
+      }, { onConflict: "key" });
     }
 
     return { success: true, prices: newPrices };

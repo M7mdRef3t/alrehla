@@ -300,7 +300,7 @@ export class RevenueAutomationEngine {
 
       console.warn("✅ Stripe prices updated:", stripeResult.prices);
 
-      // TODO: Update database configuration with the new price IDs if needed.
+
       // TODO: Notify existing users about grandfathering policy
 
       console.warn("✅ Pricing changed successfully:", recommendation.suggestedPrices);
