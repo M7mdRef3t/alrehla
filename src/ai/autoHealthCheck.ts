@@ -533,9 +533,6 @@ export class AutoHealthChecker {
     console.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
 
     try {
-      // Dynamic import to avoid circular dependencies
-      const { telegramBot } = await import("../services/telegramBot");
-
       const topIssues = result.issues.slice(0, 5);
       let message = `Health Score: ${result.score}/100\n`;
       message += topIssues.map(i => `- [${i.category.toUpperCase()}] ${i.description}`).join("\n");
@@ -546,13 +543,17 @@ export class AutoHealthChecker {
 
       const affectedFeatures = Array.from(new Set(result.issues.map(i => i.category)));
 
-      await telegramBot.alertCriticalError({
-        message: message || "Unknown critical health issue detected.",
-        severity: result.status === "critical" ? "critical" : "high",
-        affectedFeatures: affectedFeatures.length > 0 ? affectedFeatures : ["system"],
+      await fetch("/api/admin/health-alert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: message || "Unknown critical health issue detected.",
+          severity: result.status === "critical" ? "critical" : "high",
+          affectedFeatures: affectedFeatures.length > 0 ? affectedFeatures : ["system"],
+        }),
       });
     } catch (error) {
-      console.error("❌ Failed to send Telegram notification:", error);
+      console.error("❌ Failed to trigger health alert API:", error);
     }
   }
 
