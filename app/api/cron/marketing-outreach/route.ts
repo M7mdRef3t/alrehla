@@ -97,7 +97,7 @@ function buildStep1Html(opts: { firstName: string; personalLink: string; unsubLi
     name: opts.firstName || undefined,
     personalLink: opts.personalLink,
     previewText: "خريطة علاقاتك جاهزة — ابدأ الرحلة الآن",
-    _senderName: "فريق عمل",
+    senderName: "فريق عمل",
     unsubLink: opts.unsubLink,
   });
 }
@@ -107,7 +107,7 @@ function buildStep2Html(opts: { firstName: string; personalLink: string; unsubLi
     name: opts.firstName || undefined,
     personalLink: opts.personalLink,
     previewText: "الخريطة لسه مستنياك — مكانك محجوز",
-    _senderName: "فريق عمل",
+    senderName: "فريق عمل",
     unsubLink: opts.unsubLink,
   });
 }
@@ -117,7 +117,7 @@ function buildStep3Html(opts: { firstName: string; personalLink: string; unsubLi
     name: opts.firstName || undefined,
     personalLink: opts.personalLink,
     previewText: "رسالة أخيرة — اللينك ده هيوصلك لخريطتك في أي وقت",
-    _senderName: "فريق عمل",
+    senderName: "فريق عمل",
     unsubLink: opts.unsubLink,
   });
 }
