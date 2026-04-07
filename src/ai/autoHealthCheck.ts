@@ -555,21 +555,6 @@ ${issuesText}`;
     } catch (e) {
       console.error("Failed to send telegram notification for health check", e);
     }
-
-    try {
-      const alerts = JSON.parse(
-        localStorage.getItem("dawayir-health-alerts") || "[]"
-      ) as HealthCheckResult[];
-
-      alerts.push(result);
-
-      localStorage.setItem(
-        "dawayir-health-alerts",
-        JSON.stringify(alerts.slice(-10)) // آخر 10 تنبيهات
-      );
-    } catch {
-      // ignore
-    }
   }
 
   /**

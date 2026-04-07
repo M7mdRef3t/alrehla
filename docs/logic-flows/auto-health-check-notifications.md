@@ -29,7 +29,7 @@ To notify administrators in real-time about critical system health issues detect
 
 ## Failure & Fallback
 - If the Telegram API fails or throws: The error is logged to `console.error` and handled gracefully without crashing the health check.
-- Local Storage history: `dawayir-health-alerts` is always updated in `localStorage` as a fallback local history of alerts.
+- Local Storage history: The fallback logic using `localStorage` was removed entirely in favor of immediate telegram alerts.
 
 ## Performance Constraints
 - Target complexity: O(1) for alerting.
