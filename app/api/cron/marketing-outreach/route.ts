@@ -233,9 +233,10 @@ export async function GET(request: Request) {
         .in("email", uniqueEmailsList)
     : { data: [] };
 
-  const leadsMap = new Map(
-    (leadsData || []).map((lead) => [(lead as Record<string, unknown>).email as string, lead])
-  );
+  const leadsMap = new Map<string, Record<string, unknown>>();
+  for (const lead of leadsData || []) {
+    leadsMap.set((lead as Record<string, unknown>).email as string, lead as Record<string, unknown>);
+  }
 
   for (const row of rows) {
     try {
