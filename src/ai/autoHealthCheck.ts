@@ -14,8 +14,9 @@
 
 import { decisionEngine } from "./decision-framework";
 import type { AIDecision } from "./decision-framework";
-import * as Sentry from "@sentry/react";
+
 import { runtimeEnv } from "../config/runtimeEnv";
+import { initMonitoring } from "../services/monitoring";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🏥 Health Check Result
@@ -537,8 +538,14 @@ export class AutoHealthChecker {
     console.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
 
     if (runtimeEnv.isProd) {
-      Sentry.captureException(new Error("Critical Health Issue Detected"), {
-        extra: { healthCheckResult: result }
+      // Dynamic import to avoid SSR and circular dependency issues
+      initMonitoring();
+      import("@sentry/react").then((Sentry) => {
+        Sentry.captureException(new Error("Critical Health Issue Detected"), {
+          extra: { healthCheckResult: result }
+        });
+      }).catch((err) => {
+        console.error("Failed to load Sentry for health check alert:", err);
       });
     }
 
