@@ -6,7 +6,6 @@
 
 import { decisionEngine } from "./decision-framework";
 import { geminiClient } from "../services/geminiClient";
-import { updateStripePrices } from "../services/stripePricingService";
 import type { AIDecision } from "./decision-framework";
 import {
   type PricingTier,
@@ -293,6 +292,7 @@ export class RevenueAutomationEngine {
     // تطبيق التغيير
     try {
       // ربط تغيير الأسعار بمصدر التسعير الفعلي
+      const { updateStripePrices } = await import("../services/stripePricingService");
       const stripeResult = await updateStripePrices(
         recommendation.suggestedPrices.premium,
         recommendation.suggestedPrices.coach
