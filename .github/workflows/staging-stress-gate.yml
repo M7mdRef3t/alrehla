@@ -55,7 +55,6 @@ jobs:
         run: npm run stress:gate
 
   stress-gate-real-staging:
-    if: ${{ secrets.STAGING_DATABASE_URL != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
