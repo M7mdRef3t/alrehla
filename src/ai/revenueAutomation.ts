@@ -1,3 +1,4 @@
+import { notifyUsersAboutGrandfathering } from "../services/grandfatheringService";
 /**
  * REVENUE_AUTOMATION.ts — محرك الدخل المالي الذاتي
  * =====================================================
@@ -293,7 +294,11 @@ export class RevenueAutomationEngine {
     try {
       // TODO: ربط تغيير الأسعار بمصدر التسعير الفعلي عند تفعيله
       // TODO: Update database with new pricing
-      // TODO: Notify existing users about grandfathering policy
+      // Notify existing users about grandfathering policy
+      const notifyResult = await notifyUsersAboutGrandfathering(recommendation);
+      if (!notifyResult.success) {
+        console.warn('⚠️ Failed to completely notify users about grandfathering');
+      }
 
       console.warn("✅ Pricing changed successfully:", recommendation.suggestedPrices);
 
