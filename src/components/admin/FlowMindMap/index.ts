@@ -1,4 +1,4 @@
-export { FlowMindMap } from "../FlowMindMap";
+export { FlowMindMap } from "./FlowMindMap";
 export * from "./types";
 export * from "./constants";
 export * from "./utils";

@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "tsc:check": "tsc --noEmit && echo ✅ صفر أخطاء TypeScript || echo ❌ يوجد أخطاء TypeScript",
     "check": "npm run typecheck && npm run lint && npm run test:run",
-    "lint": "eslint \"app/**/*.{ts,tsx}\" \"src/**/*.{ts,tsx}\" \"server/**/*.{ts,tsx}\"",
+    "lint": "eslint --quiet \"app/**/*.{ts,tsx}\" \"src/**/*.{ts,tsx}\" \"server/**/*.{ts,tsx}\"",
     "lint:fix": "eslint \"app/**/*.{ts,tsx}\" \"src/**/*.{ts,tsx}\" \"server/**/*.{ts,tsx}\" --fix",
     "test": "vitest",
     "test:run": "vitest run",

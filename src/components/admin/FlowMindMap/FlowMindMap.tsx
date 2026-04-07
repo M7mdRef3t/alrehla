@@ -9,33 +9,33 @@ import {
 
 import {
   FlowNode, FlowMapActionEvent, FlowMindMapProps, Position, FlowNodeOverride, EditorMode, FlowSnapshot
-} from "./FlowMindMap/types";
+} from "./types";
 import {
   STORAGE_KEY, POS_STORAGE_KEY, ZOOM_STORAGE_KEY, OVERRIDES_STORAGE_KEY,
   HIDDEN_BASE_STORAGE_KEY, DEFAULT_POS_STORAGE_KEY, LOCKED_NODE_STORAGE_KEY,
   CARD_W, CARD_H, H_GAP, V_GAP, TOP_PAD, MIN_ZOOM, MAX_ZOOM, ZOOM_STEP,
   CANVAS_SIZE, MINIMAP_SIZE, MAX_ABS_COORD, MAX_ABS_PAN
-} from "./FlowMindMap/constants";
+} from "./constants";
 import {
   variantConfig, getVariantKey, getStyle, getDecisionOutcome, PHASE_LANE_META,
   isValidAccent, isValidVariant, isPosition, mergePositionsWithLayout,
   arePositionsEqual, isOverlapping, connectorPath, computeTreeLayout,
   areLinksEqual, applyPresetToLayout, cloneSnapshot
-} from "./FlowMindMap/utils";
+} from "./utils";
 import {
   loadCustom, saveCustom, loadPositions, savePositions, loadDefaultPositions,
   saveDefaultPositions, loadZoom, saveZoom, loadOverrides, saveOverrides,
   loadHiddenBaseIds, saveHiddenBaseIds, loadLockedNodeIds, saveLockedNodeIds
-} from "./FlowMindMap/storage";
-import { kbdStyle, ToolbarBtn } from "./FlowMindMap/components";
+} from "./storage";
+import { kbdStyle, ToolbarBtn } from "./components";
 
-import { removeFromLocalStorage } from "../../services/browserStorage";
+import { removeFromLocalStorage } from "../../../services/browserStorage";
 
-export type { FlowNode, FlowMapActionEvent, FlowMindMapProps, Position, FlowNodeOverride, EditorMode, FlowSnapshot } from "./FlowMindMap/types";
+export type { FlowNode, FlowMapActionEvent, FlowMindMapProps, Position, FlowNodeOverride, EditorMode, FlowSnapshot } from "./types";
 
 
 
-import { downloadBlobFile } from "../../services/clientDom";
+import { downloadBlobFile } from "../../../services/clientDom";
 
 /* ═══════════════════════════════════════════════════
    Component
