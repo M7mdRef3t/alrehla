@@ -102,14 +102,21 @@ Output strictly as JSON:
 "فيه خرم إبرة واحد للنجاة من اللي هيحصل الساعة ١٠.. الثغرة دي موجودة في كلامك اللي فات بس أنت خايف تشوفها. لو معرفتش تطلعها من لسانك قبل ما المجال ينحرف، الصدمة هتكون تقيلة. جاهز تكسر الـ Ego بتاعك ولا هتغرق مع الباقيين؟"
         `;
 
-        for (const p of pioneers) {
-            await supabase.from('resonance_nudge_logs').insert({
-                user_id: p.id,
-                nudge_type: 'pre_ionization',
-                context_sentiment: 'STABILITY',
-                nudge_content: riddle
-            });
-            console.log(`🌀 [ResonanceMonitor] Pre-Ionization Riddle sent to ${p.id}`);
+        const nudgeLogs = pioneers.map(p => ({
+            user_id: p.id,
+            nudge_type: 'pre_ionization',
+            context_sentiment: 'STABILITY',
+            nudge_content: riddle
+        }));
+
+        const { error } = await supabase.from('resonance_nudge_logs').insert(nudgeLogs);
+
+        if (!error) {
+            for (const p of pioneers) {
+                console.log(`🌀 [ResonanceMonitor] Pre-Ionization Riddle sent to ${p.id}`);
+            }
+        } else {
+            console.error('❌ [ResonanceMonitor] Failed to dispatch Pre-Ionization Riddle:', error);
         }
     }
 
