@@ -146,26 +146,34 @@ Output strictly as JSON:
             return;
         }
 
-        // 3. For each unpaired pioneer, find their complement
+        // 3. For each unpaired pioneer, find their complement concurrently
         let pairsCreated = 0;
         const paired = new Set<string>();
 
-        for (const pioneer of pioneers) {
-            if (paired.has(pioneer.id)) continue;
+        const partnerPromises = pioneers.map(pioneer =>
+            supabase!.rpc('find_resonance_partner', { p_user_id: pioneer.id })
+                .then(({ data }) => ({
+                    pioneerId: pioneer.id,
+                    partner: data && data.length > 0 ? data[0] : null
+                }))
+        );
 
-            const { data: partner } = await supabase
-                .rpc('find_resonance_partner', { p_user_id: pioneer.id });
+        const results = await Promise.all(partnerPromises);
 
-            if (!partner || partner.length === 0) continue;
+        // 4. Create the Ephemeral Entanglement (TTL: 24h) in bulk
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        const inserts: any[] = [];
 
-            const match = partner[0];
+        for (const result of results) {
+            const { pioneerId, partner } = result;
+            if (paired.has(pioneerId)) continue;
+            if (!partner) continue;
+
+            const match = partner;
             if (paired.has(match.partner_id)) continue;
 
-            // 4. Create the Ephemeral Entanglement (TTL: 24h)
-            const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-
-            await supabase.from('resonance_pairs').insert({
-                user_a_id: pioneer.id,
+            inserts.push({
+                user_a_id: pioneerId,
                 user_b_id: match.partner_id,
                 complementary_axis: match.weakness_axis,
                 similarity_score: match.complementary_score,
@@ -176,11 +184,15 @@ Output strictly as JSON:
                 }
             });
 
-            paired.add(pioneer.id);
+            paired.add(pioneerId);
             paired.add(match.partner_id);
             pairsCreated++;
 
-            console.log(`✨ [ResonanceMonitor] Paired ${pioneer.id} ↔ ${match.partner_id} (Axis: ${match.weakness_axis})`);
+            console.log(`✨ [ResonanceMonitor] Paired ${pioneerId} ↔ ${match.partner_id} (Axis: ${match.weakness_axis})`);
+        }
+
+        if (inserts.length > 0) {
+            await supabase.from('resonance_pairs').insert(inserts);
         }
 
         console.log(`🔗 [ResonanceMonitor] Synchronicity complete: ${pairsCreated} pairs created.`);
