@@ -1,3 +1,4 @@
+import { getAuthUserId } from "../state/authState";
 /**
  * EMOTIONAL_PRICING_ENGINE.ts — محرك التسعير العاطفي
  * =====================================================
@@ -434,7 +435,7 @@ export class EmotionalPricingEngine {
    * فحص دوري لكل المستخدمين (يوميا)
    * ─────────────────────────────────────────────────────────────────
    */
-  async runDailyEmotionalCheck(): Promise<void> {
+  async runDailyEmotionalCheck(userId?: string): Promise<void> {
     console.warn("🧠 Running daily emotional pricing check...");
 
     try {
@@ -453,7 +454,7 @@ export class EmotionalPricingEngine {
       ) as number[];
 
       const state = this.analyzeUserState({
-        userId: "current-user", // TODO: استخدام User ID الفعلي
+        userId: userId || getAuthUserId() || "anonymous",
         nodes,
         journalEntries,
         teiHistory,
@@ -484,11 +485,11 @@ export const emotionalPricingEngine = new EmotionalPricingEngine();
  */
 export function startDailyEmotionalCheck(): void {
   // تشغيل فوراً
-  void emotionalPricingEngine.runDailyEmotionalCheck();
+  void emotionalPricingEngine.runDailyEmotionalCheck(getAuthUserId() || "anonymous");
 
   // كل 24 ساعة
   setInterval(() => {
-    void emotionalPricingEngine.runDailyEmotionalCheck();
+    void emotionalPricingEngine.runDailyEmotionalCheck(getAuthUserId() || "anonymous");
   }, 24 * 60 * 60 * 1000);
 
   console.warn("✅ Daily emotional pricing check scheduled");
