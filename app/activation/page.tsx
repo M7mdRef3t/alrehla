@@ -3,9 +3,7 @@
 import type { ChangeEvent, FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import {
-  CheckCircle2,
-  MessageCircle,
-} from "lucide-react";
+  } from "lucide-react";
 import {
   trackCompleteRegistration,
   trackInitiateCheckout as trackActivationInitiated,

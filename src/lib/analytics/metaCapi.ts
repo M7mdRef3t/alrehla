@@ -1,8 +1,8 @@
 export const sendToCapi = async (
   eventName: string,
   eventId: string,
-  userData: any,
-  customData: any = {}
+  userData: Record<string, unknown>,
+  customData: Record<string, unknown> = {}
 ) => {
   try {
     const res = await fetch('/api/meta/capi', {

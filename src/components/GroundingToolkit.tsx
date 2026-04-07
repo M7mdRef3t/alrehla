@@ -1,7 +1,7 @@
 import type { FC } from "react";
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wind, Eye, Hand, ChevronLeft, X, Volume2, VolumeX, Activity, Brain } from "lucide-react";
+import { Wind, Eye, ChevronLeft, Volume2, VolumeX, Activity, Brain } from "lucide-react";
 
 /* ══════════════════════════════════════════
    GROUNDING TOOLKIT — أدوات تهدئة الجسم أولاً
