@@ -129,6 +129,41 @@ export function applyReferralCode(code: string): boolean {
     data.referredBy = code;
     saveReferralData(data);
 
+    // Notify referrer via Supabase edge function
+    if (isSupabaseReady && supabase) {
+        // Fire-and-forget async IIFE to avoid blocking the synchronous applyReferralCode
+        (async () => {
+            try {
+                // Find the referrer's email by their referral_code
+                const { data: referrer } = await supabase
+                    .from("marketing_leads")
+                    .select("email")
+                    .filter("metadata->>referral_code", "eq", code)
+                    .maybeSingle();
+
+                if (referrer?.email) {
+                    await supabase.functions.invoke("send-email", {
+                        body: {
+                            to: referrer.email,
+                            subject: "دعوة ناجحة! تكسب ميدالية + أسبوع بريميوم 🎉",
+                            html: `
+                                <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6;">
+                                    <h2>ألف مبروك!</h2>
+                                    <p>فيه حد سجل باستخدام كود الإحالة بتاعك.</p>
+                                    <p>كده إنت كسبت أسبوع بريميوم زيادة في حسابك.</p>
+                                    <p>استمر في دعوة أصحابك عشان تكسب أكتر!</p>
+                                </div>
+                            `,
+                            text: "فيه حد سجل باستخدام كود الإحالة بتاعك. كسبت أسبوع بريميوم!"
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to notify referrer:", err);
+            }
+        })();
+    }
+
     return true;
 }
 
@@ -160,6 +195,27 @@ export async function applyReferralCodeAsync(code: string, myEmail: string): Pro
                         earned_weeks: (rMeta.earned_weeks || 0) + 1
                     }
                 }).eq("email", referrer.email);
+
+                // Notify referrer via Supabase edge function
+                try {
+                    await supabase.functions.invoke("send-email", {
+                        body: {
+                            to: referrer.email,
+                            subject: "دعوة ناجحة! تكسب ميدالية + أسبوع بريميوم 🎉",
+                            html: `
+                                <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6;">
+                                    <h2>ألف مبروك!</h2>
+                                    <p>فيه حد سجل باستخدام كود الإحالة بتاعك.</p>
+                                    <p>كده إنت كسبت أسبوع بريميوم زيادة في حسابك.</p>
+                                    <p>استمر في دعوة أصحابك عشان تكسب أكتر!</p>
+                                </div>
+                            `,
+                            text: "فيه حد سجل باستخدام كود الإحالة بتاعك. كسبت أسبوع بريميوم!"
+                        }
+                    });
+                } catch (emailErr) {
+                    console.error("Failed to notify referrer:", emailErr);
+                }
             }
         }
     } catch (e) {
