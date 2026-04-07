@@ -5,7 +5,6 @@
  */
 
 import { decisionEngine } from "./decision-framework";
-import { supabase } from "../services/supabaseClient";
 import { geminiClient } from "../services/geminiClient";
 import type { AIDecision } from "./decision-framework";
 import {
@@ -162,12 +161,13 @@ export class RevenueAutomationEngine {
    * إرسال إشعار للمستخدمين الحاليين باحتفاظهم بأسعارهم القديمة
    */
   private async notifyGrandfatheredUsers(): Promise<void> {
-    if (!supabase) {
-      console.warn("Supabase not initialized, cannot notify users.");
-      return;
-    }
-
     try {
+      const { supabase } = await import("../services/supabaseClient");
+      if (!supabase) {
+        console.warn("Supabase not initialized, cannot notify users.");
+        return;
+      }
+
       console.warn("📧 Notifying active users about grandfathering policy...");
 
       // Fetch users who are on premium/coach tiers (active or enterprise admins)
