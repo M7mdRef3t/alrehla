@@ -16,6 +16,7 @@ interface ViralLoopNudgeProps {
 
 export function ViralLoopNudge({ onClose, forceShow = false }: ViralLoopNudgeProps) {
   const [isVisible, setIsVisible] = useState(false);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_isExpanding, _setIsExpanding] = useState(false);
   const [copied, setCopied] = useState(false);
   
