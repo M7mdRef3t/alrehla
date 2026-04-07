@@ -6,6 +6,7 @@
 
 import { decisionEngine } from "./decision-framework";
 import { geminiClient } from "../services/geminiClient";
+import { updateStripePrices } from "../services/stripePricingService";
 import type { AIDecision } from "./decision-framework";
 import {
   type PricingTier,
@@ -291,8 +292,15 @@ export class RevenueAutomationEngine {
 
     // تطبيق التغيير
     try {
-      // TODO: ربط تغيير الأسعار بمصدر التسعير الفعلي عند تفعيله
-      // TODO: Update database with new pricing
+      // ربط تغيير الأسعار بمصدر التسعير الفعلي
+      const stripeResult = await updateStripePrices(
+        recommendation.suggestedPrices.premium,
+        recommendation.suggestedPrices.coach
+      );
+
+      console.warn("✅ Stripe prices updated:", stripeResult.prices);
+
+      // TODO: Update database configuration with the new price IDs if needed.
       // TODO: Notify existing users about grandfathering policy
 
       console.warn("✅ Pricing changed successfully:", recommendation.suggestedPrices);
