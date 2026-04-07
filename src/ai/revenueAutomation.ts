@@ -1,3 +1,4 @@
+import { createClient } from "@supabase/supabase-js";
 /**
  * REVENUE_AUTOMATION.ts — محرك الدخل المالي الذاتي
  * =====================================================
@@ -117,6 +118,14 @@ export interface PricingRecommendation {
 // 🤖 Revenue Automation Engine
 // ═══════════════════════════════════════════════════════════════════════════
 
+
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!supabaseUrl || !serviceRoleKey) return null;
+  return createClient(supabaseUrl, serviceRoleKey);
+}
+
 export class RevenueAutomationEngine {
   /**
    * ─────────────────────────────────────────────────────────────────
@@ -124,32 +133,79 @@ export class RevenueAutomationEngine {
    * ─────────────────────────────────────────────────────────────────
    */
   async analyzeCurrentMetrics(): Promise<RevenueMetrics | null> {
-    // في المستقبل: نجيب البيانات من Supabase
-    // مؤقتاً: نحاكي البيانات
-
     try {
-      // TODO: Replace with actual Supabase query
-      const mockData: RevenueMetrics = {
+      const supabaseAdmin = getSupabaseAdmin();
+      if (!supabaseAdmin) {
+        console.warn("⚠️ No Supabase Admin client available. Check env vars.");
+        return null;
+      }
+
+      // Fetch active subscriptions from profiles
+      const { data: profiles, error } = await supabaseAdmin
+        .from('profiles')
+        .select('role, subscription_status');
+
+      if (error) {
+        console.error("❌ Error fetching profiles from Supabase:", error);
+        return null;
+      }
+
+      const totalUsers = profiles.length || 0;
+
+      let free = 0;
+      let premium = 0;
+      let coach = 0;
+
+      profiles.forEach(p => {
+        const role = p.role || 'user';
+        const status = p.subscription_status || 'none';
+
+        if (status === 'active') {
+          if (role === 'coach') {
+            coach++;
+          } else {
+            premium++;
+          }
+        } else {
+          free++;
+        }
+      });
+
+      const premiumPrice = TIER_PRICES_USD.premium.monthly;
+      const coachPrice = TIER_PRICES_USD.coach.monthly;
+
+      const mrr = (premium * premiumPrice) + (coach * coachPrice);
+      const arr = mrr * 12;
+
+      // Mock data for churn, conversion, ARPU, and LTV until we implement proper tracking.
+      // Keeping original mock values to not break downstream calculations, except for calculated ARPU/LTV.
+      const churnRate = 0.05;
+      const avgRevenuePerUser = totalUsers > 0 ? (mrr / totalUsers) : 0;
+      // Formula used in original: (MRR / paid_users) * (1/churnRate) -> simplify to (mrr/paid) / churn
+      const paidUsers = premium + coach;
+      const lifetimeValue = paidUsers > 0 ? (mrr / paidUsers) * (1 / churnRate) : 0;
+
+      const data: RevenueMetrics = {
         timestamp: Date.now(),
-        totalUsers: 150,
+        totalUsers,
         breakdown: {
-          free: 100,
-          premium: 40,
-          coach: 10,
+          free,
+          premium,
+          coach,
         },
-        mrr: 40 * 4.99 + 10 * 49, // $689.6
-        arr: (40 * 4.99 + 10 * 49) * 12, // $8,275.2
-        churnRate: 0.05, // 5%
+        mrr,
+        arr,
+        churnRate,
         conversionRate: {
-          freeToPremium: 0.15, // 15% من Free بيحولوا لـ Premium
-          premiumToCoach: 0.08, // 8% من B2C بيحولوا لـ B2B
+          freeToPremium: 0.15,
+          premiumToCoach: 0.08,
         },
-        avgRevenuePerUser: (40 * 4.99 + 10 * 49) / 150,
-        lifetimeValue: ((40 * 4.99 + 10 * 49) / 50) * (1 / 0.05), // LTV = ARPU × (1/churn)
+        avgRevenuePerUser,
+        lifetimeValue,
       };
 
-      console.warn("📊 Revenue metrics analyzed:", mockData);
-      return mockData;
+      console.warn("📊 Revenue metrics analyzed from Supabase:", data);
+      return data;
     } catch (error) {
       console.error("❌ Failed to analyze metrics:", error);
       return null;
