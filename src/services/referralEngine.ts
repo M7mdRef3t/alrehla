@@ -129,22 +129,26 @@ export function applyReferralCode(code: string): boolean {
     data.referredBy = code;
     saveReferralData(data);
 
-    // TODO: Notify referrer via Supabase edge function
+    // Notify referrer via Supabase edge function
     if (isSupabaseReady && supabase) {
-        // Try to find the referrer's email to notify them
-        supabase.from("marketing_leads").select("email").filter("metadata->>referral_code", "eq", code).maybeSingle()
-            .then(({ data: referrer }) => {
-                if (referrer?.email) {
-                    supabase.functions.invoke("notify-referrer", {
-                        body: {
-                            to: referrer.email,
-                            referrerCode: code,
-                            newUserName: "مستخدم جديد"
-                        }
-                    }).catch(err => console.error("Failed to notify referrer:", err));
+        (async () => {
+            try {
+                const client = supabase;
+                if (!client) return;
+
+                const { error: notifyError } = await client.functions.invoke("notify-referrer", {
+                    body: {
+                        referrerCode: code
+                    }
+                });
+
+                if (notifyError) {
+                    console.error("Failed to notify referrer:", notifyError);
                 }
-            })
-            .catch(err => console.error("Failed to fetch referrer email for notification:", err));
+            } catch (err: unknown) {
+                console.error("Unexpected error in referral notification:", err);
+            }
+        })();
     }
 
     return true;
