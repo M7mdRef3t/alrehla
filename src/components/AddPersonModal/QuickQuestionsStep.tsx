@@ -1,5 +1,5 @@
 import type { FC } from "react";
-import type { OptionTier } from "../../utils/optionColors";
+
 import { EditableText } from "../EditableText";
 
 interface OptionItem {

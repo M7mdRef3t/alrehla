@@ -12,7 +12,7 @@ import type { QuickAnswer1, QuickAnswer2 } from "../utils/suggestInitialRing";
 import { recordJourneyEvent, recordFlowEvent } from "../services/journeyTracking";
 import { trackEvent, AnalyticsEvents } from "../services/analytics";
 import { useEmergencyState } from "../state/emergencyState";
-import { quick1Tier, quick2Tier } from "../utils/optionColors";
+
 import { SelectPersonStep } from "./AddPersonModal/SelectPersonStep";
 import { QuickQuestionsStep } from "./AddPersonModal/QuickQuestionsStep";
 import { PositionStep } from "./AddPersonModal/PositionStep";
