@@ -533,27 +533,17 @@ export class AutoHealthChecker {
     console.error("🚨 CRITICAL HEALTH ISSUE DETECTED:", result);
 
     try {
-      // Dynamic import to avoid circular dependency
-      const { telegramBot } = await import("../services/telegramBot");
-
-      const issuesText = result.issues
-        .map((i) => `- ${i.category}: ${i.description} (${i.severity})`)
-        .join("\n");
-
-      const messageText = `🚨 *CRITICAL HEALTH ISSUE DETECTED* 🚨
-*Status:* ${result.status.toUpperCase()}
-*Score:* ${result.score}/100
-
-*Issues:*
-${issuesText}`;
-
-      await telegramBot.sendMessage({
-        type: "critical_error_alert",
-        text: messageText,
-        parseMode: "Markdown",
+      const response = await fetch("/api/admin/health-alert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(result),
       });
-    } catch (e) {
-      console.error("Failed to send telegram notification for health check", e);
+
+      if (!response.ok) {
+        console.error("Health alert notification failed with status:", response.status);
+      }
+    } catch (fetchError) {
+      console.error("Network error sending health alert notification:", fetchError);
     }
   }
 
