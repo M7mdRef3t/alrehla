@@ -84,6 +84,7 @@ export const BreathingOverlay: FC<BreathingOverlayProps> = ({
 
     // --- Audio Init (Binaural Beats: 174Hz base, 5Hz difference for Theta state) ---
     const AudioContext = window.AudioContext || (window as /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 any).webkitAudioContext;
     if (AudioContext) {
       const ctx = new AudioContext();

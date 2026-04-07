@@ -2,8 +2,10 @@ export const sendToCapi = async (
   eventName: string,
   eventId: string,
   userData: /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 any,
   customData: /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 any = {}
 ) => {
   try {
