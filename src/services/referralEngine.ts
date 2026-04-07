@@ -160,6 +160,11 @@ export async function applyReferralCodeAsync(code: string, myEmail: string): Pro
                         earned_weeks: (rMeta.earned_weeks || 0) + 1
                     }
                 }).eq("email", referrer.email);
+
+                // Notify referrer via Supabase edge function
+                await supabase.functions.invoke('notify-referrer', {
+                    body: { referrerCode: code, newUserName: myEmail }
+                });
             }
         }
     } catch (e) {
