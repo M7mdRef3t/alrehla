@@ -4,6 +4,7 @@
  * نظام أتمتة كامل للاشتراكات والدفع والتسعير
  */
 
+import { getStripeClient } from "../../app/api/_lib/stripeConfig";
 import { decisionEngine } from "./decision-framework";
 import { geminiClient } from "../services/geminiClient";
 import type { AIDecision } from "./decision-framework";
@@ -291,7 +292,42 @@ export class RevenueAutomationEngine {
 
     // تطبيق التغيير
     try {
-      // TODO: ربط تغيير الأسعار بمصدر التسعير الفعلي عند تفعيله
+      const { client, config } = getStripeClient();
+
+      if (client && config.pricePremium && config.priceCoach) {
+        // Fetch existing prices to extract Product IDs
+        const premiumPrice = await client.prices.retrieve(config.pricePremium);
+        const premiumProductId = typeof premiumPrice.product === "string"
+          ? premiumPrice.product
+          : premiumPrice.product.id;
+
+        // Create new Stripe Price for Premium
+        const newPremiumPrice = await client.prices.create({
+          product: premiumProductId,
+          unit_amount: Math.round(recommendation.suggestedPrices.premium * 100),
+          currency: "usd",
+          recurring: { interval: "month" },
+        });
+
+        // Fetch existing Coach price for Product ID
+        const coachPrice = await client.prices.retrieve(config.priceCoach);
+        const coachProductId = typeof coachPrice.product === "string"
+          ? coachPrice.product
+          : coachPrice.product.id;
+
+        // Create new Stripe Price for Coach
+        const newCoachPrice = await client.prices.create({
+          product: coachProductId,
+          unit_amount: Math.round(recommendation.suggestedPrices.coach * 100),
+          currency: "usd",
+          recurring: { interval: "month" },
+        });
+
+        console.warn(`✅ [Stripe] Created new prices. Premium: ${newPremiumPrice.id}, Coach: ${newCoachPrice.id}. Ensure environment variables are updated.`);
+      } else {
+        console.warn("⚠️ Stripe client not configured or missing price IDs. Skipping actual Stripe price updates.");
+      }
+
       // TODO: Update database with new pricing
       // TODO: Notify existing users about grandfathering policy
 
