@@ -21,8 +21,6 @@ interface QuickQuestionsStepProps {
   onBack: () => void;
   onContinue: (e: React.FormEvent) => void;
   disableSubmit: boolean;
-  getTier1: (value: string) => OptionTier;
-  getTier2: (value: string) => OptionTier;
   nextLabel: string;
 }
 

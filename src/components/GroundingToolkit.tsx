@@ -41,7 +41,7 @@ const TECHNIQUES: TechniqueConfig[] = [
     id: "body_scan",
     title: "مسح الجسم التكتيكي",
     subtitle: "الرصد الداخلي — استكشاف نقاط التوتر",
-    icon: Activity,
+    icon: Brain,
     colorClass: { text: "text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/30", glow: "hover:shadow-[0_0_20px_-5px_rgba(139,92,246,0.3)] shadow-[inset_0_0_15px_rgba(139,92,246,0.1)]" },
     duration: "3 دقائق",
   },
@@ -297,7 +297,7 @@ const BoxBreathingExercise: FC<{ onDone: () => void }> = ({ onDone }) => {
           <ChevronLeft className="w-4 h-4" /> مغادرة المحطة
         </button>
         <button onClick={() => setMuted(!muted)} className="p-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-          {muted ? <VolumeX className="w-4 h-4 text-white/40" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+          {muted ? <Volume2 className="w-4 h-4 text-white/40" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
         </button>
       </div>
 
